@@ -27,7 +27,9 @@ class ServiceRegistry:
         try:
             return self._services[service_type]  # type: ignore[return-value]
         except KeyError as exc:
-            raise KeyError(f"service {service_type.__name__} is not registered") from exc
+            raise KeyError(
+                f"service {service_type.__name__} is not registered"
+            ) from exc
 
     def try_get(self, service_type: type[T]) -> T | None:
         return self._services.get(service_type)  # type: ignore[return-value]

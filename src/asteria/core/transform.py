@@ -1,6 +1,7 @@
 from .component import Component
 from .metadata import Field, component_schema
 
+
 @component_schema(
     type_name="asteria.Transform",
     version=1,

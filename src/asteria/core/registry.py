@@ -1,5 +1,6 @@
 from .metadata import get_component_schema
 
+
 class ComponentRegistry:
     def __init__(self):
         self._types = {}
@@ -25,4 +26,4 @@ class ComponentRegistry:
         return tuple(sorted(self._types.items(), key=lambda item: item[0]))
 
     def component_types(self):
-        return tuple(component_type for _,component_type in self.registrations())
+        return tuple(component_type for _, component_type in self.registrations())

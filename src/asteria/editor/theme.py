@@ -1,18 +1,20 @@
 from dataclasses import dataclass
 
-@dataclass(frozen=True,slots=True)
+
+@dataclass(frozen=True, slots=True)
 class EditorTheme:
-    name:str="Asteria Dark"
-    spacing_xs:int=4
-    spacing_sm:int=8
-    spacing_md:int=12
-    spacing_lg:int=16
-    radius_sm:int=4
-    radius_md:int=6
+    name: str = "Asteria Dark"
+    spacing_xs: int = 4
+    spacing_sm: int = 8
+    spacing_md: int = 12
+    spacing_lg: int = 16
+    radius_sm: int = 4
+    radius_md: int = 6
 
-ASTERIA_DARK=EditorTheme()
 
-ASTERIA_DARK_QSS = '''
+ASTERIA_DARK = EditorTheme()
+
+ASTERIA_DARK_QSS = """
 QMainWindow, QDialog { background: #17191d; color: #d9dde5; }
 QDockWidget { color: #bfc5d0; font-weight: 600; }
 QDockWidget::title { background: #1d2025; padding: 7px 10px; }
@@ -50,6 +52,8 @@ QLabel#MutedLabel { color: #858e9d; padding: 2px 1px; }
 QListWidget#TilePaletteList::item { min-height: 26px; padding: 3px 6px; }
 QToolBar { background: #1d2025; border-bottom: 1px solid #292e36; spacing: 4px; padding: 4px; }
 QStatusBar { background: #1b1e23; color: #9098a6; }
-'''
+"""
+
+
 def apply_asteria_theme(app):
     app.setStyleSheet(ASTERIA_DARK_QSS)

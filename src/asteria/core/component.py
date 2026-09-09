@@ -57,8 +57,17 @@ class Component:
         self._created = False
         self._entity = None
 
-    def on_create(self): pass
-    def on_enable(self): pass
-    def on_disable(self): pass
-    def on_detach(self): pass
-    def on_destroy(self): pass
+    def on_create(self):
+        pass
+
+    def on_enable(self):
+        pass
+
+    def on_disable(self):
+        pass
+
+    def on_detach(self):
+        pass
+
+    def on_destroy(self):
+        pass

@@ -1,8 +1,10 @@
 class System:
     order = 0
     enabled = True
+
     def update(self, scene, dt):
         raise NotImplementedError
+
 
 class SystemScheduler:
     def __init__(self):

@@ -1,6 +1,7 @@
-from .metadata import get_component_schema
 from .entity import Entity
+from .metadata import get_component_schema
 from .scene import Scene
+
 
 def serialize_component(component):
     schema = get_component_schema(type(component))
@@ -15,6 +16,7 @@ def serialize_component(component):
         "version": schema.version,
         "fields": values,
     }
+
 
 def deserialize_component(data, registry):
     if set(data) != {"type", "version", "fields"}:
@@ -38,6 +40,7 @@ def deserialize_component(data, registry):
         setattr(c, name, value)
     return c
 
+
 def serialize_entity(entity):
     return {
         "id": entity.id,
@@ -45,6 +48,7 @@ def serialize_entity(entity):
         "enabled": entity.enabled,
         "components": [serialize_component(c) for c in entity.components()],
     }
+
 
 def deserialize_entity(data, registry):
     if set(data) != {"id", "name", "enabled", "components"}:
@@ -56,6 +60,7 @@ def deserialize_entity(data, registry):
         entity.add_component(deserialize_component(cdata, registry))
     return entity
 
+
 def serialize_scene(scene):
     return {
         "schema": "asteria.scene",
@@ -64,6 +69,7 @@ def serialize_scene(scene):
         "name": scene.name,
         "entities": [serialize_entity(e) for e in scene.entities()],
     }
+
 
 def deserialize_scene(data, registry):
     expected = {"schema", "version", "id", "name", "entities"}

@@ -1,5 +1,6 @@
 from .ids import new_id, validate_id
 
+
 class Entity:
     def __init__(self, name="Entity", *, entity_id=None, enabled=True):
         self.id = validate_id(entity_id) if entity_id is not None else new_id()
