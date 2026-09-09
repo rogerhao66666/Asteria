@@ -1,0 +1,133 @@
+{
+  "texture_asset_id": "10000000-0000-4000-8000-000000000002",
+  "frames": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 16,
+      "y": 0,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 32,
+      "y": 0,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 48,
+      "y": 0,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 0,
+      "y": 24,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 16,
+      "y": 24,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 32,
+      "y": 24,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 48,
+      "y": 24,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 0,
+      "y": 48,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 16,
+      "y": 48,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 32,
+      "y": 48,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 48,
+      "y": 48,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 0,
+      "y": 72,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 16,
+      "y": 72,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 32,
+      "y": 72,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    },
+    {
+      "x": 48,
+      "y": 72,
+      "width": 16,
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0
+    }
+  ]
+}

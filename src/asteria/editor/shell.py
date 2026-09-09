@@ -1,0 +1,581 @@
+from .model import EditorDocument
+from .inspector import build_inspector_fields
+from .editing import build_set_component_field_command,EditError
+from .structure import (
+    build_rename_command,build_add_entity_command,build_remove_entity_command,
+    build_add_component_command,build_remove_component_command,StructureEditError
+)
+from .component_picker import build_component_choices
+from .clipboard import build_duplicate_entity_command,build_paste_entity_command
+from .scenes import build_add_scene_command,build_remove_scene_command,SceneEditError
+from .storage import save_document,load_document,EditorStorageError
+from .playmode import create_play_session,PlayModeError
+from .runtime_launcher import launch_play_session,RuntimeLaunchError
+
+try:
+    from PySide6.QtWidgets import (
+        QApplication,QMainWindow,QDockWidget,QLabel,QListWidget,QInputDialog,
+        QMessageBox,QFileDialog,QToolBar
+    )
+    from PySide6.QtGui import QAction,QKeySequence
+    from PySide6.QtCore import Qt,QTimer
+except Exception:
+    QApplication=None; QMainWindow=object; Qt=None
+
+from .widgets import ProjectTreeWidget,InspectorWidget
+from .viewport_widget import SceneViewportWidget
+from .theme import apply_asteria_theme
+from .tile_palette_widget import TilePaletteWidget
+from .tile_layers_widget import TileLayersWidget
+from .animation_widget import AnimationWidget
+from .tile_edit import AddTileLayerCommand,RemoveTileLayerCommand,ReorderTileLayerCommand,SetTileLayerPropertyCommand,TileEditError
+from asteria.graphics import TileLayer
+
+class AsteriaEditorWindow(QMainWindow):
+    def __init__(self, project=None, component_registry=None):
+        if QApplication is None:
+            raise RuntimeError("PySide6 is required for Asteria Editor")
+        super().__init__()
+        self.document=EditorDocument(project,component_registry=component_registry)
+        self.play_session=None
+        self.runtime_process=None
+        self.runtime_monitor=QTimer(self)
+        self.runtime_monitor.setInterval(250)
+        self.runtime_monitor.timeout.connect(self._poll_runtime_process)
+        self.runtime_monitor.start()
+        self.setWindowTitle("Asteria Editor")
+        self.resize(1280,800)
+
+        self.viewport=SceneViewportWidget(self.document)
+        self.setCentralWidget(self.viewport)
+
+        self.project_tree=ProjectTreeWidget(self.document)
+        left=QDockWidget("Project / Scene",self)
+        left.setWidget(self.project_tree)
+        self.addDockWidget(Qt.LeftDockWidgetArea,left)
+
+        self.tile_palette=TilePaletteWidget(self)
+        palette_dock=QDockWidget("Tile Palette",self)
+        palette_dock.setWidget(self.tile_palette)
+        self.addDockWidget(Qt.LeftDockWidgetArea,palette_dock)
+        self.tabifyDockWidget(left,palette_dock)
+        self.tile_palette.modeChanged.connect(self.viewport.set_tile_mode)
+        self.tile_palette.tileSelected.connect(self.viewport.set_selected_tile)
+
+        self.tile_layers=TileLayersWidget(self)
+        layers_dock=QDockWidget("Layers",self)
+        layers_dock.setWidget(self.tile_layers)
+        self.addDockWidget(Qt.LeftDockWidgetArea,layers_dock)
+        self.tabifyDockWidget(left,layers_dock)
+        self.tile_layers.layerSelected.connect(self._select_tile_layer)
+        self.tile_layers.addRequested.connect(self._add_tile_layer)
+        self.tile_layers.removeRequested.connect(self._remove_tile_layer)
+        self.tile_layers.moveRequested.connect(self._move_tile_layer)
+        self.tile_layers.visibilityChanged.connect(self._set_tile_layer_visible)
+        self.tile_layers.collisionChanged.connect(self._set_tile_layer_collision)
+
+        self.animation_widget=AnimationWidget(self)
+        animation_dock=QDockWidget("Animation",self)
+        animation_dock.setWidget(self.animation_widget)
+        self.addDockWidget(Qt.BottomDockWidgetArea,animation_dock)
+
+        self.inspector=InspectorWidget(self.document)
+        right=QDockWidget("Inspector",self)
+        right.setWidget(self.inspector)
+        self.addDockWidget(Qt.RightDockWidgetArea,right)
+
+        self.asset_list=QListWidget()
+        bottom=QDockWidget("Assets",self)
+        bottom.setWidget(self.asset_list)
+        self.addDockWidget(Qt.BottomDockWidgetArea,bottom)
+
+        self.console=QLabel("Console ready")
+        console=QDockWidget("Console",self)
+        console.setWidget(self.console)
+        self.addDockWidget(Qt.BottomDockWidgetArea,console)
+        self.tabifyDockWidget(bottom,console)
+
+        self._build_actions()
+        self.refresh_all()
+
+    def _build_actions(self):
+        file_menu=self.menuBar().addMenu("&File")
+        self.open_action=QAction("Open Project…",self)
+        self.open_action.setShortcut(QKeySequence.Open)
+        self.open_action.triggered.connect(self.open_project)
+        self.save_action=QAction("Save",self)
+        self.save_action.setShortcut(QKeySequence.Save)
+        self.save_action.triggered.connect(self.save_project)
+        self.save_as_action=QAction("Save As…",self)
+        self.save_as_action.setShortcut("Ctrl+Shift+S")
+        self.save_as_action.triggered.connect(self.save_project_as)
+        file_menu.addActions([self.open_action,self.save_action,self.save_as_action])
+
+        edit=self.menuBar().addMenu("&Edit")
+        self.undo_action=QAction("Undo",self)
+        self.undo_action.setShortcut(QKeySequence.Undo)
+        self.undo_action.triggered.connect(self.undo)
+        self.redo_action=QAction("Redo",self)
+        self.redo_action.setShortcut(QKeySequence.Redo)
+        self.redo_action.triggered.connect(self.redo)
+        edit.addActions([self.undo_action,self.redo_action])
+        edit.addSeparator()
+
+        self.rename_action=QAction("Rename…",self)
+        self.rename_action.setShortcut("F2")
+        self.rename_action.triggered.connect(self.rename_selected)
+        self.add_scene_action=QAction("Add Scene…",self)
+        self.add_scene_action.triggered.connect(self.add_scene)
+        self.delete_scene_action=QAction("Delete Scene",self)
+        self.delete_scene_action.triggered.connect(self.delete_scene)
+        self.add_entity_action=QAction("Add Entity…",self)
+        self.add_entity_action.triggered.connect(self.add_entity)
+        self.delete_action=QAction("Delete Selected",self)
+        self.delete_action.setShortcut(QKeySequence.Delete)
+        self.delete_action.triggered.connect(self.delete_selected)
+        self.add_component_action=QAction("Add Component…",self)
+        self.add_component_action.triggered.connect(self.add_component)
+        self.copy_action=QAction("Copy Entity",self)
+        self.copy_action.setShortcut(QKeySequence.Copy)
+        self.copy_action.triggered.connect(self.copy_selected)
+        self.paste_action=QAction("Paste Entity",self)
+        self.paste_action.setShortcut(QKeySequence.Paste)
+        self.paste_action.triggered.connect(self.paste_entity)
+        self.duplicate_action=QAction("Duplicate Entity",self)
+        self.duplicate_action.setShortcut("Ctrl+D")
+        self.duplicate_action.triggered.connect(self.duplicate_selected)
+        for action in (
+            self.rename_action,self.add_scene_action,self.delete_scene_action,
+            self.add_entity_action,self.add_component_action,self.copy_action,
+            self.paste_action,self.duplicate_action,self.delete_action
+        ):
+            edit.addAction(action)
+
+        self.play_action=QAction("Play Current Scene",self)
+        self.play_action.setShortcut("F6")
+        self.play_action.triggered.connect(self.play_current_scene)
+        self.stop_action=QAction("Stop",self)
+        self.stop_action.setShortcut("Shift+F6")
+        self.stop_action.triggered.connect(self.stop_play)
+        toolbar=QToolBar("Run",self)
+        toolbar.setObjectName("AsteriaRunToolbar")
+        toolbar.addAction(self.play_action)
+        toolbar.addAction(self.stop_action)
+        self.addToolBar(Qt.TopToolBarArea,toolbar)
+        self._refresh_actions()
+
+    def _refresh_actions(self):
+        if not hasattr(self,"undo_action"):
+            return
+        self.undo_action.setEnabled(self.document.commands.can_undo)
+        self.redo_action.setEnabled(self.document.commands.can_redo)
+        self.undo_action.setText("Undo"+(f" {self.document.commands.undo_label}" if self.document.commands.undo_label else ""))
+        self.redo_action.setText("Redo"+(f" {self.document.commands.redo_label}" if self.document.commands.redo_label else ""))
+
+        project=self.document.project
+        sel=self.document.selection
+        self.save_action.setEnabled(project is not None)
+        self.save_as_action.setEnabled(project is not None)
+        self.rename_action.setEnabled(sel.kind in {"project","scene","entity"} and not sel.multiple)
+        self.add_scene_action.setEnabled(project is not None)
+        self.delete_scene_action.setEnabled(
+            sel.kind=="scene" and not sel.multiple and project is not None and len(project.scenes())>1
+        )
+        self.add_entity_action.setEnabled(sel.kind in {"scene","entity"} and not sel.multiple)
+        self.delete_action.setEnabled(sel.kind in {"entity","component"} and not sel.multiple)
+        self.add_component_action.setEnabled(sel.kind=="entity" and not sel.multiple)
+        self.copy_action.setEnabled(sel.kind=="entity" and not sel.multiple)
+        self.duplicate_action.setEnabled(sel.kind=="entity" and not sel.multiple)
+        self.paste_action.setEnabled(
+            self.document.clipboard.has_entity() and sel.kind in {"scene","entity"} and not sel.multiple
+        )
+        active=self.play_session is not None and self.play_session.active
+        self.play_action.setEnabled(project is not None and not active)
+        self.stop_action.setEnabled(active)
+
+    def _refresh_title(self):
+        name=self.document.project.name if self.document.project else "No Project"
+        dirty=" *" if self.document.dirty else ""
+        self.setWindowTitle(f"Asteria Editor — {name}{dirty}")
+
+    def set_animation_clip_set_view(self,clip_set_id,clip_set):
+        self.document.asset_views.set_clip_set(clip_set_id,clip_set)
+        self.animation_widget.set_clips(tuple(clip_set.clips))
+        self.animation_widget.set_status(f"{len(clip_set.clips)} clips available")
+
+    def set_sprite_sheet_view(self,asset_id,sprite_sheet):
+        self.document.asset_views.set_sprite_sheet(asset_id,sprite_sheet)
+        self.viewport.texture_cache.clear()
+        self.viewport.refresh()
+
+    def set_tilemap_render_source(self,source):
+        self.viewport.set_render_source(source)
+        self.tile_palette.set_tileset(source.tileset if source is not None else None)
+        layer=self.viewport.tile_tools.active_layer if source is not None else None
+        self.tile_palette.set_layer(layer)
+        self.tile_layers.set_tilemap(source.tilemap if source is not None else None,layer)
+
+    def _select_tile_layer(self,layer):
+        self.viewport.set_active_tile_layer(layer)
+        self.tile_palette.set_layer(layer)
+
+    def _add_tile_layer(self):
+        source=self.viewport.render_source
+        if source is None:return
+        names={l.name for l in source.tilemap.layers}
+        index=1
+        name="Layer"
+        while name in names:
+            index+=1
+            name=f"Layer {index}"
+        layer=TileLayer(name,order=len(source.tilemap.layers))
+        self.document.execute(AddTileLayerCommand(source.tilemap,layer))
+        self.viewport.set_active_tile_layer(layer)
+        self.refresh_all()
+
+    def _remove_tile_layer(self,layer):
+        source=self.viewport.render_source
+        if source is None:return
+        try:
+            self.document.execute(RemoveTileLayerCommand(source.tilemap,layer))
+        except TileEditError:
+            return
+        self.viewport.tile_tools.active_layer=source.tilemap.layers[0]
+        self.refresh_all()
+
+    def _move_tile_layer(self,layer,index):
+        source=self.viewport.render_source
+        if source is None:return
+        self.document.execute(ReorderTileLayerCommand(source.tilemap,layer,index))
+        self.refresh_all()
+
+    def _set_tile_layer_visible(self,layer,value):
+        self.document.execute(SetTileLayerPropertyCommand(layer,"visible",bool(value)))
+        self.refresh_all()
+
+    def _set_tile_layer_collision(self,layer,value):
+        self.document.execute(SetTileLayerPropertyCommand(layer,"collision_enabled",bool(value)))
+        self.refresh_all()
+
+    def refresh_all(self):
+        self.project_tree.refresh()
+        self.refresh_asset_list()
+        self.refresh_inspector()
+        self.viewport.refresh()
+        if self.viewport.render_source is not None:
+            self.tile_layers.set_tilemap(
+                self.viewport.render_source.tilemap,
+                self.viewport.tile_tools.active_layer
+            )
+            self.tile_palette.set_layer(self.viewport.tile_tools.active_layer)
+        self._refresh_actions()
+        self._refresh_title()
+
+    def set_project(self,project,file_path=None):
+        if self.play_session is not None and self.play_session.active:
+            self.stop_play()
+        self.document.set_project(project,file_path=file_path)
+        self.play_session=None
+        self.runtime_process=None
+        self.refresh_all()
+
+    def refresh_asset_list(self):
+        self.asset_list.clear()
+        if self.document.project is None:
+            return
+        for record in self.document.project.assets.records():
+            self.asset_list.addItem(f"{record.kind}: {record.source_path}")
+
+    def refresh_inspector(self):
+        sel=self.document.selection
+        if sel.kind=="none" or sel.value is None:
+            if sel.multiple:
+                self.inspector.show_properties(f"{len(sel.values)} selected",(("Count",len(sel.values),"int"),))
+            else:
+                self.inspector.show_message("Nothing selected")
+            return
+        if sel.multiple:
+            self.inspector.show_properties(
+                f"{len(sel.values)} {sel.kind.title()}s selected",
+                (("Count",len(sel.values),"int"),)
+            )
+            return
+        obj=sel.value
+        if sel.kind=="project":
+            self.inspector.show_properties("Project",(("Name",obj.name,"str"),("ID",obj.id,"UUID"),("Startup Scene",obj.startup_scene_id,"UUID")))
+        elif sel.kind=="scene":
+            self.inspector.show_properties("Scene",(("Name",obj.name,"str"),("ID",obj.id,"UUID"),("Entities",len(obj.entities()),"int")))
+        elif sel.kind=="entity":
+            self.inspector.show_properties("Entity",(("Name",obj.name,"str"),("ID",obj.id,"UUID"),("Enabled",obj.enabled,"bool"),("Components",len(obj.components()),"int")))
+        elif sel.kind=="component":
+            self.inspector.show_component(type(obj).__name__,build_inspector_fields(obj))
+        elif sel.kind=="asset":
+            self.inspector.show_properties("Asset",(("Kind",obj.kind,"str"),("Path",obj.source_path,"path"),("ID",obj.id,"UUID")))
+        else:
+            self.inspector.show_message(f"Selected: {sel.kind}")
+
+    def _execute_structure(self,command,selection_kind=None,selection_value=None):
+        self.document.execute(command)
+        if selection_kind is not None:
+            self.document.selection.set_single(selection_kind,selection_value)
+        self.refresh_all()
+
+    def rename_selected(self):
+        sel=self.document.selection
+        if sel.kind not in {"project","scene","entity"} or sel.value is None or sel.multiple:
+            return False
+        name,ok=QInputDialog.getText(self,"Rename","Name:",text=sel.value.name)
+        if not ok:
+            return False
+        try:
+            command=build_rename_command(sel.value,name)
+        except StructureEditError as exc:
+            QMessageBox.warning(self,"Rename",str(exc)); return False
+        if command.new_name==command.old_name:
+            return True
+        self._execute_structure(command,sel.kind,sel.value)
+        return True
+
+    def add_scene(self):
+        if self.document.project is None:
+            return False
+        name,ok=QInputDialog.getText(self,"Add Scene","Name:",text="Scene")
+        if not ok:
+            return False
+        try:
+            command=build_add_scene_command(self.document.project,name)
+        except SceneEditError as exc:
+            QMessageBox.warning(self,"Add Scene",str(exc)); return False
+        self._execute_structure(command,"scene",command.scene)
+        return True
+
+    def delete_scene(self):
+        sel=self.document.selection
+        if sel.kind!="scene" or sel.value is None or sel.multiple or self.document.project is None:
+            return False
+        try:
+            command=build_remove_scene_command(self.document.project,sel.value)
+        except SceneEditError as exc:
+            QMessageBox.warning(self,"Delete Scene",str(exc)); return False
+        self.document.execute(command)
+        self.document.selection.set_single("scene",self.document.project.scenes()[0])
+        self.refresh_all()
+        return True
+
+    def add_entity(self):
+        sel=self.document.selection
+        scene=sel.value if sel.kind=="scene" else getattr(sel.value,"scene",None) if sel.kind=="entity" else None
+        if scene is None or sel.multiple:
+            return False
+        name,ok=QInputDialog.getText(self,"Add Entity","Name:",text="Entity")
+        if not ok:
+            return False
+        try:
+            command=build_add_entity_command(scene,name)
+        except StructureEditError as exc:
+            QMessageBox.warning(self,"Add Entity",str(exc)); return False
+        self._execute_structure(command,"entity",command.entity)
+        return True
+
+    def add_component(self):
+        sel=self.document.selection
+        if sel.kind!="entity" or sel.value is None or sel.multiple:
+            return False
+        choices=[c for c in build_component_choices(self.document.component_registry,sel.value) if c.addable]
+        if not choices:
+            QMessageBox.information(self,"Add Component","No addable registered components."); return False
+        labels=[c.display_name for c in choices]
+        label,ok=QInputDialog.getItem(self,"Add Component","Component:",labels,0,False)
+        if not ok:
+            return False
+        choice=choices[labels.index(label)]
+        try:
+            command=build_add_component_command(sel.value,choice.component_type)
+        except StructureEditError as exc:
+            QMessageBox.warning(self,"Add Component",str(exc)); return False
+        self._execute_structure(command,"component",command.component)
+        return True
+
+    def copy_selected(self):
+        sel=self.document.selection
+        if sel.kind!="entity" or sel.value is None or sel.multiple:
+            return False
+        self.document.clipboard.copy_entity(sel.value)
+        self._refresh_actions()
+        return True
+
+    def duplicate_selected(self):
+        sel=self.document.selection
+        if sel.kind!="entity" or sel.value is None or sel.multiple:
+            return False
+        command=build_duplicate_entity_command(sel.value,self.document.component_registry)
+        self._execute_structure(command,"entity",command.duplicate_entity)
+        return True
+
+    def paste_entity(self):
+        sel=self.document.selection
+        scene=sel.value if sel.kind=="scene" else getattr(sel.value,"scene",None) if sel.kind=="entity" else None
+        if scene is None or sel.multiple:
+            return False
+        try:
+            command=build_paste_entity_command(scene,self.document.clipboard,self.document.component_registry)
+        except ValueError as exc:
+            QMessageBox.warning(self,"Paste",str(exc)); return False
+        self._execute_structure(command,"entity",command.entity)
+        return True
+
+    def delete_selected(self):
+        sel=self.document.selection
+        if sel.multiple:
+            return False
+        try:
+            if sel.kind=="entity" and sel.value is not None:
+                scene=sel.value.scene
+                self._execute_structure(build_remove_entity_command(sel.value),"scene",scene)
+                return True
+            if sel.kind=="component" and sel.value is not None:
+                entity=sel.value.entity
+                self._execute_structure(build_remove_component_command(sel.value),"entity",entity)
+                return True
+        except StructureEditError as exc:
+            QMessageBox.warning(self,"Delete",str(exc))
+        return False
+
+    def edit_selected_component_field(self,field_name,raw_value):
+        sel=self.document.selection
+        if sel.kind!="component" or sel.value is None or sel.multiple:
+            return False,"No single component selected"
+        try:
+            command=build_set_component_field_command(sel.value,field_name,raw_value)
+            if command.new_value==command.old_value:
+                return True,None
+            self.document.execute(command)
+        except EditError as exc:
+            return False,str(exc)
+        self._refresh_actions()
+        self._refresh_title()
+        self.viewport.refresh()
+        return True,None
+
+    def undo(self):
+        if not self.document.undo():
+            return False
+        self.document.selection.set_single("project" if self.document.project else "none",self.document.project)
+        self.refresh_all()
+        return True
+
+    def redo(self):
+        if not self.document.redo():
+            return False
+        self.document.selection.set_single("project" if self.document.project else "none",self.document.project)
+        self.refresh_all()
+        return True
+
+    def save_project(self):
+        if self.document.project is None:
+            return False
+        if self.document.file_path is None:
+            return self.save_project_as()
+        try:
+            save_document(self.document)
+        except EditorStorageError as exc:
+            QMessageBox.critical(self,"Save Project",str(exc)); return False
+        self.statusBar().showMessage(f"Saved {self.document.file_path}",3000)
+        self.refresh_all()
+        return True
+
+    def save_project_as(self):
+        if self.document.project is None:
+            return False
+        path,_=QFileDialog.getSaveFileName(self,"Save Asteria Project","","Asteria Project (*.asteria.json);;JSON (*.json)")
+        if not path:
+            return False
+        try:
+            save_document(self.document,path)
+        except EditorStorageError as exc:
+            QMessageBox.critical(self,"Save Project",str(exc)); return False
+        self.statusBar().showMessage(f"Saved {self.document.file_path}",3000)
+        self.refresh_all()
+        return True
+
+    def open_project(self):
+        if self.document.dirty:
+            answer=QMessageBox.question(
+                self,"Unsaved Changes",
+                "This project has unsaved changes. Open another project anyway?",
+                QMessageBox.Yes|QMessageBox.No,QMessageBox.No
+            )
+            if answer!=QMessageBox.Yes:
+                return False
+        path,_=QFileDialog.getOpenFileName(self,"Open Asteria Project","","Asteria Project (*.asteria.json *.json)")
+        if not path:
+            return False
+        try:
+            load_document(self.document,path)
+        except EditorStorageError as exc:
+            QMessageBox.critical(self,"Open Project",str(exc)); return False
+        self.play_session=None
+        self.refresh_all()
+        return True
+
+    def play_current_scene(self):
+        try:
+            self.play_session=create_play_session(self.document)
+            self.runtime_process=launch_play_session(self.play_session)
+        except (PlayModeError,RuntimeLaunchError) as exc:
+            if self.play_session is not None:
+                self.play_session.stop()
+            self.play_session=None
+            self.runtime_process=None
+            QMessageBox.warning(self,"Play",str(exc)); return False
+        self.console.setText(f"Runtime preview: {self.play_session.runtime_scene.name}")
+        self.statusBar().showMessage(f"Playing — {self.play_session.runtime_scene.name}")
+        self._refresh_actions()
+        return True
+
+    def stop_play(self):
+        if self.play_session is None or not self.play_session.active:
+            return False
+        if self.runtime_process is not None:
+            self.runtime_process.stop()
+            self.runtime_process=None
+        self.play_session.stop()
+        self.console.setText("Play session stopped")
+        self.statusBar().showMessage("Play session stopped",2000)
+        self._refresh_actions()
+        return True
+
+    def _poll_runtime_process(self):
+        if self.runtime_process is None or self.runtime_process.running:
+            return
+        self.runtime_process.stop()
+        self.runtime_process=None
+        if self.play_session is not None and self.play_session.active:
+            self.play_session.stop()
+        self.console.setText("Runtime preview closed")
+        self.statusBar().showMessage("Runtime preview closed",2000)
+        self._refresh_actions()
+
+    def closeEvent(self,event):
+        if self.play_session is not None and self.play_session.active:
+            self.stop_play()
+        if self.document.dirty:
+            answer=QMessageBox.question(
+                self,"Unsaved Changes",
+                "Save changes before closing Asteria?",
+                QMessageBox.Save|QMessageBox.Discard|QMessageBox.Cancel,
+                QMessageBox.Save
+            )
+            if answer==QMessageBox.Cancel:
+                event.ignore(); return
+            if answer==QMessageBox.Save and not self.save_project():
+                event.ignore(); return
+        event.accept()
+
+def launch_editor(project=None):
+    import sys
+    app=QApplication.instance() or QApplication(sys.argv)
+    apply_asteria_theme(app)
+    window=AsteriaEditorWindow(project)
+    window.show()
+    return app.exec()

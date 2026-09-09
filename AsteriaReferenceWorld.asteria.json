@@ -1,0 +1,176 @@
+{
+  "assets": {
+    "assets": [
+      {
+        "id": "10000000-0000-4000-8000-000000000001",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "Asteria original reference art",
+          "pixel_scale": 1
+        },
+        "name": "Environment Atlas",
+        "source_path": "reference_assets/asteria_environment_atlas_1x.png"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000002",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "Asteria original reference art",
+          "pixel_scale": 1
+        },
+        "name": "Hero Sheet",
+        "source_path": "reference_assets/asteria_hero_sheet_1x.png"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000003",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "Asteria original reference art",
+          "pixel_scale": 1
+        },
+        "name": "Props",
+        "source_path": "reference_assets/asteria_props_1x.png"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000011",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {},
+        "name": "Environment Sprite Sheet",
+        "source_path": "reference_data/environment_sheet.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000012",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {},
+        "name": "Hero Sprite Sheet",
+        "source_path": "reference_data/hero_sheet.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000021",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "tileset",
+        "metadata": {},
+        "name": "Environment Tileset",
+        "source_path": "reference_data/environment_tileset.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000031",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {},
+        "name": "Hero Animation",
+        "source_path": "reference_data/hero_animation.json"
+      }
+    ],
+    "schema": "asteria.assets",
+    "version": 1
+  },
+  "id": "fce00db0-4f2a-4bf7-bfcc-e75c1e62d170",
+  "name": "Asteria Reference World",
+  "scenes": [
+    {
+      "entities": [
+        {
+          "components": [
+            {
+              "fields": {
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 320.0,
+                "y": 208.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 5,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "10000000-0000-4000-8000-000000000012",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "10000000-0000-4000-8000-000000000031",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "64e68f95-18b1-41d5-a733-543e0649c892",
+          "name": "Hero"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 240.0,
+                "y": 128.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "active": true,
+                "deadzone_x": 16.0,
+                "deadzone_y": 10.0,
+                "follow_entity_id": "64e68f95-18b1-41d5-a733-543e0649c892",
+                "height": 180,
+                "smoothing": 8.0,
+                "width": 320,
+                "zoom": 2.0
+              },
+              "type": "asteria.Camera2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "7698d7c3-07a9-4df4-81c7-07a2348c8343",
+          "name": "Game Camera"
+        }
+      ],
+      "id": "3a4f3219-7fb1-4fda-8af4-877a7f3dc141",
+      "name": "Town & River",
+      "schema": "asteria.scene",
+      "version": 1
+    }
+  ],
+  "schema": "asteria.project",
+  "startup_scene_id": "3a4f3219-7fb1-4fda-8af4-877a7f3dc141",
+  "version": 2
+}

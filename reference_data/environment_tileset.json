@@ -1,0 +1,103 @@
+{
+  "sprite_sheet_asset_id": "10000000-0000-4000-8000-000000000011",
+  "tile_width": 16,
+  "tile_height": 16,
+  "tiles": {
+    "0": {
+      "frame_index": 0,
+      "collision": "none",
+      "terrain": null,
+      "tags": []
+    },
+    "1": {
+      "frame_index": 1,
+      "collision": "none",
+      "terrain": null,
+      "tags": []
+    },
+    "2": {
+      "frame_index": 2,
+      "collision": "none",
+      "terrain": null,
+      "tags": []
+    },
+    "3": {
+      "frame_index": 3,
+      "collision": "none",
+      "terrain": null,
+      "tags": []
+    },
+    "4": {
+      "frame_index": 4,
+      "collision": "solid",
+      "terrain": null,
+      "tags": []
+    },
+    "5": {
+      "frame_index": 5,
+      "collision": "none",
+      "terrain": null,
+      "tags": []
+    },
+    "6": {
+      "frame_index": 6,
+      "collision": "none",
+      "terrain": null,
+      "tags": []
+    },
+    "7": {
+      "frame_index": 7,
+      "collision": "none",
+      "terrain": null,
+      "tags": []
+    },
+    "8": {
+      "frame_index": 8,
+      "collision": "solid",
+      "terrain": null,
+      "tags": []
+    },
+    "9": {
+      "frame_index": 9,
+      "collision": "none",
+      "terrain": null,
+      "tags": []
+    },
+    "10": {
+      "frame_index": 10,
+      "collision": "none",
+      "terrain": null,
+      "tags": []
+    },
+    "11": {
+      "frame_index": 11,
+      "collision": "none",
+      "terrain": null,
+      "tags": []
+    },
+    "12": {
+      "frame_index": 12,
+      "collision": "none",
+      "terrain": null,
+      "tags": []
+    },
+    "13": {
+      "frame_index": 13,
+      "collision": "none",
+      "terrain": null,
+      "tags": []
+    },
+    "14": {
+      "frame_index": 14,
+      "collision": "none",
+      "terrain": null,
+      "tags": []
+    },
+    "15": {
+      "frame_index": 15,
+      "collision": "solid",
+      "terrain": null,
+      "tags": []
+    }
+  }
+}
