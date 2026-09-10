@@ -25,10 +25,11 @@ class FakeProcess:
         self._poll = -9
 
 
-def test_launcher_uses_external_module_and_cleans_snapshot():
+def test_launcher_uses_external_module_resource_root_and_cleans_snapshot(tmp_path):
     p = Project("P")
     p.add_scene(Scene("S"))
-    session = create_play_session(EditorDocument(p))
+    project_path = tmp_path / "game.asteria.json"
+    session = create_play_session(EditorDocument(p, file_path=project_path))
     captured = {}
 
     def factory(args):
@@ -42,6 +43,8 @@ def test_launcher_uses_external_module_and_cleans_snapshot():
     assert runtime.snapshot_path.exists()
     assert captured["proc"].args[:3] == ["python-test", "-m", "asteria.runtime.preview"]
     assert "--scene" in captured["proc"].args
+    root_index = captured["proc"].args.index("--resource-root") + 1
+    assert captured["proc"].args[root_index] == str(tmp_path.resolve())
     runtime.stop()
     assert captured["proc"].terminated
     assert not runtime.snapshot_path.exists()

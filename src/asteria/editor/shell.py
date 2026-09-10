@@ -305,8 +305,8 @@ class AsteriaEditorWindow(QMainWindow):
         self.stop_action.triggered.connect(self.stop_play)
         toolbar = QToolBar("Run", self)
         toolbar.setObjectName("AsteriaRunToolbar")
-
-        toolbar.addSeparator()
+        toolbar.setMovable(False)
+        toolbar.setFloatable(False)
         self.scene_workspace_action = QAction("Scene", self)
         self.code_workspace_action = QAction("Code", self)
         self.event_workspace_action = QAction("Event", self)

@@ -57,6 +57,11 @@ def launch_play_session(
                 "--scene",
                 session.source_scene_id,
             ]
+            + (
+                ["--resource-root", str(session.resource_root)]
+                if session.resource_root is not None
+                else []
+            )
         )
         return RuntimeProcess(process, snapshot_path)
     except Exception as exc:

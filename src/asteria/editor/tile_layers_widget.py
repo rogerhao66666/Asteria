@@ -5,6 +5,7 @@ try:
         QHBoxLayout,
         QLabel,
         QListWidget,
+        QSizePolicy,
         QToolButton,
         QVBoxLayout,
         QWidget,
@@ -32,12 +33,26 @@ class TileLayersWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setSpacing(6)
+        layer_group = QWidget()
+        layer_group.setObjectName("LayerListGroup")
+        group_layout = QVBoxLayout(layer_group)
+        group_layout.setContentsMargins(0, 0, 0, 0)
+        group_layout.setSpacing(0)
+
         header = QLabel("MAP LAYERS")
-        header.setObjectName("SectionLabel")
-        layout.addWidget(header)
+        header.setObjectName("LayerSectionLabel")
+        group_layout.addWidget(header)
+
         self.list = QListWidget()
-        layout.addWidget(self.list, 1)
+        self.list.setObjectName("LayerList")
+        group_layout.addWidget(self.list, 1)
+
+        controls = QWidget()
+        controls.setObjectName("LayerControlRow")
         row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
+        controls.setLayout(row)
         self.add_button = QToolButton()
         self.add_button.setText("+")
         self.remove_button = QToolButton()
@@ -52,8 +67,13 @@ class TileLayersWidget(QWidget):
             self.up_button,
             self.down_button,
         ):
-            row.addWidget(b)
-        layout.addLayout(row)
+            b.setObjectName("LayerControlButton")
+            b.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            b.setMinimumHeight(36)
+            row.addWidget(b, 1)
+        group_layout.addWidget(controls)
+        layout.addWidget(layer_group, 1)
+
         self.visible = QCheckBox("Visible")
         self.collision = QCheckBox("Collision layer")
         layout.addWidget(self.visible)

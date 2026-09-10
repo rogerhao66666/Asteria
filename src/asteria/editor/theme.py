@@ -74,6 +74,28 @@ QToolButton {
 }
 QToolButton:hover { background: #272d35; }
 QToolButton:checked { background: #34465f; border-color: #4a6484; color: #ffffff; }
+QWidget#LayerListGroup {
+    background: #1b1e23; border: 1px solid #292e36; border-radius: 4px;
+}
+QLabel#LayerSectionLabel {
+    background: #20242a; color: #aab2bf;
+    border: 0; border-bottom: 1px solid #292e36;
+    font-size: 10px; font-weight: 700; padding: 7px 8px;
+}
+QListWidget#LayerList {
+    border: 0; border-radius: 0; background: #1b1e23;
+}
+QWidget#LayerControlRow {
+    background: #20242a; border: 0; border-top: 1px solid #292e36;
+}
+QToolButton#LayerControlButton {
+    background: transparent; border: 0; border-right: 1px solid #292e36;
+    border-radius: 0; padding: 7px 9px;
+}
+QToolButton#LayerControlButton:hover {
+    background: #2c333d;
+}
+QToolButton#LayerControlButton:pressed { background: #181c21; }
 QLabel#SectionLabel { color: #aab2bf; font-size: 10px; font-weight: 700; padding: 3px 1px; }
 QLabel#MutedLabel { color: #858e9d; padding: 2px 1px; }
 QListWidget#TilePaletteList::item { min-height: 26px; padding: 3px 6px; }

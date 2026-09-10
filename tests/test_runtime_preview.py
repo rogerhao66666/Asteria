@@ -50,6 +50,48 @@ def test_preview_runs_snapshot_with_backend_adapter(tmp_path):
     assert (x, y) == (490, 290)
 
 
+def test_preview_resolves_reference_assets_from_explicit_resource_root(
+    tmp_path, monkeypatch
+):
+    from asteria.runtime import reference_runtime
+
+    project = Project("Preview")
+    scene = project.add_scene(Scene("Town"))
+    snapshot = tmp_path / "snapshots" / "preview.json"
+    snapshot.parent.mkdir()
+    project.save_json(snapshot)
+
+    resource_root = tmp_path / "project"
+    sidecar = resource_root / "reference_data" / "tilemap.json"
+    sidecar.parent.mkdir(parents=True)
+    sidecar.write_text("{}", encoding="utf-8")
+
+    captured = {}
+    runtime = object()
+
+    def load_runtime(loaded_project, loaded_scene, root):
+        captured["load"] = (loaded_project.id, loaded_scene.id, root)
+        return runtime
+
+    def run_runtime(loaded_runtime, backend, width, height, target_fps):
+        captured["run"] = (loaded_runtime, width, height, target_fps)
+
+    monkeypatch.setattr(reference_runtime.ReferenceRuntime, "load", load_runtime)
+    monkeypatch.setattr(reference_runtime, "run_reference_runtime", run_runtime)
+
+    backend = FakeBackend()
+    backend.load_texture = lambda *args: None
+    backend.draw_texture = lambda *args: None
+
+    assert (
+        run_preview(snapshot, scene.id, resource_root=resource_root, backend=backend)
+        == 0
+    )
+    assert captured["load"] == (project.id, scene.id, resource_root.resolve())
+    assert captured["run"] == (runtime, 960, 540, 60)
+    assert backend.closed
+
+
 def test_pygame_runtime_backend_module_imports():
     from asteria.platform.backend import RuntimeBackend, TextureBackend
     from asteria.platform.pygame_backend import (

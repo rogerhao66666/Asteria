@@ -9,3 +9,8 @@ def test_theme_has_coherent_tokens_and_nonempty_qss():
     assert "border: 1px solid #343a44" in ASTERIA_DARK_QSS
     assert "border-left: 1px solid #292e36" in ASTERIA_DARK_QSS
     assert "border-right: 1px solid #292e36" in ASTERIA_DARK_QSS
+    assert "QToolButton#LayerControlButton" in ASTERIA_DARK_QSS
+    assert "QWidget#LayerListGroup" in ASTERIA_DARK_QSS
+    assert "QWidget#LayerControlRow" in ASTERIA_DARK_QSS
+    assert "QLabel#LayerSectionLabel" in ASTERIA_DARK_QSS
+    assert "background: #1b1e23; border: 1px solid #292e36" in ASTERIA_DARK_QSS

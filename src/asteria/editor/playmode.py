@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 from asteria.project import Project
 
@@ -12,6 +13,7 @@ class PlaySession:
     source_project_id: str
     source_scene_id: str
     runtime_project: Project
+    resource_root: Path | None = None
     active: bool = True
 
     @property
@@ -61,4 +63,9 @@ def create_play_session(document):
         source_project_id=document.project.id,
         source_scene_id=scene.id,
         runtime_project=snapshot,
+        resource_root=(
+            document.file_path.resolve().parent
+            if document.file_path is not None
+            else None
+        ),
     )

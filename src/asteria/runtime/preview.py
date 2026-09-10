@@ -28,7 +28,14 @@ def build_preview_registry():
 
 
 def run_preview(
-    project_path, scene_id=None, *, backend=None, width=960, height=540, target_fps=60
+    project_path,
+    scene_id=None,
+    *,
+    resource_root=None,
+    backend=None,
+    width=960,
+    height=540,
+    target_fps=60,
 ):
     registry = build_preview_registry()
     project = Project.load_json(project_path, registry)
@@ -43,7 +50,11 @@ def run_preview(
 
     backend.open(f"Asteria Preview — {scene.name}", width, height)
     try:
-        root = Path(project_path).resolve().parent
+        root = (
+            Path(resource_root).expanduser().resolve()
+            if resource_root is not None
+            else Path(project_path).resolve().parent
+        )
         reference_sidecar = root / "reference_data/tilemap.json"
         if (
             reference_sidecar.exists()
@@ -82,10 +93,17 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Run an Asteria scene preview")
     parser.add_argument("project")
     parser.add_argument("--scene")
+    parser.add_argument("--resource-root")
     parser.add_argument("--width", type=int, default=960)
     parser.add_argument("--height", type=int, default=540)
     args = parser.parse_args(argv)
-    return run_preview(args.project, args.scene, width=args.width, height=args.height)
+    return run_preview(
+        args.project,
+        args.scene,
+        resource_root=args.resource_root,
+        width=args.width,
+        height=args.height,
+    )
 
 
 if __name__ == "__main__":
