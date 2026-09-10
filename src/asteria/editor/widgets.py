@@ -2,6 +2,7 @@ try:
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import (
         QAbstractItemView,
+        QComboBox,
         QHeaderView,
         QLabel,
         QTableWidget,
@@ -191,10 +192,39 @@ class InspectorWidget(QWidget):
                     n.setToolTip(f.tooltip)
                     v.setToolTip(f.tooltip)
                 self.table.setItem(row, 0, n)
-                self.table.setItem(row, 1, v)
+                if f.name == "follow_entity_id":
+                    from .inspector import build_follow_entity_choices
+
+                    combo = QComboBox()
+                    for label, value in build_follow_entity_choices(
+                        self.document.selection.value
+                    ):
+                        combo.addItem(label, value)
+                    current = combo.findData(str(f.value))
+                    combo.setCurrentIndex(max(0, current))
+                    combo.currentIndexChanged.connect(
+                        lambda _index, r=row, c=combo: self._choice_changed(r, c)
+                    )
+                    self.table.setCellWidget(row, 1, combo)
+                else:
+                    self.table.setItem(row, 1, v)
                 self.table.setItem(row, 2, t)
         finally:
             self._refreshing = False
+
+    def _choice_changed(self, row, combo):
+        if self._refreshing:
+            return
+        field = self._field_models.get(row)
+        if field is None or not field.editable:
+            return
+        window = self.window()
+        if not hasattr(window, "edit_selected_component_field"):
+            return
+        ok, error = window.edit_selected_component_field(
+            field.name, combo.currentData()
+        )
+        self.error.setText("" if ok else error or "Invalid value")
 
     def _item_changed(self, item):
         if self._refreshing or item.column() != 1:

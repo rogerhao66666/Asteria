@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from math import exp
 
 
 @dataclass(slots=True)
@@ -26,6 +27,7 @@ class CameraFollow2D:
     deadzone_x: float = 0.0
     deadzone_y: float = 0.0
     smoothing: float = 0.0
+    world_bounds: tuple[float, float, float, float] | None = None
 
     def update(self, target_x, target_y, dt):
         desired_x = target_x - (self.camera.width / self.camera.zoom) / 2
@@ -36,10 +38,16 @@ class CameraFollow2D:
             desired_x = self.camera.x
         if abs(target_y - cy) <= self.deadzone_y:
             desired_y = self.camera.y
+        if self.world_bounds is not None:
+            min_x, min_y, max_x, max_y = self.world_bounds
+            visible_width = self.camera.width / self.camera.zoom
+            visible_height = self.camera.height / self.camera.zoom
+            desired_x = min(max(desired_x, min_x), max(min_x, max_x - visible_width))
+            desired_y = min(max(desired_y, min_y), max(min_y, max_y - visible_height))
         if self.smoothing <= 0 or dt <= 0:
             self.camera.x = desired_x
             self.camera.y = desired_y
             return
-        alpha = min(1.0, self.smoothing * dt)
+        alpha = 1.0 - exp(-self.smoothing * dt)
         self.camera.x += (desired_x - self.camera.x) * alpha
         self.camera.y += (desired_y - self.camera.y) * alpha

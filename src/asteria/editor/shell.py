@@ -178,8 +178,10 @@ class AsteriaEditorWindow(QMainWindow):
             dock_tabs.setDrawBase(False)
 
         self._build_actions()
+        left.raise_()
         self._workspace_mode_changed(self.workspace.mode.value)
         self.refresh_all()
+        QTimer.singleShot(0, self.viewport.frame_game_camera)
 
     def _workspace_mode_changed(self, mode):
         current = WorkspaceMode(mode)
@@ -239,6 +241,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.refresh_all()
 
     def _build_actions(self):
+        self.menuBar().setNativeMenuBar(False)
         file_menu = self.menuBar().addMenu("&File")
         self.open_action = QAction("Open Project…", self)
         self.open_action.setShortcut(QKeySequence.Open)
@@ -303,6 +306,21 @@ class AsteriaEditorWindow(QMainWindow):
         self.stop_action = QAction("Stop", self)
         self.stop_action.setShortcut("Shift+F6")
         self.stop_action.triggered.connect(self.stop_play)
+        self.reset_view_action = QAction("Reset View", self)
+        self.reset_view_action.setShortcut("Ctrl+0")
+        self.reset_view_action.triggered.connect(self.viewport.reset_view)
+        view_menu = self.menuBar().addMenu("&View")
+        view_menu.addAction(self.reset_view_action)
+
+        run_menu = self.menuBar().addMenu("&Run")
+        run_menu.addActions([self.play_action, self.stop_action])
+
+        help_menu = self.menuBar().addMenu("&Help")
+        self.controls_action = QAction("Controls and Shortcuts", self)
+        self.controls_action.triggered.connect(self.show_controls)
+        self.about_action = QAction("About Asteria", self)
+        self.about_action.triggered.connect(self.show_about)
+        help_menu.addActions([self.controls_action, self.about_action])
         toolbar = QToolBar("Run", self)
         toolbar.setObjectName("AsteriaRunToolbar")
         toolbar.setMovable(False)
@@ -324,8 +342,38 @@ class AsteriaEditorWindow(QMainWindow):
             toolbar.addAction(action)
         toolbar.addAction(self.play_action)
         toolbar.addAction(self.stop_action)
+        toolbar.addAction(self.reset_view_action)
         self.addToolBar(Qt.TopToolBarArea, toolbar)
         self._refresh_actions()
+
+    def show_controls(self):
+        QMessageBox.information(
+            self,
+            "Asteria Controls and Shortcuts",
+            "Scene Viewport\n"
+            "• Click an object, then use arrow keys to move it by 1 unit.\n"
+            "• Hold Shift with an arrow key to move it by 10 units.\n"
+            "• Click empty space, then use arrow keys to move the view.\n"
+            "• Two-finger drag pans the view.\n"
+            "• Two-finger pinch zooms around the view center.\n"
+            "• Command+0 resets the view.\n\n"
+            "Project\n"
+            "• Command+S saves.\n"
+            "• Command+Z undoes; Command+Shift+Z redoes.\n"
+            "• F2 renames the selected item.\n\n"
+            "Play\n"
+            "• F6 plays the current scene.\n"
+            "• Shift+F6 stops Play.\n"
+            "• WASD or arrow keys move the player.\n"
+            "• Escape closes the Preview window.",
+        )
+
+    def show_about(self):
+        QMessageBox.about(
+            self,
+            "About Asteria",
+            "Asteria Editor\nCanonical Phase 1–7 development build",
+        )
 
     def _refresh_actions(self):
         if not hasattr(self, "undo_action"):
@@ -731,6 +779,7 @@ class AsteriaEditorWindow(QMainWindow):
             self.set_tilemap_render_source(None)
         self.code_workspace.load_default_script()
         self.refresh_all()
+        QTimer.singleShot(0, self.viewport.frame_game_camera)
 
     def refresh_asset_list(self):
         self.asset_list.clear()
@@ -757,12 +806,16 @@ class AsteriaEditorWindow(QMainWindow):
             return
         obj = sel.value
         if sel.kind == "project":
+            startup = obj.scene(obj.startup_scene_id)
             self.inspector.show_properties(
                 "Project",
                 (
                     ("Name", obj.name, "str"),
-                    ("ID", obj.id, "UUID"),
-                    ("Startup Scene", obj.startup_scene_id, "UUID"),
+                    (
+                        "Startup Scene",
+                        startup.name if startup is not None else "None",
+                        "Scene",
+                    ),
                 ),
             )
         elif sel.kind == "scene":
@@ -770,7 +823,6 @@ class AsteriaEditorWindow(QMainWindow):
                 "Scene",
                 (
                     ("Name", obj.name, "str"),
-                    ("ID", obj.id, "UUID"),
                     ("Entities", len(obj.entities()), "int"),
                 ),
             )
@@ -779,7 +831,6 @@ class AsteriaEditorWindow(QMainWindow):
                 "Entity",
                 (
                     ("Name", obj.name, "str"),
-                    ("ID", obj.id, "UUID"),
                     ("Enabled", obj.enabled, "bool"),
                     ("Components", len(obj.components()), "int"),
                 ),
@@ -794,7 +845,6 @@ class AsteriaEditorWindow(QMainWindow):
                 (
                     ("Kind", obj.kind, "str"),
                     ("Path", obj.source_path, "path"),
-                    ("ID", obj.id, "UUID"),
                 ),
             )
         else:
@@ -1067,6 +1117,7 @@ class AsteriaEditorWindow(QMainWindow):
             return False
         self.play_session = None
         self.refresh_all()
+        QTimer.singleShot(0, self.viewport.frame_game_camera)
         return True
 
     def play_current_scene(self):

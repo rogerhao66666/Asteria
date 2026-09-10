@@ -1,5 +1,6 @@
 from asteria.core import Entity, Scene, Transform
 from asteria.project import Project
+from asteria.runtime import Camera2DComponent
 from asteria.runtime.preview import run_preview
 
 
@@ -48,6 +49,23 @@ def test_preview_runs_snapshot_with_backend_adapter(tmp_path):
     assert len(b.markers) == 1
     x, y, *_ = b.markers[0]
     assert (x, y) == (490, 290)
+
+
+def test_preview_uses_active_camera_dimensions(tmp_path):
+    p = Project("Preview")
+    s = p.add_scene(Scene("Town"))
+    camera = s.add_entity(Entity("Camera"))
+    camera.add_component(Transform())
+    spec = camera.add_component(Camera2DComponent())
+    spec.width = 800
+    spec.height = 450
+    path = tmp_path / "preview.json"
+    p.save_json(path)
+
+    backend = FakeBackend()
+    run_preview(path, s.id, backend=backend)
+
+    assert backend.size == (800, 450)
 
 
 def test_preview_resolves_reference_assets_from_explicit_resource_root(

@@ -33,8 +33,8 @@ def run_preview(
     *,
     resource_root=None,
     backend=None,
-    width=960,
-    height=540,
+    width=None,
+    height=None,
     target_fps=60,
 ):
     registry = build_preview_registry()
@@ -42,6 +42,18 @@ def run_preview(
     scene = project.scene(scene_id or project.startup_scene_id)
     if scene is None:
         raise ValueError("Preview scene does not exist")
+
+    active_camera = next(
+        (
+            entity.try_get(Camera2DComponent)
+            for entity in scene.entities()
+            if entity.try_get(Camera2DComponent) is not None
+            and entity.try_get(Camera2DComponent).active
+        ),
+        None,
+    )
+    width = int(width or (active_camera.width if active_camera is not None else 960))
+    height = int(height or (active_camera.height if active_camera is not None else 540))
 
     if backend is None:
         from asteria.platform.pygame_backend import PygameRuntimeBackend

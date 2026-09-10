@@ -1,6 +1,10 @@
 from pathlib import Path
 
+import pytest
+
+from asteria.core import Entity, Transform
 from asteria.reference_world import build_reference_world
+from asteria.runtime import Camera2DComponent
 from asteria.runtime.reference_runtime import ReferenceRuntime, run_reference_runtime
 
 
@@ -63,6 +67,65 @@ def test_reference_runtime_player_moves_and_camera_follows():
     ).x
     assert end > start
     assert runtime.camera.x != 0
+
+
+def test_reference_runtime_fits_camera_to_preview_and_centers_player():
+    runtime = make_runtime()
+    runtime.prepare_viewport(960, 540)
+    transform = runtime.hero.get(
+        __import__("asteria.core", fromlist=["Transform"]).Transform
+    )
+
+    assert runtime.camera.zoom == 2
+    assert runtime.camera_follow.world_bounds == (0.0, 0.0, 640.0, 384.0)
+    assert runtime.camera.world_to_screen(transform.x, transform.y) == (480, 270)
+
+
+def test_reference_runtime_supports_authored_fixed_camera():
+    bundle = build_reference_world()
+    bundle.camera.get(Camera2DComponent).follow_entity_id = ""
+    camera_transform = bundle.camera.get(
+        __import__("asteria.core", fromlist=["Transform"]).Transform
+    )
+    camera_transform.x = 32
+    camera_transform.y = 48
+
+    runtime = ReferenceRuntime.load(
+        bundle.project, bundle.scene, Path(__file__).resolve().parents[1]
+    )
+    runtime.prepare_viewport(960, 540)
+    runtime.step({"move_right": 1.0}, 0.1)
+
+    assert runtime.camera_follow is None
+    assert (runtime.camera.x, runtime.camera.y) == (32, 48)
+
+
+def test_reference_runtime_follows_the_authored_stable_entity_id():
+    bundle = build_reference_world()
+    target = bundle.scene.add_entity(Entity("Camera Target"))
+    target_transform = target.add_component(Transform(400, 192))
+    bundle.camera.get(Camera2DComponent).follow_entity_id = target.id
+
+    runtime = ReferenceRuntime.load(
+        bundle.project, bundle.scene, Path(__file__).resolve().parents[1]
+    )
+    runtime.prepare_viewport(960, 540)
+
+    assert runtime.player.camera_target is target
+    assert runtime.camera.world_to_screen(target_transform.x, target_transform.y) == (
+        480,
+        270,
+    )
+
+
+def test_reference_runtime_rejects_missing_camera_follow_id():
+    bundle = build_reference_world()
+    bundle.camera.get(Camera2DComponent).follow_entity_id = "0"
+
+    with pytest.raises(ValueError, match="Camera follow entity does not exist: 0"):
+        ReferenceRuntime.load(
+            bundle.project, bundle.scene, Path(__file__).resolve().parents[1]
+        )
 
 
 def test_reference_runtime_resolves_player_and_camera_by_stable_id():

@@ -1,3 +1,5 @@
+from pytest import approx
+
 from asteria.core import Entity, Transform
 from asteria.graphics import DirectionalClips, SpriteClip, SpriteKeyframe
 from asteria.runtime import (
@@ -40,3 +42,25 @@ def test_player_slice_moves_animates_and_follows_camera():
     assert sprite.frame_index == 1
     # Camera2D stores the world-space top-left, so centering on x=5 in a 100px view gives -45.
     assert camera.x == -45 and camera.y == -50
+
+
+def test_camera_follow_clamps_to_world_edges_and_smooths_independently_of_frames():
+    bounds = (0.0, 0.0, 640.0, 384.0)
+    camera = Camera2D(0, 0, 320, 180, 2)
+    follow = CameraFollow2D(camera, smoothing=0, world_bounds=bounds)
+
+    follow.update(10, 10, 0)
+    assert (camera.x, camera.y) == (0, 0)
+    follow.update(630, 374, 0)
+    assert (camera.x, camera.y) == (480, 294)
+
+    one_step_camera = Camera2D(0, 0, 100, 100, 1)
+    many_step_camera = Camera2D(0, 0, 100, 100, 1)
+    one_step = CameraFollow2D(one_step_camera, smoothing=8)
+    many_steps = CameraFollow2D(many_step_camera, smoothing=8)
+    one_step.update(100, 50, 0.5)
+    for _ in range(5):
+        many_steps.update(100, 50, 0.1)
+
+    assert one_step_camera.x == approx(many_step_camera.x)
+    assert one_step_camera.y == approx(many_step_camera.y)

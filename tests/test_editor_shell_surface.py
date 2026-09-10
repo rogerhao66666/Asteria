@@ -12,6 +12,8 @@ def test_shell_class_has_core_file_and_play_actions_as_methods():
         "open_project",
         "play_current_scene",
         "stop_play",
+        "show_controls",
+        "show_about",
     ):
         assert callable(getattr(AsteriaEditorWindow, name, None)), name
     assert callable(getattr(AsteriaEditorWindow, "_poll_runtime_process", None))
@@ -51,6 +53,103 @@ def test_project_tree_refresh_preserves_canonical_selection():
     assert payload == ("entity", hero)
     widget.close()
     app.processEvents()
+
+
+def test_scene_viewport_arrow_navigation_and_reset():
+    import pytest
+
+    pytest.importorskip("PySide6")
+    from PySide6.QtCore import QEvent, Qt
+    from PySide6.QtGui import QKeyEvent
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.core import Entity, Scene, Transform
+    from asteria.editor.model import EditorDocument
+    from asteria.editor.viewport_widget import SceneViewportWidget
+    from asteria.project import Project
+
+    app = QApplication.instance() or QApplication([])
+    project = Project("Game")
+    scene = project.add_scene(Scene("Town"))
+    entity = scene.add_entity(Entity("Camera"))
+    transform = entity.add_component(Transform())
+    document = EditorDocument(project)
+    viewport = SceneViewportWidget(document)
+
+    app.sendEvent(
+        viewport,
+        QKeyEvent(QEvent.KeyPress, Qt.Key_Right, Qt.NoModifier),
+    )
+    assert viewport.camera.pan_x == -24
+
+    document.select_entity(entity)
+    app.sendEvent(
+        viewport,
+        QKeyEvent(QEvent.KeyPress, Qt.Key_Right, Qt.NoModifier),
+    )
+    assert transform.x == 1
+    assert viewport.camera.pan_x == -24
+    assert document.dirty
+
+    viewport.camera.zoom = 2
+
+    viewport.reset_view()
+    assert (
+        viewport.camera.pan_x,
+        viewport.camera.pan_y,
+        viewport.camera.zoom,
+    ) == (0, 0, 1)
+    viewport.close()
+
+
+def test_scene_viewport_frames_active_camera_at_the_center():
+    import pytest
+
+    pytest.importorskip("PySide6")
+    from PySide6.QtCore import QEvent, Qt
+    from PySide6.QtGui import QKeyEvent
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.core import Entity, Scene, Transform
+    from asteria.editor.model import EditorDocument
+    from asteria.editor.viewport_widget import SceneViewportWidget
+    from asteria.project import Project
+    from asteria.runtime import Camera2DComponent
+
+    app = QApplication.instance() or QApplication([])
+    project = Project("Game")
+    scene = project.add_scene(Scene("Town"))
+    hero = scene.add_entity(Entity("Hero"))
+    hero.add_component(Transform(300, 200))
+    entity = scene.add_entity(Entity("Camera"))
+    entity.add_component(Transform(100, 50))
+    spec = entity.add_component(Camera2DComponent())
+    spec.width = 480
+    spec.height = 270
+    spec.follow_entity_id = hero.id
+    document = EditorDocument(project)
+    viewport = SceneViewportWidget(document)
+    viewport.resize(1000, 600)
+
+    assert viewport.frame_game_camera()
+    center = viewport.camera.world_to_screen(300, 200)
+    assert center == (500, 300)
+    camera_marker = next(
+        marker for marker in viewport.markers() if marker.entity is entity
+    )
+    assert (camera_marker.world_x, camera_marker.world_y) == (60, 65)
+
+    document.select_entity(entity)
+    app.sendEvent(
+        viewport,
+        QKeyEvent(QEvent.KeyPress, Qt.Key_Right, Qt.NoModifier),
+    )
+    assert spec.follow_entity_id == ""
+    transform = entity.get(Transform)
+    assert (transform.x, transform.y) == (61, 65)
+    document.undo()
+    assert spec.follow_entity_id == hero.id
+    viewport.close()
 
 
 def test_runtime_monitor_cleans_up_an_exited_preview():

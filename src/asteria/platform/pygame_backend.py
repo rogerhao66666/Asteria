@@ -31,8 +31,8 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
     def tick(self, target_fps=60):
         if self.clock is None:
             raise RuntimeError("Backend is not open")
-        ms = self.clock.tick(int(target_fps))
-        return ms / 1000.0
+        ms = self.clock.tick_busy_loop(int(target_fps))
+        return min(ms / 1000.0, 0.05)
 
     def begin_frame(self):
         if self.screen is None:
@@ -99,7 +99,7 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
             image = image.copy()
             image.set_alpha(max(0, min(255, int(draw_command.opacity * 255))))
         self.screen.blit(
-            image, (int(draw_command.screen_x), int(draw_command.screen_y))
+            image, (round(draw_command.screen_x), round(draw_command.screen_y))
         )
 
     def end_frame(self):
@@ -151,5 +151,5 @@ class PygameTextureBackend(TextureBackend):
             image = image.copy()
             image.set_alpha(max(0, min(255, int(draw_command.opacity * 255))))
         self.screen.blit(
-            image, (int(draw_command.screen_x), int(draw_command.screen_y))
+            image, (round(draw_command.screen_x), round(draw_command.screen_y))
         )

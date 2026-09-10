@@ -63,3 +63,21 @@ def test_camera_authoring_frame_is_distinct_from_editor_camera():
     f = frames[0]
     assert (f.screen_x, f.screen_y) == (160, 95)
     assert (f.width, f.height) == (240, 135)
+
+
+def test_follow_camera_authoring_frame_is_centered_on_target():
+    scene = Scene("S")
+    hero = scene.add_entity(Entity("Hero"))
+    hero.add_component(Transform(300, 200))
+    camera = scene.add_entity(Entity("Game Camera"))
+    camera.add_component(Transform(0, 0))
+    spec = camera.add_component(Camera2DComponent())
+    spec.width = 480
+    spec.height = 270
+    spec.zoom = 1
+    spec.follow_entity_id = hero.id
+
+    frame = build_camera_frames(scene, ViewportCamera())[0]
+
+    assert (frame.screen_x, frame.screen_y) == (60, 65)
+    assert (frame.width, frame.height) == (480, 270)

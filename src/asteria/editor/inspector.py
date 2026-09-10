@@ -35,3 +35,25 @@ def build_inspector_fields(component):
         )
         for f in fields
     )
+
+
+def build_follow_entity_choices(component):
+    """Return display labels mapped to canonical entity IDs for Camera2D."""
+    from asteria.core import Transform
+
+    try:
+        owner = component.entity
+    except RuntimeError:
+        return (("Fixed", ""),)
+    scene = owner.scene
+    if scene is None:
+        return (("Fixed", ""),)
+    choices = [("Fixed", "")]
+    for entity in scene.entities():
+        if entity is owner or entity.try_get(Transform) is None:
+            continue
+        choices.append((f"Follow {entity.name}", entity.id))
+    current = str(getattr(component, "follow_entity_id", ""))
+    if current and all(value != current for _, value in choices):
+        choices.append((f"Missing entity ({current})", current))
+    return tuple(choices)

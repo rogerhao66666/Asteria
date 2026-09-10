@@ -174,13 +174,13 @@
             {
               "fields": {
                 "active": true,
-                "deadzone_x": 16.0,
-                "deadzone_y": 10.0,
+                "deadzone_x": 0.0,
+                "deadzone_y": 0.0,
                 "follow_entity_id": "64e68f95-18b1-41d5-a733-543e0649c892",
-                "height": 180,
-                "smoothing": 8.0,
-                "width": 320,
-                "zoom": 2.0
+                "height": 270,
+                "smoothing": 12.0,
+                "width": 480,
+                "zoom": 1.0
               },
               "type": "asteria.Camera2D",
               "version": 1

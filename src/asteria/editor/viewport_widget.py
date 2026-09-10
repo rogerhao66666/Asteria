@@ -1,7 +1,14 @@
-from asteria.runtime import SpriteRenderer2D
+from asteria.core import Transform
+from asteria.runtime import Camera2DComponent, SpriteRenderer2D
 
 from .collision_overlay import build_collision_cells
-from .entity_render import build_camera_frames, build_entity_sprite_draws
+from .commands import CommandTransaction
+from .editing import build_set_component_field_command
+from .entity_render import (
+    build_camera_frames,
+    build_entity_sprite_draws,
+    camera_world_rect,
+)
 from .gizmo import (
     GridSnap,
     SelectionRect,
@@ -22,7 +29,7 @@ from .tile_palette import TileToolState
 from .viewport import ViewportCamera, pick_entity, scene_markers, selected_scene
 
 try:
-    from PySide6.QtCore import QPointF, Qt
+    from PySide6.QtCore import QEvent, QPointF, Qt
     from PySide6.QtGui import QBrush, QColor, QPainter, QPen
     from PySide6.QtWidgets import QWidget
 except ImportError:
@@ -58,14 +65,38 @@ class SceneViewportWidget(QWidget):
 
     def _selected_entities(self):
         sel = self.document.selection
-        if sel.kind != "entity":
-            return ()
-        return sel.values or (() if sel.value is None else (sel.value,))
+        if sel.kind == "entity":
+            return sel.values or (() if sel.value is None else (sel.value,))
+        if sel.kind == "component" and sel.value is not None:
+            entity = getattr(sel.value, "entity", None)
+            return () if entity is None else (entity,)
+        return ()
 
     def markers(self):
-        return scene_markers(
-            self.current_scene(), self.camera, self._selected_entities()
-        )
+        scene = self.current_scene()
+        markers = scene_markers(scene, self.camera, self._selected_entities())
+        if scene is None:
+            return markers
+        result = []
+        for marker in markers:
+            rect = camera_world_rect(marker.entity, scene)
+            if rect is None:
+                result.append(marker)
+                continue
+            world_x, world_y, _width, _height = rect
+            screen_x, screen_y = self.camera.world_to_screen(world_x, world_y)
+            result.append(
+                type(marker)(
+                    marker.entity,
+                    world_x,
+                    world_y,
+                    screen_x,
+                    screen_y,
+                    marker.radius,
+                    marker.selected,
+                )
+            )
+        return tuple(result)
 
     def set_render_source(self, source):
         self.render_source = source
@@ -120,6 +151,131 @@ class SceneViewportWidget(QWidget):
 
     def refresh(self):
         self.update()
+
+    def reset_view(self):
+        if self.frame_game_camera():
+            return
+        self.camera.pan_x = 0.0
+        self.camera.pan_y = 0.0
+        self.camera.zoom = 1.0
+        self.update()
+
+    def frame_game_camera(self):
+        scene = self.current_scene()
+        if scene is None:
+            return False
+        selected = self._selected_entities()
+        candidates = [
+            entity
+            for entity in selected
+            if entity.try_get(Camera2DComponent) is not None
+        ]
+        if not candidates:
+            candidates = [
+                entity
+                for entity in scene.entities()
+                if (spec := entity.try_get(Camera2DComponent)) is not None
+                and spec.active
+            ]
+        if not candidates:
+            return False
+        entity = candidates[0]
+        rect = camera_world_rect(entity, scene)
+        if rect is None:
+            return False
+        world_x, world_y, world_width, world_height = rect
+        margin = 32.0
+        fit_zoom = min(
+            max(1.0, self.width() - margin * 2) / world_width,
+            max(1.0, self.height() - margin * 2) / world_height,
+        )
+        self.camera.zoom = max(
+            self.camera.min_zoom, min(self.camera.max_zoom, fit_zoom)
+        )
+        center_x = world_x + world_width / 2
+        center_y = world_y + world_height / 2
+        self.camera.pan_x = self.width() / 2 - center_x * self.camera.zoom
+        self.camera.pan_y = self.height() / 2 - center_y * self.camera.zoom
+        self.update()
+        return True
+
+    def pan_view(self, dx, dy):
+        self.camera.pan_by(float(dx), float(dy))
+        self.update()
+
+    def _build_keyboard_move_command(self, entities, dx, dy):
+        transaction = CommandTransaction("Move Entities")
+        scene = self.current_scene()
+        for entity in entities:
+            transform = entity.try_get(Transform)
+            if transform is None:
+                continue
+            base_x = transform.x
+            base_y = transform.y
+            camera = entity.try_get(Camera2DComponent)
+            if camera is not None and camera.follow_entity_id and scene is not None:
+                rect = camera_world_rect(entity, scene)
+                if rect is not None:
+                    base_x, base_y = rect[0], rect[1]
+                transaction.add(
+                    build_set_component_field_command(camera, "follow_entity_id", "")
+                )
+            transaction.add(
+                build_set_component_field_command(transform, "x", base_x + dx)
+            )
+            transaction.add(
+                build_set_component_field_command(transform, "y", base_y + dy)
+            )
+        if not transaction.commands:
+            raise ValueError("No movable Transform components")
+        return transaction
+
+    def keyPressEvent(self, event):
+        selected = self._selected_entities()
+        if selected:
+            step = 10.0 if event.modifiers() & Qt.ShiftModifier else 1.0
+            movement = {
+                Qt.Key_Left: (-step, 0.0),
+                Qt.Key_Right: (step, 0.0),
+                Qt.Key_Up: (0.0, -step),
+                Qt.Key_Down: (0.0, step),
+            }.get(event.key())
+            if movement is not None:
+                try:
+                    self.document.execute(
+                        self._build_keyboard_move_command(selected, *movement)
+                    )
+                except ValueError:
+                    pass
+                window = self.window()
+                if hasattr(window, "refresh_all"):
+                    window.refresh_all()
+                event.accept()
+                return
+        step = 64.0 if event.modifiers() & Qt.ShiftModifier else 24.0
+        movement = {
+            Qt.Key_Left: (step, 0.0),
+            Qt.Key_Right: (-step, 0.0),
+            Qt.Key_Up: (0.0, step),
+            Qt.Key_Down: (0.0, -step),
+        }.get(event.key())
+        if movement is not None:
+            self.pan_view(*movement)
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+    def event(self, event):
+        if (
+            event.type() == QEvent.NativeGesture
+            and event.gestureType() == Qt.ZoomNativeGesture
+        ):
+            factor = max(0.01, 1.0 + float(event.value()))
+            self.camera.zoom_by(factor, (self.width() / 2, self.height() / 2))
+            self.update()
+            event.accept()
+            return True
+        return super().event(event)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -470,8 +626,16 @@ class SceneViewportWidget(QWidget):
         super().mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
-        factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
-        pos = event.position()
-        self.camera.zoom_by(factor, (pos.x(), pos.y()))
+        delta = event.pixelDelta()
+        dx = float(delta.x())
+        dy = float(delta.y())
+        if dx == 0 and dy == 0:
+            angle = event.angleDelta()
+            dx = float(angle.x()) / 120.0 * 48.0
+            dy = float(angle.y()) / 120.0 * 48.0
+        if dx == 0 and dy == 0:
+            event.accept()
+            return
+        self.camera.pan_by(dx, dy)
         self.update()
         event.accept()

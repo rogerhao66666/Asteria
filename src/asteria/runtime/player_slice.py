@@ -13,8 +13,9 @@ class PlayerCameraSlice:
     entity: object
     controller: CharacterController2D
     animation: CharacterAnimationController
-    camera_follow: CameraFollow2D
+    camera_follow: CameraFollow2D | None
     sprite: SpriteRenderer2D
+    camera_target: object | None = None
 
     def step(self, input_snapshot, dt, tile_query):
         dx, dy = input_snapshot.movement_vector()
@@ -25,5 +26,8 @@ class PlayerCameraSlice:
         moving = self.animation.update_motion(actual_dx, actual_dy)
         self.animation.animator.update(dt)
         self.sprite.frame_index = self.animation.animator.frame_index
-        self.camera_follow.update(transform.x, transform.y, dt)
+        if self.camera_follow is not None:
+            target = self.camera_target or self.entity
+            target_transform = target.get(Transform)
+            self.camera_follow.update(target_transform.x, target_transform.y, dt)
         return actual_dx, actual_dy, moving

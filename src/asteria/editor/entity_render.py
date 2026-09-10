@@ -16,6 +16,24 @@ class CameraFrame:
     deadzone: tuple[float, float, float, float] | None
 
 
+def camera_world_rect(entity, scene):
+    transform = entity.try_get(Transform)
+    spec = entity.try_get(Camera2DComponent)
+    if transform is None or spec is None:
+        return None
+    width = spec.width / spec.zoom
+    height = spec.height / spec.zoom
+    x = transform.x
+    y = transform.y
+    if spec.follow_entity_id:
+        target = scene.get_entity(spec.follow_entity_id)
+        target_transform = target.try_get(Transform) if target is not None else None
+        if target_transform is not None:
+            x = target_transform.x - width / 2
+            y = target_transform.y - height / 2
+    return (x, y, width, height)
+
+
 def build_entity_sprite_draws(scene, camera, resolve_sprite_sheet):
     if scene is None:
         return ()
@@ -64,13 +82,14 @@ def build_camera_frames(scene, editor_camera):
         return ()
     result = []
     for entity in scene.entities():
-        transform = entity.try_get(Transform)
         spec = entity.try_get(Camera2DComponent)
-        if transform is None or spec is None:
+        rect = camera_world_rect(entity, scene)
+        if spec is None or rect is None:
             continue
-        sx, sy = editor_camera.world_to_screen(transform.x, transform.y)
-        width = (spec.width / spec.zoom) * editor_camera.zoom
-        height = (spec.height / spec.zoom) * editor_camera.zoom
+        world_x, world_y, world_width, world_height = rect
+        sx, sy = editor_camera.world_to_screen(world_x, world_y)
+        width = world_width * editor_camera.zoom
+        height = world_height * editor_camera.zoom
         deadzone = None
         if spec.deadzone_x > 0 or spec.deadzone_y > 0:
             dw = spec.deadzone_x * 2 * editor_camera.zoom

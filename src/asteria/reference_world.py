@@ -268,13 +268,13 @@ def build_reference_world():
     camera = scene.add_entity(Entity("Game Camera", entity_id=CAMERA_ENTITY_ID))
     camera.add_component(Transform(15 * 16, 8 * 16))
     cam = camera.add_component(Camera2DComponent())
-    cam.width = 320
-    cam.height = 180
-    cam.zoom = 2.0
+    cam.width = 480
+    cam.height = 270
+    cam.zoom = 1.0
     cam.follow_entity_id = hero.id
-    cam.deadzone_x = 16.0
-    cam.deadzone_y = 10.0
-    cam.smoothing = 8.0
+    cam.deadzone_x = 0.0
+    cam.deadzone_y = 0.0
+    cam.smoothing = 12.0
 
     tilemap = _make_map()
     return ReferenceWorldBundle(

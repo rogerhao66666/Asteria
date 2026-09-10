@@ -20,6 +20,11 @@ def test_reference_world_has_real_assets_map_player_camera():
     assert b.hero.get(SpriteRenderer2D).sprite_sheet_asset_id
     assert b.hero.get(Animator2DComponent).clip_set_id
     assert b.camera.get(Camera2DComponent).follow_entity_id == b.hero.id
+    assert (
+        b.camera.get(Camera2DComponent).width,
+        b.camera.get(Camera2DComponent).height,
+        b.camera.get(Camera2DComponent).zoom,
+    ) == (480, 270, 1)
 
 
 def test_reference_world_collision_boundary_and_bridge():
