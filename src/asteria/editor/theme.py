@@ -33,7 +33,8 @@ QDockWidget::close-button:hover, QDockWidget::float-button:hover {
 QTabBar { background: #17191d; }
 QTabBar::tab {
     background: #1d2025; color: #aeb5c1;
-    border: 1px solid #292e36;
+    border: 0; border-left: 1px solid #292e36;
+    border-right: 1px solid #292e36;
     min-width: 92px; padding: 6px 10px; margin: 0;
 }
 QTabBar::tab:selected { background: #34465f; color: #ffffff; }

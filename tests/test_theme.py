@@ -7,3 +7,5 @@ def test_theme_has_coherent_tokens_and_nonempty_qss():
     assert "QTreeWidget::item:selected" in ASTERIA_DARK_QSS
     assert "QTextEdit#ConsoleOutput" in ASTERIA_DARK_QSS
     assert "border: 1px solid #343a44" in ASTERIA_DARK_QSS
+    assert "border-left: 1px solid #292e36" in ASTERIA_DARK_QSS
+    assert "border-right: 1px solid #292e36" in ASTERIA_DARK_QSS
