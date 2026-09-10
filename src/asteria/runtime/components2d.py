@@ -93,3 +93,26 @@ class TileMap2DComponent(Component):
         self.origin_x = 0.0
         self.origin_y = 0.0
         self.visible = True
+
+
+@component_schema(
+    type_name="asteria.Interaction2D",
+    version=1,
+    fields=(
+        Field("event_binding_id", str, "", label="Event Binding"),
+        Field("event_program_id", str, "", label="Event Program"),
+        Field("range", float, 24.0, minimum=0.0, label="Interaction Range"),
+        Field("require_facing", bool, True, label="Require Facing"),
+        Field("local_scope_id", str, "", label="Local State Scope"),
+    ),
+)
+class Interaction2DComponent(Component):
+    """Persistent authoring data for an interactable world entity."""
+
+    def __init__(self):
+        super().__init__()
+        self.event_binding_id = ""
+        self.event_program_id = ""
+        self.range = 24.0
+        self.require_facing = True
+        self.local_scope_id = ""

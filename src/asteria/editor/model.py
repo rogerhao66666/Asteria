@@ -32,9 +32,11 @@ class EditorDocument:
         self, project=None, *, component_registry=None, clipboard=None, file_path=None
     ):
         from asteria.core import ComponentRegistry, Transform
+        from asteria.gameplay import GameplayAttributesComponent
         from asteria.runtime import (
             Animator2DComponent,
             Camera2DComponent,
+            Interaction2DComponent,
             SpriteRenderer2D,
             TileMap2DComponent,
         )
@@ -47,8 +49,10 @@ class EditorDocument:
             component_registry.register(Transform)
             component_registry.register(SpriteRenderer2D)
             component_registry.register(Camera2DComponent)
+            component_registry.register(Interaction2DComponent)
             component_registry.register(Animator2DComponent)
             component_registry.register(TileMap2DComponent)
+            component_registry.register(GameplayAttributesComponent)
         self.project = project
         self.selection = EditorSelection()
         self.component_registry = component_registry

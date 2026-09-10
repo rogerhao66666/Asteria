@@ -1,0 +1,640 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+from asteria.core.lifecycle import emit_hook
+from asteria.gameplay import (
+    Effect,
+    GameplayTrigger,
+    ModifierSet,
+    StatModifier,
+    apply_effect,
+)
+
+
+def _id(value, label):
+    value = str(value).strip()
+    if not value:
+        raise ValueError(f"{label} is required")
+    return value
+
+
+def _tags(values):
+    return tuple(sorted({_id(x, "tag").lower() for x in values}))
+
+
+@dataclass(frozen=True, slots=True)
+class SocketDefinition:
+    socket_id: str
+    accepted_tags: tuple[str, ...] = ()
+    locked: bool = False
+
+    def __init__(self, socket_id, *, accepted_tags=(), locked=False):
+        object.__setattr__(self, "socket_id", _id(socket_id, "socket_id"))
+        object.__setattr__(self, "accepted_tags", _tags(accepted_tags))
+        object.__setattr__(self, "locked", bool(locked))
+
+    def accepts(self, attachment):
+        if self.locked:
+            return False
+        if not self.accepted_tags:
+            return True
+        return any(tag in attachment.tags for tag in self.accepted_tags)
+
+    def to_data(self):
+        return {
+            "socket_id": self.socket_id,
+            "accepted_tags": list(self.accepted_tags),
+            "locked": self.locked,
+        }
+
+    @classmethod
+    def from_data(cls, data):
+        if set(data) != {"socket_id", "accepted_tags", "locked"}:
+            raise ValueError("invalid socket definition")
+        return cls(
+            data["socket_id"],
+            accepted_tags=data["accepted_tags"],
+            locked=data["locked"],
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class AttachmentDefinition:
+    attachment_id: str
+    display_name: str
+    tags: tuple[str, ...] = ()
+    modifiers: tuple[StatModifier, ...] = ()
+    granted_abilities: tuple[str, ...] = ()
+    triggers: tuple[GameplayTrigger, ...] = ()
+
+    def __init__(
+        self,
+        attachment_id,
+        display_name=None,
+        *,
+        tags=(),
+        modifiers=(),
+        granted_abilities=(),
+        triggers=(),
+    ):
+        attachment_id = _id(attachment_id, "attachment_id")
+        modifiers = tuple(modifiers)
+        triggers = tuple(triggers)
+        if any(not isinstance(x, StatModifier) for x in modifiers):
+            raise TypeError("modifiers must be StatModifier values")
+        if any(not isinstance(x, GameplayTrigger) for x in triggers):
+            raise TypeError("triggers must be GameplayTrigger values")
+        object.__setattr__(self, "attachment_id", attachment_id)
+        object.__setattr__(self, "display_name", str(display_name or attachment_id))
+        object.__setattr__(self, "tags", _tags(tags))
+        object.__setattr__(self, "modifiers", modifiers)
+        object.__setattr__(
+            self,
+            "granted_abilities",
+            tuple(dict.fromkeys(_id(x, "ability_id") for x in granted_abilities)),
+        )
+        object.__setattr__(self, "triggers", triggers)
+
+    def to_data(self):
+        return {
+            "schema": "asteria.rpg.attachment",
+            "version": 1,
+            "attachment_id": self.attachment_id,
+            "display_name": self.display_name,
+            "tags": list(self.tags),
+            "modifiers": [x.to_data() for x in self.modifiers],
+            "granted_abilities": list(self.granted_abilities),
+            "triggers": [x.to_data() for x in self.triggers],
+        }
+
+    @classmethod
+    def from_data(cls, data):
+        if data.get("schema") != "asteria.rpg.attachment" or data.get("version") != 1:
+            raise ValueError("unsupported attachment definition")
+        return cls(
+            data["attachment_id"],
+            data["display_name"],
+            tags=data["tags"],
+            modifiers=[StatModifier.from_data(x) for x in data["modifiers"]],
+            granted_abilities=data["granted_abilities"],
+            triggers=[GameplayTrigger.from_data(x) for x in data["triggers"]],
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class EquipmentDefinition:
+    equipment_id: str
+    display_name: str
+    slot: str
+    tags: tuple[str, ...] = ()
+    modifiers: tuple[StatModifier, ...] = ()
+    granted_abilities: tuple[str, ...] = ()
+    triggers: tuple[GameplayTrigger, ...] = ()
+    sockets: tuple[SocketDefinition, ...] = ()
+
+    def __init__(
+        self,
+        equipment_id,
+        display_name=None,
+        *,
+        slot="equipment",
+        tags=(),
+        modifiers=(),
+        granted_abilities=(),
+        triggers=(),
+        sockets=(),
+    ):
+        equipment_id = _id(equipment_id, "equipment_id")
+        modifiers = tuple(modifiers)
+        triggers = tuple(triggers)
+        sockets = tuple(sockets)
+        if any(not isinstance(x, StatModifier) for x in modifiers):
+            raise TypeError("modifiers must be StatModifier values")
+        if any(not isinstance(x, GameplayTrigger) for x in triggers):
+            raise TypeError("triggers must be GameplayTrigger values")
+        if any(not isinstance(x, SocketDefinition) for x in sockets):
+            raise TypeError("sockets must be SocketDefinition values")
+        if len({x.socket_id for x in sockets}) != len(sockets):
+            raise ValueError("duplicate socket_id")
+        object.__setattr__(self, "equipment_id", equipment_id)
+        object.__setattr__(self, "display_name", str(display_name or equipment_id))
+        object.__setattr__(self, "slot", _id(slot, "slot"))
+        object.__setattr__(self, "tags", _tags(tags))
+        object.__setattr__(self, "modifiers", modifiers)
+        object.__setattr__(
+            self,
+            "granted_abilities",
+            tuple(dict.fromkeys(_id(x, "ability_id") for x in granted_abilities)),
+        )
+        object.__setattr__(self, "triggers", triggers)
+        object.__setattr__(self, "sockets", sockets)
+
+    def to_data(self):
+        return {
+            "schema": "asteria.rpg.equipment",
+            "version": 1,
+            "equipment_id": self.equipment_id,
+            "display_name": self.display_name,
+            "slot": self.slot,
+            "tags": list(self.tags),
+            "modifiers": [x.to_data() for x in self.modifiers],
+            "granted_abilities": list(self.granted_abilities),
+            "triggers": [x.to_data() for x in self.triggers],
+            "sockets": [x.to_data() for x in self.sockets],
+        }
+
+    @classmethod
+    def from_data(cls, data):
+        if data.get("schema") != "asteria.rpg.equipment" or data.get("version") != 1:
+            raise ValueError("unsupported equipment definition")
+        return cls(
+            data["equipment_id"],
+            data["display_name"],
+            slot=data["slot"],
+            tags=data["tags"],
+            modifiers=[StatModifier.from_data(x) for x in data["modifiers"]],
+            granted_abilities=data["granted_abilities"],
+            triggers=[GameplayTrigger.from_data(x) for x in data["triggers"]],
+            sockets=[SocketDefinition.from_data(x) for x in data["sockets"]],
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ItemDefinition:
+    item_id: str
+    display_name: str
+    tags: tuple[str, ...] = ()
+    stack_limit: int = 99
+    use_effects: tuple[Effect, ...] = ()
+
+    def __init__(
+        self, item_id, display_name=None, *, tags=(), stack_limit=99, use_effects=()
+    ):
+        item_id = _id(item_id, "item_id")
+        stack_limit = int(stack_limit)
+        use_effects = tuple(use_effects)
+        if stack_limit < 1:
+            raise ValueError("stack_limit must be >= 1")
+        if any(not isinstance(x, Effect) for x in use_effects):
+            raise TypeError("use_effects must be Effect values")
+        object.__setattr__(self, "item_id", item_id)
+        object.__setattr__(self, "display_name", str(display_name or item_id))
+        object.__setattr__(self, "tags", _tags(tags))
+        object.__setattr__(self, "stack_limit", stack_limit)
+        object.__setattr__(self, "use_effects", use_effects)
+
+    def to_data(self):
+        return {
+            "schema": "asteria.rpg.item",
+            "version": 2,
+            "item_id": self.item_id,
+            "display_name": self.display_name,
+            "tags": list(self.tags),
+            "stack_limit": self.stack_limit,
+            "use_effects": [x.to_data() for x in self.use_effects],
+        }
+
+    @classmethod
+    def from_data(cls, data):
+        if data.get("schema") != "asteria.rpg.item" or data.get("version") not in {
+            1,
+            2,
+        }:
+            raise ValueError("unsupported item definition")
+        return cls(
+            data["item_id"],
+            data["display_name"],
+            tags=data["tags"],
+            stack_limit=data["stack_limit"],
+            use_effects=[]
+            if data["version"] == 1
+            else [Effect.from_data(x) for x in data["use_effects"]],
+        )
+
+
+class Inventory:
+    def __init__(self):
+        self._counts = {}
+
+    def count(self, item_id):
+        return self._counts.get(str(item_id), 0)
+
+    def add(self, item_id, amount=1):
+        item_id = _id(item_id, "item_id")
+        amount = int(amount)
+        if amount < 1:
+            raise ValueError("amount must be >= 1")
+        self._counts[item_id] = self.count(item_id) + amount
+        return self._counts[item_id]
+
+    def remove(self, item_id, amount=1):
+        item_id = _id(item_id, "item_id")
+        amount = int(amount)
+        if amount < 1:
+            raise ValueError("amount must be >= 1")
+        if self.count(item_id) < amount:
+            return False
+        remain = self.count(item_id) - amount
+        if remain:
+            self._counts[item_id] = remain
+        else:
+            self._counts.pop(item_id, None)
+        return True
+
+    def to_data(self):
+        return {
+            "schema": "asteria.rpg.inventory",
+            "version": 1,
+            "counts": {k: self._counts[k] for k in sorted(self._counts)},
+        }
+
+    @classmethod
+    def from_data(cls, data):
+        if data.get("schema") != "asteria.rpg.inventory" or data.get("version") != 1:
+            raise ValueError("unsupported inventory")
+        result = cls()
+        for key, value in data["counts"].items():
+            result.add(key, value)
+        return result
+
+    def replace_from(self, other):
+        if not isinstance(other, Inventory):
+            raise TypeError("other must be Inventory")
+        self._counts = dict(other._counts)
+        return self
+
+    def replace_from_data(self, data):
+        return self.replace_from(type(self).from_data(data))
+
+
+@dataclass(slots=True)
+class EquippedItem:
+    equipment: EquipmentDefinition
+    attachments: dict[str, AttachmentDefinition] = field(default_factory=dict)
+    instance_id: str = ""
+
+    def __post_init__(self):
+        self.instance_id = _id(
+            self.instance_id or self.equipment.equipment_id, "instance_id"
+        )
+        existing = dict(self.attachments)
+        self.attachments = {}
+        for socket_id, attachment in existing.items():
+            self.attach(socket_id, attachment)
+
+    def to_data(self):
+        return {
+            "schema": "asteria.rpg.equipment_instance",
+            "version": 1,
+            "instance_id": self.instance_id,
+            "equipment_id": self.equipment.equipment_id,
+            "attachments": {
+                key: value.attachment_id
+                for key, value in sorted(self.attachments.items())
+            },
+        }
+
+    @classmethod
+    def from_data(cls, data, *, equipment, attachments):
+        if (
+            data.get("schema") != "asteria.rpg.equipment_instance"
+            or data.get("version") != 1
+        ):
+            raise ValueError("unsupported equipment instance")
+        equipment_id = data["equipment_id"]
+        if equipment_id not in equipment:
+            raise KeyError(f"unknown equipment: {equipment_id}")
+        item = cls(equipment[equipment_id], instance_id=data["instance_id"])
+        for socket_id, attachment_id in data["attachments"].items():
+            if attachment_id not in attachments:
+                raise KeyError(f"unknown attachment: {attachment_id}")
+            item.attach(socket_id, attachments[attachment_id])
+        return item
+
+    def attach(self, socket_id, attachment):
+        socket_id = str(socket_id)
+        socket = next(
+            (x for x in self.equipment.sockets if x.socket_id == socket_id), None
+        )
+        if socket is None:
+            raise KeyError(f"unknown socket: {socket_id}")
+        if not isinstance(attachment, AttachmentDefinition):
+            raise TypeError("attachment must be AttachmentDefinition")
+        if not socket.accepts(attachment):
+            raise ValueError("attachment is not compatible with socket")
+        self.attachments[socket_id] = attachment
+
+    def detach(self, socket_id):
+        return self.attachments.pop(str(socket_id), None)
+
+    def modifiers(self):
+        result = list(self.equipment.modifiers)
+        for socket_id in sorted(self.attachments):
+            result.extend(self.attachments[socket_id].modifiers)
+        return tuple(result)
+
+    def abilities(self):
+        result = list(self.equipment.granted_abilities)
+        for socket_id in sorted(self.attachments):
+            result.extend(self.attachments[socket_id].granted_abilities)
+        return tuple(dict.fromkeys(result))
+
+    def triggers(self):
+        result = list(self.equipment.triggers)
+        for socket_id in sorted(self.attachments):
+            result.extend(self.attachments[socket_id].triggers)
+        return tuple(result)
+
+    def tags(self):
+        result = set(self.equipment.tags)
+        for socket_id in sorted(self.attachments):
+            result.update(self.attachments[socket_id].tags)
+        return tuple(sorted(result))
+
+
+@dataclass(frozen=True, slots=True)
+class EquipmentSlotDefinition:
+    slot_id: str
+    accepted_tags: tuple[str, ...] = ()
+    capacity: int | None = 1
+
+    def __init__(self, slot_id, *, accepted_tags=(), capacity=1):
+        object.__setattr__(self, "slot_id", _id(slot_id, "slot_id"))
+        object.__setattr__(self, "accepted_tags", _tags(accepted_tags))
+        if capacity is not None:
+            capacity = int(capacity)
+            if capacity < 1:
+                raise ValueError("capacity must be >= 1 or None")
+        object.__setattr__(self, "capacity", capacity)
+
+    def to_data(self):
+        return {
+            "slot_id": self.slot_id,
+            "accepted_tags": list(self.accepted_tags),
+            "capacity": self.capacity,
+        }
+
+    @classmethod
+    def from_data(cls, data):
+        return cls(
+            data["slot_id"],
+            accepted_tags=data["accepted_tags"],
+            capacity=data["capacity"],
+        )
+
+    def accepts(self, equipment):
+        return not self.accepted_tags or any(
+            x in equipment.tags for x in self.accepted_tags
+        )
+
+
+class EquipmentLoadout:
+    """Owns equipped instances; derives contributions without mutating base actor data."""
+
+    def __init__(self, slots=(), *, hooks=None):
+        self.hooks = hooks
+        self._slots = {x.slot_id: x for x in slots}
+        if len(self._slots) != len(tuple(slots)):
+            raise ValueError("duplicate equipment slot")
+        self._equipped = {key: [] for key in self._slots}
+
+    def to_data(self):
+        return {
+            "schema": "asteria.rpg.equipment_loadout",
+            "version": 1,
+            "slots": [self._slots[key].to_data() for key in sorted(self._slots)],
+            "equipped": {
+                key: [item.to_data() for item in self._equipped[key]]
+                for key in sorted(self._equipped)
+            },
+        }
+
+    @classmethod
+    def from_data(cls, data, *, equipment, attachments, hooks=None):
+        if (
+            data.get("schema") != "asteria.rpg.equipment_loadout"
+            or data.get("version") != 1
+        ):
+            raise ValueError("unsupported equipment loadout")
+        result = cls(
+            [EquipmentSlotDefinition.from_data(x) for x in data["slots"]], hooks=hooks
+        )
+        for slot_id, items in data["equipped"].items():
+            for raw in items:
+                result.equip(
+                    slot_id,
+                    EquippedItem.from_data(
+                        raw, equipment=equipment, attachments=attachments
+                    ),
+                )
+        return result
+
+    def equip(self, slot_id, item):
+        slot_id = str(slot_id)
+        emit_hook(
+            self.hooks,
+            "rpg.equipment.before_equip",
+            source=slot_id,
+            data={
+                "item": item,
+                "instance_id": getattr(item, "instance_id", None),
+                "equipment_id": getattr(
+                    getattr(item, "equipment", None), "equipment_id", None
+                ),
+            },
+        )
+        if slot_id not in self._slots:
+            raise KeyError(f"unknown equipment slot: {slot_id}")
+        if not isinstance(item, EquippedItem):
+            raise TypeError("item must be EquippedItem")
+        if any(
+            existing.instance_id == item.instance_id for existing in self.equipped()
+        ):
+            raise ValueError("equipment instance is already equipped")
+        slot = self._slots[slot_id]
+        if item.equipment.slot != slot_id and not slot.accepts(item.equipment):
+            raise ValueError("equipment is not compatible with slot")
+        if slot.capacity is not None and len(self._equipped[slot_id]) >= slot.capacity:
+            raise ValueError("equipment slot is full")
+        self._equipped[slot_id].append(item)
+        emit_hook(
+            self.hooks,
+            "rpg.equipment.after_equip",
+            source=slot_id,
+            data={
+                "item": item,
+                "instance_id": getattr(item, "instance_id", None),
+                "equipment_id": getattr(
+                    getattr(item, "equipment", None), "equipment_id", None
+                ),
+            },
+        )
+        return item
+
+    def unequip(self, slot_id, index=0):
+        slot_id = str(slot_id)
+        if slot_id not in self._slots:
+            raise KeyError(f"unknown equipment slot: {slot_id}")
+        item = self._equipped[slot_id][int(index)]
+        emit_hook(
+            self.hooks,
+            "rpg.equipment.before_unequip",
+            source=slot_id,
+            data={
+                "item": item,
+                "instance_id": getattr(item, "instance_id", None),
+                "equipment_id": getattr(
+                    getattr(item, "equipment", None), "equipment_id", None
+                ),
+            },
+        )
+        item = self._equipped[slot_id].pop(int(index))
+        emit_hook(
+            self.hooks,
+            "rpg.equipment.after_unequip",
+            source=slot_id,
+            data={
+                "item": item,
+                "instance_id": getattr(item, "instance_id", None),
+                "equipment_id": getattr(
+                    getattr(item, "equipment", None), "equipment_id", None
+                ),
+            },
+        )
+        return item
+
+    def equipped(self, slot_id=None):
+        if slot_id is not None:
+            return tuple(self._equipped[str(slot_id)])
+        return tuple(
+            item for key in sorted(self._equipped) for item in self._equipped[key]
+        )
+
+    def modifier_set(self):
+        result = ModifierSet()
+        for item in self.equipped():
+            for modifier in item.modifiers():
+                result.add(modifier)
+        return result
+
+    def abilities(self):
+        result = []
+        for item in self.equipped():
+            result.extend(item.abilities())
+        return tuple(dict.fromkeys(result))
+
+    def triggers(self):
+        result = []
+        for item in self.equipped():
+            result.extend(item.triggers())
+        return tuple(result)
+
+    def tags(self):
+        result = set()
+        for item in self.equipped():
+            result.update(item.tags())
+        return tuple(sorted(result))
+
+
+@dataclass(frozen=True, slots=True)
+class ItemUseResult:
+    used: bool
+    item_id: str
+    effect_results: tuple = ()
+    reason: str | None = None
+
+
+def use_inventory_item(
+    inventory, item, target_stats, target_resources, target_tags, *, hooks=None
+):
+    """Use one item atomically with inventory consumption after all effects succeed."""
+    if not isinstance(inventory, Inventory):
+        raise TypeError("inventory must be Inventory")
+    if not isinstance(item, ItemDefinition):
+        raise TypeError("item must be ItemDefinition")
+    emit_hook(
+        hooks,
+        "rpg.item.before_use",
+        source=item.item_id,
+        data={
+            "item": item,
+            "instance_id": getattr(item, "instance_id", None),
+            "equipment_id": getattr(
+                getattr(item, "equipment", None), "equipment_id", None
+            ),
+        },
+    )
+    if inventory.count(item.item_id) < 1:
+        result = ItemUseResult(False, item.item_id, (), "not_in_inventory")
+        emit_hook(
+            hooks, "rpg.item.use_failed", source=item.item_id, data={"result": result}
+        )
+        return result
+    # Stage gameplay state so a later failed effect cannot partially mutate target.
+    stats = type(target_stats).from_data(target_stats.to_data())
+    resources = type(target_resources).from_data(target_resources.to_data())
+    tags = type(target_tags).from_data(target_tags.to_data())
+    results = []
+    for effect in item.use_effects:
+        result = apply_effect(effect, stats, resources, tags)
+        if not result.applied:
+            failed = ItemUseResult(
+                False, item.item_id, tuple(results) + (result,), "effect_rejected"
+            )
+            emit_hook(
+                hooks,
+                "rpg.item.use_failed",
+                source=item.item_id,
+                data={"result": failed},
+            )
+            return failed
+        results.append(result)
+    # Commit only after all effects succeeded, through public replacement seams.
+    target_stats.replace_from(stats)
+    target_resources.replace_from(resources)
+    target_tags.replace_from(tags)
+    inventory.remove(item.item_id, 1)
+    final = ItemUseResult(True, item.item_id, tuple(results), None)
+    emit_hook(hooks, "rpg.item.after_use", source=item.item_id, data={"result": final})
+    return final

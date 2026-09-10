@@ -2,6 +2,7 @@ from .application import Application, ApplicationConfig
 from .component import Component
 from .entity import Entity
 from .events import EventBus
+from .lifecycle import LifecycleEvent, LifecycleHookBus, emit_hook
 from .metadata import ComponentSchema, Field, component_schema, get_component_schema
 from .registry import ComponentRegistry
 from .scene import Scene

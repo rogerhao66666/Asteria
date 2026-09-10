@@ -67,35 +67,53 @@ class ProjectTreeWidget(QWidget):
                 window._refresh_actions()
 
     def refresh(self):
-        self.tree.clear()
-        project = self.document.project
-        if project is None:
-            return
-        root = QTreeWidgetItem([project.name])
-        root.setData(0, Qt.UserRole, ("project", project))
-        self.tree.addTopLevelItem(root)
-        scenes = QTreeWidgetItem(["Scenes"])
-        root.addChild(scenes)
-        for scene in project.scenes():
-            sitem = QTreeWidgetItem([scene.name])
-            sitem.setData(0, Qt.UserRole, ("scene", scene))
-            scenes.addChild(sitem)
-            for entity in scene.entities():
-                eitem = QTreeWidgetItem([entity.name])
-                eitem.setData(0, Qt.UserRole, ("entity", entity))
-                sitem.addChild(eitem)
-                for component in entity.components():
-                    citem = QTreeWidgetItem([type(component).__name__])
-                    citem.setData(0, Qt.UserRole, ("component", component))
-                    eitem.addChild(citem)
-        assets = QTreeWidgetItem(["Assets"])
-        root.addChild(assets)
-        for record in project.assets.records():
-            item = QTreeWidgetItem([record.source_path])
-            item.setData(0, Qt.UserRole, ("asset", record))
-            assets.addChild(item)
-        root.setExpanded(True)
-        scenes.setExpanded(True)
+        selection = self.document.selection
+        selected = {(selection.kind, id(value)) for value in selection.values}
+        selected_items = []
+        self.tree.blockSignals(True)
+        try:
+            self.tree.clear()
+            project = self.document.project
+            if project is None:
+                return
+
+            def item(label, kind=None, value=None):
+                tree_item = QTreeWidgetItem([label])
+                if kind is not None:
+                    tree_item.setData(0, Qt.UserRole, (kind, value))
+                    if (kind, id(value)) in selected:
+                        tree_item.setSelected(True)
+                        selected_items.append(tree_item)
+                return tree_item
+
+            root = item(project.name, "project", project)
+            self.tree.addTopLevelItem(root)
+            scenes = item("Scenes")
+            root.addChild(scenes)
+            for scene in project.scenes():
+                sitem = item(scene.name, "scene", scene)
+                scenes.addChild(sitem)
+                for entity in scene.entities():
+                    eitem = item(entity.name, "entity", entity)
+                    sitem.addChild(eitem)
+                    for component in entity.components():
+                        citem = item(type(component).__name__, "component", component)
+                        eitem.addChild(citem)
+            assets = item("Assets")
+            root.addChild(assets)
+            for record in project.assets.records():
+                assets.addChild(item(record.source_path, "asset", record))
+            root.setExpanded(True)
+            scenes.setExpanded(True)
+            for selected_item in selected_items:
+                parent = selected_item.parent()
+                while parent is not None:
+                    parent.setExpanded(True)
+                    parent = parent.parent()
+            if selected_items:
+                self.tree.setCurrentItem(selected_items[0])
+        finally:
+            self.tree.blockSignals(False)
 
 
 class InspectorWidget(QWidget):

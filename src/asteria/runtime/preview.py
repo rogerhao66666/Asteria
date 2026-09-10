@@ -4,10 +4,12 @@ import argparse
 from pathlib import Path
 
 from asteria.core import ComponentRegistry, Transform
+from asteria.gameplay import GameplayAttributesComponent
 from asteria.project import Project
 from asteria.runtime.components2d import (
     Animator2DComponent,
     Camera2DComponent,
+    Interaction2DComponent,
     SpriteRenderer2D,
     TileMap2DComponent,
 )
@@ -18,8 +20,10 @@ def build_preview_registry():
     registry.register(Transform)
     registry.register(SpriteRenderer2D)
     registry.register(Camera2DComponent)
+    registry.register(Interaction2DComponent)
     registry.register(Animator2DComponent)
     registry.register(TileMap2DComponent)
+    registry.register(GameplayAttributesComponent)
     return registry
 
 

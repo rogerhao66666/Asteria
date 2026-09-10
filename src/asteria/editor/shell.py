@@ -1,6 +1,19 @@
 from .clipboard import build_duplicate_entity_command, build_paste_entity_command
+from .code_workspace import CodeWorkspaceWidget
 from .component_picker import build_component_choices
 from .editing import EditError, build_set_component_field_command
+from .event_editing import (
+    AddEventBindingCommand,
+    AddEventProgramCommand,
+    ReplaceEventBindingCommand,
+    ReplaceEventProgramCommand,
+    bindings_for_scene,
+    program_with_insert,
+    program_with_move,
+    program_with_remove,
+    replace_binding_fields,
+)
+from .event_editor_widget import EventEditorWidget
 from .inspector import build_inspector_fields
 from .model import EditorDocument
 from .playmode import PlayModeError, create_play_session
@@ -15,6 +28,7 @@ from .structure import (
     build_remove_entity_command,
     build_rename_command,
 )
+from .workspace import EditorWorkspace, WorkspaceMode
 
 try:
     from PySide6.QtCore import Qt, QTimer
@@ -35,6 +49,16 @@ except ImportError:
     QMainWindow = object
     Qt = None
 
+from asteria.authoring import run_authoring_script
+from asteria.core.ids import new_id
+from asteria.events import (
+    EventBinding,
+    EventCondition,
+    EventInstruction,
+    EventProgram,
+    EventTriggerCondition,
+    EventTriggerKind,
+)
 from asteria.graphics import TileLayer
 
 from .animation_widget import AnimationWidget
@@ -70,7 +94,20 @@ class AsteriaEditorWindow(QMainWindow):
         self.resize(1280, 800)
 
         self.viewport = SceneViewportWidget(self.document)
-        self.setCentralWidget(self.viewport)
+        self.code_workspace = CodeWorkspaceWidget(self.document, self)
+        self.event_editor = EventEditorWidget(self)
+        self.animation_widget = AnimationWidget(self)
+        self.workspace = EditorWorkspace(
+            {
+                WorkspaceMode.SCENE: self.viewport,
+                WorkspaceMode.CODE: self.code_workspace,
+                WorkspaceMode.EVENT: self.event_editor,
+                WorkspaceMode.ANIMATION: self.animation_widget,
+            },
+            self,
+        )
+        self.workspace.modeChanged.connect(self._workspace_mode_changed)
+        self.setCentralWidget(self.workspace)
 
         self.project_tree = ProjectTreeWidget(self.document)
         left = QDockWidget("Project / Scene", self)
@@ -97,10 +134,14 @@ class AsteriaEditorWindow(QMainWindow):
         self.tile_layers.visibilityChanged.connect(self._set_tile_layer_visible)
         self.tile_layers.collisionChanged.connect(self._set_tile_layer_collision)
 
-        self.animation_widget = AnimationWidget(self)
-        animation_dock = QDockWidget("Animation", self)
-        animation_dock.setWidget(self.animation_widget)
-        self.addDockWidget(Qt.BottomDockWidgetArea, animation_dock)
+        self.event_editor.bindingRequested.connect(self._event_add_binding)
+        self.event_editor.bindingChanged.connect(self._event_binding_changed)
+        self.event_editor.addConditionRequested.connect(self._event_add_condition)
+        self.event_editor.addCommandRequested.connect(self._event_add_command)
+        self.event_editor.removeCommandRequested.connect(self._event_remove_command)
+        self.event_editor.moveCommandRequested.connect(self._event_move_command)
+        self.code_workspace.saved.connect(self._code_script_saved)
+        self.code_workspace.runRequested.connect(self._run_authoring_script)
 
         self.inspector = InspectorWidget(self.document)
         right = QDockWidget("Inspector", self)
@@ -119,6 +160,64 @@ class AsteriaEditorWindow(QMainWindow):
         self.tabifyDockWidget(bottom, console)
 
         self._build_actions()
+        self._workspace_mode_changed(self.workspace.mode.value)
+        self.refresh_all()
+
+    def _workspace_mode_changed(self, mode):
+        current = WorkspaceMode(mode)
+        for action, candidate in (
+            (getattr(self, "scene_workspace_action", None), WorkspaceMode.SCENE),
+            (getattr(self, "code_workspace_action", None), WorkspaceMode.CODE),
+            (getattr(self, "event_workspace_action", None), WorkspaceMode.EVENT),
+            (
+                getattr(self, "animation_workspace_action", None),
+                WorkspaceMode.ANIMATION,
+            ),
+        ):
+            if action is not None:
+                action.setChecked(current == candidate)
+        if current == WorkspaceMode.CODE:
+            self.code_workspace.refresh_project_context()
+
+    def _code_script_saved(self, path):
+        self.statusBar().showMessage(f"Saved script {path}", 3000)
+
+    def _run_authoring_script(self, source, filename):
+        from .commands import CommandTransaction
+
+        tx = CommandTransaction("Run Authoring Script")
+
+        def apply(command):
+            command.redo()
+            tx.add(command)
+
+        sel = self.document.selection
+        result = run_authoring_script(
+            source,
+            self.document.project,
+            execute=apply,
+            filename=filename,
+            selection_kind=sel.kind if not sel.multiple else "none",
+            selection_value=sel.value if not sel.multiple else None,
+        )
+        if not result.success:
+            tx.undo()
+            message = result.stdout + result.diagnostic
+            self.console.setText(message)
+            self.code_workspace.jump_to_diagnostic(result.line, result.column)
+            location = f" line {result.line}" if result.line is not None else ""
+            self.statusBar().showMessage(
+                f"Script failed{location} — changes rolled back", 5000
+            )
+            self.refresh_all()
+            return
+
+        if tx.commands:
+            self.document.commands.record_applied(tx)
+        self.console.setText(
+            result.stdout.rstrip() if result.stdout else "Script completed successfully"
+        )
+        self.statusBar().showMessage("Authoring script completed", 3000)
         self.refresh_all()
 
     def _build_actions(self):
@@ -188,6 +287,23 @@ class AsteriaEditorWindow(QMainWindow):
         self.stop_action.triggered.connect(self.stop_play)
         toolbar = QToolBar("Run", self)
         toolbar.setObjectName("AsteriaRunToolbar")
+
+        toolbar.addSeparator()
+        self.scene_workspace_action = QAction("Scene", self)
+        self.code_workspace_action = QAction("Code", self)
+        self.event_workspace_action = QAction("Event", self)
+        self.animation_workspace_action = QAction("Animation", self)
+        for action, mode in (
+            (self.scene_workspace_action, WorkspaceMode.SCENE),
+            (self.code_workspace_action, WorkspaceMode.CODE),
+            (self.event_workspace_action, WorkspaceMode.EVENT),
+            (self.animation_workspace_action, WorkspaceMode.ANIMATION),
+        ):
+            action.setCheckable(True)
+            action.triggered.connect(
+                lambda checked=False, m=mode: self.workspace.set_mode(m)
+            )
+            toolbar.addAction(action)
         toolbar.addAction(self.play_action)
         toolbar.addAction(self.stop_action)
         self.addToolBar(Qt.TopToolBarArea, toolbar)
@@ -279,7 +395,224 @@ class AsteriaEditorWindow(QMainWindow):
         self.refresh_inspector()
         self._sync_scene_authoring_context()
         self._sync_animation_context()
+        self._sync_event_context()
+        self.code_workspace.refresh_project_context()
         self._refresh_actions()
+
+    def _selected_event_entity(self):
+        sel = self.document.selection
+        if sel.kind == "entity" and sel.value is not None and not sel.multiple:
+            return sel.value
+        if sel.kind == "component" and sel.value is not None and not sel.multiple:
+            try:
+                return sel.value.entity
+            except RuntimeError:
+                return None
+        return None
+
+    def _selected_event_scene(self):
+        entity = self._selected_event_entity()
+        return entity.scene if entity is not None else None
+
+    def _sync_event_context(self):
+        project = self.document.project
+        entity = self._selected_event_entity()
+        scene = self._selected_event_scene()
+        if project is None or entity is None or scene is None:
+            self.event_editor.show_empty("Select an Entity to edit events")
+            return
+        bindings = bindings_for_scene(project, scene)
+        self.event_editor.set_entity_context(entity, bindings, project.event_programs)
+
+    def _current_event_binding(self):
+        project = self.document.project
+        scene = self._selected_event_scene()
+        if project is None or scene is None:
+            return None, None
+        bindings = bindings_for_scene(project, scene)
+        binding_id = self.event_editor.selected_binding_id()
+        return bindings, bindings.bindings.get(binding_id) if binding_id else None
+
+    def _event_add_binding(self):
+        project = self.document.project
+        entity = self._selected_event_entity()
+        scene = self._selected_event_scene()
+        if project is None or entity is None or scene is None:
+            return
+        name, ok = QInputDialog.getText(
+            self, "New Event", "Event name:", text="Interaction"
+        )
+        if not ok:
+            return
+        program_id = new_id()
+        binding_id = new_id()
+        program = EventProgram([], name=name.strip() or "Interaction")
+        binding = EventBinding(
+            binding_id, entity.id, program_id, trigger=EventTriggerKind.ACTION
+        )
+        bindings = bindings_for_scene(project, scene)
+        from .commands import CommandTransaction
+
+        tx = CommandTransaction("Add Event")
+        tx.add(AddEventProgramCommand(project.event_programs, program_id, program))
+        tx.add(AddEventBindingCommand(bindings, binding))
+        self.document.execute(tx)
+        self.refresh_all()
+
+    def _event_binding_changed(self, field, value):
+        if field == "select":
+            bindings, binding = self._current_event_binding()
+            if binding is not None:
+                self.event_editor._refreshing = True
+                try:
+                    self.event_editor._show_binding(
+                        binding, self.document.project.event_programs
+                    )
+                finally:
+                    self.event_editor._refreshing = False
+            return
+        bindings, binding = self._current_event_binding()
+        if binding is None:
+            return
+        if field == "trigger":
+            replacement = replace_binding_fields(
+                binding, trigger=EventTriggerKind(value)
+            )
+        elif field == "program_id":
+            replacement = replace_binding_fields(binding, program_id=value)
+        else:
+            return
+        self.document.execute(
+            ReplaceEventBindingCommand(bindings, replacement, binding)
+        )
+        self.refresh_all()
+
+    def _event_add_condition(self):
+        bindings, binding = self._current_event_binding()
+        if binding is None:
+            return
+        name, ok = QInputDialog.getText(
+            self, "Event Condition", "Switch name:", text="quest_started"
+        )
+        if not ok or not name.strip():
+            return
+        cond = EventTriggerCondition(EventCondition("switch", name.strip(), "==", True))
+        replacement = replace_binding_fields(
+            binding, conditions=tuple(binding.conditions) + (cond,)
+        )
+        self.document.execute(
+            ReplaceEventBindingCommand(bindings, replacement, binding)
+        )
+        self.refresh_all()
+
+    def _event_make_instruction(self, kind):
+        if kind == "dialogue":
+            text, ok = QInputDialog.getText(self, "Dialogue", "Text:")
+            if not ok:
+                return None
+            speaker, ok = QInputDialog.getText(self, "Dialogue", "Speaker:")
+            if not ok:
+                return None
+            return EventInstruction("DIALOGUE", {"speaker": speaker, "text": text})
+        if kind == "choice":
+            prompt, ok = QInputDialog.getText(self, "Choice", "Prompt:")
+            if not ok:
+                return None
+            return EventInstruction(
+                "CHOICE",
+                {
+                    "prompt": prompt,
+                    "choices": [
+                        {"text": "Option 1", "value": 1},
+                        {"text": "Option 2", "value": 2},
+                    ],
+                    "variable_name": "choice",
+                },
+            )
+        if kind == "if":
+            name, ok = QInputDialog.getText(self, "If", "Switch name:")
+            if not ok or not name.strip():
+                return None
+            condition = EventCondition("switch", name.strip(), "==", True).to_data()
+            return EventInstruction(
+                "JUMP_IF", {"condition": condition, "label": "target"}
+            )
+        if kind == "switch":
+            name, ok = QInputDialog.getText(self, "Set Switch", "Switch name:")
+            if not ok or not name.strip():
+                return None
+            return EventInstruction("SET_SWITCH", {"name": name.strip(), "value": True})
+        if kind == "variable":
+            name, ok = QInputDialog.getText(self, "Set Variable", "Variable name:")
+            if not ok or not name.strip():
+                return None
+            value, ok = QInputDialog.getText(self, "Set Variable", "Value:")
+            if not ok:
+                return None
+            return EventInstruction(
+                "SET_VARIABLE", {"name": name.strip(), "value": value}
+            )
+        if kind == "world":
+            command, ok = QInputDialog.getText(
+                self, "World Command", "Command:", text="TRANSFER"
+            )
+            if not ok or not command.strip():
+                return None
+            return EventInstruction(
+                "WORLD", {"command": command.strip().upper(), "args": {}}
+            )
+        return None
+
+    def _event_add_command(self, kind):
+        project = self.document.project
+        _, binding = self._current_event_binding()
+        if project is None or binding is None:
+            return
+        program = project.event_programs.get(binding.program_id)
+        if program is None:
+            return
+        instruction = self._event_make_instruction(kind)
+        if instruction is None:
+            return
+        row = self.event_editor.selected_command_index()
+        index = len(program.instructions) if row < 0 else row + 1
+        new_program = program_with_insert(program, index, instruction)
+        self.document.execute(
+            ReplaceEventProgramCommand(
+                project.event_programs, binding.program_id, new_program, program
+            )
+        )
+        self.refresh_all()
+
+    def _event_remove_command(self, index):
+        project = self.document.project
+        _, binding = self._current_event_binding()
+        if project is None or binding is None:
+            return
+        program = project.event_programs.require(binding.program_id)
+        if not 0 <= index < len(program.instructions):
+            return
+        new_program = program_with_remove(program, index)
+        self.document.execute(
+            ReplaceEventProgramCommand(
+                project.event_programs, binding.program_id, new_program, program
+            )
+        )
+        self.refresh_all()
+
+    def _event_move_command(self, old_index, new_index):
+        project = self.document.project
+        _, binding = self._current_event_binding()
+        if project is None or binding is None:
+            return
+        program = project.event_programs.require(binding.program_id)
+        new_program = program_with_move(program, old_index, new_index)
+        self.document.execute(
+            ReplaceEventProgramCommand(
+                project.event_programs, binding.program_id, new_program, program
+            )
+        )
+        self.refresh_all()
 
     def set_animation_clip_set_view(self, clip_set_id, clip_set):
         self.document.asset_views.set_clip_set(clip_set_id, clip_set)
@@ -355,6 +688,8 @@ class AsteriaEditorWindow(QMainWindow):
         self.refresh_inspector()
         self._sync_scene_authoring_context()
         self._sync_animation_context()
+        self._sync_event_context()
+        self.code_workspace.refresh_project_context()
         self.viewport.refresh()
         if self.viewport.render_source is not None:
             self.tile_layers.set_tilemap(
@@ -376,6 +711,7 @@ class AsteriaEditorWindow(QMainWindow):
         else:
             self.document.asset_views.clear()
             self.set_tilemap_render_source(None)
+        self.code_workspace.load_default_script()
         self.refresh_all()
 
     def refresh_asset_list(self):

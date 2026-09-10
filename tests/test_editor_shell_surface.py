@@ -23,6 +23,36 @@ def test_project_tree_has_selection_callback_used_during_construction():
     assert callable(getattr(ProjectTreeWidget, "_on_selection_changed", None))
 
 
+def test_project_tree_refresh_preserves_canonical_selection():
+    import pytest
+
+    pytest.importorskip("PySide6")
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.core import Entity, Scene
+    from asteria.editor.model import EditorDocument
+    from asteria.editor.widgets import ProjectTreeWidget
+    from asteria.project import Project
+
+    app = QApplication.instance() or QApplication([])
+    project = Project("Game")
+    scene = project.add_scene(Scene("Town"))
+    hero = scene.add_entity(Entity("Hero"))
+    document = EditorDocument(project)
+    document.select_entity(hero)
+
+    widget = ProjectTreeWidget(document)
+    widget.refresh()
+
+    assert document.selection.kind == "entity"
+    assert document.selection.value is hero
+    payload = widget.tree.selectedItems()[0].data(0, Qt.UserRole)
+    assert payload == ("entity", hero)
+    widget.close()
+    app.processEvents()
+
+
 def test_runtime_monitor_cleans_up_an_exited_preview():
     from asteria.editor.shell import AsteriaEditorWindow
 

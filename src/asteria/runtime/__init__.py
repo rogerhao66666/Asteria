@@ -8,11 +8,18 @@ from .character_animation import CharacterAnimationController
 from .components2d import (
     Animator2DComponent,
     Camera2DComponent,
+    Interaction2DComponent,
     SpriteRenderer2D,
     TileMap2DComponent,
 )
 from .draw import TextureDraw, sprite_draw
 from .input import InputSnapshot
+from .interaction import (
+    InteractionCandidate,
+    InteractionController,
+    InteractionQuery,
+    InteractionTrigger,
+)
 from .player import PlayerRuntime
 from .player_slice import PlayerCameraSlice
 from .reference_runtime import ReferenceRuntime, run_reference_runtime

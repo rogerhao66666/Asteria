@@ -54,6 +54,15 @@ class CommandStack:
         self._redo.clear()
         self._current_state_id = after
 
+    def record_applied(self, command: Command):
+        """Record a command whose redo effects are already applied."""
+        before = self._current_state_id
+        after = self._next_state_id
+        self._next_state_id += 1
+        self._undo.append((command, before, after))
+        self._redo.clear()
+        self._current_state_id = after
+
     def undo(self):
         if not self._undo:
             return False

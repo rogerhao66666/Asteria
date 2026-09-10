@@ -4,7 +4,7 @@ build-backend="setuptools.build_meta"
 
 [project]
 name="asteria"
-version="0.35.0a35"
+version="0.73.0a73"
 requires-python=">=3.12"
 
 [project.optional-dependencies]
