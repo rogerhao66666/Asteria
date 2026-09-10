@@ -17,7 +17,27 @@ ASTERIA_DARK = EditorTheme()
 ASTERIA_DARK_QSS = """
 QMainWindow, QDialog { background: #17191d; color: #d9dde5; }
 QDockWidget { color: #bfc5d0; font-weight: 600; }
-QDockWidget::title { background: #1d2025; padding: 7px 10px; }
+QDockWidget::title {
+    background: #1d2025; border-bottom: 1px solid #292e36;
+    padding: 7px 10px 7px 62px; text-align: left;
+}
+QDockWidget::close-button, QDockWidget::float-button {
+    background: transparent; border: 0; border-radius: 4px;
+    position: absolute; top: 5px; width: 20px; height: 20px;
+}
+QDockWidget::close-button { subcontrol-position: top left; left: 6px; }
+QDockWidget::float-button { subcontrol-position: top left; left: 29px; }
+QDockWidget::close-button:hover, QDockWidget::float-button:hover {
+    background: #343a44;
+}
+QTabBar { background: #17191d; }
+QTabBar::tab {
+    background: #1d2025; color: #aeb5c1;
+    border: 1px solid #292e36; border-top: 0;
+    min-width: 92px; padding: 6px 10px; margin: 0;
+}
+QTabBar::tab:selected { background: #34465f; color: #ffffff; }
+QTabBar::tab:hover:!selected { background: #252b33; color: #d9dde5; }
 QTreeWidget, QListWidget, QTableWidget {
     background: #1b1e23; alternate-background-color: #1e2228;
     border: 1px solid #292e36; outline: 0; color: #d9dde5;
