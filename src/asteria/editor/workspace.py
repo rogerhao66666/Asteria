@@ -48,6 +48,7 @@ class EditorWorkspace(QWidget):
 
         self.tabs = QTabBar(self)
         self.tabs.setExpanding(False)
+        self.tabs.setDrawBase(False)
         self.stack = QStackedWidget(self)
         self._modes = list(self.ORDER)
         self._pages = dict(pages)

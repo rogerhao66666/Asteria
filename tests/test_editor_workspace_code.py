@@ -1,5 +1,5 @@
 from asteria.editor.code_workspace import DEFAULT_AUTHORING_SCRIPT, CodeBuffer
-from asteria.editor.workspace import WorkspaceMode
+from asteria.editor.workspace import EditorWorkspace, WorkspaceMode
 
 
 def test_workspace_modes_are_stable_authoring_surfaces():
@@ -9,6 +9,22 @@ def test_workspace_modes_are_stable_authoring_surfaces():
         "event",
         "animation",
     ]
+
+
+def test_workspace_hides_redundant_native_tab_base():
+    import pytest
+
+    pytest.importorskip("PySide6")
+    from PySide6.QtWidgets import QApplication, QWidget
+
+    app = QApplication.instance() or QApplication([])
+    pages = {mode: QWidget() for mode in WorkspaceMode}
+    workspace = EditorWorkspace(pages)
+
+    assert not workspace.tabs.drawBase()
+
+    workspace.close()
+    app.processEvents()
 
 
 def test_code_buffer_tracks_dirty_and_saves(tmp_path):

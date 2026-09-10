@@ -41,6 +41,7 @@ try:
         QListWidget,
         QMainWindow,
         QMessageBox,
+        QTabBar,
         QTextEdit,
         QToolBar,
         QVBoxLayout,
@@ -170,6 +171,11 @@ class AsteriaEditorWindow(QMainWindow):
         console.setWidget(console_panel)
         self.addDockWidget(Qt.BottomDockWidgetArea, console)
         self.tabifyDockWidget(bottom, console)
+
+        # The native macOS tab base draws a redundant rounded line behind
+        # tabified docks. Individual tabs retain their own visual states.
+        for dock_tabs in self.findChildren(QTabBar):
+            dock_tabs.setDrawBase(False)
 
         self._build_actions()
         self._workspace_mode_changed(self.workspace.mode.value)
