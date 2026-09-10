@@ -38,11 +38,13 @@ try:
         QDockWidget,
         QFileDialog,
         QInputDialog,
-        QLabel,
         QListWidget,
         QMainWindow,
         QMessageBox,
+        QTextEdit,
         QToolBar,
+        QVBoxLayout,
+        QWidget,
     )
 except ImportError:
     QApplication = None
@@ -153,9 +155,19 @@ class AsteriaEditorWindow(QMainWindow):
         bottom.setWidget(self.asset_list)
         self.addDockWidget(Qt.BottomDockWidgetArea, bottom)
 
-        self.console = QLabel("Console ready")
+        console_panel = QWidget()
+        console_panel.setObjectName("ConsolePanel")
+        console_layout = QVBoxLayout(console_panel)
+        console_layout.setContentsMargins(10, 10, 10, 10)
+
+        self.console = QTextEdit()
+        self.console.setObjectName("ConsoleOutput")
+        self.console.setReadOnly(True)
+        self.console.setAcceptRichText(False)
+        console_layout.addWidget(self.console)
+
         console = QDockWidget("Console", self)
-        console.setWidget(self.console)
+        console.setWidget(console_panel)
         self.addDockWidget(Qt.BottomDockWidgetArea, console)
         self.tabifyDockWidget(bottom, console)
 

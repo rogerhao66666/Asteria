@@ -33,7 +33,7 @@ QDockWidget::close-button:hover, QDockWidget::float-button:hover {
 QTabBar { background: #17191d; }
 QTabBar::tab {
     background: #1d2025; color: #aeb5c1;
-    border: 1px solid #292e36; border-top: 0;
+    border: 1px solid #292e36;
     min-width: 92px; padding: 6px 10px; margin: 0;
 }
 QTabBar::tab:selected { background: #34465f; color: #ffffff; }
@@ -45,6 +45,12 @@ QTreeWidget, QListWidget, QTableWidget {
 QTreeWidget::item, QListWidget::item { min-height: 24px; padding: 2px 5px; }
 QTreeWidget::item:selected, QListWidget::item:selected { background: #34465f; }
 QTreeWidget::item:hover, QListWidget::item:hover { background: #252b33; }
+QWidget#ConsolePanel { background: #17191d; }
+QTextEdit#ConsoleOutput {
+    background: #1b1e23; color: #d9dde5;
+    border: 1px solid #343a44; border-radius: 4px;
+    padding: 8px; selection-background-color: #34465f;
+}
 QMenuBar, QMenu { background: #1d2025; color: #d9dde5; }
 QMenu::item:selected { background: #34465f; }
 QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {
