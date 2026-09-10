@@ -5,7 +5,12 @@ from .camera import Camera2D, CameraFollow2D
 from .camera_factory import build_runtime_camera
 from .character import CharacterController2D
 from .character_animation import CharacterAnimationController
-from .components2d import Animator2DComponent, Camera2DComponent, SpriteRenderer2D
+from .components2d import (
+    Animator2DComponent,
+    Camera2DComponent,
+    SpriteRenderer2D,
+    TileMap2DComponent,
+)
 from .draw import TextureDraw, sprite_draw
 from .input import InputSnapshot
 from .player import PlayerRuntime

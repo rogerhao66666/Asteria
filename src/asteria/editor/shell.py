@@ -38,6 +38,8 @@ except ImportError:
 from asteria.graphics import TileLayer
 
 from .animation_widget import AnimationWidget
+from .authoring_context import animation_context, scene_authoring_source
+from .resource_resolver import EditorResourceError, resolve_project_resources
 from .theme import apply_asteria_theme
 from .tile_edit import (
     AddTileLayerCommand,
@@ -250,6 +252,35 @@ class AsteriaEditorWindow(QMainWindow):
         dirty = " *" if self.document.dirty else ""
         self.setWindowTitle(f"Asteria Editor — {name}{dirty}")
 
+    def _resolve_project_resources(self):
+        resolve_project_resources(self.document)
+        self.viewport.texture_cache.clear()
+        self._sync_scene_authoring_context()
+        self._sync_animation_context()
+
+    def _sync_scene_authoring_context(self):
+        self.set_tilemap_render_source(scene_authoring_source(self.document))
+
+    def _sync_animation_context(self):
+        clip_set, current = animation_context(self.document)
+        if clip_set is None:
+            self.animation_widget.set_clips(())
+            self.animation_widget.set_status(
+                "No animation selected"
+                if current is None
+                else f"Missing animation asset for {current}"
+            )
+            return
+        names = tuple(clip_set.clips)
+        self.animation_widget.set_clips(names, current)
+        self.animation_widget.set_status(f"{len(names)} clips available")
+
+    def refresh_selection_context(self):
+        self.refresh_inspector()
+        self._sync_scene_authoring_context()
+        self._sync_animation_context()
+        self._refresh_actions()
+
     def set_animation_clip_set_view(self, clip_set_id, clip_set):
         self.document.asset_views.set_clip_set(clip_set_id, clip_set)
         self.animation_widget.set_clips(tuple(clip_set.clips))
@@ -322,6 +353,8 @@ class AsteriaEditorWindow(QMainWindow):
         self.project_tree.refresh()
         self.refresh_asset_list()
         self.refresh_inspector()
+        self._sync_scene_authoring_context()
+        self._sync_animation_context()
         self.viewport.refresh()
         if self.viewport.render_source is not None:
             self.tile_layers.set_tilemap(
@@ -338,6 +371,11 @@ class AsteriaEditorWindow(QMainWindow):
         self.document.set_project(project, file_path=file_path)
         self.play_session = None
         self.runtime_process = None
+        if file_path is not None:
+            self._resolve_project_resources()
+        else:
+            self.document.asset_views.clear()
+            self.set_tilemap_render_source(None)
         self.refresh_all()
 
     def refresh_asset_list(self):
@@ -669,7 +707,8 @@ class AsteriaEditorWindow(QMainWindow):
             return False
         try:
             load_document(self.document, path)
-        except EditorStorageError as exc:
+            self._resolve_project_resources()
+        except (EditorStorageError, EditorResourceError) as exc:
             QMessageBox.critical(self, "Open Project", str(exc))
             return False
         self.play_session = None

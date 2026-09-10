@@ -79,6 +79,16 @@
         "metadata": {},
         "name": "Hero Animation",
         "source_path": "reference_data/hero_animation.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000041",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "tilemap",
+        "metadata": {},
+        "name": "Town & River TileMap",
+        "source_path": "reference_data/tilemap.json"
       }
     ],
     "schema": "asteria.assets",
@@ -89,6 +99,23 @@
   "scenes": [
     {
       "entities": [
+        {
+          "components": [
+            {
+              "fields": {
+                "origin_x": 0.0,
+                "origin_y": 0.0,
+                "tilemap_asset_id": "10000000-0000-4000-8000-000000000041",
+                "visible": true
+              },
+              "type": "asteria.TileMap2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "10000000-0000-4000-8000-000000000051",
+          "name": "World Map"
+        },
         {
           "components": [
             {

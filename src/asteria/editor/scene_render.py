@@ -38,3 +38,32 @@ def resolve_texture_source(document, texture_asset_id):
     if document.file_path is not None:
         source = document.file_path.parent / source
     return source
+
+
+def render_source_for_scene(document, scene):
+    """Resolve the first visible TileMap2D binding in scene order."""
+    if scene is None:
+        return None
+    from asteria.runtime import TileMap2DComponent
+
+    for entity in scene.entities():
+        binding = entity.try_get(TileMap2DComponent)
+        if binding is None or not binding.visible or not binding.tilemap_asset_id:
+            continue
+        tilemap = document.asset_views.tilemap(binding.tilemap_asset_id)
+        if tilemap is None:
+            continue
+        tileset = document.asset_views.tileset(tilemap.tileset.asset_id)
+        if tileset is None:
+            continue
+        sprite_sheet = document.asset_views.sprite_sheet(tileset.sprite_sheet.asset_id)
+        if sprite_sheet is None:
+            continue
+        return TileMapRenderSource(
+            tilemap,
+            tileset,
+            sprite_sheet,
+            binding.origin_x,
+            binding.origin_y,
+        )
+    return None

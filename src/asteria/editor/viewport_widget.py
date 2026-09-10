@@ -69,9 +69,10 @@ class SceneViewportWidget(QWidget):
 
     def set_render_source(self, source):
         self.render_source = source
-        if (
-            source is not None
-            and self.tile_tools.active_layer is None
+        if source is None:
+            self.tile_tools.active_layer = None
+        elif (
+            self.tile_tools.active_layer not in source.tilemap.layers
             and source.tilemap.layers
         ):
             self.tile_tools.active_layer = source.tilemap.ordered_layers()[0]

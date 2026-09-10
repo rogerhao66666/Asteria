@@ -25,14 +25,19 @@ from asteria.reference_ids import (
     HERO_ENTITY_ID,
     HERO_SHEET_ID,
     HERO_TEXTURE_ID,
+    PROJECT_ID,
     PROPS_TEXTURE_ID,
+    SCENE_ID,
+    TILEMAP_ID,
     TILESET_ID,
+    WORLD_ENTITY_ID,
 )
 from asteria.runtime import (
     AnimationClipSet,
     Animator2DComponent,
     Camera2DComponent,
     SpriteRenderer2D,
+    TileMap2DComponent,
 )
 
 
@@ -157,8 +162,8 @@ def _make_map():
 
 
 def build_reference_world():
-    project = Project("Asteria Reference World")
-    scene = project.add_scene(Scene("Town & River"))
+    project = Project("Asteria Reference World", project_id=PROJECT_ID)
+    scene = project.add_scene(Scene("Town & River", scene_id=SCENE_ID))
 
     for record in (
         _record(
@@ -206,6 +211,12 @@ def build_reference_world():
             "reference_data/hero_animation.json",
             "Hero Animation",
         ),
+        _record(
+            TILEMAP_ID,
+            "tilemap",
+            "reference_data/tilemap.json",
+            "Town & River TileMap",
+        ),
     ):
         project.assets.add(record)
 
@@ -240,6 +251,10 @@ def build_reference_world():
             f"walk_{name}", [SpriteKeyframe(base + i, 0.12) for i in (0, 1, 2, 3)], True
         )
     hero_clips = AnimationClipSet(clips)
+
+    world = scene.add_entity(Entity("World Map", entity_id=WORLD_ENTITY_ID))
+    world_map = world.add_component(TileMap2DComponent())
+    world_map.tilemap_asset_id = TILEMAP_ID
 
     hero = scene.add_entity(Entity("Hero", entity_id=HERO_ENTITY_ID))
     hero.add_component(Transform(20 * 16, 13 * 16))

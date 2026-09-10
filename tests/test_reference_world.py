@@ -1,3 +1,4 @@
+from asteria.reference_ids import PROJECT_ID, SCENE_ID
 from asteria.reference_world import build_reference_world, write_reference_world
 from asteria.runtime import (
     Animator2DComponent,
@@ -9,6 +10,9 @@ from asteria.runtime import (
 
 def test_reference_world_has_real_assets_map_player_camera():
     b = build_reference_world()
+    assert b.project.id == PROJECT_ID
+    assert b.scene.id == SCENE_ID
+    assert b.project.startup_scene_id == SCENE_ID
     assert len(b.tilemap.layers) == 3
     assert len(b.environment_sheet.frames) == 16
     assert len(b.hero_sheet.frames) == 16

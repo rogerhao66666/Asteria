@@ -36,6 +36,7 @@ class EditorDocument:
             Animator2DComponent,
             Camera2DComponent,
             SpriteRenderer2D,
+            TileMap2DComponent,
         )
 
         from .asset_views import EditorAssetViews
@@ -47,6 +48,7 @@ class EditorDocument:
             component_registry.register(SpriteRenderer2D)
             component_registry.register(Camera2DComponent)
             component_registry.register(Animator2DComponent)
+            component_registry.register(TileMap2DComponent)
         self.project = project
         self.selection = EditorSelection()
         self.component_registry = component_registry

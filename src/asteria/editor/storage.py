@@ -3,6 +3,7 @@ import os
 import tempfile
 from pathlib import Path
 
+from asteria.graphics.serialization import tilemap_to_data
 from asteria.project import Project
 
 
@@ -35,6 +36,32 @@ def save_document(document, path=None):
         except FileNotFoundError:
             pass
         raise EditorStorageError(str(exc)) from exc
+
+    # Persist mutable canonical TileMap sidecars resolved by the editor.
+    for asset_id, tilemap in document.asset_views.tilemaps():
+        record = document.project.assets.get(asset_id)
+        if record is None or record.kind != "tilemap":
+            continue
+        sidecar = target.parent / record.source_path
+        sidecar.parent.mkdir(parents=True, exist_ok=True)
+        resource_payload = (
+            json.dumps(tilemap_to_data(tilemap), indent=2, sort_keys=True) + "\n"
+        )
+        rfd, rtmp = tempfile.mkstemp(
+            prefix=f".{sidecar.name}.", suffix=".tmp", dir=sidecar.parent
+        )
+        try:
+            with os.fdopen(rfd, "w", encoding="utf-8") as rf:
+                rf.write(resource_payload)
+                rf.flush()
+                os.fsync(rf.fileno())
+            os.replace(rtmp, sidecar)
+        except Exception as exc:
+            try:
+                os.unlink(rtmp)
+            except FileNotFoundError:
+                pass
+            raise EditorStorageError(str(exc)) from exc
 
     document.file_path = target
     document.mark_saved()

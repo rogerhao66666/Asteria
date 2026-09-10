@@ -9,6 +9,7 @@ from asteria.runtime.components2d import (
     Animator2DComponent,
     Camera2DComponent,
     SpriteRenderer2D,
+    TileMap2DComponent,
 )
 
 
@@ -18,6 +19,7 @@ def build_preview_registry():
     registry.register(SpriteRenderer2D)
     registry.register(Camera2DComponent)
     registry.register(Animator2DComponent)
+    registry.register(TileMap2DComponent)
     return registry
 
 

@@ -1,19 +1,13 @@
-# Asteria v0.34.0a34 — Phase 4 FROZEN
+# Asteria v0.35.0a35 — Phase 4 MacFix / Editor Integration Candidate
 
-Asteria is now a Python-first 2D RPG engine/editor foundation capable of:
+This build is based on the user-supplied v0.34 Phase 4 MacFix and fixes the
+remaining Reference World Editor integration gap.
 
-- real TileMap authoring
-- real sprite entities
-- collision authoring
-- camera authoring
-- animation preview/binding
-- a playable Reference World
-- isolated external runtime preview
-- original Asteria reference pixel art
+Opening `AsteriaReferenceWorld.asteria.json` now has a canonical path for:
+TileMap -> Viewport, Tileset -> Tile Palette, TileMap layers -> Layers dock,
+and selected Hero Animator2D -> Animation dock.
 
-The Phase 4 milestone is the first recommended hands-on Mac testing point.
+Automated result: **88 tests passed**, compileall passed.
 
-See:
-- `docs/PHASE_4_CLOSURE_AUDIT.md`
-- `docs/MAC_FIRST_RUN_TEST.md`
-- `docs/NEXT_PHASE_PLAN.md`
+Phase 4 is not re-frozen until the updated package completes the Mac GUI smoke
+test. See `docs/BATCH35_EDITOR_INTEGRATION_FIX.md`.

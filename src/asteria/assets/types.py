@@ -8,6 +8,7 @@ VALID_KINDS = frozenset(
         "texture",
         "sprite_sheet",
         "tileset",
+        "tilemap",
         "animation",
         "audio",
         "font",

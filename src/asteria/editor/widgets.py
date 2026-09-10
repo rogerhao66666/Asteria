@@ -58,10 +58,13 @@ class ProjectTreeWidget(QWidget):
             kind, value = payloads[0]
             self.document.selection.set_single(kind, value)
         window = self.window()
-        if hasattr(window, "refresh_inspector"):
-            window.refresh_inspector()
-        if hasattr(window, "_refresh_actions"):
-            window._refresh_actions()
+        if hasattr(window, "refresh_selection_context"):
+            window.refresh_selection_context()
+        else:
+            if hasattr(window, "refresh_inspector"):
+                window.refresh_inspector()
+            if hasattr(window, "_refresh_actions"):
+                window._refresh_actions()
 
     def refresh(self):
         self.tree.clear()

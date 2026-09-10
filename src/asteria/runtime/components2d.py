@@ -72,3 +72,24 @@ class Animator2DComponent(Component):
         self.default_clip = "idle_down"
         self.speed = 1.0
         self.playing = True
+
+
+@component_schema(
+    type_name="asteria.TileMap2D",
+    version=1,
+    fields=(
+        Field("tilemap_asset_id", str, "", label="Tile Map"),
+        Field("origin_x", float, 0.0, label="Origin X"),
+        Field("origin_y", float, 0.0, label="Origin Y"),
+        Field("visible", bool, True),
+    ),
+)
+class TileMap2DComponent(Component):
+    """Persistent scene binding to a canonical TileMap asset."""
+
+    def __init__(self):
+        super().__init__()
+        self.tilemap_asset_id = ""
+        self.origin_x = 0.0
+        self.origin_y = 0.0
+        self.visible = True
