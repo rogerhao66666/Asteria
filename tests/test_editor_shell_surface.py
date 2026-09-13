@@ -94,11 +94,16 @@ def test_scene_viewport_arrow_navigation_and_reset():
     viewport.camera.zoom = 2
 
     viewport.reset_view()
+    # No Camera2DComponent exists to frame, so reset_view() falls back to
+    # centering every positioned entity at the default 1x zoom, instead of
+    # pinning world (0, 0) at the screen's top-left corner. The lone entity
+    # sits at world (1, 0) here (after the move above), so it lands at the
+    # center of the (unshown, default-sized 640x480) viewport.
     assert (
         viewport.camera.pan_x,
         viewport.camera.pan_y,
         viewport.camera.zoom,
-    ) == (0, 0, 1)
+    ) == (319.0, 240.0, 1.0)
     viewport.close()
 
 

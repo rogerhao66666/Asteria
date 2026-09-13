@@ -29,15 +29,21 @@ from .tile_palette import TileToolState
 from .viewport import ViewportCamera, pick_entity, scene_markers, selected_scene
 
 try:
-    from PySide6.QtCore import QEvent, QPointF, Qt
+    from PySide6.QtCore import QEvent, QPointF, Qt, Signal
     from PySide6.QtGui import QBrush, QColor, QPainter, QPen
     from PySide6.QtWidgets import QWidget
 except ImportError:
     QWidget = object
     Qt = None
+    Signal = None
+
+_ZOOM_STEP = 1.25
 
 
 class SceneViewportWidget(QWidget):
+    if Signal is not None:
+        zoomChanged = Signal(float)
+
     def __init__(self, document, parent=None):
         if Qt is None:
             raise RuntimeError("PySide6 is required for SceneViewportWidget")
@@ -57,6 +63,7 @@ class SceneViewportWidget(QWidget):
         self._box_end = None
         self._drag_entity = None
         self._drag_start_world = None
+        self._reported_zoom = self.camera.zoom
         self.setFocusPolicy(Qt.StrongFocus)
         self.setMouseTracking(True)
 
@@ -155,10 +162,59 @@ class SceneViewportWidget(QWidget):
     def reset_view(self):
         if self.frame_game_camera():
             return
+        if self.frame_all_entities():
+            return
         self.camera.pan_x = 0.0
         self.camera.pan_y = 0.0
         self.camera.zoom = 1.0
         self.update()
+
+    def frame_all_entities(self):
+        """Center the view on the scene's content — every positioned entity
+        plus the tile map's extent — at the default 1x zoom.
+
+        Used when there's no in-scene camera to frame instead — otherwise the
+        view falls back to pinning world (0, 0) at the screen's top-left
+        corner, which crowds entities placed near the origin into a corner.
+        The map extent matters because a map's entity sits at its top-left
+        origin, so framing entities alone leaves the map hanging off-centre.
+        """
+        scene = self.current_scene()
+        if scene is None:
+            return False
+        positions = [
+            (transform.x, transform.y)
+            for entity in scene.entities()
+            if (transform := entity.try_get(Transform)) is not None
+        ]
+        positions.extend(self._tilemap_corners())
+        if not positions:
+            return False
+        xs = [x for x, _ in positions]
+        ys = [y for _, y in positions]
+        center_x = (min(xs) + max(xs)) / 2
+        center_y = (min(ys) + max(ys)) / 2
+        self.camera.zoom = 1.0
+        self.camera.pan_x = self.width() / 2 - center_x
+        self.camera.pan_y = self.height() / 2 - center_y
+        self.update()
+        return True
+
+    def _tilemap_corners(self):
+        source = self.render_source
+        if source is None:
+            return []
+        tilemap = source.tilemap
+        corners = []
+        for layer in tilemap.layers:
+            for chunk in layer.chunks.values():
+                left = (chunk.chunk_x * tilemap.chunk_width) * tilemap.tile_width
+                top = (chunk.chunk_y * tilemap.chunk_height) * tilemap.tile_height
+                right = left + chunk.width * tilemap.tile_width
+                bottom = top + chunk.height * tilemap.tile_height
+                corners.append((source.origin_x + left, source.origin_y + top))
+                corners.append((source.origin_x + right, source.origin_y + bottom))
+        return corners
 
     def frame_game_camera(self):
         scene = self.current_scene()
@@ -198,6 +254,16 @@ class SceneViewportWidget(QWidget):
         self.camera.pan_y = self.height() / 2 - center_y * self.camera.zoom
         self.update()
         return True
+
+    def zoom_in(self):
+        self._zoom_about_center(_ZOOM_STEP)
+
+    def zoom_out(self):
+        self._zoom_about_center(1.0 / _ZOOM_STEP)
+
+    def _zoom_about_center(self, factor):
+        self.camera.zoom_by(factor, (self.width() / 2, self.height() / 2))
+        self.update()
 
     def pan_view(self, dx, dy):
         self.camera.pan_by(float(dx), float(dy))
@@ -278,6 +344,12 @@ class SceneViewportWidget(QWidget):
         return super().event(event)
 
     def paintEvent(self, event):
+        # Zoom changes from many paths (wheel, pinch, buttons, reset, framing)
+        # and every one of them repaints, so report it here once instead of
+        # at each call site.
+        if self.camera.zoom != self._reported_zoom:
+            self._reported_zoom = self.camera.zoom
+            self.zoomChanged.emit(self.camera.zoom)
         painter = QPainter(self)
         painter.fillRect(self.rect(), QColor(32, 34, 38))
 
@@ -626,16 +698,23 @@ class SceneViewportWidget(QWidget):
         super().mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
-        delta = event.pixelDelta()
-        dx = float(delta.x())
-        dy = float(delta.y())
-        if dx == 0 and dy == 0:
-            angle = event.angleDelta()
-            dx = float(angle.x()) / 120.0 * 48.0
-            dy = float(angle.y()) / 120.0 * 48.0
-        if dx == 0 and dy == 0:
+        # Trackpad two-finger scroll reports continuous pixelDelta and keeps
+        # panning the view (matches the pinch-to-zoom gesture already bound
+        # to zoom). A physical mouse wheel only reports discrete angleDelta
+        # steps, and scrolling that zooms toward the cursor instead.
+        pixel_delta = event.pixelDelta()
+        if pixel_delta.x() != 0 or pixel_delta.y() != 0:
+            self.camera.pan_by(float(pixel_delta.x()), float(pixel_delta.y()))
+            self.update()
             event.accept()
             return
-        self.camera.pan_by(dx, dy)
+        angle = event.angleDelta()
+        if angle.x() == 0 and angle.y() == 0:
+            event.accept()
+            return
+        steps = angle.y() / 120.0
+        factor = 1.15 ** steps
+        pos = event.position()
+        self.camera.zoom_by(factor, (pos.x(), pos.y()))
         self.update()
         event.accept()
