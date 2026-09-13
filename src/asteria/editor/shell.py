@@ -163,18 +163,18 @@ class AsteriaEditorWindow(QMainWindow):
         self.addDockWidget(Qt.LeftDockWidgetArea, left)
 
         self.tile_palette = TilePaletteWidget(self)
-        palette_dock = QDockWidget("Tile Palette", self)
-        palette_dock.setWidget(self.tile_palette)
-        self.addDockWidget(Qt.LeftDockWidgetArea, palette_dock)
-        self.tabifyDockWidget(left, palette_dock)
+        self.palette_dock = QDockWidget("Tile Palette", self)
+        self.palette_dock.setWidget(self.tile_palette)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.palette_dock)
+        self.tabifyDockWidget(left, self.palette_dock)
         self.tile_palette.modeChanged.connect(self.viewport.set_tile_mode)
         self.tile_palette.tileSelected.connect(self.viewport.set_selected_tile)
 
         self.tile_layers = TileLayersWidget(self)
-        layers_dock = QDockWidget("Layers", self)
-        layers_dock.setWidget(self.tile_layers)
-        self.addDockWidget(Qt.LeftDockWidgetArea, layers_dock)
-        self.tabifyDockWidget(left, layers_dock)
+        self.layers_dock = QDockWidget("Layers", self)
+        self.layers_dock.setWidget(self.tile_layers)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.layers_dock)
+        self.tabifyDockWidget(left, self.layers_dock)
         self.tile_layers.layerSelected.connect(self._select_tile_layer)
         self.tile_layers.addRequested.connect(self._add_tile_layer)
         self.tile_layers.removeRequested.connect(self._remove_tile_layer)
@@ -241,6 +241,9 @@ class AsteriaEditorWindow(QMainWindow):
         ):
             if action is not None:
                 action.setChecked(current == candidate)
+        is_scene = current == WorkspaceMode.SCENE
+        self.palette_dock.setVisible(is_scene)
+        self.layers_dock.setVisible(is_scene)
         if current == WorkspaceMode.CODE:
             self.code_workspace.refresh_project_context()
         elif current == WorkspaceMode.RPG:
