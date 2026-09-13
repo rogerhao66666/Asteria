@@ -59,7 +59,7 @@ class EditorWorkspace(QWidget):
 
         labels = {
             WorkspaceMode.SCENE: "Scene",
-            WorkspaceMode.RPG: "RPG",
+            WorkspaceMode.RPG: "Character",
             WorkspaceMode.BATTLE: "Battle",
             WorkspaceMode.UI: "UI / Presentation",
             WorkspaceMode.EVENT: "Events",

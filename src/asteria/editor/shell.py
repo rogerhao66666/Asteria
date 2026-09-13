@@ -75,7 +75,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.playtest_profile_library = None
 
         self.rpg_authoring = FamilyHostWidget(
-            "RPG Authoring", self.authoring_controllers.rpg_categories, self
+            "Character", self.authoring_controllers.rpg_categories, self
         )
         self.battle_authoring = FamilyHostWidget(
             "Battle Rules", self.authoring_controllers.battle_categories, self
@@ -194,16 +194,6 @@ class AsteriaEditorWindow(QMainWindow):
 
     def _workspace_mode_changed(self, mode):
         current = WorkspaceMode(mode)
-        for action, candidate in (
-            (getattr(self, "scene_workspace_action", None), WorkspaceMode.SCENE),
-            (getattr(self, "rpg_workspace_action", None), WorkspaceMode.RPG),
-            (getattr(self, "battle_workspace_action", None), WorkspaceMode.BATTLE),
-            (getattr(self, "ui_workspace_action", None), WorkspaceMode.UI),
-            (getattr(self, "event_workspace_action", None), WorkspaceMode.EVENT),
-            (getattr(self, "code_workspace_action", None), WorkspaceMode.CODE),
-        ):
-            if action is not None:
-                action.setChecked(current == candidate)
         is_scene = current == WorkspaceMode.SCENE
         self.palette_dock.setVisible(is_scene)
         self.layers_dock.setVisible(is_scene)
@@ -367,29 +357,8 @@ class AsteriaEditorWindow(QMainWindow):
         toolbar.setObjectName("AsteriaRunToolbar")
         toolbar.setMovable(False)
         toolbar.setFloatable(False)
-        self.scene_workspace_action = QAction("Scene", self)
-        self.rpg_workspace_action = QAction("RPG", self)
-        self.battle_workspace_action = QAction("Battle", self)
-        self.ui_workspace_action = QAction("UI", self)
-        self.event_workspace_action = QAction("Events", self)
-        self.code_workspace_action = QAction("Code", self)
-        for action, mode in (
-            (self.scene_workspace_action, WorkspaceMode.SCENE),
-            (self.rpg_workspace_action, WorkspaceMode.RPG),
-            (self.battle_workspace_action, WorkspaceMode.BATTLE),
-            (self.ui_workspace_action, WorkspaceMode.UI),
-            (self.event_workspace_action, WorkspaceMode.EVENT),
-            (self.code_workspace_action, WorkspaceMode.CODE),
-        ):
-            action.setCheckable(True)
-            action.triggered.connect(
-                lambda checked=False, m=mode: self.workspace.set_mode(m)
-            )
-            toolbar.addAction(action)
-        toolbar.addSeparator()
         toolbar.addAction(self.play_action)
         toolbar.addAction(self.stop_action)
-        toolbar.addAction(self.reset_view_action)
         self.addToolBar(Qt.TopToolBarArea, toolbar)
         self._refresh_actions()
 
