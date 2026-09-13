@@ -25,6 +25,8 @@ from .tile_edit import (
     TileEditError,
 )
 from .authoring_context import scene_authoring_source
+from .scene_render import resolve_texture_source
+from .starter_project import starter_tileset_preview
 
 try:
     from PySide6.QtWidgets import QInputDialog, QMessageBox
@@ -50,6 +52,7 @@ class SceneEditingController:
         self.tile_palette = tile_palette
         self.tile_layers = tile_layers
         self.animation_widget = animation_widget
+        self._starter_preview = None
 
     def _sync_scene_authoring_context(self):
         self.set_tilemap_render_source(scene_authoring_source(self.document))
@@ -66,9 +69,30 @@ class SceneEditingController:
 
     def set_tilemap_render_source(self, source):
         self.viewport.set_render_source(source)
-        self.tile_palette.set_tileset(source.tileset if source is not None else None)
+        no_project = source is None and self.document.project is None
+        if no_project:
+            # The palette shows the editor's built-in tiles even before a
+            # project exists, the way a new RPG Maker install already has its
+            # default resources; painting still needs a project to hold the map.
+            if self._starter_preview is None:
+                self._starter_preview = starter_tileset_preview()
+            self.tile_palette.set_tileset(*self._starter_preview)
+        elif source is None:
+            self.tile_palette.set_tileset(None)
+        else:
+            sheet = source.sprite_sheet
+            texture = getattr(sheet, "texture", None)
+            self.tile_palette.set_tileset(
+                source.tileset,
+                sheet,
+                resolve_texture_source(self.document, texture.asset_id)
+                if texture is not None
+                else None,
+            )
         layer = self.viewport.tile_tools.active_layer if source is not None else None
         self.tile_palette.set_layer(layer)
+        if no_project:
+            self.tile_palette.show_hint("Built-in tiles · File → New Project to paint")
         self.tile_layers.set_tilemap(
             source.tilemap if source is not None else None, layer
         )

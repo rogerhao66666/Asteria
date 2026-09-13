@@ -12,6 +12,9 @@ pygame=["pygame-ce>=2.5"]
 editor=["PySide6>=6.8"]
 dev=["pytest>=9", "ruff>=0.16", "Pillow>=10"]
 
+[tool.setuptools.package-data]
+"asteria.editor"=["starter_assets/*.png"]
+
 [tool.ruff]
 target-version="py312"
 
