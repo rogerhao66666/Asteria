@@ -6,8 +6,7 @@ These steps use the current v0.159.0 Complex Reference RPG checkout:
 
 ## 1. Install dependencies
 
-Use the project virtual environment and its declared extras. Do not mix this
-checkout with the older `ChatGPT/Asteria` or `acceptance_clean` copies.
+Use the project virtual environment and its declared extras.
 
 ```bash
 cd "/Users/roger/Documents/Vscode/Asteria"
@@ -72,3 +71,7 @@ After the Runtime check, return to the Editor and verify scene selection,
 mouse selection, arrow-key camera adjustment, viewport pan/zoom, tile paint,
 layer visibility/collision toggles, undo/redo, and project Save. Editor project
 Save is separate from Runtime Player Save.
+
+Also switch between the **Scene / RPG / Battle / UI / Events / Code** toolbar
+modes and confirm the **Tile Palette** and **Layers** docks are visible only
+in Scene mode, and hidden in every other mode.
