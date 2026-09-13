@@ -29,7 +29,7 @@ class ProjectTreeWidget(QWidget):
         super().__init__(parent)
         self.document = document
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["Project"])
+        self.tree.setHeaderLabels(["Scenes"])
         self.tree.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.tree.setDragEnabled(True)
         self.tree.setAcceptDrops(True)
@@ -87,25 +87,16 @@ class ProjectTreeWidget(QWidget):
                         selected_items.append(tree_item)
                 return tree_item
 
-            root = item(project.name, "project", project)
-            self.tree.addTopLevelItem(root)
-            scenes = item("Scenes")
-            root.addChild(scenes)
             for scene in project.scenes():
                 sitem = item(scene.name, "scene", scene)
-                scenes.addChild(sitem)
+                self.tree.addTopLevelItem(sitem)
                 for entity in scene.entities():
                     eitem = item(entity.name, "entity", entity)
                     sitem.addChild(eitem)
                     for component in entity.components():
                         citem = item(type(component).__name__, "component", component)
                         eitem.addChild(citem)
-            assets = item("Assets")
-            root.addChild(assets)
-            for record in project.assets.records():
-                assets.addChild(item(record.source_path, "asset", record))
-            root.setExpanded(True)
-            scenes.setExpanded(True)
+                sitem.setExpanded(True)
             for selected_item in selected_items:
                 parent = selected_item.parent()
                 while parent is not None:
