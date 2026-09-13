@@ -1,32 +1,45 @@
-# Asteria v0.159.0 Real-machine acceptance
+# Asteria v0.159.0 real-machine acceptance report
 
-## Verified
+This report describes the current checkout at
+`/Users/roger/Documents/Vscode/Asteria`, based on the v0.159.0 Complex
+Reference RPG package.
 
-- Editor starts through the VS Code `Asteria Editor` launch configuration on macOS.
-- Complex Reference RPG opens through **File → Open Project**.
-- Editor scene and RPG/battle workspace tabs render without a Qt traceback.
-- Editor **Run Project** creates a live runtime subprocess from the canonical Game Start Definition.
-- Automated playable validation completes New Game materialization, six-person party setup, boss interaction, battle actions, victory rewards, and exact save/reload state comparison.
-- Final offscreen regression suite: **1150 passed**.
-- `compileall src tests`: **pass**.
+## Environment and automated baseline
 
-## Focused fix
+- macOS with the project virtual environment and declared editor/pygame/dev extras.
+- Editor source imports from this checkout; the older ChatGPT and acceptance-clean copies are not part of the current workflow.
+- `QT_QPA_PLATFORM=offscreen python -m pytest -q`: **1151 passed, 0 failed**.
+- `python -m compileall -q src tests`: **pass**.
 
-The native pygame adapter now creates a resizable desktop window and handles `VIDEORESIZE` by updating the logical canvas dimensions. This keeps field, battle, and HUD layout usable after a real window resize without changing the frozen core/RPG/battle contracts.
+## Verified in the current package
 
-The playable reference UI now uses arrow-key navigation with a visible selection. Enter applies the selected choice. Title choices, build rows, actor arrows, progression nodes, and battle skills also accept mouse clicks. Readable character names and labeled buttons replace the numbered engineering-test controls.
+- Editor starts and opens the Complex Reference RPG through **File → Open Project**.
+- **Run Project** routes to the playable Runtime and uses the canonical Game Start Definition.
+- Reference scene, RPG data, battle data, and playable manifest are present.
+- Runtime UI presents named data with separate Character, Skills, and Equipment tabs, mouse selection, visible arrow controls, and no tofu/engineering-ID labels.
+- Reference data covers the six-person party, secondary class, progression graph, passives, multiple weapons, weapon growth, equipment/accessories, formation, boss interaction, battle rewards, and save/load state.
+- Equipment instances reject duplicate equip operations without corrupting the loadout.
 
-Changed files:
+## Focused fixes included
 
-- `src/asteria/platform/pygame_backend.py`
-- `src/asteria/runtime/playable_test_runtime.py`
-- `reference_projects/complex_reference_rpg/PLAYTEST.md`
-- `tests/test_playable_runtime_input.py`
+- Preview routing now selects the playable Runtime before the generic preview backend, preventing a blank/grid-only window when the Complex Reference RPG is run from the Editor.
+- Runtime build menu labels and controls were rewritten for readable names and separate tabs; mouse clicks and arrow-key controls share the same selection path.
+- Equipment instance identity is checked at the loadout boundary so repeated clicks produce a clear validation result instead of duplicated state.
+- macOS Pygame window resize handling keeps the logical canvas and HUD layout in sync.
 
-## Remaining machine limitation
+## GUI acceptance status
 
-The current Codex managed desktop session can start the pygame subprocess, but does not expose that child window as an independently controllable accessibility surface. Consequently, keyboard movement, boss interaction, full GUI battle input, in-game F5 save/load, and direct FPS/input-latency measurement cannot be claimed as completed by this session. These are environment visibility limitations rather than automated runtime failures; the subprocess remains alive and the same path is covered by the playable validation harness.
+Automated playable validation covers New Game materialization, party/build
+changes, boss interaction, battle resolution, victory rewards, and exact
+save/reload comparison. In the Codex managed desktop session, the Pygame child
+window can start but is not exposed as an independently focusable accessibility
+surface. Therefore this session cannot honestly claim independent GUI PASS for
+keyboard movement, boss Interact, full battle input, in-game F5 Save/Load,
+window resize, FPS, or input-latency measurements. A normal macOS desktop run
+with the child window focused is the remaining verification step.
 
-## Verdict
+## Final verdict
 
-**BLOCKED for independent GUI playable acceptance in this managed session.** The package is ready for a normal macOS desktop run where the pygame child window is visible and focusable.
+**BLOCKED for independent GUI playable acceptance in the managed session.**
+The repository and documented workflow are ready for a normal macOS desktop
+acceptance run; automated regression remains green.

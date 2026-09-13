@@ -1,103 +1,74 @@
-# Asteria — Mac First-Run Test
+# Asteria — macOS first run
 
-Optional setup and reference-world checks for the v0.94.0a94 full canonical review package.
-Batch 94 battle presentation is a data/coordinator foundation; these checks do
-not constitute a playable battle checkpoint. Batch 93 Battle Core remains frozen
-at v0.93.0a93, Batch 95 is on hold, and no fresh GUI playtest is claimed.
+These steps use the current v0.159.0 Complex Reference RPG checkout:
 
-## 1. Environment
-Use Python 3.12+.
+`/Users/roger/Documents/Vscode/Asteria`
 
-Create a virtual environment and install the project with editor/runtime extras:
+## 1. Install dependencies
+
+Use the project virtual environment and its declared extras. Do not mix this
+checkout with the older `ChatGPT/Asteria` or `acceptance_clean` copies.
 
 ```bash
-python3 -m venv .venv
+cd "/Users/roger/Documents/Vscode/Asteria"
+python3 -m venv .venv                 # only if .venv is missing
 source .venv/bin/activate
-python -m pip install -U pip
 python -m pip install -e ".[editor,pygame,dev]"
 ```
 
-## 2. Run automated checks
+## 2. Verify the checkout
 
 ```bash
-python -m pytest -q
+QT_QPA_PLATFORM=offscreen python -m pytest -q
 python -m compileall -q src tests
 ```
 
-Expected for the current v0.94.0a94 source:
-- all applicable tests pass; optional backend tests require their dependencies
-- packaging verification: 523 passed, 4 skipped because PySide6 was absent
-- compileall exits 0
+The current result is **1151 passed, 0 failed** and compileall exits 0.
 
-## 3. Launch the Editor
+## 3. Open the Editor and project
 
 ```bash
 python -m asteria.editor
 ```
 
-Smoke-check:
-- Asteria Editor opens
-- docks render with Asteria Dark styling
-- Project/Scene hierarchy is usable
-- Inspector updates on selection
-- Scene Viewport pans/zooms
-- undo/redo works
-- no default-Qt/prototype visual regression is obvious
-
-## 4. Open the Reference World
-
-Open:
-
-`AsteriaReferenceWorld.asteria.json`
-
-Expected:
-- project loads without schema errors
-- Hero and Game Camera exist in the Scene
-- assets appear in Asset Browser
-- no missing stable-ID references
-
-## 5. Play Current Scene
-
-Press **F6** or click **Play Current Scene**.
-
-Expected:
-- external runtime preview opens
-- Reference World renders with actual Asteria pixel assets
-- WASD / arrow keys move the Hero
-- Hero cannot walk through collision areas
-- bridge is passable
-- directional animation changes while moving
-- camera follows Hero
-- Escape closes preview
-- Shift+F6 stops preview from Editor
-
-## 6. Tile-authoring smoke test
-
 In the Editor:
-- select a TileMap render source / active layer
-- Paint several tiles
-- Erase several tiles
-- test Rectangle and Fill
-- undo and redo each operation
-- add/remove/reorder Layers
-- toggle layer visibility
-- toggle Collision layer and inspect overlay
 
-## 7. Save/Open safety
+1. Choose **File → Open Project…**.
+2. Open `reference_projects/complex_reference_rpg/project.asteria.json`.
+3. Confirm the Project / Scene tree, Scene viewport, RPG, Battle, UI, Events,
+   and Code tabs render.
+4. Choose **Run Project**. This starts the canonical Game Start Definition;
+   do not use a Player Save or a midgame profile to start the acceptance run.
 
-- make an edit and verify the dirty indicator
-- Save
-- make another edit
-- Undo back to saved state
-- verify clean state
-- branch from history and verify dirty state
-- close with unsaved changes and confirm prompt appears
+## 4. Runtime smoke test
 
-## Report useful failures
-For each failure record:
-- exact action sequence
-- expected behavior
-- actual behavior
-- screenshot if visual
-- terminal traceback if present
-- whether it reproduces after restart
+Choose **New Game** in the Runtime. The primary controls are:
+
+- **↑ ↓ ← →** — move the player
+- **E**, **Enter**, or **Space** — interact / confirm
+- **C** — open or close Character / Build
+- **F5** — save Player Save inside the Runtime
+- **Esc** — close the Runtime
+
+In Character / Build, use the separate **Character**, **Skills**, and
+**Equipment** tabs. Secondary class, skill-tree nodes, passives, weapons,
+weapon growth, armor, accessories, party, and formation are selected with
+arrow keys or mouse clicks. Save after making a build change, close the
+Runtime, run the project again, choose **Load Game**, and compare the state.
+
+## 5. If the preview is blank
+
+Stop the preview and verify that the Editor opened the project path above and
+that this file exists:
+
+`reference_projects/complex_reference_rpg/playable_test_manifest.json`
+
+Restart the Editor and use **Run Project** again. A generic grid-only preview
+usually means an older project or the wrong preview route was opened.
+
+## 6. Authoring smoke test
+
+After the Runtime check, return to the Editor and verify scene selection,
+mouse selection, arrow-key camera adjustment, viewport pan/zoom, tile paint,
+layer visibility/collision toggles, undo/redo, and project Save. Editor project
+Save is separate from Runtime Player Save.

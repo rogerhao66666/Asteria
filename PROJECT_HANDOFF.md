@@ -1,14 +1,18 @@
 # Asteria Project Handoff
 
-Current canonical baseline: **v0.158.0a158, Batch 158 FROZEN / FINAL CLOSURE
-PASS**. The authoritative current audit is
-`docs/BATCH158_EDITOR_RPG_RUNTIME_FINAL_CLOSURE_AUDIT.md`. Earlier incremental
+Current canonical baseline: **v0.159.0 Complex Reference RPG acceptance**.
+The active checkout is `/Users/roger/Documents/Vscode/Asteria`; do not assemble
+it from older zip files or the former `ChatGPT/Asteria` copy. Earlier batch
 instructions below are retained as provenance and are not the current assembly
 procedure.
 
 ## Current development baseline
 
-Use `Asteria_v0.94.0a94_FULL_CANONICAL_REVIEW_DOCS_CONSISTENCY.zip` as the full cumulative canonical base, then apply Batch 95, Batch 96, Batch 97 and Batch 98 incremental packages in order. The resulting development version is **v0.98.0a98**.
+Use the checked-in v0.159.0 tree directly. Open
+`reference_projects/complex_reference_rpg/project.asteria.json` from the
+Editor with **File → Open Project**, then use **Run Project**. The acceptance
+flow starts with Runtime **New Game** and keeps Player Save inside Runtime;
+Editor Save remains project authoring only.
 
 Phase 7 RPG Toolkit remains FROZEN at v0.73.0a73. Phase 7B Battle Core remains **FROZEN at Batch 93 / v0.93.0a93**. Batch 94 established Battle Presentation scene/event foundations; Batch 95 added combatant sprite/animation runtime integration; Batch 96 adds resolved combat feedback state and VFX/audio cue routing; Batch 97 adds presentation-only camera/screen hit feedback and canonical target-indicator state; Batch 98 adds read-only Battle HUD view-state for canonical resources and active statuses. Do not redesign or re-resolve frozen Battle Core behavior.
 
@@ -54,7 +58,9 @@ No second character/equipment/ability model exists in presentation. Existing Act
 
 Adaptive + Premium Battle Presentation Batches 104–112 are now closure-complete. Next phase should move to runtime RPG UI (character/party/equipment/abilities/progression/inventory) rather than reopening frozen Battle Presentation without a proven abstraction gap. Damage numbers and interaction/break labels now have canonical backend-neutral view-state but still need their final renderer/UI adapter. RPG GUI and the playable vertical slice come after Battle Presentation reaches a human-testable checkpoint.
 
-Automated regression for the Batch 112 working overlay: **633 passed, 4 skipped, 0 failed**. The four skips are optional PySide6 editor UI tests in this environment.
+Current automated regression: **1151 passed, 0 failed**; `compileall -q src tests`
+also passes. The full manual checklist and managed-session GUI limitation are
+documented in `REAL_MACHINE_ACCEPTANCE_REPORT.md` and `START_HERE_MAC.md`.
 
 See `docs/BATCH103_BATTLE_SCREEN_ORCHESTRATION.md`, `docs/BATCH103_CLOSURE_AUDIT.md`, `docs/ARCHITECTURE.md`, and `docs/NEXT_PHASE_PLAN.md`.
 
