@@ -175,13 +175,12 @@ def build_project():
                 rewards=(reward,reward) if n in {2,4} else (reward,),
                 prerequisites=prereq,tags=(f"tree.{jid}",),
             ))
-        positions={}
-        if branching:
-            coords=((0,90),(190,20),(190,160),(380,20),(380,160),(570,90))
-            positions={node.node_id:coords[i] for i,node in enumerate(nodes)}
+        # No stored node_positions: the editor derives the talent-tree layout
+        # from prerequisites, and stored coordinates would pin it to whatever
+        # layout existed when the project was generated.
         db.add_progression_graph(ProgressionGraphDefinition(
             f"{jid}_tree",f"{name} Skill Tree",nodes=nodes,tags=("skill_tree",f"job.{jid}"),
-            editor_view="graph" if branching else "list",node_positions=positions
+            editor_view="graph" if branching else "list",
         ))
 
     # --- Passives ---
@@ -415,8 +414,11 @@ def write_project(output_dir):
     # Canonical New Game state belongs to the Project, not a developer/player save.
     try:
         from .build_saves import build_save
+        from .field_tiles import install_field_tilemap
     except ImportError:
         from build_saves import build_save
+        from field_tiles import install_field_tilemap
+    install_field_tilemap(project, project.scenes()[0], output_dir)
     from asteria.runtime.game_start import GameStartDefinition
     project.game_start=GameStartDefinition.from_runtime_save(build_save(project,"early"))
     project.game_start.event_context_data["variables"]["reference_profile"]="new_game"

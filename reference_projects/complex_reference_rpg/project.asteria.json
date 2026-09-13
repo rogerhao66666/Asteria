@@ -1,6 +1,47 @@
 {
   "assets": {
-    "assets": [],
+    "assets": [
+      {
+        "id": "45567b63-5365-4704-944b-033514dba205",
+        "import_settings": {},
+        "importer": "raw",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {},
+        "name": "environment_atlas",
+        "source_path": "field_tiles/environment_atlas.png"
+      },
+      {
+        "id": "f1f6e3cf-a4e0-4e63-97e5-a0c5299e157a",
+        "import_settings": {},
+        "importer": "raw",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {},
+        "name": "environment.sprite_sheet",
+        "source_path": "field_tiles/environment.sprite_sheet.json"
+      },
+      {
+        "id": "b8851c61-d7f9-4ad3-bd30-8f14b03abbc7",
+        "import_settings": {},
+        "importer": "raw",
+        "importer_version": 1,
+        "kind": "tileset",
+        "metadata": {},
+        "name": "environment.tileset",
+        "source_path": "field_tiles/environment.tileset.json"
+      },
+      {
+        "id": "27aea456-bd25-4fb4-84a9-471e017a190e",
+        "import_settings": {},
+        "importer": "raw",
+        "importer_version": 1,
+        "kind": "tilemap",
+        "metadata": {},
+        "name": "astral_gate.tilemap",
+        "source_path": "field_tiles/astral_gate.tilemap.json"
+      }
+    ],
     "schema": "asteria.assets",
     "version": 1
   },
@@ -6688,32 +6729,7 @@
         "display_name": "Alchemist Skill Tree",
         "editor_view": "graph",
         "graph_id": "alchemist_tree",
-        "node_positions": {
-          "alchemist_node_1": [
-            0.0,
-            90.0
-          ],
-          "alchemist_node_2": [
-            190.0,
-            20.0
-          ],
-          "alchemist_node_3": [
-            190.0,
-            160.0
-          ],
-          "alchemist_node_4": [
-            380.0,
-            20.0
-          ],
-          "alchemist_node_5": [
-            380.0,
-            160.0
-          ],
-          "alchemist_node_6": [
-            570.0,
-            90.0
-          ]
-        },
+        "node_positions": {},
         "nodes": [
           {
             "any_prerequisites": [],
@@ -7267,32 +7283,7 @@
         "display_name": "Duelist Skill Tree",
         "editor_view": "graph",
         "graph_id": "duelist_tree",
-        "node_positions": {
-          "duelist_node_1": [
-            0.0,
-            90.0
-          ],
-          "duelist_node_2": [
-            190.0,
-            20.0
-          ],
-          "duelist_node_3": [
-            190.0,
-            160.0
-          ],
-          "duelist_node_4": [
-            380.0,
-            20.0
-          ],
-          "duelist_node_5": [
-            380.0,
-            160.0
-          ],
-          "duelist_node_6": [
-            570.0,
-            90.0
-          ]
-        },
+        "node_positions": {},
         "nodes": [
           {
             "any_prerequisites": [],
@@ -8121,32 +8112,7 @@
         "display_name": "Ranger Skill Tree",
         "editor_view": "graph",
         "graph_id": "ranger_tree",
-        "node_positions": {
-          "ranger_node_1": [
-            0.0,
-            90.0
-          ],
-          "ranger_node_2": [
-            190.0,
-            20.0
-          ],
-          "ranger_node_3": [
-            190.0,
-            160.0
-          ],
-          "ranger_node_4": [
-            380.0,
-            20.0
-          ],
-          "ranger_node_5": [
-            380.0,
-            160.0
-          ],
-          "ranger_node_6": [
-            570.0,
-            90.0
-          ]
-        },
+        "node_positions": {},
         "nodes": [
           {
             "any_prerequisites": [],
@@ -8425,32 +8391,7 @@
         "display_name": "Vanguard Skill Tree",
         "editor_view": "graph",
         "graph_id": "vanguard_tree",
-        "node_positions": {
-          "vanguard_node_1": [
-            0.0,
-            90.0
-          ],
-          "vanguard_node_2": [
-            190.0,
-            20.0
-          ],
-          "vanguard_node_3": [
-            190.0,
-            160.0
-          ],
-          "vanguard_node_4": [
-            380.0,
-            20.0
-          ],
-          "vanguard_node_5": [
-            380.0,
-            160.0
-          ],
-          "vanguard_node_6": [
-            570.0,
-            90.0
-          ]
-        },
+        "node_positions": {},
         "nodes": [
           {
             "any_prerequisites": [],
@@ -9476,6 +9417,34 @@
           "enabled": true,
           "id": "37cf3857-fe20-402c-b060-1c4c471b3783",
           "name": "Astral Tyrant"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 0.0,
+                "y": 0.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "origin_x": -168.0,
+                "origin_y": -112.0,
+                "tilemap_asset_id": "27aea456-bd25-4fb4-84a9-471e017a190e",
+                "visible": true
+              },
+              "type": "asteria.TileMap2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "24d268b3-244c-4954-bd4d-08e84a3bf9d5",
+          "name": "Field Map"
         }
       ],
       "id": "cb9edc51-9d32-45fd-89e7-d3d66529b680",
