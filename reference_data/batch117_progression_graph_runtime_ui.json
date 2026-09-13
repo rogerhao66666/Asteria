@@ -1,0 +1,16 @@
+{
+  "schema": "asteria.progression_screen_profile",
+  "version": 1,
+  "graph_labels": {
+    "alchemy": "Formula Web",
+    "blade": "Blade Path"
+  },
+  "node_labels": {
+    "mixing": "Mixture Theory",
+    "catalyst": "Catalyst Theory"
+  },
+  "visible_limits": {
+    "alchemy": 8,
+    "blade": 8
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "schema": "asteria.reference.battle_action_menu",
+  "version": 1,
+  "policy": {
+    "schema": "asteria.battle_action_menu_policy",
+    "version": 1,
+    "page_size": 6,
+    "categories_visible": true,
+    "include_all_category": true,
+    "all_category_id": "all",
+    "sort_mode": "order",
+    "wrap_cursor": true
+  },
+  "entries": [
+    {
+      "action_id": "slash",
+      "label": "Slash",
+      "category": "weapon",
+      "kind": "ability",
+      "cost_text": "3 SP"
+    },
+    {
+      "action_id": "fire",
+      "label": "Fire",
+      "category": "magic",
+      "kind": "ability",
+      "cost_text": "8 MP"
+    },
+    {
+      "action_id": "concoct",
+      "label": "Concoct",
+      "category": "craft",
+      "kind": "workflow",
+      "detail": "Combine ingredients"
+    },
+    {
+      "action_id": "summon",
+      "label": "Summon",
+      "category": "special",
+      "kind": "workflow"
+    },
+    {
+      "action_id": "bomb",
+      "label": "Bomb",
+      "category": "item",
+      "kind": "item"
+    }
+  ],
+  "notes": [
+    "Action identifiers are opaque to presentation.",
+    "Enabled/disabled state is supplied by the canonical controller.",
+    "No fixed Attack/Skill/Item/Defend command model is assumed."
+  ]
+}

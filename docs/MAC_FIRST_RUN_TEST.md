@@ -1,6 +1,9 @@
 # Asteria — Mac First-Run Test
 
-This is the first recommended hands-on milestone.
+Optional setup and reference-world checks for the v0.94.0a94 full canonical review package.
+Batch 94 battle presentation is a data/coordinator foundation; these checks do
+not constitute a playable battle checkpoint. Batch 93 Battle Core remains frozen
+at v0.93.0a93, Batch 95 is on hold, and no fresh GUI playtest is claimed.
 
 ## 1. Environment
 Use Python 3.12+.
@@ -11,7 +14,7 @@ Create a virtual environment and install the project with editor/runtime extras:
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -U pip
-python -m pip install -e ".[editor,pygame]"
+python -m pip install -e ".[editor,pygame,dev]"
 ```
 
 ## 2. Run automated checks
@@ -21,8 +24,9 @@ python -m pytest -q
 python -m compileall -q src tests
 ```
 
-Expected for v0.34.0a34:
-- all tests pass
+Expected for the current v0.94.0a94 source:
+- all applicable tests pass; optional backend tests require their dependencies
+- packaging verification: 523 passed, 4 skipped because PySide6 was absent
 - compileall exits 0
 
 ## 3. Launch the Editor

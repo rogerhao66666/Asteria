@@ -1,0 +1,32 @@
+{
+  "schema": "asteria.battle_motion_reference",
+  "version": 1,
+  "channels": [
+    "animation",
+    "vfx",
+    "camera",
+    "audio",
+    "ui",
+    "timing",
+    "screen_fx"
+  ],
+  "reference_chain": [
+    "startup",
+    "cast",
+    "projectile",
+    "impact",
+    "hit_stop",
+    "floating_value",
+    "resource_motion",
+    "status",
+    "recovery"
+  ],
+  "multi_hit_spacing_seconds": 0.055,
+  "temporal_quantum_seconds": 0.004166666666666667,
+  "special_transitions": [
+    "transform",
+    "summon_enter",
+    "phase_transition"
+  ],
+  "design_goal": "Support smooth premium JRPG presentation comparable in feel to Octopath Traveler while remaining project-authored and generic."
+}

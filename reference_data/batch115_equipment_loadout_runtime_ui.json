@@ -1,0 +1,22 @@
+{
+  "schema": "asteria.equipment_screen_profile",
+  "version": 1,
+  "slot_labels": {
+    "main": "Primary",
+    "accessory": "Accessories",
+    "relic_matrix": "Relic Matrix"
+  },
+  "equipment_labels": {
+    "blade_alpha": "Aster Blade",
+    "swift_charm": "Swift Charm",
+    "relic_core": "Relic Core"
+  },
+  "socket_labels": {
+    "gem": "Gem Socket"
+  },
+  "growth_labels": {
+    "relic_path": "Relic Path"
+  },
+  "page_size": 8,
+  "include_incompatible_candidates": true
+}

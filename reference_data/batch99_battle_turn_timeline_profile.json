@@ -1,0 +1,8 @@
+{
+  "schema": "asteria.reference.battle_turn_timeline_profile",
+  "version": 1,
+  "max_visible_turns": 8,
+  "show_cast_progress": true,
+  "show_target_preview": true,
+  "note": "Presentation-only reference policy; scheduler/timing remain canonical gameplay state."
+}

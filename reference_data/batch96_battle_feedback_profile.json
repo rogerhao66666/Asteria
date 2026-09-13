@@ -1,0 +1,18 @@
+{
+  "schema": "asteria.battle_feedback_profile",
+  "version": 1,
+  "outcome_tag_labels": {
+    "outcome.resist": "RESIST",
+    "outcome.weak": "WEAK"
+  },
+  "disposition_labels": {
+    "absorb": "ABSORB",
+    "nullify": "IMMUNE"
+  },
+  "threshold_labels": {
+    "guard_break": "BREAK"
+  },
+  "value_duration": 0.9,
+  "label_duration": 0.65,
+  "vfx_default_duration": 0.5
+}

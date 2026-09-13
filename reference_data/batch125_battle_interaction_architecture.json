@@ -1,0 +1,35 @@
+{
+  "schema": "asteria.battle_interaction_reference",
+  "version": 1,
+  "root_layers": [
+    "weapon",
+    "skills",
+    "items",
+    "compose",
+    "special",
+    "swap"
+  ],
+  "overflow_layers": [
+    "stance"
+  ],
+  "contextual_layers": [
+    "boost"
+  ],
+  "stress_case": {
+    "weapons": 4,
+    "skills": 80
+  },
+  "flow": [
+    "root",
+    "action",
+    "workflow_or_modifier",
+    "target",
+    "confirm"
+  ],
+  "invariants": [
+    "large action collections are paged/grouped instead of flattened",
+    "contextual mechanics appear only when relevant",
+    "transform summon swap and stance remain project actions/categories",
+    "gameplay legality and execution stay outside presentation router"
+  ]
+}

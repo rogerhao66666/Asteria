@@ -1,0 +1,12 @@
+{
+  "batch": 92,
+  "version": "0.92.0a92",
+  "transaction_policy": {
+    "schema": "asteria.rpg.action_transaction_policy",
+    "version": 1,
+    "ability_id": "meteor",
+    "cost_commit": "start",
+    "interrupt_cost": "refund"
+  },
+  "snapshot_contract": "Mutable runtime state + internal RNG; authored definitions remain canonical project data"
+}

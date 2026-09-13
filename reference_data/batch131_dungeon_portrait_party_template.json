@@ -1,0 +1,18 @@
+{
+  "schema": "asteria.dungeon_portrait_party_template_reference",
+  "version": 1,
+  "template_id": "asteria.dungeon_portrait_party.default",
+  "presentation": {
+    "portrait_party_bodies_hidden": true,
+    "portrait_party_hud_zone": "hud.party",
+    "battlefield_zone": "battle.front",
+    "battlefield_hud_zone": "hud.enemy"
+  },
+  "principles": [
+    "portrait-party membership is explicitly supplied",
+    "battlefield and HUD visibility are independent",
+    "opaque IDs work",
+    "no player/enemy inference",
+    "visibility caps are presentation-only"
+  ]
+}

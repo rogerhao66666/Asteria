@@ -1,0 +1,29 @@
+{
+  "schema": "asteria.playable_battle_party_reference",
+  "version": 1,
+  "party_size": 12,
+  "active_count": 4,
+  "reserve_count": 8,
+  "formation_id": "reference_party_formation",
+  "slots": [
+    "slot_0",
+    "slot_1",
+    "slot_2",
+    "slot_3"
+  ],
+  "swap_example": {
+    "out": "party_01",
+    "in": "party_08",
+    "slot": "slot_1"
+  },
+  "invariants": [
+    "reserve status is generic lifecycle participation state",
+    "swap preserves party membership order",
+    "incoming member reuses outgoing formation slot",
+    "incoming member executes ordinary BattleAction",
+    "outgoing reserve member cannot act",
+    "turn selection filters inactive reserves",
+    "formation slot tags remain project vocabulary"
+  ],
+  "presentation_note": "Large rosters and reserve members must not be rendered as one flat combat HUD."
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "asteria.battle_result_profile",
+  "version": 1,
+  "victory_label": "Victory",
+  "defeat_label": "Defeat",
+  "escape_label": "Escaped",
+  "complete_label": "Battle Complete",
+  "currency_labels": {
+    "gold": "Gold"
+  },
+  "progression_labels": {
+    "hero_level": "Level"
+  },
+  "item_labels": {
+    "potion": "Potion"
+  }
+}

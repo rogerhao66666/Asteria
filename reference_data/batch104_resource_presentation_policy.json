@@ -1,0 +1,79 @@
+{
+  "schema": "asteria.battle_hud_profile",
+  "version": 1,
+  "resources": [
+    {
+      "resource_id": "hp",
+      "label": "HP",
+      "order": 0,
+      "icon_asset_id": null,
+      "visible": true,
+      "presentation": "bar",
+      "segments": 0,
+      "group": "primary",
+      "priority": 100,
+      "show_label": true,
+      "show_value": true,
+      "compact": false
+    },
+    {
+      "resource_id": "bp",
+      "label": "BP",
+      "order": 10,
+      "icon_asset_id": null,
+      "visible": true,
+      "presentation": "pips",
+      "segments": 5,
+      "group": "primary",
+      "priority": 80,
+      "show_label": true,
+      "show_value": false,
+      "compact": true
+    },
+    {
+      "resource_id": "guard",
+      "label": "Guard",
+      "order": 20,
+      "icon_asset_id": null,
+      "visible": true,
+      "presentation": "segmented_bar",
+      "segments": 6,
+      "group": "target_context",
+      "priority": 60,
+      "show_label": true,
+      "show_value": false,
+      "compact": true
+    },
+    {
+      "resource_id": "action",
+      "label": "ACT",
+      "order": 30,
+      "icon_asset_id": null,
+      "visible": true,
+      "presentation": "action_gauge",
+      "segments": 0,
+      "group": "timing",
+      "priority": 90,
+      "show_label": false,
+      "show_value": false,
+      "compact": true
+    },
+    {
+      "resource_id": "limit",
+      "label": "Limit",
+      "order": 40,
+      "icon_asset_id": null,
+      "visible": true,
+      "presentation": "ring",
+      "segments": 0,
+      "group": "secondary",
+      "priority": 40,
+      "show_label": true,
+      "show_value": false,
+      "compact": true
+    }
+  ],
+  "statuses": [],
+  "show_unmapped_resources": true,
+  "show_unmapped_statuses": false
+}

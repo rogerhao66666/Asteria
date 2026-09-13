@@ -4,13 +4,13 @@ build-backend="setuptools.build_meta"
 
 [project]
 name="asteria"
-version="0.73.0a73"
+version="0.158.0a158"
 requires-python=">=3.12"
 
 [project.optional-dependencies]
 pygame=["pygame-ce>=2.5"]
 editor=["PySide6>=6.8"]
-dev=["pytest>=9", "ruff>=0.16"]
+dev=["pytest>=9", "ruff>=0.16", "Pillow>=10"]
 
 [tool.ruff]
 target-version="py312"
@@ -19,7 +19,7 @@ target-version="py312"
 "**/__init__.py"=["F401"]
 
 [tool.pytest.ini_options]
-pythonpath=["src"]
+pythonpath=["src", "."]
 testpaths=["tests"]
 
 [project.scripts]

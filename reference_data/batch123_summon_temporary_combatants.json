@@ -1,0 +1,28 @@
+{
+  "schema": "asteria.playable_battle_summon_reference",
+  "version": 1,
+  "player_summon": {
+    "member_id": "spirit_echo",
+    "owner_id": "validation_hero",
+    "ability": "spirit_bolt"
+  },
+  "boss_adds": [
+    {
+      "member_id": "ember_add",
+      "owner_id": "reference_boss",
+      "ability": "add_bite"
+    },
+    {
+      "member_id": "ash_add",
+      "owner_id": "reference_boss",
+      "ability": "add_bite"
+    }
+  ],
+  "invariants": [
+    "player summon and boss adds use BattleRuntime.summon",
+    "summoned combatants execute ordinary BattleAction",
+    "temporary exit uses canonical combatant lifecycle removal",
+    "snapshot/restore preserves summon topology and owner provenance"
+  ],
+  "presentation_note": "HUD/targeting/layout must handle summons and adds without assuming fixed party/enemy counts."
+}

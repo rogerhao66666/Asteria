@@ -1,0 +1,1621 @@
+{
+  "assets": {
+    "assets": [
+      {
+        "id": "10000000-0000-4000-8000-000000000001",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "Asteria original reference art",
+          "pixel_scale": 1
+        },
+        "name": "Environment Atlas",
+        "source_path": "reference_assets/asteria_environment_atlas_1x.png"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000002",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "Asteria original reference art",
+          "pixel_scale": 1
+        },
+        "name": "Hero Sheet",
+        "source_path": "reference_assets/asteria_hero_sheet_1x.png"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000003",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "Asteria original reference art",
+          "pixel_scale": 1
+        },
+        "name": "Props",
+        "source_path": "reference_assets/asteria_props_1x.png"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000011",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {},
+        "name": "Environment Sprite Sheet",
+        "source_path": "reference_data/environment_sheet.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000012",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {},
+        "name": "Hero Sprite Sheet",
+        "source_path": "reference_data/hero_sheet.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000021",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "tileset",
+        "metadata": {},
+        "name": "Environment Tileset",
+        "source_path": "reference_data/environment_tileset.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000031",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {},
+        "name": "Hero Animation",
+        "source_path": "reference_data/hero_animation.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000041",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "tilemap",
+        "metadata": {},
+        "name": "Town & River TileMap",
+        "source_path": "reference_data/tilemap.json"
+      }
+    ],
+    "schema": "asteria.assets",
+    "version": 1
+  },
+  "event_programs": {},
+  "gameplay_library": {
+    "abilities": [
+      {
+        "ability_id": "aimed_shot",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "basic_attack",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "counter_stance",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "fireball",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "firestorm",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "heal",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "power_strike",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      }
+    ],
+    "formulas": {},
+    "schema": "asteria.gameplay_library",
+    "states": [],
+    "timelines": [],
+    "triggers": [],
+    "version": 1
+  },
+  "id": "fce00db0-4f2a-4bf7-bfcc-e75c1e62d170",
+  "lifecycle_event_bindings": [],
+  "name": "Asteria Phase 7B Interaction Outcome Demo",
+  "rpg_database": {
+    "ability_evolutions": [
+      {
+        "minimum_rank": 3,
+        "priority": 10,
+        "progression_track_id": "scholar_rank",
+        "result_ability_id": "firestorm",
+        "retain_source": false,
+        "rule_id": "fireball_to_firestorm",
+        "schema": "asteria.rpg.ability_evolution",
+        "source_ability_id": "fireball",
+        "version": 1
+      }
+    ],
+    "actors": [
+      {
+        "abilities": [
+          "basic_attack"
+        ],
+        "actor_id": "aria",
+        "base_resources": {
+          "hp": {
+            "current": 100.0,
+            "maximum": 100.0,
+            "minimum": 0.0
+          },
+          "mp": {
+            "current": 10.0,
+            "maximum": 10.0,
+            "minimum": 0.0
+          }
+        },
+        "base_stats": {
+          "attack": 20.0,
+          "defense": 10.0,
+          "magic": 8.0,
+          "speed": 5.0
+        },
+        "class_assignments": [
+          {
+            "assignment_id": "aria.warrior",
+            "class_id": "warrior",
+            "enabled": true,
+            "priority": 10,
+            "progression_track_ids": [
+              "warrior_rank"
+            ],
+            "role": "primary",
+            "schema": "asteria.rpg.class_assignment",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "assignment_id": "aria.scholar",
+            "class_id": "scholar",
+            "enabled": true,
+            "priority": 20,
+            "progression_track_ids": [
+              "scholar_rank"
+            ],
+            "role": "secondary",
+            "schema": "asteria.rpg.class_assignment",
+            "tags": [
+              "build.magic_side"
+            ],
+            "version": 1
+          },
+          {
+            "assignment_id": "aria.hunter",
+            "class_id": "hunter",
+            "enabled": true,
+            "priority": 30,
+            "progression_track_ids": [
+              "hunter_rank"
+            ],
+            "role": "special",
+            "schema": "asteria.rpg.class_assignment",
+            "tags": [],
+            "version": 1
+          }
+        ],
+        "display_name": "Aria",
+        "schema": "asteria.rpg.actor",
+        "tags": [
+          "actor.player",
+          "demo.phase7b"
+        ],
+        "version": 2
+      }
+    ],
+    "attachments": [
+      {
+        "attachment_id": "growth_ruby",
+        "display_name": "Growth Ruby",
+        "granted_abilities": [],
+        "growth_id": null,
+        "modifiers": [],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "gem"
+        ],
+        "triggers": [],
+        "version": 2
+      }
+    ],
+    "battle_resources": [
+      {
+        "end_mode": "persist",
+        "maximum": null,
+        "minimum": null,
+        "overflow_limit": null,
+        "resource_id": "mp",
+        "rules": [],
+        "schema": "asteria.rpg.battle_resource",
+        "start_mode": "current",
+        "start_value": null,
+        "version": 1
+      },
+      {
+        "end_mode": "reset_to_start",
+        "maximum": 100.0,
+        "minimum": 0.0,
+        "overflow_limit": 120.0,
+        "resource_id": "rage",
+        "rules": [
+          {
+            "amount": 10.0,
+            "trigger": "rpg.battle.turn_ended"
+          }
+        ],
+        "schema": "asteria.rpg.battle_resource",
+        "start_mode": "fixed",
+        "start_value": 0.0,
+        "version": 1
+      },
+      {
+        "end_mode": "reset_to_start",
+        "maximum": 5.0,
+        "minimum": 0.0,
+        "overflow_limit": null,
+        "resource_id": "boost",
+        "rules": [
+          {
+            "amount": 1.0,
+            "trigger": "rpg.battle.round_started"
+          }
+        ],
+        "schema": "asteria.rpg.battle_resource",
+        "start_mode": "fixed",
+        "start_value": 1.0,
+        "version": 1
+      },
+      {
+        "end_mode": "reset_to_start",
+        "maximum": 100.0,
+        "minimum": 0.0,
+        "overflow_limit": null,
+        "resource_id": "stagger",
+        "rules": [
+          {
+            "amount": -25.0,
+            "trigger": "demo.weakness_hit"
+          }
+        ],
+        "schema": "asteria.rpg.battle_resource",
+        "start_mode": "maximum",
+        "start_value": null,
+        "version": 1
+      },
+      {
+        "end_mode": "reset_to_start",
+        "maximum": 10.0,
+        "minimum": 0.0,
+        "overflow_limit": 15.0,
+        "resource_id": "combo",
+        "rules": [
+          {
+            "amount": 2.0,
+            "trigger": "demo.successful_hit"
+          }
+        ],
+        "schema": "asteria.rpg.battle_resource",
+        "start_mode": "minimum",
+        "start_value": null,
+        "version": 1
+      }
+    ],
+    "classes": [
+      {
+        "class_id": "hunter",
+        "display_name": "Hunter",
+        "granted_abilities": [
+          "aimed_shot"
+        ],
+        "granted_tags": [
+          "capability.weapon.bow",
+          "class.hunter"
+        ],
+        "resource_bonuses": {},
+        "schema": "asteria.rpg.class",
+        "stat_bonuses": {
+          "speed": 7.0
+        },
+        "version": 1
+      },
+      {
+        "class_id": "scholar",
+        "display_name": "Scholar",
+        "granted_abilities": [
+          "fireball"
+        ],
+        "granted_tags": [
+          "capability.weapon.staff",
+          "class.scholar"
+        ],
+        "resource_bonuses": {
+          "mp": 15.0
+        },
+        "schema": "asteria.rpg.class",
+        "stat_bonuses": {
+          "magic": 12.0,
+          "speed": 2.0
+        },
+        "version": 1
+      },
+      {
+        "class_id": "warrior",
+        "display_name": "Warrior",
+        "granted_abilities": [
+          "power_strike"
+        ],
+        "granted_tags": [
+          "capability.weapon.sword",
+          "class.warrior"
+        ],
+        "resource_bonuses": {
+          "hp": 20.0
+        },
+        "schema": "asteria.rpg.class",
+        "stat_bonuses": {
+          "attack": 10.0,
+          "defense": 4.0
+        },
+        "version": 1
+      }
+    ],
+    "encounters": [],
+    "enemies": [],
+    "equipment": [
+      {
+        "any_capabilities": [],
+        "display_name": "Blood Blade",
+        "equipment_id": "blood_blade",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": "blood_blade_growth",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "blood.base",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "attack",
+            "value": 12.0
+          }
+        ],
+        "required_capabilities": [
+          "capability.weapon.sword"
+        ],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": true,
+            "socket_id": "awakening"
+          }
+        ],
+        "tags": [
+          "weapon",
+          "weapon.sword"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Bronze Sword",
+        "equipment_id": "bronze_sword",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "bronze_sword.attack",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "attack",
+            "value": 4.0
+          }
+        ],
+        "required_capabilities": [
+          "capability.weapon.sword"
+        ],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [],
+        "tags": [
+          "equipment.weapon",
+          "weapon.sword"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Crimson Fang",
+        "equipment_id": "crimson_fang",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "crimson.base",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "attack",
+            "value": 25.0
+          }
+        ],
+        "required_capabilities": [
+          "capability.weapon.sword"
+        ],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [],
+        "tags": [
+          "weapon",
+          "weapon.evolved",
+          "weapon.sword"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Guard Ring",
+        "equipment_id": "guard_ring",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "guard_ring.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 1.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "accessory",
+        "sockets": [],
+        "tags": [
+          "equipment.accessory"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Hunter Bow",
+        "equipment_id": "hunter_bow",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "hunter_bow.attack",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "attack",
+            "value": 3.0
+          }
+        ],
+        "required_capabilities": [
+          "capability.weapon.bow"
+        ],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [],
+        "tags": [
+          "equipment.weapon",
+          "weapon.bow"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Mastery Badge",
+        "equipment_id": "mastery_badge",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "modifiers": [],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "accessory",
+        "sockets": [],
+        "tags": [
+          "capability.weapon.greatblade",
+          "equipment.accessory"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Oak Staff",
+        "equipment_id": "oak_staff",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "oak_staff.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 5.0
+          }
+        ],
+        "required_capabilities": [
+          "capability.weapon.staff"
+        ],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [],
+        "tags": [
+          "equipment.weapon",
+          "weapon.staff"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Titan Blade",
+        "equipment_id": "titan_blade",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "titan_blade.attack",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "attack",
+            "value": 12.0
+          }
+        ],
+        "required_capabilities": [
+          "capability.weapon.greatblade"
+        ],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [],
+        "tags": [
+          "equipment.weapon",
+          "weapon.greatblade"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Traveler Coat",
+        "equipment_id": "traveler_coat",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "traveler_coat.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 2.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "armor",
+        "sockets": [],
+        "tags": [
+          "equipment.armor"
+        ],
+        "triggers": [],
+        "version": 3
+      }
+    ],
+    "equipment_growth": [
+      {
+        "display_name": "Blood Blade Growth",
+        "growth_id": "blood_blade_growth",
+        "nodes": [
+          {
+            "auto_unlock": true,
+            "display_name": "Weapon Level",
+            "exclusive_group": null,
+            "max_rank": 3,
+            "node_id": "weapon_level",
+            "prerequisites": [],
+            "rank_requirements": [
+              {
+                "xp": 10.0
+              },
+              {
+                "xp": 30.0
+              },
+              {
+                "xp": 60.0
+              }
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "growth.atk.1",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "attack",
+                    "value": 2.0
+                  }
+                ],
+                "unlocked_sockets": []
+              },
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [
+                  "weapon.tempered"
+                ],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "growth.atk.2",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "attack",
+                    "value": 3.0
+                  }
+                ],
+                "unlocked_sockets": []
+              },
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "growth.atk.3",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "attack",
+                    "value": 5.0
+                  }
+                ],
+                "unlocked_sockets": [
+                  "awakening"
+                ]
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "auto_unlock": false,
+            "display_name": "Blood Awakening",
+            "exclusive_group": "final_path",
+            "max_rank": 1,
+            "node_id": "blood_awakening",
+            "prerequisites": [
+              [
+                "weapon_level",
+                3
+              ]
+            ],
+            "rank_requirements": [
+              {
+                "boss_mark": 1.0
+              }
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": "crimson_fang",
+                "granted_abilities": [
+                  "power_strike"
+                ],
+                "granted_capabilities": [
+                  "capability.weapon.blood_awakened"
+                ],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [],
+                "unlocked_sockets": []
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "auto_unlock": false,
+            "display_name": "Swift Awakening",
+            "exclusive_group": "final_path",
+            "max_rank": 1,
+            "node_id": "swift_awakening",
+            "prerequisites": [
+              [
+                "weapon_level",
+                3
+              ]
+            ],
+            "rank_requirements": [
+              {
+                "usage_mastery": 25.0
+              }
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [
+                  "weapon.swift_awakened"
+                ],
+                "granted_triggers": [],
+                "modifiers": [],
+                "unlocked_sockets": []
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          }
+        ],
+        "schema": "asteria.rpg.equipment_growth",
+        "tags": [],
+        "version": 1
+      }
+    ],
+    "interaction_rules": [
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 1.5,
+        "outcome_tags": [
+          "outcome.weak"
+        ],
+        "priority": 40,
+        "rule_id": "weak_fire",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "damage.fire"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "weak.fire"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.5,
+        "outcome_tags": [
+          "outcome.resist"
+        ],
+        "priority": 40,
+        "rule_id": "resist_fire",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "damage.fire"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "resist.fire"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "nullify",
+        "flat_delta": 0.0,
+        "multiplier": 1.0,
+        "outcome_tags": [
+          "outcome.immune"
+        ],
+        "priority": 100,
+        "rule_id": "immune_physical",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "damage.physical"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "immune.physical"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "absorb",
+        "flat_delta": 0.0,
+        "multiplier": 1.0,
+        "outcome_tags": [
+          "outcome.absorb"
+        ],
+        "priority": 100,
+        "rule_id": "absorb_arcane",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "damage.arcane"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "absorb.arcane"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "reflect",
+        "flat_delta": 0.0,
+        "multiplier": 1.0,
+        "outcome_tags": [
+          "outcome.reflect"
+        ],
+        "priority": 100,
+        "rule_id": "reflect_holy",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "damage.holy"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "reflect.holy"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 1.0,
+        "outcome_tags": [
+          "outcome.armored"
+        ],
+        "priority": 50,
+        "rule_id": "armor_mitigation",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [],
+        "source_tags_any": [],
+        "target_stat_terms": {
+          "defense": -0.5
+        },
+        "target_tags_all": [
+          "trait.armored"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "nullify",
+        "flat_delta": 0.0,
+        "multiplier": 1.0,
+        "outcome_tags": [],
+        "priority": 200,
+        "rule_id": "evade_nullifies",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "outcome.evade"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 1.5,
+        "outcome_tags": [
+          "outcome.critical_damage"
+        ],
+        "priority": 60,
+        "rule_id": "critical_bonus",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "outcome.critical"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.5,
+        "outcome_tags": [],
+        "priority": 70,
+        "rule_id": "block_reduction",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "outcome.block"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [],
+        "target_tags_any": [],
+        "version": 1
+      }
+    ],
+    "items": [],
+    "outcome_checks": [
+      {
+        "base_chance": 0.85,
+        "check_id": "hit",
+        "failure_tags": [
+          "outcome.evade"
+        ],
+        "maximum_chance": 0.99,
+        "minimum_chance": 0.05,
+        "required_source_tags": [],
+        "required_target_tags": [],
+        "schema": "asteria.rpg.outcome_check",
+        "source_stat_terms": {
+          "accuracy": 0.005
+        },
+        "success_tags": [
+          "outcome.hit"
+        ],
+        "target_stat_terms": {
+          "evasion": -0.005
+        },
+        "version": 1
+      },
+      {
+        "base_chance": 0.05,
+        "check_id": "critical",
+        "failure_tags": [],
+        "maximum_chance": 0.75,
+        "minimum_chance": 0.0,
+        "required_source_tags": [],
+        "required_target_tags": [],
+        "schema": "asteria.rpg.outcome_check",
+        "source_stat_terms": {
+          "critical": 0.005
+        },
+        "success_tags": [
+          "outcome.critical"
+        ],
+        "target_stat_terms": {},
+        "version": 1
+      },
+      {
+        "base_chance": 0.0,
+        "check_id": "block",
+        "failure_tags": [],
+        "maximum_chance": 0.8,
+        "minimum_chance": 0.0,
+        "required_source_tags": [],
+        "required_target_tags": [
+          "stance.guard"
+        ],
+        "schema": "asteria.rpg.outcome_check",
+        "source_stat_terms": {},
+        "success_tags": [
+          "outcome.block"
+        ],
+        "target_stat_terms": {
+          "block": 0.01
+        },
+        "version": 1
+      }
+    ],
+    "passives": [
+      {
+        "display_name": "Battle Instinct",
+        "granted_abilities": [
+          "counter_stance"
+        ],
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "passive.battle_instinct.attack",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "attack",
+            "value": 5.0
+          }
+        ],
+        "passive_id": "battle_instinct",
+        "schema": "asteria.rpg.passive",
+        "tags": [
+          "passive.counter_ready"
+        ],
+        "triggers": [],
+        "version": 1
+      }
+    ],
+    "progression_graphs": [
+      {
+        "display_name": "Aria Growth Board",
+        "graph_id": "aria_growth_board",
+        "nodes": [
+          {
+            "any_prerequisites": [],
+            "display_name": "Core Training",
+            "exclusive_group": null,
+            "max_rank": 3,
+            "node_id": "core_training",
+            "prerequisites": [],
+            "rank_costs": [
+              {
+                "ap": 1.0
+              },
+              {
+                "ap": 2.0
+              },
+              {
+                "ap": 3.0
+              }
+            ],
+            "rewards": [
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "attack": 2.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "attack": 3.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "attack": 5.0
+                },
+                "unlocked_passives": []
+              }
+            ],
+            "schema": "asteria.rpg.progression_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "any_prerequisites": [],
+            "display_name": "Field Medic",
+            "exclusive_group": null,
+            "max_rank": 1,
+            "node_id": "field_medic",
+            "prerequisites": [
+              {
+                "minimum_rank": 1,
+                "node_id": "core_training"
+              }
+            ],
+            "rank_costs": [
+              {
+                "ap": 2.0
+              }
+            ],
+            "rewards": [
+              {
+                "granted_abilities": [
+                  "heal"
+                ],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              }
+            ],
+            "schema": "asteria.rpg.progression_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "any_prerequisites": [],
+            "display_name": "Warrior Focus",
+            "exclusive_group": "combat_focus",
+            "max_rank": 1,
+            "node_id": "warrior_focus",
+            "prerequisites": [
+              {
+                "minimum_rank": 2,
+                "node_id": "core_training"
+              }
+            ],
+            "rank_costs": [
+              {
+                "jp": 2.0
+              }
+            ],
+            "rewards": [
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [
+                  "capability.progression.warrior_focus"
+                ],
+                "granted_tags": [
+                  "build.warrior_focus"
+                ],
+                "resource_bonuses": {},
+                "stat_bonuses": {},
+                "unlocked_passives": [
+                  "battle_instinct"
+                ]
+              }
+            ],
+            "schema": "asteria.rpg.progression_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "any_prerequisites": [],
+            "display_name": "Arcane Focus",
+            "exclusive_group": "combat_focus",
+            "max_rank": 1,
+            "node_id": "arcane_focus",
+            "prerequisites": [
+              {
+                "minimum_rank": 2,
+                "node_id": "core_training"
+              }
+            ],
+            "rank_costs": [
+              {
+                "jp": 2.0
+              }
+            ],
+            "rewards": [
+              {
+                "granted_abilities": [
+                  "firestorm"
+                ],
+                "granted_capabilities": [],
+                "granted_tags": [
+                  "build.arcane_focus"
+                ],
+                "resource_bonuses": {},
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              }
+            ],
+            "schema": "asteria.rpg.progression_node",
+            "tags": [],
+            "version": 1
+          }
+        ],
+        "schema": "asteria.rpg.progression_graph",
+        "tags": [
+          "demo.phase7b",
+          "progression.character"
+        ],
+        "version": 1
+      }
+    ],
+    "progression_tracks": [
+      {
+        "display_name": "Hunter Rank",
+        "milestones": [
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 1,
+            "required_total": 0.0,
+            "stat_bonuses": {}
+          },
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 2,
+            "required_total": 10.0,
+            "stat_bonuses": {
+              "speed": 4.0
+            }
+          }
+        ],
+        "schema": "asteria.rpg.progression_track",
+        "track_id": "hunter_rank",
+        "version": 1
+      },
+      {
+        "display_name": "Scholar Rank",
+        "milestones": [
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 1,
+            "required_total": 0.0,
+            "stat_bonuses": {}
+          },
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 2,
+            "required_total": 10.0,
+            "stat_bonuses": {
+              "magic": 5.0
+            }
+          },
+          {
+            "granted_abilities": [],
+            "granted_tags": [
+              "job.scholar.adept"
+            ],
+            "rank": 3,
+            "required_total": 30.0,
+            "stat_bonuses": {}
+          }
+        ],
+        "schema": "asteria.rpg.progression_track",
+        "track_id": "scholar_rank",
+        "version": 1
+      },
+      {
+        "display_name": "Warrior Rank",
+        "milestones": [
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 1,
+            "required_total": 0.0,
+            "stat_bonuses": {}
+          },
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 2,
+            "required_total": 10.0,
+            "stat_bonuses": {
+              "attack": 3.0
+            }
+          },
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 3,
+            "required_total": 30.0,
+            "stat_bonuses": {
+              "defense": 2.0
+            }
+          }
+        ],
+        "schema": "asteria.rpg.progression_track",
+        "track_id": "warrior_rank",
+        "version": 1
+      }
+    ],
+    "schema": "asteria.rpg.database",
+    "version": 10
+  },
+  "scene_event_bindings": {},
+  "scenes": [
+    {
+      "entities": [
+        {
+          "components": [
+            {
+              "fields": {
+                "origin_x": 0.0,
+                "origin_y": 0.0,
+                "tilemap_asset_id": "10000000-0000-4000-8000-000000000041",
+                "visible": true
+              },
+              "type": "asteria.TileMap2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "10000000-0000-4000-8000-000000000051",
+          "name": "World Map"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 320.0,
+                "y": 208.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 5,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "10000000-0000-4000-8000-000000000012",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "10000000-0000-4000-8000-000000000031",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "64e68f95-18b1-41d5-a733-543e0649c892",
+          "name": "Hero"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 240.0,
+                "y": 128.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "active": true,
+                "deadzone_x": 0.0,
+                "deadzone_y": 0.0,
+                "follow_entity_id": "64e68f95-18b1-41d5-a733-543e0649c892",
+                "height": 270,
+                "smoothing": 12.0,
+                "width": 480,
+                "zoom": 1.0
+              },
+              "type": "asteria.Camera2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "7698d7c3-07a9-4df4-81c7-07a2348c8343",
+          "name": "Game Camera"
+        }
+      ],
+      "id": "3a4f3219-7fb1-4fda-8af4-877a7f3dc141",
+      "name": "Town & River",
+      "schema": "asteria.scene",
+      "version": 1
+    }
+  ],
+  "schema": "asteria.project",
+  "startup_scene_id": "3a4f3219-7fb1-4fda-8af4-877a7f3dc141",
+  "version": 6
+}

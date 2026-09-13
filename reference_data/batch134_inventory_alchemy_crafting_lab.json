@@ -1,0 +1,21 @@
+{
+  "schema": "asteria.inventory_alchemy_crafting_lab_reference",
+  "version": 1,
+  "operable": [
+    "inventory-backed workflow options",
+    "multi-step selection",
+    "generic recipe lookup",
+    "material validation",
+    "transactional consumption",
+    "product generation",
+    "optional catalyst",
+    "repeat crafting"
+  ],
+  "principles": [
+    "workflow runtime collects selections only",
+    "recipe semantics remain controller/project policy",
+    "inventory mutation uses canonical Inventory",
+    "no Alchemy engine enum or hardcoded command",
+    "failed craft does not partially consume materials"
+  ]
+}

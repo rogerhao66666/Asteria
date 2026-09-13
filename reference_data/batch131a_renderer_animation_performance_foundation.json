@@ -1,0 +1,20 @@
+{
+  "schema": "asteria.renderer_animation_performance_foundation",
+  "version": 1,
+  "features": [
+    "backend-neutral draw batching plan",
+    "visibility culling",
+    "transient object pooling",
+    "asset preload readiness",
+    "frame-budget/dropped-frame metrics"
+  ],
+  "stress_case": {
+    "party": 12,
+    "boss": 1,
+    "adds": 4,
+    "summons": 1,
+    "vfx_draws": 300,
+    "transient_pool_capacity": 128
+  },
+  "principle": "Animation timing precision must not imply excessive render work; renderer work should scale with visible/released content."
+}

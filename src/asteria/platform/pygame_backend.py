@@ -23,7 +23,12 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
 
     def open(self, title, width, height):
         self.pg.init()
-        self.screen = self.pg.display.set_mode((int(width), int(height)))
+        # Keep the runtime window user-resizable on desktop platforms.  The
+        # backend remains renderer-neutral; the flag only controls the native
+        # pygame window created by this adapter.
+        self.screen = self.pg.display.set_mode(
+            (int(width), int(height)), self.pg.RESIZABLE
+        )
         self.pg.display.set_caption(str(title))
         self.clock = self.pg.time.Clock()
         self._close = False

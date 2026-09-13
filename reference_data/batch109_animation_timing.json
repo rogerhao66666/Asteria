@@ -1,0 +1,31 @@
+{
+  "schema": "asteria.battle_animation_timing_profile",
+  "version": 1,
+  "rules": [
+    {
+      "role": "attack",
+      "playback_rate": 1.15,
+      "transition_duration": 0.06,
+      "transition_easing": "ease_out",
+      "recovery_hold": 0.05
+    },
+    {
+      "role": "hit",
+      "playback_rate": 1.0,
+      "transition_duration": 0.03,
+      "transition_easing": "smoothstep",
+      "recovery_hold": 0.04
+    },
+    {
+      "role": "ko",
+      "playback_rate": 0.9,
+      "transition_duration": 0.08,
+      "transition_easing": "ease_in_out",
+      "recovery_hold": 0.0
+    }
+  ],
+  "default_playback_rate": 1.0,
+  "default_transition_duration": 0.0,
+  "default_transition_easing": "linear",
+  "default_recovery_hold": 0.0
+}

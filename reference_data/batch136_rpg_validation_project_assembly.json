@@ -1,0 +1,22 @@
+{
+  "schema": "asteria.rpg_validation_project_assembly",
+  "version": 1,
+  "flow": [
+    "Character/Job/Progression",
+    "Equipment/Attachment/Growth",
+    "Inventory/Composition",
+    "Party/Formation",
+    "Battle Arena"
+  ],
+  "state_model": {
+    "shared_reference_actor_scenario": true,
+    "battle_arena_built_from_current_resolved_actor_build": true,
+    "outside_battle_state_is_not_mutated_by_battle_arena": true
+  },
+  "principles": [
+    "labs compose one shared actor scenario instead of parallel copies",
+    "battle entry snapshots the current resolved build",
+    "battle runtime remains isolated from outside-battle persistent mutation",
+    "no game-specific engine subsystem added for the validation project"
+  ]
+}

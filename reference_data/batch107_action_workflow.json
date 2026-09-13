@@ -1,0 +1,45 @@
+{
+  "schema": "asteria.reference.battle_action_workflow",
+  "version": 1,
+  "definition": {
+    "schema": "asteria.battle_action_workflow_definition",
+    "version": 1,
+    "workflow_id": "concoct",
+    "label": "Concoct",
+    "steps": [
+      {
+        "step_id": "base",
+        "label": "Choose Base",
+        "selection_mode": "single",
+        "minimum_selections": 1,
+        "maximum_selections": 1,
+        "optional": false,
+        "allow_back": true
+      },
+      {
+        "step_id": "reagent",
+        "label": "Choose Reagent",
+        "selection_mode": "single",
+        "minimum_selections": 1,
+        "maximum_selections": 1,
+        "optional": false,
+        "allow_back": true
+      },
+      {
+        "step_id": "catalyst",
+        "label": "Optional Catalyst",
+        "selection_mode": "single",
+        "minimum_selections": 1,
+        "maximum_selections": 1,
+        "optional": true,
+        "allow_back": true
+      }
+    ],
+    "confirmation_label": "Mix"
+  },
+  "notes": [
+    "This demonstrates an alchemy-like flow but the mechanism is generic.",
+    "The workflow runtime never evaluates recipes or consumes inventory.",
+    "Options and disabled states are supplied by the canonical controller."
+  ]
+}

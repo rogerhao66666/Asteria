@@ -57,6 +57,7 @@ class StateDefinition:
     on_apply: tuple[Effect, ...] = ()
     periodic: tuple[PeriodicEffect, ...] = ()
     on_remove: tuple[Effect, ...] = ()
+    on_expire: tuple[Effect, ...] = ()
     contributed_tags: tuple[str, ...] = ()
 
     def __init__(
@@ -70,6 +71,7 @@ class StateDefinition:
         on_apply=(),
         periodic=(),
         on_remove=(),
+        on_expire=(),
         contributed_tags=(),
     ):
         state_id = str(state_id).strip()
@@ -85,6 +87,7 @@ class StateDefinition:
         on_apply = tuple(on_apply)
         periodic = tuple(periodic)
         on_remove = tuple(on_remove)
+        on_expire = tuple(on_expire)
         contributed_tags = tuple(
             sorted({str(x).strip().lower() for x in contributed_tags})
         )
@@ -94,8 +97,8 @@ class StateDefinition:
             )
         if any(not isinstance(x, StatModifier) for x in modifiers):
             raise TypeError("modifiers must be StatModifier values")
-        if any(not isinstance(x, Effect) for x in (*on_apply, *on_remove)):
-            raise TypeError("on_apply/on_remove must be Effect values")
+        if any(not isinstance(x, Effect) for x in (*on_apply, *on_remove, *on_expire)):
+            raise TypeError("on_apply/on_remove/on_expire must be Effect values")
         if any(not isinstance(x, PeriodicEffect) for x in periodic):
             raise TypeError("periodic must be PeriodicEffect values")
 
@@ -107,12 +110,13 @@ class StateDefinition:
         object.__setattr__(self, "on_apply", on_apply)
         object.__setattr__(self, "periodic", periodic)
         object.__setattr__(self, "on_remove", on_remove)
+        object.__setattr__(self, "on_expire", on_expire)
         object.__setattr__(self, "contributed_tags", contributed_tags)
 
     def to_data(self):
         return {
             "schema": "asteria.state_definition",
-            "version": 2,
+            "version": 3,
             "state_id": self.state_id,
             "duration": self.duration,
             "stacking": self.stacking.value,
@@ -121,6 +125,7 @@ class StateDefinition:
             "on_apply": [x.to_data() for x in self.on_apply],
             "periodic": [x.to_data() for x in self.periodic],
             "on_remove": [x.to_data() for x in self.on_remove],
+            "on_expire": [x.to_data() for x in self.on_expire],
             "contributed_tags": list(self.contributed_tags),
         }
 
@@ -139,10 +144,17 @@ class StateDefinition:
             "on_remove",
         }
         version = data.get("version")
-        expected = base if version == 1 else base | {"contributed_tags"}
+        if version == 1:
+            expected = base
+        elif version == 2:
+            expected = base | {"contributed_tags"}
+        elif version == 3:
+            expected = base | {"contributed_tags", "on_expire"}
+        else:
+            expected = set()
         if set(data) != expected:
             raise ValueError("invalid state definition")
-        if data["schema"] != "asteria.state_definition" or version not in {1, 2}:
+        if data["schema"] != "asteria.state_definition" or version not in {1, 2, 3}:
             raise ValueError("unsupported state definition")
         return cls(
             data["state_id"],
@@ -153,6 +165,7 @@ class StateDefinition:
             on_apply=[Effect.from_data(x) for x in data["on_apply"]],
             periodic=[PeriodicEffect.from_data(x) for x in data["periodic"]],
             on_remove=[Effect.from_data(x) for x in data["on_remove"]],
+            on_expire=[Effect.from_data(x) for x in data.get("on_expire", ())],
             contributed_tags=data.get("contributed_tags", ()),
         )
 
@@ -190,6 +203,7 @@ class ActiveState:
     remaining: float
     stacks: int = 1
     periodic_elapsed: list[float] | None = None
+    source_id: str | None = None
 
     def __post_init__(self):
         self.state_id = str(self.state_id)
@@ -201,6 +215,8 @@ class ActiveState:
             self.periodic_elapsed = []
         else:
             self.periodic_elapsed = [float(x) for x in self.periodic_elapsed]
+        if self.source_id is not None:
+            self.source_id = str(self.source_id)
 
     def to_data(self):
         return {
@@ -208,17 +224,21 @@ class ActiveState:
             "remaining": self.remaining,
             "stacks": self.stacks,
             "periodic_elapsed": list(self.periodic_elapsed),
+            "source_id": self.source_id,
         }
 
     @classmethod
     def from_data(cls, data):
-        if set(data) != {"state_id", "remaining", "stacks", "periodic_elapsed"}:
+        expected_v1 = {"state_id", "remaining", "stacks", "periodic_elapsed"}
+        expected_v2 = expected_v1 | {"source_id"}
+        if set(data) != expected_v1 and set(data) != expected_v2:
             raise ValueError("invalid active state")
         return cls(
             data["state_id"],
             data["remaining"],
             data["stacks"],
             data["periodic_elapsed"],
+            data.get("source_id"),
         )
 
 
@@ -247,16 +267,19 @@ class StateRuntime:
     def get(self, state_id):
         return self._active.get(str(state_id))
 
-    def apply(self, state_id):
+    def apply(self, state_id, *, duration=None, source_id=None):
         definition = self.registry.require(state_id)
+        applied_duration = definition.duration if duration is None else _duration(duration)
+        source_id = None if source_id is None else str(source_id)
         active = self._active.get(definition.state_id)
 
         if active is None or definition.stacking == StackingPolicy.REPLACE:
             active = ActiveState(
                 definition.state_id,
-                definition.duration,
+                applied_duration,
                 1,
                 [0.0] * len(definition.periodic),
+                source_id,
             )
             self._active[definition.state_id] = active
             for tag in definition.contributed_tags:
@@ -268,11 +291,13 @@ class StateRuntime:
                     self.tags.add(tag)
                 owners.add(definition.state_id)
         elif definition.stacking == StackingPolicy.REFRESH:
-            active.remaining = definition.duration
+            active.remaining = applied_duration
+            active.source_id = source_id
             active.periodic_elapsed = [0.0] * len(definition.periodic)
         else:
             active.stacks = min(definition.max_stacks, active.stacks + 1)
-            active.remaining = definition.duration
+            active.remaining = applied_duration
+            active.source_id = source_id
             active.periodic_elapsed = [0.0] * len(definition.periodic)
 
         # on_apply describes this application event, not all stacks that
@@ -303,6 +328,39 @@ class StateRuntime:
             for effect in definition.on_remove:
                 apply_effect(effect, self.stats, self.resources, self.tags)
         return True
+
+    def expire(self, state_id):
+        state_id = str(state_id)
+        definition = self.registry.require(state_id)
+        if not self.remove(state_id, run_remove_effects=True):
+            return False
+        for effect in definition.on_expire:
+            apply_effect(effect, self.stats, self.resources, self.tags)
+        return True
+
+    def advance(self, state_id, dt):
+        """Advance one active state only; returns True when it expires."""
+        state_id = str(state_id)
+        dt = float(dt)
+        if not isfinite(dt) or dt < 0.0:
+            raise ValueError("dt must be finite and >= 0")
+        active = self._active.get(state_id)
+        if active is None:
+            return False
+        definition = self.registry.require(state_id)
+        active_dt = min(dt, active.remaining)
+        active.remaining = max(0.0, active.remaining - dt)
+        for index, periodic in enumerate(definition.periodic):
+            active.periodic_elapsed[index] += active_dt
+            while active.periodic_elapsed[index] >= periodic.interval:
+                active.periodic_elapsed[index] -= periodic.interval
+                repeat = active.stacks if definition.stacking == StackingPolicy.STACK else 1
+                for _ in range(repeat):
+                    apply_effect(periodic.effect, self.stats, self.resources, self.tags)
+        if active.remaining <= 0.0:
+            self.expire(state_id)
+            return True
+        return False
 
     def update(self, dt):
         dt = float(dt)
@@ -336,7 +394,7 @@ class StateRuntime:
                 expired.append(state_id)
 
         for state_id in expired:
-            self.remove(state_id, run_remove_effects=True)
+            self.expire(state_id)
         return tuple(expired)
 
     def modifiers(self):
@@ -363,14 +421,14 @@ class StateRuntime:
     def snapshot(self):
         return {
             "schema": "asteria.state_runtime",
-            "version": 1,
+            "version": 2,
             "active": [x.to_data() for x in self.active_states()],
         }
 
     def restore(self, data):
         if set(data) != {"schema", "version", "active"}:
             raise ValueError("invalid state runtime snapshot")
-        if data["schema"] != "asteria.state_runtime" or data["version"] != 1:
+        if data["schema"] != "asteria.state_runtime" or data["version"] not in {1, 2}:
             raise ValueError("unsupported state runtime snapshot")
         restored = {}
         for raw in data["active"]:

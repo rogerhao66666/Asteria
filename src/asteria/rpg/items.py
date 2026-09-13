@@ -67,6 +67,7 @@ class AttachmentDefinition:
     modifiers: tuple[StatModifier, ...] = ()
     granted_abilities: tuple[str, ...] = ()
     triggers: tuple[GameplayTrigger, ...] = ()
+    growth_id: str | None = None
 
     def __init__(
         self,
@@ -77,6 +78,7 @@ class AttachmentDefinition:
         modifiers=(),
         granted_abilities=(),
         triggers=(),
+        growth_id=None,
     ):
         attachment_id = _id(attachment_id, "attachment_id")
         modifiers = tuple(modifiers)
@@ -95,23 +97,26 @@ class AttachmentDefinition:
             tuple(dict.fromkeys(_id(x, "ability_id") for x in granted_abilities)),
         )
         object.__setattr__(self, "triggers", triggers)
+        object.__setattr__(self, "growth_id", None if growth_id is None else _id(growth_id, "growth_id"))
 
     def to_data(self):
         return {
             "schema": "asteria.rpg.attachment",
-            "version": 1,
+            "version": 2,
             "attachment_id": self.attachment_id,
             "display_name": self.display_name,
             "tags": list(self.tags),
             "modifiers": [x.to_data() for x in self.modifiers],
             "granted_abilities": list(self.granted_abilities),
             "triggers": [x.to_data() for x in self.triggers],
+            "growth_id": self.growth_id,
         }
 
     @classmethod
     def from_data(cls, data):
-        if data.get("schema") != "asteria.rpg.attachment" or data.get("version") != 1:
+        if data.get("schema") != "asteria.rpg.attachment" or data.get("version") not in {1, 2}:
             raise ValueError("unsupported attachment definition")
+        version = data["version"]
         return cls(
             data["attachment_id"],
             data["display_name"],
@@ -119,7 +124,16 @@ class AttachmentDefinition:
             modifiers=[StatModifier.from_data(x) for x in data["modifiers"]],
             granted_abilities=data["granted_abilities"],
             triggers=[GameplayTrigger.from_data(x) for x in data["triggers"]],
+            growth_id=data.get("growth_id") if version >= 2 else None,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class EquipmentEligibility:
+    allowed: bool
+    reasons: tuple[str, ...] = ()
+    missing_capabilities: tuple[str, ...] = ()
+    forbidden_capabilities: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,6 +146,10 @@ class EquipmentDefinition:
     granted_abilities: tuple[str, ...] = ()
     triggers: tuple[GameplayTrigger, ...] = ()
     sockets: tuple[SocketDefinition, ...] = ()
+    required_capabilities: tuple[str, ...] = ()
+    any_capabilities: tuple[str, ...] = ()
+    forbidden_capabilities: tuple[str, ...] = ()
+    growth_id: str | None = None
 
     def __init__(
         self,
@@ -144,6 +162,10 @@ class EquipmentDefinition:
         granted_abilities=(),
         triggers=(),
         sockets=(),
+        required_capabilities=(),
+        any_capabilities=(),
+        forbidden_capabilities=(),
+        growth_id=None,
     ):
         equipment_id = _id(equipment_id, "equipment_id")
         modifiers = tuple(modifiers)
@@ -169,11 +191,15 @@ class EquipmentDefinition:
         )
         object.__setattr__(self, "triggers", triggers)
         object.__setattr__(self, "sockets", sockets)
+        object.__setattr__(self, "required_capabilities", _tags(required_capabilities))
+        object.__setattr__(self, "any_capabilities", _tags(any_capabilities))
+        object.__setattr__(self, "forbidden_capabilities", _tags(forbidden_capabilities))
+        object.__setattr__(self, "growth_id", None if growth_id is None else _id(growth_id, "growth_id"))
 
     def to_data(self):
         return {
             "schema": "asteria.rpg.equipment",
-            "version": 1,
+            "version": 3,
             "equipment_id": self.equipment_id,
             "display_name": self.display_name,
             "slot": self.slot,
@@ -182,12 +208,35 @@ class EquipmentDefinition:
             "granted_abilities": list(self.granted_abilities),
             "triggers": [x.to_data() for x in self.triggers],
             "sockets": [x.to_data() for x in self.sockets],
+            "required_capabilities": list(self.required_capabilities),
+            "any_capabilities": list(self.any_capabilities),
+            "forbidden_capabilities": list(self.forbidden_capabilities),
+            "growth_id": self.growth_id,
         }
+
+    def eligibility(self, capabilities=()):
+        available = {str(x).strip().lower() for x in capabilities if str(x).strip()}
+        missing = tuple(x for x in self.required_capabilities if x not in available)
+        forbidden = tuple(x for x in self.forbidden_capabilities if x in available)
+        any_missing = bool(self.any_capabilities) and not any(
+            x in available for x in self.any_capabilities
+        )
+        reasons = []
+        if missing:
+            reasons.append("missing required capabilities: " + ", ".join(missing))
+        if any_missing:
+            reasons.append("requires any capability: " + ", ".join(self.any_capabilities))
+        if forbidden:
+            reasons.append("forbidden capabilities present: " + ", ".join(forbidden))
+        return EquipmentEligibility(
+            not reasons, tuple(reasons), missing, forbidden
+        )
 
     @classmethod
     def from_data(cls, data):
-        if data.get("schema") != "asteria.rpg.equipment" or data.get("version") != 1:
+        if data.get("schema") != "asteria.rpg.equipment" or data.get("version") not in {1, 2, 3}:
             raise ValueError("unsupported equipment definition")
+        version = data["version"]
         return cls(
             data["equipment_id"],
             data["display_name"],
@@ -197,6 +246,10 @@ class EquipmentDefinition:
             granted_abilities=data["granted_abilities"],
             triggers=[GameplayTrigger.from_data(x) for x in data["triggers"]],
             sockets=[SocketDefinition.from_data(x) for x in data["sockets"]],
+            required_capabilities=data.get("required_capabilities", ()) if version >= 2 else (),
+            any_capabilities=data.get("any_capabilities", ()) if version >= 2 else (),
+            forbidden_capabilities=data.get("forbidden_capabilities", ()) if version >= 2 else (),
+            growth_id=data.get("growth_id") if version >= 3 else None,
         )
 
 
@@ -313,11 +366,21 @@ class EquippedItem:
     equipment: EquipmentDefinition
     attachments: dict[str, AttachmentDefinition] = field(default_factory=dict)
     instance_id: str = ""
+    growth: object | None = None
 
     def __post_init__(self):
+        from .equipment_growth import EquipmentGrowthRuntime
         self.instance_id = _id(
             self.instance_id or self.equipment.equipment_id, "instance_id"
         )
+        if self.growth is not None:
+            if not isinstance(self.growth, EquipmentGrowthRuntime):
+                raise TypeError("growth must be EquipmentGrowthRuntime")
+            if self.equipment.growth_id is None:
+                raise ValueError("equipment does not declare a growth_id")
+            if self.growth.definition.growth_id != self.equipment.growth_id:
+                raise ValueError("equipment growth definition does not match equipment growth_id")
+            self.growth.source = self.instance_id
         existing = dict(self.attachments)
         self.attachments = {}
         for socket_id, attachment in existing.items():
@@ -326,31 +389,69 @@ class EquippedItem:
     def to_data(self):
         return {
             "schema": "asteria.rpg.equipment_instance",
-            "version": 1,
+            "version": 2,
             "instance_id": self.instance_id,
             "equipment_id": self.equipment.equipment_id,
             "attachments": {
                 key: value.attachment_id
                 for key, value in sorted(self.attachments.items())
             },
+            "growth": None if self.growth is None else self.growth.to_data(),
         }
 
     @classmethod
-    def from_data(cls, data, *, equipment, attachments):
+    def from_data(cls, data, *, equipment, attachments, growth_definitions=None, hooks=None):
         if (
             data.get("schema") != "asteria.rpg.equipment_instance"
-            or data.get("version") != 1
+            or data.get("version") not in {1, 2}
         ):
             raise ValueError("unsupported equipment instance")
         equipment_id = data["equipment_id"]
         if equipment_id not in equipment:
             raise KeyError(f"unknown equipment: {equipment_id}")
-        item = cls(equipment[equipment_id], instance_id=data["instance_id"])
+        growth = None
+        if data["version"] >= 2 and data.get("growth") is not None:
+            from .equipment_growth import EquipmentGrowthRuntime
+            growth = EquipmentGrowthRuntime.from_data(
+                data["growth"],
+                growth_definitions or {},
+                hooks=hooks,
+                source=data["instance_id"],
+            )
+        item = cls(equipment[equipment_id], instance_id=data["instance_id"], growth=growth)
         for socket_id, attachment_id in data["attachments"].items():
             if attachment_id not in attachments:
                 raise KeyError(f"unknown attachment: {attachment_id}")
             item.attach(socket_id, attachments[attachment_id])
         return item
+
+    def ensure_growth(self, growth_definitions, *, hooks=None):
+        if self.equipment.growth_id is None:
+            return None
+        if self.growth is None:
+            from .equipment_growth import EquipmentGrowthRuntime
+            definitions = dict(growth_definitions)
+            if self.equipment.growth_id not in definitions:
+                raise KeyError(f"unknown equipment growth definition: {self.equipment.growth_id}")
+            self.growth = EquipmentGrowthRuntime(
+                definitions[self.equipment.growth_id], hooks=hooks, source=self.instance_id
+            )
+        return self.growth
+
+    def growth_contribution(self):
+        return None if self.growth is None else self.growth.contribution()
+
+    def unlocked_socket_ids(self):
+        unlocked = {x.socket_id for x in self.equipment.sockets if not x.locked}
+        contribution = self.growth_contribution()
+        if contribution is not None:
+            unlocked.update(contribution.unlocked_sockets)
+        return tuple(sorted(unlocked))
+
+    @property
+    def evolution_target_id(self):
+        contribution = self.growth_contribution()
+        return None if contribution is None else contribution.evolution_equipment_id
 
     def attach(self, socket_id, attachment):
         socket_id = str(socket_id)
@@ -361,7 +462,12 @@ class EquippedItem:
             raise KeyError(f"unknown socket: {socket_id}")
         if not isinstance(attachment, AttachmentDefinition):
             raise TypeError("attachment must be AttachmentDefinition")
-        if not socket.accepts(attachment):
+        unlocked = set(self.unlocked_socket_ids())
+        if socket_id not in unlocked:
+            raise ValueError("equipment socket is locked")
+        # Growth-unlocked sockets may be authored with locked=True; once the
+        # runtime unlock exists, compatibility still follows accepted_tags.
+        if socket.accepted_tags and not any(tag in attachment.tags for tag in socket.accepted_tags):
             raise ValueError("attachment is not compatible with socket")
         self.attachments[socket_id] = attachment
 
@@ -370,24 +476,37 @@ class EquippedItem:
 
     def modifiers(self):
         result = list(self.equipment.modifiers)
+        contribution = self.growth_contribution()
+        if contribution is not None:
+            result.extend(contribution.modifiers)
         for socket_id in sorted(self.attachments):
             result.extend(self.attachments[socket_id].modifiers)
         return tuple(result)
 
     def abilities(self):
         result = list(self.equipment.granted_abilities)
+        contribution = self.growth_contribution()
+        if contribution is not None:
+            result.extend(contribution.granted_abilities)
         for socket_id in sorted(self.attachments):
             result.extend(self.attachments[socket_id].granted_abilities)
         return tuple(dict.fromkeys(result))
 
     def triggers(self):
         result = list(self.equipment.triggers)
+        contribution = self.growth_contribution()
+        if contribution is not None:
+            result.extend(contribution.granted_triggers)
         for socket_id in sorted(self.attachments):
             result.extend(self.attachments[socket_id].triggers)
         return tuple(result)
 
     def tags(self):
         result = set(self.equipment.tags)
+        contribution = self.growth_contribution()
+        if contribution is not None:
+            result.update(contribution.granted_tags)
+            result.update(contribution.granted_capabilities)
         for socket_id in sorted(self.attachments):
             result.update(self.attachments[socket_id].tags)
         return tuple(sorted(result))
@@ -451,7 +570,7 @@ class EquipmentLoadout:
         }
 
     @classmethod
-    def from_data(cls, data, *, equipment, attachments, hooks=None):
+    def from_data(cls, data, *, equipment, attachments, growth_definitions=None, hooks=None):
         if (
             data.get("schema") != "asteria.rpg.equipment_loadout"
             or data.get("version") != 1
@@ -465,12 +584,29 @@ class EquipmentLoadout:
                 result.equip(
                     slot_id,
                     EquippedItem.from_data(
-                        raw, equipment=equipment, attachments=attachments
+                        raw, equipment=equipment, attachments=attachments,
+                        growth_definitions=growth_definitions or {}, hooks=hooks
                     ),
+                    validate_requirements=False,
                 )
         return result
 
-    def equip(self, slot_id, item):
+    def check_equip(self, slot_id, item, *, capabilities=()):
+        slot_id = str(slot_id)
+        if slot_id not in self._slots:
+            return EquipmentEligibility(False, (f"unknown equipment slot: {slot_id}",))
+        if not isinstance(item, EquippedItem):
+            raise TypeError("item must be EquippedItem")
+        if any(existing.instance_id == item.instance_id for existing in self.equipped()):
+            return EquipmentEligibility(False, ("equipment instance is already equipped",))
+        slot = self._slots[slot_id]
+        if item.equipment.slot != slot_id and not slot.accepts(item.equipment):
+            return EquipmentEligibility(False, ("equipment is not compatible with slot",))
+        if slot.capacity is not None and len(self._equipped[slot_id]) >= slot.capacity:
+            return EquipmentEligibility(False, ("equipment slot is full",))
+        return item.equipment.eligibility(capabilities)
+
+    def equip(self, slot_id, item, *, capabilities=(), validate_requirements=True):
         slot_id = str(slot_id)
         emit_hook(
             self.hooks,
@@ -484,19 +620,37 @@ class EquipmentLoadout:
                 ),
             },
         )
-        if slot_id not in self._slots:
-            raise KeyError(f"unknown equipment slot: {slot_id}")
         if not isinstance(item, EquippedItem):
             raise TypeError("item must be EquippedItem")
-        if any(
-            existing.instance_id == item.instance_id for existing in self.equipped()
-        ):
-            raise ValueError("equipment instance is already equipped")
-        slot = self._slots[slot_id]
-        if item.equipment.slot != slot_id and not slot.accepts(item.equipment):
-            raise ValueError("equipment is not compatible with slot")
-        if slot.capacity is not None and len(self._equipped[slot_id]) >= slot.capacity:
-            raise ValueError("equipment slot is full")
+        if validate_requirements:
+            eligibility = self.check_equip(slot_id, item, capabilities=capabilities)
+            if not eligibility.allowed:
+                emit_hook(
+                    self.hooks,
+                    "rpg.equipment.equip_rejected",
+                    source=slot_id,
+                    data={
+                        "item": item,
+                        "instance_id": item.instance_id,
+                        "equipment_id": item.equipment.equipment_id,
+                        "reasons": eligibility.reasons,
+                        "missing_capabilities": eligibility.missing_capabilities,
+                        "forbidden_capabilities": eligibility.forbidden_capabilities,
+                    },
+                )
+                if eligibility.reasons and eligibility.reasons[0].startswith("unknown equipment slot"):
+                    raise KeyError(eligibility.reasons[0])
+                raise ValueError("; ".join(eligibility.reasons))
+        else:
+            if slot_id not in self._slots:
+                raise KeyError(f"unknown equipment slot: {slot_id}")
+            if any(existing.instance_id == item.instance_id for existing in self.equipped()):
+                raise ValueError("equipment instance is already equipped")
+            slot = self._slots[slot_id]
+            if item.equipment.slot != slot_id and not slot.accepts(item.equipment):
+                raise ValueError("equipment is not compatible with slot")
+            if slot.capacity is not None and len(self._equipped[slot_id]) >= slot.capacity:
+                raise ValueError("equipment slot is full")
         self._equipped[slot_id].append(item)
         emit_hook(
             self.hooks,
@@ -555,7 +709,20 @@ class EquipmentLoadout:
         result = ModifierSet()
         for item in self.equipped():
             for modifier in item.modifiers():
-                result.add(modifier)
+                # Modifier IDs are definition-local.  Scope them by stable
+                # equipment instance so multiple copies of the same definition
+                # contribute independently without colliding in ModifierSet.
+                result.add(
+                    StatModifier(
+                        f"{item.instance_id}:{modifier.modifier_id}",
+                        modifier.stat,
+                        modifier.operation,
+                        modifier.value,
+                        priority=modifier.priority,
+                        required_tags=modifier.required_tags,
+                        blocked_tags=modifier.blocked_tags,
+                    )
+                )
         return result
 
     def abilities(self):

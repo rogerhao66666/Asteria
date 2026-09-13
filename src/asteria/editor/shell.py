@@ -18,8 +18,15 @@ from .inspector import build_inspector_fields
 from .model import EditorDocument
 from .playmode import PlayModeError, create_play_session
 from .runtime_launcher import RuntimeLaunchError, launch_play_session
-from .scenes import SceneEditError, build_add_scene_command, build_remove_scene_command
+from .scenes import (
+    SceneEditError,
+    build_add_scene_command,
+    build_remove_scene_command,
+    build_reorder_scene_command,
+)
 from .storage import EditorStorageError, load_document, save_document
+from .hierarchy import build_reorder_entity_command
+from .commands import CommandTransaction, SetAttributeCommand
 from .structure import (
     StructureEditError,
     build_add_component_command,
@@ -29,6 +36,11 @@ from .structure import (
     build_rename_command,
 )
 from .workspace import EditorWorkspace, WorkspaceMode
+from .integrated_authoring import IntegratedAuthoringControllers
+from .authoring_hub_widget import FamilyHostWidget
+from .game_flow_overview_widget import GameFlowOverviewWidget
+from .project_workspace import ProjectWorkspaceController
+from .playtest_profiles import PlaytestProfileLibrary
 
 try:
     from PySide6.QtCore import Qt, QTimer
@@ -38,10 +50,13 @@ try:
         QDockWidget,
         QFileDialog,
         QInputDialog,
+        QComboBox,
+        QLabel,
         QListWidget,
         QMainWindow,
         QMessageBox,
         QTabBar,
+        QTabWidget,
         QTextEdit,
         QToolBar,
         QVBoxLayout,
@@ -100,12 +115,42 @@ class AsteriaEditorWindow(QMainWindow):
         self.code_workspace = CodeWorkspaceWidget(self.document, self)
         self.event_editor = EventEditorWidget(self)
         self.animation_widget = AnimationWidget(self)
+
+        self.authoring_controllers = IntegratedAuthoringControllers(self.document)
+        self.project_workspace_controller = ProjectWorkspaceController(self.document)
+        self.playtest_profile_library = None
+
+        self.rpg_authoring = FamilyHostWidget(
+            "RPG Authoring", self.authoring_controllers.rpg_categories, self
+        )
+        self.battle_authoring = FamilyHostWidget(
+            "Battle Rules", self.authoring_controllers.battle_categories, self
+        )
+        self.presentation_authoring = FamilyHostWidget(
+            "Battle Presentation", self.authoring_controllers.presentation_categories, self
+        )
+        self.runtime_ui_authoring = FamilyHostWidget(
+            "Runtime RPG UI", self.authoring_controllers.runtime_ui_categories, self
+        )
+
+        self.ui_workspace = QTabWidget(self)
+        self.ui_workspace.addTab(self.presentation_authoring, "Battle Presentation")
+        self.ui_workspace.addTab(self.runtime_ui_authoring, "Runtime RPG UI")
+        self.ui_workspace.addTab(self.animation_widget, "Animation")
+
+        self.game_flow_overview = GameFlowOverviewWidget(self.document, self)
+        self.events_workspace = QTabWidget(self)
+        self.events_workspace.addTab(self.event_editor, "Event Program")
+        self.events_workspace.addTab(self.game_flow_overview, "Field / Game Flow")
+
         self.workspace = EditorWorkspace(
             {
                 WorkspaceMode.SCENE: self.viewport,
+                WorkspaceMode.RPG: self.rpg_authoring,
+                WorkspaceMode.BATTLE: self.battle_authoring,
+                WorkspaceMode.UI: self.ui_workspace,
+                WorkspaceMode.EVENT: self.events_workspace,
                 WorkspaceMode.CODE: self.code_workspace,
-                WorkspaceMode.EVENT: self.event_editor,
-                WorkspaceMode.ANIMATION: self.animation_widget,
             },
             self,
         )
@@ -178,6 +223,7 @@ class AsteriaEditorWindow(QMainWindow):
             dock_tabs.setDrawBase(False)
 
         self._build_actions()
+        self._load_playtest_profiles()
         left.raise_()
         self._workspace_mode_changed(self.workspace.mode.value)
         self.refresh_all()
@@ -187,17 +233,25 @@ class AsteriaEditorWindow(QMainWindow):
         current = WorkspaceMode(mode)
         for action, candidate in (
             (getattr(self, "scene_workspace_action", None), WorkspaceMode.SCENE),
-            (getattr(self, "code_workspace_action", None), WorkspaceMode.CODE),
+            (getattr(self, "rpg_workspace_action", None), WorkspaceMode.RPG),
+            (getattr(self, "battle_workspace_action", None), WorkspaceMode.BATTLE),
+            (getattr(self, "ui_workspace_action", None), WorkspaceMode.UI),
             (getattr(self, "event_workspace_action", None), WorkspaceMode.EVENT),
-            (
-                getattr(self, "animation_workspace_action", None),
-                WorkspaceMode.ANIMATION,
-            ),
+            (getattr(self, "code_workspace_action", None), WorkspaceMode.CODE),
         ):
             if action is not None:
                 action.setChecked(current == candidate)
         if current == WorkspaceMode.CODE:
             self.code_workspace.refresh_project_context()
+        elif current == WorkspaceMode.RPG:
+            self.rpg_authoring.rebuild()
+        elif current == WorkspaceMode.BATTLE:
+            self.battle_authoring.rebuild()
+        elif current == WorkspaceMode.UI:
+            self.presentation_authoring.rebuild()
+            self.runtime_ui_authoring.rebuild()
+        elif current == WorkspaceMode.EVENT:
+            self.game_flow_overview.refresh()
 
     def _code_script_saved(self, path):
         self.statusBar().showMessage(f"Saved script {path}", 3000)
@@ -271,6 +325,14 @@ class AsteriaEditorWindow(QMainWindow):
         self.add_scene_action.triggered.connect(self.add_scene)
         self.delete_scene_action = QAction("Delete Scene", self)
         self.delete_scene_action.triggered.connect(self.delete_scene)
+        self.set_startup_scene_action = QAction("Set as Startup Scene", self)
+        self.set_startup_scene_action.triggered.connect(self.set_startup_scene)
+        self.move_up_action = QAction("Move Up", self)
+        self.move_up_action.setShortcut("Alt+Up")
+        self.move_up_action.triggered.connect(lambda: self.move_selected(-1))
+        self.move_down_action = QAction("Move Down", self)
+        self.move_down_action.setShortcut("Alt+Down")
+        self.move_down_action.triggered.connect(lambda: self.move_selected(1))
         self.add_entity_action = QAction("Add Entity…", self)
         self.add_entity_action.triggered.connect(self.add_entity)
         self.delete_action = QAction("Delete Selected", self)
@@ -287,22 +349,29 @@ class AsteriaEditorWindow(QMainWindow):
         self.duplicate_action = QAction("Duplicate Entity", self)
         self.duplicate_action.setShortcut("Ctrl+D")
         self.duplicate_action.triggered.connect(self.duplicate_selected)
+        self.toggle_entity_enabled_action = QAction("Enable / Disable Entity", self)
+        self.toggle_entity_enabled_action.setShortcut("Ctrl+E")
+        self.toggle_entity_enabled_action.triggered.connect(self.toggle_selected_entity_enabled)
         for action in (
             self.rename_action,
             self.add_scene_action,
             self.delete_scene_action,
+            self.set_startup_scene_action,
+            self.move_up_action,
+            self.move_down_action,
             self.add_entity_action,
             self.add_component_action,
             self.copy_action,
             self.paste_action,
             self.duplicate_action,
+            self.toggle_entity_enabled_action,
             self.delete_action,
         ):
             edit.addAction(action)
 
-        self.play_action = QAction("Play Current Scene", self)
+        self.play_action = QAction("Run Project", self)
         self.play_action.setShortcut("F6")
-        self.play_action.triggered.connect(self.play_current_scene)
+        self.play_action.triggered.connect(self.play_project)
         self.stop_action = QAction("Stop", self)
         self.stop_action.setShortcut("Shift+F6")
         self.stop_action.triggered.connect(self.stop_play)
@@ -313,7 +382,12 @@ class AsteriaEditorWindow(QMainWindow):
         view_menu.addAction(self.reset_view_action)
 
         run_menu = self.menuBar().addMenu("&Run")
-        run_menu.addActions([self.play_action, self.stop_action])
+        run_menu.addAction(self.play_action)
+        self.play_scene_action = QAction("Run Current Scene", self)
+        self.play_scene_action.setShortcut("Ctrl+F6")
+        self.play_scene_action.triggered.connect(self.play_current_scene)
+        run_menu.addAction(self.play_scene_action)
+        run_menu.addAction(self.stop_action)
 
         help_menu = self.menuBar().addMenu("&Help")
         self.controls_action = QAction("Controls and Shortcuts", self)
@@ -326,20 +400,25 @@ class AsteriaEditorWindow(QMainWindow):
         toolbar.setMovable(False)
         toolbar.setFloatable(False)
         self.scene_workspace_action = QAction("Scene", self)
+        self.rpg_workspace_action = QAction("RPG", self)
+        self.battle_workspace_action = QAction("Battle", self)
+        self.ui_workspace_action = QAction("UI", self)
+        self.event_workspace_action = QAction("Events", self)
         self.code_workspace_action = QAction("Code", self)
-        self.event_workspace_action = QAction("Event", self)
-        self.animation_workspace_action = QAction("Animation", self)
         for action, mode in (
             (self.scene_workspace_action, WorkspaceMode.SCENE),
-            (self.code_workspace_action, WorkspaceMode.CODE),
+            (self.rpg_workspace_action, WorkspaceMode.RPG),
+            (self.battle_workspace_action, WorkspaceMode.BATTLE),
+            (self.ui_workspace_action, WorkspaceMode.UI),
             (self.event_workspace_action, WorkspaceMode.EVENT),
-            (self.animation_workspace_action, WorkspaceMode.ANIMATION),
+            (self.code_workspace_action, WorkspaceMode.CODE),
         ):
             action.setCheckable(True)
             action.triggered.connect(
                 lambda checked=False, m=mode: self.workspace.set_mode(m)
             )
             toolbar.addAction(action)
+        toolbar.addSeparator()
         toolbar.addAction(self.play_action)
         toolbar.addAction(self.stop_action)
         toolbar.addAction(self.reset_view_action)
@@ -362,7 +441,8 @@ class AsteriaEditorWindow(QMainWindow):
             "• Command+Z undoes; Command+Shift+Z redoes.\n"
             "• F2 renames the selected item.\n\n"
             "Play\n"
-            "• F6 plays the current scene.\n"
+            "• F6 runs the Project from its canonical Game Start.\n"
+            "• Ctrl+F6 runs the current scene for local testing.\n"
             "• Shift+F6 stops Play.\n"
             "• WASD or arrow keys move the player.\n"
             "• Escape closes the Preview window.",
@@ -405,6 +485,15 @@ class AsteriaEditorWindow(QMainWindow):
             sel.kind in {"project", "scene", "entity"} and not sel.multiple
         )
         self.add_scene_action.setEnabled(project is not None)
+        self.set_startup_scene_action.setEnabled(
+            sel.kind == "scene" and not sel.multiple and sel.value is not None
+        )
+        self.move_up_action.setEnabled(
+            sel.kind in {"scene", "entity"} and not sel.multiple and sel.value is not None
+        )
+        self.move_down_action.setEnabled(
+            sel.kind in {"scene", "entity"} and not sel.multiple and sel.value is not None
+        )
         self.delete_scene_action.setEnabled(
             sel.kind == "scene"
             and not sel.multiple
@@ -415,11 +504,15 @@ class AsteriaEditorWindow(QMainWindow):
             sel.kind in {"scene", "entity"} and not sel.multiple
         )
         self.delete_action.setEnabled(
-            sel.kind in {"entity", "component"} and not sel.multiple
+            sel.kind == "component" and not sel.multiple
+            or sel.kind == "entity" and bool(sel.values)
         )
         self.add_component_action.setEnabled(sel.kind == "entity" and not sel.multiple)
         self.copy_action.setEnabled(sel.kind == "entity" and not sel.multiple)
-        self.duplicate_action.setEnabled(sel.kind == "entity" and not sel.multiple)
+        self.duplicate_action.setEnabled(sel.kind == "entity" and bool(sel.values))
+        self.toggle_entity_enabled_action.setEnabled(
+            sel.kind == "entity" and not sel.multiple and sel.value is not None
+        )
         self.paste_action.setEnabled(
             self.document.clipboard.has_entity()
             and sel.kind in {"scene", "entity"}
@@ -756,6 +849,11 @@ class AsteriaEditorWindow(QMainWindow):
         self._sync_animation_context()
         self._sync_event_context()
         self.code_workspace.refresh_project_context()
+        self.rpg_authoring.rebuild()
+        self.battle_authoring.rebuild()
+        self.presentation_authoring.rebuild()
+        self.runtime_ui_authoring.rebuild()
+        self.game_flow_overview.refresh()
         self.viewport.refresh()
         if self.viewport.render_source is not None:
             self.tile_layers.set_tilemap(
@@ -910,6 +1008,61 @@ class AsteriaEditorWindow(QMainWindow):
         self.refresh_all()
         return True
 
+    def set_startup_scene(self):
+        sel = self.document.selection
+        project = self.document.project
+        if project is None or sel.kind != "scene" or sel.multiple or sel.value is None:
+            return False
+        scene = sel.value
+        if project.startup_scene_id == scene.id:
+            return True
+        self.document.execute(SetAttributeCommand(
+            project, "startup_scene_id", scene.id, project.startup_scene_id,
+            f"Set Startup Scene {scene.name}",
+        ))
+        self.refresh_all()
+        return True
+
+    def move_selected(self, delta):
+        sel = self.document.selection
+        if sel.multiple or sel.value is None:
+            return False
+        try:
+            if sel.kind == "scene":
+                project = self.document.project
+                old = project.scene_index(sel.value)
+                new = max(0, min(old + int(delta), len(project.scenes()) - 1))
+                if new == old:
+                    return True
+                command = build_reorder_scene_command(project, sel.value, new)
+            elif sel.kind == "entity":
+                scene = sel.value.scene
+                old = scene.entity_index(sel.value)
+                new = max(0, min(old + int(delta), len(scene.entities()) - 1))
+                if new == old:
+                    return True
+                command = build_reorder_entity_command(sel.value, new)
+            else:
+                return False
+        except (SceneEditError, ValueError) as exc:
+            QMessageBox.warning(self, "Move", str(exc))
+            return False
+        self.document.execute(command)
+        self.refresh_all()
+        return True
+
+    def toggle_selected_entity_enabled(self):
+        sel = self.document.selection
+        if sel.kind != "entity" or sel.multiple or sel.value is None:
+            return False
+        entity = sel.value
+        self.document.execute(SetAttributeCommand(
+            entity, "enabled", not entity.enabled, entity.enabled,
+            f"{'Disable' if entity.enabled else 'Enable'} Entity {entity.name}",
+        ))
+        self.refresh_all()
+        return True
+
     def add_entity(self):
         sel = self.document.selection
         scene = (
@@ -973,12 +1126,23 @@ class AsteriaEditorWindow(QMainWindow):
 
     def duplicate_selected(self):
         sel = self.document.selection
-        if sel.kind != "entity" or sel.value is None or sel.multiple:
+        if sel.kind != "entity" or not sel.values:
             return False
-        command = build_duplicate_entity_command(
-            sel.value, self.document.component_registry
-        )
-        self._execute_structure(command, "entity", command.duplicate_entity)
+        commands = [
+            build_duplicate_entity_command(value, self.document.component_registry)
+            for value in sel.values
+        ]
+        if len(commands) == 1:
+            self._execute_structure(
+                commands[0], "entity", commands[0].duplicate_entity
+            )
+        else:
+            tx = CommandTransaction(f"Duplicate {len(commands)} Entities", commands)
+            self.document.execute(tx)
+            self.document.selection.set_many(
+                "entity", tuple(command.duplicate_entity for command in commands)
+            )
+            self.refresh_all()
         return True
 
     def paste_entity(self):
@@ -1004,16 +1168,24 @@ class AsteriaEditorWindow(QMainWindow):
 
     def delete_selected(self):
         sel = self.document.selection
-        if sel.multiple:
-            return False
         try:
-            if sel.kind == "entity" and sel.value is not None:
-                scene = sel.value.scene
-                self._execute_structure(
-                    build_remove_entity_command(sel.value), "scene", scene
-                )
+            if sel.kind == "entity" and sel.values:
+                entities = tuple(sel.values)
+                scenes = {id(entity.scene): entity.scene for entity in entities}
+                commands = [build_remove_entity_command(entity) for entity in entities]
+                if len(commands) == 1:
+                    self.document.execute(commands[0])
+                else:
+                    self.document.execute(
+                        CommandTransaction(f"Delete {len(commands)} Entities", commands)
+                    )
+                if len(scenes) == 1:
+                    self.document.selection.set_single("scene", next(iter(scenes.values())))
+                else:
+                    self.document.selection.set_single("project", self.document.project)
+                self.refresh_all()
                 return True
-            if sel.kind == "component" and sel.value is not None:
+            if sel.kind == "component" and sel.value is not None and not sel.multiple:
                 entity = sel.value.entity
                 self._execute_structure(
                     build_remove_component_command(sel.value), "entity", entity
@@ -1116,13 +1288,52 @@ class AsteriaEditorWindow(QMainWindow):
             QMessageBox.critical(self, "Open Project", str(exc))
             return False
         self.play_session = None
+        self._load_playtest_profiles()
         self.refresh_all()
         QTimer.singleShot(0, self.viewport.frame_game_camera)
         return True
 
+    def _load_playtest_profiles(self):
+        if not hasattr(self,"playtest_profile_combo"):
+            return
+        self.playtest_profile_combo.clear()
+        self.playtest_profile_library=None
+        if self.document.project is None or self.document.file_path is None:
+            self.playtest_profile_combo.addItem("Default","")
+            return
+        library=PlaytestProfileLibrary(self.document.file_path.resolve().parent)
+        self.playtest_profile_library=library
+        profiles=library.profiles()
+        if not profiles:
+            self.playtest_profile_combo.addItem("Default","")
+            return
+        default_index=0
+        for index,profile in enumerate(profiles):
+            self.playtest_profile_combo.addItem(profile.display_name,profile.profile_id)
+            if profile.default: default_index=index
+        self.playtest_profile_combo.setCurrentIndex(default_index)
+
+    def selected_playtest_profile_id(self):
+        if not hasattr(self,"playtest_profile_combo"):
+            return None
+        value=self.playtest_profile_combo.currentData()
+        return str(value) if value else None
+
+    def play_project(self):
+        try:
+            self.play_session=create_play_session(self.document,from_start=True)
+            self.runtime_process=launch_play_session(self.play_session)
+        except (PlayModeError,RuntimeLaunchError) as exc:
+            if self.play_session is not None:self.play_session.stop()
+            self.play_session=None; self.runtime_process=None
+            QMessageBox.warning(self,"Run Project",str(exc)); return False
+        self.console.setText(f"Runtime preview: {self.play_session.runtime_scene.name}")
+        self.statusBar().showMessage(f"Playing — {self.play_session.runtime_scene.name}")
+        self._refresh_actions(); return True
+
     def play_current_scene(self):
         try:
-            self.play_session = create_play_session(self.document)
+            self.play_session=create_play_session(self.document)
             self.runtime_process = launch_play_session(self.play_session)
         except (PlayModeError, RuntimeLaunchError) as exc:
             if self.play_session is not None:

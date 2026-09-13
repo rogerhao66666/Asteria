@@ -12,11 +12,13 @@ from asteria.events import EventProgram, EventProgramRegistry, SceneEventBinding
 from asteria.events.lifecycle_bridge import LifecycleEventBinding
 from asteria.gameplay import GameplayLibrary
 from asteria.rpg import RpgDatabase
+from asteria.presentation.library import BattlePresentationLibrary
+from asteria.runtime.game_start import GameStartDefinition
 
 
 class Project:
     SCHEMA = "asteria.project"
-    VERSION = 6
+    VERSION = 8
 
     def __init__(
         self,
@@ -30,6 +32,8 @@ class Project:
         rpg_database=None,
         lifecycle_event_bindings=None,
         gameplay_library=None,
+        battle_presentation_library=None,
+        game_start=None,
     ):
         self.id = validate_id(project_id) if project_id else new_id()
         self.name = str(name)
@@ -45,6 +49,17 @@ class Project:
         ):
             raise TypeError("gameplay_library must be GameplayLibrary")
         self.gameplay_library = gameplay_library or GameplayLibrary()
+        if (
+            battle_presentation_library is not None
+            and not isinstance(battle_presentation_library, BattlePresentationLibrary)
+        ):
+            raise TypeError("battle_presentation_library must be BattlePresentationLibrary")
+        self.battle_presentation_library = (
+            battle_presentation_library or BattlePresentationLibrary()
+        )
+        if game_start is not None and not isinstance(game_start, GameStartDefinition):
+            raise TypeError("game_start must be GameStartDefinition")
+        self.game_start = game_start or GameStartDefinition(startup_scene_id)
         self.lifecycle_event_bindings = list(lifecycle_event_bindings or ())
         if any(
             not isinstance(x, LifecycleEventBinding)
@@ -108,6 +123,8 @@ class Project:
             raise ValueError("invalid startup scene")
         self.assets.validate()
         self.rpg_database.validate()
+        self.battle_presentation_library.validate()
+        self.game_start.validate(self)
         for scene_id in self.scene_event_bindings:
             if scene_id not in self._scenes:
                 raise ValueError("event bindings reference unknown scene")
@@ -139,6 +156,28 @@ class Project:
                         (f"progression {track.track_id} rank {milestone.rank}", x)
                         for x in milestone.granted_abilities
                     )
+            for passive in self.rpg_database.passives.values():
+                refs.extend(
+                    (f"passive {passive.passive_id}", x)
+                    for x in passive.granted_abilities
+                )
+            for rule in self.rpg_database.ability_evolutions.values():
+                refs.append((f"ability evolution {rule.rule_id} source", rule.source_ability_id))
+                refs.append((f"ability evolution {rule.rule_id} result", rule.result_ability_id))
+            for graph in self.rpg_database.progression_graphs.values():
+                for node in graph.nodes:
+                    for rank, reward in enumerate(node.rewards, start=1):
+                        refs.extend(
+                            (f"progression graph {graph.graph_id} node {node.node_id} rank {rank}", x)
+                            for x in reward.granted_abilities
+                        )
+            for growth in self.rpg_database.equipment_growth.values():
+                for node in growth.nodes:
+                    for rank, reward in enumerate(node.rewards, start=1):
+                        refs.extend(
+                            (f"equipment growth {growth.growth_id} node {node.node_id} rank {rank}", x)
+                            for x in reward.granted_abilities
+                        )
             missing = [
                 f"{owner} references unknown ability {ability_id}"
                 for owner, ability_id in refs
@@ -170,6 +209,8 @@ class Project:
             },
             "rpg_database": self.rpg_database.to_data(),
             "gameplay_library": self.gameplay_library.to_data(),
+            "battle_presentation_library": self.battle_presentation_library.to_data(),
+            "game_start": self.game_start.to_data(),
             "lifecycle_event_bindings": [
                 binding.to_data() for binding in self.lifecycle_event_bindings
             ],
@@ -178,7 +219,7 @@ class Project:
     @classmethod
     def from_data(cls, data, registry):
         version = data.get("version")
-        if data.get("schema") != cls.SCHEMA or version not in {2, 3, 4, 5, 6}:
+        if data.get("schema") != cls.SCHEMA or version not in {2, 3, 4, 5, 6, 7, 8}:
             raise ValueError("unsupported project")
 
         expected_v2 = {
@@ -194,8 +235,14 @@ class Project:
         expected_v4 = expected_v3 | {"rpg_database"}
         expected_v5 = expected_v4 | {"lifecycle_event_bindings"}
         expected_v6 = expected_v5 | {"gameplay_library"}
+        expected_v7 = expected_v6 | {"battle_presentation_library"}
+        expected_v8 = expected_v7 | {"game_start"}
         expected = (
-            expected_v6
+            expected_v8
+            if version == 8
+            else expected_v7
+            if version == 7
+            else expected_v6
             if version == 6
             else expected_v5
             if version == 5
@@ -233,6 +280,12 @@ class Project:
             gameplay_library=GameplayLibrary.from_data(data["gameplay_library"])
             if version >= 6
             else GameplayLibrary(),
+            battle_presentation_library=BattlePresentationLibrary.from_data(
+                data["battle_presentation_library"]
+            )
+            if version >= 7
+            else BattlePresentationLibrary(),
+            game_start=GameStartDefinition.from_data(data["game_start"]) if version >= 8 else GameStartDefinition(data["startup_scene_id"]),
             lifecycle_event_bindings=[
                 LifecycleEventBinding.from_data(x)
                 for x in data["lifecycle_event_bindings"]

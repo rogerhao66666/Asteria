@@ -1,0 +1,76 @@
+{
+  "schema": "asteria.playable_test_content",
+  "version": 1,
+  "title": "Asteria Complex Reference RPG \u2014 Playable Test",
+  "field": {
+    "background": "playable_assets/field_map.png",
+    "player_sheet": "playable_assets/player_field_sheet.png",
+    "player_frame_size": [
+      32,
+      48
+    ],
+    "boss_sprite": "playable_assets/boss_field.png",
+    "world_to_screen_scale": 3.0,
+    "player_start": [
+      38,
+      0
+    ],
+    "boss_world": [
+      48,
+      0
+    ]
+  },
+  "battle": {
+    "background": "playable_assets/battle_background.png",
+    "heroes": [
+      "playable_assets/hero_01_battle.png",
+      "playable_assets/hero_02_battle.png",
+      "playable_assets/hero_03_battle.png",
+      "playable_assets/hero_04_battle.png",
+      "playable_assets/hero_05_battle.png",
+      "playable_assets/hero_06_battle.png"
+    ],
+    "enemy_sprites": {
+      "astral_tyrant": "playable_assets/astral_tyrant_battle.png",
+      "mender_wisp": "playable_assets/mender_wisp_battle.png"
+    },
+    "skills": {
+      "strike": {
+        "label": "Strike",
+        "fx": "playable_assets/fx_strike.png",
+        "frames": 16
+      },
+      "fire_arc": {
+        "label": "Fire Arc",
+        "fx": "playable_assets/fx_fire.png",
+        "frames": 16
+      },
+      "heal": {
+        "label": "Heal",
+        "fx": "playable_assets/fx_heal.png",
+        "frames": 16
+      },
+      "meteor": {
+        "label": "Meteor",
+        "fx": "playable_assets/fx_meteor.png",
+        "frames": 16
+      }
+    }
+  },
+  "controls": {
+    "title": "N New Game / L Load Player Save",
+    "move": "Directional arrows",
+    "character_menu": "C",
+    "character_menu_actions": "Q/E actor, 1 secondary class, 2 skill tree, 3 passive, 4 weapon, 5 weapon upgrade, 6 accessory, 7 party/formation",
+    "interact": "E / Enter",
+    "battle_actions": "1-4 skill, B cycles generic Momentum boost",
+    "save": "F5 (in-game Player Save only)",
+    "quit": "Esc"
+  },
+  "progression_rewards": {
+    "experience": 1600,
+    "level_threshold": 1000,
+    "ap_per_level": 2,
+    "ability_points_per_level": 1
+  }
+}

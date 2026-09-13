@@ -1,0 +1,26 @@
+{
+  "schema": "asteria.character_job_progression_lab_reference",
+  "version": 1,
+  "operable": [
+    "experience",
+    "level",
+    "job_unlock",
+    "job_switch",
+    "secondary_job",
+    "multiclass",
+    "skill_point",
+    "ability_point",
+    "skill_tree_allocate",
+    "skill_tree_refund",
+    "passive_equip",
+    "passive_unequip"
+  ],
+  "engine_principles": [
+    "job slot semantics are project/controller policy",
+    "canonical ActorDefinition/ClassAssignment/RpgActorRuntime rebuild resolved build",
+    "ProgressionRuntime owns arbitrary EXP/rank track",
+    "ProgressionAllocationRuntime owns arbitrary currencies and skill-tree allocation",
+    "ActorAbilityState owns passive loadout",
+    "resolved build is recomputed from canonical mechanisms after every operation"
+  ]
+}

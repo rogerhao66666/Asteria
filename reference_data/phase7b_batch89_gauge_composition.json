@@ -1,0 +1,55 @@
+{
+  "schema": "asteria.rpg.gauge_composition",
+  "version": 1,
+  "composition_id": "stagger_break",
+  "impacts": [
+    {
+      "schema": "asteria.rpg.gauge_impact_rule",
+      "version": 1,
+      "impact_id": "heavy_pressure",
+      "resource_id": "stagger",
+      "trigger": "battle.hit",
+      "recipient": "target",
+      "delta": -10.0,
+      "value_scale": 0.0,
+      "required_outcome_tags_all": [
+        "attack.heavy"
+      ],
+      "required_outcome_tags_any": [],
+      "blocked_outcome_tags": [],
+      "priority": 0
+    },
+    {
+      "schema": "asteria.rpg.gauge_impact_rule",
+      "version": 1,
+      "impact_id": "weakness_pressure",
+      "resource_id": "stagger",
+      "trigger": "battle.hit",
+      "recipient": "target",
+      "delta": -25.0,
+      "value_scale": 0.0,
+      "required_outcome_tags_all": [
+        "outcome.weak"
+      ],
+      "required_outcome_tags_any": [],
+      "blocked_outcome_tags": [],
+      "priority": 0
+    }
+  ],
+  "thresholds": [
+    {
+      "schema": "asteria.rpg.gauge_threshold_rule",
+      "version": 1,
+      "threshold_id": "broken",
+      "resource_id": "stagger",
+      "comparison": "at_or_below",
+      "threshold": 0.0,
+      "state_id": "broken",
+      "timeline_shift": 20.0,
+      "reset_to": 100.0,
+      "emit_trigger": "battle.break.triggered",
+      "include_cast_in_shift": true,
+      "priority": 0
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "asteria.playable_runtime_loop_reference",
+  "version": 1,
+  "flow": [
+    "edit character level/progression",
+    "edit primary/secondary job",
+    "allocate skill tree node",
+    "equip weapon/accessory",
+    "attach rune",
+    "apply equipment growth",
+    "enter field",
+    "face nearby monster",
+    "press interact",
+    "start encounter from current resolved build",
+    "player action",
+    "enemy AI action",
+    "finish encounter",
+    "return to field"
+  ],
+  "encounter_trigger": {
+    "component": "asteria.Interaction2D",
+    "range": 24.0,
+    "require_facing": true,
+    "input_action": "interact",
+    "event_program_id": "encounter:training_monster"
+  },
+  "note": "This is the deliberately simple first encounter mechanism requested for real-machine validation."
+}

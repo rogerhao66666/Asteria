@@ -1,0 +1,21 @@
+{
+  "schema": "asteria.playable_battle_validation_reference",
+  "version": 1,
+  "sides": [
+    "side.alpha",
+    "side.omega"
+  ],
+  "player_actions": [
+    "power_strike",
+    "double_strike",
+    "flame_slash",
+    "venom_edge",
+    "tempered_arc"
+  ],
+  "enemy_actions": [
+    "enemy_claw",
+    "enemy_crush"
+  ],
+  "invariant": "Player input and enemy AI decisions execute through the same AbilityRuntime/BattleRuntime path.",
+  "presentation_note": "Complexity remains controller data; later visual templates must group/contextualize rather than dump every action/resource."
+}

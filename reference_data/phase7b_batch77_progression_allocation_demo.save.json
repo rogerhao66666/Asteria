@@ -1,0 +1,99 @@
+{
+  "actor_snapshots": {
+    "aria": {
+      "ability_state": {
+        "active_passives": [
+          "battle_instinct"
+        ],
+        "learned_abilities": [],
+        "schema": "asteria.rpg.actor_ability_state",
+        "selected_evolutions": {
+          "fireball": "fireball_to_firestorm"
+        },
+        "version": 1
+      },
+      "actor_id": "aria",
+      "resources": {
+        "schema": "asteria.resource_pool",
+        "values": {
+          "hp": {
+            "current": 120.0,
+            "maximum": 120.0,
+            "minimum": 0.0
+          },
+          "mp": {
+            "current": 25.0,
+            "maximum": 25.0,
+            "minimum": 0.0
+          }
+        },
+        "version": 1
+      },
+      "schema": "asteria.rpg.actor_snapshot",
+      "stats": {
+        "schema": "asteria.stat_block",
+        "values": {
+          "attack": 30.0,
+          "defense": 14.0,
+          "magic": 20.0,
+          "speed": 14.0
+        },
+        "version": 1
+      },
+      "tags": {
+        "schema": "asteria.tag_set",
+        "values": [
+          "actor.player",
+          "build.magic_side",
+          "capability.weapon.bow",
+          "capability.weapon.staff",
+          "capability.weapon.sword",
+          "class.hunter",
+          "class.scholar",
+          "class.warrior",
+          "demo.phase7b"
+        ],
+        "version": 1
+      },
+      "version": 2
+    }
+  },
+  "currencies": {},
+  "inventory": {
+    "counts": {},
+    "schema": "asteria.rpg.inventory",
+    "version": 1
+  },
+  "loadouts": {},
+  "party_actor_ids": [
+    "aria"
+  ],
+  "progression": {
+    "schema": "asteria.rpg.progression_runtime",
+    "totals": {
+      "hunter_rank": 10.0,
+      "scholar_rank": 30.0,
+      "warrior_rank": 30.0
+    },
+    "version": 1
+  },
+  "progression_allocations": {
+    "actor:aria": {
+      "allocations": {
+        "aria_growth_board": {
+          "core_training": 2,
+          "field_medic": 1,
+          "warrior_focus": 1
+        }
+      },
+      "balances": {
+        "ap": 5.0,
+        "jp": 2.0
+      },
+      "schema": "asteria.rpg.progression_allocation_runtime",
+      "version": 1
+    }
+  },
+  "schema": "asteria.rpg.runtime_state",
+  "version": 3
+}

@@ -1,0 +1,92 @@
+{
+  "schema": "asteria.battle_ui_theme",
+  "version": 1,
+  "panel_fill": [
+    18,
+    23,
+    34,
+    224
+  ],
+  "panel_border": [
+    110,
+    132,
+    168,
+    255
+  ],
+  "result_fill": [
+    12,
+    16,
+    25,
+    242
+  ],
+  "result_border": [
+    218,
+    181,
+    86,
+    255
+  ],
+  "text_primary": [
+    242,
+    245,
+    250,
+    255
+  ],
+  "text_secondary": [
+    180,
+    190,
+    207,
+    255
+  ],
+  "text_emphasis": [
+    255,
+    215,
+    112,
+    255
+  ],
+  "damage_text": [
+    255,
+    118,
+    105,
+    255
+  ],
+  "heal_text": [
+    113,
+    224,
+    147,
+    255
+  ],
+  "gauge_track": [
+    49,
+    57,
+    73,
+    255
+  ],
+  "gauge_fill": [
+    94,
+    190,
+    130,
+    255
+  ],
+  "gauge_full": [
+    233,
+    193,
+    85,
+    255
+  ],
+  "target": [
+    206,
+    216,
+    233,
+    255
+  ],
+  "target_primary": [
+    255,
+    208,
+    83,
+    255
+  ],
+  "panel_radius": 4,
+  "border_width": 1,
+  "font_size": 10,
+  "headline_font_size": 18
+}

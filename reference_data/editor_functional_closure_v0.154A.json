@@ -1,0 +1,37 @@
+{
+  "schema": "asteria.audit.editor_functional_closure",
+  "version": 2,
+  "baseline": "v0.154A",
+  "status": "frozen",
+  "top_level_workspaces": [
+    "scene",
+    "rpg",
+    "battle",
+    "ui",
+    "event",
+    "code"
+  ],
+  "nested": {
+    "ui": [
+      "battle_presentation",
+      "runtime_rpg_ui",
+      "animation"
+    ],
+    "event": [
+      "event_program",
+      "field_game_flow"
+    ]
+  },
+  "runtime_save_shell_workflow": true,
+  "regression": {
+    "passed": 1090,
+    "skipped": 6,
+    "failed": 0
+  },
+  "compileall": "pass",
+  "json": {
+    "files": 94,
+    "errors": 0
+  },
+  "reference_game_allowed": true
+}

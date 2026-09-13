@@ -1,0 +1,16 @@
+{
+  "schema": "asteria.reference.phase7b_batch93_closure",
+  "version": 1,
+  "engine_version": "0.93.0a93",
+  "battle_core_frozen": true,
+  "checks": [
+    "equal_speed_snapshot",
+    "gauge_state_hook_interrupt_refund",
+    "multihit_mid_sequence_state",
+    "incapacitation_sequence_policy",
+    "reaction_rng_snapshot_replay",
+    "boss_phase_hook",
+    "json_snapshot"
+  ],
+  "next_phase": "battle_presentation"
+}

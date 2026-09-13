@@ -27,3 +27,7 @@ from .sprite import SpriteRendererState
 from .texture_renderer import TextureRenderer
 from .tile_draw import build_tile_draws
 from .tilequery import TileMapQuery
+
+from .game_session import GameSessionError, GameSessionRuntime
+
+from .game_start import GameStartDefinition

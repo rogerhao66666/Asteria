@@ -1,0 +1,36 @@
+{
+  "schema": "asteria.battle_combatant_visual_reference",
+  "version": 1,
+  "asset_roles": [
+    "battlefield",
+    "portrait",
+    "small_portrait",
+    "icon"
+  ],
+  "states": [
+    "idle",
+    "attack",
+    "cast",
+    "hit",
+    "guard",
+    "ko",
+    "revive",
+    "status",
+    "transform"
+  ],
+  "large_boss_transform": {
+    "scale_x": 2.8,
+    "scale_y": 2.8,
+    "anchor_x": 0.5,
+    "anchor_y": 0.92,
+    "offset_x": -18,
+    "offset_y": 6,
+    "z_order": 40
+  },
+  "invariants": [
+    "player enemy boss summon share one visual profile mechanism",
+    "portrait-party template may hide battlefield body while retaining HUD",
+    "transform can replace visual profile for same member",
+    "visual state is presentation-only and falls back to idle"
+  ]
+}

@@ -16,9 +16,11 @@ except ImportError:
 
 class WorkspaceMode(str, Enum):
     SCENE = "scene"
-    CODE = "code"
+    RPG = "rpg"
+    BATTLE = "battle"
+    UI = "ui"
     EVENT = "event"
-    ANIMATION = "animation"
+    CODE = "code"
 
 
 class EditorWorkspace(QWidget):
@@ -33,9 +35,11 @@ class EditorWorkspace(QWidget):
 
     ORDER = (
         WorkspaceMode.SCENE,
-        WorkspaceMode.CODE,
+        WorkspaceMode.RPG,
+        WorkspaceMode.BATTLE,
+        WorkspaceMode.UI,
         WorkspaceMode.EVENT,
-        WorkspaceMode.ANIMATION,
+        WorkspaceMode.CODE,
     )
 
     def __init__(self, pages: dict[WorkspaceMode, QWidget], parent=None):
@@ -55,9 +59,11 @@ class EditorWorkspace(QWidget):
 
         labels = {
             WorkspaceMode.SCENE: "Scene",
+            WorkspaceMode.RPG: "RPG",
+            WorkspaceMode.BATTLE: "Battle",
+            WorkspaceMode.UI: "UI / Presentation",
+            WorkspaceMode.EVENT: "Events",
             WorkspaceMode.CODE: "Code",
-            WorkspaceMode.EVENT: "Event",
-            WorkspaceMode.ANIMATION: "Animation",
         }
         for mode in self._modes:
             self.tabs.addTab(labels[mode])

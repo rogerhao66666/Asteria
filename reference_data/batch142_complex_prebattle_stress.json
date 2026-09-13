@@ -1,0 +1,24 @@
+{
+  "schema": "asteria.prebattle_stress_reference",
+  "version": 1,
+  "roster_size": 12,
+  "active": 4,
+  "reserve": 8,
+  "jobs": 8,
+  "inventory_unique_items": 64,
+  "recipes": 16,
+  "per_character": {
+    "job_slots": 2,
+    "active_passives": 2,
+    "equipment": [
+      "1 weapon",
+      "2 accessories"
+    ],
+    "attachments": 1,
+    "equipment_growth": true,
+    "progression_nodes": "3-6 allocated",
+    "resources": "6+",
+    "abilities": "15+ resolved"
+  },
+  "purpose": "Stress the full pre-battle RPG state before encounter creation."
+}

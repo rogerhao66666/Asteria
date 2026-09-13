@@ -5,9 +5,11 @@ from asteria.editor.workspace import EditorWorkspace, WorkspaceMode
 def test_workspace_modes_are_stable_authoring_surfaces():
     assert [m.value for m in WorkspaceMode] == [
         "scene",
-        "code",
+        "rpg",
+        "battle",
+        "ui",
         "event",
-        "animation",
+        "code",
     ]
 
 

@@ -1,0 +1,34 @@
+{
+  "schema": "asteria.ui_renderer_animation_stress",
+  "version": 1,
+  "reference_load": {
+    "party_members": 12,
+    "boss": 1,
+    "adds": 4,
+    "summons": 1,
+    "action_entries": 80,
+    "status_resource_indicators": 96,
+    "vfx_draws": 3000,
+    "offscreen_draws": 1000,
+    "motion_beats": 5000,
+    "transient_pool_capacity": 512
+  },
+  "tuning": [
+    "removed full tuple(draws) materialization from visibility culling hot path",
+    "removed full tuple(draws) materialization from batching hot path"
+  ],
+  "acceptance": [
+    "offscreen draws culled before batching",
+    "visible draws compacted into atlas/material/layer batches",
+    "transient objects bounded/reused",
+    "all hot assets preloaded before processing",
+    "5000 motion beats released by event-driven clock under coarse host update",
+    "frame-budget tracker reports synthetic over-budget frames",
+    "wall-clock planner measurement remains informational, never a CI hardware gate"
+  ],
+  "limits": [
+    "backend-neutral CPU-side planning only",
+    "no claim of stable real-hardware 60 FPS",
+    "GPU upload/draw-call/driver/backend performance requires concrete renderer and assets"
+  ]
+}

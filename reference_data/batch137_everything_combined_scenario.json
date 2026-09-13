@@ -1,0 +1,21 @@
+{
+  "schema": "asteria.everything_combined_scenario",
+  "version": 1,
+  "sequence": [
+    "multiclass/progression",
+    "equipment/attachment/growth",
+    "composition",
+    "party/formation",
+    "battle from current resolved build",
+    "status/interaction/multi-hit",
+    "transform",
+    "summon/boss add",
+    "reward application"
+  ],
+  "principles": [
+    "one deterministic project journey",
+    "specialized mechanics reuse existing generic canonical harnesses",
+    "persistent postbattle mutation occurs only through RewardRuntime",
+    "no new game-specific core subsystem"
+  ]
+}

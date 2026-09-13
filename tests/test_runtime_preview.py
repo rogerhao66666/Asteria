@@ -119,3 +119,31 @@ def test_pygame_runtime_backend_module_imports():
 
     assert issubclass(PygameRuntimeBackend, (RuntimeBackend, TextureBackend))
     assert issubclass(PygameTextureBackend, TextureBackend)
+
+
+def test_pygame_runtime_backend_requests_resizable_window(monkeypatch):
+    import sys
+    import types
+
+    calls = {}
+
+    class Display:
+        def set_mode(self, size, flags=0):
+            calls["set_mode"] = (size, flags)
+            return object()
+
+        def set_caption(self, title):
+            calls["title"] = title
+
+    fake = types.SimpleNamespace(
+        RESIZABLE=16,
+        display=Display(),
+        time=types.SimpleNamespace(Clock=lambda: object()),
+        init=lambda: None,
+    )
+    monkeypatch.setitem(sys.modules, "pygame", fake)
+
+    from asteria.platform.pygame_backend import PygameRuntimeBackend
+
+    PygameRuntimeBackend().open("Preview", 640, 360)
+    assert calls["set_mode"] == ((640, 360), 16)

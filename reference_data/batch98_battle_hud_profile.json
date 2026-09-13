@@ -1,0 +1,15 @@
+{
+  "schema": "asteria.battle_hud_profile",
+  "version": 1,
+  "resources": [
+    {"resource_id": "hp", "label": "HP", "order": 0, "icon_asset_id": "hud.hp", "visible": true},
+    {"resource_id": "mp", "label": "MP", "order": 10, "icon_asset_id": "hud.mp", "visible": true},
+    {"resource_id": "limit", "label": "LIMIT", "order": 20, "icon_asset_id": "hud.limit", "visible": true}
+  ],
+  "statuses": [
+    {"state_id": "poison", "icon_asset_id": "status.poison", "label": "Poison", "order": 10},
+    {"state_id": "guard_up", "icon_asset_id": "status.guard_up", "label": "Guard Up", "order": 20}
+  ],
+  "show_unmapped_resources": true,
+  "show_unmapped_statuses": false
+}

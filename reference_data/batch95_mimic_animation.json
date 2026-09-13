@@ -1,0 +1,20 @@
+{
+  "clips": {
+    "idle": {"loop": true, "keyframes": [
+      {"frame_index": 0, "duration": 0.30},
+      {"frame_index": 1, "duration": 0.30}
+    ]},
+    "attack": {"loop": false, "keyframes": [
+      {"frame_index": 0, "duration": 0.10},
+      {"frame_index": 2, "duration": 0.12},
+      {"frame_index": 0, "duration": 0.12}
+    ]},
+    "hit": {"loop": false, "keyframes": [
+      {"frame_index": 3, "duration": 0.14},
+      {"frame_index": 0, "duration": 0.12}
+    ]},
+    "ko": {"loop": false, "keyframes": [
+      {"frame_index": 3, "duration": 0.18}
+    ]}
+  }
+}

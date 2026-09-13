@@ -1,0 +1,28 @@
+{
+  "schema": "asteria.playable_rpg_validation_reference",
+  "version": 1,
+  "actor_id": "validation_hero",
+  "class_assignments": [
+    "vanguard",
+    "alchemist"
+  ],
+  "progression_currencies": [
+    "skill_point",
+    "ability_point"
+  ],
+  "equipment": [
+    "ember_blade",
+    "echo_charm"
+  ],
+  "attachment": "venom_rune",
+  "equipment_growth": "ember_blade_growth",
+  "passive": "counter_formula",
+  "workflow": "field_concoction",
+  "resources": [
+    "vitality",
+    "technique",
+    "momentum",
+    "reagent_charge"
+  ],
+  "purpose": "Cross-system reference content; names are project data, not engine taxonomy."
+}

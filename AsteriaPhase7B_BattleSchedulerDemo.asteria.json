@@ -1,0 +1,624 @@
+{
+  "assets": {
+    "assets": [
+      {
+        "id": "10000000-0000-4000-8000-000000000001",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "Asteria original reference art",
+          "pixel_scale": 1
+        },
+        "name": "Environment Atlas",
+        "source_path": "reference_assets/asteria_environment_atlas_1x.png"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000002",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "Asteria original reference art",
+          "pixel_scale": 1
+        },
+        "name": "Hero Sheet",
+        "source_path": "reference_assets/asteria_hero_sheet_1x.png"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000003",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "Asteria original reference art",
+          "pixel_scale": 1
+        },
+        "name": "Props",
+        "source_path": "reference_assets/asteria_props_1x.png"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000011",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {},
+        "name": "Environment Sprite Sheet",
+        "source_path": "reference_data/environment_sheet.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000012",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {},
+        "name": "Hero Sprite Sheet",
+        "source_path": "reference_data/hero_sheet.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000021",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "tileset",
+        "metadata": {},
+        "name": "Environment Tileset",
+        "source_path": "reference_data/environment_tileset.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000031",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {},
+        "name": "Hero Animation",
+        "source_path": "reference_data/hero_animation.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000041",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "tilemap",
+        "metadata": {},
+        "name": "Town & River TileMap",
+        "source_path": "reference_data/tilemap.json"
+      }
+    ],
+    "schema": "asteria.assets",
+    "version": 1
+  },
+  "event_programs": {},
+  "gameplay_library": {
+    "abilities": [
+      {
+        "ability_id": "aimed_shot",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "basic_attack",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "counter_stance",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "fireball",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "firestorm",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "heal",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "power_strike",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      }
+    ],
+    "formulas": {},
+    "schema": "asteria.gameplay_library",
+    "states": [
+      {
+        "contributed_tags": [
+          "status.poison"
+        ],
+        "duration": 3.0,
+        "max_stacks": 3,
+        "modifiers": [],
+        "on_apply": [],
+        "on_expire": [],
+        "on_remove": [],
+        "periodic": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "poison.tick",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "hp",
+                  "value": -6.0
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "interval": 1.0
+          }
+        ],
+        "schema": "asteria.state_definition",
+        "stacking": "stack",
+        "state_id": "poison",
+        "version": 3
+      },
+      {
+        "contributed_tags": [
+          "status.control.stunned"
+        ],
+        "duration": 1.0,
+        "max_stacks": 1,
+        "modifiers": [],
+        "on_apply": [],
+        "on_expire": [],
+        "on_remove": [],
+        "periodic": [],
+        "schema": "asteria.state_definition",
+        "stacking": "refresh",
+        "state_id": "stun",
+        "version": 3
+      },
+      {
+        "contributed_tags": [
+          "status.silenced"
+        ],
+        "duration": 2.0,
+        "max_stacks": 1,
+        "modifiers": [],
+        "on_apply": [],
+        "on_expire": [],
+        "on_remove": [],
+        "periodic": [],
+        "schema": "asteria.state_definition",
+        "stacking": "refresh",
+        "state_id": "silence",
+        "version": 3
+      },
+      {
+        "contributed_tags": [
+          "status.slow"
+        ],
+        "duration": 3.0,
+        "max_stacks": 1,
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "slow.speed",
+            "operation": "multiply",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "speed",
+            "value": 0.5
+          }
+        ],
+        "on_apply": [],
+        "on_expire": [],
+        "on_remove": [],
+        "periodic": [],
+        "schema": "asteria.state_definition",
+        "stacking": "refresh",
+        "state_id": "slow",
+        "version": 3
+      },
+      {
+        "contributed_tags": [
+          "status.sleep"
+        ],
+        "duration": 4.0,
+        "max_stacks": 1,
+        "modifiers": [],
+        "on_apply": [],
+        "on_expire": [],
+        "on_remove": [],
+        "periodic": [],
+        "schema": "asteria.state_definition",
+        "stacking": "refresh",
+        "state_id": "sleep",
+        "version": 3
+      },
+      {
+        "contributed_tags": [
+          "status.doom"
+        ],
+        "duration": 3.0,
+        "max_stacks": 1,
+        "modifiers": [],
+        "on_apply": [],
+        "on_expire": [
+          {
+            "blocked_tags": [],
+            "effect_id": "doom.resolve",
+            "operations": [
+              {
+                "kind": "resource_delta",
+                "target": "hp",
+                "value": -999.0
+              }
+            ],
+            "required_tags": [],
+            "schema": "asteria.effect",
+            "version": 1
+          }
+        ],
+        "on_remove": [],
+        "periodic": [],
+        "schema": "asteria.state_definition",
+        "stacking": "refresh",
+        "state_id": "doom",
+        "version": 3
+      }
+    ],
+    "timelines": [],
+    "triggers": [],
+    "version": 1
+  },
+  "id": "asteria.phase7b.battle_scheduler.demo",
+  "lifecycle_event_bindings": [],
+  "name": "Asteria Phase 7B Battle Scheduler Demo",
+  "rpg_database": {
+    "ability_evolutions": [],
+    "actors": [],
+    "attachments": [],
+    "battle_objectives": [
+      {
+        "defeated_sides": [
+          "enemies"
+        ],
+        "failure_conditions": [],
+        "failure_defeated_sides": [
+          "heroes"
+        ],
+        "failure_mode": "any",
+        "failure_winning_sides": [
+          "enemies"
+        ],
+        "objective_id": "defeat.enemies",
+        "priority": 10,
+        "schema": "asteria.rpg.battle_objective_definition",
+        "success_conditions": [
+          {
+            "kind": "side_active_count",
+            "operator": "==",
+            "subject_id": "enemies",
+            "value": 0.0
+          }
+        ],
+        "success_mode": "all",
+        "version": 1,
+        "winning_sides": [
+          "heroes"
+        ]
+      },
+      {
+        "defeated_sides": [
+          "enemies"
+        ],
+        "failure_conditions": [
+          {
+            "kind": "member_active",
+            "operator": "==",
+            "subject_id": "guardian",
+            "value": false
+          }
+        ],
+        "failure_defeated_sides": [
+          "heroes"
+        ],
+        "failure_mode": "any",
+        "failure_winning_sides": [
+          "enemies"
+        ],
+        "objective_id": "seal.portal",
+        "priority": 20,
+        "schema": "asteria.rpg.battle_objective_definition",
+        "success_conditions": [
+          {
+            "kind": "flag",
+            "operator": "==",
+            "subject_id": "portal.sealed",
+            "value": true
+          }
+        ],
+        "success_mode": "all",
+        "version": 1,
+        "winning_sides": [
+          "heroes"
+        ]
+      }
+    ],
+    "battle_resources": [],
+    "battle_schedulers": [
+      {
+        "minimum_speed": 1.0,
+        "mode": "continuous",
+        "scheduler_id": "continuous.demo",
+        "schema": "asteria.rpg.battle_scheduler_definition",
+        "timeline_scale": 100.0,
+        "version": 1
+      }
+    ],
+    "battle_state_policies": [],
+    "battle_targeting": [],
+    "classes": [],
+    "encounters": [],
+    "enemies": [],
+    "equipment": [],
+    "equipment_growth": [],
+    "escape_rules": [
+      {
+        "base_chance": 0.35,
+        "maximum_chance": 0.95,
+        "minimum_chance": 0.05,
+        "opponent_scale": 0.005,
+        "opponent_stat": "pursuit",
+        "rule_id": "retreat",
+        "schema": "asteria.rpg.battle_escape_rule",
+        "side": "heroes",
+        "source_scale": 0.01,
+        "source_stat": "speed",
+        "version": 1
+      }
+    ],
+    "formations": [],
+    "interaction_rules": [],
+    "items": [],
+    "outcome_checks": [],
+    "passives": [],
+    "progression_graphs": [],
+    "progression_tracks": [],
+    "schema": "asteria.rpg.database",
+    "version": 14
+  },
+  "scene_event_bindings": {},
+  "scenes": [
+    {
+      "entities": [
+        {
+          "components": [
+            {
+              "fields": {
+                "origin_x": 0.0,
+                "origin_y": 0.0,
+                "tilemap_asset_id": "10000000-0000-4000-8000-000000000041",
+                "visible": true
+              },
+              "type": "asteria.TileMap2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "10000000-0000-4000-8000-000000000051",
+          "name": "World Map"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 320.0,
+                "y": 208.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 5,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "10000000-0000-4000-8000-000000000012",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "10000000-0000-4000-8000-000000000031",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "64e68f95-18b1-41d5-a733-543e0649c892",
+          "name": "Hero"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 240.0,
+                "y": 128.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "active": true,
+                "deadzone_x": 0.0,
+                "deadzone_y": 0.0,
+                "follow_entity_id": "64e68f95-18b1-41d5-a733-543e0649c892",
+                "height": 270,
+                "smoothing": 12.0,
+                "width": 480,
+                "zoom": 1.0
+              },
+              "type": "asteria.Camera2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "7698d7c3-07a9-4df4-81c7-07a2348c8343",
+          "name": "Game Camera"
+        }
+      ],
+      "id": "3a4f3219-7fb1-4fda-8af4-877a7f3dc141",
+      "name": "Town & River",
+      "schema": "asteria.scene",
+      "version": 1
+    }
+  ],
+  "schema": "asteria.project",
+  "startup_scene_id": "3a4f3219-7fb1-4fda-8af4-877a7f3dc141",
+  "version": 6
+}

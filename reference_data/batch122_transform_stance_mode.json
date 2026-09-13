@@ -1,0 +1,42 @@
+{
+  "schema": "asteria.playable_battle_mode_reference",
+  "version": 1,
+  "forms": [
+    {
+      "form_id": null,
+      "abilities": [
+        "steady_strike"
+      ],
+      "tags": [
+        "form.normal"
+      ]
+    },
+    {
+      "form_id": "guard_stance",
+      "abilities": [
+        "guard_counter"
+      ],
+      "tags": [
+        "form.guard",
+        "mode.defensive"
+      ]
+    },
+    {
+      "form_id": "overdrive",
+      "abilities": [
+        "overdrive_arc"
+      ],
+      "tags": [
+        "form.overdrive",
+        "mode.aggressive"
+      ]
+    }
+  ],
+  "stack": [
+    "normal",
+    "guard_stance",
+    "overdrive"
+  ],
+  "invariant": "Mode changes are authored PartyMember replacements over the canonical transform stack; action ownership follows the current member only.",
+  "presentation_note": "Runtime UI must rebuild from the current action surface and must not show inactive-form actions."
+}

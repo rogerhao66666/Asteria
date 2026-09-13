@@ -1,0 +1,187 @@
+{
+  "ability_evolutions": [],
+  "actors": [],
+  "attachments": [],
+  "battle_resources": [],
+  "battle_state_policies": [],
+  "battle_targeting": [
+    {
+      "ability_id": "backshot",
+      "active_only": true,
+      "adjacent_to_actor": false,
+      "blocked_slot_tags": [],
+      "blocked_subject_tags": [],
+      "maximum_targets": 1,
+      "metric_conditions": [],
+      "minimum_targets": 1,
+      "relation": "opponent",
+      "required_slot_tags": [
+        "row.back"
+      ],
+      "required_subject_tags": [],
+      "schema": "asteria.rpg.battle_targeting_definition",
+      "selection_count": null,
+      "selection_mode": "manual",
+      "version": 1
+    },
+    {
+      "ability_id": "emergency_heal",
+      "active_only": true,
+      "adjacent_to_actor": false,
+      "blocked_slot_tags": [],
+      "blocked_subject_tags": [],
+      "maximum_targets": 1,
+      "metric_conditions": [
+        {
+          "key": "hp",
+          "kind": "resource_fraction",
+          "operator": "<=",
+          "value": 0.35
+        }
+      ],
+      "minimum_targets": 1,
+      "relation": "ally",
+      "required_slot_tags": [],
+      "required_subject_tags": [],
+      "schema": "asteria.rpg.battle_targeting_definition",
+      "selection_count": null,
+      "selection_mode": "manual",
+      "version": 1
+    },
+    {
+      "ability_id": "strike",
+      "active_only": true,
+      "adjacent_to_actor": false,
+      "blocked_slot_tags": [],
+      "blocked_subject_tags": [],
+      "maximum_targets": 1,
+      "metric_conditions": [],
+      "minimum_targets": 1,
+      "relation": "opponent",
+      "required_slot_tags": [],
+      "required_subject_tags": [],
+      "schema": "asteria.rpg.battle_targeting_definition",
+      "selection_count": null,
+      "selection_mode": "manual",
+      "version": 1
+    },
+    {
+      "ability_id": "sweep",
+      "active_only": true,
+      "adjacent_to_actor": false,
+      "blocked_slot_tags": [],
+      "blocked_subject_tags": [],
+      "maximum_targets": 8,
+      "metric_conditions": [],
+      "minimum_targets": 1,
+      "relation": "opponent",
+      "required_slot_tags": [],
+      "required_subject_tags": [],
+      "schema": "asteria.rpg.battle_targeting_definition",
+      "selection_count": null,
+      "selection_mode": "all",
+      "version": 1
+    }
+  ],
+  "classes": [],
+  "encounters": [],
+  "enemies": [],
+  "equipment": [],
+  "equipment_growth": [],
+  "formations": [
+    {
+      "formation_id": "boss.parts",
+      "schema": "asteria.rpg.formation_definition",
+      "slots": [
+        {
+          "adjacent_to": [],
+          "slot_id": "shell",
+          "tags": [
+            "part.shell",
+            "row.front"
+          ],
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "adjacent_to": [],
+          "slot_id": "core",
+          "tags": [
+            "part.core",
+            "row.back"
+          ],
+          "x": 0.0,
+          "y": 1.0
+        }
+      ],
+      "version": 1
+    },
+    {
+      "formation_id": "heroes.standard",
+      "schema": "asteria.rpg.formation_definition",
+      "slots": [
+        {
+          "adjacent_to": [
+            "back.left",
+            "front.right"
+          ],
+          "slot_id": "front.left",
+          "tags": [
+            "lane.left",
+            "row.front"
+          ],
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "adjacent_to": [
+            "back.right",
+            "front.left"
+          ],
+          "slot_id": "front.right",
+          "tags": [
+            "lane.right",
+            "row.front"
+          ],
+          "x": 1.0,
+          "y": 0.0
+        },
+        {
+          "adjacent_to": [
+            "back.right",
+            "front.left"
+          ],
+          "slot_id": "back.left",
+          "tags": [
+            "lane.left",
+            "row.back"
+          ],
+          "x": 0.0,
+          "y": 1.0
+        },
+        {
+          "adjacent_to": [
+            "back.left",
+            "front.right"
+          ],
+          "slot_id": "back.right",
+          "tags": [
+            "lane.right",
+            "row.back"
+          ],
+          "x": 1.0,
+          "y": 1.0
+        }
+      ],
+      "version": 1
+    }
+  ],
+  "interaction_rules": [],
+  "items": [],
+  "outcome_checks": [],
+  "passives": [],
+  "progression_graphs": [],
+  "progression_tracks": [],
+  "schema": "asteria.rpg.database",
+  "version": 12
+}

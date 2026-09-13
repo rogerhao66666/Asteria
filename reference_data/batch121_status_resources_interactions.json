@@ -1,0 +1,35 @@
+{
+  "schema": "asteria.playable_battle_mechanics_reference",
+  "version": 1,
+  "states": [
+    "scorch",
+    "focus_up",
+    "staggered"
+  ],
+  "state_duration_example": {
+    "scorch": 3,
+    "focus_up": 2,
+    "staggered": 1
+  },
+  "periodic_tick": {
+    "state": "scorch",
+    "resource": "vitality",
+    "delta": -5
+  },
+  "interaction": {
+    "rule": "flame_fragility",
+    "source_tag": "element.flame",
+    "target_tag": "trait.flame_fragile",
+    "multiplier": 1.5,
+    "outcome_tag": "interaction.exposed"
+  },
+  "gauge": {
+    "resource": "resolve_guard",
+    "start": 4,
+    "impact": -2,
+    "threshold_state": "staggered"
+  },
+  "sequence": "double_flame",
+  "healing": "restoration",
+  "note": "All names are reference-project vocabulary. Engine mechanisms remain generic."
+}

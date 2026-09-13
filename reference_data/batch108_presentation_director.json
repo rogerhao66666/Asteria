@@ -1,0 +1,36 @@
+{
+  "schema": "asteria.battle_presentation_director_profile",
+  "version": 1,
+  "rules": [
+    {
+      "event_kind": "timeline_cue",
+      "cue_kind": "animation",
+      "direction": {
+        "beat": "anticipation",
+        "delay": 0.0,
+        "hold": 0.0,
+        "priority": 0
+      }
+    },
+    {
+      "event_kind": "timeline_cue",
+      "cue_kind": "vfx",
+      "direction": {
+        "beat": "impact",
+        "delay": 0.08,
+        "hold": 0.0,
+        "priority": 5
+      }
+    },
+    {
+      "event_kind": "timeline_cue",
+      "cue_kind": "camera",
+      "direction": {
+        "beat": "impact",
+        "delay": 0.08,
+        "hold": 0.04,
+        "priority": 10
+      }
+    }
+  ]
+}

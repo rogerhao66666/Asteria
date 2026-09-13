@@ -1,0 +1,28 @@
+{
+  "schema": "asteria.battle_presentation_scene",
+  "version": 1,
+  "scene_id": "asteria.reference.batch95.forest_mimic",
+  "background_asset_id": "10000000-0000-4000-8000-000000000001",
+  "camera_preset_id": "battle.reference.sideview",
+  "combatants": [
+    {
+      "member_id": "hero",
+      "sprite_sheet_asset_id": "10000000-0000-4000-8000-000000000012",
+      "clip_set_id": "10000000-0000-4000-8000-000000000095",
+      "anchor": {"x": 82.0, "y": 124.0, "facing": "right", "depth": 0.1},
+      "animation_roles": {
+        "idle": "battle_idle",
+        "attack": "battle_attack",
+        "hit": "battle_hit",
+        "ko": "battle_ko"
+      }
+    },
+    {
+      "member_id": "archive_mimic",
+      "sprite_sheet_asset_id": "10000000-0000-4000-8000-000000000096",
+      "clip_set_id": "10000000-0000-4000-8000-000000000097",
+      "anchor": {"x": 230.0, "y": 124.0, "facing": "left", "depth": 0.2},
+      "animation_roles": {"idle": "idle", "attack": "attack", "hit": "hit", "ko": "ko"}
+    }
+  ]
+}

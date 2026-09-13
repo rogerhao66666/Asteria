@@ -1,0 +1,540 @@
+{
+  "assets": {
+    "assets": [
+      {
+        "id": "10000000-0000-4000-8000-000000000001",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "Asteria original reference art",
+          "pixel_scale": 1
+        },
+        "name": "Environment Atlas",
+        "source_path": "reference_assets/asteria_environment_atlas_1x.png"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000002",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "Asteria original reference art",
+          "pixel_scale": 1
+        },
+        "name": "Hero Sheet",
+        "source_path": "reference_assets/asteria_hero_sheet_1x.png"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000003",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "Asteria original reference art",
+          "pixel_scale": 1
+        },
+        "name": "Props",
+        "source_path": "reference_assets/asteria_props_1x.png"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000011",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {},
+        "name": "Environment Sprite Sheet",
+        "source_path": "reference_data/environment_sheet.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000012",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {},
+        "name": "Hero Sprite Sheet",
+        "source_path": "reference_data/hero_sheet.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000021",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "tileset",
+        "metadata": {},
+        "name": "Environment Tileset",
+        "source_path": "reference_data/environment_tileset.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000031",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {},
+        "name": "Hero Animation",
+        "source_path": "reference_data/hero_animation.json"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000041",
+        "import_settings": {},
+        "importer": "asteria.reference",
+        "importer_version": 1,
+        "kind": "tilemap",
+        "metadata": {},
+        "name": "Town & River TileMap",
+        "source_path": "reference_data/tilemap.json"
+      }
+    ],
+    "schema": "asteria.assets",
+    "version": 1
+  },
+  "event_programs": {},
+  "gameplay_library": {
+    "abilities": [
+      {
+        "ability_id": "aimed_shot",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "basic_attack",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "fireball",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "power_strike",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability.demo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      }
+    ],
+    "formulas": {},
+    "schema": "asteria.gameplay_library",
+    "states": [],
+    "timelines": [],
+    "triggers": [],
+    "version": 1
+  },
+  "id": "fce00db0-4f2a-4bf7-bfcc-e75c1e62d170",
+  "lifecycle_event_bindings": [],
+  "name": "Asteria Phase 7B Multi-Class Demo",
+  "rpg_database": {
+    "actors": [
+      {
+        "abilities": [
+          "basic_attack"
+        ],
+        "actor_id": "aria",
+        "base_resources": {
+          "hp": {
+            "current": 100.0,
+            "maximum": 100.0,
+            "minimum": 0.0
+          },
+          "mp": {
+            "current": 10.0,
+            "maximum": 10.0,
+            "minimum": 0.0
+          }
+        },
+        "base_stats": {
+          "attack": 20.0,
+          "defense": 10.0,
+          "magic": 8.0,
+          "speed": 5.0
+        },
+        "class_assignments": [
+          {
+            "assignment_id": "aria.warrior",
+            "class_id": "warrior",
+            "enabled": true,
+            "priority": 10,
+            "progression_track_ids": [
+              "warrior_rank"
+            ],
+            "role": "primary",
+            "schema": "asteria.rpg.class_assignment",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "assignment_id": "aria.scholar",
+            "class_id": "scholar",
+            "enabled": true,
+            "priority": 20,
+            "progression_track_ids": [
+              "scholar_rank"
+            ],
+            "role": "secondary",
+            "schema": "asteria.rpg.class_assignment",
+            "tags": [
+              "build.magic_side"
+            ],
+            "version": 1
+          },
+          {
+            "assignment_id": "aria.hunter",
+            "class_id": "hunter",
+            "enabled": true,
+            "priority": 30,
+            "progression_track_ids": [
+              "hunter_rank"
+            ],
+            "role": "special",
+            "schema": "asteria.rpg.class_assignment",
+            "tags": [],
+            "version": 1
+          }
+        ],
+        "display_name": "Aria",
+        "schema": "asteria.rpg.actor",
+        "tags": [
+          "actor.player",
+          "demo.phase7b"
+        ],
+        "version": 2
+      }
+    ],
+    "attachments": [],
+    "classes": [
+      {
+        "class_id": "hunter",
+        "display_name": "Hunter",
+        "granted_abilities": [
+          "aimed_shot"
+        ],
+        "granted_tags": [
+          "capability.weapon.bow",
+          "class.hunter"
+        ],
+        "resource_bonuses": {},
+        "schema": "asteria.rpg.class",
+        "stat_bonuses": {
+          "speed": 7.0
+        },
+        "version": 1
+      },
+      {
+        "class_id": "scholar",
+        "display_name": "Scholar",
+        "granted_abilities": [
+          "fireball"
+        ],
+        "granted_tags": [
+          "capability.weapon.staff",
+          "class.scholar"
+        ],
+        "resource_bonuses": {
+          "mp": 15.0
+        },
+        "schema": "asteria.rpg.class",
+        "stat_bonuses": {
+          "magic": 12.0,
+          "speed": 2.0
+        },
+        "version": 1
+      },
+      {
+        "class_id": "warrior",
+        "display_name": "Warrior",
+        "granted_abilities": [
+          "power_strike"
+        ],
+        "granted_tags": [
+          "capability.weapon.sword",
+          "class.warrior"
+        ],
+        "resource_bonuses": {
+          "hp": 20.0
+        },
+        "schema": "asteria.rpg.class",
+        "stat_bonuses": {
+          "attack": 10.0,
+          "defense": 4.0
+        },
+        "version": 1
+      }
+    ],
+    "encounters": [],
+    "enemies": [],
+    "equipment": [],
+    "items": [],
+    "progression_tracks": [
+      {
+        "display_name": "Hunter Rank",
+        "milestones": [
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 1,
+            "required_total": 0.0,
+            "stat_bonuses": {}
+          },
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 2,
+            "required_total": 10.0,
+            "stat_bonuses": {
+              "speed": 4.0
+            }
+          }
+        ],
+        "schema": "asteria.rpg.progression_track",
+        "track_id": "hunter_rank",
+        "version": 1
+      },
+      {
+        "display_name": "Scholar Rank",
+        "milestones": [
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 1,
+            "required_total": 0.0,
+            "stat_bonuses": {}
+          },
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 2,
+            "required_total": 10.0,
+            "stat_bonuses": {
+              "magic": 5.0
+            }
+          },
+          {
+            "granted_abilities": [],
+            "granted_tags": [
+              "job.scholar.adept"
+            ],
+            "rank": 3,
+            "required_total": 30.0,
+            "stat_bonuses": {}
+          }
+        ],
+        "schema": "asteria.rpg.progression_track",
+        "track_id": "scholar_rank",
+        "version": 1
+      },
+      {
+        "display_name": "Warrior Rank",
+        "milestones": [
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 1,
+            "required_total": 0.0,
+            "stat_bonuses": {}
+          },
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 2,
+            "required_total": 10.0,
+            "stat_bonuses": {
+              "attack": 3.0
+            }
+          },
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 3,
+            "required_total": 30.0,
+            "stat_bonuses": {
+              "defense": 2.0
+            }
+          }
+        ],
+        "schema": "asteria.rpg.progression_track",
+        "track_id": "warrior_rank",
+        "version": 1
+      }
+    ],
+    "schema": "asteria.rpg.database",
+    "version": 5
+  },
+  "scene_event_bindings": {},
+  "scenes": [
+    {
+      "entities": [
+        {
+          "components": [
+            {
+              "fields": {
+                "origin_x": 0.0,
+                "origin_y": 0.0,
+                "tilemap_asset_id": "10000000-0000-4000-8000-000000000041",
+                "visible": true
+              },
+              "type": "asteria.TileMap2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "10000000-0000-4000-8000-000000000051",
+          "name": "World Map"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 320.0,
+                "y": 208.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 5,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "10000000-0000-4000-8000-000000000012",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "10000000-0000-4000-8000-000000000031",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "64e68f95-18b1-41d5-a733-543e0649c892",
+          "name": "Hero"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 240.0,
+                "y": 128.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "active": true,
+                "deadzone_x": 0.0,
+                "deadzone_y": 0.0,
+                "follow_entity_id": "64e68f95-18b1-41d5-a733-543e0649c892",
+                "height": 270,
+                "smoothing": 12.0,
+                "width": 480,
+                "zoom": 1.0
+              },
+              "type": "asteria.Camera2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "7698d7c3-07a9-4df4-81c7-07a2348c8343",
+          "name": "Game Camera"
+        }
+      ],
+      "id": "3a4f3219-7fb1-4fda-8af4-877a7f3dc141",
+      "name": "Town & River",
+      "schema": "asteria.scene",
+      "version": 1
+    }
+  ],
+  "schema": "asteria.project",
+  "startup_scene_id": "3a4f3219-7fb1-4fda-8af4-877a7f3dc141",
+  "version": 6
+}

@@ -1,0 +1,30 @@
+{
+  "schema": "asteria.battle_ui_assembly_reference",
+  "version": 1,
+  "assembled_from": [
+    "battle_interaction",
+    "battle_information",
+    "combatant_visuals",
+    "roster_density"
+  ],
+  "stress_case": {
+    "party_members": 12,
+    "primary_cards": 4,
+    "compact_cards": 4,
+    "overflow_members": 4,
+    "skill_page_size": 8,
+    "battlefield": [
+      "boss",
+      "add",
+      "summon"
+    ]
+  },
+  "design_goals": [
+    "focused actor is visually privileged without expanding every card",
+    "large action sets remain paged",
+    "reserve members are summarized",
+    "battlefield visibility and HUD visibility are independent",
+    "large boss transform metadata reaches renderer-ready frame"
+  ],
+  "reference_policy": "Premium JRPG clarity may inspire hierarchy and rhythm, but Asteria remains project-configurable and generic."
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "asteria.battle_ui_polish_profile",
+  "version": 1,
+  "interaction_width": 156.0,
+  "interaction_padding": 7.0,
+  "interaction_row_height": 12.0,
+  "interaction_header_height": 11.0,
+  "interaction_footer_height": 11.0,
+  "interaction_bottom_gap": 8.0,
+  "focus_member_emphasis": true,
+  "selected_prefix": "▶ ",
+  "selected_option_prefix": "✓ ",
+  "idle_prefix": "  ",
+  "empty_label": "—",
+  "page_separator": " / "
+}

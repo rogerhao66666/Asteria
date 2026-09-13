@@ -1,0 +1,30 @@
+{
+  "schema": "asteria.reference.battle_presentation_batch97",
+  "version": 1,
+  "scene_id": "batch95.reference",
+  "camera_feedback": {
+    "hit_shake": {
+      "effect": "hit_shake",
+      "amplitude_x": 2.0,
+      "amplitude_y": 1.0,
+      "duration": 0.16,
+      "frequency": 18.0
+    }
+  },
+  "screen_feedback": {
+    "impact_flash": {
+      "effect": "impact_flash",
+      "duration": 0.08
+    },
+    "hit_stop": {
+      "effect": "hit_stop",
+      "duration": 0.06,
+      "strength": 1.0
+    }
+  },
+  "target_indicator": {
+    "primary_role": "target.primary",
+    "secondary_role": "target.secondary",
+    "note": "Visual styling is adapter/project-owned; runtime only supplies canonical member and screen anchor state."
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "schema": "asteria.reference_project",
+  "version": 1,
+  "project_id": "reference.large_party_stress",
+  "title": "Asteria Large Party / UI Stress Reference",
+  "presentation": {
+    "primary_limit": 4,
+    "compact_limit": 4,
+    "overflow": true,
+    "target_fps": 60
+  },
+  "party": {
+    "members": [
+      "party_00",
+      "party_01",
+      "party_02",
+      "party_03",
+      "party_04",
+      "party_05",
+      "party_06",
+      "party_07",
+      "party_08",
+      "party_09",
+      "party_10",
+      "party_11"
+    ],
+    "active": [
+      "party_00",
+      "party_01",
+      "party_02",
+      "party_03"
+    ],
+    "reserve": [
+      "party_04",
+      "party_05",
+      "party_06",
+      "party_07",
+      "party_08",
+      "party_09",
+      "party_10",
+      "party_11"
+    ]
+  },
+  "battle": {
+    "boss": "stress_boss",
+    "adds": [
+      "stress_add_0",
+      "stress_add_1",
+      "stress_add_2",
+      "stress_add_3"
+    ],
+    "summon": "stress_summon",
+    "action_entries": 80,
+    "status_resource_indicators": 96,
+    "vfx_draws": 3000,
+    "offscreen_draws": 1000,
+    "motion_beats": 5000,
+    "transient_pool_capacity": 512
+  },
+  "notes": [
+    "Use for renderer/UI profiling; headless metrics are not a hardware FPS guarantee."
+  ]
+}

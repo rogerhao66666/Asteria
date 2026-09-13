@@ -1,0 +1,67 @@
+{
+  "package": "Asteria_v0.94.0a94_FULL_CANONICAL_REVIEW.zip",
+  "inputs": [
+    {
+      "name": "Asteria_Phase7B_BattleCore_Canonical_v0.93.0a93(1).zip",
+      "sha256": "885c05459c663df2469796b6b71506175d25c40f7c94499e32bf94457e115493",
+      "files": 448
+    },
+    {
+      "name": "Asteria_BattlePresentation_Batch94_v0.94.0a94.zip",
+      "sha256": "ca8ed11aa357615891b1e06864d407d2a09ae76f1d135f63a385b1aaea462656",
+      "files": 8
+    }
+  ],
+  "baseline_files": 448,
+  "delta_files": 8,
+  "merged_original_files": 453,
+  "overlaid_paths": [
+    "PROJECT_HANDOFF.md",
+    "docs/NEXT_PHASE_PLAN.md",
+    "pyproject.toml"
+  ],
+  "added_delta_paths": [
+    "docs/BATCH94_BATTLE_PRESENTATION_FOUNDATION.md",
+    "docs/BATCH94_CLOSURE_AUDIT.md",
+    "src/asteria/presentation/__init__.py",
+    "src/asteria/presentation/battle.py",
+    "tests/test_battle_presentation_foundation.py"
+  ],
+  "missing_baseline_paths": [],
+  "modified_active_documents": [
+    "PROJECT_HANDOFF.md",
+    "README.md",
+    "START_HERE_MAC.md",
+    "docs/MAC_FIRST_RUN_TEST.md",
+    "docs/NEXT_PHASE_PLAN.md",
+    "docs/PHASE_7B_COMPLETE_FLEXIBLE_RPG_SYSTEMS_PLAN.md"
+  ],
+  "v093_source_and_tests_byte_identical": true,
+  "merged_source_tests_and_historical_batch_closure_bytes_preserved": true,
+  "python_parse_compile_count": 298,
+  "json_parse_count": 35,
+  "readable_text_file_count": 463,
+  "project_roundtrips": "covered by full pytest suite; asset-rich projects require registered component types",
+  "active_docs_checked": [
+    "PROJECT_HANDOFF.md",
+    "README.md",
+    "START_HERE_MAC.md",
+    "docs/ARCHITECTURE.md",
+    "docs/CANONICAL_SPEC.md",
+    "docs/MAC_FIRST_RUN_TEST.md",
+    "docs/NEXT_PHASE_PLAN.md",
+    "docs/PHASE_7B_COMPLETE_FLEXIBLE_RPG_SYSTEMS_PLAN.md"
+  ],
+  "active_local_links_checked": 25,
+  "backend_import_boundary": "PASS",
+  "pytest": {
+    "passed": 523,
+    "skipped": 4,
+    "failed": 0,
+    "skip_reason": "PySide6 not installed",
+    "python": "3.13.15 (v3.13.15:4061bc4c35f, Aug  5 2026, 09:08:51) [Clang 21.0.0 (clang-2100.1.1.101)]",
+    "pytest": "9.1.1",
+    "log": "review/PYTEST_RESULTS.txt"
+  },
+  "batch95_started": false
+}

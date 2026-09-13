@@ -1,0 +1,11 @@
+{
+  "expect": {
+    "interrupt_threshold": 5.0,
+    "meteor_recovery": 2.0,
+    "meteor_windup": 5.0,
+    "priority": 10
+  },
+  "scheduler": "continuous.demo",
+  "schema": "asteria.rpg.batch87.action_timing_reference",
+  "version": 1
+}

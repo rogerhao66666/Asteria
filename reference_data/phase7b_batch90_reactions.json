@@ -1,0 +1,58 @@
+{
+  "schema": "asteria.rpg.reaction_reference",
+  "version": 1,
+  "reactions": [
+    {
+      "schema": "asteria.rpg.reaction_definition",
+      "version": 1,
+      "reaction_id": "counter",
+      "trigger": "rpg.battle.after_action",
+      "reactor_selector": "event_targets",
+      "target_selector": "event_source",
+      "ability_id": "counter",
+      "priority": 10,
+      "required_tags": [],
+      "blocked_tags": [
+        "reaction"
+      ],
+      "require_can_act": true,
+      "allow_self": false,
+      "max_per_chain": 1,
+      "action_target_policy": "preserve"
+    },
+    {
+      "schema": "asteria.rpg.reaction_definition",
+      "version": 1,
+      "reaction_id": "cover",
+      "trigger": "rpg.battle.before_action",
+      "reactor_selector": "allies_of_targets_except_targets",
+      "target_selector": "event_source",
+      "ability_id": null,
+      "priority": 20,
+      "required_tags": [],
+      "blocked_tags": [],
+      "require_can_act": true,
+      "allow_self": false,
+      "max_per_chain": 1,
+      "action_target_policy": "replace_event_targets_with_reactor"
+    },
+    {
+      "schema": "asteria.rpg.reaction_definition",
+      "version": 1,
+      "reaction_id": "critical_followup",
+      "trigger": "rpg.battle.after_action",
+      "reactor_selector": "allies_of_source_except_source",
+      "target_selector": "event_targets",
+      "ability_id": "followup",
+      "priority": 5,
+      "required_tags": [
+        "outcome.critical"
+      ],
+      "blocked_tags": [],
+      "require_can_act": true,
+      "allow_self": false,
+      "max_per_chain": 1,
+      "action_target_policy": "preserve"
+    }
+  ]
+}

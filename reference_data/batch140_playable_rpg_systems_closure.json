@@ -1,0 +1,24 @@
+{
+  "schema": "asteria.playable_rpg_systems_closure",
+  "version": 1,
+  "status": "FROZEN",
+  "baseline": "v0.138.0 FULL CANONICAL + Batch139",
+  "full_regression": {
+    "passed": 919,
+    "skipped": 4,
+    "failed": 0
+  },
+  "json_files": 91,
+  "compile_pass": true,
+  "frozen_gameplay_rpg_diff": 0,
+  "direct_use_references": [
+    "README.md",
+    "__pycache__",
+    "large_party_stress_reference.json",
+    "non_octopath_generality_reference.json",
+    "portrait_dungeon_reference.json",
+    "run_reference_smoke.py",
+    "sideview_jrpg_reference.json"
+  ],
+  "next_phase": "Asteria Engine Editor GUI"
+}

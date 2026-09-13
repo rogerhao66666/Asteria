@@ -1,0 +1,25 @@
+{
+  "schema": "asteria.party_screen_profile",
+  "version": 1,
+  "group_order": [
+    "active",
+    "reserve"
+  ],
+  "group_labels": {
+    "active": "Active",
+    "reserve": "Reserve"
+  },
+  "member_labels": {
+    "a": "Aria",
+    "b": "Bram"
+  },
+  "slot_labels": {
+    "vanguard": "Lead",
+    "center": "Center",
+    "rear": "Rear"
+  },
+  "visible_limits": {
+    "active": 6,
+    "reserve": 8
+  }
+}

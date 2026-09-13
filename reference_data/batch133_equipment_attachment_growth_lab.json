@@ -1,0 +1,28 @@
+{
+  "schema": "asteria.equipment_attachment_growth_lab_reference",
+  "version": 1,
+  "operable": [
+    "equip",
+    "unequip",
+    "multiweapon",
+    "accessory",
+    "socket_attach",
+    "socket_detach",
+    "growth_progress",
+    "growth_auto_unlock"
+  ],
+  "validated_effects": [
+    "stats",
+    "abilities",
+    "capabilities",
+    "attachment abilities",
+    "growth abilities"
+  ],
+  "principles": [
+    "slot IDs and capacities are project data",
+    "weapon/accessory are reference content labels, not engine enums",
+    "attachments use canonical socket compatibility",
+    "equipment growth follows canonical authored auto-unlock behavior",
+    "ResolvedActorBuild updates immediately from canonical loadout state"
+  ]
+}

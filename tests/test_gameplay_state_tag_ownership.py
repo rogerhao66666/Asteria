@@ -47,6 +47,7 @@ def test_overlapping_state_contributions_are_reference_safe():
 def test_state_definition_v1_backward_compatibility():
     raw = StateDefinition("old", 2).to_data()
     raw.pop("contributed_tags")
+    raw.pop("on_expire")
     raw["version"] = 1
     restored = StateDefinition.from_data(raw)
     assert restored.contributed_tags == ()

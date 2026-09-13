@@ -1,0 +1,39 @@
+{
+  "schema": "asteria.audit.editor_rpg_runtime_final_closure",
+  "version": 1,
+  "milestone": "v0.158",
+  "status": "frozen",
+  "schemas": {
+    "project": 7,
+    "rpg_database": 23,
+    "rpg_runtime_state": 5,
+    "game_runtime_save": 1
+  },
+  "regression": {
+    "passed": 1116,
+    "skipped": 6,
+    "failed": 0
+  },
+  "compileall": "pass",
+  "json": {
+    "files": 101,
+    "errors": 0
+  },
+  "reference_project_rebuild": "pass",
+  "reference_saves_rebuild": "pass",
+  "full_play": {
+    "status": "pass",
+    "active_party": 6,
+    "battle_actions": 40,
+    "boss_defeated": true,
+    "gold_before": 250000.0,
+    "gold_after": 252700.0,
+    "save_reload_exact": true
+  },
+  "engine_diff_vs_v0_154A": [
+    "src/asteria/rpg/__init__.py",
+    "src/asteria/rpg/save_state.py",
+    "src/asteria/runtime/__init__.py",
+    "src/asteria/runtime/game_session.py"
+  ]
+}

@@ -1,0 +1,199 @@
+{
+  "actor_snapshots": {
+    "aria": {
+      "ability_state": {
+        "active_passives": [
+          "battle_instinct"
+        ],
+        "learned_abilities": [],
+        "schema": "asteria.rpg.actor_ability_state",
+        "selected_evolutions": {
+          "fireball": "fireball_to_firestorm"
+        },
+        "version": 1
+      },
+      "actor_id": "aria",
+      "resources": {
+        "schema": "asteria.resource_pool",
+        "values": {
+          "hp": {
+            "current": 120.0,
+            "maximum": 120.0,
+            "minimum": 0.0
+          },
+          "mp": {
+            "current": 25.0,
+            "maximum": 25.0,
+            "minimum": 0.0
+          }
+        },
+        "version": 1
+      },
+      "schema": "asteria.rpg.actor_snapshot",
+      "stats": {
+        "schema": "asteria.stat_block",
+        "values": {
+          "attack": 30.0,
+          "defense": 14.0,
+          "magic": 20.0,
+          "speed": 14.0
+        },
+        "version": 1
+      },
+      "tags": {
+        "schema": "asteria.tag_set",
+        "values": [
+          "actor.player",
+          "build.magic_side",
+          "capability.weapon.bow",
+          "capability.weapon.staff",
+          "capability.weapon.sword",
+          "class.hunter",
+          "class.scholar",
+          "class.warrior",
+          "demo.phase7b"
+        ],
+        "version": 1
+      },
+      "version": 2
+    }
+  },
+  "currencies": {},
+  "inventory": {
+    "counts": {},
+    "schema": "asteria.rpg.inventory",
+    "version": 1
+  },
+  "loadouts": {
+    "aria": {
+      "equipped": {
+        "accessory": [
+          {
+            "attachments": {},
+            "equipment_id": "mastery_badge",
+            "instance_id": "badge-01",
+            "schema": "asteria.rpg.equipment_instance",
+            "version": 1
+          },
+          {
+            "attachments": {},
+            "equipment_id": "guard_ring",
+            "instance_id": "ring-01",
+            "schema": "asteria.rpg.equipment_instance",
+            "version": 1
+          },
+          {
+            "attachments": {},
+            "equipment_id": "guard_ring",
+            "instance_id": "ring-02",
+            "schema": "asteria.rpg.equipment_instance",
+            "version": 1
+          },
+          {
+            "attachments": {},
+            "equipment_id": "guard_ring",
+            "instance_id": "ring-03",
+            "schema": "asteria.rpg.equipment_instance",
+            "version": 1
+          }
+        ],
+        "armor": [
+          {
+            "attachments": {},
+            "equipment_id": "traveler_coat",
+            "instance_id": "coat-01",
+            "schema": "asteria.rpg.equipment_instance",
+            "version": 1
+          },
+          {
+            "attachments": {},
+            "equipment_id": "traveler_coat",
+            "instance_id": "coat-02",
+            "schema": "asteria.rpg.equipment_instance",
+            "version": 1
+          }
+        ],
+        "weapon": [
+          {
+            "attachments": {},
+            "equipment_id": "bronze_sword",
+            "instance_id": "sword-01",
+            "schema": "asteria.rpg.equipment_instance",
+            "version": 1
+          },
+          {
+            "attachments": {},
+            "equipment_id": "oak_staff",
+            "instance_id": "staff-01",
+            "schema": "asteria.rpg.equipment_instance",
+            "version": 1
+          },
+          {
+            "attachments": {},
+            "equipment_id": "hunter_bow",
+            "instance_id": "bow-01",
+            "schema": "asteria.rpg.equipment_instance",
+            "version": 1
+          },
+          {
+            "attachments": {},
+            "equipment_id": "titan_blade",
+            "instance_id": "titan-01",
+            "schema": "asteria.rpg.equipment_instance",
+            "version": 1
+          }
+        ]
+      },
+      "schema": "asteria.rpg.equipment_loadout",
+      "slots": [
+        {
+          "accepted_tags": [],
+          "capacity": null,
+          "slot_id": "accessory"
+        },
+        {
+          "accepted_tags": [],
+          "capacity": 12,
+          "slot_id": "armor"
+        },
+        {
+          "accepted_tags": [],
+          "capacity": 8,
+          "slot_id": "weapon"
+        }
+      ],
+      "version": 1
+    }
+  },
+  "party_actor_ids": [
+    "aria"
+  ],
+  "progression": {
+    "schema": "asteria.rpg.progression_runtime",
+    "totals": {
+      "hunter_rank": 10.0,
+      "scholar_rank": 30.0,
+      "warrior_rank": 30.0
+    },
+    "version": 1
+  },
+  "progression_allocations": {
+    "actor:aria": {
+      "allocations": {
+        "aria_growth_board": {
+          "core_training": 2,
+          "field_medic": 1,
+          "warrior_focus": 1
+        }
+      },
+      "balances": {
+        "ap": 5.0,
+        "jp": 2.0
+      },
+      "schema": "asteria.rpg.progression_allocation_runtime",
+      "version": 1
+    }
+  },
+  "schema": "asteria.rpg.runtime_state",
+  "version": 3
+}

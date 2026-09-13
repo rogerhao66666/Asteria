@@ -1,151 +1,199 @@
 # Asteria Next Phase Plan
 
-Canonical baseline:
-`Asteria Phase 1–4 corrected baseline (user-provided f22ec74)`
+## Current checkpoint: v0.112.0a112 incremental development state
 
-## Phase 5 — Event VM + Dialogue
+Full cumulative base: v0.94.0a94. Apply Batch 95 through Batch 112 incremental overlays in order. Phase 7B Battle Core remains FROZEN at Batch 93 / v0.93.0a93.
 
-Goal: turn the walkable 2D world into an actual RPG world with behavior.
+| Area | Delivered status |
+| --- | --- |
+| Engine / rendering / editor / runtime | cumulative foundation |
+| Phase 5 Event VM / Dialogue / Python authoring | FROZEN |
+| Phase 6 Generic Gameplay | FROZEN |
+| Phase 7 RPG Toolkit | FROZEN |
+| Phase 7B Battle Core | FROZEN at Batch 93 |
+| Batch 94 Battle Presentation | scene/bindings/coordinator/cue-hook bridge |
+| Batch 95 Battle Presentation | sprite/animation runtime; Idle/Attack/Hit/KO; texture draws; presentation snapshots |
+| Batch 96 Battle Presentation | resolved floating-value/interaction/gauge feedback state; VFX/audio queues; feedback snapshots |
+| Batch 97 Battle Presentation | camera/screen hit feedback state; target indicator projection; deterministic snapshots |
+| Batch 98 Battle Presentation | read-only HP/MP/arbitrary gauge HUD; status icons; project HUD profile; deterministic snapshots |
+| Batch 99 Battle Presentation | read-only scheduler/timing timeline; upcoming turns; current actor marker; pending cast progress; deterministic snapshot |
+| Batch 100 Battle Presentation | canonical battle outcome/applied reward result view; currencies/items/progression crossings; project-owned result labels |
+| Batch 101 Battle Presentation | unified adapter-ready battle UI frame; panels/text/gauges/icons/markers; composition of prior presentation view-state |
+| Batch 102 Battle Presentation | project-owned UI theme; deterministic renderer executor; headless renderer backend; optional concrete pygame UI backend |
+| Batch 103 Battle Presentation | full presentation orchestration; event fan-out; HUD/timeline mirror; composed render path; one-shot audio; composite snapshot |
+| Batch 104 Battle Presentation | generic resource presentation policy; bars, pips, numbers, rings, action/timeline/contextual/hidden/custom resource roles |
+| Batch 105 Battle Presentation | adaptive party/combatant HUD layout; density reduction, overflow, focus retention, generic placement zones |
+| Batch 106 Battle Presentation | generic project action menu; categories, paging, filtering/search, supplied availability/disabled reasons, opaque selection |
+| Batch 107 Battle Presentation | generic multi-step action workflow/composition; supplied options, selection steps, optional/back navigation, opaque completion payload |
+| Batch 108 Battle Presentation | presentation director; authored choreography beats, event delays, priority and presentation-only hold/hit-stop windows |
+| Batch 109 Battle Presentation | animation timing/transition polish; easing, playback rate, sprite cross-fade, recovery hold, multi-hit presentation rhythm |
+| Batch 110 Battle Presentation | coordinated staging/layering across animation, VFX, camera, screen FX and audio with shared groups and deterministic ordering |
+| Batch 111 Battle Presentation | premium adaptive Battle UI hierarchy; interaction surfaces, focused HUD emphasis, selected/disabled roles, project-owned polish/theme |
+| Batch 112 Battle Presentation | diverse archetype validation and closure; removes residual side-name semantics and freezes Adaptive + Premium Battle Presentation milestone |
 
-Recommended first batches:
+## Next Battle Presentation work
 
-1. Event VM core
-   - instruction format
-   - program counter
-   - wait/resume
-   - deterministic state
-   - save/load/resume seam
+Batch 112 closes the Battle Presentation milestone. Proceed to Runtime RPG UI: character screen, party/formation, equipment/loadout, abilities, progression graph UI and inventory. Exact batching may be adjusted to keep each batch independently testable.
 
-2. Event context/state
-   - switches
-   - variables
-   - local/self state
-   - conditions
+No presentation layer may infer gameplay outcomes. Damage values, interaction outcomes, target validity, KO, Break-like gauge transitions, costs, AI and turn ownership remain frozen/core-resolved inputs.
 
-3. Interaction
-   - Interaction component
-   - proximity/facing checks
-   - action button
-   - NPC/chest/door event start
+After Battle Presentation reaches a coherent playable checkpoint: RPG GUI + playable vertical slice, then broad Mac human playtesting.
 
-4. Dialogue
-   - dialogue command
-   - choice command
-   - dialogue UI boundary
-   - variable/switch consequences
+## Battle System milestone closure
 
-5. World commands
-   - transfer scene/map position
-   - give/remove item placeholder API
-   - play animation/audio/screen effect boundaries
+Battle Core 75–93 + Battle Presentation 94–112: **FROZEN**.
 
-6. Common/parallel/autorun events
-   - scheduling
-   - cancellation
-   - debugger hooks
+Batch 118 Inventory / Item Runtime UI and Runtime RPG UI closure are complete. Next: Asteria Engine Editor GUI / RPG UX. Battle-system changes should be treated as exceptions requiring a demonstrated abstraction gap rather than normal roadmap work.
 
-7. Reference World RPG slice
-   - NPC
-   - dialogue
-   - choice
-   - chest
-   - door/transfer
-   - simple cutscene
+## Runtime RPG UI phase
 
-Do not hardcode game-specific quest/battle mechanics in Phase 5.
+| Batch | Scope |
+|---|---|
+| Batch 113 Runtime RPG UI | Character Screen Foundation: canonical resolved-build projection, generic sections/resources/equipment/abilities/progression, presentation-only navigation |
+| Batch 114 Runtime RPG UI | Party / formation runtime UI |
+| Batch 115 Runtime RPG UI | Equipment / loadout runtime UI |
+| Batch 116 Runtime RPG UI | Ability/passive collections and loadouts |
+| Batch 117 Runtime RPG UI | Progression graph / skill-tree rendering |
+| Batch 118 Runtime RPG UI | Inventory/item runtime UI + phase closure |
 
+## Playable RPG Systems Validation
 
-## Current progress
+Batch 119 complete: cross-system reference harness.
+Next: Batch 120 enemy/AI + shared battle action execution validation, using the
+same reference-project philosophy. Later batches converge on a human-playable
+reference battle and multiple presentation presets.
 
-- Phase 5 Batch 36: Event VM Core implemented in v0.36.0a36.
-- Phase 5 Batch 37: Event context/state implemented in v0.37.0a37.
-- Phase 5 Batch 38: Interaction foundation implemented in v0.38.0a38.
-- Phase 5 Batch 39: Event Runner / program registry integration implemented in v0.39.0a39.
-- Phase 5 Batch 40: Dialogue runtime boundary + choice-state foundation implemented in v0.40.0a40.
-- Phase 5 Batch 41: control flow + world-command service boundaries implemented in v0.41.0a41.\n- Phase 5 Batch 42: reusable/common event calls + call-stack foundation implemented in v0.42.0a42.\n- Phase 5 Batch 43: autorun / parallel event scheduling foundation implemented in v0.43.0a43.\n- Phase 5 Batch 44: scene/event binding + trigger condition model implemented in v0.44.0a44.\n- Phase 5 Batch 45: first Asteria Event Editor GUI vertical slice implemented in v0.45.0a45.\n- Phase 5 Batch 46: central Scene ↔ Code ↔ Event ↔ Animation workspace architecture implemented in v0.46.0a46.
-- Next: Batch 47 Asteria Python Authoring API v1 + safe Code workspace Run integration.
+### Batch 120 complete
+Enemy AI + player input shared battle execution validated. Next integration
+expands status/resources/interactions and boss behavior while preserving
+presentation clarity under high system complexity.
 
-- Phase 5 Batch 47: Python Authoring API v1 + Code workspace Run integration implemented in v0.47.0a47.
-- Next: Batch 48 Code workspace integration/polish, then Phase 5 closure audit.
+### Batch 121 complete
+Status/resources/interactions integrated. Next: Batch 122 transform / stance /
+mode validation, including build/action changes without adding a dedicated
+TransformSystem taxonomy.
 
-- Phase 5 Batch 48: Code workspace integration/diagnostics implemented in v0.48.0a48.
-- Next: Phase 5 closure audit; fix blockers before freeze, then Phase 6 Generic Gameplay Framework.
+### Batch 122 complete
+Transform / stance / mode integration validated over canonical member
+replacement and form stack. Next: Batch 123 summon / temporary combatants /
+boss adds and lifecycle integration.
 
-## Phase 5 Closure
+### Batch 123 complete
+Summon / temporary combatant / boss-add integration validated. Next: Batch 124
+swap / reserve / formation / complex-party validation before Battle Interaction
+& Information Architecture.
 
-Phase 5 is FROZEN at `v0.49.0a49` after closure audit and blocker fixes. See `PHASE_5_CLOSURE_AUDIT.md`.
+### Batch 124 complete
+Swap / reserve / formation / complex-party integration validated. Gameplay
+capability integration 121-124 is complete. Next: Batch 125 Battle Interaction
+& Information Architecture, including multi-weapon/many-skill/special-system
+action organization and clutter-control policy.
 
-Next: Phase 6 — Generic Gameplay Framework.
+### Batch 125 complete
+Complex battle interaction routing validated. Next: Batch 126 Battle Information
+Hierarchy / Clutter Control: persistent/contextual/focused/compact/hidden/
+overflow policies for large parties, many resources/statuses, boss+adds+summon,
+and dense timelines.
 
-## Phase 6 — Generic Gameplay Framework
+### Batch 126 complete
+Information hierarchy/clutter policy validated. Next: Batch 127 Combatant Visual
+System, separating battlefield visual, portrait, small portrait and icon, with
+animation states and large-boss scale/anchor/offset/z-order support.
 
-- Batch 50: Stats / Resources / Tags foundation implemented in `v0.50.0a50`.
-- Next: Batch 51 — Modifier / Effect foundation.
-\n- Phase 6 Batch 51: Modifier / Effect foundation implemented in `v0.51.0a51`.\n- Next: Batch 52 — State / Status lifecycle foundation.\n
-- Phase 6 Batch 52: Formula / Scaling foundation implemented in `v0.52.0a52`.
-- Next: Batch 53 — State / Status lifecycle foundation.
+### Batch 127 complete
+Combatant visual profiles/states validated. Next: Batch 128 Battle HUD + Action
+UI assembly, combining Batch125 interaction architecture, Batch126 information
+hierarchy and Batch127 combatant visuals into a concrete runtime battle UI.
 
-- Phase 6 Batch 53: Generic State / Status lifecycle implemented in `v0.53.0a53`.
-- Next: Batch 54 — Generic Conditions / Triggers foundation.
+### Batch 128 complete
+Concrete Battle HUD + Action UI assembly validated. Next: Batch 129 Animation /
+VFX / Camera Integration to exercise the visible action chain from input through
+cast/impact/hit-stop/damage/status/recovery and special transitions.
 
-- Phase 6 Batch 54: Generic Conditions / Triggers foundation implemented in `v0.54.0a54`.
-- Next: Batch 55 — Ability / Targeting foundation.
+### Batch 129 complete
+Animation/VFX/Camera integration validated. Next: Batch 130 Side-view JRPG
+Template using the same generic gameplay/presentation mechanisms with enemies on
+the left, players on the right, both facing center. This is a presentation preset
+only and must not encode side semantics in Battle Core.
 
-- Phase 6 Batch 55: Ability / Targeting foundation implemented in `v0.55.0a55`.
-- Next: Batch 56 — Gameplay execution / timeline seam.
+### Batch 129A complete
+Animation runtime closure review passed after removing the fixed-role leak and
+substep-wide beat scanning hot path. Continue to Batch 130 Side-view JRPG
+Template. Renderer-specific 60-FPS claims remain gated on concrete backend +
+representative asset stress tests.
 
-- Phase 6 Batch 56: Action Timeline / presentation seam implemented in `v0.56.0a56`.
-- Next: Batch 57 — Phase 6 canonical registry/authoring integration.
+### Batch 130 complete
+Side-view JRPG presentation template validated. Next: Batch 131 Dungeon /
+Portrait Party Template using the same gameplay with player battlefield bodies
+optionally hidden while portraits/HUD remain visible. Then Batch 131A concrete
+Renderer & Animation Performance Foundation.
 
-- Phase 6 Batch 57: Gameplay defaults/presets and canonical GameplayLibrary implemented in `v0.57.0a57`.
-- Next: Batch 58 — Phase 6 hardening before closure.
+### Batch 131 complete
+Second battle presentation grammar validated. Next: Batch 131A Renderer &
+Animation Performance Foundation: concrete batching/culling/pooling/preload and
+frame-time instrumentation seams, followed by representative stress validation.
 
-- Phase 6 Batch 58: State lifecycle, generic trigger keys, and formula-driven Effect hardening implemented in `v0.58.0a58`.
-- Next: Phase 6 closure audit.
+### Batch 131A complete
+Renderer/animation performance foundation is now present. Continue to Batch 132
+Character / Job / Progression Lab, where outside-battle RPG systems become
+actually operable rather than read-only validation projections.
 
-- Phase 6 closure: FROZEN at `v0.59.0a59` after tag-contribution ownership closure fix.
-- Next: Phase 7 — RPG Toolkit built on frozen generic gameplay primitives.
+### Batch 132 complete
+Character / Job / Progression Lab is operable. Next: Batch 133 Equipment /
+Accessory / Attachment Lab: equip/unequip, multiple weapons, accessory,
+socket/attachment, upgrade/growth/evolution, with immediate ResolvedActorBuild
+changes.
 
-- Phase 7 Batch 60: Actor/Class RPG Toolkit implemented in `v0.60.0a60`.
-- Next: Batch 61 — Item / Equipment Toolkit.
+### Batch 133 complete
+Equipment / Accessory / Attachment Lab is operable. Next: Batch 134 Inventory /
+Alchemy / Crafting Lab: real inventory consumption/production, generic
+multi-step composition, recipe resolution, and reversible validation without
+hardcoding an Alchemy command into the engine.
 
-- Phase 7 Batch 61: Item/Equipment/Socket/Attachment Toolkit implemented in `v0.61.0a61`.
-- Next: Batch 62 — loadout contribution integration + consumable item effects.
+### Batch 134 complete
+Inventory / Alchemy / Crafting Lab is operable. Next: Batch 135 Party /
+Formation Lab: party roster, active/reserve assignment, formation placement,
+swap, and large-party operation outside battle before full Validation Project
+assembly.
 
-- Phase 7 Batch 62: Loadout + consumable integration implemented in `v0.62.0a62`.
-- Next: Batch 63 — Enemy / encounter / loot-reward toolkit.
+### Batch 135 complete
+Party / Formation Lab is operable. Next: Batch 136 Asteria RPG Validation
+Project Assembly — connect Character/Job/Progression, Equipment, Inventory/
+Composition, Party/Formation, and Battle Arena into one coherent reference
+project flow instead of isolated labs.
 
-- Phase 7 Batch 63: Enemy/Encounter/Loot-Reward toolkit implemented in `v0.63.0a63`.
-- Next: Batch 64 — progression / level / experience toolkit.
+### Batch 136 complete
+The RPG Validation Project is assembled across outside-battle systems and Battle
+Arena. Next: Batch 137 Everything Combined Scenario — exercise the full authored
+sequence in one deterministic end-to-end validation: build/multiclass,
+progression, equipment/attachment/growth, composition, party swap, battle
+interaction, transform/summon/boss-phase/status/cleanse style mechanics where
+available, victory/reward application, then verify post-battle progression and
+inventory state.
 
-- Phase 7 Batch 64: generic progression/rank toolkit implemented in `v0.64.0a64`.
-- Next: Batch 65 — party + battle/turn-order foundation.
+### Batch 137 complete
+Everything Combined Scenario passes. Next: Batch 138 UI + Renderer/Animation
+Stress Test and performance tuning. Exercise dense party/action/status/resource/
+VFX presentation together, collect frame-budget/batching/culling/pool metrics,
+and tune only evidence-backed hot paths before generality proof.
 
-- Phase 7 Batch 65: Party + deterministic turn-order + thin BattleRuntime implemented in `v0.65.0a65`.
-- Next: Batch 66 — battle outcome + reward/progression handoff.
+### Batch 138 complete
+Dense UI/renderer/animation stress validation passes and two unnecessary
+per-frame draw-container copies were removed. Next: Batch 139 Non-Octopath
+Generality Proof — validate materially different RPG/battle structures against
+the same mechanisms and presentation policies so the engine is not accidentally
+optimized around the reference JRPG shape.
 
-- Phase 7 Batch 66: universal lifecycle hooks + Event VM bridge + battle outcome/reward handoff implemented in `v0.66.0a66`.
-- Architectural invariant: any meaningful workflow must remain event-connectable.
-- Next: Batch 67 — Project persistence integration for Phase 7 RPG data.
+### Batch 139 complete
+Non-Octopath generality proof passes. Next: Batch 140 Playable RPG Systems
+Closure Audit / Freeze. Audit the full 119–139 validation milestone, resolve
+only proven generic gaps, then produce a persistent FULL CANONICAL milestone
+before the Editor GUI phase.
 
-- Phase 7 Batch 67: canonical Project v4 now persists RpgDatabase; Project v2/v3 remain backward-readable.
-- Next: Batch 68 — RPG cross-reference validation + lifecycle-event binding persistence.
+### Batch 140 — Playable RPG Systems Closure / Freeze
+Batches 119–139 are closed and frozen. Direct-use local reference presets and a
+runnable smoke script are included under `reference_projects/`.
 
-- Phase 7 Batch 68: RPG cross-reference validation + persistent universal lifecycle-event bindings; Project v5.
-- Next: Batch 69 — unique equipment instances / socketed loadout persistence.
-
-- Phase 7 Batch 69: stable equipment instance identity + socket/loadout persistence; no arbitrary socket cap; slot capacity may be unlimited.
-- Next: Batch 70 — RPG runtime save-state container + restore validation.
-
-- Phase 7 Batch 70: canonical RPG runtime save-state for inventory, progression, loadouts, party identity, currencies.
-- Next: Batch 71 — actor mutable runtime snapshots + derived equipment/progression integration.
-
-- Phase 7 Batch 71: actor runtime snapshots + non-baked effective progression/equipment stats/tags/abilities.
-- Next: Batch 72 — Phase 7 integration hardening before closure.
-
-- Phase 7 Batch 72: reward transaction/rollback, public state replacement seams, stable equipment lifecycle identity.
-- Next: Phase 7 pre-closure audit; resolve GameplayLibrary/ability persistence ownership before freeze.
-
-- Phase 7 Batch 73: Project schema v6 owns canonical GameplayLibrary; RPG ability refs validated.
-- Phase 7: CLOSURE PASS / FROZEN at v0.73.0a73.
-- Next checkpoint: RPG Authoring GUI integration, then Phase 8 ARPG Toolkit.
+Next milestone: Asteria Engine Editor GUI. The editor must remain polished,
+modern, beginner-usable, and code/script friendly, with GUI and Python APIs
+editing the same canonical Project/Scene/RPG data.

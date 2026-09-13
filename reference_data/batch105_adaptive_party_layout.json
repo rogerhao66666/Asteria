@@ -1,0 +1,17 @@
+{
+  "schema": "asteria.battle_party_layout_policy",
+  "version": 1,
+  "expanded_row_height": 42.0,
+  "compact_row_height": 29.0,
+  "minimal_row_height": 19.0,
+  "compact_resource_limit": 3,
+  "minimal_resource_limit": 1,
+  "compact_status_limit": 4,
+  "minimal_status_limit": 2,
+  "default_zone": "left",
+  "notes": [
+    "This is presentation density policy, not a gameplay party-size cap.",
+    "Explicit placement zones are project presentation metadata.",
+    "When a zone overflows, the focused/current member remains visible."
+  ]
+}

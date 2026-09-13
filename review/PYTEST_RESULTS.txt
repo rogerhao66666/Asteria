@@ -1,0 +1,14 @@
+....................................................sss.......s......... [ 13%]
+........................................................................ [ 27%]
+........................................................................ [ 40%]
+........................................................................ [ 54%]
+........................................................................ [ 68%]
+........................................................................ [ 81%]
+........................................................................ [ 95%]
+.......................                                                  [100%]
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_editor_shell_surface.py:31: could not import 'PySide6': No module named 'PySide6'
+SKIPPED [1] tests/test_editor_shell_surface.py:61: could not import 'PySide6': No module named 'PySide6'
+SKIPPED [1] tests/test_editor_shell_surface.py:108: could not import 'PySide6': No module named 'PySide6'
+SKIPPED [1] tests/test_editor_workspace_code.py:17: could not import 'PySide6': No module named 'PySide6'
+523 passed, 4 skipped in 1.33s

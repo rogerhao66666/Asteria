@@ -1,0 +1,22 @@
+{
+  "schema": "asteria.sideview_jrpg_template_reference",
+  "version": 1,
+  "template_id": "asteria.sideview_jrpg.default",
+  "visual_grammar": {
+    "left_zone": {
+      "facing": "right",
+      "x": 72.0
+    },
+    "right_zone": {
+      "facing": "left",
+      "x": 248.0
+    },
+    "center_x": 160.0
+  },
+  "principles": [
+    "zone membership is explicitly supplied by project/controller",
+    "no player/enemy semantics are inferred from member or side IDs",
+    "presentation visibility caps do not limit gameplay membership",
+    "projects may replace or reverse the grammar without Battle Core changes"
+  ]
+}

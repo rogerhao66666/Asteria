@@ -1,0 +1,47 @@
+{
+  "schema": "asteria.reference_project",
+  "version": 1,
+  "project_id": "reference.portrait_dungeon",
+  "title": "Asteria Portrait Dungeon Reference",
+  "presentation": {
+    "template": "asteria.portrait_party.default",
+    "party_bodies_visible": false,
+    "party_hud_visible": true,
+    "target_fps": 60
+  },
+  "party": {
+    "active": [
+      "delver",
+      "medic",
+      "caster"
+    ],
+    "reserve": [
+      "scout"
+    ]
+  },
+  "encounter": {
+    "battlefield_members": [
+      "crypt_guardian",
+      "wisp_a",
+      "wisp_b"
+    ],
+    "mechanics": [
+      "portrait_party",
+      "status",
+      "summon",
+      "temporary_combatants"
+    ]
+  },
+  "commands": {
+    "layers": [
+      "weapon",
+      "technique",
+      "item",
+      "stance"
+    ],
+    "page_size": 6
+  },
+  "notes": [
+    "Same canonical battle mechanisms; different visual grammar from side-view."
+  ]
+}

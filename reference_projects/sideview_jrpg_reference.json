@@ -1,0 +1,108 @@
+{
+  "schema": "asteria.reference_project",
+  "version": 1,
+  "project_id": "reference.sideview_jrpg",
+  "title": "Asteria Sideview JRPG Reference",
+  "purpose": "Direct-use reference for job/equipment/progression/battle presentation validation.",
+  "presentation": {
+    "template": "asteria.sideview_jrpg.default",
+    "player_zone": "battle.right",
+    "enemy_zone": "battle.left",
+    "target_fps": 60
+  },
+  "party": {
+    "active": [
+      "hero",
+      "scholar",
+      "warden",
+      "mixer"
+    ],
+    "reserve": [
+      "ranger",
+      "oracle"
+    ]
+  },
+  "actors": {
+    "hero": {
+      "main_class": "vanguard",
+      "secondary_class": "arcanist",
+      "resources": {
+        "vitality": 420,
+        "technique": 90,
+        "momentum": 3
+      },
+      "equipment": {
+        "main_hand": "ember_blade",
+        "accessory": "echo_charm"
+      },
+      "abilities": [
+        "basic_attack",
+        "double_strike",
+        "flame_slash",
+        "venom_edge",
+        "tempered_arc"
+      ]
+    },
+    "scholar": {
+      "main_class": "scholar",
+      "resources": {
+        "vitality": 280,
+        "technique": 150
+      },
+      "abilities": [
+        "ice_arc",
+        "focus_step"
+      ]
+    },
+    "warden": {
+      "main_class": "warden",
+      "resources": {
+        "vitality": 520,
+        "technique": 55
+      },
+      "abilities": [
+        "guard_break"
+      ]
+    },
+    "mixer": {
+      "main_class": "alchemist",
+      "resources": {
+        "vitality": 310,
+        "technique": 110
+      },
+      "abilities": [
+        "quick_mix",
+        "field_mix"
+      ]
+    }
+  },
+  "encounter": {
+    "enemies": [
+      {
+        "id": "boss",
+        "vitality": 1200,
+        "phase": 1
+      },
+      {
+        "id": "add_a",
+        "vitality": 180
+      },
+      {
+        "id": "add_b",
+        "vitality": 180
+      }
+    ],
+    "mechanics": [
+      "arbitrary_resources",
+      "weakness_interaction",
+      "multi_hit",
+      "status",
+      "boss_phase",
+      "adds"
+    ]
+  },
+  "notes": [
+    "Original placeholder data only; no third-party game assets/content.",
+    "Project rules are data, not engine hardcodes."
+  ]
+}

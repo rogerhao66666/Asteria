@@ -6,3 +6,5 @@ try:
 except ImportError:
     PygameRuntimeBackend = None
     PygameTextureBackend = None
+
+from .pygame_battle_ui import PygameBattleUiBackend

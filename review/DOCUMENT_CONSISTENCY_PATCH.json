@@ -1,0 +1,35 @@
+{
+  "baseline": "Asteria_v0.94.0a94_FULL_CANONICAL_REVIEW.zip",
+  "scope": "active documentation consistency only",
+  "batch95_started": false,
+  "battle_core_freeze": "v0.93.0a93",
+  "current_package": "v0.94.0a94",
+  "changed_active_documents": [
+    "README.md",
+    "PROJECT_HANDOFF.md",
+    "START_HERE_MAC.md",
+    "docs/ARCHITECTURE.md",
+    "docs/CANONICAL_SPEC.md",
+    "docs/MAC_FIRST_RUN_TEST.md",
+    "docs/NEXT_PHASE_PLAN.md",
+    "docs/CONSISTENCY_AUDIT.md"
+  ],
+  "historical_documents_changed": false,
+  "source_tests_changed": false,
+  "checks": {
+    "active_document_links": "PASS",
+    "active_status_consistency": "PASS",
+    "stale_baseline_and_escaped_newline_scan": "PASS",
+    "python_ast_parse": "PASS",
+    "asteria_json_parse": "PASS",
+    "non_active_byte_preservation": "PASS",
+    "historical_byte_preservation": "PASS",
+    "full_pytest": "REUSED INPUT EVIDENCE: 523 passed, 4 skipped (PySide6 unavailable)"
+  },
+  "notes": [
+    "Historical batch and closure documents retain their original wording and bytes.",
+    "Batch 95 remains on hold.",
+    "Frozen Battle Core semantics were not modified.",
+    "The active documents now explicitly state that historical Next sections are not current work orders."
+  ]
+}

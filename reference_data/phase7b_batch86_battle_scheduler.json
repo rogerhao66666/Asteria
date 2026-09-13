@@ -1,0 +1,25 @@
+{
+  "example_speeds": {
+    "fast_hero": 100.0,
+    "normal_enemy": 50.0,
+    "slow_enemy": 25.0
+  },
+  "expected_first_six": [
+    "fast_hero",
+    "fast_hero",
+    "normal_enemy",
+    "fast_hero",
+    "fast_hero",
+    "normal_enemy"
+  ],
+  "scheduler": {
+    "minimum_speed": 1.0,
+    "mode": "continuous",
+    "scheduler_id": "continuous.demo",
+    "schema": "asteria.rpg.battle_scheduler_definition",
+    "timeline_scale": 100.0,
+    "version": 1
+  },
+  "schema": "asteria.phase7b.batch86.scheduler_reference",
+  "version": 1
+}

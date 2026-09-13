@@ -1,0 +1,100 @@
+{
+  "schema": "asteria.rpg.battle_resource_runtime",
+  "values": {
+    "aria": {
+      "boost": {
+        "bound_to_subject": false,
+        "current": 2.0,
+        "initial": 5.0,
+        "maximum": 5.0,
+        "minimum": 0.0,
+        "overflow_limit": 5.0,
+        "start_value": 1.0
+      },
+      "combo": {
+        "bound_to_subject": false,
+        "current": 2.0,
+        "initial": 10.0,
+        "maximum": 10.0,
+        "minimum": 0.0,
+        "overflow_limit": 15.0,
+        "start_value": 0.0
+      },
+      "mp": {
+        "bound_to_subject": true,
+        "current": 42.0,
+        "initial": 42.0,
+        "maximum": 60.0,
+        "minimum": 0.0,
+        "overflow_limit": 60.0,
+        "start_value": 42.0
+      },
+      "rage": {
+        "bound_to_subject": false,
+        "current": 10.0,
+        "initial": 100.0,
+        "maximum": 100.0,
+        "minimum": 0.0,
+        "overflow_limit": 120.0,
+        "start_value": 0.0
+      },
+      "stagger": {
+        "bound_to_subject": false,
+        "current": 100.0,
+        "initial": 100.0,
+        "maximum": 100.0,
+        "minimum": 0.0,
+        "overflow_limit": 100.0,
+        "start_value": 100.0
+      }
+    },
+    "iron_beetle": {
+      "boost": {
+        "bound_to_subject": false,
+        "current": 2.0,
+        "initial": 5.0,
+        "maximum": 5.0,
+        "minimum": 0.0,
+        "overflow_limit": 5.0,
+        "start_value": 1.0
+      },
+      "combo": {
+        "bound_to_subject": false,
+        "current": 0.0,
+        "initial": 10.0,
+        "maximum": 10.0,
+        "minimum": 0.0,
+        "overflow_limit": 15.0,
+        "start_value": 0.0
+      },
+      "mp": {
+        "bound_to_subject": true,
+        "current": 20.0,
+        "initial": 20.0,
+        "maximum": 20.0,
+        "minimum": 0.0,
+        "overflow_limit": 20.0,
+        "start_value": 20.0
+      },
+      "rage": {
+        "bound_to_subject": false,
+        "current": 0.0,
+        "initial": 100.0,
+        "maximum": 100.0,
+        "minimum": 0.0,
+        "overflow_limit": 120.0,
+        "start_value": 0.0
+      },
+      "stagger": {
+        "bound_to_subject": false,
+        "current": 75.0,
+        "initial": 100.0,
+        "maximum": 100.0,
+        "minimum": 0.0,
+        "overflow_limit": 100.0,
+        "start_value": 100.0
+      }
+    }
+  },
+  "version": 1
+}

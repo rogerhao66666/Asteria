@@ -1,0 +1,8 @@
+{
+  "batch": 88,
+  "examples": {
+    "triple_slash": {"participants": ["hero"], "hits": 3},
+    "inferno_cyclone": {"participants": ["mage", "rogue"], "ordered_abilities": ["fire", "wind"]},
+    "raid_sync": {"max_participants": null}
+  }
+}

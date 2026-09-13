@@ -1,0 +1,23 @@
+{
+  "schema": "asteria.inventory_screen_profile",
+  "version": 1,
+  "item_labels": {
+    "potion": "Potion",
+    "ore": "Forging Ore"
+  },
+  "item_groups": {
+    "potion": "supplies",
+    "ore": "crafting",
+    "key_fragment": "quest"
+  },
+  "group_labels": {
+    "supplies": "Supplies",
+    "crafting": "Crafting",
+    "quest": "Quest"
+  },
+  "visible_limits": {
+    "supplies": 10,
+    "crafting": 12
+  },
+  "default_group": "items"
+}

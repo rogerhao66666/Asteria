@@ -1,0 +1,9 @@
+{
+  "texture_asset_id": "10000000-0000-4000-8000-000000000003",
+  "frames": [
+    {"x": 128, "y": 0, "width": 32, "height": 32, "pivot_x": 0.5, "pivot_y": 1.0},
+    {"x": 128, "y": 0, "width": 32, "height": 32, "pivot_x": 0.5, "pivot_y": 1.0},
+    {"x": 128, "y": 0, "width": 32, "height": 32, "pivot_x": 0.5, "pivot_y": 0.92},
+    {"x": 128, "y": 0, "width": 32, "height": 32, "pivot_x": 0.5, "pivot_y": 1.0}
+  ]
+}

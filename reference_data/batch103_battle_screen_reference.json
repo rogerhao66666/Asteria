@@ -1,0 +1,21 @@
+{
+  "schema": "asteria.reference.battle_screen",
+  "version": 1,
+  "scene_id": "batch103.reference",
+  "virtual_size": [
+    320,
+    180
+  ],
+  "presentation_path": [
+    "coordinator events",
+    "animation/feedback/camera runtimes",
+    "HUD/timeline canonical mirrors",
+    "BattleUiComposer",
+    "BattleUiRenderer"
+  ],
+  "notes": [
+    "Reference presentation orchestration only.",
+    "Battle Core remains authoritative for gameplay.",
+    "Current actor is caller-supplied canonical state."
+  ]
+}

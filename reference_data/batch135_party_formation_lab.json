@@ -1,0 +1,21 @@
+{
+  "schema": "asteria.party_formation_lab_reference",
+  "version": 1,
+  "reference_roster_size": 12,
+  "default_active_capacity": 4,
+  "operable": [
+    "roster_order",
+    "active_reserve_assignment",
+    "active_reserve_swap",
+    "formation_move",
+    "formation_slot_swap",
+    "member_add_remove"
+  ],
+  "principles": [
+    "Party owns the canonical roster",
+    "BattleFormationRuntime owns logical placement",
+    "active/reserve grouping is project policy",
+    "active capacity is project policy, not an engine-wide cap",
+    "formation slots are opaque project-authored IDs"
+  ]
+}

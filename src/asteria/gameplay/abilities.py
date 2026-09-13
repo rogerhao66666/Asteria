@@ -341,6 +341,8 @@ class AbilityRuntime:
         ability_id,
         source: AbilityTarget,
         targets=(),
+        *,
+        prepaid_costs=None,
     ):
         definition = self.registry.require(ability_id)
         targets = tuple(targets)
@@ -372,7 +374,7 @@ class AbilityRuntime:
                 source.subject.resources.current(cost.resource)
                 - source.subject.resources.get(cost.resource).minimum
             )
-            if available < amount:
+            if prepaid_costs is None and available < amount:
                 errors.append(f"insufficient_resource:{cost.resource}")
             evaluated_costs.append((cost.resource, amount))
 
@@ -389,12 +391,19 @@ class AbilityRuntime:
         }
 
         staged_source = staged_by_id[source.target_id]
-        for resource, amount in evaluated_costs:
-            if not staged_source.resources.spend(resource, amount):
+        if prepaid_costs is None:
+            for resource, amount in evaluated_costs:
+                if not staged_source.resources.spend(resource, amount):
+                    return AbilityExecutionResult(
+                        definition.ability_id,
+                        False,
+                        (f"insufficient_resource:{resource}",),
+                    )
+        else:
+            normalized_prepaid = tuple((str(r), float(a)) for r, a in prepaid_costs)
+            if normalized_prepaid != tuple(evaluated_costs):
                 return AbilityExecutionResult(
-                    definition.ability_id,
-                    False,
-                    (f"insufficient_resource:{resource}",),
+                    definition.ability_id, False, ("prepaid_cost_mismatch",)
                 )
 
         effect_results = []

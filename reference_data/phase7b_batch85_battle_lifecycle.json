@@ -1,0 +1,114 @@
+{
+  "notes": [
+    "Combatant lifecycle state IDs are open project vocabulary.",
+    "Explicit objectives override legacy eliminate-last-side fallback.",
+    "Objective priority is deterministic; failure wins a same-objective tie.",
+    "Escape is seeded and project-stat driven; no fixed speed/agility stat is required."
+  ],
+  "rpg_database": {
+    "ability_evolutions": [],
+    "actors": [],
+    "attachments": [],
+    "battle_objectives": [
+      {
+        "defeated_sides": [
+          "enemies"
+        ],
+        "failure_conditions": [],
+        "failure_defeated_sides": [
+          "heroes"
+        ],
+        "failure_mode": "any",
+        "failure_winning_sides": [
+          "enemies"
+        ],
+        "objective_id": "defeat.enemies",
+        "priority": 10,
+        "schema": "asteria.rpg.battle_objective_definition",
+        "success_conditions": [
+          {
+            "kind": "side_active_count",
+            "operator": "==",
+            "subject_id": "enemies",
+            "value": 0.0
+          }
+        ],
+        "success_mode": "all",
+        "version": 1,
+        "winning_sides": [
+          "heroes"
+        ]
+      },
+      {
+        "defeated_sides": [
+          "enemies"
+        ],
+        "failure_conditions": [
+          {
+            "kind": "member_active",
+            "operator": "==",
+            "subject_id": "guardian",
+            "value": false
+          }
+        ],
+        "failure_defeated_sides": [
+          "heroes"
+        ],
+        "failure_mode": "any",
+        "failure_winning_sides": [
+          "enemies"
+        ],
+        "objective_id": "seal.portal",
+        "priority": 20,
+        "schema": "asteria.rpg.battle_objective_definition",
+        "success_conditions": [
+          {
+            "kind": "flag",
+            "operator": "==",
+            "subject_id": "portal.sealed",
+            "value": true
+          }
+        ],
+        "success_mode": "all",
+        "version": 1,
+        "winning_sides": [
+          "heroes"
+        ]
+      }
+    ],
+    "battle_resources": [],
+    "battle_state_policies": [],
+    "battle_targeting": [],
+    "classes": [],
+    "encounters": [],
+    "enemies": [],
+    "equipment": [],
+    "equipment_growth": [],
+    "escape_rules": [
+      {
+        "base_chance": 0.35,
+        "maximum_chance": 0.95,
+        "minimum_chance": 0.05,
+        "opponent_scale": 0.005,
+        "opponent_stat": "pursuit",
+        "rule_id": "retreat",
+        "schema": "asteria.rpg.battle_escape_rule",
+        "side": "heroes",
+        "source_scale": 0.01,
+        "source_stat": "speed",
+        "version": 1
+      }
+    ],
+    "formations": [],
+    "interaction_rules": [],
+    "items": [],
+    "outcome_checks": [],
+    "passives": [],
+    "progression_graphs": [],
+    "progression_tracks": [],
+    "schema": "asteria.rpg.database",
+    "version": 13
+  },
+  "schema": "asteria.reference.phase7b_batch85_battle_lifecycle",
+  "version": 1
+}

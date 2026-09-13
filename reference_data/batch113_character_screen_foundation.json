@@ -1,0 +1,38 @@
+{
+  "schema": "asteria.character_screen_profile",
+  "version": 1,
+  "section_order": [
+    "overview",
+    "resources",
+    "equipment",
+    "abilities",
+    "progression",
+    "status"
+  ],
+  "hidden_sections": [],
+  "stat_labels": {
+    "power": "PWR",
+    "speed": "SPD"
+  },
+  "resource_labels": {
+    "life": "Vitality",
+    "focus": "Focus"
+  },
+  "resource_presentations": {
+    "life": "bar",
+    "focus": "pips"
+  },
+  "slot_labels": {
+    "main_hand": "Primary",
+    "accessory": "Accessories"
+  },
+  "equipment_labels": {
+    "bronze_blade": "Bronze Blade"
+  },
+  "ability_labels": {
+    "quick_mix": "Quick Mix"
+  },
+  "progression_labels": {
+    "chemist_mastery": "Mixture Mastery"
+  }
+}

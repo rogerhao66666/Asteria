@@ -1,0 +1,26 @@
+{
+  "schema": "asteria.animation_runtime_closure",
+  "version": 1,
+  "fixed": [
+    "project_defined_animation_roles",
+    "event_driven_motion_boundaries",
+    "motion_metrics",
+    "sprite_sheet_preload_cache",
+    "stable_member_iteration",
+    "timing_rule_cache"
+  ],
+  "stress_validation": {
+    "dense_beats": 5000,
+    "single_update_release": 5000
+  },
+  "renderer_deferred": [
+    "gpu_batching",
+    "texture_atlas_policy",
+    "vfx_pooling",
+    "culling",
+    "async_streaming",
+    "gpu_upload_scheduling",
+    "real_frame_time_metrics"
+  ],
+  "principle": "Presentation timing precision must not require rendering at presentation timing quantum."
+}

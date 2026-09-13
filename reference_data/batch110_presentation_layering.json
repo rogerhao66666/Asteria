@@ -1,0 +1,36 @@
+{
+  "schema": "asteria.battle_presentation_layering_profile",
+  "version": 1,
+  "channels": [
+    {
+      "channel": "animation",
+      "layer": 0,
+      "gain": 1.0,
+      "bus": "visual"
+    },
+    {
+      "channel": "vfx",
+      "layer": 10,
+      "gain": 1.0,
+      "bus": "visual"
+    },
+    {
+      "channel": "camera",
+      "layer": 20,
+      "gain": 1.0,
+      "bus": "impact"
+    },
+    {
+      "channel": "screen_fx",
+      "layer": 30,
+      "gain": 1.0,
+      "bus": "visual"
+    },
+    {
+      "channel": "audio",
+      "layer": 40,
+      "gain": 1.0,
+      "bus": "sfx"
+    }
+  ]
+}

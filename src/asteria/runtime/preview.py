@@ -6,6 +6,7 @@ from pathlib import Path
 from asteria.core import ComponentRegistry, Transform
 from asteria.gameplay import GameplayAttributesComponent
 from asteria.project import Project
+from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.components2d import (
     Animator2DComponent,
     Camera2DComponent,
@@ -36,10 +37,32 @@ def run_preview(
     width=None,
     height=None,
     target_fps=60,
+    save_path=None,
+    playtest_profile=None,
 ):
     registry = build_preview_registry()
     project = Project.load_json(project_path, registry)
-    scene = project.scene(scene_id or project.startup_scene_id)
+    root = (
+        Path(resource_root).expanduser().resolve()
+        if resource_root is not None
+        else Path(project_path).resolve().parent
+    )
+    runtime_save = GameRuntimeSave.load_json(save_path, project) if save_path else None
+    if runtime_save is None and playtest_profile:
+        from asteria.editor.playtest_profiles import PlaytestProfileLibrary
+        runtime_save=PlaytestProfileLibrary(root).instantiate(playtest_profile,project)
+    if runtime_save is None:
+        runtime_save=project.game_start.instantiate(project)
+    effective_scene_id = (
+        runtime_save.scene_id if runtime_save is not None else (scene_id or project.startup_scene_id)
+    )
+    scene = project.scene(effective_scene_id)
+    if runtime_save is not None and runtime_save.player_entity_id and runtime_save.player_position is not None:
+        player = scene.get_entity(runtime_save.player_entity_id) if scene is not None else None
+        if player is not None:
+            transform = player.try_get(Transform)
+            if transform is not None:
+                transform.x, transform.y = runtime_save.player_position
     if scene is None:
         raise ValueError("Preview scene does not exist")
 
@@ -55,6 +78,22 @@ def run_preview(
     width = int(width or (active_camera.width if active_camera is not None else 960))
     height = int(height or (active_camera.height if active_camera is not None else 540))
 
+    playable_manifest = root / "playable_test_manifest.json"
+    if playable_manifest.exists():
+        # Route playable content before opening the generic preview backend.
+        # Opening and immediately replacing a pygame window can leave a stale
+        # grid-only window on macOS.
+        from asteria.runtime.playable_test_runtime import run_playable_test_runtime
+        return run_playable_test_runtime(
+            project,
+            root,
+            runtime_save=runtime_save,
+            save_path=save_path,
+            width=width,
+            height=height,
+            target_fps=target_fps,
+        )
+
     if backend is None:
         from asteria.platform.pygame_backend import PygameRuntimeBackend
 
@@ -62,11 +101,6 @@ def run_preview(
 
     backend.open(f"Asteria Preview — {scene.name}", width, height)
     try:
-        root = (
-            Path(resource_root).expanduser().resolve()
-            if resource_root is not None
-            else Path(project_path).resolve().parent
-        )
         reference_sidecar = root / "reference_data/tilemap.json"
         if (
             reference_sidecar.exists()
@@ -108,6 +142,8 @@ def main(argv=None):
     parser.add_argument("--resource-root")
     parser.add_argument("--width", type=int, default=960)
     parser.add_argument("--height", type=int, default=540)
+    parser.add_argument("--save")
+    parser.add_argument("--playtest-profile")
     args = parser.parse_args(argv)
     return run_preview(
         args.project,
@@ -115,6 +151,8 @@ def main(argv=None):
         resource_root=args.resource_root,
         width=args.width,
         height=args.height,
+        save_path=args.save,
+        playtest_profile=args.playtest_profile,
     )
 
 

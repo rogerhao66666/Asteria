@@ -1,0 +1,26 @@
+{
+  "schema": "asteria.battle_information_hierarchy_reference",
+  "version": 1,
+  "visibility_roles": [
+    "persistent",
+    "contextual",
+    "focused",
+    "compact",
+    "hidden",
+    "overflow"
+  ],
+  "stress_cases": {
+    "resources": 7,
+    "statuses": 12,
+    "party_members": 12,
+    "timeline_entries": 18,
+    "battlefield": [
+      "boss",
+      "add.a",
+      "add.b",
+      "summon"
+    ]
+  },
+  "design_reference": "Premium JRPG clarity may inform hierarchy/focus/interaction rhythm, including lessons from Octopath Traveler, but Asteria owns the adaptive generic policy and never hardcodes reference-game mechanics or layout.",
+  "principle": "Gameplay complexity != visual complexity."
+}

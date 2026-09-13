@@ -1,0 +1,19 @@
+{
+  "clips": {
+    "battle_idle": {"loop": true, "keyframes": [{"frame_index": 8, "duration": 0.4}]},
+    "battle_attack": {"loop": false, "keyframes": [
+      {"frame_index": 8, "duration": 0.08},
+      {"frame_index": 9, "duration": 0.08},
+      {"frame_index": 10, "duration": 0.08},
+      {"frame_index": 11, "duration": 0.10}
+    ]},
+    "battle_hit": {"loop": false, "keyframes": [
+      {"frame_index": 9, "duration": 0.10},
+      {"frame_index": 8, "duration": 0.12}
+    ]},
+    "battle_ko": {"loop": false, "keyframes": [
+      {"frame_index": 8, "duration": 0.10},
+      {"frame_index": 12, "duration": 0.18}
+    ]}
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "asteria.reference.battle_ui_layout",
+  "version": 1,
+  "virtual_width": 320,
+  "virtual_height": 180,
+  "margin": 8,
+  "hud_panel_width": 112,
+  "hud_row_height": 10,
+  "timeline_y": 7,
+  "result_panel_width": 196,
+  "result_panel_height": 116,
+  "notes": [
+    "Reference presentation layout only.",
+    "No gameplay semantics are encoded here.",
+    "Final backend styling/typography remains adapter-owned."
+  ]
+}

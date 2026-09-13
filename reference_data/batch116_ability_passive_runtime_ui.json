@@ -1,0 +1,31 @@
+{
+  "schema": "asteria.ability_screen_profile",
+  "version": 1,
+  "ability_labels": {
+    "quick_mix": "Quick Mix",
+    "slash": "Slash"
+  },
+  "passive_labels": {
+    "careful_measure": "Careful Measure"
+  },
+  "ability_categories": {
+    "quick_mix": "formulas",
+    "slash": "techniques",
+    "dash": "movement"
+  },
+  "passive_categories": {
+    "careful_measure": "craft",
+    "fleet_foot": "mobility"
+  },
+  "category_labels": {
+    "formulas": "Formulas",
+    "techniques": "Techniques",
+    "craft": "Craft"
+  },
+  "visible_limits": {
+    "formulas": 8,
+    "techniques": 8
+  },
+  "default_ability_category": "abilities",
+  "default_passive_category": "passives"
+}

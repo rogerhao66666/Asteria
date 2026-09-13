@@ -1,0 +1,78 @@
+{
+  "schema": "asteria.reference.diverse_battle_validation",
+  "version": 1,
+  "scenarios": [
+    {
+      "id": "classic_turn_based",
+      "resources": [
+        "vital",
+        "mana"
+      ],
+      "party_size": 2,
+      "commands": [
+        "weapon",
+        "stance",
+        "arcana"
+      ]
+    },
+    {
+      "id": "boost_break",
+      "resources": [
+        "life",
+        "spirit",
+        "boost",
+        "guard_break"
+      ],
+      "presentations": [
+        "bar",
+        "bar",
+        "pips",
+        "segmented_bar"
+      ]
+    },
+    {
+      "id": "atb",
+      "resources": [
+        "stamina",
+        "initiative_meter"
+      ],
+      "presentations": [
+        "bar",
+        "action_gauge"
+      ],
+      "timeline": "continuous"
+    },
+    {
+      "id": "large_party",
+      "party_size": 12,
+      "presentation": "adaptive_overflow"
+    },
+    {
+      "id": "custom_composition",
+      "workflow_id": "resonance_weave",
+      "steps": [
+        "tone",
+        "sigils"
+      ]
+    },
+    {
+      "id": "single_character",
+      "party_size": 1,
+      "resources": [
+        "resolve",
+        "heat"
+      ],
+      "presentations": [
+        "ring",
+        "number"
+      ]
+    }
+  ],
+  "closure_notes": [
+    "No scenario requires HP/MP semantics.",
+    "No scenario requires a fixed four-member party.",
+    "No scenario requires Attack/Skill/Item/Defend.",
+    "Legacy side grouping now uses opaque deterministic side order rather than enemy/foe name parsing.",
+    "Presentation overflow is not a gameplay party-size cap."
+  ]
+}
