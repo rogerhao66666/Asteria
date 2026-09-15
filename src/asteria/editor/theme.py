@@ -16,6 +16,10 @@ ASTERIA_DARK = EditorTheme()
 
 ASTERIA_DARK_QSS = """
 QMainWindow, QDialog { background: #17191d; color: #d9dde5; }
+QMainWindow::separator {
+    background: #20242a; width: 5px; height: 5px;
+}
+QMainWindow::separator:hover { background: #4a6484; }
 QDockWidget { color: #bfc5d0; font-weight: 600; }
 QDockWidget::title {
     background: #1d2025; border-bottom: 1px solid #292e36;
@@ -46,10 +50,45 @@ QTreeWidget, QListWidget, QTableWidget {
 QTreeWidget::item, QListWidget::item { min-height: 24px; padding: 2px 5px; }
 QTreeWidget::item:selected, QListWidget::item:selected { background: #34465f; }
 QTreeWidget::item:hover, QListWidget::item:hover { background: #252b33; }
+QTableWidget#RecordTable {
+    gridline-color: #3c444f; background: #1b1e23;
+    alternate-background-color: #1f242b; border: 1px solid #3c444f;
+}
+QTableWidget#RecordTable::item { padding: 6px 8px; border: 0; }
+QTableWidget#RecordTable::item:selected { background: #34465f; color: #ffffff; }
+/* The global QLineEdit rule below (padding+border+border-radius) also
+   applies to the inline QLineEdit Qt spawns to edit a table cell, which
+   nested its own bordered/rounded box inside the cell instead of filling
+   it — text looked like it was sitting inside a smaller floating box. This
+   flush, borderless variant fills the cell exactly, at every table in the
+   editor since none of them set an objectName the global rule could avoid. */
+QTableWidget QLineEdit {
+    background: #34465f; color: #ffffff;
+    border: none; border-radius: 0; padding: 6px 8px; margin: 0;
+    selection-background-color: #4d6f96;
+}
+QHeaderView::section {
+    background: #232830; color: #aeb6c2;
+    border: 0; border-right: 1px solid #2b313a; border-bottom: 1px solid #2b313a;
+    padding: 4px 6px; font-weight: 600;
+}
+QTableCornerButton::section { background: #232830; border: 0; }
+QLineEdit#RecordIdField { background: #191c21; color: #9098a6; }
 QWidget#ConsolePanel { background: #17191d; }
 QTextEdit#ConsoleOutput {
     background: #1b1e23; color: #d9dde5;
     border: 1px solid #343a44; border-radius: 4px;
+    padding: 8px; selection-background-color: #34465f;
+}
+QPlainTextEdit#ScriptEditor {
+    background: #1b1e23; color: #d9dde5;
+    border: 1px solid #343a44; border-radius: 4px;
+    padding: 8px; selection-background-color: #34465f;
+}
+QWidget#ScriptEditorGutter { background: #1b1e23; }
+QPlainTextEdit#ScriptQuickReference {
+    background: #191c21; color: #9098a6;
+    border: 1px solid #292e36; border-radius: 4px;
     padding: 8px; selection-background-color: #34465f;
 }
 QMenuBar, QMenu { background: #1d2025; color: #d9dde5; }
@@ -67,6 +106,10 @@ QPushButton {
 }
 QPushButton:hover { background: #323a45; }
 QPushButton:pressed { background: #22272e; }
+QPushButton:checked {
+    background: #4d6f96; border: 1px solid #6385ad; color: #ffffff;
+}
+QPushButton:checked:hover { background: #5679a2; }
 
 QToolButton {
     background: transparent; border: 1px solid transparent; border-radius: 4px;

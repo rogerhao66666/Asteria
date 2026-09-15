@@ -90,10 +90,10 @@ def test_reference_field_has_real_boss_interaction_chain():
 def test_reference_project_is_visible_through_real_editor_authoring_adapters():
     _,_,c=load()
     rpg={x.category_id:x for x in c.rpg_categories()}
-    assert len(rpg["actors"].ids())==12
+    # Actors and enemies are one Units family in the editor.
+    assert len(rpg["units"].ids())==16
     assert len(rpg["classes"].ids())==8
     assert len(rpg["equipment"].ids())==26
-    assert len(rpg["enemies"].ids())==4
 
     battle={x.category_id:x for x in c.battle_categories()}
     assert "resources" in battle and len(battle["resources"].ids())==3

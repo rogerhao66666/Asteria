@@ -28,12 +28,33 @@ def build_preview_registry():
     return registry
 
 
+_BACKEND_FACTORIES = {
+    "pygame": lambda: __import__(
+        "asteria.platform.pygame_backend", fromlist=["PygameRuntimeBackend"]
+    ).PygameRuntimeBackend(),
+    "moderngl": lambda: __import__(
+        "asteria.platform.moderngl_backend", fromlist=["ModernglRuntimeBackend"]
+    ).ModernglRuntimeBackend(),
+}
+
+
+def _build_backend(backend_kind):
+    factory = _BACKEND_FACTORIES.get(backend_kind)
+    if factory is None:
+        raise ValueError(
+            f"unknown backend_kind {backend_kind!r}; choose one of "
+            f"{sorted(_BACKEND_FACTORIES)}"
+        )
+    return factory()
+
+
 def run_preview(
     project_path,
     scene_id=None,
     *,
     resource_root=None,
     backend=None,
+    backend_kind="pygame",
     width=None,
     height=None,
     target_fps=60,
@@ -95,9 +116,7 @@ def run_preview(
         )
 
     if backend is None:
-        from asteria.platform.pygame_backend import PygameRuntimeBackend
-
-        backend = PygameRuntimeBackend()
+        backend = _build_backend(backend_kind)
 
     backend.open(f"Asteria Preview — {scene.name}", width, height)
     try:
@@ -144,11 +163,16 @@ def main(argv=None):
     parser.add_argument("--height", type=int, default=540)
     parser.add_argument("--save")
     parser.add_argument("--playtest-profile")
+    parser.add_argument(
+        "--backend", choices=sorted(_BACKEND_FACTORIES), default="pygame",
+        help="Rendering backend (default: pygame)",
+    )
     args = parser.parse_args(argv)
     return run_preview(
         args.project,
         args.scene,
         resource_root=args.resource_root,
+        backend_kind=args.backend,
         width=args.width,
         height=args.height,
         save_path=args.save,

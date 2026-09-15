@@ -1,5 +1,7 @@
+import math
+
 from .clipboard import build_duplicate_entity_command, build_paste_entity_command
-from .commands import CommandTransaction, SetAttributeCommand
+from .commands import AddComponentCommand, CommandTransaction, SetAttributeCommand
 from .component_picker import build_component_choices
 from .editing import EditError, build_set_component_field_command
 from .hierarchy import build_reorder_entity_command
@@ -23,18 +25,57 @@ from .tile_edit import (
     ReorderTileLayerCommand,
     SetTileLayerPropertyCommand,
     TileEditError,
+    build_resize_map_command,
+    tilemap_size,
 )
 from .authoring_context import scene_authoring_source
 from .scene_render import resolve_texture_source
 from .starter_project import starter_tileset_preview
 
 try:
-    from PySide6.QtWidgets import QInputDialog, QMessageBox
+    from PySide6.QtWidgets import (
+        QDialog,
+        QDialogButtonBox,
+        QFormLayout,
+        QInputDialog,
+        QMessageBox,
+        QSpinBox,
+    )
 except ImportError:
+    QDialog = None
     QInputDialog = None
     QMessageBox = None
 
 from asteria.graphics import TileLayer
+
+
+class _MapSizeDialog(QDialog if QDialog is not None else object):
+    """Width/height (in tiles) prompt for Resize Map — QInputDialog only
+    takes one field, and this needs two."""
+
+    def __init__(self, parent, width, height):
+        super().__init__(parent)
+        self.setWindowTitle("Resize Map")
+        self.width_spin = QSpinBox()
+        self.width_spin.setRange(1, 2000)
+        self.width_spin.setValue(width)
+        self.height_spin = QSpinBox()
+        self.height_spin.setRange(1, 2000)
+        self.height_spin.setValue(height)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout = QFormLayout(self)
+        layout.addRow("Width (tiles)", self.width_spin)
+        layout.addRow("Height (tiles)", self.height_spin)
+        layout.addRow(buttons)
+
+    @staticmethod
+    def get_size(parent, width, height):
+        dialog = _MapSizeDialog(parent, width, height)
+        if dialog.exec() != QDialog.Accepted:
+            return None
+        return dialog.width_spin.value(), dialog.height_spin.value()
 
 
 class SceneEditingController:
@@ -145,6 +186,35 @@ class SceneEditingController:
             SetTileLayerPropertyCommand(layer, "collision_enabled", bool(value))
         )
         self.window.refresh_all()
+
+    def resize_map(self):
+        """Grow or shrink the current map's tile bounds, in place.
+
+        Painting outside the map is not how you grow it — this is: the
+        canvas itself has to change size first. Existing tiles are kept
+        wherever the old and new bounds overlap.
+        """
+        source = self.viewport.render_source
+        if source is None:
+            QMessageBox.information(
+                self.window, "Resize Map", "This scene has no map to resize."
+            )
+            return False
+        current_width, current_height = tilemap_size(source.tilemap)
+        size = _MapSizeDialog.get_size(
+            self.window, current_width or 20, current_height or 15
+        )
+        if size is None:
+            return False
+        try:
+            command = build_resize_map_command(source.tilemap, *size)
+        except TileEditError as exc:
+            QMessageBox.warning(self.window, "Resize Map", str(exc))
+            return False
+        self.document.execute(command)
+        self.window.refresh_all()
+        self.viewport.reset_view()
+        return True
 
     def _execute_structure(self, command, selection_kind=None, selection_value=None):
         self.document.execute(command)
@@ -314,6 +384,106 @@ class SceneEditingController:
             QMessageBox.warning(self.window, "Add Component", str(exc))
             return False
         self._execute_structure(command, "component", command.component)
+        return True
+
+    def _scene_for_placement(self):
+        sel = self.document.selection
+        scene = (
+            sel.value
+            if sel.kind == "scene"
+            else getattr(sel.value, "scene", None)
+            if sel.kind == "entity"
+            else None
+        )
+        if scene is not None:
+            return scene
+        project = self.document.project
+        if project.startup_scene_id:
+            scene = project.scene(project.startup_scene_id)
+            if scene is not None:
+                return scene
+        scenes = project.scenes()
+        return scenes[0] if scenes else None
+
+    def placement_position(self):
+        """Where a newly placed character should stand: the tile cell at the
+        centre of the current view, on its bottom edge.
+
+        Sprite frames pivot at bottom-centre, so a transform on the cell's
+        bottom edge reads as the character standing in that cell rather than
+        floating above it.
+        """
+        viewport = self.viewport
+        x, y = viewport.camera.screen_to_world(
+            max(1, viewport.width()) / 2, max(1, viewport.height()) / 2
+        )
+        rect = viewport.map_world_rect()
+        source = viewport.render_source
+        if rect is None or source is None:
+            return x, y
+        map_x, map_y, map_w, map_h = rect
+        tile_w = float(source.tilemap.tile_width)
+        tile_h = float(source.tilemap.tile_height)
+        x = min(max(x, map_x), map_x + map_w - tile_w)
+        y = min(max(y, map_y), map_y + map_h - tile_h)
+        column = math.floor((x - map_x) / tile_w)
+        row = math.floor((y - map_y) / tile_h)
+        return map_x + (column + 0.5) * tile_w, map_y + (row + 1) * tile_h
+
+    def place_actor(self, actor_id, position=None):
+        """Create a map Entity that stands in for an existing RPG Actor.
+
+        A bare Entity() carries no components at all — this adds Transform
+        (at the centre of the current view by default) and ActorLinkComponent,
+        and pre-fills SpriteRenderer2D from any stored field appearance — one
+        undoable step, mirroring add_entity()/add_component().
+        """
+        from asteria.core import Transform
+        from asteria.runtime import ActorLinkComponent, SpriteRenderer2D
+
+        project = self.document.project
+        if project is None:
+            return False
+        actors = project.rpg_database.actors
+        if actor_id not in actors:
+            return False
+        scene = self._scene_for_placement()
+        if scene is None:
+            return False
+        actor = actors[actor_id]
+        try:
+            entity_command = build_add_entity_command(scene, actor.display_name)
+        except StructureEditError as exc:
+            QMessageBox.warning(self.window, "Place Actor", str(exc))
+            return False
+        entity = entity_command.entity
+        link = ActorLinkComponent()
+        link.actor_id = str(actor_id)
+        world_x, world_y = position if position is not None else self.placement_position()
+        tx = CommandTransaction(f"Place {actor.display_name} on Map")
+        tx.add(entity_command)
+        tx.add(AddComponentCommand(entity, Transform(world_x, world_y)))
+        tx.add(AddComponentCommand(entity, link))
+        appearance = self.window.actor_appearance(actor_id)
+        if appearance is None:
+            # A character dropped on the map with no sprite is an invisible
+            # entity, which reads as "nothing happened". Draw it one first.
+            from .character_generator import generate_actor_appearance
+
+            try:
+                generate_actor_appearance(self.document, actor_id)
+            except Exception:
+                pass
+            else:
+                self.window._resolve_project_resources()
+                appearance = self.window.actor_appearance(actor_id)
+        if appearance is not None:
+            sprite = SpriteRenderer2D()
+            sprite.sprite_sheet_asset_id = appearance.sprite_sheet_asset_id
+            sprite.frame_index = appearance.frame_index
+            sprite.flip_x = appearance.flip_x
+            tx.add(AddComponentCommand(entity, sprite))
+        self._execute_structure(tx, "entity", entity)
         return True
 
     def copy_selected(self):

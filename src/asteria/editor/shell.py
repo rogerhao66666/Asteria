@@ -16,10 +16,10 @@ from .project_workspace import ProjectWorkspaceController
 from .playtest_profiles import PlaytestProfileLibrary
 from .scene_editing_controller import SceneEditingController
 from .event_authoring_controller import EventAuthoringController
-from .starter_project import create_new_project
+from .starter_project import build_untitled_project, create_new_project
 
 try:
-    from PySide6.QtCore import QSettings, Qt, QTimer
+    from PySide6.QtCore import QSize, Qt, QTimer
     from PySide6.QtGui import QAction, QKeySequence
     from PySide6.QtWidgets import (
         QApplication,
@@ -31,6 +31,7 @@ try:
         QListWidget,
         QListWidgetItem,
         QMainWindow,
+        QMenu,
         QMessageBox,
         QTabBar,
         QTabWidget,
@@ -47,12 +48,14 @@ except ImportError:
 from asteria.authoring import run_authoring_script
 
 from .animation_widget import AnimationWidget
+from .asset_thumbnails import asset_thumbnail
 from .authoring_context import animation_context
+from .qt_texture_renderer import QtTextureCache
 from .resource_resolver import EditorResourceError, resolve_project_resources
 from .theme import apply_asteria_theme
 from .tile_layers_widget import TileLayersWidget
 from .tile_palette_widget import TilePaletteWidget
-from .viewport_widget import SceneViewportWidget
+from .viewport_widget import DEFAULT_ZOOM, SceneViewportWidget
 from .widgets import InspectorWidget, ProjectTreeWidget
 
 
@@ -61,6 +64,11 @@ class AsteriaEditorWindow(QMainWindow):
         if QApplication is None:
             raise RuntimeError("PySide6 is required for Asteria Editor")
         super().__init__()
+        if project is None:
+            # Open on a paintable untitled project rather than an empty
+            # "No Project" shell: a map can be drawn immediately, and the
+            # first Save is what decides where it lives.
+            project = build_untitled_project()
         self.document = EditorDocument(project, component_registry=component_registry)
         self.play_session = None
         self.runtime_process = None
@@ -70,6 +78,19 @@ class AsteriaEditorWindow(QMainWindow):
         self.runtime_monitor.start()
         self.setWindowTitle("Asteria Editor")
         self.resize(1280, 800)
+        # Leaving position to the OS's own default placement centers the
+        # window — on a setup where that center point lands outside a single
+        # monitor's usable bounds (an ultrawide, a multi-monitor span, a
+        # scaled display), both edges of a 1280px-wide window can end up
+        # clipped off-screen at once. Anchoring near the primary screen's
+        # own top-left instead guarantees the whole window is reachable.
+        screen = QApplication.primaryScreen()
+        if screen is not None:
+            available = screen.availableGeometry()
+            self.move(
+                available.x() + min(40, max(0, available.width() - self.width())),
+                available.y() + min(40, max(0, available.height() - self.height())),
+            )
 
         self.viewport = SceneViewportWidget(self.document)
         self.code_workspace = CodeWorkspaceWidget(self.document, self)
@@ -83,6 +104,11 @@ class AsteriaEditorWindow(QMainWindow):
         self.rpg_authoring = FamilyHostWidget(
             "Character", self.authoring_controllers.rpg_categories, self
         )
+        # Applying an Actor's field appearance renames/adds sprites on map
+        # entities outside this hub's own tree/list, so the Scene side needs
+        # a full refresh too — unlike a plain RPG-data-only edit here.
+        self.rpg_authoring.changed.connect(self.refresh_all)
+        self.rpg_authoring.assetsChanged.connect(self._resolve_project_resources)
         self.battle_authoring = FamilyHostWidget(
             "Battle Rules", self.authoring_controllers.battle_categories, self
         )
@@ -170,6 +196,8 @@ class AsteriaEditorWindow(QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, right)
 
         self.asset_list = QListWidget()
+        self.asset_list.setIconSize(QSize(24, 24))
+        self._asset_texture_cache = QtTextureCache()
         self.asset_list.currentRowChanged.connect(self._asset_selected)
         bottom = QDockWidget("Assets", self)
         bottom.setWidget(self.asset_list)
@@ -203,6 +231,7 @@ class AsteriaEditorWindow(QMainWindow):
         self._build_actions()
         self._load_playtest_profiles()
         self._workspace_mode_changed(self.workspace.mode.value)
+        self._resolve_project_resources()
         self.refresh_all()
         QTimer.singleShot(0, self.viewport.reset_view)
 
@@ -298,6 +327,8 @@ class AsteriaEditorWindow(QMainWindow):
         self.rename_action.triggered.connect(self.scene_controller.rename_selected)
         self.add_scene_action = QAction("Add Scene…", self)
         self.add_scene_action.triggered.connect(self.add_scene)
+        self.resize_map_action = QAction("Resize Map…", self)
+        self.resize_map_action.triggered.connect(self.scene_controller.resize_map)
         self.delete_scene_action = QAction("Delete Scene", self)
         self.delete_scene_action.triggered.connect(self.delete_scene)
         self.set_startup_scene_action = QAction("Set as Startup Scene", self)
@@ -310,6 +341,8 @@ class AsteriaEditorWindow(QMainWindow):
         self.move_down_action.triggered.connect(lambda: self.scene_controller.move_selected(1))
         self.add_entity_action = QAction("Add Entity…", self)
         self.add_entity_action.triggered.connect(self.add_entity)
+        self.place_actor_action = QAction("Place Actor on Map…", self)
+        self.place_actor_action.triggered.connect(self.place_actor_on_map)
         self.delete_action = QAction("Delete Selected", self)
         self.delete_action.setShortcut(QKeySequence.Delete)
         self.delete_action.triggered.connect(self.delete_selected)
@@ -329,15 +362,11 @@ class AsteriaEditorWindow(QMainWindow):
         self.toggle_entity_enabled_action.triggered.connect(
             self.scene_controller.toggle_selected_entity_enabled
         )
+        # Edit keeps only what acts on the current selection; everything that
+        # manages scenes or adds content lives in the Scene menu (and on the
+        # Scenes panel's own context menu), so neither list is a mixed bag.
         for action in (
             self.rename_action,
-            self.add_scene_action,
-            self.delete_scene_action,
-            self.set_startup_scene_action,
-            self.move_up_action,
-            self.move_down_action,
-            self.add_entity_action,
-            self.add_component_action,
             self.copy_action,
             self.paste_action,
             self.duplicate_action,
@@ -345,6 +374,24 @@ class AsteriaEditorWindow(QMainWindow):
             self.delete_action,
         ):
             edit.addAction(action)
+
+        scene_menu = self.menuBar().addMenu("&Scene")
+        for action in (
+            self.add_entity_action,
+            self.place_actor_action,
+            self.add_component_action,
+        ):
+            scene_menu.addAction(action)
+        scene_menu.addSeparator()
+        for action in (
+            self.add_scene_action,
+            self.delete_scene_action,
+            self.set_startup_scene_action,
+            self.resize_map_action,
+            self.move_up_action,
+            self.move_down_action,
+        ):
+            scene_menu.addAction(action)
 
         self.play_action = QAction("Run Project", self)
         self.play_action.setShortcut("F6")
@@ -401,12 +448,61 @@ class AsteriaEditorWindow(QMainWindow):
         self.view_toolbar.addAction(self.zoom_in_action)
         self.view_toolbar.addAction(self.reset_view_action)
         self.addToolBar(Qt.TopToolBarArea, self.view_toolbar)
+
+        # The content actions used constantly while building a map belong next
+        # to the view controls, not buried five items deep in a menu.
+        self.entity_toolbar = QToolBar("Entity", self)
+        self.entity_toolbar.setObjectName("AsteriaEntityToolbar")
+        self.entity_toolbar.setMovable(False)
+        self.entity_toolbar.setFloatable(False)
+        for action in (
+            self.add_entity_action,
+            self.place_actor_action,
+            self.add_component_action,
+            self.duplicate_action,
+            self.delete_action,
+        ):
+            self.entity_toolbar.addAction(action)
+        self.addToolBar(Qt.TopToolBarArea, self.entity_toolbar)
+
+        self.project_tree.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.project_tree.customContextMenuRequested.connect(self._show_tree_menu)
         self.viewport.zoomChanged.connect(self._update_zoom_label)
         self._update_zoom_label(self.viewport.camera.zoom)
         self._refresh_actions()
 
+    def _show_tree_menu(self, point):
+        menu = QMenu(self)
+        for action in (
+            self.add_scene_action,
+            self.add_entity_action,
+            self.place_actor_action,
+            self.add_component_action,
+        ):
+            menu.addAction(action)
+        menu.addSeparator()
+        for action in (
+            self.rename_action,
+            self.duplicate_action,
+            self.toggle_entity_enabled_action,
+            self.set_startup_scene_action,
+            self.resize_map_action,
+            self.move_up_action,
+            self.move_down_action,
+        ):
+            menu.addAction(action)
+        menu.addSeparator()
+        for action in (self.delete_action, self.delete_scene_action):
+            menu.addAction(action)
+        menu.exec(self.project_tree.viewport().mapToGlobal(point))
+
     def _update_zoom_label(self, zoom):
-        self.zoom_label.setText(f"{round(zoom * 100)}%")
+        # The camera's own zoom=1.0 renders a 16px tile at 16px; the editor's
+        # actual default view runs at 2x that (DEFAULT_ZOOM) so pixel art
+        # isn't tiny on a modern display. "100%" in this label means "the
+        # default view", not "one world unit per screen pixel" — otherwise
+        # the view everyone actually starts on would read as "200%".
+        self.zoom_label.setText(f"{round(zoom / DEFAULT_ZOOM * 100)}%")
 
     def show_controls(self):
         QMessageBox.information(
@@ -493,6 +589,11 @@ class AsteriaEditorWindow(QMainWindow):
             or sel.kind == "entity" and bool(sel.values)
         )
         self.add_component_action.setEnabled(sel.kind == "entity" and not sel.multiple)
+        # No actors yet is fine: the picker can define one inline.
+        self.place_actor_action.setEnabled(
+            project is not None and bool(project.scenes())
+        )
+        self.resize_map_action.setEnabled(self.viewport.render_source is not None)
         self.copy_action.setEnabled(sel.kind == "entity" and not sel.multiple)
         self.duplicate_action.setEnabled(sel.kind == "entity" and bool(sel.values))
         self.toggle_entity_enabled_action.setEnabled(
@@ -512,9 +613,28 @@ class AsteriaEditorWindow(QMainWindow):
         dirty = " *" if self.document.dirty else ""
         self.setWindowTitle(f"Asteria Editor — {name}{dirty}")
 
+    def actor_appearance(self, actor_id):
+        """Stored field appearance for an Actor, or None if it has none yet."""
+        from .actor_appearance import get_actor_appearance
+
+        return get_actor_appearance(self.document, actor_id)
+
+    def apply_actor_appearance(self, actor_id, sprite_sheet_asset_id, frame_index=0, flip_x=False):
+        """Persist an Actor's field appearance/name and push both onto every
+        map Entity linked to it via ActorLinkComponent — one undoable step.
+        """
+        from .actor_appearance import apply_actor_appearance as _apply_actor_appearance
+
+        result = _apply_actor_appearance(
+            self.document, actor_id, sprite_sheet_asset_id, frame_index, flip_x
+        )
+        self.refresh_all()
+        return result
+
     def _resolve_project_resources(self):
         resolve_project_resources(self.document)
         self.viewport.texture_cache.clear()
+        self._asset_texture_cache.clear()
         self.scene_controller._sync_scene_authoring_context()
         self._sync_animation_context()
 
@@ -583,7 +703,11 @@ class AsteriaEditorWindow(QMainWindow):
         if self.document.project is None:
             return
         for record in self.document.project.assets.records():
-            item = QListWidgetItem(f"{record.kind}: {record.source_path}")
+            item = QListWidgetItem(f"{record.name}  ·  {record.kind}")
+            item.setToolTip(f"{record.kind}: {record.source_path}")
+            icon = asset_thumbnail(self.document, record, self._asset_texture_cache)
+            if icon is not None:
+                item.setIcon(icon)
             item.setData(Qt.UserRole, record)
             self.asset_list.addItem(item)
 
@@ -648,7 +772,7 @@ class AsteriaEditorWindow(QMainWindow):
             )
         elif sel.kind == "asset":
             self.inspector.show_properties(
-                "Asset",
+                obj.name,
                 (
                     ("Kind", obj.kind, "str"),
                     ("Path", obj.source_path, "path"),
@@ -668,6 +792,60 @@ class AsteriaEditorWindow(QMainWindow):
 
     def add_component(self):
         return self.scene_controller.add_component()
+
+    NEW_ACTOR_CHOICE = "＋ New Character…"
+
+    def place_actor_on_map(self):
+        if self.document.project is None:
+            return False
+        actors = self.document.project.rpg_database.actors
+        actor_ids = sorted(actors)
+        labels = [self.NEW_ACTOR_CHOICE]
+        labels += [f"{actors[k].display_name} ({k})" for k in actor_ids]
+        label, ok = QInputDialog.getItem(
+            self, "Place Character on Map", "Character:", labels, 0, False
+        )
+        if not ok:
+            return False
+        if label == self.NEW_ACTOR_CHOICE:
+            actor_id = self._create_actor_for_placement()
+            if actor_id is None:
+                return False
+        else:
+            actor_id = actor_ids[labels.index(label) - 1]
+        # Arm the pointer rather than dropping the character at the view
+        # centre: the author picks the cell, and sees the sprite and the
+        # target cell before committing. Esc or right-click cancels.
+        self.workspace.set_mode(WorkspaceMode.SCENE)
+        self.statusBar().showMessage(
+            f"Click a cell to place {actors[actor_id].display_name} — Esc to cancel"
+        )
+        return self.viewport.begin_actor_placement(actor_id)
+
+    def _create_actor_for_placement(self):
+        """Define a new Actor inline, so placing the first character on a map
+        does not require a detour through the Character tab."""
+        from .rpg_actor_class_authoring import RpgActorClassAuthoringError
+
+        name, ok = QInputDialog.getText(
+            self, "New Character", "Name:", text="Hero"
+        )
+        name = name.strip() if ok else ""
+        if not name:
+            return None
+        actors = self.document.project.rpg_database.actors
+        base = re.sub(r"[^a-z0-9_]+", "_", name.lower()).strip("_") or "actor"
+        actor_id = base
+        suffix = 2
+        while actor_id in actors:
+            actor_id = f"{base}_{suffix}"
+            suffix += 1
+        try:
+            self.authoring_controllers.actor_class.create_actor(actor_id, name)
+        except RpgActorClassAuthoringError as exc:
+            QMessageBox.warning(self, "New Character", str(exc))
+            return None
+        return actor_id
 
     def delete_selected(self):
         return self.scene_controller.delete_selected()
@@ -703,7 +881,6 @@ class AsteriaEditorWindow(QMainWindow):
             QMessageBox.critical(self, "Save Project", str(exc))
             return False
         self.statusBar().showMessage(f"Saved {self.document.file_path}", 3000)
-        remember_last_project(self.document.file_path)
         self.refresh_all()
         return True
 
@@ -740,7 +917,6 @@ class AsteriaEditorWindow(QMainWindow):
         self._load_playtest_profiles()
         self.refresh_all()
         QTimer.singleShot(0, self.viewport.reset_view)
-        remember_last_project(self.document.file_path)
         return True
 
     def new_project(self):
@@ -840,12 +1016,24 @@ class AsteriaEditorWindow(QMainWindow):
     def _poll_runtime_process(self):
         if self.runtime_process is None or self.runtime_process.running:
             return
+        exit_code = self.runtime_process.exit_code
+        stderr = self.runtime_process.read_stderr()
         self.runtime_process.stop()
         self.runtime_process = None
         if self.play_session is not None and self.play_session.active:
             self.play_session.stop()
-        self.console.setText("Runtime preview closed")
-        self.statusBar().showMessage("Runtime preview closed", 2000)
+        # A user closing the Runtime window exits 0; anything else (a Python
+        # traceback, a signal) is a crash and the traceback is the only clue
+        # since the child window itself has already closed.
+        if exit_code:
+            message = f"Runtime preview crashed (exit code {exit_code})"
+            if stderr.strip():
+                message += f"\n\n{stderr.strip()}"
+            self.console.setText(message)
+            self.statusBar().showMessage("Runtime preview crashed", 4000)
+        else:
+            self.console.setText("Runtime preview closed")
+            self.statusBar().showMessage("Runtime preview closed", 2000)
         self._refresh_actions()
 
     def closeEvent(self, event):
@@ -868,24 +1056,6 @@ class AsteriaEditorWindow(QMainWindow):
         event.accept()
 
 
-_LAST_PROJECT_KEY = "last_project_path"
-
-
-def _editor_settings():
-    return QSettings("Asteria", "Asteria Editor")
-
-
-def remember_last_project(path):
-    if path is not None:
-        _editor_settings().setValue(_LAST_PROJECT_KEY, str(Path(path).resolve()))
-
-
-def last_project_path():
-    value = _editor_settings().value(_LAST_PROJECT_KEY, "")
-    path = Path(value) if value else None
-    return path if path is not None and path.is_file() else None
-
-
 def project_folder_name(name):
     folder = re.sub(r"[^\w\- ]+", "_", str(name)).strip(" ._")
     return folder or "New Project"
@@ -898,11 +1068,4 @@ def launch_editor(project=None):
     apply_asteria_theme(app)
     window = AsteriaEditorWindow(project)
     window.show()
-    if project is None:
-        # Reopen where the user left off instead of an empty "No Project"
-        # window. Done here, not in the window constructor, so windows built
-        # in tests never touch the user's real last-project setting.
-        previous = last_project_path()
-        if previous is not None and not window.open_project_path(previous):
-            _editor_settings().remove(_LAST_PROJECT_KEY)
     return app.exec()

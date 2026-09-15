@@ -2,9 +2,12 @@ try:
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import (
         QAbstractItemView,
+        QCheckBox,
         QComboBox,
+        QHBoxLayout,
         QHeaderView,
         QLabel,
+        QStyle,
         QTableWidget,
         QTableWidgetItem,
         QTreeWidget,
@@ -78,10 +81,20 @@ class ProjectTreeWidget(QWidget):
             if project is None:
                 return
 
+            style = self.style()
+            icons = {
+                "scene": style.standardIcon(QStyle.SP_DirIcon),
+                "entity": style.standardIcon(QStyle.SP_FileIcon),
+                "component": style.standardIcon(QStyle.SP_FileDialogDetailedView),
+            }
+
             def item(label, kind=None, value=None):
                 tree_item = QTreeWidgetItem([label])
                 if kind is not None:
                     tree_item.setData(0, Qt.UserRole, (kind, value))
+                    icon = icons.get(kind)
+                    if icon is not None:
+                        tree_item.setIcon(0, icon)
                     if (kind, id(value)) in selected:
                         tree_item.setSelected(True)
                         selected_items.append(tree_item)
@@ -158,6 +171,9 @@ class InspectorWidget(QWidget):
                 t = QTableWidgetItem(str(type_name))
                 t.setFlags(t.flags() & ~Qt.ItemIsEditable)
                 self.table.setItem(i, 0, n)
+                # A row reused from a prior show_component() call may still
+                # carry a checkbox/combo cell widget under this plain item.
+                self.table.removeCellWidget(i, 1)
                 self.table.setItem(i, 1, v)
                 self.table.setItem(i, 2, t)
         finally:
@@ -174,15 +190,17 @@ class InspectorWidget(QWidget):
                 self._field_models[row] = f
                 n = QTableWidgetItem(f.label)
                 n.setFlags(n.flags() & ~Qt.ItemIsEditable)
-                v = QTableWidgetItem(str(f.value))
-                if not f.editable:
-                    v.setFlags(v.flags() & ~Qt.ItemIsEditable)
                 t = QTableWidgetItem(f.type_name)
                 t.setFlags(t.flags() & ~Qt.ItemIsEditable)
                 if f.tooltip:
                     n.setToolTip(f.tooltip)
-                    v.setToolTip(f.tooltip)
                 self.table.setItem(row, 0, n)
+                self.table.setItem(row, 2, t)
+                # A stale cell widget from a previously selected component
+                # (e.g. this row held a checkbox, this one is a plain value)
+                # would otherwise sit on top of the QTableWidgetItem below it.
+                self.table.removeCellWidget(row, 1)
+
                 if f.name == "follow_entity_id":
                     from .inspector import build_follow_entity_choices
 
@@ -193,13 +211,63 @@ class InspectorWidget(QWidget):
                         combo.addItem(label, value)
                     current = combo.findData(str(f.value))
                     combo.setCurrentIndex(max(0, current))
+                    combo.setEnabled(f.editable)
+                    combo.currentIndexChanged.connect(
+                        lambda _index, r=row, c=combo: self._choice_changed(r, c)
+                    )
+                    self.table.setCellWidget(row, 1, combo)
+                elif f.name == "actor_id":
+                    from .inspector import build_actor_link_choices
+
+                    combo = QComboBox()
+                    for label, value in build_actor_link_choices(
+                        self.document.project, f.value
+                    ):
+                        combo.addItem(label, value)
+                    current = combo.findData(str(f.value))
+                    combo.setCurrentIndex(max(0, current))
+                    combo.setEnabled(f.editable)
+                    combo.currentIndexChanged.connect(
+                        lambda _index, r=row, c=combo: self._choice_changed(r, c)
+                    )
+                    self.table.setCellWidget(row, 1, combo)
+                elif f.value_type is bool:
+                    # A raw table cell means typing the literal text "True"/
+                    # "False" to flip a flag; a checkbox is a single click.
+                    checkbox = QCheckBox()
+                    checkbox.setChecked(bool(f.value))
+                    checkbox.setEnabled(f.editable)
+                    if f.tooltip:
+                        checkbox.setToolTip(f.tooltip)
+                    checkbox.toggled.connect(
+                        lambda checked, r=row: self._bool_changed(r, checked)
+                    )
+                    cell = QWidget()
+                    cell_layout = QHBoxLayout(cell)
+                    cell_layout.setContentsMargins(6, 0, 0, 0)
+                    cell_layout.addWidget(checkbox)
+                    cell_layout.addStretch(1)
+                    self.table.setCellWidget(row, 1, cell)
+                elif f.choices:
+                    combo = QComboBox()
+                    for choice in f.choices:
+                        combo.addItem(str(choice), choice)
+                    current = combo.findData(f.value)
+                    combo.setCurrentIndex(max(0, current))
+                    combo.setEnabled(f.editable)
+                    if f.tooltip:
+                        combo.setToolTip(f.tooltip)
                     combo.currentIndexChanged.connect(
                         lambda _index, r=row, c=combo: self._choice_changed(r, c)
                     )
                     self.table.setCellWidget(row, 1, combo)
                 else:
+                    v = QTableWidgetItem(str(f.value))
+                    if not f.editable:
+                        v.setFlags(v.flags() & ~Qt.ItemIsEditable)
+                    if f.tooltip:
+                        v.setToolTip(f.tooltip)
                     self.table.setItem(row, 1, v)
-                self.table.setItem(row, 2, t)
         finally:
             self._refreshing = False
 
@@ -215,6 +283,18 @@ class InspectorWidget(QWidget):
         ok, error = window.edit_selected_component_field(
             field.name, combo.currentData()
         )
+        self.error.setText("" if ok else error or "Invalid value")
+
+    def _bool_changed(self, row, checked):
+        if self._refreshing:
+            return
+        field = self._field_models.get(row)
+        if field is None or not field.editable:
+            return
+        window = self.window()
+        if not hasattr(window, "edit_selected_component_field"):
+            return
+        ok, error = window.edit_selected_component_field(field.name, checked)
         self.error.setText("" if ok else error or "Invalid value")
 
     def _item_changed(self, item):

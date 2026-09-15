@@ -11,6 +11,10 @@ class TileMapRenderSource:
     sprite_sheet: object
     origin_x: float = 0.0
     origin_y: float = 0.0
+    # The TileMap2DComponent this was resolved from. Growing the map on its
+    # left/top side has to move the binding's origin to keep already-painted
+    # tiles in place, so the editor needs the component, not just its values.
+    binding: object = None
 
 
 def build_scene_texture_draws(source, camera, viewport_width, viewport_height):
@@ -34,10 +38,12 @@ def resolve_texture_source(document, texture_asset_id):
     record = document.project.assets.get(texture_asset_id)
     if record is None or record.kind != "texture":
         return None
-    source = Path(record.source_path)
-    if document.file_path is not None:
-        source = document.file_path.parent / source
-    return source
+    # One resolver for every asset path: bundled starter art for an unsaved
+    # project, a staging directory for art generated before the first save,
+    # and the project folder once there is one.
+    from .resource_resolver import asset_source_path
+
+    return asset_source_path(document, record)
 
 
 def render_source_for_scene(document, scene):
@@ -65,5 +71,6 @@ def render_source_for_scene(document, scene):
             sprite_sheet,
             binding.origin_x,
             binding.origin_y,
+            binding,
         )
     return None

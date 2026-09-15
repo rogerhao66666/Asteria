@@ -19,6 +19,7 @@ from .qt_texture_renderer import QtTextureCache, paint_texture_draws
 from .scene_render import build_scene_texture_draws, resolve_texture_source
 from .tile_edit import (
     TileEditError,
+    build_grow_map_command,
     build_paint_command,
     flood_fill_cells,
     line_cells,
@@ -29,7 +30,7 @@ from .tile_palette import TileToolState
 from .viewport import ViewportCamera, pick_entity, scene_markers, selected_scene
 
 try:
-    from PySide6.QtCore import QEvent, QPointF, Qt, Signal
+    from PySide6.QtCore import QEvent, QPointF, QRect, Qt, Signal
     from PySide6.QtGui import QBrush, QColor, QPainter, QPen
     from PySide6.QtWidgets import QWidget
 except ImportError:
@@ -38,6 +39,14 @@ except ImportError:
     Signal = None
 
 _ZOOM_STEP = 1.25
+
+# Tiles are authored at 48px (the size RPG Maker MV uses), which is already a
+# comfortable cell on a modern display — so the default view shows them 1:1
+# rather than magnifying them the way the old 16px tiles needed.
+DEFAULT_ZOOM = 1.0
+
+# Cell size for the empty-cell field when no map is loaded to take it from.
+_FALLBACK_TILE = 48.0
 
 
 class SceneViewportWidget(QWidget):
@@ -63,9 +72,24 @@ class SceneViewportWidget(QWidget):
         self._box_end = None
         self._drag_entity = None
         self._drag_start_world = None
+        # Cell under the pointer, and the character waiting to be dropped on
+        # it: both drive the placement preview drawn in paintEvent.
+        self._hover_cell = None
+        self._pending_actor_id = None
         self._reported_zoom = self.camera.zoom
+        self._framed_once = False
+        self.camera.zoom = DEFAULT_ZOOM
         self.setFocusPolicy(Qt.StrongFocus)
         self.setMouseTracking(True)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        # The constructor frames the scene before layout has given this
+        # widget its real size, which leaves the map parked off-centre.
+        # Re-frame once, as soon as there is a real size to centre in.
+        if not self._framed_once and self.width() > 1 and self.height() > 1:
+            self._framed_once = True
+            self.reset_view()
 
     def current_scene(self):
         return selected_scene(self.document)
@@ -144,6 +168,148 @@ class SceneViewportWidget(QWidget):
             self.render_source.origin_y,
         )
 
+    # ---- placement / paint preview -------------------------------------
+
+    def begin_actor_placement(self, actor_id):
+        """Arm the pointer with a character; the next map click drops it."""
+        self._pending_actor_id = None if actor_id is None else str(actor_id)
+        self.setCursor(Qt.CrossCursor if actor_id is not None else Qt.ArrowCursor)
+        self.setFocus()
+        self.update()
+        return True
+
+    def cancel_placement(self):
+        if self._pending_actor_id is None:
+            return False
+        self._pending_actor_id = None
+        self.unsetCursor()
+        self.update()
+        return True
+
+    def _cell_screen_rect(self, cell):
+        map_rect = self.map_screen_rect()
+        if cell is None or map_rect is None:
+            return None
+        step_x, step_y = self._cell_size()
+        return QRect(
+            int(map_rect.left() + cell[0] * step_x),
+            int(map_rect.top() + cell[1] * step_y),
+            int(step_x),
+            int(step_y),
+        )
+
+    def _cell_world_position(self, cell):
+        """Centre of a tile cell in world units, or None to use the default."""
+        source = self.render_source
+        if cell is None or source is None:
+            return None
+        return (
+            source.origin_x + (cell[0] + 0.5) * source.tilemap.tile_width,
+            source.origin_y + (cell[1] + 0.5) * source.tilemap.tile_height,
+        )
+
+    def _frame_image(self, sheet_asset_id, frame_index):
+        sheet = self.document.asset_views.sprite_sheet(sheet_asset_id)
+        if sheet is None or not sheet.frames:
+            return None
+        frame = sheet.frames[min(max(0, int(frame_index)), len(sheet.frames) - 1)]
+        path = resolve_texture_source(self.document, sheet.texture.asset_id)
+        image = self.texture_cache.get(path) if path else None
+        if image is None or image.isNull():
+            return None
+        return image.copy(
+            QRect(int(frame.x), int(frame.y), int(frame.width), int(frame.height))
+        )
+
+    def _pending_actor_image(self):
+        window = self.window()
+        appearance = None
+        if hasattr(window, "actor_appearance"):
+            appearance = window.actor_appearance(self._pending_actor_id)
+        if appearance is None:
+            return None
+        return self._frame_image(
+            appearance.sprite_sheet_asset_id, appearance.frame_index
+        )
+
+    def _active_tile_image(self):
+        """Pixels of the tile the palette is currently set to paint."""
+        source = self.render_source
+        if source is None or self.tile_tools.mode not in {"paint", "fill", "rectangle"}:
+            return None
+        tileset = self.document.asset_views.tileset(source.tilemap.tileset.asset_id)
+        if tileset is None:
+            return None
+        tile = tileset.tiles.get(int(self.tile_tools.effective_tile_id))
+        if tile is None:
+            return None
+        return self._frame_image(tileset.sprite_sheet.asset_id, tile.frame_index)
+
+    def _paint_actor_cells(self, painter):
+        """Shade the cell each character stands on, the way an event tile reads
+        as occupied in RPG Maker — a sprite alone does not say which cell it is
+        actually on once it is taller than one tile."""
+        from asteria.runtime import ActorLinkComponent
+
+        scene = self.current_scene()
+        source = self.render_source
+        if scene is None or source is None:
+            return
+        painter.save()
+        painter.setPen(QPen(QColor(255, 255, 255, 40), 1))
+        painter.setBrush(QBrush(QColor(0, 0, 0, 55)))
+        for entity in scene.entities():
+            if entity.try_get(ActorLinkComponent) is None:
+                continue
+            transform = entity.try_get(Transform)
+            if transform is None:
+                continue
+            # Character sprites pivot on their feet, so a transform sitting
+            # exactly on a cell's bottom edge belongs to the cell above it.
+            cell = world_to_tile(
+                source.tilemap, transform.x,
+                transform.y - source.tilemap.tile_height * 0.25,
+                source.origin_x, source.origin_y,
+            )
+            rect = self._cell_screen_rect(cell)
+            if rect is not None:
+                painter.drawRect(rect)
+        painter.restore()
+
+    def _paint_hover_preview(self, painter):
+        rect = self._cell_screen_rect(self._hover_cell)
+        if rect is None:
+            return
+        ghost = (
+            self._pending_actor_image()
+            if self._pending_actor_id is not None
+            else self._active_tile_image()
+        )
+        # The shaded cell is what makes the drop target unambiguous; the ghost
+        # on top says *what* lands there.
+        painter.save()
+        painter.setOpacity(0.55)
+        if ghost is not None:
+            if self._pending_actor_id is not None:
+                # Characters are taller than one tile and stand on its floor.
+                scale = rect.height() / max(1, ghost.height())
+                width = max(1, int(ghost.width() * scale * 1.6))
+                height = max(1, int(ghost.height() * scale * 1.6))
+                target = QRect(
+                    rect.left() + (rect.width() - width) // 2,
+                    rect.bottom() - height,
+                    width,
+                    height,
+                )
+            else:
+                target = rect
+            painter.drawImage(target, ghost)
+        painter.setOpacity(1.0)
+        painter.setPen(QPen(QColor(255, 226, 138, 230), 2))
+        painter.setBrush(QBrush(QColor(255, 226, 138, 60)))
+        painter.drawRect(rect)
+        painter.restore()
+
     def _append_tile_stroke(self, cell):
         if cell is None:
             return
@@ -166,12 +332,12 @@ class SceneViewportWidget(QWidget):
             return
         self.camera.pan_x = 0.0
         self.camera.pan_y = 0.0
-        self.camera.zoom = 1.0
+        self.camera.zoom = DEFAULT_ZOOM
         self.update()
 
     def frame_all_entities(self):
         """Center the view on the scene's content — every positioned entity
-        plus the tile map's extent — at the default 1x zoom.
+        plus the tile map's extent — at the default zoom.
 
         Used when there's no in-scene camera to frame instead — otherwise the
         view falls back to pinning world (0, 0) at the screen's top-left
@@ -194,11 +360,25 @@ class SceneViewportWidget(QWidget):
         ys = [y for _, y in positions]
         center_x = (min(xs) + max(xs)) / 2
         center_y = (min(ys) + max(ys)) / 2
-        self.camera.zoom = 1.0
-        self.camera.pan_x = self.width() / 2 - center_x
-        self.camera.pan_y = self.height() / 2 - center_y
+        self.camera.zoom = DEFAULT_ZOOM
+        self.camera.pan_x = self.width() / 2 - center_x * DEFAULT_ZOOM
+        self.camera.pan_y = self.height() / 2 - center_y * DEFAULT_ZOOM
         self.update()
         return True
+
+    def map_world_rect(self):
+        """The tile map's own bounds in world units, or None without a map.
+
+        The editable map is a finite sheet like RPG Maker's, not an endless
+        plane: the viewport paints a grid only inside these bounds so it is
+        obvious where the map you are painting on actually ends.
+        """
+        corners = self._tilemap_corners()
+        if not corners:
+            return None
+        xs = [x for x, _ in corners]
+        ys = [y for _, y in corners]
+        return (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
 
     def _tilemap_corners(self):
         source = self.render_source
@@ -297,6 +477,9 @@ class SceneViewportWidget(QWidget):
         return transaction
 
     def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape and self.cancel_placement():
+            event.accept()
+            return
         selected = self._selected_entities()
         if selected:
             step = 10.0 if event.modifiers() & Qt.ShiftModifier else 1.0
@@ -343,6 +526,135 @@ class SceneViewportWidget(QWidget):
             return True
         return super().event(event)
 
+    def map_screen_rect(self):
+        rect = self.map_world_rect()
+        if rect is None:
+            return None
+        world_x, world_y, world_w, world_h = rect
+        left, top = self.camera.world_to_screen(world_x, world_y)
+        return QRect(
+            int(left), int(top),
+            int(world_w * self.camera.zoom), int(world_h * self.camera.zoom),
+        )
+
+    def _paint_cells(self, cells, tile_id):
+        """Paint cells, growing the map first if any fall outside it.
+
+        Painting at or past the edge is how the map grows — by exactly the
+        cells painted, not a fixed jump — so the grow and the paint land on
+        the undo stack as one step.
+        """
+        source = self.render_source
+        layer = self.tile_tools.active_layer
+        if source is None or layer is None:
+            return False
+        cells = list(cells)
+        grow = None
+        offset = (0, 0)
+        if source.binding is not None:
+            try:
+                grow, offset = build_grow_map_command(
+                    source.tilemap, source.binding, cells
+                )
+            except TileEditError:
+                return False
+        try:
+            if grow is not None:
+                grow.redo()
+                cells = [(x + offset[0], y + offset[1]) for x, y in cells]
+            paint = build_paint_command(source.tilemap, layer, cells, tile_id)
+            paint.redo()
+        except (TileEditError, ValueError, IndexError):
+            if grow is not None:
+                grow.undo()
+            return False
+        commands = [grow, paint] if grow is not None else [paint]
+        self.document.commands.record_applied(
+            CommandTransaction(paint.label, commands)
+        )
+        if grow is not None:
+            # The binding origin moved, so the resolved render source is stale.
+            window = self.window()
+            if hasattr(window, "scene_controller"):
+                window.scene_controller._sync_scene_authoring_context()
+        return True
+
+    def _cell_size(self):
+        source = self.render_source
+        tile_w = source.tilemap.tile_width if source is not None else _FALLBACK_TILE
+        tile_h = source.tilemap.tile_height if source is not None else _FALLBACK_TILE
+        return (
+            max(4.0, tile_w * self.camera.zoom),
+            max(4.0, tile_h * self.camera.zoom),
+        )
+
+    def grid_field_rect(self):
+        """Screen rect of the empty-cell field, or None when it cannot fit.
+
+        Trimmed to whole cells inside the pane so the field never spills past
+        the visible viewport, and phase-aligned to the map's tile grid so the
+        map's border lands on a cell boundary — empty cells read as "more map
+        could go here", which is exactly what painting past the edge does.
+        """
+        step_x, step_y = self._cell_size()
+        map_rect = self.map_screen_rect()
+        phase_x = map_rect.left() if map_rect is not None else self.camera.pan_x
+        phase_y = map_rect.top() if map_rect is not None else self.camera.pan_y
+        start_x = phase_x % step_x
+        start_y = phase_y % step_y
+        width = int((self.width() - start_x) // step_x) * step_x
+        height = int((self.height() - start_y) // step_y) * step_y
+        if width <= 0 or height <= 0:
+            return None
+        return QRect(int(start_x), int(start_y), int(width), int(height))
+
+    def _paint_backdrop(self, painter):
+        field = self.grid_field_rect()
+        map_rect = self.map_screen_rect()
+        if field is not None:
+            step_x, step_y = self._cell_size()
+            painter.setPen(QPen(QColor(44, 47, 53), 1))
+            x = float(field.left())
+            while x <= field.left() + field.width():
+                painter.drawLine(int(x), field.top(), int(x), field.top() + field.height())
+                x += step_x
+            y = float(field.top())
+            while y <= field.top() + field.height():
+                painter.drawLine(field.left(), int(y), field.left() + field.width(), int(y))
+                y += step_y
+        if map_rect is not None:
+            painter.fillRect(map_rect, QColor(38, 41, 47))
+
+    def _paint_map_grid(self, painter):
+        """Tile grid drawn over the painted map, the way a map editor shows it.
+
+        Under the tiles it would be invisible — a filled map covers it — so
+        this runs after the tile draws rather than with the backdrop.
+        """
+        map_rect = self.map_screen_rect()
+        source = self.render_source
+        if map_rect is None or source is None:
+            return
+        step_x, step_y = self._cell_size()
+        # Below a few pixels per cell the grid is solid noise, so zoomed-out
+        # views get the outline only.
+        if min(step_x, step_y) >= 4.0:
+            painter.save()
+            painter.setClipRect(map_rect)
+            painter.setPen(QPen(QColor(255, 255, 255, 28), 1))
+            offset = float(map_rect.left())
+            while offset <= map_rect.right():
+                painter.drawLine(int(offset), map_rect.top(), int(offset), map_rect.bottom())
+                offset += step_x
+            offset = float(map_rect.top())
+            while offset <= map_rect.bottom():
+                painter.drawLine(map_rect.left(), int(offset), map_rect.right(), int(offset))
+                offset += step_y
+            painter.restore()
+        painter.setPen(QPen(QColor(120, 128, 142), 1))
+        painter.setBrush(Qt.NoBrush)
+        painter.drawRect(map_rect)
+
     def paintEvent(self, event):
         # Zoom changes from many paths (wheel, pinch, buttons, reset, framing)
         # and every one of them repaints, so report it here once instead of
@@ -351,20 +663,8 @@ class SceneViewportWidget(QWidget):
             self._reported_zoom = self.camera.zoom
             self.zoomChanged.emit(self.camera.zoom)
         painter = QPainter(self)
-        painter.fillRect(self.rect(), QColor(32, 34, 38))
-
-        spacing = max(8.0, 32.0 * self.camera.zoom)
-        ox = self.camera.pan_x % spacing
-        oy = self.camera.pan_y % spacing
-        painter.setPen(QPen(QColor(52, 55, 61), 1))
-        x = ox
-        while x < self.width():
-            painter.drawLine(int(x), 0, int(x), self.height())
-            x += spacing
-        y = oy
-        while y < self.height():
-            painter.drawLine(0, int(y), self.width(), int(y))
-            y += spacing
+        painter.fillRect(self.rect(), QColor(24, 26, 30))
+        self._paint_backdrop(painter)
 
         if self.render_source is not None:
             draws = build_scene_texture_draws(
@@ -376,6 +676,7 @@ class SceneViewportWidget(QWidget):
                 lambda aid: resolve_texture_source(self.document, aid),
                 self.texture_cache,
             )
+            self._paint_map_grid(painter)
             painter.setPen(QPen(QColor(222, 91, 91, 180), 1))
             painter.setBrush(QBrush(QColor(222, 91, 91, 38)))
             for cell in build_collision_cells(
@@ -391,6 +692,8 @@ class SceneViewportWidget(QWidget):
                     int(cell.height),
                 )
 
+        self._paint_actor_cells(painter)
+
         sprite_draws = build_entity_sprite_draws(
             self.current_scene(), self.camera, self.document.asset_views.sprite_sheet
         )
@@ -400,6 +703,8 @@ class SceneViewportWidget(QWidget):
             lambda aid: resolve_texture_source(self.document, aid),
             self.texture_cache,
         )
+
+        self._paint_hover_preview(painter)
 
         for frame in build_camera_frames(self.current_scene(), self.camera):
             color = (
@@ -420,13 +725,16 @@ class SceneViewportWidget(QWidget):
                 painter.setPen(QPen(QColor(92, 181, 122, 130), 1, Qt.DotLine))
                 painter.drawRect(int(x), int(y), int(w), int(h))
 
-        painter.setPen(QPen(QColor(70, 74, 82), 1))
-        painter.drawLine(
-            int(self.camera.pan_x), 0, int(self.camera.pan_x), self.height()
-        )
-        painter.drawLine(
-            0, int(self.camera.pan_y), self.width(), int(self.camera.pan_y)
-        )
+        if self.map_screen_rect() is None:
+            # World-origin crosshair: the only spatial reference a scene
+            # without a map has. A map's own border supersedes it.
+            painter.setPen(QPen(QColor(70, 74, 82), 1))
+            painter.drawLine(
+                int(self.camera.pan_x), 0, int(self.camera.pan_x), self.height()
+            )
+            painter.drawLine(
+                0, int(self.camera.pan_y), self.width(), int(self.camera.pan_y)
+            )
 
         markers = self.markers()
         for m in markers:
@@ -477,6 +785,19 @@ class SceneViewportWidget(QWidget):
         painter.end()
 
     def mousePressEvent(self, event):
+        if self._pending_actor_id is not None and event.button() == Qt.LeftButton:
+            actor_id = self._pending_actor_id
+            cell = self._screen_to_tile(event.position().x(), event.position().y())
+            self.cancel_placement()
+            window = self.window()
+            controller = getattr(window, "scene_controller", None)
+            if controller is not None:
+                controller.place_actor(actor_id, self._cell_world_position(cell))
+            event.accept()
+            return
+        if event.button() == Qt.RightButton and self.cancel_placement():
+            event.accept()
+            return
         if event.button() == Qt.MiddleButton or (
             event.button() == Qt.LeftButton and event.modifiers() & Qt.AltModifier
         ):
@@ -495,18 +816,13 @@ class SceneViewportWidget(QWidget):
                 return
             cell = self._screen_to_tile(event.position().x(), event.position().y())
             try:
+                # Flood fill spreads within what is already there, so it never
+                # needs the map to grow — only in-bounds clicks do anything.
                 cells = flood_fill_cells(
                     self.render_source.tilemap, self.tile_tools.active_layer, *cell
                 )
-                self.document.execute(
-                    build_paint_command(
-                        self.render_source.tilemap,
-                        self.tile_tools.active_layer,
-                        cells,
-                        self.tile_tools.effective_tile_id,
-                    )
-                )
-            except (TileEditError, ValueError):
+                self._paint_cells(cells, self.tile_tools.effective_tile_id)
+            except (TileEditError, ValueError, IndexError):
                 pass
             window = self.window()
             if hasattr(window, "refresh_all"):
@@ -575,6 +891,12 @@ class SceneViewportWidget(QWidget):
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
+        # Tracked for every move, so the hovered cell and its ghost follow the
+        # pointer whether a character is armed or a tile brush is selected.
+        cell = self._screen_to_tile(event.position().x(), event.position().y())
+        if cell != self._hover_cell:
+            self._hover_cell = cell
+            self.update()
         if self._panning and self._last_pos is not None:
             pos = event.position()
             delta = pos - self._last_pos
@@ -616,14 +938,7 @@ class SceneViewportWidget(QWidget):
             end = self._screen_to_tile(event.position().x(), event.position().y())
             try:
                 cells = rectangle_cells(*self._tile_rect_start, *end)
-                self.document.execute(
-                    build_paint_command(
-                        self.render_source.tilemap,
-                        self.tile_tools.active_layer,
-                        cells,
-                        self.tile_tools.effective_tile_id,
-                    )
-                )
+                self._paint_cells(cells, self.tile_tools.effective_tile_id)
             except (TileEditError, ValueError):
                 pass
             self._tile_rect_start = None
@@ -639,13 +954,9 @@ class SceneViewportWidget(QWidget):
             and self.render_source is not None
         ):
             try:
-                command = build_paint_command(
-                    self.render_source.tilemap,
-                    self.tile_tools.active_layer,
-                    self._tile_stroke_cells,
-                    self.tile_tools.effective_tile_id,
+                self._paint_cells(
+                    self._tile_stroke_cells, self.tile_tools.effective_tile_id
                 )
-                self.document.execute(command)
             except (TileEditError, ValueError):
                 pass
             self._tile_stroke_cells = []

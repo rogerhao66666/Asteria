@@ -27,6 +27,23 @@ def _chunk_address(tilemap, tile_x, tile_y):
     return cx, cy, lx, ly
 
 
+def tilemap_size(tilemap):
+    """Current map size in tiles, read from each layer's origin chunk.
+
+    Every map this editor authors lives in one chunk at (0, 0) rather than a
+    true infinite grid (see field_tiles.py / starter_project.py), so the map
+    size is just that chunk's own width/height — 0 for a layer with nothing
+    painted, and the largest across layers if they somehow disagree.
+    """
+    width = height = 0
+    for layer in tilemap.layers:
+        chunk = layer.chunks.get((0, 0))
+        if chunk is not None:
+            width = max(width, chunk.width)
+            height = max(height, chunk.height)
+    return width, height
+
+
 def tile_at(tilemap, layer, tile_x, tile_y):
     cx, cy, lx, ly = _chunk_address(tilemap, tile_x, tile_y)
     chunk = layer.chunks.get((cx, cy))
@@ -132,6 +149,163 @@ class RemoveTileLayerCommand:
         self.tilemap.layers.insert(idx, self.layer)
 
 
+@dataclass(slots=True)
+class ResizeMapCommand:
+    """Resizes every layer's origin chunk, cropping or padding with empty
+    tiles. Existing tile data in the kept region is preserved.
+    """
+
+    tilemap: object
+    new_width: int
+    new_height: int
+    _old_chunks: dict | None = None
+    _new_chunks: dict | None = None
+
+    @property
+    def label(self):
+        return "Resize Map"
+
+    def redo(self):
+        if self._new_chunks is None:
+            if self.new_width <= 0 or self.new_height <= 0:
+                raise TileEditError("Map dimensions must be positive")
+            self._old_chunks = {}
+            self._new_chunks = {}
+            for layer in self.tilemap.layers:
+                old_chunk = layer.chunks.get((0, 0))
+                self._old_chunks[layer.name] = old_chunk
+                new_chunk = TileChunk.empty(0, 0, self.new_width, self.new_height)
+                if old_chunk is not None:
+                    for y in range(min(old_chunk.height, self.new_height)):
+                        for x in range(min(old_chunk.width, self.new_width)):
+                            new_chunk.set(x, y, old_chunk.get(x, y))
+                self._new_chunks[layer.name] = new_chunk
+        for layer in self.tilemap.layers:
+            chunk = self._new_chunks[layer.name]
+            if _chunk_is_empty(chunk):
+                layer.chunks.pop((0, 0), None)
+            else:
+                layer.chunks[(0, 0)] = chunk
+
+    def undo(self):
+        if self._old_chunks is None:
+            raise RuntimeError("Command was never executed")
+        for layer in self.tilemap.layers:
+            old_chunk = self._old_chunks[layer.name]
+            if old_chunk is None:
+                layer.chunks.pop((0, 0), None)
+            else:
+                layer.chunks[(0, 0)] = old_chunk
+
+
+# A stray click on a zoomed-out view shouldn't be able to turn a small map
+# into a million-tile one, so growth stops here.
+MAX_MAP_SIDE = 512
+
+
+@dataclass(slots=True)
+class GrowMapCommand:
+    """Extends the map on any side so a painted cell falls inside it.
+
+    Growing left/up shifts every tile within the origin chunk, so the map's
+    binding origin moves by the same amount in world space — the tiles that
+    were already painted stay exactly where they look like they are.
+    """
+
+    tilemap: object
+    binding: object
+    left: int
+    top: int
+    right: int
+    bottom: int
+    _old_chunks: dict | None = None
+    _new_chunks: dict | None = None
+
+    @property
+    def label(self):
+        return "Grow Map"
+
+    def _origin_delta(self):
+        return (
+            self.left * self.tilemap.tile_width,
+            self.top * self.tilemap.tile_height,
+        )
+
+    def redo(self):
+        if self._new_chunks is None:
+            width, height = tilemap_size(self.tilemap)
+            new_width = width + self.left + self.right
+            new_height = height + self.top + self.bottom
+            if new_width > MAX_MAP_SIDE or new_height > MAX_MAP_SIDE:
+                raise TileEditError("Map would grow past its maximum size")
+            self._old_chunks = {}
+            self._new_chunks = {}
+            for layer in self.tilemap.layers:
+                old_chunk = layer.chunks.get((0, 0))
+                self._old_chunks[layer.name] = old_chunk
+                new_chunk = TileChunk.empty(0, 0, new_width, new_height)
+                if old_chunk is not None:
+                    for y in range(old_chunk.height):
+                        for x in range(old_chunk.width):
+                            new_chunk.set(
+                                x + self.left, y + self.top, old_chunk.get(x, y)
+                            )
+                self._new_chunks[layer.name] = new_chunk
+        for layer in self.tilemap.layers:
+            layer.chunks[(0, 0)] = self._new_chunks[layer.name]
+        dx, dy = self._origin_delta()
+        self.binding.origin_x -= dx
+        self.binding.origin_y -= dy
+
+    def undo(self):
+        if self._old_chunks is None:
+            raise RuntimeError("Command was never executed")
+        for layer in self.tilemap.layers:
+            old_chunk = self._old_chunks[layer.name]
+            if old_chunk is None:
+                layer.chunks.pop((0, 0), None)
+            else:
+                layer.chunks[(0, 0)] = old_chunk
+        dx, dy = self._origin_delta()
+        self.binding.origin_x += dx
+        self.binding.origin_y += dy
+
+
+def build_grow_map_command(tilemap, binding, cells):
+    """Grow the map just far enough to contain `cells`, or None if it already
+    does. Returns (command, tile_offset) — cell coordinates shift by the
+    offset once the map has grown on its left/top side.
+    """
+    width, height = tilemap_size(tilemap)
+    if not width or not height:
+        return None, (0, 0)
+    xs = [int(x) for x, _ in cells]
+    ys = [int(y) for _, y in cells]
+    if not xs:
+        return None, (0, 0)
+    left = max(0, -min(xs))
+    top = max(0, -min(ys))
+    right = max(0, max(xs) - (width - 1))
+    bottom = max(0, max(ys) - (height - 1))
+    if not (left or top or right or bottom):
+        return None, (0, 0)
+    if (
+        width + left + right > MAX_MAP_SIDE
+        or height + top + bottom > MAX_MAP_SIDE
+    ):
+        raise TileEditError("Map would grow past its maximum size")
+    return GrowMapCommand(tilemap, binding, left, top, right, bottom), (left, top)
+
+
+def build_resize_map_command(tilemap, new_width, new_height):
+    new_width, new_height = int(new_width), int(new_height)
+    if new_width <= 0 or new_height <= 0:
+        raise TileEditError("Map dimensions must be positive")
+    if (new_width, new_height) == tilemap_size(tilemap):
+        raise TileEditError("Map is already that size")
+    return ResizeMapCommand(tilemap, new_width, new_height)
+
+
 def build_paint_command(tilemap, layer, cells, tile_id):
     if tile_id == EMPTY_TILE:
         label = "Erase Tiles"
@@ -144,7 +318,14 @@ def build_paint_command(tilemap, layer, cells, tile_id):
         if key in seen:
             continue
         seen.add(key)
-        old = tile_at(tilemap, layer, *key)
+        try:
+            old = tile_at(tilemap, layer, *key)
+        except IndexError:
+            # A stroke or rectangle that runs off the map's edge still
+            # paints the part that's on it, instead of the whole gesture
+            # being silently lost (or crashing) because one corner fell
+            # outside the origin chunk's own bounds.
+            continue
         if old == tile_id:
             continue
         tx.add(SetTileCommand(tilemap, layer, key[0], key[1], int(tile_id), old))

@@ -1,0 +1,336 @@
+{
+  "assets": {
+    "assets": [
+      {
+        "id": "15847bbd-fa0c-415c-9169-9b1561e747a2",
+        "import_settings": {},
+        "importer": "raw",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "asteria.starter_asset": "texture"
+        },
+        "name": "environment_atlas",
+        "source_path": "tiles/environment_atlas.png"
+      },
+      {
+        "id": "09061753-56e1-4680-ac61-251aaf36e4c1",
+        "import_settings": {},
+        "importer": "raw",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "asteria.starter_asset": "sprite_sheet"
+        },
+        "name": "environment.sprite_sheet",
+        "source_path": "tiles/environment.sprite_sheet.json"
+      },
+      {
+        "id": "8c9f91f1-d8c7-4313-a178-9ee3e23cf309",
+        "import_settings": {},
+        "importer": "raw",
+        "importer_version": 1,
+        "kind": "tileset",
+        "metadata": {
+          "asteria.starter_asset": "tileset"
+        },
+        "name": "environment.tileset",
+        "source_path": "tiles/environment.tileset.json"
+      },
+      {
+        "id": "1fe14df4-8e8e-4c02-9091-d5a63a468e10",
+        "import_settings": {},
+        "importer": "raw",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "asteria.starter_asset": "character_texture"
+        },
+        "name": "characters_atlas",
+        "source_path": "characters/characters_atlas.png"
+      },
+      {
+        "id": "9dbc2a73-122b-4f28-83cc-cf543e7bf7f4",
+        "import_settings": {},
+        "importer": "raw",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "asteria.starter_asset": "character_sprite_sheet"
+        },
+        "name": "characters.sprite_sheet",
+        "source_path": "characters/characters.sprite_sheet.json"
+      },
+      {
+        "id": "42d575c5-7be7-4d9e-87ac-e11b21de09c4",
+        "import_settings": {},
+        "importer": "raw",
+        "importer_version": 1,
+        "kind": "tilemap",
+        "metadata": {},
+        "name": "map001.tilemap",
+        "source_path": "tiles/map001.tilemap.json"
+      }
+    ],
+    "schema": "asteria.assets",
+    "version": 1
+  },
+  "battle_presentation_library": {
+    "categories": {
+      "action_menu": {},
+      "action_workflows": {},
+      "animation_timing": {},
+      "combatant_visuals": {},
+      "director": {},
+      "feedback": {},
+      "hud": {},
+      "interaction": {},
+      "layering": {},
+      "motion_sequences": {},
+      "party_layout": {},
+      "portrait_templates": {},
+      "results": {},
+      "rpg_ability_screen": {},
+      "rpg_character_screen": {},
+      "rpg_equipment_screen": {},
+      "rpg_inventory_screen": {},
+      "rpg_party_screen": {},
+      "rpg_progression_screen": {},
+      "sideview_templates": {},
+      "ui_layout": {},
+      "ui_polish": {},
+      "ui_theme": {}
+    },
+    "schema": "asteria.battle_presentation_library",
+    "version": 1
+  },
+  "event_programs": {},
+  "game_start": {
+    "event_context": null,
+    "player_entity_id": "",
+    "player_facing": "down",
+    "player_position": null,
+    "rpg_state": null,
+    "scene_id": null,
+    "schema": "asteria.game_start",
+    "version": 1
+  },
+  "gameplay_library": {
+    "abilities": [],
+    "formulas": {},
+    "schema": "asteria.gameplay_library",
+    "states": [],
+    "timelines": [],
+    "triggers": [],
+    "version": 1
+  },
+  "id": "95df52df-8f45-45fd-9f27-ee34c784d7a9",
+  "lifecycle_event_bindings": [],
+  "name": "Untitled",
+  "rpg_database": {
+    "ability_evolutions": [],
+    "action_sequences": [],
+    "action_timings": [],
+    "action_transactions": [],
+    "actors": [
+      {
+        "abilities": [],
+        "actor_id": "hero",
+        "base_resources": {},
+        "base_stats": {},
+        "class_assignments": [],
+        "display_name": "Hero",
+        "schema": "asteria.rpg.actor",
+        "tags": [],
+        "version": 2
+      }
+    ],
+    "attachments": [],
+    "battle_objectives": [],
+    "battle_resources": [],
+    "battle_schedulers": [],
+    "battle_state_policies": [],
+    "battle_targeting": [],
+    "classes": [
+      {
+        "class_id": "saber",
+        "display_name": "saber",
+        "granted_abilities": [],
+        "granted_tags": [],
+        "resource_bonuses": {},
+        "schema": "asteria.rpg.class",
+        "stat_bonuses": {},
+        "version": 1
+      }
+    ],
+    "composition_recipes": [],
+    "encounters": [],
+    "enemies": [],
+    "enemy_ai": [],
+    "enemy_behavior_bindings": [],
+    "equipment": [],
+    "equipment_growth": [],
+    "escape_rules": [],
+    "formations": [],
+    "gauge_compositions": [],
+    "interaction_rules": [],
+    "items": [],
+    "outcome_checks": [],
+    "party_presentation_policies": [],
+    "party_setups": [],
+    "passives": [],
+    "progression_graphs": [
+      {
+        "display_name": "saber",
+        "editor_view": "list",
+        "graph_id": "saber",
+        "node_positions": {},
+        "nodes": [
+          {
+            "any_prerequisites": [],
+            "display_name": "saber_root",
+            "exclusive_group": null,
+            "max_rank": 1,
+            "node_id": "saber_root",
+            "prerequisites": [],
+            "rank_costs": [
+              {}
+            ],
+            "rewards": [
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              }
+            ],
+            "schema": "asteria.rpg.progression_node",
+            "tags": [],
+            "version": 1
+          }
+        ],
+        "schema": "asteria.rpg.progression_graph",
+        "tags": [],
+        "version": 2
+      }
+    ],
+    "progression_tracks": [],
+    "reactions": [],
+    "schema": "asteria.rpg.database",
+    "version": 23
+  },
+  "scene_event_bindings": {
+    "3bd3fc0a-ceb5-43fe-8763-3ba1cdd59c55": {
+      "bindings": [],
+      "schema": "asteria.scene_event_bindings",
+      "version": 1
+    }
+  },
+  "scenes": [
+    {
+      "entities": [
+        {
+          "components": [
+            {
+              "fields": {
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 0.0,
+                "y": 0.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "origin_x": 0.0,
+                "origin_y": 0.0,
+                "tilemap_asset_id": "42d575c5-7be7-4d9e-87ac-e11b21de09c4",
+                "visible": true
+              },
+              "type": "asteria.TileMap2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "301b4eb7-aa42-438c-acea-e19720c4d02a",
+          "name": "Map"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 80.0,
+                "y": 128.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "actor_id": "hero"
+              },
+              "type": "asteria.ActorLink",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 10,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "9dbc2a73-122b-4f28-83cc-cf543e7bf7f4",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "dce3c470-07c1-4557-9e54-ee1f99765ef4",
+          "name": "Hero"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 160.0,
+                "y": 128.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "actor_id": "hero"
+              },
+              "type": "asteria.ActorLink",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "8e4d1d6b-9d1b-413f-9646-7dc7e5fbf991",
+          "name": "Hero"
+        }
+      ],
+      "id": "3bd3fc0a-ceb5-43fe-8763-3ba1cdd59c55",
+      "name": "Map001",
+      "schema": "asteria.scene",
+      "version": 1
+    }
+  ],
+  "schema": "asteria.project",
+  "startup_scene_id": "3bd3fc0a-ceb5-43fe-8763-3ba1cdd59c55",
+  "version": 8
+}

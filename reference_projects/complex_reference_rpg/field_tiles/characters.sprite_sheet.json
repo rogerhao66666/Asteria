@@ -1,0 +1,21 @@
+{
+  "frames": [
+    {
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0,
+      "width": 16,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "height": 24,
+      "pivot_x": 0.5,
+      "pivot_y": 1.0,
+      "width": 16,
+      "x": 16,
+      "y": 0
+    }
+  ],
+  "texture_asset_id": "edc23851-dc66-4e80-845c-e6324cdc9b23"
+}

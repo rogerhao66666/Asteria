@@ -34,6 +34,7 @@ class EditorDocument:
         from asteria.core import ComponentRegistry, Transform
         from asteria.gameplay import GameplayAttributesComponent
         from asteria.runtime import (
+            ActorLinkComponent,
             Animator2DComponent,
             Camera2DComponent,
             Interaction2DComponent,
@@ -53,6 +54,7 @@ class EditorDocument:
             component_registry.register(Animator2DComponent)
             component_registry.register(TileMap2DComponent)
             component_registry.register(GameplayAttributesComponent)
+            component_registry.register(ActorLinkComponent)
         self.project = project
         self.selection = EditorSelection()
         self.component_registry = component_registry
@@ -61,6 +63,13 @@ class EditorDocument:
         self.commands = CommandStack()
         self.saved_state_id = self.commands.current_state_id
         self.file_path = Path(file_path) if file_path is not None else None
+        # Asset files produced while the project had no folder yet, keyed by the
+        # project-relative source_path their AssetRecord already claims. Saving
+        # copies them into the project and empties this.
+        self.staged_assets = {}
+        # Field appearances applied this session, so an actor that is not on a
+        # map yet still has one to place with.
+        self.session_appearances = {}
 
     @property
     def revision(self):
@@ -92,6 +101,8 @@ class EditorDocument:
         self.selection = EditorSelection()
         self.commands.clear()
         self.file_path = Path(file_path) if file_path is not None else None
+        self.staged_assets = {}
+        self.session_appearances = {}
         self.mark_saved()
 
     def select_project(self):

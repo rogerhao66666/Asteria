@@ -57,3 +57,15 @@ def build_follow_entity_choices(component):
     if current and all(value != current for _, value in choices):
         choices.append((f"Missing entity ({current})", current))
     return tuple(choices)
+
+
+def build_actor_link_choices(project, current=""):
+    """Return display labels mapped to Actor ids for ActorLinkComponent."""
+    choices = [("— None —", "")]
+    actors = project.rpg_database.actors if project is not None else {}
+    for actor_id in sorted(actors):
+        choices.append((f"{actors[actor_id].display_name} ({actor_id})", actor_id))
+    current = str(current or "")
+    if current and all(value != current for _, value in choices):
+        choices.append((f"Missing actor ({current})", current))
+    return tuple(choices)

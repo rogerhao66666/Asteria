@@ -19,8 +19,15 @@ _LOADERS = {
 
 
 def asset_source_path(document, record):
+    # Assets generated before the project had a folder live in a staging dir
+    # until a save copies them in, so they resolve either way.
+    staged = getattr(document, "staged_assets", {}).get(record.source_path)
+    if staged is not None:
+        return staged
     if document.file_path is None:
-        return None
+        from .starter_project import starter_asset_path
+
+        return starter_asset_path(record)
     return document.file_path.parent / record.source_path
 
 
@@ -28,10 +35,21 @@ def resolve_project_resources(document):
     """Resolve canonical project asset sidecars into editor/runtime resource views."""
     document.asset_views.clear()
     project = document.project
-    if project is None or document.file_path is None:
+    if project is None:
         return document.asset_views
+    records = project.assets.records()
+    if document.file_path is None:
+        # An unsaved project has no folder to read sidecars from; its bundled
+        # starter resources come straight from the editor package instead.
+        # Assets generated during this session do have real files, so those are
+        # resolved normally on top.
+        from .starter_project import seed_unsaved_views
 
-    for record in project.assets.records():
+        seed_unsaved_views(document)
+        staged = getattr(document, "staged_assets", {})
+        records = [r for r in records if r.source_path in staged]
+
+    for record in records:
         loader = _LOADERS.get(record.kind)
         if loader is None:
             continue

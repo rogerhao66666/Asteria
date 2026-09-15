@@ -10,6 +10,7 @@ requires-python=">=3.12"
 [project.optional-dependencies]
 pygame=["pygame-ce>=2.5"]
 editor=["PySide6>=6.8"]
+moderngl=["moderngl>=5.8", "pygame-ce>=2.5", "Pillow>=10"]
 dev=["pytest>=9", "ruff>=0.16", "Pillow>=10"]
 
 [tool.setuptools.package-data]

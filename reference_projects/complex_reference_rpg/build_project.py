@@ -30,7 +30,7 @@ from asteria.rpg import (
     ProgressionNodeReward, ProgressionTrackDefinition, ReactionDefinition,
     RewardDefinition, SocketDefinition,
 )
-from asteria.runtime import Interaction2DComponent
+from asteria.runtime import Interaction2DComponent, SpriteRenderer2D
 
 
 ABILITY_IDS = (
@@ -415,10 +415,29 @@ def write_project(output_dir):
     try:
         from .build_saves import build_save
         from .field_tiles import install_field_tilemap
+        from .character_art import install_character_sprites, PLAYER_FRAME, ASTRAL_TYRANT_FRAME
     except ImportError:
         from build_saves import build_save
         from field_tiles import install_field_tilemap
-    install_field_tilemap(project, project.scenes()[0], output_dir)
+        from character_art import install_character_sprites, PLAYER_FRAME, ASTRAL_TYRANT_FRAME
+    scene = project.scenes()[0]
+    install_field_tilemap(project, scene, output_dir)
+
+    # Field-map look for Player/Astral Tyrant: SpriteRenderer2D on the entity,
+    # not a tile — a character is not part of the terrain.
+    sheet_id = install_character_sprites(project, output_dir)
+    player_sprite = scene.get_entity(player_id).add_component(SpriteRenderer2D())
+    player_sprite.sprite_sheet_asset_id = sheet_id
+    player_sprite.frame_index = PLAYER_FRAME
+    player_sprite.layer = 10
+    boss_entity = scene.get_entity(boss_id)
+    boss_sprite = boss_entity.add_component(SpriteRenderer2D())
+    boss_sprite.sprite_sheet_asset_id = sheet_id
+    boss_sprite.frame_index = ASTRAL_TYRANT_FRAME
+    boss_sprite.layer = 10
+    boss_transform = boss_entity.get(Transform)
+    boss_transform.scale_x = 1.3
+    boss_transform.scale_y = 1.3
     from asteria.runtime.game_start import GameStartDefinition
     project.game_start=GameStartDefinition.from_runtime_save(build_save(project,"early"))
     project.game_start.event_context_data["variables"]["reference_profile"]="new_game"

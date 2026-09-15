@@ -1,0 +1,17 @@
+{
+  "texture_asset_id": "546e74e2-1675-459b-a203-a7ec485f18c3",
+  "frames": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 16,
+      "height": 24
+    },
+    {
+      "x": 16,
+      "y": 0,
+      "width": 16,
+      "height": 24
+    }
+  ]
+}
