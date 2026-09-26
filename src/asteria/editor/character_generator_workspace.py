@@ -101,3 +101,10 @@ class CharacterGeneratorWorkspace:
         return cell
 
     def generate(self, output_dir: str | Path): return self.generator.generate(self.recipe, output_dir)
+
+    def create_character_command(self, bundle, project, scene, cell, *, display_name=None):
+        from .create_character_command import CreateCharacterCommand
+        return CreateCharacterCommand(
+            bundle, project, scene, cell,
+            display_name=display_name or self.recipe.id,
+        )
