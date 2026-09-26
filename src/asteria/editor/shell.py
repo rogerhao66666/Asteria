@@ -123,6 +123,24 @@ class AsteriaEditorWindow(QMainWindow):
         self.rpg_authoring = FamilyHostWidget(
             "RPG Authoring", self.authoring_controllers.rpg_categories, self
         )
+        from pathlib import Path
+        from asteria.assets.character_generator import CharacterGeneratorCatalog
+        from asteria.assets.local_reference import resolve_rpg_maker_mv_root
+        from asteria.assets.rpg_maker_mv_generator import RPGMakerMVGeneratorCatalog
+        from .character_generator_widget import CharacterGeneratorWidget
+        from .character_generator_workspace import CharacterGeneratorWorkspace
+
+        reference_root = resolve_rpg_maker_mv_root(Path(__file__).resolve().parents[3])
+        if reference_root is None:
+            character_workspace = CharacterGeneratorWorkspace.create(CharacterGeneratorCatalog())
+        else:
+            character_workspace = CharacterGeneratorWorkspace.create_mv(
+                RPGMakerMVGeneratorCatalog.discover(reference_root)
+            )
+        self.character_creator = CharacterGeneratorWidget(character_workspace, self)
+        self.rpg_workspace = QTabWidget(self)
+        self.rpg_workspace.addTab(self.rpg_authoring, "Database")
+        self.rpg_workspace.addTab(self.character_creator, "Character Creator")
         self.battle_authoring = FamilyHostWidget(
             "Battle Rules", self.authoring_controllers.battle_categories, self
         )
@@ -146,7 +164,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.workspace = EditorWorkspace(
             {
                 WorkspaceMode.SCENE: self.viewport,
-                WorkspaceMode.RPG: self.rpg_authoring,
+                WorkspaceMode.RPG: self.rpg_workspace,
                 WorkspaceMode.BATTLE: self.battle_authoring,
                 WorkspaceMode.UI: self.ui_workspace,
                 WorkspaceMode.EVENT: self.events_workspace,

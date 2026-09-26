@@ -25,6 +25,7 @@ def main(argv=None) -> int:
     source = args.source.expanduser().resolve()
     destination = args.destination.expanduser().resolve()
     required = (
+        source / "RPG Maker MV.app" / "Contents" / "MacOS" / "Generator",
         source / "RPG Maker MV.app" / "Contents" / "MacOS" / "NewData",
         source / "dlc",
     )
@@ -32,8 +33,9 @@ def main(argv=None) -> int:
         parser.error("source must contain RPG Maker MV NewData and dlc trees")
 
     destination.mkdir(parents=True, exist_ok=True)
-    copied = synchronize_tree(required[0], destination / "NewData")
-    copied += synchronize_tree(required[1], destination / "dlc")
+    copied = synchronize_tree(required[0], destination / "Generator")
+    copied += synchronize_tree(required[1], destination / "NewData")
+    copied += synchronize_tree(required[2], destination / "dlc")
     source_inventory = build_rpg_maker_mv_source_inventory(source)
     destination_inventory = inventory_tree(destination)
 

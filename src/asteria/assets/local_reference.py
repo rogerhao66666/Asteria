@@ -155,22 +155,21 @@ def inventory_tree(root: Path) -> ReferenceInventory:
 
 def build_rpg_maker_mv_source_inventory(source_root: Path) -> ReferenceInventory:
     source_root = Path(source_root).expanduser().resolve()
+    generator = inventory_tree(
+        source_root / "RPG Maker MV.app" / "Contents" / "MacOS" / "Generator"
+    )
     new_data = inventory_tree(
         source_root / "RPG Maker MV.app" / "Contents" / "MacOS" / "NewData"
     )
     dlc = inventory_tree(source_root / "dlc")
-    files = tuple(
-        sorted(
-            (
-                ReferenceFile(f"NewData/{item.relative_path}", item.size, item.sha256)
-                for item in new_data.files
-            ),
-            key=lambda item: item.relative_path,
-        )
-    ) + tuple(
-        ReferenceFile(f"dlc/{item.relative_path}", item.size, item.sha256)
-        for item in dlc.files
-    )
+    files = tuple(sorted(
+        (
+            *(ReferenceFile(f"Generator/{item.relative_path}", item.size, item.sha256) for item in generator.files),
+            *(ReferenceFile(f"NewData/{item.relative_path}", item.size, item.sha256) for item in new_data.files),
+            *(ReferenceFile(f"dlc/{item.relative_path}", item.size, item.sha256) for item in dlc.files),
+        ),
+        key=lambda item: item.relative_path,
+    ))
     return ReferenceInventory("rpg_maker_mv", files)
 
 

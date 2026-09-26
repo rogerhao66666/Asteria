@@ -66,3 +66,21 @@ def test_mv_widget_exposes_part_grid_and_three_representation_tabs():
     finally:
         widget.close()
         app.processEvents()
+
+
+def test_editor_shell_exposes_mv_character_creator_in_rpg_workspace():
+    pytest.importorskip("PySide6")
+    from PySide6.QtWidgets import QApplication
+    from asteria.editor.shell import AsteriaEditorWindow
+    from asteria.editor.workspace import WorkspaceMode
+
+    app = QApplication.instance() or QApplication([])
+    window = AsteriaEditorWindow()
+    try:
+        window.workspace.set_mode(WorkspaceMode.RPG)
+        labels = [window.rpg_workspace.tabText(i) for i in range(window.rpg_workspace.count())]
+        assert labels == ["Database", "Character Creator"]
+        assert window.character_creator.part_grid.objectName() == "CharacterPartGrid"
+    finally:
+        window.close()
+        app.processEvents()

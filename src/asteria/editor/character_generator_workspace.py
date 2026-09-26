@@ -62,15 +62,18 @@ class CharacterGeneratorWorkspace:
         if representation not in {"walking", "face", "side_view"}: raise ValueError(f"unsupported representation: {representation}")
         if not self.is_mv: return representation == "walking"
         parts = self._selected_mv_parts()
-        return bool(parts) and all(getattr(part, representation) is not None for part in parts)
+        return any(getattr(part, representation) is not None for part in parts)
 
     def unavailable_reason(self, representation: str) -> str:
         label = {"walking": "Walking", "face": "Face", "side_view": "Side View"}[representation]
         if not self.is_mv: return "" if representation == "walking" else f"{label} unavailable for custom parts"
-        for part in self._selected_mv_parts():
-            if getattr(part, representation) is None:
-                return f"{label} unavailable for {part.source_category} p{part.part_number}"
-        return "" if self._selected_mv_parts() else f"{label} unavailable until a part is selected"
+        if self.representation_available(representation):
+            return ""
+        parts = self._selected_mv_parts()
+        if parts:
+            part = parts[0]
+            return f"{label} unavailable for {part.source_category} p{part.part_number}"
+        return f"{label} unavailable until a part is selected"
 
     def preview_representation(self, representation: str):
         if not self.representation_available(representation): return None

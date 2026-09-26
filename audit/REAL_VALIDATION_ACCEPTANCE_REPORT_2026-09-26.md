@@ -89,3 +89,23 @@ An additional Editor E2E finding was fixed:
 - Full visual tilemap, battle, side-view transition, and attachment occlusion playback; four-direction MV walking frame playback passes.
 
 These limitations are environmental/interactive gates and were not converted into false PASS results.
+
+## MV Character Creator validation addendum — 2026-09-27
+
+- Final regression after the character-creator integration: **1820 passed, 0 failed**.
+- The local ignored MV reference now includes the previously omitted built-in app `Generator`: **5 Generator roots, 3422 source files**. The synchronization inventory and script include `Generator`, `NewData`, and `dlc`.
+- Actual desktop operation: **PASS**. A visible Cocoa Asteria Editor was launched, `RPG → Character Creator` was opened through accessibility-driven desktop interaction, a real MV Body part was selected, and its walking art visibly aligned to the 48×48 ground line. The Character Creator is now mounted in the real Editor shell beside the RPG Database page.
+- Full recipe: **PASS**. The bounded validator selected nine real core parts: body, face shape, eyes, eyebrows, nose, mouth, rear hair, clothing, and front hair. Representation-specific face-only layers no longer invalidate walking or side-view composition.
+- Cocoa captures: **PASS after visual inspection**:
+  - `/private/tmp/asteria-mv-character-creator/editor-walking.png`
+  - `/private/tmp/asteria-mv-character-creator/editor-face.png`
+  - `/private/tmp/asteria-mv-character-creator/editor-side-view.png`
+- pygame capture: **PASS after visual inspection**: `/private/tmp/asteria-mv-character-creator/runtime-map.png`. It contains a generated 48×48 actor and a native 96×96 `$BigMonster1` at the same `standing_y=240`; both rectangles end at y=240, and the large sprite is neither shrunk nor clipped.
+- Bounded runtime: **PASS**, exactly 3 displayed frames followed by clean shutdown. Machine-readable evidence is `/private/tmp/asteria-mv-character-creator/results.json`.
+- Generated actor integration: **PASS** for three canonical visual assets, RPG ActorDefinition, eight idle/walk directional clips, Animator2D metadata, map-cell entity placement, stable undo/redo IDs, and rollback at files/assets/actor/entity boundaries.
+- Repository hygiene: **PASS**. `local_reference/rpg_maker_mv` remains Git-ignored; no MV source or generated PNG/JPG/WebP is tracked.
+- `compileall`, `pip check`, and `git diff --check`: **PASS**.
+
+The face capture initially exposed an incomplete recipe with only body and clothing layers. That evidence was rejected rather than promoted to PASS. Independent generic categories were added for face shape, eyebrows, nose, mouth, and facial marks; the final captures were regenerated and visually re-inspected.
+
+Audio-device timing remains **PARTIAL** and outside this character-creator phase. Live keyboard/controller movement, real GPU frame pacing, and final game-specific occlusion also remain **PARTIAL**; they are not implied by the bounded three-frame pygame evidence.

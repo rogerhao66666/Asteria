@@ -85,3 +85,19 @@ def test_validation_fails_before_publishing_partial_bundle(tmp_path, mode):
 
     assert not (output / "broken").exists()
     assert not output.exists() or not tuple(output.iterdir())
+
+
+def test_representation_specific_face_feature_does_not_invalidate_walking_or_side_view(tmp_path):
+    catalog, body = _catalog(tmp_path / "source")
+    face_path = _png(tmp_path / "source" / "Generator" / "eyes.png", (144, 144), (0, 0, 255, 255))
+    eyes = MVGeneratorPart(
+        "mvgen.test.eyes", body.source_root, "Male", "Eyes", "eyes", 1,
+        face=MVGeneratorRepresentation("face", (face_path,)),
+    )
+    catalog = RPGMakerMVGeneratorCatalog(catalog.roots, (body, eyes), (), catalog.source_file_count + 1)
+    recipe = CharacterRecipe("complete", parts={"body": body.id, "eyes": eyes.id})
+
+    bundle = CharacterBundleGenerator(catalog).generate(recipe, tmp_path / "generated")
+
+    assert bundle.walking_path.is_file() and bundle.face_path.is_file() and bundle.side_view_path.is_file()
+    assert Image.open(bundle.face_path).getpixel((10, 10))[:3] == (0, 0, 255)

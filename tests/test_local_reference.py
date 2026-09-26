@@ -70,14 +70,16 @@ def test_reference_root_is_git_ignored():
     assert "/local_reference/rpg_maker_mv/" in patterns
 
 
-def test_source_inventory_reads_only_new_data_and_dlc(tmp_path):
+def test_source_inventory_reads_core_generator_new_data_and_dlc(tmp_path):
     _write(tmp_path, "RPG Maker MV.app/Contents/MacOS/NewData/data/Actors.json", b"a")
+    _write(tmp_path, "RPG Maker MV.app/Contents/MacOS/Generator/TV/Male/TV_Body_p01.png", b"g")
     _write(tmp_path, "RPG Maker MV.app/Contents/Resources/unrelated.bin", b"ignore")
     _write(tmp_path, "dlc/sample/readme.txt", b"d")
 
     inventory = build_rpg_maker_mv_source_inventory(tmp_path)
 
     assert tuple(item.relative_path for item in inventory.files) == (
+        "Generator/TV/Male/TV_Body_p01.png",
         "NewData/data/Actors.json",
         "dlc/sample/readme.txt",
     )

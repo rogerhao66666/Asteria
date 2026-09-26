@@ -6,7 +6,10 @@ import json
 from PIL import Image
 
 DIRECTIONS = ("down", "left", "right", "up")
-LAYER_ORDER = ("body", "eyes", "hair_back", "outfit", "armor", "hair_front", "accessory")
+LAYER_ORDER = (
+    "body", "face_shape", "eyes", "eyebrows", "nose", "mouth", "hair_back",
+    "outfit", "armor", "hair_front", "facial_mark", "accessory", "tail", "wing",
+)
 
 @dataclass(frozen=True)
 class CharacterGeneratorPreset:

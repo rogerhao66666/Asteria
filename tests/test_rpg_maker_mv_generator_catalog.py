@@ -13,8 +13,8 @@ def test_real_catalog_discovers_every_generator_source_file_deterministically():
     first = _real()
     second = _real()
 
-    assert len(first.roots) == 4
-    assert first.source_file_count == 684
+    assert len(first.roots) == 5
+    assert first.source_file_count == 3422
     assert first.parts == second.parts
     assert tuple(part.id for part in first.parts) == tuple(sorted(part.id for part in first.parts))
 
@@ -73,3 +73,32 @@ def test_missing_representations_are_explicit_not_substituted():
     assert body.side_view is None
     assert any(issue.code == "generator.representation_missing" and issue.part_id == body.id
                for issue in catalog.issues)
+
+
+def test_core_generator_merges_case_and_numbered_filename_layers_into_logical_parts():
+    catalog = _real()
+    core = next(
+        item for item in catalog.parts
+        if item.source_root.parent.name == "rpg_maker_mv"
+        and item.source_category == "Body" and item.part_number == 1 and item.gender == "Male"
+    )
+    clothing = next(
+        item for item in catalog.parts
+        if item.source_root.parent.name == "rpg_maker_mv"
+        and item.source_category == "Clothing" and item.part_number == 1 and item.gender == "Male"
+    )
+
+    assert core.walking is not None and core.face is not None and core.side_view is not None
+    assert clothing.walking is not None and len(clothing.walking.images) >= 2
+    assert clothing.face is not None and clothing.side_view is not None
+
+
+def test_core_face_features_translate_to_independent_generic_categories():
+    catalog = _real()
+    core_parts = [part for part in catalog.parts if part.source_root.parent.name == "rpg_maker_mv" and part.gender == "Male"]
+
+    assert next(part for part in core_parts if part.source_category == "Face").category == "face_shape"
+    assert next(part for part in core_parts if part.source_category == "Eyebrows").category == "eyebrows"
+    assert next(part for part in core_parts if part.source_category == "Nose").category == "nose"
+    assert next(part for part in core_parts if part.source_category == "Mouth").category == "mouth"
+    assert next(part for part in core_parts if part.source_category == "FacialMark").category == "facial_mark"

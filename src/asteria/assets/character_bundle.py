@@ -73,7 +73,7 @@ class CharacterBundleGenerator:
         palette_requested: bool,
     ) -> None:
         if representation is None or not representation.images:
-            raise ValueError(f"{part.id}: {name} unavailable")
+            return
         expected = _CANVASES[name]
         for path in representation.images:
             with Image.open(path) as image:
@@ -94,9 +94,12 @@ class CharacterBundleGenerator:
         genders = {part.gender.lower() for part in parts if part.gender.lower() != "unspecified"}
         if len(genders) > 1:
             raise ValueError("selected parts use incompatible body/gender variants")
-        for part in parts:
-            palette_requested = part.id in recipe.palette or part.category in recipe.palette
-            for name in _REPRESENTATIONS:
+        for name in _REPRESENTATIONS:
+            contributors = tuple(part for part in parts if (rep := getattr(part, name)) is not None and rep.images)
+            if not contributors:
+                raise ValueError(f"{name} unavailable for selected character parts")
+            for part in contributors:
+                palette_requested = part.id in recipe.palette or part.category in recipe.palette
                 self._validate_representation(part, name, getattr(part, name), palette_requested)
 
     @staticmethod
@@ -120,7 +123,8 @@ class CharacterBundleGenerator:
         canvas = Image.new("RGBA", _CANVASES[name], (0, 0, 0, 0))
         for part in parts:
             representation = getattr(part, name)
-            assert representation is not None
+            if representation is None:
+                continue
             for path in representation.images:
                 with Image.open(path) as source:
                     canvas.alpha_composite(source.convert("RGBA"))

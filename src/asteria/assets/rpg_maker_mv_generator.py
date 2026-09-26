@@ -23,9 +23,22 @@ _CATEGORIES = {
     "clothing2": "armor", "acca": "accessory", "accb": "accessory",
     "glasses": "accessory", "fronthair": "hair_front",
     "rearhair": "hair_back", "eyes": "eyes", "eyebrows": "eyes",
-    "beard": "accessory", "ears": "accessory", "tail": "accessory",
-    "wing": "accessory", "face": "body",
+    "beard": "accessory", "ears": "accessory", "tail": "tail",
+    "wing": "wing", "face": "face_shape", "eyebrows": "eyebrows",
+    "nose": "nose", "mouth": "mouth", "facialmark": "facial_mark",
 }
+_NUMBERED_FAMILIES = {
+    "beard": "Beard", "clothing": "Clothing", "cloak": "Cloak",
+    "fronthair": "FrontHair", "rearhair": "RearHair", "tail": "Tail", "wing": "Wing",
+}
+
+
+def _logical_category(value: str) -> str:
+    lowered = value.casefold()
+    base = re.sub(r"\d+$", "", lowered)
+    if base == "body":
+        return "Body"
+    return _NUMBERED_FAMILIES.get(base, value)
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,7 +112,7 @@ class RPGMakerMVGeneratorCatalog:
                     continue
                 relative_parts = path.relative_to(generator_root).parts
                 gender = next((value for value in relative_parts if value.lower() in {"male", "female"}), "Unspecified")
-                source_category = match.group("category")
+                source_category = _logical_category(match.group("category"))
                 token = match.group("number")
                 number = int(token) if token.isdigit() else token
                 key = (generator_root, gender, source_category, number)
