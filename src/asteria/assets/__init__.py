@@ -39,3 +39,4 @@ from .reconciliation import *
 from .editor_import_service import *
 from .quality_gate import *
 from .rpg_maker_mv_database import *
+from .rpg_maker_mv_catalog import *
