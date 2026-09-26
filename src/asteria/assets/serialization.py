@@ -1,6 +1,7 @@
 from .cache import ImportArtifact, ImportCache
 from .registry import AssetRegistry
 from .types import AssetRecord
+from .canonical import AssetSource, CanonicalAsset
 
 
 def serialize_asset(record):
@@ -39,19 +40,46 @@ def serialize_asset_registry(registry):
     registry.validate()
     return {
         "schema": "asteria.assets",
-        "version": 1,
+        "version": 2,
         "assets": [serialize_asset(r) for r in registry.records()],
+        "canonical_assets": [
+            {
+                "asset_id": asset.asset_id,
+                "kind": asset.kind,
+                "source": {
+                    "uri": asset.source.uri,
+                    "provider": asset.source.provider,
+                    "provenance": list(asset.source.provenance),
+                },
+                "version": asset.version,
+                "tags": sorted(asset.tags),
+                "metadata": list(asset.metadata),
+            }
+            for asset in registry.snapshot()
+        ],
     }
 
 
 def deserialize_asset_registry(data):
-    if set(data) != {"schema", "version", "assets"}:
+    version = data.get("version")
+    expected = {"schema", "version", "assets"} if version == 1 else {
+        "schema", "version", "assets", "canonical_assets"
+    }
+    if set(data) != expected:
         raise ValueError("invalid assets document")
-    if data["schema"] != "asteria.assets" or data["version"] != 1:
+    if data["schema"] != "asteria.assets" or version not in {1, 2}:
         raise ValueError("unsupported asset registry")
     reg = AssetRegistry()
     for d in data["assets"]:
         reg.add(deserialize_asset(d))
+    if version >= 2:
+        for d in data["canonical_assets"]:
+            source = d["source"]
+            reg.register(CanonicalAsset(
+                d["asset_id"], d["kind"],
+                AssetSource(source["uri"], source["provider"], tuple(tuple(x) for x in source["provenance"])),
+                d["version"], frozenset(d["tags"]), tuple(tuple(x) for x in d["metadata"]),
+            ))
     return reg
 
 
