@@ -31,6 +31,10 @@ class CharacterRecipe:
     parts: dict[str, str] = field(default_factory=dict)
     palette: dict[str, str] = field(default_factory=dict)
 
+    def ordered_part_ids(self) -> tuple[str, ...]:
+        """Return selections in the shared deterministic composition order."""
+        return tuple(self.parts[category] for category in LAYER_ORDER if category in self.parts)
+
 @dataclass(frozen=True)
 class GeneratedCharacter:
     recipe_id: str
