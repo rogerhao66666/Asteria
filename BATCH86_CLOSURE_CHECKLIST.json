@@ -1,0 +1,20 @@
+{
+  "batch": 86,
+  "scope": "composable_presentation",
+  "result": "conditional_pass",
+  "architecture_blockers": [],
+  "tested_through_batch": 85,
+  "remaining_gates": [
+    "real_scene_assetstore_integration",
+    "qt_editor_wiring",
+    "real_renderer_backend",
+    "font_animated_text_backend",
+    "camera_vfx_material_shader_audio_adapters",
+    "real_project_scene_save_load",
+    "full_repository_regression",
+    "real_hardware_profiling",
+    "starter_asset_real_pipeline_validation",
+    "final_vertical_slice"
+  ],
+  "architecture_reopen_policy": "only_on_concrete_production_integration_failure"
+}

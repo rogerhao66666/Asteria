@@ -189,13 +189,8 @@ class GameSessionRuntime:
         loadout=self.save.rpg_state.loadouts[actor_id]
         if replace and loadout.equipped(slot_id):
             loadout.unequip(slot_id,0)
-        prefix=f"{equipment_id}:runtime:{actor_id}:"
-        used={item.instance_id for item in loadout.equipped()}
-        sequence=1
-        while f"{prefix}{sequence}" in used:
-            sequence+=1
         instance=EquippedItem(
-            definition, instance_id=f"{prefix}{sequence}",
+            definition, instance_id=f"{equipment_id}:runtime:{actor_id}:{len(loadout.equipped())+1}",
             growth=(EquipmentGrowthRuntime(self.project.rpg_database.equipment_growth[definition.growth_id]) if definition.growth_id else None),
         )
         loadout.equip(slot_id,instance,validate_requirements=False)

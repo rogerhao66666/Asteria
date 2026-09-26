@@ -55,37 +55,6 @@ def test_project_tree_refresh_preserves_canonical_selection():
     app.processEvents()
 
 
-def test_project_tree_gives_scenes_entities_and_components_distinct_icons():
-    import pytest
-
-    pytest.importorskip("PySide6")
-    from PySide6.QtWidgets import QApplication
-
-    from asteria.core import Entity, Scene, Transform
-    from asteria.editor.model import EditorDocument
-    from asteria.editor.widgets import ProjectTreeWidget
-    from asteria.project import Project
-
-    app = QApplication.instance() or QApplication([])
-    project = Project("Game")
-    scene = project.add_scene(Scene("Town"))
-    hero = scene.add_entity(Entity("Hero"))
-    hero.add_component(Transform())
-    document = EditorDocument(project)
-
-    widget = ProjectTreeWidget(document)
-    widget.refresh()
-
-    scene_item = widget.tree.topLevelItem(0)
-    entity_item = scene_item.child(0)
-    component_item = entity_item.child(0)
-    icons = {scene_item.icon(0), entity_item.icon(0), component_item.icon(0)}
-    assert len(icons) == 3
-    assert all(not icon.isNull() for icon in icons)
-    widget.close()
-    app.processEvents()
-
-
 def test_scene_viewport_arrow_navigation_and_reset():
     import pytest
 
@@ -122,22 +91,14 @@ def test_scene_viewport_arrow_navigation_and_reset():
     assert viewport.camera.pan_x == -24
     assert document.dirty
 
-    viewport.camera.zoom = 5
+    viewport.camera.zoom = 2
 
     viewport.reset_view()
-    # No Camera2DComponent exists to frame, so reset_view() falls back to
-    # centering every positioned entity at the default zoom, instead of
-    # pinning world (0, 0) at the screen's top-left corner. The lone entity
-    # sits at world (1, 0) here (after the move above), so it lands at the
-    # center of the (unshown, default-sized 640x480) viewport — 16px tiles
-    # are drawn at 2x so a cell reads as 32px on screen.
-    from asteria.editor.viewport_widget import DEFAULT_ZOOM
-
     assert (
         viewport.camera.pan_x,
         viewport.camera.pan_y,
         viewport.camera.zoom,
-    ) == (320.0 - 1 * DEFAULT_ZOOM, 240.0, DEFAULT_ZOOM)
+    ) == (0, 0, 1)
     viewport.close()
 
 
@@ -197,13 +158,9 @@ def test_runtime_monitor_cleans_up_an_exited_preview():
     class Process:
         running = False
         stopped = False
-        exit_code = 0
 
         def stop(self):
             self.stopped = True
-
-        def read_stderr(self):
-            return ""
 
     class Session:
         active = True
@@ -236,51 +193,4 @@ def test_runtime_monitor_cleans_up_an_exited_preview():
     assert window.runtime_process is None
     assert not window.play_session.active
     assert window.console.text == "Runtime preview closed"
-
-
-def test_runtime_monitor_surfaces_crash_traceback_in_console():
-    from asteria.editor.shell import AsteriaEditorWindow
-
-    class Process:
-        running = False
-        stopped = False
-        exit_code = 1
-
-        def stop(self):
-            self.stopped = True
-
-        def read_stderr(self):
-            return "Traceback (most recent call last):\nRuntimeError: boom\n"
-
-    class Session:
-        active = True
-
-        def stop(self):
-            self.active = False
-
-    class Label:
-        def setText(self, text):
-            self.text = text
-
-    class Status:
-        def showMessage(self, text, timeout):
-            self.message = (text, timeout)
-
-    class Window:
-        runtime_process = Process()
-        play_session = Session()
-        console = Label()
-        refreshed = False
-
-        def statusBar(self):
-            return Status()
-
-        def _refresh_actions(self):
-            self.refreshed = True
-
-    window = Window()
-    AsteriaEditorWindow._poll_runtime_process(window)
-    assert window.runtime_process is None
-    assert "exit code 1" in window.console.text
-    assert "RuntimeError: boom" in window.console.text
     assert window.refreshed

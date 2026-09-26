@@ -7,9 +7,4 @@ except ImportError:
     PygameRuntimeBackend = None
     PygameTextureBackend = None
 
-try:
-    from .moderngl_backend import ModernglRuntimeBackend
-except ImportError:
-    ModernglRuntimeBackend = None
-
 from .pygame_battle_ui import PygameBattleUiBackend

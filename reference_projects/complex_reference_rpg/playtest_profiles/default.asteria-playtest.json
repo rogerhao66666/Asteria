@@ -6,475 +6,176 @@
   "description": "Fresh reference-game developer profile.",
   "default": true,
   "runtime_state": {
-    "schema": "asteria.game_runtime_save",
-    "version": 1,
-    "project_id": "08325667-473b-4f61-b4c9-72bff3619957",
-    "scene_id": "cb9edc51-9d32-45fd-89e7-d3d66529b680",
-    "player_entity_id": "d74889b6-e551-43b0-af4b-5d9403de8a2e",
+    "event_context": {
+      "locals": {
+        "astral_tyrant": {
+          "challenged": false
+        }
+      },
+      "schema": "asteria.event_context",
+      "switches": {
+        "boss_gate_unlocked": false
+      },
+      "variables": {
+        "chapter": 1,
+        "reference_profile": "early"
+      },
+      "version": 1
+    },
+    "player_entity_id": "698c1327-c30a-4340-a45c-8673a9313f9d",
     "player_facing": "right",
     "player_position": [
       0.0,
       0.0
     ],
+    "project_id": "b8dcf8ef-98b6-441a-b1e7-5f7533801cca",
     "rpg_state": {
-      "schema": "asteria.rpg.runtime_state",
-      "version": 5,
-      "inventory": {
-        "schema": "asteria.rpg.inventory",
-        "version": 1,
-        "counts": {
-          "alchemy_salt": 1,
-          "ancient_thread": 2,
-          "boss_emblem": 3,
-          "ether_leaf": 4,
-          "fire_dust": 5,
-          "focus_stone": 1,
-          "guardian_scale": 2,
-          "healing_herb": 3,
-          "ice_crystal": 4,
-          "iron_ore": 5
-        }
-      },
-      "progression": {
-        "schema": "asteria.rpg.progression_runtime",
-        "version": 1,
-        "totals": {
-          "alchemist_mastery": 201.0,
-          "arcanist_mastery": 202.0,
-          "duelist_mastery": 213.0,
-          "mystic_mastery": 201.0,
-          "oracle_mastery": 200.0,
-          "ranger_mastery": 209.0,
-          "vanguard_mastery": 205.0,
-          "warden_mastery": 211.0
-        }
-      },
-      "loadouts": {
+      "actor_progression": {
         "hero_01": {
-          "schema": "asteria.rpg.equipment_loadout",
-          "version": 1,
-          "slots": [
-            {
-              "slot_id": "accessory",
-              "accepted_tags": [],
-              "capacity": 2
-            },
-            {
-              "slot_id": "armor",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "weapon",
-              "accepted_tags": [],
-              "capacity": 1
-            }
+          "active_class_ids": [
+            "vanguard",
+            "warden"
           ],
-          "equipped": {
-            "accessory": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "accessory_01:actor:1:0",
-                "equipment_id": "accessory_01",
-                "attachments": {},
-                "growth": null
-              },
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "accessory_02:actor:1:1",
-                "equipment_id": "accessory_02",
-                "attachments": {},
-                "growth": null
-              }
-            ],
-            "armor": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "armor_01:actor:1",
-                "equipment_id": "armor_01",
-                "attachments": {},
-                "growth": null
-              }
-            ],
-            "weapon": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "weapon_01:actor:1",
-                "equipment_id": "weapon_01",
-                "attachments": {
-                  "rune": "rune_01"
-                },
-                "growth": null
-              }
-            ]
-          }
+          "experience": 11500.0,
+          "level": 12,
+          "points": {
+            "ability_points": 4.0,
+            "ap": 22.0
+          },
+          "schema": "asteria.rpg.actor_progression_state",
+          "unlocked_class_ids": [
+            "vanguard",
+            "warden",
+            "alchemist",
+            "arcanist",
+            "duelist"
+          ],
+          "version": 1
         },
         "hero_02": {
-          "schema": "asteria.rpg.equipment_loadout",
-          "version": 1,
-          "slots": [
-            {
-              "slot_id": "accessory",
-              "accepted_tags": [],
-              "capacity": 2
-            },
-            {
-              "slot_id": "armor",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "weapon",
-              "accepted_tags": [],
-              "capacity": 1
-            }
+          "active_class_ids": [
+            "arcanist",
+            "ranger"
           ],
-          "equipped": {
-            "accessory": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "accessory_02:actor:2:0",
-                "equipment_id": "accessory_02",
-                "attachments": {},
-                "growth": null
-              },
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "accessory_03:actor:2:1",
-                "equipment_id": "accessory_03",
-                "attachments": {},
-                "growth": null
-              }
-            ],
-            "armor": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "armor_02:actor:2",
-                "equipment_id": "armor_02",
-                "attachments": {},
-                "growth": null
-              }
-            ],
-            "weapon": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "weapon_02:actor:2",
-                "equipment_id": "weapon_02",
-                "attachments": {
-                  "rune": "rune_02"
-                },
-                "growth": null
-              }
-            ]
-          }
+          "experience": 11875.0,
+          "level": 13,
+          "points": {
+            "ability_points": 4.0,
+            "ap": 22.0
+          },
+          "schema": "asteria.rpg.actor_progression_state",
+          "unlocked_class_ids": [
+            "arcanist",
+            "ranger",
+            "alchemist",
+            "duelist"
+          ],
+          "version": 1
         },
         "hero_03": {
-          "schema": "asteria.rpg.equipment_loadout",
-          "version": 1,
-          "slots": [
-            {
-              "slot_id": "accessory",
-              "accepted_tags": [],
-              "capacity": 2
-            },
-            {
-              "slot_id": "armor",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "weapon",
-              "accepted_tags": [],
-              "capacity": 1
-            }
+          "active_class_ids": [
+            "alchemist",
+            "oracle"
           ],
-          "equipped": {
-            "accessory": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "accessory_03:actor:3:0",
-                "equipment_id": "accessory_03",
-                "attachments": {},
-                "growth": null
-              },
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "accessory_04:actor:3:1",
-                "equipment_id": "accessory_04",
-                "attachments": {},
-                "growth": null
-              }
-            ],
-            "armor": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "armor_03:actor:3",
-                "equipment_id": "armor_03",
-                "attachments": {},
-                "growth": null
-              }
-            ],
-            "weapon": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "weapon_03:actor:3",
-                "equipment_id": "weapon_03",
-                "attachments": {
-                  "rune": "rune_03"
-                },
-                "growth": null
-              }
-            ]
-          }
+          "experience": 12250.0,
+          "level": 14,
+          "points": {
+            "ability_points": 4.0,
+            "ap": 22.0
+          },
+          "schema": "asteria.rpg.actor_progression_state",
+          "unlocked_class_ids": [
+            "alchemist",
+            "oracle",
+            "arcanist",
+            "duelist"
+          ],
+          "version": 1
         },
         "hero_04": {
-          "schema": "asteria.rpg.equipment_loadout",
-          "version": 1,
-          "slots": [
-            {
-              "slot_id": "accessory",
-              "accepted_tags": [],
-              "capacity": 2
-            },
-            {
-              "slot_id": "armor",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "weapon",
-              "accepted_tags": [],
-              "capacity": 1
-            }
+          "active_class_ids": [
+            "warden",
+            "duelist"
           ],
-          "equipped": {
-            "accessory": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "accessory_04:actor:4:0",
-                "equipment_id": "accessory_04",
-                "attachments": {},
-                "growth": null
-              },
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "accessory_05:actor:4:1",
-                "equipment_id": "accessory_05",
-                "attachments": {},
-                "growth": null
-              }
-            ],
-            "armor": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "armor_04:actor:4",
-                "equipment_id": "armor_04",
-                "attachments": {},
-                "growth": null
-              }
-            ],
-            "weapon": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "weapon_04:actor:4",
-                "equipment_id": "weapon_04",
-                "attachments": {
-                  "rune": "rune_04"
-                },
-                "growth": null
-              }
-            ]
-          }
+          "experience": 12625.0,
+          "level": 15,
+          "points": {
+            "ability_points": 4.0,
+            "ap": 22.0
+          },
+          "schema": "asteria.rpg.actor_progression_state",
+          "unlocked_class_ids": [
+            "warden",
+            "duelist",
+            "alchemist",
+            "arcanist"
+          ],
+          "version": 1
         },
         "hero_05": {
-          "schema": "asteria.rpg.equipment_loadout",
-          "version": 1,
-          "slots": [
-            {
-              "slot_id": "accessory",
-              "accepted_tags": [],
-              "capacity": 2
-            },
-            {
-              "slot_id": "armor",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "weapon",
-              "accepted_tags": [],
-              "capacity": 1
-            }
+          "active_class_ids": [
+            "ranger",
+            "mystic"
           ],
-          "equipped": {
-            "accessory": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "accessory_05:actor:5:0",
-                "equipment_id": "accessory_05",
-                "attachments": {},
-                "growth": null
-              },
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "accessory_06:actor:5:1",
-                "equipment_id": "accessory_06",
-                "attachments": {},
-                "growth": null
-              }
-            ],
-            "armor": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "armor_05:actor:5",
-                "equipment_id": "armor_05",
-                "attachments": {},
-                "growth": null
-              }
-            ],
-            "weapon": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "weapon_05:actor:5",
-                "equipment_id": "weapon_05",
-                "attachments": {
-                  "rune": "rune_05"
-                },
-                "growth": null
-              }
-            ]
-          }
+          "experience": 13000.0,
+          "level": 12,
+          "points": {
+            "ability_points": 4.0,
+            "ap": 22.0
+          },
+          "schema": "asteria.rpg.actor_progression_state",
+          "unlocked_class_ids": [
+            "ranger",
+            "mystic",
+            "alchemist",
+            "arcanist",
+            "duelist"
+          ],
+          "version": 1
         },
         "hero_06": {
-          "schema": "asteria.rpg.equipment_loadout",
-          "version": 1,
-          "slots": [
-            {
-              "slot_id": "accessory",
-              "accepted_tags": [],
-              "capacity": 2
-            },
-            {
-              "slot_id": "armor",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "weapon",
-              "accepted_tags": [],
-              "capacity": 1
-            }
+          "active_class_ids": [
+            "oracle",
+            "vanguard"
           ],
-          "equipped": {
-            "accessory": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "accessory_06:actor:6:0",
-                "equipment_id": "accessory_06",
-                "attachments": {},
-                "growth": null
-              },
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "accessory_07:actor:6:1",
-                "equipment_id": "accessory_07",
-                "attachments": {},
-                "growth": null
-              }
-            ],
-            "armor": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "armor_06:actor:6",
-                "equipment_id": "armor_06",
-                "attachments": {},
-                "growth": null
-              }
-            ],
-            "weapon": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "weapon_06:actor:6",
-                "equipment_id": "weapon_06",
-                "attachments": {
-                  "rune": "rune_06"
-                },
-                "growth": null
-              }
-            ]
-          }
+          "experience": 13375.0,
+          "level": 13,
+          "points": {
+            "ability_points": 4.0,
+            "ap": 22.0
+          },
+          "schema": "asteria.rpg.actor_progression_state",
+          "unlocked_class_ids": [
+            "oracle",
+            "vanguard",
+            "alchemist",
+            "arcanist",
+            "duelist"
+          ],
+          "version": 1
         }
-      },
-      "party_actor_ids": [
-        "hero_01",
-        "hero_02",
-        "hero_03",
-        "hero_04",
-        "hero_05",
-        "hero_06"
-      ],
-      "party_active_actor_ids": [
-        "hero_01",
-        "hero_02",
-        "hero_03",
-        "hero_04",
-        "hero_05",
-        "hero_06"
-      ],
-      "party_placements": {
-        "hero_01": "slot_1",
-        "hero_02": "slot_2",
-        "hero_03": "slot_3",
-        "hero_04": "slot_4",
-        "hero_05": "slot_5",
-        "hero_06": "slot_6"
-      },
-      "currencies": {
-        "gold": 3500.0,
-        "renown": 0.0
       },
       "actor_snapshots": {
         "hero_01": {
-          "schema": "asteria.rpg.actor_snapshot",
-          "version": 2,
-          "actor_id": "hero_01",
-          "stats": {
-            "schema": "asteria.stat_block",
-            "version": 1,
-            "values": {
-              "defense": 47.0,
-              "magic": 35.0,
-              "power": 62.0,
-              "speed": 44.0
-            }
+          "ability_state": {
+            "active_passives": [
+              "passive_01"
+            ],
+            "learned_abilities": [
+              "strike",
+              "fire_arc",
+              "heal",
+              "meteor",
+              "guard",
+              "armor_break"
+            ],
+            "schema": "asteria.rpg.actor_ability_state",
+            "selected_evolutions": {},
+            "version": 1
           },
+          "actor_id": "hero_01",
           "resources": {
             "schema": "asteria.resource_pool",
-            "version": 1,
             "values": {
               "focus": {
                 "current": 3.0,
@@ -491,52 +192,52 @@
                 "maximum": 1595.0,
                 "minimum": 0.0
               }
-            }
+            },
+            "version": 1
+          },
+          "schema": "asteria.rpg.actor_snapshot",
+          "stats": {
+            "schema": "asteria.stat_block",
+            "values": {
+              "defense": 47.0,
+              "magic": 35.0,
+              "power": 62.0,
+              "speed": 44.0
+            },
+            "version": 1
           },
           "tags": {
             "schema": "asteria.tag_set",
-            "version": 1,
             "values": [
               "actor.playable",
               "job.vanguard",
               "job.warden",
               "roster.01"
-            ]
+            ],
+            "version": 1
           },
-          "ability_state": {
-            "schema": "asteria.rpg.actor_ability_state",
-            "version": 1,
-            "learned_abilities": [
-              "strike",
-              "fire_arc",
-              "heal",
-              "meteor",
-              "guard",
-              "armor_break"
-            ],
-            "active_passives": [
-              "passive_01"
-            ],
-            "selected_evolutions": {}
-          }
+          "version": 2
         },
         "hero_02": {
-          "schema": "asteria.rpg.actor_snapshot",
-          "version": 2,
-          "actor_id": "hero_02",
-          "stats": {
-            "schema": "asteria.stat_block",
-            "version": 1,
-            "values": {
-              "defense": 51.0,
-              "magic": 40.0,
-              "power": 69.0,
-              "speed": 44.0
-            }
+          "ability_state": {
+            "active_passives": [
+              "passive_02"
+            ],
+            "learned_abilities": [
+              "strike",
+              "ice_lance",
+              "heal",
+              "revive",
+              "party_barrier",
+              "guard"
+            ],
+            "schema": "asteria.rpg.actor_ability_state",
+            "selected_evolutions": {},
+            "version": 1
           },
+          "actor_id": "hero_02",
           "resources": {
             "schema": "asteria.resource_pool",
-            "version": 1,
             "values": {
               "focus": {
                 "current": 3.0,
@@ -553,52 +254,52 @@
                 "maximum": 1685.0,
                 "minimum": 0.0
               }
-            }
+            },
+            "version": 1
+          },
+          "schema": "asteria.rpg.actor_snapshot",
+          "stats": {
+            "schema": "asteria.stat_block",
+            "values": {
+              "defense": 51.0,
+              "magic": 40.0,
+              "power": 69.0,
+              "speed": 44.0
+            },
+            "version": 1
           },
           "tags": {
             "schema": "asteria.tag_set",
-            "version": 1,
             "values": [
               "actor.playable",
               "job.arcanist",
               "job.ranger",
               "roster.02"
-            ]
+            ],
+            "version": 1
           },
-          "ability_state": {
-            "schema": "asteria.rpg.actor_ability_state",
-            "version": 1,
-            "learned_abilities": [
-              "strike",
-              "ice_lance",
-              "heal",
-              "revive",
-              "party_barrier",
-              "guard"
-            ],
-            "active_passives": [
-              "passive_02"
-            ],
-            "selected_evolutions": {}
-          }
+          "version": 2
         },
         "hero_03": {
-          "schema": "asteria.rpg.actor_snapshot",
-          "version": 2,
-          "actor_id": "hero_03",
-          "stats": {
-            "schema": "asteria.stat_block",
-            "version": 1,
-            "values": {
-              "defense": 55.0,
-              "magic": 45.0,
-              "power": 76.0,
-              "speed": 52.0
-            }
+          "ability_state": {
+            "active_passives": [
+              "passive_03"
+            ],
+            "learned_abilities": [
+              "strike",
+              "storm_chain",
+              "double_cut",
+              "haste_song",
+              "heal",
+              "guard"
+            ],
+            "schema": "asteria.rpg.actor_ability_state",
+            "selected_evolutions": {},
+            "version": 1
           },
+          "actor_id": "hero_03",
           "resources": {
             "schema": "asteria.resource_pool",
-            "version": 1,
             "values": {
               "focus": {
                 "current": 3.0,
@@ -615,52 +316,52 @@
                 "maximum": 1775.0,
                 "minimum": 0.0
               }
-            }
+            },
+            "version": 1
+          },
+          "schema": "asteria.rpg.actor_snapshot",
+          "stats": {
+            "schema": "asteria.stat_block",
+            "values": {
+              "defense": 55.0,
+              "magic": 45.0,
+              "power": 76.0,
+              "speed": 52.0
+            },
+            "version": 1
           },
           "tags": {
             "schema": "asteria.tag_set",
-            "version": 1,
             "values": [
               "actor.playable",
               "job.alchemist",
               "job.oracle",
               "roster.03"
-            ]
+            ],
+            "version": 1
           },
+          "version": 2
+        },
+        "hero_04": {
           "ability_state": {
-            "schema": "asteria.rpg.actor_ability_state",
-            "version": 1,
+            "active_passives": [
+              "passive_04"
+            ],
             "learned_abilities": [
               "strike",
-              "storm_chain",
-              "double_cut",
-              "haste_song",
+              "poison_edge",
+              "armor_break",
+              "counter_stance",
               "heal",
               "guard"
             ],
-            "active_passives": [
-              "passive_03"
-            ],
-            "selected_evolutions": {}
-          }
-        },
-        "hero_04": {
-          "schema": "asteria.rpg.actor_snapshot",
-          "version": 2,
-          "actor_id": "hero_04",
-          "stats": {
-            "schema": "asteria.stat_block",
-            "version": 1,
-            "values": {
-              "defense": 59.0,
-              "magic": 50.0,
-              "power": 83.0,
-              "speed": 60.0
-            }
+            "schema": "asteria.rpg.actor_ability_state",
+            "selected_evolutions": {},
+            "version": 1
           },
+          "actor_id": "hero_04",
           "resources": {
             "schema": "asteria.resource_pool",
-            "version": 1,
             "values": {
               "focus": {
                 "current": 3.0,
@@ -677,52 +378,52 @@
                 "maximum": 1865.0,
                 "minimum": 0.0
               }
-            }
+            },
+            "version": 1
+          },
+          "schema": "asteria.rpg.actor_snapshot",
+          "stats": {
+            "schema": "asteria.stat_block",
+            "values": {
+              "defense": 59.0,
+              "magic": 50.0,
+              "power": 83.0,
+              "speed": 60.0
+            },
+            "version": 1
           },
           "tags": {
             "schema": "asteria.tag_set",
-            "version": 1,
             "values": [
               "actor.playable",
               "job.duelist",
               "job.warden",
               "roster.04"
-            ]
+            ],
+            "version": 1
           },
-          "ability_state": {
-            "schema": "asteria.rpg.actor_ability_state",
-            "version": 1,
-            "learned_abilities": [
-              "strike",
-              "poison_edge",
-              "armor_break",
-              "counter_stance",
-              "heal",
-              "guard"
-            ],
-            "active_passives": [
-              "passive_04"
-            ],
-            "selected_evolutions": {}
-          }
+          "version": 2
         },
         "hero_05": {
-          "schema": "asteria.rpg.actor_snapshot",
-          "version": 2,
-          "actor_id": "hero_05",
-          "stats": {
-            "schema": "asteria.stat_block",
-            "version": 1,
-            "values": {
-              "defense": 63.0,
-              "magic": 55.0,
-              "power": 90.0,
-              "speed": 60.0
-            }
+          "ability_state": {
+            "active_passives": [
+              "passive_05"
+            ],
+            "learned_abilities": [
+              "strike",
+              "fire_arc",
+              "summon_wisp",
+              "focus_charge",
+              "burst_release",
+              "heal"
+            ],
+            "schema": "asteria.rpg.actor_ability_state",
+            "selected_evolutions": {},
+            "version": 1
           },
+          "actor_id": "hero_05",
           "resources": {
             "schema": "asteria.resource_pool",
-            "version": 1,
             "values": {
               "focus": {
                 "current": 3.0,
@@ -739,52 +440,52 @@
                 "maximum": 1955.0,
                 "minimum": 0.0
               }
-            }
+            },
+            "version": 1
+          },
+          "schema": "asteria.rpg.actor_snapshot",
+          "stats": {
+            "schema": "asteria.stat_block",
+            "values": {
+              "defense": 63.0,
+              "magic": 55.0,
+              "power": 90.0,
+              "speed": 60.0
+            },
+            "version": 1
           },
           "tags": {
             "schema": "asteria.tag_set",
-            "version": 1,
             "values": [
               "actor.playable",
               "job.mystic",
               "job.ranger",
               "roster.05"
-            ]
+            ],
+            "version": 1
           },
-          "ability_state": {
-            "schema": "asteria.rpg.actor_ability_state",
-            "version": 1,
-            "learned_abilities": [
-              "strike",
-              "fire_arc",
-              "summon_wisp",
-              "focus_charge",
-              "burst_release",
-              "heal"
-            ],
-            "active_passives": [
-              "passive_05"
-            ],
-            "selected_evolutions": {}
-          }
+          "version": 2
         },
         "hero_06": {
-          "schema": "asteria.rpg.actor_snapshot",
-          "version": 2,
-          "actor_id": "hero_06",
-          "stats": {
-            "schema": "asteria.stat_block",
-            "version": 1,
-            "values": {
-              "defense": 59.0,
-              "magic": 35.0,
-              "power": 81.0,
-              "speed": 60.0
-            }
+          "ability_state": {
+            "active_passives": [
+              "passive_06"
+            ],
+            "learned_abilities": [
+              "strike",
+              "double_cut",
+              "dispel",
+              "slow_hex",
+              "heal",
+              "revive"
+            ],
+            "schema": "asteria.rpg.actor_ability_state",
+            "selected_evolutions": {},
+            "version": 1
           },
+          "actor_id": "hero_06",
           "resources": {
             "schema": "asteria.resource_pool",
-            "version": 1,
             "values": {
               "focus": {
                 "current": 3.0,
@@ -801,43 +502,383 @@
                 "maximum": 2005.0,
                 "minimum": 0.0
               }
-            }
+            },
+            "version": 1
+          },
+          "schema": "asteria.rpg.actor_snapshot",
+          "stats": {
+            "schema": "asteria.stat_block",
+            "values": {
+              "defense": 59.0,
+              "magic": 35.0,
+              "power": 81.0,
+              "speed": 60.0
+            },
+            "version": 1
           },
           "tags": {
             "schema": "asteria.tag_set",
-            "version": 1,
             "values": [
               "actor.playable",
               "job.oracle",
               "job.vanguard",
               "roster.06"
+            ],
+            "version": 1
+          },
+          "version": 2
+        }
+      },
+      "currencies": {
+        "gold": 3500.0,
+        "renown": 0.0
+      },
+      "inventory": {
+        "counts": {
+          "alchemy_salt": 1,
+          "ancient_thread": 2,
+          "boss_emblem": 3,
+          "ether_leaf": 4,
+          "fire_dust": 5,
+          "focus_stone": 1,
+          "guardian_scale": 2,
+          "healing_herb": 3,
+          "ice_crystal": 4,
+          "iron_ore": 5
+        },
+        "schema": "asteria.rpg.inventory",
+        "version": 1
+      },
+      "loadouts": {
+        "hero_01": {
+          "equipped": {
+            "accessory": [
+              {
+                "attachments": {},
+                "equipment_id": "accessory_01",
+                "growth": null,
+                "instance_id": "accessory_01:actor:1:0",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              },
+              {
+                "attachments": {},
+                "equipment_id": "accessory_02",
+                "growth": null,
+                "instance_id": "accessory_02:actor:1:1",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              }
+            ],
+            "weapon": [
+              {
+                "attachments": {
+                  "rune": "rune_01"
+                },
+                "equipment_id": "weapon_01",
+                "growth": null,
+                "instance_id": "weapon_01:actor:1",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              }
             ]
           },
-          "ability_state": {
-            "schema": "asteria.rpg.actor_ability_state",
-            "version": 1,
-            "learned_abilities": [
-              "strike",
-              "double_cut",
-              "dispel",
-              "slow_hex",
-              "heal",
-              "revive"
+          "schema": "asteria.rpg.equipment_loadout",
+          "slots": [
+            {
+              "accepted_tags": [],
+              "capacity": 2,
+              "slot_id": "accessory"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "weapon"
+            }
+          ],
+          "version": 1
+        },
+        "hero_02": {
+          "equipped": {
+            "accessory": [
+              {
+                "attachments": {},
+                "equipment_id": "accessory_02",
+                "growth": null,
+                "instance_id": "accessory_02:actor:2:0",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              },
+              {
+                "attachments": {},
+                "equipment_id": "accessory_03",
+                "growth": null,
+                "instance_id": "accessory_03:actor:2:1",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              }
             ],
-            "active_passives": [
-              "passive_06"
+            "weapon": [
+              {
+                "attachments": {
+                  "rune": "rune_02"
+                },
+                "equipment_id": "weapon_02",
+                "growth": null,
+                "instance_id": "weapon_02:actor:2",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              }
+            ]
+          },
+          "schema": "asteria.rpg.equipment_loadout",
+          "slots": [
+            {
+              "accepted_tags": [],
+              "capacity": 2,
+              "slot_id": "accessory"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "weapon"
+            }
+          ],
+          "version": 1
+        },
+        "hero_03": {
+          "equipped": {
+            "accessory": [
+              {
+                "attachments": {},
+                "equipment_id": "accessory_03",
+                "growth": null,
+                "instance_id": "accessory_03:actor:3:0",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              },
+              {
+                "attachments": {},
+                "equipment_id": "accessory_04",
+                "growth": null,
+                "instance_id": "accessory_04:actor:3:1",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              }
             ],
-            "selected_evolutions": {}
-          }
+            "weapon": [
+              {
+                "attachments": {
+                  "rune": "rune_03"
+                },
+                "equipment_id": "weapon_03",
+                "growth": null,
+                "instance_id": "weapon_03:actor:3",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              }
+            ]
+          },
+          "schema": "asteria.rpg.equipment_loadout",
+          "slots": [
+            {
+              "accepted_tags": [],
+              "capacity": 2,
+              "slot_id": "accessory"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "weapon"
+            }
+          ],
+          "version": 1
+        },
+        "hero_04": {
+          "equipped": {
+            "accessory": [
+              {
+                "attachments": {},
+                "equipment_id": "accessory_04",
+                "growth": null,
+                "instance_id": "accessory_04:actor:4:0",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              },
+              {
+                "attachments": {},
+                "equipment_id": "accessory_05",
+                "growth": null,
+                "instance_id": "accessory_05:actor:4:1",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              }
+            ],
+            "weapon": [
+              {
+                "attachments": {
+                  "rune": "rune_04"
+                },
+                "equipment_id": "weapon_04",
+                "growth": null,
+                "instance_id": "weapon_04:actor:4",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              }
+            ]
+          },
+          "schema": "asteria.rpg.equipment_loadout",
+          "slots": [
+            {
+              "accepted_tags": [],
+              "capacity": 2,
+              "slot_id": "accessory"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "weapon"
+            }
+          ],
+          "version": 1
+        },
+        "hero_05": {
+          "equipped": {
+            "accessory": [
+              {
+                "attachments": {},
+                "equipment_id": "accessory_05",
+                "growth": null,
+                "instance_id": "accessory_05:actor:5:0",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              },
+              {
+                "attachments": {},
+                "equipment_id": "accessory_06",
+                "growth": null,
+                "instance_id": "accessory_06:actor:5:1",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              }
+            ],
+            "weapon": [
+              {
+                "attachments": {
+                  "rune": "rune_05"
+                },
+                "equipment_id": "weapon_05",
+                "growth": null,
+                "instance_id": "weapon_05:actor:5",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              }
+            ]
+          },
+          "schema": "asteria.rpg.equipment_loadout",
+          "slots": [
+            {
+              "accepted_tags": [],
+              "capacity": 2,
+              "slot_id": "accessory"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "weapon"
+            }
+          ],
+          "version": 1
+        },
+        "hero_06": {
+          "equipped": {
+            "accessory": [
+              {
+                "attachments": {},
+                "equipment_id": "accessory_06",
+                "growth": null,
+                "instance_id": "accessory_06:actor:6:0",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              },
+              {
+                "attachments": {},
+                "equipment_id": "accessory_07",
+                "growth": null,
+                "instance_id": "accessory_07:actor:6:1",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              }
+            ],
+            "weapon": [
+              {
+                "attachments": {
+                  "rune": "rune_06"
+                },
+                "equipment_id": "weapon_06",
+                "growth": null,
+                "instance_id": "weapon_06:actor:6",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              }
+            ]
+          },
+          "schema": "asteria.rpg.equipment_loadout",
+          "slots": [
+            {
+              "accepted_tags": [],
+              "capacity": 2,
+              "slot_id": "accessory"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "weapon"
+            }
+          ],
+          "version": 1
         }
+      },
+      "party_active_actor_ids": [
+        "hero_01",
+        "hero_02",
+        "hero_03",
+        "hero_04",
+        "hero_05",
+        "hero_06"
+      ],
+      "party_actor_ids": [
+        "hero_01",
+        "hero_02",
+        "hero_03",
+        "hero_04",
+        "hero_05",
+        "hero_06"
+      ],
+      "party_placements": {
+        "hero_01": "slot_1",
+        "hero_02": "slot_2",
+        "hero_03": "slot_3",
+        "hero_04": "slot_4",
+        "hero_05": "slot_5",
+        "hero_06": "slot_6"
+      },
+      "progression": {
+        "schema": "asteria.rpg.progression_runtime",
+        "totals": {
+          "alchemist_mastery": 201.0,
+          "arcanist_mastery": 202.0,
+          "duelist_mastery": 213.0,
+          "mystic_mastery": 201.0,
+          "oracle_mastery": 200.0,
+          "ranger_mastery": 209.0,
+          "vanguard_mastery": 205.0,
+          "warden_mastery": 211.0
+        },
+        "version": 1
       },
       "progression_allocations": {
         "hero_01": {
-          "schema": "asteria.rpg.progression_allocation_runtime",
-          "version": 1,
-          "balances": {
-            "ap": 23.0
-          },
           "allocations": {
             "alchemist_tree": {
               "alchemist_node_1": 1
@@ -849,14 +890,14 @@
             "ranger_tree": {},
             "vanguard_tree": {},
             "warden_tree": {}
-          }
-        },
-        "hero_02": {
-          "schema": "asteria.rpg.progression_allocation_runtime",
-          "version": 1,
+          },
           "balances": {
             "ap": 23.0
           },
+          "schema": "asteria.rpg.progression_allocation_runtime",
+          "version": 1
+        },
+        "hero_02": {
           "allocations": {
             "alchemist_tree": {},
             "arcanist_tree": {
@@ -868,14 +909,14 @@
             "ranger_tree": {},
             "vanguard_tree": {},
             "warden_tree": {}
-          }
-        },
-        "hero_03": {
-          "schema": "asteria.rpg.progression_allocation_runtime",
-          "version": 1,
+          },
           "balances": {
             "ap": 23.0
           },
+          "schema": "asteria.rpg.progression_allocation_runtime",
+          "version": 1
+        },
+        "hero_03": {
           "allocations": {
             "alchemist_tree": {},
             "arcanist_tree": {},
@@ -887,14 +928,14 @@
             "ranger_tree": {},
             "vanguard_tree": {},
             "warden_tree": {}
-          }
-        },
-        "hero_04": {
-          "schema": "asteria.rpg.progression_allocation_runtime",
-          "version": 1,
+          },
           "balances": {
             "ap": 23.0
           },
+          "schema": "asteria.rpg.progression_allocation_runtime",
+          "version": 1
+        },
+        "hero_04": {
           "allocations": {
             "alchemist_tree": {},
             "arcanist_tree": {},
@@ -906,14 +947,14 @@
             "ranger_tree": {},
             "vanguard_tree": {},
             "warden_tree": {}
-          }
-        },
-        "hero_05": {
-          "schema": "asteria.rpg.progression_allocation_runtime",
-          "version": 1,
+          },
           "balances": {
             "ap": 23.0
           },
+          "schema": "asteria.rpg.progression_allocation_runtime",
+          "version": 1
+        },
+        "hero_05": {
           "allocations": {
             "alchemist_tree": {},
             "arcanist_tree": {},
@@ -925,14 +966,14 @@
             "ranger_tree": {},
             "vanguard_tree": {},
             "warden_tree": {}
-          }
-        },
-        "hero_06": {
-          "schema": "asteria.rpg.progression_allocation_runtime",
-          "version": 1,
+          },
           "balances": {
             "ap": 23.0
           },
+          "schema": "asteria.rpg.progression_allocation_runtime",
+          "version": 1
+        },
+        "hero_06": {
           "allocations": {
             "alchemist_tree": {},
             "arcanist_tree": {},
@@ -944,150 +985,19 @@
             },
             "vanguard_tree": {},
             "warden_tree": {}
-          }
+          },
+          "balances": {
+            "ap": 23.0
+          },
+          "schema": "asteria.rpg.progression_allocation_runtime",
+          "version": 1
         }
       },
-      "actor_progression": {
-        "hero_01": {
-          "schema": "asteria.rpg.actor_progression_state",
-          "version": 1,
-          "level": 12,
-          "experience": 11500.0,
-          "points": {
-            "ability_points": 4.0,
-            "ap": 22.0
-          },
-          "unlocked_class_ids": [
-            "vanguard",
-            "warden",
-            "alchemist",
-            "arcanist",
-            "duelist"
-          ],
-          "active_class_ids": [
-            "vanguard",
-            "warden"
-          ]
-        },
-        "hero_02": {
-          "schema": "asteria.rpg.actor_progression_state",
-          "version": 1,
-          "level": 13,
-          "experience": 11875.0,
-          "points": {
-            "ability_points": 4.0,
-            "ap": 22.0
-          },
-          "unlocked_class_ids": [
-            "arcanist",
-            "ranger",
-            "alchemist",
-            "duelist"
-          ],
-          "active_class_ids": [
-            "arcanist",
-            "ranger"
-          ]
-        },
-        "hero_03": {
-          "schema": "asteria.rpg.actor_progression_state",
-          "version": 1,
-          "level": 14,
-          "experience": 12250.0,
-          "points": {
-            "ability_points": 4.0,
-            "ap": 22.0
-          },
-          "unlocked_class_ids": [
-            "alchemist",
-            "oracle",
-            "arcanist",
-            "duelist"
-          ],
-          "active_class_ids": [
-            "alchemist",
-            "oracle"
-          ]
-        },
-        "hero_04": {
-          "schema": "asteria.rpg.actor_progression_state",
-          "version": 1,
-          "level": 15,
-          "experience": 12625.0,
-          "points": {
-            "ability_points": 4.0,
-            "ap": 22.0
-          },
-          "unlocked_class_ids": [
-            "warden",
-            "duelist",
-            "alchemist",
-            "arcanist"
-          ],
-          "active_class_ids": [
-            "warden",
-            "duelist"
-          ]
-        },
-        "hero_05": {
-          "schema": "asteria.rpg.actor_progression_state",
-          "version": 1,
-          "level": 12,
-          "experience": 13000.0,
-          "points": {
-            "ability_points": 4.0,
-            "ap": 22.0
-          },
-          "unlocked_class_ids": [
-            "ranger",
-            "mystic",
-            "alchemist",
-            "arcanist",
-            "duelist"
-          ],
-          "active_class_ids": [
-            "ranger",
-            "mystic"
-          ]
-        },
-        "hero_06": {
-          "schema": "asteria.rpg.actor_progression_state",
-          "version": 1,
-          "level": 13,
-          "experience": 13375.0,
-          "points": {
-            "ability_points": 4.0,
-            "ap": 22.0
-          },
-          "unlocked_class_ids": [
-            "oracle",
-            "vanguard",
-            "alchemist",
-            "arcanist",
-            "duelist"
-          ],
-          "active_class_ids": [
-            "oracle",
-            "vanguard"
-          ]
-        }
-      }
+      "schema": "asteria.rpg.runtime_state",
+      "version": 5
     },
-    "event_context": {
-      "schema": "asteria.event_context",
-      "version": 1,
-      "switches": {
-        "boss_gate_unlocked": false
-      },
-      "variables": {
-        "chapter": 1,
-        "reference_profile": "early"
-      },
-      "locals": {
-        "astral_tyrant": {
-          "challenged": false
-        }
-      }
-    }
+    "scene_id": "2175c138-7eed-4ab6-91c7-0b912611c1a0",
+    "schema": "asteria.game_runtime_save",
+    "version": 1
   }
 }

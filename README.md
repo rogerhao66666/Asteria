@@ -1,51 +1,24 @@
-# Asteria v0.159.0 — Editor + Complex Reference RPG
+# Asteria v0.158.0a158 — Editor + RPG Runtime Milestone
 
-This repository is the current working copy of the v0.159.0 Complex Reference
-RPG acceptance baseline. Keep the checkout at:
+Current canonical state: **Batch 158 FROZEN / FINAL CLOSURE PASS**. See
+[`docs/BATCH158_EDITOR_RPG_RUNTIME_FINAL_CLOSURE_AUDIT.md`](docs/BATCH158_EDITOR_RPG_RUNTIME_FINAL_CLOSURE_AUDIT.md)
+for the verified architecture, schema, editor, runtime, save-state, and full-play
+coverage.
 
-`/Users/roger/Documents/Vscode/Asteria`
+## Historical Batch 98 state
 
-The Editor owns project authoring (`Project + Game Start Definition`). Player
-progression and Player Save belong to the Runtime only.
+Current cumulative base: `Asteria_v0.94.0a94_FULL_CANONICAL_REVIEW_DOCS_CONSISTENCY.zip`. Apply Batch 95, Batch 96, Batch 97, and then Batch 98 incremental packages for the current development tree. Phase 7 RPG Toolkit remains frozen at v0.73.0a73; Phase 7B Battle Core remains **FROZEN at Batch 93 / v0.93.0a93**.
 
-## Start on macOS
+Battle Presentation status:
 
-```bash
-cd "/Users/roger/Documents/Vscode/Asteria"
-source .venv/bin/activate
-python -m asteria.editor
-```
+- Batch 94: backend-neutral battle presentation scene/bindings/coordinator.
+- Batch 95: combatant Idle/Attack/Hit/KO animation runtime and existing `TextureDraw` integration.
+- Batch 96: deterministic resolved combat-feedback state, data-driven interaction/threshold labels, VFX cue queue and audio cue queue.
+- Batch 97: presentation-only camera/screen hit feedback plus canonical target-indicator state.
+- Batch 98: read-only HP/MP/arbitrary gauge HUD view-state plus project-mapped status icons.
 
-In the Editor choose **File → Open Project…** and open:
+Batch 98 does not recompute or mutate battle resources/states. HUD values mirror canonical `BattleResourceRuntime` and active gameplay states through project-owned presentation profiles. Final bar/icon/text rendering, turn/timeline UI and battle result/reward presentation remain future work.
 
-`reference_projects/complex_reference_rpg/project.asteria.json`
+Current regression result: **554 passed, 4 skipped, 0 failed**. The four skips are optional PySide6 editor UI tests unavailable in this environment.
 
-Then choose **Run Project**. The normal flow is **New Game → play the field →
-open the runtime Character menu with C → interact with the boss → complete the
-battle → save in Runtime with F5 → restart → Load Game**. Use the arrow keys to
-move, E/Enter/Space to interact or confirm, and Esc to quit the Runtime. The
-Character menu separates Character, Skills, and Equipment tabs; mouse clicks
-and arrow-key navigation are both supported.
-
-## Install and verify
-
-If the virtual environment does not exist:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -e ".[editor,pygame,dev]"
-```
-
-The current automated baseline is **1151 passed, 0 failed**. Compile checks
-also pass:
-
-```bash
-QT_QPA_PLATFORM=offscreen python -m pytest -q
-python -m compileall -q src tests
-```
-
-For the complete manual checklist and known managed-session limitation, see
-[`REAL_MACHINE_ACCEPTANCE_REPORT.md`](REAL_MACHINE_ACCEPTANCE_REPORT.md) and
-[`START_HERE_MAC.md`](START_HERE_MAC.md). Historical batch documents remain
-provenance and are not assembly instructions for this checkout.
+See [current specification](docs/CANONICAL_SPEC.md), [architecture](docs/ARCHITECTURE.md), [handoff](PROJECT_HANDOFF.md), [next-phase plan](docs/NEXT_PHASE_PLAN.md), and [Batch 98 closure](docs/BATCH98_CLOSURE_AUDIT.md). Historical batch/closure documents remain provenance only and do not reopen frozen ownership boundaries.

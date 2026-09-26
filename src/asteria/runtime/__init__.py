@@ -1,4 +1,3 @@
-from .actor_link import ActorLinkComponent
 from .animation import AnimatorState
 from .animation_binding import Animator2DBinding
 from .animation_library import AnimationClipSet

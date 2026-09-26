@@ -52,22 +52,9 @@ class PlayableTestRuntime:
         self._defeat=False
         self._loaded={}
         self._ui_mode="title"
-        self._title_selection=0
         self._menu_actor_index=0
-        self._build_selection=0
-        self._build_tab=0
-        self._picker=None
-        self._picker_selection=0
         self._boost_level=0
         self._victory_summary=[]
-        self._title_buttons=[]
-        self._build_action_rects=[]
-        self._build_node_rects={}
-        self._build_actor_buttons=[]
-        self._build_close_rect=None
-        self._build_tab_rects=[]
-        self._picker_rects=[]
-        self._battle_skill_rects=[]
 
     def path(self, rel):
         return self.resource_root/str(rel)
@@ -80,9 +67,7 @@ class PlayableTestRuntime:
 
     def open(self):
         self.pg.init()
-        self.screen=self.pg.display.set_mode(
-            (self.width,self.height), self.pg.RESIZABLE
-        )
+        self.screen=self.pg.display.set_mode((self.width,self.height))
         self.pg.display.set_caption(self.manifest.get("title","Asteria Playable Test"))
         self.clock=self.pg.time.Clock()
         return self
@@ -107,32 +92,6 @@ class PlayableTestRuntime:
         s.fill(fill)
         self.screen.blit(s,(rect[0],rect[1]))
         self.pg.draw.rect(self.screen,border,rect,2,border_radius=6)
-
-    @staticmethod
-    def _contains(rect, position):
-        x,y,w,h=rect; px,py=position
-        return x<=px<x+w and y<=py<y+h
-
-    def button(self, rect, label, *, selected=False, enabled=True, size=20):
-        fill=(55,76,112) if selected else (25,32,48)
-        border=(255,215,112) if selected else (105,122,154)
-        color=(248,249,252) if enabled else (120,128,145)
-        self.pg.draw.rect(self.screen,fill,rect,border_radius=6)
-        self.pg.draw.rect(self.screen,border,rect,2,border_radius=6)
-        self.text(label,rect[0]+14,rect[1]+(rect[3]-size)//2,size=size,color=color)
-        return rect
-
-    def arrow_button(self, rect, direction, *, selected=False):
-        self.button(rect,"",selected=selected)
-        x,y,w,h=rect; cx=x+w//2; cy=y+h//2; d=min(w,h)//5
-        points={
-            "left":((cx+d,cy-d),(cx-d,cy),(cx+d,cy+d)),
-            "right":((cx-d,cy-d),(cx+d,cy),(cx-d,cy+d)),
-            "up":((cx-d,cy+d),(cx,cy-d),(cx+d,cy+d)),
-            "down":((cx-d,cy-d),(cx,cy+d),(cx+d,cy-d)),
-        }[direction]
-        self.pg.draw.polygon(self.screen,(245,248,255),points)
-        return rect
 
     def bar(self, x,y,w,h,current,maximum, *, fill=(90,203,130), bg=(48,53,66)):
         maximum=max(float(maximum),1.0)
@@ -182,10 +141,8 @@ class PlayableTestRuntime:
 
         self.panel((18,self.height-92,self.width-36,72))
         self.text("Field Test",34,self.height-82,size=24,color=(255,220,124))
-        self.text("Move",34,self.height-52,size=19)
-        for i,direction in enumerate(("left","up","down","right")):
-            self.arrow_button((86+i*28,self.height-58,24,24),direction)
-        self.text("C: Menu   E: Interact   F5: Save   Esc: Quit",210,self.height-52,size=19)
+        self.text("Move: WASD / Arrows   C: Character/Build   E: Interact   F5: Save   Esc: Quit",
+                  34,self.height-52,size=19)
         candidate=self._interaction_candidate()
         if candidate is not None:
             self.text("E  Interact — Astral Tyrant",self.width/2,55,size=26,
@@ -195,8 +152,8 @@ class PlayableTestRuntime:
 
     def _field_input(self, events, dt):
         keys=self.pg.key.get_pressed()
-        dx=(1 if keys[self.pg.K_RIGHT] else 0)-(1 if keys[self.pg.K_LEFT] else 0)
-        dy=(1 if keys[self.pg.K_DOWN] else 0)-(1 if keys[self.pg.K_UP] else 0)
+        dx=(1 if keys[self.pg.K_d] or keys[self.pg.K_RIGHT] else 0)-(1 if keys[self.pg.K_a] or keys[self.pg.K_LEFT] else 0)
+        dy=(1 if keys[self.pg.K_s] or keys[self.pg.K_DOWN] else 0)-(1 if keys[self.pg.K_w] or keys[self.pg.K_UP] else 0)
         moving=bool(dx or dy)
         if moving:
             mag=(dx*dx+dy*dy)**0.5
@@ -233,19 +190,11 @@ class PlayableTestRuntime:
         shade=self.pg.Surface((self.width,self.height),self.pg.SRCALPHA); shade.fill((5,8,16,150)); self.screen.blit(shade,(0,0))
         self.text("ASTERIA",self.width/2,120,size=64,color=(255,220,120),center=True)
         self.text("Complex Reference RPG",self.width/2,180,size=36,center=True)
-        menu_w=min(440,self.width-48); menu_x=(self.width-menu_w)//2
-        self.panel((menu_x,245,menu_w,190))
-        self.arrow_button((menu_x+92,258,28,28),"up")
-        self.arrow_button((menu_x+124,258,28,28),"down")
-        self.text("Choose, then Enter or click",menu_x+166,264,size=18,color=(180,205,235))
-        self._title_buttons=[
-            (menu_x+24,295,menu_w-48,48),
-            (menu_x+24,351,menu_w-48,48),
-        ]
-        self.button(self._title_buttons[0],"New Game",selected=self._title_selection==0,size=24)
+        self.panel((280,250,400,150))
+        self.text("N   New Game",330,282,size=28)
+        self.text("L   Load Player Save",330,330,size=28)
         save_path=self.resource_root/"saves"/"playtest_autosave.asteria-save.json"
-        self.button(self._title_buttons[1],"Load Game",selected=self._title_selection==1,enabled=save_path.exists(),size=24)
-        self.text("Save found" if save_path.exists() else "No player save yet",self.width/2,416,size=17,color=(170,210,240),center=True)
+        self.text("Save found" if save_path.exists() else "No player save yet",330,372,size=18,color=(170,210,240))
 
     def _load_player_save(self):
         path=self.resource_root/"saves"/"playtest_autosave.asteria-save.json"
@@ -265,10 +214,6 @@ class PlayableTestRuntime:
         if not ids:return None
         self._menu_actor_index%=len(ids); return ids[self._menu_actor_index]
 
-    def _actor_name(self, actor_id):
-        actor=self.project.rpg_database.actors.get(actor_id)
-        return getattr(actor,"display_name",None) or str(actor_id).replace("_"," ").title()
-
     def _current_weapon(self, actor_id):
         loadout=self.save.rpg_state.loadouts[actor_id]
         values=loadout.equipped("weapon")
@@ -282,85 +227,40 @@ class PlayableTestRuntime:
         db=self.project.rpg_database; state=self.save.rpg_state.actor_progression[actor_id]
         ability=self.game._ability_state(actor_id); weapon=self._current_weapon(actor_id)
         allocation=self.save.rpg_state.progression_allocations[actor_id]
-        margin=24; panel_w=self.width-margin*2; panel_h=self.height-margin*2
-        self.panel((margin,margin,panel_w,panel_h),fill=(11,15,25,246))
-        self.text("Character Build",margin+20,margin+14,size=30,color=(255,220,120))
-        self.text("Mouse click or arrows + Enter",margin+245,margin+22,size=16,color=(170,210,240))
-        close_w=92
-        self._build_close_rect=(self.width-margin-close_w-14,margin+12,close_w,36)
-        self.button(self._build_close_rect,"Close",size=18)
-
-        actor_y=margin+58; arrow_w=48; actor_w=min(330,panel_w//2-70)
-        actor_x=margin+20
-        self._build_actor_buttons=[
-            (actor_x,actor_y,arrow_w,42),
-            (actor_x+arrow_w+actor_w,actor_y,arrow_w,42),
-        ]
-        self.arrow_button(self._build_actor_buttons[0],"left")
-        self.arrow_button(self._build_actor_buttons[1],"right")
-        self.button((actor_x+arrow_w,actor_y,actor_w,42),self._actor_name(actor_id),selected=True,size=20)
-        self.text(f"Level {state.level}   EXP {int(state.experience)}   AP {int(allocation.balance('ap'))}   Ability Points {int(state.points.get('ability_points',0))}",margin+20,margin+108,size=19,color=(170,220,255))
-
-        tab_y=margin+140; tab_w=(panel_w-40)//3
-        self._build_tab_rects=[]
-        for i,label in enumerate(("Character","Skills","Equipment")):
-            rect=(margin+20+i*tab_w,tab_y,tab_w-6,40); self._build_tab_rects.append(rect)
-            self.button(rect,label,selected=i==self._build_tab,size=19)
-        content_y=tab_y+54; self._build_action_rects=[]; self._build_node_rects={}
-        if self._build_tab==0:
-            primary=state.active_class_ids[0] if state.active_class_ids else None
-            secondary=state.active_class_ids[1] if len(state.active_class_ids)>1 else None
-            rows=[
-                ("Main Class",db.classes[primary].display_name if primary else "None"),
-                ("Secondary Class",db.classes[secondary].display_name if secondary else "None — click to choose"),
-                ("Party / Formation",f"{len(self.save.rpg_state.party_active_actor_ids)} active members — click to rotate"),
-            ]
-            for i,(label,value) in enumerate(rows):
-                rect=(margin+28,content_y+i*62,panel_w-56,50); self._build_action_rects.append(rect)
-                self.button(rect,label,selected=i==self._build_selection,size=19)
-                self.text(value,rect[0]+230,rect[1]+15,size=18,color=(174,202,232))
-        elif self._build_tab==1:
-            cls=state.active_class_ids[-1] if state.active_class_ids else None
-            graph=db.progression_graphs.get(f"{cls}_tree") if cls else None
-            left_w=(panel_w-74)//2
-            self.text("Skill Tree",margin+28,content_y,size=22,color=(255,220,120))
-            if graph:
+        self.panel((24,22,912,496),fill=(11,15,25,242))
+        self.text("Character / Build Acceptance Menu",44,38,size=30,color=(255,220,120))
+        self.text(f"Q/E Actor   C Close     Current: {actor_id}",44,76,size=19)
+        self.text(f"Level {state.level}   EXP {int(state.experience)}   AP {int(allocation.balance('ap'))}   Ability Pts {int(state.points.get('ability_points',0))}",44,106,size=20,color=(170,220,255))
+        classes=" + ".join(state.active_class_ids) or "—"
+        self.text(f"1 Secondary Class: {classes}",44,148,size=20)
+        self.text(f"3 Passives: {', '.join(ability.active_passives[:4]) or '—'}",44,178,size=20)
+        self.text(f"4 Weapon: {weapon.equipment.display_name if weapon else '—'}",44,208,size=20)
+        growth="—" if weapon is None or weapon.growth is None else ", ".join(f"{k}:{v}" for k,v in sorted(weapon.growth.ranks.items())) or "base"
+        self.text(f"5 Weapon Upgrade: {growth}",44,238,size=20)
+        accessories=self.save.rpg_state.loadouts[actor_id].equipped("accessory")
+        self.text(f"6 Accessories: {', '.join(x.equipment.display_name for x in accessories) or '—'}",44,268,size=20)
+        active=self.save.rpg_state.party_active_actor_ids
+        self.text(f"7 Party / Formation: {', '.join(active)}",44,298,size=20)
+        self.text("2 Skill Tree: allocate next available node",44,328,size=20)
+        graph_id=(state.active_class_ids[-1] if state.active_class_ids else next(iter(db.classes)))+"_tree"
+        graph=db.progression_graphs.get(graph_id)
+        if graph is not None:
+            ox,oy=485,150
+            self.text(graph.display_name,ox,116,size=22,color=(255,220,120))
+            if graph.node_positions:
                 ranks=allocation.allocations.get(graph.graph_id,{})
-                for i,node in enumerate(graph.nodes):
-                    rect=(margin+28,content_y+34+i*43,left_w,36); self._build_node_rects[node.node_id]=rect
-                    learned=bool(ranks.get(node.node_id,0))
-                    prefix="Learned" if learned else "Learn"
-                    self.button(rect,f"{prefix}: {node.display_name}",selected=learned,size=16)
-            px=margin+44+left_w
-            self.text("Passives (choose up to 4)",px,content_y,size=22,color=(255,220,120))
-            passive_ids=sorted(db.passives)
-            for i,pid in enumerate(passive_ids):
-                col=i//8; row=i%8; rect=(px+col*(left_w//2+4),content_y+34+row*32,left_w//2,27)
-                self._build_action_rects.append(rect)
-                active=pid in ability.active_passives
-                self.button(rect,("Equipped: " if active else "Equip: ")+db.passives[pid].display_name,selected=active,size=14)
-        else:
-            loadout=self.save.rpg_state.loadouts[actor_id]
-            accessories=loadout.equipped("accessory")
-            armor=loadout.equipped("armor")
-            rows=[
-                ("Weapon",weapon.equipment.display_name if weapon else "None"),
-                ("Armor",armor[0].equipment.display_name if armor else "None"),
-                ("Accessory 1",accessories[0].equipment.display_name if len(accessories)>0 else "None"),
-                ("Accessory 2",accessories[1].equipment.display_name if len(accessories)>1 else "None"),
-            ]
-            for i,(label,value) in enumerate(rows):
-                rect=(margin+28,content_y+i*54,int(panel_w*.52),44); self._build_action_rects.append(rect)
-                self.button(rect,label,selected=i==self._build_selection,size=18)
-                self.text(value,rect[0]+190,rect[1]+13,size=16,color=(174,202,232))
-            gx=margin+int(panel_w*.57); self.text("Weapon Upgrades",gx,content_y,size=22,color=(255,220,120))
-            if weapon and weapon.growth:
-                for i,node in enumerate(weapon.growth.definition.nodes):
-                    rect=(gx,content_y+36+i*48,int(panel_w*.38),38); self._build_node_rects[node.node_id]=rect
-                    rank=weapon.growth.ranks.get(node.node_id,0)
-                    self.button(rect,("Upgraded: " if rank else "Upgrade: ")+node.display_name,selected=bool(rank),size=16)
-            else:self.text("Equip a weapon to view upgrades",gx,content_y+42,size=17,color=(174,202,232))
-        if self._picker:self._draw_picker()
+                for node in graph.nodes:
+                    x,y=graph.node_positions.get(node.node_id,(0,0)); x=ox+x*0.55; y=oy+y*0.65
+                    for req in node.prerequisites:
+                        px,py=graph.node_positions.get(req.node_id,(0,0)); px=ox+px*0.55; py=oy+py*0.65
+                        self.pg.draw.line(self.screen,(100,120,155),(int(px+38),int(py+12)),(int(x+38),int(y+12)),2)
+                    rect=(int(x),int(y),78,25); self.pg.draw.rect(self.screen,(45,70,60) if ranks.get(node.node_id,0) else (40,46,62),rect,border_radius=4); self.pg.draw.rect(self.screen,(190,200,225),rect,1,border_radius=4)
+                    self.text(node.display_name.replace(graph.display_name.split()[0],"")[:10],x+4,y+5,size=14)
+            else:
+                ranks=allocation.allocations.get(graph.graph_id,{})
+                for i,node in enumerate(graph.nodes[:6]):
+                    self.text(("✓ " if ranks.get(node.node_id,0) else "○ ")+node.display_name,ox,155+i*38,size=18)
+        self.text("All changes are Runtime State and are verified again after Save/Load.",44,480,size=18,color=(170,210,240))
 
     def _cycle_secondary_class(self, actor_id):
         state=self.save.rpg_state.actor_progression[actor_id]; current=state.active_class_ids[-1] if len(state.active_class_ids)>1 else None
@@ -378,21 +278,6 @@ class PlayableTestRuntime:
             if preview.allowed:
                 allocation.allocate(graph_id,node.node_id,1); self.message=f"Learned {node.display_name}"; self.message_until=self.pg.time.get_ticks()+1400; return
         self.message="No affordable/unlocked node"; self.message_until=self.pg.time.get_ticks()+1400
-
-    def _allocate_tree_node(self, actor_id, node_id):
-        state=self.save.rpg_state.actor_progression[actor_id]
-        cls=state.active_class_ids[-1] if state.active_class_ids else None
-        if not cls:return
-        graph_id=f"{cls}_tree"; allocation=self.save.rpg_state.progression_allocations[actor_id]
-        graph=self.project.rpg_database.progression_graphs[graph_id]
-        node=graph.node(node_id)
-        preview=allocation.preview_allocate(graph_id,node_id,1)
-        if preview.allowed:
-            allocation.allocate(graph_id,node_id,1)
-            self.message=f"Learned {node.display_name}"
-        else:
-            self.message="This skill is already learned, locked, or needs more AP"
-        self.message_until=self.pg.time.get_ticks()+1600
 
     def _cycle_passive(self, actor_id):
         ids=sorted(self.project.rpg_database.passives); state=self.game._ability_state(actor_id); current=list(state.active_passives)
@@ -426,100 +311,20 @@ class PlayableTestRuntime:
         rotated=roster[1:]+roster[:1]; chosen=rotated[:min(6,len(rotated))]
         self.game.set_active_party(chosen,{actor_id:f"slot_{i+1}" for i,actor_id in enumerate(chosen)})
 
-    def _open_picker(self, kind, actor_id, slot_index=0):
-        db=self.project.rpg_database
-        if kind=="secondary":
-            state=self.save.rpg_state.actor_progression[actor_id]
-            options=[(None,"No Secondary Class")]+[(cid,db.classes[cid].display_name) for cid in state.unlocked_class_ids if cid!=state.active_class_ids[0]]
-        else:
-            options=[(None,f"Unequip {kind.title()}")]+[(eid,item.display_name) for eid,item in sorted(db.equipment.items()) if item.slot==kind]
-        self._picker={"kind":kind,"actor":actor_id,"slot_index":slot_index,"options":options}
-        self._picker_selection=0
-
-    def _draw_picker(self):
-        options=self._picker["options"]; cols=2 if len(options)>8 else 1; rows=(len(options)+cols-1)//cols
-        w=min(760,self.width-80); h=min(self.height-80,110+rows*42); x=(self.width-w)//2; y=(self.height-h)//2
-        self.panel((x,y,w,h),fill=(10,14,24,252),border=(255,215,112))
-        self.text("Choose an option",x+22,y+18,size=25,color=(255,220,120))
-        self._picker_rects=[]; cell_w=(w-52)//cols
-        for i,(_,label) in enumerate(options):
-            col=i//rows; row=i%rows; rect=(x+20+col*(cell_w+10),y+58+row*42,cell_w,34)
-            self._picker_rects.append(rect); self.button(rect,label,selected=i==self._picker_selection,size=16)
-
-    def _apply_picker(self):
-        data=self._picker; value,_=data["options"][self._picker_selection]; actor=data["actor"]; kind=data["kind"]
-        if kind=="secondary":
-            state=self.save.rpg_state.actor_progression[actor]
-            if value is None:self.game.set_active_classes(actor,state.active_class_ids[:1])
-            else:self.game.set_secondary_class(actor,value)
-        else:
-            loadout=self.save.rpg_state.loadouts[actor]; index=data["slot_index"]
-            equipped=loadout.equipped(kind)
-            if index<len(equipped):loadout.unequip(kind,index)
-            if value is not None:self.game.equip_definition(actor,value,slot_id=kind,replace=False)
-        self._picker=None
-
-    def _toggle_passive(self, actor, passive_id):
-        values=list(self.game._ability_state(actor).active_passives)
-        if passive_id in values:values.remove(passive_id)
-        elif len(values)<4:values.append(passive_id)
-        else:
-            self.message="Four passives are already equipped"; self.message_until=self.pg.time.get_ticks()+1600; return
-        self.game.set_passives(actor,values,capacity=4)
-
-    def _activate_build_action(self, actor, index):
-        if self._build_tab==0:
-            if index==1:self._open_picker("secondary",actor)
-            elif index==2:self._rotate_party()
-        elif self._build_tab==1:
-            passive_ids=sorted(self.project.rpg_database.passives)
-            if index<len(passive_ids):self._toggle_passive(actor,passive_ids[index])
-        else:
-            if index==0:self._open_picker("weapon",actor)
-            elif index==1:self._open_picker("armor",actor)
-            elif index in (2,3):self._open_picker("accessory",actor,index-2)
-
     def _build_menu_input(self, events):
         actor=self._menu_actor()
         for event in events:
-            if self._picker:
-                if event.type==self.pg.KEYDOWN:
-                    if event.key==self.pg.K_ESCAPE:self._picker=None
-                    elif event.key in (self.pg.K_UP,self.pg.K_LEFT):self._picker_selection=(self._picker_selection-1)%len(self._picker["options"])
-                    elif event.key in (self.pg.K_DOWN,self.pg.K_RIGHT):self._picker_selection=(self._picker_selection+1)%len(self._picker["options"])
-                    elif event.key in (self.pg.K_RETURN,self.pg.K_SPACE):self._apply_picker()
-                elif event.type==self.pg.MOUSEBUTTONDOWN and event.button==1:
-                    for index,rect in enumerate(self._picker_rects):
-                        if self._contains(rect,event.pos):self._picker_selection=index; self._apply_picker(); break
-                continue
-            if event.type==self.pg.KEYDOWN:
-                if event.key==self.pg.K_c:self._ui_mode="field"
-                elif event.key==self.pg.K_LEFT:self._build_tab=(self._build_tab-1)%3; self._build_selection=0
-                elif event.key==self.pg.K_RIGHT:self._build_tab=(self._build_tab+1)%3; self._build_selection=0
-                elif event.key==self.pg.K_UP:self._build_selection=max(0,self._build_selection-1)
-                elif event.key==self.pg.K_DOWN:self._build_selection+=1
-                elif actor is not None and event.key in (self.pg.K_RETURN,self.pg.K_SPACE):
-                    self._activate_build_action(actor,self._build_selection)
-            elif event.type==self.pg.MOUSEBUTTONDOWN and event.button==1:
-                pos=event.pos
-                if self._build_close_rect and self._contains(self._build_close_rect,pos):
-                    self._ui_mode="field"; continue
-                if self._build_actor_buttons and self._contains(self._build_actor_buttons[0],pos):
-                    self._menu_actor_index-=1; continue
-                if self._build_actor_buttons and self._contains(self._build_actor_buttons[1],pos):
-                    self._menu_actor_index+=1; continue
-                for index,rect in enumerate(self._build_tab_rects):
-                    if self._contains(rect,pos):self._build_tab=index; self._build_selection=0; break
-                for index,rect in enumerate(self._build_action_rects):
-                    if self._contains(rect,pos):
-                        self._build_selection=index
-                        if actor is not None:self._activate_build_action(actor,index)
-                        break
-                for node_id,rect in self._build_node_rects.items():
-                    if actor is not None and self._contains(rect,pos):
-                        if self._build_tab==1:self._allocate_tree_node(actor,node_id)
-                        elif self._build_tab==2:self._upgrade_weapon(actor)
-                        break
+            if event.type!=self.pg.KEYDOWN:continue
+            if event.key==self.pg.K_c:self._ui_mode="field"
+            elif event.key==self.pg.K_q:self._menu_actor_index-=1
+            elif event.key==self.pg.K_e:self._menu_actor_index+=1
+            elif actor is not None and event.key==self.pg.K_1:self._cycle_secondary_class(actor)
+            elif actor is not None and event.key==self.pg.K_2:self._allocate_next_tree_node(actor)
+            elif actor is not None and event.key==self.pg.K_3:self._cycle_passive(actor)
+            elif actor is not None and event.key==self.pg.K_4:self._cycle_weapon(actor)
+            elif actor is not None and event.key==self.pg.K_5:self._upgrade_weapon(actor)
+            elif actor is not None and event.key==self.pg.K_6:self._cycle_accessory(actor)
+            elif event.key==self.pg.K_7:self._rotate_party()
 
     def _member_resource(self, member_id, resource="vitality"):
         member=self.game.battle.member(member_id)
@@ -586,25 +391,19 @@ class PlayableTestRuntime:
 
         actor=self._battle_actor()
         skills=self._skills_for_actor(actor)
-        self.panel((20,22,420,178))
-        self.text("Battle",36,34,size=28,color=(255,219,126))
-        self.text(f"Current: {self._actor_name(actor) if actor else '—'}",36,67,size=19)
-        self._battle_skill_rects=[]
-        for i,(ability_id,meta) in enumerate(skills):
-            rect=(34+(i%2)*196,96+(i//2)*48,186,40)
-            self._battle_skill_rects.append(rect)
-            self.button(rect,meta.get('label',ability_id),selected=i==self._battle_skill_index,size=18)
+        self.panel((20,22,420,155))
+        self.text("Battle Test",36,34,size=28,color=(255,219,126))
+        self.text(f"Current: {actor or '—'}",36,67,size=19)
+        for i,(ability_id,meta) in enumerate(skills,1):
+            color=(255,234,150) if i-1==self._battle_skill_index else (235,238,245)
+            self.text(f"{i}. {meta.get('label',ability_id)}",36+((i-1)%2)*190,100+((i-1)//2)*32,size=20,color=color)
 
         self.panel((460,22,480,92))
-        self.text("Select",478,36,size=18)
-        for i,direction in enumerate(("left","up","down","right")):
-            self.arrow_button((535+i*27,31,23,23),direction)
-        self.text("Enter / Click: Use",650,36,size=18)
-        self.text("B: Boost   F5: Save   Esc: Quit",478,62,size=18)
-        self.text(self._last_action_name or "Choose an action",478,88,size=18,color=(172,220,255))
+        self.text("1–4: Skill   B: Boost   F5: Save   Esc: Quit",478,36,size=20)
+        self.text(self._last_action_name or "Choose an action",478,70,size=20,color=(172,220,255))
         if actor:
             momentum=self.game.battle.battle_resources.current(actor,"momentum")
-            self.text(f"Momentum {int(momentum)}   Boost x{self._boost_level+1}",700,88,size=17,color=(255,220,120))
+            self.text(f"Momentum {int(momentum)}   Boost x{self._boost_level+1}",700,70,size=18,color=(255,220,120))
         boss=next((x for x in enemies if x.startswith("astral_tyrant")),None)
         if boss:
             stagger=self.game.battle.battle_resources.current(boss,"stagger")
@@ -709,7 +508,7 @@ class PlayableTestRuntime:
                         ap_per_level=rewards.get("ap_per_level",2),
                         ability_points_per_level=rewards.get("ability_points_per_level",1),
                     )
-                    self._victory_summary.append(f"{hero_id}: Lv {info['old_level']} to {info['new_level']} +{info['levels_gained']*2:g} AP +{info['levels_gained']:g} ability pts")
+                    self._victory_summary.append(f"{hero_id}: Lv {info['old_level']}→{info['new_level']} +{info['levels_gained']*2:g} AP +{info['levels_gained']:g} ability pts")
                 self._victory=True
                 self._last_action_name="Victory — rewards + progression applied"
             except Exception as exc:
@@ -727,21 +526,16 @@ class PlayableTestRuntime:
             return
         if self._defeat:return
         for event in events:
-            if event.type==self.pg.KEYDOWN:
-                if event.key==self.pg.K_b:
-                    actor=self._battle_actor()
-                    if actor:
-                        available=int(self.game.battle.battle_resources.current(actor,"momentum"))
-                        self._boost_level=(self._boost_level+1)%max(1,min(3,available)+1)
-                elif event.key==self.pg.K_LEFT:self._battle_skill_index=(self._battle_skill_index-1)%max(1,len(self._skills_for_actor(self._battle_actor())))
-                elif event.key==self.pg.K_RIGHT:self._battle_skill_index=(self._battle_skill_index+1)%max(1,len(self._skills_for_actor(self._battle_actor())))
-                elif event.key==self.pg.K_UP:self._battle_skill_index=(self._battle_skill_index-2)%max(1,len(self._skills_for_actor(self._battle_actor())))
-                elif event.key==self.pg.K_DOWN:self._battle_skill_index=(self._battle_skill_index+2)%max(1,len(self._skills_for_actor(self._battle_actor())))
-                elif event.key in (self.pg.K_RETURN,self.pg.K_SPACE):self._use_skill(self._battle_skill_index)
-            elif event.type==self.pg.MOUSEBUTTONDOWN and event.button==1:
-                for index,rect in enumerate(self._battle_skill_rects):
-                    if self._contains(rect,event.pos):
-                        self._battle_skill_index=index; self._use_skill(index); break
+            if event.type!=self.pg.KEYDOWN:continue
+            if event.key==self.pg.K_b:
+                actor=self._battle_actor()
+                if actor:
+                    available=int(self.game.battle.battle_resources.current(actor,"momentum"))
+                    self._boost_level=(self._boost_level+1)%max(1,min(3,available)+1)
+            elif event.key in (self.pg.K_1,self.pg.K_KP1):self._use_skill(0)
+            elif event.key in (self.pg.K_2,self.pg.K_KP2):self._use_skill(1)
+            elif event.key in (self.pg.K_3,self.pg.K_KP3):self._use_skill(2)
+            elif event.key in (self.pg.K_4,self.pg.K_KP4):self._use_skill(3)
 
     def save_playtest(self):
         self.game.sync_world_state()
@@ -762,15 +556,6 @@ class PlayableTestRuntime:
                 for event in events:
                     if event.type==self.pg.QUIT:
                         self.running=False
-                    elif event.type==self.pg.VIDEORESIZE:
-                        # Keep the logical canvas in sync with the native
-                        # window so HUD anchors and field rendering remain
-                        # usable after a real desktop resize.
-                        self.width=max(320,int(event.w))
-                        self.height=max(180,int(event.h))
-                        self.screen=self.pg.display.set_mode(
-                            (self.width,self.height), self.pg.RESIZABLE
-                        )
                     elif event.type==self.pg.KEYDOWN and event.key==self.pg.K_ESCAPE:
                         if self._ui_mode=="build": self._ui_mode="field"
                         else: self.running=False
@@ -779,20 +564,8 @@ class PlayableTestRuntime:
 
                 if self._ui_mode=="title":
                     for event in events:
-                        if event.type==self.pg.KEYDOWN:
-                            if event.key in (self.pg.K_UP,self.pg.K_DOWN):self._title_selection=1-self._title_selection
-                            elif event.key in (self.pg.K_RETURN,self.pg.K_SPACE):
-                                if self._title_selection==0:self._ui_mode="field"
-                                else:self._load_player_save()
-                            elif event.key==self.pg.K_n:self._ui_mode="field"
-                            elif event.key==self.pg.K_l:self._load_player_save()
-                        elif event.type==self.pg.MOUSEBUTTONDOWN and event.button==1:
-                            for index,rect in enumerate(self._title_buttons):
-                                if self._contains(rect,event.pos):
-                                    self._title_selection=index
-                                    if index==0:self._ui_mode="field"
-                                    else:self._load_player_save()
-                                    break
+                        if event.type==self.pg.KEYDOWN and event.key==self.pg.K_n:self._ui_mode="field"
+                        elif event.type==self.pg.KEYDOWN and event.key==self.pg.K_l:self._load_player_save()
                     self._draw_title()
                 elif self._ui_mode=="build":
                     self._build_menu_input(events); self._draw_build_menu()

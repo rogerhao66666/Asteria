@@ -6,7 +6,7 @@ from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
 from asteria.editor.workspace import WorkspaceMode
 from asteria.gameplay import AbilityDefinition
 from asteria.project import Project
-from asteria.rpg import ClassDefinition, ProgressionMilestone, ProgressionTrackDefinition
+from asteria.rpg import ClassDefinition
 
 
 def project():
@@ -96,38 +96,17 @@ def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
     window.close(); app.processEvents()
 
 
-def test_real_qt_shell_starts_on_a_paintable_untitled_project():
+def test_real_qt_shell_starts_without_project_when_qt_is_available():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication, QLabel
     from asteria.editor.shell import AsteriaEditorWindow
 
     app = QApplication.instance() or QApplication([])
     window = AsteriaEditorWindow()
-    # Launching with no project no longer means "nothing to do": there is an
-    # unsaved project with a map, so painting and authoring work right away
-    # and the first Save decides where it lands.
-    assert window.document.project is not None
-    assert window.document.file_path is None
-    assert window.viewport.render_source is not None
-    assert not isinstance(window.rpg_authoring.child, QLabel)
+    assert isinstance(window.rpg_authoring.child, QLabel)
     window.refresh_all()
-    assert window.viewport.render_source is not None
-    window.document.mark_saved()
+    assert isinstance(window.rpg_authoring.child, QLabel)
     window.close()
-    app.processEvents()
-
-
-def test_authoring_host_still_shows_a_placeholder_without_any_project():
-    pytest.importorskip("PySide6")
-    from PySide6.QtWidgets import QApplication, QLabel
-
-    from asteria.editor.authoring_hub_widget import FamilyHostWidget
-
-    app = QApplication.instance() or QApplication([])
-    controllers = IntegratedAuthoringControllers(EditorDocument())
-    host = FamilyHostWidget("Character", controllers.rpg_categories)
-    assert isinstance(host.child, QLabel)
-    host.close()
     app.processEvents()
 
 
@@ -168,38 +147,4 @@ def test_real_qt_rpg_structured_editor_modifies_canonical_project_when_available
     assert p.rpg_database.classes["fighter"].display_name=="Vanguard"
     assert window.document.commands.can_undo
     window.document.mark_saved()
-    window.close(); app.processEvents()
-
-
-def test_selecting_a_progression_track_updates_its_growth_curve_chart():
-    pytest.importorskip("PySide6")
-    from PySide6.QtWidgets import QApplication
-    from asteria.editor.shell import AsteriaEditorWindow
-
-    p=project()
-    p.rpg_database.add_progression_track(
-        ProgressionTrackDefinition(
-            "fighter_track", "Fighter Growth",
-            milestones=(
-                ProgressionMilestone(1, 0, stat_bonuses={"hp": 10}),
-                ProgressionMilestone(2, 100, stat_bonuses={"hp": 15}),
-            ),
-        )
-    )
-    app=QApplication.instance() or QApplication([])
-    window=AsteriaEditorWindow(p)
-    window.workspace.set_mode(WorkspaceMode.RPG)
-    hub=window.rpg_authoring.child
-    idx=hub.category.findData("tracks"); hub.category.setCurrentIndex(idx); hub.refresh()
-    assert hub.selected_id=="fighter_track"
-    assert not hub.curve_chart.isHidden()
-    assert hub.curve_chart._series["hp"]==[10.0, 25.0]
-
-    # Live-editing the milestone table (before Apply) refreshes the chart too.
-    raw=hub.editor.record()
-    raw["milestones"][1]["stat_bonuses"]["hp"]=50
-    hub.editor.set_record(raw)
-    hub.editor.changed.emit()
-    assert hub.curve_chart._series["hp"]==[10.0, 60.0]
-
     window.close(); app.processEvents()

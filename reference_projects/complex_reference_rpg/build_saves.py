@@ -1,6 +1,5 @@
 from __future__ import annotations
 from pathlib import Path
-import json
 
 from asteria.core import Transform
 from asteria.editor import EditorDocument
@@ -55,7 +54,6 @@ def _allocation(db, actor_index, tree_nodes, level):
 def _loadout(db, actor_index, growth_rank):
     loadout=EquipmentLoadout((
         EquipmentSlotDefinition("weapon",capacity=1),
-        EquipmentSlotDefinition("armor",capacity=1),
         EquipmentSlotDefinition("accessory",capacity=2),
     ))
     weapon=db.equipment[f"weapon_{(actor_index%12)+1:02d}"]
@@ -73,8 +71,6 @@ def _loadout(db, actor_index, growth_rank):
     rune=db.attachments[f"rune_{(actor_index%6)+1:02d}"]
     item.attach("rune",rune)
     loadout.equip("weapon",item,validate_requirements=False)
-    armor=db.equipment[f"armor_{(actor_index%6)+1:02d}"]
-    loadout.equip("armor",EquippedItem(armor,instance_id=f"{armor.equipment_id}:actor:{actor_index+1}"),validate_requirements=False)
     for n in range(2):
         acc=db.equipment[f"accessory_{((actor_index+n)%8)+1:02d}"]
         loadout.equip("accessory",EquippedItem(acc,instance_id=f"{acc.equipment_id}:actor:{actor_index+1}:{n}"),validate_requirements=False)
@@ -172,22 +168,6 @@ def write_saves(project_path, output_dir):
     return paths
 
 
-def write_playtest_profiles(project_path, output_dir):
-    project=load_project(project_path); output_dir=Path(output_dir); output_dir.mkdir(parents=True,exist_ok=True)
-    profiles=(
-        ("default","Default","early","Fresh reference-game developer profile.",True),
-        ("early","Early","early","Early-game developer profile.",False),
-        ("mid","Mid","mid","Mid-game developer profile.",False),
-        ("endgame","Endgame","endgame_complex","Endgame developer profile.",False),
-        ("boss_stress","Boss Stress","boss_stress","Spawn near the Astral Tyrant with a high-density party build.",False),
-    )
-    for profile_id,label,save_name,description,default in profiles:
-        data={"schema":"asteria.playtest_profile","version":1,"profile_id":profile_id,"display_name":label,
-              "description":description,"default":default,"runtime_state":build_save(project,save_name).to_data()}
-        (output_dir/f"{profile_id}.asteria-playtest.json").write_text(json.dumps(data,indent=2)+"\n",encoding="utf-8")
-
-
 if __name__=="__main__":
     here=Path(__file__).resolve().parent
     write_saves(here/"project.asteria.json",here/"saves")
-    write_playtest_profiles(here/"project.asteria.json",here/"playtest_profiles")

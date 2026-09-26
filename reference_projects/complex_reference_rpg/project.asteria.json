@@ -1,67 +1,6 @@
 {
   "assets": {
-    "assets": [
-      {
-        "id": "45567b63-5365-4704-944b-033514dba205",
-        "import_settings": {},
-        "importer": "raw",
-        "importer_version": 1,
-        "kind": "texture",
-        "metadata": {},
-        "name": "environment_atlas",
-        "source_path": "field_tiles/environment_atlas.png"
-      },
-      {
-        "id": "f1f6e3cf-a4e0-4e63-97e5-a0c5299e157a",
-        "import_settings": {},
-        "importer": "raw",
-        "importer_version": 1,
-        "kind": "sprite_sheet",
-        "metadata": {},
-        "name": "environment.sprite_sheet",
-        "source_path": "field_tiles/environment.sprite_sheet.json"
-      },
-      {
-        "id": "b8851c61-d7f9-4ad3-bd30-8f14b03abbc7",
-        "import_settings": {},
-        "importer": "raw",
-        "importer_version": 1,
-        "kind": "tileset",
-        "metadata": {},
-        "name": "environment.tileset",
-        "source_path": "field_tiles/environment.tileset.json"
-      },
-      {
-        "id": "27aea456-bd25-4fb4-84a9-471e017a190e",
-        "import_settings": {},
-        "importer": "raw",
-        "importer_version": 1,
-        "kind": "tilemap",
-        "metadata": {},
-        "name": "astral_gate.tilemap",
-        "source_path": "field_tiles/astral_gate.tilemap.json"
-      },
-      {
-        "id": "edc23851-dc66-4e80-845c-e6324cdc9b23",
-        "import_settings": {},
-        "importer": "raw",
-        "importer_version": 1,
-        "kind": "texture",
-        "metadata": {},
-        "name": "characters_atlas",
-        "source_path": "field_tiles/characters_atlas.png"
-      },
-      {
-        "id": "09be6b2d-1f76-4458-8080-752270d1b9da",
-        "import_settings": {},
-        "importer": "raw",
-        "importer_version": 1,
-        "kind": "sprite_sheet",
-        "metadata": {},
-        "name": "characters.sprite_sheet",
-        "source_path": "field_tiles/characters.sprite_sheet.json"
-      }
-    ],
+    "assets": [],
     "schema": "asteria.assets",
     "version": 1
   },
@@ -453,7 +392,7 @@
       },
       "version": 1
     },
-    "player_entity_id": "d74889b6-e551-43b0-af4b-5d9403de8a2e",
+    "player_entity_id": "698c1327-c30a-4340-a45c-8673a9313f9d",
     "player_facing": "right",
     "player_position": [
       0.0,
@@ -1000,16 +939,6 @@
                 "version": 2
               }
             ],
-            "armor": [
-              {
-                "attachments": {},
-                "equipment_id": "armor_01",
-                "growth": null,
-                "instance_id": "armor_01:actor:1",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ],
             "weapon": [
               {
                 "attachments": {
@@ -1029,11 +958,6 @@
               "accepted_tags": [],
               "capacity": 2,
               "slot_id": "accessory"
-            },
-            {
-              "accepted_tags": [],
-              "capacity": 1,
-              "slot_id": "armor"
             },
             {
               "accepted_tags": [],
@@ -1063,16 +987,6 @@
                 "version": 2
               }
             ],
-            "armor": [
-              {
-                "attachments": {},
-                "equipment_id": "armor_02",
-                "growth": null,
-                "instance_id": "armor_02:actor:2",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ],
             "weapon": [
               {
                 "attachments": {
@@ -1092,11 +1006,6 @@
               "accepted_tags": [],
               "capacity": 2,
               "slot_id": "accessory"
-            },
-            {
-              "accepted_tags": [],
-              "capacity": 1,
-              "slot_id": "armor"
             },
             {
               "accepted_tags": [],
@@ -1126,16 +1035,6 @@
                 "version": 2
               }
             ],
-            "armor": [
-              {
-                "attachments": {},
-                "equipment_id": "armor_03",
-                "growth": null,
-                "instance_id": "armor_03:actor:3",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ],
             "weapon": [
               {
                 "attachments": {
@@ -1155,11 +1054,6 @@
               "accepted_tags": [],
               "capacity": 2,
               "slot_id": "accessory"
-            },
-            {
-              "accepted_tags": [],
-              "capacity": 1,
-              "slot_id": "armor"
             },
             {
               "accepted_tags": [],
@@ -1189,16 +1083,6 @@
                 "version": 2
               }
             ],
-            "armor": [
-              {
-                "attachments": {},
-                "equipment_id": "armor_04",
-                "growth": null,
-                "instance_id": "armor_04:actor:4",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ],
             "weapon": [
               {
                 "attachments": {
@@ -1218,11 +1102,6 @@
               "accepted_tags": [],
               "capacity": 2,
               "slot_id": "accessory"
-            },
-            {
-              "accepted_tags": [],
-              "capacity": 1,
-              "slot_id": "armor"
             },
             {
               "accepted_tags": [],
@@ -1252,16 +1131,6 @@
                 "version": 2
               }
             ],
-            "armor": [
-              {
-                "attachments": {},
-                "equipment_id": "armor_05",
-                "growth": null,
-                "instance_id": "armor_05:actor:5",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ],
             "weapon": [
               {
                 "attachments": {
@@ -1281,11 +1150,6 @@
               "accepted_tags": [],
               "capacity": 2,
               "slot_id": "accessory"
-            },
-            {
-              "accepted_tags": [],
-              "capacity": 1,
-              "slot_id": "armor"
             },
             {
               "accepted_tags": [],
@@ -1315,16 +1179,6 @@
                 "version": 2
               }
             ],
-            "armor": [
-              {
-                "attachments": {},
-                "equipment_id": "armor_06",
-                "growth": null,
-                "instance_id": "armor_06:actor:6",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ],
             "weapon": [
               {
                 "attachments": {
@@ -1344,11 +1198,6 @@
               "accepted_tags": [],
               "capacity": 2,
               "slot_id": "accessory"
-            },
-            {
-              "accepted_tags": [],
-              "capacity": 1,
-              "slot_id": "armor"
             },
             {
               "accepted_tags": [],
@@ -1516,7 +1365,7 @@
       "schema": "asteria.rpg.runtime_state",
       "version": 5
     },
-    "scene_id": "cb9edc51-9d32-45fd-89e7-d3d66529b680",
+    "scene_id": "2175c138-7eed-4ab6-91c7-0b912611c1a0",
     "schema": "asteria.game_start",
     "version": 1
   },
@@ -2822,7 +2671,7 @@
     "triggers": [],
     "version": 1
   },
-  "id": "08325667-473b-4f61-b4c9-72bff3619957",
+  "id": "b8dcf8ef-98b6-441a-b1e7-5f7533801cca",
   "lifecycle_event_bindings": [],
   "name": "Asteria Complex Reference RPG",
   "rpg_database": {
@@ -5348,7 +5197,7 @@
     "equipment": [
       {
         "any_capabilities": [],
-        "display_name": "Ember Charm",
+        "display_name": "Accessory 01",
         "equipment_id": "accessory_01",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5369,7 +5218,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Frost Pendant",
+        "display_name": "Accessory 02",
         "equipment_id": "accessory_02",
         "forbidden_capabilities": [],
         "granted_abilities": [],
@@ -5388,7 +5237,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Storm Ring",
+        "display_name": "Accessory 03",
         "equipment_id": "accessory_03",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5409,7 +5258,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Guardian Brooch",
+        "display_name": "Accessory 04",
         "equipment_id": "accessory_04",
         "forbidden_capabilities": [],
         "granted_abilities": [],
@@ -5428,7 +5277,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Moonstone Band",
+        "display_name": "Accessory 05",
         "equipment_id": "accessory_05",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5449,7 +5298,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Wisp Locket",
+        "display_name": "Accessory 06",
         "equipment_id": "accessory_06",
         "forbidden_capabilities": [],
         "granted_abilities": [],
@@ -5468,7 +5317,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Scholar's Seal",
+        "display_name": "Accessory 07",
         "equipment_id": "accessory_07",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5489,7 +5338,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Astral Emblem",
+        "display_name": "Accessory 08",
         "equipment_id": "accessory_08",
         "forbidden_capabilities": [],
         "granted_abilities": [],
@@ -5508,121 +5357,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Traveler's Coat",
-        "equipment_id": "armor_01",
-        "forbidden_capabilities": [],
-        "granted_abilities": [],
-        "growth_id": null,
-        "modifiers": [],
-        "required_capabilities": [],
-        "schema": "asteria.rpg.equipment",
-        "slot": "armor",
-        "sockets": [],
-        "tags": [
-          "armor",
-          "armor.family.0"
-        ],
-        "triggers": [],
-        "version": 3
-      },
-      {
-        "any_capabilities": [],
-        "display_name": "Iron Wardplate",
-        "equipment_id": "armor_02",
-        "forbidden_capabilities": [],
-        "granted_abilities": [],
-        "growth_id": null,
-        "modifiers": [],
-        "required_capabilities": [],
-        "schema": "asteria.rpg.equipment",
-        "slot": "armor",
-        "sockets": [],
-        "tags": [
-          "armor",
-          "armor.family.1"
-        ],
-        "triggers": [],
-        "version": 3
-      },
-      {
-        "any_capabilities": [],
-        "display_name": "Moonweave Robe",
-        "equipment_id": "armor_03",
-        "forbidden_capabilities": [],
-        "granted_abilities": [],
-        "growth_id": null,
-        "modifiers": [],
-        "required_capabilities": [],
-        "schema": "asteria.rpg.equipment",
-        "slot": "armor",
-        "sockets": [],
-        "tags": [
-          "armor",
-          "armor.family.2"
-        ],
-        "triggers": [],
-        "version": 3
-      },
-      {
-        "any_capabilities": [],
-        "display_name": "Ranger's Leathers",
-        "equipment_id": "armor_04",
-        "forbidden_capabilities": [],
-        "granted_abilities": [],
-        "growth_id": null,
-        "modifiers": [],
-        "required_capabilities": [],
-        "schema": "asteria.rpg.equipment",
-        "slot": "armor",
-        "sockets": [],
-        "tags": [
-          "armor",
-          "armor.family.0"
-        ],
-        "triggers": [],
-        "version": 3
-      },
-      {
-        "any_capabilities": [],
-        "display_name": "Oracle Vestments",
-        "equipment_id": "armor_05",
-        "forbidden_capabilities": [],
-        "granted_abilities": [],
-        "growth_id": null,
-        "modifiers": [],
-        "required_capabilities": [],
-        "schema": "asteria.rpg.equipment",
-        "slot": "armor",
-        "sockets": [],
-        "tags": [
-          "armor",
-          "armor.family.1"
-        ],
-        "triggers": [],
-        "version": 3
-      },
-      {
-        "any_capabilities": [],
-        "display_name": "Astral Plate",
-        "equipment_id": "armor_06",
-        "forbidden_capabilities": [],
-        "granted_abilities": [],
-        "growth_id": null,
-        "modifiers": [],
-        "required_capabilities": [],
-        "schema": "asteria.rpg.equipment",
-        "slot": "armor",
-        "sockets": [],
-        "tags": [
-          "armor",
-          "armor.family.2"
-        ],
-        "triggers": [],
-        "version": 3
-      },
-      {
-        "any_capabilities": [],
-        "display_name": "Emberblade",
+        "display_name": "Weapon 01",
         "equipment_id": "weapon_01",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5651,7 +5386,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Frostbrand",
+        "display_name": "Weapon 02",
         "equipment_id": "weapon_02",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5680,7 +5415,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Stormcaller",
+        "display_name": "Weapon 03",
         "equipment_id": "weapon_03",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5709,7 +5444,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Iron Vanguard",
+        "display_name": "Weapon 04",
         "equipment_id": "weapon_04",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5738,7 +5473,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Moonlit Bow",
+        "display_name": "Weapon 05",
         "equipment_id": "weapon_05",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5767,7 +5502,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Oracle Staff",
+        "display_name": "Weapon 06",
         "equipment_id": "weapon_06",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5796,7 +5531,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Duelist's Edge",
+        "display_name": "Weapon 07",
         "equipment_id": "weapon_07",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5825,7 +5560,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Mystic Scepter",
+        "display_name": "Weapon 08",
         "equipment_id": "weapon_08",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5854,7 +5589,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Sunsteel Spear",
+        "display_name": "Weapon 09",
         "equipment_id": "weapon_09",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5883,7 +5618,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Ashen Dagger",
+        "display_name": "Weapon 10",
         "equipment_id": "weapon_10",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5912,7 +5647,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Riverguard Axe",
+        "display_name": "Weapon 11",
         "equipment_id": "weapon_11",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -5941,7 +5676,7 @@
       },
       {
         "any_capabilities": [],
-        "display_name": "Astral Greatsword",
+        "display_name": "Weapon 12",
         "equipment_id": "weapon_12",
         "forbidden_capabilities": [],
         "granted_abilities": [
@@ -6544,7 +6279,7 @@
     ],
     "passives": [
       {
-        "display_name": "Steadfast Heart",
+        "display_name": "Passive 01",
         "granted_abilities": [
           "heal"
         ],
@@ -6558,7 +6293,7 @@
         "version": 1
       },
       {
-        "display_name": "Arcane Insight",
+        "display_name": "Passive 02",
         "granted_abilities": [],
         "modifiers": [],
         "passive_id": "passive_02",
@@ -6570,7 +6305,7 @@
         "version": 1
       },
       {
-        "display_name": "Fleet Foot",
+        "display_name": "Passive 03",
         "granted_abilities": [],
         "modifiers": [],
         "passive_id": "passive_03",
@@ -6582,7 +6317,7 @@
         "version": 1
       },
       {
-        "display_name": "Iron Will",
+        "display_name": "Passive 04",
         "granted_abilities": [],
         "modifiers": [],
         "passive_id": "passive_04",
@@ -6594,7 +6329,7 @@
         "version": 1
       },
       {
-        "display_name": "Second Wind",
+        "display_name": "Passive 05",
         "granted_abilities": [
           "poison_edge"
         ],
@@ -6608,7 +6343,7 @@
         "version": 1
       },
       {
-        "display_name": "Keen Eye",
+        "display_name": "Passive 06",
         "granted_abilities": [],
         "modifiers": [],
         "passive_id": "passive_06",
@@ -6620,7 +6355,7 @@
         "version": 1
       },
       {
-        "display_name": "Mana Flow",
+        "display_name": "Passive 07",
         "granted_abilities": [],
         "modifiers": [],
         "passive_id": "passive_07",
@@ -6632,7 +6367,7 @@
         "version": 1
       },
       {
-        "display_name": "Guardian Oath",
+        "display_name": "Passive 08",
         "granted_abilities": [],
         "modifiers": [],
         "passive_id": "passive_08",
@@ -6644,7 +6379,7 @@
         "version": 1
       },
       {
-        "display_name": "Battle Rhythm",
+        "display_name": "Passive 09",
         "granted_abilities": [
           "guard"
         ],
@@ -6658,7 +6393,7 @@
         "version": 1
       },
       {
-        "display_name": "Herbal Wisdom",
+        "display_name": "Passive 10",
         "granted_abilities": [],
         "modifiers": [],
         "passive_id": "passive_10",
@@ -6670,7 +6405,7 @@
         "version": 1
       },
       {
-        "display_name": "Elemental Ward",
+        "display_name": "Passive 11",
         "granted_abilities": [],
         "modifiers": [],
         "passive_id": "passive_11",
@@ -6682,7 +6417,7 @@
         "version": 1
       },
       {
-        "display_name": "Precise Strike",
+        "display_name": "Passive 12",
         "granted_abilities": [],
         "modifiers": [],
         "passive_id": "passive_12",
@@ -6694,7 +6429,7 @@
         "version": 1
       },
       {
-        "display_name": "Last Stand",
+        "display_name": "Passive 13",
         "granted_abilities": [
           "heal"
         ],
@@ -6708,7 +6443,7 @@
         "version": 1
       },
       {
-        "display_name": "Quick Recovery",
+        "display_name": "Passive 14",
         "granted_abilities": [],
         "modifiers": [],
         "passive_id": "passive_14",
@@ -6720,7 +6455,7 @@
         "version": 1
       },
       {
-        "display_name": "Scholar's Focus",
+        "display_name": "Passive 15",
         "granted_abilities": [],
         "modifiers": [],
         "passive_id": "passive_15",
@@ -6732,7 +6467,7 @@
         "version": 1
       },
       {
-        "display_name": "Unbroken Spirit",
+        "display_name": "Passive 16",
         "granted_abilities": [],
         "modifiers": [],
         "passive_id": "passive_16",
@@ -6749,11 +6484,36 @@
         "display_name": "Alchemist Skill Tree",
         "editor_view": "graph",
         "graph_id": "alchemist_tree",
-        "node_positions": {},
+        "node_positions": {
+          "alchemist_node_1": [
+            0.0,
+            90.0
+          ],
+          "alchemist_node_2": [
+            190.0,
+            20.0
+          ],
+          "alchemist_node_3": [
+            190.0,
+            160.0
+          ],
+          "alchemist_node_4": [
+            380.0,
+            20.0
+          ],
+          "alchemist_node_5": [
+            380.0,
+            160.0
+          ],
+          "alchemist_node_6": [
+            570.0,
+            90.0
+          ]
+        },
         "nodes": [
           {
             "any_prerequisites": [],
-            "display_name": "Alchemist Initiation",
+            "display_name": "Alchemist Node 1",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "alchemist_node_1",
@@ -6786,7 +6546,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Alchemist Discipline",
+            "display_name": "Alchemist Node 2",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "alchemist_node_2",
@@ -6826,7 +6586,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Alchemist Insight",
+            "display_name": "Alchemist Node 3",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "alchemist_node_3",
@@ -6880,7 +6640,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Alchemist Mastery",
+            "display_name": "Alchemist Node 4",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "alchemist_node_4",
@@ -6920,7 +6680,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Alchemist Resolve",
+            "display_name": "Alchemist Node 5",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "alchemist_node_5",
@@ -6974,7 +6734,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Alchemist Ascendance",
+            "display_name": "Alchemist Node 6",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "alchemist_node_6",
@@ -7032,7 +6792,7 @@
         "nodes": [
           {
             "any_prerequisites": [],
-            "display_name": "Arcanist Initiation",
+            "display_name": "Arcanist Node 1",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "arcanist_node_1",
@@ -7065,7 +6825,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Arcanist Discipline",
+            "display_name": "Arcanist Node 2",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "arcanist_node_2",
@@ -7105,7 +6865,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Arcanist Insight",
+            "display_name": "Arcanist Node 3",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "arcanist_node_3",
@@ -7159,7 +6919,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Arcanist Mastery",
+            "display_name": "Arcanist Node 4",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "arcanist_node_4",
@@ -7199,7 +6959,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Arcanist Resolve",
+            "display_name": "Arcanist Node 5",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "arcanist_node_5",
@@ -7253,7 +7013,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Arcanist Ascendance",
+            "display_name": "Arcanist Node 6",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "arcanist_node_6",
@@ -7303,11 +7063,36 @@
         "display_name": "Duelist Skill Tree",
         "editor_view": "graph",
         "graph_id": "duelist_tree",
-        "node_positions": {},
+        "node_positions": {
+          "duelist_node_1": [
+            0.0,
+            90.0
+          ],
+          "duelist_node_2": [
+            190.0,
+            20.0
+          ],
+          "duelist_node_3": [
+            190.0,
+            160.0
+          ],
+          "duelist_node_4": [
+            380.0,
+            20.0
+          ],
+          "duelist_node_5": [
+            380.0,
+            160.0
+          ],
+          "duelist_node_6": [
+            570.0,
+            90.0
+          ]
+        },
         "nodes": [
           {
             "any_prerequisites": [],
-            "display_name": "Duelist Initiation",
+            "display_name": "Duelist Node 1",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "duelist_node_1",
@@ -7340,7 +7125,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Duelist Discipline",
+            "display_name": "Duelist Node 2",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "duelist_node_2",
@@ -7380,7 +7165,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Duelist Insight",
+            "display_name": "Duelist Node 3",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "duelist_node_3",
@@ -7434,7 +7219,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Duelist Mastery",
+            "display_name": "Duelist Node 4",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "duelist_node_4",
@@ -7474,7 +7259,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Duelist Resolve",
+            "display_name": "Duelist Node 5",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "duelist_node_5",
@@ -7528,7 +7313,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Duelist Ascendance",
+            "display_name": "Duelist Node 6",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "duelist_node_6",
@@ -7586,7 +7371,7 @@
         "nodes": [
           {
             "any_prerequisites": [],
-            "display_name": "Mystic Initiation",
+            "display_name": "Mystic Node 1",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "mystic_node_1",
@@ -7619,7 +7404,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Mystic Discipline",
+            "display_name": "Mystic Node 2",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "mystic_node_2",
@@ -7659,7 +7444,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Mystic Insight",
+            "display_name": "Mystic Node 3",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "mystic_node_3",
@@ -7713,7 +7498,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Mystic Mastery",
+            "display_name": "Mystic Node 4",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "mystic_node_4",
@@ -7753,7 +7538,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Mystic Resolve",
+            "display_name": "Mystic Node 5",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "mystic_node_5",
@@ -7807,7 +7592,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Mystic Ascendance",
+            "display_name": "Mystic Node 6",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "mystic_node_6",
@@ -7861,7 +7646,7 @@
         "nodes": [
           {
             "any_prerequisites": [],
-            "display_name": "Oracle Initiation",
+            "display_name": "Oracle Node 1",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "oracle_node_1",
@@ -7894,7 +7679,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Oracle Discipline",
+            "display_name": "Oracle Node 2",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "oracle_node_2",
@@ -7934,7 +7719,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Oracle Insight",
+            "display_name": "Oracle Node 3",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "oracle_node_3",
@@ -7988,7 +7773,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Oracle Mastery",
+            "display_name": "Oracle Node 4",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "oracle_node_4",
@@ -8028,7 +7813,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Oracle Resolve",
+            "display_name": "Oracle Node 5",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "oracle_node_5",
@@ -8082,7 +7867,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Oracle Ascendance",
+            "display_name": "Oracle Node 6",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "oracle_node_6",
@@ -8132,11 +7917,36 @@
         "display_name": "Ranger Skill Tree",
         "editor_view": "graph",
         "graph_id": "ranger_tree",
-        "node_positions": {},
+        "node_positions": {
+          "ranger_node_1": [
+            0.0,
+            90.0
+          ],
+          "ranger_node_2": [
+            190.0,
+            20.0
+          ],
+          "ranger_node_3": [
+            190.0,
+            160.0
+          ],
+          "ranger_node_4": [
+            380.0,
+            20.0
+          ],
+          "ranger_node_5": [
+            380.0,
+            160.0
+          ],
+          "ranger_node_6": [
+            570.0,
+            90.0
+          ]
+        },
         "nodes": [
           {
             "any_prerequisites": [],
-            "display_name": "Ranger Initiation",
+            "display_name": "Ranger Node 1",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "ranger_node_1",
@@ -8169,7 +7979,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Ranger Discipline",
+            "display_name": "Ranger Node 2",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "ranger_node_2",
@@ -8209,7 +8019,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Ranger Insight",
+            "display_name": "Ranger Node 3",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "ranger_node_3",
@@ -8263,7 +8073,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Ranger Mastery",
+            "display_name": "Ranger Node 4",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "ranger_node_4",
@@ -8303,7 +8113,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Ranger Resolve",
+            "display_name": "Ranger Node 5",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "ranger_node_5",
@@ -8357,7 +8167,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Ranger Ascendance",
+            "display_name": "Ranger Node 6",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "ranger_node_6",
@@ -8411,11 +8221,36 @@
         "display_name": "Vanguard Skill Tree",
         "editor_view": "graph",
         "graph_id": "vanguard_tree",
-        "node_positions": {},
+        "node_positions": {
+          "vanguard_node_1": [
+            0.0,
+            90.0
+          ],
+          "vanguard_node_2": [
+            190.0,
+            20.0
+          ],
+          "vanguard_node_3": [
+            190.0,
+            160.0
+          ],
+          "vanguard_node_4": [
+            380.0,
+            20.0
+          ],
+          "vanguard_node_5": [
+            380.0,
+            160.0
+          ],
+          "vanguard_node_6": [
+            570.0,
+            90.0
+          ]
+        },
         "nodes": [
           {
             "any_prerequisites": [],
-            "display_name": "Vanguard Initiation",
+            "display_name": "Vanguard Node 1",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "vanguard_node_1",
@@ -8448,7 +8283,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Vanguard Discipline",
+            "display_name": "Vanguard Node 2",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "vanguard_node_2",
@@ -8488,7 +8323,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Vanguard Insight",
+            "display_name": "Vanguard Node 3",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "vanguard_node_3",
@@ -8542,7 +8377,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Vanguard Mastery",
+            "display_name": "Vanguard Node 4",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "vanguard_node_4",
@@ -8582,7 +8417,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Vanguard Resolve",
+            "display_name": "Vanguard Node 5",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "vanguard_node_5",
@@ -8636,7 +8471,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Vanguard Ascendance",
+            "display_name": "Vanguard Node 6",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "vanguard_node_6",
@@ -8694,7 +8529,7 @@
         "nodes": [
           {
             "any_prerequisites": [],
-            "display_name": "Warden Initiation",
+            "display_name": "Warden Node 1",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "warden_node_1",
@@ -8727,7 +8562,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Warden Discipline",
+            "display_name": "Warden Node 2",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "warden_node_2",
@@ -8767,7 +8602,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Warden Insight",
+            "display_name": "Warden Node 3",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "warden_node_3",
@@ -8821,7 +8656,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Warden Mastery",
+            "display_name": "Warden Node 4",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "warden_node_4",
@@ -8861,7 +8696,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Warden Resolve",
+            "display_name": "Warden Node 5",
             "exclusive_group": null,
             "max_rank": 2,
             "node_id": "warden_node_5",
@@ -8915,7 +8750,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Warden Ascendance",
+            "display_name": "Warden Node 6",
             "exclusive_group": null,
             "max_rank": 1,
             "node_id": "warden_node_6",
@@ -9372,13 +9207,13 @@
     "version": 23
   },
   "scene_event_bindings": {
-    "cb9edc51-9d32-45fd-89e7-d3d66529b680": {
+    "2175c138-7eed-4ab6-91c7-0b912611c1a0": {
       "bindings": [
         {
           "binding_id": "boss_interaction",
           "conditions": [],
           "enabled": true,
-          "entity_id": "37cf3857-fe20-402c-b060-1c4c471b3783",
+          "entity_id": "d27dbd21-2fd3-4cc0-b50b-6cb1b2f345c6",
           "local_scope_id": "astral_tyrant",
           "program_id": "boss_interaction_event",
           "trigger": "action"
@@ -9403,24 +9238,10 @@
               },
               "type": "asteria.Transform",
               "version": 1
-            },
-            {
-              "fields": {
-                "depth": 0.0,
-                "elevation": 0.0,
-                "flip_x": false,
-                "frame_index": 0,
-                "layer": 10,
-                "opacity": 1.0,
-                "sprite_sheet_asset_id": "09be6b2d-1f76-4458-8080-752270d1b9da",
-                "visible": true
-              },
-              "type": "asteria.SpriteRenderer2D",
-              "version": 1
             }
           ],
           "enabled": true,
-          "id": "d74889b6-e551-43b0-af4b-5d9403de8a2e",
+          "id": "698c1327-c30a-4340-a45c-8673a9313f9d",
           "name": "Player"
         },
         {
@@ -9428,8 +9249,8 @@
             {
               "fields": {
                 "rotation": 0.0,
-                "scale_x": 1.3,
-                "scale_y": 1.3,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
                 "x": 48.0,
                 "y": 0.0
               },
@@ -9446,62 +9267,20 @@
               },
               "type": "asteria.Interaction2D",
               "version": 1
-            },
-            {
-              "fields": {
-                "depth": 0.0,
-                "elevation": 0.0,
-                "flip_x": false,
-                "frame_index": 1,
-                "layer": 10,
-                "opacity": 1.0,
-                "sprite_sheet_asset_id": "09be6b2d-1f76-4458-8080-752270d1b9da",
-                "visible": true
-              },
-              "type": "asteria.SpriteRenderer2D",
-              "version": 1
             }
           ],
           "enabled": true,
-          "id": "37cf3857-fe20-402c-b060-1c4c471b3783",
+          "id": "d27dbd21-2fd3-4cc0-b50b-6cb1b2f345c6",
           "name": "Astral Tyrant"
-        },
-        {
-          "components": [
-            {
-              "fields": {
-                "rotation": 0.0,
-                "scale_x": 1.0,
-                "scale_y": 1.0,
-                "x": 0.0,
-                "y": 0.0
-              },
-              "type": "asteria.Transform",
-              "version": 1
-            },
-            {
-              "fields": {
-                "origin_x": -168.0,
-                "origin_y": -112.0,
-                "tilemap_asset_id": "27aea456-bd25-4fb4-84a9-471e017a190e",
-                "visible": true
-              },
-              "type": "asteria.TileMap2D",
-              "version": 1
-            }
-          ],
-          "enabled": true,
-          "id": "24d268b3-244c-4954-bd4d-08e84a3bf9d5",
-          "name": "Field Map"
         }
       ],
-      "id": "cb9edc51-9d32-45fd-89e7-d3d66529b680",
+      "id": "2175c138-7eed-4ab6-91c7-0b912611c1a0",
       "name": "Astral Gate",
       "schema": "asteria.scene",
       "version": 1
     }
   ],
   "schema": "asteria.project",
-  "startup_scene_id": "cb9edc51-9d32-45fd-89e7-d3d66529b680",
+  "startup_scene_id": "2175c138-7eed-4ab6-91c7-0b912611c1a0",
   "version": 8
 }

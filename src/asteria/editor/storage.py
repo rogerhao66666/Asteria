@@ -37,19 +37,6 @@ def save_document(document, path=None):
             pass
         raise EditorStorageError(str(exc)) from exc
 
-    # An untitled project's bundled tileset lived only in memory until this
-    # save gave it a folder; write those files out before the sidecars that
-    # reference them. Existing files are left alone.
-    from .starter_project import materialize_starter_assets
-
-    materialize_starter_assets(document.project, target.parent)
-
-    # Sprites generated while the project was still untitled were written to a
-    # staging directory; this save is the first time they have a home.
-    from .character_generator import materialize_staged_assets
-
-    materialize_staged_assets(document, target.parent)
-
     # Persist mutable canonical TileMap sidecars resolved by the editor.
     for asset_id, tilemap in document.asset_views.tilemaps():
         record = document.project.assets.get(asset_id)

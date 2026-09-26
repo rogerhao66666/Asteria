@@ -3,7 +3,6 @@ try:
     from PySide6.QtWidgets import (
         QComboBox,
         QFormLayout,
-        QGroupBox,
         QHBoxLayout,
         QLabel,
         QListWidget,
@@ -46,7 +45,6 @@ class EventEditorWidget(QWidget):
         self.binding_combo = QComboBox()
         self.binding_combo.currentIndexChanged.connect(self._binding_selected)
         self.new_binding_button = QPushButton("+ Event")
-        self.new_binding_button.setToolTip("Create a new event binding on this entity")
         self.new_binding_button.clicked.connect(lambda: self.bindingRequested.emit())
 
         header = QHBoxLayout()
@@ -55,59 +53,37 @@ class EventEditorWidget(QWidget):
 
         self.trigger_combo = QComboBox()
         self.trigger_combo.addItems(["Action", "Autorun", "Parallel"])
-        self.trigger_combo.setToolTip(
-            "Action: fires when the player interacts with this entity\n"
-            "Autorun: fires once automatically when the scene starts\n"
-            "Parallel: runs continuously in the background"
-        )
         self.trigger_combo.currentTextChanged.connect(
             lambda value: self._emit_binding_change("trigger", value.lower())
         )
 
         self.program_combo = QComboBox()
-        self.program_combo.setToolTip("The command sequence this event runs")
         self.program_combo.currentIndexChanged.connect(self._program_changed)
 
         form = QFormLayout()
         form.addRow("Trigger", self.trigger_combo)
         form.addRow("Program", self.program_combo)
 
-        event_group = QGroupBox("Event")
-        event_group.setObjectName("EventSectionGroup")
-        event_layout = QVBoxLayout(event_group)
-        event_layout.addLayout(header)
-        event_layout.addLayout(form)
-
         condition_row = QHBoxLayout()
         self.conditions = QLabel("Conditions: Always")
         self.conditions.setObjectName("MutedLabel")
         add_condition = QPushButton("+ Condition")
-        add_condition.setToolTip(
-            "Only run this event when a switch/flag matches a value"
-        )
         add_condition.clicked.connect(lambda: self.addConditionRequested.emit())
         condition_row.addWidget(self.conditions, 1)
         condition_row.addWidget(add_condition)
 
-        condition_group = QGroupBox("Conditions")
-        condition_group.setObjectName("EventSectionGroup")
-        condition_layout = QVBoxLayout(condition_group)
-        condition_layout.addLayout(condition_row)
-
         self.commands = QListWidget()
 
         buttons = QHBoxLayout()
-        command_kinds = [
-            ("Dialogue", "dialogue", "Show a line of dialogue from a speaker"),
-            ("Choice", "choice", "Present the player with multiple choices"),
-            ("If", "if", "Branch: skip ahead unless a switch matches a value"),
-            ("Switch", "switch", "Set a boolean switch/flag"),
-            ("Variable", "variable", "Set a variable to a value"),
-            ("World", "world", "Run a world-level command (e.g. scene transfer)"),
-        ]
-        for text, kind, tooltip in command_kinds:
+        for text, kind in [
+            ("Dialogue", "dialogue"),
+            ("Choice", "choice"),
+            ("If", "if"),
+            ("Switch", "switch"),
+            ("Variable", "variable"),
+            ("World", "world"),
+        ]:
             b = QPushButton(text)
-            b.setToolTip(tooltip)
             b.clicked.connect(
                 lambda checked=False, k=kind: self.addCommandRequested.emit(k)
             )
@@ -115,11 +91,8 @@ class EventEditorWidget(QWidget):
 
         ordering = QHBoxLayout()
         up = QPushButton("↑")
-        up.setToolTip("Move the selected command up")
         down = QPushButton("↓")
-        down.setToolTip("Move the selected command down")
         delete = QPushButton("Delete")
-        delete.setToolTip("Delete the selected command")
         up.clicked.connect(lambda: self._move(-1))
         down.clicked.connect(lambda: self._move(1))
         delete.clicked.connect(self._remove)
@@ -128,18 +101,15 @@ class EventEditorWidget(QWidget):
         ordering.addStretch(1)
         ordering.addWidget(delete)
 
-        commands_group = QGroupBox("Commands")
-        commands_group.setObjectName("EventSectionGroup")
-        commands_layout = QVBoxLayout(commands_group)
-        commands_layout.addWidget(self.commands, 1)
-        commands_layout.addLayout(buttons)
-        commands_layout.addLayout(ordering)
-
         layout = QVBoxLayout(self)
         layout.addWidget(self.title)
-        layout.addWidget(event_group)
-        layout.addWidget(condition_group)
-        layout.addWidget(commands_group, 1)
+        layout.addLayout(header)
+        layout.addLayout(form)
+        layout.addLayout(condition_row)
+        layout.addWidget(QLabel("Commands"))
+        layout.addWidget(self.commands, 1)
+        layout.addLayout(buttons)
+        layout.addLayout(ordering)
 
         self.show_empty("Select an Entity to edit events")
 

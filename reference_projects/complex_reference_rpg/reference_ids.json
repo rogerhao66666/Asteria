@@ -1,8 +1,8 @@
 {
-  "project_id": "08325667-473b-4f61-b4c9-72bff3619957",
-  "startup_scene_id": "cb9edc51-9d32-45fd-89e7-d3d66529b680",
-  "player_entity_id": "d74889b6-e551-43b0-af4b-5d9403de8a2e",
-  "boss_entity_id": "37cf3857-fe20-402c-b060-1c4c471b3783",
+  "project_id": "b8dcf8ef-98b6-441a-b1e7-5f7533801cca",
+  "startup_scene_id": "2175c138-7eed-4ab6-91c7-0b912611c1a0",
+  "player_entity_id": "698c1327-c30a-4340-a45c-8673a9313f9d",
+  "boss_entity_id": "d27dbd21-2fd3-4cc0-b50b-6cb1b2f345c6",
   "party_id": "main_party",
   "encounter_id": "boss_room"
 }

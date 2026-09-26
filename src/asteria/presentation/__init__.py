@@ -438,3 +438,21 @@ from .battle_render_performance import (
 )
 
 from .library import BattlePresentationLibrary, BattlePresentationProfileRef
+
+# Generic composable presentation extensions (Asset/Presentation branch)
+from .canonical import *
+from .runtime import *
+from .bridge import *
+from .editor_model import *
+from .workspace import *
+from .preview import *
+from .visual_authoring import *
+from .visual_editing import *
+from .workspace_controller import *
+from .fidelity import *
+from .composition import *
+from .choreography import *
+from .performance import *
+from .fidelity_editor import *
+# Export both legacy battle-presentation and generic composable-presentation APIs.
+__all__ = sorted(set(__all__) | {name for name in globals() if not name.startswith('_')})

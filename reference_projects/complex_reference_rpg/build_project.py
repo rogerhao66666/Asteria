@@ -30,7 +30,7 @@ from asteria.rpg import (
     ProgressionNodeReward, ProgressionTrackDefinition, ReactionDefinition,
     RewardDefinition, SocketDefinition,
 )
-from asteria.runtime import Interaction2DComponent, SpriteRenderer2D
+from asteria.runtime import Interaction2DComponent
 
 
 ABILITY_IDS = (
@@ -52,12 +52,6 @@ JOBS = (
 )
 
 ACTORS = tuple((f"hero_{i:02d}", f"Hero {i:02d}") for i in range(1,13))
-
-PASSIVE_NAMES=("Steadfast Heart","Arcane Insight","Fleet Foot","Iron Will","Second Wind","Keen Eye","Mana Flow","Guardian Oath","Battle Rhythm","Herbal Wisdom","Elemental Ward","Precise Strike","Last Stand","Quick Recovery","Scholar's Focus","Unbroken Spirit")
-WEAPON_NAMES=("Emberblade","Frostbrand","Stormcaller","Iron Vanguard","Moonlit Bow","Oracle Staff","Duelist's Edge","Mystic Scepter","Sunsteel Spear","Ashen Dagger","Riverguard Axe","Astral Greatsword")
-ARMOR_NAMES=("Traveler's Coat","Iron Wardplate","Moonweave Robe","Ranger's Leathers","Oracle Vestments","Astral Plate")
-ACCESSORY_NAMES=("Ember Charm","Frost Pendant","Storm Ring","Guardian Brooch","Moonstone Band","Wisp Locket","Scholar's Seal","Astral Emblem")
-SKILL_TIERS=("Initiation","Discipline","Insight","Mastery","Resolve","Ascendance")
 
 
 def build_project():
@@ -170,17 +164,18 @@ def build_project():
                 granted_tags=(f"mastery.{jid}.{n+1}",),
             )
             nodes.append(ProgressionNodeDefinition(
-                nid,f"{name} {SKILL_TIERS[n]}",max_rank=2 if n in {2,4} else 1,
+                nid,f"{name} Node {n+1}",max_rank=2 if n in {2,4} else 1,
                 rank_costs=({"ap":1},{"ap":2}) if n in {2,4} else ({"ap":1},),
                 rewards=(reward,reward) if n in {2,4} else (reward,),
                 prerequisites=prereq,tags=(f"tree.{jid}",),
             ))
-        # No stored node_positions: the editor derives the talent-tree layout
-        # from prerequisites, and stored coordinates would pin it to whatever
-        # layout existed when the project was generated.
+        positions={}
+        if branching:
+            coords=((0,90),(190,20),(190,160),(380,20),(380,160),(570,90))
+            positions={node.node_id:coords[i] for i,node in enumerate(nodes)}
         db.add_progression_graph(ProgressionGraphDefinition(
             f"{jid}_tree",f"{name} Skill Tree",nodes=nodes,tags=("skill_tree",f"job.{jid}"),
-            editor_view="graph" if branching else "list",
+            editor_view="graph" if branching else "list",node_positions=positions
         ))
 
     # --- Passives ---
@@ -188,7 +183,7 @@ def build_project():
         pid=f"passive_{i+1:02d}"
         granted=(ABILITY_IDS[(i+5)%12],) if i%4==0 else ()
         db.add_passive(PassiveDefinition(
-            pid,PASSIVE_NAMES[i],tags=(f"passive.family.{i%4}",),
+            pid,f"Passive {i+1:02d}",tags=(f"passive.family.{i%4}",),
             granted_abilities=granted,
         ))
 
@@ -223,18 +218,14 @@ def build_project():
     for i in range(12):
         eid=f"weapon_{i+1:02d}"
         db.add_equipment(EquipmentDefinition(
-            eid,WEAPON_NAMES[i],slot="weapon",tags=("weapon",f"weapon.family.{i%4}"),
+            eid,f"Weapon {i+1:02d}",slot="weapon",tags=("weapon",f"weapon.family.{i%4}"),
             granted_abilities=(ABILITY_IDS[2+(i%10)],),sockets=(SocketDefinition("rune",accepted_tags=("rune",)),),growth_id="weapon_growth",
         ))
     for i in range(8):
         db.add_equipment(EquipmentDefinition(
-            f"accessory_{i+1:02d}",ACCESSORY_NAMES[i],slot="accessory",
+            f"accessory_{i+1:02d}",f"Accessory {i+1:02d}",slot="accessory",
             tags=("accessory",f"accessory.family.{i%3}"),
             granted_abilities=(ABILITY_IDS[5+(i%6)],) if i%2==0 else (),
-        ))
-    for i,name in enumerate(ARMOR_NAMES):
-        db.add_equipment(EquipmentDefinition(
-            f"armor_{i+1:02d}",name,slot="armor",tags=("armor",f"armor.family.{i%3}"),
         ))
     for i in range(6):
         db.add_attachment(AttachmentDefinition(
@@ -414,30 +405,8 @@ def write_project(output_dir):
     # Canonical New Game state belongs to the Project, not a developer/player save.
     try:
         from .build_saves import build_save
-        from .field_tiles import install_field_tilemap
-        from .character_art import install_character_sprites, PLAYER_FRAME, ASTRAL_TYRANT_FRAME
     except ImportError:
         from build_saves import build_save
-        from field_tiles import install_field_tilemap
-        from character_art import install_character_sprites, PLAYER_FRAME, ASTRAL_TYRANT_FRAME
-    scene = project.scenes()[0]
-    install_field_tilemap(project, scene, output_dir)
-
-    # Field-map look for Player/Astral Tyrant: SpriteRenderer2D on the entity,
-    # not a tile — a character is not part of the terrain.
-    sheet_id = install_character_sprites(project, output_dir)
-    player_sprite = scene.get_entity(player_id).add_component(SpriteRenderer2D())
-    player_sprite.sprite_sheet_asset_id = sheet_id
-    player_sprite.frame_index = PLAYER_FRAME
-    player_sprite.layer = 10
-    boss_entity = scene.get_entity(boss_id)
-    boss_sprite = boss_entity.add_component(SpriteRenderer2D())
-    boss_sprite.sprite_sheet_asset_id = sheet_id
-    boss_sprite.frame_index = ASTRAL_TYRANT_FRAME
-    boss_sprite.layer = 10
-    boss_transform = boss_entity.get(Transform)
-    boss_transform.scale_x = 1.3
-    boss_transform.scale_y = 1.3
     from asteria.runtime.game_start import GameStartDefinition
     project.game_start=GameStartDefinition.from_runtime_save(build_save(project,"early"))
     project.game_start.event_context_data["variables"]["reference_profile"]="new_game"

@@ -28,33 +28,12 @@ def build_preview_registry():
     return registry
 
 
-_BACKEND_FACTORIES = {
-    "pygame": lambda: __import__(
-        "asteria.platform.pygame_backend", fromlist=["PygameRuntimeBackend"]
-    ).PygameRuntimeBackend(),
-    "moderngl": lambda: __import__(
-        "asteria.platform.moderngl_backend", fromlist=["ModernglRuntimeBackend"]
-    ).ModernglRuntimeBackend(),
-}
-
-
-def _build_backend(backend_kind):
-    factory = _BACKEND_FACTORIES.get(backend_kind)
-    if factory is None:
-        raise ValueError(
-            f"unknown backend_kind {backend_kind!r}; choose one of "
-            f"{sorted(_BACKEND_FACTORIES)}"
-        )
-    return factory()
-
-
 def run_preview(
     project_path,
     scene_id=None,
     *,
     resource_root=None,
     backend=None,
-    backend_kind="pygame",
     width=None,
     height=None,
     target_fps=60,
@@ -99,28 +78,29 @@ def run_preview(
     width = int(width or (active_camera.width if active_camera is not None else 960))
     height = int(height or (active_camera.height if active_camera is not None else 540))
 
-    playable_manifest = root / "playable_test_manifest.json"
-    if playable_manifest.exists():
-        # Route playable content before opening the generic preview backend.
-        # Opening and immediately replacing a pygame window can leave a stale
-        # grid-only window on macOS.
-        from asteria.runtime.playable_test_runtime import run_playable_test_runtime
-        return run_playable_test_runtime(
-            project,
-            root,
-            runtime_save=runtime_save,
-            save_path=save_path,
-            width=width,
-            height=height,
-            target_fps=target_fps,
-        )
-
     if backend is None:
-        backend = _build_backend(backend_kind)
+        from asteria.platform.pygame_backend import PygameRuntimeBackend
+
+        backend = PygameRuntimeBackend()
 
     backend.open(f"Asteria Preview — {scene.name}", width, height)
     try:
+        playable_manifest = root / "playable_test_manifest.json"
         reference_sidecar = root / "reference_data/tilemap.json"
+        if playable_manifest.exists():
+            # Human-operable sample-game path. This remains manifest/content-driven;
+            # Project + GameRuntimeSave own game rules/state.
+            backend.close()
+            from asteria.runtime.playable_test_runtime import run_playable_test_runtime
+            return run_playable_test_runtime(
+                project,
+                root,
+                runtime_save=runtime_save,
+                save_path=save_path,
+                width=width,
+                height=height,
+                target_fps=target_fps,
+            )
         if (
             reference_sidecar.exists()
             and hasattr(backend, "load_texture")
@@ -163,16 +143,11 @@ def main(argv=None):
     parser.add_argument("--height", type=int, default=540)
     parser.add_argument("--save")
     parser.add_argument("--playtest-profile")
-    parser.add_argument(
-        "--backend", choices=sorted(_BACKEND_FACTORIES), default="pygame",
-        help="Rendering backend (default: pygame)",
-    )
     args = parser.parse_args(argv)
     return run_preview(
         args.project,
         args.scene,
         resource_root=args.resource_root,
-        backend_kind=args.backend,
         width=args.width,
         height=args.height,
         save_path=args.save,

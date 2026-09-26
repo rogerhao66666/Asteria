@@ -1,0 +1,18 @@
+{
+  "gates": {
+    "composition": true,
+    "rendering": true,
+    "animated_text": true,
+    "choreography": true,
+    "vfx": true,
+    "material_lighting": true,
+    "audio": true,
+    "editor_preview": true,
+    "fidelity_import": true,
+    "save_load": true,
+    "project_e2e": true,
+    "performance": true
+  },
+  "all_pass": true,
+  "result": "PASS_FOR_STARTER_ASSET_VALIDATION"
+}

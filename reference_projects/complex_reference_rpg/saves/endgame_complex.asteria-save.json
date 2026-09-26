@@ -15,13 +15,13 @@
     },
     "version": 1
   },
-  "player_entity_id": "d74889b6-e551-43b0-af4b-5d9403de8a2e",
+  "player_entity_id": "698c1327-c30a-4340-a45c-8673a9313f9d",
   "player_facing": "right",
   "player_position": [
     28.0,
     0.0
   ],
-  "project_id": "08325667-473b-4f61-b4c9-72bff3619957",
+  "project_id": "b8dcf8ef-98b6-441a-b1e7-5f7533801cca",
   "rpg_state": {
     "actor_progression": {
       "hero_01": {
@@ -1125,16 +1125,6 @@
               "version": 2
             }
           ],
-          "armor": [
-            {
-              "attachments": {},
-              "equipment_id": "armor_01",
-              "growth": null,
-              "instance_id": "armor_01:actor:1",
-              "schema": "asteria.rpg.equipment_instance",
-              "version": 2
-            }
-          ],
           "weapon": [
             {
               "attachments": {
@@ -1167,11 +1157,6 @@
           {
             "accepted_tags": [],
             "capacity": 1,
-            "slot_id": "armor"
-          },
-          {
-            "accepted_tags": [],
-            "capacity": 1,
             "slot_id": "weapon"
           }
         ],
@@ -1193,16 +1178,6 @@
               "equipment_id": "accessory_03",
               "growth": null,
               "instance_id": "accessory_03:actor:2:1",
-              "schema": "asteria.rpg.equipment_instance",
-              "version": 2
-            }
-          ],
-          "armor": [
-            {
-              "attachments": {},
-              "equipment_id": "armor_02",
-              "growth": null,
-              "instance_id": "armor_02:actor:2",
               "schema": "asteria.rpg.equipment_instance",
               "version": 2
             }
@@ -1239,11 +1214,6 @@
           {
             "accepted_tags": [],
             "capacity": 1,
-            "slot_id": "armor"
-          },
-          {
-            "accepted_tags": [],
-            "capacity": 1,
             "slot_id": "weapon"
           }
         ],
@@ -1265,16 +1235,6 @@
               "equipment_id": "accessory_04",
               "growth": null,
               "instance_id": "accessory_04:actor:3:1",
-              "schema": "asteria.rpg.equipment_instance",
-              "version": 2
-            }
-          ],
-          "armor": [
-            {
-              "attachments": {},
-              "equipment_id": "armor_03",
-              "growth": null,
-              "instance_id": "armor_03:actor:3",
               "schema": "asteria.rpg.equipment_instance",
               "version": 2
             }
@@ -1311,11 +1271,6 @@
           {
             "accepted_tags": [],
             "capacity": 1,
-            "slot_id": "armor"
-          },
-          {
-            "accepted_tags": [],
-            "capacity": 1,
             "slot_id": "weapon"
           }
         ],
@@ -1337,16 +1292,6 @@
               "equipment_id": "accessory_05",
               "growth": null,
               "instance_id": "accessory_05:actor:4:1",
-              "schema": "asteria.rpg.equipment_instance",
-              "version": 2
-            }
-          ],
-          "armor": [
-            {
-              "attachments": {},
-              "equipment_id": "armor_04",
-              "growth": null,
-              "instance_id": "armor_04:actor:4",
               "schema": "asteria.rpg.equipment_instance",
               "version": 2
             }
@@ -1383,11 +1328,6 @@
           {
             "accepted_tags": [],
             "capacity": 1,
-            "slot_id": "armor"
-          },
-          {
-            "accepted_tags": [],
-            "capacity": 1,
             "slot_id": "weapon"
           }
         ],
@@ -1409,16 +1349,6 @@
               "equipment_id": "accessory_06",
               "growth": null,
               "instance_id": "accessory_06:actor:5:1",
-              "schema": "asteria.rpg.equipment_instance",
-              "version": 2
-            }
-          ],
-          "armor": [
-            {
-              "attachments": {},
-              "equipment_id": "armor_05",
-              "growth": null,
-              "instance_id": "armor_05:actor:5",
               "schema": "asteria.rpg.equipment_instance",
               "version": 2
             }
@@ -1455,11 +1385,6 @@
           {
             "accepted_tags": [],
             "capacity": 1,
-            "slot_id": "armor"
-          },
-          {
-            "accepted_tags": [],
-            "capacity": 1,
             "slot_id": "weapon"
           }
         ],
@@ -1481,16 +1406,6 @@
               "equipment_id": "accessory_07",
               "growth": null,
               "instance_id": "accessory_07:actor:6:1",
-              "schema": "asteria.rpg.equipment_instance",
-              "version": 2
-            }
-          ],
-          "armor": [
-            {
-              "attachments": {},
-              "equipment_id": "armor_06",
-              "growth": null,
-              "instance_id": "armor_06:actor:6",
               "schema": "asteria.rpg.equipment_instance",
               "version": 2
             }
@@ -1527,11 +1442,6 @@
           {
             "accepted_tags": [],
             "capacity": 1,
-            "slot_id": "armor"
-          },
-          {
-            "accepted_tags": [],
-            "capacity": 1,
             "slot_id": "weapon"
           }
         ],
@@ -1553,16 +1463,6 @@
               "equipment_id": "accessory_08",
               "growth": null,
               "instance_id": "accessory_08:actor:7:1",
-              "schema": "asteria.rpg.equipment_instance",
-              "version": 2
-            }
-          ],
-          "armor": [
-            {
-              "attachments": {},
-              "equipment_id": "armor_01",
-              "growth": null,
-              "instance_id": "armor_01:actor:7",
               "schema": "asteria.rpg.equipment_instance",
               "version": 2
             }
@@ -1599,11 +1499,6 @@
           {
             "accepted_tags": [],
             "capacity": 1,
-            "slot_id": "armor"
-          },
-          {
-            "accepted_tags": [],
-            "capacity": 1,
             "slot_id": "weapon"
           }
         ],
@@ -1625,16 +1520,6 @@
               "equipment_id": "accessory_01",
               "growth": null,
               "instance_id": "accessory_01:actor:8:1",
-              "schema": "asteria.rpg.equipment_instance",
-              "version": 2
-            }
-          ],
-          "armor": [
-            {
-              "attachments": {},
-              "equipment_id": "armor_02",
-              "growth": null,
-              "instance_id": "armor_02:actor:8",
               "schema": "asteria.rpg.equipment_instance",
               "version": 2
             }
@@ -1671,11 +1556,6 @@
           {
             "accepted_tags": [],
             "capacity": 1,
-            "slot_id": "armor"
-          },
-          {
-            "accepted_tags": [],
-            "capacity": 1,
             "slot_id": "weapon"
           }
         ],
@@ -1697,16 +1577,6 @@
               "equipment_id": "accessory_02",
               "growth": null,
               "instance_id": "accessory_02:actor:9:1",
-              "schema": "asteria.rpg.equipment_instance",
-              "version": 2
-            }
-          ],
-          "armor": [
-            {
-              "attachments": {},
-              "equipment_id": "armor_03",
-              "growth": null,
-              "instance_id": "armor_03:actor:9",
               "schema": "asteria.rpg.equipment_instance",
               "version": 2
             }
@@ -1743,11 +1613,6 @@
           {
             "accepted_tags": [],
             "capacity": 1,
-            "slot_id": "armor"
-          },
-          {
-            "accepted_tags": [],
-            "capacity": 1,
             "slot_id": "weapon"
           }
         ],
@@ -1769,16 +1634,6 @@
               "equipment_id": "accessory_03",
               "growth": null,
               "instance_id": "accessory_03:actor:10:1",
-              "schema": "asteria.rpg.equipment_instance",
-              "version": 2
-            }
-          ],
-          "armor": [
-            {
-              "attachments": {},
-              "equipment_id": "armor_04",
-              "growth": null,
-              "instance_id": "armor_04:actor:10",
               "schema": "asteria.rpg.equipment_instance",
               "version": 2
             }
@@ -1815,11 +1670,6 @@
           {
             "accepted_tags": [],
             "capacity": 1,
-            "slot_id": "armor"
-          },
-          {
-            "accepted_tags": [],
-            "capacity": 1,
             "slot_id": "weapon"
           }
         ],
@@ -1841,16 +1691,6 @@
               "equipment_id": "accessory_04",
               "growth": null,
               "instance_id": "accessory_04:actor:11:1",
-              "schema": "asteria.rpg.equipment_instance",
-              "version": 2
-            }
-          ],
-          "armor": [
-            {
-              "attachments": {},
-              "equipment_id": "armor_05",
-              "growth": null,
-              "instance_id": "armor_05:actor:11",
               "schema": "asteria.rpg.equipment_instance",
               "version": 2
             }
@@ -1887,11 +1727,6 @@
           {
             "accepted_tags": [],
             "capacity": 1,
-            "slot_id": "armor"
-          },
-          {
-            "accepted_tags": [],
-            "capacity": 1,
             "slot_id": "weapon"
           }
         ],
@@ -1913,16 +1748,6 @@
               "equipment_id": "accessory_05",
               "growth": null,
               "instance_id": "accessory_05:actor:12:1",
-              "schema": "asteria.rpg.equipment_instance",
-              "version": 2
-            }
-          ],
-          "armor": [
-            {
-              "attachments": {},
-              "equipment_id": "armor_06",
-              "growth": null,
-              "instance_id": "armor_06:actor:12",
               "schema": "asteria.rpg.equipment_instance",
               "version": 2
             }
@@ -1955,11 +1780,6 @@
             "accepted_tags": [],
             "capacity": 2,
             "slot_id": "accessory"
-          },
-          {
-            "accepted_tags": [],
-            "capacity": 1,
-            "slot_id": "armor"
           },
           {
             "accepted_tags": [],
@@ -2295,7 +2115,7 @@
     "schema": "asteria.rpg.runtime_state",
     "version": 5
   },
-  "scene_id": "cb9edc51-9d32-45fd-89e7-d3d66529b680",
+  "scene_id": "2175c138-7eed-4ab6-91c7-0b912611c1a0",
   "schema": "asteria.game_runtime_save",
   "version": 1
 }

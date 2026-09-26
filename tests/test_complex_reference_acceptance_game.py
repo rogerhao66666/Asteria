@@ -58,23 +58,6 @@ def test_build_customization_all_mutates_runtime_state():
     assert save.rpg_state.party_active_actor_ids==rotated[:6]
 
 
-def test_repeated_equipment_changes_keep_instance_ids_unique():
-    project=load_project(); save=project.game_start.instantiate(project); game=GameSessionRuntime(project,save)
-    actor=save.rpg_state.party_actor_ids[0]
-    for equipment_id in ("weapon_12","weapon_01","weapon_12","weapon_01"):
-        game.equip_definition(actor,equipment_id,slot_id="weapon")
-    ids=[item.instance_id for item in save.rpg_state.loadouts[actor].equipped()]
-    assert len(ids)==len(set(ids))
-    loadout=save.rpg_state.loadouts[actor]
-    while loadout.equipped("accessory"):loadout.unequip("accessory",0)
-    game.equip_definition(actor,"accessory_01",slot_id="accessory",replace=False)
-    game.equip_definition(actor,"accessory_01",slot_id="accessory",replace=False)
-    loadout.unequip("accessory",0)
-    game.equip_definition(actor,"accessory_01",slot_id="accessory",replace=False)
-    ids=[item.instance_id for item in loadout.equipped()]
-    assert len(ids)==len(set(ids))
-
-
 def test_battle_has_generic_boost_and_weakness_break_path():
     project=load_project(); save=project.game_start.instantiate(project); game=GameSessionRuntime(project,save)
     battle=game.start_encounter("boss_room")

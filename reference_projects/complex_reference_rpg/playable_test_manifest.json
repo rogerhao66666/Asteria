@@ -59,7 +59,7 @@
   },
   "controls": {
     "title": "N New Game / L Load Player Save",
-    "move": "Directional arrows",
+    "move": "WASD / Arrow Keys",
     "character_menu": "C",
     "character_menu_actions": "Q/E actor, 1 secondary class, 2 skill tree, 3 passive, 4 weapon, 5 weapon upgrade, 6 accessory, 7 party/formation",
     "interact": "E / Enter",
