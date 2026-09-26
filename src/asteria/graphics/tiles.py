@@ -1,6 +1,9 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-from asteria.assets import AssetRef
+if TYPE_CHECKING:
+    from asteria.assets.types import AssetRef
 
 
 @dataclass(frozen=True, slots=True)

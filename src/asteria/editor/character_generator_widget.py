@@ -12,6 +12,21 @@ except ImportError:
     Qt = QTimer = Signal = QImage = QPixmap = None
 
 from asteria.assets.character_generator import DIRECTIONS, LAYER_ORDER
+from asteria.graphics.character_placement import CharacterPlacement, frame_rect_at_standing_point
+from PIL import Image, ImageDraw
+
+
+def character_grid_preview(image, *, canvas_size=(144, 144), tile_size=(48, 48)):
+    canvas = Image.new("RGBA", canvas_size, (24, 27, 32, 255))
+    draw = ImageDraw.Draw(canvas)
+    left = (canvas_size[0] - tile_size[0]) // 2
+    top = (canvas_size[1] - tile_size[1]) // 2
+    draw.rectangle((left, top, left + tile_size[0], top + tile_size[1]), outline=(79, 88, 104, 255), width=1)
+    draw.line((left, top + tile_size[1], left + tile_size[0], top + tile_size[1]), fill=(235, 183, 76, 255), width=2)
+    standing = (left + tile_size[0] / 2, top + tile_size[1])
+    x1, y1, _, _ = frame_rect_at_standing_point(standing, CharacterPlacement(image.size))
+    canvas.alpha_composite(image.convert("RGBA"), (round(x1), round(y1)))
+    return canvas
 
 
 class CharacterGeneratorWidget(QWidget):
@@ -83,7 +98,7 @@ class CharacterGeneratorWidget(QWidget):
         self.frame_index = (self.frame_index + 1) % self.workspace.generator.preset.frames_per_direction; self.refresh_preview()
 
     def refresh_preview(self):
-        image = self.workspace.preview_frame(self.direction, self.frame_index)
+        image = character_grid_preview(self.workspace.preview_frame(self.direction, self.frame_index))
         raw = image.tobytes("raw", "RGBA")
         qimg = QImage(raw, image.width, image.height, QImage.Format_RGBA8888).copy()
         pix = QPixmap.fromImage(qimg).scaled(288,288,Qt.KeepAspectRatio,Qt.FastTransformation)

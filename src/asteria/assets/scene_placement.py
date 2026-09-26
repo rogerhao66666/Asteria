@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 from typing import Any,Callable,Protocol
 from .browser_workspace import AssetDragPayload
+from asteria.graphics.character_placement import standing_point_for_cell
+
+def character_cell_position(column,row,tile_size=(48,48)):
+ return standing_point_for_cell(column,row,tile_size)
 @dataclass(frozen=True,slots=True)
 class SceneAssetRef: asset_id:str;kind:str
 @dataclass(frozen=True,slots=True)

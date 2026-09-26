@@ -40,5 +40,3 @@ from .editor_import_service import *
 from .quality_gate import *
 from .rpg_maker_mv_database import *
 from .rpg_maker_mv_catalog import *
-from .rpg_maker_mv_map import *
-from .rpg_maker_mv_project import *

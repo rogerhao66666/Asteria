@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
-from asteria.graphics import RenderPlacement2D
+from asteria.graphics.placement import RenderPlacement2D
+from asteria.graphics.character_placement import CharacterPlacement, frame_rect_at_standing_point
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,8 +32,10 @@ def sprite_draw(
     placement = placement or RenderPlacement2D()
     placement.validate()
     frame = sheet.frames[frame_index]
-    draw_x = world_x - frame.width * frame.pivot_x
-    draw_y = world_y - frame.height * frame.pivot_y
+    draw_x, draw_y, _, _ = frame_rect_at_standing_point(
+        (world_x, world_y),
+        CharacterPlacement((frame.width, frame.height), (frame.pivot_x, frame.pivot_y)),
+    )
     sx, sy = camera.world_to_screen(
         draw_x, draw_y, placement.parallax_x, placement.parallax_y, placement.elevation
     )
