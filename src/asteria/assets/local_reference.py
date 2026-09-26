@@ -28,6 +28,18 @@ class LocalReferenceLayout:
 
 
 @dataclass(frozen=True, slots=True)
+class RPGMakerMVProjectLayout:
+    reference_root: Path
+    root: Path
+    relative_path: str
+    data: Path
+    img: Path | None
+    audio: Path | None
+    fonts: Path | None
+    js: Path | None
+
+
+@dataclass(frozen=True, slots=True)
 class ReferenceFile:
     relative_path: str
     size: int
@@ -79,6 +91,45 @@ def resolve_rpg_maker_mv_root(
         if _valid_reference_root(steam):
             return steam
     return None
+
+
+def discover_mv_projects(root: Path) -> tuple[RPGMakerMVProjectLayout, ...]:
+    reference_root = Path(root).expanduser().resolve()
+    candidates = []
+    main = reference_root / "NewData" / "data" / "System.json"
+    if main.is_file():
+        candidates.append(main)
+    dlc = reference_root / "dlc"
+    if dlc.is_dir():
+        candidates.extend(sorted(dlc.glob("**/data/System.json")))
+
+    projects = []
+    for system_path in candidates:
+        try:
+            system = json.loads(system_path.read_text(encoding="utf-8-sig"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            continue
+        if not isinstance(system, dict):
+            continue
+        project_root = system_path.parent.parent.resolve()
+
+        def optional(name: str) -> Path | None:
+            path = project_root / name
+            return path if path.is_dir() else None
+
+        projects.append(
+            RPGMakerMVProjectLayout(
+                reference_root=reference_root,
+                root=project_root,
+                relative_path=project_root.relative_to(reference_root).as_posix(),
+                data=system_path.parent.resolve(),
+                img=optional("img"),
+                audio=optional("audio"),
+                fonts=optional("fonts"),
+                js=optional("js"),
+            )
+        )
+    return tuple(sorted(projects, key=lambda item: (item.relative_path != "NewData", item.relative_path)))
 
 
 def _hash_file(path: Path) -> str:

@@ -3,16 +3,21 @@ from pathlib import Path
 import pytest
 
 from asteria.assets import AssetRegistry
+from asteria.assets.local_reference import resolve_rpg_maker_mv_root
 from asteria.assets.rpg_maker_mv import RPGMakerMVImporter
 
 
-MV_ROOT = Path(
+STEAM_MV_ROOT = Path(
     "/Users/roger/Library/Application Support/Steam/steamapps/common/RPG Maker MV"
 )
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def real_mv_file(category: str, pattern: str = "*.png") -> Path:
-    matches = sorted(MV_ROOT.glob(f"**/img/{category}/{pattern}"))
+    root = resolve_rpg_maker_mv_root(REPO_ROOT, STEAM_MV_ROOT)
+    if root is None:
+        pytest.skip(f"real RPG Maker MV {category} fixture unavailable")
+    matches = sorted(root.glob(f"**/img/{category}/{pattern}"))
     if not matches:
         pytest.skip(f"real RPG Maker MV {category} fixture unavailable")
     return matches[0]
