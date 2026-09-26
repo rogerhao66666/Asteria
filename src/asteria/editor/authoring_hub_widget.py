@@ -383,6 +383,7 @@ class FamilyHostWidget(QWidget):
                 refresh()
             return
         if self.child is not None:
+            self.child.hide()
             self.layout.removeWidget(self.child); self.child.deleteLater(); self.child=None
         self.project_id=pid
         if project is None:
