@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from .clipboard import build_duplicate_entity_command, build_paste_entity_command
 from .code_workspace import CodeWorkspaceWidget
 from .component_picker import build_component_choices
@@ -96,6 +98,14 @@ from .viewport_widget import SceneViewportWidget
 from .widgets import InspectorWidget, ProjectTreeWidget
 
 
+@lru_cache(maxsize=1)
+def _discover_mv_generator_catalog(reference_root):
+    """Share the immutable MV file index while keeping each recipe independent."""
+    from asteria.assets.rpg_maker_mv_generator import RPGMakerMVGeneratorCatalog
+
+    return RPGMakerMVGeneratorCatalog.discover(reference_root)
+
+
 class AsteriaEditorWindow(QMainWindow):
     def __init__(self, project=None, component_registry=None):
         if QApplication is None:
@@ -126,7 +136,6 @@ class AsteriaEditorWindow(QMainWindow):
         from pathlib import Path
         from asteria.assets.character_generator import CharacterGeneratorCatalog
         from asteria.assets.local_reference import resolve_rpg_maker_mv_root
-        from asteria.assets.rpg_maker_mv_generator import RPGMakerMVGeneratorCatalog
         from .character_generator_widget import CharacterGeneratorWidget
         from .character_generator_workspace import CharacterGeneratorWorkspace
 
@@ -135,9 +144,10 @@ class AsteriaEditorWindow(QMainWindow):
             character_workspace = CharacterGeneratorWorkspace.create(CharacterGeneratorCatalog())
         else:
             character_workspace = CharacterGeneratorWorkspace.create_mv(
-                RPGMakerMVGeneratorCatalog.discover(reference_root)
+                _discover_mv_generator_catalog(reference_root)
             )
         self.character_creator = CharacterGeneratorWidget(character_workspace, self)
+        self.character_creator.generated.connect(self._create_generated_character)
         self.rpg_workspace = QTabWidget(self)
         self.rpg_workspace.addTab(self.rpg_authoring, "Database")
         self.rpg_workspace.addTab(self.character_creator, "Character Creator")
@@ -246,6 +256,38 @@ class AsteriaEditorWindow(QMainWindow):
         self._workspace_mode_changed(self.workspace.mode.value)
         self.refresh_all()
         QTimer.singleShot(0, self.viewport.frame_game_camera)
+
+    def _create_generated_character(self, bundle):
+        """Commit a generated bundle to the current project and selected map."""
+        project = self.document.project
+        scene = self.viewport.current_scene()
+        if project is None or scene is None:
+            self.character_creator.status.setText(
+                "Open a project and select a scene before creating a character"
+            )
+            return None
+        cell = (
+            self.character_creator.cell_x_spin.value(),
+            self.character_creator.cell_y_spin.value(),
+        )
+        try:
+            command = self.character_creator.workspace.create_character_command(
+                bundle,
+                project,
+                scene,
+                cell,
+                display_name=self.character_creator.name_edit.text().strip() or None,
+            )
+            self.document.execute(command)
+        except Exception as exc:
+            self.character_creator.status.setText(f"Character creation failed: {exc}")
+            return None
+        self.document.select_entity(command.created.entity)
+        self.character_creator.status.setText(
+            f"Created {command.created.actor.display_name} at map cell {cell[0]}, {cell[1]}"
+        )
+        self.refresh_all()
+        return command.created
 
     def _workspace_mode_changed(self, mode):
         current = WorkspaceMode(mode)

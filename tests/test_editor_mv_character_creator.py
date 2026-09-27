@@ -82,5 +82,63 @@ def test_editor_shell_exposes_mv_character_creator_in_rpg_workspace():
         assert labels == ["Database", "Character Creator"]
         assert window.character_creator.part_grid.objectName() == "CharacterPartGrid"
     finally:
+        window.document.mark_saved()
+        window.close()
+        app.processEvents()
+
+
+def test_editor_shell_generated_bundle_creates_character_in_selected_scene(monkeypatch):
+    pytest.importorskip("PySide6")
+    from PySide6.QtWidgets import QApplication
+    from asteria.core import Entity, Scene
+    from asteria.editor.shell import AsteriaEditorWindow
+    from asteria.project import Project
+
+    class Command:
+        label = "Create Character Hero"
+
+        def __init__(self):
+            self.created = type("Created", (), {
+                "entity": Entity("Hero"),
+                "actor": type("Actor", (), {"display_name": "Hero"})(),
+            })()
+            self.applied = False
+            self.scene = None
+
+        def redo(self):
+            self.scene.add_entity(self.created.entity)
+            self.applied = True
+
+        def undo(self):
+            self.scene.detach_entity(self.created.entity)
+            self.applied = False
+
+    app = QApplication.instance() or QApplication([])
+    project = Project("Game")
+    scene = project.add_scene(Scene("Map"))
+    window = AsteriaEditorWindow(project)
+    command = Command()
+    captured = {}
+
+    def build(bundle, actual_project, actual_scene, cell, *, display_name=None):
+        command.scene = actual_scene
+        captured.update(bundle=bundle, project=actual_project, scene=actual_scene,
+                        cell=cell, display_name=display_name)
+        return command
+
+    monkeypatch.setattr(window.character_creator.workspace, "create_character_command", build)
+    monkeypatch.setattr(window, "refresh_all", lambda: None)
+    window.character_creator.cell_x_spin.setValue(4)
+    window.character_creator.cell_y_spin.setValue(5)
+    window.character_creator.name_edit.setText("Hero")
+    try:
+        window.character_creator.generated.emit("bundle")
+        assert captured == {"bundle": "bundle", "project": project, "scene": scene,
+                            "cell": (4, 5), "display_name": "Hero"}
+        assert command.applied
+        assert window.document.commands.undo_label == "Create Character Hero"
+        assert window.document.selection.value is command.created.entity
+    finally:
+        window.document.mark_saved()
         window.close()
         app.processEvents()

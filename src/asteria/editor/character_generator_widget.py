@@ -6,7 +6,7 @@ try:
     from PySide6.QtWidgets import (
         QWidget, QLabel, QComboBox, QPushButton, QHBoxLayout, QVBoxLayout,
         QFormLayout, QFrame, QLineEdit, QFileDialog, QListWidget, QListWidgetItem,
-        QTabWidget
+        QTabWidget, QSpinBox
     )
 except ImportError:
     QWidget = object
@@ -101,9 +101,14 @@ class CharacterGeneratorWidget(QWidget):
         self.gender_combo.currentTextChanged.connect(self.refresh_choices); left.addWidget(self.gender_combo)
         self.category_combo = QComboBox(); self.category_combo.addItems([c for c in LAYER_ORDER])
         self.category_combo.currentTextChanged.connect(self.refresh_choices); left.addWidget(self.category_combo)
+        cell_row = QHBoxLayout()
+        self.cell_x_spin = QSpinBox(); self.cell_x_spin.setRange(0, 9999); self.cell_x_spin.setPrefix("X ")
+        self.cell_y_spin = QSpinBox(); self.cell_y_spin.setRange(0, 9999); self.cell_y_spin.setPrefix("Y ")
+        cell_row.addWidget(self.cell_x_spin); cell_row.addWidget(self.cell_y_spin)
+        left.addWidget(QLabel("MAP CELL")); left.addLayout(cell_row)
         self.selected_label = QLabel("No parts selected"); self.selected_label.setWordWrap(True); left.addWidget(self.selected_label)
         left.addStretch(1)
-        self.generate_button = QPushButton("Create Character Bundle"); self.generate_button.setObjectName("PrimaryButton")
+        self.generate_button = QPushButton("Create Character on Map"); self.generate_button.setObjectName("PrimaryButton")
         self.generate_button.clicked.connect(self._generate); left.addWidget(self.generate_button)
         root.addWidget(profile, 0)
 
