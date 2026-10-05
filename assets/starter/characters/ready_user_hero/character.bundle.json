@@ -1,0 +1,39 @@
+{
+  "schema": "asteria.character.bundle.v1",
+  "origin": "asteria-generated-user-defined-hero",
+  "preset_id": "ready.user_hero",
+  "display_name": "User-defined Hero",
+  "art_adjustment": {
+    "all_visuals": "re-illustrated with image generation from the user-approved portrait; DLC assets are layout and motion references, not the delivered raster artwork",
+    "preserved": "character palette and costume direction, expression/action intent, transparent background, and engine frame grids"
+  },
+  "source": {
+    "pack": "ParallelWorldsHero_GFX",
+    "approved_portrait": "user-provided codex-clipboard-0dacfb96-1b81-4f42-9fdd-ec3ea1ee5b29.png",
+    "layout_and_motion_references": [
+      "Characters/Satan/$Satan01.png",
+      "Characters/Satan/$Satan02.png",
+      "Characters/faces/Satan/Satan-aura.png",
+      "Characters/sv_actors/Satan/Satan-sv_actors01.png",
+      "Characters/sv_actors/Satan/Satan-sv_actors02.png"
+    ],
+    "delivered_art": "Asteria-generated and stored in this preset bundle"
+  },
+  "anchor": [24, 48],
+  "walking": {
+    "file": "walking.png",
+    "canvas": [144, 192],
+    "frame_size": [48, 48],
+    "columns": 3,
+    "rows": 4,
+    "row_directions": ["down", "left", "right", "up"]
+  },
+  "face": {"file": "face.png", "canvas": [144, 144]},
+  "face_expressions": {"file": "face_expressions.png", "canvas": [576, 288], "columns": 4, "rows": 2},
+  "side_view": {"file": "side_view.png", "canvas": [576, 384], "columns": 9, "rows": 6, "frame_size": [64, 64]},
+  "aura_variants": {
+    "walking": "walking_aura.png",
+    "face": "face_aura.png",
+    "side_view": "side_view_aura.png"
+  }
+}
