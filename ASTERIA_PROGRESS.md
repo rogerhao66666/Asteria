@@ -283,3 +283,27 @@ in a clean clone without the git-ignored MV reference → **1799 passed,
 
 **NEXT:** CB3 (battle rules back into canonical data) → CB1 (Event VM in the
 runtime) → CB2 (incremental Battle Presentation integration).
+
+## Runtime integration batches CB3 / CB1 / CB2 (first increment) --- 2026-10-09
+
+- **CB3:** `rpg.BattleSessionRules` (RPG database schema v24) names the
+  knockout resource, the gauge hit trigger and boost resource/cost/limit.
+  `GameSessionRuntime` uses battle targeting data, the battle scheduler and
+  these rules; `runtime/` holds no project-specific battle ids (enforced by
+  `tests/test_battle_session_rules.py`).
+- **CB1:** authored event programs run during play: a foreground
+  `EventRunner` for interactions, the scene's autorun/parallel scheduler,
+  standard WORLD commands (`runtime/world_command_handlers.py`), dialogue and
+  choices, and game save version 2 keeps an event that is mid-dialogue.
+- **CB2 (first increment):** the session records an ordered battle log;
+  `LegacyPygameBattleAdapter` (default) and `CanonicalBattleAdapter`
+  (`BattleScreenRuntime` + `PygameBattleUiBackend`) both consume it, and a
+  parity test proves they agree. The canonical UI renders but has open layout
+  defects; canonical combatant sprites, VFX/audio playback and legacy
+  retirement remain.
+- Found: the reference project's `playable_assets/` images were removed in
+  `bf4a993`, so Run Project on it cannot load its images until licensed art or
+  test-only placeholders are added.
+
+Verification: `QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q` →
+**1884 passed**. Real-window runs were not executed (headless SDL only).

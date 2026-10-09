@@ -211,3 +211,41 @@
 **驗證：** 本機 offscreen **1854 passed, 0 failed**；乾淨 clone（沒有 MV reference）**1799 passed, 55 skipped, 0 failed**。
 **狀態變更：** AST-13 由 C → B（邊界已由測試強制；尚未實機重驗 W-18）。SPEC_GAP_AUDIT 中的 C-1、C-2、C-3 已處理（README、PROGRESS 已同步）；C-5（pyproject 版本）**未改**，版本號需要由你決定。
 **CI：** 只有 commit，沒有 push，所以還沒在 GitHub 上跑過。
+
+---
+
+## D9 — CB3／CB1／CB2（第一階段）執行紀錄（2026-10-09）
+
+| Commit | Batch | 內容 |
+|---|---|---|
+| `84a1d9b` | CB3 | 新增 `BattleSessionRules`（RPG DB schema v24）；`GameSessionRuntime` 依資料決定目標、boost、量表、KO、排程器回合；runtime 中沒有任何寫死的專案 ID（有測試強制）；字型快取（PERF-01） |
+| `4cd1daf` | CB1 | Event VM 在遊玩中執行（前景 runner + 場景 autorun/parallel）；標準 WORLD handler；存檔 v2 保存進行中的事件；Event Editor 可以輸入 WORLD 參數 |
+| `826d82c` | CB2-a～d | session 戰鬥紀錄 → Legacy／Canonical 兩個 presentation adapter；行為對照測試；預設仍是 legacy |
+| `bb69837` | CB2 | Canonical UI 依 virtual resolution 縮放；陣營左右配置 |
+
+**行為變更（已寫在 commit 中）：** 回合順序改由排程器決定；多目標技能依 `maximum_targets` 命中；boss 先說台詞，確認後才開始戰鬥。
+
+**驗證：** 本機 offscreen **1884 passed, 0 failed**；compileall／正確性 lint PASS。實機視窗（RM）**沒有執行**，只有 SDL dummy driver 的 headless 執行與截圖檢視。
+
+**狀態更新（SPEC_TRACEABILITY_MATRIX）：**
+| ID | 之前 | 現在 | 說明 |
+|---|---|---|---|
+| GP-02、GP-05、BTL-01、BTL-02、BTL-03 | B | B（已在遊玩中使用，HI 驗證） | 缺 RM |
+| EVT-01 | B | B（已在遊玩中執行，HI 驗證） | 缺 RM |
+| EVT-02 | C | B | 有標準 handler；Editor 可以撰寫參數 |
+| EVT-03 | C | C | 仍沒有 common event 和 cutscene |
+| BTL-04、UI-01 | B／C | C | Canonical adapter 已接上，但實際渲染有版面缺陷（見下）；不是預設 |
+| AST-13 | C | B | 邊界由測試強制 |
+| RISK-02、RISK-03、PERF-01 | 開放 | 已處理 | |
+
+**新發現：**
+- **F-1（高）：** `reference_projects/complex_reference_rpg/playable_assets/` 在 `bf4a993` 被刪除（屬於引擎專用的交接整理）。`playable_test_manifest.json` 仍然引用這些圖片，所以**對 reference project 執行 Run Project 時圖片會載入失敗**。測試改用程式產生的佔位圖。要等授權明確的免費素材（或 test-only 佔位素材）補上。
+- **F-2（中，CB2 後續）：** Canonical battle UI 第一次實際渲染時發現的版面缺陷：
+  - HUD 面板在 6 人隊伍時和 action menu 重疊
+  - 回合時間軸標籤互相重疊，而且顯示原始排程時間值
+  - 預設字型缺少選單游標字元
+  - 戰鬥者顯示 member id，不是顯示名稱
+  這些缺陷修好之前，legacy 維持預設。
+- **F-3（中）：** 互動結果（弱點倍率）只用在量表和演出，**沒有套用到實際傷害**。這是 Battle Core 呼叫方式的語意問題，沿用自原本的 playable runtime。需要你決定是否列入 Battle 規則修正。
+
+**CB2 剩餘：** canonical 戰鬥者 sprite／動畫（需要 combatant visual profile + 素材）、VFX/音訊 cue 播放（需要 CB6）、F-2 版面修正、實機驗證，最後才是 legacy 退役提案。
