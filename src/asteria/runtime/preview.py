@@ -8,6 +8,7 @@ from asteria.gameplay import GameplayAttributesComponent
 from asteria.project import Project
 from asteria.core import PersistentComponent
 from asteria.runtime.actor_link import ActorLinkComponent
+from asteria.runtime.collision import Collider2DComponent
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.components2d import (
     Animator2DComponent,
@@ -29,6 +30,7 @@ def build_preview_registry():
     registry.register(GameplayAttributesComponent)
     registry.register(ActorLinkComponent)
     registry.register(PersistentComponent)
+    registry.register(Collider2DComponent)
     return registry
 
 

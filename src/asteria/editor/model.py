@@ -37,6 +37,7 @@ class EditorDocument:
             ActorLinkComponent,
             Animator2DComponent,
             Camera2DComponent,
+            Collider2DComponent,
             Interaction2DComponent,
             SpriteRenderer2D,
             TileMap2DComponent,
@@ -56,6 +57,7 @@ class EditorDocument:
             component_registry.register(GameplayAttributesComponent)
             component_registry.register(ActorLinkComponent)
             component_registry.register(PersistentComponent)
+            component_registry.register(Collider2DComponent)
         self.project = project
         self.selection = EditorSelection()
         self.component_registry = component_registry

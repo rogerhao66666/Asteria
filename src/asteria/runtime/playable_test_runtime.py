@@ -7,6 +7,7 @@ from asteria.core import Transform
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
 from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
+from asteria.runtime.collision import CollisionWorld
 from asteria.runtime.input_map import InputActionTracker
 
 
@@ -226,8 +227,11 @@ class PlayableTestRuntime:
             mag=max(1.0,(dx*dx+dy*dy)**0.5)
             speed=36.0
             pt=self.game.player.get(Transform)
-            pt.x=max(-120.0,min(120.0,pt.x+dx/mag*speed*dt))
-            pt.y=max(-52.0,min(52.0,pt.y+dy/mag*speed*dt))
+            blocked=CollisionWorld.from_scene(self.game.scene).blocking_query(exclude={self.game.player.id})
+            nx=max(-120.0,min(120.0,pt.x+dx/mag*speed*dt))
+            if not blocked.collides_world_point(nx,pt.y):pt.x=nx
+            ny=max(-52.0,min(52.0,pt.y+dy/mag*speed*dt))
+            if not blocked.collides_world_point(pt.x,ny):pt.y=ny
             self.game.save.player_position=(pt.x,pt.y)
             if abs(dx)>abs(dy):
                 self.game.set_player_facing("right" if dx>0 else "left")
