@@ -169,7 +169,7 @@ def test_database_v11_owns_battle_state_policies_and_v10_is_backward_readable():
     db = RpgDatabase()
     db.add_battle_state_policy(BattleStatePolicy("poison", immune_target_tags=["immune.poison"]))
     data = db.to_data()
-    assert data["version"] == 23
+    assert data["version"] == 24
     restored = RpgDatabase.from_data(data)
     assert restored.battle_state_policies["poison"].immune_target_tags == ("immune.poison",)
 

@@ -4106,6 +4106,18 @@
         "version": 1
       }
     ],
+    "battle_session_rules": [
+      {
+        "boost_cost_per_level": 1.0,
+        "boost_max_level": 3,
+        "boost_resource_id": "momentum",
+        "hit_trigger": "battle.hit",
+        "knockout_resource_id": "vitality",
+        "rules_id": "reference_session",
+        "schema": "asteria.rpg.battle_session_rules",
+        "version": 1
+      }
+    ],
     "battle_state_policies": [
       {
         "base_chance": 1.0,
@@ -9204,7 +9216,7 @@
       }
     ],
     "schema": "asteria.rpg.database",
-    "version": 23
+    "version": 24
   },
   "scene_event_bindings": {
     "2175c138-7eed-4ab6-91c7-0b912611c1a0": {

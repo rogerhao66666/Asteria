@@ -1,4 +1,5 @@
 from .enemy_behavior import EnemyBehaviorBinding
+from .battle_session_rules import BattleSessionRules
 from .party_setup import PartyPlacementDefinition, PartyPresentationPolicyDefinition, PartySetupDefinition
 from .composition import CompositionOutput, CompositionRecipeDefinition, CompositionResult, CompositionRuntime, CompositionSelection
 from .battle_transactions import (
@@ -169,6 +170,7 @@ from .save_state import ActorProgressionState, RpgRuntimeState
 
 __all__ = [
     "EnemyBehaviorBinding",
+    "BattleSessionRules",
     "PartyPlacementDefinition", "PartyPresentationPolicyDefinition", "PartySetupDefinition",
     "CompositionOutput", "CompositionRecipeDefinition", "CompositionResult", "CompositionRuntime", "CompositionSelection",
     "ActionTransactionPolicy", "BattleTransactionRuntime", "CostCommitMode", "InterruptCostPolicy", "PendingCostReservation",

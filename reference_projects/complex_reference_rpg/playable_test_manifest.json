@@ -55,6 +55,22 @@
         "fx": "playable_assets/fx_meteor.png",
         "frames": 16
       }
+    },
+    "enemy_layouts": {
+      "astral_tyrant": {
+        "size": [
+          220,
+          220
+        ],
+        "position": [
+          650,
+          100
+        ],
+        "gauge": {
+          "resource": "stagger",
+          "label": "Shield"
+        }
+      }
     }
   },
   "controls": {

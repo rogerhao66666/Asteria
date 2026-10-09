@@ -260,7 +260,7 @@ def test_database_v12_roundtrip_and_v11_backward_read():
     db.add_formation(formation())
     db.add_battle_targeting(BattleTargetingDefinition("hit", relation="opponent"))
     data = db.to_data()
-    assert data["version"] == 23
+    assert data["version"] == 24
     restored = RpgDatabase.from_data(data)
     assert "party.grid" in restored.formations
     assert restored.battle_targeting["hit"].relation is TargetRelation.OPPONENT

@@ -5,9 +5,10 @@ import random
 from asteria.core import Transform
 from asteria.gameplay import AbilityRegistry, AbilityRuntime, GameplaySubject
 from asteria.rpg import (
-    ActorAbilityState, ActorProgressionState, BattleAction, BattleRuntime, ClassAssignment, EquipmentGrowthRuntime, EquippedItem, Party, PartyMember, RewardRuntime, RpgActorSnapshot,
+    ActorAbilityState, ActorProgressionState, BattleAction, BattleRuntime, BattleSessionRules, ClassAssignment, EquipmentGrowthRuntime, EquippedItem, Party, PartyMember, RewardRuntime, RpgActorSnapshot,
     RpgActorRuntime, roll_reward, resolve_actor_build,
 )
+from asteria.rpg.targeting import TargetRelation
 from asteria.runtime.input import InputSnapshot
 from asteria.runtime.interaction import InteractionController
 
@@ -286,10 +287,7 @@ class GameSessionRuntime:
         self.battle=BattleRuntime(
             (Party("heroes",heroes),Party("enemies",tuple(enemies))),
             AbilityRuntime(registry),
-            is_active=lambda m: (
-                "vitality" not in m.subject.resources.to_data()["values"]
-                or m.subject.resources.current("vitality")>0
-            ),
+            is_active=self._is_conscious,
             resource_definitions=db.battle_resources.values(),
             interaction_rules=db.interaction_rules.values(),
             outcome_checks=db.outcome_checks.values(),
@@ -310,6 +308,120 @@ class GameSessionRuntime:
         self._enemy_ids=tuple(enemy_definition_ids)
         self.mode="battle"
         return self.battle
+
+    @property
+    def rules(self):
+        """Project battle session rules; the first by id, or inert defaults."""
+        values=self.project.rpg_database.battle_session_rules
+        return values[sorted(values)[0]] if values else BattleSessionRules("default")
+
+    def _is_conscious(self,member):
+        resource=self.rules.knockout_resource_id
+        if not resource or resource not in member.subject.resources.to_data()["values"]:
+            return True
+        return member.subject.resources.current(resource)>0
+
+    def ability_relation(self,ability_id):
+        if self.mode!="battle": raise GameSessionError("no active battle")
+        definition=self.battle.targeting.definition_for(ability_id)
+        return TargetRelation.OPPONENT if definition is None else definition.relation
+
+    def default_targets(self,actor_id,ability_id):
+        """Targets a manual selection would default to, from the ability's targeting data."""
+        if self.mode!="battle": raise GameSessionError("no active battle")
+        definition=self.battle.targeting.definition_for(ability_id)
+        if definition is not None and definition.relation==TargetRelation.SELF:
+            return (str(actor_id),)
+        candidates=self.battle.targeting.candidates(actor_id,ability_id)
+        maximum=1 if definition is None else max(1,definition.maximum_targets)
+        return tuple(candidates[:maximum])
+
+    def max_boost_level(self,actor_id):
+        if self.mode!="battle": raise GameSessionError("no active battle")
+        rules=self.rules
+        if not rules.boost_enabled: return 0
+        available=self.battle.battle_resources.current(actor_id,rules.boost_resource_id)
+        return min(rules.boost_max_level,int(available//rules.boost_cost_per_level))
+
+    def use_ability(self,actor_id,ability_id,target_ids=None,*,boost_level=0):
+        """Run one player action through project rules: targeting, boost and hit gauges.
+
+        Each boost level spends ``boost_cost_per_level`` of the boost resource
+        and repeats the action once more. Every action against opponents emits
+        ``hit_trigger`` into all project gauge compositions.
+        """
+        if self.mode!="battle": raise GameSessionError("no active battle")
+        rules=self.rules
+        boost_level=int(boost_level)
+        if boost_level<0 or boost_level>self.max_boost_level(actor_id):
+            raise GameSessionError(f"boost level {boost_level} is not available")
+        targets=tuple(target_ids) if target_ids is not None else self.default_targets(actor_id,ability_id)
+        if not targets: raise GameSessionError(f"{ability_id} has no valid targets")
+        offensive=self.ability_relation(ability_id)==TargetRelation.OPPONENT
+        if boost_level:
+            self.battle.battle_resources.spend(
+                actor_id,rules.boost_resource_id,boost_level*rules.boost_cost_per_level,trigger="rpg.session.boost",
+            )
+        results=[]
+        for _ in range(boost_level+1):
+            if offensive:
+                targets=tuple(t for t in targets if self.battle.is_active(self.battle.member(t)))
+                if not targets: break
+            result=self.execute(actor_id,ability_id,targets)
+            results.append(result)
+            if offensive:
+                for target_id in targets:
+                    outcome=self.battle.resolve_interaction(result.action,target_id,1.0)
+                    for composition_id in sorted(self.battle.gauge_compositions.definitions):
+                        self.battle.apply_gauge_impact(
+                            composition_id,actor_id,target_id,trigger=rules.hit_trigger,outcome=outcome,
+                        )
+        return tuple(results)
+
+    def current_turn_actor(self):
+        """Member whose turn it is under the battle's scheduler; starts new rounds as needed."""
+        if self.mode!="battle": raise GameSessionError("no active battle")
+        if not self.active_enemy_ids() or not self.active_hero_ids(): return None
+        actor=self.battle.next_actor()
+        if actor is None:
+            self.battle.start_next_round()
+            actor=self.battle.next_actor()
+        return None if actor is None else actor.member_id
+
+    def end_turn(self):
+        if self.mode!="battle": raise GameSessionError("no active battle")
+        return self.battle.advance_turn()
+
+    def enemy_act(self,member_id):
+        """One enemy action: its bound AI, else its first ability on default targets."""
+        if self.mode!="battle": raise GameSessionError("no active battle")
+        enemy_id=str(member_id).split(":",1)[0]
+        binding=self.project.rpg_database.enemy_behavior_bindings.get(enemy_id)
+        if binding is not None:
+            return self.enemy_turn(member_id,binding.ai_id)
+        definition=self.project.rpg_database.enemies.get(enemy_id)
+        if definition is None or not definition.abilities: return None
+        ability_id=definition.abilities[0]
+        targets=self.default_targets(member_id,ability_id)
+        return None if not targets else self.execute(member_id,ability_id,targets)
+
+    def run_enemy_turns(self,*,limit=1000):
+        """Advance through enemy turns until a hero must act or the battle is decided.
+
+        Returns ``(hero_id_or_None, ((enemy_member_id, result_or_error), ...))``.
+        """
+        log=[]
+        for _ in range(int(limit)):
+            actor_id=self.current_turn_actor()
+            if actor_id is None or self.battle.member(actor_id).side!="enemies":
+                return actor_id,tuple(log)
+            try:
+                outcome=self.enemy_act(actor_id)
+            except Exception as exc:
+                outcome=exc
+            log.append((actor_id,outcome))
+            self.end_turn()
+        raise GameSessionError("enemy turns did not yield to a hero")
 
     def execute(self,actor_id,ability_id,target_ids):
         if self.mode!="battle": raise GameSessionError("no active battle")

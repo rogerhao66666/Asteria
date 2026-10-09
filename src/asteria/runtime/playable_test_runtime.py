@@ -77,7 +77,9 @@ class PlayableTestRuntime:
         self._ui_mode="title"
         self._menu_actor_index=0
         self._boost_level=0
+        self._turn_actor=None
         self._victory_summary=[]
+        self._fonts={}
 
     def path(self, rel):
         return self.resource_root/str(rel)
@@ -100,7 +102,9 @@ class PlayableTestRuntime:
             self.pg.quit()
 
     def text(self, value, x, y, *, size=20, color=(245,245,250), center=False):
-        f=self.pg.font.Font(None,int(size))
+        f=self._fonts.get(int(size))
+        if f is None:
+            f=self._fonts[int(size)]=self.pg.font.Font(None,int(size))
         surf=f.render(str(value),True,color)
         rect=surf.get_rect()
         if center:
@@ -204,6 +208,8 @@ class PlayableTestRuntime:
             if trigger is not None:
                 self.message="Encounter started"
                 self.message_until=self.pg.time.get_ticks()+1000
+                if self.game.mode=="battle":
+                    self._advance_to_hero_turn()
         return moving
 
 
@@ -349,29 +355,47 @@ class PlayableTestRuntime:
             elif actor is not None and event.key==self.pg.K_6:self._cycle_accessory(actor)
             elif event.key==self.pg.K_7:self._rotate_party()
 
-    def _member_resource(self, member_id, resource="vitality"):
-        member=self.game.battle.member(member_id)
-        pool=member.subject.resources
+    def _member_resource(self, member_id, resource=None):
+        resource=resource or self.game.rules.knockout_resource_id
+        pool=self.game.battle.member(member_id).subject.resources
+        if not resource or resource not in pool.to_data()["values"]:
+            return None
         return pool.current(resource),pool.maximum(resource)
 
     def _battle_actor(self):
-        ids=self.game.active_hero_ids()
-        return ids[0] if ids else None
+        return self._turn_actor
+
+    def _advance_to_hero_turn(self):
+        """Let the battle scheduler run enemy turns until a hero must act."""
+        hero,log=self.game.run_enemy_turns()
+        if log:
+            member_id,outcome=log[-1]
+            name=member_id.split(":",1)[0].replace("_"," ").title()
+            self._last_action_name=f"Enemy AI: {outcome}" if isinstance(outcome,Exception) else f"{name} acts"
+        self._turn_actor=hero
+        self._boost_level=0
+        if not self.game.active_hero_ids():
+            self._defeat=True
 
     def _skills_for_actor(self, actor_id):
         if actor_id is None:return []
         member=self.game.battle.member(actor_id)
         authored=self.manifest["battle"].get("skills",{})
         values=[]
-        for ability_id in ("strike","fire_arc","heal","meteor"):
-            if ability_id in member.ability_ids and ability_id in authored:
+        for ability_id in authored:
+            if ability_id in member.ability_ids:
                 values.append((ability_id,authored[ability_id]))
+            if len(values)>=4:break
         # Ensure at least some menu entries if a custom save changed build.
         for ability_id in member.ability_ids:
             if ability_id not in {x[0] for x in values}:
                 values.append((ability_id,{"label":ability_id.replace("_"," ").title()}))
             if len(values)>=4:break
         return values[:4]
+
+    def _enemy_layout(self, member_id):
+        enemy_id=str(member_id).split(":",1)[0]
+        return self.manifest["battle"].get("enemy_layouts",{}).get(enemy_id)
 
     def _enemy_sprite(self, member_id):
         enemy_id=str(member_id).split(":",1)[0]
@@ -391,8 +415,8 @@ class PlayableTestRuntime:
             if hid not in active:
                 ghost=img.copy(); ghost.set_alpha(80); img=ghost
             self.screen.blit(img,(x,y))
-            cur,mx=self._member_resource(hid)
-            self.bar(x,y+103,92,10,cur,mx)
+            vital=self._member_resource(hid)
+            if vital is not None:self.bar(x,y+103,92,10,*vital)
             self.text(hid,x,y+116,size=15)
 
         enemies=list(self.game.battle.parties["enemies"].ids())
@@ -400,16 +424,17 @@ class PlayableTestRuntime:
         for i,eid in enumerate(enemies):
             img=self._enemy_sprite(eid)
             if img is None:continue
-            if eid.startswith("astral_tyrant"):
-                size=(220,220); x,y=650,100
+            layout=self._enemy_layout(eid)
+            if layout is not None:
+                size=tuple(layout["size"]); x,y=layout["position"]
             else:
                 size=(90,90); x,y=610+(i-1)*120,315
             img=self.pg.transform.smoothscale(img,size)
             if eid not in live:
                 dead=img.copy(); dead.set_alpha(50); img=dead
             self.screen.blit(img,(x,y))
-            cur,mx=self._member_resource(eid)
-            self.bar(x,y+size[1]-8,size[0],10,cur,mx,fill=(215,86,105))
+            vital=self._member_resource(eid)
+            if vital is not None:self.bar(x,y+size[1]-8,size[0],10,*vital,fill=(215,86,105))
             self.text(eid,x,y+size[1]+5,size=16)
 
         actor=self._battle_actor()
@@ -424,13 +449,18 @@ class PlayableTestRuntime:
         self.panel((460,22,480,92))
         self.text("1–4: Skill   B: Boost   F5: Save   Esc: Quit",478,36,size=20)
         self.text(self._last_action_name or "Choose an action",478,70,size=20,color=(172,220,255))
-        if actor:
-            momentum=self.game.battle.battle_resources.current(actor,"momentum")
-            self.text(f"Momentum {int(momentum)}   Boost x{self._boost_level+1}",700,70,size=18,color=(255,220,120))
-        boss=next((x for x in enemies if x.startswith("astral_tyrant")),None)
-        if boss:
-            stagger=self.game.battle.battle_resources.current(boss,"stagger")
-            self.text(f"Shield {int(stagger)}/8",730,118,size=18,color=(255,205,120))
+        boost_resource=self.game.rules.boost_resource_id
+        if actor and self.game.rules.boost_enabled:
+            amount=self.game.battle.battle_resources.current(actor,boost_resource)
+            label=boost_resource.replace("_"," ").title()
+            self.text(f"{label} {int(amount)}   Boost x{self._boost_level+1}",700,70,size=18,color=(255,220,120))
+        for eid in enemies:
+            gauge=(self._enemy_layout(eid) or {}).get("gauge")
+            if gauge is None or eid not in live:continue
+            resource=gauge["resource"]
+            current=self.game.battle.battle_resources.current(eid,resource)
+            maximum=self.game.battle.battle_resources.definitions[resource].maximum
+            self.text(f"{gauge.get('label',resource)} {int(current)}/{int(maximum)}",730,118,size=18,color=(255,205,120))
 
         if self._victory:
             self.panel((300,190,360,150),fill=(12,18,28,240),border=(240,201,93))
@@ -469,56 +499,22 @@ class PlayableTestRuntime:
             self.pg.display.flip()
             self.clock.tick(60)
 
-    def _enemy_response(self):
-        if not self.game.active_enemy_ids() or not self.game.active_hero_ids():
-            return
-        target=self.game.active_hero_ids()[0]
-        for enemy_member_id in tuple(self.game.active_enemy_ids()):
-            enemy_id=enemy_member_id.split(":",1)[0]
-            binding=self.project.rpg_database.enemy_behavior_bindings.get(enemy_id)
-            if binding is not None:
-                try:
-                    self.game.enemy_turn(enemy_member_id,binding.ai_id)
-                    self._last_action_name=f"{enemy_id.replace('_',' ').title()} acts"
-                except Exception as exc:
-                    self._last_action_name=f"Enemy AI: {exc}"
-            else:
-                definition=self.project.rpg_database.enemies[enemy_id]
-                if definition.abilities:
-                    ability_id=definition.abilities[0]
-                    try:
-                        self.game.execute(enemy_member_id,ability_id,(target,))
-                        self._last_action_name=f"{enemy_id.replace('_',' ').title()}: {ability_id}"
-                    except Exception:
-                        pass
-            if not self.game.active_hero_ids():
-                self._defeat=True
-                return
-
     def _use_skill(self, slot):
         actor=self._battle_actor()
         skills=self._skills_for_actor(actor)
         if actor is None or slot<0 or slot>=len(skills):return
         ability_id,meta=skills[slot]
-        target_enemy=ability_id not in {"heal","revive","party_barrier","haste_song","guard","focus_charge","counter_stance"}
-        targets=(self.game.active_enemy_ids()[0],) if target_enemy else (actor,)
-        if not targets:return
+        boost=self._boost_level
         try:
-            repeat=self._boost_level+1
-            if self._boost_level:
-                self.game.battle.battle_resources.spend(actor,"momentum",self._boost_level,trigger="reference.boost")
-            for _ in range(repeat):
-                if not targets or (target_enemy and targets[0] not in self.game.active_enemy_ids()): break
-                result=self.game.execute(actor,ability_id,targets)
-                if target_enemy:
-                    outcome=self.game.battle.resolve_interaction(result.action,targets[0],1.0)
-                    self.game.battle.apply_gauge_impact("stagger_system",actor,targets[0],trigger="battle.hit",outcome=outcome)
-            self._last_action_name=f"{actor}: {meta.get('label',ability_id)} x{repeat}"
+            offensive=self.game.ability_relation(ability_id).value=="opponent"
+            self.game.use_ability(actor,ability_id,boost_level=boost)
+            self._last_action_name=f"{actor}: {meta.get('label',ability_id)} x{boost+1}"
             self._boost_level=0
-            self._play_fx(ability_id,target_is_enemy=target_enemy)
+            self._play_fx(ability_id,target_is_enemy=offensive)
         except Exception as exc:
             self._last_action_name=f"Action failed: {exc}"
             return
+        self.game.end_turn()
         if not self.game.active_enemy_ids():
             try:
                 self.game.finish_victory()
@@ -537,7 +533,7 @@ class PlayableTestRuntime:
             except Exception as exc:
                 self._last_action_name=f"Victory finalize failed: {exc}"
             return
-        self._enemy_response()
+        self._advance_to_hero_turn()
 
     def _battle_input(self, events):
         if self._victory:
@@ -553,8 +549,7 @@ class PlayableTestRuntime:
             if event.key==self.pg.K_b:
                 actor=self._battle_actor()
                 if actor:
-                    available=int(self.game.battle.battle_resources.current(actor,"momentum"))
-                    self._boost_level=(self._boost_level+1)%max(1,min(3,available)+1)
+                    self._boost_level=(self._boost_level+1)%(self.game.max_boost_level(actor)+1)
             elif event.key in (self.pg.K_1,self.pg.K_KP1):self._use_skill(0)
             elif event.key in (self.pg.K_2,self.pg.K_KP2):self._use_skill(1)
             elif event.key in (self.pg.K_3,self.pg.K_KP3):self._use_skill(2)

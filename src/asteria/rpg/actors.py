@@ -703,6 +703,7 @@ class RpgDatabase:
         self.party_setups = {}
         self.party_presentation_policies = {}
         self.enemy_behavior_bindings = {}
+        self.battle_session_rules = {}
 
     def add_actor(self, value):
         if not isinstance(value, ActorDefinition):
@@ -953,6 +954,15 @@ class RpgDatabase:
         self.enemy_behavior_bindings[value.enemy_id] = value
         return value
 
+    def add_battle_session_rules(self, value):
+        from .battle_session_rules import BattleSessionRules
+        if not isinstance(value, BattleSessionRules):
+            raise TypeError("battle session rules must be BattleSessionRules")
+        if value.rules_id in self.battle_session_rules:
+            raise ValueError(f"duplicate battle session rules: {value.rules_id}")
+        self.battle_session_rules[value.rules_id] = value
+        return value
+
     def add_party_presentation_policy(self, value):
         from .party_setup import PartyPresentationPolicyDefinition
         if not isinstance(value, PartyPresentationPolicyDefinition):
@@ -1108,7 +1118,7 @@ class RpgDatabase:
     def to_data(self):
         return {
             "schema": "asteria.rpg.database",
-            "version": 23,
+            "version": 24,
             "actors": [self.actors[k].to_data() for k in sorted(self.actors)],
             "classes": [self.classes[k].to_data() for k in sorted(self.classes)],
             "items": [self.items[k].to_data() for k in sorted(self.items)],
@@ -1189,6 +1199,10 @@ class RpgDatabase:
                 self.enemy_behavior_bindings[k].to_data()
                 for k in sorted(self.enemy_behavior_bindings)
             ],
+            "battle_session_rules": [
+                self.battle_session_rules[k].to_data()
+                for k in sorted(self.battle_session_rules)
+            ],
         }
 
     @classmethod
@@ -1217,6 +1231,7 @@ class RpgDatabase:
             21,
             22,
             23,
+            24,
         }:
             raise ValueError("unsupported RPG database")
         result = cls()
@@ -1327,4 +1342,8 @@ class RpgDatabase:
             from .enemy_behavior import EnemyBehaviorBinding
             for x in data.get("enemy_behavior_bindings", ()):
                 result.add_enemy_behavior_binding(EnemyBehaviorBinding.from_data(x))
+        if data["version"] >= 24:
+            from .battle_session_rules import BattleSessionRules
+            for x in data.get("battle_session_rules", ()):
+                result.add_battle_session_rules(BattleSessionRules.from_data(x))
         return result

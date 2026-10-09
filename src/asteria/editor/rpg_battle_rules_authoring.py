@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from asteria.rpg import (
     ActionSequenceDefinition, ActionTimingDefinition, ActionTransactionPolicy,
     BattleEscapeRule, BattleObjectiveDefinition, BattleResourceDefinition,
-    BattleSchedulerDefinition, BattleStatePolicy, BattleTargetingDefinition,
+    BattleSchedulerDefinition, BattleSessionRules, BattleStatePolicy, BattleTargetingDefinition,
     GaugeCompositionDefinition, InteractionRule, OutcomeCheckDefinition,
     ReactionDefinition,
 )
@@ -73,12 +73,14 @@ class BattleRulesInformationArchitecture:
                            ("Side","Base Chance","Source Terms","Opponent Terms","Bounds")),
             BattleRuleKind("transactions","Action Transactions","action_transactions",ActionTransactionPolicy,"ability_id",
                            ("Cost Commit","Interrupt Cost")),
+            BattleRuleKind("session","Session Rules","battle_session_rules",BattleSessionRules,"rules_id",
+                           ("Knockout","Hit Trigger","Boost")),
         )
         self.groups=(
             BattleRuleGroup("combat_model","Combat Model",("resources","states","interactions","outcome_checks","targeting")),
             BattleRuleGroup("turn_flow","Turn Flow",("schedulers","timing")),
             BattleRuleGroup("action_logic","Action Logic",("sequences","gauges","reactions")),
-            BattleRuleGroup("battle_flow","Battle Flow",("objectives","escape")),
+            BattleRuleGroup("battle_flow","Battle Flow",("objectives","escape","session")),
             BattleRuleGroup("execution","Execution / Costs",("transactions",)),
         )
         self.primary_navigation="rule_group_sidebar"
@@ -129,6 +131,9 @@ class RpgBattleRulesAuthoringController:
             if value.ability_id is not None and value.ability_id not in abilities: missing.append(value.ability_id)
         if missing:
             raise RpgBattleRulesAuthoringError("unknown abilities: "+", ".join(sorted(set(missing))))
+        if kind.kind_id=="session" and value.boost_resource_id:
+            if value.boost_resource_id not in self.database.battle_resources:
+                raise RpgBattleRulesAuthoringError(f"unknown battle resources: {value.boost_resource_id}")
         if kind.kind_id=="gauges":
             resources=set(self.database.battle_resources)
             states=set(self.database.battle_state_policies)

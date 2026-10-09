@@ -13,6 +13,7 @@ from asteria.presentation import (
 )
 from asteria.project import Project
 from asteria.rpg import (
+    BattleSessionRules,
     AICondition, AIDecisionRule, ActionSequenceDefinition, ActionSequenceStep,
     ActionTimingDefinition, ActionTransactionPolicy, ActorDefinition,
     AttachmentDefinition, BattleEscapeRule, BattleObjectiveCondition,
@@ -354,6 +355,10 @@ def build_project():
         winning_sides=("heroes",),defeated_sides=("enemies",),
     ))
     db.add_escape_rule(BattleEscapeRule("standard_escape","heroes",base_chance=0.45,source_stat="speed",source_scale=0.002))
+    db.add_battle_session_rules(BattleSessionRules(
+        "reference_session",knockout_resource_id="vitality",hit_trigger="battle.hit",
+        boost_resource_id="momentum",boost_cost_per_level=1,boost_max_level=3,
+    ))
 
     # --- Presentation profiles, project-owned ---
     lib=project.battle_presentation_library

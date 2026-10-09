@@ -11,7 +11,7 @@ from asteria.gameplay import AbilityDefinition
 from asteria.project import Project
 from asteria.rpg import (
     ActionSequenceDefinition, ActionSequenceStep,
-    ActionTimingDefinition, ActionTransactionPolicy,
+    ActionTimingDefinition, ActionTransactionPolicy, BattleSessionRules,
     BattleEscapeRule, BattleObjectiveCondition, BattleObjectiveDefinition,
     BattleResourceDefinition, BattleSchedulerDefinition, BattleStatePolicy,
     BattleTargetingDefinition, GaugeCompositionDefinition, GaugeImpactRule,
@@ -80,6 +80,9 @@ def sample_definitions():
         "transactions": ActionTransactionPolicy(
             "meteor",cost_commit="start",interrupt_cost="refund"
         ),
+        "session": BattleSessionRules(
+            "default",knockout_resource_id="hp",boost_resource_id="stagger",boost_max_level=2
+        ),
     }
 
 
@@ -99,7 +102,7 @@ def test_all_current_battle_rule_kinds_are_authorable():
         created=c.create(kind,value)
         assert created is value
         assert len(c.definitions(kind))==1
-    assert len(c.information_architecture.kinds)==13
+    assert len(c.information_architecture.kinds)==14
 
 
 def test_every_mutation_is_undoable_and_redoable():
@@ -259,3 +262,12 @@ def test_unknown_rule_kind_is_rejected():
     _,_,c=make()
     with pytest.raises(KeyError):
         c.create("break_system",{"x":1})
+
+
+def test_session_rules_boost_resource_must_be_a_battle_resource():
+    _,_,c=make()
+    with pytest.raises(RpgBattleRulesAuthoringError):
+        c.create("session",BattleSessionRules("r",boost_resource_id="missing",boost_max_level=1))
+    c.create("resources",BattleResourceDefinition("bp"))
+    created=c.create("session",BattleSessionRules("r",boost_resource_id="bp",boost_max_level=1))
+    assert c.definitions("session")==(created,)

@@ -190,7 +190,7 @@ def test_rpg_database_v8_persists_growth_and_validates_references():
     db.add_equipment(EquipmentDefinition("crimson_fang", slot="weapon"))
     assert db.validate()
     raw = db.to_data()
-    assert raw["version"] == 23
+    assert raw["version"] == 24
     restored = RpgDatabase.from_data(raw)
     assert restored.equipment_growth["blood_blade_growth"].nodes[0].max_rank == 3
 
