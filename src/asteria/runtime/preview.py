@@ -36,6 +36,22 @@ def build_preview_registry():
     return registry
 
 
+BACKENDS = ("pygame", "moderngl")
+
+
+def build_backend(kind, input_map=None):
+    """Window backend by name: "pygame" (default, CPU) or "moderngl" (GPU sprite batching)."""
+    if kind == "pygame":
+        from asteria.platform.pygame_backend import PygameRuntimeBackend
+
+        return PygameRuntimeBackend(input_map=input_map)
+    if kind == "moderngl":
+        from asteria.platform.moderngl_backend import ModernglRuntimeBackend
+
+        return ModernglRuntimeBackend(input_map=input_map)
+    raise ValueError(f"unknown backend {kind!r}; choose one of {', '.join(BACKENDS)}")
+
+
 def run_preview(
     project_path,
     scene_id=None,
@@ -47,6 +63,7 @@ def run_preview(
     target_fps=60,
     save_path=None,
     playtest_profile=None,
+    backend_kind="pygame",
 ):
     registry = build_preview_registry()
     project = Project.load_json(project_path, registry)
@@ -87,9 +104,7 @@ def run_preview(
     height = int(height or (active_camera.height if active_camera is not None else 540))
 
     if backend is None:
-        from asteria.platform.pygame_backend import PygameRuntimeBackend
-
-        backend = PygameRuntimeBackend(input_map=project.input_map)
+        backend = build_backend(backend_kind, project.input_map)
 
     backend.open(f"Asteria Preview — {scene.name}", width, height)
     try:
@@ -151,6 +166,7 @@ def main(argv=None):
     parser.add_argument("--height", type=int, default=540)
     parser.add_argument("--save")
     parser.add_argument("--playtest-profile")
+    parser.add_argument("--backend", choices=BACKENDS, default="pygame")
     args = parser.parse_args(argv)
     return run_preview(
         args.project,
@@ -160,6 +176,7 @@ def main(argv=None):
         height=args.height,
         save_path=args.save,
         playtest_profile=args.playtest_profile,
+        backend_kind=args.backend,
     )
 
 
