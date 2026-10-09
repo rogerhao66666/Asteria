@@ -356,6 +356,90 @@ class AsteriaEditorWindow(QMainWindow):
         self.refresh_all()
         return applied
 
+    def _selected_entity(self):
+        sel = self.document.selection
+        if sel.multiple or sel.value is None:
+            return None
+        if sel.kind == "entity":
+            return sel.value
+        if sel.kind == "component":
+            return sel.value.entity
+        return None
+
+    def _run_prefab_command(self, command, message):
+        from asteria.core.prefab import PrefabError
+
+        try:
+            self.document.execute(command)
+        except (PrefabError, ValueError, KeyError) as exc:
+            self.statusBar().showMessage(f"Prefab: {exc}", 6000)
+            return None
+        self.statusBar().showMessage(message, 6000)
+        self.refresh_all()
+        return command
+
+    def create_prefab_from_selection(self, prefab_id=None):
+        from .prefab_commands import CreatePrefabFromEntityCommand
+
+        entity = self._selected_entity()
+        if entity is None or self.document.project is None:
+            self.statusBar().showMessage("Select one entity to make a prefab", 6000)
+            return None
+        if prefab_id is None:
+            prefab_id, ok = QInputDialog.getText(self, "Create Prefab", "Prefab id:", text=entity.name.lower().replace(" ", "_"))
+            if not ok or not prefab_id.strip():
+                return None
+        command = CreatePrefabFromEntityCommand(self.document.project, entity, prefab_id.strip())
+        return self._run_prefab_command(command, f"Created prefab {prefab_id.strip()}")
+
+    def place_prefab(self, prefab_id=None, x=None, y=None):
+        from .prefab_commands import InstantiatePrefabCommand
+
+        project, scene = self.document.project, self.viewport.current_scene()
+        if project is None or scene is None:
+            return None
+        if prefab_id is None:
+            ids = list(project.prefabs.ids())
+            if not ids:
+                self.statusBar().showMessage("The project has no prefabs", 6000)
+                return None
+            prefab_id, ok = QInputDialog.getItem(self, "Place Prefab", "Prefab:", ids, 0, False)
+            if not ok:
+                return None
+        if x is None or y is None:
+            cx, cy = self.viewport.width() / 2, self.viewport.height() / 2
+            x, y = self.viewport.camera.screen_to_world(cx, cy)
+        command = InstantiatePrefabCommand(project, self.document.component_registry, scene, prefab_id, x, y)
+        result = self._run_prefab_command(command, f"Placed {prefab_id}")
+        if result is not None:
+            self.document.select_entity(command.entity)
+            self.refresh_all()
+        return result
+
+    def apply_instance_to_prefab(self):
+        from asteria.core.prefab import PrefabInstanceComponent
+
+        from .prefab_commands import apply_instance_to_prefab_command
+
+        entity = self._selected_entity()
+        if entity is None or not entity.has(PrefabInstanceComponent):
+            self.statusBar().showMessage("Select a prefab instance", 6000)
+            return None
+        command = apply_instance_to_prefab_command(self.document.project, self.document.component_registry, entity)
+        return self._run_prefab_command(command, "Prefab updated; other instances kept their overrides")
+
+    def revert_instance_to_prefab(self):
+        from asteria.core.prefab import PrefabInstanceComponent
+
+        from .prefab_commands import RevertInstanceCommand
+
+        entity = self._selected_entity()
+        if entity is None or not entity.has(PrefabInstanceComponent):
+            self.statusBar().showMessage("Select a prefab instance", 6000)
+            return None
+        command = RevertInstanceCommand(self.document.project, self.document.component_registry, entity)
+        return self._run_prefab_command(command, f"{entity.name} matches its prefab again")
+
     def _place_generated_character_at(self, cell):
         """Commit the pending generated bundle using the cell clicked in Scene."""
         bundle = getattr(self, "_pending_character_bundle", None)
@@ -556,6 +640,20 @@ class AsteriaEditorWindow(QMainWindow):
         self.reset_view_action.triggered.connect(self.viewport.reset_view)
         view_menu = self.menuBar().addMenu("&View")
         view_menu.addAction(self.reset_view_action)
+
+        prefab_menu = self.menuBar().addMenu("&Prefab")
+        self.create_prefab_action = QAction("Create Prefab from Selected Entity…", self)
+        self.create_prefab_action.triggered.connect(lambda: self.create_prefab_from_selection())
+        self.place_prefab_action = QAction("Place Prefab…", self)
+        self.place_prefab_action.triggered.connect(lambda: self.place_prefab())
+        self.apply_prefab_action = QAction("Apply Instance Changes to Prefab", self)
+        self.apply_prefab_action.triggered.connect(lambda: self.apply_instance_to_prefab())
+        self.revert_prefab_action = QAction("Revert Instance to Prefab", self)
+        self.revert_prefab_action.triggered.connect(lambda: self.revert_instance_to_prefab())
+        prefab_menu.addActions([
+            self.create_prefab_action, self.place_prefab_action,
+            self.apply_prefab_action, self.revert_prefab_action,
+        ])
 
         run_menu = self.menuBar().addMenu("&Run")
         run_menu.addAction(self.play_action)

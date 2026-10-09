@@ -123,6 +123,14 @@ class ProjectTreeWidget(QWidget):
                 for entity in scene.entities():
                     if entity.id not in placed:
                         add_entity(sitem, entity, placed)
+            prefabs = item("Prefabs")
+            root.addChild(prefabs)
+            for prefab_id in project.prefabs.ids():
+                definition = project.prefabs.get(prefab_id)
+                label = f"{definition.name} ({prefab_id})"
+                if definition.base_prefab_id:
+                    label += f"  ← {definition.base_prefab_id}"
+                prefabs.addChild(item(label))
             assets = item("Assets")
             root.addChild(assets)
             for record in project.assets.records():

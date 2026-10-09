@@ -7,6 +7,7 @@ from asteria.core import ComponentRegistry, Transform
 from asteria.gameplay import GameplayAttributesComponent
 from asteria.project import Project
 from asteria.core import PersistentComponent
+from asteria.core.prefab import PrefabInstanceComponent
 from asteria.runtime.actor_link import ActorLinkComponent
 from asteria.runtime.collision import Collider2DComponent
 from asteria.runtime.game_save import GameRuntimeSave
@@ -30,6 +31,7 @@ def build_preview_registry():
     registry.register(GameplayAttributesComponent)
     registry.register(ActorLinkComponent)
     registry.register(PersistentComponent)
+    registry.register(PrefabInstanceComponent)
     registry.register(Collider2DComponent)
     return registry
 

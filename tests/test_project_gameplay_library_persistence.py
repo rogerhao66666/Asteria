@@ -28,7 +28,7 @@ def test_project_v6_persists_canonical_gameplay_library():
     lib = library_with_defaults()
     project = make_project(lib=lib)
     raw = project.to_data()
-    assert raw["version"] == 9
+    assert raw["version"] == 10
     assert raw["gameplay_library"]["schema"] == "asteria.gameplay_library"
     restored = Project.from_data(raw, ComponentRegistry())
     assert restored.gameplay_library.to_data() == lib.to_data()
@@ -43,7 +43,7 @@ def test_project_v6_validates_rpg_ability_references():
     lib = GameplayLibrary()
     lib.add_ability(AbilityDefinition("measure"))
     raw = make_project(db=db, lib=lib).to_data()
-    assert raw["version"] == 9
+    assert raw["version"] == 10
 
 
 def test_pre_v6_project_remains_readable_without_inventing_ability_definitions():
@@ -53,7 +53,7 @@ def test_pre_v6_project_remains_readable_without_inventing_ability_definitions()
     lib.add_ability(AbilityDefinition("old_skill"))
     raw = make_project(db=db, lib=lib).to_data()
     raw["version"] = 5
-    raw.pop("game_start",None); raw.pop("input_map",None)
+    raw.pop("game_start",None); raw.pop("input_map",None); raw.pop("prefabs",None)
     raw.pop("battle_presentation_library", None)
     raw.pop("gameplay_library")
     restored = Project.from_data(raw, ComponentRegistry())
