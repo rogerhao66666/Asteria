@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import hypot
 
-from asteria.core import Transform
+from asteria.core import Transform, world_position
 
 _FACING_VECTORS = {
     "up": (0.0, -1.0),
@@ -39,7 +39,7 @@ class InteractionQuery:
         self.facing_dot_threshold = threshold
 
     def candidates(self, scene, actor, facing: str):
-        actor_transform = actor.get(Transform)
+        actor_x, actor_y = world_position(actor)
         facing_vector = _FACING_VECTORS.get(str(facing).lower())
         if facing_vector is None:
             raise ValueError(f"unsupported facing: {facing}")
@@ -57,8 +57,9 @@ class InteractionQuery:
             if not interaction.enabled or not interaction.event_program_id:
                 continue
 
-            dx = transform.x - actor_transform.x
-            dy = transform.y - actor_transform.y
+            ex, ey = world_position(entity)
+            dx = ex - actor_x
+            dy = ey - actor_y
             distance = hypot(dx, dy)
             if distance > interaction.range:
                 continue

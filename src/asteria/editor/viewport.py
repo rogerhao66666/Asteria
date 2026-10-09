@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from asteria.core import Transform
+from asteria.core import Transform, world_position
 
 
 @dataclass(slots=True)
@@ -64,12 +64,13 @@ def scene_markers(scene, camera, selected_entities=(), base_radius=8.0):
         transform = entity.try_get(Transform) if hasattr(entity, "try_get") else None
         if transform is None:
             continue
-        sx, sy = camera.world_to_screen(transform.x, transform.y)
+        wx, wy = world_position(entity)
+        sx, sy = camera.world_to_screen(wx, wy)
         result.append(
             EntityMarker(
                 entity=entity,
-                world_x=float(transform.x),
-                world_y=float(transform.y),
+                world_x=float(wx),
+                world_y=float(wy),
                 screen_x=sx,
                 screen_y=sy,
                 radius=max(4.0, base_radius * min(camera.zoom, 2.0)),

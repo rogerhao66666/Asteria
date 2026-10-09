@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from asteria.core import Transform
+from asteria.core.transform import world_delta_to_local
 
 from .commands import CommandTransaction
 from .editing import build_set_component_field_command
@@ -61,7 +62,8 @@ def build_move_entities_command(entities, delta_world_x, delta_world_y, snap=Non
         transform = entity.try_get(Transform)
         if transform is None:
             continue
-        nx, ny = snap.point(transform.x + delta_world_x, transform.y + delta_world_y)
+        local_dx, local_dy = world_delta_to_local(entity, delta_world_x, delta_world_y)
+        nx, ny = snap.point(transform.x + local_dx, transform.y + local_dy)
         if nx != transform.x:
             tx.add(build_set_component_field_command(transform, "x", nx))
         if ny != transform.y:

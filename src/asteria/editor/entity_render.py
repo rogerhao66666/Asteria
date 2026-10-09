@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from asteria.core import Transform
+from asteria.core import Transform, world_position
 from asteria.graphics import RenderPlacement2D
 from asteria.runtime import Camera2DComponent, SpriteRenderer2D, sprite_draw
 
@@ -23,14 +23,13 @@ def camera_world_rect(entity, scene):
         return None
     width = spec.width / spec.zoom
     height = spec.height / spec.zoom
-    x = transform.x
-    y = transform.y
+    x, y = world_position(entity)
     if spec.follow_entity_id:
         target = scene.get_entity(spec.follow_entity_id)
-        target_transform = target.try_get(Transform) if target is not None else None
-        if target_transform is not None:
-            x = target_transform.x - width / 2
-            y = target_transform.y - height / 2
+        if target is not None and target.has(Transform):
+            tx, ty = world_position(target)
+            x = tx - width / 2
+            y = ty - height / 2
     return (x, y, width, height)
 
 
@@ -52,8 +51,8 @@ def build_entity_sprite_draws(scene, camera, resolve_sprite_sheet):
         draw = sprite_draw(
             sheet=sheet,
             frame_index=renderer.frame_index,
-            world_x=transform.x,
-            world_y=transform.y,
+            world_x=world_position(entity)[0],
+            world_y=world_position(entity)[1],
             camera=camera,
             placement=placement,
             opacity=renderer.opacity,

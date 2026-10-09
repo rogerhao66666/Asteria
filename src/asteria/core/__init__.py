@@ -17,4 +17,12 @@ from .serialization import (
 from .services import ServiceRegistry
 from .system import System, SystemScheduler
 from .time import TimeState
-from .transform import Transform
+from .transform import (
+    Transform,
+    TransformHierarchyError,
+    can_parent,
+    children,
+    set_parent,
+    world_position,
+    world_transform,
+)

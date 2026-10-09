@@ -86,6 +86,8 @@ def inspector_choices(document, component, field):
     """Choices for an Inspector field, or None when it is edited as plain text."""
     if field.name == "follow_entity_id":
         return build_follow_entity_choices(component)
+    if field.name == "parent_id":
+        return build_parent_choices(component)
     if field.name == "actor_id":
         return build_actor_link_choices(document.project, field.value)
     if field.name == "sprite_sheet_asset_id":
@@ -95,3 +97,18 @@ def inspector_choices(document, component, field):
     if field.choices:
         return tuple((str(choice), choice) for choice in field.choices)
     return None
+
+
+def build_parent_choices(component):
+    """Transform parent dropdown: entities in the same scene that would not form a cycle."""
+    from asteria.core import can_parent
+
+    try:
+        owner = component.entity
+    except RuntimeError:
+        return (("— None —", ""),)
+    choices = [("— None —", "")]
+    scene = owner.scene
+    if scene is not None:
+        choices.extend((e.name, e.id) for e in scene.entities() if e is not owner and can_parent(owner, e))
+    return _with_missing(choices, getattr(component, "parent_id", ""), "entity")

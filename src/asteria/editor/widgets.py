@@ -92,15 +92,37 @@ class ProjectTreeWidget(QWidget):
             self.tree.addTopLevelItem(root)
             scenes = item("Scenes")
             root.addChild(scenes)
+            from asteria.core.transform import parent_entity
+
+            def add_entity(parent_item, entity, placed):
+                placed.add(entity.id)
+                eitem = item(entity.name, "entity", entity)
+                parent_item.addChild(eitem)
+                for component in entity.components():
+                    citem = item(type(component).__name__, "component", component)
+                    eitem.addChild(citem)
+                for child in children_by_parent.get(entity.id, ()):
+                    if child.id not in placed:
+                        add_entity(eitem, child, placed)
+
             for scene in project.scenes():
                 sitem = item(scene.name, "scene", scene)
                 scenes.addChild(sitem)
+                children_by_parent = {}
+                roots = []
                 for entity in scene.entities():
-                    eitem = item(entity.name, "entity", entity)
-                    sitem.addChild(eitem)
-                    for component in entity.components():
-                        citem = item(type(component).__name__, "component", component)
-                        eitem.addChild(citem)
+                    parent = parent_entity(entity)
+                    if parent is None:
+                        roots.append(entity)
+                    else:
+                        children_by_parent.setdefault(parent.id, []).append(entity)
+                placed = set()
+                for entity in roots:
+                    add_entity(sitem, entity, placed)
+                # Entities caught in a parent cycle still appear at scene level.
+                for entity in scene.entities():
+                    if entity.id not in placed:
+                        add_entity(sitem, entity, placed)
             assets = item("Assets")
             root.addChild(assets)
             for record in project.assets.records():
