@@ -23,3 +23,7 @@ def test_field_render_preserves_custom_48px_square_character_aspect_ratio():
 
 def test_field_render_keeps_native_mv_character_height_at_existing_scale():
     assert field_player_render_size((32, 48)) == (64, 96)
+
+
+def test_field_render_width_is_configurable():
+    assert field_player_render_size((64, 64), 128) == (128, 128)

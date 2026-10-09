@@ -6,8 +6,8 @@
     "background": "playable_assets/field_map.png",
     "player_sheet": "playable_assets/player_field_sheet.png",
     "player_frame_size": [
-      32,
-      48
+      64,
+      64
     ],
     "world_to_screen_scale": 3.0,
     "player_start": [
@@ -23,10 +23,11 @@
         "sprite": "playable_assets/boss_field.png",
         "size": [
           96,
-          112
+          96
         ]
       }
-    }
+    },
+    "player_render_width": 128
   },
   "battle": {
     "background": "playable_assets/battle_background.png",

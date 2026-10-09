@@ -22,12 +22,12 @@ def walking_pattern_index(field_step: int) -> int:
     return WALK_PATTERN_SEQUENCE[(max(0, int(field_step)) // 8) % len(WALK_PATTERN_SEQUENCE)]
 
 
-def field_player_render_size(frame_size) -> tuple[int, int]:
-    """Scale field sprites to 64px wide while preserving each source frame's ratio."""
+def field_player_render_size(frame_size, render_width=64) -> tuple[int, int]:
+    """Scale field sprites to ``render_width`` while preserving each source frame's ratio."""
     frame_w, frame_h = (int(frame_size[0]), int(frame_size[1]))
     if frame_w <= 0 or frame_h <= 0:
         raise ValueError("player frame dimensions must be positive")
-    render_w = 64
+    render_w = int(render_width)
     render_h = max(1, round(frame_h * render_w / frame_w))
     return render_w, render_h
 
@@ -166,7 +166,7 @@ class PlayableTestRuntime:
 
         pt=self.game.player.get(Transform); px,py=self._field_screen_xy(pt.x,pt.y)
         pf=self._player_frame(self.game.facing,moving)
-        render_w,render_h=field_player_render_size(pf.get_size())
+        render_w,render_h=field_player_render_size(pf.get_size(),self.manifest["field"].get("player_render_width",64))
         pf=self.pg.transform.scale(pf,(render_w,render_h))
         self.screen.blit(pf,(int(px-render_w/2),int(py-render_h+10)))
 
