@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from asteria.assets.local_reference import discover_mv_projects, resolve_rpg_maker_mv_root
 from asteria.assets.rpg_maker_mv_catalog import RPGMakerMVCatalog
 from asteria.assets.rpg_maker_mv_database import RPGMakerMVDatabase
@@ -9,6 +11,8 @@ from asteria.assets.rpg_maker_mv_map_render import (
     MVTileResolver,
     compose_mv_map_draws,
 )
+
+pytestmark = pytest.mark.mv_reference
 
 
 def _context():

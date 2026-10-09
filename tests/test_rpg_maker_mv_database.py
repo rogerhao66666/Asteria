@@ -48,6 +48,7 @@ def _fixture_layout(tmp_path, *, invalid=None, missing=()):
     return RPGMakerMVProjectLayout(tmp_path, root, "project", data, None, None, None, None)
 
 
+@pytest.mark.mv_reference
 def test_real_new_data_record_counts_and_ids():
     database = RPGMakerMVDatabase.load(_real_layout())
 
@@ -58,6 +59,7 @@ def test_real_new_data_record_counts_and_ids():
     assert database.items[0].id == 1
 
 
+@pytest.mark.mv_reference
 def test_real_actor_skill_item_and_system_fields_are_typed():
     database = RPGMakerMVDatabase.load(_real_layout())
     actor = database.actors[0]

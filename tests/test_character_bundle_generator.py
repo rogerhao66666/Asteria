@@ -19,6 +19,7 @@ def _real_catalog():
     return RPGMakerMVGeneratorCatalog.discover(resolve_rpg_maker_mv_root(repo))
 
 
+@pytest.mark.mv_reference
 def test_real_mv_part_generates_coordinated_atomic_bundle(tmp_path):
     catalog = _real_catalog()
     part = next(
@@ -49,6 +50,7 @@ def test_real_mv_part_generates_coordinated_atomic_bundle(tmp_path):
     assert not any(path.name.startswith(".hero-one-") for path in (tmp_path / "generated").iterdir())
 
 
+@pytest.mark.mv_reference
 def test_new_bundle_rejects_recipe_without_a_body(tmp_path):
     catalog = _real_catalog()
     accessory = next(part for part in catalog.parts if part.category == "accessory" and part.gender == "Male")
@@ -59,6 +61,7 @@ def test_new_bundle_rejects_recipe_without_a_body(tmp_path):
     assert not (tmp_path / "generated" / "no-body").exists()
 
 
+@pytest.mark.mv_reference
 def test_full_core_body_generates_editable_four_sheet_bundle(tmp_path):
     catalog = _real_catalog()
     root = next(part.source_root for part in catalog.parts
@@ -81,6 +84,7 @@ def test_full_core_body_generates_editable_four_sheet_bundle(tmp_path):
     assert metadata["damaged"]["canvas"] == [144, 48]
 
 
+@pytest.mark.mv_reference
 def test_mixed_family_recipe_is_rejected_before_output(tmp_path):
     catalog = _real_catalog()
     body = next(part for part in catalog.parts if part.category == "body" and part.gender == "Male")
@@ -92,6 +96,7 @@ def test_mixed_family_recipe_is_rejected_before_output(tmp_path):
     assert not (tmp_path / "generated" / "broken-family").exists()
 
 
+@pytest.mark.mv_reference
 def test_mv_face_iris_layer_stays_visible_above_eye_white():
     catalog = _real_catalog()
     core = [part for part in catalog.parts if part.source_root.parent.name == "rpg_maker_mv"
@@ -107,6 +112,7 @@ def test_mv_face_iris_layer_stays_visible_above_eye_white():
     assert blue > red + 40
 
 
+@pytest.mark.mv_reference
 def test_mv_face_stays_in_front_of_high_collar_and_scarf_layers():
     catalog = _real_catalog()
     generator_root = (resolve_rpg_maker_mv_root(Path(__file__).resolve().parents[1]) / "Generator").resolve()
@@ -148,6 +154,7 @@ def test_palette_recolor_preserves_part_shading_and_transparency(tmp_path):
     assert clear[3] == 0
 
 
+@pytest.mark.mv_reference
 def test_hair_palette_updates_face_without_tinting_skin():
     catalog = _real_catalog()
     core = [part for part in catalog.parts if part.source_root.parent.name == "rpg_maker_mv"

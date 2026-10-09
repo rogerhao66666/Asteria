@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from asteria.assets.local_reference import (
     discover_mv_projects,
     resolve_rpg_maker_mv_root,
@@ -75,6 +77,7 @@ def test_malformed_dlc_directory_does_not_hide_valid_siblings(tmp_path):
     )
 
 
+@pytest.mark.mv_reference
 def test_real_local_reference_discovers_main_and_dlc_projects():
     repo = Path(__file__).resolve().parents[1]
     root = resolve_rpg_maker_mv_root(repo)

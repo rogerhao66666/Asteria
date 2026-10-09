@@ -20,6 +20,7 @@ def _complete_accessory(workspace):
     )
 
 
+@pytest.mark.mv_reference
 def test_mv_workspace_filters_selects_and_synchronizes_three_previews():
     workspace = _workspace()
     part = _complete_accessory(workspace)
@@ -35,6 +36,7 @@ def test_mv_workspace_filters_selects_and_synchronizes_three_previews():
     assert workspace.preview_representation("side_view").size == (576, 384)
 
 
+@pytest.mark.mv_reference
 def test_mv_workspace_reports_unavailable_representation_without_substitution():
     workspace = _workspace()
     body = next(
@@ -49,6 +51,7 @@ def test_mv_workspace_reports_unavailable_representation_without_substitution():
     assert workspace.unavailable_reason("face") == "Face unavailable for Body p1"
 
 
+@pytest.mark.mv_reference
 def test_mv_workspace_family_switch_clears_incompatible_parts_and_palette():
     workspace = _workspace()
     workspace.set_body_family("Male")
@@ -66,6 +69,7 @@ def test_mv_workspace_family_switch_clears_incompatible_parts_and_palette():
     assert all(part.gender == "Kid" for part in workspace.choices("hair_front"))
 
 
+@pytest.mark.mv_reference
 def test_mv_workspace_reloads_saved_recipe_for_editing(tmp_path):
     workspace = _workspace()
     workspace.set_body_family("Female")
@@ -81,6 +85,7 @@ def test_mv_workspace_reloads_saved_recipe_for_editing(tmp_path):
     assert reopened.preview_representation("damaged").size == (144, 48)
 
 
+@pytest.mark.mv_reference
 def test_mv_widget_exposes_all_four_full_sheet_previews_and_kid_family():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
@@ -103,6 +108,7 @@ def test_mv_widget_exposes_all_four_full_sheet_previews_and_kid_family():
         app.processEvents()
 
 
+@pytest.mark.mv_reference
 def test_mv_widget_recomposes_hair_and_clothing_without_changing_body():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
@@ -130,6 +136,7 @@ def test_mv_widget_recomposes_hair_and_clothing_without_changing_body():
         app.processEvents()
 
 
+@pytest.mark.mv_reference
 def test_mv_widget_can_inspect_every_side_view_and_damaged_frame():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
@@ -150,6 +157,7 @@ def test_mv_widget_can_inspect_every_side_view_and_damaged_frame():
         app.processEvents()
 
 
+@pytest.mark.mv_reference
 def test_mv_widget_loads_saved_recipe_back_into_editable_controls(tmp_path, monkeypatch):
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication, QFileDialog
@@ -174,6 +182,7 @@ def test_mv_widget_loads_saved_recipe_back_into_editable_controls(tmp_path, monk
         app.processEvents()
 
 
+@pytest.mark.mv_reference
 def test_editor_shell_exposes_mv_character_creator_in_rpg_workspace():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication

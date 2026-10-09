@@ -35,6 +35,7 @@ def _map(path: Path, *, data_length=24, tile=-1):
     path.write_text(json.dumps(raw), encoding="utf-8")
 
 
+@pytest.mark.mv_reference
 def test_real_map_infos_resolve_and_six_layers_validate():
     layout, _ = _real()
     entries = discover_mv_maps(layout)
@@ -72,6 +73,7 @@ def test_map_rejects_wrong_layer_length_and_negative_tile_id(tmp_path):
         RPGMakerMVMap.load(bad, map_id=2)
 
 
+@pytest.mark.mv_reference
 def test_scene_conversion_uses_tilemap_host_and_event_standing_points(tmp_path):
     _, catalog = _real()
     path = tmp_path / "Map001.json"

@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from asteria.assets.local_reference import resolve_rpg_maker_mv_root
 from asteria.assets.rpg_maker_mv_generator import RPGMakerMVGeneratorCatalog
 
@@ -9,6 +11,7 @@ def _real():
     return RPGMakerMVGeneratorCatalog.discover(resolve_rpg_maker_mv_root(repo))
 
 
+@pytest.mark.mv_reference
 def test_real_catalog_discovers_every_generator_source_file_deterministically():
     first = _real()
     second = _real()
@@ -19,6 +22,7 @@ def test_real_catalog_discovers_every_generator_source_file_deterministically():
     assert tuple(part.id for part in first.parts) == tuple(sorted(part.id for part in first.parts))
 
 
+@pytest.mark.mv_reference
 def test_representative_part_links_walking_face_side_view_thumbnail_and_masks():
     catalog = _real()
     part = next(
@@ -36,6 +40,7 @@ def test_representative_part_links_walking_face_side_view_thumbnail_and_masks():
     assert part.layer_order["walking"] < part.layer_order["face"]
 
 
+@pytest.mark.mv_reference
 def test_body_gender_variation_and_generic_translation_are_retained():
     catalog = _real()
     body = next(item for item in catalog.parts if item.source_category == "Body" and item.gender == "Female")
@@ -61,6 +66,7 @@ def test_malformed_part_does_not_hide_valid_sibling(tmp_path):
     assert any(issue.code == "generator.unrecognized_name" for issue in catalog.issues)
 
 
+@pytest.mark.mv_reference
 def test_missing_representations_are_explicit_not_substituted():
     catalog = _real()
     body = next(
@@ -75,6 +81,7 @@ def test_missing_representations_are_explicit_not_substituted():
                for issue in catalog.issues)
 
 
+@pytest.mark.mv_reference
 def test_core_generator_merges_case_and_numbered_filename_layers_into_logical_parts():
     catalog = _real()
     core = next(
@@ -93,6 +100,7 @@ def test_core_generator_merges_case_and_numbered_filename_layers_into_logical_pa
     assert clothing.face is not None and clothing.side_view is not None
 
 
+@pytest.mark.mv_reference
 def test_core_face_features_translate_to_independent_generic_categories():
     catalog = _real()
     core_parts = [part for part in catalog.parts if part.source_root.parent.name == "rpg_maker_mv" and part.gender == "Male"]
@@ -104,6 +112,7 @@ def test_core_face_features_translate_to_independent_generic_categories():
     assert next(part for part in core_parts if part.source_category == "FacialMark").category == "facial_mark"
 
 
+@pytest.mark.mv_reference
 def test_mv_generator_keeps_interchangeable_face_and_clothing_slots_distinct():
     catalog = _real()
     core = [part for part in catalog.parts if part.source_root.parent.name == "rpg_maker_mv" and part.gender == "Male"]

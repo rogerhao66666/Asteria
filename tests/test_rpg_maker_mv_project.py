@@ -1,9 +1,13 @@
 from pathlib import Path
 
+import pytest
+
 from asteria.assets.local_reference import discover_mv_projects, resolve_rpg_maker_mv_root
 from asteria.assets.rpg_maker_mv_project import RPGMakerMVProjectImporter
 from asteria.project import Project
 from asteria.runtime.preview import build_preview_registry
+
+pytestmark = pytest.mark.mv_reference
 
 
 def _import(map_ids=(1,)):
