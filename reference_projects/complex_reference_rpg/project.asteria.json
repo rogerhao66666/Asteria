@@ -360,8 +360,10 @@
         },
         {
           "args": {
-            "command": "START_ENCOUNTER",
-            "encounter_id": "boss_room"
+            "args": {
+              "encounter_id": "boss_room"
+            },
+            "command": "START_ENCOUNTER"
           },
           "opcode": "WORLD"
         },

@@ -239,7 +239,10 @@ class EventRunner:
 
     def _dispatch_world_command(self, instruction):
         name = instruction.args.get("command")
-        raw_args = instruction.args.get("args", {})
+        raw_args = instruction.args.get("args")
+        if raw_args is None:
+            # Older programs put command arguments beside "command".
+            raw_args = {k: v for k, v in instruction.args.items() if k != "command"}
         if name is None:
             raise EventRunnerError("WORLD requires command")
         if not isinstance(raw_args, dict):

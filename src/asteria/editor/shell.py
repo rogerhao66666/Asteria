@@ -10,6 +10,7 @@ from .event_editing import (
     ReplaceEventBindingCommand,
     ReplaceEventProgramCommand,
     bindings_for_scene,
+    parse_world_args,
     program_with_insert,
     program_with_move,
     program_with_remove,
@@ -802,8 +803,19 @@ class AsteriaEditorWindow(QMainWindow):
             )
             if not ok or not command.strip():
                 return None
+            raw_args, ok = QInputDialog.getText(
+                self, "World Command", "Arguments (key=value, ...):",
+                text="encounter_id=" if command.strip().upper() == "START_ENCOUNTER" else "",
+            )
+            if not ok:
+                return None
+            try:
+                args = parse_world_args(raw_args)
+            except ValueError as exc:
+                QMessageBox.warning(self, "World Command", str(exc))
+                return None
             return EventInstruction(
-                "WORLD", {"command": command.strip().upper(), "args": {}}
+                "WORLD", {"command": command.strip().upper(), "args": args}
             )
         return None
 

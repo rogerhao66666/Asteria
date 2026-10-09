@@ -70,6 +70,11 @@ def test_full_project_save_field_interaction_battle_reward_reload(tmp_path):
     assert g.mode=="field"
     trigger=g.field_step({"interact":1})
     assert trigger is not None
+    # The authored event speaks first; the encounter starts after the line is acknowledged.
+    assert g.mode=="field"
+    assert g.pending_dialogue.line.speaker=="Astral Tyrant"
+    g.acknowledge_dialogue()
+    assert g.pending_dialogue is None
     assert g.mode=="battle"
     assert g.encounter_id=="boss_room"
     assert len(g.active_hero_ids())==6

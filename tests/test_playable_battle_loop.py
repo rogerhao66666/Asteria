@@ -36,7 +36,7 @@ def resource_root(tmp_path):
     for relative in set(_image_paths(manifest)):
         path = tmp_path / relative
         path.parent.mkdir(parents=True, exist_ok=True)
-        Image.new("RGBA", (128, 128), (90, 120, 200, 255)).save(path)
+        Image.new("RGBA", (512, 512), (90, 120, 200, 255)).save(path)
     return tmp_path
 
 
@@ -82,3 +82,26 @@ def test_boost_cycles_within_the_rules_limit(runtime):
         runtime._battle_input([pygame.event.Event(pygame.KEYDOWN, key=pygame.K_b)])
         seen.add(runtime._boost_level)
     assert seen == set(range(limit + 1))
+
+
+def test_field_interaction_shows_dialogue_then_enters_battle(resource_root, monkeypatch):
+    from asteria.runtime.game_save import GameRuntimeSave
+
+    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    save = GameRuntimeSave.load_json(ROOT / "saves" / "boss_stress.asteria-save.json", project)
+    runtime = PlayableTestRuntime(project, save, resource_root, width=960, height=540)
+    runtime.open()
+    try:
+        runtime._ui_mode = "field"
+        key = lambda k: pygame.event.Event(pygame.KEYDOWN, key=k)  # noqa: E731
+        runtime._frame([key(pygame.K_e)], 0.016)
+        assert runtime.game.pending_dialogue.line.speaker == "Astral Tyrant"
+        assert runtime.game.mode == "field"
+        runtime._frame([], 0.016)  # dialogue keeps waiting
+        assert runtime.game.pending_dialogue is not None
+        runtime._frame([key(pygame.K_RETURN)], 0.016)
+        assert runtime.game.mode == "battle"
+        assert runtime._battle_actor() in runtime.game.active_hero_ids()
+    finally:
+        runtime.close()

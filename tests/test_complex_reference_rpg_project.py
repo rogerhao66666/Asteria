@@ -84,7 +84,7 @@ def test_reference_field_has_real_boss_interaction_chain():
     binding=p.scene_event_bindings[scene.id].bindings[interaction.event_binding_id]
     program=p.event_programs.require(interaction.event_program_id)
     assert binding.entity_id==boss.id
-    assert any(x.opcode=="WORLD" and x.args.get("command")=="START_ENCOUNTER" and x.args.get("encounter_id")=="boss_room" for x in program.instructions)
+    assert any(x.opcode=="WORLD" and x.args.get("command")=="START_ENCOUNTER" and x.args.get("args",{}).get("encounter_id")=="boss_room" for x in program.instructions)
 
 
 def test_reference_project_is_visible_through_real_editor_authoring_adapters():

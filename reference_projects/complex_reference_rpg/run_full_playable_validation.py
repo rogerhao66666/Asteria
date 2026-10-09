@@ -21,6 +21,7 @@ def run():
     game.equip_passive(actor,"passive_01",capacity=8)
 
     trigger=game.field_step({"interact":1})
+    game.acknowledge_dialogue()
     boss="astral_tyrant:1"
     game.enemy_turn(boss,"astral_tyrant_ai")
 

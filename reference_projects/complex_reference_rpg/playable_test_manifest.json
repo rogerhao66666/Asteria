@@ -9,7 +9,6 @@
       32,
       48
     ],
-    "boss_sprite": "playable_assets/boss_field.png",
     "world_to_screen_scale": 3.0,
     "player_start": [
       38,
@@ -18,7 +17,16 @@
     "boss_world": [
       48,
       0
-    ]
+    ],
+    "entity_sprites": {
+      "Astral Tyrant": {
+        "sprite": "playable_assets/boss_field.png",
+        "size": [
+          96,
+          112
+        ]
+      }
+    }
   },
   "battle": {
     "background": "playable_assets/battle_background.png",

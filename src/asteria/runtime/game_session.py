@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 
 from asteria.core import Transform
+from asteria.events import EventRunner, SceneEventRuntime, WorldCommandRouter
 from asteria.gameplay import AbilityRegistry, AbilityRuntime, GameplaySubject
 from asteria.rpg import (
     ActorAbilityState, ActorProgressionState, BattleAction, BattleRuntime, BattleSessionRules, ClassAssignment, EquipmentGrowthRuntime, EquippedItem, Party, PartyMember, RewardRuntime, RpgActorSnapshot,
@@ -11,6 +12,7 @@ from asteria.rpg import (
 from asteria.rpg.targeting import TargetRelation
 from asteria.runtime.input import InputSnapshot
 from asteria.runtime.interaction import InteractionController
+from asteria.runtime.world_command_handlers import move_entity_to_scene, register_standard_world_commands
 
 
 class GameSessionError(RuntimeError):
@@ -43,6 +45,16 @@ class GameSessionRuntime:
         self.battle=None
         self.encounter_id=None
         self._enemy_ids=()
+        # Event programs run here: one foreground runner for interactions plus
+        # the current scene's autorun/parallel scheduler.
+        self.presentation_requests=[]
+        self.event_errors=[]
+        self.world_commands=register_standard_world_commands(WorldCommandRouter(),self)
+        self.events=EventRunner(project.event_programs,context=runtime_save.event_context,world_commands=self.world_commands)
+        if runtime_save.active_event is not None:
+            self.events.restore(runtime_save.active_event)
+        self.scene_events=None
+        self._build_scene_events()
 
     def set_player_position(self,x,y):
         t=self.player.get(Transform); t.x=float(x); t.y=float(y)
@@ -54,17 +66,91 @@ class GameSessionRuntime:
         return self.facing
 
     def field_step(self,actions=None):
+        """Feed field input; an interaction starts its event program in the foreground runner."""
         if self.mode!="field":
             raise GameSessionError("field input unavailable outside field mode")
+        if self.event_busy:
+            return None
         trigger=self.interaction.step(InputSnapshot(dict(actions or {})),self.scene,self.player,self.facing)
         if trigger is None:
             return None
-        program=self.project.event_programs.require(trigger.event_program_id)
-        for instruction in program.instructions:
-            if instruction.opcode=="WORLD" and instruction.args.get("command")=="START_ENCOUNTER":
-                self.start_encounter(instruction.args["encounter_id"])
-                break
+        self.events.start_trigger(trigger,replace=True)
+        self.update_events(0.0)
         return trigger
+
+    def _build_scene_events(self):
+        bindings=self.project.scene_event_bindings.get(self.scene.id)
+        self.scene_events=None if bindings is None else SceneEventRuntime.build(
+            bindings,self.project.event_programs,context=self.save.event_context,world_commands=self.world_commands,
+        )
+
+    @property
+    def event_busy(self):
+        """True while a foreground or autorun event blocks player control."""
+        return self.events.busy or (self.scene_events is not None and self.scene_events.scheduler.autorun_busy)
+
+    def _dialogue_runner(self):
+        if self.events.dialogue.blocked:
+            return self.events
+        if self.scene_events is not None:
+            for spec in self.scene_events.scheduler.specs():
+                instance=self.scene_events.scheduler.instance(spec.event_id)
+                if instance is not None and instance.runner.dialogue.blocked:
+                    return instance.runner
+        return None
+
+    @property
+    def pending_dialogue(self):
+        """The DialogueRequest or ChoiceRequest waiting for the player, if any."""
+        runner=self._dialogue_runner()
+        if runner is None: return None
+        return runner.dialogue.dialogue or runner.dialogue.choice
+
+    def acknowledge_dialogue(self):
+        runner=self._dialogue_runner()
+        if runner is None: raise GameSessionError("no dialogue is waiting")
+        runner.acknowledge_dialogue()
+        return self.update_events(0.0)
+
+    def choose(self,index):
+        runner=self._dialogue_runner()
+        if runner is None: raise GameSessionError("no choice is waiting")
+        selected=runner.choose(index)
+        self.update_events(0.0)
+        return selected
+
+    def update_events(self,dt=0.0):
+        """Advance running event programs. Failures stop that event and are kept in event_errors."""
+        output=()
+        try:
+            output=self.events.update(dt)
+        except Exception as exc:
+            self.event_errors.append(exc)
+            self.events.stop()
+        if not self.events.busy:
+            self.events.clear_completed()
+        if self.scene_events is not None and self.mode=="field" and not self.events.busy:
+            try:
+                self.scene_events.update(dt)
+            except Exception as exc:
+                self.event_errors.append(exc)
+                self.scene_events.scheduler.stop_all()
+        return output
+
+    def transfer_player(self,scene_id,x=None,y=None,*,facing=None):
+        """Move the player entity to another scene (or position) and switch event bindings."""
+        destination=self.project.scene(str(scene_id))
+        if destination is None: raise GameSessionError(f"unknown scene: {scene_id}")
+        changed=destination is not self.scene
+        transform=move_entity_to_scene(self.player,self.scene,destination,x,y)
+        self.scene=destination
+        self.save.scene_id=destination.id
+        self.save.player_position=(transform.x,transform.y)
+        if facing: self.set_player_facing(facing)
+        if changed:
+            self.interaction.reset()
+            self._build_scene_events()
+        return destination
 
     def set_active_classes(self,actor_id,class_ids):
         actor_id=str(actor_id); state=self.save.rpg_state.actor_progression[actor_id]
@@ -486,4 +572,5 @@ class GameSessionRuntime:
         self.save.player_entity_id=self.player.id
         self.save.player_facing=self.facing
         self.save.player_position=(t.x,t.y)
+        self.save.active_event=self.events.snapshot()
         return self.save

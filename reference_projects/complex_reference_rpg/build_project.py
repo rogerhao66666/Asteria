@@ -390,7 +390,7 @@ def build_project():
     event_id="boss_interaction_event"; binding_id="boss_interaction"
     program=EventProgram((
         EventInstruction("DIALOGUE",{"speaker":"Astral Tyrant","text":"The gate yields only to those who endure."}),
-        EventInstruction("WORLD",{"command":"START_ENCOUNTER","encounter_id":"boss_room"}),
+        EventInstruction("WORLD",{"command":"START_ENCOUNTER","args":{"encounter_id":"boss_room"}}),
         EventInstruction("END"),
     ),name="Astral Tyrant Encounter")
     project.event_programs.register(event_id,program)

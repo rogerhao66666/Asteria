@@ -15,12 +15,13 @@ class GameRuntimeSave:
     player_position: tuple[float,float] | None
     rpg_state: RpgRuntimeState
     event_context: EventContext
+    active_event: dict | None
 
     SCHEMA="asteria.game_runtime_save"
-    VERSION=1
+    VERSION=2
 
     def __init__(self,project_id,scene_id,*,player_entity_id="",player_facing="down",
-                 player_position=None,rpg_state,event_context=None):
+                 player_position=None,rpg_state,event_context=None,active_event=None):
         self.project_id=str(project_id)
         self.scene_id=str(scene_id)
         self.player_entity_id=str(player_entity_id)
@@ -28,6 +29,8 @@ class GameRuntimeSave:
         self.player_position=(None if player_position is None else (float(player_position[0]),float(player_position[1])))
         self.rpg_state=rpg_state
         self.event_context=event_context or EventContext()
+        # Snapshot of the foreground event that was running when saved (EventRunner.snapshot()).
+        self.active_event=None if active_event is None else dict(active_event)
 
     def validate(self,project):
         if self.project_id!=project.id: raise ValueError("save belongs to another project")
@@ -41,18 +44,19 @@ class GameRuntimeSave:
         return {"schema":self.SCHEMA,"version":self.VERSION,"project_id":self.project_id,
                 "scene_id":self.scene_id,"player_entity_id":self.player_entity_id,
                 "player_facing":self.player_facing,"player_position":None if self.player_position is None else list(self.player_position),"rpg_state":self.rpg_state.to_data(),
-                "event_context":self.event_context.to_data()}
+                "event_context":self.event_context.to_data(),"active_event":self.active_event}
 
     @classmethod
     def from_data(cls,data,project):
-        if data.get("schema")!=cls.SCHEMA or data.get("version")!=1:
+        if data.get("schema")!=cls.SCHEMA or data.get("version") not in {1,2}:
             raise ValueError("unsupported game runtime save")
         value=cls(data["project_id"],data["scene_id"],
                   player_entity_id=data.get("player_entity_id",""),
                   player_facing=data.get("player_facing","down"),
                   player_position=data.get("player_position"),
                   rpg_state=RpgRuntimeState.from_data(data["rpg_state"],project.rpg_database),
-                  event_context=EventContext.from_data(data["event_context"]))
+                  event_context=EventContext.from_data(data["event_context"]),
+                  active_event=data.get("active_event"))
         value.validate(project); return value
 
     def save_json(self,path):

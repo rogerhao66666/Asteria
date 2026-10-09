@@ -108,6 +108,40 @@ def program_with_move(program, old_index, new_index):
     return EventProgram(items, name=program.name)
 
 
+def _coerce_world_value(text):
+    lowered = text.lower()
+    if lowered in {"true", "false"}:
+        return lowered == "true"
+    for kind in (int, float):
+        try:
+            return kind(text)
+        except ValueError:
+            pass
+    return text
+
+
+def parse_world_args(text):
+    """Parse "key=value, key2=value2" into WORLD command arguments.
+
+    Numbers and true/false are converted; everything else stays a string.
+    """
+    args = {}
+    for part in str(text or "").split(","):
+        part = part.strip()
+        if not part:
+            continue
+        key, sep, value = part.partition("=")
+        key = key.strip()
+        if not sep or not key:
+            raise ValueError(f"expected key=value, got {part!r}")
+        args[key] = _coerce_world_value(value.strip())
+    return args
+
+
+def format_world_args(args):
+    return ", ".join(f"{k}={v}" for k, v in dict(args or {}).items())
+
+
 def describe_instruction(instruction):
     op = instruction.opcode
     a = instruction.args
@@ -124,7 +158,8 @@ def describe_instruction(instruction):
     if op == "SET_VARIABLE":
         return f"Set Variable  {a.get('name', '')} = {a.get('value')}"
     if op == "WORLD":
-        return f"World  {a.get('command', '')}"
+        details = format_world_args(a.get("args") or {})
+        return f"World  {a.get('command', '')}" + (f"  ({details})" if details else "")
     if op == "CALL":
         return f"Call  {a.get('program_id', '')}"
     if op == "WAIT":

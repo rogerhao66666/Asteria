@@ -153,12 +153,14 @@ class PlayableTestRuntime:
         bg=self.load_image(self.manifest["field"]["background"])
         self.screen.blit(self.pg.transform.smoothscale(bg,(self.width,self.height)),(0,0))
 
-        boss=next((e for e in self.game.scene.entities() if e.name=="Astral Tyrant"),None)
-        if boss is not None:
-            bt=boss.get(Transform); bx,by=self._field_screen_xy(bt.x,bt.y)
-            bs=self.load_image(self.manifest["field"]["boss_sprite"])
-            bs=self.pg.transform.scale(bs,(96,112))
-            self.screen.blit(bs,(int(bx-48),int(by-100)))
+        sprites=self.manifest["field"].get("entity_sprites",{})
+        for entity in self.game.scene.entities():
+            spec=sprites.get(entity.name)
+            if spec is None or entity is self.game.player:continue
+            et=entity.get(Transform); ex,ey=self._field_screen_xy(et.x,et.y)
+            w,h=spec.get("size",(96,112))
+            image=self.pg.transform.scale(self.load_image(spec["sprite"]),(int(w),int(h)))
+            self.screen.blit(image,(int(ex-w/2),int(ey-h+12)))
 
         pt=self.game.player.get(Transform); px,py=self._field_screen_xy(pt.x,pt.y)
         pf=self._player_frame(self.game.facing,moving)
@@ -171,13 +173,44 @@ class PlayableTestRuntime:
         self.text("Move: WASD / Arrows   C: Character/Build   E: Interact   F5: Save   Esc: Quit",
                   34,self.height-52,size=19)
         candidate=self._interaction_candidate()
-        if candidate is not None:
-            self.text("E  Interact — Astral Tyrant",self.width/2,55,size=26,
+        if candidate is not None and not self.game.event_busy:
+            self.text(f"E  Interact — {candidate.entity.name}",self.width/2,55,size=26,
                       color=(255,226,129),center=True)
         if self.message and self.pg.time.get_ticks()<self.message_until:
             self.text(self.message,self.width/2,92,size=22,color=(175,235,255),center=True)
+        self._draw_dialogue()
+
+    def _draw_dialogue(self):
+        request=self.game.pending_dialogue
+        if request is None:return
+        self.panel((60,self.height-230,self.width-120,130),fill=(10,14,24,235),border=(240,201,93))
+        line=getattr(request,"line",None)
+        if line is not None:
+            if line.speaker:self.text(line.speaker,84,self.height-218,size=24,color=(255,220,124))
+            self.text(line.text,84,self.height-184,size=22)
+            self.text("Enter / E: continue",self.width-250,self.height-128,size=18,color=(170,210,240))
+            return
+        self.text(request.prompt or "Choose",84,self.height-218,size=22,color=(255,220,124))
+        for i,choice in enumerate(request.choices[:9],1):
+            self.text(f"{i}. {choice.text}",84+((i-1)%3)*270,self.height-184+((i-1)//3)*26,size=20)
+
+    def _dialogue_input(self, events):
+        """Route keys to a waiting dialogue/choice. Returns True when one is open."""
+        request=self.game.pending_dialogue
+        if request is None:return False
+        for event in events:
+            if event.type!=self.pg.KEYDOWN:continue
+            if getattr(request,"line",None) is not None and event.key in (self.pg.K_e,self.pg.K_RETURN,self.pg.K_SPACE):
+                self.game.acknowledge_dialogue(); break
+            if getattr(request,"choices",None) and self.pg.K_1<=event.key<=self.pg.K_9:
+                index=event.key-self.pg.K_1
+                if index<len(request.choices):
+                    self.game.choose(index); break
+        return True
 
     def _field_input(self, events, dt):
+        if self._dialogue_input(events) or self.game.event_busy:
+            return False
         keys=self.pg.key.get_pressed()
         dx=(1 if keys[self.pg.K_d] or keys[self.pg.K_RIGHT] else 0)-(1 if keys[self.pg.K_a] or keys[self.pg.K_LEFT] else 0)
         dy=(1 if keys[self.pg.K_s] or keys[self.pg.K_DOWN] else 0)-(1 if keys[self.pg.K_w] or keys[self.pg.K_UP] else 0)
@@ -203,13 +236,9 @@ class PlayableTestRuntime:
                 interact=True
         # GameSessionRuntime interaction is edge-triggered. Emit release after press.
         if interact:
-            trigger=self.game.field_step({"interact":1.0})
-            self.game.field_step({"interact":0.0})
-            if trigger is not None:
-                self.message="Encounter started"
-                self.message_until=self.pg.time.get_ticks()+1000
-                if self.game.mode=="battle":
-                    self._advance_to_hero_turn()
+            self.game.field_step({"interact":1.0})
+            if self.game.mode=="field":
+                self.game.field_step({"interact":0.0})
         return moving
 
 
@@ -570,33 +599,42 @@ class PlayableTestRuntime:
         try:
             while self.running:
                 dt=min(self.clock.tick(int(target_fps))/1000.0,0.05)
-                events=self.pg.event.get()
-                for event in events:
-                    if event.type==self.pg.QUIT:
-                        self.running=False
-                    elif event.type==self.pg.KEYDOWN and event.key==self.pg.K_ESCAPE:
-                        if self._ui_mode=="build": self._ui_mode="field"
-                        else: self.running=False
-                    elif event.type==self.pg.KEYDOWN and event.key==self.pg.K_F5 and self._ui_mode!="title":
-                        self.save_playtest()
-
-                if self._ui_mode=="title":
-                    for event in events:
-                        if event.type==self.pg.KEYDOWN and event.key==self.pg.K_n:self._ui_mode="field"
-                        elif event.type==self.pg.KEYDOWN and event.key==self.pg.K_l:self._load_player_save()
-                    self._draw_title()
-                elif self._ui_mode=="build":
-                    self._build_menu_input(events); self._draw_build_menu()
-                elif self.game.mode=="field":
-                    moving=self._field_input(events,dt)
-                    self._draw_field(moving)
-                elif self.game.mode=="battle":
-                    self._battle_input(events)
-                    self._draw_battle()
+                self._frame(self.pg.event.get(),dt)
                 self.pg.display.flip()
         finally:
             self.close()
         return 0
+
+    def _frame(self, events, dt):
+        """Process one frame of input, event programs and drawing (no flip)."""
+        for event in events:
+            if event.type==self.pg.QUIT:
+                self.running=False
+            elif event.type==self.pg.KEYDOWN and event.key==self.pg.K_ESCAPE:
+                if self._ui_mode=="build": self._ui_mode="field"
+                else: self.running=False
+            elif event.type==self.pg.KEYDOWN and event.key==self.pg.K_F5 and self._ui_mode!="title":
+                self.save_playtest()
+
+        if self._ui_mode=="title":
+            for event in events:
+                if event.type==self.pg.KEYDOWN and event.key==self.pg.K_n:self._ui_mode="field"
+                elif event.type==self.pg.KEYDOWN and event.key==self.pg.K_l:self._load_player_save()
+            self._draw_title()
+        elif self._ui_mode=="build":
+            self._build_menu_input(events); self._draw_build_menu()
+        elif self.game.mode=="field":
+            moving=self._field_input(events,dt)
+            self.game.update_events(dt)
+            if self.game.mode=="battle":
+                self._turn_actor=None
+                self._advance_to_hero_turn()
+                self._draw_battle()
+            else:
+                self._draw_field(moving)
+        elif self.game.mode=="battle":
+            self._battle_input(events)
+            self._draw_battle()
 
 
 def run_playable_test_runtime(project, resource_root, *, runtime_save=None, save_path=None, width=960, height=540, target_fps=60):
