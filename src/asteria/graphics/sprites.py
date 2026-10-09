@@ -42,6 +42,8 @@ class SpriteSheet:
 class SpriteKeyframe:
     frame_index: int
     duration: float
+    # Names fired when playback enters this keyframe (footstep, hit, spawn_vfx, ...).
+    events: tuple[str, ...] = ()
 
     def validate(self):
         if self.frame_index < 0 or self.duration <= 0:

@@ -51,12 +51,17 @@ def load_animation_set(path):
         clips[name] = SpriteClip(
             name,
             [
-                SpriteKeyframe(int(k["frame_index"]), float(k["duration"]))
+                SpriteKeyframe(int(k["frame_index"]), float(k["duration"]), tuple(k.get("events", ())))
                 for k in cd["keyframes"]
             ],
             bool(cd["loop"]),
         )
-    return AnimationClipSet(clips)
+    machine = None
+    if "state_machine" in data:
+        from asteria.runtime.animation_state_machine import AnimationStateMachineDefinition
+
+        machine = AnimationStateMachineDefinition.from_data(data["state_machine"])
+    return AnimationClipSet(clips, machine)
 
 
 def load_tilemap(path):

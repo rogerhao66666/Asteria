@@ -4,6 +4,8 @@ from dataclasses import dataclass
 @dataclass(frozen=True, slots=True)
 class AnimationClipSet:
     clips: dict[str, object]
+    # Optional AnimationStateMachineDefinition choosing clips from parameters.
+    state_machine: object = None
 
     def validate(self, sprite_sheet):
         if not self.clips:

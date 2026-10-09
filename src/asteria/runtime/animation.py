@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(slots=True)
@@ -7,6 +7,24 @@ class AnimatorState:
     time: float = 0.0
     frame_cursor: int = 0
     playing: bool = True
+    # (clip name, keyframe index, event name) in the order keyframes were entered.
+    pending_events: list = field(default_factory=list)
+
+    def __post_init__(self):
+        self._enter_keyframe()
+
+    def _enter_keyframe(self):
+        keyframe = self.clip.keyframes[self.frame_cursor] if self.clip.keyframes else None
+        for name in getattr(keyframe, "events", ()):
+            self.pending_events.append((self.clip.name, self.frame_cursor, name))
+
+    def drain_events(self):
+        events, self.pending_events = self.pending_events, []
+        return events
+
+    @property
+    def finished(self):
+        return not self.playing and not self.clip.loop
 
     @property
     def frame_index(self):
@@ -19,6 +37,7 @@ class AnimatorState:
         self.time = 0.0
         self.frame_cursor = 0
         self.playing = True
+        self._enter_keyframe()
 
     def update(self, dt):
         if not self.playing or dt <= 0:
@@ -39,3 +58,5 @@ class AnimatorState:
                     self.frame_cursor = len(self.clip.keyframes) - 1
                     self.time = 0.0
                     self.playing = False
+                    break
+            self._enter_keyframe()
