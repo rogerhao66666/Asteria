@@ -26,6 +26,7 @@ class PygameBattleUiBackend:
         if not self.scale > 0:
             raise ValueError("scale must be positive")
         self._fonts = {}
+        self._glyph_cache = {}
 
     def _s(self, value):
         return round(float(value) * self.scale)
@@ -121,8 +122,29 @@ class PygameBattleUiBackend:
         radius = self._s(7 if marker.primary else 5)
         self.pg.draw.polygon(self.screen, c, ((cx, cy-radius), (cx-radius, cy), (cx, cy+radius), (cx+radius, cy)), width=max(1, self._s(2)))
 
+    GLYPH_FALLBACKS = {"▶": ">", "▸": ">", "►": ">", "◀": "<", "◂": "<", "…": "...", "•": "*"}
+
+    def _has_glyph(self, font, char):
+        """True when ``font`` draws ``char`` differently from its missing-glyph box."""
+        key = (id(font), char)
+        cached = self._glyph_cache.get(key)
+        if cached is None:
+            def pixels(value):
+                return self.pg.image.tobytes(font.render(value, True, (255, 255, 255)), "RGBA")
+            cached = char.isspace() or char.isascii() or pixels(char) != pixels("\ue000")
+            self._glyph_cache[key] = cached
+        return cached
+
+    def _renderable(self, font, value):
+        """Replace characters the font cannot draw (shown as empty boxes otherwise)."""
+        return "".join(
+            char if self._has_glyph(font, char) else self.GLYPH_FALLBACKS.get(char, "?")
+            for char in str(value)
+        )
+
     def draw_text(self, text, *, color, size):
-        image = self._font(size).render(str(text.text), True, self._rgb(color))
+        font = self._font(size)
+        image = font.render(self._renderable(font, text.text), True, self._rgb(color))
         x, y = self._s(text.x), self._s(text.y)
         if text.align == "center":
             x -= image.get_width() // 2

@@ -121,6 +121,9 @@ class BattleUiComposer:
     targets, changes resources, advances scheduler time, or applies rewards.
     """
 
+    MIN_MENU_WIDTH = 96.0
+    TIMELINE_CHAR_WIDTH = 5.0
+
     def __init__(self, scene: BattlePresentationScene, layout=None, party_layout=None, polish=None):
         if not isinstance(scene, BattlePresentationScene):
             raise TypeError("scene must be BattlePresentationScene")
@@ -134,6 +137,23 @@ class BattleUiComposer:
         self.polish = polish or BattleUiPolishProfile()
         if not isinstance(self.polish, BattleUiPolishProfile):
             raise TypeError("polish must be BattleUiPolishProfile")
+        self._display_names = {}
+
+    def _name(self, member_id):
+        return self._display_names.get(str(member_id), str(member_id))
+
+    @staticmethod
+    def _fit(text, max_chars):
+        """Shorten to ``max_chars``, keeping the last word (e.g. "Hero 06" -> "H06")."""
+        text = str(text)
+        if len(text) <= max_chars:
+            return text
+        words = text.split()
+        if len(words) > 1:
+            short = "".join(w[0] for w in words[:-1]) + words[-1]
+            if len(short) <= max_chars:
+                return short
+        return text[: max(1, max_chars - 1)] + "."
 
     def _anchor_screen(self, camera, member_id):
         try:
@@ -188,6 +208,7 @@ class BattleUiComposer:
             row_height = self.party_layout.row_height(density)
             right = zone_layout.zone == "right"
             center = zone_layout.zone == "center"
+            stacked = 0.0
             for row_index, member_id in enumerate(zone_layout.visible_member_ids):
                 member = member_by_id[member_id]
                 if center:
@@ -197,9 +218,10 @@ class BattleUiComposer:
                 else:
                     x = L.margin
 
-                # Stack upward from the lower battle HUD safe area.
+                # Stack upward from the lower battle HUD safe area; each row
+                # advances by at least its own panel height so panels never overlap.
                 base_y = L.virtual_height - L.margin - 8.0
-                y = base_y - row_index * row_height
+                y = base_y - stacked
 
                 resource_limit = self.party_layout.resource_limit(density)
                 ordered_gauges = sorted(
@@ -223,6 +245,7 @@ class BattleUiComposer:
                     height = 16.0
 
                 panel_y = y - height
+                stacked += max(row_height, height + 2.0)
                 focused = (
                     self.polish.focus_member_emphasis
                     and focus_member_id is not None
@@ -235,7 +258,7 @@ class BattleUiComposer:
                     panel_role, member.member_id
                 ))
                 texts.append(BattleUiText(
-                    member.member_id, x+4, panel_y+3, name_role, "left", member.member_id
+                    self._name(member.member_id), x+4, panel_y+3, name_role, "left", member.member_id
                 ))
 
                 gy = panel_y + (13 if density != "minimal" else 9)
@@ -262,7 +285,7 @@ class BattleUiComposer:
 
                     if gauge.show_label and density == "expanded":
                         texts.append(BattleUiText(
-                            gauge.label, x+4, gy, "gauge_label", "left", member.member_id
+                            self._fit(gauge.label, 5), x+4, gy, "gauge_label", "left", member.member_id
                         ))
 
                     if mode in {"number", "contextual"}:
@@ -328,6 +351,10 @@ class BattleUiComposer:
             raise TypeError("action_menu must be BattleActionMenuView")
         L, P = self.layout, self.polish
         width = min(P.interaction_width, L.virtual_width - 2 * L.margin)
+        # Keep the menu between left/right HUD columns when there is room for it.
+        hud_gap = L.virtual_width - 2 * (L.margin + L.hud_panel_width) - 2 * L.margin
+        if hud_gap >= self.MIN_MENU_WIDTH:
+            width = min(width, hud_gap)
         x = (L.virtual_width - width) / 2
         header_rows = (1 if menu.categories else 0) + (1 if menu.query else 0)
         body_rows = max(1, len(menu.entries))
@@ -474,15 +501,21 @@ class BattleUiComposer:
         if timeline is None:
             return panels, texts
         L = self.layout
-        width = min(L.virtual_width - 2*L.margin, 18.0 + 32.0*len(timeline.turns))
+        slot, padding = 32.0, 9.0
+        capacity = max(1, int((L.virtual_width - 2*L.margin - 2*padding) // slot))
+        turns = tuple(timeline.turns)[:capacity]
+        width = 2*padding + slot*len(turns)
         panels.append(BattleUiPanel("timeline", (L.virtual_width-width)/2, L.timeline_y, width, 20.0, "timeline"))
-        x = (L.virtual_width-width)/2 + 8
-        for entry in timeline.turns:
+        x = (L.virtual_width-width)/2 + padding + slot/2
+        max_chars = max(3, int(slot // self.TIMELINE_CHAR_WIDTH))
+        for entry in turns:
             role = "timeline_current" if entry.is_current else "timeline_entry"
-            texts.append(BattleUiText(entry.member_id, x, L.timeline_y+6, role, "center", entry.member_id))
+            texts.append(BattleUiText(
+                self._fit(self._name(entry.member_id), max_chars), x, L.timeline_y+6, role, "center", entry.member_id,
+            ))
             if timeline.scheduler_mode == "continuous":
-                texts.append(BattleUiText(f"{entry.ready_time:g}", x, L.timeline_y+13, "timeline_time", "center", entry.member_id))
-            x += 32
+                texts.append(BattleUiText(f"{entry.ready_time:.1f}", x, L.timeline_y+13, "timeline_time", "center", entry.member_id))
+            x += slot
         for i, cast in enumerate(timeline.casts):
             texts.append(BattleUiText(
                 f"{cast.actor_id}: {cast.ability_id} {int(round(cast.progress*100))}%",
@@ -546,7 +579,10 @@ class BattleUiComposer:
         side_by_member=None,
         placement_by_member=None,
         focus_member_id=None,
+        display_names=None,
     ):
+        """``display_names`` maps member ids to the labels shown in HUD and timeline."""
+        self._display_names = {str(k): str(v) for k, v in dict(display_names or {}).items()}
         if not isinstance(camera, Camera2D):
             raise TypeError("camera must be Camera2D")
         if not isinstance(battle_frame, BattlePresentationFrame):

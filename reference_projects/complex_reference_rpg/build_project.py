@@ -364,7 +364,7 @@ def build_project():
     lib=project.battle_presentation_library
     lib.add("feedback","premium",BattleFeedbackProfile())
     lib.add("hud","adaptive",BattleHudProfile())
-    lib.add("ui_layout","adaptive",BattleUiLayoutProfile())
+    lib.add("ui_layout","adaptive",BattleUiLayoutProfile(virtual_width=480,virtual_height=270))
     lib.add("ui_polish","premium",BattleUiPolishProfile())
     lib.add("action_menu","default",BattleActionMenuPolicy())
     lib.add("results","default",BattleResultProfile())

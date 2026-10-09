@@ -105,6 +105,7 @@ class BattleScreenRuntime:
         }
         self.placement_by_member: dict[str, str] = {}
         self.current_member_id: str | None = None
+        self.display_names: dict[str, str] = {}
         self.time = 0.0
 
     def _dispatch_presentation_events(self, values):
@@ -211,6 +212,7 @@ class BattleScreenRuntime:
             side_by_member=self.side_by_member,
             placement_by_member=self.placement_by_member,
             focus_member_id=self.current_member_id,
+            display_names=self.display_names,
         )
 
     def render(self, base_camera, *, ui_renderer: BattleUiRenderer, texture_renderer=None):

@@ -139,12 +139,32 @@ class CanonicalBattleAdapter:
         self.screen = BattleScreenRuntime(
             scene, lambda _id: None, lambda _id: None, placement_by_side=self.placement_by_side, **kwargs,
         )
+        self.screen.display_names = self._display_names(game)
         self.screen.coordinator.attach(game.battle.hooks)
         layout = self.screen.composer.layout
         scale = min(self.host.width / layout.virtual_width, self.host.height / layout.virtual_height)
         self._ui_backend = PygameBattleUiBackend(self.host.screen, scale=scale)
         self.renderer = BattleUiRenderer(self._ui_backend, self._theme())
         self.audio_cues.clear()
+
+    @staticmethod
+    def _display_names(game):
+        """Member id -> project display name; repeated enemy kinds get their index."""
+        db = game.project.rpg_database
+        names = {}
+        member_ids = [m.member_id for party in game.battle.parties.values() for m in party.members]
+        kinds = {}
+        for member_id in member_ids:
+            base = member_id.split(":", 1)[0]
+            kinds[base] = kinds.get(base, 0) + 1
+        for member_id in member_ids:
+            base, _, index = member_id.partition(":")
+            definition = db.actors.get(member_id) or db.enemies.get(base)
+            name = getattr(definition, "display_name", "") or member_id
+            if index and kinds[base] > 1:
+                name = f"{name} {index}"
+            names[member_id] = name
+        return names
 
     # -- log translation --------------------------------------------------
     def consume(self, entries):

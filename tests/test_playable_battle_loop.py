@@ -275,3 +275,65 @@ def test_pygame_battle_ui_backend_scales_virtual_coordinates(monkeypatch):
     assert backend._font(10).get_height() > PygameBattleUiBackend(surface)._font(10).get_height()
     with pytest.raises(ValueError):
         PygameBattleUiBackend(surface, scale=0)
+
+
+# --- CB2 follow-up: canonical battle UI layout (F-2) -----------------------
+
+def _canonical_frame(resource_root, monkeypatch):
+    from asteria.runtime.camera import Camera2D
+
+    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+    runtime = _boss_runtime(resource_root)
+    monkeypatch.setattr(runtime, "_play_fx", lambda *a, **k: None)
+    runtime._battle_presentation = CanonicalBattleAdapter(runtime)
+    runtime.game.start_encounter("boss_room")
+    runtime._battle_presentation.begin()
+    runtime._advance_to_hero_turn()
+    runtime._present_battle(0.016)
+    screen = runtime._battle_presentation.screen
+    layout = screen.composer.layout
+    frame = screen.build_frame(Camera2D(width=layout.virtual_width, height=layout.virtual_height))
+    return runtime, layout, frame
+
+
+def _overlaps(a, b):
+    return a.x < b.x + b.width and b.x < a.x + a.width and a.y < b.y + b.height and b.y < a.y + a.height
+
+
+def test_canonical_hud_panels_do_not_overlap_and_menu_sits_between_columns(resource_root, monkeypatch):
+    runtime, layout, frame = _canonical_frame(resource_root, monkeypatch)
+    try:
+        hud = [p for p in frame.panels if p.panel_id.startswith("hud:")]
+        assert len(hud) == 9
+        assert not any(_overlaps(a, b) for i, a in enumerate(hud) for b in hud[i + 1:])
+        assert all(p.y >= 0 and p.y + p.height <= layout.virtual_height for p in hud)
+        menu = next(p for p in frame.panels if p.panel_id == "action_menu")
+        assert not any(_overlaps(menu, p) for p in hud)
+    finally:
+        runtime.close()
+
+
+def test_canonical_ui_uses_display_names_and_fits_the_timeline(resource_root, monkeypatch):
+    runtime, layout, frame = _canonical_frame(resource_root, monkeypatch)
+    try:
+        texts = [t.text for t in frame.texts]
+        assert "Hero 06" in texts and "Astral Tyrant" in texts
+        assert not any(t.startswith("hero_") or ":" in t for t in texts if t)
+        timeline = next(p for p in frame.panels if p.panel_id == "timeline")
+        assert timeline.x >= 0 and timeline.x + timeline.width <= layout.virtual_width
+        labels = [t.text for t in frame.texts if t.role in {"timeline_entry", "timeline_current"}]
+        assert labels and all(len(x) <= 6 for x in labels)
+        assert len(set(labels[:5])) == 5  # heroes stay distinguishable ("H06", "H04", ...)
+    finally:
+        runtime.close()
+
+
+def test_pygame_backend_replaces_glyphs_the_font_cannot_draw(monkeypatch):
+    from asteria.platform.pygame_battle_ui import PygameBattleUiBackend
+
+    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+    pygame.init()
+    backend = PygameBattleUiBackend(pygame.Surface((10, 10)))
+    font = backend._font(20)
+    assert backend._renderable(font, "▶ Strike") == "> Strike"
+    assert backend._renderable(font, "Plain text 123") == "Plain text 123"
