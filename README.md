@@ -1,9 +1,25 @@
-# Asteria v0.158.0a158 — Editor + RPG Runtime Milestone
+# Asteria — Python-first 2D RPG engine and editor
 
-Current canonical state: **Batch 158 FROZEN / FINAL CLOSURE PASS**. See
-[`docs/BATCH158_EDITOR_RPG_RUNTIME_FINAL_CLOSURE_AUDIT.md`](docs/BATCH158_EDITOR_RPG_RUNTIME_FINAL_CLOSURE_AUDIT.md)
-for the verified architecture, schema, editor, runtime, save-state, and full-play
-coverage.
+**Canonical specification** (authority order, see `audit/FIVE_DOC_CONSISTENCY_AUDIT.md`):
+[`ASTERIA_SPEC.md`](ASTERIA_SPEC.md), [`ASTERIA_ASSET_SPEC.md`](ASTERIA_ASSET_SPEC.md),
+[`ASTERIA_ASSET_PIPELINE.md`](ASTERIA_ASSET_PIPELINE.md),
+[`ASTERIA_ART_DIRECTION.md`](ASTERIA_ART_DIRECTION.md); implementation state lives in
+[`ASTERIA_PROGRESS.md`](ASTERIA_PROGRESS.md). `docs/CANONICAL_SPEC.md` and the batch
+documents are historical.
+
+**Current state (2026-10-09):** SPEC-to-code gap audit and closure plan in
+[`docs/audits/`](docs/audits/README.md) — start with
+[`AUDIT_EXECUTIVE_SUMMARY.md`](docs/audits/AUDIT_EXECUTIVE_SUMMARY.md). The Character
+Generator is cancelled and no art assets are bundled; ARPG and demo work are deferred
+until the original SPEC is closed.
+
+```bash
+python -m pip install -e ".[pygame,editor,mv,dev]"
+QT_QPA_PLATFORM=offscreen python -m pytest -q
+```
+
+Tests marked `mv_reference` need the git-ignored `local_reference/rpg_maker_mv` and
+skip without it.
 
 ## Historical Batch 98 state
 
@@ -19,6 +35,6 @@ Battle Presentation status:
 
 Batch 98 does not recompute or mutate battle resources/states. HUD values mirror canonical `BattleResourceRuntime` and active gameplay states through project-owned presentation profiles. Final bar/icon/text rendering, turn/timeline UI and battle result/reward presentation remain future work.
 
-Current regression result: **554 passed, 4 skipped, 0 failed**. The four skips are optional PySide6 editor UI tests unavailable in this environment.
+Historical regression result at Batch 98: 554 passed, 4 skipped.
 
 See [current specification](docs/CANONICAL_SPEC.md), [architecture](docs/ARCHITECTURE.md), [handoff](PROJECT_HANDOFF.md), [next-phase plan](docs/NEXT_PHASE_PLAN.md), and [Batch 98 closure](docs/BATCH98_CLOSURE_AUDIT.md). Historical batch/closure documents remain provenance only and do not reopen frozen ownership boundaries.

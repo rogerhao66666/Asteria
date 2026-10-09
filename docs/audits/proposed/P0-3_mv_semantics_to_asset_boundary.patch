@@ -1,0 +1,712 @@
+diff -ruN a/scripts/validate_mv_character_creator.py b/scripts/validate_mv_character_creator.py
+--- a/scripts/validate_mv_character_creator.py	2026-10-09 21:44:38
++++ b/scripts/validate_mv_character_creator.py	2026-10-09 21:44:38
+@@ -17,7 +17,7 @@
+ from asteria.assets.rpg_maker_mv_project import RPGMakerMVProjectImporter
+ from asteria.editor.character_generator_widget import CharacterGeneratorWidget
+ from asteria.editor.character_generator_workspace import CharacterGeneratorWorkspace
+-from asteria.graphics.mv_weapon_visual import weapon_visual_for_type
++from asteria.assets.rpg_maker_mv_weapon import weapon_visual_for_type
+ from asteria.project import Project
+ from asteria.runtime.preview import build_preview_registry
+ 
+diff -ruN a/src/asteria/assets/rpg_maker_mv_map_render.py b/src/asteria/assets/rpg_maker_mv_map_render.py
+--- a/src/asteria/assets/rpg_maker_mv_map_render.py	1970-01-01 08:00:00
++++ b/src/asteria/assets/rpg_maker_mv_map_render.py	2026-10-09 21:44:38
+@@ -0,0 +1,139 @@
++"""Draw composition for RPG Maker MV tiles without leaking MV IDs into core."""
++
++from __future__ import annotations
++
++import json
++import re
++from dataclasses import dataclass
++from pathlib import Path
++
++from asteria.assets.local_reference import RPGMakerMVProjectLayout
++from asteria.assets.rpg_maker_mv_catalog import RPGMakerMVCatalog
++from asteria.assets.rpg_maker_mv_map import RPGMakerMVMap
++
++from asteria.runtime.draw import TextureDraw
++
++
++@dataclass(frozen=True, slots=True)
++class MVTileRegion:
++    tile_id: int
++    source: Path | None
++    asset_id: str
++    quarters: tuple[tuple[int, int, int, int], ...]
++
++
++def _autotile_table(js_path: Path, name: str):
++    source = js_path.read_text(encoding="utf-8-sig")
++    match = re.search(
++        rf"Tilemap\.{name}\s*=\s*(\[.*?\]);", source, re.DOTALL
++    )
++    if match is None:
++        raise ValueError(f"missing MV autotile table: {name}")
++    return tuple(tuple(tuple(pair) for pair in row) for row in json.loads(match.group(1)))
++
++
++class MVTileResolver:
++    def __init__(self, layout: RPGMakerMVProjectLayout, catalog: RPGMakerMVCatalog, *, tileset_id: int):
++        self.layout = layout
++        self.catalog = catalog
++        self.tileset_id = int(tileset_id)
++        records = json.loads((layout.data / "Tilesets.json").read_text(encoding="utf-8-sig"))
++        if self.tileset_id <= 0 or self.tileset_id >= len(records) or not isinstance(records[self.tileset_id], dict):
++            raise ValueError(f"unknown MV tileset: {self.tileset_id}")
++        self.names = tuple(records[self.tileset_id].get("tilesetNames", ()))
++        js = (layout.js or layout.root / "js") / "rpg_core.js"
++        self.floor = _autotile_table(js, "FLOOR_AUTOTILE_TABLE")
++        self.wall = _autotile_table(js, "WALL_AUTOTILE_TABLE")
++        self.waterfall = _autotile_table(js, "WATERFALL_AUTOTILE_TABLE")
++
++    def _source(self, set_number: int) -> tuple[Path | None, str]:
++        name = self.names[set_number] if set_number < len(self.names) else ""
++        if not name:
++            return None, ""
++        source = self.catalog.resolve_image("tilesets", name)
++        if source is None:
++            return None, ""
++        asset = next((item for item in self.catalog.assets if item.source.uri == str(source)), None)
++        return source, "" if asset is None else asset.asset_id
++
++    def resolve(self, tile_id: int) -> MVTileRegion | None:
++        tile_id = int(tile_id)
++        if tile_id == 0:
++            return None
++        if 0 < tile_id < 1024:
++            set_number = tile_id // 256 + 5
++            local = tile_id % 256
++            source, asset_id = self._source(set_number)
++            return MVTileRegion(tile_id, source, asset_id, ((local % 16 * 48, local // 16 * 48, 48, 48),))
++        if 1536 <= tile_id < 2048:
++            local = tile_id - 1536
++            source, asset_id = self._source(4)
++            return MVTileRegion(tile_id, source, asset_id, ((local % 8 * 48, local // 8 * 48, 48, 48),))
++        if not 2048 <= tile_id < 8192:
++            return MVTileRegion(tile_id, None, "", ())
++
++        kind = (tile_id - 2048) // 48
++        shape = (tile_id - 2048) % 48
++        tx, ty = kind % 8, kind // 8
++        table = self.floor
++        if tile_id < 2816:  # A1, animation frame zero
++            set_number = 0
++            if kind == 0:
++                bx, by = 0, 0
++            elif kind == 1:
++                bx, by = 0, 3
++            elif kind == 2:
++                bx, by = 6, 0
++            elif kind == 3:
++                bx, by = 6, 3
++            else:
++                bx = (tx // 4) * 8
++                by = ty * 6 + ((tx // 2) % 2) * 3
++                if kind % 2:
++                    bx += 6
++                    table = self.waterfall
++                    shape %= len(table)
++        elif tile_id < 4352:  # A2
++            set_number, bx, by = 1, tx * 2, (ty - 2) * 3
++        elif tile_id < 5888:  # A3
++            set_number, bx, by, table = 2, tx * 2, (ty - 6) * 2, self.wall
++            shape %= len(table)
++        else:  # A4
++            set_number, bx = 3, tx * 2
++            by = int((ty - 10) * 2.5 + (0.5 if ty % 2 else 0))
++            if ty % 2:
++                table = self.wall
++                shape %= len(table)
++        source, asset_id = self._source(set_number)
++        quarters = tuple(((bx * 2 + qx) * 24, (by * 2 + qy) * 24, 24, 24) for qx, qy in table[shape])
++        return MVTileRegion(tile_id, source, asset_id, quarters)
++
++
++def compose_mv_map_draws(
++    mv_map: RPGMakerMVMap,
++    resolver: MVTileResolver,
++    viewport: tuple[float, float, float, float],
++) -> tuple[TextureDraw, ...]:
++    vx, vy, vw, vh = viewport
++    draws = []
++    for layer_index, layer in enumerate(mv_map.layers):
++        for index, tile_id in enumerate(layer):
++            if tile_id == 0:
++                continue
++            column, row = index % mv_map.width, index // mv_map.width
++            x, y = column * 48, row * 48
++            if x + 48 <= vx or y + 48 <= vy or x >= vx + vw or y >= vy + vh:
++                continue
++            region = resolver.resolve(tile_id)
++            if region is None or region.source is None:
++                continue
++            for quarter_index, source_rect in enumerate(region.quarters):
++                full = len(region.quarters) == 1
++                qx = 0 if full else quarter_index % 2 * 24
++                qy = 0 if full else quarter_index // 2 * 24
++                size = 48 if full else 24
++                draws.append(TextureDraw(
++                    region.asset_id, source_rect, x + qx, y + qy, size, size,
++                    layer=layer_index,
++                ))
++    return tuple(draws)
+diff -ruN a/src/asteria/assets/rpg_maker_mv_weapon.py b/src/asteria/assets/rpg_maker_mv_weapon.py
+--- a/src/asteria/assets/rpg_maker_mv_weapon.py	1970-01-01 08:00:00
++++ b/src/asteria/assets/rpg_maker_mv_weapon.py	2026-10-09 21:44:38
+@@ -0,0 +1,75 @@
++"""RPG Maker MV weapon types translated into generic combatant overlays.
++
++MV-specific data (``System.json`` weapon types/attack motions, the ``WeaponsN``
++sheet layout and ``mv-weapon-type:`` equipment tags) stays in this adapter.
++Battle Presentation only receives :class:`CombatantOverlay` values.
++"""
++
++from __future__ import annotations
++
++from collections.abc import Callable, Iterable, Mapping
++from dataclasses import dataclass
++
++MV_WEAPON_TYPE_TAG = "mv-weapon-type:"
++
++
++@dataclass(frozen=True, slots=True)
++class WeaponVisual:
++    motion: str
++    sheet_name: str = ""
++    frames: tuple[tuple[int, int, int, int], ...] = ()
++
++
++def weapon_visual_for_type(weapon_type: str, system_data: dict) -> WeaponVisual:
++    """Resolve MV's attack motion and 3-frame WeaponsN sheet layout."""
++    weapon_types = system_data.get("weaponTypes", ())
++    motions = system_data.get("attackMotions", ())
++    try:
++        type_id = weapon_types.index(str(weapon_type))
++        entry = motions[type_id]
++        motion = {0: "thrust", 1: "swing", 2: "missile"}[int(entry["type"])]
++        image_id = int(entry["weaponImageId"])
++    except (AttributeError, ValueError, IndexError, KeyError, TypeError):
++        return WeaponVisual("unarmed")
++    if image_id <= 0:
++        return WeaponVisual(motion)
++    page = (image_id - 1) // 12 + 1
++    index = (image_id - 1) % 12
++    x = index // 6 * 3 * 96
++    y = index % 6 * 64
++    return WeaponVisual(motion, f"Weapons{page}", tuple((x + frame * 96, y, 96, 64) for frame in range(3)))
++
++
++def weapon_type_for_loadout(loadout, system_data: dict) -> str:
++    """Return the MV weapon type named by the equipped weapon's tag, or ``""``."""
++    equipped = () if loadout is None else loadout.equipped("weapon")
++    tags = () if not equipped else equipped[0].equipment.tags
++    selected = next((tag.split(":", 1)[1] for tag in tags if tag.startswith(MV_WEAPON_TYPE_TAG)), "")
++    names = {str(name).casefold(): str(name) for name in system_data.get("weaponTypes", ())}
++    return names.get(selected.casefold(), "")
++
++
++def weapon_overlay_for_loadout(loadout, system_data: dict, asset_id_for_sheet: Callable[[str], str]):
++    """Translate an equipped MV weapon into a generic attack overlay (armor stays inert)."""
++    from asteria.presentation import CombatantOverlay
++
++    visual = weapon_visual_for_type(weapon_type_for_loadout(loadout, system_data), system_data)
++    if not visual.frames or not visual.sheet_name:
++        return None
++    asset_id = asset_id_for_sheet(visual.sheet_name)
++    if not asset_id:
++        return None
++    return CombatantOverlay(asset_id, visual.frames)
++
++
++def apply_weapon_overlays(
++    animation,
++    member_ids: Iterable[str],
++    loadouts: Mapping[str, object],
++    system_data: dict,
++    asset_id_for_sheet: Callable[[str], str],
++) -> None:
++    """Set or clear each member's overlay on a ``BattlePresentationRuntime``."""
++    for member_id in member_ids:
++        overlay = weapon_overlay_for_loadout(loadouts.get(member_id), system_data, asset_id_for_sheet)
++        animation.set_overlay(member_id, overlay)
+diff -ruN a/src/asteria/graphics/mv_weapon_visual.py b/src/asteria/graphics/mv_weapon_visual.py
+--- a/src/asteria/graphics/mv_weapon_visual.py	2026-10-09 21:44:38
++++ b/src/asteria/graphics/mv_weapon_visual.py	1970-01-01 08:00:00
+@@ -1,32 +0,0 @@
+-"""RPG Maker MV weapon type to independent attack overlay frames."""
+-
+-from __future__ import annotations
+-
+-from dataclasses import dataclass
+-
+-
+-@dataclass(frozen=True, slots=True)
+-class WeaponVisual:
+-    motion: str
+-    sheet_name: str = ""
+-    frames: tuple[tuple[int, int, int, int], ...] = ()
+-
+-
+-def weapon_visual_for_type(weapon_type: str, system_data: dict) -> WeaponVisual:
+-    """Resolve MV's attack motion and 3-frame WeaponsN sheet layout."""
+-    weapon_types = system_data.get("weaponTypes", ())
+-    motions = system_data.get("attackMotions", ())
+-    try:
+-        type_id = weapon_types.index(str(weapon_type))
+-        entry = motions[type_id]
+-        motion = {0: "thrust", 1: "swing", 2: "missile"}[int(entry["type"])]
+-        image_id = int(entry["weaponImageId"])
+-    except (AttributeError, ValueError, IndexError, KeyError, TypeError):
+-        return WeaponVisual("unarmed")
+-    if image_id <= 0:
+-        return WeaponVisual(motion)
+-    page = (image_id - 1) // 12 + 1
+-    index = (image_id - 1) % 12
+-    x = index // 6 * 3 * 96
+-    y = index % 6 * 64
+-    return WeaponVisual(motion, f"Weapons{page}", tuple((x + frame * 96, y, 96, 64) for frame in range(3)))
+diff -ruN a/src/asteria/presentation/__init__.py b/src/asteria/presentation/__init__.py
+--- a/src/asteria/presentation/__init__.py	2026-10-09 21:44:38
++++ b/src/asteria/presentation/__init__.py	2026-10-09 21:44:38
+@@ -10,6 +10,7 @@
+     BattleAnimationRole,
+     BattleCombatantAnimator,
+     BattlePresentationFrame,
++    CombatantOverlay,
+     BattlePresentationRuntime,
+ )
+ 
+@@ -24,6 +25,7 @@
+     "BattlePresentationRuntime",
+     "BattlePresentationScene",
+     "BattleVisualAnchor",
++    "CombatantOverlay",
+ ]
+ 
+ from .battle_feedback import (
+diff -ruN a/src/asteria/presentation/battle_runtime.py b/src/asteria/presentation/battle_runtime.py
+--- a/src/asteria/presentation/battle_runtime.py	2026-10-09 21:44:38
++++ b/src/asteria/presentation/battle_runtime.py	2026-10-09 21:44:38
+@@ -6,7 +6,6 @@
+ 
+ from asteria.gameplay.action_timeline import ActionCueKind
+ from asteria.runtime import AnimatorState, TextureDraw
+-from asteria.graphics.mv_weapon_visual import WeaponVisual
+ 
+ from .battle_animation_timing import BattleAnimationTimingProfile, easing_value
+ 
+@@ -28,6 +27,29 @@
+ _TRANSIENT_ROLE_NAMES = {"attack", "hit"}
+ 
+ 
++@dataclass(frozen=True, slots=True)
++class CombatantOverlay:
++    """Frame-cycled texture drawn over a combatant while it plays one role.
++
++    Overlays are generic presentation layers (held props, weapons, effects);
++    source-format adapters translate their own data into this shape.
++    """
++
++    texture_asset_id: str
++    frames: tuple[tuple[int, int, int, int], ...]
++    role: str = BattleAnimationRole.ATTACK.value
++    offset: tuple[float, float] = (-64.0, 0.0)
++
++    def __post_init__(self):
++        if not str(self.texture_asset_id).strip():
++            raise ValueError("texture_asset_id is required")
++        if not self.frames:
++            raise ValueError("overlay requires at least one frame")
++        object.__setattr__(self, "frames", tuple(tuple(int(v) for v in f) for f in self.frames))
++        object.__setattr__(self, "role", _role_name(self.role))
++        object.__setattr__(self, "offset", (float(self.offset[0]), float(self.offset[1])))
++
++
+ def _role_name(role):
+     if isinstance(role, BattleAnimationRole):
+         return role.value
+@@ -258,7 +280,7 @@
+         self._combatants: dict[str, BattleCombatantAnimator] = {}
+         self._sprite_sheets = {}
+         self._aura_sprite_sheets = {}
+-        self._weapon_visuals: dict[str, tuple[WeaponVisual, str]] = {}
++        self._overlays: dict[str, CombatantOverlay] = {}
+         self._member_order = tuple(x.member_id for x in scene.combatants)
+         for visual in scene.combatants:
+             clip_set = resolve_clip_set(visual.clip_set_id)
+@@ -290,16 +312,17 @@
+     def combatant(self, member_id):
+         return self._combatants[str(member_id)]
+ 
+-    def set_weapon_visual(self, member_id: str, visual: WeaponVisual, texture_asset_id: str) -> None:
++    def set_overlay(self, member_id: str, overlay: CombatantOverlay | None) -> None:
++        """Attach, replace or (with ``None``) remove a combatant's overlay."""
+         member_id = str(member_id)
+         if member_id not in self._combatants:
+             raise KeyError(member_id)
+-        if not isinstance(visual, WeaponVisual):
+-            raise TypeError("visual must be WeaponVisual")
+-        if not visual.frames or not texture_asset_id:
+-            self._weapon_visuals.pop(member_id, None)
++        if overlay is None:
++            self._overlays.pop(member_id, None)
++        elif not isinstance(overlay, CombatantOverlay):
++            raise TypeError("overlay must be CombatantOverlay")
+         else:
+-            self._weapon_visuals[member_id] = (visual, str(texture_asset_id))
++            self._overlays[member_id] = overlay
+ 
+     def _member_from_animation_payload(self, payload):
+         for key in ("member_id", "combatant_id", "source_id", "target_id"):
+@@ -459,13 +482,16 @@
+                     flip_x=visual.anchor.facing.lower() == "left",
+                 )
+             )
+-            weapon = self._weapon_visuals.get(visual.member_id)
+-            if weapon is not None and state.role == BattleAnimationRole.ATTACK:
+-                weapon_visual, asset_id = weapon
+-                source = weapon_visual.frames[state.animator.frame_cursor % len(weapon_visual.frames)]
+-                wx, wy = camera.world_to_screen(visual.anchor.x - 64, visual.anchor.y - source[3])
++            overlay = self._overlays.get(visual.member_id)
++            if overlay is not None and _role_name(state.role) == overlay.role:
++                source = overlay.frames[state.animator.frame_cursor % len(overlay.frames)]
++                ox, oy = camera.world_to_screen(
++                    visual.anchor.x + overlay.offset[0],
++                    visual.anchor.y + overlay.offset[1] - source[3],
++                )
+                 draws.append(TextureDraw(
+-                    asset_id, source, wx, wy, source[2] * camera.zoom, source[3] * camera.zoom,
++                    overlay.texture_asset_id, source, ox, oy,
++                    source[2] * camera.zoom, source[3] * camera.zoom,
+                     layer=1, depth=visual.anchor.depth, flip_x=visual.anchor.facing.lower() == "left",
+                 ))
+         draws.sort(key=lambda d: (d.layer, d.depth, d.screen_y, d.screen_x))
+diff -ruN a/src/asteria/presentation/battle_screen.py b/src/asteria/presentation/battle_screen.py
+--- a/src/asteria/presentation/battle_screen.py	2026-10-09 21:44:38
++++ b/src/asteria/presentation/battle_screen.py	2026-10-09 21:44:38
+@@ -4,7 +4,6 @@
+ from math import isfinite
+ 
+ from asteria.runtime import Camera2D
+-from asteria.graphics.mv_weapon_visual import WeaponVisual, weapon_visual_for_type
+ 
+ from .battle import BattlePresentationCoordinator, BattlePresentationScene
+ from .battle_camera_feedback import BattleCameraFeedbackRuntime
+@@ -174,19 +173,6 @@
+             for member_id, side_id in self.side_by_member.items()
+         }
+         return members
+-
+-    def sync_weapon_loadouts(self, loadouts, system_data, asset_id_for_sheet) -> None:
+-        """Read equipped weapon types; armor is intentionally visually inert."""
+-        names = {str(name).casefold(): str(name) for name in system_data.get("weaponTypes", ())}
+-        for member_id in self.animation._member_order:
+-            loadout = loadouts.get(member_id)
+-            equipped = () if loadout is None else loadout.equipped("weapon")
+-            tags = () if not equipped else equipped[0].equipment.tags
+-            selected = next((tag.split(":", 1)[1] for tag in tags
+-                             if tag.startswith("mv-weapon-type:")), "")
+-            visual = weapon_visual_for_type(names.get(selected.casefold(), ""), system_data)
+-            asset_id = asset_id_for_sheet(visual.sheet_name) if visual.sheet_name else ""
+-            self.animation.set_weapon_visual(member_id, visual, asset_id)
+ 
+     def present_result(self, outcome, reward_result=None, *, perspective_side_ids=None, disposition=None):
+         return self.result.present(
+diff -ruN a/src/asteria/runtime/rpg_maker_mv_map_render.py b/src/asteria/runtime/rpg_maker_mv_map_render.py
+--- a/src/asteria/runtime/rpg_maker_mv_map_render.py	2026-10-09 21:44:38
++++ b/src/asteria/runtime/rpg_maker_mv_map_render.py	1970-01-01 08:00:00
+@@ -1,139 +0,0 @@
+-"""Draw composition for RPG Maker MV tiles without leaking MV IDs into core."""
+-
+-from __future__ import annotations
+-
+-import json
+-import re
+-from dataclasses import dataclass
+-from pathlib import Path
+-
+-from asteria.assets.local_reference import RPGMakerMVProjectLayout
+-from asteria.assets.rpg_maker_mv_catalog import RPGMakerMVCatalog
+-from asteria.assets.rpg_maker_mv_map import RPGMakerMVMap
+-
+-from .draw import TextureDraw
+-
+-
+-@dataclass(frozen=True, slots=True)
+-class MVTileRegion:
+-    tile_id: int
+-    source: Path | None
+-    asset_id: str
+-    quarters: tuple[tuple[int, int, int, int], ...]
+-
+-
+-def _autotile_table(js_path: Path, name: str):
+-    source = js_path.read_text(encoding="utf-8-sig")
+-    match = re.search(
+-        rf"Tilemap\.{name}\s*=\s*(\[.*?\]);", source, re.DOTALL
+-    )
+-    if match is None:
+-        raise ValueError(f"missing MV autotile table: {name}")
+-    return tuple(tuple(tuple(pair) for pair in row) for row in json.loads(match.group(1)))
+-
+-
+-class MVTileResolver:
+-    def __init__(self, layout: RPGMakerMVProjectLayout, catalog: RPGMakerMVCatalog, *, tileset_id: int):
+-        self.layout = layout
+-        self.catalog = catalog
+-        self.tileset_id = int(tileset_id)
+-        records = json.loads((layout.data / "Tilesets.json").read_text(encoding="utf-8-sig"))
+-        if self.tileset_id <= 0 or self.tileset_id >= len(records) or not isinstance(records[self.tileset_id], dict):
+-            raise ValueError(f"unknown MV tileset: {self.tileset_id}")
+-        self.names = tuple(records[self.tileset_id].get("tilesetNames", ()))
+-        js = (layout.js or layout.root / "js") / "rpg_core.js"
+-        self.floor = _autotile_table(js, "FLOOR_AUTOTILE_TABLE")
+-        self.wall = _autotile_table(js, "WALL_AUTOTILE_TABLE")
+-        self.waterfall = _autotile_table(js, "WATERFALL_AUTOTILE_TABLE")
+-
+-    def _source(self, set_number: int) -> tuple[Path | None, str]:
+-        name = self.names[set_number] if set_number < len(self.names) else ""
+-        if not name:
+-            return None, ""
+-        source = self.catalog.resolve_image("tilesets", name)
+-        if source is None:
+-            return None, ""
+-        asset = next((item for item in self.catalog.assets if item.source.uri == str(source)), None)
+-        return source, "" if asset is None else asset.asset_id
+-
+-    def resolve(self, tile_id: int) -> MVTileRegion | None:
+-        tile_id = int(tile_id)
+-        if tile_id == 0:
+-            return None
+-        if 0 < tile_id < 1024:
+-            set_number = tile_id // 256 + 5
+-            local = tile_id % 256
+-            source, asset_id = self._source(set_number)
+-            return MVTileRegion(tile_id, source, asset_id, ((local % 16 * 48, local // 16 * 48, 48, 48),))
+-        if 1536 <= tile_id < 2048:
+-            local = tile_id - 1536
+-            source, asset_id = self._source(4)
+-            return MVTileRegion(tile_id, source, asset_id, ((local % 8 * 48, local // 8 * 48, 48, 48),))
+-        if not 2048 <= tile_id < 8192:
+-            return MVTileRegion(tile_id, None, "", ())
+-
+-        kind = (tile_id - 2048) // 48
+-        shape = (tile_id - 2048) % 48
+-        tx, ty = kind % 8, kind // 8
+-        table = self.floor
+-        if tile_id < 2816:  # A1, animation frame zero
+-            set_number = 0
+-            if kind == 0:
+-                bx, by = 0, 0
+-            elif kind == 1:
+-                bx, by = 0, 3
+-            elif kind == 2:
+-                bx, by = 6, 0
+-            elif kind == 3:
+-                bx, by = 6, 3
+-            else:
+-                bx = (tx // 4) * 8
+-                by = ty * 6 + ((tx // 2) % 2) * 3
+-                if kind % 2:
+-                    bx += 6
+-                    table = self.waterfall
+-                    shape %= len(table)
+-        elif tile_id < 4352:  # A2
+-            set_number, bx, by = 1, tx * 2, (ty - 2) * 3
+-        elif tile_id < 5888:  # A3
+-            set_number, bx, by, table = 2, tx * 2, (ty - 6) * 2, self.wall
+-            shape %= len(table)
+-        else:  # A4
+-            set_number, bx = 3, tx * 2
+-            by = int((ty - 10) * 2.5 + (0.5 if ty % 2 else 0))
+-            if ty % 2:
+-                table = self.wall
+-                shape %= len(table)
+-        source, asset_id = self._source(set_number)
+-        quarters = tuple(((bx * 2 + qx) * 24, (by * 2 + qy) * 24, 24, 24) for qx, qy in table[shape])
+-        return MVTileRegion(tile_id, source, asset_id, quarters)
+-
+-
+-def compose_mv_map_draws(
+-    mv_map: RPGMakerMVMap,
+-    resolver: MVTileResolver,
+-    viewport: tuple[float, float, float, float],
+-) -> tuple[TextureDraw, ...]:
+-    vx, vy, vw, vh = viewport
+-    draws = []
+-    for layer_index, layer in enumerate(mv_map.layers):
+-        for index, tile_id in enumerate(layer):
+-            if tile_id == 0:
+-                continue
+-            column, row = index % mv_map.width, index // mv_map.width
+-            x, y = column * 48, row * 48
+-            if x + 48 <= vx or y + 48 <= vy or x >= vx + vw or y >= vy + vh:
+-                continue
+-            region = resolver.resolve(tile_id)
+-            if region is None or region.source is None:
+-                continue
+-            for quarter_index, source_rect in enumerate(region.quarters):
+-                full = len(region.quarters) == 1
+-                qx = 0 if full else quarter_index % 2 * 24
+-                qy = 0 if full else quarter_index // 2 * 24
+-                size = 48 if full else 24
+-                draws.append(TextureDraw(
+-                    region.asset_id, source_rect, x + qx, y + qy, size, size,
+-                    layer=layer_index,
+-                ))
+-    return tuple(draws)
+diff -ruN a/tests/test_battle_presentation_runtime.py b/tests/test_battle_presentation_runtime.py
+--- a/tests/test_battle_presentation_runtime.py	2026-10-09 21:44:38
++++ b/tests/test_battle_presentation_runtime.py	2026-10-09 21:44:38
+@@ -290,11 +290,9 @@
+     assert aura.opacity == character.opacity == 1.0
+     assert aura.flip_x is character.flip_x is True
+ 
+-    from asteria.graphics.mv_weapon_visual import WeaponVisual
++    from asteria.presentation import CombatantOverlay
+ 
+-    runtime.set_weapon_visual(
+-        "hero", WeaponVisual("swing", "Weapons1", ((0, 0, 8, 12),)), "sheet.weapon"
+-    )
++    runtime.set_overlay("hero", CombatantOverlay("sheet.weapon", ((0, 0, 8, 12),)))
+     runtime.combatant("hero").set_role("attack")
+     attack_draws = runtime.build_frame(Camera2D(width=320, height=180)).combatant_draws
+     assert attack_draws[-1].texture_asset_id == "sheet.weapon"
+diff -ruN a/tests/test_battle_screen_runtime.py b/tests/test_battle_screen_runtime.py
+--- a/tests/test_battle_screen_runtime.py	2026-10-09 21:44:38
++++ b/tests/test_battle_screen_runtime.py	2026-10-09 21:44:38
+@@ -11,7 +11,8 @@
+     TagSet,
+ )
+ from asteria.graphics import SpriteClip, SpriteFrame, SpriteKeyframe, SpriteSheet
+-from asteria.graphics.mv_weapon_visual import weapon_visual_for_type
++from asteria.assets.rpg_maker_mv_weapon import apply_weapon_overlays, weapon_overlay_for_loadout
++from asteria.presentation import CombatantOverlay
+ from asteria.presentation import (
+     BattleAnimationRole,
+     BattleCombatantVisual,
+@@ -127,24 +128,29 @@
+                                 {"type": 1, "weaponImageId": 2},
+                                 {"type": 2, "weaponImageId": 13}]}
+     screen = _screen()
+-    sword = weapon_visual_for_type("Sword", system)
+-    screen.animation.set_weapon_visual("hero", sword, "weapon.sword")
++    loadout = EquipmentLoadout((EquipmentSlotDefinition("weapon"),))
++    loadout.equip("weapon", EquippedItem(EquipmentDefinition("sword", slot="weapon", tags=("mv-weapon-type:sword",))))
++    sword = weapon_overlay_for_loadout(loadout, system, lambda name: "weapon.sword")
++    screen.animation.set_overlay("hero", sword)
+     assert all(draw.texture_asset_id != "weapon.sword" for draw in screen.animation.build_frame(Camera2D()).combatant_draws)
+ 
+     screen.animation.combatant("hero").set_role("attack")
+     attack = screen.animation.build_frame(Camera2D()).combatant_draws
+     assert screen.animation.combatant("hero").role == "attack"
+-    assert sword.frames[0] in [draw.source for draw in attack]
+     assert any(draw.texture_asset_id == "weapon.sword" and draw.source == sword.frames[0] for draw in attack)
+ 
+-    bow = weapon_visual_for_type("Bow", system)
+-    screen.animation.set_weapon_visual("hero", bow, "weapon.bow")
++    bow = CombatantOverlay("weapon.bow", ((0, 0, 96, 64),))
++    screen.animation.set_overlay("hero", bow)
+     swapped = screen.animation.build_frame(Camera2D()).combatant_draws
+     assert any(draw.texture_asset_id == "weapon.bow" and draw.source == bow.frames[0] for draw in swapped)
+     assert all(draw.texture_asset_id != "weapon.sword" for draw in swapped)
+ 
++    screen.animation.set_overlay("hero", None)
++    cleared = screen.animation.build_frame(Camera2D()).combatant_draws
++    assert all(draw.texture_asset_id != "weapon.bow" for draw in cleared)
+ 
+-def test_battle_screen_syncs_weapon_from_real_loadout_but_ignores_armor():
++
++def test_mv_weapon_overlays_follow_real_loadout_but_ignore_armor():
+     system = {"weaponTypes": ["", "Sword", "Bow"],
+               "attackMotions": [{"type": 0, "weaponImageId": 0},
+                                 {"type": 1, "weaponImageId": 2},
+@@ -156,14 +162,15 @@
+     loadout.equip("armor", armor)
+     screen = _screen()
+     screen.animation.combatant("hero").set_role("attack")
++    members = screen.animation._member_order
+ 
+-    screen.sync_weapon_loadouts({"hero": loadout}, system, lambda name: f"mv.system.{name}")
++    apply_weapon_overlays(screen.animation, members, {"hero": loadout}, system, lambda name: f"mv.system.{name}")
+     first = screen.animation.build_frame(Camera2D()).combatant_draws
+     assert any(draw.texture_asset_id == "mv.system.Weapons1" for draw in first)
+ 
+     loadout.unequip("weapon", 0)
+     loadout.equip("weapon", EquippedItem(EquipmentDefinition("bow", slot="weapon", tags=("mv-weapon-type:bow",))))
+-    screen.sync_weapon_loadouts({"hero": loadout}, system, lambda name: f"mv.system.{name}")
++    apply_weapon_overlays(screen.animation, members, {"hero": loadout}, system, lambda name: f"mv.system.{name}")
+     second = screen.animation.build_frame(Camera2D()).combatant_draws
+     assert any(draw.texture_asset_id == "mv.system.Weapons2" for draw in second)
+     assert all(draw.texture_asset_id != "mv.system.Weapons1" for draw in second)
+diff -ruN a/tests/test_mv_weapon_visual.py b/tests/test_mv_weapon_visual.py
+--- a/tests/test_mv_weapon_visual.py	2026-10-09 21:44:38
++++ b/tests/test_mv_weapon_visual.py	1970-01-01 08:00:00
+@@ -1,24 +0,0 @@
+-from asteria.graphics.mv_weapon_visual import weapon_visual_for_type
+-
+-
+-def test_weapon_type_selects_mv_attack_motion_and_three_separate_frames():
+-    system = {
+-        "weaponTypes": ["", "Dagger", "Sword", "Bow"],
+-        "attackMotions": [
+-            {"type": 0, "weaponImageId": 0},
+-            {"type": 1, "weaponImageId": 1},
+-            {"type": 1, "weaponImageId": 2},
+-            {"type": 2, "weaponImageId": 13},
+-        ],
+-    }
+-
+-    sword = weapon_visual_for_type("Sword", system)
+-    bow = weapon_visual_for_type("Bow", system)
+-
+-    assert sword.motion == "swing"
+-    assert sword.sheet_name == "Weapons1"
+-    assert sword.frames == ((0, 64, 96, 64), (96, 64, 96, 64), (192, 64, 96, 64))
+-    assert bow.motion == "missile"
+-    assert bow.sheet_name == "Weapons2"
+-    assert len(bow.frames) == 3
+-    assert weapon_visual_for_type("Unknown", system).motion == "unarmed"
+diff -ruN a/tests/test_rpg_maker_mv_map_render.py b/tests/test_rpg_maker_mv_map_render.py
+--- a/tests/test_rpg_maker_mv_map_render.py	2026-10-09 21:44:38
++++ b/tests/test_rpg_maker_mv_map_render.py	2026-10-09 21:44:38
+@@ -5,7 +5,7 @@
+ from asteria.assets.rpg_maker_mv_catalog import RPGMakerMVCatalog
+ from asteria.assets.rpg_maker_mv_database import RPGMakerMVDatabase
+ from asteria.assets.rpg_maker_mv_map import RPGMakerMVMap
+-from asteria.runtime.rpg_maker_mv_map_render import (
++from asteria.assets.rpg_maker_mv_map_render import (
+     MVTileResolver,
+     compose_mv_map_draws,
+ )
+diff -ruN a/tests/test_rpg_maker_mv_weapon.py b/tests/test_rpg_maker_mv_weapon.py
+--- a/tests/test_rpg_maker_mv_weapon.py	1970-01-01 08:00:00
++++ b/tests/test_rpg_maker_mv_weapon.py	2026-10-09 21:44:38
+@@ -0,0 +1,24 @@
++from asteria.assets.rpg_maker_mv_weapon import weapon_visual_for_type
++
++
++def test_weapon_type_selects_mv_attack_motion_and_three_separate_frames():
++    system = {
++        "weaponTypes": ["", "Dagger", "Sword", "Bow"],
++        "attackMotions": [
++            {"type": 0, "weaponImageId": 0},
++            {"type": 1, "weaponImageId": 1},
++            {"type": 1, "weaponImageId": 2},
++            {"type": 2, "weaponImageId": 13},
++        ],
++    }
++
++    sword = weapon_visual_for_type("Sword", system)
++    bow = weapon_visual_for_type("Bow", system)
++
++    assert sword.motion == "swing"
++    assert sword.sheet_name == "Weapons1"
++    assert sword.frames == ((0, 64, 96, 64), (96, 64, 96, 64), (192, 64, 96, 64))
++    assert bow.motion == "missile"
++    assert bow.sheet_name == "Weapons2"
++    assert len(bow.frames) == 3
++    assert weapon_visual_for_type("Unknown", system).motion == "unarmed"

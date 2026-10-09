@@ -233,3 +233,53 @@ Implemented the first production-facing modular-part topology contract: explicit
 A second Chat-side consolidation is prepared as an **engine-only** handoff. Rejected/generated Starter art and reference art have been removed rather than promoted. Character Generator code remains supported; its production modular art library is deferred. During integration, the user's RPG Maker MV assets may be used externally as private development fixtures through the generic Asset Pipeline. They are not Asteria distribution assets.
 
 See `ASTERIA_FINAL_ALIGNMENT_AUDIT.md` for the current implementation/external-validation/deferred-content boundary.
+
+------------------------------------------------------------------------
+
+# SPEC gap audit, scope decisions and CB0 baseline --- 2026-10-09
+
+**Scope decisions** (`SCOPE_DECISIONS.md`, delivered outside the repo in
+`Asteria_Codex_SPEC_Audit_Handoff.zip`; recorded in
+`docs/audits/DECISION_LOG.md`):
+
+- Character Generator is formally cancelled. AI art generation stopped.
+  Generic Asset Pipeline, Animation, Attachment and Presentation are kept.
+- ARPG Engine, Dual-Mode Demo and JRPG Demo are deferred until original SPEC
+  closure; the JRPG Demo will use licensed free assets.
+- C++ migration and renderer replacement are deferred.
+
+**Work recorded since the 2026-09-26 handoff** (previously missing from this
+ledger): real RPG Maker MV asset/database/map import and project conversion,
+the MV-backed character creator and click-to-place character creation
+(2026-09-26 → 2026-10-09). MV data stays in `asteria.assets.rpg_maker_mv*`;
+`tests/test_architecture_boundaries.py` now enforces that.
+
+**Corrections to earlier entries.** Commit `bf4a993` (2026-09-26, "integrate
+canonical engine baseline") removed, without a ledger note:
+`platform/moderngl_backend.py`, `platform/moderngl_shaders.py`,
+`editor/actor_appearance.py`, `editor/class_design_panel.py`,
+`editor/unit_authoring.py`, `editor/asset_thumbnails.py`,
+`runtime/actor_link.py` and their tests. The first section of this ledger
+(commit `16a6ebd`) therefore no longer describes the current tree. Restoring
+the ModernGL backend (as a parallel backend, not a renderer replacement) and
+the generic actor-appearance/actor-link/thumbnail features is planned as
+CB9 and CB14 in `docs/audits/REMAINING_WORK_PLAN.md`.
+
+**Removed:** all of `assets/` (AI-generated and MV-derived starter
+characters), the starter character-pack code, the Ready Characters editor tab
+and art-only scripts/tests. A backup exists outside the repository.
+
+**Audit result:** 97 active requirements → A 17 / B 20 / C 44 / D 16
+(`docs/audits/SPEC_TRACEABILITY_MATRIX.md`). Closure verdict: **FAIL**. The
+main gaps are integration: the playable runtime does not consume Battle
+Presentation or execute the Event VM, and battle rules are partly hard-coded
+in `runtime/playable_test_runtime.py`.
+
+**Verification (2026-10-09):**
+`QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q` → **1854 passed**;
+in a clean clone without the git-ignored MV reference → **1799 passed,
+55 skipped, 0 failed**; `compileall` PASS. CI workflow added
+(`.github/workflows/ci.yml`).
+
+**NEXT:** CB3 (battle rules back into canonical data) → CB1 (Event VM in the
+runtime) → CB2 (incremental Battle Presentation integration).
