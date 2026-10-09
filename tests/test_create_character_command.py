@@ -1,4 +1,5 @@
 from pathlib import Path
+from dataclasses import replace
 
 import pytest
 from PIL import Image
@@ -56,7 +57,10 @@ def test_execute_creates_actor_assets_clips_and_cell_aligned_entity(tmp_path):
         "idle_down", "walk_down", "idle_left", "walk_left",
         "idle_right", "walk_right", "idle_up", "walk_up",
     )
-    assert [frame.frame_index for frame in created.clip_set.get("walk_right").keyframes] == [6, 7, 8]
+    for row, direction in enumerate(("down", "left", "right", "up")):
+        assert [frame.frame_index for frame in created.clip_set.get(f"walk_{direction}").keyframes] == [
+            row * 3 + pattern for pattern in (1, 2, 1, 0)
+        ]
     assert scene.get_entity(created.entity_id) is created.entity
     transform = created.entity.get(Transform)
     assert (transform.x, transform.y) == (120.0, 192.0)
@@ -86,6 +90,21 @@ def test_undo_and_redo_restore_identical_ids_and_only_owned_files(tmp_path):
     assert (second.actor_id, second.entity_id, second.clip_set_id) == ids
     assert all(path.exists() for path in bundle.visual_paths + (bundle.metadata_path,))
     assert sentinel.exists()
+
+
+def test_undo_removes_owned_damaged_sheet_and_redo_restores_it(tmp_path):
+    project, scene, bundle = _world(tmp_path)
+    damaged = bundle.output_dir / "damaged.png"
+    Image.new("RGBA", (144, 48), (0, 0, 0, 0)).save(damaged)
+    asset = CanonicalAsset("generated/hero-one/damaged", "character.damaged", AssetSource(str(damaged), "generated"))
+    bundle = replace(bundle, damaged_path=damaged, canonical_assets=bundle.canonical_assets + (asset,))
+    command = CreateCharacterCommand(bundle, project, scene, (0, 0))
+
+    command.execute()
+    command.undo()
+    assert not damaged.exists()
+    command.redo()
+    assert damaged.is_file()
 
 
 def test_workspace_builds_scene_creation_command_from_generated_bundle(tmp_path):

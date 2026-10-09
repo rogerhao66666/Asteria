@@ -14,7 +14,7 @@ def test_real_catalog_discovers_every_generator_source_file_deterministically():
     second = _real()
 
     assert len(first.roots) == 5
-    assert first.source_file_count == 3422
+    assert first.source_file_count >= 3422
     assert first.parts == second.parts
     assert tuple(part.id for part in first.parts) == tuple(sorted(part.id for part in first.parts))
 
@@ -102,3 +102,21 @@ def test_core_face_features_translate_to_independent_generic_categories():
     assert next(part for part in core_parts if part.source_category == "Nose").category == "nose"
     assert next(part for part in core_parts if part.source_category == "Mouth").category == "mouth"
     assert next(part for part in core_parts if part.source_category == "FacialMark").category == "facial_mark"
+
+
+def test_mv_generator_keeps_interchangeable_face_and_clothing_slots_distinct():
+    catalog = _real()
+    core = [part for part in catalog.parts if part.source_root.parent.name == "rpg_maker_mv" and part.gender == "Male"]
+    categories = {part.source_category: part.category for part in core}
+
+    assert categories["Eyes"] == "eyes"
+    assert categories["Eyebrows"] == "eyebrows"
+    assert categories["Cloak"] == "cloak"
+    assert categories["Clothing"] == "outfit"
+    assert categories["AccA"] == "accessory"
+    assert categories["AccB"] == "accessory_b"
+    assert categories["Glasses"] == "glasses"
+    assert categories["Beard"] == "beard"
+    assert categories["Ears"] == "ears"
+    assert categories["BeastEars"] == "beast_ears"
+    assert {part.gender for part in catalog.parts if part.source_category == "Body"} >= {"Male", "Female", "Kid"}

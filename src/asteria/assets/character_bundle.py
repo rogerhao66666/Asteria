@@ -9,20 +9,27 @@ import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from PIL import Image, ImageColor
+from PIL import Image, ImageChops, ImageColor, ImageOps
 
 from .canonical import AssetSource, CanonicalAsset
 from .character_generator import CharacterRecipe, LAYER_ORDER
 from .rpg_maker_mv_generator import MVGeneratorPart, MVGeneratorRepresentation, RPGMakerMVGeneratorCatalog
 
 
-_REPRESENTATIONS = ("walking", "face", "side_view")
-_CANVASES = {"walking": (144, 192), "face": (144, 144), "side_view": (576, 384)}
+_REPRESENTATIONS = ("walking", "face", "damaged", "side_view")
+_CANVASES = {"walking": (144, 192), "face": (144, 144), "damaged": (144, 48), "side_view": (576, 384)}
 _KINDS = {
     "walking": "character.walking",
     "face": "character.face",
+    "damaged": "character.damaged",
     "side_view": "character.side_view",
 }
+_FACE_COMPOSITION_ORDER = (
+    "body", "hair_back", "outfit", "armor", "cloak",
+    "face_shape", "eyes", "eyebrows", "nose", "mouth", "ears", "beard",
+    "facial_mark", "hair_front", "beast_ears", "accessory", "accessory_b",
+    "glasses", "tail", "wing",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,10 +43,16 @@ class GeneratedCharacterBundle:
     anchor: tuple[int, int]
     source_part_ids: tuple[str, ...]
     canonical_assets: tuple[CanonicalAsset, ...]
+    files_owned: bool = True
+    damaged_path: Path | None = None
 
     @property
     def visual_paths(self) -> tuple[Path, Path, Path]:
         return self.walking_path, self.face_path, self.side_view_path
+
+    @property
+    def all_visual_paths(self) -> tuple[Path, ...]:
+        return self.visual_paths + (() if self.damaged_path is None else (self.damaged_path,))
 
 
 class CharacterBundleGenerator:
@@ -91,6 +104,10 @@ class CharacterBundleGenerator:
                     )
 
     def _validate(self, recipe: CharacterRecipe, parts: tuple[MVGeneratorPart, ...]) -> None:
+        if "body" not in recipe.parts:
+            raise ValueError("body part required for generated character")
+        if recipe.body_family and any(part.gender != recipe.body_family for part in parts):
+            raise ValueError("selected parts use incompatible body family")
         genders = {part.gender.lower() for part in parts if part.gender.lower() != "unspecified"}
         if len(genders) > 1:
             raise ValueError("selected parts use incompatible body/gender variants")
@@ -104,35 +121,60 @@ class CharacterBundleGenerator:
 
     @staticmethod
     def _colorize_mask(canvas: Image.Image, mask_path: Path, color: str) -> None:
-        try:
-            rgb = ImageColor.getrgb(color)
-        except ValueError as exc:
-            raise ValueError(f"invalid palette color: {color}") from exc
         with Image.open(mask_path) as source:
             mask_rgba = source.convert("RGBA")
         alpha = mask_rgba.getchannel("A")
         if not alpha.getbbox():
             alpha = mask_rgba.convert("L")
-        tint = Image.new("RGBA", canvas.size, (*rgb[:3], 0))
-        tint.putalpha(alpha)
+        CharacterBundleGenerator._colorize_region(canvas, alpha, color)
+
+    @staticmethod
+    def _colorize_region(canvas: Image.Image, alpha: Image.Image, color: str) -> None:
+        try:
+            rgb = ImageColor.getrgb(color)
+        except ValueError as exc:
+            raise ValueError(f"invalid palette color: {color}") from exc
+        dark = tuple(round(channel * 0.18) for channel in rgb[:3])
+        light = tuple(round(channel + (255 - channel) * 0.75) for channel in rgb[:3])
+        tint = ImageOps.colorize(canvas.convert("RGB").convert("L"), dark, light, mid=rgb[:3]).convert("RGBA")
+        tint.putalpha(ImageChops.multiply(alpha, canvas.getchannel("A")))
         canvas.alpha_composite(tint)
 
     def _compose(
         self, name: str, parts: tuple[MVGeneratorPart, ...], recipe: CharacterRecipe
     ) -> Image.Image:
+        if name == "face":
+            by_category = {part.category: part for part in parts}
+            parts = tuple(by_category[category] for category in _FACE_COMPOSITION_ORDER
+                          if category in by_category)
         canvas = Image.new("RGBA", _CANVASES[name], (0, 0, 0, 0))
         for part in parts:
             representation = getattr(part, name)
             if representation is None:
                 continue
-            for path in representation.images:
+            layer = Image.new("RGBA", _CANVASES[name], (0, 0, 0, 0))
+            # FG color sublayers are named c1, c2, ... with c1 in front.
+            # Source-file sorting alone puts the opaque eye white over the iris.
+            images = reversed(representation.images) if name == "face" else representation.images
+            for path in images:
                 with Image.open(path) as source:
-                    canvas.alpha_composite(source.convert("RGBA"))
+                    layer.alpha_composite(source.convert("RGBA"))
             color = recipe.palette.get(part.id) or recipe.palette.get(part.category)
-            if color and name != "face":
-                for mask in representation.masks:
-                    self._colorize_mask(canvas, mask, color)
+            if color:
+                if name == "face":
+                    self._colorize_region(layer, layer.getchannel("A"), color)
+                else:
+                    for mask in representation.masks:
+                        self._colorize_mask(layer, mask, color)
+            canvas.alpha_composite(layer)
         return canvas
+
+    def compose(self, name: str, recipe: CharacterRecipe) -> Image.Image:
+        if name not in _REPRESENTATIONS:
+            raise ValueError(f"unknown character representation: {name}")
+        parts = self._selected(recipe)
+        self._validate(recipe, parts)
+        return self._compose(name, parts, recipe)
 
     def generate(self, recipe: CharacterRecipe, output_root: str | Path) -> GeneratedCharacterBundle:
         parts = self._selected(recipe)
@@ -158,6 +200,7 @@ class CharacterBundleGenerator:
                     "columns": 3, "rows": 4, "row_directions": ["down", "left", "right", "up"],
                 },
                 "face": {"file": "face.png", "canvas": [144, 144]},
+                "damaged": {"file": "damaged.png", "canvas": [144, 48], "columns": 3, "rows": 1},
                 "side_view": {"file": "side_view.png", "canvas": [576, 384]},
             }
             (temporary / "character.bundle.json").write_text(
@@ -180,4 +223,5 @@ class CharacterBundleGenerator:
         return GeneratedCharacterBundle(
             recipe.id, target, paths["walking"], paths["face"], paths["side_view"],
             target / "character.bundle.json", (24, 48), tuple(part.id for part in parts), assets,
+            damaged_path=paths["damaged"],
         )

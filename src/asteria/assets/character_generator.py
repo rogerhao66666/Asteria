@@ -7,8 +7,10 @@ from PIL import Image
 
 DIRECTIONS = ("down", "left", "right", "up")
 LAYER_ORDER = (
-    "body", "face_shape", "eyes", "eyebrows", "nose", "mouth", "hair_back",
-    "outfit", "armor", "hair_front", "facial_mark", "accessory", "tail", "wing",
+    "body", "face_shape", "eyes", "eyebrows", "nose", "mouth", "ears",
+    "hair_back", "beard",
+    "outfit", "armor", "cloak", "hair_front", "facial_mark",
+    "beast_ears", "accessory", "accessory_b", "glasses", "tail", "wing",
 )
 
 @dataclass(frozen=True)
@@ -33,6 +35,7 @@ class CharacterRecipe:
     preset: str = "rpg_like_48"
     parts: dict[str, str] = field(default_factory=dict)
     palette: dict[str, str] = field(default_factory=dict)
+    body_family: str = ""
 
     def ordered_part_ids(self) -> tuple[str, ...]:
         """Return selections in the shared deterministic composition order."""

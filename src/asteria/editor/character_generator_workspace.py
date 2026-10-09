@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from pathlib import Path
 
 from PIL import Image
@@ -26,6 +27,38 @@ class CharacterGeneratorWorkspace:
     def create_mv(cls, catalog: RPGMakerMVGeneratorCatalog, recipe_id: str = "new_character"):
         return cls(catalog, CharacterBundleGenerator(catalog), CharacterRecipe(recipe_id), True)
 
+    def load_bundle(self, metadata_path: Path) -> None:
+        if not self.is_mv:
+            raise ValueError("bundle recipe loading requires an MV generator workspace")
+        data = json.loads(Path(metadata_path).read_text(encoding="utf-8"))
+        if data.get("schema") != "asteria.character.bundle.v1" or not isinstance(data.get("recipe"), dict):
+            raise ValueError("invalid character bundle metadata")
+        recipe = CharacterRecipe(**data["recipe"])
+        parts = self.generator._selected(recipe)
+        self.generator._validate(recipe, parts)
+        self.recipe = recipe
+
+    def set_body_family(self, family: str) -> tuple[str, ...]:
+        if not self.is_mv or family not in {"Male", "Female", "Kid"}:
+            raise ValueError(f"unsupported body family: {family}")
+        body = next((part for part in self.catalog.parts
+                     if part.gender == family and part.category == "body"
+                     and part.source_root.parent.name == "rpg_maker_mv"
+                     and part.part_number == 1), None)
+        if body is None:
+            raise ValueError(f"base body unavailable: {family}")
+        cleared = []
+        for category, part_id in tuple(self.recipe.parts.items()):
+            part = self._part(part_id)
+            if part.gender != family:
+                self.recipe.parts.pop(category)
+                self.recipe.palette.pop(category, None)
+                self.recipe.palette.pop(part_id, None)
+                cleared.append(category)
+        self.recipe.body_family = family
+        self.recipe.parts["body"] = body.id
+        return tuple(cleared)
+
     def categories(self): return LAYER_ORDER
 
     def _part(self, part_id):
@@ -43,6 +76,9 @@ class CharacterGeneratorWorkspace:
             )).casefold())
         if gender:
             choices = tuple(part for part in choices if getattr(part, "gender", "").casefold() == gender.casefold())
+        elif self.is_mv and self.recipe.body_family:
+            body = self._part(self.recipe.parts["body"])
+            choices = tuple(part for part in choices if part.gender == self.recipe.body_family)
         return choices
 
     def select(self, category: str, part_id: str | None):
@@ -50,6 +86,10 @@ class CharacterGeneratorWorkspace:
             self.recipe.parts.pop(category, None); return
         part = self._part(part_id)
         if part.category != category: raise ValueError("category mismatch")
+        if self.is_mv and self.recipe.body_family:
+            body = self._part(self.recipe.parts["body"])
+            if part.gender != self.recipe.body_family:
+                raise ValueError("part is incompatible with selected body family")
         self.recipe.parts[category] = part_id
 
     def selected_summary(self):
@@ -59,13 +99,13 @@ class CharacterGeneratorWorkspace:
         return tuple(self._part(part_id) for _, part_id in self.selected_summary())
 
     def representation_available(self, representation: str) -> bool:
-        if representation not in {"walking", "face", "side_view"}: raise ValueError(f"unsupported representation: {representation}")
+        if representation not in {"walking", "face", "damaged", "side_view"}: raise ValueError(f"unsupported representation: {representation}")
         if not self.is_mv: return representation == "walking"
         parts = self._selected_mv_parts()
         return any(getattr(part, representation) is not None for part in parts)
 
     def unavailable_reason(self, representation: str) -> str:
-        label = {"walking": "Walking", "face": "Face", "side_view": "Side View"}[representation]
+        label = {"walking": "Walking", "face": "Face", "damaged": "Damaged", "side_view": "Side View"}[representation]
         if not self.is_mv: return "" if representation == "walking" else f"{label} unavailable for custom parts"
         if self.representation_available(representation):
             return ""
@@ -78,7 +118,17 @@ class CharacterGeneratorWorkspace:
     def preview_representation(self, representation: str):
         if not self.representation_available(representation): return None
         if not self.is_mv: return self.preview_frame()
-        return self.generator._compose(representation, self._selected_mv_parts(), self.recipe)
+        if "body" not in self.recipe.parts:
+            # Legacy/partial recipes can be inspected before choosing a body;
+            # generation still requires a complete compatible character.
+            parts = self.generator._selected(self.recipe)
+            for part in parts:
+                rep = getattr(part, representation)
+                if rep is not None:
+                    self.generator._validate_representation(part, representation, rep,
+                        part.id in self.recipe.palette or part.category in self.recipe.palette)
+            return self.generator._compose(representation, parts, self.recipe)
+        return self.generator.compose(representation, self.recipe)
 
     def preview_frame(self, direction: str = "down", frame_index: int = 1):
         if self.is_mv:

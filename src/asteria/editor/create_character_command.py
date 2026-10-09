@@ -36,8 +36,12 @@ def _directional_clips() -> AnimationClipSet:
         clips[f"idle_{direction}"] = SpriteClip(
             f"idle_{direction}", [SpriteKeyframe(base + 1, 0.4)], True
         )
+        # MV's middle cell is the standing pose. Repeat it between the two
+        # alternating step poses so the loop matches the native 3-frame gait.
         clips[f"walk_{direction}"] = SpriteClip(
-            f"walk_{direction}", [SpriteKeyframe(base + index, 0.12) for index in range(3)], True
+            f"walk_{direction}",
+            [SpriteKeyframe(base + pattern, 0.12) for pattern in (1, 2, 1, 0)],
+            True,
         )
     return AnimationClipSet(clips)
 
@@ -86,7 +90,7 @@ class CreateCharacterCommand:
         )
         assets[0] = replace(walking, metadata=tuple(walking.metadata) + animation_metadata)
         self.created = CreatedCharacter(actor_id, entity_id, clip_set_id, actor, entity, clip_set, tuple(assets))
-        self._paths = bundle.visual_paths + (bundle.metadata_path,)
+        self._paths = bundle.all_visual_paths + (bundle.metadata_path,) if bundle.files_owned else ()
         self._file_bytes: dict[Path, bytes] | None = None
         self._registered_asset_ids: list[str] = []
         self._actor_added = False

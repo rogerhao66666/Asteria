@@ -20,10 +20,11 @@ _REPRESENTATIONS = {
 }
 _CATEGORIES = {
     "body": "body", "clothing": "outfit", "clothing1": "outfit",
-    "clothing2": "armor", "acca": "accessory", "accb": "accessory",
-    "glasses": "accessory", "fronthair": "hair_front",
+    "clothing2": "armor", "cloak": "cloak", "cloak1": "cloak", "cloak2": "cloak",
+    "acca": "accessory", "accb": "accessory_b",
+    "glasses": "glasses", "fronthair": "hair_front",
     "rearhair": "hair_back", "eyes": "eyes", "eyebrows": "eyes",
-    "beard": "accessory", "ears": "accessory", "tail": "tail",
+    "beard": "beard", "ears": "ears", "beastears": "beast_ears", "tail": "tail",
     "wing": "wing", "face": "face_shape", "eyebrows": "eyebrows",
     "nose": "nose", "mouth": "mouth", "facialmark": "facial_mark",
 }
@@ -111,7 +112,7 @@ class RPGMakerMVGeneratorCatalog:
                     issues.append(MVGeneratorIssue("generator.unrecognized_name", str(path), path.name))
                     continue
                 relative_parts = path.relative_to(generator_root).parts
-                gender = next((value for value in relative_parts if value.lower() in {"male", "female"}), "Unspecified")
+                gender = next((value for value in relative_parts if value.lower() in {"male", "female", "kid"}), "Unspecified")
                 source_category = _logical_category(match.group("category"))
                 token = match.group("number")
                 number = int(token) if token.isdigit() else token
