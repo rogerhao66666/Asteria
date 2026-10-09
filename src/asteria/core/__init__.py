@@ -17,6 +17,7 @@ from .serialization import (
 from .services import ServiceRegistry
 from .system import System, SystemScheduler
 from .time import TimeState
+from .scene_transition import PersistentComponent, SceneTransition
 from .transform import (
     Transform,
     TransformHierarchyError,

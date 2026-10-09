@@ -5,6 +5,7 @@ from dataclasses import dataclass, replace
 
 from asteria.core import Transform
 from asteria.core.lifecycle import LifecycleHookBus
+from asteria.core.scene_transition import carry_persistent_entities
 from asteria.events import EventRunner, SceneEventRuntime, WorldCommandRouter
 from asteria.gameplay import AbilityRegistry, AbilityRuntime, GameplaySubject
 from asteria.rpg import (
@@ -164,7 +165,9 @@ class GameSessionRuntime:
         destination=self.project.scene(str(scene_id))
         if destination is None: raise GameSessionError(f"unknown scene: {scene_id}")
         changed=destination is not self.scene
+        previous=self.scene
         transform=move_entity_to_scene(self.player,self.scene,destination,x,y)
+        if changed: carry_persistent_entities(previous,destination)
         self.scene=destination
         self.save.scene_id=destination.id
         self.save.player_position=(transform.x,transform.y)

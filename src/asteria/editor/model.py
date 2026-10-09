@@ -31,7 +31,7 @@ class EditorDocument:
     def __init__(
         self, project=None, *, component_registry=None, clipboard=None, file_path=None
     ):
-        from asteria.core import ComponentRegistry, Transform
+        from asteria.core import ComponentRegistry, PersistentComponent, Transform
         from asteria.gameplay import GameplayAttributesComponent
         from asteria.runtime import (
             ActorLinkComponent,
@@ -55,6 +55,7 @@ class EditorDocument:
             component_registry.register(TileMap2DComponent)
             component_registry.register(GameplayAttributesComponent)
             component_registry.register(ActorLinkComponent)
+            component_registry.register(PersistentComponent)
         self.project = project
         self.selection = EditorSelection()
         self.component_registry = component_registry

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from .events import EventBus
+from .scene_transition import SceneTransition, _ActiveTransition, carry_persistent_entities
 from .services import ServiceRegistry
 from .time import TimeState
 
@@ -27,6 +28,9 @@ class Application:
         self.scene = None
         self._running = False
         self._accumulator = 0.0
+        self._transition = None
+        # 0 = scene fully visible, 1 = fully covered by the transition colour.
+        self.transition_cover = 0.0
         if self.config.fixed_timestep is not None and not self.config.fixed_timestep > 0:
             raise ValueError("fixed_timestep must be positive")
         self.services.add(TimeState, self.time)
@@ -43,6 +47,43 @@ class Application:
         self.scene = scene
         if self._running and scene is not None:
             scene.enter()
+
+    @property
+    def transition_color(self):
+        return None if self._transition is None else self._transition.spec.color
+
+    def change_scene(self, scene, transition: SceneTransition | None = None):
+        """Switch scenes now, or fade out, switch, fade in when ``transition`` is given.
+
+        Entities with PersistentComponent move to the new scene.
+        """
+        if transition is None or (transition.fade_out == 0 and transition.fade_in == 0):
+            self._swap_scene(scene)
+            return
+        self._transition = _ActiveTransition(scene, transition)
+
+    def _swap_scene(self, scene):
+        carry_persistent_entities(self.scene, scene)
+        self.set_scene(scene)
+
+    def advance_transition(self, dt):
+        """Advance an active fade; returns True while a transition is running."""
+        t = self._transition
+        if t is None:
+            return False
+        t.elapsed += max(0.0, float(dt))
+        if t.phase == "out":
+            self.transition_cover = 1.0 if t.spec.fade_out == 0 else min(1.0, t.elapsed / t.spec.fade_out)
+            if t.elapsed >= t.spec.fade_out:
+                self._swap_scene(t.target)
+                t.phase, t.elapsed = "in", 0.0
+        if t.phase == "in":
+            self.transition_cover = 0.0 if t.spec.fade_in == 0 else max(0.0, 1.0 - t.elapsed / t.spec.fade_in)
+            if t.elapsed >= t.spec.fade_in:
+                self._transition = None
+                self.transition_cover = 0.0
+                return False
+        return True
 
     def stop(self):
         self._running = False
@@ -87,6 +128,7 @@ class Application:
                 )
                 dt = min(max(float(dt), 0.0), self.config.max_delta_seconds)
                 self.time.advance(dt)
+                self.advance_transition(dt)
                 self.step_fixed(dt)
                 if self.scene is not None:
                     self.scene.update(self.time.delta_seconds)
