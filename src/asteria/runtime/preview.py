@@ -64,6 +64,7 @@ def run_preview(
     save_path=None,
     playtest_profile=None,
     backend_kind="pygame",
+    max_frames=None,
 ):
     registry = build_preview_registry()
     project = Project.load_json(project_path, registry)
@@ -123,6 +124,7 @@ def run_preview(
                 width=width,
                 height=height,
                 target_fps=target_fps,
+                max_frames=max_frames,
             )
         if (
             reference_sidecar.exists()
@@ -135,9 +137,13 @@ def run_preview(
             )
 
             runtime = ReferenceRuntime.load(project, scene, root)
-            run_reference_runtime(runtime, backend, width, height, target_fps)
+            run_reference_runtime(runtime, backend, width, height, target_fps, max_frames=max_frames)
         else:
+            frames = 0
             while not backend.should_close():
+                frames += 1
+                if max_frames is not None and frames > max_frames:
+                    break
                 if hasattr(backend, "tick"):
                     backend.tick(target_fps)
                 backend.begin_frame()
@@ -167,6 +173,7 @@ def main(argv=None):
     parser.add_argument("--save")
     parser.add_argument("--playtest-profile")
     parser.add_argument("--backend", choices=BACKENDS, default="pygame")
+    parser.add_argument("--frames", type=int, help="quit after this many frames (smoke tests)")
     args = parser.parse_args(argv)
     return run_preview(
         args.project,
@@ -177,6 +184,7 @@ def main(argv=None):
         save_path=args.save,
         playtest_profile=args.playtest_profile,
         backend_kind=args.backend,
+        max_frames=args.frames,
     )
 
 

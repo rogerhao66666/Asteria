@@ -640,13 +640,16 @@ class PlayableTestRuntime:
         self._last_action_name=self.message
         return out
 
-    def run(self, target_fps=60):
+    def run(self, target_fps=60, max_frames=None):
         self.open()
+        frames=0
         try:
             while self.running:
                 dt=min(self.clock.tick(int(target_fps))/1000.0,0.05)
                 self._frame(self.pg.event.get(),dt)
                 self.pg.display.flip()
+                frames+=1
+                if max_frames is not None and frames>=max_frames:break
         finally:
             self.close()
         return 0
@@ -699,7 +702,7 @@ class PlayableTestRuntime:
                 self._draw_field(moving)
 
 
-def run_playable_test_runtime(project, resource_root, *, runtime_save=None, save_path=None, width=960, height=540, target_fps=60):
+def run_playable_test_runtime(project, resource_root, *, runtime_save=None, save_path=None, width=960, height=540, target_fps=60, max_frames=None):
     resource_root=Path(resource_root)
     if runtime_save is None:
         if save_path is not None:
@@ -711,4 +714,4 @@ def run_playable_test_runtime(project, resource_root, *, runtime_save=None, save
             )
     return PlayableTestRuntime(
         project,runtime_save,resource_root,width=width,height=height
-    ).run(target_fps)
+    ).run(target_fps, max_frames)

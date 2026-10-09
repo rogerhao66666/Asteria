@@ -23,11 +23,16 @@ def deserialize_component(data, registry):
         raise ValueError("Invalid component record")
     component_type = registry.resolve(data["type"])
     schema = get_component_schema(component_type)
-    if data["version"] != schema.version:
-        raise ValueError(f"Unsupported component schema version: {data['version']}")
     incoming = data["fields"]
     if not isinstance(incoming, dict):
         raise TypeError("Component fields must be an object")
+    if data["version"] != schema.version:
+        from .migration import MigrationError, migrate_component_fields
+
+        try:
+            incoming = migrate_component_fields(data["type"], incoming, data["version"], schema.version)
+        except MigrationError as exc:
+            raise ValueError(f"Unsupported component schema version: {exc}") from exc
     unknown = set(incoming) - set(schema.fields)
     if unknown:
         raise ValueError(f"Unknown component fields: {sorted(unknown)}")

@@ -27,3 +27,5 @@ testpaths=["tests"]
 [project.scripts]
 asteria-editor="asteria.editor.shell:launch_editor"
 asteria-preview="asteria.runtime.preview:main"
+asteria-upgrade="asteria.project_tools:upgrade_main"
+asteria-export="asteria.project_tools:export_main"
