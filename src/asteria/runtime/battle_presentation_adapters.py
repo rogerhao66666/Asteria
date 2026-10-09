@@ -101,10 +101,14 @@ class CanonicalBattleAdapter:
 
     name = "canonical"
 
-    def __init__(self, host, *, profile_ids=None):
+    # Session parties are "heroes" and "enemies"; mirror the legacy world layer.
+    DEFAULT_PLACEMENT = {"heroes": "left", "enemies": "right"}
+
+    def __init__(self, host, *, profile_ids=None, placement_by_side=None):
         self.host = host
         self.trace = []
         self.profile_ids = dict(profile_ids or {})
+        self.placement_by_side = dict(placement_by_side or self.DEFAULT_PLACEMENT)
         self.screen = None
         self.renderer = None
         self._ui_backend = None
@@ -132,9 +136,13 @@ class CanonicalBattleAdapter:
         )
         kwargs = {name: self._profile(category) for name, category in PRESENTATION_PROFILE_CATEGORIES.items()}
         kwargs = {name: value for name, value in kwargs.items() if value is not None}
-        self.screen = BattleScreenRuntime(scene, lambda _id: None, lambda _id: None, **kwargs)
+        self.screen = BattleScreenRuntime(
+            scene, lambda _id: None, lambda _id: None, placement_by_side=self.placement_by_side, **kwargs,
+        )
         self.screen.coordinator.attach(game.battle.hooks)
-        self._ui_backend = PygameBattleUiBackend(self.host.screen)
+        layout = self.screen.composer.layout
+        scale = min(self.host.width / layout.virtual_width, self.host.height / layout.virtual_height)
+        self._ui_backend = PygameBattleUiBackend(self.host.screen, scale=scale)
         self.renderer = BattleUiRenderer(self._ui_backend, self._theme())
         self.audio_cues.clear()
 
@@ -223,7 +231,8 @@ class CanonicalBattleAdapter:
     def draw(self):
         if not self.screen.scene.combatants:
             self.host._draw_battle_world(show_labels=False)
-        result = self.screen.render(Camera2D(width=self.host.width, height=self.host.height), ui_renderer=self.renderer)
+        layout = self.screen.composer.layout
+        result = self.screen.render(Camera2D(width=layout.virtual_width, height=layout.virtual_height), ui_renderer=self.renderer)
         self.audio_cues.extend(result.audio_cues)
         return result
 
@@ -235,5 +244,7 @@ def create_battle_presentation_adapter(host):
     if kind == "legacy":
         return LegacyPygameBattleAdapter(host)
     if kind == "canonical":
-        return CanonicalBattleAdapter(host, profile_ids=settings.get("profiles"))
+        return CanonicalBattleAdapter(
+            host, profile_ids=settings.get("profiles"), placement_by_side=settings.get("placement_by_side"),
+        )
     raise ValueError(f"unknown battle presentation adapter: {kind}")

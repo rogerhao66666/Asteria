@@ -7,9 +7,13 @@ class PygameBattleUiBackend:
     `resolve_icon(asset_id)` may return either a pygame Surface or an object
     whose `backend_handle` is a Surface. Missing icons fall back to a styled
     placeholder so project data errors do not crash presentation.
+
+    UI frames are composed in the layout's virtual resolution; `scale`
+    multiplies every coordinate, size and font size so the same frame can be
+    drawn crisply at a larger window size.
     """
 
-    def __init__(self, screen, *, resolve_icon=None, font_name=None):
+    def __init__(self, screen, *, resolve_icon=None, font_name=None, scale=1.0):
         try:
             import pygame
         except ImportError as exc:
@@ -18,14 +22,23 @@ class PygameBattleUiBackend:
         self.screen = screen
         self.resolve_icon = resolve_icon
         self.font_name = font_name
+        self.scale = float(scale)
+        if not self.scale > 0:
+            raise ValueError("scale must be positive")
         self._fonts = {}
+
+    def _s(self, value):
+        return round(float(value) * self.scale)
+
+    def _rect(self, x, y, width, height):
+        return self.pg.Rect(self._s(x), self._s(y), max(1, self._s(width)), max(1, self._s(height)))
 
     @staticmethod
     def _rgb(color):
         return tuple(color[:3])
 
     def _font(self, size):
-        size = max(1, int(size))
+        size = max(1, round(float(size) * self.scale))
         if size not in self._fonts:
             if not self.pg.font.get_init():
                 self.pg.font.init()
@@ -37,21 +50,21 @@ class PygameBattleUiBackend:
             raise RuntimeError("pygame battle UI screen is not configured")
 
     def draw_panel(self, panel, *, fill, border, radius, border_width):
-        rect = self.pg.Rect(round(panel.x), round(panel.y), max(1, round(panel.width)), max(1, round(panel.height)))
-        self.pg.draw.rect(self.screen, self._rgb(fill), rect, border_radius=int(radius))
+        rect = self._rect(panel.x, panel.y, panel.width, panel.height)
+        self.pg.draw.rect(self.screen, self._rgb(fill), rect, border_radius=self._s(radius))
         if border_width:
-            self.pg.draw.rect(self.screen, self._rgb(border), rect, width=int(border_width), border_radius=int(radius))
+            self.pg.draw.rect(self.screen, self._rgb(border), rect, width=max(1, self._s(border_width)), border_radius=self._s(radius))
 
     def draw_gauge(self, gauge, *, track, fill):
         mode = str(getattr(gauge, "presentation", "bar"))
         normalized = max(0.0, min(1.0, float(gauge.normalized)))
-        rect = self.pg.Rect(round(gauge.x), round(gauge.y), max(1, round(gauge.width)), max(1, round(gauge.height)))
+        rect = self._rect(gauge.x, gauge.y, gauge.width, gauge.height)
 
         if mode in {"pips", "segmented_bar", "icon_stack"}:
             segments = int(getattr(gauge, "segments", 0))
             if segments <= 0:
                 segments = max(1, int(round(float(gauge.maximum)))) if float(gauge.maximum) <= 24 else 5
-            gap = 1
+            gap = max(1, self._s(1))
             cell_w = max(1, (rect.width - gap * (segments - 1)) // segments)
             filled_count = int(round(normalized * segments))
             icon = None
@@ -94,7 +107,7 @@ class PygameBattleUiBackend:
         if self.resolve_icon is not None:
             value = self.resolve_icon(icon.asset_id)
             surface = getattr(value, "backend_handle", value)
-        target = self.pg.Rect(round(icon.x), round(icon.y), 8, 8)
+        target = self._rect(icon.x, icon.y, 8, 8)
         if surface is not None:
             image = surface if surface.get_size() == target.size else self.pg.transform.scale(surface, target.size)
             self.screen.blit(image, target.topleft)
@@ -103,14 +116,14 @@ class PygameBattleUiBackend:
             self.pg.draw.rect(self.screen, (202, 211, 226), target, width=1, border_radius=2)
 
     def draw_marker(self, marker, *, color):
-        cx, cy = round(marker.x), round(marker.y)
+        cx, cy = self._s(marker.x), self._s(marker.y)
         c = self._rgb(color)
-        radius = 7 if marker.primary else 5
-        self.pg.draw.polygon(self.screen, c, ((cx, cy-radius), (cx-radius, cy), (cx, cy+radius), (cx+radius, cy)), width=2)
+        radius = self._s(7 if marker.primary else 5)
+        self.pg.draw.polygon(self.screen, c, ((cx, cy-radius), (cx-radius, cy), (cx, cy+radius), (cx+radius, cy)), width=max(1, self._s(2)))
 
     def draw_text(self, text, *, color, size):
         image = self._font(size).render(str(text.text), True, self._rgb(color))
-        x, y = round(text.x), round(text.y)
+        x, y = self._s(text.x), self._s(text.y)
         if text.align == "center":
             x -= image.get_width() // 2
         elif text.align == "right":

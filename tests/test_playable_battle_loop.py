@@ -256,3 +256,22 @@ def test_full_frame_loop_with_canonical_adapter_reaches_victory(resource_root, m
         runtime._frame([], 0.016)
     finally:
         runtime.close()
+
+
+def test_pygame_battle_ui_backend_scales_virtual_coordinates(monkeypatch):
+    from types import SimpleNamespace
+
+    from asteria.platform.pygame_battle_ui import PygameBattleUiBackend
+
+    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+    pygame.init()
+    surface = pygame.Surface((300, 150))
+    backend = PygameBattleUiBackend(surface, scale=3)
+    panel = SimpleNamespace(x=10, y=5, width=20, height=10)
+    backend.draw_panel(panel, fill=(255, 0, 0), border=(0, 0, 0), radius=0, border_width=0)
+    assert surface.get_at((30, 15))[:3] == (255, 0, 0)  # (10, 5) * 3
+    assert surface.get_at((89, 44))[:3] == (255, 0, 0)  # far corner of 60x30 rect
+    assert surface.get_at((91, 46))[:3] == (0, 0, 0)
+    assert backend._font(10).get_height() > PygameBattleUiBackend(surface)._font(10).get_height()
+    with pytest.raises(ValueError):
+        PygameBattleUiBackend(surface, scale=0)
