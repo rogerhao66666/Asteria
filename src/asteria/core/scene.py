@@ -109,6 +109,16 @@ class Scene:
             if e.enabled and all(e.has(t) for t in types):
                 yield (e, *(e.get(t) for t in types))
 
+    def fixed_update(self, dt):
+        """Run every system's fixed-rate step (no entity add/remove flush)."""
+        if self._updating:
+            raise RuntimeError("Scene update is not re-entrant")
+        self._updating = True
+        try:
+            self.scheduler.fixed_update(self, dt)
+        finally:
+            self._updating = False
+
     def update(self, dt):
         if self._updating:
             raise RuntimeError("Scene update is not re-entrant")

@@ -5,6 +5,9 @@ class System:
     def update(self, scene, dt):
         raise NotImplementedError
 
+    def fixed_update(self, scene, dt):
+        """Deterministic simulation step at the application's fixed rate (optional)."""
+
 
 class SystemScheduler:
     def __init__(self):
@@ -27,5 +30,16 @@ class SystemScheduler:
             for system in tuple(self._systems):
                 if system.enabled:
                     system.update(scene, dt)
+        finally:
+            self._running = False
+
+    def fixed_update(self, scene, dt):
+        if self._running:
+            raise RuntimeError("Scheduler update is not re-entrant")
+        self._running = True
+        try:
+            for system in tuple(self._systems):
+                if system.enabled:
+                    system.fixed_update(scene, dt)
         finally:
             self._running = False

@@ -10,6 +10,8 @@ class TimeState:
     delta_seconds: float = 0.0
     elapsed_seconds: float = 0.0
     frame_index: int = 0
+    fixed_steps: int = 0
+    fixed_alpha: float = 0.0  # leftover fraction of a fixed step, for render interpolation
 
     def advance(self, delta_seconds: float) -> None:
         if delta_seconds < 0:

@@ -12,6 +12,9 @@ class ApplicationConfig:
     height: int = 540
     target_fps: int = 60
     max_delta_seconds: float = 0.25
+    # Fixed simulation step in seconds (None disables). Systems implement fixed_update.
+    fixed_timestep: float | None = None
+    max_fixed_steps: int = 5
 
 
 class Application:
@@ -23,6 +26,9 @@ class Application:
         self.events = EventBus()
         self.scene = None
         self._running = False
+        self._accumulator = 0.0
+        if self.config.fixed_timestep is not None and not self.config.fixed_timestep > 0:
+            raise ValueError("fixed_timestep must be positive")
         self.services.add(TimeState, self.time)
 
     @property
@@ -40,6 +46,28 @@ class Application:
 
     def stop(self):
         self._running = False
+
+    def step_fixed(self, dt):
+        """Advance the fixed-rate simulation by ``dt`` of real time; returns steps run.
+
+        At most ``max_fixed_steps`` run per frame; extra backlog is dropped so a
+        slow frame cannot snowball into ever longer catch-up frames.
+        """
+        step = self.config.fixed_timestep
+        if step is None:
+            return 0
+        self._accumulator += float(dt)
+        steps = 0
+        while self._accumulator >= step and steps < self.config.max_fixed_steps:
+            if self.scene is not None:
+                self.scene.fixed_update(step)
+            self._accumulator -= step
+            steps += 1
+        if steps == self.config.max_fixed_steps and self._accumulator >= step:
+            self._accumulator %= step
+        self.time.fixed_steps += steps
+        self.time.fixed_alpha = self._accumulator / step
+        return steps
 
     def run(self, *, max_frames=None):
         if self._running:
@@ -59,6 +87,7 @@ class Application:
                 )
                 dt = min(max(float(dt), 0.0), self.config.max_delta_seconds)
                 self.time.advance(dt)
+                self.step_fixed(dt)
                 if self.scene is not None:
                     self.scene.update(self.time.delta_seconds)
                 if hasattr(self.backend, "begin_frame"):
