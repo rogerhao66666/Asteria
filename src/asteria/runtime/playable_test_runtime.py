@@ -8,6 +8,29 @@ from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
 
 
+WALK_ROW_BY_FACING = {"down": 0, "left": 1, "right": 2, "up": 3}
+WALK_PATTERN_SEQUENCE = (0, 1, 2, 1)
+
+
+def walking_row_index(facing: str) -> int:
+    return WALK_ROW_BY_FACING.get(facing, 0)
+
+
+def walking_pattern_index(field_step: int) -> int:
+    """Use MV's 0-1-2-1 walk loop; never jump directly from stride to stride."""
+    return WALK_PATTERN_SEQUENCE[(max(0, int(field_step)) // 8) % len(WALK_PATTERN_SEQUENCE)]
+
+
+def field_player_render_size(frame_size) -> tuple[int, int]:
+    """Scale field sprites to 64px wide while preserving each source frame's ratio."""
+    frame_w, frame_h = (int(frame_size[0]), int(frame_size[1]))
+    if frame_w <= 0 or frame_h <= 0:
+        raise ValueError("player frame dimensions must be positive")
+    render_w = 64
+    render_h = max(1, round(frame_h * render_w / frame_w))
+    return render_w, render_h
+
+
 def _load_manifest(resource_root):
     path=Path(resource_root)/"playable_test_manifest.json"
     data=json.loads(path.read_text(encoding="utf-8"))
@@ -110,9 +133,8 @@ class PlayableTestRuntime:
     def _player_frame(self, facing, moving):
         sheet=self.load_image(self.manifest["field"]["player_sheet"])
         fw,fh=self.manifest["field"]["player_frame_size"]
-        rows={"down":0,"left":1,"right":2,"up":3}
-        row=rows.get(facing,0)
-        col=(self._field_step//8)%3 if moving else 1
+        row=walking_row_index(facing)
+        col=walking_pattern_index(self._field_step) if moving else 1
         return sheet.subsurface((col*fw,row*fh,fw,fh))
 
     def _interaction_candidate(self):
@@ -136,8 +158,9 @@ class PlayableTestRuntime:
 
         pt=self.game.player.get(Transform); px,py=self._field_screen_xy(pt.x,pt.y)
         pf=self._player_frame(self.game.facing,moving)
-        pf=self.pg.transform.scale(pf,(64,96))
-        self.screen.blit(pf,(int(px-32),int(py-86)))
+        render_w,render_h=field_player_render_size(pf.get_size())
+        pf=self.pg.transform.scale(pf,(render_w,render_h))
+        self.screen.blit(pf,(int(px-render_w/2),int(py-render_h+10)))
 
         self.panel((18,self.height-92,self.width-36,72))
         self.text("Field Test",34,self.height-82,size=24,color=(255,220,124))
