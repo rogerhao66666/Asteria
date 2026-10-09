@@ -131,6 +131,16 @@ def test_real_mv_side_view_actor_motion_extraction_stays_in_adapter():
         (64, 0, 128, 64),
         (128, 0, 192, 64),
     )
+    assert importer.side_view_motion_boxes(imported, motion_index=6) == (
+        (192, 0, 256, 64),
+        (256, 0, 320, 64),
+        (320, 0, 384, 64),
+    )
+    assert importer.side_view_motion_boxes(imported, motion_index=9) == (
+        (192, 192, 256, 256),
+        (256, 192, 320, 256),
+        (320, 192, 384, 256),
+    )
     assert importer.side_view_motion_boxes(imported, motion_index=17) == (
         (384, 320, 448, 384),
         (448, 320, 512, 384),

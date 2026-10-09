@@ -177,8 +177,11 @@ class RPGMakerMVImporter:
         if motion_index < 0 or motion_index >= 18:
             raise ValueError("motion_index out of range")
         frame_width, frame_height = imported.frame_size
-        motion_column = motion_index % 3
-        motion_row = motion_index // 3
+        # RPG Maker MV stores three pattern frames for each motion. Six
+        # motions are stacked vertically before advancing to the next group
+        # of three pattern columns (see Sprite_Actor.updateFrame).
+        motion_column = motion_index // 6
+        motion_row = motion_index % 6
         first_column = motion_column * 3
         return tuple(
             (
