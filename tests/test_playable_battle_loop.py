@@ -337,3 +337,27 @@ def test_pygame_backend_replaces_glyphs_the_font_cannot_draw(monkeypatch):
     font = backend._font(20)
     assert backend._renderable(font, "▶ Strike") == "> Strike"
     assert backend._renderable(font, "Plain text 123") == "Plain text 123"
+
+
+def test_legacy_victory_panel_keeps_rendering_after_the_battle_ends(resource_root, monkeypatch):
+    """Regression: the frame after victory drew the HUD against a finished (None) battle."""
+    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+    runtime = _boss_runtime(resource_root)
+    monkeypatch.setattr(runtime, "_play_fx", lambda *a, **k: None)
+    key = lambda k: pygame.event.Event(pygame.KEYDOWN, key=k)  # noqa: E731
+    try:
+        assert isinstance(runtime._battle_presentation, LegacyPygameBattleAdapter)
+        runtime._ui_mode = "field"
+        runtime._frame([key(pygame.K_e)], 0.016)
+        runtime._frame([key(pygame.K_RETURN)], 0.016)
+        for _ in range(60):
+            if runtime._victory:
+                break
+            runtime._frame([key(pygame.K_1)], 0.05)
+        assert runtime._victory and runtime.game.battle is None
+        runtime._frame([], 0.016)
+        runtime._frame([], 0.016)
+        runtime._frame([key(pygame.K_RETURN)], 0.016)
+        assert runtime.game.mode == "field" and not runtime._victory
+    finally:
+        runtime.close()

@@ -10,6 +10,7 @@ not the official Asteria Starter Pack.
 | `hero_01_battle.png` … `hero_06_battle.png`, `astral_tyrant_battle.png`, `mender_wisp_battle.png`, `boss_field.png` | [Tiny Dungeon](https://kenney.nl/assets/tiny-dungeon) 1.0 — tiles 96, 84, 99, 87, 100, 112, 110, 108, scaled | Kenney (kenney.nl) | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
 | `field_map.png`, `battle_background.png` | [Tiny Town](https://kenney.nl/assets/tiny-town) 1.1 — tiles composed into scenes, scaled | Kenney (kenney.nl) | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
 | `player_field_sheet.png` | [LPC Base Assets](https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles) — `sprites/people/soldier.png`, frames rearranged into a 3×4 walking sheet | Manuel Riecke (MrBeast), Liberated Pixel Cup | [CC-BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) or [GPL 3.0](https://www.gnu.org/licenses/gpl-3.0.html) |
+| `audio/field_theme.ogg` ("9 - Quiet"), `audio/battle_theme.ogg` ("17 - Fight"), `audio/hit.wav` (Hit1), `audio/heal.wav` (Heal), `audio/confirm.wav` (Accept2), `audio/victory.wav` (Jingle LevelUp1) | [Ninja Adventure Asset Pack](https://pixel-boy.itch.io/ninja-adventure-asset-pack) — copied unmodified, renamed | Pixel-boy, AAA | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
 | `fx_strike.png`, `fx_fire.png`, `fx_heal.png`, `fx_meteor.png` | Drawn procedurally by the build script | Asteria project | Same as the repository |
 
 ## Share-alike notice

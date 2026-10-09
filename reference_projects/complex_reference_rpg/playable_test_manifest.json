@@ -27,7 +27,8 @@
         ]
       }
     },
-    "player_render_width": 128
+    "player_render_width": 128,
+    "bgm": "field_theme"
   },
   "battle": {
     "background": "playable_assets/battle_background.png",
@@ -47,22 +48,26 @@
       "strike": {
         "label": "Strike",
         "fx": "playable_assets/fx_strike.png",
-        "frames": 16
+        "frames": 16,
+        "sfx": "hit"
       },
       "fire_arc": {
         "label": "Fire Arc",
         "fx": "playable_assets/fx_fire.png",
-        "frames": 16
+        "frames": 16,
+        "sfx": "hit"
       },
       "heal": {
         "label": "Heal",
         "fx": "playable_assets/fx_heal.png",
-        "frames": 16
+        "frames": 16,
+        "sfx": "heal"
       },
       "meteor": {
         "label": "Meteor",
         "fx": "playable_assets/fx_meteor.png",
-        "frames": 16
+        "frames": 16,
+        "sfx": "hit"
       }
     },
     "enemy_layouts": {
@@ -80,7 +85,9 @@
           "label": "Shield"
         }
       }
-    }
+    },
+    "bgm": "battle_theme",
+    "victory_jingle": "victory"
   },
   "controls": {
     "title": "N New Game / L Load Player Save",
@@ -97,5 +104,14 @@
     "level_threshold": 1000,
     "ap_per_level": 2,
     "ability_points_per_level": 1
-  }
+  },
+  "audio": {
+    "field_theme": "playable_assets/audio/field_theme.ogg",
+    "battle_theme": "playable_assets/audio/battle_theme.ogg",
+    "hit": "playable_assets/audio/hit.wav",
+    "heal": "playable_assets/audio/heal.wav",
+    "confirm": "playable_assets/audio/confirm.wav",
+    "victory": "playable_assets/audio/victory.wav"
+  },
+  "dialogue_confirm_sfx": "confirm"
 }

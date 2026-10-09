@@ -7,6 +7,7 @@ from asteria.core import Transform
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
 from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
+from asteria.runtime.audio_mixer import AudioMixer
 from asteria.runtime.collision import CollisionWorld
 from asteria.runtime.input_map import InputActionTracker
 
@@ -102,9 +103,26 @@ class PlayableTestRuntime:
         from asteria.platform.pygame_input import PygameInputSource
         self.input_source=PygameInputSource(self.pg)
         self.input=InputActionTracker(self.project.input_map)
+        from asteria.platform.pygame_audio import open_audio_device
+        self.audio=AudioMixer(open_audio_device(self.pg),self._audio_path)
         return self
 
+    def _audio_path(self, asset_id):
+        """Manifest audio map first, then a canonical project asset; None when missing."""
+        rel=self.manifest.get("audio",{}).get(asset_id)
+        if rel is not None:
+            path=self.path(rel)
+        else:
+            try:
+                path=Path(self.project.assets.resolve(asset_id).source.uri)
+            except KeyError:
+                return None
+            if not path.is_absolute():path=self.resource_root/path
+        return path if path.is_file() else None
+
     def close(self):
+        audio=getattr(self,"audio",None)
+        if audio is not None:audio.stop_music()
         if self.pg.get_init():
             self.pg.quit()
 
@@ -208,6 +226,7 @@ class PlayableTestRuntime:
         if getattr(request,"line",None) is not None:
             if self.input.just_pressed("confirm") or self.input.just_pressed("interact"):
                 self.game.acknowledge_dialogue()
+                self._sound(self.manifest.get("dialogue_confirm_sfx"))
             return True
         for event in events:
             if event.type!=self.pg.KEYDOWN:continue
@@ -399,7 +418,7 @@ class PlayableTestRuntime:
         return pool.current(resource),pool.maximum(resource)
 
     def _battle_actor(self):
-        return self._turn_actor
+        return None if self.game.battle is None else self._turn_actor
 
     def _advance_to_hero_turn(self):
         """Let the battle scheduler run enemy turns until a hero must act."""
@@ -563,6 +582,7 @@ class PlayableTestRuntime:
             self.game.use_ability(actor,ability_id,boost_level=boost)
             self._last_action_name=f"{actor}: {meta.get('label',ability_id)} x{boost+1}"
             self._boost_level=0
+            self._sound(meta.get("sfx"))
             self._play_fx(ability_id,target_is_enemy=offensive)
         except Exception as exc:
             self._last_action_name=f"Action failed: {exc}"
@@ -582,6 +602,8 @@ class PlayableTestRuntime:
                     )
                     self._victory_summary.append(f"{hero_id}: Lv {info['old_level']}→{info['new_level']} +{info['levels_gained']*2:g} AP +{info['levels_gained']:g} ability pts")
                 self._victory=True
+                self.audio.stop_music(fade_out=0.3)
+                self._sound(self.manifest["battle"].get("victory_jingle"))
                 self._last_action_name="Victory — rewards + progression applied"
             except Exception as exc:
                 self._last_action_name=f"Victory finalize failed: {exc}"
@@ -629,10 +651,21 @@ class PlayableTestRuntime:
             self.close()
         return 0
 
+    def _sound(self, asset_id):
+        if asset_id:self.audio.play_effect(asset_id)
+
+    def _music(self, asset_id, fade=0.5):
+        if asset_id:self.audio.play_music(asset_id,fade_in=fade)
+
     def _frame(self, events, dt):
         """Process one frame of input, event programs and drawing (no flip)."""
         self.input_source.handle_events(events)
         self.input.update(self.input_source.raw_state())
+        while self.game.presentation_requests:
+            self.audio.handle_world_request(self.game.presentation_requests.pop(0))
+        for cue in getattr(self._battle_presentation,"audio_cues",()):
+            self._sound(dict(cue.payload).get("asset_id"))
+        if hasattr(self._battle_presentation,"audio_cues"):self._battle_presentation.audio_cues.clear()
         for event in events:
             if event.type==self.pg.QUIT:
                 self.running=False
@@ -658,9 +691,11 @@ class PlayableTestRuntime:
             if self.game.mode=="battle":
                 self._turn_actor=None
                 self._battle_presentation.begin()
+                self._music(self.manifest["battle"].get("bgm"))
                 self._advance_to_hero_turn()
                 self._present_battle(dt)
             else:
+                self._music(self.manifest["field"].get("bgm"))
                 self._draw_field(moving)
 
 
