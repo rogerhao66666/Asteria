@@ -6,6 +6,7 @@ from math import isfinite
 
 from asteria.gameplay.action_timeline import ActionCueKind
 from asteria.runtime import AnimatorState, TextureDraw
+from asteria.graphics.mv_weapon_visual import WeaponVisual
 
 from .battle_animation_timing import BattleAnimationTimingProfile, easing_value
 
@@ -256,6 +257,8 @@ class BattlePresentationRuntime:
         self._resolve_sprite_sheet = resolve_sprite_sheet
         self._combatants: dict[str, BattleCombatantAnimator] = {}
         self._sprite_sheets = {}
+        self._aura_sprite_sheets = {}
+        self._weapon_visuals: dict[str, tuple[WeaponVisual, str]] = {}
         self._member_order = tuple(x.member_id for x in scene.combatants)
         for visual in scene.combatants:
             clip_set = resolve_clip_set(visual.clip_set_id)
@@ -266,6 +269,18 @@ class BattlePresentationRuntime:
                 raise ValueError(f"missing sprite sheet: {visual.sprite_sheet_asset_id}")
             clip_set.validate(sheet)
             self._sprite_sheets[visual.member_id] = sheet
+            if visual.aura_sprite_sheet_asset_id is not None:
+                aura_sheet = resolve_sprite_sheet(visual.aura_sprite_sheet_asset_id)
+                if aura_sheet is None:
+                    raise ValueError(
+                        f"missing aura sprite sheet: {visual.aura_sprite_sheet_asset_id}"
+                    )
+                if tuple(aura_sheet.frames) != tuple(sheet.frames):
+                    raise ValueError(
+                        f"aura sprite sheet frame layout must match character sheet "
+                        f"for {visual.member_id}"
+                    )
+                self._aura_sprite_sheets[visual.member_id] = aura_sheet
             self._combatants[visual.member_id] = BattleCombatantAnimator.create(
                 visual, clip_set, self.timing_profile
             )
@@ -274,6 +289,17 @@ class BattlePresentationRuntime:
 
     def combatant(self, member_id):
         return self._combatants[str(member_id)]
+
+    def set_weapon_visual(self, member_id: str, visual: WeaponVisual, texture_asset_id: str) -> None:
+        member_id = str(member_id)
+        if member_id not in self._combatants:
+            raise KeyError(member_id)
+        if not isinstance(visual, WeaponVisual):
+            raise TypeError("visual must be WeaponVisual")
+        if not visual.frames or not texture_asset_id:
+            self._weapon_visuals.pop(member_id, None)
+        else:
+            self._weapon_visuals[member_id] = (visual, str(texture_asset_id))
 
     def _member_from_animation_payload(self, payload):
         for key in ("member_id", "combatant_id", "source_id", "target_id"):
@@ -355,22 +381,42 @@ class BattlePresentationRuntime:
             if not state.visible:
                 continue
             sheet = self._sprite_sheets[visual.member_id]
+            aura_sheet = self._aura_sprite_sheets.get(visual.member_id)
+            source_ratio = visual.source_pixels_per_logical_pixel
             frame = sheet.frames[state.frame_index]
             mix = state.transition_mix()
 
             if state.transition_from_frame is not None and 0 <= state.transition_from_frame < len(sheet.frames):
                 previous = sheet.frames[state.transition_from_frame]
-                px = visual.anchor.x - previous.width * previous.pivot_x
-                py = visual.anchor.y - previous.height * previous.pivot_y
+                previous_width = previous.width / source_ratio
+                previous_height = previous.height / source_ratio
+                px = visual.anchor.x - previous_width * previous.pivot_x
+                py = visual.anchor.y - previous_height * previous.pivot_y
                 psx, psy = camera.world_to_screen(px, py)
+                if aura_sheet is not None:
+                    aura_previous = aura_sheet.frames[state.transition_from_frame]
+                    draws.append(
+                        TextureDraw(
+                            aura_sheet.texture.asset_id,
+                            (aura_previous.x, aura_previous.y, aura_previous.width, aura_previous.height),
+                            psx,
+                            psy,
+                            aura_previous.width / source_ratio * camera.zoom,
+                            aura_previous.height / source_ratio * camera.zoom,
+                            layer=-1,
+                            depth=visual.anchor.depth,
+                            opacity=max(0.0, min(1.0, 1.0 - mix)),
+                            flip_x=visual.anchor.facing.lower() == "left",
+                        )
+                    )
                 draws.append(
                     TextureDraw(
                         sheet.texture.asset_id,
                         (previous.x, previous.y, previous.width, previous.height),
                         psx,
                         psy,
-                        previous.width * camera.zoom,
-                        previous.height * camera.zoom,
+                        previous_width * camera.zoom,
+                        previous_height * camera.zoom,
                         layer=0,
                         depth=visual.anchor.depth,
                         opacity=max(0.0, min(1.0, 1.0 - mix)),
@@ -378,23 +424,50 @@ class BattlePresentationRuntime:
                     )
                 )
 
-            draw_x = visual.anchor.x - frame.width * frame.pivot_x
-            draw_y = visual.anchor.y - frame.height * frame.pivot_y
+            frame_width = frame.width / source_ratio
+            frame_height = frame.height / source_ratio
+            draw_x = visual.anchor.x - frame_width * frame.pivot_x
+            draw_y = visual.anchor.y - frame_height * frame.pivot_y
             sx, sy = camera.world_to_screen(draw_x, draw_y)
+            if aura_sheet is not None:
+                aura_frame = aura_sheet.frames[state.frame_index]
+                draws.append(
+                    TextureDraw(
+                        aura_sheet.texture.asset_id,
+                        (aura_frame.x, aura_frame.y, aura_frame.width, aura_frame.height),
+                        sx,
+                        sy,
+                        aura_frame.width / source_ratio * camera.zoom,
+                        aura_frame.height / source_ratio * camera.zoom,
+                        layer=-1,
+                        depth=visual.anchor.depth,
+                        opacity=max(0.0, min(1.0, mix)),
+                        flip_x=visual.anchor.facing.lower() == "left",
+                    )
+                )
             draws.append(
                 TextureDraw(
                     sheet.texture.asset_id,
                     (frame.x, frame.y, frame.width, frame.height),
                     sx,
                     sy,
-                    frame.width * camera.zoom,
-                    frame.height * camera.zoom,
+                    frame_width * camera.zoom,
+                    frame_height * camera.zoom,
                     layer=0,
                     depth=visual.anchor.depth,
                     opacity=max(0.0, min(1.0, mix)),
                     flip_x=visual.anchor.facing.lower() == "left",
                 )
             )
+            weapon = self._weapon_visuals.get(visual.member_id)
+            if weapon is not None and state.role == BattleAnimationRole.ATTACK:
+                weapon_visual, asset_id = weapon
+                source = weapon_visual.frames[state.animator.frame_cursor % len(weapon_visual.frames)]
+                wx, wy = camera.world_to_screen(visual.anchor.x - 64, visual.anchor.y - source[3])
+                draws.append(TextureDraw(
+                    asset_id, source, wx, wy, source[2] * camera.zoom, source[3] * camera.zoom,
+                    layer=1, depth=visual.anchor.depth, flip_x=visual.anchor.facing.lower() == "left",
+                ))
         draws.sort(key=lambda d: (d.layer, d.depth, d.screen_y, d.screen_x))
         return BattlePresentationFrame(self.scene.scene_id, self.scene.background_asset_id, tuple(draws))
 

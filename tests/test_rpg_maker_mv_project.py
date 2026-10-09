@@ -49,3 +49,11 @@ def test_icons_and_unsupported_mv_semantics_are_retained_as_metadata_and_issues(
     assert item["icon_index"] == 176
     assert "damage" in skill["mv_metadata"]
     assert any(issue.code == "skill.unsupported_semantics" for issue in result.issues)
+
+
+def test_imported_weapon_keeps_mv_type_for_attack_visuals():
+    result = _import(map_ids=())
+    sword = result.project.rpg_database.equipment["mv.weapon.1"]
+
+    assert "mv-weapon-type:sword" in sword.tags
+    assert result.source_metadata["equipment"][1]["weapon_type"] == "Sword"

@@ -69,8 +69,19 @@ class BattleCombatantVisual:
     clip_set_id: str
     anchor: BattleVisualAnchor
     animation_roles: tuple[tuple[str, str], ...]
+    aura_sprite_sheet_asset_id: str | None = None
+    source_pixels_per_logical_pixel: float = 1.0
 
-    def __init__(self, member_id, sprite_sheet_asset_id, clip_set_id, anchor, animation_roles=None):
+    def __init__(
+        self,
+        member_id,
+        sprite_sheet_asset_id,
+        clip_set_id,
+        anchor,
+        animation_roles=None,
+        aura_sprite_sheet_asset_id=None,
+        source_pixels_per_logical_pixel=1.0,
+    ):
         if not isinstance(anchor, BattleVisualAnchor):
             raise TypeError("anchor must be BattleVisualAnchor")
         roles = dict(animation_roles or {"idle": "idle", "attack": "attack", "hit": "hit", "ko": "ko"})
@@ -80,23 +91,41 @@ class BattleCombatantVisual:
         object.__setattr__(self, "clip_set_id", _id(clip_set_id, "clip_set_id"))
         object.__setattr__(self, "anchor", anchor)
         object.__setattr__(self, "animation_roles", normalized)
+        aura_asset_id = (
+            None
+            if aura_sprite_sheet_asset_id is None
+            or not str(aura_sprite_sheet_asset_id).strip()
+            else _id(aura_sprite_sheet_asset_id, "aura_sprite_sheet_asset_id")
+        )
+        object.__setattr__(self, "aura_sprite_sheet_asset_id", aura_asset_id)
+        source_ratio = float(source_pixels_per_logical_pixel)
+        if not isfinite(source_ratio) or source_ratio <= 0:
+            raise ValueError("source_pixels_per_logical_pixel must be finite and positive")
+        object.__setattr__(self, "source_pixels_per_logical_pixel", source_ratio)
 
     def clip_for(self, role):
         return dict(self.animation_roles).get(str(role))
 
     def to_data(self):
-        return {
+        data = {
             "member_id": self.member_id,
             "sprite_sheet_asset_id": self.sprite_sheet_asset_id,
             "clip_set_id": self.clip_set_id,
             "anchor": self.anchor.to_data(),
             "animation_roles": dict(self.animation_roles),
         }
+        if self.aura_sprite_sheet_asset_id is not None:
+            data["aura_sprite_sheet_asset_id"] = self.aura_sprite_sheet_asset_id
+        if self.source_pixels_per_logical_pixel != 1.0:
+            data["source_pixels_per_logical_pixel"] = self.source_pixels_per_logical_pixel
+        return data
 
     @classmethod
     def from_data(cls, data):
         return cls(data["member_id"], data["sprite_sheet_asset_id"], data["clip_set_id"],
-                   BattleVisualAnchor.from_data(data["anchor"]), data.get("animation_roles"))
+                   BattleVisualAnchor.from_data(data["anchor"]), data.get("animation_roles"),
+                   data.get("aura_sprite_sheet_asset_id"),
+                   data.get("source_pixels_per_logical_pixel", 1.0))
 
 
 @dataclass(frozen=True, slots=True)

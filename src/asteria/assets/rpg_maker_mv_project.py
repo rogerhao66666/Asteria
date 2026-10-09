@@ -109,17 +109,26 @@ class RPGMakerMVProjectImporter:
                 "mv_metadata": _thaw(record.metadata),
             }
 
+        system_metadata = _thaw(database.system.metadata)
+        weapon_types = system_metadata.get("weaponTypes", ())
         for record in (*database.weapons, *database.armors):
             target_id = f"mv.{record.equipment_kind}.{record.id}"
+            record_metadata = _thaw(record.metadata)
+            type_id = int(record_metadata.get("wtypeId", 0)) if record.equipment_kind == "weapon" else 0
+            weapon_type = weapon_types[type_id] if 0 <= type_id < len(weapon_types) else ""
+            tags = ("source.mv", record.equipment_kind)
+            if weapon_type:
+                tags += (f"mv-weapon-type:{weapon_type.lower()}",)
             project.rpg_database.add_equipment(EquipmentDefinition(
-                target_id, record.name, slot=record.equipment_kind, tags=("source.mv", record.equipment_kind),
+                target_id, record.name, slot=record.equipment_kind, tags=tags,
             ))
             source_ids["equipment"][record.id if record.equipment_kind == "weapon" else 100000 + record.id] = target_id
             icon = catalog.icon(record.icon_index)
             source_metadata["equipment"][record.id if record.equipment_kind == "weapon" else 100000 + record.id] = {
                 "kind": record.equipment_kind, "icon_index": record.icon_index,
+                "weapon_type": weapon_type,
                 "icon_box": None if icon is None else icon.box,
-                "mv_metadata": _thaw(record.metadata),
+                "mv_metadata": record_metadata,
             }
 
         entries = discover_mv_maps(layout)
