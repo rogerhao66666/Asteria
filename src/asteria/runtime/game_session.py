@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import random
+from dataclasses import dataclass, replace
 
 from asteria.core import Transform
+from asteria.core.lifecycle import LifecycleHookBus
 from asteria.events import EventRunner, SceneEventRuntime, WorldCommandRouter
 from asteria.gameplay import AbilityRegistry, AbilityRuntime, GameplaySubject
 from asteria.rpg import (
@@ -17,6 +19,23 @@ from asteria.runtime.world_command_handlers import move_entity_to_scene, registe
 
 class GameSessionError(RuntimeError):
     pass
+
+
+@dataclass(frozen=True, slots=True)
+class BattleLogEntry:
+    """One canonical battle fact, in order, for presentation adapters to consume.
+
+    kinds: ``battle_started``, ``turn``, ``action``, ``gauge``, ``battle_finished``.
+    ``outcomes`` pairs each target with its non-mutating interaction outcome.
+    """
+
+    sequence: int
+    kind: str
+    member_id: str = ""
+    ability_id: str = ""
+    target_ids: tuple[str, ...] = ()
+    outcomes: tuple = ()
+    data: object = None
 
 
 class GameSessionRuntime:
@@ -45,6 +64,9 @@ class GameSessionRuntime:
         self.battle=None
         self.encounter_id=None
         self._enemy_ids=()
+        self.battle_log=[]
+        self._log_sequence=0
+        self._logged_turn=None
         # Event programs run here: one foreground runner for interactions plus
         # the current scene's autorun/parallel scheduler.
         self.presentation_requests=[]
@@ -389,10 +411,13 @@ class GameSessionRuntime:
             enemy_ai_definitions=db.enemy_ai.values(),
             transaction_policies=db.action_transactions.values(),
             rng_seed=157,
+            hooks=LifecycleHookBus(),
         )
         self.encounter_id=str(encounter_id)
         self._enemy_ids=tuple(enemy_definition_ids)
         self.mode="battle"
+        self.battle_log.clear(); self._logged_turn=None
+        self._log("battle_started",data={"encounter_id":self.encounter_id})
         return self.battle
 
     @property
@@ -453,15 +478,18 @@ class GameSessionRuntime:
             if offensive:
                 targets=tuple(t for t in targets if self.battle.is_active(self.battle.member(t)))
                 if not targets: break
+            before=self._knockout_values(targets)
             result=self.execute(actor_id,ability_id,targets)
             results.append(result)
-            if offensive:
-                for target_id in targets:
-                    outcome=self.battle.resolve_interaction(result.action,target_id,1.0)
-                    for composition_id in sorted(self.battle.gauge_compositions.definitions):
-                        self.battle.apply_gauge_impact(
-                            composition_id,actor_id,target_id,trigger=rules.hit_trigger,outcome=outcome,
-                        )
+            outcomes=self._action_outcomes(actor_id,ability_id,targets,before) if offensive else ()
+            self._log("action",member_id=str(actor_id),ability_id=str(ability_id),target_ids=tuple(targets),outcomes=outcomes)
+            for target_id,outcome in outcomes:
+                for composition_id in sorted(self.battle.gauge_compositions.definitions):
+                    gauge=self.battle.apply_gauge_impact(
+                        composition_id,actor_id,target_id,trigger=rules.hit_trigger,outcome=outcome,
+                    )
+                    if getattr(gauge,"thresholds",()):
+                        self._log("gauge",member_id=str(target_id),data=gauge)
         return tuple(results)
 
     def current_turn_actor(self):
@@ -472,10 +500,16 @@ class GameSessionRuntime:
         if actor is None:
             self.battle.start_next_round()
             actor=self.battle.next_actor()
-        return None if actor is None else actor.member_id
+        if actor is None: return None
+        key=(self.battle.turn_queue.round_index,actor.member_id)
+        if key!=self._logged_turn:
+            self._logged_turn=key
+            self._log("turn",member_id=actor.member_id)
+        return actor.member_id
 
     def end_turn(self):
         if self.mode!="battle": raise GameSessionError("no active battle")
+        self._logged_turn=None
         return self.battle.advance_turn()
 
     def enemy_act(self,member_id):
@@ -489,7 +523,12 @@ class GameSessionRuntime:
         if definition is None or not definition.abilities: return None
         ability_id=definition.abilities[0]
         targets=self.default_targets(member_id,ability_id)
-        return None if not targets else self.execute(member_id,ability_id,targets)
+        if not targets: return None
+        before=self._knockout_values(targets)
+        result=self.execute(member_id,ability_id,targets)
+        self._log("action",member_id=str(member_id),ability_id=ability_id,target_ids=targets,
+                  outcomes=self._action_outcomes(member_id,ability_id,targets,before))
+        return result
 
     def run_enemy_turns(self,*,limit=1000):
         """Advance through enemy turns until a hero must act or the battle is decided.
@@ -500,6 +539,8 @@ class GameSessionRuntime:
         for _ in range(int(limit)):
             actor_id=self.current_turn_actor()
             if actor_id is None or self.battle.member(actor_id).side!="enemies":
+                if not self.active_hero_ids():
+                    self._log("battle_finished",data={"winning_sides":("enemies",),"defeated_sides":("heroes",)})
                 return actor_id,tuple(log)
             try:
                 outcome=self.enemy_act(actor_id)
@@ -509,6 +550,46 @@ class GameSessionRuntime:
             self.end_turn()
         raise GameSessionError("enemy turns did not yield to a hero")
 
+    def _log(self,kind,**values):
+        self._log_sequence+=1
+        entry=BattleLogEntry(self._log_sequence,kind,**values)
+        self.battle_log.append(entry)
+        return entry
+
+    def drain_battle_log(self):
+        """Return and clear battle facts recorded since the last drain."""
+        values=tuple(self.battle_log); self.battle_log.clear()
+        return values
+
+    def _knockout_values(self,target_ids):
+        resource=self.rules.knockout_resource_id
+        values={}
+        for target_id in target_ids:
+            pool=self.battle.member(target_id).subject.resources
+            if resource and resource in pool.to_data()["values"]:
+                values[target_id]=pool.current(resource)
+        return values
+
+    def _action_outcomes(self,actor_id,ability_id,target_ids,before=None):
+        """Interaction outcomes for opponent targets, valued by the observed knockout-resource change.
+
+        Outcome tags/disposition come from the non-mutating interaction resolver;
+        ``value.resolved_value`` is replaced by how much the knockout resource
+        actually dropped (when ``before`` was measured), so presentation shows
+        what happened rather than a multiplier.
+        """
+        if self.ability_relation(ability_id)!=TargetRelation.OPPONENT: return ()
+        action=BattleAction(actor_id,ability_id,tuple(target_ids))
+        after=self._knockout_values(target_ids)
+        outcomes=[]
+        for target_id in target_ids:
+            outcome=self.battle.resolve_interaction(action,target_id,1.0)
+            if before is not None and target_id in before and target_id in after:
+                observed=max(0.0,before[target_id]-after[target_id])
+                outcome=replace(outcome,value=replace(outcome.value,resolved_value=observed))
+            outcomes.append((target_id,outcome))
+        return tuple(outcomes)
+
     def execute(self,actor_id,ability_id,target_ids):
         if self.mode!="battle": raise GameSessionError("no active battle")
         return self.battle.execute(BattleAction(actor_id,ability_id,target_ids))
@@ -517,7 +598,13 @@ class GameSessionRuntime:
         if self.mode!="battle": raise GameSessionError("no active battle")
         decision=self.battle.enemy_ai.decide(self.battle,ai_id,member_id,rng=self.battle.rng)
         if decision is None:return None
-        return self.battle.enemy_ai.execute_decision(self.battle,decision,rng=self.battle.rng)
+        before=self._knockout_values(decision.target_ids)
+        result=self.battle.enemy_ai.execute_decision(self.battle,decision,rng=self.battle.rng)
+        ability_id=decision.payload.get("ability_id") if decision.action_kind=="ability" else None
+        if ability_id:
+            self._log("action",member_id=str(member_id),ability_id=str(ability_id),target_ids=tuple(decision.target_ids),
+                      outcomes=self._action_outcomes(member_id,ability_id,decision.target_ids,before))
+        return result
 
     def active_enemy_ids(self):
         if self.battle is None:return ()
@@ -561,6 +648,7 @@ class GameSessionRuntime:
         for enemy_id in self._enemy_ids:
             reward=roll_reward(db.enemies[enemy_id].reward,rng)
             applied.append(reward_runtime.apply(reward))
+        self._log("battle_finished",data={"winning_sides":("heroes",),"defeated_sides":("enemies",)})
         self.save.event_context.set_switch(f"encounter.{self.encounter_id}.defeated",True)
         self.mode="field"; self.battle=None; self.encounter_id=None; self._enemy_ids=()
         self.interaction.reset()

@@ -6,6 +6,7 @@ from pathlib import Path
 from asteria.core import Transform
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
+from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
 
 
 WALK_ROW_BY_FACING = {"down": 0, "left": 1, "right": 2, "up": 3}
@@ -80,6 +81,7 @@ class PlayableTestRuntime:
         self._turn_actor=None
         self._victory_summary=[]
         self._fonts={}
+        self._battle_presentation=create_battle_presentation_adapter(self)
 
     def path(self, rel):
         return self.resource_root/str(rel)
@@ -432,8 +434,19 @@ class PlayableTestRuntime:
         return None if rel is None else self.load_image(rel)
 
     def _draw_battle(self):
+        self._battle_presentation.draw()
+
+    def _present_battle(self, dt):
+        """Feed new canonical battle facts to the active presentation adapter and draw."""
+        self._battle_presentation.consume(self.game.drain_battle_log())
+        self._battle_presentation.update(dt)
+        self._battle_presentation.draw()
+
+    def _draw_battle_world(self, show_labels=True):
+        """Legacy world layer: background and combatant sprites (plus bars/names when show_labels)."""
         bg=self.load_image(self.manifest["battle"]["background"])
         self.screen.blit(self.pg.transform.smoothscale(bg,(self.width,self.height)),(0,0))
+        if self.game.battle is None:return
 
         hero_ids=list(self.game.battle.parties["heroes"].ids())
         active=set(self.game.active_hero_ids())
@@ -444,6 +457,7 @@ class PlayableTestRuntime:
             if hid not in active:
                 ghost=img.copy(); ghost.set_alpha(80); img=ghost
             self.screen.blit(img,(x,y))
+            if not show_labels:continue
             vital=self._member_resource(hid)
             if vital is not None:self.bar(x,y+103,92,10,*vital)
             self.text(hid,x,y+116,size=15)
@@ -462,10 +476,15 @@ class PlayableTestRuntime:
             if eid not in live:
                 dead=img.copy(); dead.set_alpha(50); img=dead
             self.screen.blit(img,(x,y))
+            if not show_labels:continue
             vital=self._member_resource(eid)
             if vital is not None:self.bar(x,y+size[1]-8,size[0],10,*vital,fill=(215,86,105))
             self.text(eid,x,y+size[1]+5,size=16)
 
+    def _draw_battle_hud(self):
+        """Legacy HUD: action list, controls, boost and gauge text, result panels."""
+        enemies=[] if self.game.battle is None else list(self.game.battle.parties["enemies"].ids())
+        live=set(self.game.active_enemy_ids())
         actor=self._battle_actor()
         skills=self._skills_for_actor(actor)
         self.panel((20,22,420,155))
@@ -623,18 +642,19 @@ class PlayableTestRuntime:
             self._draw_title()
         elif self._ui_mode=="build":
             self._build_menu_input(events); self._draw_build_menu()
+        elif self.game.mode=="battle" or self._victory:
+            self._battle_input(events)
+            self._present_battle(dt)
         elif self.game.mode=="field":
             moving=self._field_input(events,dt)
             self.game.update_events(dt)
             if self.game.mode=="battle":
                 self._turn_actor=None
+                self._battle_presentation.begin()
                 self._advance_to_hero_turn()
-                self._draw_battle()
+                self._present_battle(dt)
             else:
                 self._draw_field(moving)
-        elif self.game.mode=="battle":
-            self._battle_input(events)
-            self._draw_battle()
 
 
 def run_playable_test_runtime(project, resource_root, *, runtime_save=None, save_path=None, width=960, height=540, target_fps=60):
