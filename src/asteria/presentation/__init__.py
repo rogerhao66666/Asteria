@@ -10,6 +10,7 @@ from .battle_runtime import (
     BattleAnimationRole,
     BattleCombatantAnimator,
     BattlePresentationFrame,
+    CombatantOverlay,
     BattlePresentationRuntime,
 )
 
@@ -24,6 +25,7 @@ __all__ = [
     "BattlePresentationRuntime",
     "BattlePresentationScene",
     "BattleVisualAnchor",
+    "CombatantOverlay",
 ]
 
 from .battle_feedback import (

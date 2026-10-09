@@ -1,12 +1,26 @@
 import json
+import os
+import sys
 from pathlib import Path
 
 import pytest
 from PIL import Image
 
+from asteria.assets.local_reference import resolve_rpg_maker_mv_root
 from scripts.validate_mv_character_creator import run_validation
 
+REPO = Path(__file__).resolve().parents[1]
 
+
+def _expected_qt_platform():
+    """Return the Qt platform this run should report, or None when unknown."""
+    requested = os.environ.get("QT_QPA_PLATFORM")
+    if requested:
+        return requested
+    return "cocoa" if sys.platform == "darwin" else None
+
+
+@pytest.mark.skipif(resolve_rpg_maker_mv_root(REPO) is None, reason="local RPG Maker MV reference unavailable")
 @pytest.mark.filterwarnings("error::DeprecationWarning")
 def test_real_mv_character_creator_editor_and_runtime_are_bounded(tmp_path):
     output = tmp_path / "captures"
@@ -19,7 +33,9 @@ def test_real_mv_character_creator_editor_and_runtime_are_bounded(tmp_path):
     assert result["standard_character"]["standing_y"] == result["standard_character"]["rect_bottom"]
     assert result["large_character"]["standing_y"] == result["large_character"]["rect_bottom"]
     assert result["large_character"]["frame_size"][1] > 48
-    assert result["editor_platform"] == "cocoa"
+    expected_platform = _expected_qt_platform()
+    if expected_platform is not None:
+        assert result["editor_platform"] == expected_platform
     assert result["families_checked"] == ["Male", "Female", "Kid"]
     assert result["hair_variation_changed_side_view"] is True
     assert result["project_reloaded"] is True

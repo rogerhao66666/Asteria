@@ -1,4 +1,4 @@
-from asteria.graphics.mv_weapon_visual import weapon_visual_for_type
+from asteria.assets.rpg_maker_mv_weapon import weapon_visual_for_type
 
 
 def test_weapon_type_selects_mv_attack_motion_and_three_separate_frames():

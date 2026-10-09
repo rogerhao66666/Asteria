@@ -6,7 +6,6 @@ from math import isfinite
 
 from asteria.gameplay.action_timeline import ActionCueKind
 from asteria.runtime import AnimatorState, TextureDraw
-from asteria.graphics.mv_weapon_visual import WeaponVisual
 
 from .battle_animation_timing import BattleAnimationTimingProfile, easing_value
 
@@ -26,6 +25,29 @@ class BattleAnimationRole(str, Enum):
 
 
 _TRANSIENT_ROLE_NAMES = {"attack", "hit"}
+
+
+@dataclass(frozen=True, slots=True)
+class CombatantOverlay:
+    """Frame-cycled texture drawn over a combatant while it plays one role.
+
+    Overlays are generic presentation layers (held props, weapons, effects);
+    source-format adapters translate their own data into this shape.
+    """
+
+    texture_asset_id: str
+    frames: tuple[tuple[int, int, int, int], ...]
+    role: str = BattleAnimationRole.ATTACK.value
+    offset: tuple[float, float] = (-64.0, 0.0)
+
+    def __post_init__(self):
+        if not str(self.texture_asset_id).strip():
+            raise ValueError("texture_asset_id is required")
+        if not self.frames:
+            raise ValueError("overlay requires at least one frame")
+        object.__setattr__(self, "frames", tuple(tuple(int(v) for v in f) for f in self.frames))
+        object.__setattr__(self, "role", _role_name(self.role))
+        object.__setattr__(self, "offset", (float(self.offset[0]), float(self.offset[1])))
 
 
 def _role_name(role):
@@ -258,7 +280,7 @@ class BattlePresentationRuntime:
         self._combatants: dict[str, BattleCombatantAnimator] = {}
         self._sprite_sheets = {}
         self._aura_sprite_sheets = {}
-        self._weapon_visuals: dict[str, tuple[WeaponVisual, str]] = {}
+        self._overlays: dict[str, CombatantOverlay] = {}
         self._member_order = tuple(x.member_id for x in scene.combatants)
         for visual in scene.combatants:
             clip_set = resolve_clip_set(visual.clip_set_id)
@@ -290,16 +312,17 @@ class BattlePresentationRuntime:
     def combatant(self, member_id):
         return self._combatants[str(member_id)]
 
-    def set_weapon_visual(self, member_id: str, visual: WeaponVisual, texture_asset_id: str) -> None:
+    def set_overlay(self, member_id: str, overlay: CombatantOverlay | None) -> None:
+        """Attach, replace or (with ``None``) remove a combatant's overlay."""
         member_id = str(member_id)
         if member_id not in self._combatants:
             raise KeyError(member_id)
-        if not isinstance(visual, WeaponVisual):
-            raise TypeError("visual must be WeaponVisual")
-        if not visual.frames or not texture_asset_id:
-            self._weapon_visuals.pop(member_id, None)
+        if overlay is None:
+            self._overlays.pop(member_id, None)
+        elif not isinstance(overlay, CombatantOverlay):
+            raise TypeError("overlay must be CombatantOverlay")
         else:
-            self._weapon_visuals[member_id] = (visual, str(texture_asset_id))
+            self._overlays[member_id] = overlay
 
     def _member_from_animation_payload(self, payload):
         for key in ("member_id", "combatant_id", "source_id", "target_id"):
@@ -459,13 +482,16 @@ class BattlePresentationRuntime:
                     flip_x=visual.anchor.facing.lower() == "left",
                 )
             )
-            weapon = self._weapon_visuals.get(visual.member_id)
-            if weapon is not None and state.role == BattleAnimationRole.ATTACK:
-                weapon_visual, asset_id = weapon
-                source = weapon_visual.frames[state.animator.frame_cursor % len(weapon_visual.frames)]
-                wx, wy = camera.world_to_screen(visual.anchor.x - 64, visual.anchor.y - source[3])
+            overlay = self._overlays.get(visual.member_id)
+            if overlay is not None and _role_name(state.role) == overlay.role:
+                source = overlay.frames[state.animator.frame_cursor % len(overlay.frames)]
+                ox, oy = camera.world_to_screen(
+                    visual.anchor.x + overlay.offset[0],
+                    visual.anchor.y + overlay.offset[1] - source[3],
+                )
                 draws.append(TextureDraw(
-                    asset_id, source, wx, wy, source[2] * camera.zoom, source[3] * camera.zoom,
+                    overlay.texture_asset_id, source, ox, oy,
+                    source[2] * camera.zoom, source[3] * camera.zoom,
                     layer=1, depth=visual.anchor.depth, flip_x=visual.anchor.facing.lower() == "left",
                 ))
         draws.sort(key=lambda d: (d.layer, d.depth, d.screen_y, d.screen_x))

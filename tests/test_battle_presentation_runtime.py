@@ -290,11 +290,9 @@ def test_aura_sheet_tracks_actor_frame_and_draws_behind_character():
     assert aura.opacity == character.opacity == 1.0
     assert aura.flip_x is character.flip_x is True
 
-    from asteria.graphics.mv_weapon_visual import WeaponVisual
+    from asteria.presentation import CombatantOverlay
 
-    runtime.set_weapon_visual(
-        "hero", WeaponVisual("swing", "Weapons1", ((0, 0, 8, 12),)), "sheet.weapon"
-    )
+    runtime.set_overlay("hero", CombatantOverlay("sheet.weapon", ((0, 0, 8, 12),)))
     runtime.combatant("hero").set_role("attack")
     attack_draws = runtime.build_frame(Camera2D(width=320, height=180)).combatant_draws
     assert attack_draws[-1].texture_asset_id == "sheet.weapon"

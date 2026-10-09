@@ -5,7 +5,7 @@ from asteria.assets.local_reference import discover_mv_projects, resolve_rpg_mak
 from asteria.assets.rpg_maker_mv_catalog import RPGMakerMVCatalog
 from asteria.assets.rpg_maker_mv_database import RPGMakerMVDatabase
 from asteria.assets.rpg_maker_mv_map import RPGMakerMVMap
-from asteria.runtime.rpg_maker_mv_map_render import (
+from asteria.assets.rpg_maker_mv_map_render import (
     MVTileResolver,
     compose_mv_map_draws,
 )

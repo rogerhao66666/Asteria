@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from math import isfinite
 
 from asteria.runtime import Camera2D
-from asteria.graphics.mv_weapon_visual import WeaponVisual, weapon_visual_for_type
 
 from .battle import BattlePresentationCoordinator, BattlePresentationScene
 from .battle_camera_feedback import BattleCameraFeedbackRuntime
@@ -174,19 +173,6 @@ class BattleScreenRuntime:
             for member_id, side_id in self.side_by_member.items()
         }
         return members
-
-    def sync_weapon_loadouts(self, loadouts, system_data, asset_id_for_sheet) -> None:
-        """Read equipped weapon types; armor is intentionally visually inert."""
-        names = {str(name).casefold(): str(name) for name in system_data.get("weaponTypes", ())}
-        for member_id in self.animation._member_order:
-            loadout = loadouts.get(member_id)
-            equipped = () if loadout is None else loadout.equipped("weapon")
-            tags = () if not equipped else equipped[0].equipment.tags
-            selected = next((tag.split(":", 1)[1] for tag in tags
-                             if tag.startswith("mv-weapon-type:")), "")
-            visual = weapon_visual_for_type(names.get(selected.casefold(), ""), system_data)
-            asset_id = asset_id_for_sheet(visual.sheet_name) if visual.sheet_name else ""
-            self.animation.set_weapon_visual(member_id, visual, asset_id)
 
     def present_result(self, outcome, reward_result=None, *, perspective_side_ids=None, disposition=None):
         return self.result.present(

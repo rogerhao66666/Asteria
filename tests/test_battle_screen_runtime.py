@@ -11,7 +11,8 @@ from asteria.gameplay import (
     TagSet,
 )
 from asteria.graphics import SpriteClip, SpriteFrame, SpriteKeyframe, SpriteSheet
-from asteria.graphics.mv_weapon_visual import weapon_visual_for_type
+from asteria.assets.rpg_maker_mv_weapon import apply_weapon_overlays, weapon_overlay_for_loadout
+from asteria.presentation import CombatantOverlay
 from asteria.presentation import (
     BattleAnimationRole,
     BattleCombatantVisual,
@@ -127,24 +128,29 @@ def test_equipped_weapon_overlay_changes_with_type_only_during_attack():
                                 {"type": 1, "weaponImageId": 2},
                                 {"type": 2, "weaponImageId": 13}]}
     screen = _screen()
-    sword = weapon_visual_for_type("Sword", system)
-    screen.animation.set_weapon_visual("hero", sword, "weapon.sword")
+    loadout = EquipmentLoadout((EquipmentSlotDefinition("weapon"),))
+    loadout.equip("weapon", EquippedItem(EquipmentDefinition("sword", slot="weapon", tags=("mv-weapon-type:sword",))))
+    sword = weapon_overlay_for_loadout(loadout, system, lambda name: "weapon.sword")
+    screen.animation.set_overlay("hero", sword)
     assert all(draw.texture_asset_id != "weapon.sword" for draw in screen.animation.build_frame(Camera2D()).combatant_draws)
 
     screen.animation.combatant("hero").set_role("attack")
     attack = screen.animation.build_frame(Camera2D()).combatant_draws
     assert screen.animation.combatant("hero").role == "attack"
-    assert sword.frames[0] in [draw.source for draw in attack]
     assert any(draw.texture_asset_id == "weapon.sword" and draw.source == sword.frames[0] for draw in attack)
 
-    bow = weapon_visual_for_type("Bow", system)
-    screen.animation.set_weapon_visual("hero", bow, "weapon.bow")
+    bow = CombatantOverlay("weapon.bow", ((0, 0, 96, 64),))
+    screen.animation.set_overlay("hero", bow)
     swapped = screen.animation.build_frame(Camera2D()).combatant_draws
     assert any(draw.texture_asset_id == "weapon.bow" and draw.source == bow.frames[0] for draw in swapped)
     assert all(draw.texture_asset_id != "weapon.sword" for draw in swapped)
 
+    screen.animation.set_overlay("hero", None)
+    cleared = screen.animation.build_frame(Camera2D()).combatant_draws
+    assert all(draw.texture_asset_id != "weapon.bow" for draw in cleared)
 
-def test_battle_screen_syncs_weapon_from_real_loadout_but_ignores_armor():
+
+def test_mv_weapon_overlays_follow_real_loadout_but_ignore_armor():
     system = {"weaponTypes": ["", "Sword", "Bow"],
               "attackMotions": [{"type": 0, "weaponImageId": 0},
                                 {"type": 1, "weaponImageId": 2},
@@ -156,14 +162,15 @@ def test_battle_screen_syncs_weapon_from_real_loadout_but_ignores_armor():
     loadout.equip("armor", armor)
     screen = _screen()
     screen.animation.combatant("hero").set_role("attack")
+    members = screen.animation._member_order
 
-    screen.sync_weapon_loadouts({"hero": loadout}, system, lambda name: f"mv.system.{name}")
+    apply_weapon_overlays(screen.animation, members, {"hero": loadout}, system, lambda name: f"mv.system.{name}")
     first = screen.animation.build_frame(Camera2D()).combatant_draws
     assert any(draw.texture_asset_id == "mv.system.Weapons1" for draw in first)
 
     loadout.unequip("weapon", 0)
     loadout.equip("weapon", EquippedItem(EquipmentDefinition("bow", slot="weapon", tags=("mv-weapon-type:bow",))))
-    screen.sync_weapon_loadouts({"hero": loadout}, system, lambda name: f"mv.system.{name}")
+    apply_weapon_overlays(screen.animation, members, {"hero": loadout}, system, lambda name: f"mv.system.{name}")
     second = screen.animation.build_frame(Camera2D()).combatant_draws
     assert any(draw.texture_asset_id == "mv.system.Weapons2" for draw in second)
     assert all(draw.texture_asset_id != "mv.system.Weapons1" for draw in second)

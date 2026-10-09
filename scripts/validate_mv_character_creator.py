@@ -17,7 +17,7 @@ from asteria.assets.rpg_maker_mv_map import discover_mv_maps
 from asteria.assets.rpg_maker_mv_project import RPGMakerMVProjectImporter
 from asteria.editor.character_generator_widget import CharacterGeneratorWidget
 from asteria.editor.character_generator_workspace import CharacterGeneratorWorkspace
-from asteria.graphics.mv_weapon_visual import weapon_visual_for_type
+from asteria.assets.rpg_maker_mv_weapon import weapon_visual_for_type
 from asteria.project import Project
 from asteria.runtime.preview import build_preview_registry
 
