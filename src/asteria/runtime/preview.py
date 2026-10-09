@@ -83,7 +83,7 @@ def run_preview(
     if backend is None:
         from asteria.platform.pygame_backend import PygameRuntimeBackend
 
-        backend = PygameRuntimeBackend()
+        backend = PygameRuntimeBackend(input_map=project.input_map)
 
     backend.open(f"Asteria Preview — {scene.name}", width, height)
     try:

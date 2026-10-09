@@ -14,11 +14,12 @@ from asteria.gameplay import GameplayLibrary
 from asteria.rpg import RpgDatabase
 from asteria.presentation.library import BattlePresentationLibrary
 from asteria.runtime.game_start import GameStartDefinition
+from asteria.runtime.input_map import InputActionMap
 
 
 class Project:
     SCHEMA = "asteria.project"
-    VERSION = 8
+    VERSION = 9
 
     def __init__(
         self,
@@ -34,6 +35,7 @@ class Project:
         gameplay_library=None,
         battle_presentation_library=None,
         game_start=None,
+        input_map=None,
     ):
         self.id = validate_id(project_id) if project_id else new_id()
         self.name = str(name)
@@ -60,6 +62,9 @@ class Project:
         if game_start is not None and not isinstance(game_start, GameStartDefinition):
             raise TypeError("game_start must be GameStartDefinition")
         self.game_start = game_start or GameStartDefinition(startup_scene_id)
+        if input_map is not None and not isinstance(input_map, InputActionMap):
+            raise TypeError("input_map must be InputActionMap")
+        self.input_map = input_map or InputActionMap.default()
         self.lifecycle_event_bindings = list(lifecycle_event_bindings or ())
         if any(
             not isinstance(x, LifecycleEventBinding)
@@ -211,6 +216,7 @@ class Project:
             "gameplay_library": self.gameplay_library.to_data(),
             "battle_presentation_library": self.battle_presentation_library.to_data(),
             "game_start": self.game_start.to_data(),
+            "input_map": self.input_map.to_data(),
             "lifecycle_event_bindings": [
                 binding.to_data() for binding in self.lifecycle_event_bindings
             ],
@@ -219,7 +225,7 @@ class Project:
     @classmethod
     def from_data(cls, data, registry):
         version = data.get("version")
-        if data.get("schema") != cls.SCHEMA or version not in {2, 3, 4, 5, 6, 7, 8}:
+        if data.get("schema") != cls.SCHEMA or version not in {2, 3, 4, 5, 6, 7, 8, 9}:
             raise ValueError("unsupported project")
 
         expected_v2 = {
@@ -237,8 +243,11 @@ class Project:
         expected_v6 = expected_v5 | {"gameplay_library"}
         expected_v7 = expected_v6 | {"battle_presentation_library"}
         expected_v8 = expected_v7 | {"game_start"}
+        expected_v9 = expected_v8 | {"input_map"}
         expected = (
-            expected_v8
+            expected_v9
+            if version == 9
+            else expected_v8
             if version == 8
             else expected_v7
             if version == 7
@@ -286,6 +295,7 @@ class Project:
             if version >= 7
             else BattlePresentationLibrary(),
             game_start=GameStartDefinition.from_data(data["game_start"]) if version >= 8 else GameStartDefinition(data["startup_scene_id"]),
+            input_map=InputActionMap.from_data(data["input_map"]) if version >= 9 else InputActionMap.default(),
             lifecycle_event_bindings=[
                 LifecycleEventBinding.from_data(x)
                 for x in data["lifecycle_event_bindings"]

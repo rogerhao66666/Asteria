@@ -9,17 +9,21 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
     Engine/editor/project layers never receive pygame objects.
     """
 
-    def __init__(self):
+    def __init__(self, input_map=None):
         try:
             import pygame
         except ImportError as exc:
             raise RuntimeError(
                 "Install pygame-ce with: pip install 'asteria[pygame]'"
             ) from exc
+        from asteria.runtime.input_map import InputActionMap
+
         self.pg = pygame
         self.screen = None
         self.clock = None
         self._close = False
+        self.input_map = input_map or InputActionMap.default()
+        self.input_source = None
 
     def open(self, title, width, height):
         self.pg.init()
@@ -27,6 +31,9 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
         self.pg.display.set_caption(str(title))
         self.clock = self.pg.time.Clock()
         self._close = False
+        from .pygame_input import PygameInputSource
+
+        self.input_source = PygameInputSource(self.pg)
 
     def tick(self, target_fps=60):
         if self.clock is None:
@@ -38,6 +45,8 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
         if self.screen is None:
             raise RuntimeError("Backend is not open")
         for event in self.pg.event.get():
+            if self.input_source is not None:
+                self.input_source.handle_event(event)
             if (
                 event.type == self.pg.QUIT
                 or event.type == self.pg.KEYDOWN
@@ -68,13 +77,10 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
         self.pg.draw.circle(self.screen, color, (int(x), int(y)), max(3, int(radius)))
 
     def poll_actions(self):
-        keys = self.pg.key.get_pressed()
-        return {
-            "move_left": 1.0 if keys[self.pg.K_LEFT] or keys[self.pg.K_a] else 0.0,
-            "move_right": 1.0 if keys[self.pg.K_RIGHT] or keys[self.pg.K_d] else 0.0,
-            "move_up": 1.0 if keys[self.pg.K_UP] or keys[self.pg.K_w] else 0.0,
-            "move_down": 1.0 if keys[self.pg.K_DOWN] or keys[self.pg.K_s] else 0.0,
-        }
+        """Current action values from the input map (keyboard and gamepads)."""
+        if self.input_source is None:
+            return {}
+        return dict(self.input_map.evaluate(self.input_source.raw_state()).actions)
 
     def load_texture(self, asset_id, source_path):
         surface = self.pg.image.load(source_path).convert_alpha()

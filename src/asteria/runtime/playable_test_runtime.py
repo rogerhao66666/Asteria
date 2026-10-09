@@ -7,6 +7,7 @@ from asteria.core import Transform
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
 from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
+from asteria.runtime.input_map import InputActionTracker
 
 
 WALK_ROW_BY_FACING = {"down": 0, "left": 1, "right": 2, "up": 3}
@@ -97,6 +98,9 @@ class PlayableTestRuntime:
         self.screen=self.pg.display.set_mode((self.width,self.height))
         self.pg.display.set_caption(self.manifest.get("title","Asteria Playable Test"))
         self.clock=self.pg.time.Clock()
+        from asteria.platform.pygame_input import PygameInputSource
+        self.input_source=PygameInputSource(self.pg)
+        self.input=InputActionTracker(self.project.input_map)
         return self
 
     def close(self):
@@ -200,10 +204,12 @@ class PlayableTestRuntime:
         """Route keys to a waiting dialogue/choice. Returns True when one is open."""
         request=self.game.pending_dialogue
         if request is None:return False
+        if getattr(request,"line",None) is not None:
+            if self.input.just_pressed("confirm") or self.input.just_pressed("interact"):
+                self.game.acknowledge_dialogue()
+            return True
         for event in events:
             if event.type!=self.pg.KEYDOWN:continue
-            if getattr(request,"line",None) is not None and event.key in (self.pg.K_e,self.pg.K_RETURN,self.pg.K_SPACE):
-                self.game.acknowledge_dialogue(); break
             if getattr(request,"choices",None) and self.pg.K_1<=event.key<=self.pg.K_9:
                 index=event.key-self.pg.K_1
                 if index<len(request.choices):
@@ -213,12 +219,11 @@ class PlayableTestRuntime:
     def _field_input(self, events, dt):
         if self._dialogue_input(events) or self.game.event_busy:
             return False
-        keys=self.pg.key.get_pressed()
-        dx=(1 if keys[self.pg.K_d] or keys[self.pg.K_RIGHT] else 0)-(1 if keys[self.pg.K_a] or keys[self.pg.K_LEFT] else 0)
-        dy=(1 if keys[self.pg.K_s] or keys[self.pg.K_DOWN] else 0)-(1 if keys[self.pg.K_w] or keys[self.pg.K_UP] else 0)
+        # Project input map: keyboard and gamepad (stick / d-pad) both drive movement.
+        dx,dy=self.input.current.movement_vector()
         moving=bool(dx or dy)
         if moving:
-            mag=(dx*dx+dy*dy)**0.5
+            mag=max(1.0,(dx*dx+dy*dy)**0.5)
             speed=36.0
             pt=self.game.player.get(Transform)
             pt.x=max(-120.0,min(120.0,pt.x+dx/mag*speed*dt))
@@ -230,14 +235,10 @@ class PlayableTestRuntime:
                 self.game.set_player_facing("down" if dy>0 else "up")
             self._field_step+=1
 
-        interact=False
-        for event in events:
-            if event.type==self.pg.KEYDOWN and event.key==self.pg.K_c:
-                self._ui_mode="build"
-            if event.type==self.pg.KEYDOWN and event.key in (self.pg.K_e,self.pg.K_RETURN,self.pg.K_SPACE):
-                interact=True
+        if self.input.just_pressed("menu"):
+            self._ui_mode="build"
         # GameSessionRuntime interaction is edge-triggered. Emit release after press.
-        if interact:
+        if self.input.just_pressed("interact"):
             self.game.field_step({"interact":1.0})
             if self.game.mode=="field":
                 self.game.field_step({"interact":0.0})
@@ -626,6 +627,8 @@ class PlayableTestRuntime:
 
     def _frame(self, events, dt):
         """Process one frame of input, event programs and drawing (no flip)."""
+        self.input_source.handle_events(events)
+        self.input.update(self.input_source.raw_state())
         for event in events:
             if event.type==self.pg.QUIT:
                 self.running=False

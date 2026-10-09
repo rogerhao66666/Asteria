@@ -44,7 +44,7 @@ def test_project_v4_owns_canonical_rpg_database():
     db = simple_rpg_database()
     project = make_project(db)
     data = project.to_data()
-    assert data["version"] == 8
+    assert data["version"] == 9
     assert data["rpg_database"]["schema"] == "asteria.rpg.database"
     loaded = Project.from_data(data, ComponentRegistry())
     assert loaded.rpg_database.actors.keys() == db.actors.keys()
@@ -80,7 +80,7 @@ def test_project_v3_backward_read_gets_empty_rpg_database():
     p = make_project()
     data = p.to_data()
     data["version"] = 3
-    data.pop("game_start",None)
+    data.pop("game_start",None); data.pop("input_map",None)
     data.pop("battle_presentation_library", None)
     data.pop("rpg_database")
     data.pop("lifecycle_event_bindings")
@@ -94,7 +94,7 @@ def test_project_v2_backward_read_gets_empty_rpg_database():
     p = make_project()
     data = p.to_data()
     data["version"] = 2
-    data.pop("game_start",None)
+    data.pop("game_start",None); data.pop("input_map",None)
     data.pop("battle_presentation_library", None)
     data.pop("rpg_database")
     data.pop("lifecycle_event_bindings")

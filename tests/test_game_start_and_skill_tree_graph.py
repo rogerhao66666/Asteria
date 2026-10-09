@@ -7,7 +7,7 @@ from asteria.runtime.game_start import GameStartDefinition
 def test_project_v8_owns_canonical_game_start_and_fresh_run_state():
     p=Project('Start'); s=Scene('Start Scene'); e=Entity('Player'); s.add_entity(e); p.add_scene(s)
     p.game_start=GameStartDefinition(s.id,e.id,'right',(12,8))
-    raw=p.to_data(); assert raw['version']==8 and raw['game_start']['schema']=='asteria.game_start'
+    raw=p.to_data(); assert raw['version']==9 and raw['game_start']['schema']=='asteria.game_start'
     clone=Project.from_data(raw,ComponentRegistry())
     a=clone.game_start.instantiate(clone); b=clone.game_start.instantiate(clone)
     assert a.scene_id==s.id and a.player_entity_id==e.id and a.player_position==(12.0,8.0)
