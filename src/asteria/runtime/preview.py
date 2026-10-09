@@ -6,6 +6,7 @@ from pathlib import Path
 from asteria.core import ComponentRegistry, Transform
 from asteria.gameplay import GameplayAttributesComponent
 from asteria.project import Project
+from asteria.runtime.actor_link import ActorLinkComponent
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.components2d import (
     Animator2DComponent,
@@ -25,6 +26,7 @@ def build_preview_registry():
     registry.register(Animator2DComponent)
     registry.register(TileMap2DComponent)
     registry.register(GameplayAttributesComponent)
+    registry.register(ActorLinkComponent)
     return registry
 
 

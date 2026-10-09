@@ -1,4 +1,4 @@
-"""Transactional creation of a playable character from a generated bundle."""
+"""Transactional creation of a playable character from a walking sheet or generated bundle."""
 
 from __future__ import annotations
 
@@ -10,12 +10,13 @@ from typing import Callable
 from uuid import NAMESPACE_URL, uuid5
 
 from asteria.assets.character_bundle import GeneratedCharacterBundle
+from asteria.assets.character_visual import CharacterVisualSet
 from asteria.assets.scene_placement import character_cell_position
 from asteria.core import Entity, Transform
 from asteria.graphics import SpriteClip, SpriteKeyframe
 from asteria.project import Project
 from asteria.rpg import ActorDefinition
-from asteria.runtime import AnimationClipSet, Animator2DComponent, SpriteRenderer2D
+from asteria.runtime import ActorLinkComponent, AnimationClipSet, Animator2DComponent, SpriteRenderer2D
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,7 +52,7 @@ class CreateCharacterCommand:
 
     def __init__(
         self,
-        bundle: GeneratedCharacterBundle,
+        bundle: GeneratedCharacterBundle | CharacterVisualSet,
         project: Project,
         scene,
         cell: tuple[int, int],
@@ -61,36 +62,46 @@ class CreateCharacterCommand:
     ):
         if project.scene(scene.id) is not scene:
             raise ValueError("target scene does not belong to project")
+        generated = isinstance(bundle, GeneratedCharacterBundle)
+        visual = CharacterVisualSet.from_bundle(bundle) if generated else bundle
+        if not isinstance(visual, CharacterVisualSet):
+            raise TypeError("bundle must be CharacterVisualSet or GeneratedCharacterBundle")
+        prefix = "generated." if generated else ""
         self.bundle = bundle
+        self.visual = visual
         self.project = project
         self.scene = scene
         self.cell = (int(cell[0]), int(cell[1]))
         self.failure_injector = failure_injector
-        actor_id = f"actor.generated.{bundle.recipe_id}"
-        entity_id = str(uuid5(NAMESPACE_URL, f"asteria:{project.id}:{scene.id}:{bundle.recipe_id}:entity"))
-        clip_set_id = f"animation.generated.{bundle.recipe_id}"
-        actor = ActorDefinition(actor_id, display_name or bundle.recipe_id, tags=("generated", "playable"))
+        key = visual.key
+        actor_id = f"actor.{prefix}{key}"
+        entity_id = str(uuid5(NAMESPACE_URL, f"asteria:{project.id}:{scene.id}:{key}:entity"))
+        clip_set_id = f"animation.{prefix}{key}"
+        tags = ("generated", "playable") if generated else ("playable",)
+        actor = ActorDefinition(actor_id, display_name or key, tags=tags)
         clip_set = _directional_clips()
-        entity = Entity(display_name or bundle.recipe_id, entity_id=entity_id)
+        entity = Entity(display_name or key, entity_id=entity_id)
         x, y = character_cell_position(*self.cell)
         entity.add_component(Transform(x, y))
         sprite = entity.add_component(SpriteRenderer2D())
-        sprite.sprite_sheet_asset_id = bundle.canonical_assets[0].asset_id
+        sprite.sprite_sheet_asset_id = visual.walking_asset.asset_id
         animator = entity.add_component(Animator2DComponent())
         animator.clip_set_id = clip_set_id
         animator.default_clip = "idle_down"
+        link = entity.add_component(ActorLinkComponent())
+        link.actor_id = actor_id
 
-        assets = list(bundle.canonical_assets)
+        assets = list(visual.canonical_assets)
         walking = assets[0]
         animation_metadata = (
-            ("anchor", bundle.anchor),
+            ("anchor", tuple(visual.anchor)),
             ("clip_set_id", clip_set_id),
             ("clips", tuple(clip_set.clips)),
-            ("frame_size", (48, 48)),
+            ("frame_size", tuple(visual.frame_size)),
         )
         assets[0] = replace(walking, metadata=tuple(walking.metadata) + animation_metadata)
         self.created = CreatedCharacter(actor_id, entity_id, clip_set_id, actor, entity, clip_set, tuple(assets))
-        self._paths = bundle.all_visual_paths + (bundle.metadata_path,) if bundle.files_owned else ()
+        self._paths = tuple(visual.owned_paths)
         self._file_bytes: dict[Path, bytes] | None = None
         self._registered_asset_ids: list[str] = []
         self._actor_added = False

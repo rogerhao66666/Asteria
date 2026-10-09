@@ -40,6 +40,12 @@ class EditorAssetViews:
     def clip_set(self, clip_set_id):
         return self._clip_sets.get(str(clip_set_id))
 
+    def sprite_sheet_ids(self):
+        return tuple(sorted(self._sprite_sheets))
+
+    def clip_set_ids(self):
+        return tuple(sorted(self._clip_sets))
+
     def clear(self):
         self._sprite_sheets.clear()
         self._tilesets.clear()

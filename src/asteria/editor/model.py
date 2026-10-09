@@ -34,6 +34,7 @@ class EditorDocument:
         from asteria.core import ComponentRegistry, Transform
         from asteria.gameplay import GameplayAttributesComponent
         from asteria.runtime import (
+            ActorLinkComponent,
             Animator2DComponent,
             Camera2DComponent,
             Interaction2DComponent,
@@ -53,6 +54,7 @@ class EditorDocument:
             component_registry.register(Animator2DComponent)
             component_registry.register(TileMap2DComponent)
             component_registry.register(GameplayAttributesComponent)
+            component_registry.register(ActorLinkComponent)
         self.project = project
         self.selection = EditorSelection()
         self.component_registry = component_registry

@@ -2,6 +2,7 @@ try:
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import (
         QAbstractItemView,
+        QCheckBox,
         QComboBox,
         QHeaderView,
         QLabel,
@@ -192,25 +193,54 @@ class InspectorWidget(QWidget):
                     n.setToolTip(f.tooltip)
                     v.setToolTip(f.tooltip)
                 self.table.setItem(row, 0, n)
-                if f.name == "follow_entity_id":
-                    from .inspector import build_follow_entity_choices
+                # A cell widget from a previously shown component would otherwise
+                # sit on top of this row's plain value item.
+                self.table.removeCellWidget(row, 1)
+                from .inspector import inspector_choices
 
+                choices = inspector_choices(self.document, self.document.selection.value, f)
+                if choices is not None:
                     combo = QComboBox()
-                    for label, value in build_follow_entity_choices(
-                        self.document.selection.value
-                    ):
+                    for label, value in choices:
                         combo.addItem(label, value)
-                    current = combo.findData(str(f.value))
+                    current = combo.findData(f.value if f.choices else str(f.value))
                     combo.setCurrentIndex(max(0, current))
+                    combo.setEnabled(f.editable)
+                    if f.tooltip:
+                        combo.setToolTip(f.tooltip)
                     combo.currentIndexChanged.connect(
                         lambda _index, r=row, c=combo: self._choice_changed(r, c)
                     )
+                    self.table.setItem(row, 1, v)
                     self.table.setCellWidget(row, 1, combo)
+                elif f.value_type is bool:
+                    checkbox = QCheckBox()
+                    checkbox.setChecked(bool(f.value))
+                    checkbox.setEnabled(f.editable)
+                    if f.tooltip:
+                        checkbox.setToolTip(f.tooltip)
+                    checkbox.toggled.connect(
+                        lambda checked, r=row: self._bool_changed(r, checked)
+                    )
+                    self.table.setItem(row, 1, v)
+                    self.table.setCellWidget(row, 1, checkbox)
                 else:
                     self.table.setItem(row, 1, v)
                 self.table.setItem(row, 2, t)
         finally:
             self._refreshing = False
+
+    def _bool_changed(self, row, checked):
+        if self._refreshing:
+            return
+        field = self._field_models.get(row)
+        if field is None or not field.editable:
+            return
+        window = self.window()
+        if not hasattr(window, "edit_selected_component_field"):
+            return
+        ok, error = window.edit_selected_component_field(field.name, bool(checked))
+        self.error.setText("" if ok else error or "Invalid value")
 
     def _choice_changed(self, row, combo):
         if self._refreshing:

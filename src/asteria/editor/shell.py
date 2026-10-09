@@ -1,4 +1,9 @@
+import shutil
 from functools import lru_cache
+from pathlib import Path
+from types import SimpleNamespace
+
+from asteria.assets.character_visual import CharacterVisualSet
 
 from .clipboard import build_duplicate_entity_command, build_paste_entity_command
 from .code_workspace import CodeWorkspaceWidget
@@ -43,6 +48,7 @@ from .integrated_authoring import IntegratedAuthoringControllers
 from .authoring_hub_widget import FamilyHostWidget
 from .game_flow_overview_widget import GameFlowOverviewWidget
 from .project_workspace import ProjectWorkspaceController
+from .create_character_command import CreateCharacterCommand
 from .playtest_profiles import PlaytestProfileLibrary
 
 try:
@@ -56,6 +62,7 @@ try:
         QComboBox,
         QLabel,
         QListWidget,
+        QListWidgetItem,
         QMainWindow,
         QMessageBox,
         QTabBar,
@@ -278,6 +285,77 @@ class AsteriaEditorWindow(QMainWindow):
         status_widget.status.setText("Click a map cell to place this character")
         return bundle
 
+    def _status_sink(self):
+        """Object with ``.status.setText`` that reports to the window status bar."""
+        bar = self.statusBar()
+        return SimpleNamespace(status=SimpleNamespace(setText=lambda text: bar.showMessage(text, 6000)))
+
+    def place_character_from_sheet(self, path=None, name=None):
+        """Place a playable character from any 3x4 walking sheet (rows down/left/right/up).
+
+        The sheet is copied next to a saved project so the project stays
+        portable; for an unsaved project it is referenced where it is.
+        """
+        project = self.document.project
+        if project is None:
+            return None
+        if path is None:
+            path, _ = QFileDialog.getOpenFileName(self, "Walking Sprite Sheet", "", "Images (*.png)")
+            if not path:
+                return None
+        if name is None:
+            name, ok = QInputDialog.getText(self, "Character", "Name:", text=Path(path).stem)
+            if not ok or not name.strip():
+                return None
+        source = Path(path)
+        try:
+            key = CharacterVisualSet.from_walking_sheet(source, key=name).key
+            uri = source
+            if self.document.file_path is not None:
+                target = self.document.file_path.parent / "characters" / f"{key}.png"
+                target.parent.mkdir(parents=True, exist_ok=True)
+                if source.resolve() != target.resolve():
+                    shutil.copyfile(source, target)
+                uri = target.relative_to(self.document.file_path.parent)
+                source = target
+            visual = CharacterVisualSet.from_walking_sheet(source, key=key, uri=uri)
+        except (OSError, ValueError) as exc:
+            self.statusBar().showMessage(f"Cannot use sprite sheet: {exc}", 6000)
+            return None
+        self._pending_character_name = name.strip()
+        return self.begin_character_placement(visual, self._status_sink())
+
+    def set_actor_appearance(self, actor_id=None, sprite_sheet_asset_id=None):
+        """Give an Actor a field sprite and push it onto every map entity linked to it."""
+        from .actor_appearance import apply_actor_appearance
+
+        project = self.document.project
+        if project is None:
+            return False
+        actors = project.rpg_database.actors
+        if actor_id is None:
+            labels = [f"{actors[a].display_name} ({a})" for a in sorted(actors)]
+            if not labels:
+                self.statusBar().showMessage("The project has no actors", 6000)
+                return False
+            label, ok = QInputDialog.getItem(self, "Actor Appearance", "Actor:", labels, 0, False)
+            if not ok:
+                return False
+            actor_id = sorted(actors)[labels.index(label)]
+        if sprite_sheet_asset_id is None:
+            sheets = list(self.document.asset_views.sprite_sheet_ids())
+            if not sheets:
+                self.statusBar().showMessage("No sprite sheets are loaded", 6000)
+                return False
+            sprite_sheet_asset_id, ok = QInputDialog.getItem(
+                self, "Actor Appearance", "Sprite sheet:", sheets, 0, False
+            )
+            if not ok:
+                return False
+        applied = apply_actor_appearance(self.document, actor_id, sprite_sheet_asset_id)
+        self.refresh_all()
+        return applied
+
     def _place_generated_character_at(self, cell):
         """Commit the pending generated bundle using the cell clicked in Scene."""
         bundle = getattr(self, "_pending_character_bundle", None)
@@ -297,10 +375,16 @@ class AsteriaEditorWindow(QMainWindow):
             int(cell[1]),
         )
         try:
-            command = self.character_creator.workspace.create_character_command(
-                bundle, project, scene, cell,
-                display_name=self.character_creator.name_edit.text().strip() or None,
-            )
+            if isinstance(bundle, CharacterVisualSet):
+                command = CreateCharacterCommand(
+                    bundle, project, scene, cell,
+                    display_name=getattr(self, "_pending_character_name", None),
+                )
+            else:
+                command = self.character_creator.workspace.create_character_command(
+                    bundle, project, scene, cell,
+                    display_name=self.character_creator.name_edit.text().strip() or None,
+                )
             self.document.execute(command)
         except Exception as exc:
             status_widget.status.setText(f"Character creation failed: {exc}")
@@ -421,6 +505,10 @@ class AsteriaEditorWindow(QMainWindow):
         self.move_down_action.triggered.connect(lambda: self.move_selected(1))
         self.add_entity_action = QAction("Add Entity…", self)
         self.add_entity_action.triggered.connect(self.add_entity)
+        self.place_sheet_character_action = QAction("Place Character from Sprite Sheet…", self)
+        self.place_sheet_character_action.triggered.connect(lambda: self.place_character_from_sheet())
+        self.actor_appearance_action = QAction("Set Actor Appearance…", self)
+        self.actor_appearance_action.triggered.connect(lambda: self.set_actor_appearance())
         self.delete_action = QAction("Delete Selected", self)
         self.delete_action.setShortcut(QKeySequence.Delete)
         self.delete_action.triggered.connect(self.delete_selected)
@@ -446,6 +534,8 @@ class AsteriaEditorWindow(QMainWindow):
             self.move_up_action,
             self.move_down_action,
             self.add_entity_action,
+            self.place_sheet_character_action,
+            self.actor_appearance_action,
             self.add_component_action,
             self.copy_action,
             self.paste_action,
@@ -977,11 +1067,24 @@ class AsteriaEditorWindow(QMainWindow):
         QTimer.singleShot(0, self.viewport.frame_game_camera)
 
     def refresh_asset_list(self):
+        from .asset_thumbnails import ImageCache, asset_thumbnail, canonical_asset_thumbnail
+
         self.asset_list.clear()
         if self.document.project is None:
             return
+        cache = ImageCache()
         for record in self.document.project.assets.records():
-            self.asset_list.addItem(f"{record.kind}: {record.source_path}")
+            item = QListWidgetItem(f"{record.kind}: {record.source_path}")
+            icon = asset_thumbnail(self.document, record, cache)
+            if icon is not None:
+                item.setIcon(icon)
+            self.asset_list.addItem(item)
+        for asset in self.document.project.assets.snapshot():
+            item = QListWidgetItem(f"{asset.kind}: {asset.source.uri}")
+            icon = canonical_asset_thumbnail(self.document, asset, cache)
+            if icon is not None:
+                item.setIcon(icon)
+            self.asset_list.addItem(item)
 
     def refresh_inspector(self):
         sel = self.document.selection
