@@ -30,7 +30,7 @@ class SpriteSheet:
     frames: list[SpriteFrame] = field(default_factory=list)
 
     def validate(self):
-        if self.texture.expected_kind not in (None, "texture"):
+        if getattr(self.texture, "expected_kind", None) not in (None, "texture"):
             raise TypeError("texture ref required")
         if not self.frames:
             raise ValueError("frames required")

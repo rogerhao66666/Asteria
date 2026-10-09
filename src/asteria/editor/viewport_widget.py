@@ -1,3 +1,5 @@
+from math import floor
+
 from asteria.core import Transform
 from asteria.runtime import Camera2DComponent, SpriteRenderer2D
 
@@ -29,15 +31,19 @@ from .tile_palette import TileToolState
 from .viewport import ViewportCamera, pick_entity, scene_markers, selected_scene
 
 try:
-    from PySide6.QtCore import QEvent, QPointF, Qt
+    from PySide6.QtCore import QEvent, QPointF, Qt, Signal
     from PySide6.QtGui import QBrush, QColor, QPainter, QPen
     from PySide6.QtWidgets import QWidget
 except ImportError:
     QWidget = object
     Qt = None
+    Signal = None
 
 
 class SceneViewportWidget(QWidget):
+    if Signal is not None:
+        characterCellClicked = Signal(tuple)
+
     def __init__(self, document, parent=None):
         if Qt is None:
             raise RuntimeError("PySide6 is required for SceneViewportWidget")
@@ -57,6 +63,7 @@ class SceneViewportWidget(QWidget):
         self._box_end = None
         self._drag_entity = None
         self._drag_start_world = None
+        self.character_placement_active = False
         self.setFocusPolicy(Qt.StrongFocus)
         self.setMouseTracking(True)
 
@@ -136,6 +143,21 @@ class SceneViewportWidget(QWidget):
             self.render_source.origin_x,
             self.render_source.origin_y,
         )
+
+    def cell_at_screen(self, x, y):
+        """Resolve a clicked scene position into the canonical 48px RPG cell."""
+        if self.render_source is not None:
+            return self._screen_to_tile(x, y)
+        world_x, world_y = self.camera.screen_to_world(x, y)
+        return (floor(world_x / 48), floor(world_y / 48))
+
+    def begin_character_placement(self):
+        self.character_placement_active = True
+        self.setCursor(Qt.CrossCursor)
+
+    def end_character_placement(self):
+        self.character_placement_active = False
+        self.unsetCursor()
 
     def _append_tile_stroke(self, cell):
         if cell is None:
@@ -411,6 +433,12 @@ class SceneViewportWidget(QWidget):
             self._panning = True
             self._last_pos = event.position()
             self.setCursor(Qt.ClosedHandCursor)
+            event.accept()
+            return
+        if event.button() == Qt.LeftButton and self.character_placement_active:
+            self.characterCellClicked.emit(
+                self.cell_at_screen(event.position().x(), event.position().y())
+            )
             event.accept()
             return
         if (

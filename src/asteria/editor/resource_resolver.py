@@ -4,6 +4,9 @@ from asteria.reference_data import (
     load_tilemap,
     load_tileset,
 )
+from asteria.assets.canonical import AssetRef
+from asteria.graphics import SpriteFrame, SpriteSheet
+from PIL import Image
 
 
 class EditorResourceError(RuntimeError):
@@ -55,6 +58,31 @@ def resolve_project_resources(document):
             document.asset_views.set_tilemap(record.id, value)
         elif record.kind == "animation":
             document.asset_views.set_clip_set(record.id, value)
+
+    # Generated characters are canonical image assets rather than
+    # legacy JSON sidecars. Rebuild their 3x4 walking sheet view from the
+    # persisted frame metadata so save/reopen retains viewport rendering.
+    for asset in project.assets.snapshot():
+        if asset.kind != "character.walking":
+            continue
+        path = document.file_path.parent / asset.source.uri
+        if not path.is_file():
+            raise EditorResourceError(f"Missing character.walking asset: {asset.source.uri}")
+        metadata = asset.meta()
+        frame_width, frame_height = metadata.get("frame_size", (48, 48))
+        try:
+            with Image.open(path) as image:
+                width, height = image.size
+        except Exception as exc:
+            raise EditorResourceError(f"Failed to load {asset.source.uri}: {exc}") from exc
+        if width % frame_width or height % frame_height:
+            raise EditorResourceError(f"Invalid walking sheet grid: {asset.source.uri}")
+        frames = [
+            SpriteFrame(column * frame_width, row * frame_height, frame_width, frame_height)
+            for row in range(height // frame_height)
+            for column in range(width // frame_width)
+        ]
+        document.asset_views.set_sprite_sheet(asset.asset_id, SpriteSheet(AssetRef(asset.asset_id), frames))
 
     # Validate cross-resource references only after every record is resolved.
     for tilemap_id, tilemap in document.asset_views.tilemaps():

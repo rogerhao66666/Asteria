@@ -32,9 +32,16 @@ def resolve_texture_source(document, texture_asset_id):
     if document.project is None:
         return None
     record = document.project.assets.get(texture_asset_id)
-    if record is None or record.kind != "texture":
-        return None
-    source = Path(record.source_path)
+    if record is not None and record.kind == "texture":
+        source = Path(record.source_path)
+    else:
+        try:
+            canonical = document.project.assets.resolve(texture_asset_id)
+        except KeyError:
+            return None
+        if canonical.kind not in {"texture", "character.walking"}:
+            return None
+        source = Path(canonical.source.uri)
     if document.file_path is not None:
         source = document.file_path.parent / source
     return source

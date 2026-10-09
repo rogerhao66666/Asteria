@@ -147,7 +147,10 @@ class AsteriaEditorWindow(QMainWindow):
                 _discover_mv_generator_catalog(reference_root)
             )
         self.character_creator = CharacterGeneratorWidget(character_workspace, self)
-        self.character_creator.generated.connect(self._create_generated_character)
+        self.character_creator.generated.connect(
+            lambda bundle: self.begin_character_placement(bundle, self.character_creator)
+        )
+        self.viewport.characterCellClicked.connect(self._place_generated_character_at)
         self.rpg_workspace = QTabWidget(self)
         self.rpg_workspace.addTab(self.rpg_authoring, "Database")
         self.rpg_workspace.addTab(self.character_creator, "Character Creator")
@@ -257,33 +260,55 @@ class AsteriaEditorWindow(QMainWindow):
         self.refresh_all()
         QTimer.singleShot(0, self.viewport.frame_game_camera)
 
-    def _create_generated_character(self, bundle):
-        """Commit a generated bundle to the current project and selected map."""
+    def begin_character_placement(self, bundle, status_widget=None):
+        """Switch to Scene and wait for one map-cell click to place a bundle."""
+        status_widget = status_widget or self.character_creator
         project = self.document.project
         scene = self.viewport.current_scene()
         if project is None or scene is None:
-            self.character_creator.status.setText(
+            status_widget.status.setText(
                 "Open a project and select a scene before creating a character"
             )
             return None
+        self._pending_character_bundle = bundle
+        self._placement_status_widget = status_widget
+        self.workspace.set_mode(WorkspaceMode.SCENE)
+        self.viewport.begin_character_placement()
+        status_widget.status.setText("Click a map cell to place this character")
+        return bundle
+
+    def _place_generated_character_at(self, cell):
+        """Commit the pending generated bundle using the cell clicked in Scene."""
+        bundle = getattr(self, "_pending_character_bundle", None)
+        if bundle is None:
+            return None
+        project = self.document.project
+        scene = self.viewport.current_scene()
+        status_widget = getattr(self, "_placement_status_widget", None) or self.character_creator
+        if project is None or scene is None:
+            self.viewport.end_character_placement()
+            self._pending_character_bundle = None
+            self._placement_status_widget = None
+            status_widget.status.setText("Character placement cancelled: no active scene")
+            return None
         cell = (
-            self.character_creator.cell_x_spin.value(),
-            self.character_creator.cell_y_spin.value(),
+            int(cell[0]),
+            int(cell[1]),
         )
         try:
             command = self.character_creator.workspace.create_character_command(
-                bundle,
-                project,
-                scene,
-                cell,
+                bundle, project, scene, cell,
                 display_name=self.character_creator.name_edit.text().strip() or None,
             )
             self.document.execute(command)
         except Exception as exc:
-            self.character_creator.status.setText(f"Character creation failed: {exc}")
+            status_widget.status.setText(f"Character creation failed: {exc}")
             return None
+        self._pending_character_bundle = None
+        self._placement_status_widget = None
+        self.viewport.end_character_placement()
         self.document.select_entity(command.created.entity)
-        self.character_creator.status.setText(
+        status_widget.status.setText(
             f"Created {command.created.actor.display_name} at map cell {cell[0]}, {cell[1]}"
         )
         self.refresh_all()
