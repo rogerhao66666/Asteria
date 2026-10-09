@@ -457,4 +457,4 @@ from .choreography import *
 from .performance import *
 from .fidelity_editor import *
 # Export both legacy battle-presentation and generic composable-presentation APIs.
-__all__ = sorted(set(__all__) | {name for name in globals() if not name.startswith('_')})
+__all__ = sorted(set(__all__) | {name for name in globals() if not name.startswith('_')})  # noqa: PLE0605 - sorted() returns a list

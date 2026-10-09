@@ -23,7 +23,7 @@ _CATEGORIES = {
     "clothing2": "armor", "cloak": "cloak", "cloak1": "cloak", "cloak2": "cloak",
     "acca": "accessory", "accb": "accessory_b",
     "glasses": "glasses", "fronthair": "hair_front",
-    "rearhair": "hair_back", "eyes": "eyes", "eyebrows": "eyes",
+    "rearhair": "hair_back", "eyes": "eyes",
     "beard": "beard", "ears": "ears", "beastears": "beast_ears", "tail": "tail",
     "wing": "wing", "face": "face_shape", "eyebrows": "eyebrows",
     "nose": "nose", "mouth": "mouth", "facialmark": "facial_mark",
