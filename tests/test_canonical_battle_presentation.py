@@ -146,3 +146,15 @@ def test_missing_visual_profile_falls_back_to_the_legacy_world_layer(battle):
     fresh = CanonicalBattleAdapter(runtime)
     fresh.begin()
     assert not fresh.visuals_enabled and "astral_tyrant" in fresh.fallback_reason
+
+
+def test_canonical_screen_never_runs_the_blocking_legacy_effect_loop(battle, monkeypatch):
+    # Real-machine finding (D15): the legacy _play_fx loop blocked ~430 ms per skill.
+    runtime, adapter = battle
+
+    def blocked(*args, **kwargs):
+        raise AssertionError("legacy blocking effect loop called under the canonical screen")
+
+    monkeypatch.setattr(runtime, "_play_fx", blocked)
+    _use(runtime, "fire_arc")
+    _settle(runtime)

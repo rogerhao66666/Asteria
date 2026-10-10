@@ -655,7 +655,10 @@ class PlayableTestRuntime:
             self._last_action_name=f"{actor}: {meta.get('label',ability_id)} x{boost+1}"
             self._boost_level=0
             self._sound(meta.get("sfx"))
-            self._play_fx(ability_id,target_is_enemy=offensive)
+            if getattr(self._battle_presentation,"name","legacy")=="legacy":
+                # The legacy screen plays a blocking effect loop; the canonical
+                # screen plays the ability's authored motion sequence instead.
+                self._play_fx(ability_id,target_is_enemy=offensive)
         except Exception as exc:
             self._last_action_name=f"Action failed: {exc}"
             return

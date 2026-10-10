@@ -1,0 +1,109 @@
+{
+  "schema": "asteria.runtime_profile",
+  "version": 1,
+  "frames": 588,
+  "frame": {
+    "count": 588,
+    "mean_ms": 5.8897,
+    "p50_ms": 5.915,
+    "p95_ms": 6.5905,
+    "p99_ms": 8.8688,
+    "max_ms": 10.3925,
+    "total_ms": 3463.1473
+  },
+  "pacing": {
+    "target_fps": 60.0,
+    "measured_fps": 58.877,
+    "interval_mean_ms": 16.9845,
+    "interval_jitter_ms": 1.035,
+    "interval_p99_ms": 17.9397,
+    "frames_over_budget": 1
+  },
+  "sections": {
+    "animation": {
+      "count": 588,
+      "mean_ms": 0.8147,
+      "p50_ms": 0.8018,
+      "p95_ms": 0.9218,
+      "p99_ms": 1.2931,
+      "max_ms": 3.8115,
+      "total_ms": 479.0544
+    },
+    "asset_loading": {
+      "count": 13,
+      "mean_ms": 0.7255,
+      "p50_ms": 0.2747,
+      "p95_ms": 2.7029,
+      "p99_ms": 2.7525,
+      "max_ms": 2.7525,
+      "total_ms": 9.4318
+    },
+    "input": {
+      "count": 588,
+      "mean_ms": 0.0336,
+      "p50_ms": 0.0335,
+      "p95_ms": 0.0437,
+      "p99_ms": 0.0543,
+      "max_ms": 0.0788,
+      "total_ms": 19.7511
+    },
+    "present": {
+      "count": 588,
+      "mean_ms": 0.3927,
+      "p50_ms": 0.3613,
+      "p95_ms": 0.5158,
+      "p99_ms": 0.8786,
+      "max_ms": 4.9368,
+      "total_ms": 230.9357
+    },
+    "render": {
+      "count": 588,
+      "mean_ms": 4.5445,
+      "p50_ms": 4.6224,
+      "p95_ms": 4.9423,
+      "p99_ms": 5.2414,
+      "max_ms": 7.163,
+      "total_ms": 2672.1515
+    },
+    "update": {
+      "count": 588,
+      "mean_ms": 0.0395,
+      "p50_ms": 0.0359,
+      "p95_ms": 0.0474,
+      "p99_ms": 0.2158,
+      "max_ms": 0.3064,
+      "total_ms": 23.2106
+    }
+  },
+  "counters": {
+    "asset_usage": {
+      "last": 13.0,
+      "max": 13.0,
+      "mean": 11.699
+    },
+    "entity_count": {
+      "last": 2.0,
+      "max": 2.0,
+      "mean": 2.0
+    },
+    "particles": {
+      "last": 0.0,
+      "max": 1.0,
+      "mean": 0.4609
+    }
+  },
+  "memory": {
+    "peak_rss_bytes": 198443008,
+    "python_heap_current_bytes": 967071,
+    "python_heap_peak_bytes": 990247
+  },
+  "unsupported": {
+    "draw_calls": "pygame software blitting exposes no draw-call counter",
+    "gpu_time": "pygame backend renders on the CPU; no GPU timer"
+  },
+  "not_recorded": [
+    "ai",
+    "collision",
+    "vfx"
+  ]
+}
