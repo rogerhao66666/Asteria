@@ -53,10 +53,7 @@ def test_modifier_tag_requirements_and_blocks():
     modifiers = ModifierSet([modifier])
 
     assert modifiers.evaluate("power", 5, tags=TagSet(["weapon.staff"])) == 15
-    assert (
-        modifiers.evaluate("power", 5, tags=TagSet(["weapon.staff", "state.silenced"]))
-        == 5
-    )
+    assert modifiers.evaluate("power", 5, tags=TagSet(["weapon.staff", "state.silenced"])) == 5
 
 
 def test_modifier_set_roundtrip():

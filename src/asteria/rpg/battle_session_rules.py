@@ -1,4 +1,5 @@
 """Project-level rules a game session applies around the Battle Core."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

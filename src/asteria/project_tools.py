@@ -1,8 +1,9 @@
 """Project maintenance commands: upgrade to the current format and export a playable game.
 
-    asteria-upgrade path/to/project.asteria.json        # rewrites at the current version (.bak kept)
-    asteria-export  path/to/project.asteria.json OUT    # portable game folder with run_game.py
+asteria-upgrade path/to/project.asteria.json        # rewrites at the current version (.bak kept)
+asteria-export  path/to/project.asteria.json OUT    # portable game folder with run_game.py
 """
+
 from __future__ import annotations
 
 import argparse

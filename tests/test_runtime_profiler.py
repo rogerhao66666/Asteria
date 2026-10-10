@@ -25,7 +25,7 @@ def test_sections_frames_pacing_and_unsupported_are_reported_from_measurements()
             clock.now += 0.004
         with profiler.section("render"):
             clock.now += 0.006
-        with profiler.section("update"):            # accumulates within one frame
+        with profiler.section("update"):  # accumulates within one frame
             clock.now += 0.001
         profiler.count("entity_count", 10 + frame)
         profiler.end_frame()
@@ -37,11 +37,18 @@ def test_sections_frames_pacing_and_unsupported_are_reported_from_measurements()
     assert report["frame"]["mean_ms"] == pytest.approx(11.0)
     pacing = report["pacing"]
     assert pacing["interval_mean_ms"] == pytest.approx((31 + 31 + 51) / 3)
-    assert pacing["frames_over_budget"] == 1                      # only 51 ms > 1.5 x 25 ms
+    assert pacing["frames_over_budget"] == 1  # only 51 ms > 1.5 x 25 ms
     assert report["counters"]["entity_count"] == {"last": 13.0, "max": 13.0, "mean": 11.5}
     assert report["unsupported"] == {"draw_calls": "no counter"}
     # Metrics neither measured nor declared unsupported are listed, never invented.
-    assert set(report["not_recorded"]) == set(SPEC_METRICS) - {"frame", "update", "render", "entity_count", "memory", "draw_calls"}
+    assert set(report["not_recorded"]) == set(SPEC_METRICS) - {
+        "frame",
+        "update",
+        "render",
+        "entity_count",
+        "memory",
+        "draw_calls",
+    }
     assert report["memory"]["peak_rss_bytes"] > 0
 
 

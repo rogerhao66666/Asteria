@@ -53,9 +53,7 @@ class EventEditorWidget(QWidget):
 
         self.trigger_combo = QComboBox()
         self.trigger_combo.addItems(["Action", "Autorun", "Parallel"])
-        self.trigger_combo.currentTextChanged.connect(
-            lambda value: self._emit_binding_change("trigger", value.lower())
-        )
+        self.trigger_combo.currentTextChanged.connect(lambda value: self._emit_binding_change("trigger", value.lower()))
 
         self.program_combo = QComboBox()
         self.program_combo.currentIndexChanged.connect(self._program_changed)
@@ -84,9 +82,7 @@ class EventEditorWidget(QWidget):
             ("World", "world"),
         ]:
             b = QPushButton(text)
-            b.clicked.connect(
-                lambda checked=False, k=kind: self.addCommandRequested.emit(k)
-            )
+            b.clicked.connect(lambda checked=False, k=kind: self.addCommandRequested.emit(k))
             buttons.addWidget(b)
 
         ordering = QHBoxLayout()
@@ -134,9 +130,7 @@ class EventEditorWidget(QWidget):
             self._binding_ids = [b.binding_id for b in entity_bindings]
             self.binding_combo.clear()
             for b in entity_bindings:
-                self.binding_combo.addItem(
-                    f"{b.trigger.value.title()} · {b.program_id}"
-                )
+                self.binding_combo.addItem(f"{b.trigger.value.title()} · {b.program_id}")
 
             self._program_ids = list(registry.ids())
             self.program_combo.clear()
@@ -155,13 +149,9 @@ class EventEditorWidget(QWidget):
     def _show_binding(self, binding, registry):
         self.trigger_combo.setCurrentText(binding.trigger.value.title())
         if binding.program_id in self._program_ids:
-            self.program_combo.setCurrentIndex(
-                self._program_ids.index(binding.program_id)
-            )
+            self.program_combo.setCurrentIndex(self._program_ids.index(binding.program_id))
         self.conditions.setText(
-            f"Conditions: {len(binding.conditions)}"
-            if binding.conditions
-            else "Conditions: Always"
+            f"Conditions: {len(binding.conditions)}" if binding.conditions else "Conditions: Always"
         )
         self.commands.clear()
         program = registry.get(binding.program_id)

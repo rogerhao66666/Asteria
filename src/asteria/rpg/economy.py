@@ -1,4 +1,5 @@
 """Shops: buying and selling items for project-defined currencies (ASTERIA_SPEC §23)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -180,5 +181,7 @@ class ShopRuntime:
         for key, delta in change.items():
             self.currencies[key] = self.currencies.get(key, 0.0) + delta
         if entry.stock is not None:
-            self.stock.setdefault(shop.shop_id, {})[entry.item_id] = self.remaining(shop.shop_id, entry.item_id) + quantity
+            self.stock.setdefault(shop.shop_id, {})[entry.item_id] = (
+                self.remaining(shop.shop_id, entry.item_id) + quantity
+            )
         return ShopTransaction(shop.shop_id, entry.item_id, quantity, change)

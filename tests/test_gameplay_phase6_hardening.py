@@ -41,9 +41,7 @@ def test_stack_on_apply_runs_once_per_application_not_once_per_existing_stack():
                 10,
                 stacking="stack",
                 max_stacks=3,
-                on_apply=[
-                    Effect("apply_heal", [EffectOperation("resource_delta", "hp", 5)])
-                ],
+                on_apply=[Effect("apply_heal", [EffectOperation("resource_delta", "hp", 5)])],
             )
         ]
     )
@@ -65,9 +63,7 @@ def test_periodic_effect_does_not_tick_after_expiry_when_large_dt_crosses_bounda
                 "short_dot",
                 2.5,
                 periodic=[
-                    __import__(
-                        "asteria.gameplay", fromlist=["PeriodicEffect"]
-                    ).PeriodicEffect(
+                    __import__("asteria.gameplay", fromlist=["PeriodicEffect"]).PeriodicEffect(
                         1.0,
                         Effect("dot", [EffectOperation("resource_delta", "hp", -10)]),
                     )
@@ -100,9 +96,7 @@ def test_trigger_accepts_project_defined_event_key_and_roundtrips():
 
 
 def test_formula_driven_effect_value_roundtrip():
-    formula = (
-        FormulaBuilder().source_stat("attack", 1.0).target_stat("defense", -0.5).build()
-    )
+    formula = FormulaBuilder().source_stat("attack", 1.0).target_stat("defense", -0.5).build()
     effect = Effect("scaled_damage", [EffectOperation("resource_delta", "hp", formula)])
     assert Effect.from_data(effect.to_data()) == effect
 
@@ -110,23 +104,17 @@ def test_formula_driven_effect_value_roundtrip():
 def test_ability_can_apply_formula_driven_damage():
     source = AbilityTarget("hero", make_subject(attack=30, tags=["actor.player"]))
     target = AbilityTarget("enemy", make_subject(defense=10, tags=["enemy"]))
-    formula = (
-        FormulaBuilder().source_stat("attack", -1.0).target_stat("defense", 0.5).build()
-    )
+    formula = FormulaBuilder().source_stat("attack", -1.0).target_stat("defense", 0.5).build()
     ability = AbilityDefinition(
         "scaled_strike",
         effects=[
             AbilityEffect(
                 "selected",
-                Effect(
-                    "scaled_damage", [EffectOperation("resource_delta", "hp", formula)]
-                ),
+                Effect("scaled_damage", [EffectOperation("resource_delta", "hp", formula)]),
             )
         ],
     )
-    result = AbilityRuntime(AbilityRegistry([ability])).execute(
-        "scaled_strike", source, [target]
-    )
+    result = AbilityRuntime(AbilityRegistry([ability])).execute("scaled_strike", source, [target])
     assert result.executed
     # -30 + 5 = -25 resource delta
     assert target.subject.resources.current("hp") == 75
@@ -136,9 +124,7 @@ def test_formula_effect_uses_each_selected_target_context():
     source = AbilityTarget("hero", make_subject(attack=30))
     weak = AbilityTarget("weak", make_subject(defense=0))
     armored = AbilityTarget("armored", make_subject(defense=20))
-    formula = (
-        FormulaBuilder().source_stat("attack", -1.0).target_stat("defense", 0.5).build()
-    )
+    formula = FormulaBuilder().source_stat("attack", -1.0).target_stat("defense", 0.5).build()
     from asteria.gameplay import TargetingRule
 
     ability = AbilityDefinition(
@@ -151,9 +137,7 @@ def test_formula_effect_uses_each_selected_target_context():
             )
         ],
     )
-    AbilityRuntime(AbilityRegistry([ability])).execute(
-        "cleave", source, [weak, armored]
-    )
+    AbilityRuntime(AbilityRegistry([ability])).execute("cleave", source, [weak, armored])
     assert weak.subject.resources.current("hp") == 70
     assert armored.subject.resources.current("hp") == 80
 

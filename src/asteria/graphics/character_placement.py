@@ -17,9 +17,7 @@ class CharacterPlacement:
             raise ValueError("pivot must be normalized")
 
 
-def standing_point_for_cell(
-    column: int, row: int, tile_size: tuple[int, int] = (48, 48)
-) -> tuple[float, float]:
+def standing_point_for_cell(column: int, row: int, tile_size: tuple[int, int] = (48, 48)) -> tuple[float, float]:
     width, height = tile_size
     if width <= 0 or height <= 0:
         raise ValueError("tile dimensions must be positive")
@@ -35,9 +33,7 @@ def frame_rect_at_standing_point(
     return (left, top, left + width, top + height)
 
 
-def integer_preview_scale(
-    frame_size: tuple[int, int], available_size: tuple[int, int]
-) -> int:
+def integer_preview_scale(frame_size: tuple[int, int], available_size: tuple[int, int]) -> int:
     width, height = frame_size
     available_width, available_height = available_size
     if min(width, height, available_width, available_height) <= 0:

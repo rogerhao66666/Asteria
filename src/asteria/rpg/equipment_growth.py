@@ -157,8 +157,7 @@ class EquipmentGrowthNodeDefinition:
         if len(rewards) != max_rank:
             raise ValueError("rewards must contain one entry per rank")
         rewards = tuple(
-            x if isinstance(x, EquipmentGrowthReward) else EquipmentGrowthReward.from_data(x)
-            for x in rewards
+            x if isinstance(x, EquipmentGrowthReward) else EquipmentGrowthReward.from_data(x) for x in rewards
         )
         parsed_prereqs = []
         for entry in prerequisites:
@@ -214,9 +213,17 @@ class EquipmentGrowthNodeDefinition:
     @classmethod
     def from_data(cls, data):
         expected = {
-            "schema", "version", "node_id", "display_name", "max_rank",
-            "rank_requirements", "rewards", "prerequisites", "exclusive_group",
-            "auto_unlock", "tags",
+            "schema",
+            "version",
+            "node_id",
+            "display_name",
+            "max_rank",
+            "rank_requirements",
+            "rewards",
+            "prerequisites",
+            "exclusive_group",
+            "auto_unlock",
+            "tags",
         }
         if (
             set(data) != expected
@@ -269,6 +276,7 @@ class EquipmentGrowthDefinition:
         # Static cycle check.
         edges = {x.node_id: {dep for dep, _ in x.prerequisites} for x in nodes}
         visiting, visited = set(), set()
+
         def visit(node_id):
             if node_id in visiting:
                 raise ValueError("equipment growth graph contains prerequisite cycle")
@@ -279,6 +287,7 @@ class EquipmentGrowthDefinition:
                 visit(dep)
             visiting.remove(node_id)
             visited.add(node_id)
+
         for node_id in mapping:
             visit(node_id)
         object.__setattr__(self, "growth_id", growth_id)
@@ -309,11 +318,7 @@ class EquipmentGrowthDefinition:
     @classmethod
     def from_data(cls, data):
         expected = {"schema", "version", "growth_id", "display_name", "nodes", "tags"}
-        if (
-            set(data) != expected
-            or data.get("schema") != "asteria.rpg.equipment_growth"
-            or data.get("version") != 1
-        ):
+        if set(data) != expected or data.get("schema") != "asteria.rpg.equipment_growth" or data.get("version") != 1:
             raise ValueError("unsupported equipment growth definition")
         return cls(
             data["growth_id"],
@@ -399,7 +404,12 @@ class EquipmentGrowthRuntime:
             self.hooks,
             "rpg.equipment_growth.progressed",
             source=self.source or self.definition.growth_id,
-            data={"growth_id": self.definition.growth_id, "counter_id": counter_id, "old": old, "new": self.counters[counter_id]},
+            data={
+                "growth_id": self.definition.growth_id,
+                "counter_id": counter_id,
+                "old": old,
+                "new": self.counters[counter_id],
+            },
         )
         unlocked = self._auto_unlock()
         return tuple(unlocked)
@@ -528,11 +538,7 @@ class EquipmentGrowthRuntime:
     @classmethod
     def from_data(cls, data, definitions, *, hooks=None, source=None):
         expected = {"schema", "version", "growth_id", "counters", "ranks"}
-        if (
-            set(data) != expected
-            or data.get("schema") != cls.SCHEMA
-            or data.get("version") != cls.VERSION
-        ):
+        if set(data) != expected or data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported equipment growth runtime")
         definitions = dict(definitions)
         growth_id = data["growth_id"]

@@ -52,9 +52,7 @@ def setup_runtime():
         granted_abilities=["overdrive"],
         sockets=[SocketDefinition("socket")],
     )
-    attachment = AttachmentDefinition(
-        "chip", tags=["precision"], granted_abilities=["calibrate"]
-    )
+    attachment = AttachmentDefinition("chip", tags=["precision"], granted_abilities=["calibrate"])
     item = EquippedItem(gear, instance_id="amp.001")
     item.attach("socket", attachment)
     loadout = EquipmentLoadout([EquipmentSlotDefinition("tool")])
@@ -68,9 +66,9 @@ def test_effective_actor_composes_runtime_progression_and_equipment_without_baki
     assert effective.get("power") == 30  # (10 + 2 + 3) * 2
     assert effective.get("sensor") == 4
     assert runtime.stats.get("power") == 10
-    assert runtime.effective_tags(
-        progression=progression, loadout=loadout
-    ).contains_all(["organic", "trained", "amplifier", "precision"])
+    assert runtime.effective_tags(progression=progression, loadout=loadout).contains_all(
+        ["organic", "trained", "amplifier", "precision"]
+    )
     assert runtime.effective_abilities(progression=progression, loadout=loadout) == (
         "scan",
         "focus",
@@ -82,18 +80,10 @@ def test_effective_actor_composes_runtime_progression_and_equipment_without_baki
 
 def test_unequip_immediately_removes_derived_contributions():
     _, runtime, _, progression, _, _, loadout = setup_runtime()
-    assert (
-        runtime.effective_stats(progression=progression, loadout=loadout).get("power")
-        == 30
-    )
+    assert runtime.effective_stats(progression=progression, loadout=loadout).get("power") == 30
     loadout.unequip("tool")
-    assert (
-        runtime.effective_stats(progression=progression, loadout=loadout).get("power")
-        == 15
-    )
-    assert "overdrive" not in runtime.effective_abilities(
-        progression=progression, loadout=loadout
-    )
+    assert runtime.effective_stats(progression=progression, loadout=loadout).get("power") == 15
+    assert "overdrive" not in runtime.effective_abilities(progression=progression, loadout=loadout)
 
 
 def test_actor_snapshot_roundtrip_restores_only_mutable_intrinsic_state():
@@ -122,9 +112,7 @@ def test_runtime_save_state_v2_carries_actor_snapshots_and_v1_is_backward_readab
         actor_snapshots={"pilot": runtime.snapshot()},
     )
     raw = state.to_data()
-    assert (
-        raw["version"] == 7 and raw["actor_snapshots"]["pilot"]["actor_id"] == "pilot"
-    )
+    assert raw["version"] == 7 and raw["actor_snapshots"]["pilot"]["actor_id"] == "pilot"
     restored = RpgRuntimeState.from_data(raw, db)
     actor2 = RpgActorRuntime(actor).restore(restored.actor_snapshots["pilot"])
     assert actor2.resources.current("charge") == 70

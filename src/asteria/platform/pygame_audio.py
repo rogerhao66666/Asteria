@@ -1,4 +1,5 @@
 """pygame.mixer implementation of runtime.audio_mixer.AudioDevice."""
+
 from __future__ import annotations
 
 from asteria.runtime.audio_mixer import RecordingAudioDevice

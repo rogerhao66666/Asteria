@@ -12,13 +12,25 @@ from test_session_events import _session  # noqa: E402
 
 def _add_content(project):
     db = project.rpg_database
-    db.add_shop(ShopDefinition("apothecary", "Apothecary", [
-        ShopEntry("ether_leaf", buy_prices={"gold": 30}, sell_prices={"gold": 12}, stock=1),
-        ShopEntry("boss_emblem", sell_prices={"gold": 500}),
-    ]))
-    db.add_quest(QuestDefinition("gather", "Gather Leaves", objectives=[
-        QuestObjective("leaves", "item", target="ether_leaf", required=999, description="Collect ether leaves"),
-    ]))
+    db.add_shop(
+        ShopDefinition(
+            "apothecary",
+            "Apothecary",
+            [
+                ShopEntry("ether_leaf", buy_prices={"gold": 30}, sell_prices={"gold": 12}, stock=1),
+                ShopEntry("boss_emblem", sell_prices={"gold": 500}),
+            ],
+        )
+    )
+    db.add_quest(
+        QuestDefinition(
+            "gather",
+            "Gather Leaves",
+            objectives=[
+                QuestObjective("leaves", "item", target="ether_leaf", required=999, description="Collect ether leaves"),
+            ],
+        )
+    )
 
 
 def test_shop_screen_model_tabs_stock_and_messages():
@@ -26,10 +38,10 @@ def test_shop_screen_model_tabs_stock_and_messages():
     _add_content(project)
     game.open_shop("apothecary")
     screen = ShopScreen(game)
-    assert [r.item_id for r in screen.rows()] == ["ether_leaf"]          # buy tab hides sell-only entries
+    assert [r.item_id for r in screen.rows()] == ["ether_leaf"]  # buy tab hides sell-only entries
     assert screen.rows()[0].stock == "1" and screen.rows()[0].available
     assert screen.confirm() is not None and screen.message.startswith("Bought")
-    assert not screen.rows()[0].available and screen.confirm() is None   # sold out
+    assert not screen.rows()[0].available and screen.confirm() is None  # sold out
     assert "only 0" in screen.message
     screen.switch_tab()
     assert {r.item_id for r in screen.rows()} == {"ether_leaf", "boss_emblem"}
@@ -59,17 +71,17 @@ def test_runtime_pause_quests_save_and_title(runtime, resource_root):
     _press(runtime, pygame.K_ESCAPE)
     assert runtime._ui_mode == "pause" and runtime.running
     _press(runtime, pygame.K_DOWN)
-    _press(runtime, pygame.K_RETURN)                                       # Quest Log
+    _press(runtime, pygame.K_RETURN)  # Quest Log
     assert runtime._ui_mode == "quests"
     _press(runtime, pygame.K_ESCAPE)
     assert runtime._ui_mode == "pause"
-    for _ in range(5):                                                     # Crafting, Achievements, Bestiary, Settings, Save
+    for _ in range(5):  # Crafting, Achievements, Bestiary, Settings, Save
         _press(runtime, pygame.K_DOWN)
-    _press(runtime, pygame.K_RETURN)                                       # Save Game
+    _press(runtime, pygame.K_RETURN)  # Save Game
     assert (resource_root / "saves" / "playtest_autosave.asteria-save.json").is_file()
     _press(runtime, pygame.K_DOWN)
     _press(runtime, pygame.K_DOWN)
-    _press(runtime, pygame.K_RETURN)                                       # Return to Title
+    _press(runtime, pygame.K_RETURN)  # Return to Title
     assert runtime._ui_mode == "title"
 
 

@@ -20,12 +20,16 @@ def _events(cues):
 
 def test_shared_staging_context_is_injected_without_mutating_original_event():
     runtime = BattlePresentationLayeringRuntime()
-    event = _events((ActionCue(
-        "slash",
-        0,
-        "vfx",
-        {"effect_id": "slash", "staging": {"group_id": "impact:1", "layer": 4, "intensity": 1.5}},
-    ),))[0]
+    event = _events(
+        (
+            ActionCue(
+                "slash",
+                0,
+                "vfx",
+                {"effect_id": "slash", "staging": {"group_id": "impact:1", "layer": 4, "intensity": 1.5}},
+            ),
+        )
+    )[0]
     original = dict(event.payload)
 
     processed = runtime.process((event,))[0]
@@ -39,17 +43,21 @@ def test_shared_staging_context_is_injected_without_mutating_original_event():
 
 
 def test_channel_profile_scales_camera_audio_and_vfx_presentation_only():
-    profile = BattlePresentationLayeringProfile((
-        BattlePresentationChannelPolicy("camera", layer=2, gain=1.5, bus="impact"),
-        BattlePresentationChannelPolicy("audio", layer=3, gain=.8, bus="sfx_heavy"),
-        BattlePresentationChannelPolicy("vfx", layer=5, gain=2.0, bus="visual"),
-    ))
+    profile = BattlePresentationLayeringProfile(
+        (
+            BattlePresentationChannelPolicy("camera", layer=2, gain=1.5, bus="impact"),
+            BattlePresentationChannelPolicy("audio", layer=3, gain=0.8, bus="sfx_heavy"),
+            BattlePresentationChannelPolicy("vfx", layer=5, gain=2.0, bus="visual"),
+        )
+    )
     runtime = BattlePresentationLayeringRuntime(profile)
-    events = _events((
-        ActionCue("cam", 0, "camera", {"amplitude": 2, "staging": {"intensity": 2}}),
-        ActionCue("sfx", 0, "audio", {"sound_id": "hit", "staging": {"intensity": .5}}),
-        ActionCue("fx", 0, "vfx", {"effect_id": "spark"}),
-    ))
+    events = _events(
+        (
+            ActionCue("cam", 0, "camera", {"amplitude": 2, "staging": {"intensity": 2}}),
+            ActionCue("sfx", 0, "audio", {"sound_id": "hit", "staging": {"intensity": 0.5}}),
+            ActionCue("fx", 0, "vfx", {"effect_id": "spark"}),
+        )
+    )
     camera, audio, vfx = runtime.process(events)
 
     cp = camera.payload["cue"]["payload"]
@@ -58,7 +66,7 @@ def test_channel_profile_scales_camera_audio_and_vfx_presentation_only():
 
     assert cp["amplitude"] == 6.0
     assert cp["staging"]["layer"] == 2
-    assert ap["gain"] == .4
+    assert ap["gain"] == 0.4
     assert ap["bus"] == "sfx_heavy"
     assert vp["intensity"] == 2.0
     assert vp["layer"] == 5
@@ -66,19 +74,26 @@ def test_channel_profile_scales_camera_audio_and_vfx_presentation_only():
 
 def test_same_group_can_coordinate_multiple_channels():
     runtime = BattlePresentationLayeringRuntime()
-    events = _events(tuple(
-        ActionCue(kind, 0, cue_kind, {
-            "staging": {"group_id": "impact:boss", "priority": 9},
-            **payload,
-        })
-        for kind, cue_kind, payload in (
-            ("anim", "animation", {"member_id": "hero", "role": "attack"}),
-            ("fx", "vfx", {"effect_id": "burst"}),
-            ("cam", "camera", {"amplitude": 3}),
-            ("screen", "screen_fx", {"effect": "flash"}),
-            ("sfx", "audio", {"sound_id": "boom"}),
+    events = _events(
+        tuple(
+            ActionCue(
+                kind,
+                0,
+                cue_kind,
+                {
+                    "staging": {"group_id": "impact:boss", "priority": 9},
+                    **payload,
+                },
+            )
+            for kind, cue_kind, payload in (
+                ("anim", "animation", {"member_id": "hero", "role": "attack"}),
+                ("fx", "vfx", {"effect_id": "burst"}),
+                ("cam", "camera", {"amplitude": 3}),
+                ("screen", "screen_fx", {"effect": "flash"}),
+                ("sfx", "audio", {"sound_id": "boom"}),
+            )
         )
-    ))
+    )
     processed = runtime.process(events)
     contexts = [runtime.context_for_event(x) for x in processed]
     assert {x.group_id for x in contexts} == {"impact:boss"}
@@ -87,10 +102,12 @@ def test_same_group_can_coordinate_multiple_channels():
 
 
 def test_profile_and_runtime_snapshot_roundtrip():
-    profile = BattlePresentationLayeringProfile((
-        BattlePresentationChannelPolicy("audio", layer=2, gain=.7, bus="impact"),
-        BattlePresentationChannelPolicy("vfx", layer=8, gain=1.2, bus="default"),
-    ))
+    profile = BattlePresentationLayeringProfile(
+        (
+            BattlePresentationChannelPolicy("audio", layer=2, gain=0.7, bus="impact"),
+            BattlePresentationChannelPolicy("vfx", layer=8, gain=1.2, bus="default"),
+        )
+    )
     assert BattlePresentationLayeringProfile.from_data(profile.to_data()) == profile
 
     runtime = BattlePresentationLayeringRuntime(profile)

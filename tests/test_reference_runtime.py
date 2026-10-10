@@ -44,9 +44,7 @@ class FakeTextureBackend:
 
 def make_runtime():
     b = build_reference_world()
-    return ReferenceRuntime.load(
-        b.project, b.scene, Path(__file__).resolve().parents[1]
-    )
+    return ReferenceRuntime.load(b.project, b.scene, Path(__file__).resolve().parents[1])
 
 
 def test_reference_runtime_builds_map_and_hero_draws():
@@ -58,13 +56,9 @@ def test_reference_runtime_builds_map_and_hero_draws():
 
 def test_reference_runtime_player_moves_and_camera_follows():
     runtime = make_runtime()
-    start = runtime.hero.get(
-        __import__("asteria.core", fromlist=["Transform"]).Transform
-    ).x
+    start = runtime.hero.get(__import__("asteria.core", fromlist=["Transform"]).Transform).x
     runtime.step({"move_right": 1.0}, 0.1)
-    end = runtime.hero.get(
-        __import__("asteria.core", fromlist=["Transform"]).Transform
-    ).x
+    end = runtime.hero.get(__import__("asteria.core", fromlist=["Transform"]).Transform).x
     assert end > start
     assert runtime.camera.x != 0
 
@@ -72,9 +66,7 @@ def test_reference_runtime_player_moves_and_camera_follows():
 def test_reference_runtime_fits_camera_to_preview_and_centers_player():
     runtime = make_runtime()
     runtime.prepare_viewport(960, 540)
-    transform = runtime.hero.get(
-        __import__("asteria.core", fromlist=["Transform"]).Transform
-    )
+    transform = runtime.hero.get(__import__("asteria.core", fromlist=["Transform"]).Transform)
 
     assert runtime.camera.zoom == 2
     assert runtime.camera_follow.world_bounds == (0.0, 0.0, 640.0, 384.0)
@@ -84,15 +76,11 @@ def test_reference_runtime_fits_camera_to_preview_and_centers_player():
 def test_reference_runtime_supports_authored_fixed_camera():
     bundle = build_reference_world()
     bundle.camera.get(Camera2DComponent).follow_entity_id = ""
-    camera_transform = bundle.camera.get(
-        __import__("asteria.core", fromlist=["Transform"]).Transform
-    )
+    camera_transform = bundle.camera.get(__import__("asteria.core", fromlist=["Transform"]).Transform)
     camera_transform.x = 32
     camera_transform.y = 48
 
-    runtime = ReferenceRuntime.load(
-        bundle.project, bundle.scene, Path(__file__).resolve().parents[1]
-    )
+    runtime = ReferenceRuntime.load(bundle.project, bundle.scene, Path(__file__).resolve().parents[1])
     runtime.prepare_viewport(960, 540)
     runtime.step({"move_right": 1.0}, 0.1)
 
@@ -106,9 +94,7 @@ def test_reference_runtime_follows_the_authored_stable_entity_id():
     target_transform = target.add_component(Transform(400, 192))
     bundle.camera.get(Camera2DComponent).follow_entity_id = target.id
 
-    runtime = ReferenceRuntime.load(
-        bundle.project, bundle.scene, Path(__file__).resolve().parents[1]
-    )
+    runtime = ReferenceRuntime.load(bundle.project, bundle.scene, Path(__file__).resolve().parents[1])
     runtime.prepare_viewport(960, 540)
 
     assert runtime.player.camera_target is target
@@ -123,18 +109,14 @@ def test_reference_runtime_rejects_missing_camera_follow_id():
     bundle.camera.get(Camera2DComponent).follow_entity_id = "0"
 
     with pytest.raises(ValueError, match="Camera follow entity does not exist: 0"):
-        ReferenceRuntime.load(
-            bundle.project, bundle.scene, Path(__file__).resolve().parents[1]
-        )
+        ReferenceRuntime.load(bundle.project, bundle.scene, Path(__file__).resolve().parents[1])
 
 
 def test_reference_runtime_resolves_player_and_camera_by_stable_id():
     bundle = build_reference_world()
     bundle.hero.name = "Renamed Hero"
     bundle.camera.name = "Renamed Camera"
-    runtime = ReferenceRuntime.load(
-        bundle.project, bundle.scene, Path(__file__).resolve().parents[1]
-    )
+    runtime = ReferenceRuntime.load(bundle.project, bundle.scene, Path(__file__).resolve().parents[1])
     assert runtime.hero is bundle.hero
     assert runtime.game_camera_entity is bundle.camera
 

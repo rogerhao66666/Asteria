@@ -13,9 +13,7 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
         try:
             import pygame
         except ImportError as exc:
-            raise RuntimeError(
-                "Install pygame-ce with: pip install 'asteria[pygame]'"
-            ) from exc
+            raise RuntimeError("Install pygame-ce with: pip install 'asteria[pygame]'") from exc
         from asteria.runtime.input_map import InputActionMap
 
         self.pg = pygame
@@ -47,11 +45,7 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
         for event in self.pg.event.get():
             if self.input_source is not None:
                 self.input_source.handle_event(event)
-            if (
-                event.type == self.pg.QUIT
-                or event.type == self.pg.KEYDOWN
-                and event.key == self.pg.K_ESCAPE
-            ):
+            if event.type == self.pg.QUIT or event.type == self.pg.KEYDOWN and event.key == self.pg.K_ESCAPE:
                 self._close = True
         self.screen.fill((24, 26, 30))
 
@@ -84,9 +78,7 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
 
     def load_texture(self, asset_id, source_path):
         surface = self.pg.image.load(source_path).convert_alpha()
-        return TextureResource(
-            asset_id, surface.get_width(), surface.get_height(), surface
-        )
+        return TextureResource(asset_id, surface.get_width(), surface.get_height(), surface)
 
     def draw_texture(self, texture_resource, draw_command):
         if self.screen is None:
@@ -104,9 +96,7 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
         if draw_command.opacity < 1.0:
             image = image.copy()
             image.set_alpha(max(0, min(255, int(draw_command.opacity * 255))))
-        self.screen.blit(
-            image, (round(draw_command.screen_x), round(draw_command.screen_y))
-        )
+        self.screen.blit(image, (round(draw_command.screen_x), round(draw_command.screen_y)))
 
     def end_frame(self):
         if self.screen is not None:
@@ -128,17 +118,13 @@ class PygameTextureBackend(TextureBackend):
         try:
             import pygame
         except ImportError as exc:
-            raise RuntimeError(
-                "Install pygame-ce with: pip install 'asteria[pygame]'"
-            ) from exc
+            raise RuntimeError("Install pygame-ce with: pip install 'asteria[pygame]'") from exc
         self.pg = pygame
         self.screen = screen
 
     def load_texture(self, asset_id, source_path):
         surface = self.pg.image.load(source_path).convert_alpha()
-        return TextureResource(
-            asset_id, surface.get_width(), surface.get_height(), surface
-        )
+        return TextureResource(asset_id, surface.get_width(), surface.get_height(), surface)
 
     def draw_texture(self, texture_resource, draw_command):
         if self.screen is None:
@@ -156,6 +142,4 @@ class PygameTextureBackend(TextureBackend):
         if draw_command.opacity < 1.0:
             image = image.copy()
             image.set_alpha(max(0, min(255, int(draw_command.opacity * 255))))
-        self.screen.blit(
-            image, (round(draw_command.screen_x), round(draw_command.screen_y))
-        )
+        self.screen.blit(image, (round(draw_command.screen_x), round(draw_command.screen_y)))

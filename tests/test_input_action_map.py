@@ -75,9 +75,12 @@ def test_pygame_input_source_tracks_keys_and_reads_joysticks(monkeypatch):
     assert source.raw_state().keys == {"return"}
 
     pad = SimpleNamespace(
-        get_numbuttons=lambda: 2, get_button=lambda i: i == 1,
-        get_numaxes=lambda: 2, get_axis=lambda i: (-0.9, 0.1)[i],
-        get_numhats=lambda: 1, get_hat=lambda i: (0, -1),
+        get_numbuttons=lambda: 2,
+        get_button=lambda i: i == 1,
+        get_numaxes=lambda: 2,
+        get_axis=lambda i: (-0.9, 0.1)[i],
+        get_numhats=lambda: 1,
+        get_hat=lambda i: (0, -1),
     )
     source._joysticks[99] = pad
     raw = source.raw_state()

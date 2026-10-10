@@ -24,9 +24,7 @@ class MVTileRegion:
 
 def _autotile_table(js_path: Path, name: str):
     source = js_path.read_text(encoding="utf-8-sig")
-    match = re.search(
-        rf"Tilemap\.{name}\s*=\s*(\[.*?\]);", source, re.DOTALL
-    )
+    match = re.search(rf"Tilemap\.{name}\s*=\s*(\[.*?\]);", source, re.DOTALL)
     if match is None:
         raise ValueError(f"missing MV autotile table: {name}")
     return tuple(tuple(tuple(pair) for pair in row) for row in json.loads(match.group(1)))
@@ -132,8 +130,15 @@ def compose_mv_map_draws(
                 qx = 0 if full else quarter_index % 2 * 24
                 qy = 0 if full else quarter_index // 2 * 24
                 size = 48 if full else 24
-                draws.append(TextureDraw(
-                    region.asset_id, source_rect, x + qx, y + qy, size, size,
-                    layer=layer_index,
-                ))
+                draws.append(
+                    TextureDraw(
+                        region.asset_id,
+                        source_rect,
+                        x + qx,
+                        y + qy,
+                        size,
+                        size,
+                        layer=layer_index,
+                    )
+                )
     return tuple(draws)

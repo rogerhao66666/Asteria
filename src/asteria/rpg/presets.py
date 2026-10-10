@@ -70,9 +70,7 @@ def simple_rpg_database():
             "Iron Sword",
             slot="weapon",
             tags=["equipment.weapon"],
-            modifiers=[
-                StatModifier("iron_sword.attack", "attack", ModifierOperation.ADD, 10)
-            ],
+            modifiers=[StatModifier("iron_sword.attack", "attack", ModifierOperation.ADD, 10)],
             sockets=[SocketDefinition("socket_1", accepted_tags=["attachment.weapon"])],
         )
     )

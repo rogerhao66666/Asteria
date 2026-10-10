@@ -33,11 +33,7 @@ def resolve_play_scene(document):
     sel = document.selection
     if sel.kind == "scene" and not sel.multiple and sel.value is not None:
         return sel.value
-    if (
-        sel.kind == "entity"
-        and sel.value is not None
-        and getattr(sel.value, "scene", None) is not None
-    ):
+    if sel.kind == "entity" and sel.value is not None and getattr(sel.value, "scene", None) is not None:
         return sel.value.scene
     if sel.kind == "component" and sel.value is not None:
         entity = getattr(sel.value, "entity", None)
@@ -56,30 +52,28 @@ def create_play_session(document, *, runtime_save=None, playtest_profile_id=None
     This is deliberately backend-neutral; launching a pygame/native runtime is
     a later adapter concern.
     """
-    scene = (document.project.scene(document.project.startup_scene_id) if from_start and document.project is not None else resolve_play_scene(document))
-    snapshot = Project.from_data(
-        document.project.to_data(), document.component_registry
+    scene = (
+        document.project.scene(document.project.startup_scene_id)
+        if from_start and document.project is not None
+        else resolve_play_scene(document)
     )
+    snapshot = Project.from_data(document.project.to_data(), document.component_registry)
     if snapshot.scene(scene.id) is None:
         raise PlayModeError("Selected scene was not present in runtime snapshot")
     if runtime_save is None and from_start:
-        runtime_save=snapshot.game_start.instantiate(snapshot)
+        runtime_save = snapshot.game_start.instantiate(snapshot)
     if runtime_save is not None:
         if isinstance(runtime_save, dict):
-            runtime_save=GameRuntimeSave.from_data(runtime_save,snapshot)
+            runtime_save = GameRuntimeSave.from_data(runtime_save, snapshot)
         runtime_save.validate(snapshot)
-        source_scene_id=runtime_save.scene_id
+        source_scene_id = runtime_save.scene_id
     else:
-        source_scene_id=scene.id
+        source_scene_id = scene.id
     return PlaySession(
         source_project_id=document.project.id,
         source_scene_id=source_scene_id,
         runtime_project=snapshot,
-        resource_root=(
-            document.file_path.resolve().parent
-            if document.file_path is not None
-            else None
-        ),
+        resource_root=(document.file_path.resolve().parent if document.file_path is not None else None),
         runtime_save=runtime_save,
         playtest_profile_id=None if playtest_profile_id is None else str(playtest_profile_id),
     )

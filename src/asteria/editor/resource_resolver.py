@@ -40,15 +40,11 @@ def resolve_project_resources(document):
             continue
         path = asset_source_path(document, record)
         if path is None or not path.is_file():
-            raise EditorResourceError(
-                f"Missing {record.kind} asset: {record.source_path}"
-            )
+            raise EditorResourceError(f"Missing {record.kind} asset: {record.source_path}")
         try:
             value = loader(path)
         except Exception as exc:
-            raise EditorResourceError(
-                f"Failed to load {record.source_path}: {exc}"
-            ) from exc
+            raise EditorResourceError(f"Failed to load {record.source_path}: {exc}") from exc
 
         if record.kind == "sprite_sheet":
             document.asset_views.set_sprite_sheet(record.id, value)
@@ -88,15 +84,11 @@ def resolve_project_resources(document):
     for tilemap_id, tilemap in document.asset_views.tilemaps():
         tileset = document.asset_views.tileset(tilemap.tileset.asset_id)
         if tileset is None:
-            raise EditorResourceError(
-                f"TileMap {tilemap_id} references unresolved Tileset "
-                f"{tilemap.tileset.asset_id}"
-            )
+            raise EditorResourceError(f"TileMap {tilemap_id} references unresolved Tileset {tilemap.tileset.asset_id}")
         sprite_sheet = document.asset_views.sprite_sheet(tileset.sprite_sheet.asset_id)
         if sprite_sheet is None:
             raise EditorResourceError(
-                f"Tileset {tilemap.tileset.asset_id} references unresolved "
-                f"SpriteSheet {tileset.sprite_sheet.asset_id}"
+                f"Tileset {tilemap.tileset.asset_id} references unresolved SpriteSheet {tileset.sprite_sheet.asset_id}"
             )
         tilemap.validate()
         tileset.validate(len(sprite_sheet.frames))

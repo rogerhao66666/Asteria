@@ -11,7 +11,8 @@ from asteria.rpg.items import (
 
 def _catalog():
     blade = EquipmentDefinition(
-        "blade_alpha", "Blade Alpha",
+        "blade_alpha",
+        "Blade Alpha",
         slot="main",
         tags=("blade", "metal"),
         granted_abilities=("slash",),
@@ -19,13 +20,15 @@ def _catalog():
         required_capabilities=("blade_use",),
     )
     charm = EquipmentDefinition(
-        "swift_charm", "Swift Charm",
+        "swift_charm",
+        "Swift Charm",
         slot="accessory",
         tags=("charm",),
         granted_abilities=("haste",),
     )
     relic = EquipmentDefinition(
-        "relic_core", "Relic Core",
+        "relic_core",
+        "Relic Core",
         slot="relic_matrix",
         tags=("relic",),
         growth_id="relic_path",
@@ -37,11 +40,13 @@ def _loadout():
     blade, charm, relic = _catalog()
     gem = AttachmentDefinition("ruby", "Ruby", tags=("gem",))
     equipped_blade = EquippedItem(blade, {"gem": gem}, "blade:01")
-    loadout = EquipmentLoadout((
-        EquipmentSlotDefinition("main", accepted_tags=("blade",), capacity=1),
-        EquipmentSlotDefinition("accessory", accepted_tags=("charm",), capacity=2),
-        EquipmentSlotDefinition("relic_matrix", accepted_tags=("relic",), capacity=None),
-    ))
+    loadout = EquipmentLoadout(
+        (
+            EquipmentSlotDefinition("main", accepted_tags=("blade",), capacity=1),
+            EquipmentSlotDefinition("accessory", accepted_tags=("charm",), capacity=2),
+            EquipmentSlotDefinition("relic_matrix", accepted_tags=("relic",), capacity=None),
+        )
+    )
     loadout.equip("main", equipped_blade, capabilities=("blade_use",))
     return loadout
 
@@ -58,9 +63,9 @@ def test_projects_arbitrary_slots_capacities_and_equipped_items():
 def test_projects_socket_attachment_without_mutation():
     loadout = _loadout()
     before = loadout.to_data()
-    view = EquipmentScreenRuntime(
-        EquipmentScreenProfile(socket_labels={"gem": "Gem Socket"})
-    ).project(loadout, _catalog(), capabilities=("blade_use",))
+    view = EquipmentScreenRuntime(EquipmentScreenProfile(socket_labels={"gem": "Gem Socket"})).project(
+        loadout, _catalog(), capabilities=("blade_use",)
+    )
     main = next(x for x in view.slots if x.slot_id == "main")
     socket = main.items[0].sockets[0]
     assert socket.label == "Gem Socket"
@@ -93,10 +98,7 @@ def test_slot_selection_filters_compatibility_without_fixed_slot_names():
 
 
 def test_query_and_paging_are_presentation_only():
-    catalog = tuple(
-        EquipmentDefinition(f"item_{i}", f"Item {i}", slot="main", tags=("blade",))
-        for i in range(15)
-    )
+    catalog = tuple(EquipmentDefinition(f"item_{i}", f"Item {i}", slot="main", tags=("blade",)) for i in range(15))
     profile = EquipmentScreenProfile(page_size=5)
     runtime = EquipmentScreenRuntime(profile)
     runtime.project(_loadout(), catalog)
@@ -140,12 +142,8 @@ def test_profile_and_navigation_snapshot_roundtrip():
 def test_no_weapon_armor_or_fixed_slot_assumption():
     profile = EquipmentScreenProfile()
     runtime = EquipmentScreenRuntime(profile)
-    loadout = EquipmentLoadout((
-        EquipmentSlotDefinition("sigil_array", accepted_tags=("sigil",), capacity=7),
-    ))
-    catalog = (
-        EquipmentDefinition("moon_sigil", slot="sigil_array", tags=("sigil",)),
-    )
+    loadout = EquipmentLoadout((EquipmentSlotDefinition("sigil_array", accepted_tags=("sigil",), capacity=7),))
+    catalog = (EquipmentDefinition("moon_sigil", slot="sigil_array", tags=("sigil",)),)
     view = runtime.project(loadout, catalog)
     assert view.slots[0].slot_id == "sigil_array"
     assert view.slots[0].capacity == 7

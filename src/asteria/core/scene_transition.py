@@ -1,4 +1,5 @@
 """Scene changes with optional fade, carrying persistent entities (ASTERIA_SPEC §8 Scene)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

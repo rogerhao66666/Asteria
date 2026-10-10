@@ -27,7 +27,7 @@ def frame():
             BattleUiText("Victory", 160, 44, "result_headline", "center"),
         ),
         (
-            BattleUiGaugeBar("hero", "hp", "HP", 38, 138, 54, 5, .75, 75, 100),
+            BattleUiGaugeBar("hero", "hp", "HP", 38, 138, 54, 5, 0.75, 75, 100),
             BattleUiGaugeBar("hero", "limit", "LIMIT", 38, 148, 54, 5, 1.0, 100, 100),
         ),
         (BattleUiIcon("status.poison", 12, 154, "status", "hero", "Poison"),),
@@ -43,11 +43,16 @@ def test_renderer_executes_stable_ui_command_order():
     kinds = [x[0] for x in backend.ops]
     assert kinds == [
         "begin",
-        "panel", "panel",
-        "gauge", "gauge",
+        "panel",
+        "panel",
+        "gauge",
+        "gauge",
         "icon",
         "marker",
-        "text", "text", "text", "text",
+        "text",
+        "text",
+        "text",
+        "text",
         "end",
     ]
 

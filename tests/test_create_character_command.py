@@ -30,8 +30,15 @@ def _bundle(tmp_path):
         for name in ("walking", "face", "side_view")
     )
     return GeneratedCharacterBundle(
-        "hero-one", output, paths["walking"], paths["face"], paths["side_view"],
-        metadata, (24, 48), ("mvgen.source",), assets,
+        "hero-one",
+        output,
+        paths["walking"],
+        paths["face"],
+        paths["side_view"],
+        metadata,
+        (24, 48),
+        ("mvgen.source",),
+        assets,
     )
 
 
@@ -51,11 +58,19 @@ def test_execute_creates_actor_assets_clips_and_cell_aligned_entity(tmp_path):
     assert isinstance(created.actor, ActorDefinition)
     assert project.rpg_database.actors[created.actor_id] is created.actor
     assert len(project.assets.snapshot()) == 3
-    assert tuple(asset.asset_id for asset in created.assets) == tuple(asset.asset_id for asset in bundle.canonical_assets)
+    assert tuple(asset.asset_id for asset in created.assets) == tuple(
+        asset.asset_id for asset in bundle.canonical_assets
+    )
     assert isinstance(created.clip_set, AnimationClipSet)
     assert tuple(created.clip_set.clips) == (
-        "idle_down", "walk_down", "idle_left", "walk_left",
-        "idle_right", "walk_right", "idle_up", "walk_up",
+        "idle_down",
+        "walk_down",
+        "idle_left",
+        "walk_left",
+        "idle_right",
+        "walk_right",
+        "idle_up",
+        "walk_up",
     )
     for row, direction in enumerate(("down", "left", "right", "up")):
         assert [frame.frame_index for frame in created.clip_set.get(f"walk_{direction}").keyframes] == [
@@ -125,7 +140,8 @@ def test_failure_at_each_boundary_rolls_back_without_touching_preexisting_state(
     project.assets.register(existing_asset)
     existing_actor = project.rpg_database.add_actor(ActorDefinition("existing.actor", "Existing"))
     existing_entity = scene.add_entity(Entity("Existing"))
-    sentinel = bundle.output_dir / "keep.txt"; sentinel.write_text("keep", encoding="utf-8")
+    sentinel = bundle.output_dir / "keep.txt"
+    sentinel.write_text("keep", encoding="utf-8")
 
     def fail(stage):
         if stage == boundary:

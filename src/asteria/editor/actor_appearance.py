@@ -6,6 +6,7 @@ every linked entity's SpriteRenderer2D fields (see SceneEditingController and
 AdapterFamilyWidget's "actors" appearance panel), so the shipped game never
 needs to know this file exists.
 """
+
 from __future__ import annotations
 
 import json
@@ -64,8 +65,7 @@ class ActorAppearanceLibrary:
         if raw.get("schema") != self.SCHEMA or raw.get("version") != self.VERSION:
             raise ActorAppearanceError("unsupported actor appearance store")
         self._items = {
-            actor_id: ActorAppearance.from_data(actor_id, data)
-            for actor_id, data in raw.get("actors", {}).items()
+            actor_id: ActorAppearance.from_data(actor_id, data) for actor_id, data in raw.get("actors", {}).items()
         }
 
     def get(self, actor_id):
@@ -75,9 +75,7 @@ class ActorAppearanceLibrary:
     def set(self, actor_id, sprite_sheet_asset_id, frame_index=0, flip_x=False):
         self._ensure_loaded()
         actor_id = str(actor_id)
-        value = ActorAppearance(
-            actor_id, str(sprite_sheet_asset_id), int(frame_index), bool(flip_x)
-        )
+        value = ActorAppearance(actor_id, str(sprite_sheet_asset_id), int(frame_index), bool(flip_x))
         self._items[actor_id] = value
         self._save()
         return value
@@ -94,9 +92,7 @@ class ActorAppearanceLibrary:
             "version": self.VERSION,
             "actors": {k: v.to_data() for k, v in sorted(self._items.items())},
         }
-        self.path.write_text(
-            json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-        )
+        self.path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def get_actor_appearance(document, actor_id):
@@ -129,8 +125,10 @@ def _appearance_from_map(document, actor_id):
             sprite = entity.try_get(SpriteRenderer2D)
             if sprite is not None and sprite.sprite_sheet_asset_id:
                 return ActorAppearance(
-                    str(actor_id), sprite.sprite_sheet_asset_id,
-                    sprite.frame_index, sprite.flip_x,
+                    str(actor_id),
+                    sprite.sprite_sheet_asset_id,
+                    sprite.frame_index,
+                    sprite.flip_x,
                 )
     return None
 
@@ -161,9 +159,7 @@ def apply_actor_appearance(document, actor_id, sprite_sheet_asset_id, frame_inde
         str(actor_id), str(sprite_sheet_asset_id), int(frame_index), bool(flip_x)
     )
     if document.file_path is not None:
-        ActorAppearanceLibrary(document.file_path.parent).set(
-            actor_id, sprite_sheet_asset_id, frame_index, flip_x
-        )
+        ActorAppearanceLibrary(document.file_path.parent).set(actor_id, sprite_sheet_asset_id, frame_index, flip_x)
     target_fields = {
         "sprite_sheet_asset_id": str(sprite_sheet_asset_id),
         "frame_index": int(frame_index),
@@ -189,7 +185,10 @@ def apply_actor_appearance(document, actor_id, sprite_sheet_asset_id, frame_inde
                     if old_value != new_value:
                         tx.add(
                             SetAttributeCommand(
-                                sprite, field_name, new_value, old_value,
+                                sprite,
+                                field_name,
+                                new_value,
+                                old_value,
                                 f"Set {field_name}",
                             )
                         )

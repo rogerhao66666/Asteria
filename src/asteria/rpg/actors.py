@@ -72,9 +72,7 @@ class ClassDefinition:
         object.__setattr__(self, "class_id", class_id)
         object.__setattr__(self, "display_name", str(display_name or class_id))
         object.__setattr__(self, "stat_bonuses", _numbers(stat_bonuses or {}, "stat"))
-        object.__setattr__(
-            self, "resource_bonuses", _numbers(resource_bonuses or {}, "resource")
-        )
+        object.__setattr__(self, "resource_bonuses", _numbers(resource_bonuses or {}, "resource"))
         object.__setattr__(
             self,
             "granted_tags",
@@ -175,14 +173,17 @@ class ClassAssignment:
     @classmethod
     def from_data(cls, data):
         expected = {
-            "schema", "version", "class_id", "assignment_id", "role",
-            "enabled", "priority", "progression_track_ids", "tags",
+            "schema",
+            "version",
+            "class_id",
+            "assignment_id",
+            "role",
+            "enabled",
+            "priority",
+            "progression_track_ids",
+            "tags",
         }
-        if (
-            set(data) != expected
-            or data.get("schema") != "asteria.rpg.class_assignment"
-            or data.get("version") != 1
-        ):
+        if set(data) != expected or data.get("schema") != "asteria.rpg.class_assignment" or data.get("version") != 1:
             raise ValueError("unsupported class assignment")
         return cls(
             data["class_id"],
@@ -221,13 +222,10 @@ class ActorDefinition:
         if class_assignments is not None and class_id is not None:
             raise ValueError("use class_id or class_assignments, not both")
         if class_assignments is None:
-            assignments = () if class_id is None else (
-                ClassAssignment(class_id, role="primary"),
-            )
+            assignments = () if class_id is None else (ClassAssignment(class_id, role="primary"),)
         else:
             assignments = tuple(
-                x if isinstance(x, ClassAssignment) else ClassAssignment.from_data(x)
-                for x in class_assignments
+                x if isinstance(x, ClassAssignment) else ClassAssignment.from_data(x) for x in class_assignments
             )
         ids = [x.assignment_id for x in assignments]
         if len(ids) != len(set(ids)):
@@ -237,9 +235,7 @@ class ActorDefinition:
         object.__setattr__(self, "class_assignments", assignments)
         object.__setattr__(self, "base_stats", _numbers(base_stats or {}, "stat"))
         object.__setattr__(self, "base_resources", _resources(base_resources or {}))
-        object.__setattr__(
-            self, "tags", tuple(sorted({_id(x, "tag").lower() for x in tags}))
-        )
+        object.__setattr__(self, "tags", tuple(sorted({_id(x, "tag").lower() for x in tags})))
         object.__setattr__(
             self,
             "abilities",
@@ -272,9 +268,7 @@ class ActorDefinition:
             "display_name": self.display_name,
             "class_assignments": [x.to_data() for x in self.class_assignments],
             "base_stats": dict(sorted(self.base_stats.items())),
-            "base_resources": {
-                k: self.base_resources[k] for k in sorted(self.base_resources)
-            },
+            "base_resources": {k: self.base_resources[k] for k in sorted(self.base_resources)},
             "tags": list(self.tags),
             "abilities": list(self.abilities),
         }
@@ -345,9 +339,7 @@ def build_actor(
     stats = StatBlock(actor.base_stats)
     resources = ResourcePool()
     for key, raw in actor.base_resources.items():
-        resources.define(
-            key, raw["maximum"], minimum=raw["minimum"], current=raw["current"]
-        )
+        resources.define(key, raw["maximum"], minimum=raw["minimum"], current=raw["current"])
     tags = TagSet(actor.tags)
     abilities = list(actor.abilities)
     for assignment in assignments:
@@ -373,9 +365,7 @@ def build_actor(
         for tag in assignment.tags:
             tags.add(tag)
         abilities.extend(definition.granted_abilities)
-    return RpgActorBuild(
-        stats, resources, tags, tuple(dict.fromkeys(abilities)), assignments
-    )
+    return RpgActorBuild(stats, resources, tags, tuple(dict.fromkeys(abilities)), assignments)
 
 
 @dataclass(frozen=True, slots=True)
@@ -431,9 +421,7 @@ class RpgActorRuntime:
         )
         self.class_assignments = assignments
         self.class_definitions = definitions
-        self.class_definition = (
-            definitions[assignments[0].class_id] if len(assignments) == 1 else None
-        )
+        self.class_definition = definitions[assignments[0].class_id] if len(assignments) == 1 else None
         build = build_actor(actor, class_definitions=definitions)
         self.stats = build.stats
         self.resources = build.resources
@@ -474,9 +462,7 @@ class RpgActorRuntime:
         if progression is None:
             return bonuses, tags, abilities
         assigned_tracks = {
-            track_id
-            for assignment in self.class_assignments
-            for track_id in assignment.progression_track_ids
+            track_id for assignment in self.class_assignments for track_id in assignment.progression_track_ids
         }
         # Phase 7A actors did not record progression ownership. Preserve that
         # behavior when no assignment declares tracks; new multi-job actors can
@@ -544,9 +530,7 @@ class RpgActorRuntime:
             passives=passives,
         ).values()
 
-    def equipment_eligibility(
-        self, loadout, slot_id, item, *, progression=None, allocations=None, passives=None
-    ):
+    def equipment_eligibility(self, loadout, slot_id, item, *, progression=None, allocations=None, passives=None):
         return loadout.check_equip(
             slot_id,
             item,
@@ -558,9 +542,7 @@ class RpgActorRuntime:
             ),
         )
 
-    def equip_item(
-        self, loadout, slot_id, item, *, progression=None, allocations=None, passives=None
-    ):
+    def equip_item(self, loadout, slot_id, item, *, progression=None, allocations=None, passives=None):
         return loadout.equip(
             slot_id,
             item,
@@ -646,9 +628,15 @@ class RpgActorRuntime:
             add(chosen.result_ability_id, "evolution", chosen.rule_id)
         return AbilityResolution(tuple(ordered), tuple(grants))
 
-    def effective_abilities(self, *, progression=None, allocations=None, loadout=None, passives=None, evolution_rules=()):
+    def effective_abilities(
+        self, *, progression=None, allocations=None, loadout=None, passives=None, evolution_rules=()
+    ):
         return self.resolve_abilities(
-            progression=progression, allocations=allocations, loadout=loadout, passives=passives, evolution_rules=evolution_rules
+            progression=progression,
+            allocations=allocations,
+            loadout=loadout,
+            passives=passives,
+            evolution_rules=evolution_rules,
         ).abilities
 
     def effective_passive_modifiers(self, passives):
@@ -667,7 +655,6 @@ class RpgActorRuntime:
             if passive is not None:
                 result.update(passive.tags)
         return tuple(sorted(result))
-
 
 
 class RpgDatabase:
@@ -789,6 +776,7 @@ class RpgDatabase:
 
     def add_passive(self, value):
         from .ability_build import PassiveDefinition
+
         if not isinstance(value, PassiveDefinition):
             raise TypeError("passive must be PassiveDefinition")
         if value.passive_id in self.passives:
@@ -798,6 +786,7 @@ class RpgDatabase:
 
     def add_ability_evolution(self, value):
         from .ability_build import AbilityEvolutionRule
+
         if not isinstance(value, AbilityEvolutionRule):
             raise TypeError("ability evolution must be AbilityEvolutionRule")
         if value.rule_id in self.ability_evolutions:
@@ -807,6 +796,7 @@ class RpgDatabase:
 
     def add_progression_graph(self, value):
         from .progression_graph import ProgressionGraphDefinition
+
         if not isinstance(value, ProgressionGraphDefinition):
             raise TypeError("progression graph must be ProgressionGraphDefinition")
         if value.graph_id in self.progression_graphs:
@@ -814,9 +804,9 @@ class RpgDatabase:
         self.progression_graphs[value.graph_id] = value
         return value
 
-
     def add_equipment_growth(self, value):
         from .equipment_growth import EquipmentGrowthDefinition
+
         if not isinstance(value, EquipmentGrowthDefinition):
             raise TypeError("equipment growth must be EquipmentGrowthDefinition")
         if value.growth_id in self.equipment_growth:
@@ -826,6 +816,7 @@ class RpgDatabase:
 
     def add_battle_resource(self, value):
         from .battle_resources import BattleResourceDefinition
+
         if not isinstance(value, BattleResourceDefinition):
             raise TypeError("battle resource must be BattleResourceDefinition")
         if value.resource_id in self.battle_resources:
@@ -835,6 +826,7 @@ class RpgDatabase:
 
     def add_interaction_rule(self, value):
         from .interactions import InteractionRule
+
         if not isinstance(value, InteractionRule):
             raise TypeError("interaction rule must be InteractionRule")
         if value.rule_id in self.interaction_rules:
@@ -844,6 +836,7 @@ class RpgDatabase:
 
     def add_outcome_check(self, value):
         from .interactions import OutcomeCheckDefinition
+
         if not isinstance(value, OutcomeCheckDefinition):
             raise TypeError("outcome check must be OutcomeCheckDefinition")
         if value.check_id in self.outcome_checks:
@@ -853,6 +846,7 @@ class RpgDatabase:
 
     def add_battle_state_policy(self, value):
         from .battle_states import BattleStatePolicy
+
         if not isinstance(value, BattleStatePolicy):
             raise TypeError("battle state policy must be BattleStatePolicy")
         if value.state_id in self.battle_state_policies:
@@ -860,9 +854,9 @@ class RpgDatabase:
         self.battle_state_policies[value.state_id] = value
         return value
 
-
     def add_formation(self, value):
         from .targeting import FormationDefinition
+
         if not isinstance(value, FormationDefinition):
             raise TypeError("formation must be FormationDefinition")
         if value.formation_id in self.formations:
@@ -872,6 +866,7 @@ class RpgDatabase:
 
     def add_battle_targeting(self, value):
         from .targeting import BattleTargetingDefinition
+
         if not isinstance(value, BattleTargetingDefinition):
             raise TypeError("battle targeting must be BattleTargetingDefinition")
         if value.ability_id in self.battle_targeting:
@@ -881,6 +876,7 @@ class RpgDatabase:
 
     def add_battle_objective(self, value):
         from .battle_lifecycle import BattleObjectiveDefinition
+
         if not isinstance(value, BattleObjectiveDefinition):
             raise TypeError("battle objective must be BattleObjectiveDefinition")
         if value.objective_id in self.battle_objectives:
@@ -890,6 +886,7 @@ class RpgDatabase:
 
     def add_escape_rule(self, value):
         from .battle_lifecycle import BattleEscapeRule
+
         if not isinstance(value, BattleEscapeRule):
             raise TypeError("escape rule must be BattleEscapeRule")
         if value.rule_id in self.escape_rules:
@@ -899,6 +896,7 @@ class RpgDatabase:
 
     def add_battle_scheduler(self, value):
         from .battle_scheduler import BattleSchedulerDefinition
+
         if not isinstance(value, BattleSchedulerDefinition):
             raise TypeError("battle scheduler must be BattleSchedulerDefinition")
         if value.scheduler_id in self.battle_schedulers:
@@ -908,6 +906,7 @@ class RpgDatabase:
 
     def add_action_timing(self, value):
         from .battle_timing import ActionTimingDefinition
+
         if not isinstance(value, ActionTimingDefinition):
             raise TypeError("action timing must be ActionTimingDefinition")
         if value.ability_id in self.action_timings:
@@ -917,6 +916,7 @@ class RpgDatabase:
 
     def add_action_sequence(self, value):
         from .action_sequences import ActionSequenceDefinition
+
         if not isinstance(value, ActionSequenceDefinition):
             raise TypeError("action sequence must be ActionSequenceDefinition")
         if value.sequence_id in self.action_sequences:
@@ -926,6 +926,7 @@ class RpgDatabase:
 
     def add_gauge_composition(self, value):
         from .gauge_composition import GaugeCompositionDefinition
+
         if not isinstance(value, GaugeCompositionDefinition):
             raise TypeError("gauge composition must be GaugeCompositionDefinition")
         if value.composition_id in self.gauge_compositions:
@@ -935,6 +936,7 @@ class RpgDatabase:
 
     def add_reaction(self, value):
         from .reactions import ReactionDefinition
+
         if not isinstance(value, ReactionDefinition):
             raise TypeError("reaction must be ReactionDefinition")
         if value.reaction_id in self.reactions:
@@ -944,6 +946,7 @@ class RpgDatabase:
 
     def add_enemy_ai(self, value):
         from .enemy_ai import EnemyAIDefinition
+
         if not isinstance(value, EnemyAIDefinition):
             raise TypeError("enemy AI must be EnemyAIDefinition")
         if value.ai_id in self.enemy_ai:
@@ -953,6 +956,7 @@ class RpgDatabase:
 
     def add_enemy_behavior_binding(self, value):
         from .enemy_behavior import EnemyBehaviorBinding
+
         if not isinstance(value, EnemyBehaviorBinding):
             raise TypeError("enemy behavior binding must be EnemyBehaviorBinding")
         if value.enemy_id in self.enemy_behavior_bindings:
@@ -962,6 +966,7 @@ class RpgDatabase:
 
     def add_battle_session_rules(self, value):
         from .battle_session_rules import BattleSessionRules
+
         if not isinstance(value, BattleSessionRules):
             raise TypeError("battle session rules must be BattleSessionRules")
         if value.rules_id in self.battle_session_rules:
@@ -971,6 +976,7 @@ class RpgDatabase:
 
     def add_shop(self, value):
         from .economy import ShopDefinition
+
         if not isinstance(value, ShopDefinition):
             raise TypeError("shop must be ShopDefinition")
         if value.shop_id in self.shops:
@@ -980,6 +986,7 @@ class RpgDatabase:
 
     def add_equipment_set(self, value):
         from .equipment_sets import EquipmentSetDefinition
+
         if not isinstance(value, EquipmentSetDefinition):
             raise TypeError("equipment set must be EquipmentSetDefinition")
         if value.set_id in self.equipment_sets:
@@ -997,18 +1004,22 @@ class RpgDatabase:
 
     def add_faction(self, value):
         from .world_record import FactionDefinition
+
         return self._add_keyed(self.factions, value, FactionDefinition, "faction_id", "faction")
 
     def add_achievement(self, value):
         from .world_record import AchievementDefinition
+
         return self._add_keyed(self.achievements, value, AchievementDefinition, "achievement_id", "achievement")
 
     def add_capture_rule(self, value):
         from .capture import CaptureRule
+
         return self._add_keyed(self.capture_rules, value, CaptureRule, "enemy_id", "capture rule")
 
     def add_quest(self, value):
         from .quests import QuestDefinition
+
         if not isinstance(value, QuestDefinition):
             raise TypeError("quest must be QuestDefinition")
         if value.quest_id in self.quests:
@@ -1018,6 +1029,7 @@ class RpgDatabase:
 
     def add_party_presentation_policy(self, value):
         from .party_setup import PartyPresentationPolicyDefinition
+
         if not isinstance(value, PartyPresentationPolicyDefinition):
             raise TypeError("party presentation policy must be PartyPresentationPolicyDefinition")
         if value.profile_id in self.party_presentation_policies:
@@ -1027,6 +1039,7 @@ class RpgDatabase:
 
     def add_party_setup(self, value):
         from .party_setup import PartySetupDefinition
+
         if not isinstance(value, PartySetupDefinition):
             raise TypeError("party setup must be PartySetupDefinition")
         if value.party_id in self.party_setups:
@@ -1036,6 +1049,7 @@ class RpgDatabase:
 
     def add_composition_recipe(self, value):
         from .composition import CompositionRecipeDefinition
+
         if not isinstance(value, CompositionRecipeDefinition):
             raise TypeError("composition recipe must be CompositionRecipeDefinition")
         if value.recipe_id in self.composition_recipes:
@@ -1045,6 +1059,7 @@ class RpgDatabase:
 
     def add_action_transaction(self, value):
         from .battle_transactions import ActionTransactionPolicy
+
         if not isinstance(value, ActionTransactionPolicy):
             raise TypeError("action transaction must be ActionTransactionPolicy")
         if value.ability_id in self.action_transactions:
@@ -1069,7 +1084,9 @@ class RpgDatabase:
                         )
         for rule in self.ability_evolutions.values():
             if rule.progression_track_id is not None and rule.progression_track_id not in self.progression_tracks:
-                errors.append(f"ability evolution {rule.rule_id} references unknown progression track {rule.progression_track_id}")
+                errors.append(
+                    f"ability evolution {rule.rule_id} references unknown progression track {rule.progression_track_id}"
+                )
         for graph in self.progression_graphs.values():
             for node in graph.nodes:
                 for reward in node.rewards:
@@ -1102,9 +1119,9 @@ class RpgDatabase:
                         )
                     for socket_id in reward.unlocked_sockets:
                         owners = [
-                            e for e in self.equipment.values()
-                            if e.growth_id == growth.growth_id
-                            and any(s.socket_id == socket_id for s in e.sockets)
+                            e
+                            for e in self.equipment.values()
+                            if e.growth_id == growth.growth_id and any(s.socket_id == socket_id for s in e.sockets)
                         ]
                         if not owners:
                             errors.append(
@@ -1128,7 +1145,9 @@ class RpgDatabase:
                     known_slots = {x.slot_id for x in formation.slots}
                     for placement in party.placements:
                         if placement.slot_id not in known_slots:
-                            errors.append(f"party setup {party.party_id} references unknown formation slot {placement.slot_id}")
+                            errors.append(
+                                f"party setup {party.party_id} references unknown formation slot {placement.slot_id}"
+                            )
         for recipe in self.composition_recipes.values():
             for selection in recipe.selections:
                 for item_id in selection.item_ids:
@@ -1139,7 +1158,9 @@ class RpgDatabase:
                     errors.append(f"composition recipe {recipe.recipe_id} references unknown output item {item_id}")
             for track_id in recipe.experience:
                 if track_id not in self.progression_tracks:
-                    errors.append(f"composition recipe {recipe.recipe_id} references unknown progression track {track_id}")
+                    errors.append(
+                        f"composition recipe {recipe.recipe_id} references unknown progression track {track_id}"
+                    )
         for equipment_set in self.equipment_sets.values():
             for equipment_id in equipment_set.equipment_ids:
                 if equipment_id not in self.equipment:
@@ -1154,7 +1175,9 @@ class RpgDatabase:
         for achievement in self.achievements.values():
             store = {"defeated": self.enemies, "reputation": self.factions, "quest": self.quests}.get(achievement.kind)
             if store is not None and achievement.target not in store:
-                errors.append(f"achievement {achievement.achievement_id} references unknown {achievement.kind} target {achievement.target}")
+                errors.append(
+                    f"achievement {achievement.achievement_id} references unknown {achievement.kind} target {achievement.target}"
+                )
         for shop in self.shops.values():
             for entry in shop.entries:
                 if entry.item_id not in self.items:
@@ -1177,31 +1200,22 @@ class RpgDatabase:
         for encounter in self.encounters.values():
             for member in encounter.members:
                 if member.enemy_id not in self.enemies:
-                    errors.append(
-                        f"encounter {encounter.encounter_id} references unknown enemy {member.enemy_id}"
-                    )
+                    errors.append(f"encounter {encounter.encounter_id} references unknown enemy {member.enemy_id}")
         for enemy in self.enemies.values():
             for entry in enemy.reward.loot:
                 if entry.item_id not in self.items:
-                    errors.append(
-                        f"enemy {enemy.enemy_id} reward references unknown item {entry.item_id}"
-                    )
+                    errors.append(f"enemy {enemy.enemy_id} reward references unknown item {entry.item_id}")
             for track_id in enemy.reward.experience:
                 if track_id not in self.progression_tracks:
-                    errors.append(
-                        f"enemy {enemy.enemy_id} reward references unknown progression track {track_id}"
-                    )
+                    errors.append(f"enemy {enemy.enemy_id} reward references unknown progression track {track_id}")
         if errors:
-            raise ValueError(
-                "invalid RPG database references: " + "; ".join(sorted(errors))
-            )
+            raise ValueError("invalid RPG database references: " + "; ".join(sorted(errors)))
         return True
 
     def build_actor(self, actor_id):
         actor = self.actors[str(actor_id)]
         definitions = {
-            assignment.class_id: self.classes[assignment.class_id]
-            for assignment in actor.enabled_class_assignments()
+            assignment.class_id: self.classes[assignment.class_id] for assignment in actor.enabled_class_assignments()
         }
         return RpgActorRuntime(actor, class_definitions=definitions)
 
@@ -1213,86 +1227,40 @@ class RpgDatabase:
             "classes": [self.classes[k].to_data() for k in sorted(self.classes)],
             "items": [self.items[k].to_data() for k in sorted(self.items)],
             "equipment": [self.equipment[k].to_data() for k in sorted(self.equipment)],
-            "attachments": [
-                self.attachments[k].to_data() for k in sorted(self.attachments)
-            ],
+            "attachments": [self.attachments[k].to_data() for k in sorted(self.attachments)],
             "enemies": [self.enemies[k].to_data() for k in sorted(self.enemies)],
-            "encounters": [
-                self.encounters[k].to_data() for k in sorted(self.encounters)
-            ],
-            "progression_tracks": [
-                self.progression_tracks[k].to_data()
-                for k in sorted(self.progression_tracks)
-            ],
+            "encounters": [self.encounters[k].to_data() for k in sorted(self.encounters)],
+            "progression_tracks": [self.progression_tracks[k].to_data() for k in sorted(self.progression_tracks)],
             "passives": [self.passives[k].to_data() for k in sorted(self.passives)],
-            "ability_evolutions": [
-                self.ability_evolutions[k].to_data() for k in sorted(self.ability_evolutions)
-            ],
-            "progression_graphs": [
-                self.progression_graphs[k].to_data() for k in sorted(self.progression_graphs)
-            ],
-            "equipment_growth": [
-                self.equipment_growth[k].to_data() for k in sorted(self.equipment_growth)
-            ],
-            "battle_resources": [
-                self.battle_resources[k].to_data() for k in sorted(self.battle_resources)
-            ],
-            "interaction_rules": [
-                self.interaction_rules[k].to_data() for k in sorted(self.interaction_rules)
-            ],
-            "outcome_checks": [
-                self.outcome_checks[k].to_data() for k in sorted(self.outcome_checks)
-            ],
+            "ability_evolutions": [self.ability_evolutions[k].to_data() for k in sorted(self.ability_evolutions)],
+            "progression_graphs": [self.progression_graphs[k].to_data() for k in sorted(self.progression_graphs)],
+            "equipment_growth": [self.equipment_growth[k].to_data() for k in sorted(self.equipment_growth)],
+            "battle_resources": [self.battle_resources[k].to_data() for k in sorted(self.battle_resources)],
+            "interaction_rules": [self.interaction_rules[k].to_data() for k in sorted(self.interaction_rules)],
+            "outcome_checks": [self.outcome_checks[k].to_data() for k in sorted(self.outcome_checks)],
             "battle_state_policies": [
                 self.battle_state_policies[k].to_data() for k in sorted(self.battle_state_policies)
             ],
-            "formations": [
-                self.formations[k].to_data() for k in sorted(self.formations)
-            ],
-            "battle_targeting": [
-                self.battle_targeting[k].to_data() for k in sorted(self.battle_targeting)
-            ],
-            "battle_objectives": [
-                self.battle_objectives[k].to_data() for k in sorted(self.battle_objectives)
-            ],
-            "escape_rules": [
-                self.escape_rules[k].to_data() for k in sorted(self.escape_rules)
-            ],
-            "battle_schedulers": [
-                self.battle_schedulers[k].to_data() for k in sorted(self.battle_schedulers)
-            ],
-            "action_timings": [
-                self.action_timings[k].to_data() for k in sorted(self.action_timings)
-            ],
-            "action_sequences": [
-                self.action_sequences[k].to_data() for k in sorted(self.action_sequences)
-            ],
-            "gauge_compositions": [
-                self.gauge_compositions[k].to_data() for k in sorted(self.gauge_compositions)
-            ],
+            "formations": [self.formations[k].to_data() for k in sorted(self.formations)],
+            "battle_targeting": [self.battle_targeting[k].to_data() for k in sorted(self.battle_targeting)],
+            "battle_objectives": [self.battle_objectives[k].to_data() for k in sorted(self.battle_objectives)],
+            "escape_rules": [self.escape_rules[k].to_data() for k in sorted(self.escape_rules)],
+            "battle_schedulers": [self.battle_schedulers[k].to_data() for k in sorted(self.battle_schedulers)],
+            "action_timings": [self.action_timings[k].to_data() for k in sorted(self.action_timings)],
+            "action_sequences": [self.action_sequences[k].to_data() for k in sorted(self.action_sequences)],
+            "gauge_compositions": [self.gauge_compositions[k].to_data() for k in sorted(self.gauge_compositions)],
             "reactions": [self.reactions[k].to_data() for k in sorted(self.reactions)],
             "enemy_ai": [self.enemy_ai[k].to_data() for k in sorted(self.enemy_ai)],
-            "action_transactions": [
-                self.action_transactions[k].to_data() for k in sorted(self.action_transactions)
-            ],
-            "composition_recipes": [
-                self.composition_recipes[k].to_data() for k in sorted(self.composition_recipes)
-            ],
-            "party_setups": [
-                self.party_setups[k].to_data() for k in sorted(self.party_setups)
-            ],
+            "action_transactions": [self.action_transactions[k].to_data() for k in sorted(self.action_transactions)],
+            "composition_recipes": [self.composition_recipes[k].to_data() for k in sorted(self.composition_recipes)],
+            "party_setups": [self.party_setups[k].to_data() for k in sorted(self.party_setups)],
             "party_presentation_policies": [
-                self.party_presentation_policies[k].to_data()
-                for k in sorted(self.party_presentation_policies)
+                self.party_presentation_policies[k].to_data() for k in sorted(self.party_presentation_policies)
             ],
             "enemy_behavior_bindings": [
-                self.enemy_behavior_bindings[k].to_data()
-                for k in sorted(self.enemy_behavior_bindings)
+                self.enemy_behavior_bindings[k].to_data() for k in sorted(self.enemy_behavior_bindings)
             ],
-            "battle_session_rules": [
-                self.battle_session_rules[k].to_data()
-                for k in sorted(self.battle_session_rules)
-            ],
+            "battle_session_rules": [self.battle_session_rules[k].to_data() for k in sorted(self.battle_session_rules)],
             "shops": [self.shops[k].to_data() for k in sorted(self.shops)],
             "equipment_sets": [self.equipment_sets[k].to_data() for k in sorted(self.equipment_sets)],
             "factions": [self.factions[k].to_data() for k in sorted(self.factions)],
@@ -1359,102 +1327,124 @@ class RpgDatabase:
                 result.add_progression_track(ProgressionTrackDefinition.from_data(x))
         if data["version"] >= 6:
             from .ability_build import AbilityEvolutionRule, PassiveDefinition
+
             for x in data["passives"]:
                 result.add_passive(PassiveDefinition.from_data(x))
             for x in data["ability_evolutions"]:
                 result.add_ability_evolution(AbilityEvolutionRule.from_data(x))
         if data["version"] >= 7:
             from .progression_graph import ProgressionGraphDefinition
+
             for x in data["progression_graphs"]:
                 result.add_progression_graph(ProgressionGraphDefinition.from_data(x))
         if data["version"] >= 8:
             from .equipment_growth import EquipmentGrowthDefinition
+
             for x in data["equipment_growth"]:
                 result.add_equipment_growth(EquipmentGrowthDefinition.from_data(x))
         if data["version"] >= 9:
             from .battle_resources import BattleResourceDefinition
+
             for x in data["battle_resources"]:
                 result.add_battle_resource(BattleResourceDefinition.from_data(x))
         if data["version"] >= 10:
             from .interactions import InteractionRule, OutcomeCheckDefinition
+
             for x in data["interaction_rules"]:
                 result.add_interaction_rule(InteractionRule.from_data(x))
             for x in data["outcome_checks"]:
                 result.add_outcome_check(OutcomeCheckDefinition.from_data(x))
         if data["version"] >= 11:
             from .battle_states import BattleStatePolicy
+
             for x in data["battle_state_policies"]:
                 result.add_battle_state_policy(BattleStatePolicy.from_data(x))
         if data["version"] >= 12:
             from .targeting import BattleTargetingDefinition, FormationDefinition
+
             for x in data["formations"]:
                 result.add_formation(FormationDefinition.from_data(x))
             for x in data["battle_targeting"]:
                 result.add_battle_targeting(BattleTargetingDefinition.from_data(x))
         if data["version"] >= 13:
             from .battle_lifecycle import BattleEscapeRule, BattleObjectiveDefinition
+
             for x in data["battle_objectives"]:
                 result.add_battle_objective(BattleObjectiveDefinition.from_data(x))
             for x in data["escape_rules"]:
                 result.add_escape_rule(BattleEscapeRule.from_data(x))
         if data["version"] >= 14:
             from .battle_scheduler import BattleSchedulerDefinition
+
             for x in data["battle_schedulers"]:
                 result.add_battle_scheduler(BattleSchedulerDefinition.from_data(x))
         if data["version"] >= 15:
             from .battle_timing import ActionTimingDefinition
+
             for x in data["action_timings"]:
                 result.add_action_timing(ActionTimingDefinition.from_data(x))
         if data["version"] >= 16:
             from .action_sequences import ActionSequenceDefinition
+
             for x in data.get("action_sequences", ()):
                 result.add_action_sequence(ActionSequenceDefinition.from_data(x))
         if data["version"] >= 17:
             from .gauge_composition import GaugeCompositionDefinition
+
             for x in data.get("gauge_compositions", ()):
                 result.add_gauge_composition(GaugeCompositionDefinition.from_data(x))
         if data["version"] >= 18:
             from .reactions import ReactionDefinition
+
             for x in data.get("reactions", ()):
                 result.add_reaction(ReactionDefinition.from_data(x))
         if data["version"] >= 19:
             from .enemy_ai import EnemyAIDefinition
+
             for x in data.get("enemy_ai", ()):
                 result.add_enemy_ai(EnemyAIDefinition.from_data(x))
         if data["version"] >= 20:
             from .battle_transactions import ActionTransactionPolicy
+
             for x in data.get("action_transactions", ()):
                 result.add_action_transaction(ActionTransactionPolicy.from_data(x))
         if data["version"] >= 21:
             from .composition import CompositionRecipeDefinition
+
             for x in data.get("composition_recipes", ()):
                 result.add_composition_recipe(CompositionRecipeDefinition.from_data(x))
         if data["version"] >= 22:
             from .party_setup import PartyPresentationPolicyDefinition, PartySetupDefinition
+
             for x in data.get("party_setups", ()):
                 result.add_party_setup(PartySetupDefinition.from_data(x))
             for x in data.get("party_presentation_policies", ()):
                 result.add_party_presentation_policy(PartyPresentationPolicyDefinition.from_data(x))
         if data["version"] >= 23:
             from .enemy_behavior import EnemyBehaviorBinding
+
             for x in data.get("enemy_behavior_bindings", ()):
                 result.add_enemy_behavior_binding(EnemyBehaviorBinding.from_data(x))
         if data["version"] >= 24:
             from .battle_session_rules import BattleSessionRules
+
             for x in data.get("battle_session_rules", ()):
                 result.add_battle_session_rules(BattleSessionRules.from_data(x))
         if data["version"] >= 25:
             from .economy import ShopDefinition
             from .quests import QuestDefinition
+
             for x in data.get("shops", ()):
                 result.add_shop(ShopDefinition.from_data(x))
             for x in data.get("quests", ()):
                 result.add_quest(QuestDefinition.from_data(x))
             from .equipment_sets import EquipmentSetDefinition
+
             for x in data.get("equipment_sets", ()):
                 result.add_equipment_set(EquipmentSetDefinition.from_data(x))
             from .capture import CaptureRule
             from .world_record import AchievementDefinition, FactionDefinition
+
             for x in data.get("factions", ()):
                 result.add_faction(FactionDefinition.from_data(x))
             for x in data.get("achievements", ()):

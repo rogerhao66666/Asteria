@@ -2,6 +2,7 @@
 
 Add them to ``Scene.scheduler``; ``Scene.update`` then runs them in ``order``.
 """
+
 from __future__ import annotations
 
 from asteria.core import System, Transform

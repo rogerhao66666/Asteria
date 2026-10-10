@@ -3,14 +3,29 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from asteria.gameplay import (
-    AbilityDefinition, AbilityEffect, AbilityRegistry, AbilityRuntime,
-    AbilityTargetMode, Effect, EffectOperation, EffectOperationKind,
-    GameplaySubject, ResourcePool, StateRegistry, StateRuntime, StatBlock,
-    TagSet, TargetingRule,
+    AbilityDefinition,
+    AbilityEffect,
+    AbilityRegistry,
+    AbilityRuntime,
+    AbilityTargetMode,
+    Effect,
+    EffectOperation,
+    EffectOperationKind,
+    GameplaySubject,
+    ResourcePool,
+    StateRegistry,
+    StateRuntime,
+    StatBlock,
+    TagSet,
+    TargetingRule,
 )
 from asteria.rpg import (
-    AIDecisionRule, BattleAction, BattleRuntime, EnemyAIDefinition,
-    Party, PartyMember,
+    AIDecisionRule,
+    BattleAction,
+    BattleRuntime,
+    EnemyAIDefinition,
+    Party,
+    PartyMember,
 )
 from .playable_rpg import PlayableRpgValidationHarness
 
@@ -61,11 +76,13 @@ def _damage_ability(ability_id, amount):
                 AbilityTargetMode.SELECTED,
                 Effect(
                     f"{ability_id}.effect",
-                    (EffectOperation(
-                        EffectOperationKind.RESOURCE_DELTA,
-                        "vitality",
-                        -abs(float(amount)),
-                    ),),
+                    (
+                        EffectOperation(
+                            EffectOperationKind.RESOURCE_DELTA,
+                            "vitality",
+                            -abs(float(amount)),
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -103,24 +120,36 @@ def build_reference_battle_scenario():
     player_ability_ids = tuple(x for x in build.abilities if x in authored_damage)
     enemy_ability_ids = ("enemy_claw", "enemy_crush")
     player = PartyMember(
-        "validation_hero", "side.alpha", _subject_from_resolved_build(build),
-        ability_ids=player_ability_ids, initiative=12,
+        "validation_hero",
+        "side.alpha",
+        _subject_from_resolved_build(build),
+        ability_ids=player_ability_ids,
+        initiative=12,
     )
     enemy = PartyMember(
-        "reference_enemy", "side.omega", _reference_enemy_subject(),
-        ability_ids=enemy_ability_ids, initiative=8,
+        "reference_enemy",
+        "side.omega",
+        _reference_enemy_subject(),
+        ability_ids=enemy_ability_ids,
+        initiative=8,
     )
 
     ai = EnemyAIDefinition(
         "reference_enemy_ai",
         rules=(
             AIDecisionRule(
-                "heavy", "ability", payload={"ability_id": "enemy_crush"},
-                target_selector="first_opponent", priority=20,
+                "heavy",
+                "ability",
+                payload={"ability_id": "enemy_crush"},
+                target_selector="first_opponent",
+                priority=20,
             ),
             AIDecisionRule(
-                "light", "ability", payload={"ability_id": "enemy_claw"},
-                target_selector="first_opponent", priority=10,
+                "light",
+                "ability",
+                payload={"ability_id": "enemy_claw"},
+                target_selector="first_opponent",
+                priority=10,
             ),
         ),
     )
@@ -147,28 +176,31 @@ class PlayableBattleValidationHarness:
         self.scenario = scenario or build_reference_battle_scenario()
 
     def _vitalities(self, target_ids):
-        return tuple(
-            self.scenario.battle.member(x).subject.resources.current("vitality")
-            for x in target_ids
-        )
+        return tuple(self.scenario.battle.member(x).subject.resources.current("vitality") for x in target_ids)
 
     def player_action(self, ability_id, target_ids=None):
         target_ids = tuple(target_ids or (self.scenario.enemy_member_id,))
         before = self._vitalities(target_ids)
-        result = self.scenario.battle.execute(
-            BattleAction(self.scenario.player_member_id, ability_id, target_ids)
-        )
+        result = self.scenario.battle.execute(BattleAction(self.scenario.player_member_id, ability_id, target_ids))
         after = self._vitalities(target_ids)
-        self.scenario.trace.append(BattleTraceEntry(
-            self.scenario.player_member_id, ability_id, target_ids,
-            before, after, "player_input",
-        ))
+        self.scenario.trace.append(
+            BattleTraceEntry(
+                self.scenario.player_member_id,
+                ability_id,
+                target_ids,
+                before,
+                after,
+                "player_input",
+            )
+        )
         return result
 
     def enemy_action(self):
         battle = self.scenario.battle
         decision = battle.enemy_ai.decide(
-            battle, self.scenario.enemy_ai_id, self.scenario.enemy_member_id,
+            battle,
+            self.scenario.enemy_ai_id,
+            self.scenario.enemy_member_id,
             rng=battle.rng,
         )
         if decision is None:
@@ -176,12 +208,16 @@ class PlayableBattleValidationHarness:
         before = self._vitalities(decision.target_ids)
         result = battle.enemy_ai.execute_decision(battle, decision, rng=battle.rng)
         after = self._vitalities(decision.target_ids)
-        self.scenario.trace.append(BattleTraceEntry(
-            decision.actor_id,
-            str(decision.payload.get("ability_id", decision.action_kind)),
-            decision.target_ids,
-            before, after, "enemy_ai",
-        ))
+        self.scenario.trace.append(
+            BattleTraceEntry(
+                decision.actor_id,
+                str(decision.payload.get("ability_id", decision.action_kind)),
+                decision.target_ids,
+                before,
+                after,
+                "enemy_ai",
+            )
+        )
         return result
 
     def run_exchange(self, player_ability_id="power_strike"):

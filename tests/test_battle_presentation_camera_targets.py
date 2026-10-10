@@ -13,10 +13,12 @@ from asteria.runtime import Camera2D
 
 def _scene():
     return BattlePresentationScene(
-        "batch97.reference", "battle.bg.reference_clearing", (
+        "batch97.reference",
+        "battle.bg.reference_clearing",
+        (
             BattleCombatantVisual("hero", "sheet.hero", "clips.hero", BattleVisualAnchor(72, 104)),
             BattleCombatantVisual("mimic", "sheet.mimic", "clips.mimic", BattleVisualAnchor(232, 104, "left")),
-        )
+        ),
     )
 
 
@@ -26,9 +28,7 @@ def test_camera_cue_is_presentation_only_and_does_not_mutate_base_camera_or_payl
     runtime = BattleCameraFeedbackRuntime(scene)
     payload = {"effect": "hit_shake", "amplitude_x": 2.0, "amplitude_y": 1.0, "duration": 0.2, "frequency": 20}
     before = deepcopy(payload)
-    coordinator.consume_timeline_cues((PresentationCue(
-        "slash", ActionCue("impact", 0.1, "camera", payload)
-    ),))
+    coordinator.consume_timeline_cues((PresentationCue("slash", ActionCue("impact", 0.1, "camera", payload)),))
     base = Camera2D(10, 20, 320, 180, 2.0)
     assert runtime.apply_events(coordinator.drain()) == (True,)
     view = runtime.camera_view(base)
@@ -41,9 +41,14 @@ def test_screen_fx_cue_is_deterministic_view_state_including_hit_stop_metadata()
     scene = _scene()
     coordinator = BattlePresentationCoordinator(scene)
     runtime = BattleCameraFeedbackRuntime(scene)
-    coordinator.consume_timeline_cues((PresentationCue(
-        "slash", ActionCue("freeze", 0.1, "screen_fx", {"effect": "hit_stop", "duration": 0.08, "strength": 1.0})
-    ),))
+    coordinator.consume_timeline_cues(
+        (
+            PresentationCue(
+                "slash",
+                ActionCue("freeze", 0.1, "screen_fx", {"effect": "hit_stop", "duration": 0.08, "strength": 1.0}),
+            ),
+        )
+    )
     runtime.apply_events(coordinator.drain())
     assert runtime.screen_fx[0].effect == "hit_stop"
     runtime.update(0.04)
@@ -85,9 +90,14 @@ def test_camera_impulse_lifetime_and_offset_are_deterministic():
     scene = _scene()
     coordinator = BattlePresentationCoordinator(scene)
     runtime = BattleCameraFeedbackRuntime(scene)
-    coordinator.consume_timeline_cues((PresentationCue(
-        "hit", ActionCue("shake", 0, "camera", {"effect": "shake", "amplitude": 3, "duration": 0.2, "frequency": 10})
-    ),))
+    coordinator.consume_timeline_cues(
+        (
+            PresentationCue(
+                "hit",
+                ActionCue("shake", 0, "camera", {"effect": "shake", "amplitude": 3, "duration": 0.2, "frequency": 10}),
+            ),
+        )
+    )
     runtime.apply_events(coordinator.drain())
     assert runtime.camera_offset() == (3.0, 3.0)
     runtime.update(0.05)

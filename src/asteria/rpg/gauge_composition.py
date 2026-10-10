@@ -117,8 +117,11 @@ class GaugeImpactRule:
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported gauge impact rule")
         return cls(
-            data["impact_id"], data["resource_id"], data["trigger"],
-            recipient=data.get("recipient", "target"), delta=data.get("delta", 0),
+            data["impact_id"],
+            data["resource_id"],
+            data["trigger"],
+            recipient=data.get("recipient", "target"),
+            delta=data.get("delta", 0),
             value_scale=data.get("value_scale", 0),
             required_outcome_tags_all=data.get("required_outcome_tags_all", ()),
             required_outcome_tags_any=data.get("required_outcome_tags_any", ()),
@@ -203,9 +206,14 @@ class GaugeThresholdRule:
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported gauge threshold rule")
         return cls(
-            data["threshold_id"], data["resource_id"], data["comparison"], data["threshold"],
-            state_id=data.get("state_id"), timeline_shift=data.get("timeline_shift", 0),
-            reset_to=data.get("reset_to"), emit_trigger=data.get("emit_trigger"),
+            data["threshold_id"],
+            data["resource_id"],
+            data["comparison"],
+            data["threshold"],
+            state_id=data.get("state_id"),
+            timeline_shift=data.get("timeline_shift", 0),
+            reset_to=data.get("reset_to"),
+            emit_trigger=data.get("emit_trigger"),
             include_cast_in_shift=data.get("include_cast_in_shift", True),
             priority=data.get("priority", 0),
         )
@@ -324,7 +332,9 @@ class BattleGaugeCompositionRuntime:
 
         for (member_id, resource_id), delta in sorted(aggregated.items()):
             change = battle.battle_resources.change(
-                member_id, resource_id, delta,
+                member_id,
+                resource_id,
+                delta,
                 trigger=f"gauge.{composition.composition_id}",
             )
             changes.append(change)
@@ -339,39 +349,59 @@ class BattleGaugeCompositionRuntime:
                     state_applied = bool(state_result.applied)
                 if threshold.timeline_shift != 0:
                     battle.shift_timeline(
-                        member_id, threshold.timeline_shift,
+                        member_id,
+                        threshold.timeline_shift,
                         include_cast=threshold.include_cast_in_shift,
                     )
                 if threshold.emit_trigger is not None:
                     battle.battle_resources.apply_trigger(threshold.emit_trigger, [member_id])
                     battle.battle_states.apply_trigger(threshold.emit_trigger, [battle.member(member_id)])
                     emit_hook(
-                        self.hooks, threshold.emit_trigger, source=member_id,
+                        self.hooks,
+                        threshold.emit_trigger,
+                        source=member_id,
                         data={"composition_id": composition.composition_id, "threshold_id": threshold.threshold_id},
                     )
                 if threshold.reset_to is not None:
                     current = battle.battle_resources.current(member_id, threshold.resource_id)
                     battle.battle_resources.change(
-                        member_id, threshold.resource_id, threshold.reset_to - current,
+                        member_id,
+                        threshold.resource_id,
+                        threshold.reset_to - current,
                         trigger=f"gauge.{composition.composition_id}.{threshold.threshold_id}.reset",
                     )
                 threshold_result = GaugeThresholdResult(
-                    threshold.threshold_id, member_id, threshold.resource_id,
-                    change.before, change.after, state_applied, threshold.timeline_shift,
-                    threshold.reset_to, threshold.emit_trigger,
+                    threshold.threshold_id,
+                    member_id,
+                    threshold.resource_id,
+                    change.before,
+                    change.after,
+                    state_applied,
+                    threshold.timeline_shift,
+                    threshold.reset_to,
+                    threshold.emit_trigger,
                 )
                 threshold_results.append(threshold_result)
                 emit_hook(
-                    self.hooks, "rpg.battle.gauge_threshold_crossed", source=member_id,
+                    self.hooks,
+                    "rpg.battle.gauge_threshold_crossed",
+                    source=member_id,
                     data={"composition_id": composition.composition_id, "result": threshold_result},
                 )
 
         result = GaugeCompositionResult(
-            composition.composition_id, source_id, target_id, trigger,
-            tuple(matched_impact_ids), tuple(changes), tuple(threshold_results),
+            composition.composition_id,
+            source_id,
+            target_id,
+            trigger,
+            tuple(matched_impact_ids),
+            tuple(changes),
+            tuple(threshold_results),
         )
         emit_hook(
-            self.hooks, "rpg.battle.gauge_composed", source=source_id,
+            self.hooks,
+            "rpg.battle.gauge_composed",
+            source=source_id,
             data={"result": result},
         )
         return result

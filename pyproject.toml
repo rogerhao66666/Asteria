@@ -16,9 +16,30 @@ dev=["pytest>=9", "ruff>=0.16"]
 
 [tool.ruff]
 target-version="py312"
+line-length=120
+extend-exclude=["local_reference"]
+
+[tool.ruff.format]
+quote-style="double"
+docstring-code-format=false
+
+[tool.ruff.lint]
+# E/W pycodestyle, F pyflakes, I import order, B bugbear, UP pyupgrade.
+select=["E", "F", "W", "I", "B", "UP"]
+ignore=[
+    "E741",   # short names (l, O, I) are used for math / coordinates
+    "B008",   # dataclass-style defaults call constructors on purpose
+    "B905",   # zip(strict=) would change behavior on ragged inputs
+    "UP042",  # (str, Enum) is kept for Python 3.11 JSON round-trip parity
+]
+
+[tool.ruff.lint.isort]
+known-first-party=["asteria"]
 
 [tool.ruff.lint.per-file-ignores]
-"**/__init__.py"=["F401"]
+"**/__init__.py"=["F401", "F403", "F405"]
+"tests/**"=["E402", "B011", "B017"]
+"scripts/**"=["E402"]
 
 [tool.pytest.ini_options]
 pythonpath=["src", "."]

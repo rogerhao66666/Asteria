@@ -19,8 +19,12 @@ from test_session_events import BOSS_PROGRAM, _replace_program, _session  # noqa
 
 def _secret_recipe():
     return CompositionRecipeDefinition(
-        "star_tonic", "Star Tonic", selections=[{"step_id": "base", "item_ids": ["ether_leaf", "fire_dust"]}],
-        outputs=[CompositionOutput("focus_stone")], station="alchemy_table", requires_discovery=True,
+        "star_tonic",
+        "Star Tonic",
+        selections=[{"step_id": "base", "item_ids": ["ether_leaf", "fire_dust"]}],
+        outputs=[CompositionOutput("focus_stone")],
+        station="alchemy_table",
+        requires_discovery=True,
     )
 
 
@@ -52,15 +56,19 @@ def test_recipe_discovery_by_event_and_by_experiment():
     inventory.add("ether_leaf", 2)
     inventory.add("fire_dust", 2)
     result = game.craft({"base": ["ether_leaf", "fire_dust"]}, station="alchemy_table", rng=random.Random(1))
-    assert result.recipe_id == "star_tonic" and game.recipe_known("star_tonic")     # experimenting discovers it
+    assert result.recipe_id == "star_tonic" and game.recipe_known("star_tonic")  # experimenting discovers it
     assert game.save.event_context.get_switch("recipe.star_tonic.known")
     project2, game2 = _session()
     project2.rpg_database.add_composition_recipe(_secret_recipe())
-    _replace_program(project2, BOSS_PROGRAM, [
-        EventInstruction("WORLD", {"command": "LEARN_RECIPE", "args": {"recipe_id": "star_tonic"}}),
-        EventInstruction("WORLD", {"command": "OPEN_CRAFTING", "args": {"station": "alchemy_table"}}),
-        EventInstruction("END"),
-    ])
+    _replace_program(
+        project2,
+        BOSS_PROGRAM,
+        [
+            EventInstruction("WORLD", {"command": "LEARN_RECIPE", "args": {"recipe_id": "star_tonic"}}),
+            EventInstruction("WORLD", {"command": "OPEN_CRAFTING", "args": {"station": "alchemy_table"}}),
+            EventInstruction("END"),
+        ],
+    )
     game2.field_step({"interact": 1})
     assert game2.recipe_known("star_tonic") and game2.open_crafting_station == "alchemy_table"
     assert "star_tonic" in [r.recipe_id for r in game2.known_recipes("alchemy_table")]
@@ -99,7 +107,11 @@ def test_achievement_and_bestiary_screens_from_the_pause_menu(runtime):
     game.world.note_enemy("mender_wisp", "seen", 2)
     game.world.note_enemy("mender_wisp", "defeated", 1)
     game.refresh_achievements()
-    assert ("First Blood", "", True) in achievement_rows(game) and ("???", "Hidden achievement", False) in achievement_rows(game)
+    assert ("First Blood", "", True) in achievement_rows(game) and (
+        "???",
+        "Hidden achievement",
+        False,
+    ) in achievement_rows(game)
     rows = bestiary_rows(game)
     assert any(r[0] == db.enemies["mender_wisp"].display_name and r[1:4] == (2, 1, 0) for r in rows)
     assert any(r[0] == "???" for r in rows)
@@ -124,9 +136,9 @@ def test_settings_screen_changes_volume_applies_and_persists(runtime, resource_r
     assert runtime.settings.music_volume == round(start - 0.2, 2)
     assert runtime.audio.volumes["bgm"] == runtime.settings.music_volume
     _press(runtime, pygame.K_DOWN)
-    _press(runtime, pygame.K_RIGHT)                                        # effects capped at 1.0
+    _press(runtime, pygame.K_RIGHT)  # effects capped at 1.0
     _press(runtime, pygame.K_DOWN)
-    _press(runtime, pygame.K_RETURN)                                       # toggle battle messages
+    _press(runtime, pygame.K_RETURN)  # toggle battle messages
     assert runtime.settings.show_battle_log is False
     _press(runtime, pygame.K_ESCAPE)
     assert runtime._ui_mode == "pause"

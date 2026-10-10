@@ -33,9 +33,5 @@ def animation_context(document):
         return None, animator.default_clip
 
     names = tuple(clip_set.clips)
-    current = (
-        animator.default_clip
-        if animator.default_clip in names
-        else (names[0] if names else None)
-    )
+    current = animator.default_clip if animator.default_clip in names else (names[0] if names else None)
     return clip_set, current

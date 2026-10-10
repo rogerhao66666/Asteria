@@ -68,8 +68,7 @@ class EventScheduler:
     @property
     def autorun_busy(self):
         return any(
-            inst.spec.mode == EventScheduleMode.AUTORUN and inst.runner.busy
-            for inst in self._instances.values()
+            inst.spec.mode == EventScheduleMode.AUTORUN and inst.runner.busy for inst in self._instances.values()
         )
 
     def can_start_foreground(self):
@@ -78,9 +77,7 @@ class EventScheduler:
     def _ensure_instance(self, spec: ScheduledEventSpec):
         inst = self._instances.get(spec.event_id)
         if inst is None:
-            runner = EventRunner(
-                self.registry, context=self.context, world_commands=self.world_commands
-            )
+            runner = EventRunner(self.registry, context=self.context, world_commands=self.world_commands)
             runner.start(
                 spec.program_id,
                 source_entity_id=spec.source_entity_id,
@@ -111,11 +108,7 @@ class EventScheduler:
                 continue
             inst = self._ensure_instance(spec)
             outputs[event_id] = inst.runner.update(dt)
-            if (
-                inst.runner.vm is not None
-                and inst.runner.vm.completed
-                and not inst.runner.call_stack
-            ):
+            if inst.runner.vm is not None and inst.runner.vm.completed and not inst.runner.call_stack:
                 completed.append(event_id)
 
         for event_id in completed:
@@ -161,11 +154,7 @@ class EventScheduler:
         for event_id, runner_data in data["instances"].items():
             spec = self._specs.get(event_id)
             if spec is None:
-                raise KeyError(
-                    f"snapshot references unknown scheduled event: {event_id}"
-                )
-            runner = EventRunner(
-                self.registry, context=self.context, world_commands=self.world_commands
-            )
+                raise KeyError(f"snapshot references unknown scheduled event: {event_id}")
+            runner = EventRunner(self.registry, context=self.context, world_commands=self.world_commands)
             runner.restore(runner_data)
             self._instances[event_id] = ScheduledEventInstance(spec, runner)

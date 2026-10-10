@@ -15,7 +15,8 @@ def _workspace():
 
 def _complete_accessory(workspace):
     return next(
-        part for part in workspace.choices("accessory", search="AccA", gender="Male")
+        part
+        for part in workspace.choices("accessory", search="AccA", gender="Male")
         if part.part_number == 14 and "Modern_Generator/parts" in part.source_root.as_posix()
     )
 
@@ -40,8 +41,7 @@ def test_mv_workspace_filters_selects_and_synchronizes_three_previews():
 def test_mv_workspace_reports_unavailable_representation_without_substitution():
     workspace = _workspace()
     body = next(
-        part for part in workspace.choices("body", gender="Male")
-        if "modern_body" in part.source_root.as_posix()
+        part for part in workspace.choices("body", gender="Male") if "modern_body" in part.source_root.as_posix()
     )
     workspace.select("body", body.id)
 
@@ -55,7 +55,11 @@ def test_mv_workspace_reports_unavailable_representation_without_substitution():
 def test_mv_workspace_family_switch_clears_incompatible_parts_and_palette():
     workspace = _workspace()
     workspace.set_body_family("Male")
-    male_hair = next(part for part in workspace.choices("hair_front", gender="Male") if part.source_root == workspace._part(workspace.recipe.parts["body"]).source_root)
+    male_hair = next(
+        part
+        for part in workspace.choices("hair_front", gender="Male")
+        if part.source_root == workspace._part(workspace.recipe.parts["body"]).source_root
+    )
     workspace.select("hair_front", male_hair.id)
     workspace.recipe.palette["hair_front"] = "#ffaa00"
 
@@ -96,9 +100,16 @@ def test_mv_widget_exposes_all_four_full_sheet_previews_and_kid_family():
     try:
         assert widget.part_grid.objectName() == "CharacterPartGrid"
         assert [widget.preview_tabs.tabText(i) for i in range(widget.preview_tabs.count())] == [
-            "Walking", "Face", "Damaged", "Side View"
+            "Walking",
+            "Face",
+            "Damaged",
+            "Side View",
         ]
-        assert [widget.gender_combo.itemText(i) for i in range(widget.gender_combo.count())] == ["Male", "Female", "Kid"]
+        assert [widget.gender_combo.itemText(i) for i in range(widget.gender_combo.count())] == [
+            "Male",
+            "Female",
+            "Kid",
+        ]
         assert widget.walking_canvas.minimumWidth() >= 144
         assert widget.walking_canvas.pixmap().size().width() >= 144
         assert widget.damaged_canvas.pixmap().size().height() >= 48
@@ -214,10 +225,14 @@ def test_editor_shell_generated_bundle_enters_map_placement_mode(monkeypatch):
         label = "Create Character Hero"
 
         def __init__(self):
-            self.created = type("Created", (), {
-                "entity": Entity("Hero"),
-                "actor": type("Actor", (), {"display_name": "Hero"})(),
-            })()
+            self.created = type(
+                "Created",
+                (),
+                {
+                    "entity": Entity("Hero"),
+                    "actor": type("Actor", (), {"display_name": "Hero"})(),
+                },
+            )()
             self.applied = False
             self.scene = None
 
@@ -263,14 +278,21 @@ def test_editor_shell_places_pending_generated_bundle_at_clicked_map_cell(monkey
         label = "Create Character Click Hero"
 
         def __init__(self):
-            self.created = type("Created", (), {
-                "entity": Entity("Click Hero"),
-                "actor": type("Actor", (), {"display_name": "Click Hero"})(),
-            })()
+            self.created = type(
+                "Created",
+                (),
+                {
+                    "entity": Entity("Click Hero"),
+                    "actor": type("Actor", (), {"display_name": "Click Hero"})(),
+                },
+            )()
             self.scene = None
 
-        def redo(self): self.scene.add_entity(self.created.entity)
-        def undo(self): self.scene.detach_entity(self.created.entity)
+        def redo(self):
+            self.scene.add_entity(self.created.entity)
+
+        def undo(self):
+            self.scene.detach_entity(self.created.entity)
 
     app = QApplication.instance() or QApplication([])
     project = Project("Game")
@@ -280,8 +302,7 @@ def test_editor_shell_places_pending_generated_bundle_at_clicked_map_cell(monkey
 
     def build(bundle, actual_project, actual_scene, cell, *, display_name=None):
         command.scene = actual_scene
-        captured.update(bundle=bundle, project=actual_project, scene=actual_scene,
-                        cell=cell, display_name=display_name)
+        captured.update(bundle=bundle, project=actual_project, scene=actual_scene, cell=cell, display_name=display_name)
         return command
 
     monkeypatch.setattr(window.character_creator.workspace, "create_character_command", build)
@@ -297,8 +318,13 @@ def test_editor_shell_places_pending_generated_bundle_at_clicked_map_cell(monkey
         app.processEvents()
         QTest.mouseClick(window.viewport, Qt.LeftButton, pos=QPoint(4 * 48 + 12, 5 * 48 + 12))
 
-        assert captured == {"bundle": "bundle", "project": project, "scene": scene,
-                            "cell": (4, 5), "display_name": "Click Hero"}
+        assert captured == {
+            "bundle": "bundle",
+            "project": project,
+            "scene": scene,
+            "cell": (4, 5),
+            "display_name": "Click Hero",
+        }
         assert window.document.commands.undo_label == "Create Character Click Hero"
         assert not window.viewport.character_placement_active
         assert "Created Click Hero at map cell 4, 5" in window.character_creator.status.text()

@@ -68,9 +68,7 @@ def test_preview_uses_active_camera_dimensions(tmp_path):
     assert backend.size == (800, 450)
 
 
-def test_preview_resolves_reference_assets_from_explicit_resource_root(
-    tmp_path, monkeypatch
-):
+def test_preview_resolves_reference_assets_from_explicit_resource_root(tmp_path, monkeypatch):
     from asteria.runtime import reference_runtime
 
     project = Project("Preview")
@@ -101,10 +99,7 @@ def test_preview_resolves_reference_assets_from_explicit_resource_root(
     backend.load_texture = lambda *args: None
     backend.draw_texture = lambda *args: None
 
-    assert (
-        run_preview(snapshot, scene.id, resource_root=resource_root, backend=backend)
-        == 0
-    )
+    assert run_preview(snapshot, scene.id, resource_root=resource_root, backend=backend) == 0
     assert captured["load"] == (project.id, scene.id, resource_root.resolve())
     assert captured["run"] == (runtime, 960, 540, 60)
     assert backend.closed

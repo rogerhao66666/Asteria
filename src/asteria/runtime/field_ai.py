@@ -9,6 +9,7 @@ optional event switch condition; ``SpawnSystem`` performs the spawning.
 ``VisibleEncounterComponent`` marks a field entity that starts an encounter
 when the player touches it.
 """
+
 from __future__ import annotations
 
 import random
@@ -37,8 +38,13 @@ def parse_path(text):
     type_name="asteria.FieldAI",
     version=1,
     fields=(
-        Field("behaviour", str, "idle", choices=FIELD_AI_BEHAVIOURS,
-              tooltip="Resting behaviour; chase/flee react to the target inside detect_radius."),
+        Field(
+            "behaviour",
+            str,
+            "idle",
+            choices=FIELD_AI_BEHAVIOURS,
+            tooltip="Resting behaviour; chase/flee react to the target inside detect_radius.",
+        ),
         Field("speed", float, 48.0, minimum=0.0),
         Field("detect_radius", float, 96.0, minimum=0.0),
         Field("lose_radius", float, 160.0, minimum=0.0, tooltip="Distance at which a chase or flee gives up."),
@@ -63,7 +69,7 @@ class FieldAIComponent(Component):
 
 @dataclass(slots=True)
 class FieldAIState:
-    mode: str = "idle"           # current mode: idle, patrol, wander, chase, flee, return
+    mode: str = "idle"  # current mode: idle, patrol, wander, chase, flee, return
     home: tuple = (0.0, 0.0)
     patrol_index: int = 0
     wander_goal: tuple | None = None
@@ -109,7 +115,11 @@ class FieldAISystem(System):
             state = self.states.get(entity.id)
             if state is None:
                 state = self.states[entity.id] = FieldAIState(spec.behaviour, (transform.x, transform.y))
-            self._query = self.blocking(entity) if callable(self.blocking) and not hasattr(self.blocking, "collides_world_point") else self.blocking
+            self._query = (
+                self.blocking(entity)
+                if callable(self.blocking) and not hasattr(self.blocking, "collides_world_point")
+                else self.blocking
+            )
             target_id = spec.target_entity_id or self.default_target_id
             target = scene.get_entity(target_id) if target_id else None
             distance = None

@@ -91,7 +91,5 @@ class AssetRecord:
             self.import_settings = {}
         if self.metadata is None:
             self.metadata = {}
-        if not isinstance(self.import_settings, dict) or not isinstance(
-            self.metadata, dict
-        ):
+        if not isinstance(self.import_settings, dict) or not isinstance(self.metadata, dict):
             raise TypeError("settings/metadata must be dict")

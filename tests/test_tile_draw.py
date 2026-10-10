@@ -21,9 +21,7 @@ def make():
         AssetRef(TEX, "texture"),
         [SpriteFrame(0, 0, 16, 16, 0, 0), SpriteFrame(16, 0, 16, 16, 0, 0)],
     )
-    ts = Tileset(
-        AssetRef(SHEET, "sprite_sheet"), 16, 16, {0: TileDef(0), 1: TileDef(1)}
-    )
+    ts = Tileset(AssetRef(SHEET, "sprite_sheet"), 16, 16, {0: TileDef(0), 1: TileDef(1)})
     ch = TileChunk.empty(0, 0, 2, 2)
     ch.set(0, 0, 0)
     ch.set(1, 1, 1)
@@ -52,7 +50,5 @@ def test_tilemap_builds_backend_neutral_texture_draws():
 def test_tile_draw_culls_outside_viewport():
     tm, ts, sheet = make()
     cam = ViewportCamera(1000, 1000, 1)
-    draws = build_tile_draws(
-        tm, ts, sheet, cam, viewport_width=100, viewport_height=100
-    )
+    draws = build_tile_draws(tm, ts, sheet, cam, viewport_width=100, viewport_height=100)
     assert draws == ()

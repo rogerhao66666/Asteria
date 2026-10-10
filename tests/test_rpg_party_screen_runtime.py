@@ -39,9 +39,7 @@ def test_party_screen_projects_active_reserve_without_mutating_membership():
 
 
 def test_formation_projection_preserves_project_slot_semantics_as_tags_only():
-    runtime = PartyScreenRuntime(
-        PartyScreenProfile(slot_labels={"vanguard": "Lead", "rear": "Rear"})
-    )
+    runtime = PartyScreenRuntime(PartyScreenProfile(slot_labels={"vanguard": "Lead", "rear": "Rear"}))
     view = runtime.project(
         ("a", "b", "c"),
         active_member_ids=("a", "b", "c"),

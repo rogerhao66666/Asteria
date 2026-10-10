@@ -4,6 +4,7 @@ This module bridges an animation player's time/frame state to AttachmentRuntime.
 It deliberately has no gameplay vocabulary: clips, sockets and attachments are
 project-defined presentation data.
 """
+
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
@@ -14,6 +15,7 @@ from .attachment_runtime import AttachmentRuntime, ResolvedAttachment
 @dataclass(frozen=True, slots=True)
 class FrameTiming:
     """One animation frame's duration in milliseconds."""
+
     duration_ms: float
 
     def __post_init__(self) -> None:
@@ -24,6 +26,7 @@ class FrameTiming:
 @dataclass(frozen=True, slots=True)
 class AnimationClock:
     """Canonical timing description for a presentation animation clip."""
+
     frames: tuple[FrameTiming, ...]
     loop: bool = True
 
@@ -79,6 +82,7 @@ class AnimationSample:
 @dataclass(frozen=True, slots=True)
 class AttachmentPoseFrame:
     """Resolved attachment pose snapshot for one animation-clock sample."""
+
     sample: AnimationSample
     attachments: tuple[ResolvedAttachment, ...]
 
@@ -90,6 +94,7 @@ class AnimatedAttachmentBinding:
     for time, while AttachmentRuntime remains authoritative for socket hierarchy,
     attachment lifecycle and world-space composition.
     """
+
     def __init__(self, runtime: AttachmentRuntime, clock: AnimationClock):
         self.runtime = runtime
         self.clock = clock
@@ -112,6 +117,7 @@ class AnimationAttachmentPlayer:
     animator; this class proves the timing contract without replacing that actor
     animation system.
     """
+
     binding: AnimatedAttachmentBinding
     time_ms: float = 0.0
     playing: bool = True

@@ -56,9 +56,7 @@ class EffectOperation:
         object.__setattr__(self, "value", value)
 
     def to_data(self):
-        value = (
-            self.value.to_data() if isinstance(self.value, ValueFormula) else self.value
-        )
+        value = self.value.to_data() if isinstance(self.value, ValueFormula) else self.value
         return {
             "kind": self.kind.value,
             "target": self.target,
@@ -110,9 +108,7 @@ class Effect:
         )
 
     def applies(self, tags: TagSet):
-        return tags.contains_all(self.required_tags) and not tags.contains_any(
-            self.blocked_tags
-        )
+        return tags.contains_all(self.required_tags) and not tags.contains_any(self.blocked_tags)
 
     def to_data(self):
         return {

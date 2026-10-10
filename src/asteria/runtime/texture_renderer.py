@@ -9,8 +9,6 @@ class TextureRenderer:
             try:
                 source = self.source_paths[draw.texture_asset_id]
             except KeyError as exc:
-                raise KeyError(
-                    f"missing source path for texture {draw.texture_asset_id}"
-                ) from exc
+                raise KeyError(f"missing source path for texture {draw.texture_asset_id}") from exc
             resource = self.cache.get(draw.texture_asset_id, source)
             self.backend.draw_texture(resource, draw)

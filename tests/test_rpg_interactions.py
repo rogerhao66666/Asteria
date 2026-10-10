@@ -18,48 +18,95 @@ def subject(*, stats=None, tags=()):
 
 
 def test_weakness_is_tag_driven_not_element_enum():
-    resolver = InteractionResolver([
-        InteractionRule("weak_fire", source_tags_all=("damage.fire",), target_tags_all=("weak.fire",), multiplier=1.5, outcome_tags=("outcome.weak",))
-    ])
-    result = resolver.resolve_value(100, subject(tags=("caster",)), subject(tags=("weak.fire",)), action_tags=("damage.fire",))
+    resolver = InteractionResolver(
+        [
+            InteractionRule(
+                "weak_fire",
+                source_tags_all=("damage.fire",),
+                target_tags_all=("weak.fire",),
+                multiplier=1.5,
+                outcome_tags=("outcome.weak",),
+            )
+        ]
+    )
+    result = resolver.resolve_value(
+        100, subject(tags=("caster",)), subject(tags=("weak.fire",)), action_tags=("damage.fire",)
+    )
     assert result.resolved_value == 150
     assert result.outcome_tags == ("outcome.weak",)
 
 
 def test_resistance_and_stat_mitigation_compose_deterministically():
-    resolver = InteractionResolver([
-        InteractionRule("armor", target_tags_all=("armored",), target_stat_terms={"defense": -0.5}, priority=20),
-        InteractionRule("fire_resist", source_tags_all=("damage.fire",), target_tags_all=("resist.fire",), multiplier=0.5, priority=10),
-    ])
-    result = resolver.resolve_value(100, subject(), subject(stats={"defense": 40}, tags=("armored", "resist.fire")), action_tags=("damage.fire",))
+    resolver = InteractionResolver(
+        [
+            InteractionRule("armor", target_tags_all=("armored",), target_stat_terms={"defense": -0.5}, priority=20),
+            InteractionRule(
+                "fire_resist",
+                source_tags_all=("damage.fire",),
+                target_tags_all=("resist.fire",),
+                multiplier=0.5,
+                priority=10,
+            ),
+        ]
+    )
+    result = resolver.resolve_value(
+        100, subject(), subject(stats={"defense": 40}, tags=("armored", "resist.fire")), action_tags=("damage.fire",)
+    )
     assert result.resolved_value == 40
     assert result.matched_rules == ("armor", "fire_resist")
 
 
 def test_immune_nullifies_value():
-    resolver = InteractionResolver([
-        InteractionRule("ghost", source_tags_all=("damage.physical",), target_tags_all=("immune.physical",), disposition="nullify", outcome_tags=("outcome.immune",), priority=100)
-    ])
-    result = resolver.resolve_value(999, subject(), subject(tags=("immune.physical",)), action_tags=("damage.physical",))
+    resolver = InteractionResolver(
+        [
+            InteractionRule(
+                "ghost",
+                source_tags_all=("damage.physical",),
+                target_tags_all=("immune.physical",),
+                disposition="nullify",
+                outcome_tags=("outcome.immune",),
+                priority=100,
+            )
+        ]
+    )
+    result = resolver.resolve_value(
+        999, subject(), subject(tags=("immune.physical",)), action_tags=("damage.physical",)
+    )
     assert result.disposition is InteractionDisposition.NULLIFY
     assert result.resolved_value == 0
 
 
 @pytest.mark.parametrize("disposition", ["absorb", "reflect"])
 def test_absorb_and_reflect_are_routing_outcomes_not_negative_damage(disposition):
-    resolver = InteractionResolver([
-        InteractionRule("route", source_tags_all=("arcane",), target_tags_all=(f"{disposition}.arcane",), disposition=disposition)
-    ])
+    resolver = InteractionResolver(
+        [
+            InteractionRule(
+                "route",
+                source_tags_all=("arcane",),
+                target_tags_all=(f"{disposition}.arcane",),
+                disposition=disposition,
+            )
+        ]
+    )
     result = resolver.resolve_value(30, subject(), subject(tags=(f"{disposition}.arcane",)), action_tags=("arcane",))
     assert result.disposition.value == disposition
     assert result.resolved_value == 30
 
 
 def test_arbitrary_species_and_weapon_interaction():
-    resolver = InteractionResolver([
-        InteractionRule("spear_airborne", source_tags_all=("weapon.spear",), target_tags_all=("trait.airborne",), multiplier=2)
-    ])
-    assert resolver.resolve_value(12, subject(), subject(tags=("trait.airborne",)), action_tags=("weapon.spear",)).resolved_value == 24
+    resolver = InteractionResolver(
+        [
+            InteractionRule(
+                "spear_airborne", source_tags_all=("weapon.spear",), target_tags_all=("trait.airborne",), multiplier=2
+            )
+        ]
+    )
+    assert (
+        resolver.resolve_value(
+            12, subject(), subject(tags=("trait.airborne",)), action_tags=("weapon.spear",)
+        ).resolved_value
+        == 24
+    )
 
 
 def test_rule_serialization_roundtrip():
@@ -68,9 +115,18 @@ def test_rule_serialization_roundtrip():
 
 
 def test_generic_hit_check_uses_project_stats_and_seeded_rng():
-    check = OutcomeCheckDefinition("hit", 0.7, source_stat_terms={"accuracy": 0.01}, target_stat_terms={"evasion": -0.01}, success_tags=("outcome.hit",), failure_tags=("outcome.evade",))
+    check = OutcomeCheckDefinition(
+        "hit",
+        0.7,
+        source_stat_terms={"accuracy": 0.01},
+        target_stat_terms={"evasion": -0.01},
+        success_tags=("outcome.hit",),
+        failure_tags=("outcome.evade",),
+    )
     resolver = InteractionResolver(checks=[check])
-    result = resolver.check("hit", subject(stats={"accuracy": 10}), subject(stats={"evasion": 20}), rng=random.Random(1))
+    result = resolver.check(
+        "hit", subject(stats={"accuracy": 10}), subject(stats={"evasion": 20}), rng=random.Random(1)
+    )
     assert result.chance == pytest.approx(0.6)
     assert result.success is True
     assert result.outcome_tags == ("outcome.hit",)
@@ -149,10 +205,14 @@ def test_battle_runtime_exposes_interaction_resolution_seam():
     beetle = subject(tags=("weak.fire",))
     ability = AbilityDefinition("fire", targeting=TargetingRule(), tags=("damage.fire",))
     battle = BattleRuntime(
-        [Party("heroes", [PartyMember("hero", "heroes", hero, ability_ids=("fire",))]),
-         Party("foes", [PartyMember("beetle", "foes", beetle)])],
+        [
+            Party("heroes", [PartyMember("hero", "heroes", hero, ability_ids=("fire",))]),
+            Party("foes", [PartyMember("beetle", "foes", beetle)]),
+        ],
         AbilityRuntime(AbilityRegistry([ability])),
-        interaction_rules=[InteractionRule("weak", source_tags_all=("damage.fire",), target_tags_all=("weak.fire",), multiplier=1.5)],
+        interaction_rules=[
+            InteractionRule("weak", source_tags_all=("damage.fire",), target_tags_all=("weak.fire",), multiplier=1.5)
+        ],
     )
     result = battle.resolve_interaction(BattleAction("hero", "fire", ("beetle",)), "beetle", 40)
     assert result.value.resolved_value == 60

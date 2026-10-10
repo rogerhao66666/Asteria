@@ -39,6 +39,7 @@ def tilemap_to_data(tilemap):
 
 def tilemap_from_data(data):
     from asteria.assets.types import AssetRef
+
     if data["schema"] != "asteria.tilemap" or data["version"] != 1:
         raise ValueError("unsupported tilemap")
     layers = []

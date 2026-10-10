@@ -56,8 +56,7 @@ class BattlePresentationLayeringProfile:
 
     def __init__(self, channels=()):
         channels = tuple(
-            x if isinstance(x, BattlePresentationChannelPolicy)
-            else BattlePresentationChannelPolicy.from_data(x)
+            x if isinstance(x, BattlePresentationChannelPolicy) else BattlePresentationChannelPolicy.from_data(x)
             for x in channels
         )
         if len({x.channel for x in channels}) != len(channels):
@@ -181,8 +180,12 @@ class BattlePresentationLayeringRuntime:
         if not staging:
             return None
         return BattlePresentationLayerContext(
-            str(staging["group_id"]), str(staging["channel"]), int(staging["layer"]),
-            float(staging["intensity"]), float(staging["gain"]), str(staging["bus"]),
+            str(staging["group_id"]),
+            str(staging["channel"]),
+            int(staging["layer"]),
+            float(staging["intensity"]),
+            float(staging["gain"]),
+            str(staging["bus"]),
             int(staging["priority"]),
         )
 

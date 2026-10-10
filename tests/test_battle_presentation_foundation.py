@@ -14,9 +14,16 @@ def scene():
         "forest_encounter",
         "battle.bg.forest",
         [
-            BattleCombatantVisual("hero", "battle.hero.sheet", "battle.hero.clips", BattleVisualAnchor(90, 112),
-                                  {"idle": "idle", "attack": "slash", "hit": "hurt", "ko": "down"}),
-            BattleCombatantVisual("slime", "battle.slime.sheet", "battle.slime.clips", BattleVisualAnchor(236, 108, "left")),
+            BattleCombatantVisual(
+                "hero",
+                "battle.hero.sheet",
+                "battle.hero.clips",
+                BattleVisualAnchor(90, 112),
+                {"idle": "idle", "attack": "slash", "hit": "hurt", "ko": "down"},
+            ),
+            BattleCombatantVisual(
+                "slime", "battle.slime.sheet", "battle.slime.clips", BattleVisualAnchor(236, 108, "left")
+            ),
         ],
     )
 

@@ -90,8 +90,7 @@ class FormationDefinition:
             unknown = set(slot.adjacent_to) - known
             if unknown:
                 raise ValueError(
-                    f"formation slot {slot.slot_id} references unknown adjacent slots: "
-                    + ", ".join(sorted(unknown))
+                    f"formation slot {slot.slot_id} references unknown adjacent slots: " + ", ".join(sorted(unknown))
                 )
             if slot.slot_id in slot.adjacent_to:
                 raise ValueError("formation slot cannot be adjacent to itself")
@@ -191,20 +190,14 @@ class BattleFormationRuntime:
         return tuple(sorted(result))
 
     def placements(self):
-        return tuple(
-            BattlePlacement(member_id, slot_id)
-            for member_id, slot_id in sorted(self._member_to_slot.items())
-        )
+        return tuple(BattlePlacement(member_id, slot_id) for member_id, slot_id in sorted(self._member_to_slot.items()))
 
     def to_data(self):
         return {
             "schema": "asteria.rpg.battle_formation_runtime",
             "version": 1,
             "definition_id": self.definition.formation_id,
-            "placements": [
-                {"member_id": x.member_id, "slot_id": x.slot_id}
-                for x in self.placements()
-            ],
+            "placements": [{"member_id": x.member_id, "slot_id": x.slot_id} for x in self.placements()],
         }
 
     def restore_from_data(self, data):
@@ -455,7 +448,9 @@ class BattleTargetingRuntime:
                 continue
             if adjacent is not None and candidate.member_id not in adjacent:
                 continue
-            if definition.required_subject_tags and not candidate.subject.tags.contains_all(definition.required_subject_tags):
+            if definition.required_subject_tags and not candidate.subject.tags.contains_all(
+                definition.required_subject_tags
+            ):
                 continue
             if definition.blocked_subject_tags and candidate.subject.tags.contains_any(definition.blocked_subject_tags):
                 continue

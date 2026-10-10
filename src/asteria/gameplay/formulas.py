@@ -239,9 +239,7 @@ class ValueFormula:
             raise ValueError("unsupported value formula")
         return cls(
             [FormulaTerm.from_data(x) for x in data["terms"]],
-            multipliers=[
-                ConditionalMultiplier.from_data(x) for x in data["multipliers"]
-            ],
+            multipliers=[ConditionalMultiplier.from_data(x) for x in data["multipliers"]],
             minimum=data["minimum"],
             maximum=data["maximum"],
         )

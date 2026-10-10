@@ -5,7 +5,7 @@ from math import isfinite
 
 
 def _positive(value, name):
-    value=float(value)
+    value = float(value)
     if not isfinite(value) or value <= 0:
         raise ValueError(f"{name} must be finite and > 0")
     return value
@@ -50,54 +50,53 @@ class BattleFrameBudgetMetrics:
 
 class BattleFrameBudgetTracker:
     def __init__(self, target_fps=60.0):
-        self.target_frame_ms=1000.0/_positive(target_fps,"target_fps")
-        self.frame_count=0
-        self.dropped_frames=0
-        self.total_frame_ms=0.0
-        self.max_frame_ms=0.0
-        self.last_frame_ms=0.0
+        self.target_frame_ms = 1000.0 / _positive(target_fps, "target_fps")
+        self.frame_count = 0
+        self.dropped_frames = 0
+        self.total_frame_ms = 0.0
+        self.max_frame_ms = 0.0
+        self.last_frame_ms = 0.0
 
     def record(self, frame_ms):
-        frame_ms=float(frame_ms)
+        frame_ms = float(frame_ms)
         if not isfinite(frame_ms) or frame_ms < 0:
             raise ValueError("frame_ms must be finite and >= 0")
         self.frame_count += 1
-        self.last_frame_ms=frame_ms
+        self.last_frame_ms = frame_ms
         self.total_frame_ms += frame_ms
-        self.max_frame_ms=max(self.max_frame_ms,frame_ms)
+        self.max_frame_ms = max(self.max_frame_ms, frame_ms)
         if frame_ms > self.target_frame_ms:
             self.dropped_frames += 1
         return self.metrics()
 
     def metrics(self):
-        avg=0.0 if not self.frame_count else self.total_frame_ms/self.frame_count
+        avg = 0.0 if not self.frame_count else self.total_frame_ms / self.frame_count
         return BattleFrameBudgetMetrics(
-            self.frame_count,self.dropped_frames,self.last_frame_ms,
-            self.max_frame_ms,avg,self.target_frame_ms
+            self.frame_count, self.dropped_frames, self.last_frame_ms, self.max_frame_ms, avg, self.target_frame_ms
         )
 
 
 class BattleRenderVisibilityCuller:
     def __init__(self, *, min_x=0.0, min_y=0.0, max_x=320.0, max_y=180.0, padding=16.0):
-        self.min_x=float(min_x)-float(padding)
-        self.min_y=float(min_y)-float(padding)
-        self.max_x=float(max_x)+float(padding)
-        self.max_y=float(max_y)+float(padding)
+        self.min_x = float(min_x) - float(padding)
+        self.min_y = float(min_y) - float(padding)
+        self.max_x = float(max_x) + float(padding)
+        self.max_y = float(max_y) + float(padding)
 
     def resolve(self, draws):
-        visible=[]
-        culled=[]
+        visible = []
+        culled = []
         for draw in draws:
             if not draw.visible:
                 culled.append(draw.draw_id)
                 continue
-            right=draw.x+draw.width
-            bottom=draw.y+draw.height
+            right = draw.x + draw.width
+            bottom = draw.y + draw.height
             if right < self.min_x or draw.x > self.max_x or bottom < self.min_y or draw.y > self.max_y:
                 culled.append(draw.draw_id)
             else:
                 visible.append(draw)
-        return BattleRenderCullResult(tuple(visible),tuple(culled))
+        return BattleRenderCullResult(tuple(visible), tuple(culled))
 
 
 class BattleRenderBatcher:
@@ -108,14 +107,14 @@ class BattleRenderBatcher:
     """
 
     def build(self, draws):
-        groups={}
+        groups = {}
         for draw in draws:
-            atlas=draw.atlas_id or draw.asset_id
-            key=(atlas,draw.material_id,int(draw.layer))
-            groups.setdefault(key,[]).append(draw)
+            atlas = draw.atlas_id or draw.asset_id
+            key = (atlas, draw.material_id, int(draw.layer))
+            groups.setdefault(key, []).append(draw)
         return tuple(
-            BattleRenderBatch(key,tuple(sorted(values,key=lambda x:(x.depth,x.draw_id))))
-            for key,values in sorted(groups.items())
+            BattleRenderBatch(key, tuple(sorted(values, key=lambda x: (x.depth, x.draw_id))))
+            for key, values in sorted(groups.items())
         )
 
 
@@ -131,37 +130,37 @@ class BattleTransientPool:
     """Reusable pool for VFX/popups/transient presentation objects."""
 
     def __init__(self, capacity):
-        capacity=int(capacity)
+        capacity = int(capacity)
         if capacity <= 0:
             raise ValueError("capacity must be > 0")
-        self._objects=[BattleTransientObject(i) for i in range(capacity)]
-        self._free=list(reversed(range(capacity)))
-        self.peak_active=0
+        self._objects = [BattleTransientObject(i) for i in range(capacity)]
+        self._free = list(reversed(range(capacity)))
+        self.peak_active = 0
 
     def acquire(self, kind, payload=None):
         if not self._free:
             return None
-        index=self._free.pop()
-        obj=self._objects[index]
-        obj.active=True
-        obj.kind=str(kind)
-        obj.payload=payload
-        active=len(self._objects)-len(self._free)
-        self.peak_active=max(self.peak_active,active)
+        index = self._free.pop()
+        obj = self._objects[index]
+        obj.active = True
+        obj.kind = str(kind)
+        obj.payload = payload
+        active = len(self._objects) - len(self._free)
+        self.peak_active = max(self.peak_active, active)
         return obj
 
     def release(self, obj):
-        if not isinstance(obj,BattleTransientObject) or not obj.active:
+        if not isinstance(obj, BattleTransientObject) or not obj.active:
             return False
-        obj.active=False
-        obj.kind=""
-        obj.payload=None
+        obj.active = False
+        obj.kind = ""
+        obj.payload = None
         self._free.append(obj.object_id)
         return True
 
     @property
     def active_count(self):
-        return len(self._objects)-len(self._free)
+        return len(self._objects) - len(self._free)
 
     @property
     def capacity(self):
@@ -172,18 +171,18 @@ class BattleAssetPreloadRegistry:
     """Tracks presentation assets expected before a battle scene becomes hot."""
 
     def __init__(self):
-        self._required=[]
-        self._loaded=set()
+        self._required = []
+        self._loaded = set()
 
     def require(self, *asset_ids):
         for asset_id in asset_ids:
-            asset_id=str(asset_id).strip()
+            asset_id = str(asset_id).strip()
             if asset_id and asset_id not in self._required:
                 self._required.append(asset_id)
 
     def mark_loaded(self, *asset_ids):
         for asset_id in asset_ids:
-            asset_id=str(asset_id).strip()
+            asset_id = str(asset_id).strip()
             if asset_id:
                 self._loaded.add(asset_id)
 

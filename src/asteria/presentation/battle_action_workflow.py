@@ -22,8 +22,16 @@ class BattleWorkflowOption:
     payload: tuple[tuple[str, object], ...] = ()
 
     def __init__(
-        self, option_id, label=None, *, enabled=True, disabled_reason="",
-        detail="", icon_asset_id=None, tags=(), payload=None,
+        self,
+        option_id,
+        label=None,
+        *,
+        enabled=True,
+        disabled_reason="",
+        detail="",
+        icon_asset_id=None,
+        tags=(),
+        payload=None,
     ):
         option_id = _id(option_id, "option_id")
         label = option_id if label is None else _id(label, "label")
@@ -32,7 +40,9 @@ class BattleWorkflowOption:
         object.__setattr__(self, "enabled", bool(enabled))
         object.__setattr__(self, "disabled_reason", str(disabled_reason))
         object.__setattr__(self, "detail", str(detail))
-        object.__setattr__(self, "icon_asset_id", None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id"))
+        object.__setattr__(
+            self, "icon_asset_id", None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id")
+        )
         object.__setattr__(self, "tags", tuple(dict.fromkeys(str(x).strip() for x in tags if str(x).strip())))
         payload = dict(payload or {})
         object.__setattr__(self, "payload", tuple(sorted(payload.items(), key=lambda x: str(x[0]))))
@@ -130,7 +140,9 @@ class BattleActionWorkflowDefinition:
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported battle action workflow definition")
         return cls(
-            data["workflow_id"], data["label"], data["steps"],
+            data["workflow_id"],
+            data["label"],
+            data["steps"],
             confirmation_label=data["confirmation_label"],
         )
 
@@ -190,9 +202,7 @@ class BattleActionWorkflowRuntime:
             if s.step_id in self._selections
         )
         can_advance = complete or self._step_complete(step)
-        can_back = self.step_index > 0 and (
-            complete or self.definition.steps[self.step_index].allow_back
-        )
+        can_back = self.step_index > 0 and (complete or self.definition.steps[self.step_index].allow_back)
         return BattleActionWorkflowView(
             self.definition.workflow_id,
             self.definition.label,
@@ -295,8 +305,7 @@ class BattleActionWorkflowRuntime:
         return {
             "workflow_id": self.definition.workflow_id,
             "selections": {
-                step.step_id: list(self._selections.get(step.step_id, ()))
-                for step in self.definition.steps
+                step.step_id: list(self._selections.get(step.step_id, ())) for step in self.definition.steps
             },
         }
 

@@ -43,9 +43,7 @@ class ResolvedActorBuild:
     def sources_for(self, category, key):
         category = str(category)
         key = str(key)
-        return tuple(
-            x for x in self.contributions if x.category == category and x.key == key
-        )
+        return tuple(x for x in self.contributions if x.category == category and x.key == key)
 
     def ability_sources(self, ability_id):
         ability_id = str(ability_id)
@@ -123,7 +121,9 @@ def resolve_actor_build(
     for stat, value in actor_runtime.definition.base_stats.items():
         contributions.append(BuildContribution("stat", stat, "intrinsic", actor_runtime.definition.actor_id, value))
     for resource_id, raw in actor_runtime.definition.base_resources.items():
-        contributions.append(BuildContribution("resource", resource_id, "intrinsic", actor_runtime.definition.actor_id, raw["maximum"]))
+        contributions.append(
+            BuildContribution("resource", resource_id, "intrinsic", actor_runtime.definition.actor_id, raw["maximum"])
+        )
     for tag in actor_runtime.definition.tags:
         contributions.append(BuildContribution("tag", tag, "intrinsic", actor_runtime.definition.actor_id))
 
@@ -164,18 +164,30 @@ def resolve_actor_build(
                 for tag in growth.granted_tags:
                     contributions.append(BuildContribution("tag", tag, "equipment_growth", item.instance_id))
                 for capability in growth.granted_capabilities:
-                    contributions.append(BuildContribution("capability", capability, "equipment_growth", item.instance_id))
+                    contributions.append(
+                        BuildContribution("capability", capability, "equipment_growth", item.instance_id)
+                    )
                 for modifier in growth.modifiers:
-                    contributions.append(BuildContribution("stat_modifier", modifier.stat, "equipment_growth", item.instance_id, modifier.modifier_id))
+                    contributions.append(
+                        BuildContribution(
+                            "stat_modifier", modifier.stat, "equipment_growth", item.instance_id, modifier.modifier_id
+                        )
+                    )
             for modifier in item.equipment.modifiers:
-                contributions.append(BuildContribution("stat_modifier", modifier.stat, "equipment", item.instance_id, modifier.modifier_id))
+                contributions.append(
+                    BuildContribution(
+                        "stat_modifier", modifier.stat, "equipment", item.instance_id, modifier.modifier_id
+                    )
+                )
             for socket_id in sorted(item.attachments):
                 attachment = item.attachments[socket_id]
                 source_id = f"{item.instance_id}:{socket_id}"
                 for tag in attachment.tags:
                     contributions.append(BuildContribution("tag", tag, "attachment", source_id))
                 for modifier in attachment.modifiers:
-                    contributions.append(BuildContribution("stat_modifier", modifier.stat, "attachment", source_id, modifier.modifier_id))
+                    contributions.append(
+                        BuildContribution("stat_modifier", modifier.stat, "attachment", source_id, modifier.modifier_id)
+                    )
 
     for passive_id in actor_runtime.ability_state.active_passives:
         passive = passive_map.get(passive_id)
@@ -184,7 +196,9 @@ def resolve_actor_build(
         for tag in passive.tags:
             contributions.append(BuildContribution("tag", tag, "passive", passive_id))
         for modifier in passive.modifiers:
-            contributions.append(BuildContribution("stat_modifier", modifier.stat, "passive", passive_id, modifier.modifier_id))
+            contributions.append(
+                BuildContribution("stat_modifier", modifier.stat, "passive", passive_id, modifier.modifier_id)
+            )
 
     stats = actor_runtime.effective_stats(
         progression=progression,

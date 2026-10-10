@@ -68,9 +68,7 @@ class ActionTimeline:
         if len(ids) != len(set(ids)):
             raise ValueError("duplicate cue_id")
         object.__setattr__(self, "timeline_id", timeline_id)
-        object.__setattr__(
-            self, "cues", tuple(sorted(cues, key=lambda x: (x.time, x.cue_id)))
-        )
+        object.__setattr__(self, "cues", tuple(sorted(cues, key=lambda x: (x.time, x.cue_id))))
 
     @property
     def duration(self):
@@ -151,19 +149,12 @@ class ActionTimelinePlayer:
                 ability_id = str(cue.payload.get("ability_id", "")).strip()
                 if not ability_id:
                     raise ValueError("gameplay ability cue requires ability_id")
-                gameplay.append(
-                    self.ability_runtime.execute(ability_id, self.source, self.targets)
-                )
+                gameplay.append(self.ability_runtime.execute(ability_id, self.source, self.targets))
             else:
                 presentation.append(PresentationCue(self.timeline.timeline_id, cue))
         self.time = end
-        self.completed = (
-            self._next >= len(self.timeline.cues)
-            and self.time >= self.timeline.duration
-        )
-        return TimelineAdvanceResult(
-            tuple(gameplay), tuple(presentation), self.completed
-        )
+        self.completed = self._next >= len(self.timeline.cues) and self.time >= self.timeline.duration
+        return TimelineAdvanceResult(tuple(gameplay), tuple(presentation), self.completed)
 
     def snapshot(self):
         return {

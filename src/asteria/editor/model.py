@@ -28,9 +28,7 @@ class EditorSelection:
 
 
 class EditorDocument:
-    def __init__(
-        self, project=None, *, component_registry=None, clipboard=None, file_path=None
-    ):
+    def __init__(self, project=None, *, component_registry=None, clipboard=None, file_path=None):
         from asteria.core import ComponentRegistry, PersistentComponent, Transform
         from asteria.core.prefab import PrefabInstanceComponent
         from asteria.gameplay import GameplayAttributesComponent

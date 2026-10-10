@@ -14,6 +14,7 @@ A backend that cannot provide a metric declares it with :meth:`unsupported`;
 reports list such metrics under ``"unsupported"`` instead of inventing a
 number. Nothing here is estimated or synthesized.
 """
+
 from __future__ import annotations
 
 import json
@@ -26,8 +27,19 @@ from pathlib import Path
 from statistics import mean, pstdev
 
 SPEC_METRICS = (
-    "frame", "update", "render", "ai", "collision", "animation", "vfx", "asset_loading",
-    "entity_count", "particles", "draw_calls", "memory", "asset_usage",
+    "frame",
+    "update",
+    "render",
+    "ai",
+    "collision",
+    "animation",
+    "vfx",
+    "asset_loading",
+    "entity_count",
+    "particles",
+    "draw_calls",
+    "memory",
+    "asset_usage",
 )
 
 
@@ -43,9 +55,15 @@ def _summary_ms(samples):
     if not samples:
         return None
     ms = [s * 1000.0 for s in samples]
-    return {"count": len(ms), "mean_ms": round(mean(ms), 4), "p50_ms": round(_percentile(ms, 0.50), 4),
-            "p95_ms": round(_percentile(ms, 0.95), 4), "p99_ms": round(_percentile(ms, 0.99), 4),
-            "max_ms": round(max(ms), 4), "total_ms": round(sum(ms), 4)}
+    return {
+        "count": len(ms),
+        "mean_ms": round(mean(ms), 4),
+        "p50_ms": round(_percentile(ms, 0.50), 4),
+        "p95_ms": round(_percentile(ms, 0.95), 4),
+        "p99_ms": round(_percentile(ms, 0.99), 4),
+        "max_ms": round(max(ms), 4),
+        "total_ms": round(sum(ms), 4),
+    }
 
 
 class RuntimeProfiler:
@@ -133,7 +151,9 @@ class RuntimeProfiler:
         return result
 
     def report(self):
-        counters = {k: {"last": v[-1], "max": max(v), "mean": round(mean(v), 4)} for k, v in sorted(self.counters.items()) if v}
+        counters = {
+            k: {"last": v[-1], "max": max(v), "mean": round(mean(v), 4)} for k, v in sorted(self.counters.items()) if v
+        }
         measured = set(self.sections) | set(counters) | {"frame", "memory"}
         missing = [m for m in SPEC_METRICS if m not in measured and m not in self._unsupported]
         return {

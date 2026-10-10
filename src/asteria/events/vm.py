@@ -49,10 +49,7 @@ class EventVM:
         self.state.validate()
         if self.state.pc > len(self.program):
             raise ValueError("VM state pc exceeds program length")
-        if (
-            self.state.pc == len(self.program)
-            and self.state.status == EventVMStatus.RUNNING
-        ):
+        if self.state.pc == len(self.program) and self.state.status == EventVMStatus.RUNNING:
             self.state.status = EventVMStatus.COMPLETED
 
     @property
@@ -69,11 +66,7 @@ class EventVM:
 
     def resume(self):
         if self.state.status == EventVMStatus.STOPPED:
-            self.state.status = (
-                EventVMStatus.COMPLETED
-                if self.state.pc >= len(self.program)
-                else EventVMStatus.RUNNING
-            )
+            self.state.status = EventVMStatus.COMPLETED if self.state.pc >= len(self.program) else EventVMStatus.RUNNING
         return self.state.status
 
     def update_wait(self, dt: float):
@@ -86,11 +79,7 @@ class EventVM:
         remaining = max(0.0, self.state.wait_remaining - dt)
         self.state.wait_remaining = remaining
         if remaining == 0.0:
-            self.state.status = (
-                EventVMStatus.COMPLETED
-                if self.state.pc >= len(self.program)
-                else EventVMStatus.RUNNING
-            )
+            self.state.status = EventVMStatus.COMPLETED if self.state.pc >= len(self.program) else EventVMStatus.RUNNING
         return self.state.status
 
     def step(self):
@@ -127,9 +116,7 @@ class EventVM:
             scope_id = instruction.args.get("scope_id", self.local_scope_id)
             name = instruction.args.get("name")
             if not scope_id or name is None:
-                raise EventVMError(
-                    "SET_LOCAL requires scope_id/local_scope_id and name"
-                )
+                raise EventVMError("SET_LOCAL requires scope_id/local_scope_id and name")
             self.context.set_local(scope_id, name, instruction.args.get("value"))
 
         elif instruction.opcode == "LABEL":

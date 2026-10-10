@@ -14,9 +14,7 @@ from asteria.assets.local_reference import (
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Additively synchronize a local RPG Maker MV reference library"
-    )
+    parser = argparse.ArgumentParser(description="Additively synchronize a local RPG Maker MV reference library")
     parser.add_argument("source", type=Path)
     parser.add_argument("destination", type=Path)
     parser.add_argument("--inventory", required=True, type=Path)
@@ -52,10 +50,7 @@ def main(argv=None) -> int:
         "destination_files": destination_inventory.file_count,
         "source_bytes": source_inventory.total_bytes,
         "destination_bytes": destination_inventory.total_bytes,
-        "mismatches": [
-            {"relative_path": item.relative_path, "reason": item.reason}
-            for item in mismatches
-        ],
+        "mismatches": [{"relative_path": item.relative_path, "reason": item.reason} for item in mismatches],
     }
     print(json.dumps(summary, indent=2))
     return 0 if not mismatches else 1

@@ -28,8 +28,12 @@ def _battle():
 
 def test_session_rules_round_trip_and_validate():
     rules = BattleSessionRules(
-        "r", knockout_resource_id="hp", hit_trigger="hit", boost_resource_id="bp",
-        boost_cost_per_level=2, boost_max_level=3,
+        "r",
+        knockout_resource_id="hp",
+        hit_trigger="hit",
+        boost_resource_id="bp",
+        boost_cost_per_level=2,
+        boost_max_level=3,
     )
     assert BattleSessionRules.from_data(rules.to_data()) == rules
     assert rules.boost_enabled
@@ -86,7 +90,10 @@ def test_boost_spends_the_rules_resource_and_repeats_the_action():
         game.use_ability(hero, "strike", boost_level=level + 1)
     results = game.use_ability(hero, "strike", boost_level=level)
     assert 1 <= len(results) <= level + 1
-    assert game.battle.battle_resources.current(hero, rules.boost_resource_id) == available - level * rules.boost_cost_per_level
+    assert (
+        game.battle.battle_resources.current(hero, rules.boost_resource_id)
+        == available - level * rules.boost_cost_per_level
+    )
 
 
 def test_hits_feed_every_gauge_composition_through_the_rules_trigger():
@@ -123,8 +130,19 @@ def test_knockout_resource_comes_from_rules():
 
 
 def test_runtime_contains_no_project_specific_battle_ids():
-    names = ("heal", "revive", "momentum", "vitality", "stagger", "stagger_system",
-             "astral_tyrant", "strike", "fire_arc", "meteor", "party_barrier")
+    names = (
+        "heal",
+        "revive",
+        "momentum",
+        "vitality",
+        "stagger",
+        "stagger_system",
+        "astral_tyrant",
+        "strike",
+        "fire_arc",
+        "meteor",
+        "party_barrier",
+    )
     pattern = re.compile(r"""["'](%s)["']""" % "|".join(names))
     offenders = [
         f"{path.name}:{number}"

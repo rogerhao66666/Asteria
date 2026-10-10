@@ -184,9 +184,7 @@ def build_reference_actor_scenario():
         "Ember Blade",
         slot="main_hand",
         tags=("weapon", "blade"),
-        modifiers=(
-            StatModifier("ember_blade.power", "power", ModifierOperation.ADD, 6),
-        ),
+        modifiers=(StatModifier("ember_blade.power", "power", ModifierOperation.ADD, 6),),
         granted_abilities=("flame_slash",),
         sockets=(SocketDefinition("rune", accepted_tags=("attachment.weapon",)),),
         growth_id="ember_blade_growth",
@@ -195,9 +193,7 @@ def build_reference_actor_scenario():
         "venom_rune",
         "Venom Rune",
         tags=("attachment.weapon", "rune"),
-        modifiers=(
-            StatModifier("venom_rune.focus", "focus", ModifierOperation.ADD, 1),
-        ),
+        modifiers=(StatModifier("venom_rune.focus", "focus", ModifierOperation.ADD, 1),),
         granted_abilities=("venom_edge",),
     )
     blade_instance = EquippedItem(
@@ -272,9 +268,7 @@ class PlayableRpgValidationHarness:
         entries = []
         for order, ability_id in enumerate(build.abilities):
             sources = build.ability_sources(ability_id)
-            source_text = ", ".join(
-                f"{source.source_kind}:{source.source_id}" for source in sources
-            )
+            source_text = ", ".join(f"{source.source_kind}:{source.source_id}" for source in sources)
             entries.append(
                 BattleActionEntry(
                     ability_id,
@@ -322,10 +316,7 @@ class PlayableRpgValidationHarness:
             ability_sources.append(
                 (
                     ability_id,
-                    tuple(
-                        (source.source_kind, source.source_id)
-                        for source in build.ability_sources(ability_id)
-                    ),
+                    tuple((source.source_kind, source.source_id) for source in build.ability_sources(ability_id)),
                 )
             )
         resources = tuple(sorted(build.resources.to_data()["values"]))

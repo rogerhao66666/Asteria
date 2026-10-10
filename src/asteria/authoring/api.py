@@ -219,9 +219,7 @@ class AuthoringScene:
         return self._scene.name
 
     def entities(self):
-        return tuple(
-            AuthoringEntity(self._session, self, e) for e in self._scene.entities()
-        )
+        return tuple(AuthoringEntity(self._session, self, e) for e in self._scene.entities())
 
     def entity(self, name_or_id):
         value = str(name_or_id)
@@ -255,9 +253,7 @@ class AuthoringTransform:
 
     @x.setter
     def x(self, value):
-        self._session._run(
-            _SetAttribute(self._transform, "x", float(value), self._transform.x)
-        )
+        self._session._run(_SetAttribute(self._transform, "x", float(value), self._transform.x))
 
     @property
     def y(self):
@@ -265,9 +261,7 @@ class AuthoringTransform:
 
     @y.setter
     def y(self, value):
-        self._session._run(
-            _SetAttribute(self._transform, "y", float(value), self._transform.y)
-        )
+        self._session._run(_SetAttribute(self._transform, "y", float(value), self._transform.y))
 
     @property
     def position(self):
@@ -285,11 +279,7 @@ class AuthoringTransform:
 
     @rotation.setter
     def rotation(self, value):
-        self._session._run(
-            _SetAttribute(
-                self._transform, "rotation", float(value), self._transform.rotation
-            )
-        )
+        self._session._run(_SetAttribute(self._transform, "rotation", float(value), self._transform.rotation))
 
     @property
     def scale(self):
@@ -298,12 +288,8 @@ class AuthoringTransform:
     @scale.setter
     def scale(self, value):
         x, y = value
-        self._session._run(
-            _SetAttribute(self._transform, "scale_x", float(x), self._transform.scale_x)
-        )
-        self._session._run(
-            _SetAttribute(self._transform, "scale_y", float(y), self._transform.scale_y)
-        )
+        self._session._run(_SetAttribute(self._transform, "scale_x", float(x), self._transform.scale_x))
+        self._session._run(_SetAttribute(self._transform, "scale_y", float(y), self._transform.scale_y))
 
 
 class AuthoringEvent:
@@ -370,17 +356,13 @@ class AuthoringGameplayAttributes:
         block = StatBlock(self._component.stats)
         block.set(name, value)
         new_values = dict(block.to_data()["values"])
-        self._session._run(
-            _SetAttribute(self._component, "stats", new_values, self._component.stats)
-        )
+        self._session._run(_SetAttribute(self._component, "stats", new_values, self._component.stats))
         return block.get(name)
 
     def add_stat(self, name, delta):
         return self.set_stat(name, self.stat(name) + float(delta))
 
-    def define_resource(
-        self, name, maximum, *, current=None, minimum=0.0, replace=False
-    ):
+    def define_resource(self, name, maximum, *, current=None, minimum=0.0, replace=False):
         pool = ResourcePool.from_data(
             {
                 "schema": "asteria.resource_pool",
@@ -396,11 +378,7 @@ class AuthoringGameplayAttributes:
             replace=replace,
         )
         new_values = dict(pool.to_data()["values"])
-        self._session._run(
-            _SetAttribute(
-                self._component, "resources", new_values, self._component.resources
-            )
-        )
+        self._session._run(_SetAttribute(self._component, "resources", new_values, self._component.resources))
         return resource.current
 
     def resource(self, name):
@@ -423,11 +401,7 @@ class AuthoringGameplayAttributes:
         )
         value = pool.change(name, delta)
         new_values = dict(pool.to_data()["values"])
-        self._session._run(
-            _SetAttribute(
-                self._component, "resources", new_values, self._component.resources
-            )
-        )
+        self._session._run(_SetAttribute(self._component, "resources", new_values, self._component.resources))
         return value
 
     def spend_resource(self, name, amount):
@@ -441,33 +415,21 @@ class AuthoringGameplayAttributes:
         if not pool.spend(name, amount):
             return False
         new_values = dict(pool.to_data()["values"])
-        self._session._run(
-            _SetAttribute(
-                self._component, "resources", new_values, self._component.resources
-            )
-        )
+        self._session._run(_SetAttribute(self._component, "resources", new_values, self._component.resources))
         return True
 
     def add_tag(self, tag):
         tags = TagSet(self._component.tags)
         if not tags.add(tag):
             return False
-        self._session._run(
-            _SetAttribute(
-                self._component, "tags", list(tags.values()), self._component.tags
-            )
-        )
+        self._session._run(_SetAttribute(self._component, "tags", list(tags.values()), self._component.tags))
         return True
 
     def remove_tag(self, tag):
         tags = TagSet(self._component.tags)
         if not tags.remove(tag):
             return False
-        self._session._run(
-            _SetAttribute(
-                self._component, "tags", list(tags.values()), self._component.tags
-            )
-        )
+        self._session._run(_SetAttribute(self._component, "tags", list(tags.values()), self._component.tags))
         return True
 
     def has_tag(self, tag):
@@ -505,11 +467,7 @@ class AuthoringGameplayAttributes:
         new_tags = list(tags.values())
 
         if new_stats != self._component.stats:
-            self._session._run(
-                _SetAttribute(
-                    self._component, "stats", new_stats, self._component.stats
-                )
-            )
+            self._session._run(_SetAttribute(self._component, "stats", new_stats, self._component.stats))
         if new_resources != self._component.resources:
             self._session._run(
                 _SetAttribute(
@@ -520,9 +478,7 @@ class AuthoringGameplayAttributes:
                 )
             )
         if new_tags != self._component.tags:
-            self._session._run(
-                _SetAttribute(self._component, "tags", new_tags, self._component.tags)
-            )
+            self._session._run(_SetAttribute(self._component, "tags", new_tags, self._component.tags))
         return result
 
 
@@ -542,9 +498,7 @@ class AuthoringEntity:
 
     @name.setter
     def name(self, value):
-        self._session._run(
-            _SetAttribute(self._entity, "name", str(value), self._entity.name)
-        )
+        self._session._run(_SetAttribute(self._entity, "name", str(value), self._entity.name))
 
     @property
     def enabled(self):
@@ -552,9 +506,7 @@ class AuthoringEntity:
 
     @enabled.setter
     def enabled(self, value):
-        self._session._run(
-            _SetAttribute(self._entity, "enabled", bool(value), self._entity.enabled)
-        )
+        self._session._run(_SetAttribute(self._entity, "enabled", bool(value), self._entity.enabled))
 
     @property
     def transform(self):
@@ -583,9 +535,7 @@ class AuthoringEntity:
             program_id,
             trigger=EventTriggerKind(str(trigger).lower()),
         )
-        bindings = project.scene_event_bindings.setdefault(
-            self._scene.id, SceneEventBindings()
-        )
+        bindings = project.scene_event_bindings.setdefault(self._scene.id, SceneEventBindings())
         self._session._run(_AddProgram(project.event_programs, program_id, program))
         self._session._run(_AddBinding(bindings, binding))
         return AuthoringEvent(self._session, program_id)

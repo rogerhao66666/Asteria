@@ -3,6 +3,7 @@
 Sockets intentionally carry no gameplay meaning: a project may attach a weapon,
 shield, hat, wing, prop, VFX, UI marker, or any other visual resource.
 """
+
 from __future__ import annotations
 from dataclasses import dataclass, field, asdict
 from typing import Any, Iterable
@@ -39,11 +40,15 @@ class Transform2D:
         # impossible half-visible/half-flipped states.
         discrete_b = t >= 1.0
         return Transform2D(
-            _lerp(a.x,b.x,t), _lerp(a.y,b.y,t), _lerp(a.rotation_deg,b.rotation_deg,t),
-            _lerp(a.scale_x,b.scale_x,t), _lerp(a.scale_y,b.scale_y,t),
+            _lerp(a.x, b.x, t),
+            _lerp(a.y, b.y, t),
+            _lerp(a.rotation_deg, b.rotation_deg, t),
+            _lerp(a.scale_x, b.scale_x, t),
+            _lerp(a.scale_y, b.scale_y, t),
             b.flip_x if discrete_b else a.flip_x,
             b.flip_y if discrete_b else a.flip_y,
-            _lerp(a.opacity,b.opacity,t), b.visible if discrete_b else a.visible,
+            _lerp(a.opacity, b.opacity, t),
+            b.visible if discrete_b else a.visible,
             b.z_offset if discrete_b else a.z_offset,
         )
 
@@ -55,7 +60,8 @@ class SocketKey:
     interpolate: bool = True
 
     def validate(self) -> None:
-        if self.frame < 0: raise ValueError("socket key frame must be >= 0")
+        if self.frame < 0:
+            raise ValueError("socket key frame must be >= 0")
         self.transform.validate()
 
 
@@ -70,24 +76,31 @@ class Socket:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def validate(self) -> None:
-        if not self.id: raise ValueError("socket id required")
+        if not self.id:
+            raise ValueError("socket id required")
         self.default.validate()
         last = -1
         for key in self.keys:
             key.validate()
-            if key.frame <= last: raise ValueError("socket keys must have unique ascending frames")
+            if key.frame <= last:
+                raise ValueError("socket keys must have unique ascending frames")
             last = key.frame
 
     def sample(self, frame: int, subframe: float = 0.0) -> Transform2D:
-        if frame < 0: raise ValueError("frame must be >= 0")
-        if not self.keys: return self.default
+        if frame < 0:
+            raise ValueError("frame must be >= 0")
+        if not self.keys:
+            return self.default
         frames = [k.frame for k in self.keys]
         pos = bisect.bisect_right(frames, frame) - 1
-        if pos < 0: return self.default
+        if pos < 0:
+            return self.default
         left = self.keys[pos]
-        if pos + 1 >= len(self.keys): return left.transform
+        if pos + 1 >= len(self.keys):
+            return left.transform
         right = self.keys[pos + 1]
-        if not left.interpolate: return left.transform
+        if not left.interpolate:
+            return left.transform
         absolute = frame + min(0.999999, max(0.0, subframe))
         span = right.frame - left.frame
         t = (absolute - left.frame) / span
@@ -101,6 +114,7 @@ class GripTransform:
     Coordinates are expressed in the attachment asset's local pixel/unit space.
     This is presentation metadata only and carries no weapon semantics.
     """
+
     x: float = 0.0
     y: float = 0.0
     rotation_deg: float = 0.0
@@ -141,8 +155,10 @@ class SocketRig:
 
     def add(self, socket: Socket) -> None:
         socket.validate()
-        if socket.id in self.sockets: raise ValueError(f"duplicate socket: {socket.id}")
-        if socket.parent == socket.id: raise ValueError("socket cannot parent itself")
+        if socket.id in self.sockets:
+            raise ValueError(f"duplicate socket: {socket.id}")
+        if socket.parent == socket.id:
+            raise ValueError("socket cannot parent itself")
         self.sockets[socket.id] = socket
         self.validate()
 
@@ -151,11 +167,16 @@ class SocketRig:
             s.validate()
             if s.parent is not None and s.parent not in self.sockets:
                 raise ValueError(f"missing parent socket: {s.parent}")
+
         def walk(sid: str, path: set[str]):
-            if sid in path: raise ValueError("socket parent cycle")
+            if sid in path:
+                raise ValueError("socket parent cycle")
             parent = self.sockets[sid].parent
-            if parent is not None: walk(parent, path | {sid})
-        for sid in self.sockets: walk(sid, set())
+            if parent is not None:
+                walk(parent, path | {sid})
+
+        for sid in self.sockets:
+            walk(sid, set())
 
     def sample(self, socket_id: str, frame: int, subframe: float = 0.0) -> Transform2D:
         return self.sockets[socket_id].sample(frame, subframe)
@@ -167,16 +188,33 @@ class SocketRig:
     def from_dict(cls, data: dict[str, Any]) -> "SocketRig":
         rig = cls()
         for raw in data.get("sockets", []):
-            keys = tuple(SocketKey(int(k["frame"]), Transform2D(**k.get("transform", {})), bool(k.get("interpolate", True))) for k in raw.get("keys", []))
-            rig.add(Socket(raw["id"], raw.get("parent"), float(raw.get("pivot_x",0)), float(raw.get("pivot_y",0)), Transform2D(**raw.get("default",{})), keys, dict(raw.get("metadata",{}))))
-        rig.validate(); return rig
+            keys = tuple(
+                SocketKey(int(k["frame"]), Transform2D(**k.get("transform", {})), bool(k.get("interpolate", True)))
+                for k in raw.get("keys", [])
+            )
+            rig.add(
+                Socket(
+                    raw["id"],
+                    raw.get("parent"),
+                    float(raw.get("pivot_x", 0)),
+                    float(raw.get("pivot_y", 0)),
+                    Transform2D(**raw.get("default", {})),
+                    keys,
+                    dict(raw.get("metadata", {})),
+                )
+            )
+        rig.validate()
+        return rig
 
 
 def validate_attachments(rig: SocketRig, attachments: Iterable[Attachment]) -> tuple[Attachment, ...]:
-    result = tuple(attachments); seen=set()
+    result = tuple(attachments)
+    seen = set()
     for a in result:
         a.validate()
-        if a.id in seen: raise ValueError(f"duplicate attachment: {a.id}")
-        if a.socket_id not in rig.sockets: raise ValueError(f"unknown socket: {a.socket_id}")
+        if a.id in seen:
+            raise ValueError(f"duplicate attachment: {a.id}")
+        if a.socket_id not in rig.sockets:
+            raise ValueError(f"unknown socket: {a.socket_id}")
         seen.add(a.id)
     return result

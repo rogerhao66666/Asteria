@@ -18,6 +18,7 @@ never have to think about it. This was confirmed empirically while building
 the backend — see `moderngl_backend.py:load_texture`'s comment for the
 matching texture-orientation finding (no flip needed on load).
 """
+
 import pytest
 
 moderngl = pytest.importorskip("moderngl")
@@ -43,9 +44,7 @@ def _standalone_backend(size=(16, 16)):
     backend.ctx = ctx
     ctx.enable(moderngl.BLEND)
     ctx.blend_func = moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA
-    backend._program = ctx.program(
-        vertex_shader=SPRITE_VERTEX_SHADER, fragment_shader=SPRITE_FRAGMENT_SHADER
-    )
+    backend._program = ctx.program(vertex_shader=SPRITE_VERTEX_SHADER, fragment_shader=SPRITE_FRAGMENT_SHADER)
     backend._program["u_texture"] = 0
     backend._white_texture = ctx.texture((1, 1), 4, bytes((255, 255, 255, 255)))
     backend._white_texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
@@ -68,8 +67,13 @@ def _make_draw(source, screen_x, screen_y, width, height, opacity=1.0, flip_x=Fa
         "Draw",
         (),
         dict(
-            source=source, screen_x=screen_x, screen_y=screen_y,
-            width=width, height=height, opacity=opacity, flip_x=flip_x,
+            source=source,
+            screen_x=screen_x,
+            screen_y=screen_y,
+            width=width,
+            height=height,
+            opacity=opacity,
+            flip_x=flip_x,
         ),
     )()
 
@@ -109,9 +113,7 @@ def test_flip_x_mirrors_the_source_rect():
     resource = TextureResource("tex", 2, 1, texture)
 
     backend.ctx.clear(0, 0, 0, 1)
-    backend.draw_texture(
-        resource, _make_draw((0, 0, 2, 1), 0, 0, 8, 4, flip_x=True)
-    )
+    backend.draw_texture(resource, _make_draw((0, 0, 2, 1), 0, 0, 8, 4, flip_x=True))
     backend._flush_batch()
 
     left = _read_rgba(fbo, 1, 2, 4)
@@ -180,6 +182,7 @@ def test_draw_grid_and_draw_marker_do_not_raise():
 
 # --- CB9: parity with the pygame backend --------------------------------------
 
+
 def test_moderngl_and_pygame_render_the_same_draw_commands():
     """Same texture + TextureDraw commands (scaling, flip, opacity) -> same pixels."""
     pygame = pytest.importorskip("pygame")
@@ -193,9 +196,9 @@ def test_moderngl_and_pygame_render_the_same_draw_commands():
     gl_texture = gl_backend.ctx.texture(image.size, 4, image.tobytes())
     gl_texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
     draws = (
-        _make_draw((0, 0, 2, 1), 0, 0, 8, 8),                  # 4x scale
-        _make_draw((0, 0, 2, 1), 16, 0, 8, 8, flip_x=True),    # mirrored
-        _make_draw((0, 0, 1, 1), 0, 8, 8, 8, opacity=0.5),     # half transparent red
+        _make_draw((0, 0, 2, 1), 0, 0, 8, 8),  # 4x scale
+        _make_draw((0, 0, 2, 1), 16, 0, 8, 8, flip_x=True),  # mirrored
+        _make_draw((0, 0, 1, 1), 0, 8, 8, 8, opacity=0.5),  # half transparent red
     )
     fbo.clear(0.0, 0.0, 0.0, 1.0)
     for draw in draws:

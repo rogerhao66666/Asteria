@@ -7,14 +7,20 @@ whole RPG database and applied through the document's undoable command
 stack. :data:`FORMS` describes each kind's fields for form-based editors; it
 has no Qt dependency.
 """
+
 from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
 
 from asteria.rpg import (
-    AchievementDefinition, CaptureRule, EquipmentSetDefinition, FactionDefinition,
-    QuestDefinition, QuestObjective, ShopDefinition,
+    AchievementDefinition,
+    CaptureRule,
+    EquipmentSetDefinition,
+    FactionDefinition,
+    QuestDefinition,
+    QuestObjective,
+    ShopDefinition,
 )
 from asteria.rpg.quests import OBJECTIVE_KINDS
 from asteria.rpg.world_record import ACHIEVEMENT_KINDS
@@ -50,6 +56,7 @@ class _MapCommand:
 
 
 # --- form description (Qt-free) ------------------------------------------------
+
 
 @dataclass(frozen=True, slots=True)
 class FormField:
@@ -104,24 +111,36 @@ FORMS = {
     "shops": (
         F("shop_id", "Shop ID", "id"),
         F("display_name", "Name", "text"),
-        F("entries", "Stock", "table", default=(), fields=(
-            F("item_id", "Item", "ref", source="items"),
-            F("buy_prices", "Buy Price", "amounts", default={}),
-            F("sell_prices", "Sell Price", "amounts", default={}),
-            F("stock", "Limited Stock", "optional_int", default=None),
-        )),
+        F(
+            "entries",
+            "Stock",
+            "table",
+            default=(),
+            fields=(
+                F("item_id", "Item", "ref", source="items"),
+                F("buy_prices", "Buy Price", "amounts", default={}),
+                F("sell_prices", "Sell Price", "amounts", default={}),
+                F("stock", "Limited Stock", "optional_int", default=None),
+            ),
+        ),
     ),
     "quests": (
         F("quest_id", "Quest ID", "id"),
         F("display_name", "Name", "text"),
         F("description", "Description", "multiline", default=""),
-        F("objectives", "Objectives", "table", default=(), fields=(
-            F("objective_id", "Objective ID", "text", default="objective"),
-            F("kind", "Kind", "choice", choices=OBJECTIVE_KINDS, default="counter"),
-            F("target", "Target (item / enemy / switch)", "text", default=""),
-            F("required", "Required", "int", default=1),
-            F("description", "Description", "text", default=""),
-        )),
+        F(
+            "objectives",
+            "Objectives",
+            "table",
+            default=(),
+            fields=(
+                F("objective_id", "Objective ID", "text", default="objective"),
+                F("kind", "Kind", "choice", choices=OBJECTIVE_KINDS, default="counter"),
+                F("target", "Target (item / enemy / switch)", "text", default=""),
+                F("required", "Required", "int", default=1),
+                F("description", "Description", "text", default=""),
+            ),
+        ),
         F("prerequisites", "Prerequisite Quests", "ref_list", source="quests", default=()),
         F("next_quest_ids", "Next Quests (chain)", "ref_list", source="quests", default=()),
         F("auto_complete", "Complete Automatically", "bool", default=True),
@@ -148,12 +167,18 @@ FORMS = {
         F("set_id", "Set ID", "id"),
         F("display_name", "Name", "text"),
         F("equipment_ids", "Equipment", "ref_list", source="equipment", default=()),
-        F("bonuses", "Bonuses", "table", default=(), fields=(
-            F("pieces", "Pieces Equipped", "int", default=2),
-            F("modifiers", "Stat Modifiers", "table", fields=_MODIFIER, default=()),
-            F("tags", "Granted Tags", "string_list", default=()),
-            F("granted_abilities", "Granted Abilities", "ref_list", source="abilities", default=()),
-        )),
+        F(
+            "bonuses",
+            "Bonuses",
+            "table",
+            default=(),
+            fields=(
+                F("pieces", "Pieces Equipped", "int", default=2),
+                F("modifiers", "Stat Modifiers", "table", fields=_MODIFIER, default=()),
+                F("tags", "Granted Tags", "string_list", default=()),
+                F("granted_abilities", "Granted Abilities", "ref_list", source="abilities", default=()),
+            ),
+        ),
     ),
     "capture_rules": (
         F("enemy_id", "Enemy", "id", source="enemies"),
@@ -196,6 +221,7 @@ KINDS = (
 )
 _BY_ID = {k.kind_id: k for k in KINDS}
 
+
 # Fields whose canonical data omits defaults (LootEntry) — fill them for forms.
 def _with_defaults(spec, data):
     data = copy.deepcopy(data)
@@ -220,7 +246,9 @@ def new_row(fields):
         elif f.kind == "amounts":
             row[f.key] = {}
         else:
-            row[f.key] = copy.deepcopy(f.default) if f.default is not None else ("" if f.kind != "optional_int" else None)
+            row[f.key] = (
+                copy.deepcopy(f.default) if f.default is not None else ("" if f.kind != "optional_int" else None)
+            )
     return row
 
 
@@ -276,8 +304,15 @@ class GameSystemsAuthoringController:
         db = self.database
         if source == "abilities":
             return tuple(sorted(self.project.gameplay_library.abilities.ids()))
-        stores = {"items": db.items, "enemies": db.enemies, "actors": db.actors, "equipment": db.equipment,
-                  "quests": db.quests, "factions": db.factions, "progression_tracks": db.progression_tracks}
+        stores = {
+            "items": db.items,
+            "enemies": db.enemies,
+            "actors": db.actors,
+            "equipment": db.equipment,
+            "quests": db.quests,
+            "factions": db.factions,
+            "progression_tracks": db.progression_tracks,
+        }
         return tuple(sorted(stores.get(source, {})))
 
     def where_used(self, kind_id, key):
@@ -286,13 +321,22 @@ class GameSystemsAuthoringController:
         db = self.database
         users = []
         if kind_id == "quests":
-            users += [f"quest {q.quest_id}" for q in db.quests.values()
-                      if q.quest_id != key and key in q.prerequisites + q.next_quest_ids]
-            users += [f"achievement {a.achievement_id}" for a in db.achievements.values()
-                      if a.kind == "quest" and a.target == key]
+            users += [
+                f"quest {q.quest_id}"
+                for q in db.quests.values()
+                if q.quest_id != key and key in q.prerequisites + q.next_quest_ids
+            ]
+            users += [
+                f"achievement {a.achievement_id}"
+                for a in db.achievements.values()
+                if a.kind == "quest" and a.target == key
+            ]
         if kind_id == "factions":
-            users += [f"achievement {a.achievement_id}" for a in db.achievements.values()
-                      if a.kind == "reputation" and a.target == key]
+            users += [
+                f"achievement {a.achievement_id}"
+                for a in db.achievements.values()
+                if a.kind == "reputation" and a.target == key
+            ]
         return tuple(users)
 
     def _coerce(self, kind_id, value):
@@ -361,5 +405,10 @@ class GameSystemsAuthoringController:
 
 
 __all__ = [
-    "FORMS", "FormField", "GameSystemsAuthoringController", "GameSystemsAuthoringError", "KINDS", "new_row",
+    "FORMS",
+    "FormField",
+    "GameSystemsAuthoringController",
+    "GameSystemsAuthoringError",
+    "KINDS",
+    "new_row",
 ]

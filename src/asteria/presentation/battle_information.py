@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 
 def _id(value, name):
-    value=str(value).strip()
+    value = str(value).strip()
     if not value:
         raise ValueError(f"{name} is required")
     return value
@@ -19,12 +19,12 @@ class BattleInformationRule:
     compact: bool = False
     group: str = "default"
 
-    VISIBILITY=("persistent","contextual","focused","compact","hidden")
+    VISIBILITY = ("persistent", "contextual", "focused", "compact", "hidden")
 
     def __post_init__(self):
-        _id(self.info_id,"info_id")
-        _id(self.role,"role")
-        _id(self.group,"group")
+        _id(self.info_id, "info_id")
+        _id(self.role, "role")
+        _id(self.group, "group")
         if self.visibility not in self.VISIBILITY:
             raise ValueError("unsupported information visibility")
 
@@ -43,9 +43,9 @@ class BattleInformationItem:
     contextual: bool = False
 
     def __post_init__(self):
-        _id(self.info_id,"info_id")
-        _id(self.role,"role")
-        _id(self.label,"label")
+        _id(self.info_id, "info_id")
+        _id(self.role, "role")
+        _id(self.label, "label")
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,8 +67,8 @@ class BattleInformationPolicy:
     contextual_limit: int = 8
 
     def __post_init__(self):
-        for name in ("persistent_limit","compact_limit","focused_limit","contextual_limit"):
-            if int(getattr(self,name)) < 0:
+        for name in ("persistent_limit", "compact_limit", "focused_limit", "contextual_limit"):
+            if int(getattr(self, name)) < 0:
                 raise ValueError(f"{name} must be >= 0")
 
 
@@ -81,9 +81,9 @@ class BattleInformationRuntime:
     """
 
     def __init__(self, policy=None):
-        self.policy=policy or BattleInformationPolicy()
-        self.revision=0
-        self._view=BattleInformationView((),(),(),(),(),0,0)
+        self.policy = policy or BattleInformationPolicy()
+        self.revision = 0
+        self._view = BattleInformationView((), (), (), (), (), 0, 0)
 
     @property
     def view(self):
@@ -91,53 +91,62 @@ class BattleInformationRuntime:
 
     @staticmethod
     def _sort(values):
-        return sorted(values,key=lambda x:(-x.priority,x.group,x.label.casefold(),x.info_id))
+        return sorted(values, key=lambda x: (-x.priority, x.group, x.label.casefold(), x.info_id))
 
     def resolve(self, items, *, focus_member_id=None, active_contexts=()):
-        values=tuple(items)
-        active_contexts={str(x) for x in active_contexts}
-        focus=None if focus_member_id is None else str(focus_member_id)
-        persistent=[]; compact=[]; focused=[]; contextual=[]; overflow=[]
-        hidden=0
+        values = tuple(items)
+        active_contexts = {str(x) for x in active_contexts}
+        focus = None if focus_member_id is None else str(focus_member_id)
+        persistent = []
+        compact = []
+        focused = []
+        contextual = []
+        overflow = []
+        hidden = 0
 
         for item in values:
-            if not isinstance(item,BattleInformationItem):
-                item=BattleInformationItem(**item)
-            if item.visibility=="hidden":
-                hidden+=1
+            if not isinstance(item, BattleInformationItem):
+                item = BattleInformationItem(**item)
+            if item.visibility == "hidden":
+                hidden += 1
                 continue
-            if item.visibility=="focused":
-                if focus is not None and item.member_id==focus:
+            if item.visibility == "focused":
+                if focus is not None and item.member_id == focus:
                     focused.append(item)
                 else:
                     overflow.append(item)
                 continue
-            if item.visibility=="contextual":
+            if item.visibility == "contextual":
                 if item.contextual or item.group in active_contexts:
                     contextual.append(item)
                 else:
                     # contextual information is dormant, not clutter/overflow
-                    hidden+=1
+                    hidden += 1
                 continue
-            if item.visibility=="compact" or item.compact:
+            if item.visibility == "compact" or item.compact:
                 compact.append(item)
             else:
                 persistent.append(item)
 
         def cap(values, limit):
-            ordered=self._sort(values)
+            ordered = self._sort(values)
             return ordered[:limit], ordered[limit:]
 
-        persistent,p_over=cap(persistent,self.policy.persistent_limit)
-        compact,c_over=cap(compact,self.policy.compact_limit)
-        focused,f_over=cap(focused,self.policy.focused_limit)
-        contextual,x_over=cap(contextual,self.policy.contextual_limit)
-        overflow=self._sort((*overflow,*p_over,*c_over,*f_over,*x_over))
+        persistent, p_over = cap(persistent, self.policy.persistent_limit)
+        compact, c_over = cap(compact, self.policy.compact_limit)
+        focused, f_over = cap(focused, self.policy.focused_limit)
+        contextual, x_over = cap(contextual, self.policy.contextual_limit)
+        overflow = self._sort((*overflow, *p_over, *c_over, *f_over, *x_over))
 
-        self.revision+=1
-        self._view=BattleInformationView(
-            tuple(persistent),tuple(compact),tuple(focused),tuple(contextual),
-            tuple(overflow),hidden,self.revision,
+        self.revision += 1
+        self._view = BattleInformationView(
+            tuple(persistent),
+            tuple(compact),
+            tuple(focused),
+            tuple(contextual),
+            tuple(overflow),
+            hidden,
+            self.revision,
         )
         return self._view
 
@@ -154,21 +163,21 @@ class BattleRosterDensityPolicy:
     """Keeps large rosters legible without imposing gameplay party limits."""
 
     def __init__(self, *, primary_limit=4, compact_limit=4):
-        if int(primary_limit)<1 or int(compact_limit)<0:
+        if int(primary_limit) < 1 or int(compact_limit) < 0:
             raise ValueError("invalid roster density limits")
-        self.primary_limit=int(primary_limit)
-        self.compact_limit=int(compact_limit)
+        self.primary_limit = int(primary_limit)
+        self.compact_limit = int(compact_limit)
 
     def resolve(self, member_ids, *, focus_member_id=None):
-        ids=tuple(str(x) for x in member_ids)
-        if len(ids)!=len(set(ids)):
+        ids = tuple(str(x) for x in member_ids)
+        if len(ids) != len(set(ids)):
             raise ValueError("duplicate roster member")
-        focus=None if focus_member_id is None else str(focus_member_id)
-        primary=list(ids[:self.primary_limit])
+        focus = None if focus_member_id is None else str(focus_member_id)
+        primary = list(ids[: self.primary_limit])
         if focus in ids and focus not in primary and primary:
-            primary[-1]=focus
-        used=set(primary)
-        remaining=[x for x in ids if x not in used]
-        compact=remaining[:self.compact_limit]
-        overflow=remaining[self.compact_limit:]
-        return BattleRosterSummary(tuple(primary),tuple(compact),tuple(overflow),focus)
+            primary[-1] = focus
+        used = set(primary)
+        remaining = [x for x in ids if x not in used]
+        compact = remaining[: self.compact_limit]
+        overflow = remaining[self.compact_limit :]
+        return BattleRosterSummary(tuple(primary), tuple(compact), tuple(overflow), focus)

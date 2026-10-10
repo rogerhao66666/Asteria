@@ -36,9 +36,7 @@ def test_loadout_aggregates_equipment_and_attachment_contributions():
     loadout = EquipmentLoadout(
         [
             EquipmentSlotDefinition("weapon", accepted_tags=["equipment.weapon"]),
-            EquipmentSlotDefinition(
-                "accessory", accepted_tags=["equipment.accessory"], capacity=2
-            ),
+            EquipmentSlotDefinition("accessory", accepted_tags=["equipment.accessory"], capacity=2),
         ]
     )
     loadout.equip("weapon", EquippedItem(sword))
@@ -53,9 +51,7 @@ def test_loadout_aggregates_equipment_and_attachment_contributions():
 
 def test_slot_rejects_wrong_equipment():
     armor = EquipmentDefinition("armor", slot="body", tags=["equipment.armor"])
-    loadout = EquipmentLoadout(
-        [EquipmentSlotDefinition("weapon", accepted_tags=["equipment.weapon"])]
-    )
+    loadout = EquipmentLoadout([EquipmentSlotDefinition("weapon", accepted_tags=["equipment.weapon"])])
     try:
         loadout.equip("weapon", EquippedItem(armor))
     except ValueError:
@@ -84,11 +80,7 @@ def test_capacity_and_unequip():
 def test_consumable_effect_and_inventory_consumption():
     potion = ItemDefinition(
         "potion",
-        use_effects=[
-            Effect(
-                "heal", [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", 30)]
-            )
-        ],
+        use_effects=[Effect("heal", [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", 30)])],
     )
     inv = Inventory()
     inv.add("potion")

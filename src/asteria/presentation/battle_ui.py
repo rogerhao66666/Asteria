@@ -199,10 +199,7 @@ class BattleUiComposer:
             side = legacy.get(member.member_id, "")
             if side and side not in side_order:
                 side_order.append(side)
-        fallback_zone = {
-            side: ("left" if index % 2 == 0 else "right")
-            for index, side in enumerate(side_order)
-        }
+        fallback_zone = {side: ("left" if index % 2 == 0 else "right") for index, side in enumerate(side_order)}
 
         zone_by_member = {}
         for member in members:
@@ -216,11 +213,15 @@ class BattleUiComposer:
         overhead = [m for m in members if zone_by_member[m.member_id] in L.overhead_zones]
         if overhead:
             o_panels, o_texts, o_gauges = self._overhead_commands(overhead)
-            panels.extend(o_panels); texts.extend(o_texts); gauges.extend(o_gauges)
+            panels.extend(o_panels)
+            texts.extend(o_texts)
+            gauges.extend(o_gauges)
             members = [m for m in members if zone_by_member[m.member_id] not in L.overhead_zones]
         if L.party_hud == "bottom_row":
             b_panels, b_texts, b_gauges = self._bottom_row_commands(members, focus_member_id)
-            panels.extend(b_panels); texts.extend(b_texts); gauges.extend(b_gauges)
+            panels.extend(b_panels)
+            texts.extend(b_texts)
+            gauges.extend(b_gauges)
             return panels, texts, gauges, icons
 
         available_height = max(1.0, L.virtual_height - L.timeline_y - 42.0 - L.margin)
@@ -282,13 +283,14 @@ class BattleUiComposer:
                 )
                 panel_role = f"hud:{density}:focus" if focused else f"hud:{density}"
                 name_role = f"member_name:{density}:focus" if focused else f"member_name:{density}"
-                panels.append(BattleUiPanel(
-                    f"hud:{member.member_id}", x, panel_y, L.hud_panel_width, height,
-                    panel_role, member.member_id
-                ))
-                texts.append(BattleUiText(
-                    self._name(member.member_id), x+4, panel_y+3, name_role, "left", member.member_id
-                ))
+                panels.append(
+                    BattleUiPanel(
+                        f"hud:{member.member_id}", x, panel_y, L.hud_panel_width, height, panel_role, member.member_id
+                    )
+                )
+                texts.append(
+                    BattleUiText(self._name(member.member_id), x + 4, panel_y + 3, name_role, "left", member.member_id)
+                )
 
                 gy = panel_y + (13 if density != "minimal" else 9)
                 for gauge in selected:
@@ -298,58 +300,96 @@ class BattleUiComposer:
                         # with no redundant label/value unless the project uses a
                         # number-style resource.
                         if mode in {"number", "contextual"}:
-                            texts.append(BattleUiText(
-                                f"{gauge.current:g}", x+L.hud_panel_width-4, panel_y+3,
-                                f"resource_value:{mode}", "right", member.member_id
-                            ))
+                            texts.append(
+                                BattleUiText(
+                                    f"{gauge.current:g}",
+                                    x + L.hud_panel_width - 4,
+                                    panel_y + 3,
+                                    f"resource_value:{mode}",
+                                    "right",
+                                    member.member_id,
+                                )
+                            )
                         else:
-                            gauges.append(BattleUiGaugeBar(
-                                member.member_id, gauge.resource_id, gauge.label,
-                                x+38, panel_y+6, max(8.0, L.hud_panel_width-44), 4.0,
-                                max(0.0, min(1.0, float(gauge.normalized))),
-                                float(gauge.current), float(gauge.maximum),
-                                mode, int(gauge.segments), gauge.icon_asset_id,
-                            ))
+                            gauges.append(
+                                BattleUiGaugeBar(
+                                    member.member_id,
+                                    gauge.resource_id,
+                                    gauge.label,
+                                    x + 38,
+                                    panel_y + 6,
+                                    max(8.0, L.hud_panel_width - 44),
+                                    4.0,
+                                    max(0.0, min(1.0, float(gauge.normalized))),
+                                    float(gauge.current),
+                                    float(gauge.maximum),
+                                    mode,
+                                    int(gauge.segments),
+                                    gauge.icon_asset_id,
+                                )
+                            )
                         continue
 
                     if gauge.show_label and density == "expanded":
-                        texts.append(BattleUiText(
-                            self._fit(gauge.label, 5), x+4, gy, "gauge_label", "left", member.member_id
-                        ))
+                        texts.append(
+                            BattleUiText(self._fit(gauge.label, 5), x + 4, gy, "gauge_label", "left", member.member_id)
+                        )
 
                     if mode in {"number", "contextual"}:
                         if gauge.show_value:
-                            texts.append(BattleUiText(
-                                f"{gauge.current:g}", x+L.hud_panel_width-4, gy,
-                                f"resource_value:{mode}", "right", member.member_id
-                            ))
+                            texts.append(
+                                BattleUiText(
+                                    f"{gauge.current:g}",
+                                    x + L.hud_panel_width - 4,
+                                    gy,
+                                    f"resource_value:{mode}",
+                                    "right",
+                                    member.member_id,
+                                )
+                            )
                     else:
                         label_space = 30 if (gauge.show_label and density == "expanded") else 4
                         value_space = 26 if (gauge.show_value and not gauge.compact and density == "expanded") else 8
                         bar_x = x + label_space
                         bar_w = max(8.0, L.hud_panel_width - label_space - value_space)
-                        gauges.append(BattleUiGaugeBar(
-                            member.member_id, gauge.resource_id, gauge.label, bar_x, gy,
-                            bar_w, 5.0 if density == "expanded" else 4.0,
-                            max(0.0, min(1.0, float(gauge.normalized))),
-                            float(gauge.current), float(gauge.maximum),
-                            mode, int(gauge.segments), gauge.icon_asset_id,
-                        ))
+                        gauges.append(
+                            BattleUiGaugeBar(
+                                member.member_id,
+                                gauge.resource_id,
+                                gauge.label,
+                                bar_x,
+                                gy,
+                                bar_w,
+                                5.0 if density == "expanded" else 4.0,
+                                max(0.0, min(1.0, float(gauge.normalized))),
+                                float(gauge.current),
+                                float(gauge.maximum),
+                                mode,
+                                int(gauge.segments),
+                                gauge.icon_asset_id,
+                            )
+                        )
                         if gauge.show_value and not gauge.compact and density == "expanded":
-                            texts.append(BattleUiText(
-                                f"{gauge.current:g}/{gauge.maximum:g}",
-                                x+L.hud_panel_width-4, gy, "gauge_value", "right", member.member_id
-                            ))
+                            texts.append(
+                                BattleUiText(
+                                    f"{gauge.current:g}/{gauge.maximum:g}",
+                                    x + L.hud_panel_width - 4,
+                                    gy,
+                                    "gauge_value",
+                                    "right",
+                                    member.member_id,
+                                )
+                            )
                     gy += L.hud_row_height if density == "expanded" else 8.0
 
                 if density != "minimal":
-                    ix = x+4
-                    iy = y-8
+                    ix = x + 4
+                    iy = y - 8
                     for status in selected_statuses:
                         if status.icon_asset_id:
-                            icons.append(BattleUiIcon(
-                                status.icon_asset_id, ix, iy, "status", member.member_id, status.label
-                            ))
+                            icons.append(
+                                BattleUiIcon(status.icon_asset_id, ix, iy, "status", member.member_id, status.label)
+                            )
                             ix += 10
 
             if zone_layout.overflow_count:
@@ -362,14 +402,16 @@ class BattleUiComposer:
                 else:
                     ox = L.margin
                     align = "left"
-                texts.append(BattleUiText(
-                    f"+{zone_layout.overflow_count}",
-                    ox,
-                    L.timeline_y + 31.0,
-                    "hud_overflow",
-                    align,
-                    "",
-                ))
+                texts.append(
+                    BattleUiText(
+                        f"+{zone_layout.overflow_count}",
+                        ox,
+                        L.timeline_y + 31.0,
+                        "hud_overflow",
+                        align,
+                        "",
+                    )
+                )
         return panels, texts, gauges, icons
 
     @staticmethod
@@ -379,9 +421,19 @@ class BattleUiComposer:
 
     def _bar(self, member_id, gauge, x, y, width, height):
         return BattleUiGaugeBar(
-            member_id, gauge.resource_id, gauge.label, x, y, width, height,
-            max(0.0, min(1.0, float(gauge.normalized))), float(gauge.current), float(gauge.maximum),
-            str(gauge.presentation), int(gauge.segments), gauge.icon_asset_id,
+            member_id,
+            gauge.resource_id,
+            gauge.label,
+            x,
+            y,
+            width,
+            height,
+            max(0.0, min(1.0, float(gauge.normalized))),
+            float(gauge.current),
+            float(gauge.maximum),
+            str(gauge.presentation),
+            int(gauge.segments),
+            gauge.icon_asset_id,
         )
 
     def _overhead_commands(self, members):
@@ -396,8 +448,16 @@ class BattleUiComposer:
             top = ay - float(self._member_heights.get(member.member_id, 32.0))
             width = 44.0
             ranked = self._ranked_gauges(member, 1)
-            texts.append(BattleUiText(self._fit(self._name(member.member_id), 14), ax, top - 15, "overhead_name",
-                                      "center", member.member_id))
+            texts.append(
+                BattleUiText(
+                    self._fit(self._name(member.member_id), 14),
+                    ax,
+                    top - 15,
+                    "overhead_name",
+                    "center",
+                    member.member_id,
+                )
+            )
             if ranked:
                 gauges.append(self._bar(member.member_id, ranked[0], ax - width / 2, top - 5, width, 3.0))
         return panels, texts, gauges
@@ -418,11 +478,27 @@ class BattleUiComposer:
         for index, member in enumerate(members):
             x = x0 + index * (width + gap)
             focused = focus_member_id is not None and member.member_id == str(focus_member_id)
-            panels.append(BattleUiPanel(f"hud:{member.member_id}", x, y, width, height,
-                                        "hud:compact:focus" if focused else "hud:compact", member.member_id))
-            texts.append(BattleUiText(self._fit(self._name(member.member_id), int(width // 5)), x + 3, y + 2,
-                                      "member_name:compact:focus" if focused else "member_name:compact",
-                                      "left", member.member_id))
+            panels.append(
+                BattleUiPanel(
+                    f"hud:{member.member_id}",
+                    x,
+                    y,
+                    width,
+                    height,
+                    "hud:compact:focus" if focused else "hud:compact",
+                    member.member_id,
+                )
+            )
+            texts.append(
+                BattleUiText(
+                    self._fit(self._name(member.member_id), int(width // 5)),
+                    x + 3,
+                    y + 2,
+                    "member_name:compact:focus" if focused else "member_name:compact",
+                    "left",
+                    member.member_id,
+                )
+            )
             for row, gauge in enumerate(self._ranked_gauges(member, 2)):
                 gauges.append(self._bar(member.member_id, gauge, x + 3, y + 12 + row * 6, width - 6, 3.0))
         return panels, texts, gauges
@@ -469,7 +545,11 @@ class BattleUiComposer:
                 gx, _ = self._camera.world_to_screen(visual.anchor.x, visual.anchor.y)
                 half = float(self._member_heights.get(visual.member_id, 32.0)) / 2
                 group.append(gx - half if right_side else gx + half)
-            edge = (min(group) if right_side else max(group)) if group else (ax - body / 2 if right_side else ax + body / 2)
+            edge = (
+                (min(group) if right_side else max(group))
+                if group
+                else (ax - body / 2 if right_side else ax + body / 2)
+            )
             x = edge - 6 - width if right_side else edge + 6
             x = max(L.margin, min(L.virtual_width - L.margin - width, x))
             limit = L.virtual_height - L.margin - (28.0 if L.party_hud == "bottom_row" else 0.0) - height
@@ -479,39 +559,35 @@ class BattleUiComposer:
         ty = y + P.interaction_padding
         if menu.categories:
             category_text = "  ".join(
-                f"[{value}]" if value == menu.active_category else value
-                for value in menu.categories
+                f"[{value}]" if value == menu.active_category else value for value in menu.categories
             )
             texts.append(BattleUiText(category_text, x + P.interaction_padding, ty, "action_categories", "left"))
             ty += P.interaction_header_height
 
         if menu.query:
-            texts.append(BattleUiText(
-                f"Filter: {menu.query}", x + P.interaction_padding, ty, "action_filter", "left"
-            ))
+            texts.append(BattleUiText(f"Filter: {menu.query}", x + P.interaction_padding, ty, "action_filter", "left"))
             ty += P.interaction_header_height
 
         if not menu.entries:
-            texts.append(BattleUiText(
-                P.empty_label, x + width / 2, ty + 3, "action_empty", "center"
-            ))
+            texts.append(BattleUiText(P.empty_label, x + width / 2, ty + 3, "action_empty", "center"))
         else:
             for index, entry in enumerate(menu.entries):
                 selected = index == menu.cursor
                 role = "action_selected" if selected else ("action_entry" if entry.enabled else "action_disabled")
                 prefix = P.selected_prefix if selected else P.idle_prefix
-                texts.append(BattleUiText(
-                    prefix + entry.label, x + P.interaction_padding + 2, ty, role, "left"
-                ))
+                texts.append(BattleUiText(prefix + entry.label, x + P.interaction_padding + 2, ty, role, "left"))
                 if entry.cost_text:
-                    texts.append(BattleUiText(
-                        entry.cost_text, x + width - P.interaction_padding, ty,
-                        "action_cost" if entry.enabled else "action_cost_disabled", "right"
-                    ))
+                    texts.append(
+                        BattleUiText(
+                            entry.cost_text,
+                            x + width - P.interaction_padding,
+                            ty,
+                            "action_cost" if entry.enabled else "action_cost_disabled",
+                            "right",
+                        )
+                    )
                 if entry.icon_asset_id:
-                    icons.append(BattleUiIcon(
-                        entry.icon_asset_id, x + 1, ty, "action", "", entry.label
-                    ))
+                    icons.append(BattleUiIcon(entry.icon_asset_id, x + 1, ty, "action", "", entry.label))
                 ty += P.interaction_row_height
 
             selected = menu.selected
@@ -522,22 +598,26 @@ class BattleUiComposer:
                     footer = selected.disabled_reason
                     footer_role = "action_disabled_reason"
                 if footer:
-                    texts.append(BattleUiText(
-                        footer,
-                        x + P.interaction_padding,
-                        y + height - P.interaction_footer_height,
-                        footer_role,
-                        "left",
-                    ))
+                    texts.append(
+                        BattleUiText(
+                            footer,
+                            x + P.interaction_padding,
+                            y + height - P.interaction_footer_height,
+                            footer_role,
+                            "left",
+                        )
+                    )
 
         if menu.page_count > 1:
-            texts.append(BattleUiText(
-                f"{menu.page + 1}{P.page_separator}{menu.page_count}",
-                x + width - P.interaction_padding,
-                y + height - P.interaction_footer_height,
-                "action_page",
-                "right",
-            ))
+            texts.append(
+                BattleUiText(
+                    f"{menu.page + 1}{P.page_separator}{menu.page_count}",
+                    x + width - P.interaction_padding,
+                    y + height - P.interaction_footer_height,
+                    "action_page",
+                    "right",
+                )
+            )
         return panels, texts, icons
 
     def _workflow_commands(self, workflow):
@@ -561,24 +641,33 @@ class BattleUiComposer:
             L.virtual_height - L.margin - P.interaction_bottom_gap - height,
         )
         panels.append(BattleUiPanel("action_workflow", x, y, width, height, "interaction:workflow"))
-        texts.append(BattleUiText(
-            workflow.label, x + P.interaction_padding, y + P.interaction_padding,
-            "workflow_title", "left"
-        ))
+        texts.append(
+            BattleUiText(workflow.label, x + P.interaction_padding, y + P.interaction_padding, "workflow_title", "left")
+        )
 
         if workflow.complete:
-            texts.append(BattleUiText(
-                "Ready", x + width/2, y + P.interaction_padding + P.interaction_header_height + 4,
-                "workflow_complete", "center"
-            ))
+            texts.append(
+                BattleUiText(
+                    "Ready",
+                    x + width / 2,
+                    y + P.interaction_padding + P.interaction_header_height + 4,
+                    "workflow_complete",
+                    "center",
+                )
+            )
             return panels, texts, icons
 
         step = workflow.step
         step_y = y + P.interaction_padding + P.interaction_header_height
-        texts.append(BattleUiText(
-            f"{workflow.step_index + 1}{P.page_separator}{workflow.step_count}  {step.label}",
-            x + P.interaction_padding, step_y, "workflow_step", "left"
-        ))
+        texts.append(
+            BattleUiText(
+                f"{workflow.step_index + 1}{P.page_separator}{workflow.step_count}  {step.label}",
+                x + P.interaction_padding,
+                step_y,
+                "workflow_step",
+                "left",
+            )
+        )
         selected = set()
         for value in workflow.selections:
             if value.step_id == step.step_id:
@@ -592,13 +681,9 @@ class BattleUiComposer:
                 role = "workflow_option_selected"
             else:
                 role = "workflow_option" if option.enabled else "workflow_option_disabled"
-            texts.append(BattleUiText(
-                mark + option.label, x + P.interaction_padding + 3, oy, role, "left"
-            ))
+            texts.append(BattleUiText(mark + option.label, x + P.interaction_padding + 3, oy, role, "left"))
             if option.icon_asset_id:
-                icons.append(BattleUiIcon(
-                    option.icon_asset_id, x + 1, oy, "workflow_option", "", option.label
-                ))
+                icons.append(BattleUiIcon(option.icon_asset_id, x + 1, oy, "workflow_option", "", option.label))
             oy += P.interaction_row_height
         return panels, texts, icons
 
@@ -608,25 +693,42 @@ class BattleUiComposer:
             return panels, texts
         L = self.layout
         slot, padding = 32.0, 9.0
-        capacity = max(1, int((L.virtual_width - 2*L.margin - 2*padding) // slot))
+        capacity = max(1, int((L.virtual_width - 2 * L.margin - 2 * padding) // slot))
         turns = tuple(timeline.turns)[:capacity]
-        width = 2*padding + slot*len(turns)
-        panels.append(BattleUiPanel("timeline", (L.virtual_width-width)/2, L.timeline_y, width, 20.0, "timeline"))
-        x = (L.virtual_width-width)/2 + padding + slot/2
+        width = 2 * padding + slot * len(turns)
+        panels.append(BattleUiPanel("timeline", (L.virtual_width - width) / 2, L.timeline_y, width, 20.0, "timeline"))
+        x = (L.virtual_width - width) / 2 + padding + slot / 2
         max_chars = max(3, int(slot // self.TIMELINE_CHAR_WIDTH))
         for entry in turns:
             role = "timeline_current" if entry.is_current else "timeline_entry"
-            texts.append(BattleUiText(
-                self._fit(self._name(entry.member_id), max_chars), x, L.timeline_y+6, role, "center", entry.member_id,
-            ))
+            texts.append(
+                BattleUiText(
+                    self._fit(self._name(entry.member_id), max_chars),
+                    x,
+                    L.timeline_y + 6,
+                    role,
+                    "center",
+                    entry.member_id,
+                )
+            )
             if timeline.scheduler_mode == "continuous":
-                texts.append(BattleUiText(f"{entry.ready_time:.1f}", x, L.timeline_y+13, "timeline_time", "center", entry.member_id))
+                texts.append(
+                    BattleUiText(
+                        f"{entry.ready_time:.1f}", x, L.timeline_y + 13, "timeline_time", "center", entry.member_id
+                    )
+                )
             x += slot
         for i, cast in enumerate(timeline.casts):
-            texts.append(BattleUiText(
-                f"{cast.actor_id}: {cast.ability_id} {int(round(cast.progress*100))}%",
-                L.margin, L.timeline_y+26+i*9, "cast", "left", cast.actor_id
-            ))
+            texts.append(
+                BattleUiText(
+                    f"{cast.actor_id}: {cast.ability_id} {int(round(cast.progress * 100))}%",
+                    L.margin,
+                    L.timeline_y + 26 + i * 9,
+                    "cast",
+                    "left",
+                    cast.actor_id,
+                )
+            )
         return panels, texts
 
     def _feedback_commands(self, camera, feedback):
@@ -640,7 +742,11 @@ class BattleUiComposer:
             x, y = pos
             lift = 10.0 + 12.0 * min(1.0, value.age / max(value.duration, 1e-9))
             sign = "+" if value.kind == BattleValueKind.HEAL and value.value >= 0 else ""
-            texts.append(BattleUiText(f"{sign}{value.value:g}", x, y-lift, f"value:{value.kind.value}", "center", value.target_id))
+            texts.append(
+                BattleUiText(
+                    f"{sign}{value.value:g}", x, y - lift, f"value:{value.kind.value}", "center", value.target_id
+                )
+            )
         per_target = {}
         for label in feedback.labels:
             pos = self._anchor_screen(camera, label.target_id)
@@ -648,7 +754,11 @@ class BattleUiComposer:
                 continue
             offset = per_target.get(label.target_id, 0)
             per_target[label.target_id] = offset + 1
-            texts.append(BattleUiText(label.label, pos[0], pos[1]-24.0-offset*8.0, "feedback_label", "center", label.target_id))
+            texts.append(
+                BattleUiText(
+                    label.label, pos[0], pos[1] - 24.0 - offset * 8.0, "feedback_label", "center", label.target_id
+                )
+            )
         return texts
 
     def _result_commands(self, result):
@@ -656,18 +766,29 @@ class BattleUiComposer:
         if result is None or not result.finished:
             return panels, texts
         L = self.layout
-        x = (L.virtual_width-L.result_panel_width)/2
-        y = (L.virtual_height-L.result_panel_height)/2
+        x = (L.virtual_width - L.result_panel_width) / 2
+        y = (L.virtual_height - L.result_panel_height) / 2
         panels.append(BattleUiPanel("battle_result", x, y, L.result_panel_width, L.result_panel_height, "result"))
-        texts.append(BattleUiText(result.headline, L.virtual_width/2, y+12, "result_headline", "center"))
-        line_y = y+28
+        texts.append(BattleUiText(result.headline, L.virtual_width / 2, y + 12, "result_headline", "center"))
+        line_y = y + 28
         for reward in result.currencies:
-            texts.append(BattleUiText(f"{reward.label}  +{reward.amount:g}", x+12, line_y, "reward", "left")); line_y += 9
+            texts.append(BattleUiText(f"{reward.label}  +{reward.amount:g}", x + 12, line_y, "reward", "left"))
+            line_y += 9
         for reward in result.items:
-            texts.append(BattleUiText(f"{reward.label}  x{reward.amount}", x+12, line_y, "reward", "left")); line_y += 9
+            texts.append(BattleUiText(f"{reward.label}  x{reward.amount}", x + 12, line_y, "reward", "left"))
+            line_y += 9
         for reward in result.progression:
             suffix = f"  Rank {reward.old_rank} → {reward.new_rank}" if reward.new_rank != reward.old_rank else ""
-            texts.append(BattleUiText(f"{reward.label}  +{reward.new_total-reward.old_total:g}{suffix}", x+12, line_y, "progression", "left")); line_y += 9
+            texts.append(
+                BattleUiText(
+                    f"{reward.label}  +{reward.new_total - reward.old_total:g}{suffix}",
+                    x + 12,
+                    line_y,
+                    "progression",
+                    "left",
+                )
+            )
+            line_y += 9
         return panels, texts
 
     def compose(
@@ -710,34 +831,52 @@ class BattleUiComposer:
             hud_members, side_by_member, placement_by_member, focus_member_id
         )
         pw, tw, iw = self._workflow_commands(action_workflow)
-        panels.extend(pw); texts.extend(tw); icons.extend(iw)
+        panels.extend(pw)
+        texts.extend(tw)
+        icons.extend(iw)
         if action_workflow is None:
             pa, ta, ia = self._action_menu_commands(action_menu)
-            panels.extend(pa); texts.extend(ta); icons.extend(ia)
+            panels.extend(pa)
+            texts.extend(ta)
+            icons.extend(ia)
         p2, t2 = self._timeline_commands(timeline)
-        panels.extend(p2); texts.extend(t2)
+        panels.extend(p2)
+        texts.extend(t2)
         texts.extend(self._feedback_commands(camera, feedback))
         p3, t3 = self._result_commands(result)
-        panels.extend(p3); texts.extend(t3)
+        panels.extend(p3)
+        texts.extend(t3)
 
         markers = ()
         screen_fx = ()
         if camera_feedback is not None:
-            markers = tuple(BattleUiMarker(x.member_id, x.screen_x, x.screen_y, x.primary) for x in camera_feedback.targets)
+            markers = tuple(
+                BattleUiMarker(x.member_id, x.screen_x, x.screen_y, x.primary) for x in camera_feedback.targets
+            )
             screen_fx = tuple(camera_feedback.screen_fx)
 
         if feedback is None:
             vfx = ()
         else:
-            vfx = tuple(sorted(
-                feedback.vfx,
-                key=lambda item: (
-                    int(dict(item.payload.get("staging", {}) or {}).get("layer", 0)),
-                    -int(dict(item.payload.get("staging", {}) or {}).get("priority", 0)),
-                    item.sequence,
-                ),
-            ))
+            vfx = tuple(
+                sorted(
+                    feedback.vfx,
+                    key=lambda item: (
+                        int(dict(item.payload.get("staging", {}) or {}).get("layer", 0)),
+                        -int(dict(item.payload.get("staging", {}) or {}).get("priority", 0)),
+                        item.sequence,
+                    ),
+                )
+            )
         return BattleUiFrame(
-            self.scene.scene_id, battle_frame.background_asset_id, tuple(battle_frame.combatant_draws),
-            tuple(panels), tuple(texts), tuple(gauges), tuple(icons), markers, vfx, screen_fx,
+            self.scene.scene_id,
+            battle_frame.background_asset_id,
+            tuple(battle_frame.combatant_draws),
+            tuple(panels),
+            tuple(texts),
+            tuple(gauges),
+            tuple(icons),
+            markers,
+            vfx,
+            screen_fx,
         )

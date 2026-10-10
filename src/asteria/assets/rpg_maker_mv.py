@@ -120,9 +120,7 @@ class RPGMakerMVImporter:
             alpha=alpha,
             layout=_LAYOUTS[category],
             frame_size=frame_size,
-            anchor=(0.5, 1.0)
-            if category in {"sv_actors", "enemies", "sv_enemies"}
-            else (0.5, 0.5),
+            anchor=(0.5, 1.0) if category in {"sv_actors", "enemies", "sv_enemies"} else (0.5, 0.5),
         )
 
     def to_canonical(self, imported: RPGMakerMVImage, *, asset_id: str) -> CanonicalAsset:

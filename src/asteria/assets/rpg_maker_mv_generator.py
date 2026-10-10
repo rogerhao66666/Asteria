@@ -15,22 +15,45 @@ _NAME = re.compile(
     re.IGNORECASE,
 )
 _REPRESENTATIONS = {
-    "TV": "walking", "TVD": "damaged", "SV": "side_view",
-    "FG": "face", "ICON": "thumbnail",
+    "TV": "walking",
+    "TVD": "damaged",
+    "SV": "side_view",
+    "FG": "face",
+    "ICON": "thumbnail",
 }
 _CATEGORIES = {
-    "body": "body", "clothing": "outfit", "clothing1": "outfit",
-    "clothing2": "armor", "cloak": "cloak", "cloak1": "cloak", "cloak2": "cloak",
-    "acca": "accessory", "accb": "accessory_b",
-    "glasses": "glasses", "fronthair": "hair_front",
-    "rearhair": "hair_back", "eyes": "eyes",
-    "beard": "beard", "ears": "ears", "beastears": "beast_ears", "tail": "tail",
-    "wing": "wing", "face": "face_shape", "eyebrows": "eyebrows",
-    "nose": "nose", "mouth": "mouth", "facialmark": "facial_mark",
+    "body": "body",
+    "clothing": "outfit",
+    "clothing1": "outfit",
+    "clothing2": "armor",
+    "cloak": "cloak",
+    "cloak1": "cloak",
+    "cloak2": "cloak",
+    "acca": "accessory",
+    "accb": "accessory_b",
+    "glasses": "glasses",
+    "fronthair": "hair_front",
+    "rearhair": "hair_back",
+    "eyes": "eyes",
+    "beard": "beard",
+    "ears": "ears",
+    "beastears": "beast_ears",
+    "tail": "tail",
+    "wing": "wing",
+    "face": "face_shape",
+    "eyebrows": "eyebrows",
+    "nose": "nose",
+    "mouth": "mouth",
+    "facialmark": "facial_mark",
 }
 _NUMBERED_FAMILIES = {
-    "beard": "Beard", "clothing": "Clothing", "cloak": "Cloak",
-    "fronthair": "FrontHair", "rearhair": "RearHair", "tail": "Tail", "wing": "Wing",
+    "beard": "Beard",
+    "clothing": "Clothing",
+    "cloak": "Cloak",
+    "fronthair": "FrontHair",
+    "rearhair": "RearHair",
+    "tail": "Tail",
+    "wing": "Wing",
 }
 
 
@@ -112,7 +135,9 @@ class RPGMakerMVGeneratorCatalog:
                     issues.append(MVGeneratorIssue("generator.unrecognized_name", str(path), path.name))
                     continue
                 relative_parts = path.relative_to(generator_root).parts
-                gender = next((value for value in relative_parts if value.lower() in {"male", "female", "kid"}), "Unspecified")
+                gender = next(
+                    (value for value in relative_parts if value.lower() in {"male", "female", "kid"}), "Unspecified"
+                )
                 source_category = _logical_category(match.group("category"))
                 token = match.group("number")
                 number = int(token) if token.isdigit() else token
@@ -134,24 +159,34 @@ class RPGMakerMVGeneratorCatalog:
                 value = representations.get(name)
                 if value is None:
                     return None
-                return MVGeneratorRepresentation(
-                    name, tuple(sorted(value["images"])), tuple(sorted(value["masks"]))
-                )
+                return MVGeneratorRepresentation(name, tuple(sorted(value["images"])), tuple(sorted(value["masks"])))
 
             category = _CATEGORIES.get(source_category.lower(), "accessory")
             part = MVGeneratorPart(
-                part_id, generator_root, gender, source_category, category, number,
-                rep("walking"), rep("face"), rep("side_view"),
-                rep("damaged"), rep("thumbnail"),
+                part_id,
+                generator_root,
+                gender,
+                source_category,
+                category,
+                number,
+                rep("walking"),
+                rep("face"),
+                rep("side_view"),
+                rep("damaged"),
+                rep("thumbnail"),
                 tags=(f"gender:{gender.lower()}", f"mv-category:{source_category.lower()}"),
             )
             parts.append(part)
             for required in ("walking", "face", "side_view"):
                 if getattr(part, required) is None:
-                    issues.append(MVGeneratorIssue(
-                        "generator.representation_missing", str(generator_root),
-                        f"{required} unavailable", part_id,
-                    ))
+                    issues.append(
+                        MVGeneratorIssue(
+                            "generator.representation_missing",
+                            str(generator_root),
+                            f"{required} unavailable",
+                            part_id,
+                        )
+                    )
         return cls(roots, tuple(sorted(parts, key=lambda item: item.id)), tuple(issues), source_count)
 
     def to_character_parts(self) -> tuple[CharacterPart, ...]:

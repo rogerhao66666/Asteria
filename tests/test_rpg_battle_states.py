@@ -2,13 +2,31 @@ import random
 import pytest
 
 from asteria.gameplay import (
-    AbilityDefinition, AbilityRegistry, AbilityRuntime, Effect, EffectOperation,
-    GameplaySubject, PeriodicEffect, ResourcePool, StackingPolicy, StatBlock,
-    StateDefinition, StateRegistry, StateRuntime, StatModifier, TagSet, TargetingRule,
+    AbilityDefinition,
+    AbilityRegistry,
+    AbilityRuntime,
+    Effect,
+    EffectOperation,
+    GameplaySubject,
+    PeriodicEffect,
+    ResourcePool,
+    StackingPolicy,
+    StatBlock,
+    StateDefinition,
+    StateRegistry,
+    StateRuntime,
+    StatModifier,
+    TagSet,
+    TargetingRule,
 )
 from asteria.rpg import (
-    BattleAction, BattleRuntime, BattleStatePolicy, BattleStateRuntime,
-    Party, PartyMember, RpgDatabase,
+    BattleAction,
+    BattleRuntime,
+    BattleStatePolicy,
+    BattleStateRuntime,
+    Party,
+    PartyMember,
+    RpgDatabase,
 )
 
 
@@ -24,10 +42,16 @@ def subject(*, tags=(), stats=None, states=()):
 
 def test_policy_roundtrip_and_open_trigger_vocabulary():
     policy = BattleStatePolicy(
-        "silence", base_chance=.75, source_stat_terms={"status_power": .01},
-        target_stat_terms={"status_resist": -.01}, immune_target_tags=["immune.silence"],
-        duration_multiplier=.5, duration_target_stat_terms={"status_resist": -.01},
-        blocked_ability_tags=["ability.magic"], tick_trigger="custom.clock.pulse", tick_amount=.25,
+        "silence",
+        base_chance=0.75,
+        source_stat_terms={"status_power": 0.01},
+        target_stat_terms={"status_resist": -0.01},
+        immune_target_tags=["immune.silence"],
+        duration_multiplier=0.5,
+        duration_target_stat_terms={"status_resist": -0.01},
+        blocked_ability_tags=["ability.magic"],
+        tick_trigger="custom.clock.pulse",
+        tick_amount=0.25,
     )
     assert BattleStatePolicy.from_data(policy.to_data()) == policy
     assert policy.tick_trigger == "custom.clock.pulse"
@@ -37,10 +61,12 @@ def test_state_application_uses_chance_stats_and_source_provenance():
     state = StateDefinition("poison", 4)
     src = subject(stats={"status_power": 20, "status_resist": 0, "speed": 10}, states=[state])
     dst = subject(stats={"status_power": 0, "status_resist": 10, "speed": 10}, states=[state])
-    policy = BattleStatePolicy("poison", base_chance=.5, source_stat_terms={"status_power": .01}, target_stat_terms={"status_resist": -.01})
+    policy = BattleStatePolicy(
+        "poison", base_chance=0.5, source_stat_terms={"status_power": 0.01}, target_stat_terms={"status_resist": -0.01}
+    )
     result = BattleStateRuntime([policy]).apply("poison", "hero", src, "slime", dst, rng=random.Random(1))
     assert result.applied
-    assert result.chance == pytest.approx(.6)
+    assert result.chance == pytest.approx(0.6)
     assert dst.states.get("poison").source_id == "hero"
 
 
@@ -58,7 +84,7 @@ def test_duration_resistance_can_shorten_state_without_hardcoded_status_logic():
     state = StateDefinition("slow", 10)
     src = subject(states=[state])
     dst = subject(stats={"status_power": 0, "status_resist": 25, "speed": 10}, states=[state])
-    policy = BattleStatePolicy("slow", duration_multiplier=1, duration_target_stat_terms={"status_resist": -.02})
+    policy = BattleStatePolicy("slow", duration_multiplier=1, duration_target_stat_terms={"status_resist": -0.02})
     result = BattleStateRuntime([policy]).apply("slow", "a", src, "b", dst, rng=random.Random(1))
     assert result.duration == pytest.approx(5)
     assert dst.states.get("slow").remaining == pytest.approx(5)
@@ -67,10 +93,12 @@ def test_duration_resistance_can_shorten_state_without_hardcoded_status_logic():
 def test_prevent_action_and_tag_specific_silence_share_one_policy_model():
     states = [StateDefinition("stun", 1), StateDefinition("silence", 2)]
     actor = subject(states=states)
-    rt = BattleStateRuntime([
-        BattleStatePolicy("stun", prevent_action=True),
-        BattleStatePolicy("silence", blocked_ability_tags=["ability.magic"]),
-    ])
+    rt = BattleStateRuntime(
+        [
+            BattleStatePolicy("stun", prevent_action=True),
+            BattleStatePolicy("silence", blocked_ability_tags=["ability.magic"]),
+        ]
+    )
     actor.states.apply("silence")
     assert not rt.ability_availability(actor, ["ability.magic"]).allowed
     assert rt.ability_availability(actor, ["ability.physical"]).allowed
@@ -92,7 +120,8 @@ def test_trigger_ticks_only_states_bound_to_that_lifecycle():
 
 def test_periodic_effect_can_tick_on_battle_lifecycle():
     poison = StateDefinition(
-        "poison", 3,
+        "poison",
+        3,
         periodic=[PeriodicEffect(1, Effect("poison_tick", [EffectOperation("resource_delta", "hp", -7)]))],
     )
     actor = subject(states=[poison])
@@ -120,7 +149,13 @@ def test_state_snapshot_v2_preserves_source_without_replaying_on_apply():
 def test_state_snapshot_v1_stays_backward_readable():
     definition = StateDefinition("legacy", 5)
     rt = subject(states=[definition]).states
-    rt.restore({"schema": "asteria.state_runtime", "version": 1, "active": [{"state_id": "legacy", "remaining": 2, "stacks": 1, "periodic_elapsed": []}]})
+    rt.restore(
+        {
+            "schema": "asteria.state_runtime",
+            "version": 1,
+            "active": [{"state_id": "legacy", "remaining": 2, "stacks": 1, "periodic_elapsed": []}],
+        }
+    )
     assert rt.get("legacy").remaining == 2
     assert rt.get("legacy").source_id is None
 
@@ -129,19 +164,25 @@ def battle_fixture():
     defs = [StateDefinition("stun", 1), StateDefinition("silence", 2)]
     hero = subject(states=defs)
     enemy = subject(states=defs)
-    registry = AbilityRegistry([
-        AbilityDefinition("slash", targeting=TargetingRule(), tags=["ability.physical"]),
-        AbilityDefinition("fire", targeting=TargetingRule(), tags=["ability.magic"]),
-    ])
+    registry = AbilityRegistry(
+        [
+            AbilityDefinition("slash", targeting=TargetingRule(), tags=["ability.physical"]),
+            AbilityDefinition("fire", targeting=TargetingRule(), tags=["ability.magic"]),
+        ]
+    )
     runtime = AbilityRuntime(registry)
     parties = [
         Party("heroes", [PartyMember("hero", "heroes", hero, ability_ids=["slash", "fire"], initiative=10)]),
         Party("enemies", [PartyMember("enemy", "enemies", enemy, ability_ids=["slash"], initiative=1)]),
     ]
-    battle = BattleRuntime(parties, runtime, state_policies=[
-        BattleStatePolicy("stun", prevent_action=True, tick_trigger="rpg.battle.turn_ended"),
-        BattleStatePolicy("silence", blocked_ability_tags=["ability.magic"], tick_trigger="rpg.battle.turn_ended"),
-    ])
+    battle = BattleRuntime(
+        parties,
+        runtime,
+        state_policies=[
+            BattleStatePolicy("stun", prevent_action=True, tick_trigger="rpg.battle.turn_ended"),
+            BattleStatePolicy("silence", blocked_ability_tags=["ability.magic"], tick_trigger="rpg.battle.turn_ended"),
+        ],
+    )
     return battle
 
 
@@ -193,7 +234,8 @@ def test_many_custom_states_have_no_engine_cap():
 
 def test_on_expire_is_distinct_from_manual_remove_for_doom_like_rules():
     doom = StateDefinition(
-        "doom", 1,
+        "doom",
+        1,
         on_expire=[Effect("doom_resolve", [EffectOperation("resource_delta", "hp", -99)])],
     )
     a = subject(states=[doom])
@@ -210,8 +252,8 @@ def test_remove_trigger_supports_sleep_wake_style_composition():
     actor = subject(states=[sleep])
     actor.states.apply("sleep")
     member = PartyMember("hero", "heroes", actor)
-    rt = BattleStateRuntime([
-        BattleStatePolicy("sleep", prevent_action=True, remove_triggers=["rpg.battle.damage_received"])
-    ])
+    rt = BattleStateRuntime(
+        [BattleStatePolicy("sleep", prevent_action=True, remove_triggers=["rpg.battle.damage_received"])]
+    )
     rt.apply_trigger("rpg.battle.damage_received", [member])
     assert actor.states.get("sleep") is None

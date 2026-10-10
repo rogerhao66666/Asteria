@@ -40,8 +40,11 @@ class BattleUiPolishProfile:
 
     def __post_init__(self):
         for name in (
-            "interaction_width", "interaction_padding", "interaction_row_height",
-            "interaction_header_height", "interaction_footer_height",
+            "interaction_width",
+            "interaction_padding",
+            "interaction_row_height",
+            "interaction_header_height",
+            "interaction_footer_height",
         ):
             _positive(getattr(self, name), name)
         _nonnegative(self.interaction_bottom_gap, "interaction_bottom_gap")

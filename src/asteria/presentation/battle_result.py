@@ -25,30 +25,52 @@ class BattleResultProfile:
     item_labels: tuple[tuple[str, str], ...] = ()
 
     def __init__(
-        self, *, victory_label="Victory", defeat_label="Defeat", escape_label="Escaped",
-        complete_label="Battle Complete", currency_labels=None, progression_labels=None,
+        self,
+        *,
+        victory_label="Victory",
+        defeat_label="Defeat",
+        escape_label="Escaped",
+        complete_label="Battle Complete",
+        currency_labels=None,
+        progression_labels=None,
         item_labels=None,
     ):
         object.__setattr__(self, "victory_label", str(victory_label))
         object.__setattr__(self, "defeat_label", str(defeat_label))
         object.__setattr__(self, "escape_label", str(escape_label))
         object.__setattr__(self, "complete_label", str(complete_label))
-        object.__setattr__(self, "currency_labels", tuple(sorted((str(k), str(v)) for k, v in dict(currency_labels or {}).items())))
-        object.__setattr__(self, "progression_labels", tuple(sorted((str(k), str(v)) for k, v in dict(progression_labels or {}).items())))
-        object.__setattr__(self, "item_labels", tuple(sorted((str(k), str(v)) for k, v in dict(item_labels or {}).items())))
+        object.__setattr__(
+            self, "currency_labels", tuple(sorted((str(k), str(v)) for k, v in dict(currency_labels or {}).items()))
+        )
+        object.__setattr__(
+            self,
+            "progression_labels",
+            tuple(sorted((str(k), str(v)) for k, v in dict(progression_labels or {}).items())),
+        )
+        object.__setattr__(
+            self, "item_labels", tuple(sorted((str(k), str(v)) for k, v in dict(item_labels or {}).items()))
+        )
 
     def _label(self, pairs, key):
         return dict(pairs).get(str(key), str(key))
 
-    def currency_label(self, key): return self._label(self.currency_labels, key)
-    def progression_label(self, key): return self._label(self.progression_labels, key)
-    def item_label(self, key): return self._label(self.item_labels, key)
+    def currency_label(self, key):
+        return self._label(self.currency_labels, key)
+
+    def progression_label(self, key):
+        return self._label(self.progression_labels, key)
+
+    def item_label(self, key):
+        return self._label(self.item_labels, key)
 
     def to_data(self):
         return {
-            "schema": "asteria.battle_result_profile", "version": 1,
-            "victory_label": self.victory_label, "defeat_label": self.defeat_label,
-            "escape_label": self.escape_label, "complete_label": self.complete_label,
+            "schema": "asteria.battle_result_profile",
+            "version": 1,
+            "victory_label": self.victory_label,
+            "defeat_label": self.defeat_label,
+            "escape_label": self.escape_label,
+            "complete_label": self.complete_label,
             "currency_labels": dict(self.currency_labels),
             "progression_labels": dict(self.progression_labels),
             "item_labels": dict(self.item_labels),
@@ -183,23 +205,29 @@ class BattleResultPresentationRuntime:
             progression_values = []
             for result in reward_result.progression_results:
                 crossed = tuple(result.crossed)
-                granted_abilities = tuple(dict.fromkeys(
-                    ability for milestone in crossed for ability in milestone.granted_abilities
-                ))
-                granted_tags = tuple(sorted({
-                    tag for milestone in crossed for tag in milestone.granted_tags
-                }))
-                progression_values.append(BattleProgressionRewardView(
-                    str(result.track_id), self.profile.progression_label(result.track_id),
-                    _finite(result.old_total, "old_total"), _finite(result.new_total, "new_total"),
-                    int(result.old_rank), int(result.new_rank),
-                    tuple(int(x.rank) for x in crossed), granted_abilities, granted_tags,
-                ))
+                granted_abilities = tuple(
+                    dict.fromkeys(ability for milestone in crossed for ability in milestone.granted_abilities)
+                )
+                granted_tags = tuple(sorted({tag for milestone in crossed for tag in milestone.granted_tags}))
+                progression_values.append(
+                    BattleProgressionRewardView(
+                        str(result.track_id),
+                        self.profile.progression_label(result.track_id),
+                        _finite(result.old_total, "old_total"),
+                        _finite(result.new_total, "new_total"),
+                        int(result.old_rank),
+                        int(result.new_rank),
+                        tuple(int(x.rank) for x in crossed),
+                        granted_abilities,
+                        granted_tags,
+                    )
+                )
             progression = tuple(sorted(progression_values, key=lambda x: x.track_id))
 
         self.revision += 1
         self._view = BattleResultView(
-            bool(outcome.finished), self._headline(
+            bool(outcome.finished),
+            self._headline(
                 outcome,
                 perspective_side_ids=perspective_side_ids,
                 disposition=disposition,
@@ -208,30 +236,46 @@ class BattleResultPresentationRuntime:
             tuple(str(x) for x in outcome.defeated_sides),
             tuple(str(x) for x in outcome.escaped_sides),
             tuple(str(x) for x in outcome.objective_ids),
-            currencies, progression, items, self.revision,
+            currencies,
+            progression,
+            items,
+            self.revision,
         )
         return self._view
 
     def snapshot(self):
         return {
-            "schema": self.SCHEMA, "version": self.VERSION,
-            "profile": self.profile.to_data(), "revision": self.revision,
+            "schema": self.SCHEMA,
+            "version": self.VERSION,
+            "profile": self.profile.to_data(),
+            "revision": self.revision,
             "view": {
-                "finished": self._view.finished, "headline": self._view.headline,
+                "finished": self._view.finished,
+                "headline": self._view.headline,
                 "winning_sides": list(self._view.winning_sides),
                 "defeated_sides": list(self._view.defeated_sides),
                 "escaped_sides": list(self._view.escaped_sides),
                 "objective_ids": list(self._view.objective_ids),
-                "currencies": [x.__dict__ if hasattr(x, "__dict__") else {
-                    "currency_id": x.currency_id, "label": x.label, "amount": x.amount
-                } for x in self._view.currencies],
-                "progression": [{
-                    "track_id": x.track_id, "label": x.label, "old_total": x.old_total,
-                    "new_total": x.new_total, "old_rank": x.old_rank, "new_rank": x.new_rank,
-                    "crossed_ranks": list(x.crossed_ranks),
-                    "granted_abilities": list(x.granted_abilities),
-                    "granted_tags": list(x.granted_tags),
-                } for x in self._view.progression],
+                "currencies": [
+                    x.__dict__
+                    if hasattr(x, "__dict__")
+                    else {"currency_id": x.currency_id, "label": x.label, "amount": x.amount}
+                    for x in self._view.currencies
+                ],
+                "progression": [
+                    {
+                        "track_id": x.track_id,
+                        "label": x.label,
+                        "old_total": x.old_total,
+                        "new_total": x.new_total,
+                        "old_rank": x.old_rank,
+                        "new_rank": x.new_rank,
+                        "crossed_ranks": list(x.crossed_ranks),
+                        "granted_abilities": list(x.granted_abilities),
+                        "granted_tags": list(x.granted_tags),
+                    }
+                    for x in self._view.progression
+                ],
                 "items": [{"item_id": x.item_id, "label": x.label, "amount": x.amount} for x in self._view.items],
             },
         }
@@ -243,15 +287,31 @@ class BattleResultPresentationRuntime:
         self.revision = int(data["revision"])
         v = data["view"]
         currencies = tuple(BattleCurrencyRewardView(**x) for x in v.get("currencies", ()))
-        progression = tuple(BattleProgressionRewardView(
-            x["track_id"], x["label"], float(x["old_total"]), float(x["new_total"]),
-            int(x["old_rank"]), int(x["new_rank"]), tuple(x.get("crossed_ranks", ())),
-            tuple(x.get("granted_abilities", ())), tuple(x.get("granted_tags", ())),
-        ) for x in v.get("progression", ()))
+        progression = tuple(
+            BattleProgressionRewardView(
+                x["track_id"],
+                x["label"],
+                float(x["old_total"]),
+                float(x["new_total"]),
+                int(x["old_rank"]),
+                int(x["new_rank"]),
+                tuple(x.get("crossed_ranks", ())),
+                tuple(x.get("granted_abilities", ())),
+                tuple(x.get("granted_tags", ())),
+            )
+            for x in v.get("progression", ())
+        )
         items = tuple(BattleItemRewardView(**x) for x in v.get("items", ()))
         self._view = BattleResultView(
-            bool(v["finished"]), str(v["headline"]), tuple(v.get("winning_sides", ())),
-            tuple(v.get("defeated_sides", ())), tuple(v.get("escaped_sides", ())),
-            tuple(v.get("objective_ids", ())), currencies, progression, items, self.revision,
+            bool(v["finished"]),
+            str(v["headline"]),
+            tuple(v.get("winning_sides", ())),
+            tuple(v.get("defeated_sides", ())),
+            tuple(v.get("escaped_sides", ())),
+            tuple(v.get("objective_ids", ())),
+            currencies,
+            progression,
+            items,
+            self.revision,
         )
         return self._view

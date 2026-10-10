@@ -10,6 +10,7 @@ Backends report raw device state as ``RawInputState`` using portable names:
 keys by their lower-case name ("a", "left", "return", "space"), gamepad
 buttons by index, axes by index with values in [-1, 1].
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -113,14 +114,17 @@ class InputActionMap:
         self._actions[action_id] = tuple(dict.fromkeys(current))
 
     def evaluate(self, raw: RawInputState) -> InputSnapshot:
-        return InputSnapshot({
-            action_id: max((b.value(raw) for b in bindings), default=0.0)
-            for action_id, bindings in self._actions.items()
-        })
+        return InputSnapshot(
+            {
+                action_id: max((b.value(raw) for b in bindings), default=0.0)
+                for action_id, bindings in self._actions.items()
+            }
+        )
 
     def to_data(self):
         return {
-            "schema": self.SCHEMA, "version": self.VERSION,
+            "schema": self.SCHEMA,
+            "version": self.VERSION,
             "actions": {a: [b.to_data() for b in bs] for a, bs in sorted(self._actions.items())},
         }
 
@@ -135,16 +139,38 @@ class InputActionMap:
         """Keyboard (arrows/WASD) plus a standard gamepad (left stick, d-pad, A/B/Start)."""
         key = lambda code: InputBinding("key", code)  # noqa: E731
         button = lambda code: InputBinding("gamepad_button", code)  # noqa: E731
-        return cls({
-            "move_left": (key("left"), key("a"), InputBinding("gamepad_axis", "0", -1), InputBinding("gamepad_hat", "x:0", -1)),
-            "move_right": (key("right"), key("d"), InputBinding("gamepad_axis", "0", 1), InputBinding("gamepad_hat", "x:0", 1)),
-            "move_up": (key("up"), key("w"), InputBinding("gamepad_axis", "1", -1), InputBinding("gamepad_hat", "y:0", 1)),
-            "move_down": (key("down"), key("s"), InputBinding("gamepad_axis", "1", 1), InputBinding("gamepad_hat", "y:0", -1)),
-            "interact": (key("e"), key("return"), key("space"), button("0")),
-            "confirm": (key("return"), key("space"), button("0")),
-            "cancel": (key("escape"), key("backspace"), button("1")),
-            "menu": (key("c"), button("7")),
-        })
+        return cls(
+            {
+                "move_left": (
+                    key("left"),
+                    key("a"),
+                    InputBinding("gamepad_axis", "0", -1),
+                    InputBinding("gamepad_hat", "x:0", -1),
+                ),
+                "move_right": (
+                    key("right"),
+                    key("d"),
+                    InputBinding("gamepad_axis", "0", 1),
+                    InputBinding("gamepad_hat", "x:0", 1),
+                ),
+                "move_up": (
+                    key("up"),
+                    key("w"),
+                    InputBinding("gamepad_axis", "1", -1),
+                    InputBinding("gamepad_hat", "y:0", 1),
+                ),
+                "move_down": (
+                    key("down"),
+                    key("s"),
+                    InputBinding("gamepad_axis", "1", 1),
+                    InputBinding("gamepad_hat", "y:0", -1),
+                ),
+                "interact": (key("e"), key("return"), key("space"), button("0")),
+                "confirm": (key("return"), key("space"), button("0")),
+                "cancel": (key("escape"), key("backspace"), button("1")),
+                "menu": (key("c"), button("7")),
+            }
+        )
 
 
 class InputActionTracker:

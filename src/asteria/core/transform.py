@@ -13,8 +13,9 @@ from .metadata import Field, component_schema
         Field("rotation", float, 0.0),
         Field("scale_x", float, 1.0),
         Field("scale_y", float, 1.0),
-        Field("parent_id", str, "", label="Parent",
-              tooltip="Entity whose transform this one is relative to (same scene)."),
+        Field(
+            "parent_id", str, "", label="Parent", tooltip="Entity whose transform this one is relative to (same scene)."
+        ),
     ),
 )
 class Transform(Component):
@@ -48,7 +49,8 @@ def children(entity):
     if entity.scene is None:
         return ()
     return tuple(
-        e for e in entity.scene.entities()
+        e
+        for e in entity.scene.entities()
         if e is not entity and e.has(Transform) and e.get(Transform).parent_id == entity.id
     )
 

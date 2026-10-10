@@ -43,10 +43,7 @@ def grid_four_direction_clips(
         start = row * frames_per_direction
         result[direction] = SpriteClip(
             f"{name_prefix}_{direction}",
-            [
-                SpriteKeyframe(start + i, frame_duration)
-                for i in range(frames_per_direction)
-            ],
+            [SpriteKeyframe(start + i, frame_duration) for i in range(frames_per_direction)],
             True,
         )
     return result

@@ -43,7 +43,8 @@ class ActionTransactionPolicy:
         if data.get("schema") != "asteria.rpg.action_transaction_policy" or data.get("version") != 1:
             raise ValueError("unsupported action transaction policy")
         return cls(
-            data["ability_id"], cost_commit=data.get("cost_commit", "resolution"),
+            data["ability_id"],
+            cost_commit=data.get("cost_commit", "resolution"),
             interrupt_cost=data.get("interrupt_cost", "keep"),
         )
 
@@ -57,14 +58,23 @@ class PendingCostReservation:
     refund_on_interrupt: bool
 
     def to_data(self):
-        return {"token": self.token, "actor_id": self.actor_id, "ability_id": self.ability_id,
-                "costs": [[r, a] for r, a in self.costs], "refund_on_interrupt": self.refund_on_interrupt}
+        return {
+            "token": self.token,
+            "actor_id": self.actor_id,
+            "ability_id": self.ability_id,
+            "costs": [[r, a] for r, a in self.costs],
+            "refund_on_interrupt": self.refund_on_interrupt,
+        }
 
     @classmethod
     def from_data(cls, data):
-        return cls(str(data["token"]), str(data["actor_id"]), str(data["ability_id"]),
-                   tuple((str(r), float(a)) for r, a in data.get("costs", ())),
-                   bool(data.get("refund_on_interrupt", False)))
+        return cls(
+            str(data["token"]),
+            str(data["actor_id"]),
+            str(data["ability_id"]),
+            tuple((str(r), float(a)) for r, a in data.get("costs", ())),
+            bool(data.get("refund_on_interrupt", False)),
+        )
 
 
 class BattleTransactionRuntime:
@@ -87,6 +97,7 @@ class BattleTransactionRuntime:
     @staticmethod
     def evaluate_costs(ability_runtime, ability_id, subject, target_subject=None):
         from asteria.gameplay.abilities import _formula_context
+
         definition = ability_runtime.registry.require(ability_id)
         context = _formula_context(subject, target_subject)
         result = []
@@ -114,7 +125,10 @@ class BattleTransactionRuntime:
                 raise ValueError(f"insufficient resource: {resource}")
             spent.append((resource, amount))
         self._reservations[str(token)] = PendingCostReservation(
-            str(token), str(actor_id), str(ability_id), tuple(spent),
+            str(token),
+            str(actor_id),
+            str(ability_id),
+            tuple(spent),
             policy.interrupt_cost == InterruptCostPolicy.REFUND,
         )
         return tuple(spent)
@@ -130,8 +144,11 @@ class BattleTransactionRuntime:
         return reservation
 
     def to_data(self):
-        return {"schema": self.SCHEMA, "version": self.VERSION,
-                "reservations": [self._reservations[k].to_data() for k in sorted(self._reservations)]}
+        return {
+            "schema": self.SCHEMA,
+            "version": self.VERSION,
+            "reservations": [self._reservations[k].to_data() for k in sorted(self._reservations)],
+        }
 
     def restore_from_data(self, data):
         if data.get("schema") != self.SCHEMA or data.get("version") != self.VERSION:

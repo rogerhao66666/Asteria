@@ -15,6 +15,7 @@ CREDITS.md for sources and licenses):
 Skill effect sheets are drawn procedurally here (no third-party art).
 Output is deterministic.
 """
+
 from __future__ import annotations
 
 import math
@@ -29,8 +30,8 @@ TILE = 16
 
 # Tiny Dungeon tilemap_packed.png indices (12 tiles per row).
 HERO_TILES = (96, 84, 99, 87, 100, 112)  # knight, wizard, girl, viking, healer, ranger
-BOSS_TILE = 110                            # red demon
-WISP_TILE = 108                            # green ghost
+BOSS_TILE = 110  # red demon
+WISP_TILE = 108  # green ghost
 
 # Tiny Town tilemap_packed.png indices.
 GRASS, FLOWERS, FLOWERS_2 = 0, 1, 2
@@ -39,7 +40,6 @@ TREE_TOP, TREE_BOTTOM = 4, 16
 ORANGE_TOP, ORANGE_BOTTOM = 3, 15
 BUSH = 5
 HOUSE = ((48, 49, 50), (60, 61, 62), (72, 73, 74), (84, 85, 86))
-
 
 
 def tile(sheet, index, columns=12):

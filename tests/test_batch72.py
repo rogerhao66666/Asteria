@@ -3,7 +3,10 @@ import pytest
 from asteria.presentation.attachments import Attachment, Socket, SocketKey, SocketRig, Transform2D
 from asteria.presentation.attachment_runtime import AttachmentRuntime
 from asteria.presentation.animation_attachment import (
-    AnimationClock, FrameTiming, AnimatedAttachmentBinding, AnimationAttachmentPlayer
+    AnimationClock,
+    FrameTiming,
+    AnimatedAttachmentBinding,
+    AnimationAttachmentPlayer,
 )
 
 
@@ -14,15 +17,17 @@ def T(x=0, y=0, r=0, sx=1, sy=1, **kw):
 def runtime_with_keyed_hand():
     rig = SocketRig()
     rig.add(Socket("root", default=T(100, 50)))
-    rig.add(Socket(
-        "hand",
-        parent="root",
-        keys=(
-            SocketKey(0, T(0, 0)),
-            SocketKey(1, T(10, 0)),
-            SocketKey(2, T(20, 10)),
-        ),
-    ))
+    rig.add(
+        Socket(
+            "hand",
+            parent="root",
+            keys=(
+                SocketKey(0, T(0, 0)),
+                SocketKey(1, T(10, 0)),
+                SocketKey(2, T(20, 10)),
+            ),
+        )
+    )
     rt = AttachmentRuntime(rig)
     rt.attach(Attachment("held", "asset.sword", "hand"))
     return rt
@@ -32,20 +37,20 @@ def test_uniform_clock_maps_time_to_frame_and_subframe():
     clock = AnimationClock.uniform(4, 10)
     s = clock.sample(150)
     assert s.frame == 1
-    assert s.subframe == pytest.approx(.5)
+    assert s.subframe == pytest.approx(0.5)
 
 
 def test_variable_frame_timing():
     clock = AnimationClock((FrameTiming(100), FrameTiming(300), FrameTiming(50)), loop=False)
     s = clock.sample(250)
     assert s.frame == 1
-    assert s.subframe == pytest.approx(.5)
+    assert s.subframe == pytest.approx(0.5)
 
 
 def test_loop_wraps_without_changing_attachment_contract():
     clock = AnimationClock.uniform(2, 10, loop=True)
     assert clock.sample(250).frame == 0
-    assert clock.sample(250).subframe == pytest.approx(.5)
+    assert clock.sample(250).subframe == pytest.approx(0.5)
 
 
 def test_non_loop_holds_last_frame():
@@ -59,7 +64,7 @@ def test_binding_samples_socket_from_animation_clock():
     pose = binding.resolve_at(150)
     held = pose.attachments[0]
     assert pose.sample.frame == 1
-    assert pose.sample.subframe == pytest.approx(.5)
+    assert pose.sample.subframe == pytest.approx(0.5)
     assert held.transform.x == pytest.approx(115)
     assert held.transform.y == pytest.approx(55)
 

@@ -91,9 +91,7 @@ class BattleAnimationTimingProfile:
         default_recovery_hold=0.0,
     ):
         rules = tuple(
-            x if isinstance(x, BattleAnimationTimingRule)
-            else BattleAnimationTimingRule.from_data(x)
-            for x in rules
+            x if isinstance(x, BattleAnimationTimingRule) else BattleAnimationTimingRule.from_data(x) for x in rules
         )
         if len({x.role for x in rules}) != len(rules):
             raise ValueError("duplicate animation timing role")
@@ -187,4 +185,8 @@ class BattleHitRhythm:
 
     @classmethod
     def from_data(cls, data):
-        return cls(data.get("intervals", (0.1,)), accent_every=data.get("accent_every", 0), accent_delay=data.get("accent_delay", 0.0))
+        return cls(
+            data.get("intervals", (0.1,)),
+            accent_every=data.get("accent_every", 0),
+            accent_delay=data.get("accent_delay", 0.0),
+        )

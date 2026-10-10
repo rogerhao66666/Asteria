@@ -7,6 +7,7 @@ from any source — a plain walking sheet from a free asset pack or a
 Character Generator bundle — so character placement does not depend on the
 Generator.
 """
+
 from __future__ import annotations
 
 import re

@@ -17,9 +17,7 @@ def make_registry():
         "autorun",
         EventProgram(
             [
-                EventInstruction(
-                    "SET_SWITCH", {"name": "autorun_started", "value": True}
-                ),
+                EventInstruction("SET_SWITCH", {"name": "autorun_started", "value": True}),
                 EventInstruction("WAIT", {"seconds": 1}),
                 EventInstruction("SET_SWITCH", {"name": "autorun_done", "value": True}),
                 EventInstruction("END"),
@@ -42,11 +40,7 @@ def make_registry():
 def test_autorun_starts_automatically_and_blocks_foreground():
     ctx = EventContext()
     scheduler = EventScheduler(make_registry(), context=ctx)
-    scheduler.add(
-        ScheduledEventSpec(
-            "auto-1", "autorun", EventScheduleMode.AUTORUN, local_scope_id="auto-scope"
-        )
-    )
+    scheduler.add(ScheduledEventSpec("auto-1", "autorun", EventScheduleMode.AUTORUN, local_scope_id="auto-scope"))
 
     assert scheduler.can_start_foreground() is True
     scheduler.update(0)
@@ -83,9 +77,7 @@ def test_enabled_autorun_restarts_on_later_scheduler_update():
 def test_parallel_runs_without_blocking_foreground():
     ctx = EventContext()
     scheduler = EventScheduler(make_registry(), context=ctx)
-    scheduler.add(
-        ScheduledEventSpec("parallel-1", "parallel", EventScheduleMode.PARALLEL)
-    )
+    scheduler.add(ScheduledEventSpec("parallel-1", "parallel", EventScheduleMode.PARALLEL))
 
     scheduler.update(0)
     assert ctx.get_variable("parallel_tick") == 1
@@ -94,11 +86,7 @@ def test_parallel_runs_without_blocking_foreground():
 
 def test_disabled_spec_does_not_start():
     scheduler = EventScheduler(make_registry())
-    scheduler.add(
-        ScheduledEventSpec(
-            "parallel-1", "parallel", EventScheduleMode.PARALLEL, enabled=False
-        )
-    )
+    scheduler.add(ScheduledEventSpec("parallel-1", "parallel", EventScheduleMode.PARALLEL, enabled=False))
     scheduler.update(0)
     assert scheduler.instance("parallel-1") is None
 

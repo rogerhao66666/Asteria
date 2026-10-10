@@ -42,7 +42,5 @@ def build_paste_entity_command(scene, clipboard, registry):
         raise ValueError("scene required")
     if not clipboard.has_entity():
         raise ValueError("clipboard has no entity")
-    duplicate = deserialize_entity(
-        _freshen(clipboard.entity_payload.entity_data), registry
-    )
+    duplicate = deserialize_entity(_freshen(clipboard.entity_payload.entity_data), registry)
     return AddEntityCommand(scene, duplicate)

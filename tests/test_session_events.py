@@ -59,19 +59,40 @@ def test_every_standard_world_command_has_a_handler():
 
 def test_authored_dialogue_choice_branch_and_encounter_run_in_order():
     project, game = _session()
-    _replace_program(project, BOSS_PROGRAM, [
-        EventInstruction("DIALOGUE", {"speaker": "Astral Tyrant", "text": "Fight?"}),
-        EventInstruction("CHOICE", {"prompt": "Answer", "variable_name": "answer",
-                                     "choices": [{"text": "Yes", "value": "yes"}, {"text": "No", "value": "no"}]}),
-        EventInstruction("SET_SWITCH", {"name": "met_tyrant", "value": True}),
-        EventInstruction("JUMP_IF", {"condition": {"source": "variable", "name": "answer", "operator": "==",
-                                                   "value": "no", "scope_id": None}, "label": "refuse"}),
-        EventInstruction("WORLD", {"command": "START_ENCOUNTER", "args": {"encounter_id": "boss_room"}}),
-        EventInstruction("END"),
-        EventInstruction("LABEL", {"name": "refuse"}),
-        EventInstruction("DIALOGUE", {"text": "Coward."}),
-        EventInstruction("END"),
-    ])
+    _replace_program(
+        project,
+        BOSS_PROGRAM,
+        [
+            EventInstruction("DIALOGUE", {"speaker": "Astral Tyrant", "text": "Fight?"}),
+            EventInstruction(
+                "CHOICE",
+                {
+                    "prompt": "Answer",
+                    "variable_name": "answer",
+                    "choices": [{"text": "Yes", "value": "yes"}, {"text": "No", "value": "no"}],
+                },
+            ),
+            EventInstruction("SET_SWITCH", {"name": "met_tyrant", "value": True}),
+            EventInstruction(
+                "JUMP_IF",
+                {
+                    "condition": {
+                        "source": "variable",
+                        "name": "answer",
+                        "operator": "==",
+                        "value": "no",
+                        "scope_id": None,
+                    },
+                    "label": "refuse",
+                },
+            ),
+            EventInstruction("WORLD", {"command": "START_ENCOUNTER", "args": {"encounter_id": "boss_room"}}),
+            EventInstruction("END"),
+            EventInstruction("LABEL", {"name": "refuse"}),
+            EventInstruction("DIALOGUE", {"text": "Coward."}),
+            EventInstruction("END"),
+        ],
+    )
     assert _interact(game) is not None
     assert game.pending_dialogue.line.text == "Fight?"
     assert game.event_busy and _interact(game) is None  # input blocked while the event waits
@@ -87,15 +108,35 @@ def test_authored_dialogue_choice_branch_and_encounter_run_in_order():
 
 def test_refusing_takes_the_other_branch_and_starts_no_battle():
     project, game = _session()
-    _replace_program(project, BOSS_PROGRAM, [
-        EventInstruction("CHOICE", {"variable_name": "answer",
-                                     "choices": [{"text": "Yes", "value": "yes"}, {"text": "No", "value": "no"}]}),
-        EventInstruction("JUMP_IF", {"condition": {"source": "variable", "name": "answer", "operator": "==",
-                                                   "value": "no", "scope_id": None}, "label": "refuse"}),
-        EventInstruction("WORLD", {"command": "START_ENCOUNTER", "args": {"encounter_id": "boss_room"}}),
-        EventInstruction("LABEL", {"name": "refuse"}),
-        EventInstruction("END"),
-    ])
+    _replace_program(
+        project,
+        BOSS_PROGRAM,
+        [
+            EventInstruction(
+                "CHOICE",
+                {
+                    "variable_name": "answer",
+                    "choices": [{"text": "Yes", "value": "yes"}, {"text": "No", "value": "no"}],
+                },
+            ),
+            EventInstruction(
+                "JUMP_IF",
+                {
+                    "condition": {
+                        "source": "variable",
+                        "name": "answer",
+                        "operator": "==",
+                        "value": "no",
+                        "scope_id": None,
+                    },
+                    "label": "refuse",
+                },
+            ),
+            EventInstruction("WORLD", {"command": "START_ENCOUNTER", "args": {"encounter_id": "boss_room"}}),
+            EventInstruction("LABEL", {"name": "refuse"}),
+            EventInstruction("END"),
+        ],
+    )
     _interact(game)
     game.choose(1)
     assert game.mode == "field" and not game.event_busy
@@ -106,12 +147,16 @@ def test_item_currency_and_presentation_commands_change_session_state():
     item_id = sorted(project.rpg_database.items)[0]
     before = game.save.rpg_state.inventory.count(item_id)
     gold = game.save.rpg_state.currencies.get("gold", 0.0)
-    _replace_program(project, BOSS_PROGRAM, [
-        EventInstruction("WORLD", {"command": "GIVE_ITEM", "args": {"item_id": item_id, "quantity": 2}}),
-        EventInstruction("WORLD", {"command": "CHANGE_CURRENCY", "args": {"currency_id": "gold", "amount": 50}}),
-        EventInstruction("WORLD", {"command": "PLAY_BGM", "args": {"asset_id": "music.boss"}}),
-        EventInstruction("END"),
-    ])
+    _replace_program(
+        project,
+        BOSS_PROGRAM,
+        [
+            EventInstruction("WORLD", {"command": "GIVE_ITEM", "args": {"item_id": item_id, "quantity": 2}}),
+            EventInstruction("WORLD", {"command": "CHANGE_CURRENCY", "args": {"currency_id": "gold", "amount": 50}}),
+            EventInstruction("WORLD", {"command": "PLAY_BGM", "args": {"asset_id": "music.boss"}}),
+            EventInstruction("END"),
+        ],
+    )
     _interact(game)
     assert game.save.rpg_state.inventory.count(item_id) == before + 2
     assert game.save.rpg_state.currencies["gold"] == pytest.approx(gold + 50)
@@ -122,10 +167,14 @@ def test_item_currency_and_presentation_commands_change_session_state():
 
 def test_failed_world_command_stops_the_event_and_is_reported():
     project, game = _session()
-    _replace_program(project, BOSS_PROGRAM, [
-        EventInstruction("WORLD", {"command": "GIVE_ITEM", "args": {"item_id": "no_such_item"}}),
-        EventInstruction("SET_SWITCH", {"name": "after_failure"}),
-    ])
+    _replace_program(
+        project,
+        BOSS_PROGRAM,
+        [
+            EventInstruction("WORLD", {"command": "GIVE_ITEM", "args": {"item_id": "no_such_item"}}),
+            EventInstruction("SET_SWITCH", {"name": "after_failure"}),
+        ],
+    )
     _interact(game)
     assert len(game.event_errors) == 1 and not game.event_busy
     assert not game.save.event_context.get_switch("after_failure")
@@ -134,9 +183,15 @@ def test_failed_world_command_stops_the_event_and_is_reported():
 def test_transfer_moves_the_player_to_another_scene_and_its_events():
     project = _project()
     town = project.add_scene(Scene("Town"))
-    _replace_program(project, BOSS_PROGRAM, [
-        EventInstruction("WORLD", {"command": "TRANSFER", "args": {"scene_id": town.id, "x": 5, "y": 7, "facing": "up"}}),
-    ])
+    _replace_program(
+        project,
+        BOSS_PROGRAM,
+        [
+            EventInstruction(
+                "WORLD", {"command": "TRANSFER", "args": {"scene_id": town.id, "x": 5, "y": 7, "facing": "up"}}
+            ),
+        ],
+    )
     project, game = _session(project)
     player = game.player
     _interact(game)
@@ -170,15 +225,26 @@ def test_autorun_binding_runs_once_until_its_condition_turns_off():
     project = _project()
     scene = project.scene(project.startup_scene_id)
     host = scene.add_entity(Entity("Intro Host"))
-    project.event_programs.register("intro", EventProgram([
-        EventInstruction("SET_VARIABLE", {"name": "intro_runs", "value": 1}),
-        EventInstruction("SET_SWITCH", {"name": "intro_done", "value": True}),
-    ], name="intro"))
+    project.event_programs.register(
+        "intro",
+        EventProgram(
+            [
+                EventInstruction("SET_VARIABLE", {"name": "intro_runs", "value": 1}),
+                EventInstruction("SET_SWITCH", {"name": "intro_done", "value": True}),
+            ],
+            name="intro",
+        ),
+    )
     bindings = project.scene_event_bindings.setdefault(scene.id, SceneEventBindings())
-    bindings.add(EventBinding(
-        "intro_binding", host.id, "intro", trigger=EventTriggerKind.AUTORUN,
-        conditions=(EventTriggerCondition(EventCondition("switch", "intro_done", "==", False)),),
-    ))
+    bindings.add(
+        EventBinding(
+            "intro_binding",
+            host.id,
+            "intro",
+            trigger=EventTriggerKind.AUTORUN,
+            conditions=(EventTriggerCondition(EventCondition("switch", "intro_done", "==", False)),),
+        )
+    )
     _, game = _session(project)
     for _ in range(3):
         game.update_events(0.1)
@@ -188,9 +254,13 @@ def test_autorun_binding_runs_once_until_its_condition_turns_off():
 
 def test_legacy_flat_world_arguments_still_dispatch():
     project, game = _session()
-    _replace_program(project, BOSS_PROGRAM, [
-        EventInstruction("WORLD", {"command": "START_ENCOUNTER", "encounter_id": "boss_room"}),
-    ])
+    _replace_program(
+        project,
+        BOSS_PROGRAM,
+        [
+            EventInstruction("WORLD", {"command": "START_ENCOUNTER", "encounter_id": "boss_room"}),
+        ],
+    )
     _interact(game)
     assert game.mode == "battle"
 
@@ -199,7 +269,10 @@ def test_editor_world_argument_text_parses_to_typed_args():
     from asteria.editor.event_editing import describe_instruction, parse_world_args
 
     assert parse_world_args("encounter_id=boss_room, quantity=2, amount=1.5, loop=true") == {
-        "encounter_id": "boss_room", "quantity": 2, "amount": 1.5, "loop": True,
+        "encounter_id": "boss_room",
+        "quantity": 2,
+        "amount": 1.5,
+        "loop": True,
     }
     assert parse_world_args("  ") == {}
     with pytest.raises(ValueError):

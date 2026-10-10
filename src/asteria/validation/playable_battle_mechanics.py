@@ -3,17 +3,39 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from asteria.gameplay import (
-    AbilityDefinition, AbilityEffect, AbilityRegistry, AbilityRuntime,
-    AbilityTargetMode, Effect, EffectOperation, EffectOperationKind,
-    GameplaySubject, ModifierOperation, PeriodicEffect, ResourcePool,
-    StateDefinition, StateRegistry, StateRuntime, StatBlock, StatModifier,
-    TagSet, TargetingRule,
+    AbilityDefinition,
+    AbilityEffect,
+    AbilityRegistry,
+    AbilityRuntime,
+    AbilityTargetMode,
+    Effect,
+    EffectOperation,
+    EffectOperationKind,
+    GameplaySubject,
+    ModifierOperation,
+    PeriodicEffect,
+    ResourcePool,
+    StateDefinition,
+    StateRegistry,
+    StateRuntime,
+    StatBlock,
+    StatModifier,
+    TagSet,
+    TargetingRule,
 )
 from asteria.rpg import (
-    ActionSequenceDefinition, ActionSequenceStep, BattleAction,
-    BattleResourceDefinition, BattleRuntime, BattleStatePolicy,
-    GaugeCompositionDefinition, GaugeImpactRule, GaugeThresholdRule,
-    InteractionRule, Party, PartyMember,
+    ActionSequenceDefinition,
+    ActionSequenceStep,
+    BattleAction,
+    BattleResourceDefinition,
+    BattleRuntime,
+    BattleStatePolicy,
+    GaugeCompositionDefinition,
+    GaugeImpactRule,
+    GaugeThresholdRule,
+    InteractionRule,
+    Party,
+    PartyMember,
 )
 from .playable_rpg import PlayableRpgValidationHarness
 
@@ -35,11 +57,13 @@ def _state_definitions():
                     1,
                     Effect(
                         "scorch.tick",
-                        (EffectOperation(
-                            EffectOperationKind.RESOURCE_DELTA,
-                            "vitality",
-                            -5,
-                        ),),
+                        (
+                            EffectOperation(
+                                EffectOperationKind.RESOURCE_DELTA,
+                                "vitality",
+                                -5,
+                            ),
+                        ),
                     ),
                 ),
             ),
@@ -101,68 +125,86 @@ def build_playable_mechanics_scenario():
     )
 
     registry = AbilityRegistry()
-    registry.register(AbilityDefinition(
-        "flame_slash",
-        tags=("element.flame", "attack.weapon"),
-        targeting=TargetingRule(minimum_targets=1, maximum_targets=1, allow_self=False),
-        effects=(
-            AbilityEffect(
-                AbilityTargetMode.SELECTED,
-                Effect(
-                    "flame_slash.damage",
-                    (EffectOperation(
-                        EffectOperationKind.RESOURCE_DELTA,
-                        "vitality",
-                        -20,
-                    ),),
+    registry.register(
+        AbilityDefinition(
+            "flame_slash",
+            tags=("element.flame", "attack.weapon"),
+            targeting=TargetingRule(minimum_targets=1, maximum_targets=1, allow_self=False),
+            effects=(
+                AbilityEffect(
+                    AbilityTargetMode.SELECTED,
+                    Effect(
+                        "flame_slash.damage",
+                        (
+                            EffectOperation(
+                                EffectOperationKind.RESOURCE_DELTA,
+                                "vitality",
+                                -20,
+                            ),
+                        ),
+                    ),
                 ),
             ),
-        ),
-    ))
-    registry.register(AbilityDefinition(
-        "restoration",
-        tags=("support.restore",),
-        targeting=TargetingRule(minimum_targets=1, maximum_targets=1, allow_self=True),
-        effects=(
-            AbilityEffect(
-                AbilityTargetMode.SELECTED,
-                Effect(
-                    "restoration.heal",
-                    (EffectOperation(
-                        EffectOperationKind.RESOURCE_DELTA,
-                        "vitality",
-                        24,
-                    ),),
+        )
+    )
+    registry.register(
+        AbilityDefinition(
+            "restoration",
+            tags=("support.restore",),
+            targeting=TargetingRule(minimum_targets=1, maximum_targets=1, allow_self=True),
+            effects=(
+                AbilityEffect(
+                    AbilityTargetMode.SELECTED,
+                    Effect(
+                        "restoration.heal",
+                        (
+                            EffectOperation(
+                                EffectOperationKind.RESOURCE_DELTA,
+                                "vitality",
+                                24,
+                            ),
+                        ),
+                    ),
                 ),
             ),
-        ),
-    ))
-    registry.register(AbilityDefinition(
-        "enemy_claw",
-        tags=("attack.physical",),
-        targeting=TargetingRule(minimum_targets=1, maximum_targets=1, allow_self=False),
-        effects=(
-            AbilityEffect(
-                AbilityTargetMode.SELECTED,
-                Effect(
-                    "enemy_claw.damage",
-                    (EffectOperation(
-                        EffectOperationKind.RESOURCE_DELTA,
-                        "vitality",
-                        -15,
-                    ),),
+        )
+    )
+    registry.register(
+        AbilityDefinition(
+            "enemy_claw",
+            tags=("attack.physical",),
+            targeting=TargetingRule(minimum_targets=1, maximum_targets=1, allow_self=False),
+            effects=(
+                AbilityEffect(
+                    AbilityTargetMode.SELECTED,
+                    Effect(
+                        "enemy_claw.damage",
+                        (
+                            EffectOperation(
+                                EffectOperationKind.RESOURCE_DELTA,
+                                "vitality",
+                                -15,
+                            ),
+                        ),
+                    ),
                 ),
             ),
-        ),
-    ))
+        )
+    )
 
     player_member = PartyMember(
-        "validation_hero", "side.alpha", player,
-        ability_ids=("flame_slash", "restoration"), initiative=12,
+        "validation_hero",
+        "side.alpha",
+        player,
+        ability_ids=("flame_slash", "restoration"),
+        initiative=12,
     )
     enemy_member = PartyMember(
-        "reference_enemy", "side.omega", enemy,
-        ability_ids=("enemy_claw",), initiative=8,
+        "reference_enemy",
+        "side.omega",
+        enemy,
+        ability_ids=("enemy_claw",),
+        initiative=8,
     )
 
     weakness = InteractionRule(
@@ -241,8 +283,7 @@ class PlayableBattleMechanicsHarness:
     def status_snapshot(self, member_id):
         state_runtime = self.battle.member(member_id).subject.states
         return tuple(
-            (state.state_id, state.remaining, state.stacks, state.source_id)
-            for state in state_runtime.active_states()
+            (state.state_id, state.remaining, state.stacks, state.source_id) for state in state_runtime.active_states()
         )
 
     def apply_status(self, state_id, source_id=None, target_id=None):
@@ -283,11 +324,13 @@ class PlayableBattleMechanicsHarness:
         )
 
     def heal_player(self):
-        return self.battle.execute(BattleAction(
-            self.scenario.player_id,
-            "restoration",
-            (self.scenario.player_id,),
-        ))
+        return self.battle.execute(
+            BattleAction(
+                self.scenario.player_id,
+                "restoration",
+                (self.scenario.player_id,),
+            )
+        )
 
     def revive_player(self):
         self.battle.revive(self.scenario.player_id)

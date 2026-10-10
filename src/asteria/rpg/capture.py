@@ -1,4 +1,5 @@
 """Capturing enemies as party members (ASTERIA_SPEC §25)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -41,13 +42,24 @@ class CaptureRule:
         return min(1.0, max(0.0, self.base_chance + self.low_health_bonus * (1.0 - ratio)))
 
     def to_data(self):
-        return {"schema": "asteria.rpg.capture_rule", "version": 1, "enemy_id": self.enemy_id,
-                "actor_id": self.actor_id, "base_chance": self.base_chance,
-                "low_health_bonus": self.low_health_bonus, "item_id": self.item_id}
+        return {
+            "schema": "asteria.rpg.capture_rule",
+            "version": 1,
+            "enemy_id": self.enemy_id,
+            "actor_id": self.actor_id,
+            "base_chance": self.base_chance,
+            "low_health_bonus": self.low_health_bonus,
+            "item_id": self.item_id,
+        }
 
     @classmethod
     def from_data(cls, data):
         if data.get("schema") != "asteria.rpg.capture_rule" or data.get("version") != 1:
             raise ValueError("unsupported capture rule")
-        return cls(data["enemy_id"], data["actor_id"], base_chance=data["base_chance"],
-                   low_health_bonus=data["low_health_bonus"], item_id=data["item_id"])
+        return cls(
+            data["enemy_id"],
+            data["actor_id"],
+            base_chance=data["base_chance"],
+            low_health_bonus=data["low_health_bonus"],
+            item_id=data["item_id"],
+        )

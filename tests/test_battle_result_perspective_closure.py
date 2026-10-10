@@ -32,9 +32,7 @@ def test_controller_can_supply_explicit_presentation_disposition():
 
 def test_result_perspective_does_not_change_canonical_outcome_data():
     outcome = BattleOutcome(True, ("red",), ("blue",), (), ("objective",))
-    view = BattleResultPresentationRuntime().present(
-        outcome, perspective_side_ids=("blue",)
-    )
+    view = BattleResultPresentationRuntime().present(outcome, perspective_side_ids=("blue",))
     assert view.winning_sides == ("red",)
     assert view.defeated_sides == ("blue",)
     assert view.objective_ids == ("objective",)

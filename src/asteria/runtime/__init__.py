@@ -34,7 +34,12 @@ from .sprite import SpriteRendererState
 from .systems import AnimationSystem, CameraFollowSystem
 from .collision import Collider2DComponent, CollisionSystem, CollisionWorld, CombinedQuery
 from .field_ai import (
-    FieldAIComponent, FieldAISystem, SpawnSystem, SpawnZoneComponent, VisibleEncounterComponent, touched_encounter,
+    FieldAIComponent,
+    FieldAISystem,
+    SpawnSystem,
+    SpawnZoneComponent,
+    VisibleEncounterComponent,
+    touched_encounter,
 )
 from .texture_renderer import TextureRenderer
 from .tile_draw import build_tile_draws

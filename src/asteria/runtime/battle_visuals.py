@@ -27,6 +27,7 @@ Data contract (all canonical project data, no runtime code per project):
   ``screen_fx`` (cue = effect). A beat's ``member_id`` is ``"@source"`` or
   ``"@target"`` (every target).
 """
+
 from __future__ import annotations
 
 from asteria.graphics import SpriteClip, SpriteFrame, SpriteKeyframe, SpriteSheet
@@ -105,7 +106,8 @@ class BattleVisualResolver:
                 duration = float(raw.get("frame_duration", 0.12))
                 events = {int(k): tuple(v) for k, v in dict(raw.get("events", {})).items()}
                 clips[name] = SpriteClip(
-                    name, [SpriteKeyframe(f, duration, events.get(i, ())) for i, f in enumerate(frames)],
+                    name,
+                    [SpriteKeyframe(f, duration, events.get(i, ())) for i, f in enumerate(frames)],
                     bool(raw.get("loop", True)),
                 )
             clip_set = AnimationClipSet(clips)
@@ -147,7 +149,9 @@ class BattleVisualResolver:
             # Side-view staging: the whole width is stage; feet stand on the
             # ground band between ``stage_top`` and the bottom HUD row.
             left_edge, right_edge = margin, width - margin
-            top = max(float(getattr(layout, "timeline_y", 7.0)) + 30.0, height * float(getattr(layout, "stage_top", 0.0)))
+            top = max(
+                float(getattr(layout, "timeline_y", 7.0)) + 30.0, height * float(getattr(layout, "stage_top", 0.0))
+            )
             bottom = height - margin - 24.0 - 6.0
         else:
             left_edge, right_edge = margin + panel, width - margin - panel
@@ -159,18 +163,20 @@ class BattleVisualResolver:
             zone = placement.get(side_id, "left")
             direction = 1 if zone == "left" else -1
             front_x = left_edge + stage * 0.30 if zone == "left" else right_edge - stage * 0.30
+
             def logical_size(member_id):
                 profile = self.profile_for(member_id)
                 if profile is None:
                     raise BattleVisualError(f"no combatant visual profile for {member_id}")
                 frame = self.sprite_sheet(profile.assets.battlefield_asset_id).frames[0]
                 return frame.width * float(profile.transform.scale_x), frame.height * float(profile.transform.scale_y)
+
             sizes = {m: logical_size(m) for m in members}
             smallest = min(h for _, h in sizes.values()) if sizes else 0.0
             # Large combatants (bosses) get their own column behind the others.
             large = [m for m in members if sizes[m][1] > smallest * 1.5]
             regular = [m for m in members if m not in large]
-            columns = [regular[i:i + 3] for i in range(0, len(regular), 3)] + [[m] for m in large]
+            columns = [regular[i : i + 3] for i in range(0, len(regular), 3)] + [[m] for m in large]
             # Column centres: each column clears the previous one by the widest sprites.
             xs, x = [], front_x
             for index, column in enumerate(columns):
@@ -198,13 +204,20 @@ class BattleVisualResolver:
                     # Keep the whole sprite below the turn timeline (and its overhead bar).
                     tall = self.sprite_sheet(sheet_id).frames[0].height * float(transform.scale_y)
                     y = max(y, float(getattr(layout, "timeline_y", 7.0)) + 46.0 + tall)
-                    anchor = BattleVisualAnchor(x + transform.offset_x, y + transform.offset_y,
-                                                "right" if zone == "left" else "left", depth=y)
+                    anchor = BattleVisualAnchor(
+                        x + transform.offset_x, y + transform.offset_y, "right" if zone == "left" else "left", depth=y
+                    )
                     roles = {state.state_id: state.clip_role for state in profile.states}
-                    visuals.append(BattleCombatantVisual(
-                        member_id, sheet_id, sheet_id, anchor, animation_roles=roles,
-                        source_pixels_per_logical_pixel=1.0 / float(transform.scale_x),
-                    ))
+                    visuals.append(
+                        BattleCombatantVisual(
+                            member_id,
+                            sheet_id,
+                            sheet_id,
+                            anchor,
+                            animation_roles=roles,
+                            source_pixels_per_logical_pixel=1.0 / float(transform.scale_x),
+                        )
+                    )
         return tuple(visuals)
 
     # -- choreography ----------------------------------------------------------

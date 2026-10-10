@@ -27,18 +27,27 @@ def _fixture_layout(tmp_path, *, invalid=None, missing=()):
     data = root / "data"
     data.mkdir(parents=True)
     records = {
-        "Actors.json": [None, {"id": 1, "name": "Hero", "classId": 99,
-            "characterName": "Actor1", "characterIndex": 0,
-            "faceName": "Actor1", "faceIndex": 0, "battlerName": "Actor1_1",
-            "extraField": {"preserved": True}}],
+        "Actors.json": [
+            None,
+            {
+                "id": 1,
+                "name": "Hero",
+                "classId": 99,
+                "characterName": "Actor1",
+                "characterIndex": 0,
+                "faceName": "Actor1",
+                "faceIndex": 0,
+                "battlerName": "Actor1_1",
+                "extraField": {"preserved": True},
+            },
+        ],
         "Classes.json": [None],
         "Skills.json": [None, {"id": 1, "name": "Hit", "iconIndex": 2}],
         "Items.json": [None, {"id": 1, "name": "Potion", "iconIndex": 3}],
         "Weapons.json": [None, {"id": 1, "name": "Sword", "iconIndex": 4}],
         "Armors.json": [None, {"id": 1, "name": "Coat", "iconIndex": 5}],
         "Tilesets.json": [None, {"id": 1, "name": "Outside"}],
-        "System.json": {"gameTitle": "Fixture", "startMapId": 1,
-            "startX": 2, "startY": 3, "partyMembers": [1]},
+        "System.json": {"gameTitle": "Fixture", "startMapId": 1, "startX": 2, "startY": 3, "partyMembers": [1]},
     }
     for name, value in records.items():
         if name not in missing:
@@ -52,8 +61,11 @@ def _fixture_layout(tmp_path, *, invalid=None, missing=()):
 def test_real_new_data_record_counts_and_ids():
     database = RPGMakerMVDatabase.load(_real_layout())
 
-    assert tuple(map(len, (database.actors, database.classes, database.skills,
-                           database.items, database.weapons, database.armors))) == (4, 4, 10, 4, 4, 4)
+    assert tuple(
+        map(
+            len, (database.actors, database.classes, database.skills, database.items, database.weapons, database.armors)
+        )
+    ) == (4, 4, 10, 4, 4, 4)
     assert database.actors[0].id == 1
     assert database.skills[0].id == 1
     assert database.items[0].id == 1
@@ -69,8 +81,7 @@ def test_real_actor_skill_item_and_system_fields_are_typed():
     assert actor.battler_name == "Actor1_1"
     assert database.skills[0].icon_index == 76
     assert database.items[0].icon_index == 176
-    assert (database.system.start_map_id, database.system.start_x,
-            database.system.start_y) == (1, 8, 6)
+    assert (database.system.start_map_id, database.system.start_x, database.system.start_y) == (1, 8, 6)
     assert database.tilesets[0].id == 1
 
 
@@ -83,14 +94,11 @@ def test_null_index_is_skipped_and_unknown_fields_are_preserved(tmp_path):
 
 
 def test_missing_database_file_is_reported_without_losing_other_records(tmp_path):
-    database = RPGMakerMVDatabase.load(
-        _fixture_layout(tmp_path, missing=("Armors.json",))
-    )
+    database = RPGMakerMVDatabase.load(_fixture_layout(tmp_path, missing=("Armors.json",)))
 
     assert database.items[0].name == "Potion"
     assert database.armors == ()
-    assert any(issue.source == "Armors.json" and issue.code == "missing_file"
-               for issue in database.issues)
+    assert any(issue.source == "Armors.json" and issue.code == "missing_file" for issue in database.issues)
 
 
 def test_invalid_json_names_the_source_file(tmp_path):

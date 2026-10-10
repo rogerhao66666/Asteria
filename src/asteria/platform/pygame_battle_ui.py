@@ -54,7 +54,9 @@ class PygameBattleUiBackend:
         rect = self._rect(panel.x, panel.y, panel.width, panel.height)
         self.pg.draw.rect(self.screen, self._rgb(fill), rect, border_radius=self._s(radius))
         if border_width:
-            self.pg.draw.rect(self.screen, self._rgb(border), rect, width=max(1, self._s(border_width)), border_radius=self._s(radius))
+            self.pg.draw.rect(
+                self.screen, self._rgb(border), rect, width=max(1, self._s(border_width)), border_radius=self._s(radius)
+            )
 
     def draw_gauge(self, gauge, *, track, fill):
         mode = str(getattr(gauge, "presentation", "bar"))
@@ -79,7 +81,9 @@ class PygameBattleUiBackend:
                     image = icon if icon.get_size() == cell.size else self.pg.transform.scale(icon, cell.size)
                     self.screen.blit(image, cell.topleft)
                 else:
-                    self.pg.draw.rect(self.screen, self._rgb(fill if active else track), cell, border_radius=max(1, cell.height // 3))
+                    self.pg.draw.rect(
+                        self.screen, self._rgb(fill if active else track), cell, border_radius=max(1, cell.height // 3)
+                    )
             return
 
         if mode == "ring":
@@ -88,11 +92,16 @@ class PygameBattleUiBackend:
             self.pg.draw.circle(self.screen, self._rgb(track), center, radius, width=max(1, radius // 4))
             if normalized > 0:
                 import math
-                ring_rect = self.pg.Rect(center[0]-radius, center[1]-radius, radius*2, radius*2)
+
+                ring_rect = self.pg.Rect(center[0] - radius, center[1] - radius, radius * 2, radius * 2)
                 start = -math.pi / 2
                 self.pg.draw.arc(
-                    self.screen, self._rgb(fill), ring_rect, start,
-                    start + 2 * math.pi * normalized, width=max(1, radius // 4)
+                    self.screen,
+                    self._rgb(fill),
+                    ring_rect,
+                    start,
+                    start + 2 * math.pi * normalized,
+                    width=max(1, radius // 4),
                 )
             return
 
@@ -120,7 +129,12 @@ class PygameBattleUiBackend:
         cx, cy = self._s(marker.x), self._s(marker.y)
         c = self._rgb(color)
         radius = self._s(7 if marker.primary else 5)
-        self.pg.draw.polygon(self.screen, c, ((cx, cy-radius), (cx-radius, cy), (cx, cy+radius), (cx+radius, cy)), width=max(1, self._s(2)))
+        self.pg.draw.polygon(
+            self.screen,
+            c,
+            ((cx, cy - radius), (cx - radius, cy), (cx, cy + radius), (cx + radius, cy)),
+            width=max(1, self._s(2)),
+        )
 
     GLYPH_FALLBACKS = {"▶": ">", "▸": ">", "►": ">", "◀": "<", "◂": "<", "…": "...", "•": "*"}
 
@@ -129,8 +143,10 @@ class PygameBattleUiBackend:
         key = (id(font), char)
         cached = self._glyph_cache.get(key)
         if cached is None:
+
             def pixels(value):
                 return self.pg.image.tobytes(font.render(value, True, (255, 255, 255)), "RGBA")
+
             cached = char.isspace() or char.isascii() or pixels(char) != pixels("\ue000")
             self._glyph_cache[key] = cached
         return cached
@@ -138,8 +154,7 @@ class PygameBattleUiBackend:
     def _renderable(self, font, value):
         """Replace characters the font cannot draw (shown as empty boxes otherwise)."""
         return "".join(
-            char if self._has_glyph(font, char) else self.GLYPH_FALLBACKS.get(char, "?")
-            for char in str(value)
+            char if self._has_glyph(font, char) else self.GLYPH_FALLBACKS.get(char, "?") for char in str(value)
         )
 
     def draw_text(self, text, *, color, size):

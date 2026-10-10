@@ -17,9 +17,7 @@ def test_progression_track_roundtrip_and_rank():
         ],
     )
     assert ProgressionTrackDefinition.from_data(track.to_data()) == track
-    assert (
-        track.rank_for(0) == 1 and track.rank_for(24) == 2 and track.rank_for(25) == 3
-    )
+    assert track.rank_for(0) == 1 and track.rank_for(24) == 2 and track.rank_for(25) == 3
 
 
 def test_runtime_crosses_multiple_milestones_deterministically():
@@ -52,9 +50,7 @@ def test_progression_is_not_hardcoded_to_character_level():
 
 
 def test_runtime_snapshot_roundtrip():
-    track = ProgressionTrackDefinition(
-        "x", milestones=[ProgressionMilestone(1, 0), ProgressionMilestone(2, 5)]
-    )
+    track = ProgressionTrackDefinition("x", milestones=[ProgressionMilestone(1, 0), ProgressionMilestone(2, 5)])
     runtime = ProgressionRuntime([track])
     runtime.add("x", 7)
     restored = ProgressionRuntime.from_data(runtime.to_data(), [track])

@@ -87,9 +87,7 @@ def test_reset_to_start_is_distinct_from_restore_initial():
 
 def test_spend_is_atomic_when_insufficient():
     hero = make_member()
-    definition = BattleResourceDefinition(
-        "boost", minimum=0, maximum=5, start_mode="fixed", start_value=2
-    )
+    definition = BattleResourceDefinition("boost", minimum=0, maximum=5, start_mode="fixed", start_value=2)
     runtime = BattleResourceRuntime([definition], [hero])
     assert runtime.spend("hero", "boost", 3) is False
     assert runtime.current("hero", "boost") == 2
@@ -119,9 +117,7 @@ def test_resource_lifecycle_hooks_are_generic_and_cross_thresholds_once():
     seen = []
     hooks.subscribe("*", lambda event: seen.append(event.name))
     hero = make_member()
-    definition = BattleResourceDefinition(
-        "guard", minimum=0, maximum=10, start_mode="fixed", start_value=5
-    )
+    definition = BattleResourceDefinition("guard", minimum=0, maximum=10, start_mode="fixed", start_value=5)
     runtime = BattleResourceRuntime([definition], [hero], hooks=hooks)
     runtime.change("hero", "guard", 10)
     runtime.change("hero", "guard", -20)

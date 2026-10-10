@@ -23,12 +23,18 @@ def _real_catalog():
 def test_real_mv_part_generates_coordinated_atomic_bundle(tmp_path):
     catalog = _real_catalog()
     part = next(
-        item for item in catalog.parts
-        if item.source_category == "AccA" and item.part_number == 14
-        and item.gender == "Male" and "Modern_Generator/parts" in item.source_root.as_posix()
+        item
+        for item in catalog.parts
+        if item.source_category == "AccA"
+        and item.part_number == 14
+        and item.gender == "Male"
+        and "Modern_Generator/parts" in item.source_root.as_posix()
     )
-    body = next(item for item in catalog.parts if item.category == "body" and item.gender == "Male"
-                and item.source_root.parent.name == "rpg_maker_mv")
+    body = next(
+        item
+        for item in catalog.parts
+        if item.category == "body" and item.gender == "Male" and item.source_root.parent.name == "rpg_maker_mv"
+    )
     recipe = CharacterRecipe("hero-one", parts={"body": body.id, "accessory": part.id}, body_family="Male")
 
     bundle = CharacterBundleGenerator(catalog).generate(recipe, tmp_path / "generated")
@@ -42,7 +48,10 @@ def test_real_mv_part_generates_coordinated_atomic_bundle(tmp_path):
     assert bundle.anchor == (24, 48)
     assert bundle.source_part_ids == (body.id, part.id)
     assert tuple(asset.kind for asset in bundle.canonical_assets) == (
-        "character.walking", "character.face", "character.damaged", "character.side_view"
+        "character.walking",
+        "character.face",
+        "character.damaged",
+        "character.side_view",
     )
     metadata = json.loads(bundle.metadata_path.read_text(encoding="utf-8"))
     assert metadata["source_part_ids"] == [body.id, part.id]
@@ -64,15 +73,20 @@ def test_new_bundle_rejects_recipe_without_a_body(tmp_path):
 @pytest.mark.mv_reference
 def test_full_core_body_generates_editable_four_sheet_bundle(tmp_path):
     catalog = _real_catalog()
-    root = next(part.source_root for part in catalog.parts
-                if part.category == "body" and part.gender == "Kid"
-                and part.source_root.parent.name == "rpg_maker_mv")
-    body = next(part for part in catalog.parts if part.source_root == root
-                and part.gender == "Kid" and part.category == "body")
-    hair = next(part for part in catalog.parts if part.source_root == root
-                and part.gender == "Kid" and part.category == "hair_front")
-    recipe = CharacterRecipe("kid-hero", parts={"body": body.id, "hair_front": hair.id},
-                             body_family="Kid")
+    root = next(
+        part.source_root
+        for part in catalog.parts
+        if part.category == "body" and part.gender == "Kid" and part.source_root.parent.name == "rpg_maker_mv"
+    )
+    body = next(
+        part for part in catalog.parts if part.source_root == root and part.gender == "Kid" and part.category == "body"
+    )
+    hair = next(
+        part
+        for part in catalog.parts
+        if part.source_root == root and part.gender == "Kid" and part.category == "hair_front"
+    )
+    recipe = CharacterRecipe("kid-hero", parts={"body": body.id, "hair_front": hair.id}, body_family="Kid")
 
     bundle = CharacterBundleGenerator(catalog).generate(recipe, tmp_path / "generated")
 
@@ -99,8 +113,7 @@ def test_mixed_family_recipe_is_rejected_before_output(tmp_path):
 @pytest.mark.mv_reference
 def test_mv_face_iris_layer_stays_visible_above_eye_white():
     catalog = _real_catalog()
-    core = [part for part in catalog.parts if part.source_root.parent.name == "rpg_maker_mv"
-            and part.gender == "Male"]
+    core = [part for part in catalog.parts if part.source_root.parent.name == "rpg_maker_mv" and part.gender == "Male"]
     body = next(part for part in core if part.category == "body" and part.part_number == 1)
     eyes = next(part for part in core if part.category == "eyes" and part.part_number == 1)
     recipe = CharacterRecipe("eyes", parts={"body": body.id, "eyes": eyes.id}, body_family="Male")
@@ -117,13 +130,23 @@ def test_mv_face_stays_in_front_of_high_collar_and_scarf_layers():
     catalog = _real_catalog()
     generator_root = (resolve_rpg_maker_mv_root(Path(__file__).resolve().parents[1]) / "Generator").resolve()
     core = [part for part in catalog.parts if part.source_root == generator_root and part.gender == "Male"]
-    numbers = {"body": 1, "face_shape": 3, "eyes": 25, "eyebrows": 2, "nose": 1,
-               "mouth": 1, "hair_back": 5, "hair_front": 5, "outfit": 3, "cloak": 4}
-    parts = {category: next(part for part in core
-                            if part.category == category and part.part_number == number)
-             for category, number in numbers.items()}
-    recipe = CharacterRecipe("face-protection", parts={key: part.id for key, part in parts.items()},
-                             body_family="Male")
+    numbers = {
+        "body": 1,
+        "face_shape": 3,
+        "eyes": 25,
+        "eyebrows": 2,
+        "nose": 1,
+        "mouth": 1,
+        "hair_back": 5,
+        "hair_front": 5,
+        "outfit": 3,
+        "cloak": 4,
+    }
+    parts = {
+        category: next(part for part in core if part.category == category and part.part_number == number)
+        for category, number in numbers.items()
+    }
+    recipe = CharacterRecipe("face-protection", parts={key: part.id for key, part in parts.items()}, body_family="Male")
 
     face = CharacterBundleGenerator(catalog).compose("face", recipe)
 
@@ -157,8 +180,7 @@ def test_palette_recolor_preserves_part_shading_and_transparency(tmp_path):
 @pytest.mark.mv_reference
 def test_hair_palette_updates_face_without_tinting_skin():
     catalog = _real_catalog()
-    core = [part for part in catalog.parts if part.source_root.parent.name == "rpg_maker_mv"
-            and part.gender == "Male"]
+    core = [part for part in catalog.parts if part.source_root.parent.name == "rpg_maker_mv" and part.gender == "Male"]
     body = next(part for part in core if part.category == "body" and part.part_number == 1)
     hair = next(part for part in core if part.category == "hair_front" and part.part_number == 1)
     generator = CharacterBundleGenerator(catalog)
@@ -187,7 +209,12 @@ def _catalog(tmp_path, *, face=True, bad_side=False, masks=True):
     walk_mask = _png(root / "TV_c.png", rgba=(0, 0, 0, 0))
     side_mask = _png(root / "SV_c.png", (576, 384), (0, 0, 0, 0))
     part = MVGeneratorPart(
-        "mvgen.test.body", root, "Male", "Body", "body", 1,
+        "mvgen.test.body",
+        root,
+        "Male",
+        "Body",
+        "body",
+        1,
         walking=MVGeneratorRepresentation("walking", (walk,), (walk_mask,) if masks else ()),
         face=MVGeneratorRepresentation("face", (portrait,)) if face else None,
         damaged=MVGeneratorRepresentation("damaged", (damaged,)),
@@ -205,9 +232,9 @@ def test_validation_fails_before_publishing_partial_bundle(tmp_path, mode):
     recipe = CharacterRecipe("broken", parts={"body": part.id}, palette=palette)
     output = tmp_path / "generated"
 
-    with pytest.raises(ValueError, match={
-        "missing": "face unavailable", "canvas": "side_view canvas", "mask": "walking mask"
-    }[mode]):
+    with pytest.raises(
+        ValueError, match={"missing": "face unavailable", "canvas": "side_view canvas", "mask": "walking mask"}[mode]
+    ):
         CharacterBundleGenerator(catalog).generate(recipe, output)
 
     assert not (output / "broken").exists()
@@ -218,7 +245,12 @@ def test_representation_specific_face_feature_does_not_invalidate_walking_or_sid
     catalog, body = _catalog(tmp_path / "source")
     face_path = _png(tmp_path / "source" / "Generator" / "eyes.png", (144, 144), (0, 0, 255, 255))
     eyes = MVGeneratorPart(
-        "mvgen.test.eyes", body.source_root, "Male", "Eyes", "eyes", 1,
+        "mvgen.test.eyes",
+        body.source_root,
+        "Male",
+        "Eyes",
+        "eyes",
+        1,
         face=MVGeneratorRepresentation("face", (face_path,)),
     )
     catalog = RPGMakerMVGeneratorCatalog(catalog.roots, (body, eyes), (), catalog.source_file_count + 1)

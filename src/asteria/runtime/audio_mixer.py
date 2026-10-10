@@ -7,6 +7,7 @@ fade in/out and cross-fade, looping ambient layers and one-shot effects. An
 uses pygame.mixer, and ``RecordingAudioDevice`` records calls for headless
 runs or machines without an output device.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -93,8 +94,9 @@ class AudioMixer:
         if self.music_asset_id is not None:
             self.device.stop_music(fade_ms=int(fade_in * 1000))
         self._music_volume = max(0.0, min(1.0, float(volume)))
-        self.device.play_music(path, loops=-1, fade_ms=int(fade_in * 1000),
-                               volume=self._music_volume * self._bus_volume("bgm"))
+        self.device.play_music(
+            path, loops=-1, fade_ms=int(fade_in * 1000), volume=self._music_volume * self._bus_volume("bgm")
+        )
         self.music_asset_id = asset_id
         return True
 
@@ -113,8 +115,9 @@ class AudioMixer:
         if path is None:
             return False
         volume = max(0.0, min(1.0, float(volume)))
-        handle = self.device.play_sound(path, loops=-1, fade_ms=int(fade_in * 1000),
-                                        volume=volume * self._bus_volume("ambient"))
+        handle = self.device.play_sound(
+            path, loops=-1, fade_ms=int(fade_in * 1000), volume=volume * self._bus_volume("ambient")
+        )
         self._ambient[asset_id] = (handle, volume)
         return True
 
@@ -129,8 +132,9 @@ class AudioMixer:
         path = self._path(asset_id)
         if path is None:
             return None
-        return self.device.play_sound(path, loops=0, fade_ms=0,
-                                      volume=max(0.0, min(1.0, float(volume))) * self._bus_volume(bus))
+        return self.device.play_sound(
+            path, loops=0, fade_ms=0, volume=max(0.0, min(1.0, float(volume))) * self._bus_volume(bus)
+        )
 
     # -- WORLD command requests from event programs ------------------------
     def handle_world_request(self, command):
@@ -138,8 +142,11 @@ class AudioMixer:
         args = command.args
         name = command.name
         if name == "PLAY_BGM":
-            return self.play_music(str(args.get("asset_id", "")), fade_in=float(args.get("fade", 0.0)),
-                                   volume=float(args.get("volume", 1.0)))
+            return self.play_music(
+                str(args.get("asset_id", "")),
+                fade_in=float(args.get("fade", 0.0)),
+                volume=float(args.get("volume", 1.0)),
+            )
         if name == "STOP_BGM":
             return self.stop_music(fade_out=float(args.get("fade", 0.0)))
         if name == "PLAY_SE":

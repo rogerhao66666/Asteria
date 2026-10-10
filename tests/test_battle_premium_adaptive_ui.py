@@ -31,8 +31,8 @@ def _member(member_id):
     return BattleHudMember(
         member_id,
         (
-            BattleHudGauge("hp", "HP", 70, 0, 100, 0, .7, False, None, 0),
-            BattleHudGauge("bp", "BP", 3, 0, 5, 0, .6, False, None, 10, "pips", 5),
+            BattleHudGauge("hp", "HP", 70, 0, 100, 0, 0.7, False, None, 0),
+            BattleHudGauge("bp", "BP", 3, 0, 5, 0, 0.6, False, None, 10, "pips", 5),
         ),
         (),
     )
@@ -62,11 +62,13 @@ def test_focus_member_gets_premium_emphasis_without_changing_other_members():
 
 def test_action_menu_uses_interaction_surface_and_selected_hierarchy():
     runtime = BattleActionMenuRuntime(BattleActionMenuPolicy(page_size=4))
-    runtime.set_entries((
-        BattleActionEntry("slash", "Slash", category="weapon", cost_text="3 SP"),
-        BattleActionEntry("guard", "Guard", category="stance"),
-        BattleActionEntry("locked", "Limit", category="special", enabled=False, disabled_reason="Not ready"),
-    ))
+    runtime.set_entries(
+        (
+            BattleActionEntry("slash", "Slash", category="weapon", cost_text="3 SP"),
+            BattleActionEntry("guard", "Guard", category="stance"),
+            BattleActionEntry("locked", "Limit", category="special", enabled=False, disabled_reason="Not ready"),
+        )
+    )
     composer = BattleUiComposer(_scene(), polish=BattleUiPolishProfile(interaction_width=170))
     ui = composer.compose(Camera2D(), _frame(), action_menu=runtime.view)
 
@@ -95,15 +97,16 @@ def test_workflow_selected_option_has_clear_visual_role():
         "Concoct",
         (BattleWorkflowStep("base", "Choose Base"),),
     )
-    runtime.begin(definition, (
-        BattleWorkflowOption("herb", "Herb"),
-        BattleWorkflowOption("powder", "Powder"),
-    ))
+    runtime.begin(
+        definition,
+        (
+            BattleWorkflowOption("herb", "Herb"),
+            BattleWorkflowOption("powder", "Powder"),
+        ),
+    )
     runtime.select("herb")
 
-    ui = BattleUiComposer(_scene()).compose(
-        Camera2D(), _frame(), action_workflow=runtime.view
-    )
+    ui = BattleUiComposer(_scene()).compose(Camera2D(), _frame(), action_workflow=runtime.view)
     panel = next(x for x in ui.panels if x.panel_id == "action_workflow")
     selected = next(x for x in ui.texts if x.role == "workflow_option_selected")
     assert panel.role == "interaction:workflow"

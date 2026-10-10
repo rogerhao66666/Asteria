@@ -40,23 +40,11 @@ def simple_rpg_attributes():
 
 
 def standard_physical_formula(base=10):
-    return (
-        FormulaBuilder()
-        .constant(base)
-        .source_stat("attack", 1.0)
-        .target_stat("defense", -0.5)
-        .build()
-    )
+    return FormulaBuilder().constant(base).source_stat("attack", 1.0).target_stat("defense", -0.5).build()
 
 
 def standard_magic_formula(base=10):
-    return (
-        FormulaBuilder()
-        .constant(base)
-        .source_stat("magic", 1.2)
-        .target_stat("resistance", -0.5)
-        .build()
-    )
+    return FormulaBuilder().constant(base).source_stat("magic", 1.2).target_stat("resistance", -0.5).build()
 
 
 def flat_formula(value=10):
@@ -112,9 +100,7 @@ def basic_melee_timeline(ability_id="basic_attack"):
         [
             ActionCue("attack_animation", 0.00, "animation", {"clip": "attack"}),
             ActionCue("slash_vfx", 0.18, "vfx", {"preset": "slash.basic"}),
-            ActionCue(
-                "gameplay_hit", 0.20, "gameplay_ability", {"ability_id": ability_id}
-            ),
+            ActionCue("gameplay_hit", 0.20, "gameplay_ability", {"ability_id": ability_id}),
             ActionCue("impact_audio", 0.20, "audio", {"preset": "impact.light"}),
             ActionCue("impact_screen", 0.20, "screen_fx", {"hit_stop": 0.035}),
             ActionCue("impact_camera", 0.21, "camera", {"preset": "impact.small"}),

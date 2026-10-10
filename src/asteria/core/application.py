@@ -137,10 +137,7 @@ class Application:
                 if hasattr(self.backend, "end_frame"):
                     self.backend.end_frame()
                 frames += 1
-                if (
-                    hasattr(self.backend, "should_close")
-                    and self.backend.should_close()
-                ):
+                if hasattr(self.backend, "should_close") and self.backend.should_close():
                     self.stop()
                 if max_frames is not None and frames >= max_frames:
                     self.stop()

@@ -7,15 +7,14 @@ pushed onto the map — see asteria.editor.actor_appearance. Battle/gameplay
 code has no reason to read this component; combat identity already flows
 through ResolvedActorBuild independently of any field-map placement.
 """
+
 from asteria.core import Component, Field, component_schema
 
 
 @component_schema(
     type_name="asteria.ActorLink",
     version=1,
-    fields=(
-        Field("actor_id", str, "", label="Actor"),
-    ),
+    fields=(Field("actor_id", str, "", label="Actor"),),
 )
 class ActorLinkComponent(Component):
     def __init__(self):

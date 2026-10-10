@@ -4,13 +4,23 @@ A presentation layer draws these rows and forwards named input actions; the
 models talk only to :class:`GameSessionRuntime`, so they are testable
 without a window.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-PAUSE_OPTIONS = (("resume", "Resume"), ("quests", "Quest Log"), ("crafting", "Crafting"),
-                 ("achievements", "Achievements"), ("bestiary", "Bestiary"), ("settings", "Settings"), ("save", "Save Game"),
-                 ("load", "Load Game"), ("title", "Return to Title"), ("quit", "Quit"))
+PAUSE_OPTIONS = (
+    ("resume", "Resume"),
+    ("quests", "Quest Log"),
+    ("crafting", "Crafting"),
+    ("achievements", "Achievements"),
+    ("bestiary", "Bestiary"),
+    ("settings", "Settings"),
+    ("save", "Save Game"),
+    ("load", "Load Game"),
+    ("title", "Return to Title"),
+    ("quit", "Quit"),
+)
 GAME_OVER_OPTIONS = (("load", "Load Last Save"), ("title", "Return to Title"))
 
 
@@ -74,8 +84,16 @@ class ShopScreen:
             else:
                 available = owned > 0
             item = items.get(entry.item_id)
-            rows.append(ShopRow(entry.item_id, item.display_name if item else entry.item_id, _price_text(prices),
-                                "-" if remaining is None else str(remaining), owned, available))
+            rows.append(
+                ShopRow(
+                    entry.item_id,
+                    item.display_name if item else entry.item_id,
+                    _price_text(prices),
+                    "-" if remaining is None else str(remaining),
+                    owned,
+                    available,
+                )
+            )
         return tuple(rows)
 
     def wallet(self):
@@ -138,6 +156,7 @@ def quest_rows(game):
 
 # --- crafting (recipe discovery), achievements, bestiary, settings --------------
 
+
 @dataclass(frozen=True, slots=True)
 class CraftingRow:
     recipe_id: str
@@ -172,8 +191,15 @@ class CraftingScreen:
                     needed[item_id] = needed.get(item_id, 0) + 1
             materials = tuple((self._name(k), n, inventory.count(k)) for k, n in sorted(needed.items()))
             outputs = ", ".join(f"{self._name(o.item_id)} x{o.amount}" for o in recipe.outputs)
-            rows.append(CraftingRow(recipe.recipe_id, recipe.display_name, outputs, materials,
-                                    all(have >= need for _, need, have in materials)))
+            rows.append(
+                CraftingRow(
+                    recipe.recipe_id,
+                    recipe.display_name,
+                    outputs,
+                    materials,
+                    all(have >= need for _, need, have in materials),
+                )
+            )
         return tuple(rows)
 
     def undiscovered(self):
@@ -229,8 +255,15 @@ def bestiary_rows(game):
         if not entry or not entry.get("seen"):
             rows.append(("???", 0, 0, 0, ()))
             continue
-        rows.append((enemy.display_name, entry.get("seen", 0), entry.get("defeated", 0), entry.get("captured", 0),
-                     tuple(t for t in getattr(enemy, "tags", ()) if "." in t)))
+        rows.append(
+            (
+                enemy.display_name,
+                entry.get("seen", 0),
+                entry.get("defeated", 0),
+                entry.get("captured", 0),
+                tuple(t for t in getattr(enemy, "tags", ()) if "." in t),
+            )
+        )
     return tuple(rows)
 
 
@@ -242,8 +275,12 @@ class GameSettings:
     effects_volume: float = 0.8
     show_battle_log: bool = True
 
-    OPTIONS = (("music_volume", "Music Volume"), ("effects_volume", "Effects Volume"),
-               ("show_battle_log", "Battle Messages"), ("back", "Back"))
+    OPTIONS = (
+        ("music_volume", "Music Volume"),
+        ("effects_volume", "Effects Volume"),
+        ("show_battle_log", "Battle Messages"),
+        ("back", "Back"),
+    )
 
     def adjust(self, key, delta):
         if key in ("music_volume", "effects_volume"):
@@ -265,8 +302,13 @@ class GameSettings:
         mixer.set_volume("sfx", self.effects_volume)
 
     def to_data(self):
-        return {"schema": "asteria.game_settings", "version": 1, "music_volume": self.music_volume,
-                "effects_volume": self.effects_volume, "show_battle_log": self.show_battle_log}
+        return {
+            "schema": "asteria.game_settings",
+            "version": 1,
+            "music_volume": self.music_volume,
+            "effects_volume": self.effects_volume,
+            "show_battle_log": self.show_battle_log,
+        }
 
     @classmethod
     def from_data(cls, data):

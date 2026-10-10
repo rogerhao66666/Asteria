@@ -12,6 +12,7 @@ drawn underneath.
 ``entry_semantics`` is the comparison contract for behaviour parity tests:
 each adapter records, in ``trace``, what it understood from the log.
 """
+
 from __future__ import annotations
 
 from typing import Protocol
@@ -31,8 +32,11 @@ from asteria.runtime.battle_visuals import BattleVisualError, BattleVisualResolv
 from asteria.runtime.camera import Camera2D
 
 CHANNEL_KINDS = {
-    "animation": ActionCueKind.ANIMATION, "vfx": ActionCueKind.VFX, "audio": ActionCueKind.AUDIO,
-    "camera": ActionCueKind.CAMERA, "screen_fx": ActionCueKind.SCREEN_FX,
+    "animation": ActionCueKind.ANIMATION,
+    "vfx": ActionCueKind.VFX,
+    "audio": ActionCueKind.AUDIO,
+    "camera": ActionCueKind.CAMERA,
+    "screen_fx": ActionCueKind.SCREEN_FX,
 }
 
 PRESENTATION_PROFILE_CATEGORIES = {
@@ -58,14 +62,21 @@ def entry_semantics(entry):
     """Rule-relevant meaning of one battle log entry, for parity comparison."""
     if entry.kind == "action":
         return (
-            "action", entry.member_id, entry.ability_id, tuple(entry.target_ids),
+            "action",
+            entry.member_id,
+            entry.ability_id,
+            tuple(entry.target_ids),
             tuple((t, _value(o), tuple(sorted(getattr(o, "outcome_tags", ())))) for t, o in entry.outcomes),
         )
     if entry.kind == "turn":
         return ("turn", entry.member_id)
     if entry.kind == "gauge":
-        return ("gauge", entry.member_id, entry.data.composition_id,
-                tuple(x.threshold_id for x in entry.data.thresholds))
+        return (
+            "gauge",
+            entry.member_id,
+            entry.data.composition_id,
+            tuple(x.threshold_id for x in entry.data.thresholds),
+        )
     if entry.kind == "battle_finished":
         return ("battle_finished", tuple(entry.data["winning_sides"]))
     return (entry.kind,)
@@ -132,8 +143,16 @@ class PygameTextureDrawer:
 
     def render(self, draws):
         for draw in draws:
-            self.blit_region(draw.texture_asset_id, draw.source, draw.screen_x, draw.screen_y, draw.width,
-                             draw.height, flip_x=draw.flip_x, opacity=draw.opacity)
+            self.blit_region(
+                draw.texture_asset_id,
+                draw.source,
+                draw.screen_x,
+                draw.screen_y,
+                draw.width,
+                draw.height,
+                flip_x=draw.flip_x,
+                opacity=draw.opacity,
+            )
 
 
 class CanonicalBattleAdapter:
@@ -196,6 +215,7 @@ class CanonicalBattleAdapter:
         kwargs = {name: self._profile(category) for name, category in PRESENTATION_PROFILE_CATEGORIES.items()}
         kwargs = {name: value for name, value in kwargs.items() if value is not None}
         from asteria.presentation.battle_ui import BattleUiLayoutProfile
+
         layout = kwargs.get("layout") or BattleUiLayoutProfile()
         self.resolver = BattleVisualResolver(game.project, lambda uri: self.host.load_image(uri).get_size())
         sides = {side: [m.member_id for m in party.members] for side, party in game.battle.parties.items()}
@@ -213,12 +233,16 @@ class CanonicalBattleAdapter:
                 self.fallback_reason = str(exc)
         self.visuals_enabled = bool(combatants)
         scene = BattlePresentationScene(
-            f"battle.{game.encounter_id}", self.host.manifest["battle"].get("background", "battle.background"),
+            f"battle.{game.encounter_id}",
+            self.host.manifest["battle"].get("background", "battle.background"),
             combatants,
         )
         self.screen = BattleScreenRuntime(
-            scene, self.resolver.clip_set, self.resolver.sprite_sheet,
-            placement_by_side=self.placement_by_side, **kwargs,
+            scene,
+            self.resolver.clip_set,
+            self.resolver.sprite_sheet,
+            placement_by_side=self.placement_by_side,
+            **kwargs,
         )
         self.screen.display_names = self._display_names(game)
         self.screen.member_heights = {
@@ -320,8 +344,7 @@ class CanonicalBattleAdapter:
                 outcome = BattleOutcome(True, tuple(data["winning_sides"]), tuple(data["defeated_sides"]))
                 self._at(at, lambda o=outcome, d=data: self._finish(o, d))
         for event in hook_events:
-            self._at(self._last_impact if self.visuals_enabled else self._clock,
-                     lambda e=event: coordinator.reemit(e))
+            self._at(self._last_impact if self.visuals_enabled else self._clock, lambda e=event: coordinator.reemit(e))
         self._sync_lifecycle()
         self._release_due()
 
@@ -343,12 +366,15 @@ class CanonicalBattleAdapter:
             shown_down = self._shown_down.get(visual.member_id, False)
             if not active and not shown_down:
                 self._shown_down[visual.member_id] = True
-                self._at(self._last_impact,
-                         lambda m=visual.member_id: self.screen.animation.combatant(m).mark_defeated())
+                self._at(
+                    self._last_impact, lambda m=visual.member_id: self.screen.animation.combatant(m).mark_defeated()
+                )
             elif active and shown_down:
                 self._shown_down[visual.member_id] = False
-                self._at(max(self._clock, self._cursor),
-                         lambda m=visual.member_id: self.screen.animation.combatant(m).revive())
+                self._at(
+                    max(self._clock, self._cursor),
+                    lambda m=visual.member_id: self.screen.animation.combatant(m).revive(),
+                )
 
     def _finish(self, outcome, data):
         self.screen.present_result(outcome, perspective_side_ids=("heroes",))
@@ -359,8 +385,11 @@ class CanonicalBattleAdapter:
         if kind is None:
             return []
         targets = tuple(entry.target_ids) or (entry.member_id,)
-        members = (entry.member_id,) if beat.member_id in (None, "@source") else (
-            targets if beat.member_id == "@target" else (beat.member_id,))
+        members = (
+            (entry.member_id,)
+            if beat.member_id in (None, "@source")
+            else (targets if beat.member_id == "@target" else (beat.member_id,))
+        )
         cues = []
         for member_id in members:
             payload = dict(beat.payload_dict())
@@ -374,8 +403,11 @@ class CanonicalBattleAdapter:
                 payload["asset_id"] = beat.cue
             else:
                 payload["effect"] = beat.cue
-            cues.append(PresentationCue(f"action.{entry.ability_id}",
-                                        ActionCue(f"{member_id}.{beat.beat_id}", beat.at, kind, payload)))
+            cues.append(
+                PresentationCue(
+                    f"action.{entry.ability_id}", ActionCue(f"{member_id}.{beat.beat_id}", beat.at, kind, payload)
+                )
+            )
         return cues
 
     def _push_action(self, entry, start):
@@ -384,8 +416,11 @@ class CanonicalBattleAdapter:
         sequence = self.resolver.motion_sequence(entry.ability_id) if self.visuals_enabled else None
 
         def announce():
-            coordinator.push_custom("battle.action", source_id=entry.member_id,
-                                    payload={"ability_id": entry.ability_id, "target_ids": list(targets)})
+            coordinator.push_custom(
+                "battle.action",
+                source_id=entry.member_id,
+                payload={"ability_id": entry.ability_id, "target_ids": list(targets)},
+            )
             if targets:
                 coordinator.push_target_selection(targets, primary_target_id=targets[0], source_id=entry.member_id)
 
@@ -395,14 +430,33 @@ class CanonicalBattleAdapter:
 
         self._at(start, announce)
         if sequence is None:
+
             def default_cues():
-                cues = [PresentationCue(f"action.{entry.ability_id}", ActionCue(
-                    f"{entry.member_id}.attack", 0.0, ActionCueKind.ANIMATION,
-                    {"member_id": entry.member_id, "role": "attack"}))]
-                cues.extend(PresentationCue(f"action.{entry.ability_id}", ActionCue(
-                    f"{target}.hit", 0.0, ActionCueKind.ANIMATION, {"member_id": target, "role": "hit"},
-                )) for target, _ in entry.outcomes)
+                cues = [
+                    PresentationCue(
+                        f"action.{entry.ability_id}",
+                        ActionCue(
+                            f"{entry.member_id}.attack",
+                            0.0,
+                            ActionCueKind.ANIMATION,
+                            {"member_id": entry.member_id, "role": "attack"},
+                        ),
+                    )
+                ]
+                cues.extend(
+                    PresentationCue(
+                        f"action.{entry.ability_id}",
+                        ActionCue(
+                            f"{target}.hit",
+                            0.0,
+                            ActionCueKind.ANIMATION,
+                            {"member_id": target, "role": "hit"},
+                        ),
+                    )
+                    for target, _ in entry.outcomes
+                )
                 coordinator.consume_timeline_cues(cues)
+
             self._at(start, default_cues)
             self._at(start, values)
             self._last_impact = start
@@ -435,8 +489,9 @@ class CanonicalBattleAdapter:
                 pending = [event.source_id, payload["ability_id"], tuple(payload["target_ids"]), []]
                 result.append(pending)
             elif kind == BattlePresentationEventKind.RESOLVED_VALUE and pending is not None:
-                pending[3].append((payload["target_id"], round(float(payload["value"]), 6),
-                                   tuple(sorted(payload["outcome_tags"]))))
+                pending[3].append(
+                    (payload["target_id"], round(float(payload["value"]), 6), tuple(sorted(payload["outcome_tags"])))
+                )
             elif kind == BattlePresentationEventKind.GAUGE_THRESHOLD:
                 key = ("gauge", event.source_id, payload["composition_id"])
                 if result and isinstance(result[-1], tuple) and result[-1][:3] == key:
@@ -448,8 +503,7 @@ class CanonicalBattleAdapter:
         # Keep the newest action open (its values may still arrive); report the rest.
         self._semantic_action = result.pop() if result and isinstance(result[-1], list) else None
         return [
-            ("action", item[0], item[1], item[2], tuple(item[3])) if isinstance(item, list) else item
-            for item in result
+            ("action", item[0], item[1], item[2], tuple(item[3])) if isinstance(item, list) else item for item in result
         ]
 
     def finalize_trace(self):
@@ -494,7 +548,9 @@ class CanonicalBattleAdapter:
         textures = None
         if self.screen.scene.combatants:
             background = self.host.load_image(self.screen.scene.background_asset_id)
-            self.host.screen.blit(self.host.pg.transform.smoothscale(background, (self.host.width, self.host.height)), (0, 0))
+            self.host.screen.blit(
+                self.host.pg.transform.smoothscale(background, (self.host.width, self.host.height)), (0, 0)
+            )
             textures = self.textures
         else:
             self.host._draw_battle_world(show_labels=False)
@@ -524,8 +580,9 @@ class CanonicalBattleAdapter:
         scale = float(payload.get("scale", 0.6))
         width, tall = frame.width * scale, frame.height * scale
         cx, cy = self._view_camera.world_to_screen(visual.anchor.x, visual.anchor.y - height * 0.5)
-        self.textures.blit_region(asset_id, (frame.x, frame.y, frame.width, frame.height),
-                                  cx - width / 2, cy - tall / 2, width, tall)
+        self.textures.blit_region(
+            asset_id, (frame.x, frame.y, frame.width, frame.height), cx - width / 2, cy - tall / 2, width, tall
+        )
 
 
 def create_battle_presentation_adapter(host):
@@ -536,6 +593,8 @@ def create_battle_presentation_adapter(host):
         return LegacyPygameBattleAdapter(host)
     if kind == "canonical":
         return CanonicalBattleAdapter(
-            host, profile_ids=settings.get("profiles"), placement_by_side=settings.get("placement_by_side"),
+            host,
+            profile_ids=settings.get("profiles"),
+            placement_by_side=settings.get("placement_by_side"),
         )
     raise ValueError(f"unknown battle presentation adapter: {kind}")

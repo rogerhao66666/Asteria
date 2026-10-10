@@ -44,9 +44,19 @@ class ReactionDefinition:
     VERSION = 1
 
     def __init__(
-        self, reaction_id, trigger, reactor_selector, *, target_selector="event_source",
-        ability_id=None, priority=0, required_tags=(), blocked_tags=(),
-        require_can_act=True, allow_self=False, max_per_chain=1,
+        self,
+        reaction_id,
+        trigger,
+        reactor_selector,
+        *,
+        target_selector="event_source",
+        ability_id=None,
+        priority=0,
+        required_tags=(),
+        blocked_tags=(),
+        require_can_act=True,
+        allow_self=False,
+        max_per_chain=1,
         action_target_policy="preserve",
     ):
         object.__setattr__(self, "reaction_id", _id(reaction_id, "reaction_id"))
@@ -73,13 +83,19 @@ class ReactionDefinition:
 
     def to_data(self):
         return {
-            "schema": self.SCHEMA, "version": self.VERSION,
-            "reaction_id": self.reaction_id, "trigger": self.trigger,
+            "schema": self.SCHEMA,
+            "version": self.VERSION,
+            "reaction_id": self.reaction_id,
+            "trigger": self.trigger,
             "reactor_selector": self.reactor_selector,
-            "target_selector": self.target_selector, "ability_id": self.ability_id,
-            "priority": self.priority, "required_tags": list(self.required_tags),
-            "blocked_tags": list(self.blocked_tags), "require_can_act": self.require_can_act,
-            "allow_self": self.allow_self, "max_per_chain": self.max_per_chain,
+            "target_selector": self.target_selector,
+            "ability_id": self.ability_id,
+            "priority": self.priority,
+            "required_tags": list(self.required_tags),
+            "blocked_tags": list(self.blocked_tags),
+            "require_can_act": self.require_can_act,
+            "allow_self": self.allow_self,
+            "max_per_chain": self.max_per_chain,
             "action_target_policy": self.action_target_policy,
         }
 
@@ -88,12 +104,18 @@ class ReactionDefinition:
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported reaction definition")
         return cls(
-            data["reaction_id"], data["trigger"], data["reactor_selector"],
+            data["reaction_id"],
+            data["trigger"],
+            data["reactor_selector"],
             target_selector=data.get("target_selector", "event_source"),
-            ability_id=data.get("ability_id"), priority=data.get("priority", 0),
-            required_tags=data.get("required_tags", ()), blocked_tags=data.get("blocked_tags", ()),
-            require_can_act=data.get("require_can_act", True), allow_self=data.get("allow_self", False),
-            max_per_chain=data.get("max_per_chain", 1), action_target_policy=data.get("action_target_policy", "preserve"),
+            ability_id=data.get("ability_id"),
+            priority=data.get("priority", 0),
+            required_tags=data.get("required_tags", ()),
+            blocked_tags=data.get("blocked_tags", ()),
+            require_can_act=data.get("require_can_act", True),
+            allow_self=data.get("allow_self", False),
+            max_per_chain=data.get("max_per_chain", 1),
+            action_target_policy=data.get("action_target_policy", "preserve"),
         )
 
 
@@ -156,33 +178,52 @@ class ReactionRuntime:
         if selector == "allies_of_source":
             return tuple(sorted(x.member_id for x in battle.members.values() if x.side == source.side))
         if selector == "allies_of_source_except_source":
-            return tuple(sorted(x.member_id for x in battle.members.values() if x.side == source.side and x.member_id != source.member_id))
+            return tuple(
+                sorted(
+                    x.member_id
+                    for x in battle.members.values()
+                    if x.side == source.side and x.member_id != source.member_id
+                )
+            )
         if selector == "opponents_of_source":
             return tuple(sorted(x.member_id for x in battle.members.values() if x.side != source.side))
         if selector == "allies_of_targets":
             sides = {x.side for x in targets}
             return tuple(sorted(x.member_id for x in battle.members.values() if x.side in sides))
         if selector == "allies_of_targets_except_targets":
-            sides = {x.side for x in targets}; target_ids = {x.member_id for x in targets}
-            return tuple(sorted(x.member_id for x in battle.members.values() if x.side in sides and x.member_id not in target_ids))
+            sides = {x.side for x in targets}
+            target_ids = {x.member_id for x in targets}
+            return tuple(
+                sorted(
+                    x.member_id for x in battle.members.values() if x.side in sides and x.member_id not in target_ids
+                )
+            )
         if selector == "all_present":
-            return tuple(sorted(x.member_id for x in battle.members.values() if battle.combatants.state(x.member_id).present))
+            return tuple(
+                sorted(x.member_id for x in battle.members.values() if battle.combatants.state(x.member_id).present)
+            )
         raise KeyError(f"unknown reactor selector: {selector}")
 
     def _targets(self, battle, selector, event, reactor_id):
         custom = self.selector_resolvers.get(selector)
         if custom is not None:
             return tuple(custom(battle, event, reactor_id))
-        if selector == "event_source": return (event.source_id,)
-        if selector == "event_targets": return tuple(event.target_ids)
-        if selector == "reactor": return (reactor_id,)
-        if selector == "first_event_target": return tuple(event.target_ids[:1])
+        if selector == "event_source":
+            return (event.source_id,)
+        if selector == "event_targets":
+            return tuple(event.target_ids)
+        if selector == "reactor":
+            return (reactor_id,)
+        if selector == "first_event_target":
+            return tuple(event.target_ids[:1])
         raise KeyError(f"unknown target selector: {selector}")
 
     def resolve(self, battle, trigger, source_id, target_ids=(), *, tags=(), rng=None):
         from .battle import BattleAction
 
-        event = ReactionEvent(_id(trigger, "trigger"), _id(source_id, "source_id"), tuple(str(x) for x in target_ids), _tags(tags), 0)
+        event = ReactionEvent(
+            _id(trigger, "trigger"), _id(source_id, "source_id"), tuple(str(x) for x in target_ids), _tags(tags), 0
+        )
         queue = []
         sequence = 0
         counts = {}
@@ -210,7 +251,15 @@ class ReactionRuntime:
                     if counts.get(key, 0) >= definition.max_per_chain:
                         continue
                     target_values = self._targets(battle, definition.target_selector, ev, reactor_id)
-                    request = ReactionRequest(definition.reaction_id, reactor_id, definition.ability_id, target_values, definition.priority, ev.depth, definition.action_target_policy)
+                    request = ReactionRequest(
+                        definition.reaction_id,
+                        reactor_id,
+                        definition.ability_id,
+                        target_values,
+                        definition.priority,
+                        ev.depth,
+                        definition.action_target_policy,
+                    )
                     heappush(queue, (-definition.priority, sequence, definition.reaction_id, reactor_id, request))
                     sequence += 1
 
@@ -236,11 +285,24 @@ class ReactionRuntime:
                 final_target_ids = tuple(custom(battle, event, request.reactor_id))
             action_result = None
             if request.ability_id is not None:
-                action_result = battle.execute(BattleAction(request.reactor_id, request.ability_id, request.target_ids), rng=rng)
+                action_result = battle.execute(
+                    BattleAction(request.reactor_id, request.ability_id, request.target_ids), rng=rng
+                )
                 results.append(action_result)
-                nested = ReactionEvent("rpg.battle.after_action", request.reactor_id, request.target_ids, _tags((*event.tags, "reaction", f"reaction.{request.reaction_id}")), request.depth + 1)
+                nested = ReactionEvent(
+                    "rpg.battle.after_action",
+                    request.reactor_id,
+                    request.target_ids,
+                    _tags((*event.tags, "reaction", f"reaction.{request.reaction_id}")),
+                    request.depth + 1,
+                )
                 enqueue(nested)
-            emit_hook(self.hooks, "rpg.battle.reaction_finished", source=request.reactor_id, data={"request": request, "result": action_result})
+            emit_hook(
+                self.hooks,
+                "rpg.battle.reaction_finished",
+                source=request.reactor_id,
+                data={"request": request, "result": action_result},
+            )
         if queue:
             suppressed.append("max_reactions")
         chain = ReactionChainResult(tuple(executed), tuple(results), tuple(suppressed), tuple(final_target_ids))

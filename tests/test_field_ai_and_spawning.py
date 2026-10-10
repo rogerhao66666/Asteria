@@ -43,7 +43,7 @@ def test_chase_gives_up_and_returns_home():
     _ai(wolf, "chase", speed=40.0, detect_radius=80.0, lose_radius=120.0, target_entity_id=player.id)
     scene.update(0.5)
     assert system.state(wolf.id).mode == "chase" and _distance(wolf, player) < 60
-    player.get(Transform).x = 400                       # out of lose radius
+    player.get(Transform).x = 400  # out of lose radius
     scene.update(0.1)
     assert system.state(wolf.id).mode == "return"
     for _ in range(40):
@@ -69,8 +69,8 @@ def test_flee_patrol_wander_and_blocking():
     _ai(slime, "wander", wander_radius=10.0)
     for _ in range(10):
         scene.update(0.1)
-    assert rabbit.get(Transform).x < -40                # ran away from the player
-    assert guard.get(Transform).x <= 30                 # wall blocks the third patrol point
+    assert rabbit.get(Transform).x < -40  # ran away from the player
+    assert guard.get(Transform).x <= 30  # wall blocks the third patrol point
     assert system.state(guard.id).patrol_index == 2
     assert hypot(slime.get(Transform).x, slime.get(Transform).y + 200) <= 10.0 + 1e-6
 
@@ -109,19 +109,19 @@ def test_spawn_zone_respawns_after_cooldown_inside_radius():
     _kill_all(scene, system)
     scene.update(0.5)
     assert system.state(system.zone_id).alive == []
-    scene.update(0.6)                                     # cooldown elapsed
+    scene.update(0.6)  # cooldown elapsed
     assert len(system.state(system.zone_id).alive) == 2
 
 
 def test_waves_spawn_after_clear_and_condition_switch_gates_the_zone():
     scene, system, switches = _spawning("2, 3", respawn_seconds=0.0, condition_switch="night")
     scene.update(0.1)
-    assert system.state(system.zone_id).alive == []               # switch off
+    assert system.state(system.zone_id).alive == []  # switch off
     switches.add("night")
     scene.update(0.1)
     assert len(system.state(system.zone_id).alive) == 2
     scene.update(0.1)
-    assert len(system.state(system.zone_id).alive) == 2           # next wave waits for a clear
+    assert len(system.state(system.zone_id).alive) == 2  # next wave waits for a clear
     _kill_all(scene, system)
     scene.update(0.1)
     assert len(system.state(system.zone_id).alive) == 3

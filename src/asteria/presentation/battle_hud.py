@@ -41,15 +41,36 @@ class BattleHudResourceStyle:
     show_value: bool = True
     compact: bool = False
 
-    BUILTIN_PRESENTATIONS = frozenset({
-        "bar", "segmented_bar", "pips", "number", "icon_stack", "ring",
-        "action_gauge", "timeline", "contextual", "hidden",
-    })
+    BUILTIN_PRESENTATIONS = frozenset(
+        {
+            "bar",
+            "segmented_bar",
+            "pips",
+            "number",
+            "icon_stack",
+            "ring",
+            "action_gauge",
+            "timeline",
+            "contextual",
+            "hidden",
+        }
+    )
 
     def __init__(
-        self, resource_id, label=None, *, order=0, icon_asset_id=None, visible=True,
-        presentation="bar", segments=0, group="primary", priority=0,
-        show_label=True, show_value=True, compact=False,
+        self,
+        resource_id,
+        label=None,
+        *,
+        order=0,
+        icon_asset_id=None,
+        visible=True,
+        presentation="bar",
+        segments=0,
+        group="primary",
+        priority=0,
+        show_label=True,
+        show_value=True,
+        compact=False,
     ):
         resource_id = _id(resource_id, "resource_id")
         presentation = _id(presentation, "presentation").lower()
@@ -60,7 +81,9 @@ class BattleHudResourceStyle:
         object.__setattr__(self, "resource_id", resource_id)
         object.__setattr__(self, "label", resource_id.upper() if label is None else _id(label, "label"))
         object.__setattr__(self, "order", int(order))
-        object.__setattr__(self, "icon_asset_id", None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id"))
+        object.__setattr__(
+            self, "icon_asset_id", None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id")
+        )
         object.__setattr__(self, "visible", bool(visible) and presentation != "hidden")
         object.__setattr__(self, "presentation", presentation)
         object.__setattr__(self, "segments", segments)
@@ -129,8 +152,12 @@ class BattleHudProfile:
     VERSION = 1
 
     def __init__(self, resources=(), statuses=(), *, show_unmapped_resources=True, show_unmapped_statuses=False):
-        resources = tuple(x if isinstance(x, BattleHudResourceStyle) else BattleHudResourceStyle.from_data(x) for x in resources)
-        statuses = tuple(x if isinstance(x, BattleHudStatusStyle) else BattleHudStatusStyle.from_data(x) for x in statuses)
+        resources = tuple(
+            x if isinstance(x, BattleHudResourceStyle) else BattleHudResourceStyle.from_data(x) for x in resources
+        )
+        statuses = tuple(
+            x if isinstance(x, BattleHudStatusStyle) else BattleHudStatusStyle.from_data(x) for x in statuses
+        )
         if len({x.resource_id for x in resources}) != len(resources):
             raise ValueError("duplicate HUD resource style")
         if len({x.state_id for x in statuses}) != len(statuses):
@@ -142,10 +169,13 @@ class BattleHudProfile:
 
     @classmethod
     def default(cls):
-        return cls((
-            BattleHudResourceStyle("hp", "HP", order=0),
-            BattleHudResourceStyle("mp", "MP", order=10),
-        ), show_unmapped_resources=True)
+        return cls(
+            (
+                BattleHudResourceStyle("hp", "HP", order=0),
+                BattleHudResourceStyle("mp", "MP", order=10),
+            ),
+            show_unmapped_resources=True,
+        )
 
     def resource_style(self, resource_id):
         resource_id = str(resource_id)
@@ -170,7 +200,8 @@ class BattleHudProfile:
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported battle HUD profile")
         return cls(
-            data.get("resources", ()), data.get("statuses", ()),
+            data.get("resources", ()),
+            data.get("statuses", ()),
             show_unmapped_resources=data.get("show_unmapped_resources", True),
             show_unmapped_statuses=data.get("show_unmapped_statuses", False),
         )
@@ -262,12 +293,23 @@ class BattleHudRuntime:
         if not style.visible:
             return None
         return BattleHudGauge(
-            str(resource_id), style.label, _finite(value.current, "current"),
-            _finite(value.minimum, "minimum"), _finite(value.maximum, "maximum"),
-            _finite(value.overflow, "overflow"), _finite(value.normalized, "normalized"),
-            bool(value.full), style.icon_asset_id, style.order,
-            style.presentation, style.segments, style.group, style.priority,
-            style.show_label, style.show_value, style.compact,
+            str(resource_id),
+            style.label,
+            _finite(value.current, "current"),
+            _finite(value.minimum, "minimum"),
+            _finite(value.maximum, "maximum"),
+            _finite(value.overflow, "overflow"),
+            _finite(value.normalized, "normalized"),
+            bool(value.full),
+            style.icon_asset_id,
+            style.order,
+            style.presentation,
+            style.segments,
+            style.group,
+            style.priority,
+            style.show_label,
+            style.show_value,
+            style.compact,
         )
 
     def _status(self, active):
@@ -277,9 +319,13 @@ class BattleHudRuntime:
                 return None
             style = BattleHudStatusStyle(active.state_id, "status.unmapped", order=1000)
         return BattleHudStatusIcon(
-            str(active.state_id), style.label or str(active.state_id), style.icon_asset_id,
-            int(active.stacks), _finite(active.remaining, "remaining"),
-            None if active.source_id is None else str(active.source_id), style.order,
+            str(active.state_id),
+            style.label or str(active.state_id),
+            style.icon_asset_id,
+            int(active.stacks),
+            _finite(active.remaining, "remaining"),
+            None if active.source_id is None else str(active.source_id),
+            style.order,
         )
 
     def sync_member(self, member_id, battle_resources, subject):
@@ -332,24 +378,40 @@ class BattleHudRuntime:
                     "member_id": member.member_id,
                     "gauges": [
                         {
-                            "resource_id": x.resource_id, "label": x.label, "current": x.current,
-                            "minimum": x.minimum, "maximum": x.maximum, "overflow": x.overflow,
-                            "normalized": x.normalized, "full": x.full,
-                            "icon_asset_id": x.icon_asset_id, "order": x.order,
-                            "presentation": x.presentation, "segments": x.segments,
-                            "group": x.group, "priority": x.priority,
-                            "show_label": x.show_label, "show_value": x.show_value,
+                            "resource_id": x.resource_id,
+                            "label": x.label,
+                            "current": x.current,
+                            "minimum": x.minimum,
+                            "maximum": x.maximum,
+                            "overflow": x.overflow,
+                            "normalized": x.normalized,
+                            "full": x.full,
+                            "icon_asset_id": x.icon_asset_id,
+                            "order": x.order,
+                            "presentation": x.presentation,
+                            "segments": x.segments,
+                            "group": x.group,
+                            "priority": x.priority,
+                            "show_label": x.show_label,
+                            "show_value": x.show_value,
                             "compact": x.compact,
-                        } for x in member.gauges
+                        }
+                        for x in member.gauges
                     ],
                     "statuses": [
                         {
-                            "state_id": x.state_id, "label": x.label, "icon_asset_id": x.icon_asset_id,
-                            "stacks": x.stacks, "remaining": x.remaining, "source_id": x.source_id,
+                            "state_id": x.state_id,
+                            "label": x.label,
+                            "icon_asset_id": x.icon_asset_id,
+                            "stacks": x.stacks,
+                            "remaining": x.remaining,
+                            "source_id": x.source_id,
                             "order": x.order,
-                        } for x in member.statuses
+                        }
+                        for x in member.statuses
                     ],
-                } for member in self.members
+                }
+                for member in self.members
             ],
         }
 

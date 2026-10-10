@@ -24,13 +24,34 @@ def _real():
 
 def _map(path: Path, *, data_length=24, tile=-1):
     raw = {
-        "displayName": "Village", "width": 2, "height": 2, "tilesetId": 1,
-        "parallaxName": "BlueSky", "scrollType": 0,
+        "displayName": "Village",
+        "width": 2,
+        "height": 2,
+        "tilesetId": 1,
+        "parallaxName": "BlueSky",
+        "scrollType": 0,
         "data": [tile] * data_length,
         "encounterList": [{"regionSet": [], "troopId": 1, "weight": 10}],
-        "events": [None, {"id": 1, "name": "Guide", "x": 1, "y": 1,
-            "pages": [{"image": {"characterName": "Actor1", "characterIndex": 0,
-                                    "direction": 2, "pattern": 1, "tileId": 0}}]}],
+        "events": [
+            None,
+            {
+                "id": 1,
+                "name": "Guide",
+                "x": 1,
+                "y": 1,
+                "pages": [
+                    {
+                        "image": {
+                            "characterName": "Actor1",
+                            "characterIndex": 0,
+                            "direction": 2,
+                            "pattern": 1,
+                            "tileId": 0,
+                        }
+                    }
+                ],
+            },
+        ],
     }
     path.write_text(json.dumps(raw), encoding="utf-8")
 
@@ -39,8 +60,7 @@ def _map(path: Path, *, data_length=24, tile=-1):
 def test_real_map_infos_resolve_and_six_layers_validate():
     layout, _ = _real()
     entries = discover_mv_maps(layout)
-    mv_map = RPGMakerMVMap.load(entries[0].path, map_id=entries[0].map_id,
-                                name=entries[0].name)
+    mv_map = RPGMakerMVMap.load(entries[0].path, map_id=entries[0].map_id, name=entries[0].name)
 
     assert [(entry.map_id, entry.name) for entry in entries] == [(1, "MAP001")]
     assert (mv_map.width, mv_map.height, len(mv_map.layers)) == (17, 13, 6)

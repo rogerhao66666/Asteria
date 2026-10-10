@@ -6,14 +6,19 @@ conditions hold; ``source="*"`` means "from any state". A transition with
 Parameters are numbers or booleans; triggers are booleans consumed when a
 transition that tests them fires.
 """
+
 from __future__ import annotations
 
 import operator
 from dataclasses import dataclass, field
 
 _OPERATORS = {
-    "==": operator.eq, "!=": operator.ne, "<": operator.lt,
-    "<=": operator.le, ">": operator.gt, ">=": operator.ge,
+    "==": operator.eq,
+    "!=": operator.ne,
+    "<": operator.lt,
+    "<=": operator.le,
+    ">": operator.gt,
+    ">=": operator.ge,
 }
 
 
@@ -49,15 +54,23 @@ class AnimationTransition:
     priority: int = 0
 
     def to_data(self):
-        return {"source": self.source, "target": self.target,
-                "conditions": [c.to_data() for c in self.conditions],
-                "when_finished": self.when_finished, "priority": self.priority}
+        return {
+            "source": self.source,
+            "target": self.target,
+            "conditions": [c.to_data() for c in self.conditions],
+            "when_finished": self.when_finished,
+            "priority": self.priority,
+        }
 
     @classmethod
     def from_data(cls, data):
-        return cls(data["source"], data["target"],
-                   tuple(AnimationCondition.from_data(c) for c in data.get("conditions", ())),
-                   bool(data.get("when_finished", False)), int(data.get("priority", 0)))
+        return cls(
+            data["source"],
+            data["target"],
+            tuple(AnimationCondition.from_data(c) for c in data.get("conditions", ())),
+            bool(data.get("when_finished", False)),
+            int(data.get("priority", 0)),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,18 +97,27 @@ class AnimationStateMachineDefinition:
             raise ValueError(f"state machine clips missing from clip set: {', '.join(missing)}")
 
     def to_data(self):
-        return {"schema": "asteria.animation_state_machine", "version": 1,
-                "states": dict(self.states), "initial": self.initial,
-                "transitions": [t.to_data() for t in self.transitions],
-                "parameters": dict(self.parameters), "triggers": list(self.triggers)}
+        return {
+            "schema": "asteria.animation_state_machine",
+            "version": 1,
+            "states": dict(self.states),
+            "initial": self.initial,
+            "transitions": [t.to_data() for t in self.transitions],
+            "parameters": dict(self.parameters),
+            "triggers": list(self.triggers),
+        }
 
     @classmethod
     def from_data(cls, data):
         if data.get("schema") != "asteria.animation_state_machine" or data.get("version") != 1:
             raise ValueError("unsupported animation state machine")
-        return cls(dict(data["states"]), data["initial"],
-                   tuple(AnimationTransition.from_data(t) for t in data.get("transitions", ())),
-                   dict(data.get("parameters", {})), tuple(data.get("triggers", ())))
+        return cls(
+            dict(data["states"]),
+            data["initial"],
+            tuple(AnimationTransition.from_data(t) for t in data.get("transitions", ())),
+            dict(data.get("parameters", {})),
+            tuple(data.get("triggers", ())),
+        )
 
 
 class AnimationStateMachine:

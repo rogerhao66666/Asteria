@@ -19,11 +19,7 @@ def _freeze(value: Any) -> Any:
 
 
 def _metadata(record: Mapping[str, Any], known: set[str]) -> tuple[tuple[str, Any], ...]:
-    return tuple(
-        (key, _freeze(value))
-        for key, value in sorted(record.items())
-        if key not in known
-    )
+    return tuple((key, _freeze(value)) for key, value in sorted(record.items()) if key not in known)
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,15 +119,25 @@ class RPGMakerMVDatabase:
             )
 
         actor_known = {
-            "id", "name", "classId", "characterName", "characterIndex",
-            "faceName", "faceIndex", "battlerName",
+            "id",
+            "name",
+            "classId",
+            "characterName",
+            "characterIndex",
+            "faceName",
+            "faceIndex",
+            "battlerName",
         }
         actors = tuple(
             MVActorRecord(
-                int(raw.get("id", 0)), str(raw.get("name", "")),
-                _metadata(raw, actor_known), int(raw.get("classId", 0)),
-                str(raw.get("characterName", "")), int(raw.get("characterIndex", 0)),
-                str(raw.get("faceName", "")), int(raw.get("faceIndex", 0)),
+                int(raw.get("id", 0)),
+                str(raw.get("name", "")),
+                _metadata(raw, actor_known),
+                int(raw.get("classId", 0)),
+                str(raw.get("characterName", "")),
+                int(raw.get("characterIndex", 0)),
+                str(raw.get("faceName", "")),
+                int(raw.get("faceIndex", 0)),
                 str(raw.get("battlerName", "")),
             )
             for raw in load_json_array("Actors.json")
@@ -141,7 +147,8 @@ class RPGMakerMVDatabase:
         def icons(name: str, record_type):
             return tuple(
                 record_type(
-                    int(raw.get("id", 0)), str(raw.get("name", "")),
+                    int(raw.get("id", 0)),
+                    str(raw.get("name", "")),
                     _metadata(raw, {"id", "name", "iconIndex"}),
                     int(raw.get("iconIndex", 0)),
                 )
@@ -154,9 +161,11 @@ class RPGMakerMVDatabase:
         def equipment(name: str, kind: str):
             return tuple(
                 MVEquipmentRecord(
-                    int(raw.get("id", 0)), str(raw.get("name", "")),
+                    int(raw.get("id", 0)),
+                    str(raw.get("name", "")),
                     _metadata(raw, {"id", "name", "iconIndex"}),
-                    int(raw.get("iconIndex", 0)), kind,
+                    int(raw.get("iconIndex", 0)),
+                    kind,
                 )
                 for raw in load_json_array(name)
             )
@@ -174,8 +183,10 @@ class RPGMakerMVDatabase:
             raise ValueError("invalid RPG Maker MV object: System.json")
         system_known = {"gameTitle", "startMapId", "startX", "startY", "partyMembers"}
         system = MVSystemRecord(
-            str(system_raw.get("gameTitle", "")), int(system_raw.get("startMapId", 0)),
-            int(system_raw.get("startX", 0)), int(system_raw.get("startY", 0)),
+            str(system_raw.get("gameTitle", "")),
+            int(system_raw.get("startMapId", 0)),
+            int(system_raw.get("startX", 0)),
+            int(system_raw.get("startY", 0)),
             tuple(int(item) for item in system_raw.get("partyMembers", ())),
             _metadata(system_raw, system_known),
         )
@@ -183,8 +194,11 @@ class RPGMakerMVDatabase:
         class_ids = {record.id for record in classes}
         for actor in actors:
             if actor.class_id and actor.class_id not in class_ids:
-                issues.append(MVReferenceIssue(
-                    "actor.unknown_class", "Actors.json",
-                    f"actor {actor.id} references class {actor.class_id}",
-                ))
+                issues.append(
+                    MVReferenceIssue(
+                        "actor.unknown_class",
+                        "Actors.json",
+                        f"actor {actor.id} references class {actor.class_id}",
+                    )
+                )
         return cls(actors, classes, skills, items, weapons, armors, tilesets, system, tuple(issues))

@@ -6,6 +6,7 @@ Presentation-only requests (music, sound, screen effects) are queued on the
 session for whichever presentation layer is attached, so the event VM never
 depends on an audio or render backend.
 """
+
 from __future__ import annotations
 
 from asteria.core import Transform
@@ -120,11 +121,16 @@ def register_standard_world_commands(router, session):
             from asteria.rpg.quests import QuestError
 
             quest_id = str(_required(command, "quest_id"))
-            args = (quest_id, str(_required(command, "objective_id")), int(_amount(command, "amount", 1))) if objective else (quest_id,)
+            args = (
+                (quest_id, str(_required(command, "objective_id")), int(_amount(command, "amount", 1)))
+                if objective
+                else (quest_id,)
+            )
             try:
                 return getattr(session, method)(*args)
             except QuestError as exc:
                 raise WorldCommandError(str(exc)) from exc
+
         return handler
 
     def open_shop(command):
@@ -155,7 +161,11 @@ def register_standard_world_commands(router, session):
         return session.change_reputation(faction_id, _amount(command, "amount", 0))
 
     router.register("CHANGE_REPUTATION", change_reputation)
-    router.register("CHANGE_RELATIONSHIP", lambda c: session.change_relationship(str(_required(c, "subject_id")), _amount(c, "amount", 0)))
+    router.register(
+        "CHANGE_RELATIONSHIP",
+        lambda c: session.change_relationship(str(_required(c, "subject_id")), _amount(c, "amount", 0)),
+    )
+
     def learn_recipe(command):
         recipe_id = str(_required(command, "recipe_id"))
         if recipe_id not in session.project.rpg_database.composition_recipes:
@@ -168,7 +178,9 @@ def register_standard_world_commands(router, session):
 
     router.register("LEARN_RECIPE", learn_recipe)
     router.register("OPEN_CRAFTING", open_crafting)
-    router.register("ADD_COUNTER", lambda c: session.add_counter(str(_required(c, "counter_id")), _amount(c, "amount", 1)))
+    router.register(
+        "ADD_COUNTER", lambda c: session.add_counter(str(_required(c, "counter_id")), _amount(c, "amount", 1))
+    )
     for name in PRESENTATION_COMMANDS:
         router.register(name, presentation_request)
     return router

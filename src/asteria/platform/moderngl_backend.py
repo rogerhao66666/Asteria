@@ -15,6 +15,7 @@ preserves the caller-given draw order (already sorted upstream by
 batching — reordering across a texture boundary could change how translucent
 sprites blend.
 """
+
 from array import array
 
 from asteria.assets import TextureResource
@@ -47,15 +48,11 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         try:
             import moderngl
         except ImportError as exc:
-            raise RuntimeError(
-                "Install moderngl with: pip install 'asteria[moderngl]'"
-            ) from exc
+            raise RuntimeError("Install moderngl with: pip install 'asteria[moderngl]'") from exc
         try:
             import pygame
         except ImportError as exc:
-            raise RuntimeError(
-                "Install pygame-ce with: pip install 'asteria[pygame]'"
-            ) from exc
+            raise RuntimeError("Install pygame-ce with: pip install 'asteria[pygame]'") from exc
         self._gl = moderngl
         self.pg = pygame
         self.ctx = None
@@ -74,9 +71,7 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         self.pg.init()
         self.pg.display.gl_set_attribute(self.pg.GL_CONTEXT_MAJOR_VERSION, 3)
         self.pg.display.gl_set_attribute(self.pg.GL_CONTEXT_MINOR_VERSION, 3)
-        self.pg.display.gl_set_attribute(
-            self.pg.GL_CONTEXT_PROFILE_MASK, self.pg.GL_CONTEXT_PROFILE_CORE
-        )
+        self.pg.display.gl_set_attribute(self.pg.GL_CONTEXT_PROFILE_MASK, self.pg.GL_CONTEXT_PROFILE_CORE)
         self.pg.display.set_mode(
             (int(width), int(height)),
             self.pg.OPENGL | self.pg.DOUBLEBUF | self.pg.RESIZABLE,
@@ -85,9 +80,7 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         self.ctx = self._gl.create_context()
         self.ctx.enable(self._gl.BLEND)
         self.ctx.blend_func = self._gl.SRC_ALPHA, self._gl.ONE_MINUS_SRC_ALPHA
-        self._program = self.ctx.program(
-            vertex_shader=SPRITE_VERTEX_SHADER, fragment_shader=SPRITE_FRAGMENT_SHADER
-        )
+        self._program = self.ctx.program(vertex_shader=SPRITE_VERTEX_SHADER, fragment_shader=SPRITE_FRAGMENT_SHADER)
         self._program["u_texture"] = 0
         self._white_texture = self.ctx.texture((1, 1), 4, bytes((255, 255, 255, 255)))
         self._white_texture.filter = (self._gl.NEAREST, self._gl.NEAREST)
@@ -111,9 +104,7 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         for event in self.pg.event.get():
             if self.input_source is not None:
                 self.input_source.handle_event(event)
-            if event.type == self.pg.QUIT or (
-                event.type == self.pg.KEYDOWN and event.key == self.pg.K_ESCAPE
-            ):
+            if event.type == self.pg.QUIT or (event.type == self.pg.KEYDOWN and event.key == self.pg.K_ESCAPE):
                 self._close = True
             elif event.type == self.pg.VIDEORESIZE:
                 self.screen_size = (event.w, event.h)
@@ -211,13 +202,32 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
 
     def _enqueue_solid(self, x, y, width, height, color, opacity):
         self._enqueue_quad(
-            self._white_texture, 1, 1, (0, 0, 1, 1), x, y, width, height,
-            opacity, False, color,
+            self._white_texture,
+            1,
+            1,
+            (0, 0, 1, 1),
+            x,
+            y,
+            width,
+            height,
+            opacity,
+            False,
+            color,
         )
 
     def _enqueue_quad(
-        self, texture, tex_width, tex_height, source, screen_x, screen_y,
-        width, height, opacity, flip_x, color=(1.0, 1.0, 1.0),
+        self,
+        texture,
+        tex_width,
+        tex_height,
+        source,
+        screen_x,
+        screen_y,
+        width,
+        height,
+        opacity,
+        flip_x,
+        color=(1.0, 1.0, 1.0),
     ):
         if texture is not self._batch_texture:
             self._flush_batch()
@@ -234,12 +244,42 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         r, g, b = color
         a = max(0.0, min(1.0, float(opacity)))
         base = len(self._batch_vertices) // _FLOATS_PER_VERTEX
-        self._batch_vertices.extend((
-            x0, y0, u0, v0, r, g, b, a,
-            x1, y0, u1, v0, r, g, b, a,
-            x1, y1, u1, v1, r, g, b, a,
-            x0, y1, u0, v1, r, g, b, a,
-        ))
+        self._batch_vertices.extend(
+            (
+                x0,
+                y0,
+                u0,
+                v0,
+                r,
+                g,
+                b,
+                a,
+                x1,
+                y0,
+                u1,
+                v0,
+                r,
+                g,
+                b,
+                a,
+                x1,
+                y1,
+                u1,
+                v1,
+                r,
+                g,
+                b,
+                a,
+                x0,
+                y1,
+                u0,
+                v1,
+                r,
+                g,
+                b,
+                a,
+            )
+        )
         self._batch_indices.extend((base, base + 1, base + 2, base, base + 2, base + 3))
 
     def _flush_batch(self):
@@ -251,9 +291,7 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         # performance follow-up once correctness/parity is proven out.
         vbo = self.ctx.buffer(array("f", self._batch_vertices).tobytes())
         ibo = self.ctx.buffer(array("I", self._batch_indices).tobytes())
-        vao = self.ctx.vertex_array(
-            self._program, [(vbo, _VERTEX_LAYOUT, *_VERTEX_ATTRS)], ibo
-        )
+        vao = self.ctx.vertex_array(self._program, [(vbo, _VERTEX_LAYOUT, *_VERTEX_ATTRS)], ibo)
         self._program["u_screen_size"] = tuple(float(v) for v in self.screen_size)
         self._batch_texture.use(0)
         vao.render()

@@ -49,12 +49,27 @@ class BattleUiTheme:
 
     def __post_init__(self):
         for field_name in (
-            "panel_fill", "panel_border", "result_fill", "result_border",
-            "text_primary", "text_secondary", "text_emphasis", "damage_text",
-            "heal_text", "gauge_track", "gauge_fill", "gauge_full",
-            "target", "target_primary", "panel_focus_fill", "panel_focus_border",
-            "interaction_fill", "interaction_border", "text_muted",
-            "text_disabled", "text_selected",
+            "panel_fill",
+            "panel_border",
+            "result_fill",
+            "result_border",
+            "text_primary",
+            "text_secondary",
+            "text_emphasis",
+            "damage_text",
+            "heal_text",
+            "gauge_track",
+            "gauge_fill",
+            "gauge_full",
+            "target",
+            "target_primary",
+            "panel_focus_fill",
+            "panel_focus_border",
+            "interaction_fill",
+            "interaction_border",
+            "text_muted",
+            "text_disabled",
+            "text_selected",
         ):
             object.__setattr__(self, field_name, _color(getattr(self, field_name), field_name))
         if self.panel_radius < 0 or self.border_width < 0:
@@ -92,8 +107,14 @@ class BattleUiTheme:
         if role in {"action_disabled", "action_cost_disabled", "action_disabled_reason", "workflow_option_disabled"}:
             return self.text_disabled
         if role in {
-            "gauge_label", "gauge_value", "timeline_time", "action_categories",
-            "action_filter", "action_page", "action_detail", "workflow_step",
+            "gauge_label",
+            "gauge_value",
+            "timeline_time",
+            "action_categories",
+            "action_filter",
+            "action_page",
+            "action_detail",
+            "workflow_step",
         }:
             return self.text_muted
         return self.text_primary
@@ -108,17 +129,38 @@ class BattleUiTheme:
 
     def to_data(self):
         return {
-            "schema": "asteria.battle_ui_theme", "version": 1,
-            **{name: list(getattr(self, name)) for name in (
-                "panel_fill", "panel_border", "result_fill", "result_border",
-                "text_primary", "text_secondary", "text_emphasis", "damage_text",
-                "heal_text", "gauge_track", "gauge_fill", "gauge_full",
-                "target", "target_primary", "panel_focus_fill", "panel_focus_border",
-                "interaction_fill", "interaction_border", "text_muted",
-                "text_disabled", "text_selected",
-            )},
-            "panel_radius": self.panel_radius, "border_width": self.border_width,
-            "font_size": self.font_size, "headline_font_size": self.headline_font_size,
+            "schema": "asteria.battle_ui_theme",
+            "version": 1,
+            **{
+                name: list(getattr(self, name))
+                for name in (
+                    "panel_fill",
+                    "panel_border",
+                    "result_fill",
+                    "result_border",
+                    "text_primary",
+                    "text_secondary",
+                    "text_emphasis",
+                    "damage_text",
+                    "heal_text",
+                    "gauge_track",
+                    "gauge_fill",
+                    "gauge_full",
+                    "target",
+                    "target_primary",
+                    "panel_focus_fill",
+                    "panel_focus_border",
+                    "interaction_fill",
+                    "interaction_border",
+                    "text_muted",
+                    "text_disabled",
+                    "text_selected",
+                )
+            },
+            "panel_radius": self.panel_radius,
+            "border_width": self.border_width,
+            "font_size": self.font_size,
+            "headline_font_size": self.headline_font_size,
         }
 
     @classmethod
@@ -126,7 +168,8 @@ class BattleUiTheme:
         if data.get("schema") != "asteria.battle_ui_theme" or data.get("version") != 1:
             raise ValueError("unsupported battle UI theme")
         kwargs = dict(data)
-        kwargs.pop("schema", None); kwargs.pop("version", None)
+        kwargs.pop("schema", None)
+        kwargs.pop("version", None)
         return cls(**kwargs)
 
 

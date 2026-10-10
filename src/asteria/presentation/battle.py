@@ -93,8 +93,7 @@ class BattleCombatantVisual:
         object.__setattr__(self, "animation_roles", normalized)
         aura_asset_id = (
             None
-            if aura_sprite_sheet_asset_id is None
-            or not str(aura_sprite_sheet_asset_id).strip()
+            if aura_sprite_sheet_asset_id is None or not str(aura_sprite_sheet_asset_id).strip()
             else _id(aura_sprite_sheet_asset_id, "aura_sprite_sheet_asset_id")
         )
         object.__setattr__(self, "aura_sprite_sheet_asset_id", aura_asset_id)
@@ -122,10 +121,15 @@ class BattleCombatantVisual:
 
     @classmethod
     def from_data(cls, data):
-        return cls(data["member_id"], data["sprite_sheet_asset_id"], data["clip_set_id"],
-                   BattleVisualAnchor.from_data(data["anchor"]), data.get("animation_roles"),
-                   data.get("aura_sprite_sheet_asset_id"),
-                   data.get("source_pixels_per_logical_pixel", 1.0))
+        return cls(
+            data["member_id"],
+            data["sprite_sheet_asset_id"],
+            data["clip_set_id"],
+            BattleVisualAnchor.from_data(data["anchor"]),
+            data.get("animation_roles"),
+            data.get("aura_sprite_sheet_asset_id"),
+            data.get("source_pixels_per_logical_pixel", 1.0),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,9 +172,12 @@ class BattlePresentationScene:
     def from_data(cls, data):
         if data.get("schema") != "asteria.battle_presentation_scene" or data.get("version") != 1:
             raise ValueError("unsupported battle presentation scene")
-        return cls(data["scene_id"], data["background_asset_id"],
-                   [BattleCombatantVisual.from_data(x) for x in data["combatants"]],
-                   data.get("camera_preset_id", "battle.default"))
+        return cls(
+            data["scene_id"],
+            data["background_asset_id"],
+            [BattleCombatantVisual.from_data(x) for x in data["combatants"]],
+            data.get("camera_preset_id", "battle.default"),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -203,7 +210,9 @@ class BattlePresentationCoordinator:
 
     def _emit(self, kind, source_id="", payload=None):
         self._sequence += 1
-        event = BattlePresentationEvent(self._sequence, BattlePresentationEventKind(kind), str(source_id), dict(payload or {}))
+        event = BattlePresentationEvent(
+            self._sequence, BattlePresentationEventKind(kind), str(source_id), dict(payload or {})
+        )
         self._pending.append(event)
         return event
 
@@ -232,10 +241,12 @@ class BattlePresentationCoordinator:
         for item in cues:
             if not isinstance(item, PresentationCue):
                 raise TypeError("cues must contain PresentationCue")
-            emitted.append(self._emit(
-                BattlePresentationEventKind.TIMELINE_CUE,
-                payload={"timeline_id": item.timeline_id, "cue": item.cue.to_data()},
-            ))
+            emitted.append(
+                self._emit(
+                    BattlePresentationEventKind.TIMELINE_CUE,
+                    payload={"timeline_id": item.timeline_id, "cue": item.cue.to_data()},
+                )
+            )
         return tuple(emitted)
 
     def attach(self, hooks: LifecycleHookBus):
@@ -274,9 +285,9 @@ class BattlePresentationCoordinator:
         if kind is not None:
             self._emit(kind, event.source, {"hook": event.name, "data": dict(event.data)})
 
-
     def push_resolved_value(self, result, *, target_id, source_id="", value_kind="damage", duration=None):
         from .battle_feedback import resolved_value_payload
+
         payload = resolved_value_payload(
             result, target_id=target_id, source_id=source_id, value_kind=value_kind, duration=duration
         )
@@ -284,6 +295,7 @@ class BattlePresentationCoordinator:
 
     def push_gauge_result(self, result):
         from .battle_feedback import gauge_threshold_payloads
+
         return tuple(
             self._emit(BattlePresentationEventKind.GAUGE_THRESHOLD, payload["member_id"], payload)
             for payload in gauge_threshold_payloads(result)
@@ -308,8 +320,11 @@ class BattlePresentationCoordinator:
         )
 
     def push_custom(self, event_id, *, source_id="", payload=None):
-        return self._emit(BattlePresentationEventKind.CUSTOM, source_id,
-                          {"event_id": _id(event_id, "event_id"), **dict(payload or {})})
+        return self._emit(
+            BattlePresentationEventKind.CUSTOM,
+            source_id,
+            {"event_id": _id(event_id, "event_id"), **dict(payload or {})},
+        )
 
     def drain(self):
         result = tuple(self._pending)

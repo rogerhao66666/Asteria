@@ -262,7 +262,8 @@ class BattleObjectiveCondition:
     def evaluate(self, battle, flags):
         if self.kind == "side_active_count":
             actual = sum(
-                1 for m in battle.parties[self.subject_id].members
+                1
+                for m in battle.parties[self.subject_id].members
                 if m.member_id in battle.members and battle.is_active(m)
             )
         elif self.kind == "member_active":
@@ -331,8 +332,16 @@ class BattleObjectiveDefinition:
         object.__setattr__(self, "failure_mode", failure_mode)
         object.__setattr__(self, "winning_sides", success_winners)
         object.__setattr__(self, "defeated_sides", success_defeated)
-        object.__setattr__(self, "failure_winning_sides", tuple(dict.fromkeys(_id(x, "failure_winning_side") for x in failure_winning_sides)))
-        object.__setattr__(self, "failure_defeated_sides", tuple(dict.fromkeys(_id(x, "failure_defeated_side") for x in failure_defeated_sides)))
+        object.__setattr__(
+            self,
+            "failure_winning_sides",
+            tuple(dict.fromkeys(_id(x, "failure_winning_side") for x in failure_winning_sides)),
+        )
+        object.__setattr__(
+            self,
+            "failure_defeated_sides",
+            tuple(dict.fromkeys(_id(x, "failure_defeated_side") for x in failure_defeated_sides)),
+        )
         object.__setattr__(self, "priority", int(priority))
 
     def _matches(self, conditions, mode, battle, flags):
@@ -418,7 +427,9 @@ class BattleEscapeRule:
         object.__setattr__(self, "base_chance", _number(base_chance, "base_chance"))
         object.__setattr__(self, "source_stat", None if source_stat is None else _id(source_stat, "source_stat"))
         object.__setattr__(self, "source_scale", _number(source_scale, "source_scale"))
-        object.__setattr__(self, "opponent_stat", None if opponent_stat is None else _id(opponent_stat, "opponent_stat"))
+        object.__setattr__(
+            self, "opponent_stat", None if opponent_stat is None else _id(opponent_stat, "opponent_stat")
+        )
         object.__setattr__(self, "opponent_scale", _number(opponent_scale, "opponent_scale"))
         object.__setattr__(self, "minimum_chance", minimum_chance)
         object.__setattr__(self, "maximum_chance", maximum_chance)
@@ -443,10 +454,15 @@ class BattleEscapeRule:
         if data.get("schema") != "asteria.rpg.battle_escape_rule" or data.get("version") != 1:
             raise ValueError("unsupported battle escape rule")
         return cls(
-            data["rule_id"], data["side"], base_chance=data["base_chance"],
-            source_stat=data["source_stat"], source_scale=data["source_scale"],
-            opponent_stat=data["opponent_stat"], opponent_scale=data["opponent_scale"],
-            minimum_chance=data["minimum_chance"], maximum_chance=data["maximum_chance"],
+            data["rule_id"],
+            data["side"],
+            base_chance=data["base_chance"],
+            source_stat=data["source_stat"],
+            source_scale=data["source_scale"],
+            opponent_stat=data["opponent_stat"],
+            opponent_scale=data["opponent_scale"],
+            minimum_chance=data["minimum_chance"],
+            maximum_chance=data["maximum_chance"],
         )
 
 
@@ -477,26 +493,32 @@ class BattleObjectiveRuntime:
         emit_hook(self.hooks, "rpg.battle.objective_flag_changed", source=flag_id, data={"value": bool(value)})
 
     def evaluate(self, battle):
-        ordered = sorted(
-            self.definitions.values(), key=lambda x: (-x.priority, x.objective_id)
-        )
+        ordered = sorted(self.definitions.values(), key=lambda x: (-x.priority, x.objective_id))
         return tuple((definition.objective_id, definition.evaluate(battle, self.flags)) for definition in ordered)
 
 
 def resolve_escape_chance(rule, battle):
     source_members = [
-        m for m in battle.parties[rule.side].members
-        if m.member_id in battle.members and battle.is_active(m)
+        m for m in battle.parties[rule.side].members if m.member_id in battle.members and battle.is_active(m)
     ]
     opponents = [
-        m for side, party in battle.parties.items() if side != rule.side
-        for m in party.members if m.member_id in battle.members and battle.combatants.is_active(m.member_id)
+        m
+        for side, party in battle.parties.items()
+        if side != rule.side
+        for m in party.members
+        if m.member_id in battle.members and battle.combatants.is_active(m.member_id)
     ]
     chance = rule.base_chance
     if rule.source_stat and source_members:
-        chance += sum(m.subject.stats.get(rule.source_stat, 0.0) for m in source_members) / len(source_members) * rule.source_scale
+        chance += (
+            sum(m.subject.stats.get(rule.source_stat, 0.0) for m in source_members)
+            / len(source_members)
+            * rule.source_scale
+        )
     if rule.opponent_stat and opponents:
-        chance -= sum(m.subject.stats.get(rule.opponent_stat, 0.0) for m in opponents) / len(opponents) * rule.opponent_scale
+        chance -= (
+            sum(m.subject.stats.get(rule.opponent_stat, 0.0) for m in opponents) / len(opponents) * rule.opponent_scale
+        )
     return max(rule.minimum_chance, min(rule.maximum_chance, chance))
 
 

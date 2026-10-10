@@ -191,9 +191,7 @@ def test_snapshot_restore_mid_nested_call_preserves_stack():
         EventProgram(
             [
                 EventInstruction("WAIT", {"seconds": 2}),
-                EventInstruction(
-                    "SET_VARIABLE", {"name": "common_done", "value": True}
-                ),
+                EventInstruction("SET_VARIABLE", {"name": "common_done", "value": True}),
                 EventInstruction("END"),
             ]
         ),

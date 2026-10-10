@@ -145,9 +145,7 @@ def test_scene_runtime_propagates_world_router_to_scheduled_binding():
     )
     seen = []
     router = WorldCommandRouter()
-    router.register(
-        "TRANSFER", lambda command: seen.append(command.args["destination"])
-    )
+    router.register("TRANSFER", lambda command: seen.append(command.args["destination"]))
 
     bindings = SceneEventBindings()
     bindings.add(

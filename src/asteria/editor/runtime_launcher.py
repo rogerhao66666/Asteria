@@ -34,13 +34,13 @@ class RuntimeProcess:
         for path in (self.snapshot_path, self.save_snapshot_path):
             if path is None:
                 continue
-            try: path.unlink()
-            except FileNotFoundError: pass
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                pass
 
 
-def launch_play_session(
-    session, *, popen_factory=subprocess.Popen, python_executable=None
-):
+def launch_play_session(session, *, popen_factory=subprocess.Popen, python_executable=None):
     if not session.active:
         raise RuntimeLaunchError("Play session is not active")
     fd, path = tempfile.mkstemp(prefix="asteria-play-", suffix=".asteria.json")
@@ -57,9 +57,13 @@ def launch_play_session(
                 json.dump(session.runtime_save.to_data(), f, indent=2, sort_keys=True)
                 f.write("\n")
         executable = python_executable or sys.executable
-        args=[
-            executable, "-m", "asteria.runtime.preview", str(snapshot_path),
-            "--scene", session.source_scene_id,
+        args = [
+            executable,
+            "-m",
+            "asteria.runtime.preview",
+            str(snapshot_path),
+            "--scene",
+            session.source_scene_id,
         ]
         if session.resource_root is not None:
             args += ["--resource-root", str(session.resource_root)]
@@ -70,10 +74,13 @@ def launch_play_session(
         process = popen_factory(args)
         return RuntimeProcess(process, snapshot_path, save_snapshot_path)
     except Exception as exc:
-        try: snapshot_path.unlink()
-        except FileNotFoundError: pass
         try:
-            if 'save_snapshot_path' in locals() and save_snapshot_path is not None:
+            snapshot_path.unlink()
+        except FileNotFoundError:
+            pass
+        try:
+            if "save_snapshot_path" in locals() and save_snapshot_path is not None:
                 save_snapshot_path.unlink()
-        except FileNotFoundError: pass
+        except FileNotFoundError:
+            pass
         raise RuntimeLaunchError(str(exc)) from exc

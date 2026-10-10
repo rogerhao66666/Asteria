@@ -4,15 +4,34 @@ Forms are generated from :data:`asteria.editor.game_systems_authoring.FORMS`
 and edit canonical record data; every Apply goes through
 :class:`GameSystemsAuthoringController`, the same API scripts use.
 """
+
 from __future__ import annotations
 
 import copy
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
-    QAbstractItemView, QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout, QGroupBox, QHBoxLayout, QInputDialog,
-    QLabel, QLineEdit, QListWidget, QListWidgetItem, QPlainTextEdit, QPushButton, QScrollArea, QSpinBox,
-    QSplitter, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
+    QAbstractItemView,
+    QCheckBox,
+    QComboBox,
+    QDoubleSpinBox,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QPlainTextEdit,
+    QPushButton,
+    QScrollArea,
+    QSpinBox,
+    QSplitter,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
 
 from .game_systems_authoring import FORMS, KINDS, GameSystemsAuthoringError, new_row
@@ -357,8 +376,12 @@ class GameSystemsEditorWidget(QWidget):
         self.status.setWordWrap(True)
         self.used_by = QLabel("")
         buttons = QHBoxLayout()
-        for label, slot in (("New…", self._new_clicked), ("Duplicate…", self._duplicate_clicked),
-                            ("Delete", self.delete_selected), ("Apply Changes", self.apply)):
+        for label, slot in (
+            ("New…", self._new_clicked),
+            ("Duplicate…", self._duplicate_clicked),
+            ("Delete", self.delete_selected),
+            ("Apply Changes", self.apply),
+        ):
             button = QPushButton(label)
             button.clicked.connect(slot)
             buttons.addWidget(button)

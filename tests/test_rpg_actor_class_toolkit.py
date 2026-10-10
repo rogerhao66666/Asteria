@@ -7,9 +7,7 @@ from asteria.rpg import (
 
 
 def test_actor_class_roundtrip():
-    cls = ClassDefinition(
-        "mage", "Mage", stat_bonuses={"magic": 5}, granted_abilities=["spark"]
-    )
+    cls = ClassDefinition("mage", "Mage", stat_bonuses={"magic": 5}, granted_abilities=["spark"])
     actor = ActorDefinition(
         "lina",
         "Lina",

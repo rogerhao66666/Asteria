@@ -300,9 +300,7 @@ class EventRunner:
             self.context.set_variable(request.variable_name, selected.value)
         if request.local_name:
             if self.active is None or not self.active.local_scope_id:
-                raise EventRunnerError(
-                    "choice local result requires active local scope"
-                )
+                raise EventRunnerError("choice local result requires active local scope")
             self.context.set_local(
                 self.active.local_scope_id,
                 request.local_name,
@@ -383,13 +381,7 @@ class EventRunner:
             source_entity_id=str(data["source_entity_id"]),
             local_scope_id=str(data["local_scope_id"]),
         )
-        self.call_stack = (
-            [EventCallFrame.from_data(item) for item in data["call_stack"]]
-            if version in {2, 3}
-            else []
-        )
+        self.call_stack = [EventCallFrame.from_data(item) for item in data["call_stack"]] if version in {2, 3} else []
         self.dialogue = (
-            DialogueRuntimeState.from_data(data["dialogue_state"])
-            if version == 3
-            else DialogueRuntimeState()
+            DialogueRuntimeState.from_data(data["dialogue_state"]) if version == 3 else DialogueRuntimeState()
         )

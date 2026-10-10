@@ -2,8 +2,15 @@ import json
 import random
 
 from asteria.gameplay import (
-    AbilityRegistry, AbilityRuntime, GameplaySubject, ResourcePool, StateDefinition,
-    StateRegistry, StateRuntime, StatBlock, TagSet,
+    AbilityRegistry,
+    AbilityRuntime,
+    GameplaySubject,
+    ResourcePool,
+    StateDefinition,
+    StateRegistry,
+    StateRuntime,
+    StatBlock,
+    TagSet,
 )
 from asteria.rpg import (
     BattleGaugeCompositionRuntime,
@@ -34,9 +41,7 @@ def battle_fixture(*, composition=None, state_defs=(), scheduler=False):
     enemy = PartyMember("enemy", "enemies", subject(states=state_defs), initiative=10)
     kwargs = {}
     if scheduler:
-        kwargs["scheduler_definition"] = BattleSchedulerDefinition(
-            "timeline", mode="continuous", timeline_scale=100
-        )
+        kwargs["scheduler_definition"] = BattleSchedulerDefinition("timeline", mode="continuous", timeline_scale=100)
     return BattleRuntime(
         [Party("heroes", [hero]), Party("enemies", [enemy])],
         AbilityRuntime(AbilityRegistry()),
@@ -54,18 +59,28 @@ def break_composition(**threshold_kwargs):
         "stagger_break",
         impacts=[
             GaugeImpactRule(
-                "weakness_pressure", "stagger", "battle.hit",
-                delta=-20, required_outcome_tags_all=("outcome.weak",),
+                "weakness_pressure",
+                "stagger",
+                "battle.hit",
+                delta=-20,
+                required_outcome_tags_all=("outcome.weak",),
             ),
             GaugeImpactRule(
-                "heavy_pressure", "stagger", "battle.hit",
-                delta=-10, required_outcome_tags_all=("attack.heavy",),
+                "heavy_pressure",
+                "stagger",
+                "battle.hit",
+                delta=-10,
+                required_outcome_tags_all=("attack.heavy",),
             ),
         ],
         thresholds=[
             GaugeThresholdRule(
-                "broken", "stagger", "at_or_below", 0,
-                reset_to=100, **threshold_kwargs,
+                "broken",
+                "stagger",
+                "at_or_below",
+                0,
+                reset_to=100,
+                **threshold_kwargs,
             )
         ],
     )
@@ -83,8 +98,12 @@ def test_definition_round_trip_is_generic_and_not_break_named_by_engine():
 def test_outcome_tags_drive_gauge_impact_without_element_or_break_enum():
     battle = battle_fixture(composition=break_composition())
     result = battle.apply_gauge_impact(
-        "stagger_break", "hero", "enemy", trigger="battle.hit",
-        outcome_tags=("outcome.weak",), value=25,
+        "stagger_break",
+        "hero",
+        "enemy",
+        trigger="battle.hit",
+        outcome_tags=("outcome.weak",),
+        value=25,
     )
     assert result.matched_impact_ids == ("weakness_pressure",)
     assert battle.battle_resources.current("enemy", "stagger") == 80
@@ -95,7 +114,10 @@ def test_multiple_matching_rules_aggregate_before_threshold_evaluation():
     battle = battle_fixture(composition=break_composition())
     battle.battle_resources.change("enemy", "stagger", -75)
     result = battle.apply_gauge_impact(
-        "stagger_break", "hero", "enemy", trigger="battle.hit",
+        "stagger_break",
+        "hero",
+        "enemy",
+        trigger="battle.hit",
         outcome_tags=("outcome.weak", "attack.heavy"),
     )
     assert set(result.matched_impact_ids) == {"weakness_pressure", "heavy_pressure"}
@@ -110,8 +132,12 @@ def test_threshold_can_apply_state_and_reset_gauge():
     battle = battle_fixture(composition=composition, state_defs=[broken])
     battle.battle_resources.change("enemy", "stagger", -90)
     result = battle.apply_gauge_impact(
-        "stagger_break", "hero", "enemy", trigger="battle.hit",
-        outcome_tags=("outcome.weak",), rng=random.Random(1),
+        "stagger_break",
+        "hero",
+        "enemy",
+        trigger="battle.hit",
+        outcome_tags=("outcome.weak",),
+        rng=random.Random(1),
     )
     assert result.thresholds[0].state_applied
     assert battle.member("enemy").subject.states.get("broken") is not None
@@ -124,7 +150,10 @@ def test_threshold_can_shift_continuous_timeline():
     before = [x.ready_time for x in battle.scheduler.pending() if x.member_id == "enemy"][0]
     battle.battle_resources.change("enemy", "stagger", -90)
     battle.apply_gauge_impact(
-        "stagger_break", "hero", "enemy", trigger="battle.hit",
+        "stagger_break",
+        "hero",
+        "enemy",
+        trigger="battle.hit",
         outcome_tags=("outcome.weak",),
     )
     after = [x.ready_time for x in battle.scheduler.pending() if x.member_id == "enemy"][0]
@@ -136,13 +165,17 @@ def test_threshold_emit_trigger_reuses_existing_resource_trigger_rules():
     hero = PartyMember("hero", "heroes", subject(), initiative=20)
     enemy = PartyMember("enemy", "enemies", subject(), initiative=10)
     from asteria.rpg import BattleResourceRule
+
     battle = BattleRuntime(
         [Party("heroes", [hero]), Party("enemies", [enemy])],
         AbilityRuntime(AbilityRegistry()),
         resource_definitions=[
             BattleResourceDefinition("stagger", minimum=0, maximum=100, start_mode="maximum"),
             BattleResourceDefinition(
-                "guard", minimum=0, maximum=50, start_mode="minimum",
+                "guard",
+                minimum=0,
+                maximum=50,
+                start_mode="minimum",
                 rules=[BattleResourceRule("custom.break", 5)],
             ),
         ],
@@ -150,7 +183,10 @@ def test_threshold_emit_trigger_reuses_existing_resource_trigger_rules():
     )
     battle.battle_resources.change("enemy", "stagger", -90)
     battle.apply_gauge_impact(
-        "stagger_break", "hero", "enemy", trigger="battle.hit",
+        "stagger_break",
+        "hero",
+        "enemy",
+        trigger="battle.hit",
         outcome_tags=("outcome.weak",),
     )
     assert battle.battle_resources.current("enemy", "guard") == 5
@@ -197,9 +233,7 @@ def test_database_v17_owns_gauge_compositions_and_v16_remains_backward_readable(
 
 def test_many_compositions_and_rules_have_no_engine_cap():
     definitions = [
-        GaugeCompositionDefinition(
-            f"c{i}", impacts=[GaugeImpactRule(f"i{i}", "stagger", f"trigger.{i}", delta=-1)]
-        )
+        GaugeCompositionDefinition(f"c{i}", impacts=[GaugeImpactRule(f"i{i}", "stagger", f"trigger.{i}", delta=-1)])
         for i in range(256)
     ]
     runtime = BattleGaugeCompositionRuntime(definitions)

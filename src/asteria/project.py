@@ -48,19 +48,14 @@ class Project:
         if rpg_database is not None and not isinstance(rpg_database, RpgDatabase):
             raise TypeError("rpg_database must be RpgDatabase")
         self.rpg_database = rpg_database or RpgDatabase()
-        if gameplay_library is not None and not isinstance(
-            gameplay_library, GameplayLibrary
-        ):
+        if gameplay_library is not None and not isinstance(gameplay_library, GameplayLibrary):
             raise TypeError("gameplay_library must be GameplayLibrary")
         self.gameplay_library = gameplay_library or GameplayLibrary()
-        if (
-            battle_presentation_library is not None
-            and not isinstance(battle_presentation_library, BattlePresentationLibrary)
+        if battle_presentation_library is not None and not isinstance(
+            battle_presentation_library, BattlePresentationLibrary
         ):
             raise TypeError("battle_presentation_library must be BattlePresentationLibrary")
-        self.battle_presentation_library = (
-            battle_presentation_library or BattlePresentationLibrary()
-        )
+        self.battle_presentation_library = battle_presentation_library or BattlePresentationLibrary()
         if game_start is not None and not isinstance(game_start, GameStartDefinition):
             raise TypeError("game_start must be GameStartDefinition")
         self.game_start = game_start or GameStartDefinition(startup_scene_id)
@@ -71,13 +66,8 @@ class Project:
             raise TypeError("prefabs must be PrefabLibrary")
         self.prefabs = prefabs or PrefabLibrary()
         self.lifecycle_event_bindings = list(lifecycle_event_bindings or ())
-        if any(
-            not isinstance(x, LifecycleEventBinding)
-            for x in self.lifecycle_event_bindings
-        ):
-            raise TypeError(
-                "lifecycle_event_bindings must contain LifecycleEventBinding values"
-            )
+        if any(not isinstance(x, LifecycleEventBinding) for x in self.lifecycle_event_bindings):
+            raise TypeError("lifecycle_event_bindings must contain LifecycleEventBinding values")
         self._scenes = {}
 
     def add_scene(self, scene):
@@ -149,28 +139,18 @@ class Project:
             for cls in self.rpg_database.classes.values():
                 refs.extend((f"class {cls.class_id}", x) for x in cls.granted_abilities)
             for equipment in self.rpg_database.equipment.values():
-                refs.extend(
-                    (f"equipment {equipment.equipment_id}", x)
-                    for x in equipment.granted_abilities
-                )
+                refs.extend((f"equipment {equipment.equipment_id}", x) for x in equipment.granted_abilities)
             for attachment in self.rpg_database.attachments.values():
-                refs.extend(
-                    (f"attachment {attachment.attachment_id}", x)
-                    for x in attachment.granted_abilities
-                )
+                refs.extend((f"attachment {attachment.attachment_id}", x) for x in attachment.granted_abilities)
             for enemy in self.rpg_database.enemies.values():
                 refs.extend((f"enemy {enemy.enemy_id}", x) for x in enemy.abilities)
             for track in self.rpg_database.progression_tracks.values():
                 for milestone in track.milestones:
                     refs.extend(
-                        (f"progression {track.track_id} rank {milestone.rank}", x)
-                        for x in milestone.granted_abilities
+                        (f"progression {track.track_id} rank {milestone.rank}", x) for x in milestone.granted_abilities
                     )
             for passive in self.rpg_database.passives.values():
-                refs.extend(
-                    (f"passive {passive.passive_id}", x)
-                    for x in passive.granted_abilities
-                )
+                refs.extend((f"passive {passive.passive_id}", x) for x in passive.granted_abilities)
             for rule in self.rpg_database.ability_evolutions.values():
                 refs.append((f"ability evolution {rule.rule_id} source", rule.source_ability_id))
                 refs.append((f"ability evolution {rule.rule_id} result", rule.result_ability_id))
@@ -194,9 +174,7 @@ class Project:
                 if ability_id not in known
             ]
             if missing:
-                raise ValueError(
-                    "invalid RPG gameplay references: " + "; ".join(sorted(missing))
-                )
+                raise ValueError("invalid RPG gameplay references: " + "; ".join(sorted(missing)))
         return True
 
     def to_data(self):
@@ -214,8 +192,7 @@ class Project:
                 for program_id in self.event_programs.ids()
             },
             "scene_event_bindings": {
-                scene_id: bindings.to_data()
-                for scene_id, bindings in self.scene_event_bindings.items()
+                scene_id: bindings.to_data() for scene_id, bindings in self.scene_event_bindings.items()
             },
             "rpg_database": self.rpg_database.to_data(),
             "gameplay_library": self.gameplay_library.to_data(),
@@ -223,9 +200,7 @@ class Project:
             "game_start": self.game_start.to_data(),
             "input_map": self.input_map.to_data(),
             "prefabs": self.prefabs.to_data(),
-            "lifecycle_event_bindings": [
-                binding.to_data() for binding in self.lifecycle_event_bindings
-            ],
+            "lifecycle_event_bindings": [binding.to_data() for binding in self.lifecycle_event_bindings],
         }
 
     @classmethod
@@ -292,24 +267,17 @@ class Project:
             assets=deserialize_asset_registry(data["assets"]),
             event_programs=programs,
             scene_event_bindings=bindings_by_scene,
-            rpg_database=RpgDatabase.from_data(data["rpg_database"])
-            if version >= 4
-            else RpgDatabase(),
-            gameplay_library=GameplayLibrary.from_data(data["gameplay_library"])
-            if version >= 6
-            else GameplayLibrary(),
-            battle_presentation_library=BattlePresentationLibrary.from_data(
-                data["battle_presentation_library"]
-            )
+            rpg_database=RpgDatabase.from_data(data["rpg_database"]) if version >= 4 else RpgDatabase(),
+            gameplay_library=GameplayLibrary.from_data(data["gameplay_library"]) if version >= 6 else GameplayLibrary(),
+            battle_presentation_library=BattlePresentationLibrary.from_data(data["battle_presentation_library"])
             if version >= 7
             else BattlePresentationLibrary(),
-            game_start=GameStartDefinition.from_data(data["game_start"]) if version >= 8 else GameStartDefinition(data["startup_scene_id"]),
+            game_start=GameStartDefinition.from_data(data["game_start"])
+            if version >= 8
+            else GameStartDefinition(data["startup_scene_id"]),
             input_map=InputActionMap.from_data(data["input_map"]) if version >= 9 else InputActionMap.default(),
             prefabs=PrefabLibrary.from_data(data["prefabs"]) if version >= 10 else PrefabLibrary(),
-            lifecycle_event_bindings=[
-                LifecycleEventBinding.from_data(x)
-                for x in data["lifecycle_event_bindings"]
-            ]
+            lifecycle_event_bindings=[LifecycleEventBinding.from_data(x) for x in data["lifecycle_event_bindings"]]
             if version >= 5
             else (),
         )
@@ -329,6 +297,4 @@ class Project:
 
     @classmethod
     def load_json(cls, path, registry):
-        return cls.from_data(
-            json.loads(Path(path).read_text(encoding="utf-8")), registry
-        )
+        return cls.from_data(json.loads(Path(path).read_text(encoding="utf-8")), registry)

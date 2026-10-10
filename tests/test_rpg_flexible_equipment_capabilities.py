@@ -204,9 +204,7 @@ def test_multiple_copies_of_same_equipment_stack_modifiers_by_instance_identity(
     ring = EquipmentDefinition(
         "power_ring",
         slot="accessory",
-        modifiers=(
-            StatModifier("power_ring.attack", "attack", ModifierOperation.ADD, 2),
-        ),
+        modifiers=(StatModifier("power_ring.attack", "attack", ModifierOperation.ADD, 2),),
     )
     loadout = EquipmentLoadout([EquipmentSlotDefinition("accessory", capacity=None)])
     loadout.equip("accessory", EquippedItem(ring, instance_id="ring-a"))

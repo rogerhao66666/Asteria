@@ -77,9 +77,7 @@ class StatModifier:
 
     def applies(self, tags: TagSet | None = None):
         tags = tags or TagSet()
-        return tags.contains_all(self.required_tags) and not tags.contains_any(
-            self.blocked_tags
-        )
+        return tags.contains_all(self.required_tags) and not tags.contains_any(self.blocked_tags)
 
     def to_data(self):
         return {
@@ -182,12 +180,7 @@ class ModifierSet:
             raise TypeError("base must be StatBlock")
         names = set(base.names())
         names.update(m.stat for m in self._modifiers.values())
-        return StatBlock(
-            {
-                name: self.evaluate(name, base.get(name), tags=tags)
-                for name in sorted(names)
-            }
-        )
+        return StatBlock({name: self.evaluate(name, base.get(name), tags=tags) for name in sorted(names)})
 
     def to_data(self):
         return {

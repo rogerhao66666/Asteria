@@ -23,9 +23,7 @@ class RewardRuntime:
     progression track IDs only because the caller supplied a ProgressionRuntime.
     """
 
-    def __init__(
-        self, *, inventory=None, progression=None, currencies=None, hooks=None
-    ):
+    def __init__(self, *, inventory=None, progression=None, currencies=None, hooks=None):
         if inventory is not None and not isinstance(inventory, Inventory):
             raise TypeError("inventory must be Inventory")
         if progression is not None and not isinstance(progression, ProgressionRuntime):
@@ -47,9 +45,7 @@ class RewardRuntime:
                 raise ValueError("invalid currency reward")
         if reward.experience:
             if self.progression is None:
-                raise ValueError(
-                    "reward contains progression values but no ProgressionRuntime was supplied"
-                )
+                raise ValueError("reward contains progression values but no ProgressionRuntime was supplied")
             for track_id, amount in reward.experience.items():
                 if str(track_id) not in self.progression.definitions:
                     raise KeyError(f"unknown progression track: {track_id}")
@@ -66,16 +62,12 @@ class RewardRuntime:
         emit_hook(self.hooks, "rpg.reward.before_apply", data={"reward": reward})
 
         old_currencies = dict(self.currencies)
-        old_progression = (
-            None if self.progression is None else self.progression.to_data()
-        )
+        old_progression = None if self.progression is None else self.progression.to_data()
         old_inventory = None if self.inventory is None else self.inventory.to_data()
         progression_results = []
         try:
             for key, amount in sorted(reward.currencies.items()):
-                self.currencies[key] = float(self.currencies.get(key, 0.0)) + float(
-                    amount
-                )
+                self.currencies[key] = float(self.currencies.get(key, 0.0)) + float(amount)
 
             if reward.experience:
                 for track_id, amount in sorted(reward.experience.items()):
@@ -94,8 +86,6 @@ class RewardRuntime:
             emit_hook(self.hooks, "rpg.reward.apply_failed", data={"reward": reward})
             raise
 
-        result = RewardApplicationResult(
-            dict(reward.currencies), tuple(progression_results), dict(reward.items)
-        )
+        result = RewardApplicationResult(dict(reward.currencies), tuple(progression_results), dict(reward.items))
         emit_hook(self.hooks, "rpg.reward.after_apply", data={"result": result})
         return result

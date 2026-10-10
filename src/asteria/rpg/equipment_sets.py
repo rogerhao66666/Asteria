@@ -1,4 +1,5 @@
 """Equipment sets: bonuses for wearing several pieces together (ASTERIA_SPEC §21)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -32,7 +33,9 @@ class EquipmentSetBonus:
         object.__setattr__(self, "pieces", pieces)
         object.__setattr__(self, "modifiers", modifiers)
         object.__setattr__(self, "tags", tuple(sorted({_id(x, "tag") for x in tags})))
-        object.__setattr__(self, "granted_abilities", tuple(dict.fromkeys(_id(x, "ability id") for x in granted_abilities)))
+        object.__setattr__(
+            self, "granted_abilities", tuple(dict.fromkeys(_id(x, "ability id") for x in granted_abilities))
+        )
 
     def to_data(self):
         return {
@@ -44,8 +47,12 @@ class EquipmentSetBonus:
 
     @classmethod
     def from_data(cls, data):
-        return cls(data["pieces"], modifiers=[StatModifier.from_data(x) for x in data["modifiers"]],
-                   tags=data["tags"], granted_abilities=data["granted_abilities"])
+        return cls(
+            data["pieces"],
+            modifiers=[StatModifier.from_data(x) for x in data["modifiers"]],
+            tags=data["tags"],
+            granted_abilities=data["granted_abilities"],
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,5 +97,9 @@ class EquipmentSetDefinition:
     def from_data(cls, data):
         if data.get("schema") != "asteria.rpg.equipment_set" or data.get("version") != 1:
             raise ValueError("unsupported equipment set")
-        return cls(data["set_id"], data["display_name"], equipment_ids=data["equipment_ids"],
-                   bonuses=[EquipmentSetBonus.from_data(x) for x in data["bonuses"]])
+        return cls(
+            data["set_id"],
+            data["display_name"],
+            equipment_ids=data["equipment_ids"],
+            bonuses=[EquipmentSetBonus.from_data(x) for x in data["bonuses"]],
+        )

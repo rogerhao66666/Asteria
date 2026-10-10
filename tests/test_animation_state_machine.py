@@ -22,8 +22,11 @@ from asteria.runtime import (
 def _clips():
     return {
         "idle": SpriteClip("idle", [SpriteKeyframe(0, 0.5)], True),
-        "walk": SpriteClip("walk", [SpriteKeyframe(1, 0.1, ("footstep",)), SpriteKeyframe(2, 0.1),
-                                    SpriteKeyframe(3, 0.1, ("footstep",))], True),
+        "walk": SpriteClip(
+            "walk",
+            [SpriteKeyframe(1, 0.1, ("footstep",)), SpriteKeyframe(2, 0.1), SpriteKeyframe(3, 0.1, ("footstep",))],
+            True,
+        ),
         "attack": SpriteClip("attack", [SpriteKeyframe(4, 0.1), SpriteKeyframe(5, 0.1, ("hit",))], False),
     }
 
@@ -58,10 +61,10 @@ def test_parameters_triggers_any_state_and_wait_for_finish():
     assert machine.update(0.01) == "walk" and animator.clip.name == "walk"
     machine.trigger("attack")
     assert machine.update(0.01) == "attack" and machine.parameters["attack"] is False  # consumed
-    assert machine.update(0.05) == "attack"            # attack still playing
-    machine.update(0.3)                                 # attack finishes
+    assert machine.update(0.05) == "attack"  # attack still playing
+    machine.update(0.3)  # attack finishes
     assert animator.finished
-    assert machine.update(0.01) == "idle"              # waits for finish, ignores "speed" ordering
+    assert machine.update(0.01) == "idle"  # waits for finish, ignores "speed" ordering
     with pytest.raises(KeyError):
         machine.set("nope", 1)
 
@@ -74,11 +77,15 @@ def test_definition_validation_and_round_trip():
     with pytest.raises(ValueError):
         AnimationStateMachineDefinition({"a": "idle"}, "a", (AnimationTransition("a", "b"),))
     with pytest.raises(ValueError):
-        AnimationStateMachineDefinition({"a": "idle", "b": "walk"}, "a",
-                                        (AnimationTransition("a", "b", (AnimationCondition("x"),)),))
+        AnimationStateMachineDefinition(
+            {"a": "idle", "b": "walk"}, "a", (AnimationTransition("a", "b", (AnimationCondition("x"),)),)
+        )
     with pytest.raises(ValueError):
-        AnimationStateMachine(AnimationStateMachineDefinition({"a": "fly"}, "a"),
-                              AnimationClipSet(_clips()), AnimatorState(_clips()["idle"]))
+        AnimationStateMachine(
+            AnimationStateMachineDefinition({"a": "fly"}, "a"),
+            AnimationClipSet(_clips()),
+            AnimatorState(_clips()["idle"]),
+        )
 
 
 def test_animation_system_drives_machines_and_publishes_frame_events():
@@ -107,9 +114,16 @@ def test_reference_loader_reads_events_and_state_machine(tmp_path):
     from asteria.reference_data import load_animation_set
 
     data = {
-        "clips": {name: {"loop": clip.loop, "keyframes": [
-            {"frame_index": k.frame_index, "duration": k.duration, "events": list(k.events)} for k in clip.keyframes
-        ]} for name, clip in _clips().items()},
+        "clips": {
+            name: {
+                "loop": clip.loop,
+                "keyframes": [
+                    {"frame_index": k.frame_index, "duration": k.duration, "events": list(k.events)}
+                    for k in clip.keyframes
+                ],
+            }
+            for name, clip in _clips().items()
+        },
         "state_machine": _definition().to_data(),
     }
     path = tmp_path / "hero_animation.json"

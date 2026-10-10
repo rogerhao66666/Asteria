@@ -4,6 +4,7 @@ The executor deliberately exposes presentation verbs only. It does not know whet
 an attached visual is a weapon, hat, aura, prop, VFX, UI marker, or project-defined
 asset. Commands operate on stable attachment IDs and generic asset/socket IDs.
 """
+
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
@@ -17,11 +18,15 @@ from .canonical import Command
 def _transform(raw: dict[str, Any] | None) -> Transform2D:
     raw = raw or {}
     return Transform2D(
-        x=float(raw.get("x", 0.0)), y=float(raw.get("y", 0.0)),
+        x=float(raw.get("x", 0.0)),
+        y=float(raw.get("y", 0.0)),
         rotation_deg=float(raw.get("rotation_deg", 0.0)),
-        scale_x=float(raw.get("scale_x", 1.0)), scale_y=float(raw.get("scale_y", 1.0)),
-        flip_x=bool(raw.get("flip_x", False)), flip_y=bool(raw.get("flip_y", False)),
-        opacity=float(raw.get("opacity", 1.0)), visible=bool(raw.get("visible", True)),
+        scale_x=float(raw.get("scale_x", 1.0)),
+        scale_y=float(raw.get("scale_y", 1.0)),
+        flip_x=bool(raw.get("flip_x", False)),
+        flip_y=bool(raw.get("flip_y", False)),
+        opacity=float(raw.get("opacity", 1.0)),
+        visible=bool(raw.get("visible", True)),
         z_offset=float(raw.get("z_offset", 0.0)),
     )
 
@@ -30,11 +35,16 @@ def attachment_from_args(args: dict[str, Any], *, forced_id: str | None = None) 
     aid = forced_id or str(args.get("attachment_id", ""))
     asset_id = str(args.get("asset_id", ""))
     socket_id = str(args.get("socket_id", ""))
-    if not aid: raise ValueError("attachment_id required")
-    if not asset_id: raise ValueError("asset_id required")
-    if not socket_id: raise ValueError("socket_id required")
+    if not aid:
+        raise ValueError("attachment_id required")
+    if not asset_id:
+        raise ValueError("asset_id required")
+    if not socket_id:
+        raise ValueError("socket_id required")
     return Attachment(
-        id=aid, asset_id=asset_id, socket_id=socket_id,
+        id=aid,
+        asset_id=asset_id,
+        socket_id=socket_id,
         local=_transform(args.get("local")),
         inherit_position=bool(args.get("inherit_position", True)),
         inherit_rotation=bool(args.get("inherit_rotation", True)),
@@ -49,6 +59,7 @@ def attachment_from_args(args: dict[str, Any], *, forced_id: str | None = None) 
 @dataclass(slots=True)
 class AttachmentCommandExecutor:
     """ExecutorRegistry-compatible adapter for the ``attachment`` channel."""
+
     runtime: AttachmentRuntime
     received: list[tuple[str, Command]] = field(default_factory=list)
 
@@ -81,7 +92,8 @@ class AttachmentCommandExecutor:
         return (ExecutorSignal(f"command.completed:{node_id}"),) if command.blocking else ()
 
     def update(self, dt_ms: float) -> tuple[ExecutorSignal, ...]:
-        if dt_ms < 0: raise ValueError("negative dt")
+        if dt_ms < 0:
+            raise ValueError("negative dt")
         return ()
 
     def cancel(self, node_id: str) -> None:

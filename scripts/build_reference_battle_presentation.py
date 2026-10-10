@@ -16,6 +16,7 @@ rewritten through the canonical encoders). Output is deterministic. The only
 image processing is cropping, nearest-neighbour scaling and, for hit/KO
 frames without source art, a white flash / darkened copy of a source frame.
 """
+
 from __future__ import annotations
 
 import json
@@ -30,7 +31,10 @@ sys.path.insert(0, str(REPO / "src"))
 from asteria.assets.canonical import AssetSource, CanonicalAsset  # noqa: E402
 from asteria.assets.serialization import deserialize_asset_registry, serialize_asset_registry  # noqa: E402
 from asteria.presentation.battle_combatant_visuals import (  # noqa: E402
-    BattleCombatantVisualProfile, BattleVisualAssetSet, BattleVisualStateDefinition, BattleVisualTransform,
+    BattleCombatantVisualProfile,
+    BattleVisualAssetSet,
+    BattleVisualStateDefinition,
+    BattleVisualTransform,
 )
 from asteria.presentation.battle_motion_sequence import BattleMotionBeat, BattleMotionSequence  # noqa: E402
 from asteria.presentation.library import BattlePresentationLibrary  # noqa: E402
@@ -43,9 +47,18 @@ RIGHT = 3  # Ninja Adventure walk sheets: columns are down, up, left, right
 SCALE = 4
 
 HEROES = {
-    "hero_01": "Hunter", "hero_02": "NinjaRed", "hero_03": "Knight", "hero_04": "SorcererOrange",
-    "hero_05": "Monk", "hero_06": "NinjaBlue", "hero_07": "Samurai", "hero_08": "Princess",
-    "hero_09": "NinjaGreen", "hero_10": "Caveman", "hero_11": "Villager", "hero_12": "OldMan",
+    "hero_01": "Hunter",
+    "hero_02": "NinjaRed",
+    "hero_03": "Knight",
+    "hero_04": "SorcererOrange",
+    "hero_05": "Monk",
+    "hero_06": "NinjaBlue",
+    "hero_07": "Samurai",
+    "hero_08": "Princess",
+    "hero_09": "NinjaGreen",
+    "hero_10": "Caveman",
+    "hero_11": "Villager",
+    "hero_12": "OldMan",
 }
 MONSTERS = {"mender_wisp": "Monster/Flam/SpriteSheet.png", "ember_hound": "Monster/Beast/Beast.png"}
 CHARACTER_ENEMIES = {"iron_guard": "Skeleton"}
@@ -102,8 +115,8 @@ def character_sheet(root, name):
 def field_player_sheet(root, name, *, scale=3, frame=64):
     """Ninja Adventure walk cycle -> engine 3x4 sheet (rows down/left/right/up; stride, stand, stride)."""
     walk = Image.open(root / NINJA / "Actor" / "Character" / name / "SeparateAnim" / "Walk.png").convert("RGBA")
-    source_column = {"down": 0, "left": 2, "right": 3, "up": 1}   # Walk.png columns: down, up, left, right
-    pattern_row = (1, 0, 3)                                       # stride, standing, other stride
+    source_column = {"down": 0, "left": 2, "right": 3, "up": 1}  # Walk.png columns: down, up, left, right
+    pattern_row = (1, 0, 3)  # stride, standing, other stride
     out = Image.new("RGBA", (3 * frame, 4 * frame), (0, 0, 0, 0))
     size = 16 * scale
     for engine_row, facing in enumerate(("down", "left", "right", "up")):
@@ -153,16 +166,23 @@ def effect_sheet(root, relative, fw, fh, scale):
 
 def _asset(asset_id, path, frame_size, clips, tags, pivot=(0.5, 1.0)):
     return CanonicalAsset(
-        asset_id, "sprite_sheet", AssetSource(str(path.relative_to(PROJECT_DIR)), "project",
-                                               (("license", "CC0 1.0"), ("source", "Ninja Adventure Asset Pack"))),
-        tags=frozenset(tags), metadata=(("clips", clips), ("frame_size", list(frame_size)), ("pivot", list(pivot))),
+        asset_id,
+        "sprite_sheet",
+        AssetSource(
+            str(path.relative_to(PROJECT_DIR)),
+            "project",
+            (("license", "CC0 1.0"), ("source", "Ninja Adventure Asset Pack")),
+        ),
+        tags=frozenset(tags),
+        metadata=(("clips", clips), ("frame_size", list(frame_size)), ("pivot", list(pivot))),
     )
 
 
 def _profile(member_key, asset_id, scale=1.0):
     states = tuple(BattleVisualStateDefinition(role, role) for role in ("idle", "attack", "hit", "ko"))
-    return BattleCombatantVisualProfile(member_key, BattleVisualAssetSet(asset_id), states,
-                                        BattleVisualTransform(scale_x=scale, scale_y=scale))
+    return BattleCombatantVisualProfile(
+        member_key, BattleVisualAssetSet(asset_id), states, BattleVisualTransform(scale_x=scale, scale_y=scale)
+    )
 
 
 def _beat(beat_id, at, channel, cue, member, **payload):
@@ -187,11 +207,15 @@ def motion_sequences():
         offensive("strike", "battle.fx.slash", 0.24, 0.7, 4),
         offensive("fire_arc", "battle.fx.flame", 0.32, 0.9, 5, flash=40),
         offensive("meteor", "battle.fx.explosion", 0.45, 1.1, 9, flash=80),
-        BattleMotionSequence("heal", 0.8, (
-            _beat("raise", 0.0, "animation", "attack", "@source"),
-            _beat("fx", 0.12, "vfx", "battle.fx.heal", "@target"),
-            _beat("sound", 0.12, "audio", "heal", "@target"),
-        )),
+        BattleMotionSequence(
+            "heal",
+            0.8,
+            (
+                _beat("raise", 0.0, "animation", "attack", "@source"),
+                _beat("fx", 0.12, "vfx", "battle.fx.heal", "@target"),
+                _beat("sound", 0.12, "audio", "heal", "@target"),
+            ),
+        ),
     )
 
 
@@ -228,13 +252,19 @@ def main(argv=None):
         assets.append(_asset(asset_id, path, frame_size, clips, {"battle", "vfx"}, pivot=(0.5, 0.5)))
     # The procedural heal sheet (4 x 4 frames of 64 px) already ships with the project.
     heal = PROJECT_DIR / "playable_assets" / "fx_heal.png"
-    assets.append(CanonicalAsset(
-        "battle.fx.heal", "sprite_sheet", AssetSource(str(heal.relative_to(PROJECT_DIR)), "project",
-                                                       (("license", "repository"),)),
-        tags=frozenset({"battle", "vfx"}),
-        metadata=(("clips", {"play": {"frames": list(range(16)), "frame_duration": 0.04, "loop": False}}),
-                  ("frame_size", [64, 64]), ("pivot", [0.5, 0.5])),
-    ))
+    assets.append(
+        CanonicalAsset(
+            "battle.fx.heal",
+            "sprite_sheet",
+            AssetSource(str(heal.relative_to(PROJECT_DIR)), "project", (("license", "repository"),)),
+            tags=frozenset({"battle", "vfx"}),
+            metadata=(
+                ("clips", {"play": {"frames": list(range(16)), "frame_duration": 0.04, "loop": False}}),
+                ("frame_size", [64, 64]),
+                ("pivot", [0.5, 0.5]),
+            ),
+        )
+    )
 
     project_path = PROJECT_DIR / "project.asteria.json"
     data = json.loads(project_path.read_text(encoding="utf-8"))
@@ -250,14 +280,26 @@ def main(argv=None):
     # Side-view staging: party HUD as a bottom row, enemy bars over their heads,
     # commands beside the acting hero, combatants on the ground below the horizon.
     from dataclasses import replace
+
     layout = library.require("ui_layout", "adaptive")
-    library.set("ui_layout", "adaptive", replace(layout, party_hud="bottom_row", overhead_zones=("left",),
-                                                 action_menu_placement="actor", stage_top=0.44))
-    library.set("hud", "adaptive", BattleHudProfile(
-        resources=[BattleHudResourceStyle("vitality", "HP", order=0, priority=10),
-                   BattleHudResourceStyle("technique", "SP", order=1, priority=5)],
-        show_unmapped_resources=True,
-    ))
+    library.set(
+        "ui_layout",
+        "adaptive",
+        replace(
+            layout, party_hud="bottom_row", overhead_zones=("left",), action_menu_placement="actor", stage_top=0.44
+        ),
+    )
+    library.set(
+        "hud",
+        "adaptive",
+        BattleHudProfile(
+            resources=[
+                BattleHudResourceStyle("vitality", "HP", order=0, priority=10),
+                BattleHudResourceStyle("technique", "SP", order=1, priority=5),
+            ],
+            show_unmapped_resources=True,
+        ),
+    )
     data["battle_presentation_library"] = library.to_data()
     project_path.write_text(json.dumps(data, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
     print(f"wrote {len(assets)} sprite sheet assets, {len(profiles)} combatant profiles to {project_path.name}")

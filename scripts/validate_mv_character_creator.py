@@ -24,9 +24,12 @@ from asteria.runtime.preview import build_preview_registry
 
 def _core_part(catalog, category, number, gender="Male"):
     return next(
-        part for part in catalog.parts
+        part
+        for part in catalog.parts
         if part.source_root.parent.name == "rpg_maker_mv"
-        and part.source_category == category and part.part_number == number and part.gender == gender
+        and part.source_category == category
+        and part.part_number == number
+        and part.gender == gender
     )
 
 
@@ -53,26 +56,37 @@ def _capture_editor(workspace, output: Path, show_windows: bool):
 
     def choose(category, part_id):
         widget.category_combo.setCurrentText(category)
-        item = next(item for item in (widget.part_grid.item(i) for i in range(widget.part_grid.count()))
-                    if item.data(0x0100) == part_id)
+        item = next(
+            item
+            for item in (widget.part_grid.item(i) for i in range(widget.part_grid.count()))
+            if item.data(0x0100) == part_id
+        )
         widget.part_grid.setCurrentItem(item)
         app.processEvents()
 
     before_hair = workspace.preview_representation("side_view").tobytes()
     selected_hair = workspace.recipe.parts["hair_front"]
-    another_hair = next(part for part in workspace.choices("hair_front", gender="Male")
-                        if part.id != selected_hair and part.side_view is not None)
+    another_hair = next(
+        part
+        for part in workspace.choices("hair_front", gender="Male")
+        if part.id != selected_hair and part.side_view is not None
+    )
     choose("hair_front", another_hair.id)
     hair_changed = before_hair != workspace.preview_representation("side_view").tobytes()
 
-    for family, capture in (("Female", "editor-female-side-view.png"),
-                            ("Kid", "editor-kid-side-view.png")):
+    for family, capture in (("Female", "editor-female-side-view.png"), ("Kid", "editor-kid-side-view.png")):
         widget.gender_combo.setCurrentText(family)
-        for category in ("face_shape", "eyes", "eyebrows", "nose", "mouth",
-                         "hair_back", "outfit", "hair_front"):
-            candidate = next((part for part in workspace.choices(category, gender=family)
-                              if part.source_root.parent.name == "rpg_maker_mv"
-                              and part.walking is not None and part.side_view is not None), None)
+        for category in ("face_shape", "eyes", "eyebrows", "nose", "mouth", "hair_back", "outfit", "hair_front"):
+            candidate = next(
+                (
+                    part
+                    for part in workspace.choices(category, gender=family)
+                    if part.source_root.parent.name == "rpg_maker_mv"
+                    and part.walking is not None
+                    and part.side_view is not None
+                ),
+                None,
+            )
             if candidate is not None:
                 choose(category, candidate.id)
         workspace.recipe.id = f"validated-{family.lower()}"
@@ -82,7 +96,8 @@ def _capture_editor(workspace, output: Path, show_windows: bool):
         if not widget.side_view_canvas.grab().save(str(output / capture), "PNG"):
             raise RuntimeError(f"failed to capture {capture}")
     platform = app.platformName()
-    widget.close(); app.processEvents()
+    widget.close()
+    app.processEvents()
     return platform, hair_changed
 
 
@@ -123,7 +138,10 @@ def _render_runtime(output, mv_map, bundle, reference_root, max_frames, show_win
         standard_frame = generated.crop(((frame % 3) * 48, 0, (frame % 3 + 1) * 48, 48))
         large_frame = large_sheet.crop(large_boxes[frame % 3])
         surface.blit(_pygame_image(pygame, standard_frame), (standard_standing[0] - 24, standard_standing[1] - 48))
-        surface.blit(_pygame_image(pygame, large_frame), (large_standing[0] - large_size[0] // 2, large_standing[1] - large_size[1]))
+        surface.blit(
+            _pygame_image(pygame, large_frame),
+            (large_standing[0] - large_size[0] // 2, large_standing[1] - large_size[1]),
+        )
         pygame.draw.line(surface, (235, 183, 76), (0, standard_standing[1]), (640, standard_standing[1]), 2)
         pygame.display.flip()
     pygame.image.save(surface, output / "runtime-map.png")
@@ -131,10 +149,14 @@ def _render_runtime(output, mv_map, bundle, reference_root, max_frames, show_win
     return {
         "frames_rendered": max_frames,
         "standard_character": {
-            "frame_size": [48, 48], "standing_y": standard_standing[1], "rect_bottom": standard_standing[1],
+            "frame_size": [48, 48],
+            "standing_y": standard_standing[1],
+            "rect_bottom": standard_standing[1],
         },
         "large_character": {
-            "frame_size": list(large_size), "standing_y": large_standing[1], "rect_bottom": large_standing[1],
+            "frame_size": list(large_size),
+            "standing_y": large_standing[1],
+            "rect_bottom": large_standing[1],
         },
     }
 
@@ -157,7 +179,9 @@ def _render_battle_weapons(output, bundle, reference_root, show_windows):
             source = ((motion_index % 3 * 3 + frame) * 64, motion_index // 3 * 64, 64, 64)
             character_frame = actor.subsurface(source)
             surface.blit(pygame.transform.scale(character_frame, (128, 128)), (x - 64, 115))
-            sheet = pygame.image.load(str(reference_root / "NewData" / "img" / "system" / f"{visual.sheet_name}.png")).convert_alpha()
+            sheet = pygame.image.load(
+                str(reference_root / "NewData" / "img" / "system" / f"{visual.sheet_name}.png")
+            ).convert_alpha()
             weapon_frame = sheet.subsurface(visual.frames[frame])
             weapon_pixels.append(pygame.image.tobytes(weapon_frame, "RGBA"))
             surface.blit(pygame.transform.scale(weapon_frame, (192, 128)), (x - 128, 115))
@@ -172,7 +196,8 @@ def _render_battle_weapons(output, bundle, reference_root, show_windows):
 def run_validation(output_dir: str | Path, *, max_frames: int = 3, show_windows: bool = False):
     if max_frames <= 0:
         raise ValueError("max_frames must be positive")
-    output = Path(output_dir).resolve(); output.mkdir(parents=True, exist_ok=True)
+    output = Path(output_dir).resolve()
+    output.mkdir(parents=True, exist_ok=True)
     repo = Path(__file__).resolve().parents[1]
     reference_root = resolve_rpg_maker_mv_root(repo)
     if reference_root is None:

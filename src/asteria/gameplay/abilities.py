@@ -215,9 +215,7 @@ class AbilityDefinition:
         object.__setattr__(self, "costs", costs)
         object.__setattr__(self, "conditions", conditions)
         object.__setattr__(self, "effects", effects)
-        object.__setattr__(
-            self, "tags", tuple(sorted({normalize_tag(x) for x in tags}))
-        )
+        object.__setattr__(self, "tags", tuple(sorted({normalize_tag(x) for x in tags})))
 
     def to_data(self):
         return {
@@ -318,8 +316,7 @@ def _clone_subject(subject: GameplaySubject):
 def _commit_subject(staged: GameplaySubject, actual: GameplaySubject):
     actual.stats._values = dict(staged.stats._values)
     actual.resources._values = {
-        key: type(value).from_data(value.to_data())
-        for key, value in staged.resources._values.items()
+        key: type(value).from_data(value.to_data()) for key, value in staged.resources._values.items()
     }
     actual.tags._tags = set(staged.tags._tags)
 
@@ -359,9 +356,7 @@ class AbilityRuntime:
 
         errors = list(definition.targeting.validate(source, targets))
         condition_target = targets[0].subject if targets else None
-        if not definition.conditions.evaluate(
-            GameplayConditionContext(source.subject, condition_target)
-        ):
+        if not definition.conditions.evaluate(GameplayConditionContext(source.subject, condition_target)):
             errors.append("conditions_failed")
 
         evaluated_costs = []
@@ -379,8 +374,7 @@ class AbilityRuntime:
                 errors.append(f"missing_resource:{cost.resource}")
                 continue
             available = (
-                source.subject.resources.current(cost.resource)
-                - source.subject.resources.get(cost.resource).minimum
+                source.subject.resources.current(cost.resource) - source.subject.resources.get(cost.resource).minimum
             )
             if prepaid_costs is None and available < amount:
                 errors.append(f"insufficient_resource:{cost.resource}")
@@ -393,10 +387,7 @@ class AbilityRuntime:
         actual_by_id = {source.target_id: source.subject}
         for target in targets:
             actual_by_id[target.target_id] = target.subject
-        staged_by_id = {
-            target_id: _clone_subject(subject)
-            for target_id, subject in actual_by_id.items()
-        }
+        staged_by_id = {target_id: _clone_subject(subject) for target_id, subject in actual_by_id.items()}
 
         staged_source = staged_by_id[source.target_id]
         if prepaid_costs is None:
@@ -410,9 +401,7 @@ class AbilityRuntime:
         else:
             normalized_prepaid = tuple((str(r), float(a)) for r, a in prepaid_costs)
             if normalized_prepaid != tuple(evaluated_costs):
-                return AbilityExecutionResult(
-                    definition.ability_id, False, ("prepaid_cost_mismatch",)
-                )
+                return AbilityExecutionResult(definition.ability_id, False, ("prepaid_cost_mismatch",))
 
         effect_results = []
         for ability_effect in definition.effects:
@@ -431,6 +420,7 @@ class AbilityRuntime:
                     reflected = []
                     transform = None
                     if value_transform is not None:
+
                         def transform(operation, value, _target_id=target.target_id, _reflected=reflected):
                             routed = value_transform(_target_id, operation, value)
                             if isinstance(routed, tuple):
@@ -438,6 +428,7 @@ class AbilityRuntime:
                                 if back:
                                     _reflected.append((operation.target, float(back)))
                             return routed
+
                     result = apply_effect(
                         ability_effect.effect,
                         staged_target.stats,

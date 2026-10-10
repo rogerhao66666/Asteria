@@ -1,14 +1,17 @@
 from dataclasses import dataclass
 from .canonical import AssetRef as CanonicalAssetRef
 
+
 @dataclass(frozen=True, slots=True)
 class AssetEvent:
     operation: str
     asset_id: str
     kind: str
 
+
 class AssetRegistry:
     """Compatibility registry supporting both legacy AssetRecord and canonical assets."""
+
     def __init__(self):
         self._by_id = {}
         self._by_path = {}

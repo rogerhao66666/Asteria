@@ -33,9 +33,9 @@ def test_narrow_phase_box_circle_and_mixed_shapes():
 
 def test_layers_and_masks_filter_pairs_both_ways():
     scene = Scene("S")
-    _body(scene, "Player", 0, 0, layer=1, mask=0b100)       # collides with layer 2 only
-    _body(scene, "Wall", 5, 0, layer=2, mask=0b010)         # collides with layer 1 only
-    _body(scene, "Ghost", 5, 0, layer=3, mask=0xFFFFFFFF)   # player ignores layer 3
+    _body(scene, "Player", 0, 0, layer=1, mask=0b100)  # collides with layer 2 only
+    _body(scene, "Wall", 5, 0, layer=2, mask=0b010)  # collides with layer 1 only
+    _body(scene, "Ghost", 5, 0, layer=3, mask=0xFFFFFFFF)  # player ignores layer 3
     names = {e.id: e.name for e in scene.entities()}
     pairs = {tuple(sorted((names[c.a], names[c.b]))) for c in CollisionWorld.from_scene(scene).contacts()}
     assert ("Player", "Wall") in pairs and ("Ghost", "Player") not in pairs
@@ -80,10 +80,10 @@ def test_character_controller_is_blocked_by_solid_colliders_but_not_triggers():
     controller = CharacterController2D(0.0, 0.0, speed=100.0, half_width=6.0, half_height=6.0)
     for _ in range(30):
         controller.move(1.0, 0.0, 0.05, query)
-    assert controller.x < 30 - 8 - 6 + 1e-6   # stopped at the rock's left face
+    assert controller.x < 30 - 8 - 6 + 1e-6  # stopped at the rock's left face
     for _ in range(10):
         controller.move(0.0, 1.0, 0.05, query)
-    assert controller.y > 30                   # walked through the trigger
+    assert controller.y > 30  # walked through the trigger
 
 
 def test_broad_phase_scales_to_a_thousand_colliders():
@@ -96,7 +96,7 @@ def test_broad_phase_scales_to_a_thousand_colliders():
     contacts = world.contacts()
     elapsed = time.perf_counter() - started
     candidates = len(world.grid.candidate_pairs())
-    assert candidates < 1000 * 999 // 2 // 50   # far fewer than all n^2 pairs
+    assert candidates < 1000 * 999 // 2 // 50  # far fewer than all n^2 pairs
     assert all(isinstance(c.depth, float) for c in contacts)
     assert elapsed < 1.0, f"collision build+contacts took {elapsed:.3f}s"
     print(f"\n1000 colliders: {candidates} candidate pairs, {len(contacts)} contacts, {elapsed * 1000:.1f} ms")

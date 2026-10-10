@@ -151,13 +151,26 @@ class CharacterScreenProfile:
         key = str(key)
         return dict(pairs).get(key, key if fallback is None else fallback)
 
-    def stat_label(self, key): return self._lookup(self.stat_labels, key)
-    def resource_label(self, key): return self._lookup(self.resource_labels, key)
-    def resource_presentation(self, key): return self._lookup(self.resource_presentations, key, "bar")
-    def slot_label(self, key): return self._lookup(self.slot_labels, key)
-    def equipment_label(self, key): return self._lookup(self.equipment_labels, key)
-    def ability_label(self, key): return self._lookup(self.ability_labels, key)
-    def progression_label(self, key): return self._lookup(self.progression_labels, key)
+    def stat_label(self, key):
+        return self._lookup(self.stat_labels, key)
+
+    def resource_label(self, key):
+        return self._lookup(self.resource_labels, key)
+
+    def resource_presentation(self, key):
+        return self._lookup(self.resource_presentations, key, "bar")
+
+    def slot_label(self, key):
+        return self._lookup(self.slot_labels, key)
+
+    def equipment_label(self, key):
+        return self._lookup(self.equipment_labels, key)
+
+    def ability_label(self, key):
+        return self._lookup(self.ability_labels, key)
+
+    def progression_label(self, key):
+        return self._lookup(self.progression_labels, key)
 
     def to_data(self):
         return {
@@ -242,15 +255,17 @@ class CharacterScreenRuntime:
         resources = []
         for name in sorted(resolved_build.resources.names()):
             value = resolved_build.resources.get(name)
-            resources.append(CharacterScreenResourceView(
-                resource_id=name,
-                label=self.profile.resource_label(name),
-                current=float(value.current),
-                minimum=float(value.minimum),
-                maximum=float(value.maximum),
-                normalized=float(value.normalized),
-                presentation=self.profile.resource_presentation(name),
-            ))
+            resources.append(
+                CharacterScreenResourceView(
+                    resource_id=name,
+                    label=self.profile.resource_label(name),
+                    current=float(value.current),
+                    minimum=float(value.minimum),
+                    maximum=float(value.maximum),
+                    normalized=float(value.normalized),
+                    presentation=self.profile.resource_presentation(name),
+                )
+            )
         resources = tuple(resources)
 
         equipment = ()
@@ -263,33 +278,33 @@ class CharacterScreenRuntime:
                 items = []
                 for item in raw.get("equipped", {}).get(slot_id, ()):
                     equipment_id = str(item["equipment_id"])
-                    attachments = tuple(
-                        str(v) for _, v in sorted(dict(item.get("attachments", {})).items())
-                    )
+                    attachments = tuple(str(v) for _, v in sorted(dict(item.get("attachments", {})).items()))
                     growth = item.get("growth")
                     growth_id = None
                     if isinstance(growth, dict):
                         growth_id = str(growth.get("growth_id") or growth.get("definition_id") or "") or None
-                    items.append(CharacterScreenEquipmentItemView(
-                        instance_id=str(item["instance_id"]),
-                        equipment_id=equipment_id,
-                        label=self.profile.equipment_label(equipment_id),
-                        attachment_ids=attachments,
-                        growth_id=growth_id,
-                    ))
-                slot_views.append(CharacterScreenEquipmentSlotView(
-                    slot_id=slot_id,
-                    label=self.profile.slot_label(slot_id),
-                    capacity=slot.get("capacity"),
-                    items=tuple(items),
-                ))
+                    items.append(
+                        CharacterScreenEquipmentItemView(
+                            instance_id=str(item["instance_id"]),
+                            equipment_id=equipment_id,
+                            label=self.profile.equipment_label(equipment_id),
+                            attachment_ids=attachments,
+                            growth_id=growth_id,
+                        )
+                    )
+                slot_views.append(
+                    CharacterScreenEquipmentSlotView(
+                        slot_id=slot_id,
+                        label=self.profile.slot_label(slot_id),
+                        capacity=slot.get("capacity"),
+                        items=tuple(items),
+                    )
+                )
             equipment = tuple(slot_views)
 
         source_by_ability = {}
         for grant in resolved_build.ability_grants:
-            source_by_ability.setdefault(str(grant.ability_id), []).append(
-                f"{grant.source_kind}:{grant.source_id}"
-            )
+            source_by_ability.setdefault(str(grant.ability_id), []).append(f"{grant.source_kind}:{grant.source_id}")
         abilities = tuple(
             CharacterScreenAbilityView(
                 ability_id=ability_id,
@@ -304,12 +319,14 @@ class CharacterScreenRuntime:
         if progression is not None:
             values = []
             for track_id in sorted(progression.definitions):
-                values.append(CharacterScreenProgressionView(
-                    track_id=track_id,
-                    label=self.profile.progression_label(track_id),
-                    total=float(progression.total(track_id)),
-                    rank=int(progression.rank(track_id)),
-                ))
+                values.append(
+                    CharacterScreenProgressionView(
+                        track_id=track_id,
+                        label=self.profile.progression_label(track_id),
+                        total=float(progression.total(track_id)),
+                        rank=int(progression.rank(track_id)),
+                    )
+                )
             progression_views = tuple(values)
 
         counts = {
@@ -389,17 +406,31 @@ class CharacterScreenRuntime:
             resources=tuple(CharacterScreenResourceView(**x) for x in raw.get("resources", ())),
             equipment=tuple(
                 CharacterScreenEquipmentSlotView(
-                    slot_id=x["slot_id"], label=x["label"], capacity=x.get("capacity"),
-                    items=tuple(CharacterScreenEquipmentItemView(
-                        instance_id=i["instance_id"], equipment_id=i["equipment_id"], label=i["label"],
-                        attachment_ids=tuple(i.get("attachment_ids", ())), growth_id=i.get("growth_id"),
-                    ) for i in x.get("items", ())),
-                ) for x in raw.get("equipment", ())
+                    slot_id=x["slot_id"],
+                    label=x["label"],
+                    capacity=x.get("capacity"),
+                    items=tuple(
+                        CharacterScreenEquipmentItemView(
+                            instance_id=i["instance_id"],
+                            equipment_id=i["equipment_id"],
+                            label=i["label"],
+                            attachment_ids=tuple(i.get("attachment_ids", ())),
+                            growth_id=i.get("growth_id"),
+                        )
+                        for i in x.get("items", ())
+                    ),
+                )
+                for x in raw.get("equipment", ())
             ),
-            abilities=tuple(CharacterScreenAbilityView(
-                ability_id=x["ability_id"], label=x["label"], active=bool(x.get("active", True)),
-                source_labels=tuple(x.get("source_labels", ())),
-            ) for x in raw.get("abilities", ())),
+            abilities=tuple(
+                CharacterScreenAbilityView(
+                    ability_id=x["ability_id"],
+                    label=x["label"],
+                    active=bool(x.get("active", True)),
+                    source_labels=tuple(x.get("source_labels", ())),
+                )
+                for x in raw.get("abilities", ())
+            ),
             progression=tuple(CharacterScreenProgressionView(**x) for x in raw.get("progression", ())),
             tags=tuple(raw.get("tags", ())),
             capabilities=tuple(raw.get("capabilities", ())),
@@ -416,44 +447,71 @@ class CharacterScreenRuntime:
             view = {
                 "actor_id": self._view.actor_id,
                 "display_name": self._view.display_name,
-                "sections": [x.__dict__ if hasattr(x, "__dict__") else {
-                    "section_id": x.section_id, "label": x.label, "kind": x.kind,
-                    "priority": x.priority, "count": x.count,
-                } for x in self._view.sections],
+                "sections": [
+                    x.__dict__
+                    if hasattr(x, "__dict__")
+                    else {
+                        "section_id": x.section_id,
+                        "label": x.label,
+                        "kind": x.kind,
+                        "priority": x.priority,
+                        "count": x.count,
+                    }
+                    for x in self._view.sections
+                ],
                 "stats": [
                     {"stat_id": x.stat_id, "label": x.label, "value": x.value, "group": x.group, "priority": x.priority}
                     for x in self._view.stats
                 ],
                 "resources": [
                     {
-                        "resource_id": x.resource_id, "label": x.label, "current": x.current,
-                        "minimum": x.minimum, "maximum": x.maximum, "normalized": x.normalized,
-                        "presentation": x.presentation, "group": x.group, "priority": x.priority,
-                    } for x in self._view.resources
+                        "resource_id": x.resource_id,
+                        "label": x.label,
+                        "current": x.current,
+                        "minimum": x.minimum,
+                        "maximum": x.maximum,
+                        "normalized": x.normalized,
+                        "presentation": x.presentation,
+                        "group": x.group,
+                        "priority": x.priority,
+                    }
+                    for x in self._view.resources
                 ],
                 "equipment": [
                     {
-                        "slot_id": x.slot_id, "label": x.label, "capacity": x.capacity,
+                        "slot_id": x.slot_id,
+                        "label": x.label,
+                        "capacity": x.capacity,
                         "items": [
                             {
-                                "instance_id": i.instance_id, "equipment_id": i.equipment_id,
-                                "label": i.label, "attachment_ids": list(i.attachment_ids),
+                                "instance_id": i.instance_id,
+                                "equipment_id": i.equipment_id,
+                                "label": i.label,
+                                "attachment_ids": list(i.attachment_ids),
                                 "growth_id": i.growth_id,
-                            } for i in x.items
+                            }
+                            for i in x.items
                         ],
-                    } for x in self._view.equipment
+                    }
+                    for x in self._view.equipment
                 ],
                 "abilities": [
                     {
-                        "ability_id": x.ability_id, "label": x.label, "active": x.active,
+                        "ability_id": x.ability_id,
+                        "label": x.label,
+                        "active": x.active,
                         "source_labels": list(x.source_labels),
-                    } for x in self._view.abilities
+                    }
+                    for x in self._view.abilities
                 ],
                 "progression": [
                     {
-                        "track_id": x.track_id, "label": x.label,
-                        "total": x.total, "rank": x.rank,
-                    } for x in self._view.progression
+                        "track_id": x.track_id,
+                        "label": x.label,
+                        "total": x.total,
+                        "rank": x.rank,
+                    }
+                    for x in self._view.progression
                 ],
                 "tags": list(self._view.tags),
                 "capabilities": list(self._view.capabilities),

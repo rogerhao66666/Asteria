@@ -4,6 +4,7 @@ This module deliberately knows nothing about weapons, equipment, battle, skills,
 or any other gameplay vocabulary. It resolves a SocketRig into world-space
 attachment poses and manages attachment instances by stable project IDs.
 """
+
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
@@ -42,11 +43,15 @@ class AttachmentInstance:
         self.state = AttachmentState.ACTIVE if visible else AttachmentState.HIDDEN
 
 
-def _combine(parent: Transform2D, child: Transform2D, *,
-             inherit_position: bool = True,
-             inherit_rotation: bool = True,
-             inherit_scale: bool = True,
-             inherit_opacity: bool = True) -> Transform2D:
+def _combine(
+    parent: Transform2D,
+    child: Transform2D,
+    *,
+    inherit_position: bool = True,
+    inherit_rotation: bool = True,
+    inherit_scale: bool = True,
+    inherit_opacity: bool = True,
+) -> Transform2D:
     """Compose child into parent in 2D while honoring inheritance policy."""
     px, py = child.x, child.y
     if inherit_scale:
@@ -89,9 +94,16 @@ def _place_asset_at_grip(target: Transform2D, grip: GripTransform) -> Transform2
     dy = grip.y * sy * (-1.0 if target.flip_y else 1.0)
     rx, ry = dx * cos(a) - dy * sin(a), dx * sin(a) + dy * cos(a)
     return Transform2D(
-        x=target.x-rx, y=target.y-ry, rotation_deg=rotation,
-        scale_x=sx, scale_y=sy, flip_x=target.flip_x, flip_y=target.flip_y,
-        opacity=target.opacity, visible=target.visible, z_offset=target.z_offset,
+        x=target.x - rx,
+        y=target.y - ry,
+        rotation_deg=rotation,
+        scale_x=sx,
+        scale_y=sy,
+        flip_x=target.flip_x,
+        flip_y=target.flip_y,
+        opacity=target.opacity,
+        visible=target.visible,
+        z_offset=target.z_offset,
     )
 
 
@@ -104,8 +116,16 @@ def _apply_pivot(t: Transform2D, pivot_x: float, pivot_y: float) -> Transform2D:
     dy = pivot_y * t.scale_y
     rx, ry = dx * cos(a) - dy * sin(a), dx * sin(a) + dy * cos(a)
     return Transform2D(
-        t.x + rx, t.y + ry, t.rotation_deg, t.scale_x, t.scale_y,
-        t.flip_x, t.flip_y, t.opacity, t.visible, t.z_offset,
+        t.x + rx,
+        t.y + ry,
+        t.rotation_deg,
+        t.scale_x,
+        t.scale_y,
+        t.flip_x,
+        t.flip_y,
+        t.opacity,
+        t.visible,
+        t.z_offset,
     )
 
 
@@ -136,7 +156,8 @@ class AttachmentRuntime:
             self.detach(spec.id)
         instance = AttachmentInstance(spec)
         self.instances[spec.id] = instance
-        for cb in tuple(self._on_attach): cb(instance)
+        for cb in tuple(self._on_attach):
+            cb(instance)
         return instance
 
     def attach_many(self, specs: Iterable[Attachment]) -> tuple[AttachmentInstance, ...]:
@@ -153,7 +174,8 @@ class AttachmentRuntime:
         if instance is None or instance.state == AttachmentState.DETACHED:
             raise KeyError(f"attachment not active: {attachment_id}")
         instance.state = AttachmentState.DETACHED
-        for cb in tuple(self._on_detach): cb(instance)
+        for cb in tuple(self._on_detach):
+            cb(instance)
         return instance
 
     def swap(self, attachment_id: str, replacement: Attachment) -> AttachmentInstance:
@@ -195,7 +217,8 @@ class AttachmentRuntime:
         spec = instance.spec
         socket_world = self.socket_world_transform(spec.socket_id, frame, subframe)
         world = _combine(
-            socket_world, spec.local,
+            socket_world,
+            spec.local,
             inherit_position=spec.inherit_position,
             inherit_rotation=spec.inherit_rotation,
             inherit_scale=spec.inherit_scale,
@@ -203,13 +226,26 @@ class AttachmentRuntime:
         )
         world = _place_asset_at_grip(world, spec.grip)
         if instance.state == AttachmentState.HIDDEN:
-            world = Transform2D(world.x, world.y, world.rotation_deg, world.scale_x, world.scale_y,
-                                world.flip_x, world.flip_y, world.opacity, False, world.z_offset)
-        return ResolvedAttachment(spec.id, spec.asset_id, spec.socket_id, world, instance.state, dict(spec.metadata), spec.render_layer)
+            world = Transform2D(
+                world.x,
+                world.y,
+                world.rotation_deg,
+                world.scale_x,
+                world.scale_y,
+                world.flip_x,
+                world.flip_y,
+                world.opacity,
+                False,
+                world.z_offset,
+            )
+        return ResolvedAttachment(
+            spec.id, spec.asset_id, spec.socket_id, world, instance.state, dict(spec.metadata), spec.render_layer
+        )
 
     def resolve_all(self, frame: int, subframe: float = 0.0) -> tuple[ResolvedAttachment, ...]:
-        resolved = [self.resolve(k, frame, subframe) for k, v in self.instances.items()
-                    if v.state != AttachmentState.DETACHED]
+        resolved = [
+            self.resolve(k, frame, subframe) for k, v in self.instances.items() if v.state != AttachmentState.DETACHED
+        ]
         return tuple(sorted(resolved, key=lambda r: (r.transform.z_offset, r.id)))
 
     def snapshot(self) -> dict[str, Any]:
@@ -226,6 +262,7 @@ class AttachmentRuntime:
         states = {raw["id"]: raw for raw in snapshot.get("instances", [])}
         for aid, instance in self.instances.items():
             raw = states.get(aid)
-            if raw is None: continue
+            if raw is None:
+                continue
             instance.state = AttachmentState(raw.get("state", AttachmentState.ACTIVE.value))
             instance.runtime_data = dict(raw.get("runtime_data", {}))

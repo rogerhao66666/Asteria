@@ -3,6 +3,7 @@
 Definitions (factions, achievements) live in the RPG database; the mutable
 :class:`WorldRecord` lives in the save.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -49,16 +50,29 @@ class FactionDefinition:
         return name
 
     def to_data(self):
-        return {"schema": "asteria.rpg.faction", "version": 1, "faction_id": self.faction_id,
-                "display_name": self.display_name, "minimum": self.minimum, "maximum": self.maximum,
-                "initial": self.initial, "ranks": [[t, n] for t, n in self.ranks]}
+        return {
+            "schema": "asteria.rpg.faction",
+            "version": 1,
+            "faction_id": self.faction_id,
+            "display_name": self.display_name,
+            "minimum": self.minimum,
+            "maximum": self.maximum,
+            "initial": self.initial,
+            "ranks": [[t, n] for t, n in self.ranks],
+        }
 
     @classmethod
     def from_data(cls, data):
         if data.get("schema") != "asteria.rpg.faction" or data.get("version") != 1:
             raise ValueError("unsupported faction")
-        return cls(data["faction_id"], data["display_name"], minimum=data["minimum"], maximum=data["maximum"],
-                   initial=data["initial"], ranks=data["ranks"])
+        return cls(
+            data["faction_id"],
+            data["display_name"],
+            minimum=data["minimum"],
+            maximum=data["maximum"],
+            initial=data["initial"],
+            ranks=data["ranks"],
+        )
 
 
 ACHIEVEMENT_KINDS = ("switch", "counter", "defeated", "reputation", "quest")
@@ -82,7 +96,9 @@ class AchievementDefinition:
     value: float
     hidden: bool
 
-    def __init__(self, achievement_id, display_name=None, *, description="", kind="switch", target, value=1.0, hidden=False):
+    def __init__(
+        self, achievement_id, display_name=None, *, description="", kind="switch", target, value=1.0, hidden=False
+    ):
         if kind not in ACHIEVEMENT_KINDS:
             raise ValueError(f"unknown achievement kind: {kind}")
         value = float(value)
@@ -97,16 +113,31 @@ class AchievementDefinition:
         object.__setattr__(self, "hidden", bool(hidden))
 
     def to_data(self):
-        return {"schema": "asteria.rpg.achievement", "version": 1, "achievement_id": self.achievement_id,
-                "display_name": self.display_name, "description": self.description, "kind": self.kind,
-                "target": self.target, "value": self.value, "hidden": self.hidden}
+        return {
+            "schema": "asteria.rpg.achievement",
+            "version": 1,
+            "achievement_id": self.achievement_id,
+            "display_name": self.display_name,
+            "description": self.description,
+            "kind": self.kind,
+            "target": self.target,
+            "value": self.value,
+            "hidden": self.hidden,
+        }
 
     @classmethod
     def from_data(cls, data):
         if data.get("schema") != "asteria.rpg.achievement" or data.get("version") != 1:
             raise ValueError("unsupported achievement")
-        return cls(data["achievement_id"], data["display_name"], description=data["description"], kind=data["kind"],
-                   target=data["target"], value=data["value"], hidden=data["hidden"])
+        return cls(
+            data["achievement_id"],
+            data["display_name"],
+            description=data["description"],
+            kind=data["kind"],
+            target=data["target"],
+            value=data["value"],
+            hidden=data["hidden"],
+        )
 
 
 @dataclass(slots=True)
@@ -167,14 +198,17 @@ class WorldRecord:
         for achievement_id in sorted(achievements):
             if achievement_id in self.achievements:
                 continue
-            if self.achievement_met(achievements[achievement_id], factions=factions, switches=switches, quest_status=quest_status):
+            if self.achievement_met(
+                achievements[achievement_id], factions=factions, switches=switches, quest_status=quest_status
+            ):
                 self.achievements.append(achievement_id)
                 unlocked.append(achievement_id)
         return tuple(unlocked)
 
     def to_data(self):
         return {
-            "schema": self.SCHEMA, "version": 1,
+            "schema": self.SCHEMA,
+            "version": 1,
             "reputation": dict(sorted(self.reputation.items())),
             "relationships": dict(sorted(self.relationships.items())),
             "counters": dict(sorted(self.counters.items())),

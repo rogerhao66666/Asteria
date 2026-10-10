@@ -16,17 +16,13 @@ class SceneEventRuntime:
     @classmethod
     def build(cls, bindings, registry, *, context=None, world_commands=None):
         context = context or EventContext()
-        scheduler = EventScheduler(
-            registry, context=context, world_commands=world_commands
-        )
+        scheduler = EventScheduler(registry, context=context, world_commands=world_commands)
         runtime = cls(bindings, scheduler, context)
         runtime.refresh_scheduled_bindings()
         return runtime
 
     def refresh_scheduled_bindings(self):
-        desired = {
-            spec.event_id: spec for spec in self.bindings.scheduled_specs(self.context)
-        }
+        desired = {spec.event_id: spec for spec in self.bindings.scheduled_specs(self.context)}
         existing = {spec.event_id: spec for spec in self.scheduler.specs()}
 
         for event_id in tuple(existing):
@@ -42,9 +38,7 @@ class SceneEventRuntime:
 
     def action_binding_for_entity(self, entity_id: str):
         active = [
-            b
-            for b in self.bindings.active_for_entity(entity_id, self.context)
-            if b.trigger == EventTriggerKind.ACTION
+            b for b in self.bindings.active_for_entity(entity_id, self.context) if b.trigger == EventTriggerKind.ACTION
         ]
         if not active:
             return None

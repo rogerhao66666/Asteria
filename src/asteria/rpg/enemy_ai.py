@@ -24,6 +24,7 @@ def _finite(value, label):
 @dataclass(frozen=True, slots=True)
 class AICondition:
     """Open condition contract. `kind` and `params` are project vocabulary."""
+
     kind: str
     params: dict[str, object] = field(default_factory=dict)
     negate: bool = False
@@ -55,8 +56,18 @@ class AIDecisionRule:
     SCHEMA = "asteria.rpg.ai_decision_rule"
     VERSION = 1
 
-    def __init__(self, rule_id, action_kind, *, payload=None, target_selector="first_opponent",
-                 conditions=(), priority=0, weight=1.0, tags=()):
+    def __init__(
+        self,
+        rule_id,
+        action_kind,
+        *,
+        payload=None,
+        target_selector="first_opponent",
+        conditions=(),
+        priority=0,
+        weight=1.0,
+        tags=(),
+    ):
         conditions = tuple(conditions)
         if any(not isinstance(x, AICondition) for x in conditions):
             raise TypeError("conditions must contain AICondition values")
@@ -74,21 +85,32 @@ class AIDecisionRule:
 
     def to_data(self):
         return {
-            "schema": self.SCHEMA, "version": self.VERSION,
-            "rule_id": self.rule_id, "action_kind": self.action_kind,
-            "payload": dict(self.payload), "target_selector": self.target_selector,
+            "schema": self.SCHEMA,
+            "version": self.VERSION,
+            "rule_id": self.rule_id,
+            "action_kind": self.action_kind,
+            "payload": dict(self.payload),
+            "target_selector": self.target_selector,
             "conditions": [x.to_data() for x in self.conditions],
-            "priority": self.priority, "weight": self.weight, "tags": list(self.tags),
+            "priority": self.priority,
+            "weight": self.weight,
+            "tags": list(self.tags),
         }
 
     @classmethod
     def from_data(cls, data):
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported AI decision rule")
-        return cls(data["rule_id"], data["action_kind"], payload=data.get("payload", {}),
-                   target_selector=data.get("target_selector", "first_opponent"),
-                   conditions=[AICondition.from_data(x) for x in data.get("conditions", ())],
-                   priority=data.get("priority", 0), weight=data.get("weight", 1.0), tags=data.get("tags", ()))
+        return cls(
+            data["rule_id"],
+            data["action_kind"],
+            payload=data.get("payload", {}),
+            target_selector=data.get("target_selector", "first_opponent"),
+            conditions=[AICondition.from_data(x) for x in data.get("conditions", ())],
+            priority=data.get("priority", 0),
+            weight=data.get("weight", 1.0),
+            tags=data.get("tags", ()),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,8 +126,17 @@ class BossPhaseDefinition:
     SCHEMA = "asteria.rpg.boss_phase_definition"
     VERSION = 1
 
-    def __init__(self, phase_id, *, conditions=(), priority=0, decision_rule_ids=(),
-                 actions_per_ready=None, enter_hook=None, exit_hook=None):
+    def __init__(
+        self,
+        phase_id,
+        *,
+        conditions=(),
+        priority=0,
+        decision_rule_ids=(),
+        actions_per_ready=None,
+        enter_hook=None,
+        exit_hook=None,
+    ):
         conditions = tuple(conditions)
         if any(not isinstance(x, AICondition) for x in conditions):
             raise TypeError("conditions must contain AICondition values")
@@ -115,25 +146,39 @@ class BossPhaseDefinition:
         object.__setattr__(self, "phase_id", _id(phase_id, "phase_id"))
         object.__setattr__(self, "conditions", conditions)
         object.__setattr__(self, "priority", int(priority))
-        object.__setattr__(self, "decision_rule_ids", tuple(dict.fromkeys(_id(x, "decision_rule_id") for x in decision_rule_ids)))
+        object.__setattr__(
+            self, "decision_rule_ids", tuple(dict.fromkeys(_id(x, "decision_rule_id") for x in decision_rule_ids))
+        )
         object.__setattr__(self, "actions_per_ready", apr)
         object.__setattr__(self, "enter_hook", None if enter_hook is None else _id(enter_hook, "enter_hook"))
         object.__setattr__(self, "exit_hook", None if exit_hook is None else _id(exit_hook, "exit_hook"))
 
     def to_data(self):
-        return {"schema": self.SCHEMA, "version": self.VERSION, "phase_id": self.phase_id,
-                "conditions": [x.to_data() for x in self.conditions], "priority": self.priority,
-                "decision_rule_ids": list(self.decision_rule_ids), "actions_per_ready": self.actions_per_ready,
-                "enter_hook": self.enter_hook, "exit_hook": self.exit_hook}
+        return {
+            "schema": self.SCHEMA,
+            "version": self.VERSION,
+            "phase_id": self.phase_id,
+            "conditions": [x.to_data() for x in self.conditions],
+            "priority": self.priority,
+            "decision_rule_ids": list(self.decision_rule_ids),
+            "actions_per_ready": self.actions_per_ready,
+            "enter_hook": self.enter_hook,
+            "exit_hook": self.exit_hook,
+        }
 
     @classmethod
     def from_data(cls, data):
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported boss phase definition")
-        return cls(data["phase_id"], conditions=[AICondition.from_data(x) for x in data.get("conditions", ())],
-                   priority=data.get("priority", 0), decision_rule_ids=data.get("decision_rule_ids", ()),
-                   actions_per_ready=data.get("actions_per_ready"), enter_hook=data.get("enter_hook"),
-                   exit_hook=data.get("exit_hook"))
+        return cls(
+            data["phase_id"],
+            conditions=[AICondition.from_data(x) for x in data.get("conditions", ())],
+            priority=data.get("priority", 0),
+            decision_rule_ids=data.get("decision_rule_ids", ()),
+            actions_per_ready=data.get("actions_per_ready"),
+            enter_hook=data.get("enter_hook"),
+            exit_hook=data.get("exit_hook"),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -148,7 +193,9 @@ class EnemyAIDefinition:
     VERSION = 1
 
     def __init__(self, ai_id, *, rules, phases=(), initial_phase_id=None, actions_per_ready=1):
-        rules = tuple(rules); phases = tuple(phases); apr = int(actions_per_ready)
+        rules = tuple(rules)
+        phases = tuple(phases)
+        apr = int(actions_per_ready)
         if not rules:
             raise ValueError("enemy AI requires at least one decision rule")
         if any(not isinstance(x, AIDecisionRule) for x in rules):
@@ -161,7 +208,8 @@ class EnemyAIDefinition:
             raise ValueError("duplicate AI phase_id")
         if apr < 1:
             raise ValueError("actions_per_ready must be >= 1")
-        phase_ids = {x.phase_id for x in phases}; rule_ids = {x.rule_id for x in rules}
+        phase_ids = {x.phase_id for x in phases}
+        rule_ids = {x.rule_id for x in rules}
         if initial_phase_id is not None and str(initial_phase_id) not in phase_ids:
             raise ValueError("initial_phase_id must reference a phase")
         for phase in phases:
@@ -171,21 +219,33 @@ class EnemyAIDefinition:
         object.__setattr__(self, "ai_id", _id(ai_id, "ai_id"))
         object.__setattr__(self, "rules", rules)
         object.__setattr__(self, "phases", phases)
-        object.__setattr__(self, "initial_phase_id", None if initial_phase_id is None else _id(initial_phase_id, "initial_phase_id"))
+        object.__setattr__(
+            self, "initial_phase_id", None if initial_phase_id is None else _id(initial_phase_id, "initial_phase_id")
+        )
         object.__setattr__(self, "actions_per_ready", apr)
 
     def to_data(self):
-        return {"schema": self.SCHEMA, "version": self.VERSION, "ai_id": self.ai_id,
-                "rules": [x.to_data() for x in self.rules], "phases": [x.to_data() for x in self.phases],
-                "initial_phase_id": self.initial_phase_id, "actions_per_ready": self.actions_per_ready}
+        return {
+            "schema": self.SCHEMA,
+            "version": self.VERSION,
+            "ai_id": self.ai_id,
+            "rules": [x.to_data() for x in self.rules],
+            "phases": [x.to_data() for x in self.phases],
+            "initial_phase_id": self.initial_phase_id,
+            "actions_per_ready": self.actions_per_ready,
+        }
 
     @classmethod
     def from_data(cls, data):
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported enemy AI definition")
-        return cls(data["ai_id"], rules=[AIDecisionRule.from_data(x) for x in data["rules"]],
-                   phases=[BossPhaseDefinition.from_data(x) for x in data.get("phases", ())],
-                   initial_phase_id=data.get("initial_phase_id"), actions_per_ready=data.get("actions_per_ready", 1))
+        return cls(
+            data["ai_id"],
+            rules=[AIDecisionRule.from_data(x) for x in data["rules"]],
+            phases=[BossPhaseDefinition.from_data(x) for x in data.get("phases", ())],
+            initial_phase_id=data.get("initial_phase_id"),
+            actions_per_ready=data.get("actions_per_ready", 1),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -202,8 +262,10 @@ class AIDecision:
 
 class EnemyAIRuntime:
     """Seedable generic decision engine with open condition/target/action seams."""
-    def __init__(self, definitions=(), *, hooks=None, condition_resolvers=None,
-                 target_resolvers=None, action_handlers=None):
+
+    def __init__(
+        self, definitions=(), *, hooks=None, condition_resolvers=None, target_resolvers=None, action_handlers=None
+    ):
         self.definitions = {}
         for d in definitions:
             if not isinstance(d, EnemyAIDefinition):
@@ -230,27 +292,46 @@ class EnemyAIRuntime:
 
     @staticmethod
     def _compare(lhs, op, rhs):
-        if op == "<": return lhs < rhs
-        if op == "<=": return lhs <= rhs
-        if op == ">": return lhs > rhs
-        if op == ">=": return lhs >= rhs
-        if op == "==": return lhs == rhs
-        if op == "!=": return lhs != rhs
+        if op == "<":
+            return lhs < rhs
+        if op == "<=":
+            return lhs <= rhs
+        if op == ">":
+            return lhs > rhs
+        if op == ">=":
+            return lhs >= rhs
+        if op == "==":
+            return lhs == rhs
+        if op == "!=":
+            return lhs != rhs
         raise KeyError(f"unknown comparison: {op}")
 
     def _condition(self, battle, actor_id, condition, phase_id):
-        p = condition.params; kind = condition.kind
+        p = condition.params
+        kind = condition.kind
         custom = self.condition_resolvers.get(kind)
         if custom is not None:
             value = bool(custom(battle, actor_id, p, self))
-        elif kind == "always": value = True
-        elif kind == "round_index": value = self._compare(battle.turn_queue.round_index, p.get("op", ">="), int(p.get("value", 0)))
-        elif kind == "resource_ratio": value = self._compare(self._ratio(battle.member(actor_id), p["resource_id"]), p.get("op", "<="), float(p["value"]))
-        elif kind == "stat": value = self._compare(battle.member(actor_id).subject.stats.value(p["stat_id"]), p.get("op", ">="), float(p["value"]))
-        elif kind == "memory": value = self._compare(self.get_memory(actor_id, p["key"]), p.get("op", "=="), p.get("value"))
-        elif kind == "phase": value = self._compare(phase_id, p.get("op", "=="), p.get("value"))
-        elif kind == "can_act": value = battle.can_act(actor_id)
-        else: raise KeyError(f"unknown AI condition kind: {kind}")
+        elif kind == "always":
+            value = True
+        elif kind == "round_index":
+            value = self._compare(battle.turn_queue.round_index, p.get("op", ">="), int(p.get("value", 0)))
+        elif kind == "resource_ratio":
+            value = self._compare(
+                self._ratio(battle.member(actor_id), p["resource_id"]), p.get("op", "<="), float(p["value"])
+            )
+        elif kind == "stat":
+            value = self._compare(
+                battle.member(actor_id).subject.stats.value(p["stat_id"]), p.get("op", ">="), float(p["value"])
+            )
+        elif kind == "memory":
+            value = self._compare(self.get_memory(actor_id, p["key"]), p.get("op", "=="), p.get("value"))
+        elif kind == "phase":
+            value = self._compare(phase_id, p.get("op", "=="), p.get("value"))
+        elif kind == "can_act":
+            value = battle.can_act(actor_id)
+        else:
+            raise KeyError(f"unknown AI condition kind: {kind}")
         return not value if condition.negate else value
 
     def _conditions(self, battle, actor_id, conditions, phase_id):
@@ -267,11 +348,25 @@ class EnemyAIRuntime:
             old = next((p for p in definition.phases if p.phase_id == current), None)
             new = next((p for p in definition.phases if p.phase_id == selected), None)
             if old and old.exit_hook:
-                emit_hook(self.hooks, old.exit_hook, source=actor_id, data={"battle": battle, "ai_id": definition.ai_id, "phase_id": old.phase_id})
-            emit_hook(self.hooks, "rpg.battle.ai.phase_changed", source=actor_id,
-                      data={"battle": battle, "ai_id": definition.ai_id, "old_phase_id": current, "phase_id": selected})
+                emit_hook(
+                    self.hooks,
+                    old.exit_hook,
+                    source=actor_id,
+                    data={"battle": battle, "ai_id": definition.ai_id, "phase_id": old.phase_id},
+                )
+            emit_hook(
+                self.hooks,
+                "rpg.battle.ai.phase_changed",
+                source=actor_id,
+                data={"battle": battle, "ai_id": definition.ai_id, "old_phase_id": current, "phase_id": selected},
+            )
             if new and new.enter_hook:
-                emit_hook(self.hooks, new.enter_hook, source=actor_id, data={"battle": battle, "ai_id": definition.ai_id, "phase_id": new.phase_id})
+                emit_hook(
+                    self.hooks,
+                    new.enter_hook,
+                    source=actor_id,
+                    data={"battle": battle, "ai_id": definition.ai_id, "phase_id": new.phase_id},
+                )
         self.phases[actor_id] = selected
         return selected
 
@@ -281,43 +376,78 @@ class EnemyAIRuntime:
             return tuple(custom(battle, actor_id, self, rng))
         actor = battle.member(actor_id)
         present = [m for m in battle.members.values() if battle.combatants.state(m.member_id).present]
-        opponents = sorted((m for m in present if m.side != actor.side and battle.combatants.is_targetable(m.member_id)), key=lambda x: x.member_id)
-        allies = sorted((m for m in present if m.side == actor.side and battle.combatants.is_targetable(m.member_id)), key=lambda x: x.member_id)
-        if selector == "self": return (actor_id,)
-        if selector == "first_opponent": return tuple(x.member_id for x in opponents[:1])
-        if selector == "all_opponents": return tuple(x.member_id for x in opponents)
-        if selector == "first_ally": return tuple(x.member_id for x in allies[:1])
-        if selector == "random_opponent": return () if not opponents else (rng.choice(opponents).member_id,)
+        opponents = sorted(
+            (m for m in present if m.side != actor.side and battle.combatants.is_targetable(m.member_id)),
+            key=lambda x: x.member_id,
+        )
+        allies = sorted(
+            (m for m in present if m.side == actor.side and battle.combatants.is_targetable(m.member_id)),
+            key=lambda x: x.member_id,
+        )
+        if selector == "self":
+            return (actor_id,)
+        if selector == "first_opponent":
+            return tuple(x.member_id for x in opponents[:1])
+        if selector == "all_opponents":
+            return tuple(x.member_id for x in opponents)
+        if selector == "first_ally":
+            return tuple(x.member_id for x in allies[:1])
+        if selector == "random_opponent":
+            return () if not opponents else (rng.choice(opponents).member_id,)
         if selector.startswith("lowest_resource_ratio:"):
             rid = selector.split(":", 1)[1]
             candidates = allies if allies else []
-            if not candidates: return ()
+            if not candidates:
+                return ()
             chosen = min(candidates, key=lambda x: (self._ratio(x, rid), x.member_id))
             return (chosen.member_id,)
         raise KeyError(f"unknown AI target selector: {selector}")
 
     def decide(self, battle, ai_id, actor_id, *, rng=None):
-        definition = self.definitions[str(ai_id)]; actor_id = str(actor_id); rng = rng or random.Random()
+        definition = self.definitions[str(ai_id)]
+        actor_id = str(actor_id)
+        rng = rng or random.Random()
         phase_id = self._select_phase(definition, battle, actor_id)
         phase = next((x for x in definition.phases if x.phase_id == phase_id), None)
         allowed_ids = set(phase.decision_rule_ids) if phase and phase.decision_rule_ids else None
-        eligible = [r for r in definition.rules if (allowed_ids is None or r.rule_id in allowed_ids)
-                    and self._conditions(battle, actor_id, r.conditions, phase_id)]
+        eligible = [
+            r
+            for r in definition.rules
+            if (allowed_ids is None or r.rule_id in allowed_ids)
+            and self._conditions(battle, actor_id, r.conditions, phase_id)
+        ]
         if not eligible:
-            emit_hook(self.hooks, "rpg.battle.ai.no_decision", source=actor_id, data={"battle": battle, "ai_id": ai_id, "phase_id": phase_id})
+            emit_hook(
+                self.hooks,
+                "rpg.battle.ai.no_decision",
+                source=actor_id,
+                data={"battle": battle, "ai_id": ai_id, "phase_id": phase_id},
+            )
             return None
         best_priority = max(x.priority for x in eligible)
         pool = sorted((x for x in eligible if x.priority == best_priority and x.weight > 0), key=lambda x: x.rule_id)
         if not pool:
             return None
-        total = sum(x.weight for x in pool); roll = rng.random() * total; acc = 0.0; selected = pool[-1]
+        total = sum(x.weight for x in pool)
+        roll = rng.random() * total
+        acc = 0.0
+        selected = pool[-1]
         for rule in pool:
             acc += rule.weight
             if roll < acc:
-                selected = rule; break
+                selected = rule
+                break
         targets = self._targets(battle, actor_id, selected.target_selector, rng)
-        decision = AIDecision(definition.ai_id, actor_id, selected.rule_id, selected.action_kind,
-                              dict(selected.payload), targets, phase_id, selected.tags)
+        decision = AIDecision(
+            definition.ai_id,
+            actor_id,
+            selected.rule_id,
+            selected.action_kind,
+            dict(selected.payload),
+            targets,
+            phase_id,
+            selected.tags,
+        )
         emit_hook(self.hooks, "rpg.battle.ai.decision", source=actor_id, data={"battle": battle, "decision": decision})
         return decision
 
@@ -325,17 +455,26 @@ class EnemyAIRuntime:
         definition = self.definitions[str(ai_id)]
         phase_id = self.phases.get(str(actor_id), definition.initial_phase_id)
         phase = next((x for x in definition.phases if x.phase_id == phase_id), None)
-        return phase.actions_per_ready if phase and phase.actions_per_ready is not None else definition.actions_per_ready
+        return (
+            phase.actions_per_ready if phase and phase.actions_per_ready is not None else definition.actions_per_ready
+        )
 
     def execute_decision(self, battle, decision, *, rng=None):
         from .battle import BattleAction
+
         if decision.action_kind == "ability":
             ability_id = _id(decision.payload.get("ability_id"), "ability_id")
-            result = battle.execute_with_reactions(BattleAction(decision.actor_id, ability_id, decision.target_ids), rng=rng, tags=decision.tags)
+            result = battle.execute_with_reactions(
+                BattleAction(decision.actor_id, ability_id, decision.target_ids), rng=rng, tags=decision.tags
+            )
         elif decision.action_kind == "hook":
             hook_name = _id(decision.payload.get("hook"), "hook")
-            emit_hook(self.hooks, hook_name, source=decision.actor_id,
-                      data={"battle": battle, "decision": decision, "payload": dict(decision.payload)})
+            emit_hook(
+                self.hooks,
+                hook_name,
+                source=decision.actor_id,
+                data={"battle": battle, "decision": decision, "payload": dict(decision.payload)},
+            )
             result = None
         else:
             handler = self.action_handlers.get(decision.action_kind)
@@ -343,28 +482,44 @@ class EnemyAIRuntime:
                 raise KeyError(f"unknown AI action kind: {decision.action_kind}")
             result = handler(battle, decision, rng)
         self.set_memory(decision.actor_id, "last_rule_id", decision.rule_id)
-        self.set_memory(decision.actor_id, "action_count", int(self.get_memory(decision.actor_id, "action_count", 0)) + 1)
-        emit_hook(self.hooks, "rpg.battle.ai.action_executed", source=decision.actor_id,
-                  data={"battle": battle, "decision": decision, "result": result})
+        self.set_memory(
+            decision.actor_id, "action_count", int(self.get_memory(decision.actor_id, "action_count", 0)) + 1
+        )
+        emit_hook(
+            self.hooks,
+            "rpg.battle.ai.action_executed",
+            source=decision.actor_id,
+            data={"battle": battle, "decision": decision, "result": result},
+        )
         return result
 
     def run_ready(self, battle, ai_id, actor_id, *, rng=None):
-        rng = rng or random.Random(); results = []
+        rng = rng or random.Random()
+        results = []
         count = self.actions_per_ready(ai_id, actor_id)
         for index in range(count):
-            if not battle.can_act(actor_id): break
+            if not battle.can_act(actor_id):
+                break
             decision = self.decide(battle, ai_id, actor_id, rng=rng)
-            if decision is None: break
+            if decision is None:
+                break
             result = self.execute_decision(battle, decision, rng=rng)
             results.append((decision, result))
-            emit_hook(self.hooks, "rpg.battle.ai.multi_action_step", source=actor_id,
-                      data={"battle": battle, "index": index, "count": count, "decision": decision})
+            emit_hook(
+                self.hooks,
+                "rpg.battle.ai.multi_action_step",
+                source=actor_id,
+                data={"battle": battle, "index": index, "count": count, "decision": decision},
+            )
         return tuple(results)
 
     def to_data(self):
-        return {"schema": "asteria.rpg.enemy_ai_runtime", "version": 1,
-                "memory": {k: dict(v) for k, v in sorted(self.memory.items())},
-                "phases": dict(sorted(self.phases.items()))}
+        return {
+            "schema": "asteria.rpg.enemy_ai_runtime",
+            "version": 1,
+            "memory": {k: dict(v) for k, v in sorted(self.memory.items())},
+            "phases": dict(sorted(self.phases.items())),
+        }
 
     def restore_data(self, data):
         if data.get("schema") != "asteria.rpg.enemy_ai_runtime" or data.get("version") != 1:

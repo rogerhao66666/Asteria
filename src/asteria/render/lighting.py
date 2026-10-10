@@ -38,9 +38,7 @@ def build_light_command(light: Light2D, camera):
 def build_shadow_command(caster: ShadowCaster2D, camera):
     caster.validate()
     pts = tuple(camera.world_to_screen(x, y) for x, y in caster.points)
-    return ShadowCasterCommand(
-        caster_id=caster.caster_id, polygon=pts, layer=caster.layer, depth=caster.depth
-    )
+    return ShadowCasterCommand(caster_id=caster.caster_id, polygon=pts, layer=caster.layer, depth=caster.depth)
 
 
 def validate_material_table(materials):

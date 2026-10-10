@@ -5,6 +5,7 @@ They are not JRPG/ARPG engine branches: projects may copy, edit, replace, or
 ignore them.  The policy only answers presentation questions: whether a visual
 is persistent outside actions and what should happen after an action.
 """
+
 from __future__ import annotations
 from dataclasses import dataclass, replace
 from enum import Enum
@@ -43,30 +44,44 @@ class EquipmentPresentationPolicy:
         if visual is None:
             return ()
         from dataclasses import asdict
-        return (Command("attachment", "swap_or_attach", {
-            "attachment_id": self.attachment_id,
-            "asset_id": visual.asset_id,
-            "socket_id": visual.socket_id,
-            "grip": asdict(visual.grip),
-            "local": asdict(visual.local),
-            "render_layer": visual.render_layer,
-            "metadata": dict(visual.metadata),
-        }),)
+
+        return (
+            Command(
+                "attachment",
+                "swap_or_attach",
+                {
+                    "attachment_id": self.attachment_id,
+                    "asset_id": visual.asset_id,
+                    "socket_id": visual.socket_id,
+                    "grip": asdict(visual.grip),
+                    "local": asdict(visual.local),
+                    "render_layer": visual.render_layer,
+                    "metadata": dict(visual.metadata),
+                },
+            ),
+        )
 
     def selection_preview_commands(self, visual: VisualResource | None) -> tuple[Command, ...]:
         """Optional menu/selection preview; never mutates gameplay equipment."""
         if not self.preview_on_selection or visual is None:
             return ()
         from dataclasses import asdict
-        return (Command("attachment", "swap_or_attach", {
-            "attachment_id": self.attachment_id,
-            "asset_id": visual.asset_id,
-            "socket_id": visual.socket_id,
-            "grip": asdict(visual.grip),
-            "local": asdict(visual.local),
-            "render_layer": visual.render_layer,
-            "metadata": dict(visual.metadata),
-        }),)
+
+        return (
+            Command(
+                "attachment",
+                "swap_or_attach",
+                {
+                    "attachment_id": self.attachment_id,
+                    "asset_id": visual.asset_id,
+                    "socket_id": visual.socket_id,
+                    "grip": asdict(visual.grip),
+                    "local": asdict(visual.local),
+                    "render_layer": visual.render_layer,
+                    "metadata": dict(visual.metadata),
+                },
+            ),
+        )
 
 
 # Starter conveniences only. Names describe the shipped template behavior, not

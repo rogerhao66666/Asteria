@@ -28,9 +28,7 @@ def test_enemy_runtime_uses_generic_gameplay_primitives():
 
 
 def test_enemy_and_encounter_roundtrip():
-    enemy = EnemyDefinition(
-        "slime", resources={"life": 10}, reward=RewardDefinition(currencies={"coin": 3})
-    )
+    enemy = EnemyDefinition("slime", resources={"life": 10}, reward=RewardDefinition(currencies={"coin": 3}))
     encounter = EncounterDefinition("pair", members=[EncounterMember("slime", count=2)])
     assert EnemyDefinition.from_data(enemy.to_data()) == enemy
     assert EncounterDefinition.from_data(encounter.to_data()) == encounter
@@ -52,9 +50,7 @@ def test_reward_roll_is_seedable_and_data_driven():
 
 
 def test_reward_keys_are_not_hardcoded_to_gold_or_exp():
-    reward = RewardDefinition(
-        currencies={"moon_shard": 4}, experience={"alchemy_mastery": 9}
-    )
+    reward = RewardDefinition(currencies={"moon_shard": 4}, experience={"alchemy_mastery": 9})
     rolled = roll_reward(reward, random.Random(1))
     assert rolled.currencies["moon_shard"] == 4
     assert rolled.experience["alchemy_mastery"] == 9

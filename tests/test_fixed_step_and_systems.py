@@ -36,9 +36,9 @@ def _app(step=0.02, max_steps=5):
 
 def test_fixed_step_accumulates_real_time_into_whole_steps():
     app, recorder = _app()
-    assert app.step_fixed(0.05) == 2          # 0.05 = 2 steps + 0.01 left
+    assert app.step_fixed(0.05) == 2  # 0.05 = 2 steps + 0.01 left
     assert app.time.fixed_alpha == pytest.approx(0.5)
-    assert app.step_fixed(0.01) == 1          # leftover 0.01 + 0.01 = one step
+    assert app.step_fixed(0.01) == 1  # leftover 0.01 + 0.01 = one step
     assert recorder.fixed == [0.02, 0.02, 0.02]
     assert app.time.fixed_steps == 3
 
@@ -67,8 +67,12 @@ def _animated_entity(scene, clip_set_id="clips"):
 
 def test_animation_system_advances_frames_and_rebinds_on_clip_change():
     clips = {
-        "clips": AnimationClipSet({"walk": SpriteClip("walk", [SpriteKeyframe(0, 0.1), SpriteKeyframe(1, 0.1)], True),
-                                   "idle": SpriteClip("idle", [SpriteKeyframe(5, 0.5)], True)}),
+        "clips": AnimationClipSet(
+            {
+                "walk": SpriteClip("walk", [SpriteKeyframe(0, 0.1), SpriteKeyframe(1, 0.1)], True),
+                "idle": SpriteClip("idle", [SpriteKeyframe(5, 0.5)], True),
+            }
+        ),
     }
     scene = Scene("S")
     system = AnimationSystem(clips.get)

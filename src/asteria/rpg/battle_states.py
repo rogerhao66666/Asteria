@@ -220,19 +220,25 @@ class BattleStateRuntime:
             raise ValueError("target has no StateRuntime")
         policy = self.policies.get(state_id, BattleStatePolicy(state_id))
         if any(target.tags.contains(tag) for tag in policy.immune_target_tags):
-            result = BattleStateApplicationResult(state_id, str(source_id), str(target_id), False, True, 0.0, None, None, "immune")
+            result = BattleStateApplicationResult(
+                state_id, str(source_id), str(target_id), False, True, 0.0, None, None, "immune"
+            )
             emit_hook(self.hooks, "rpg.battle.state_resisted", source=str(target_id), data={"result": result})
             return result
         chance = self._chance(policy, source, target)
         roller = rng.random if rng is not None else random.random
         roll = float(roller())
         if roll >= chance:
-            result = BattleStateApplicationResult(state_id, str(source_id), str(target_id), False, False, chance, roll, None, "resisted")
+            result = BattleStateApplicationResult(
+                state_id, str(source_id), str(target_id), False, False, chance, roll, None, "resisted"
+            )
             emit_hook(self.hooks, "rpg.battle.state_resisted", source=str(target_id), data={"result": result})
             return result
         duration = self._duration(policy, target)
         target.states.apply(state_id, duration=duration, source_id=str(source_id))
-        result = BattleStateApplicationResult(state_id, str(source_id), str(target_id), True, False, chance, roll, duration, "applied")
+        result = BattleStateApplicationResult(
+            state_id, str(source_id), str(target_id), True, False, chance, roll, duration, "applied"
+        )
         emit_hook(self.hooks, "rpg.battle.state_applied", source=str(target_id), data={"result": result})
         return result
 
@@ -263,7 +269,12 @@ class BattleStateRuntime:
                     continue
                 if trigger in policy.remove_triggers:
                     states.remove(active.state_id, run_remove_effects=True)
-                    emit_hook(self.hooks, "rpg.battle.state_removed", source=member.member_id, data={"state_id": active.state_id, "trigger": trigger})
+                    emit_hook(
+                        self.hooks,
+                        "rpg.battle.state_removed",
+                        source=member.member_id,
+                        data={"state_id": active.state_id, "trigger": trigger},
+                    )
                     continue
                 if policy.tick_trigger != trigger:
                     continue
@@ -272,5 +283,10 @@ class BattleStateRuntime:
                     transform = self.periodic_transform(member, active, policy)
                 if states.advance(active.state_id, policy.tick_amount, value_transform=transform):
                     expired.append((member.member_id, active.state_id))
-                    emit_hook(self.hooks, "rpg.battle.state_expired", source=member.member_id, data={"state_id": active.state_id, "trigger": trigger})
+                    emit_hook(
+                        self.hooks,
+                        "rpg.battle.state_expired",
+                        source=member.member_id,
+                        data={"state_id": active.state_id, "trigger": trigger},
+                    )
         return tuple(expired)

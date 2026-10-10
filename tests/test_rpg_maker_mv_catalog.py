@@ -20,9 +20,19 @@ def test_real_catalog_indexes_all_visual_categories():
     catalog = _catalog()
 
     for category in (
-        "characters", "faces", "sv_actors", "enemies", "sv_enemies",
-        "tilesets", "battlebacks1", "battlebacks2", "animations",
-        "parallaxes", "system", "titles1", "titles2",
+        "characters",
+        "faces",
+        "sv_actors",
+        "enemies",
+        "sv_enemies",
+        "tilesets",
+        "battlebacks1",
+        "battlebacks2",
+        "animations",
+        "parallaxes",
+        "system",
+        "titles1",
+        "titles2",
     ):
         assert catalog.images_for(category), category
     assert catalog.category_root("pictures").name == "pictures"

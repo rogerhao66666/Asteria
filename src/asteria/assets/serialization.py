@@ -62,9 +62,7 @@ def serialize_asset_registry(registry):
 
 def deserialize_asset_registry(data):
     version = data.get("version")
-    expected = {"schema", "version", "assets"} if version == 1 else {
-        "schema", "version", "assets", "canonical_assets"
-    }
+    expected = {"schema", "version", "assets"} if version == 1 else {"schema", "version", "assets", "canonical_assets"}
     if set(data) != expected:
         raise ValueError("invalid assets document")
     if data["schema"] != "asteria.assets" or version not in {1, 2}:
@@ -75,11 +73,16 @@ def deserialize_asset_registry(data):
     if version >= 2:
         for d in data["canonical_assets"]:
             source = d["source"]
-            reg.register(CanonicalAsset(
-                d["asset_id"], d["kind"],
-                AssetSource(source["uri"], source["provider"], tuple(tuple(x) for x in source["provenance"])),
-                d["version"], frozenset(d["tags"]), tuple(tuple(x) for x in d["metadata"]),
-            ))
+            reg.register(
+                CanonicalAsset(
+                    d["asset_id"],
+                    d["kind"],
+                    AssetSource(source["uri"], source["provider"], tuple(tuple(x) for x in source["provenance"])),
+                    d["version"],
+                    frozenset(d["tags"]),
+                    tuple(tuple(x) for x in d["metadata"]),
+                )
+            )
     return reg
 
 

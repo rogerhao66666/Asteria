@@ -21,6 +21,7 @@ def _nonnegative(value, label):
 @dataclass(frozen=True, slots=True)
 class ActionSequenceStep:
     """One authored step. participant_index makes the same model cover solo and N-person actions."""
+
     ability_id: str
     participant_index: int = 0
     repeat: int = 1
@@ -29,8 +30,17 @@ class ActionSequenceStep:
     required_previous_tags: tuple[str, ...] = ()
     emitted_tags: tuple[str, ...] = ()
 
-    def __init__(self, ability_id, *, participant_index=0, repeat=1, delay=0.0,
-                 target_policy="inherit", required_previous_tags=(), emitted_tags=()):
+    def __init__(
+        self,
+        ability_id,
+        *,
+        participant_index=0,
+        repeat=1,
+        delay=0.0,
+        target_policy="inherit",
+        required_previous_tags=(),
+        emitted_tags=(),
+    ):
         if int(participant_index) < 0:
             raise ValueError("participant_index must be >= 0")
         if int(repeat) < 1:
@@ -44,17 +54,27 @@ class ActionSequenceStep:
         object.__setattr__(self, "emitted_tags", tuple(dict.fromkeys(str(x) for x in emitted_tags)))
 
     def to_data(self):
-        return {"ability_id": self.ability_id, "participant_index": self.participant_index,
-                "repeat": self.repeat, "delay": self.delay, "target_policy": self.target_policy,
-                "required_previous_tags": list(self.required_previous_tags), "emitted_tags": list(self.emitted_tags)}
+        return {
+            "ability_id": self.ability_id,
+            "participant_index": self.participant_index,
+            "repeat": self.repeat,
+            "delay": self.delay,
+            "target_policy": self.target_policy,
+            "required_previous_tags": list(self.required_previous_tags),
+            "emitted_tags": list(self.emitted_tags),
+        }
 
     @classmethod
     def from_data(cls, data):
-        return cls(data["ability_id"], participant_index=data.get("participant_index", 0),
-                   repeat=data.get("repeat", 1), delay=data.get("delay", 0.0),
-                   target_policy=data.get("target_policy", "inherit"),
-                   required_previous_tags=data.get("required_previous_tags", ()),
-                   emitted_tags=data.get("emitted_tags", ()))
+        return cls(
+            data["ability_id"],
+            participant_index=data.get("participant_index", 0),
+            repeat=data.get("repeat", 1),
+            delay=data.get("delay", 0.0),
+            target_policy=data.get("target_policy", "inherit"),
+            required_previous_tags=data.get("required_previous_tags", ()),
+            emitted_tags=data.get("emitted_tags", ()),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,8 +87,17 @@ class ActionSequenceDefinition:
     interruption_policy: str = "cancel_remaining"
     tags: tuple[str, ...] = ()
 
-    def __init__(self, sequence_id, steps, *, min_participants=1, max_participants=1,
-                 participant_policy="all_available", interruption_policy="cancel_remaining", tags=()):
+    def __init__(
+        self,
+        sequence_id,
+        steps,
+        *,
+        min_participants=1,
+        max_participants=1,
+        participant_policy="all_available",
+        interruption_policy="cancel_remaining",
+        tags=(),
+    ):
         steps = tuple(steps)
         if not steps:
             raise ValueError("action sequence requires at least one step")
@@ -89,20 +118,31 @@ class ActionSequenceDefinition:
         object.__setattr__(self, "tags", tuple(dict.fromkeys(str(x) for x in tags)))
 
     def to_data(self):
-        return {"schema": "asteria.rpg.action_sequence_definition", "version": 1,
-                "sequence_id": self.sequence_id, "steps": [x.to_data() for x in self.steps],
-                "min_participants": self.min_participants, "max_participants": self.max_participants,
-                "participant_policy": self.participant_policy,
-                "interruption_policy": self.interruption_policy, "tags": list(self.tags)}
+        return {
+            "schema": "asteria.rpg.action_sequence_definition",
+            "version": 1,
+            "sequence_id": self.sequence_id,
+            "steps": [x.to_data() for x in self.steps],
+            "min_participants": self.min_participants,
+            "max_participants": self.max_participants,
+            "participant_policy": self.participant_policy,
+            "interruption_policy": self.interruption_policy,
+            "tags": list(self.tags),
+        }
 
     @classmethod
     def from_data(cls, data):
         if data.get("schema") != "asteria.rpg.action_sequence_definition" or data.get("version") != 1:
             raise ValueError("unsupported action sequence definition")
-        return cls(data["sequence_id"], (ActionSequenceStep.from_data(x) for x in data["steps"]),
-                   min_participants=data.get("min_participants", 1), max_participants=data.get("max_participants", 1),
-                   participant_policy=data.get("participant_policy", "all_available"),
-                   interruption_policy=data.get("interruption_policy", "cancel_remaining"), tags=data.get("tags", ()))
+        return cls(
+            data["sequence_id"],
+            (ActionSequenceStep.from_data(x) for x in data["steps"]),
+            min_participants=data.get("min_participants", 1),
+            max_participants=data.get("max_participants", 1),
+            participant_policy=data.get("participant_policy", "all_available"),
+            interruption_policy=data.get("interruption_policy", "cancel_remaining"),
+            tags=data.get("tags", ()),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,6 +170,7 @@ class ActionSequenceRuntime:
     BattleRuntime validates each concrete action at execution time; authored policy
     strings and later hooks decide whether a project cancels, skips or substitutes.
     """
+
     def __init__(self, definitions=()):
         self.definitions = {}
         for value in definitions:
@@ -159,7 +200,10 @@ class ActionSequenceRuntime:
                 raise ValueError(f"sequence prerequisites not met at step {step_index}")
             offset += step.delay
             for hit in range(step.repeat):
-                planned.append(PlannedSequenceStep(step_index, hit, participants[step.participant_index],
-                                                   step.ability_id, targets, offset))
+                planned.append(
+                    PlannedSequenceStep(
+                        step_index, hit, participants[step.participant_index], step.ability_id, targets, offset
+                    )
+                )
             emitted.update(step.emitted_tags)
         return ActionSequencePlan(definition.sequence_id, participants, tuple(planned), definition.tags)

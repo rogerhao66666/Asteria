@@ -294,18 +294,13 @@ class BattlePresentationRuntime:
             if visual.aura_sprite_sheet_asset_id is not None:
                 aura_sheet = resolve_sprite_sheet(visual.aura_sprite_sheet_asset_id)
                 if aura_sheet is None:
-                    raise ValueError(
-                        f"missing aura sprite sheet: {visual.aura_sprite_sheet_asset_id}"
-                    )
+                    raise ValueError(f"missing aura sprite sheet: {visual.aura_sprite_sheet_asset_id}")
                 if tuple(aura_sheet.frames) != tuple(sheet.frames):
                     raise ValueError(
-                        f"aura sprite sheet frame layout must match character sheet "
-                        f"for {visual.member_id}"
+                        f"aura sprite sheet frame layout must match character sheet for {visual.member_id}"
                     )
                 self._aura_sprite_sheets[visual.member_id] = aura_sheet
-            self._combatants[visual.member_id] = BattleCombatantAnimator.create(
-                visual, clip_set, self.timing_profile
-            )
+            self._combatants[visual.member_id] = BattleCombatantAnimator.create(visual, clip_set, self.timing_profile)
         self.time = 0.0
         self.last_sequence = 0
 
@@ -489,11 +484,19 @@ class BattlePresentationRuntime:
                     visual.anchor.x + overlay.offset[0],
                     visual.anchor.y + overlay.offset[1] - source[3],
                 )
-                draws.append(TextureDraw(
-                    overlay.texture_asset_id, source, ox, oy,
-                    source[2] * camera.zoom, source[3] * camera.zoom,
-                    layer=1, depth=visual.anchor.depth, flip_x=visual.anchor.facing.lower() == "left",
-                ))
+                draws.append(
+                    TextureDraw(
+                        overlay.texture_asset_id,
+                        source,
+                        ox,
+                        oy,
+                        source[2] * camera.zoom,
+                        source[3] * camera.zoom,
+                        layer=1,
+                        depth=visual.anchor.depth,
+                        flip_x=visual.anchor.facing.lower() == "left",
+                    )
+                )
         draws.sort(key=lambda d: (d.layer, d.depth, d.screen_y, d.screen_x))
         return BattlePresentationFrame(self.scene.scene_id, self.scene.background_asset_id, tuple(draws))
 

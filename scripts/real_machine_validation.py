@@ -8,6 +8,7 @@ permission missing) or NOT EXECUTED (needs a human; a procedure is printed
 in the report instead). Nothing is marked PASS without a measurement.
 Results: OUTPUT_DIR/results.json plus screenshots.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -31,6 +32,7 @@ def result(check, status, evidence, **details):
 
 
 # -- checks (each runs in its own interpreter) --------------------------------
+
 
 def check_gpu_window(out):
     import pygame
@@ -59,15 +61,21 @@ def check_gpu_window(out):
     width, height = backend.screen_size
     image = pygame.image.frombuffer(raw, (width, height), "RGB")
     pygame.image.save(pygame.transform.flip(image, False, True), str(out / "gpu_window.png"))
-    distinct = len(set(raw[i:i + 3] for i in range(0, len(raw), 3 * 97)))
+    distinct = len(set(raw[i : i + 3] for i in range(0, len(raw), 3 * 97)))
     backend.close()
     report = profiler.report()
     software = "software" in renderer.lower()
     ok = distinct > 5 and not software and report["pacing"]["measured_fps"] > 30
-    return result("gpu_window", "PASS" if ok else "FAIL",
-                  f"ModernGL window on '{renderer}': {sprites} sprites/frame for 240 frames, "
-                  f"{report['pacing']['measured_fps']} fps, read-back framebuffer has {distinct} sampled colours",
-                  renderer=renderer, pacing=report["pacing"], frame=report["frame"], screenshot="gpu_window.png")
+    return result(
+        "gpu_window",
+        "PASS" if ok else "FAIL",
+        f"ModernGL window on '{renderer}': {sprites} sprites/frame for 240 frames, "
+        f"{report['pacing']['measured_fps']} fps, read-back framebuffer has {distinct} sampled colours",
+        renderer=renderer,
+        pacing=report["pacing"],
+        frame=report["frame"],
+        screenshot="gpu_window.png",
+    )
 
 
 def check_input(out):
@@ -91,14 +99,22 @@ def check_input(out):
         tracker.update(source.raw_state())
     pads = pygame.joystick.get_count()
     pygame.quit()
-    keyboard = result("input_keyboard_event_queue", "PASS" if all(seen.values()) else "FAIL",
-                      f"Key events posted to the real {driver} window's SDL event queue reached the input map: {seen}",
-                      note="Synthetic events through the OS window queue; a physical key press is a separate manual item.")
-    physical = result("input_keyboard_physical", "NOT EXECUTED",
-                      "Needs a person pressing keys in the game window (procedure M1).")
-    controller = result("input_controller", "BLOCKED" if pads == 0 else "NOT EXECUTED",
-                        "No game controller connected (pygame.joystick.get_count() == 0); procedure M2."
-                        if pads == 0 else f"{pads} controller(s) connected; run procedure M2 with a person.")
+    keyboard = result(
+        "input_keyboard_event_queue",
+        "PASS" if all(seen.values()) else "FAIL",
+        f"Key events posted to the real {driver} window's SDL event queue reached the input map: {seen}",
+        note="Synthetic events through the OS window queue; a physical key press is a separate manual item.",
+    )
+    physical = result(
+        "input_keyboard_physical", "NOT EXECUTED", "Needs a person pressing keys in the game window (procedure M1)."
+    )
+    controller = result(
+        "input_controller",
+        "BLOCKED" if pads == 0 else "NOT EXECUTED",
+        "No game controller connected (pygame.joystick.get_count() == 0); procedure M2."
+        if pads == 0
+        else f"{pads} controller(s) connected; run procedure M2 with a person.",
+    )
     return [keyboard, physical, controller]
 
 
@@ -123,14 +139,20 @@ def check_audio(out):
     pygame.mixer.quit()
     ok = busy_at_start and abs(elapsed - length) < 0.25 and music_busy
     return [
-        result("audio_playback_device", "PASS" if ok else "FAIL",
-               f"CoreAudio device opened {init}; hit.wav ({length:.3f}s) kept its channel busy for {elapsed:.3f}s; "
-               f"battle_theme.ogg streaming={music_busy}",
-               note="Device-level playback only; audible confirmation is manual item M3."),
+        result(
+            "audio_playback_device",
+            "PASS" if ok else "FAIL",
+            f"CoreAudio device opened {init}; hit.wav ({length:.3f}s) kept its channel busy for {elapsed:.3f}s; "
+            f"battle_theme.ogg streaming={music_busy}",
+            note="Device-level playback only; audible confirmation is manual item M3.",
+        ),
         result("audio_playback_audible", "NOT EXECUTED", "Needs a listener (procedure M3)."),
-        result("audio_latency", "NOT EXECUTED",
-               "Output latency needs an acoustic or loopback measurement (procedure M4); "
-               f"the configured mixer buffer is not reported by pygame and is not presented as latency."),
+        result(
+            "audio_latency",
+            "NOT EXECUTED",
+            "Output latency needs an acoustic or loopback measurement (procedure M4); "
+            f"the configured mixer buffer is not reported by pygame and is not presented as latency.",
+        ),
     ]
 
 
@@ -192,21 +214,33 @@ def check_battle_frame_pacing(out):
     report = profiler.report()
     pacing = report["pacing"]
     smooth_ok = adapter.visuals_enabled and frame_changes / elapsed >= 3.0
-    pacing_ok = pacing["measured_fps"] >= 55 and pacing["interval_p99_ms"] <= 25.0 and \
-        pacing["frames_over_budget"] <= max(1, int(0.01 * frames))
+    pacing_ok = (
+        pacing["measured_fps"] >= 55
+        and pacing["interval_p99_ms"] <= 25.0
+        and pacing["frames_over_budget"] <= max(1, int(0.01 * frames))
+    )
     (out / "battle_profile.json").write_text(json.dumps(report, indent=2))
     return [
-        result("animation_smoothness", "PASS" if smooth_ok else "FAIL",
-               f"Canonical battle screen in a real {driver} window: combatant sprites drawn, boss animation "
-               f"advanced {frame_changes} frames in {elapsed:.1f}s ({frame_changes / elapsed:.1f}/s); "
-               f"{uses} skills used through the key-event queue; VFX particles peaked at "
-               f"{report['counters'].get('particles', {}).get('max', 0):g}",
-               screenshots=shots, note="Perceived smoothness by a person is manual item M5."),
-        result("frame_pacing", "PASS" if pacing_ok else "FAIL",
-               f"{frames} frames: {pacing['measured_fps']} fps (target 60), jitter {pacing['interval_jitter_ms']} ms, "
-               f"p99 interval {pacing['interval_p99_ms']} ms, {pacing['frames_over_budget']} frames over 1.5x budget",
-               pacing=pacing, frame=report["frame"], sections={k: v["mean_ms"] for k, v in report["sections"].items()},
-               unsupported=report["unsupported"]),
+        result(
+            "animation_smoothness",
+            "PASS" if smooth_ok else "FAIL",
+            f"Canonical battle screen in a real {driver} window: combatant sprites drawn, boss animation "
+            f"advanced {frame_changes} frames in {elapsed:.1f}s ({frame_changes / elapsed:.1f}/s); "
+            f"{uses} skills used through the key-event queue; VFX particles peaked at "
+            f"{report['counters'].get('particles', {}).get('max', 0):g}",
+            screenshots=shots,
+            note="Perceived smoothness by a person is manual item M5.",
+        ),
+        result(
+            "frame_pacing",
+            "PASS" if pacing_ok else "FAIL",
+            f"{frames} frames: {pacing['measured_fps']} fps (target 60), jitter {pacing['interval_jitter_ms']} ms, "
+            f"p99 interval {pacing['interval_p99_ms']} ms, {pacing['frames_over_budget']} frames over 1.5x budget",
+            pacing=pacing,
+            frame=report["frame"],
+            sections={k: v["mean_ms"] for k, v in report["sections"].items()},
+            unsupported=report["unsupported"],
+        ),
     ]
 
 
@@ -236,9 +270,12 @@ def check_editor_playtest(out):
     window.document.mark_saved()
     window.close()
     ok = started and alive_after and stopped and exited
-    return result("editor_to_runtime_playtest", "PASS" if ok else "FAIL",
-                  f"Qt platform '{platform_name}': Run Project started the runtime process={started}, "
-                  f"still running after 4 s={alive_after}, Stop Play returned={stopped}, process exited={exited}")
+    return result(
+        "editor_to_runtime_playtest",
+        "PASS" if ok else "FAIL",
+        f"Qt platform '{platform_name}': Run Project started the runtime process={started}, "
+        f"still running after 4 s={alive_after}, Stop Play returned={stopped}, process exited={exited}",
+    )
 
 
 def check_runtime_exit_and_recovery(out):
@@ -287,28 +324,39 @@ def check_runtime_exit_and_recovery(out):
         else:
             save_path.write_bytes(backup)
     return [
-        result("runtime_exit", "PASS" if clean else "FAIL",
-               f"Real-window runtime ran 90 frames and exited with code {finished.returncode} in {clean_time:.1f}s",
-               stderr=finished.stderr[-500:]),
-        result("runtime_recovery", "PASS" if recovered else "FAIL",
-               f"Runtime saved ({line}), was killed with SIGKILL (exit {child.returncode}); the save reloaded "
-               f"with player position {tuple(restored.player_position)}"),
+        result(
+            "runtime_exit",
+            "PASS" if clean else "FAIL",
+            f"Real-window runtime ran 90 frames and exited with code {finished.returncode} in {clean_time:.1f}s",
+            stderr=finished.stderr[-500:],
+        ),
+        result(
+            "runtime_recovery",
+            "PASS" if recovered else "FAIL",
+            f"Runtime saved ({line}), was killed with SIGKILL (exit {child.returncode}); the save reloaded "
+            f"with player position {tuple(restored.player_position)}",
+        ),
     ]
 
 
 CHECKS = {
-    "gpu_window": check_gpu_window, "input": check_input, "audio": check_audio,
-    "battle": check_battle_frame_pacing, "editor": check_editor_playtest, "runtime": check_runtime_exit_and_recovery,
+    "gpu_window": check_gpu_window,
+    "input": check_input,
+    "audio": check_audio,
+    "battle": check_battle_frame_pacing,
+    "editor": check_editor_playtest,
+    "runtime": check_runtime_exit_and_recovery,
 }
 
 
 def _run_child(name, out):
-    proc = subprocess.run([sys.executable, __file__, str(out), "--child", name],
-                          capture_output=True, text=True, timeout=600, cwd=REPO)
+    proc = subprocess.run(
+        [sys.executable, __file__, str(out), "--child", name], capture_output=True, text=True, timeout=600, cwd=REPO
+    )
     marker = "RESULT_JSON:"
     for line in proc.stdout.splitlines():
         if line.startswith(marker):
-            return json.loads(line[len(marker):])
+            return json.loads(line[len(marker) :])
     return [result(name, "FAIL", f"check crashed (exit {proc.returncode})", stderr=proc.stderr[-1500:])]
 
 
@@ -328,8 +376,11 @@ def main(argv=None):
     results = []
     for name in args.only or CHECKS:
         results.extend(_run_child(name, out))
-    meta = {"machine": platform.platform(), "python": platform.python_version(),
-            "time": time.strftime("%Y-%m-%d %H:%M:%S %z")}
+    meta = {
+        "machine": platform.platform(),
+        "python": platform.python_version(),
+        "time": time.strftime("%Y-%m-%d %H:%M:%S %z"),
+    }
     (out / "results.json").write_text(json.dumps({"meta": meta, "results": results}, indent=2))
     for item in results:
         print(f"{item['status']:<13} {item['check']}: {item['evidence']}")

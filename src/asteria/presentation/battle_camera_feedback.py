@@ -177,19 +177,27 @@ class BattleCameraFeedbackRuntime:
                 # Selection may legitimately reference a combatant with no current visual.
                 continue
             sx, sy = view.world_to_screen(visual.anchor.x, visual.anchor.y)
-            indicators.append(BattleTargetIndicator(
-                member_id, member_id == self.primary_target_id,
-                visual.anchor.x, visual.anchor.y, sx, sy,
-            ))
+            indicators.append(
+                BattleTargetIndicator(
+                    member_id,
+                    member_id == self.primary_target_id,
+                    visual.anchor.x,
+                    visual.anchor.y,
+                    sx,
+                    sy,
+                )
+            )
         dx, dy = self.camera_offset()
-        ordered_fx = tuple(sorted(
-            self.screen_fx,
-            key=lambda item: (
-                int(dict(item.payload.get("staging", {}) or {}).get("layer", 0)),
-                -int(dict(item.payload.get("staging", {}) or {}).get("priority", 0)),
-                item.sequence,
-            ),
-        ))
+        ordered_fx = tuple(
+            sorted(
+                self.screen_fx,
+                key=lambda item: (
+                    int(dict(item.payload.get("staging", {}) or {}).get("layer", 0)),
+                    -int(dict(item.payload.get("staging", {}) or {}).get("priority", 0)),
+                    item.sequence,
+                ),
+            )
+        )
         return BattleCameraFeedbackFrame(dx, dy, ordered_fx, tuple(indicators))
 
     def snapshot(self):
@@ -203,16 +211,26 @@ class BattleCameraFeedbackRuntime:
             "primary_target_id": self.primary_target_id,
             "impulses": [
                 {
-                    "sequence": x.sequence, "cue_id": x.cue_id,
-                    "amplitude_x": x.amplitude_x, "amplitude_y": x.amplitude_y,
-                    "frequency": x.frequency, "age": x.age, "duration": x.duration,
-                } for x in self.impulses
+                    "sequence": x.sequence,
+                    "cue_id": x.cue_id,
+                    "amplitude_x": x.amplitude_x,
+                    "amplitude_y": x.amplitude_y,
+                    "frequency": x.frequency,
+                    "age": x.age,
+                    "duration": x.duration,
+                }
+                for x in self.impulses
             ],
             "screen_fx": [
                 {
-                    "sequence": x.sequence, "cue_id": x.cue_id, "effect": x.effect,
-                    "payload": dict(x.payload), "age": x.age, "duration": x.duration,
-                } for x in self.screen_fx
+                    "sequence": x.sequence,
+                    "cue_id": x.cue_id,
+                    "effect": x.effect,
+                    "payload": dict(x.payload),
+                    "age": x.age,
+                    "duration": x.duration,
+                }
+                for x in self.screen_fx
             ],
         }
 
@@ -230,13 +248,26 @@ class BattleCameraFeedbackRuntime:
         self.primary_target_id = None if primary is None else str(primary)
         if self.primary_target_id is not None and self.primary_target_id not in self.target_ids:
             raise ValueError("primary target missing from restored target_ids")
-        self.impulses = [BattleCameraImpulse(
-            int(x["sequence"]), str(x["cue_id"]),
-            _finite(x["amplitude_x"], "amplitude_x"), _finite(x["amplitude_y"], "amplitude_y"),
-            _positive(x["frequency"], "frequency"), _nonnegative(x["age"], "age"),
-            _positive(x["duration"], "duration"),
-        ) for x in data.get("impulses", ())]
-        self.screen_fx = [BattleScreenFxCue(
-            int(x["sequence"]), str(x["cue_id"]), str(x["effect"]), dict(x.get("payload", {})),
-            _nonnegative(x["age"], "age"), _positive(x["duration"], "duration"),
-        ) for x in data.get("screen_fx", ())]
+        self.impulses = [
+            BattleCameraImpulse(
+                int(x["sequence"]),
+                str(x["cue_id"]),
+                _finite(x["amplitude_x"], "amplitude_x"),
+                _finite(x["amplitude_y"], "amplitude_y"),
+                _positive(x["frequency"], "frequency"),
+                _nonnegative(x["age"], "age"),
+                _positive(x["duration"], "duration"),
+            )
+            for x in data.get("impulses", ())
+        ]
+        self.screen_fx = [
+            BattleScreenFxCue(
+                int(x["sequence"]),
+                str(x["cue_id"]),
+                str(x["effect"]),
+                dict(x.get("payload", {})),
+                _nonnegative(x["age"], "age"),
+                _positive(x["duration"], "duration"),
+            )
+            for x in data.get("screen_fx", ())
+        ]

@@ -75,19 +75,16 @@ def run_preview(
     registry = build_preview_registry()
     project = Project.load_json(project_path, registry)
     root = (
-        Path(resource_root).expanduser().resolve()
-        if resource_root is not None
-        else Path(project_path).resolve().parent
+        Path(resource_root).expanduser().resolve() if resource_root is not None else Path(project_path).resolve().parent
     )
     runtime_save = GameRuntimeSave.load_json(save_path, project) if save_path else None
     if runtime_save is None and playtest_profile:
         from asteria.editor.playtest_profiles import PlaytestProfileLibrary
-        runtime_save=PlaytestProfileLibrary(root).instantiate(playtest_profile,project)
+
+        runtime_save = PlaytestProfileLibrary(root).instantiate(playtest_profile, project)
     if runtime_save is None:
-        runtime_save=project.game_start.instantiate(project)
-    effective_scene_id = (
-        runtime_save.scene_id if runtime_save is not None else (scene_id or project.startup_scene_id)
-    )
+        runtime_save = project.game_start.instantiate(project)
+    effective_scene_id = runtime_save.scene_id if runtime_save is not None else (scene_id or project.startup_scene_id)
     scene = project.scene(effective_scene_id)
     if runtime_save is not None and runtime_save.player_entity_id and runtime_save.player_position is not None:
         player = scene.get_entity(runtime_save.player_entity_id) if scene is not None else None
@@ -102,8 +99,7 @@ def run_preview(
         (
             entity.try_get(Camera2DComponent)
             for entity in scene.entities()
-            if entity.try_get(Camera2DComponent) is not None
-            and entity.try_get(Camera2DComponent).active
+            if entity.try_get(Camera2DComponent) is not None and entity.try_get(Camera2DComponent).active
         ),
         None,
     )
@@ -122,6 +118,7 @@ def run_preview(
             # Project + GameRuntimeSave own game rules/state.
             backend.close()
             from asteria.runtime.playable_test_runtime import run_playable_test_runtime
+
             return run_playable_test_runtime(
                 project,
                 root,
@@ -134,11 +131,7 @@ def run_preview(
                 profile_path=profile_path,
                 battle_presentation=battle_presentation,
             )
-        if (
-            reference_sidecar.exists()
-            and hasattr(backend, "load_texture")
-            and hasattr(backend, "draw_texture")
-        ):
+        if reference_sidecar.exists() and hasattr(backend, "load_texture") and hasattr(backend, "draw_texture"):
             from asteria.runtime.reference_runtime import (
                 ReferenceRuntime,
                 run_reference_runtime,
@@ -184,8 +177,11 @@ def main(argv=None):
     parser.add_argument("--frames", type=int, help="quit after this many frames (smoke tests)")
     parser.add_argument("--fps", type=int, default=60, help="target frame rate")
     parser.add_argument("--profile", help="write a runtime profile (JSON) to this path on exit")
-    parser.add_argument("--battle-presentation", choices=("legacy", "canonical"),
-                        help="battle screen to use (default: the project manifest's choice)")
+    parser.add_argument(
+        "--battle-presentation",
+        choices=("legacy", "canonical"),
+        help="battle screen to use (default: the project manifest's choice)",
+    )
     args = parser.parse_args(argv)
     return run_preview(
         args.project,

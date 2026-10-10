@@ -57,7 +57,9 @@ class PassiveDefinition:
         if data.get("schema") != "asteria.rpg.passive" or data.get("version") != 1:
             raise ValueError("unsupported passive definition")
         return cls(
-            data["passive_id"], data["display_name"], tags=data["tags"],
+            data["passive_id"],
+            data["display_name"],
+            tags=data["tags"],
             modifiers=[StatModifier.from_data(x) for x in data["modifiers"]],
             granted_abilities=data["granted_abilities"],
             triggers=[GameplayTrigger.from_data(x) for x in data["triggers"]],
@@ -74,11 +76,25 @@ class AbilityEvolutionRule:
     priority: int = 0
     retain_source: bool = False
 
-    def __init__(self, rule_id, source_ability_id, result_ability_id, *, progression_track_id=None, minimum_rank=1, priority=0, retain_source=False):
+    def __init__(
+        self,
+        rule_id,
+        source_ability_id,
+        result_ability_id,
+        *,
+        progression_track_id=None,
+        minimum_rank=1,
+        priority=0,
+        retain_source=False,
+    ):
         object.__setattr__(self, "rule_id", _id(rule_id, "rule_id"))
         object.__setattr__(self, "source_ability_id", _id(source_ability_id, "source_ability_id"))
         object.__setattr__(self, "result_ability_id", _id(result_ability_id, "result_ability_id"))
-        object.__setattr__(self, "progression_track_id", None if progression_track_id is None else _id(progression_track_id, "progression_track_id"))
+        object.__setattr__(
+            self,
+            "progression_track_id",
+            None if progression_track_id is None else _id(progression_track_id, "progression_track_id"),
+        )
         minimum_rank = int(minimum_rank)
         if minimum_rank < 1:
             raise ValueError("minimum_rank must be >= 1")
@@ -111,9 +127,13 @@ class AbilityEvolutionRule:
         if data.get("schema") != "asteria.rpg.ability_evolution" or data.get("version") != 1:
             raise ValueError("unsupported ability evolution rule")
         return cls(
-            data["rule_id"], data["source_ability_id"], data["result_ability_id"],
-            progression_track_id=data["progression_track_id"], minimum_rank=data["minimum_rank"],
-            priority=data["priority"], retain_source=data["retain_source"],
+            data["rule_id"],
+            data["source_ability_id"],
+            data["result_ability_id"],
+            progression_track_id=data["progression_track_id"],
+            minimum_rank=data["minimum_rank"],
+            priority=data["priority"],
+            retain_source=data["retain_source"],
         )
 
 

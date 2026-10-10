@@ -102,6 +102,4 @@ class TilePaletteWidget(QWidget):
             self.list.addItem(f"Tile {item.tile_id}{meta}")
 
     def set_layer(self, layer):
-        self.layer_label.setText(
-            f"Layer: {layer.name}" if layer is not None else "Layer: —"
-        )
+        self.layer_label.setText(f"Layer: {layer.name}" if layer is not None else "Layer: —")

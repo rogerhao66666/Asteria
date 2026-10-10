@@ -271,6 +271,7 @@ def test_database_v13_roundtrip_and_v12_backward_read():
     assert restored_old.battle_objectives == {}
     assert restored_old.escape_rules == {}
 
+
 def test_explicit_objectives_override_legacy_elimination_fallback():
     objective = BattleObjectiveDefinition(
         "survive.until.flag",
@@ -304,6 +305,7 @@ def test_failed_summon_slot_validation_is_atomic():
         battle.summon(member("wolf", "heroes"), slot_id="only")
     assert tuple(battle.members) == before
     assert "wolf" not in battle.parties["heroes"].ids()
+
 
 def test_objective_priority_is_deterministic_when_multiple_complete():
     low = BattleObjectiveDefinition(

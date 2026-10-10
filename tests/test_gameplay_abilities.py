@@ -65,9 +65,7 @@ def test_single_target_ability_spends_cost_and_applies_effect():
 
 
 def test_self_effect_and_selected_effect_can_coexist():
-    src = AbilityTarget(
-        "hero", make_subject(resources={"hp": (40, 100), "mp": (20, 20)})
-    )
+    src = AbilityTarget("hero", make_subject(resources={"hp": (40, 100), "mp": (20, 20)}))
     tgt = AbilityTarget("enemy", make_subject(resources={"hp": (100, 100)}))
 
     ability = AbilityDefinition(
@@ -161,9 +159,7 @@ def test_cost_can_use_value_formula():
         "formula_cost",
         costs=[AbilityCost("mp", cost_formula)],
     )
-    result = AbilityRuntime(AbilityRegistry([ability])).execute(
-        "formula_cost", src, [tgt]
-    )
+    result = AbilityRuntime(AbilityRegistry([ability])).execute("formula_cost", src, [tgt])
     assert result.executed
     assert src.subject.resources.current("mp") == 43
 

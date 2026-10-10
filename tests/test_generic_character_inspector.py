@@ -12,8 +12,13 @@ from asteria.editor.create_character_command import CreateCharacterCommand
 from asteria.project import Project
 from asteria.runtime import ActorLinkComponent, Animator2DComponent, SpriteRenderer2D
 
-SHEET = (Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
-         / "playable_assets" / "player_field_sheet.png")  # 3x4, 64x64 frames (CC0)
+SHEET = (
+    Path(__file__).resolve().parents[1]
+    / "reference_projects"
+    / "complex_reference_rpg"
+    / "playable_assets"
+    / "player_field_sheet.png"
+)  # 3x4, 64x64 frames (CC0)
 
 
 def test_walking_sheet_visual_set_infers_frames_and_rejects_bad_grids(tmp_path):
@@ -55,7 +60,11 @@ def test_actor_appearance_updates_every_linked_entity_in_one_undo_step():
     scene = project.add_scene(Scene("Map"))
     document = EditorDocument(project)
     created = CreateCharacterCommand(
-        CharacterVisualSet.from_walking_sheet(SHEET, key="mage"), project, scene, (0, 0), display_name="Mage",
+        CharacterVisualSet.from_walking_sheet(SHEET, key="mage"),
+        project,
+        scene,
+        (0, 0),
+        display_name="Mage",
     ).execute()
     entity = scene.get_entity(created.entity_id)
 
@@ -74,7 +83,11 @@ def test_inspector_offers_actor_sprite_and_clip_choices():
     scene = project.add_scene(Scene("Map"))
     document = EditorDocument(project)
     created = CreateCharacterCommand(
-        CharacterVisualSet.from_walking_sheet(SHEET, key="knight"), project, scene, (0, 0), display_name="Knight",
+        CharacterVisualSet.from_walking_sheet(SHEET, key="knight"),
+        project,
+        scene,
+        (0, 0),
+        display_name="Knight",
     ).execute()
     entity = scene.get_entity(created.entity_id)
     document.asset_views.set_sprite_sheet("character/knight/walking", object())

@@ -39,13 +39,7 @@ def test_beginner_constant_formula():
 
 
 def test_weapon_scaling_against_target_defense():
-    formula = (
-        FormulaBuilder()
-        .constant(25)
-        .source_stat("attack", 1.0)
-        .target_stat("defense", -0.5)
-        .build()
-    )
+    formula = FormulaBuilder().constant(25).source_stat("attack", 1.0).target_stat("defense", -0.5).build()
     result = formula.evaluate(
         context(
             source_stats={"attack": 40},
@@ -74,27 +68,14 @@ def test_multi_stat_creative_scaling():
 
 
 def test_formula_can_scale_from_current_or_max_resource():
-    formula = (
-        FormulaBuilder()
-        .source_resource_current("mp", 0.4)
-        .source_resource_max("hp", 0.2)
-        .build()
-    )
-    result = formula.evaluate(
-        context(source_resources={"mp": (50, 100), "hp": (80, 200)})
-    )
+    formula = FormulaBuilder().source_resource_current("mp", 0.4).source_resource_max("hp", 0.2).build()
+    result = formula.evaluate(context(source_resources={"mp": (50, 100), "hp": (80, 200)}))
     assert result == 60
 
 
 def test_element_like_weakness_is_generic_tag_condition():
     condition = FormulaCondition(required_target_tags=["weak.slash"])
-    formula = (
-        FormulaBuilder()
-        .constant(20)
-        .source_stat("strength", 1.0)
-        .multiply_when(1.5, condition)
-        .build()
-    )
+    formula = FormulaBuilder().constant(20).source_stat("strength", 1.0).multiply_when(1.5, condition).build()
     normal = formula.evaluate(
         context(
             source_stats={"strength": 10},
@@ -118,12 +99,7 @@ def test_condition_can_use_source_and_target_tags():
         blocked_target_tags=["immune.execute"],
     )
     formula = FormulaBuilder().constant(10).multiply_when(2, condition).build()
-    assert (
-        formula.evaluate(
-            context(source_tags=["stance.rage"], target_tags=["enemy.boss"])
-        )
-        == 20
-    )
+    assert formula.evaluate(context(source_tags=["stance.rage"], target_tags=["enemy.boss"])) == 20
     assert (
         formula.evaluate(
             context(

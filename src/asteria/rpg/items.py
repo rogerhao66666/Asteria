@@ -218,9 +218,7 @@ class EquipmentDefinition:
         available = {str(x).strip().lower() for x in capabilities if str(x).strip()}
         missing = tuple(x for x in self.required_capabilities if x not in available)
         forbidden = tuple(x for x in self.forbidden_capabilities if x in available)
-        any_missing = bool(self.any_capabilities) and not any(
-            x in available for x in self.any_capabilities
-        )
+        any_missing = bool(self.any_capabilities) and not any(x in available for x in self.any_capabilities)
         reasons = []
         if missing:
             reasons.append("missing required capabilities: " + ", ".join(missing))
@@ -228,9 +226,7 @@ class EquipmentDefinition:
             reasons.append("requires any capability: " + ", ".join(self.any_capabilities))
         if forbidden:
             reasons.append("forbidden capabilities present: " + ", ".join(forbidden))
-        return EquipmentEligibility(
-            not reasons, tuple(reasons), missing, forbidden
-        )
+        return EquipmentEligibility(not reasons, tuple(reasons), missing, forbidden)
 
     @classmethod
     def from_data(cls, data):
@@ -261,9 +257,7 @@ class ItemDefinition:
     stack_limit: int = 99
     use_effects: tuple[Effect, ...] = ()
 
-    def __init__(
-        self, item_id, display_name=None, *, tags=(), stack_limit=99, use_effects=()
-    ):
+    def __init__(self, item_id, display_name=None, *, tags=(), stack_limit=99, use_effects=()):
         item_id = _id(item_id, "item_id")
         stack_limit = int(stack_limit)
         use_effects = tuple(use_effects)
@@ -300,9 +294,7 @@ class ItemDefinition:
             data["display_name"],
             tags=data["tags"],
             stack_limit=data["stack_limit"],
-            use_effects=[]
-            if data["version"] == 1
-            else [Effect.from_data(x) for x in data["use_effects"]],
+            use_effects=[] if data["version"] == 1 else [Effect.from_data(x) for x in data["use_effects"]],
         )
 
 
@@ -370,9 +362,8 @@ class EquippedItem:
 
     def __post_init__(self):
         from .equipment_growth import EquipmentGrowthRuntime
-        self.instance_id = _id(
-            self.instance_id or self.equipment.equipment_id, "instance_id"
-        )
+
+        self.instance_id = _id(self.instance_id or self.equipment.equipment_id, "instance_id")
         if self.growth is not None:
             if not isinstance(self.growth, EquipmentGrowthRuntime):
                 raise TypeError("growth must be EquipmentGrowthRuntime")
@@ -392,19 +383,13 @@ class EquippedItem:
             "version": 2,
             "instance_id": self.instance_id,
             "equipment_id": self.equipment.equipment_id,
-            "attachments": {
-                key: value.attachment_id
-                for key, value in sorted(self.attachments.items())
-            },
+            "attachments": {key: value.attachment_id for key, value in sorted(self.attachments.items())},
             "growth": None if self.growth is None else self.growth.to_data(),
         }
 
     @classmethod
     def from_data(cls, data, *, equipment, attachments, growth_definitions=None, hooks=None):
-        if (
-            data.get("schema") != "asteria.rpg.equipment_instance"
-            or data.get("version") not in {1, 2}
-        ):
+        if data.get("schema") != "asteria.rpg.equipment_instance" or data.get("version") not in {1, 2}:
             raise ValueError("unsupported equipment instance")
         equipment_id = data["equipment_id"]
         if equipment_id not in equipment:
@@ -412,6 +397,7 @@ class EquippedItem:
         growth = None
         if data["version"] >= 2 and data.get("growth") is not None:
             from .equipment_growth import EquipmentGrowthRuntime
+
             growth = EquipmentGrowthRuntime.from_data(
                 data["growth"],
                 growth_definitions or {},
@@ -430,6 +416,7 @@ class EquippedItem:
             return None
         if self.growth is None:
             from .equipment_growth import EquipmentGrowthRuntime
+
             definitions = dict(growth_definitions)
             if self.equipment.growth_id not in definitions:
                 raise KeyError(f"unknown equipment growth definition: {self.equipment.growth_id}")
@@ -455,9 +442,7 @@ class EquippedItem:
 
     def attach(self, socket_id, attachment):
         socket_id = str(socket_id)
-        socket = next(
-            (x for x in self.equipment.sockets if x.socket_id == socket_id), None
-        )
+        socket = next((x for x in self.equipment.sockets if x.socket_id == socket_id), None)
         if socket is None:
             raise KeyError(f"unknown socket: {socket_id}")
         if not isinstance(attachment, AttachmentDefinition):
@@ -543,9 +528,7 @@ class EquipmentSlotDefinition:
         )
 
     def accepts(self, equipment):
-        return not self.accepted_tags or any(
-            x in equipment.tags for x in self.accepted_tags
-        )
+        return not self.accepted_tags or any(x in equipment.tags for x in self.accepted_tags)
 
 
 class EquipmentLoadout:
@@ -566,29 +549,24 @@ class EquipmentLoadout:
             "schema": "asteria.rpg.equipment_loadout",
             "version": 1,
             "slots": [self._slots[key].to_data() for key in sorted(self._slots)],
-            "equipped": {
-                key: [item.to_data() for item in self._equipped[key]]
-                for key in sorted(self._equipped)
-            },
+            "equipped": {key: [item.to_data() for item in self._equipped[key]] for key in sorted(self._equipped)},
         }
 
     @classmethod
     def from_data(cls, data, *, equipment, attachments, growth_definitions=None, hooks=None):
-        if (
-            data.get("schema") != "asteria.rpg.equipment_loadout"
-            or data.get("version") != 1
-        ):
+        if data.get("schema") != "asteria.rpg.equipment_loadout" or data.get("version") != 1:
             raise ValueError("unsupported equipment loadout")
-        result = cls(
-            [EquipmentSlotDefinition.from_data(x) for x in data["slots"]], hooks=hooks
-        )
+        result = cls([EquipmentSlotDefinition.from_data(x) for x in data["slots"]], hooks=hooks)
         for slot_id, items in data["equipped"].items():
             for raw in items:
                 result.equip(
                     slot_id,
                     EquippedItem.from_data(
-                        raw, equipment=equipment, attachments=attachments,
-                        growth_definitions=growth_definitions or {}, hooks=hooks
+                        raw,
+                        equipment=equipment,
+                        attachments=attachments,
+                        growth_definitions=growth_definitions or {},
+                        hooks=hooks,
                     ),
                     validate_requirements=False,
                 )
@@ -618,9 +596,7 @@ class EquipmentLoadout:
             data={
                 "item": item,
                 "instance_id": getattr(item, "instance_id", None),
-                "equipment_id": getattr(
-                    getattr(item, "equipment", None), "equipment_id", None
-                ),
+                "equipment_id": getattr(getattr(item, "equipment", None), "equipment_id", None),
             },
         )
         if not isinstance(item, EquippedItem):
@@ -662,9 +638,7 @@ class EquipmentLoadout:
             data={
                 "item": item,
                 "instance_id": getattr(item, "instance_id", None),
-                "equipment_id": getattr(
-                    getattr(item, "equipment", None), "equipment_id", None
-                ),
+                "equipment_id": getattr(getattr(item, "equipment", None), "equipment_id", None),
             },
         )
         return item
@@ -681,9 +655,7 @@ class EquipmentLoadout:
             data={
                 "item": item,
                 "instance_id": getattr(item, "instance_id", None),
-                "equipment_id": getattr(
-                    getattr(item, "equipment", None), "equipment_id", None
-                ),
+                "equipment_id": getattr(getattr(item, "equipment", None), "equipment_id", None),
             },
         )
         item = self._equipped[slot_id].pop(int(index))
@@ -694,9 +666,7 @@ class EquipmentLoadout:
             data={
                 "item": item,
                 "instance_id": getattr(item, "instance_id", None),
-                "equipment_id": getattr(
-                    getattr(item, "equipment", None), "equipment_id", None
-                ),
+                "equipment_id": getattr(getattr(item, "equipment", None), "equipment_id", None),
             },
         )
         return item
@@ -704,9 +674,7 @@ class EquipmentLoadout:
     def equipped(self, slot_id=None):
         if slot_id is not None:
             return tuple(self._equipped[str(slot_id)])
-        return tuple(
-            item for key in sorted(self._equipped) for item in self._equipped[key]
-        )
+        return tuple(item for key in sorted(self._equipped) for item in self._equipped[key])
 
     def active_set_bonuses(self):
         """``(set_id, EquipmentSetBonus)`` pairs active for the equipped pieces."""
@@ -781,9 +749,7 @@ class ItemUseResult:
     reason: str | None = None
 
 
-def use_inventory_item(
-    inventory, item, target_stats, target_resources, target_tags, *, hooks=None
-):
+def use_inventory_item(inventory, item, target_stats, target_resources, target_tags, *, hooks=None):
     """Use one item atomically with inventory consumption after all effects succeed."""
     if not isinstance(inventory, Inventory):
         raise TypeError("inventory must be Inventory")
@@ -796,16 +762,12 @@ def use_inventory_item(
         data={
             "item": item,
             "instance_id": getattr(item, "instance_id", None),
-            "equipment_id": getattr(
-                getattr(item, "equipment", None), "equipment_id", None
-            ),
+            "equipment_id": getattr(getattr(item, "equipment", None), "equipment_id", None),
         },
     )
     if inventory.count(item.item_id) < 1:
         result = ItemUseResult(False, item.item_id, (), "not_in_inventory")
-        emit_hook(
-            hooks, "rpg.item.use_failed", source=item.item_id, data={"result": result}
-        )
+        emit_hook(hooks, "rpg.item.use_failed", source=item.item_id, data={"result": result})
         return result
     # Stage gameplay state so a later failed effect cannot partially mutate target.
     stats = type(target_stats).from_data(target_stats.to_data())
@@ -815,9 +777,7 @@ def use_inventory_item(
     for effect in item.use_effects:
         result = apply_effect(effect, stats, resources, tags)
         if not result.applied:
-            failed = ItemUseResult(
-                False, item.item_id, tuple(results) + (result,), "effect_rejected"
-            )
+            failed = ItemUseResult(False, item.item_id, tuple(results) + (result,), "effect_rejected")
             emit_hook(
                 hooks,
                 "rpg.item.use_failed",

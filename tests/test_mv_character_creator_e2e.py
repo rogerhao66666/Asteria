@@ -42,13 +42,24 @@ def test_real_mv_character_creator_editor_and_runtime_are_bounded(tmp_path):
     assert result["weapon_frames_rendered"] == 6
     assert result["weapon_swapped_visual"] is True
     for family in ("female", "kid"):
-        for name, size in (("walking", (144, 192)), ("face", (144, 144)),
-                           ("damaged", (144, 48)), ("side_view", (576, 384))):
+        for name, size in (
+            ("walking", (144, 192)),
+            ("face", (144, 144)),
+            ("damaged", (144, 48)),
+            ("side_view", (576, 384)),
+        ):
             with Image.open(output / "generated" / f"validated-{family}" / f"{name}.png") as image:
                 assert image.size == size
-    for name in ("editor-walking.png", "editor-face.png", "editor-damaged.png",
-                 "editor-side-view.png", "editor-female-side-view.png",
-                 "editor-kid-side-view.png", "runtime-map.png", "runtime-battle-weapons.png"):
+    for name in (
+        "editor-walking.png",
+        "editor-face.png",
+        "editor-damaged.png",
+        "editor-side-view.png",
+        "editor-female-side-view.png",
+        "editor-kid-side-view.png",
+        "runtime-map.png",
+        "runtime-battle-weapons.png",
+    ):
         path = output / name
         assert path.is_file()
         with Image.open(path) as image:

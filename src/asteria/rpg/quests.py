@@ -1,4 +1,5 @@
 """Quests: objectives, prerequisites, rewards and chains (ASTERIA_SPEC §26)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -58,13 +59,23 @@ class QuestObjective:
         object.__setattr__(self, "description", str(description))
 
     def to_data(self):
-        return {"objective_id": self.objective_id, "kind": self.kind, "target": self.target,
-                "required": self.required, "description": self.description}
+        return {
+            "objective_id": self.objective_id,
+            "kind": self.kind,
+            "target": self.target,
+            "required": self.required,
+            "description": self.description,
+        }
 
     @classmethod
     def from_data(cls, data):
-        return cls(data["objective_id"], data["kind"], target=data["target"],
-                   required=data["required"], description=data["description"])
+        return cls(
+            data["objective_id"],
+            data["kind"],
+            target=data["target"],
+            required=data["required"],
+            description=data["description"],
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,8 +89,18 @@ class QuestDefinition:
     next_quest_ids: tuple[str, ...]
     auto_complete: bool
 
-    def __init__(self, quest_id, display_name=None, *, description="", objectives=(), prerequisites=(),
-                 reward=None, next_quest_ids=(), auto_complete=True):
+    def __init__(
+        self,
+        quest_id,
+        display_name=None,
+        *,
+        description="",
+        objectives=(),
+        prerequisites=(),
+        reward=None,
+        next_quest_ids=(),
+        auto_complete=True,
+    ):
         objectives = tuple(objectives)
         if any(not isinstance(x, QuestObjective) for x in objectives):
             raise TypeError("objectives must be QuestObjective values")
@@ -120,10 +141,14 @@ class QuestDefinition:
         if data.get("schema") != "asteria.rpg.quest" or data.get("version") != 1:
             raise ValueError("unsupported quest")
         return cls(
-            data["quest_id"], data["display_name"], description=data["description"],
+            data["quest_id"],
+            data["display_name"],
+            description=data["description"],
             objectives=[QuestObjective.from_data(x) for x in data["objectives"]],
-            prerequisites=data["prerequisites"], reward=RewardDefinition.from_data(data["reward"]),
-            next_quest_ids=data["next_quest_ids"], auto_complete=data["auto_complete"],
+            prerequisites=data["prerequisites"],
+            reward=RewardDefinition.from_data(data["reward"]),
+            next_quest_ids=data["next_quest_ids"],
+            auto_complete=data["auto_complete"],
         )
 
 

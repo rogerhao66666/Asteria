@@ -40,7 +40,11 @@ def _profile():
 
 def _value(value=42, disposition=InteractionDisposition.NORMAL, tags=()):
     return ValueResolutionResult(
-        50.0, float(value), disposition, ("rule.reference",), tuple(tags),
+        50.0,
+        float(value),
+        disposition,
+        ("rule.reference",),
+        tuple(tags),
         (("rule.reference", 50.0, float(value)),),
     )
 
@@ -95,7 +99,12 @@ def test_gauge_threshold_feedback_consumes_resolved_threshold_only():
     coordinator = _coordinator()
     runtime = BattleFeedbackRuntime(_profile())
     result = GaugeCompositionResult(
-        "poise.reference", "hero", "mimic", "hit", ("impact.poise",), (),
+        "poise.reference",
+        "hero",
+        "mimic",
+        "hit",
+        ("impact.poise",),
+        (),
         (GaugeThresholdResult("guard_break", "mimic", "poise", 12, 0, True, -2.0, 0, "battle.break"),),
     )
     before = deepcopy(result)
@@ -112,7 +121,12 @@ def test_unmapped_threshold_remains_valid_but_creates_no_label():
     coordinator = _coordinator()
     runtime = BattleFeedbackRuntime(_profile())
     result = GaugeCompositionResult(
-        "heat", "hero", "mimic", "hit", (), (),
+        "heat",
+        "hero",
+        "mimic",
+        "hit",
+        (),
+        (),
         (GaugeThresholdResult("overheat", "mimic", "heat", 90, 100),),
     )
     coordinator.push_gauge_result(result)
@@ -123,14 +137,17 @@ def test_unmapped_threshold_remains_valid_but_creates_no_label():
 def test_vfx_and_audio_timeline_cues_are_backend_neutral_queues():
     coordinator = _coordinator()
     runtime = BattleFeedbackRuntime(_profile())
-    coordinator.consume_timeline_cues((
-        PresentationCue("slash", ActionCue(
-            "slash_vfx", 0.1, "vfx", {"member_id": "mimic", "asset_id": "vfx.slash", "duration": 0.25}
-        )),
-        PresentationCue("slash", ActionCue(
-            "slash_sfx", 0.1, "audio", {"member_id": "mimic", "asset_id": "sfx.slash"}
-        )),
-    ))
+    coordinator.consume_timeline_cues(
+        (
+            PresentationCue(
+                "slash",
+                ActionCue("slash_vfx", 0.1, "vfx", {"member_id": "mimic", "asset_id": "vfx.slash", "duration": 0.25}),
+            ),
+            PresentationCue(
+                "slash", ActionCue("slash_sfx", 0.1, "audio", {"member_id": "mimic", "asset_id": "sfx.slash"})
+            ),
+        )
+    )
     assert runtime.apply_events(coordinator.drain()) == (True, True)
     assert runtime.vfx[0].payload["asset_id"] == "vfx.slash"
     audio = runtime.drain_audio()
@@ -142,9 +159,9 @@ def test_feedback_lifetime_ordering_and_snapshot_restore_are_deterministic():
     coordinator = _coordinator()
     runtime = BattleFeedbackRuntime(_profile())
     coordinator.push_resolved_value(_value(10, tags=("outcome.weak",)), target_id="mimic")
-    coordinator.consume_timeline_cues((PresentationCue(
-        "fx", ActionCue("spark", 0.0, "vfx", {"target_id": "mimic", "duration": 0.75})
-    ),))
+    coordinator.consume_timeline_cues(
+        (PresentationCue("fx", ActionCue("spark", 0.0, "vfx", {"target_id": "mimic", "duration": 0.75})),)
+    )
     runtime.apply_events(coordinator.drain())
     runtime.update(0.25)
     snapshot = runtime.snapshot()

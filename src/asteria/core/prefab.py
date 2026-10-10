@@ -7,6 +7,7 @@ when a prefab changes, each instance's differences from the *previous*
 resolution are its overrides and are kept on top of the *new* resolution.
 Placement (Transform x/y/parent_id) always belongs to the instance.
 """
+
 from __future__ import annotations
 
 import copy
@@ -41,8 +42,8 @@ class PrefabError(ValueError):
 class PrefabDefinition:
     prefab_id: str
     name: str
-    components: tuple = ()          # serialized component records
-    base_prefab_id: str = ""        # set for variants
+    components: tuple = ()  # serialized component records
+    base_prefab_id: str = ""  # set for variants
     removed_components: tuple = ()  # variant: base component types it drops
 
     def __post_init__(self):
@@ -55,8 +56,10 @@ class PrefabDefinition:
 
     def to_data(self):
         return {
-            "schema": "asteria.prefab", "version": 1,
-            "prefab_id": self.prefab_id, "name": self.name,
+            "schema": "asteria.prefab",
+            "version": 1,
+            "prefab_id": self.prefab_id,
+            "name": self.name,
             "components": [copy.deepcopy(c) for c in self.components],
             "base_prefab_id": self.base_prefab_id,
             "removed_components": list(self.removed_components),
@@ -66,8 +69,13 @@ class PrefabDefinition:
     def from_data(cls, data):
         if data.get("schema") != "asteria.prefab" or data.get("version") != 1:
             raise PrefabError("unsupported prefab")
-        return cls(data["prefab_id"], data["name"], tuple(data["components"]),
-                   data.get("base_prefab_id", ""), tuple(data.get("removed_components", ())))
+        return cls(
+            data["prefab_id"],
+            data["name"],
+            tuple(data["components"]),
+            data.get("base_prefab_id", ""),
+            tuple(data.get("removed_components", ())),
+        )
 
 
 @dataclass(slots=True)
@@ -128,8 +136,11 @@ class PrefabLibrary:
         return resolved
 
     def to_data(self):
-        return {"schema": "asteria.prefab_library", "version": 1,
-                "prefabs": [self._prefabs[k].to_data() for k in sorted(self._prefabs)]}
+        return {
+            "schema": "asteria.prefab_library",
+            "version": 1,
+            "prefabs": [self._prefabs[k].to_data() for k in sorted(self._prefabs)],
+        }
 
     @classmethod
     def from_data(cls, data):
@@ -189,8 +200,7 @@ def instance_overrides(entity, resolution):
         if base is None:
             overrides[type_name] = dict(fields)  # component added on the instance only
             continue
-        changed = {k: v for k, v in fields.items()
-                   if k not in PLACEMENT_FIELDS.get(type_name, ()) and base.get(k) != v}
+        changed = {k: v for k, v in fields.items() if k not in PLACEMENT_FIELDS.get(type_name, ()) and base.get(k) != v}
         if changed:
             overrides[type_name] = changed
     return overrides

@@ -30,9 +30,7 @@ def test_conditions_support_switch_variable_and_local_sources():
 
     assert EventCondition("switch", "ready", "==", True).evaluate(ctx)
     assert EventCondition("variable", "level", ">=", 5).evaluate(ctx)
-    assert EventCondition("local", "opened", "==", False, scope_id="chest-1").evaluate(
-        ctx
-    )
+    assert EventCondition("local", "opened", "==", False, scope_id="chest-1").evaluate(ctx)
 
 
 def test_vm_state_intrinsics_update_context_without_host_dispatch():

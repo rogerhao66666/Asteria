@@ -10,6 +10,7 @@ version so older project files still load:
 
 ``deserialize_component`` applies the steps in order before validating.
 """
+
 from __future__ import annotations
 
 _STEPS: dict[tuple[str, int], object] = {}

@@ -29,9 +29,7 @@ class Scene:
     def add_entity(self, entity):
         if entity.scene is not None and entity.scene is not self:
             raise RuntimeError("Entity already belongs to another scene")
-        if entity.id in self._entity_ids or any(
-            e.id == entity.id for e in self._pending_add
-        ):
+        if entity.id in self._entity_ids or any(e.id == entity.id for e in self._pending_add):
             raise ValueError(f"Duplicate entity ID in scene: {entity.id}")
         if self._updating:
             self._pending_add.append(entity)

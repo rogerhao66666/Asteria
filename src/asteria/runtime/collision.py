@@ -7,6 +7,7 @@ block movement (``CollisionWorld.collides_world_point`` lets the existing
 ``CharacterController2D`` use them like a tile map); triggers only report
 enter / stay / exit.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -84,8 +85,18 @@ def shape_of(entity, collider):
         half_w = half_h = collider.radius
     else:
         half_w, half_h = collider.width / 2, collider.height / 2
-    return ColliderShape(entity.id, collider.shape, cx, cy, half_w, half_h, collider.radius,
-                         1 << int(collider.layer), int(collider.mask), bool(collider.is_trigger))
+    return ColliderShape(
+        entity.id,
+        collider.shape,
+        cx,
+        cy,
+        half_w,
+        half_h,
+        collider.radius,
+        1 << int(collider.layer),
+        int(collider.mask),
+        bool(collider.is_trigger),
+    )
 
 
 def _box_box(a, b):
@@ -116,8 +127,21 @@ def _box_circle(box, circle):
     if dist >= circle.radius:
         return None
     if dist == 0:  # centre inside the box: push out along the shallow axis
-        return _box_box(box, ColliderShape(circle.entity_id, "box", circle.cx, circle.cy, circle.radius,
-                                           circle.radius, circle.radius, circle.layer_bit, circle.mask, circle.is_trigger))
+        return _box_box(
+            box,
+            ColliderShape(
+                circle.entity_id,
+                "box",
+                circle.cx,
+                circle.cy,
+                circle.radius,
+                circle.radius,
+                circle.radius,
+                circle.layer_bit,
+                circle.mask,
+                circle.is_trigger,
+            ),
+        )
     return ((dx / dist, dy / dist), circle.radius - dist)
 
 
@@ -166,7 +190,7 @@ class SpatialHash:
         pairs = {}
         for shapes in self._cells.values():
             for i, a in enumerate(shapes):
-                for b in shapes[i + 1:]:
+                for b in shapes[i + 1 :]:
                     key = (a.entity_id, b.entity_id) if a.entity_id < b.entity_id else (b.entity_id, a.entity_id)
                     if key not in pairs:
                         pairs[key] = (a, b) if key[0] == a.entity_id else (b, a)

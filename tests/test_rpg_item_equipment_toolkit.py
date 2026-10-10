@@ -32,9 +32,7 @@ def test_socket_acceptance_is_tag_driven_not_gem_hardcoded():
         sockets=[SocketDefinition("a", accepted_tags=["attachment.weapon"])],
     )
     gem = AttachmentDefinition("ruby", tags=["attachment.weapon", "attachment.gem"])
-    card = AttachmentDefinition(
-        "wolf_card", tags=["attachment.weapon", "attachment.card"]
-    )
+    card = AttachmentDefinition("wolf_card", tags=["attachment.weapon", "attachment.card"])
     equipped = EquippedItem(eq)
     equipped.attach("a", gem)
     assert equipped.attachments["a"] == gem

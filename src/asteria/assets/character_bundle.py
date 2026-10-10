@@ -25,10 +25,26 @@ _KINDS = {
     "side_view": "character.side_view",
 }
 _FACE_COMPOSITION_ORDER = (
-    "body", "hair_back", "outfit", "armor", "cloak",
-    "face_shape", "eyes", "eyebrows", "nose", "mouth", "ears", "beard",
-    "facial_mark", "hair_front", "beast_ears", "accessory", "accessory_b",
-    "glasses", "tail", "wing",
+    "body",
+    "hair_back",
+    "outfit",
+    "armor",
+    "cloak",
+    "face_shape",
+    "eyes",
+    "eyebrows",
+    "nose",
+    "mouth",
+    "ears",
+    "beard",
+    "facial_mark",
+    "hair_front",
+    "beast_ears",
+    "accessory",
+    "accessory_b",
+    "glasses",
+    "tail",
+    "wing",
 )
 
 
@@ -91,9 +107,7 @@ class CharacterBundleGenerator:
         for path in representation.images:
             with Image.open(path) as image:
                 if image.size != expected:
-                    raise ValueError(
-                        f"{part.id}: {name} canvas must be {expected[0]}x{expected[1]}; got {image.size}"
-                    )
+                    raise ValueError(f"{part.id}: {name} canvas must be {expected[0]}x{expected[1]}; got {image.size}")
         if palette_requested and name != "face" and not representation.masks:
             raise ValueError(f"{part.id}: {name} mask unavailable for palette")
         for path in representation.masks:
@@ -140,13 +154,10 @@ class CharacterBundleGenerator:
         tint.putalpha(ImageChops.multiply(alpha, canvas.getchannel("A")))
         canvas.alpha_composite(tint)
 
-    def _compose(
-        self, name: str, parts: tuple[MVGeneratorPart, ...], recipe: CharacterRecipe
-    ) -> Image.Image:
+    def _compose(self, name: str, parts: tuple[MVGeneratorPart, ...], recipe: CharacterRecipe) -> Image.Image:
         if name == "face":
             by_category = {part.category: part for part in parts}
-            parts = tuple(by_category[category] for category in _FACE_COMPOSITION_ORDER
-                          if category in by_category)
+            parts = tuple(by_category[category] for category in _FACE_COMPOSITION_ORDER if category in by_category)
         canvas = Image.new("RGBA", _CANVASES[name], (0, 0, 0, 0))
         for part in parts:
             representation = getattr(part, name)
@@ -196,8 +207,12 @@ class CharacterBundleGenerator:
                 "source_part_ids": [part.id for part in parts],
                 "anchor": [24, 48],
                 "walking": {
-                    "file": "walking.png", "canvas": [144, 192], "frame_size": [48, 48],
-                    "columns": 3, "rows": 4, "row_directions": ["down", "left", "right", "up"],
+                    "file": "walking.png",
+                    "canvas": [144, 192],
+                    "frame_size": [48, 48],
+                    "columns": 3,
+                    "rows": 4,
+                    "row_directions": ["down", "left", "right", "up"],
                 },
                 "face": {"file": "face.png", "canvas": [144, 144]},
                 "damaged": {"file": "damaged.png", "canvas": [144, 48], "columns": 3, "rows": 1},
@@ -214,14 +229,23 @@ class CharacterBundleGenerator:
         paths = {name: target / f"{name}.png" for name in _REPRESENTATIONS}
         assets = tuple(
             CanonicalAsset(
-                f"generated/{recipe.id}/{name}", _KINDS[name], AssetSource(str(paths[name]), "generated"),
+                f"generated/{recipe.id}/{name}",
+                _KINDS[name],
+                AssetSource(str(paths[name]), "generated"),
                 tags=frozenset({"generated", "character", "mv-derived"}),
                 metadata=(("recipe_id", recipe.id), ("representation", name)),
             )
             for name in _REPRESENTATIONS
         )
         return GeneratedCharacterBundle(
-            recipe.id, target, paths["walking"], paths["face"], paths["side_view"],
-            target / "character.bundle.json", (24, 48), tuple(part.id for part in parts), assets,
+            recipe.id,
+            target,
+            paths["walking"],
+            paths["face"],
+            paths["side_view"],
+            target / "character.bundle.json",
+            (24, 48),
+            tuple(part.id for part in parts),
+            assets,
             damaged_path=paths["damaged"],
         )

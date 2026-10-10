@@ -74,11 +74,19 @@ class InteractionRule:
         self,
         rule_id,
         *,
-        source_tags_all=(), source_tags_any=(), target_tags_all=(), target_tags_any=(),
-        blocked_source_tags=(), blocked_target_tags=(),
-        flat_delta=0.0, multiplier=1.0,
-        source_stat_terms=None, target_stat_terms=None,
-        disposition=InteractionDisposition.NORMAL, outcome_tags=(), priority=0,
+        source_tags_all=(),
+        source_tags_any=(),
+        target_tags_all=(),
+        target_tags_any=(),
+        blocked_source_tags=(),
+        blocked_target_tags=(),
+        flat_delta=0.0,
+        multiplier=1.0,
+        source_stat_terms=None,
+        target_stat_terms=None,
+        disposition=InteractionDisposition.NORMAL,
+        outcome_tags=(),
+        priority=0,
     ):
         multiplier = _number(multiplier, "multiplier")
         if multiplier < 0:
@@ -117,13 +125,22 @@ class InteractionRule:
 
     def to_data(self):
         return {
-            "schema": self.SCHEMA, "version": self.VERSION, "rule_id": self.rule_id,
-            "source_tags_all": list(self.source_tags_all), "source_tags_any": list(self.source_tags_any),
-            "target_tags_all": list(self.target_tags_all), "target_tags_any": list(self.target_tags_any),
-            "blocked_source_tags": list(self.blocked_source_tags), "blocked_target_tags": list(self.blocked_target_tags),
-            "flat_delta": self.flat_delta, "multiplier": self.multiplier,
-            "source_stat_terms": dict(self.source_stat_terms), "target_stat_terms": dict(self.target_stat_terms),
-            "disposition": self.disposition.value, "outcome_tags": list(self.outcome_tags), "priority": self.priority,
+            "schema": self.SCHEMA,
+            "version": self.VERSION,
+            "rule_id": self.rule_id,
+            "source_tags_all": list(self.source_tags_all),
+            "source_tags_any": list(self.source_tags_any),
+            "target_tags_all": list(self.target_tags_all),
+            "target_tags_any": list(self.target_tags_any),
+            "blocked_source_tags": list(self.blocked_source_tags),
+            "blocked_target_tags": list(self.blocked_target_tags),
+            "flat_delta": self.flat_delta,
+            "multiplier": self.multiplier,
+            "source_stat_terms": dict(self.source_stat_terms),
+            "target_stat_terms": dict(self.target_stat_terms),
+            "disposition": self.disposition.value,
+            "outcome_tags": list(self.outcome_tags),
+            "priority": self.priority,
         }
 
     @classmethod
@@ -131,13 +148,20 @@ class InteractionRule:
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported interaction rule")
         return cls(
-            data["rule_id"], source_tags_all=data.get("source_tags_all", ()),
-            source_tags_any=data.get("source_tags_any", ()), target_tags_all=data.get("target_tags_all", ()),
-            target_tags_any=data.get("target_tags_any", ()), blocked_source_tags=data.get("blocked_source_tags", ()),
-            blocked_target_tags=data.get("blocked_target_tags", ()), flat_delta=data.get("flat_delta", 0),
-            multiplier=data.get("multiplier", 1), source_stat_terms=data.get("source_stat_terms", {}),
-            target_stat_terms=data.get("target_stat_terms", {}), disposition=data.get("disposition", "normal"),
-            outcome_tags=data.get("outcome_tags", ()), priority=data.get("priority", 0),
+            data["rule_id"],
+            source_tags_all=data.get("source_tags_all", ()),
+            source_tags_any=data.get("source_tags_any", ()),
+            target_tags_all=data.get("target_tags_all", ()),
+            target_tags_any=data.get("target_tags_any", ()),
+            blocked_source_tags=data.get("blocked_source_tags", ()),
+            blocked_target_tags=data.get("blocked_target_tags", ()),
+            flat_delta=data.get("flat_delta", 0),
+            multiplier=data.get("multiplier", 1),
+            source_stat_terms=data.get("source_stat_terms", {}),
+            target_stat_terms=data.get("target_stat_terms", {}),
+            disposition=data.get("disposition", "normal"),
+            outcome_tags=data.get("outcome_tags", ()),
+            priority=data.get("priority", 0),
         )
 
 
@@ -159,9 +183,20 @@ class OutcomeCheckDefinition:
     SCHEMA = "asteria.rpg.outcome_check"
     VERSION = 1
 
-    def __init__(self, check_id, base_chance, *, source_stat_terms=None, target_stat_terms=None,
-                 minimum_chance=0.0, maximum_chance=1.0, required_source_tags=(),
-                 required_target_tags=(), success_tags=(), failure_tags=()):
+    def __init__(
+        self,
+        check_id,
+        base_chance,
+        *,
+        source_stat_terms=None,
+        target_stat_terms=None,
+        minimum_chance=0.0,
+        maximum_chance=1.0,
+        required_source_tags=(),
+        required_target_tags=(),
+        success_tags=(),
+        failure_tags=(),
+    ):
         minimum_chance = _number(minimum_chance, "minimum_chance")
         maximum_chance = _number(maximum_chance, "maximum_chance")
         if not 0 <= minimum_chance <= maximum_chance <= 1:
@@ -179,11 +214,17 @@ class OutcomeCheckDefinition:
 
     def to_data(self):
         return {
-            "schema": self.SCHEMA, "version": self.VERSION, "check_id": self.check_id,
-            "base_chance": self.base_chance, "source_stat_terms": dict(self.source_stat_terms),
-            "target_stat_terms": dict(self.target_stat_terms), "minimum_chance": self.minimum_chance,
-            "maximum_chance": self.maximum_chance, "required_source_tags": list(self.required_source_tags),
-            "required_target_tags": list(self.required_target_tags), "success_tags": list(self.success_tags),
+            "schema": self.SCHEMA,
+            "version": self.VERSION,
+            "check_id": self.check_id,
+            "base_chance": self.base_chance,
+            "source_stat_terms": dict(self.source_stat_terms),
+            "target_stat_terms": dict(self.target_stat_terms),
+            "minimum_chance": self.minimum_chance,
+            "maximum_chance": self.maximum_chance,
+            "required_source_tags": list(self.required_source_tags),
+            "required_target_tags": list(self.required_target_tags),
+            "success_tags": list(self.success_tags),
             "failure_tags": list(self.failure_tags),
         }
 
@@ -191,11 +232,18 @@ class OutcomeCheckDefinition:
     def from_data(cls, data):
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported outcome check")
-        return cls(data["check_id"], data["base_chance"], source_stat_terms=data.get("source_stat_terms", {}),
-                   target_stat_terms=data.get("target_stat_terms", {}), minimum_chance=data.get("minimum_chance", 0),
-                   maximum_chance=data.get("maximum_chance", 1), required_source_tags=data.get("required_source_tags", ()),
-                   required_target_tags=data.get("required_target_tags", ()), success_tags=data.get("success_tags", ()),
-                   failure_tags=data.get("failure_tags", ()))
+        return cls(
+            data["check_id"],
+            data["base_chance"],
+            source_stat_terms=data.get("source_stat_terms", {}),
+            target_stat_terms=data.get("target_stat_terms", {}),
+            minimum_chance=data.get("minimum_chance", 0),
+            maximum_chance=data.get("maximum_chance", 1),
+            required_source_tags=data.get("required_source_tags", ()),
+            required_target_tags=data.get("required_target_tags", ()),
+            success_tags=data.get("success_tags", ()),
+            failure_tags=data.get("failure_tags", ()),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -286,13 +334,19 @@ class InteractionResolver:
         if disposition == InteractionDisposition.NULLIFY:
             value = 0.0
         result = ValueResolutionResult(
-            base_value, value, disposition, tuple(r.rule_id for r in matches),
-            tuple(sorted(outcome_tags)), tuple(trace),
+            base_value,
+            value,
+            disposition,
+            tuple(r.rule_id for r in matches),
+            tuple(sorted(outcome_tags)),
+            tuple(trace),
         )
         emit_hook(self.hooks, "rpg.battle.interaction_resolved", data={"result": result})
         return result
 
-    def resolve(self, base_value, source: GameplaySubject, target: GameplaySubject, *, action_tags=(), check_ids=(), rng=None):
+    def resolve(
+        self, base_value, source: GameplaySubject, target: GameplaySubject, *, action_tags=(), check_ids=(), rng=None
+    ):
         """Resolve probability outcomes first, then feed their tags into value rules.
 
         This is how projects compose hit/evade, crit, block, parry and custom
@@ -301,10 +355,7 @@ class InteractionResolver:
         that tag can NULLIFY the value.
         """
         rng = rng or random.Random()
-        checks = tuple(
-            self.check(check_id, source, target, action_tags=action_tags, rng=rng)
-            for check_id in check_ids
-        )
+        checks = tuple(self.check(check_id, source, target, action_tags=action_tags, rng=rng) for check_id in check_ids)
         combined = set(_tags(action_tags))
         for check in checks:
             combined.update(check.outcome_tags)
@@ -317,7 +368,9 @@ class InteractionResolver:
         definition = self.checks[_id(check_id, "check_id")]
         source_tags = set(source.tags.values()) | set(_tags(action_tags))
         target_tags = set(target.tags.values())
-        applicable = set(definition.required_source_tags).issubset(source_tags) and set(definition.required_target_tags).issubset(target_tags)
+        applicable = set(definition.required_source_tags).issubset(source_tags) and set(
+            definition.required_target_tags
+        ).issubset(target_tags)
         if not applicable:
             return OutcomeCheckResult(definition.check_id, False, None, None, None, ())
         chance = definition.base_chance

@@ -105,9 +105,7 @@ def test_trigger_dispatches_effect_when_condition_matches():
         "desperation_hit",
         "on_hit",
         conditions=NumericCondition("source", "resource_ratio", "hp", "<=", 0.25),
-        effects=[
-            Effect("bonus_damage", [EffectOperation("resource_delta", "hp", -30)])
-        ],
+        effects=[Effect("bonus_damage", [EffectOperation("resource_delta", "hp", -30)])],
     )
 
     results = TriggerRuntime([trigger]).dispatch("on_hit", ctx)
@@ -125,9 +123,7 @@ def test_trigger_does_not_fire_when_condition_fails():
         "desperation_hit",
         "on_hit",
         conditions=NumericCondition("source", "resource_ratio", "hp", "<=", 0.25),
-        effects=[
-            Effect("bonus_damage", [EffectOperation("resource_delta", "hp", -30)])
-        ],
+        effects=[Effect("bonus_damage", [EffectOperation("resource_delta", "hp", -30)])],
     )
 
     results = TriggerRuntime([trigger]).dispatch("on_hit", ctx)

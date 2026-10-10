@@ -55,9 +55,7 @@ class ReferenceWorldBundle:
 
 
 def _record(asset_id, kind, path, name, metadata=None):
-    return AssetRecord(
-        asset_id, kind, path, name, "asteria.reference", 1, {}, dict(metadata or {})
-    )
+    return AssetRecord(asset_id, kind, path, name, "asteria.reference", 1, {}, dict(metadata or {}))
 
 
 def _chunk_from_grid(grid, chunk_x, chunk_y, chunk_w, chunk_h):
@@ -154,9 +152,7 @@ def _make_map():
         [
             _layer_from_grid("Ground", 0, ground),
             _layer_from_grid("Props", 1, props),
-            _layer_from_grid(
-                "Collision", 2, collision, visible=False, collision_enabled=True
-            ),
+            _layer_from_grid("Collision", 2, collision, visible=False, collision_enabled=True),
         ],
     )
 
@@ -220,18 +216,13 @@ def build_reference_world():
     ):
         project.assets.add(record)
 
-    env_frames = [
-        SpriteFrame((i % 8) * 16, (i // 8) * 16, 16, 16, 0.0, 0.0) for i in range(16)
-    ]
+    env_frames = [SpriteFrame((i % 8) * 16, (i // 8) * 16, 16, 16, 0.0, 0.0) for i in range(16)]
     environment_sheet = SpriteSheet(AssetRef(ENV_TEXTURE_ID, "texture"), env_frames)
     tileset = Tileset(
         AssetRef(ENV_SHEET_ID, "sprite_sheet"),
         16,
         16,
-        {
-            i: TileDef(i, collision="solid" if i in {4, 8, 15} else "none")
-            for i in range(16)
-        },
+        {i: TileDef(i, collision="solid" if i in {4, 8, 15} else "none") for i in range(16)},
     )
 
     hero_frames = []
@@ -244,12 +235,8 @@ def build_reference_world():
     clips = {}
     for name, row in directions.items():
         base = row * 4
-        clips[f"idle_{name}"] = SpriteClip(
-            f"idle_{name}", [SpriteKeyframe(base, 0.4)], True
-        )
-        clips[f"walk_{name}"] = SpriteClip(
-            f"walk_{name}", [SpriteKeyframe(base + i, 0.12) for i in (0, 1, 2, 3)], True
-        )
+        clips[f"idle_{name}"] = SpriteClip(f"idle_{name}", [SpriteKeyframe(base, 0.4)], True)
+        clips[f"walk_{name}"] = SpriteClip(f"walk_{name}", [SpriteKeyframe(base + i, 0.12) for i in (0, 1, 2, 3)], True)
     hero_clips = AnimationClipSet(clips)
 
     world = scene.add_entity(Entity("World Map", entity_id=WORLD_ENTITY_ID))
@@ -370,10 +357,7 @@ def write_reference_world(root):
                 "clips": {
                     name: {
                         "loop": clip.loop,
-                        "keyframes": [
-                            {"frame_index": k.frame_index, "duration": k.duration}
-                            for k in clip.keyframes
-                        ],
+                        "keyframes": [{"frame_index": k.frame_index, "duration": k.duration} for k in clip.keyframes],
                     }
                     for name, clip in bundle.hero_clips.clips.items()
                 }

@@ -4,6 +4,7 @@ from .playable_rpg import (
     ReferenceActorScenario,
     build_reference_actor_scenario,
 )
+
 __all__ = [
     "PlayableRpgValidationHarness",
     "PlayableRpgValidationReport",

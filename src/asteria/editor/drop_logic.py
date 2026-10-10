@@ -10,9 +10,7 @@ class DropIntent:
     command: object
 
 
-def build_hierarchy_drop_intent(
-    project, drag_kind, drag_value, target_kind, target_value, target_index=None
-):
+def build_hierarchy_drop_intent(project, drag_kind, drag_value, target_kind, target_value, target_index=None):
     if drag_kind == "scene" and target_kind == "scene":
         if target_index is None:
             target_index = project.scene_index(target_value)
@@ -25,9 +23,7 @@ def build_hierarchy_drop_intent(
         if target_kind == "scene":
             return DropIntent(
                 "entity_move",
-                build_move_entity_to_scene_command(
-                    drag_value, target_value, target_index
-                ),
+                build_move_entity_to_scene_command(drag_value, target_value, target_index),
             )
         if target_kind == "entity":
             target_scene = target_value.scene
@@ -35,9 +31,7 @@ def build_hierarchy_drop_intent(
                 target_index = target_scene.entity_index(target_value)
             return DropIntent(
                 "entity_move",
-                build_move_entity_to_scene_command(
-                    drag_value, target_scene, target_index
-                ),
+                build_move_entity_to_scene_command(drag_value, target_scene, target_index),
             )
 
     raise ValueError(f"Unsupported hierarchy drop: {drag_kind} -> {target_kind}")

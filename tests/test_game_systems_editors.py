@@ -8,7 +8,10 @@ import pytest
 
 from asteria.editor import EditorDocument
 from asteria.editor.game_systems_authoring import (
-    FORMS, KINDS, GameSystemsAuthoringController, GameSystemsAuthoringError,
+    FORMS,
+    KINDS,
+    GameSystemsAuthoringController,
+    GameSystemsAuthoringError,
 )
 from asteria.rpg import QuestDefinition, ShopDefinition, ShopEntry
 from test_session_events import _project
@@ -54,8 +57,18 @@ def test_validation_and_reference_protection():
     with pytest.raises(GameSystemsAuthoringError):
         api.create("shops", ShopDefinition("bad", entries=[ShopEntry("no_such_item")]))
     with pytest.raises(GameSystemsAuthoringError):
-        api.create("capture_rules", {"schema": "asteria.rpg.capture_rule", "version": 1, "enemy_id": "nobody",
-                                     "actor_id": "hero_01", "base_chance": 0.5, "low_health_bonus": 0, "item_id": ""})
+        api.create(
+            "capture_rules",
+            {
+                "schema": "asteria.rpg.capture_rule",
+                "version": 1,
+                "enemy_id": "nobody",
+                "actor_id": "hero_01",
+                "base_chance": 0.5,
+                "low_health_bonus": 0,
+                "item_id": "",
+            },
+        )
     api.create("quests", QuestDefinition("first"))
     api.create("quests", QuestDefinition("second", prerequisites=["first"]))
     assert api.where_used("quests", "first") == ("quest second",)
@@ -133,7 +146,7 @@ def test_quest_editor_objectives_chain_and_reward(window):
     assert quest.reward.loot[0].item_id == "focus_stone"
     assert editor.used_by.text() == ""
     editor.refresh("report")
-    assert "quest hunt" in editor.used_by.text()                      # reverse reference shown
+    assert "quest hunt" in editor.used_by.text()  # reverse reference shown
     assert not editor.delete_selected() and "used by" in editor.status.text()
 
 

@@ -147,7 +147,9 @@ def test_runtime_state_v3_roundtrip_persists_allocation_state_and_v2_is_readable
     allocation.allocate("aria_board", "strength")
     state = RpgRuntimeState(
         progression_allocations={"actor:aria": allocation},
-        progression=__import__("asteria.rpg", fromlist=["ProgressionRuntime"]).ProgressionRuntime(db.progression_tracks.values()),
+        progression=__import__("asteria.rpg", fromlist=["ProgressionRuntime"]).ProgressionRuntime(
+            db.progression_tracks.values()
+        ),
     )
     raw = state.to_data()
     assert raw["version"] == 7
@@ -186,11 +188,13 @@ def test_graph_rejects_unknown_prerequisite_and_cycles():
 
 def test_database_validation_rejects_unknown_passive_reward_reference():
     db = RpgDatabase()
-    db.add_progression_graph(ProgressionGraphDefinition(
-        "bad_passive",
-        nodes=[ProgressionNodeDefinition(
-            "node", rewards=ProgressionNodeReward(unlocked_passives=["missing_passive"])
-        )],
-    ))
+    db.add_progression_graph(
+        ProgressionGraphDefinition(
+            "bad_passive",
+            nodes=[
+                ProgressionNodeDefinition("node", rewards=ProgressionNodeReward(unlocked_passives=["missing_passive"]))
+            ],
+        )
+    )
     with pytest.raises(ValueError, match="unknown passive"):
         db.validate()

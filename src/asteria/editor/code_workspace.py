@@ -147,18 +147,14 @@ class CodeWorkspaceWidget(QWidget):
             self.save_button.setEnabled(False)
             self.run_button.setEnabled(False)
             return
-        self.context_label.setText(
-            f"Project context: {project.name}  ·  canonical Project/Scene/Entity data"
-        )
+        self.context_label.setText(f"Project context: {project.name}  ·  canonical Project/Scene/Entity data")
         sel = self.document.selection
         if sel.value is None or sel.multiple:
             text = "none" if sel.value is None else f"{len(sel.values)} selected"
         else:
             name = getattr(sel.value, "name", type(sel.value).__name__)
             text = f"{sel.kind}: {name}"
-        self.selection_label.setText(
-            f"Selection context: {text}  ·  globals: selected / scene / entity"
-        )
+        self.selection_label.setText(f"Selection context: {text}  ·  globals: selected / scene / entity")
         self.save_button.setEnabled(self.document.file_path is not None)
         self.run_button.setEnabled(project is not None)
         target = self.default_script_path()

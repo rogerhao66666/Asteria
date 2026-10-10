@@ -57,9 +57,7 @@ class SetTileCommand:
         if value == EMPTY_TILE and chunk is None:
             return
         if chunk is None:
-            chunk = TileChunk.empty(
-                cx, cy, self.tilemap.chunk_width, self.tilemap.chunk_height
-            )
+            chunk = TileChunk.empty(cx, cy, self.tilemap.chunk_width, self.tilemap.chunk_height)
             self.layer.chunks[key] = chunk
         chunk.set(lx, ly, value)
         if value == EMPTY_TILE and _chunk_is_empty(chunk):
@@ -71,9 +69,7 @@ class SetTileCommand:
         if not isinstance(self.new_tile_id, int) or self.new_tile_id < EMPTY_TILE:
             raise TileEditError("Invalid tile id")
         if self.old_tile_id is None:
-            self.old_tile_id = tile_at(
-                self.tilemap, self.layer, self.tile_x, self.tile_y
-            )
+            self.old_tile_id = tile_at(self.tilemap, self.layer, self.tile_x, self.tile_y)
         self._set(self.new_tile_id)
 
     def undo(self):
@@ -97,11 +93,7 @@ class AddTileLayerCommand:
             raise TileEditError("Layer already attached")
         if any(x.name == self.layer.name for x in self.tilemap.layers):
             raise TileEditError("Duplicate layer name")
-        idx = (
-            len(self.tilemap.layers)
-            if self.index is None
-            else max(0, min(self.index, len(self.tilemap.layers)))
-        )
+        idx = len(self.tilemap.layers) if self.index is None else max(0, min(self.index, len(self.tilemap.layers)))
         self.tilemap.layers.insert(idx, self.layer)
 
     def undo(self):

@@ -47,7 +47,8 @@ def test_prefab_capture_resets_placement_and_variants_override_and_remove():
     library.add(prefab_from_entity(_chest_entity(), "chest"))
     assert library.resolve("chest")["asteria.Transform"]["x"] == 0.0
     gold = PrefabDefinition(
-        "gold_chest", "Gold Chest",
+        "gold_chest",
+        "Gold Chest",
         ({"type": "asteria.SpriteRenderer2D", "version": 1, "fields": {"frame_index": 3}},),
         base_prefab_id="chest",
     )
@@ -59,16 +60,16 @@ def test_prefab_capture_resets_placement_and_variants_override_and_remove():
     assert "asteria.Interaction2D" not in library.resolve("mimic")
     with pytest.raises(PrefabError):
         library.set(PrefabDefinition("chest", "Loop", (), "gold_chest"))
-    assert library.get("chest").base_prefab_id == ""          # the failed edit was rolled back
+    assert library.get("chest").base_prefab_id == ""  # the failed edit was rolled back
     with pytest.raises(PrefabError):
-        library.remove("chest")                                # still the base of variants
+        library.remove("chest")  # still the base of variants
 
 
 def test_instances_keep_overrides_and_placement_when_the_prefab_changes():
     project, scene = _project_with_chest()
     a = InstantiatePrefabCommand(project, REGISTRY, scene, "chest", 10, 20).execute()
     b = InstantiatePrefabCommand(project, REGISTRY, scene, "chest", 70, 80).execute()
-    b.get(SpriteRenderer2D).frame_index = 9                    # override on one instance
+    b.get(SpriteRenderer2D).frame_index = 9  # override on one instance
     assert instance_overrides(b, project.prefabs.resolve("chest")) == {"asteria.SpriteRenderer2D": {"frame_index": 9}}
 
     changed = prefab_from_entity(_chest_entity(), "chest")
@@ -86,10 +87,14 @@ def test_instances_keep_overrides_and_placement_when_the_prefab_changes():
 
 def test_variant_instances_follow_base_changes():
     project, scene = _project_with_chest()
-    project.prefabs.add(PrefabDefinition(
-        "gold_chest", "Gold Chest",
-        ({"type": "asteria.SpriteRenderer2D", "version": 1, "fields": {"frame_index": 3}},), "chest",
-    ))
+    project.prefabs.add(
+        PrefabDefinition(
+            "gold_chest",
+            "Gold Chest",
+            ({"type": "asteria.SpriteRenderer2D", "version": 1, "fields": {"frame_index": 3}},),
+            "chest",
+        )
+    )
     gold = InstantiatePrefabCommand(project, REGISTRY, scene, "gold_chest").execute()
     base = prefab_from_entity(_chest_entity(), "chest")
     next(r for r in base.components if r["type"] == "asteria.Interaction2D")["fields"]["event_program_id"] = "open_v2"

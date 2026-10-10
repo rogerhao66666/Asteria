@@ -7,11 +7,28 @@ from PIL import Image
 
 DIRECTIONS = ("down", "left", "right", "up")
 LAYER_ORDER = (
-    "body", "face_shape", "eyes", "eyebrows", "nose", "mouth", "ears",
-    "hair_back", "beard",
-    "outfit", "armor", "cloak", "hair_front", "facial_mark",
-    "beast_ears", "accessory", "accessory_b", "glasses", "tail", "wing",
+    "body",
+    "face_shape",
+    "eyes",
+    "eyebrows",
+    "nose",
+    "mouth",
+    "ears",
+    "hair_back",
+    "beard",
+    "outfit",
+    "armor",
+    "cloak",
+    "hair_front",
+    "facial_mark",
+    "beast_ears",
+    "accessory",
+    "accessory_b",
+    "glasses",
+    "tail",
+    "wing",
 )
+
 
 @dataclass(frozen=True)
 class CharacterGeneratorPreset:
@@ -21,6 +38,7 @@ class CharacterGeneratorPreset:
     frames_per_direction: int = 3
     anchor: tuple[int, int] = (24, 46)
 
+
 @dataclass(frozen=True)
 class CharacterPart:
     id: str
@@ -28,6 +46,7 @@ class CharacterPart:
     frames: Mapping[str, Sequence[str]]
     display_name: str = ""
     tags: tuple[str, ...] = ()
+
 
 @dataclass
 class CharacterRecipe:
@@ -41,6 +60,7 @@ class CharacterRecipe:
         """Return selections in the shared deterministic composition order."""
         return tuple(self.parts[category] for category in LAYER_ORDER if category in self.parts)
 
+
 @dataclass(frozen=True)
 class GeneratedCharacter:
     recipe_id: str
@@ -49,20 +69,26 @@ class GeneratedCharacter:
     width: int
     height: int
 
+
 class CharacterGeneratorCatalog:
     def __init__(self, parts: Sequence[CharacterPart] = ()):
         self._parts = {p.id: p for p in parts}
+
     def add(self, part: CharacterPart) -> None:
         if part.category not in LAYER_ORDER:
             raise ValueError(f"unsupported character part category: {part.category}")
         self._parts[part.id] = part
+
     def get(self, part_id: str) -> CharacterPart:
         return self._parts[part_id]
+
     def choices(self, category: str) -> tuple[CharacterPart, ...]:
         return tuple(p for p in self._parts.values() if p.category == category)
 
+
 class CharacterGenerator:
     """Editor-side layered authoring tool. Output is ordinary canonical image + metadata."""
+
     def __init__(self, catalog: CharacterGeneratorCatalog, preset: CharacterGeneratorPreset | None = None):
         self.catalog = catalog
         self.preset = preset or CharacterGeneratorPreset()
@@ -81,16 +107,18 @@ class CharacterGenerator:
 
     def generate(self, recipe: CharacterRecipe, output_dir: str | Path) -> GeneratedCharacter:
         self._validate(recipe)
-        out = Path(output_dir); out.mkdir(parents=True, exist_ok=True)
+        out = Path(output_dir)
+        out.mkdir(parents=True, exist_ok=True)
         fw, fh = self.preset.frame_size
         cols, rows = self.preset.frames_per_direction, len(self.preset.directions)
-        sheet = Image.new("RGBA", (fw * cols, fh * rows), (0,0,0,0))
+        sheet = Image.new("RGBA", (fw * cols, fh * rows), (0, 0, 0, 0))
         for row, direction in enumerate(self.preset.directions):
             for frame_idx in range(cols):
-                cell = Image.new("RGBA", (fw, fh), (0,0,0,0))
+                cell = Image.new("RGBA", (fw, fh), (0, 0, 0, 0))
                 for category in LAYER_ORDER:
                     part_id = recipe.parts.get(category)
-                    if not part_id: continue
+                    if not part_id:
+                        continue
                     src = Image.open(self.catalog.get(part_id).frames[direction][frame_idx]).convert("RGBA")
                     if src.size != (fw, fh):
                         raise ValueError(f"{part_id} frame must be {fw}x{fh}; got {src.size}")
@@ -100,8 +128,10 @@ class CharacterGenerator:
         meta_path = out / f"{recipe.id}.character.json"
         sheet.save(sheet_path)
         metadata = {
-            "schema": "asteria.character.generated.v1", "recipe": asdict(recipe),
-            "preset": asdict(self.preset), "sheet": sheet_path.name,
+            "schema": "asteria.character.generated.v1",
+            "recipe": asdict(recipe),
+            "preset": asdict(self.preset),
+            "sheet": sheet_path.name,
             "layout": {"columns": cols, "rows": rows, "row_directions": list(self.preset.directions)},
             "runtime_special_type": False,
         }

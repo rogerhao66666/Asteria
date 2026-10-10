@@ -134,9 +134,7 @@ def test_scene_viewport_frames_active_camera_at_the_center():
     assert viewport.frame_game_camera()
     center = viewport.camera.world_to_screen(300, 200)
     assert center == (500, 300)
-    camera_marker = next(
-        marker for marker in viewport.markers() if marker.entity is entity
-    )
+    camera_marker = next(marker for marker in viewport.markers() if marker.entity is entity)
     assert (camera_marker.world_x, camera_marker.world_y) == (60, 65)
 
     document.select_entity(entity)

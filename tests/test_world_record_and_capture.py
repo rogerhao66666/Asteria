@@ -23,16 +23,30 @@ from test_session_events import BOSS_PROGRAM, _interact, _replace_program, _sess
 
 def _content(project):
     db = project.rpg_database
-    db.add_faction(FactionDefinition("guild", "Adventurers' Guild", minimum=-50, maximum=50,
-                                     ranks=[(0, "Neutral"), (20, "Friendly"), (45, "Honored")]))
+    db.add_faction(
+        FactionDefinition(
+            "guild",
+            "Adventurers' Guild",
+            minimum=-50,
+            maximum=50,
+            ranks=[(0, "Neutral"), (20, "Friendly"), (45, "Honored")],
+        )
+    )
     db.add_achievement(AchievementDefinition("friend", "Guild Friend", kind="reputation", target="guild", value=20))
     db.add_achievement(AchievementDefinition("slayer", "Wisp Slayer", kind="defeated", target="mender_wisp", value=2))
     db.add_achievement(AchievementDefinition("chatty", "Chatty", kind="counter", target="talks", value=3))
     db.add_quest(QuestDefinition("errand", objectives=[QuestObjective("go")]))
     db.add_achievement(AchievementDefinition("errand_done", kind="quest", target="errand"))
     base = db.actors["hero_01"]
-    db.add_actor(type(base)("tyrant_ally", "Tyrant (Ally)", base_stats=base.base_stats,
-                            base_resources=base.base_resources, abilities=base.abilities))
+    db.add_actor(
+        type(base)(
+            "tyrant_ally",
+            "Tyrant (Ally)",
+            base_stats=base.base_stats,
+            base_resources=base.base_resources,
+            abilities=base.abilities,
+        )
+    )
     db.add_capture_rule(CaptureRule("astral_tyrant", "tyrant_ally", base_chance=0.0, low_health_bonus=1.0))
     db.validate()
     return db
@@ -53,12 +67,18 @@ def test_faction_ranks_clamp_and_records_round_trip():
 def test_events_drive_reputation_counters_and_unlock_achievements():
     project, game = _session()
     _content(project)
-    _replace_program(project, BOSS_PROGRAM, [
-        EventInstruction("WORLD", {"command": "CHANGE_REPUTATION", "args": {"faction_id": "guild", "amount": 25}}),
-        EventInstruction("WORLD", {"command": "CHANGE_RELATIONSHIP", "args": {"subject_id": "innkeeper", "amount": 2}}),
-        EventInstruction("WORLD", {"command": "ADD_COUNTER", "args": {"counter_id": "talks", "amount": 3}}),
-        EventInstruction("END"),
-    ])
+    _replace_program(
+        project,
+        BOSS_PROGRAM,
+        [
+            EventInstruction("WORLD", {"command": "CHANGE_REPUTATION", "args": {"faction_id": "guild", "amount": 25}}),
+            EventInstruction(
+                "WORLD", {"command": "CHANGE_RELATIONSHIP", "args": {"subject_id": "innkeeper", "amount": 2}}
+            ),
+            EventInstruction("WORLD", {"command": "ADD_COUNTER", "args": {"counter_id": "talks", "amount": 3}}),
+            EventInstruction("END"),
+        ],
+    )
     _interact(game)
     world = game.world
     assert world.reputation["guild"] == 25 and world.relationships["innkeeper"] == 2
@@ -84,9 +104,9 @@ def test_capture_joins_the_roster_and_skips_reward_and_defeat(tmp_path):
     game.start_encounter("boss_room")
     assert game.world.bestiary["astral_tyrant"]["seen"] == 1
     with pytest.raises(GameSessionError):
-        game.attempt_capture("hero_01", "mender_wisp:2")                 # no capture rule
+        game.attempt_capture("hero_01", "mender_wisp:2")  # no capture rule
     tyrant = "astral_tyrant:1"
-    assert game.attempt_capture("hero_01", tyrant, rng=random.Random(0)) is False   # full health: 0%
+    assert game.attempt_capture("hero_01", tyrant, rng=random.Random(0)) is False  # full health: 0%
     resources = game.battle.member(tyrant).subject.resources
     resource = game.rules.knockout_resource_id
     resources.set_current(resource, 1)

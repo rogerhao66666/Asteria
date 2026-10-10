@@ -158,18 +158,8 @@ class DialogueRuntimeState:
         if data["schema"] != "asteria.dialogue_runtime_state" or data["version"] != 1:
             raise ValueError("unsupported dialogue runtime state")
         if data["dialogue"] is not None and data["choice"] is not None:
-            raise ValueError(
-                "dialogue runtime cannot block on dialogue and choice together"
-            )
+            raise ValueError("dialogue runtime cannot block on dialogue and choice together")
         return cls(
-            dialogue=(
-                DialogueRequest.from_data(data["dialogue"])
-                if data["dialogue"] is not None
-                else None
-            ),
-            choice=(
-                ChoiceRequest.from_data(data["choice"])
-                if data["choice"] is not None
-                else None
-            ),
+            dialogue=(DialogueRequest.from_data(data["dialogue"]) if data["dialogue"] is not None else None),
+            choice=(ChoiceRequest.from_data(data["choice"]) if data["choice"] is not None else None),
         )

@@ -37,9 +37,7 @@ def test_launcher_uses_external_module_resource_root_and_cleans_snapshot(tmp_pat
         captured["proc"] = proc
         return proc
 
-    runtime = launch_play_session(
-        session, popen_factory=factory, python_executable="python-test"
-    )
+    runtime = launch_play_session(session, popen_factory=factory, python_executable="python-test")
     assert runtime.snapshot_path.exists()
     assert captured["proc"].args[:3] == ["python-test", "-m", "asteria.runtime.preview"]
     assert "--scene" in captured["proc"].args

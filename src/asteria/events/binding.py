@@ -81,11 +81,7 @@ class EventBinding:
     def to_scheduler_spec(self):
         if self.trigger == EventTriggerKind.ACTION:
             raise ValueError("action bindings are foreground interactions")
-        mode = (
-            EventScheduleMode.AUTORUN
-            if self.trigger == EventTriggerKind.AUTORUN
-            else EventScheduleMode.PARALLEL
-        )
+        mode = EventScheduleMode.AUTORUN if self.trigger == EventTriggerKind.AUTORUN else EventScheduleMode.PARALLEL
         return ScheduledEventSpec(
             event_id=self.binding_id,
             program_id=self.program_id,

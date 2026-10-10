@@ -216,13 +216,15 @@ class BattleFeedbackRuntime:
         target_id = _id(payload["target_id"], "target_id")
         source_id = str(payload.get("source_id", ""))
         duration = _positive(payload.get("duration", self.profile.value_duration), "value duration")
-        self.values.append(BattleFloatingValue(
-            event.sequence, target_id, source_id, value, kind, tags, disposition, 0.0, duration
-        ))
+        self.values.append(
+            BattleFloatingValue(event.sequence, target_id, source_id, value, kind, tags, disposition, 0.0, duration)
+        )
         for label in self.profile.labels_for(outcome_tags=tags, disposition=disposition):
-            self.labels.append(BattleFeedbackLabel(
-                event.sequence, target_id, label, f"interaction:{disposition}", 0.0, self.profile.label_duration
-            ))
+            self.labels.append(
+                BattleFeedbackLabel(
+                    event.sequence, target_id, label, f"interaction:{disposition}", 0.0, self.profile.label_duration
+                )
+            )
         return True
 
     def _apply_gauge_threshold(self, event):
@@ -230,14 +232,16 @@ class BattleFeedbackRuntime:
         label = self.profile.threshold_label(payload.get("threshold_id", ""))
         if not label:
             return False
-        self.labels.append(BattleFeedbackLabel(
-            event.sequence,
-            _id(payload["member_id"], "member_id"),
-            label,
-            f"threshold:{payload['threshold_id']}",
-            0.0,
-            self.profile.label_duration,
-        ))
+        self.labels.append(
+            BattleFeedbackLabel(
+                event.sequence,
+                _id(payload["member_id"], "member_id"),
+                label,
+                f"threshold:{payload['threshold_id']}",
+                0.0,
+                self.profile.label_duration,
+            )
+        )
         return True
 
     def apply_event(self, event: BattlePresentationEvent):
@@ -274,6 +278,7 @@ class BattleFeedbackRuntime:
                 int(staging.get("layer", 0)),
                 item.sequence,
             )
+
         result = tuple(sorted(self._audio_pending, key=key))
         self._audio_pending.clear()
         return result
@@ -286,29 +291,45 @@ class BattleFeedbackRuntime:
             "last_sequence": self.last_sequence,
             "values": [
                 {
-                    "sequence": x.sequence, "target_id": x.target_id, "source_id": x.source_id,
-                    "value": x.value, "kind": x.kind.value, "outcome_tags": list(x.outcome_tags),
-                    "disposition": x.disposition, "age": x.age, "duration": x.duration,
+                    "sequence": x.sequence,
+                    "target_id": x.target_id,
+                    "source_id": x.source_id,
+                    "value": x.value,
+                    "kind": x.kind.value,
+                    "outcome_tags": list(x.outcome_tags),
+                    "disposition": x.disposition,
+                    "age": x.age,
+                    "duration": x.duration,
                 }
                 for x in self.values
             ],
             "labels": [
                 {
-                    "sequence": x.sequence, "target_id": x.target_id, "label": x.label,
-                    "reason_id": x.reason_id, "age": x.age, "duration": x.duration,
+                    "sequence": x.sequence,
+                    "target_id": x.target_id,
+                    "label": x.label,
+                    "reason_id": x.reason_id,
+                    "age": x.age,
+                    "duration": x.duration,
                 }
                 for x in self.labels
             ],
             "vfx": [
                 {
-                    "sequence": x.sequence, "cue_id": x.cue_id, "member_id": x.member_id,
-                    "payload": dict(x.payload), "age": x.age, "duration": x.duration,
+                    "sequence": x.sequence,
+                    "cue_id": x.cue_id,
+                    "member_id": x.member_id,
+                    "payload": dict(x.payload),
+                    "age": x.age,
+                    "duration": x.duration,
                 }
                 for x in self.vfx
             ],
             "audio_pending": [
                 {
-                    "sequence": x.sequence, "cue_id": x.cue_id, "member_id": x.member_id,
+                    "sequence": x.sequence,
+                    "cue_id": x.cue_id,
+                    "member_id": x.member_id,
                     "payload": dict(x.payload),
                 }
                 for x in self._audio_pending
@@ -320,23 +341,48 @@ class BattleFeedbackRuntime:
             raise ValueError("unsupported battle feedback runtime snapshot")
         self.time = _finite(data["time"], "time")
         self.last_sequence = int(data["last_sequence"])
-        self.values = [BattleFloatingValue(
-            int(x["sequence"]), str(x["target_id"]), str(x.get("source_id", "")),
-            _finite(x["value"], "value"), BattleValueKind(x["kind"]),
-            tuple(x.get("outcome_tags", ())), str(x.get("disposition", "normal")),
-            _finite(x["age"], "age"), _positive(x["duration"], "duration"),
-        ) for x in data.get("values", ())]
-        self.labels = [BattleFeedbackLabel(
-            int(x["sequence"]), str(x["target_id"]), str(x["label"]), str(x["reason_id"]),
-            _finite(x["age"], "age"), _positive(x["duration"], "duration"),
-        ) for x in data.get("labels", ())]
-        self.vfx = [BattleVfxCue(
-            int(x["sequence"]), str(x["cue_id"]), str(x.get("member_id", "")), dict(x.get("payload", {})),
-            _finite(x["age"], "age"), _positive(x["duration"], "duration"),
-        ) for x in data.get("vfx", ())]
-        self._audio_pending = [BattleAudioCue(
-            int(x["sequence"]), str(x["cue_id"]), str(x.get("member_id", "")), dict(x.get("payload", {}))
-        ) for x in data.get("audio_pending", ())]
+        self.values = [
+            BattleFloatingValue(
+                int(x["sequence"]),
+                str(x["target_id"]),
+                str(x.get("source_id", "")),
+                _finite(x["value"], "value"),
+                BattleValueKind(x["kind"]),
+                tuple(x.get("outcome_tags", ())),
+                str(x.get("disposition", "normal")),
+                _finite(x["age"], "age"),
+                _positive(x["duration"], "duration"),
+            )
+            for x in data.get("values", ())
+        ]
+        self.labels = [
+            BattleFeedbackLabel(
+                int(x["sequence"]),
+                str(x["target_id"]),
+                str(x["label"]),
+                str(x["reason_id"]),
+                _finite(x["age"], "age"),
+                _positive(x["duration"], "duration"),
+            )
+            for x in data.get("labels", ())
+        ]
+        self.vfx = [
+            BattleVfxCue(
+                int(x["sequence"]),
+                str(x["cue_id"]),
+                str(x.get("member_id", "")),
+                dict(x.get("payload", {})),
+                _finite(x["age"], "age"),
+                _positive(x["duration"], "duration"),
+            )
+            for x in data.get("vfx", ())
+        ]
+        self._audio_pending = [
+            BattleAudioCue(
+                int(x["sequence"]), str(x["cue_id"]), str(x.get("member_id", "")), dict(x.get("payload", {}))
+            )
+            for x in data.get("audio_pending", ())
+        ]
 
 
 def resolved_value_payload(result, *, target_id, source_id="", value_kind=BattleValueKind.DAMAGE, duration=None):
@@ -367,15 +413,18 @@ def gauge_threshold_payloads(result):
     """Flatten already-resolved gauge thresholds without evaluating any rule."""
     if not isinstance(result, GaugeCompositionResult):
         raise TypeError("result must be GaugeCompositionResult")
-    return tuple({
-        "composition_id": result.composition_id,
-        "threshold_id": item.threshold_id,
-        "member_id": item.member_id,
-        "resource_id": item.resource_id,
-        "before": item.before,
-        "after": item.after,
-        "state_applied": item.state_applied,
-        "timeline_shift": item.timeline_shift,
-        "reset_to": item.reset_to,
-        "emitted_trigger": item.emitted_trigger,
-    } for item in result.thresholds)
+    return tuple(
+        {
+            "composition_id": result.composition_id,
+            "threshold_id": item.threshold_id,
+            "member_id": item.member_id,
+            "resource_id": item.resource_id,
+            "before": item.before,
+            "after": item.after,
+            "state_applied": item.state_applied,
+            "timeline_shift": item.timeline_shift,
+            "reset_to": item.reset_to,
+            "emitted_trigger": item.emitted_trigger,
+        }
+        for item in result.thresholds
+    )

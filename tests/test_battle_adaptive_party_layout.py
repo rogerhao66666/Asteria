@@ -13,8 +13,23 @@ from asteria.runtime import Camera2D
 def _member(member_id, count=4):
     gauges = tuple(
         BattleHudGauge(
-            f"r{i}", f"R{i}", i + 1, 0, 10, 0, (i + 1) / 10,
-            False, None, i, "bar", 0, "primary", 100 - i, True, True, False
+            f"r{i}",
+            f"R{i}",
+            i + 1,
+            0,
+            10,
+            0,
+            (i + 1) / 10,
+            False,
+            None,
+            i,
+            "bar",
+            0,
+            "primary",
+            100 - i,
+            True,
+            True,
+            False,
         )
         for i in range(count)
     )
@@ -83,7 +98,9 @@ def test_composer_compacts_large_party_and_prioritizes_resources():
     members = tuple(_member(f"m{i}", count=5) for i in range(8))
     placements = {f"m{i}": "left" for i in range(8)}
     ui = composer.compose(
-        Camera2D(), _frame(), hud_members=members,
+        Camera2D(),
+        _frame(),
+        hud_members=members,
         placement_by_member=placements,
         focus_member_id="m7",
     )
@@ -107,15 +124,21 @@ def test_small_party_keeps_expanded_detail():
     composer = BattleUiComposer(scene)
     members = (_member("a", 3), _member("b", 3))
     ui = composer.compose(
-        Camera2D(), _frame(), hud_members=members,
+        Camera2D(),
+        _frame(),
+        hud_members=members,
         placement_by_member={"a": "left", "b": "right"},
     )
     panels = {x.member_id: x for x in ui.panels if x.panel_id.startswith("hud:")}
     assert panels["a"].role == "hud:expanded"
     assert panels["b"].role == "hud:expanded"
     assert {(g.member_id, g.resource_id) for g in ui.gauges} == {
-        ("a", "r0"), ("a", "r1"), ("a", "r2"),
-        ("b", "r0"), ("b", "r1"), ("b", "r2"),
+        ("a", "r0"),
+        ("a", "r1"),
+        ("a", "r2"),
+        ("b", "r0"),
+        ("b", "r1"),
+        ("b", "r2"),
     }
 
 

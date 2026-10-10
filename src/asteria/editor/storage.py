@@ -21,9 +21,7 @@ def save_document(document, path=None):
     target.parent.mkdir(parents=True, exist_ok=True)
     payload = json.dumps(document.project.to_data(), indent=2, sort_keys=True) + "\n"
 
-    fd, tmp_name = tempfile.mkstemp(
-        prefix=f".{target.name}.", suffix=".tmp", dir=target.parent
-    )
+    fd, tmp_name = tempfile.mkstemp(prefix=f".{target.name}.", suffix=".tmp", dir=target.parent)
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(payload)
@@ -44,12 +42,8 @@ def save_document(document, path=None):
             continue
         sidecar = target.parent / record.source_path
         sidecar.parent.mkdir(parents=True, exist_ok=True)
-        resource_payload = (
-            json.dumps(tilemap_to_data(tilemap), indent=2, sort_keys=True) + "\n"
-        )
-        rfd, rtmp = tempfile.mkstemp(
-            prefix=f".{sidecar.name}.", suffix=".tmp", dir=sidecar.parent
-        )
+        resource_payload = json.dumps(tilemap_to_data(tilemap), indent=2, sort_keys=True) + "\n"
+        rfd, rtmp = tempfile.mkstemp(prefix=f".{sidecar.name}.", suffix=".tmp", dir=sidecar.parent)
         try:
             with os.fdopen(rfd, "w", encoding="utf-8") as rf:
                 rf.write(resource_payload)

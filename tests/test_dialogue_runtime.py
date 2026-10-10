@@ -30,9 +30,7 @@ def test_dialogue_blocks_runner_until_acknowledged():
                         "portrait_asset_id": "portrait-lina",
                     },
                 ),
-                EventInstruction(
-                    "SET_SWITCH", {"name": "after_dialogue", "value": True}
-                ),
+                EventInstruction("SET_SWITCH", {"name": "after_dialogue", "value": True}),
                 EventInstruction("END"),
             ]
         )

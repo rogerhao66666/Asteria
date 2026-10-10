@@ -15,10 +15,7 @@ def definitions(socket_count=2):
         "blade",
         slot="weapon",
         tags=["equipment.weapon"],
-        sockets=[
-            SocketDefinition(f"s{i}", accepted_tags=["attachment.weapon"])
-            for i in range(socket_count)
-        ],
+        sockets=[SocketDefinition(f"s{i}", accepted_tags=["attachment.weapon"]) for i in range(socket_count)],
     )
     ruby = AttachmentDefinition("ruby", tags=["attachment.weapon", "gem"])
     sapphire = AttachmentDefinition("sapphire", tags=["attachment.weapon", "gem"])
@@ -41,13 +38,8 @@ def test_same_definition_can_have_distinct_persistent_instances_and_socket_conte
         equipment={"blade": eq},
         attachments={"ruby": ruby, "sapphire": sapphire},
     )
-    assert (
-        ra.instance_id == "blade.001" and ra.attachments["s0"].attachment_id == "ruby"
-    )
-    assert (
-        rb.instance_id == "blade.002"
-        and rb.attachments["s0"].attachment_id == "sapphire"
-    )
+    assert ra.instance_id == "blade.001" and ra.attachments["s0"].attachment_id == "ruby"
+    assert rb.instance_id == "blade.002" and rb.attachments["s0"].attachment_id == "sapphire"
 
 
 def test_equipment_definition_has_no_engine_socket_count_cap():

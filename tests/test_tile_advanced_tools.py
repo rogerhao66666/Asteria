@@ -32,9 +32,7 @@ def test_rectangle_cells_are_inclusive_and_reverse_safe():
 def test_flood_fill_respects_connected_value_region():
     tm, layer = make()
     doc = EditorDocument()
-    doc.execute(
-        build_paint_command(tm, layer, [(x, y) for y in range(3) for x in range(3)], 1)
-    )
+    doc.execute(build_paint_command(tm, layer, [(x, y) for y in range(3) for x in range(3)], 1))
     doc.execute(build_paint_command(tm, layer, [(1, 1)], 2))
     got = set(flood_fill_cells(tm, layer, 0, 0))
     assert (1, 1) not in got

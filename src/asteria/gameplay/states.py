@@ -88,13 +88,9 @@ class StateDefinition:
         periodic = tuple(periodic)
         on_remove = tuple(on_remove)
         on_expire = tuple(on_expire)
-        contributed_tags = tuple(
-            sorted({str(x).strip().lower() for x in contributed_tags})
-        )
+        contributed_tags = tuple(sorted({str(x).strip().lower() for x in contributed_tags}))
         if any(not x or any(ch.isspace() for ch in x) for x in contributed_tags):
-            raise ValueError(
-                "contributed_tags must be non-empty tags without whitespace"
-            )
+            raise ValueError("contributed_tags must be non-empty tags without whitespace")
         if any(not isinstance(x, StatModifier) for x in modifiers):
             raise TypeError("modifiers must be StatModifier values")
         if any(not isinstance(x, Effect) for x in (*on_apply, *on_remove, *on_expire)):
@@ -360,8 +356,9 @@ class StateRuntime:
                 active.periodic_elapsed[index] -= periodic.interval
                 repeat = active.stacks if definition.stacking == StackingPolicy.STACK else 1
                 for _ in range(repeat):
-                    apply_effect(periodic.effect, self.stats, self.resources, self.tags,
-                                 value_transform=value_transform)
+                    apply_effect(
+                        periodic.effect, self.stats, self.resources, self.tags, value_transform=value_transform
+                    )
         if active.remaining <= 0.0:
             self.expire(state_id)
             return True
@@ -385,15 +382,9 @@ class StateRuntime:
                 active.periodic_elapsed[index] += active_dt
                 while active.periodic_elapsed[index] >= periodic.interval:
                     active.periodic_elapsed[index] -= periodic.interval
-                    repeat = (
-                        active.stacks
-                        if definition.stacking == StackingPolicy.STACK
-                        else 1
-                    )
+                    repeat = active.stacks if definition.stacking == StackingPolicy.STACK else 1
                     for _ in range(repeat):
-                        apply_effect(
-                            periodic.effect, self.stats, self.resources, self.tags
-                        )
+                        apply_effect(periodic.effect, self.stats, self.resources, self.tags)
 
             if active.remaining <= 0.0:
                 expired.append(state_id)

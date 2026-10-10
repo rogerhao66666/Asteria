@@ -26,9 +26,7 @@ def make_growth():
                 max_rank=3,
                 rank_requirements=({"xp": 10}, {"xp": 30}, {"xp": 60}),
                 rewards=(
-                    EquipmentGrowthReward(
-                        modifiers=(StatModifier("temper1", "attack", ModifierOperation.ADD, 2),)
-                    ),
+                    EquipmentGrowthReward(modifiers=(StatModifier("temper1", "attack", ModifierOperation.ADD, 2),)),
                     EquipmentGrowthReward(
                         modifiers=(StatModifier("temper2", "attack", ModifierOperation.ADD, 3),),
                         granted_tags=("growth.tempered",),

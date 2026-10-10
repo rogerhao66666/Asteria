@@ -125,10 +125,7 @@ class ProgressionTrackDefinition:
 
     @classmethod
     def from_data(cls, data):
-        if (
-            data.get("schema") != "asteria.rpg.progression_track"
-            or data.get("version") != 1
-        ):
+        if data.get("schema") != "asteria.rpg.progression_track" or data.get("version") != 1:
             raise ValueError("unsupported progression track")
         return cls(
             data["track_id"],
@@ -192,13 +189,9 @@ class ProgressionRuntime:
         new = old + amount
         self.totals[key] = new
         new_rank = definition.rank_for(new)
-        crossed = tuple(
-            m for m in definition.milestones if old < m.required_total <= new
-        )
+        crossed = tuple(m for m in definition.milestones if old < m.required_total <= new)
         result = ProgressionAdvanceResult(key, old, new, old_rank, new_rank, crossed)
-        emit_hook(
-            self.hooks, "rpg.progression.after_add", source=key, data={"result": result}
-        )
+        emit_hook(self.hooks, "rpg.progression.after_add", source=key, data={"result": result})
         if new_rank != old_rank:
             emit_hook(
                 self.hooks,
@@ -217,10 +210,7 @@ class ProgressionRuntime:
 
     @classmethod
     def from_data(cls, data, definitions):
-        if (
-            data.get("schema") != "asteria.rpg.progression_runtime"
-            or data.get("version") != 1
-        ):
+        if data.get("schema") != "asteria.rpg.progression_runtime" or data.get("version") != 1:
             raise ValueError("unsupported progression runtime")
         return cls(definitions, data["totals"])
 

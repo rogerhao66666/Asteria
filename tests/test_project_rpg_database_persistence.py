@@ -80,7 +80,9 @@ def test_project_v3_backward_read_gets_empty_rpg_database():
     p = make_project()
     data = p.to_data()
     data["version"] = 3
-    data.pop("game_start",None); data.pop("input_map",None); data.pop("prefabs",None)
+    data.pop("game_start", None)
+    data.pop("input_map", None)
+    data.pop("prefabs", None)
     data.pop("battle_presentation_library", None)
     data.pop("rpg_database")
     data.pop("lifecycle_event_bindings")
@@ -94,7 +96,9 @@ def test_project_v2_backward_read_gets_empty_rpg_database():
     p = make_project()
     data = p.to_data()
     data["version"] = 2
-    data.pop("game_start",None); data.pop("input_map",None); data.pop("prefabs",None)
+    data.pop("game_start", None)
+    data.pop("input_map", None)
+    data.pop("prefabs", None)
     data.pop("battle_presentation_library", None)
     data.pop("rpg_database")
     data.pop("lifecycle_event_bindings")

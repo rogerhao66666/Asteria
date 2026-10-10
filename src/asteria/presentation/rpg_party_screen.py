@@ -82,9 +82,12 @@ class PartyScreenProfile:
         object.__setattr__(
             self,
             "group_labels",
-            tuple(sorted((str(k), str(v)) for k, v in dict(group_labels or {
-                "active": "Active", "reserve": "Reserve"
-            }).items())),
+            tuple(
+                sorted(
+                    (str(k), str(v))
+                    for k, v in dict(group_labels or {"active": "Active", "reserve": "Reserve"}).items()
+                )
+            ),
         )
         object.__setattr__(
             self,
@@ -209,33 +212,37 @@ class PartyScreenRuntime:
                 member_id = formation.member_at(slot.slot_id)
                 if member_id is not None:
                     slot_by_member[member_id] = slot
-                slots_list.append(PartyFormationSlotView(
-                    slot_id=slot.slot_id,
-                    label=self.profile.slot_label(slot.slot_id),
-                    x=float(slot.x),
-                    y=float(slot.y),
-                    tags=tuple(slot.tags),
-                    adjacent_to=tuple(slot.adjacent_to),
-                    member_id=member_id,
-                ))
+                slots_list.append(
+                    PartyFormationSlotView(
+                        slot_id=slot.slot_id,
+                        label=self.profile.slot_label(slot.slot_id),
+                        x=float(slot.x),
+                        y=float(slot.y),
+                        tags=tuple(slot.tags),
+                        adjacent_to=tuple(slot.adjacent_to),
+                        member_id=member_id,
+                    )
+                )
             slots = tuple(slots_list)
 
         members = []
         for member_id in roster:
             slot = slot_by_member.get(member_id)
             group_id = group_for(member_id)
-            members.append(PartyMemberPresentation(
-                member_id=member_id,
-                label=self.profile.member_label(member_id),
-                group=group_id,
-                active=member_id in active,
-                reserve=member_id not in active,
-                focused=member_id == self.focused_member_id,
-                formation_slot_id=None if slot is None else slot.slot_id,
-                formation_x=None if slot is None else float(slot.x),
-                formation_y=None if slot is None else float(slot.y),
-                formation_tags=() if slot is None else tuple(slot.tags),
-            ))
+            members.append(
+                PartyMemberPresentation(
+                    member_id=member_id,
+                    label=self.profile.member_label(member_id),
+                    group=group_id,
+                    active=member_id in active,
+                    reserve=member_id not in active,
+                    focused=member_id == self.focused_member_id,
+                    formation_slot_id=None if slot is None else slot.slot_id,
+                    formation_x=None if slot is None else float(slot.x),
+                    formation_y=None if slot is None else float(slot.y),
+                    formation_tags=() if slot is None else tuple(slot.tags),
+                )
+            )
 
         groups = []
         for group_id in available_groups:
@@ -249,13 +256,15 @@ class PartyScreenRuntime:
                 if self.focused_member_id in ids and self.focused_member_id not in visible:
                     visible[-1] = self.focused_member_id
                 visible = tuple(visible)
-            groups.append(PartyGroupView(
-                group_id=group_id,
-                label=self.profile.group_label(group_id),
-                member_ids=ids,
-                visible_member_ids=tuple(visible),
-                overflow_count=max(0, len(ids) - len(visible)),
-            ))
+            groups.append(
+                PartyGroupView(
+                    group_id=group_id,
+                    label=self.profile.group_label(group_id),
+                    member_ids=ids,
+                    visible_member_ids=tuple(visible),
+                    overflow_count=max(0, len(ids) - len(visible)),
+                )
+            )
 
         self.revision += 1
         self._view = PartyScreenView(
@@ -281,9 +290,16 @@ class PartyScreenRuntime:
         self._view = PartyScreenView(
             roster=tuple(
                 PartyMemberPresentation(
-                    x.member_id, x.label, x.group, x.active, x.reserve,
-                    x.member_id == member_id, x.formation_slot_id,
-                    x.formation_x, x.formation_y, x.formation_tags,
+                    x.member_id,
+                    x.label,
+                    x.group,
+                    x.active,
+                    x.reserve,
+                    x.member_id == member_id,
+                    x.formation_slot_id,
+                    x.formation_x,
+                    x.formation_y,
+                    x.formation_tags,
                 )
                 for x in self._view.roster
             ),
@@ -298,33 +314,51 @@ class PartyScreenRuntime:
     def snapshot(self):
         def member_data(x):
             return {
-                "member_id": x.member_id, "label": x.label, "group": x.group,
-                "active": x.active, "reserve": x.reserve, "focused": x.focused,
+                "member_id": x.member_id,
+                "label": x.label,
+                "group": x.group,
+                "active": x.active,
+                "reserve": x.reserve,
+                "focused": x.focused,
                 "formation_slot_id": x.formation_slot_id,
-                "formation_x": x.formation_x, "formation_y": x.formation_y,
+                "formation_x": x.formation_x,
+                "formation_y": x.formation_y,
                 "formation_tags": list(x.formation_tags),
             }
+
         view = None
         if self._view is not None:
             view = {
                 "roster": [member_data(x) for x in self._view.roster],
-                "groups": [{
-                    "group_id": x.group_id, "label": x.label,
-                    "member_ids": list(x.member_ids),
-                    "visible_member_ids": list(x.visible_member_ids),
-                    "overflow_count": x.overflow_count,
-                } for x in self._view.groups],
+                "groups": [
+                    {
+                        "group_id": x.group_id,
+                        "label": x.label,
+                        "member_ids": list(x.member_ids),
+                        "visible_member_ids": list(x.visible_member_ids),
+                        "overflow_count": x.overflow_count,
+                    }
+                    for x in self._view.groups
+                ],
                 "formation_id": self._view.formation_id,
-                "formation_slots": [{
-                    "slot_id": x.slot_id, "label": x.label, "x": x.x, "y": x.y,
-                    "tags": list(x.tags), "adjacent_to": list(x.adjacent_to),
-                    "member_id": x.member_id,
-                } for x in self._view.formation_slots],
+                "formation_slots": [
+                    {
+                        "slot_id": x.slot_id,
+                        "label": x.label,
+                        "x": x.x,
+                        "y": x.y,
+                        "tags": list(x.tags),
+                        "adjacent_to": list(x.adjacent_to),
+                        "member_id": x.member_id,
+                    }
+                    for x in self._view.formation_slots
+                ],
                 "focused_member_id": self._view.focused_member_id,
                 "revision": self._view.revision,
             }
         return {
-            "schema": self.SCHEMA, "version": self.VERSION,
+            "schema": self.SCHEMA,
+            "version": self.VERSION,
             "profile": self.profile.to_data(),
             "focused_member_id": self.focused_member_id,
             "revision": self.revision,
@@ -343,25 +377,44 @@ class PartyScreenRuntime:
             self._view = None
             return self
         self._view = PartyScreenView(
-            roster=tuple(PartyMemberPresentation(
-                member_id=x["member_id"], label=x["label"], group=x["group"],
-                active=bool(x["active"]), reserve=bool(x["reserve"]), focused=bool(x["focused"]),
-                formation_slot_id=x.get("formation_slot_id"),
-                formation_x=x.get("formation_x"), formation_y=x.get("formation_y"),
-                formation_tags=tuple(x.get("formation_tags", ())),
-            ) for x in raw.get("roster", ())),
-            groups=tuple(PartyGroupView(
-                group_id=x["group_id"], label=x["label"],
-                member_ids=tuple(x.get("member_ids", ())),
-                visible_member_ids=tuple(x.get("visible_member_ids", ())),
-                overflow_count=int(x["overflow_count"]),
-            ) for x in raw.get("groups", ())),
+            roster=tuple(
+                PartyMemberPresentation(
+                    member_id=x["member_id"],
+                    label=x["label"],
+                    group=x["group"],
+                    active=bool(x["active"]),
+                    reserve=bool(x["reserve"]),
+                    focused=bool(x["focused"]),
+                    formation_slot_id=x.get("formation_slot_id"),
+                    formation_x=x.get("formation_x"),
+                    formation_y=x.get("formation_y"),
+                    formation_tags=tuple(x.get("formation_tags", ())),
+                )
+                for x in raw.get("roster", ())
+            ),
+            groups=tuple(
+                PartyGroupView(
+                    group_id=x["group_id"],
+                    label=x["label"],
+                    member_ids=tuple(x.get("member_ids", ())),
+                    visible_member_ids=tuple(x.get("visible_member_ids", ())),
+                    overflow_count=int(x["overflow_count"]),
+                )
+                for x in raw.get("groups", ())
+            ),
             formation_id=raw.get("formation_id"),
-            formation_slots=tuple(PartyFormationSlotView(
-                slot_id=x["slot_id"], label=x["label"], x=float(x["x"]), y=float(x["y"]),
-                tags=tuple(x.get("tags", ())), adjacent_to=tuple(x.get("adjacent_to", ())),
-                member_id=x.get("member_id"),
-            ) for x in raw.get("formation_slots", ())),
+            formation_slots=tuple(
+                PartyFormationSlotView(
+                    slot_id=x["slot_id"],
+                    label=x["label"],
+                    x=float(x["x"]),
+                    y=float(x["y"]),
+                    tags=tuple(x.get("tags", ())),
+                    adjacent_to=tuple(x.get("adjacent_to", ())),
+                    member_id=x.get("member_id"),
+                )
+                for x in raw.get("formation_slots", ())
+            ),
             focused_member_id=raw.get("focused_member_id"),
             revision=int(raw["revision"]),
         )

@@ -58,7 +58,8 @@ def test_attachment_can_render_between_body_and_foreground_hand():
     rt.attach(Attachment("held", "sword", "hand_r", render_layer="held"))
     frame = ActorAttachmentBinding("hero", Animator(), rt).resolve()
     packets = PresentationRenderComposer().actor_packets(
-        frame, "hero.body",
+        frame,
+        "hero.body",
         actor_layers=(ActorVisualLayer("hero.hand_foreground", 20, "hand_foreground"),),
         layer_z={"held": 10},
     )
@@ -83,15 +84,16 @@ def test_layer_names_are_project_extensible():
 
 def test_grip_and_render_layer_roundtrip_presentation_state():
     rt = AttachmentRuntime(rig())
-    spec = Attachment("held", "sword", "hand_r", metadata={"kind":"generic"},
-                      grip=GripTransform(9, 2, 12), render_layer="held")
+    spec = Attachment(
+        "held", "sword", "hand_r", metadata={"kind": "generic"}, grip=GripTransform(9, 2, 12), render_layer="held"
+    )
     rt.attach(spec)
     encoded = PresentationStateCodec.dumps(capture_state(rt))
     restored, _ = restore_state(PresentationStateCodec.loads(encoded))
     out = restored.instances["held"].spec
     assert out.grip == spec.grip
     assert out.render_layer == "held"
-    assert out.metadata == {"kind":"generic"}
+    assert out.metadata == {"kind": "generic"}
 
 
 def test_legacy_attachment_defaults_remain_compatible():
@@ -107,7 +109,10 @@ def test_actor_root_transform_still_applies_after_grip_placement():
     g = GripTransform(5, 0)
     rt.attach(Attachment("held", "sword", "hand_r", grip=g))
     frame = ActorAttachmentBinding("hero", Animator(), rt).resolve()
-    packet = next(p for p in PresentationRenderComposer().actor_packets(
-        frame, "hero", actor_transform=RenderTransform(x=100, y=50)) if p.asset_id == "sword")
+    packet = next(
+        p
+        for p in PresentationRenderComposer().actor_packets(frame, "hero", actor_transform=RenderTransform(x=100, y=50))
+        if p.asset_id == "sword"
+    )
     x, y, _ = grip_world(packet.transform, g)
     assert (x, y) == pytest.approx((124, 70))

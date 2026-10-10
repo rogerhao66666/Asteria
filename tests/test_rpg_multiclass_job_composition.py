@@ -118,9 +118,7 @@ def test_disabled_assignment_does_not_contribute_and_legacy_class_id_is_view_onl
         "aria",
         class_assignments=[
             ClassAssignment("warrior", assignment_id="warrior", priority=10),
-            ClassAssignment(
-                "scholar", assignment_id="scholar", enabled=False, priority=0
-            ),
+            ClassAssignment("scholar", assignment_id="scholar", enabled=False, priority=0),
         ],
         base_stats={"attack": 1, "magic": 1},
     )
@@ -134,9 +132,7 @@ def test_disabled_assignment_does_not_contribute_and_legacy_class_id_is_view_onl
 
 
 def test_actor_v1_single_class_migrates_to_v2_assignment():
-    old = ActorDefinition(
-        "hero", class_id="warrior", base_stats={"attack": 5}
-    ).to_data()
+    old = ActorDefinition("hero", class_id="warrior", base_stats={"attack": 5}).to_data()
     old["version"] = 1
     old["class_id"] = "warrior"
     del old["class_assignments"]
@@ -178,11 +174,7 @@ def test_database_validates_class_and_job_progression_references():
     db.add_actor(
         ActorDefinition(
             "hero",
-            class_assignments=[
-                ClassAssignment(
-                    "warrior", progression_track_ids=["missing_job_rank"]
-                )
-            ],
+            class_assignments=[ClassAssignment("warrior", progression_track_ids=["missing_job_rank"])],
         )
     )
     with pytest.raises(ValueError, match="missing_job_rank"):

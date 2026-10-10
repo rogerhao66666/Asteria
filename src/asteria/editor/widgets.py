@@ -160,13 +160,9 @@ class InspectorWidget(QWidget):
         self.error = QLabel("")
         self.table = QTableWidget(0, 3)
         self.table.setHorizontalHeaderLabels(["Property", "Value", "Type"])
-        self.table.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeToContents
-        )
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(
-            2, QHeaderView.ResizeToContents
-        )
+        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
         self.table.itemChanged.connect(self._item_changed)
         layout = QVBoxLayout(self)
         layout.addWidget(self.title)
@@ -238,9 +234,7 @@ class InspectorWidget(QWidget):
                     combo.setEnabled(f.editable)
                     if f.tooltip:
                         combo.setToolTip(f.tooltip)
-                    combo.currentIndexChanged.connect(
-                        lambda _index, r=row, c=combo: self._choice_changed(r, c)
-                    )
+                    combo.currentIndexChanged.connect(lambda _index, r=row, c=combo: self._choice_changed(r, c))
                     self.table.setItem(row, 1, v)
                     self.table.setCellWidget(row, 1, combo)
                 elif f.value_type is bool:
@@ -249,9 +243,7 @@ class InspectorWidget(QWidget):
                     checkbox.setEnabled(f.editable)
                     if f.tooltip:
                         checkbox.setToolTip(f.tooltip)
-                    checkbox.toggled.connect(
-                        lambda checked, r=row: self._bool_changed(r, checked)
-                    )
+                    checkbox.toggled.connect(lambda checked, r=row: self._bool_changed(r, checked))
                     self.table.setItem(row, 1, v)
                     self.table.setCellWidget(row, 1, checkbox)
                 else:
@@ -281,9 +273,7 @@ class InspectorWidget(QWidget):
         window = self.window()
         if not hasattr(window, "edit_selected_component_field"):
             return
-        ok, error = window.edit_selected_component_field(
-            field.name, combo.currentData()
-        )
+        ok, error = window.edit_selected_component_field(field.name, combo.currentData())
         self.error.setText("" if ok else error or "Invalid value")
 
     def _item_changed(self, item):

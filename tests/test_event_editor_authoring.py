@@ -63,7 +63,9 @@ def test_project_v2_remains_loadable_with_empty_event_data():
     project, _, _ = make_project()
     data = project.to_data()
     data["version"] = 2
-    data.pop("game_start",None); data.pop("input_map",None); data.pop("prefabs",None)
+    data.pop("game_start", None)
+    data.pop("input_map", None)
+    data.pop("prefabs", None)
     data.pop("battle_presentation_library", None)
     data.pop("event_programs")
     data.pop("scene_event_bindings")
@@ -87,9 +89,7 @@ def test_program_edit_helpers_insert_move_remove_without_mutating_original():
         name="Test",
     )
 
-    inserted = program_with_insert(
-        original, 1, EventInstruction("SET_SWITCH", {"name": "x", "value": True})
-    )
+    inserted = program_with_insert(original, 1, EventInstruction("SET_SWITCH", {"name": "x", "value": True}))
     moved = program_with_move(inserted, 1, 0)
     removed = program_with_remove(moved, 0)
 
@@ -119,9 +119,7 @@ def test_event_authoring_commands_are_reversible():
     assert bindings.bindings["b1"].program_id == "p1"
 
     replacement_program = EventProgram([EventInstruction("END")], name="Greeting")
-    ReplaceEventProgramCommand(
-        project.event_programs, "p1", replacement_program, program
-    ).redo()
+    ReplaceEventProgramCommand(project.event_programs, "p1", replacement_program, program).redo()
     assert len(project.event_programs.require("p1").instructions) == 1
 
     old_binding = bindings.bindings["b1"]

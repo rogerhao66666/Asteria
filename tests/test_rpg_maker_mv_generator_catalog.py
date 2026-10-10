@@ -26,9 +26,12 @@ def test_real_catalog_discovers_every_generator_source_file_deterministically():
 def test_representative_part_links_walking_face_side_view_thumbnail_and_masks():
     catalog = _real()
     part = next(
-        item for item in catalog.parts
-        if item.source_category == "AccA" and item.part_number == 14
-        and item.gender == "Male" and "Modern_Generator/parts" in item.source_root.as_posix()
+        item
+        for item in catalog.parts
+        if item.source_category == "AccA"
+        and item.part_number == 14
+        and item.gender == "Male"
+        and "Modern_Generator/parts" in item.source_root.as_posix()
     )
 
     assert part.category == "accessory"
@@ -70,29 +73,37 @@ def test_malformed_part_does_not_hide_valid_sibling(tmp_path):
 def test_missing_representations_are_explicit_not_substituted():
     catalog = _real()
     body = next(
-        item for item in catalog.parts
+        item
+        for item in catalog.parts
         if item.source_category == "Body" and "modern_body" in item.source_root.as_posix()
     )
 
     assert body.walking is not None
     assert body.face is None
     assert body.side_view is None
-    assert any(issue.code == "generator.representation_missing" and issue.part_id == body.id
-               for issue in catalog.issues)
+    assert any(
+        issue.code == "generator.representation_missing" and issue.part_id == body.id for issue in catalog.issues
+    )
 
 
 @pytest.mark.mv_reference
 def test_core_generator_merges_case_and_numbered_filename_layers_into_logical_parts():
     catalog = _real()
     core = next(
-        item for item in catalog.parts
+        item
+        for item in catalog.parts
         if item.source_root.parent.name == "rpg_maker_mv"
-        and item.source_category == "Body" and item.part_number == 1 and item.gender == "Male"
+        and item.source_category == "Body"
+        and item.part_number == 1
+        and item.gender == "Male"
     )
     clothing = next(
-        item for item in catalog.parts
+        item
+        for item in catalog.parts
         if item.source_root.parent.name == "rpg_maker_mv"
-        and item.source_category == "Clothing" and item.part_number == 1 and item.gender == "Male"
+        and item.source_category == "Clothing"
+        and item.part_number == 1
+        and item.gender == "Male"
     )
 
     assert core.walking is not None and core.face is not None and core.side_view is not None
@@ -103,7 +114,9 @@ def test_core_generator_merges_case_and_numbered_filename_layers_into_logical_pa
 @pytest.mark.mv_reference
 def test_core_face_features_translate_to_independent_generic_categories():
     catalog = _real()
-    core_parts = [part for part in catalog.parts if part.source_root.parent.name == "rpg_maker_mv" and part.gender == "Male"]
+    core_parts = [
+        part for part in catalog.parts if part.source_root.parent.name == "rpg_maker_mv" and part.gender == "Male"
+    ]
 
     assert next(part for part in core_parts if part.source_category == "Face").category == "face_shape"
     assert next(part for part in core_parts if part.source_category == "Eyebrows").category == "eyebrows"

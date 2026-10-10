@@ -4,7 +4,15 @@ from dataclasses import dataclass
 import copy
 import random
 
-from asteria.gameplay import GameplaySubject, ResourcePool, StateDefinition, StateRegistry, StateRuntime, StatBlock, TagSet
+from asteria.gameplay import (
+    GameplaySubject,
+    ResourcePool,
+    StateDefinition,
+    StateRegistry,
+    StateRuntime,
+    StatBlock,
+    TagSet,
+)
 
 
 def _jsonable_state(value):
@@ -72,6 +80,7 @@ def _pack_member(member):
 
 def _unpack_member(raw):
     from .battle import PartyMember
+
     stats = StatBlock.from_data(raw["stats"])
     resources = ResourcePool.from_data(raw["resources"])
     tags = TagSet.from_data(raw["tags"])
@@ -81,15 +90,18 @@ def _unpack_member(raw):
         states = StateRuntime(registry, stats, resources, tags)
         states.restore(raw["states"])
     subject = GameplaySubject(stats, resources, tags, states)
-    return PartyMember(raw["member_id"], raw["side"], subject,
-                       ability_ids=raw.get("ability_ids", ()), initiative=raw.get("initiative", 0.0))
+    return PartyMember(
+        raw["member_id"],
+        raw["side"],
+        subject,
+        ability_ids=raw.get("ability_ids", ()),
+        initiative=raw.get("initiative", 0.0),
+    )
 
 
 def capture_battle_snapshot(battle) -> BattleSnapshot:
     members = {member_id: _pack_member(battle.members[member_id]) for member_id in sorted(battle.members)}
-    formations = {
-        side: runtime.to_data() for side, runtime in sorted(battle.formations.items())
-    }
+    formations = {side: runtime.to_data() for side, runtime in sorted(battle.formations.items())}
     data = {
         "schema": BattleSnapshot.SCHEMA,
         "version": BattleSnapshot.VERSION,
@@ -107,8 +119,9 @@ def capture_battle_snapshot(battle) -> BattleSnapshot:
         "rng_state": _jsonable_state(battle.rng.getstate()),
         "transactions": battle.transactions.to_data(),
         "transform_stacks": {
-            member_id: [{"member": _pack_member(member), "prior_form_id": prior_form_id}
-                        for member, prior_form_id in stack]
+            member_id: [
+                {"member": _pack_member(member), "prior_form_id": prior_form_id} for member, prior_form_id in stack
+            ]
             for member_id, stack in sorted(battle._transform_stacks.items())
         },
     }
@@ -123,7 +136,9 @@ def restore_battle_snapshot(battle, snapshot):
     # Restore dynamic topology (summons/removals) without replaying lifecycle hooks.
     for member_id in sorted(current_ids - snapshot_ids):
         member = battle.members.pop(member_id)
-        battle.parties[member.side].members = [x for x in battle.parties[member.side].members if x.member_id != member_id]
+        battle.parties[member.side].members = [
+            x for x in battle.parties[member.side].members if x.member_id != member_id
+        ]
     for member_id in sorted(snapshot_ids):
         raw = data["members"][member_id]
         replacement = _unpack_member(raw)
@@ -145,9 +160,7 @@ def restore_battle_snapshot(battle, snapshot):
     from .battle_timing import BattleActionTimingRuntime
 
     battle.combatants = CombatantLifecycleRuntime.from_data(data["combatants"], hooks=battle.hooks)
-    battle.is_active = lambda member: (
-        battle.combatants.is_active(member) and battle._base_is_active(member)
-    )
+    battle.is_active = lambda member: battle.combatants.is_active(member) and battle._base_is_active(member)
     if data["turn_kind"] == "scheduler":
         battle.scheduler = BattleScheduler.from_data(data["turn_runtime"], battle.members.values())
         battle.turn_queue = battle.scheduler
@@ -155,6 +168,7 @@ def restore_battle_snapshot(battle, snapshot):
         battle.scheduler = None
         battle.turn_queue = TurnQueue.from_data(data["turn_runtime"], battle.members.values())
     from .battle_resources import BattleResourceRuntime
+
     battle.battle_resources = BattleResourceRuntime(
         battle.battle_resources.definitions.values(), battle.members.values(), hooks=battle.hooks
     )

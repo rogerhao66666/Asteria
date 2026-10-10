@@ -92,7 +92,8 @@ class RPGMakerMVMap:
         layers = tuple(tuple(data[i * layer_size : (i + 1) * layer_size]) for i in range(6))
         encounters = tuple(
             MVEncounter(
-                int(item.get("troopId", 0)), int(item.get("weight", 0)),
+                int(item.get("troopId", 0)),
+                int(item.get("weight", 0)),
                 tuple(int(region) for region in item.get("regionSet", ())),
             )
             for item in raw.get("encounterList", ())
@@ -104,21 +105,34 @@ class RPGMakerMVMap:
                 continue
             pages = item.get("pages") or ()
             image = pages[0].get("image", {}) if pages and isinstance(pages[0], dict) else {}
-            events.append(MVMapEvent(
-                int(item.get("id", 0)), str(item.get("name", "")),
-                int(item.get("x", 0)), int(item.get("y", 0)),
-                MVEventImage(
-                    str(image.get("characterName", "")), int(image.get("characterIndex", 0)),
-                    int(image.get("direction", 2)), int(image.get("pattern", 1)),
-                    int(image.get("tileId", 0)),
-                ),
-                tuple((key, value) for key, value in sorted(item.items()) if key not in {"id", "name", "x", "y"}),
-            ))
+            events.append(
+                MVMapEvent(
+                    int(item.get("id", 0)),
+                    str(item.get("name", "")),
+                    int(item.get("x", 0)),
+                    int(item.get("y", 0)),
+                    MVEventImage(
+                        str(image.get("characterName", "")),
+                        int(image.get("characterIndex", 0)),
+                        int(image.get("direction", 2)),
+                        int(image.get("pattern", 1)),
+                        int(image.get("tileId", 0)),
+                    ),
+                    tuple((key, value) for key, value in sorted(item.items()) if key not in {"id", "name", "x", "y"}),
+                )
+            )
         return cls(
-            int(map_id), str(name or raw.get("displayName") or f"Map{int(map_id):03d}"),
-            str(raw.get("displayName", "")), width, height,
-            int(raw.get("tilesetId", 0)), str(raw.get("parallaxName", "")),
-            int(raw.get("scrollType", 0)), layers, encounters, tuple(events),
+            int(map_id),
+            str(name or raw.get("displayName") or f"Map{int(map_id):03d}"),
+            str(raw.get("displayName", "")),
+            width,
+            height,
+            int(raw.get("tilesetId", 0)),
+            str(raw.get("parallaxName", "")),
+            int(raw.get("scrollType", 0)),
+            layers,
+            encounters,
+            tuple(events),
         )
 
 
@@ -137,10 +151,15 @@ def discover_mv_maps(layout: RPGMakerMVProjectLayout) -> tuple[MVMapEntry, ...]:
         map_id = int(item.get("id", 0))
         map_path = layout.data / f"Map{map_id:03d}.json"
         if map_path.is_file():
-            entries.append(MVMapEntry(
-                map_id, str(item.get("name", f"Map{map_id:03d}")), map_path.resolve(),
-                int(item.get("parentId", 0)), int(item.get("order", 0)),
-            ))
+            entries.append(
+                MVMapEntry(
+                    map_id,
+                    str(item.get("name", f"Map{map_id:03d}")),
+                    map_path.resolve(),
+                    int(item.get("parentId", 0)),
+                    int(item.get("order", 0)),
+                )
+            )
     return tuple(sorted(entries, key=lambda item: (item.order, item.map_id)))
 
 
@@ -152,10 +171,12 @@ def to_asteria_scene(mv_map: RPGMakerMVMap, catalog: RPGMakerMVCatalog) -> Scene
     tilemap.tilemap_asset_id = f"mv.tileset.{mv_map.tileset_id}"
     host.rpg_maker_mv_map = mv_map
     for event in mv_map.events:
-        entity = scene.add_entity(Entity(
-            event.name or f"Event {event.id}",
-            entity_id=str(uuid5(_MV_ID_NAMESPACE, f"map:{mv_map.map_id}:event:{event.id}")),
-        ))
+        entity = scene.add_entity(
+            Entity(
+                event.name or f"Event {event.id}",
+                entity_id=str(uuid5(_MV_ID_NAMESPACE, f"map:{mv_map.map_id}:event:{event.id}")),
+            )
+        )
         entity.add_component(Transform(event.x * 48 + 24, event.y * 48 + 48))
         if event.image.character_name:
             sprite = entity.add_component(SpriteRenderer2D())

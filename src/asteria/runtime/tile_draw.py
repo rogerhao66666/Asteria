@@ -38,13 +38,9 @@ def build_tile_draws(
                     sx, sy = camera.world_to_screen(wx, wy)
                     width = tilemap.tile_width * camera.zoom
                     height = tilemap.tile_height * camera.zoom
-                    if viewport_width is not None and (
-                        sx + width < 0 or sx > viewport_width
-                    ):
+                    if viewport_width is not None and (sx + width < 0 or sx > viewport_width):
                         continue
-                    if viewport_height is not None and (
-                        sy + height < 0 or sy > viewport_height
-                    ):
+                    if viewport_height is not None and (sy + height < 0 or sy > viewport_height):
                         continue
                     draws.append(
                         TextureDraw(
@@ -60,6 +56,4 @@ def build_tile_draws(
                             False,
                         )
                     )
-    return tuple(
-        sorted(draws, key=lambda d: (d.layer, d.depth, d.screen_y, d.screen_x))
-    )
+    return tuple(sorted(draws, key=lambda d: (d.layer, d.depth, d.screen_y, d.screen_x)))

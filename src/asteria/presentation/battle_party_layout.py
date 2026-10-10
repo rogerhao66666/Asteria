@@ -74,8 +74,10 @@ class BattlePartyLayoutPolicy:
         if not (self.expanded_row_height >= self.compact_row_height >= self.minimal_row_height):
             raise ValueError("party row heights must satisfy expanded >= compact >= minimal")
         for name in (
-            "compact_resource_limit", "minimal_resource_limit",
-            "compact_status_limit", "minimal_status_limit",
+            "compact_resource_limit",
+            "minimal_resource_limit",
+            "compact_status_limit",
+            "minimal_status_limit",
         ):
             if int(getattr(self, name)) < 0:
                 raise ValueError(f"{name} must be >= 0")
@@ -125,12 +127,8 @@ class BattlePartyLayoutPolicy:
             for index, member_id in enumerate(values):
                 is_visible = member_id in visible_set
                 visible_index = visible.index(member_id) if is_visible else index
-                placements.append(BattlePartyPlacement(
-                    member_id, zone, visible_index, density, is_visible
-                ))
-            zones.append(BattlePartyZoneLayout(
-                zone, density, tuple(visible), tuple(hidden)
-            ))
+                placements.append(BattlePartyPlacement(member_id, zone, visible_index, density, is_visible))
+            zones.append(BattlePartyZoneLayout(zone, density, tuple(visible), tuple(hidden)))
         return BattlePartyLayoutResult(tuple(placements), tuple(zones))
 
     def resource_limit(self, density):
@@ -175,7 +173,4 @@ class BattlePartyLayoutPolicy:
     def from_data(cls, data):
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported battle party layout policy")
-        return cls(**{
-            key: value for key, value in data.items()
-            if key not in {"schema", "version"}
-        })
+        return cls(**{key: value for key, value in data.items() if key not in {"schema", "version"}})

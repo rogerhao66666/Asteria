@@ -15,7 +15,7 @@ from asteria.presentation import (
 from asteria.runtime import AnimationClipSet, Camera2D
 
 
-def _clip(name, frames, duration=.1, loop=False):
+def _clip(name, frames, duration=0.1, loop=False):
     return SpriteClip(name, [SpriteKeyframe(i, duration) for i in frames], loop)
 
 
@@ -24,11 +24,13 @@ def _assets():
         AssetRef("20000000-0000-4000-8000-0000000000a1", "texture"),
         [SpriteFrame(i * 16, 0, 16, 16) for i in range(5)],
     )
-    clips = AnimationClipSet({
-        "idle": _clip("idle", [0], loop=True),
-        "attack": _clip("attack", [1, 2, 3], duration=.1),
-        "hit": _clip("hit", [4], duration=.1),
-    })
+    clips = AnimationClipSet(
+        {
+            "idle": _clip("idle", [0], loop=True),
+            "attack": _clip("attack", [1, 2, 3], duration=0.1),
+            "hit": _clip("hit", [4], duration=0.1),
+        }
+    )
     return sheet, clips
 
 
@@ -37,10 +39,15 @@ def _runtime(profile):
     scene = BattlePresentationScene(
         "timing",
         "bg",
-        (BattleCombatantVisual(
-            "hero", "sheet", "clips", BattleVisualAnchor(80, 100),
-            {"idle": "idle", "attack": "attack", "hit": "hit"},
-        ),),
+        (
+            BattleCombatantVisual(
+                "hero",
+                "sheet",
+                "clips",
+                BattleVisualAnchor(80, 100),
+                {"idle": "idle", "attack": "attack", "hit": "hit"},
+            ),
+        ),
     )
     return BattlePresentationRuntime(
         scene,
@@ -52,24 +59,28 @@ def _runtime(profile):
 
 def _attack_event(runtime):
     coordinator = BattlePresentationCoordinator(runtime.scene)
-    coordinator.consume_timeline_cues((PresentationCue(
-        "attack",
-        ActionCue("attack", 0, "animation", {"member_id": "hero", "role": "attack"}),
-    ),))
+    coordinator.consume_timeline_cues(
+        (
+            PresentationCue(
+                "attack",
+                ActionCue("attack", 0, "animation", {"member_id": "hero", "role": "attack"}),
+            ),
+        )
+    )
     return coordinator.drain()
 
 
 def test_easing_library_is_deterministic_and_backend_neutral():
-    assert easing_value("linear", .25) == .25
-    assert round(easing_value("ease_in", .5), 6) == .25
-    assert round(easing_value("ease_out", .5), 6) == .75
-    assert round(easing_value("smoothstep", .5), 6) == .5
+    assert easing_value("linear", 0.25) == 0.25
+    assert round(easing_value("ease_in", 0.5), 6) == 0.25
+    assert round(easing_value("ease_out", 0.5), 6) == 0.75
+    assert round(easing_value("smoothstep", 0.5), 6) == 0.5
 
 
 def test_transition_crossfade_emits_previous_and_current_sprite_draws():
-    profile = BattleAnimationTimingProfile((
-        BattleAnimationTimingRule("attack", transition_duration=.2, transition_easing="ease_out"),
-    ))
+    profile = BattleAnimationTimingProfile(
+        (BattleAnimationTimingRule("attack", transition_duration=0.2, transition_easing="ease_out"),)
+    )
     runtime = _runtime(profile)
     runtime.apply_events(_attack_event(runtime))
 
@@ -78,70 +89,72 @@ def test_transition_crossfade_emits_previous_and_current_sprite_draws():
     assert frame0.combatant_draws[0].opacity == 1.0
     assert frame0.combatant_draws[1].opacity == 0.0
 
-    runtime.update(.1)
+    runtime.update(0.1)
     frame1 = runtime.build_frame(Camera2D())
     assert len(frame1.combatant_draws) == 2
     assert 0.0 < frame1.combatant_draws[0].opacity < 1.0
     assert 0.0 < frame1.combatant_draws[1].opacity < 1.0
 
-    runtime.update(.1)
+    runtime.update(0.1)
     frame2 = runtime.build_frame(Camera2D())
     assert len(frame2.combatant_draws) == 1
     assert frame2.combatant_draws[0].opacity == 1.0
 
 
 def test_role_playback_rate_changes_only_animation_clock():
-    slow = _runtime(BattleAnimationTimingProfile((
-        BattleAnimationTimingRule("attack", playback_rate=.5),
-    )))
-    fast = _runtime(BattleAnimationTimingProfile((
-        BattleAnimationTimingRule("attack", playback_rate=2.0),
-    )))
+    slow = _runtime(BattleAnimationTimingProfile((BattleAnimationTimingRule("attack", playback_rate=0.5),)))
+    fast = _runtime(BattleAnimationTimingProfile((BattleAnimationTimingRule("attack", playback_rate=2.0),)))
     slow.apply_events(_attack_event(slow))
     fast.apply_events(_attack_event(fast))
-    slow.update(.11)
-    fast.update(.11)
+    slow.update(0.11)
+    fast.update(0.11)
 
     assert slow.combatant("hero").frame_index == 1
     assert fast.combatant("hero").frame_index >= 2
-    assert slow.time == fast.time == .11
+    assert slow.time == fast.time == 0.11
 
 
 def test_recovery_hold_keeps_transient_pose_before_idle_return():
-    profile = BattleAnimationTimingProfile((
-        BattleAnimationTimingRule("attack", playback_rate=10.0, recovery_hold=.2),
-    ))
+    profile = BattleAnimationTimingProfile(
+        (BattleAnimationTimingRule("attack", playback_rate=10.0, recovery_hold=0.2),)
+    )
     runtime = _runtime(profile)
     runtime.apply_events(_attack_event(runtime))
-    runtime.update(.05)
+    runtime.update(0.05)
     assert runtime.combatant("hero").role.value == "attack"
     assert runtime.combatant("hero").recovery_remaining > 0
 
-    runtime.update(.1)
+    runtime.update(0.1)
     assert runtime.combatant("hero").role.value == "attack"
-    runtime.update(.1)
+    runtime.update(0.1)
     assert runtime.combatant("hero").role.value == "idle"
 
 
 def test_multi_hit_rhythm_generates_only_presentation_offsets():
-    rhythm = BattleHitRhythm((.08, .12), accent_every=3, accent_delay=.05)
+    rhythm = BattleHitRhythm((0.08, 0.12), accent_every=3, accent_delay=0.05)
     assert rhythm.offsets(0) == ()
-    assert rhythm.offsets(5) == (0.0, .08, .2, .33, .45)
+    assert rhythm.offsets(5) == (0.0, 0.08, 0.2, 0.33, 0.45)
 
 
 def test_timing_profile_and_runtime_snapshot_roundtrip():
     profile = BattleAnimationTimingProfile(
         (
-            BattleAnimationTimingRule("attack", playback_rate=1.25, transition_duration=.08, transition_easing="smoothstep", recovery_hold=.04),
-            BattleAnimationTimingRule("hit", playback_rate=.9, transition_duration=.03),
+            BattleAnimationTimingRule(
+                "attack",
+                playback_rate=1.25,
+                transition_duration=0.08,
+                transition_easing="smoothstep",
+                recovery_hold=0.04,
+            ),
+            BattleAnimationTimingRule("hit", playback_rate=0.9, transition_duration=0.03),
         ),
-        default_transition_duration=.01,
+        default_transition_duration=0.01,
     )
     assert BattleAnimationTimingProfile.from_data(profile.to_data()) == profile
 
     runtime = _runtime(profile)
     runtime.apply_events(_attack_event(runtime))
-    runtime.update(.04)
+    runtime.update(0.04)
     snapshot = runtime.snapshot()
 
     restored = _runtime(profile)

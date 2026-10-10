@@ -25,11 +25,14 @@ def _subject():
 def _runtime():
     subject = _subject()
     hero = PartyMember("hero", "player", subject, initiative=10)
-    resources = BattleResourceRuntime([
-        BattleResourceDefinition("hp"),
-        BattleResourceDefinition("mp"),
-        BattleResourceDefinition("limit", minimum=0, maximum=100, start_mode="fixed", start_value=35),
-    ], [hero])
+    resources = BattleResourceRuntime(
+        [
+            BattleResourceDefinition("hp"),
+            BattleResourceDefinition("mp"),
+            BattleResourceDefinition("limit", minimum=0, maximum=100, start_mode="fixed", start_value=35),
+        ],
+        [hero],
+    )
     return hero, resources
 
 
@@ -50,7 +53,9 @@ def test_hud_mirrors_hp_mp_and_project_defined_gauge_without_mutation():
     before = deepcopy(resources.to_data())
     view = hud.sync_member("hero", resources, hero.subject)
     assert [(x.resource_id, x.current, x.maximum) for x in view.gauges] == [
-        ("hp", 75, 100), ("mp", 13, 40), ("limit", 35, 100)
+        ("hp", 75, 100),
+        ("mp", 13, 40),
+        ("limit", 35, 100),
     ]
     assert resources.to_data() == before
 

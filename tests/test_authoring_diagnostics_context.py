@@ -14,10 +14,7 @@ def make_project():
 def test_selection_context_exposes_selected_entity_and_scene():
     p, _s, e = make_project()
     result = run_authoring_script(
-        "print(selected.name)\n"
-        "print(entity.name)\n"
-        "print(scene.name)\n"
-        "entity.transform.x = 42\n",
+        "print(selected.name)\nprint(entity.name)\nprint(scene.name)\nentity.transform.x = 42\n",
         p,
         selection_kind="entity",
         selection_value=e,

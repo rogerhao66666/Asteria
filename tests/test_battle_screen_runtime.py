@@ -37,7 +37,7 @@ from asteria.runtime import AnimationClipSet, Camera2D
 
 
 def _clip(name, frames, *, loop=False):
-    return SpriteClip(name, [SpriteKeyframe(i, .1) for i in frames], loop)
+    return SpriteClip(name, [SpriteKeyframe(i, 0.1) for i in frames], loop)
 
 
 def _assets():
@@ -50,25 +50,30 @@ def _assets():
         [SpriteFrame(i * 24, 0, 24, 24) for i in range(4)],
     )
     clips = {
-        "clips.hero": AnimationClipSet({
-            "idle": _clip("idle", [0], loop=True),
-            "attack": _clip("attack", [1, 2]),
-            "hit": _clip("hit", [2]),
-            "ko": _clip("ko", [3]),
-        }),
-        "clips.mimic": AnimationClipSet({
-            "idle": _clip("idle", [0], loop=True),
-            "attack": _clip("attack", [1]),
-            "hit": _clip("hit", [2]),
-            "ko": _clip("ko", [3]),
-        }),
+        "clips.hero": AnimationClipSet(
+            {
+                "idle": _clip("idle", [0], loop=True),
+                "attack": _clip("attack", [1, 2]),
+                "hit": _clip("hit", [2]),
+                "ko": _clip("ko", [3]),
+            }
+        ),
+        "clips.mimic": AnimationClipSet(
+            {
+                "idle": _clip("idle", [0], loop=True),
+                "attack": _clip("attack", [1]),
+                "hit": _clip("hit", [2]),
+                "ko": _clip("ko", [3]),
+            }
+        ),
     }
     return {"sheet.hero": hero_sheet, "sheet.mimic": mimic_sheet}, clips
 
 
 def _scene():
     return BattlePresentationScene(
-        "batch103.reference", "battle.bg.reference",
+        "batch103.reference",
+        "battle.bg.reference",
         (
             BattleCombatantVisual("hero", "sheet.hero", "clips.hero", BattleVisualAnchor(72, 104)),
             BattleCombatantVisual("mimic", "sheet.mimic", "clips.mimic", BattleVisualAnchor(232, 104, "left")),
@@ -95,9 +100,7 @@ def _battle_mirror():
         members,
         BattleSchedulerDefinition("ct", mode="continuous", timeline_scale=100),
     )
-    battle_resources = BattleResourceRuntime(
-        [BattleResourceDefinition("hp")], members
-    )
+    battle_resources = BattleResourceRuntime([BattleResourceDefinition("hp")], members)
     return SimpleNamespace(
         scheduler=scheduler,
         action_timing=None,
@@ -107,14 +110,14 @@ def _battle_mirror():
 
 def test_screen_runtime_fans_out_one_event_stream_to_animation_camera_and_feedback():
     screen = _screen()
-    screen.coordinator.consume_timeline_cues((
-        PresentationCue("hero.attack", ActionCue(
-            "attack", 0, "animation", {"member_id": "hero", "role": "attack"}
-        )),
-        PresentationCue("hit.audio", ActionCue(
-            "hit", 0, "audio", {"member_id": "mimic", "sound_id": "sfx.hit"}
-        )),
-    ))
+    screen.coordinator.consume_timeline_cues(
+        (
+            PresentationCue(
+                "hero.attack", ActionCue("attack", 0, "animation", {"member_id": "hero", "role": "attack"})
+            ),
+            PresentationCue("hit.audio", ActionCue("hit", 0, "audio", {"member_id": "mimic", "sound_id": "sfx.hit"})),
+        )
+    )
     screen.coordinator.push_target_selection(("mimic",), primary_target_id="mimic")
     events = screen.consume_events()
     assert len(events) == 3
@@ -123,16 +126,22 @@ def test_screen_runtime_fans_out_one_event_stream_to_animation_camera_and_feedba
 
 
 def test_equipped_weapon_overlay_changes_with_type_only_during_attack():
-    system = {"weaponTypes": ["", "Sword", "Bow"],
-              "attackMotions": [{"type": 0, "weaponImageId": 0},
-                                {"type": 1, "weaponImageId": 2},
-                                {"type": 2, "weaponImageId": 13}]}
+    system = {
+        "weaponTypes": ["", "Sword", "Bow"],
+        "attackMotions": [
+            {"type": 0, "weaponImageId": 0},
+            {"type": 1, "weaponImageId": 2},
+            {"type": 2, "weaponImageId": 13},
+        ],
+    }
     screen = _screen()
     loadout = EquipmentLoadout((EquipmentSlotDefinition("weapon"),))
     loadout.equip("weapon", EquippedItem(EquipmentDefinition("sword", slot="weapon", tags=("mv-weapon-type:sword",))))
     sword = weapon_overlay_for_loadout(loadout, system, lambda name: "weapon.sword")
     screen.animation.set_overlay("hero", sword)
-    assert all(draw.texture_asset_id != "weapon.sword" for draw in screen.animation.build_frame(Camera2D()).combatant_draws)
+    assert all(
+        draw.texture_asset_id != "weapon.sword" for draw in screen.animation.build_frame(Camera2D()).combatant_draws
+    )
 
     screen.animation.combatant("hero").set_role("attack")
     attack = screen.animation.build_frame(Camera2D()).combatant_draws
@@ -151,10 +160,14 @@ def test_equipped_weapon_overlay_changes_with_type_only_during_attack():
 
 
 def test_mv_weapon_overlays_follow_real_loadout_but_ignore_armor():
-    system = {"weaponTypes": ["", "Sword", "Bow"],
-              "attackMotions": [{"type": 0, "weaponImageId": 0},
-                                {"type": 1, "weaponImageId": 2},
-                                {"type": 2, "weaponImageId": 13}]}
+    system = {
+        "weaponTypes": ["", "Sword", "Bow"],
+        "attackMotions": [
+            {"type": 0, "weaponImageId": 0},
+            {"type": 1, "weaponImageId": 2},
+            {"type": 2, "weaponImageId": 13},
+        ],
+    }
     loadout = EquipmentLoadout((EquipmentSlotDefinition("weapon"), EquipmentSlotDefinition("armor")))
     sword = EquippedItem(EquipmentDefinition("sword", slot="weapon", tags=("mv-weapon-type:sword",)))
     armor = EquippedItem(EquipmentDefinition("armor", slot="armor"))
@@ -205,17 +218,16 @@ def test_build_frame_applies_camera_feedback_without_mutating_base_camera():
 class _TextureRecorder:
     def __init__(self):
         self.draws = ()
+
     def render(self, draws):
         self.draws = tuple(draws)
 
 
 def test_render_runs_world_then_ui_path_and_drains_audio_once():
     screen = _screen()
-    screen.coordinator.consume_timeline_cues((
-        PresentationCue("hit.audio", ActionCue(
-            "hit", 0, "audio", {"member_id": "mimic", "sound_id": "sfx.hit"}
-        )),
-    ))
+    screen.coordinator.consume_timeline_cues(
+        (PresentationCue("hit.audio", ActionCue("hit", 0, "audio", {"member_id": "mimic", "sound_id": "sfx.hit"})),)
+    )
     screen.consume_events()
     screen.sync_battle(_battle_mirror(), current_member_id="hero")
 
@@ -235,7 +247,7 @@ def test_screen_snapshot_restore_is_deterministic():
     screen.sync_battle(_battle_mirror(), current_member_id="hero")
     screen.coordinator.push_target_selection(("mimic",), primary_target_id="mimic")
     screen.consume_events()
-    screen.update(.1)
+    screen.update(0.1)
     snapshot = screen.snapshot()
 
     restored = _screen()

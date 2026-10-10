@@ -76,10 +76,7 @@ class TileMap:
     def validate(self):
         if self.tileset.expected_kind not in (None, "tileset"):
             raise TypeError("tileset ref")
-        if (
-            min(self.tile_width, self.tile_height, self.chunk_width, self.chunk_height)
-            <= 0
-        ):
+        if min(self.tile_width, self.tile_height, self.chunk_width, self.chunk_height) <= 0:
             raise ValueError("dimensions")
         if len({l.name for l in self.layers}) != len(self.layers):
             raise ValueError("duplicate layer name")

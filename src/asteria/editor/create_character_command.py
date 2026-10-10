@@ -34,9 +34,7 @@ def _directional_clips() -> AnimationClipSet:
     clips = {}
     for row, direction in enumerate(("down", "left", "right", "up")):
         base = row * 3
-        clips[f"idle_{direction}"] = SpriteClip(
-            f"idle_{direction}", [SpriteKeyframe(base + 1, 0.4)], True
-        )
+        clips[f"idle_{direction}"] = SpriteClip(f"idle_{direction}", [SpriteKeyframe(base + 1, 0.4)], True)
         # MV's middle cell is the standing pose. Repeat it between the two
         # alternating step poses so the loop matches the native 3-frame gait.
         clips[f"walk_{direction}"] = SpriteClip(
@@ -145,8 +143,10 @@ class CreateCharacterCommand:
                         stream.write(payload)
                     os.replace(temporary_name, path)
                 except Exception:
-                    try: os.unlink(temporary_name)
-                    except FileNotFoundError: pass
+                    try:
+                        os.unlink(temporary_name)
+                    except FileNotFoundError:
+                        pass
                     raise
         self._files_claimed = True
 
@@ -154,8 +154,10 @@ class CreateCharacterCommand:
         if not self._files_claimed:
             return
         for path in self._paths:
-            try: path.unlink()
-            except FileNotFoundError: pass
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                pass
         self._files_claimed = False
 
     def _rollback(self):
@@ -166,8 +168,10 @@ class CreateCharacterCommand:
             self.project.rpg_database.actors.pop(self.created.actor_id)
         self._actor_added = False
         for asset_id in reversed(self._registered_asset_ids):
-            try: self.project.assets.remove(asset_id)
-            except KeyError: pass
+            try:
+                self.project.assets.remove(asset_id)
+            except KeyError:
+                pass
         self._registered_asset_ids.clear()
         self._remove_owned_files()
         self._applied = False

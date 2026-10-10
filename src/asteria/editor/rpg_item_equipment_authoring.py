@@ -2,8 +2,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from asteria.rpg import (
-    AttachmentDefinition, CompositionRecipeDefinition, EquipmentDefinition,
-    EquipmentGrowthDefinition, ItemDefinition,
+    AttachmentDefinition,
+    CompositionRecipeDefinition,
+    EquipmentDefinition,
+    EquipmentGrowthDefinition,
+    ItemDefinition,
 )
 
 
@@ -48,26 +51,41 @@ class ItemEquipmentSection:
 class ItemEquipmentInformationArchitecture:
     sections: tuple[ItemEquipmentSection, ...] = (
         ItemEquipmentSection(
-            "items", "Items", "list_detail",
+            "items",
+            "Items",
+            "list_detail",
             ("Identity", "Stacking", "Tags", "Use Effects"),
         ),
         ItemEquipmentSection(
-            "equipment", "Equipment", "list_detail",
+            "equipment",
+            "Equipment",
+            "list_detail",
             (
-                "Identity", "Slot & Tags", "Requirements", "Modifiers",
-                "Abilities & Triggers", "Sockets", "Growth",
+                "Identity",
+                "Slot & Tags",
+                "Requirements",
+                "Modifiers",
+                "Abilities & Triggers",
+                "Sockets",
+                "Growth",
             ),
         ),
         ItemEquipmentSection(
-            "attachments", "Attachments", "list_detail",
+            "attachments",
+            "Attachments",
+            "list_detail",
             ("Identity", "Compatibility Tags", "Modifiers", "Abilities & Triggers", "Growth"),
         ),
         ItemEquipmentSection(
-            "growth", "Equipment Growth", "graph_detail",
+            "growth",
+            "Equipment Growth",
+            "graph_detail",
             ("Graph", "Selected Node", "Ranks & Requirements", "Prerequisites", "Rewards", "Evolution"),
         ),
         ItemEquipmentSection(
-            "recipes", "Crafting / Alchemy", "recipe_detail",
+            "recipes",
+            "Crafting / Alchemy",
+            "recipe_detail",
             ("Recipe Identity", "Selection Steps", "Outputs", "Tags"),
         ),
     )
@@ -121,9 +139,7 @@ class RpgItemEquipmentAuthoringController:
                     ability_ids.extend(reward.granted_abilities)
         missing = sorted(set(ability_ids) - self._ability_ids())
         if missing:
-            raise RpgItemEquipmentAuthoringError(
-                "unknown abilities: " + ", ".join(missing)
-            )
+            raise RpgItemEquipmentAuthoringError("unknown abilities: " + ", ".join(missing))
 
         growth_id = getattr(value, "growth_id", None)
         if (
@@ -131,29 +147,23 @@ class RpgItemEquipmentAuthoringController:
             and growth_id is not None
             and growth_id not in self.database.equipment_growth
         ):
-            raise RpgItemEquipmentAuthoringError(
-                f"unknown equipment growth: {growth_id}"
-            )
+            raise RpgItemEquipmentAuthoringError(f"unknown equipment growth: {growth_id}")
 
         if isinstance(value, EquipmentGrowthDefinition):
             for node in value.nodes:
                 for reward in node.rewards:
                     target = reward.evolution_equipment_id
                     if target is not None and target not in self.database.equipment:
-                        raise RpgItemEquipmentAuthoringError(
-                            f"unknown evolution equipment: {target}"
-                        )
+                        raise RpgItemEquipmentAuthoringError(f"unknown evolution equipment: {target}")
 
         if isinstance(value, CompositionRecipeDefinition):
             known = set(self.database.items)
-            refs = {
-                x for selection in value.selections for x in selection.item_ids
-            } | {x.item_id for x in value.outputs}
+            refs = {x for selection in value.selections for x in selection.item_ids} | {
+                x.item_id for x in value.outputs
+            }
             missing = sorted(refs - known)
             if missing:
-                raise RpgItemEquipmentAuthoringError(
-                    "unknown recipe items: " + ", ".join(missing)
-                )
+                raise RpgItemEquipmentAuthoringError("unknown recipe items: " + ", ".join(missing))
 
     def _create(self, mapping, key, value, label):
         if key in mapping:
@@ -172,9 +182,7 @@ class RpgItemEquipmentAuthoringController:
 
     def create_item(self, value):
         value = self._coerce(value, ItemDefinition)
-        return self._create(
-            self.database.items, value.item_id, value, f"Add Item {value.item_id}"
-        )
+        return self._create(self.database.items, value.item_id, value, f"Add Item {value.item_id}")
 
     def edit_item(self, item_id, value):
         value = self._coerce(value, ItemDefinition)
@@ -190,20 +198,14 @@ class RpgItemEquipmentAuthoringController:
             raise RpgItemEquipmentAuthoringError(f"unknown item: {key}")
         refs = []
         for recipe in self.database.composition_recipes.values():
-            if any(key in x.item_ids for x in recipe.selections) or any(
-                x.item_id == key for x in recipe.outputs
-            ):
+            if any(key in x.item_ids for x in recipe.selections) or any(x.item_id == key for x in recipe.outputs):
                 refs.append(f"recipe:{recipe.recipe_id}")
         for enemy in self.database.enemies.values():
             if any(x.item_id == key for x in enemy.reward.loot):
                 refs.append(f"enemy:{enemy.enemy_id}")
         if refs:
-            raise RpgItemEquipmentAuthoringError(
-                f"item {key} is referenced by " + ", ".join(sorted(refs))
-            )
-        self._execute(
-            _MapCommand(self.database.items, key, None, old, f"Delete Item {key}")
-        )
+            raise RpgItemEquipmentAuthoringError(f"item {key} is referenced by " + ", ".join(sorted(refs)))
+        self._execute(_MapCommand(self.database.items, key, None, old, f"Delete Item {key}"))
 
     def create_equipment(self, value):
         value = self._coerce(value, EquipmentDefinition)
@@ -218,12 +220,8 @@ class RpgItemEquipmentAuthoringController:
         value = self._coerce(value, EquipmentDefinition)
         key = str(equipment_id)
         if value.equipment_id != key:
-            raise RpgItemEquipmentAuthoringError(
-                "equipment id cannot change during edit"
-            )
-        return self._replace(
-            self.database.equipment, key, value, f"Edit Equipment {key}"
-        )
+            raise RpgItemEquipmentAuthoringError("equipment id cannot change during edit")
+        return self._replace(self.database.equipment, key, value, f"Edit Equipment {key}")
 
     def delete_equipment(self, equipment_id):
         key = str(equipment_id)
@@ -233,20 +231,11 @@ class RpgItemEquipmentAuthoringController:
         refs = []
         for growth in self.database.equipment_growth.values():
             for node in growth.nodes:
-                if any(
-                    reward.evolution_equipment_id == key
-                    for reward in node.rewards
-                ):
+                if any(reward.evolution_equipment_id == key for reward in node.rewards):
                     refs.append(f"growth:{growth.growth_id}:{node.node_id}")
         if refs:
-            raise RpgItemEquipmentAuthoringError(
-                f"equipment {key} is referenced by " + ", ".join(sorted(refs))
-            )
-        self._execute(
-            _MapCommand(
-                self.database.equipment, key, None, old, f"Delete Equipment {key}"
-            )
-        )
+            raise RpgItemEquipmentAuthoringError(f"equipment {key} is referenced by " + ", ".join(sorted(refs)))
+        self._execute(_MapCommand(self.database.equipment, key, None, old, f"Delete Equipment {key}"))
 
     def create_attachment(self, value):
         value = self._coerce(value, AttachmentDefinition)
@@ -261,23 +250,15 @@ class RpgItemEquipmentAuthoringController:
         value = self._coerce(value, AttachmentDefinition)
         key = str(attachment_id)
         if value.attachment_id != key:
-            raise RpgItemEquipmentAuthoringError(
-                "attachment id cannot change during edit"
-            )
-        return self._replace(
-            self.database.attachments, key, value, f"Edit Attachment {key}"
-        )
+            raise RpgItemEquipmentAuthoringError("attachment id cannot change during edit")
+        return self._replace(self.database.attachments, key, value, f"Edit Attachment {key}")
 
     def delete_attachment(self, attachment_id):
         key = str(attachment_id)
         old = self.database.attachments.get(key)
         if old is None:
             raise RpgItemEquipmentAuthoringError(f"unknown attachment: {key}")
-        self._execute(
-            _MapCommand(
-                self.database.attachments, key, None, old, f"Delete Attachment {key}"
-            )
-        )
+        self._execute(_MapCommand(self.database.attachments, key, None, old, f"Delete Attachment {key}"))
 
     def create_growth(self, value):
         value = self._coerce(value, EquipmentGrowthDefinition)
@@ -305,20 +286,10 @@ class RpgItemEquipmentAuthoringController:
         old = self.database.equipment_growth.get(key)
         if old is None:
             raise RpgItemEquipmentAuthoringError(f"unknown growth: {key}")
-        refs = [
-            f"equipment:{x.equipment_id}"
-            for x in self.database.equipment.values()
-            if x.growth_id == key
-        ]
-        refs += [
-            f"attachment:{x.attachment_id}"
-            for x in self.database.attachments.values()
-            if x.growth_id == key
-        ]
+        refs = [f"equipment:{x.equipment_id}" for x in self.database.equipment.values() if x.growth_id == key]
+        refs += [f"attachment:{x.attachment_id}" for x in self.database.attachments.values() if x.growth_id == key]
         if refs:
-            raise RpgItemEquipmentAuthoringError(
-                f"growth {key} is referenced by " + ", ".join(sorted(refs))
-            )
+            raise RpgItemEquipmentAuthoringError(f"growth {key} is referenced by " + ", ".join(sorted(refs)))
         self._execute(
             _MapCommand(
                 self.database.equipment_growth,
@@ -343,9 +314,7 @@ class RpgItemEquipmentAuthoringController:
         key = str(recipe_id)
         if value.recipe_id != key:
             raise RpgItemEquipmentAuthoringError("recipe id cannot change during edit")
-        return self._replace(
-            self.database.composition_recipes, key, value, f"Edit Recipe {key}"
-        )
+        return self._replace(self.database.composition_recipes, key, value, f"Edit Recipe {key}")
 
     def delete_recipe(self, recipe_id):
         key = str(recipe_id)

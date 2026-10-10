@@ -66,9 +66,7 @@ class GameplayLibrary:
             "schema": "asteria.gameplay_library",
             "version": 1,
             "formulas": {k: self.formulas[k].to_data() for k in sorted(self.formulas)},
-            "abilities": [
-                self.abilities.require(k).to_data() for k in self.abilities.ids()
-            ],
+            "abilities": [self.abilities.require(k).to_data() for k in self.abilities.ids()],
             "states": [self.states.require(k).to_data() for k in self.states.ids()],
             "triggers": [self.triggers[k].to_data() for k in sorted(self.triggers)],
             "timelines": [self.timelines[k].to_data() for k in sorted(self.timelines)],

@@ -54,17 +54,17 @@ def test_every_combatant_has_an_animated_sprite_with_default_staging(battle):
     width = adapter.screen.composer.layout.virtual_width
     heroes = [v for k, v in visuals.items() if k.startswith("hero")]
     enemies = [v for k, v in visuals.items() if not k.startswith("hero")]
-    assert all(v.anchor.x > width / 2 and v.anchor.facing == "left" for v in heroes)    # party on the right
+    assert all(v.anchor.x > width / 2 and v.anchor.facing == "left" for v in heroes)  # party on the right
     assert all(v.anchor.x < width / 2 and v.anchor.facing == "right" for v in enemies)  # enemies on the left
     adapter.textures.draw_count = 0
     runtime._present_battle(0.016)
-    assert adapter.textures.draw_count >= len(visuals)          # real texture blits, not a data mock
+    assert adapter.textures.draw_count >= len(visuals)  # real texture blits, not a data mock
     idle = adapter.screen.animation.combatant("astral_tyrant:1")
     frames = set()
     for _ in range(40):
         runtime._present_battle(0.03)
         frames.add(idle.frame_index)
-    assert len(frames) > 1                                       # idle animation actually advances
+    assert len(frames) > 1  # idle animation actually advances
 
 
 def test_skill_choreography_plays_animation_vfx_audio_camera_in_order(battle):
@@ -74,7 +74,7 @@ def test_skill_choreography_plays_animation_vfx_audio_camera_in_order(battle):
     target = "astral_tyrant:1"
     adapter.audio_cues.clear()
     _use(runtime, "fire_arc")
-    runtime._present_battle(0.0)                               # the frame that consumes the action
+    runtime._present_battle(0.0)  # the frame that consumes the action
     assert adapter.busy()
     seen = {"attack": None, "vfx": None, "hit": None, "shake": None, "audio": None, "value": None}
     clock = 0.0
@@ -108,7 +108,7 @@ def test_battle_input_waits_for_the_choreography(battle):
     acted = runtime._battle_actor()
     key = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_1)
     log_before = len(runtime.game.battle_log)
-    runtime._battle_input([key])                               # ignored while the strike plays
+    runtime._battle_input([key])  # ignored while the strike plays
     assert len(runtime.game.battle_log) == log_before and runtime._battle_actor() == acted
     _settle(runtime)
     assert hero is not None
@@ -124,9 +124,9 @@ def test_knockout_pose_waits_for_the_killing_blow(battle):
     runtime._after_hero_action()
     state = adapter.screen.animation.combatant(wisp)
     runtime._present_battle(0.016)
-    assert not state.defeated                                  # Battle Core already knocked it out...
+    assert not state.defeated  # Battle Core already knocked it out...
     _settle(runtime)
-    assert state.defeated                                      # ...the KO pose follows the impact
+    assert state.defeated  # ...the KO pose follows the impact
 
 
 def test_capture_prompt_appears_in_the_canonical_action_menu(battle):
@@ -162,6 +162,7 @@ def test_canonical_screen_never_runs_the_blocking_legacy_effect_loop(battle, mon
 
 # --- D15: side-view staging requested after the first demo -------------------
 
+
 def _frame(adapter):
     from asteria.runtime.camera import Camera2D
 
@@ -186,8 +187,8 @@ def test_enemy_hp_floats_over_enemies_and_party_hp_sits_in_a_bottom_row(battle):
     overhead = {t.member_id: t for t in frame.texts if t.role == "overhead_name"}
     assert set(overhead) == enemies
     bars = {(g.member_id, g.resource_id) for g in frame.gauges}
-    assert all((enemy, "vitality") in bars for enemy in enemies)          # HP over each enemy
-    assert all((hero, "vitality") in bars for hero in heroes)             # HP in each party cell
+    assert all((enemy, "vitality") in bars for enemy in enemies)  # HP over each enemy
+    assert all((hero, "vitality") in bars for hero in heroes)  # HP in each party cell
     for enemy in enemies:
         visual = adapter.screen.scene.visual_for(enemy)
         assert overhead[enemy].y < visual.anchor.y - adapter.screen.member_heights[enemy]  # above the head
@@ -198,14 +199,18 @@ def test_enemy_hp_floats_over_enemies_and_party_hp_sits_in_a_bottom_row(battle):
 def test_commands_show_only_on_a_heroes_turn_and_never_cover_the_party(battle):
     runtime, adapter = battle
     layout, frame = _frame(adapter)
-    menu = next(p for p in frame.panels if p.panel_id == "action_menu")    # idle: hero waiting
-    camera_x = [v.anchor.x for v in adapter.screen.scene.combatants if v.member_id in runtime.game.battle.parties["heroes"].ids()]
-    assert menu.x + menu.width <= min(camera_x) - 8                         # left of the whole party
+    menu = next(p for p in frame.panels if p.panel_id == "action_menu")  # idle: hero waiting
+    camera_x = [
+        v.anchor.x
+        for v in adapter.screen.scene.combatants
+        if v.member_id in runtime.game.battle.parties["heroes"].ids()
+    ]
+    assert menu.x + menu.width <= min(camera_x) - 8  # left of the whole party
     _use(runtime, "strike")
     runtime._present_battle(0.016)
     assert adapter.busy()
     playing = _frame(adapter)[1]
-    assert not any(p.panel_id == "action_menu" for p in playing.panels)          # hidden during the action
+    assert not any(p.panel_id == "action_menu" for p in playing.panels)  # hidden during the action
     _settle(runtime)
     runtime._present_battle(0.016)
     back = _frame(adapter)[1]

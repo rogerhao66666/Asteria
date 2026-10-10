@@ -116,8 +116,12 @@ class ProgressionNodeReward:
     @classmethod
     def from_data(cls, data):
         expected = {
-            "stat_bonuses", "resource_bonuses", "granted_tags",
-            "granted_abilities", "unlocked_passives", "granted_capabilities",
+            "stat_bonuses",
+            "resource_bonuses",
+            "granted_tags",
+            "granted_abilities",
+            "unlocked_passives",
+            "granted_capabilities",
         }
         if set(data) != expected:
             raise ValueError("invalid progression node reward")
@@ -172,8 +176,7 @@ class ProgressionNodeDefinition:
         if len(rewards) != max_rank:
             raise ValueError("rewards must contain one entry per rank")
         rewards = tuple(
-            x if isinstance(x, ProgressionNodeReward) else ProgressionNodeReward.from_data(x)
-            for x in rewards
+            x if isinstance(x, ProgressionNodeReward) else ProgressionNodeReward.from_data(x) for x in rewards
         )
 
         def reqs(values):
@@ -223,22 +226,30 @@ class ProgressionNodeDefinition:
     @classmethod
     def from_data(cls, data):
         expected = {
-            "schema", "version", "node_id", "display_name", "max_rank",
-            "rank_costs", "rewards", "prerequisites", "any_prerequisites",
-            "exclusive_group", "tags",
+            "schema",
+            "version",
+            "node_id",
+            "display_name",
+            "max_rank",
+            "rank_costs",
+            "rewards",
+            "prerequisites",
+            "any_prerequisites",
+            "exclusive_group",
+            "tags",
         }
-        if (
-            set(data) != expected
-            or data.get("schema") != "asteria.rpg.progression_node"
-            or data.get("version") != 1
-        ):
+        if set(data) != expected or data.get("schema") != "asteria.rpg.progression_node" or data.get("version") != 1:
             raise ValueError("unsupported progression node")
         return cls(
-            data["node_id"], data["display_name"], max_rank=data["max_rank"],
-            rank_costs=data["rank_costs"], rewards=[ProgressionNodeReward.from_data(x) for x in data["rewards"]],
+            data["node_id"],
+            data["display_name"],
+            max_rank=data["max_rank"],
+            rank_costs=data["rank_costs"],
+            rewards=[ProgressionNodeReward.from_data(x) for x in data["rewards"]],
             prerequisites=[ProgressionNodeRequirement.from_data(x) for x in data["prerequisites"]],
             any_prerequisites=[ProgressionNodeRequirement.from_data(x) for x in data["any_prerequisites"]],
-            exclusive_group=data["exclusive_group"], tags=data["tags"],
+            exclusive_group=data["exclusive_group"],
+            tags=data["tags"],
         )
 
 
@@ -249,7 +260,7 @@ class ProgressionGraphDefinition:
     nodes: tuple[ProgressionNodeDefinition, ...]
     tags: tuple[str, ...] = ()
     editor_view: str = "list"
-    node_positions: dict[str, tuple[float,float]] = None
+    node_positions: dict[str, tuple[float, float]] = None
 
     def __init__(self, graph_id, display_name=None, *, nodes, tags=(), editor_view="list", node_positions=None):
         graph_id = _id(graph_id, "graph_id")
@@ -273,6 +284,7 @@ class ProgressionGraphDefinition:
         # allocation start state.
         edges = {x.node_id: {r.node_id for r in x.prerequisites + x.any_prerequisites} for x in nodes}
         visiting, visited = set(), set()
+
         def visit(node_id):
             if node_id in visiting:
                 raise ValueError("progression graph contains prerequisite cycle")
@@ -283,6 +295,7 @@ class ProgressionGraphDefinition:
                 visit(dep)
             visiting.remove(node_id)
             visited.add(node_id)
+
         for node_id in ids:
             visit(node_id)
 
@@ -290,14 +303,16 @@ class ProgressionGraphDefinition:
         object.__setattr__(self, "display_name", str(display_name or graph_id))
         object.__setattr__(self, "nodes", nodes)
         object.__setattr__(self, "tags", tuple(sorted({_id(x, "tag").lower() for x in tags})))
-        view=str(editor_view).lower();
-        if view not in {"list","graph"}: raise ValueError("editor_view must be list or graph")
-        positions={}
-        for key,value in dict(node_positions or {}).items():
-            if key not in mapping: raise ValueError(f"node position references unknown node {key}")
-            positions[str(key)]=(float(value[0]),float(value[1]))
-        object.__setattr__(self,"editor_view",view)
-        object.__setattr__(self,"node_positions",positions)
+        view = str(editor_view).lower()
+        if view not in {"list", "graph"}:
+            raise ValueError("editor_view must be list or graph")
+        positions = {}
+        for key, value in dict(node_positions or {}).items():
+            if key not in mapping:
+                raise ValueError(f"node position references unknown node {key}")
+            positions[str(key)] = (float(value[0]), float(value[1]))
+        object.__setattr__(self, "editor_view", view)
+        object.__setattr__(self, "node_positions", positions)
 
     def node(self, node_id):
         node_id = str(node_id)
@@ -317,26 +332,28 @@ class ProgressionGraphDefinition:
             "display_name": self.display_name,
             "nodes": [x.to_data() for x in self.nodes],
             "tags": list(self.tags),
-            "editor_view":self.editor_view,
-            "node_positions":{k:list(v) for k,v in sorted(self.node_positions.items())},
+            "editor_view": self.editor_view,
+            "node_positions": {k: list(v) for k, v in sorted(self.node_positions.items())},
         }
 
     @classmethod
     def from_data(cls, data):
-        v=data.get("version")
+        v = data.get("version")
         expected1 = {"schema", "version", "graph_id", "display_name", "nodes", "tags"}
-        expected2=expected1|{"editor_view","node_positions"}
+        expected2 = expected1 | {"editor_view", "node_positions"}
         if (
-            set(data) != (expected2 if v==2 else expected1)
+            set(data) != (expected2 if v == 2 else expected1)
             or data.get("schema") != "asteria.rpg.progression_graph"
-            or v not in {1,2}
+            or v not in {1, 2}
         ):
             raise ValueError("unsupported progression graph")
         return cls(
-            data["graph_id"], data["display_name"],
+            data["graph_id"],
+            data["display_name"],
             nodes=[ProgressionNodeDefinition.from_data(x) for x in data["nodes"]],
-            tags=data["tags"], editor_view=data.get("editor_view","list"),
-            node_positions=data.get("node_positions",{}),
+            tags=data["tags"],
+            editor_view=data.get("editor_view", "list"),
+            node_positions=data.get("node_positions", {}),
         )
 
 
@@ -401,7 +418,9 @@ class ProgressionAllocationRuntime:
         if amount < 0:
             raise ValueError("allocation grant must be >= 0")
         self.balances[currency_id] = self.balance(currency_id) + amount
-        emit_hook(self.hooks, "rpg.progression_allocation.currency_granted", source=currency_id, data={"amount": amount})
+        emit_hook(
+            self.hooks, "rpg.progression_allocation.currency_granted", source=currency_id, data={"amount": amount}
+        )
         return self.balances[currency_id]
 
     def rank(self, graph_id, node_id):
@@ -457,19 +476,28 @@ class ProgressionAllocationRuntime:
                         f"insufficient {currency_id}: requires {amount:g}, current {self.balance(currency_id):g}"
                     )
         return ProgressionAllocationPreview(
-            graph_id, node.node_id, old_rank, min(target_rank, node.max_rank),
-            not reasons, costs, tuple(reasons),
+            graph_id,
+            node.node_id,
+            old_rank,
+            min(target_rank, node.max_rank),
+            not reasons,
+            costs,
+            tuple(reasons),
         )
 
     def allocate(self, graph_id, node_id, count=1):
         preview = self.preview_allocate(graph_id, node_id, count)
-        emit_hook(self.hooks, "rpg.progression_allocation.before_allocate", source=preview.node_id, data={"preview": preview})
+        emit_hook(
+            self.hooks, "rpg.progression_allocation.before_allocate", source=preview.node_id, data={"preview": preview}
+        )
         if not preview.allowed:
             raise ValueError("allocation rejected: " + "; ".join(preview.reasons))
         for currency_id, amount in preview.costs.items():
             self.balances[currency_id] = self.balance(currency_id) - amount
         self.allocations[preview.graph_id][preview.node_id] = preview.new_rank
-        emit_hook(self.hooks, "rpg.progression_allocation.after_allocate", source=preview.node_id, data={"preview": preview})
+        emit_hook(
+            self.hooks, "rpg.progression_allocation.after_allocate", source=preview.node_id, data={"preview": preview}
+        )
         return preview
 
     def _validate_allocations(self, allocations=None):
@@ -481,9 +509,7 @@ class ProgressionAllocationRuntime:
                     continue
                 reasons = self._requirements_met(graph_id, node, allocations=allocations)
                 if reasons:
-                    raise ValueError(
-                        f"invalid allocated node {graph_id}:{node.node_id}: " + "; ".join(reasons)
-                    )
+                    raise ValueError(f"invalid allocated node {graph_id}:{node.node_id}: " + "; ".join(reasons))
         return True
 
     def refund(self, graph_id, node_id, count=1, *, refund_ratio=1.0):
@@ -513,11 +539,21 @@ class ProgressionAllocationRuntime:
         for rank in range(new_rank + 1, old_rank + 1):
             for currency_id, amount in node.cost_for_rank(rank).items():
                 refund[currency_id] = refund.get(currency_id, 0.0) + amount * ratio
-        emit_hook(self.hooks, "rpg.progression_allocation.before_refund", source=node.node_id, data={"old_rank": old_rank, "new_rank": new_rank, "refund": dict(refund)})
+        emit_hook(
+            self.hooks,
+            "rpg.progression_allocation.before_refund",
+            source=node.node_id,
+            data={"old_rank": old_rank, "new_rank": new_rank, "refund": dict(refund)},
+        )
         self.allocations = simulated
         for currency_id, amount in refund.items():
             self.balances[currency_id] = self.balance(currency_id) + amount
-        emit_hook(self.hooks, "rpg.progression_allocation.after_refund", source=node.node_id, data={"old_rank": old_rank, "new_rank": new_rank, "refund": dict(refund)})
+        emit_hook(
+            self.hooks,
+            "rpg.progression_allocation.after_refund",
+            source=node.node_id,
+            data={"old_rank": old_rank, "new_rank": new_rank, "refund": dict(refund)},
+        )
         return dict(refund)
 
     def contribution(self, graph_ids=None):
@@ -548,8 +584,13 @@ class ProgressionAllocationRuntime:
                         if passive_id not in passives:
                             passives.append(passive_id)
         return ProgressionAllocationContribution(
-            stats, resources, tuple(sorted(tags)), tuple(abilities), tuple(passives),
-            tuple(sorted(capabilities)), tuple(ability_grants),
+            stats,
+            resources,
+            tuple(sorted(tags)),
+            tuple(abilities),
+            tuple(passives),
+            tuple(sorted(capabilities)),
+            tuple(ability_grants),
         )
 
     def to_data(self):
@@ -566,11 +607,7 @@ class ProgressionAllocationRuntime:
     @classmethod
     def from_data(cls, data, definitions, *, hooks=None):
         expected = {"schema", "version", "balances", "allocations"}
-        if (
-            set(data) != expected
-            or data.get("schema") != cls.SCHEMA
-            or data.get("version") != cls.VERSION
-        ):
+        if set(data) != expected or data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported progression allocation runtime")
         return cls(definitions, balances=data["balances"], allocations=data["allocations"], hooks=hooks)
 

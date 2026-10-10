@@ -17,7 +17,9 @@ from asteria.project_tools import export_game, load_project, upgrade_project
 REF = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
 
 
-@component_schema(type_name="test.Lantern", version=3, fields=(Field("brightness", float, 1.0), Field("color", str, "white")))
+@component_schema(
+    type_name="test.Lantern", version=3, fields=(Field("brightness", float, 1.0), Field("color", str, "white"))
+)
 class Lantern(Component):
     def __init__(self):
         super().__init__()
@@ -72,7 +74,7 @@ def test_export_copies_every_resource_and_license_notice(tmp_path):
     manifest = json.loads((out / "playable_test_manifest.json").read_text())
     assert (out / manifest["field"]["background"]).is_file()
     assert (out / manifest["audio"]["battle_theme"]).is_file()
-    assert (out / "playable_assets" / "CREDITS.md").is_file()      # credits / licence notices travel
+    assert (out / "playable_assets" / "CREDITS.md").is_file()  # credits / licence notices travel
     assert (out / "run_game.py").is_file()
     assert load_project(out / "project.asteria.json").to_data()["version"] == 10
 
@@ -93,6 +95,10 @@ def test_exported_game_launches_in_its_own_process(tmp_path):
     env = dict(os.environ, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy")
     result = subprocess.run(
         [sys.executable, str(tmp_path / "game" / "run_game.py"), "--frames", "5"],
-        cwd=tmp_path, env=env, capture_output=True, text=True, timeout=120,
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
     assert result.returncode == 0, result.stderr[-2000:]

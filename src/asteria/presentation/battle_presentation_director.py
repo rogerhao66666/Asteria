@@ -57,10 +57,7 @@ class BattlePresentationDirectorRule:
         object.__setattr__(self, "direction", direction)
 
     def matches(self, event_kind, cue_kind):
-        return (
-            self.event_kind in {"*", event_kind}
-            and self.cue_kind in {"*", cue_kind}
-        )
+        return self.event_kind in {"*", event_kind} and self.cue_kind in {"*", cue_kind}
 
     def to_data(self):
         return {
@@ -83,8 +80,7 @@ class BattlePresentationDirectorProfile:
 
     def __init__(self, rules=()):
         rules = tuple(
-            x if isinstance(x, BattlePresentationDirectorRule)
-            else BattlePresentationDirectorRule.from_data(x)
+            x if isinstance(x, BattlePresentationDirectorRule) else BattlePresentationDirectorRule.from_data(x)
             for x in rules
         )
         object.__setattr__(self, "rules", rules)
@@ -175,11 +171,13 @@ class BattlePresentationDirector:
                 raise ValueError("director events must be applied in increasing sequence order")
             self.last_sequence = event.sequence
             direction = self._metadata(event)
-            self._pending.append(BattleDirectedEvent(
-                event,
-                self.time + direction.delay,
-                direction,
-            ))
+            self._pending.append(
+                BattleDirectedEvent(
+                    event,
+                    self.time + direction.delay,
+                    direction,
+                )
+            )
         self._pending.sort(key=lambda x: (x.release_time, -x.direction.priority, x.event.sequence))
         return self.release_ready()
 
@@ -259,10 +257,12 @@ class BattlePresentationDirector:
                 str(e["source_id"]),
                 dict(e.get("payload", {})),
             )
-            self._pending.append(BattleDirectedEvent(
-                event,
-                _nonnegative(raw["release_time"], "release_time"),
-                BattlePresentationDirection.from_data(raw["direction"]),
-            ))
+            self._pending.append(
+                BattleDirectedEvent(
+                    event,
+                    _nonnegative(raw["release_time"], "release_time"),
+                    BattlePresentationDirection.from_data(raw["direction"]),
+                )
+            )
         self._pending.sort(key=lambda x: (x.release_time, -x.direction.priority, x.event.sequence))
         return self

@@ -40,9 +40,7 @@ def registry():
 
 
 def test_binding_roundtrip_preserves_trigger_and_conditions():
-    condition = EventTriggerCondition(
-        EventCondition("switch", "quest_started", "==", True)
-    )
+    condition = EventTriggerCondition(EventCondition("switch", "quest_started", "==", True))
     binding = EventBinding(
         "binding-1",
         "npc-1",
@@ -77,9 +75,7 @@ def test_trigger_conditions_control_action_binding_visibility():
             "b1",
             "npc-1",
             "action-program",
-            conditions=[
-                EventTriggerCondition(EventCondition("switch", "can_talk", "==", True))
-            ],
+            conditions=[EventTriggerCondition(EventCondition("switch", "can_talk", "==", True))],
         )
     )
     runtime = SceneEventRuntime.build(bindings, registry(), context=ctx)

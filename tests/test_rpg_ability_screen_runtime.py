@@ -62,9 +62,7 @@ def test_projects_resolved_abilities_and_provenance_without_mutation():
 
 
 def test_passive_capacity_is_read_only_presentation():
-    view = AbilityScreenRuntime().project(
-        _build(), passive_catalog=_passives(), passive_capacity=3
-    )
+    view = AbilityScreenRuntime().project(_build(), passive_catalog=_passives(), passive_capacity=3)
     assert view.active_passive_ids == ("careful_measure",)
     assert view.passive_capacity == 3
     assert view.passive_capacity_used == 1
@@ -77,9 +75,7 @@ def test_project_owned_categories_are_generic():
         passive_categories={"careful_measure": "craft", "fleet_foot": "mobility", "stone_skin": "guard"},
         category_labels={"formulas": "Formulas"},
     )
-    view = AbilityScreenRuntime(profile).project(
-        _build(), ability_catalog=_abilities(), passive_catalog=_passives()
-    )
+    view = AbilityScreenRuntime(profile).project(_build(), ability_catalog=_abilities(), passive_catalog=_passives())
     assert {x.category for x in view.abilities} >= {"techniques", "formulas", "movement", "arcana"}
     assert next(x for x in view.ability_groups if x.category_id == "formulas").label == "Formulas"
 
@@ -154,9 +150,7 @@ def test_snapshot_restore_roundtrip():
 
 def test_no_fixed_skill_slot_count():
     many = tuple(AbilityDefinition(f"skill_{i}", tags=("custom",)) for i in range(37))
-    profile = AbilityScreenProfile(
-        ability_categories={f"skill_{i}": "custom_set" for i in range(37)}
-    )
+    profile = AbilityScreenProfile(ability_categories={f"skill_{i}": "custom_set" for i in range(37)})
     view = AbilityScreenRuntime(profile).project(_build(), ability_catalog=many)
     group = next(x for x in view.ability_groups if x.category_id == "custom_set")
     assert len(group.entry_ids) == 37

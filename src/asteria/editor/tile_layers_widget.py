@@ -141,9 +141,5 @@ class TileLayersWidget(QWidget):
             suffix = f"  · {' / '.join(badges)}" if badges else ""
             self.list.addItem(layer.name + suffix)
         if tilemap.layers:
-            index = (
-                tilemap.layers.index(active_layer)
-                if active_layer in tilemap.layers
-                else 0
-            )
+            index = tilemap.layers.index(active_layer) if active_layer in tilemap.layers else 0
             self.list.setCurrentRow(index)

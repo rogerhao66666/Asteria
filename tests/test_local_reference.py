@@ -54,9 +54,7 @@ def test_partial_copy_is_reported(tmp_path):
     _write(destination, "NewData/data/Actors.json", b"wrong")
     _write(destination, "orphan.txt", b"allowed")
 
-    mismatches = compare_inventories(
-        inventory_tree(source), inventory_tree(destination)
-    )
+    mismatches = compare_inventories(inventory_tree(source), inventory_tree(destination))
 
     assert tuple((item.relative_path, item.reason) for item in mismatches) == (
         ("NewData/data/Actors.json", "content_mismatch"),

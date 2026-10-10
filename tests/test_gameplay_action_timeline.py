@@ -126,9 +126,7 @@ def test_timeline_roundtrip():
 
 def test_same_ability_can_use_different_presentation_timelines():
     src, tgt, rt = setup()
-    quick = ActionTimeline(
-        "quick", [ActionCue("hit", 0.1, "gameplay_ability", {"ability_id": "slash"})]
-    )
+    quick = ActionTimeline("quick", [ActionCue("hit", 0.1, "gameplay_ability", {"ability_id": "slash"})])
     fancy = ActionTimeline(
         "fancy",
         [

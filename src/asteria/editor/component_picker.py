@@ -28,7 +28,5 @@ def build_component_choices(registry, entity=None):
             except TypeError:
                 addable = False
                 reason = "Requires constructor arguments"
-        choices.append(
-            ComponentChoice(type_id, display, component_type, addable, reason)
-        )
+        choices.append(ComponentChoice(type_id, display, component_type, addable, reason))
     return tuple(choices)

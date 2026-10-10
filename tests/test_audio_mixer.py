@@ -103,11 +103,11 @@ def test_playable_runtime_plays_field_battle_and_victory_audio(monkeypatch, tmp_
         runtime._frame([key(pygame.K_e)], 0.016)
         runtime._frame([key(pygame.K_RETURN)], 0.016)
         assert runtime.audio.music_asset_id == "battle_theme"
-        for _ in range(3000):                   # actions play their choreography before the next input
+        for _ in range(3000):  # actions play their choreography before the next input
             if runtime._victory or runtime._defeat:
                 break
             runtime._frame([key(pygame.K_1)], 0.05)
-        for _ in range(400):                    # the jingle waits until the final blows have been shown
+        for _ in range(400):  # the jingle waits until the final blows have been shown
             if not runtime._presentation_busy():
                 break
             runtime._frame([], 0.05)

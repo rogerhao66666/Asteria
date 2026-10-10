@@ -5,6 +5,7 @@ actual pixels (first frame/tile); every other asset kind returns ``None`` so
 the panel still lists it as plain text. Restored from 16a6ebd and extended to
 canonical assets.
 """
+
 from pathlib import Path
 
 try:

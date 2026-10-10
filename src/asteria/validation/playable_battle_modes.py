@@ -3,10 +3,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from asteria.gameplay import (
-    AbilityDefinition, AbilityEffect, AbilityRegistry, AbilityRuntime,
-    AbilityTargetMode, Effect, EffectOperation, EffectOperationKind,
-    GameplaySubject, ResourcePool, StateRegistry, StateRuntime, StatBlock,
-    TagSet, TargetingRule,
+    AbilityDefinition,
+    AbilityEffect,
+    AbilityRegistry,
+    AbilityRuntime,
+    AbilityTargetMode,
+    Effect,
+    EffectOperation,
+    EffectOperationKind,
+    GameplaySubject,
+    ResourcePool,
+    StateRegistry,
+    StateRuntime,
+    StatBlock,
+    TagSet,
+    TargetingRule,
 )
 from asteria.rpg import BattleAction, BattleRuntime, Party, PartyMember
 
@@ -38,11 +49,13 @@ def _ability(ability_id, delta, *tags):
                 AbilityTargetMode.SELECTED,
                 Effect(
                     f"{ability_id}.effect",
-                    (EffectOperation(
-                        EffectOperationKind.RESOURCE_DELTA,
-                        "vitality",
-                        float(delta),
-                    ),),
+                    (
+                        EffectOperation(
+                            EffectOperationKind.RESOURCE_DELTA,
+                            "vitality",
+                            float(delta),
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -63,7 +76,10 @@ def build_playable_mode_scenario():
         "validation_hero",
         "side.alpha",
         _subject(
-            power=24, speed=12, vitality=240, momentum=2,
+            power=24,
+            speed=12,
+            vitality=240,
+            momentum=2,
             tags=("form.normal",),
         ),
         ability_ids=("steady_strike",),
@@ -73,7 +89,10 @@ def build_playable_mode_scenario():
         "reference_enemy",
         "side.omega",
         _subject(
-            power=18, speed=9, vitality=300, momentum=0,
+            power=18,
+            speed=9,
+            vitality=300,
+            momentum=0,
             tags=("combatant.enemy",),
         ),
         ability_ids=("enemy_hit",),
@@ -168,11 +187,13 @@ class PlayableBattleModeHarness:
 
     def execute_current_action(self, ability_id=None):
         ability_id = ability_id or self.action_surface()[0]
-        return self.battle.execute(BattleAction(
-            self.scenario.actor_id,
-            ability_id,
-            (self.scenario.target_id,),
-        ))
+        return self.battle.execute(
+            BattleAction(
+                self.scenario.actor_id,
+                ability_id,
+                (self.scenario.target_id,),
+            )
+        )
 
     def snapshot(self):
         return self.battle.snapshot()

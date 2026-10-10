@@ -83,7 +83,8 @@ class EquipmentScreenProfile:
     VERSION = 1
 
     def __init__(
-        self, *,
+        self,
+        *,
         slot_labels=None,
         equipment_labels=None,
         socket_labels=None,
@@ -100,10 +101,7 @@ class EquipmentScreenProfile:
             ("socket_labels", socket_labels),
             ("growth_labels", growth_labels),
         ):
-            object.__setattr__(
-                self, name,
-                tuple(sorted((str(k), str(v)) for k, v in dict(values or {}).items()))
-            )
+            object.__setattr__(self, name, tuple(sorted((str(k), str(v)) for k, v in dict(values or {}).items())))
         object.__setattr__(self, "page_size", page_size)
         object.__setattr__(self, "include_incompatible_candidates", bool(include_incompatible_candidates))
 
@@ -111,10 +109,17 @@ class EquipmentScreenProfile:
         key = str(key)
         return dict(pairs).get(key, key)
 
-    def slot_label(self, key): return self._lookup(self.slot_labels, key)
-    def equipment_label(self, key): return self._lookup(self.equipment_labels, key)
-    def socket_label(self, key): return self._lookup(self.socket_labels, key)
-    def growth_label(self, key): return self._lookup(self.growth_labels, key)
+    def slot_label(self, key):
+        return self._lookup(self.slot_labels, key)
+
+    def equipment_label(self, key):
+        return self._lookup(self.equipment_labels, key)
+
+    def socket_label(self, key):
+        return self._lookup(self.socket_labels, key)
+
+    def growth_label(self, key):
+        return self._lookup(self.growth_labels, key)
 
     def to_data(self):
         return {
@@ -185,13 +190,15 @@ class EquipmentScreenRuntime:
         unlocked = set(item.unlocked_socket_ids())
         for socket in definition.sockets:
             attachment = item.attachments.get(socket.socket_id)
-            sockets.append(EquipmentSocketView(
-                socket_id=socket.socket_id,
-                label=self.profile.socket_label(socket.socket_id),
-                locked=socket.socket_id not in unlocked,
-                accepted_tags=tuple(socket.accepted_tags),
-                attachment_id=None if attachment is None else attachment.attachment_id,
-            ))
+            sockets.append(
+                EquipmentSocketView(
+                    socket_id=socket.socket_id,
+                    label=self.profile.socket_label(socket.socket_id),
+                    locked=socket.socket_id not in unlocked,
+                    accepted_tags=tuple(socket.accepted_tags),
+                    attachment_id=None if attachment is None else attachment.attachment_id,
+                )
+            )
         return EquippedItemView(
             instance_id=item.instance_id,
             equipment_id=definition.equipment_id,
@@ -219,13 +226,15 @@ class EquipmentScreenRuntime:
         for slot in raw["slots"]:
             slot_id = str(slot["slot_id"])
             items = tuple(self._item_view(slot_id, x) for x in loadout.equipped(slot_id))
-            slots.append(EquipmentSlotView(
-                slot_id=slot_id,
-                label=self.profile.slot_label(slot_id),
-                accepted_tags=tuple(slot.get("accepted_tags", ())),
-                capacity=slot.get("capacity"),
-                items=items,
-            ))
+            slots.append(
+                EquipmentSlotView(
+                    slot_id=slot_id,
+                    label=self.profile.slot_label(slot_id),
+                    accepted_tags=tuple(slot.get("accepted_tags", ())),
+                    capacity=slot.get("capacity"),
+                    items=items,
+                )
+            )
         slots = tuple(slots)
 
         known_slots = {x.slot_id for x in slots}
@@ -267,20 +276,22 @@ class EquipmentScreenRuntime:
             haystack = " ".join((definition.equipment_id, label, definition.slot, *definition.tags)).casefold()
             if query and query not in haystack:
                 continue
-            candidates.append(EquipmentCandidateView(
-                equipment_id=definition.equipment_id,
-                label=label,
-                slot_id=definition.slot,
-                tags=tuple(definition.tags),
-                granted_abilities=tuple(definition.granted_abilities),
-                required_capabilities=tuple(definition.required_capabilities),
-                any_capabilities=tuple(definition.any_capabilities),
-                forbidden_capabilities=tuple(definition.forbidden_capabilities),
-                socket_count=len(definition.sockets),
-                growth_id=definition.growth_id,
-                eligible=eligible,
-                reasons=reasons,
-            ))
+            candidates.append(
+                EquipmentCandidateView(
+                    equipment_id=definition.equipment_id,
+                    label=label,
+                    slot_id=definition.slot,
+                    tags=tuple(definition.tags),
+                    granted_abilities=tuple(definition.granted_abilities),
+                    required_capabilities=tuple(definition.required_capabilities),
+                    any_capabilities=tuple(definition.any_capabilities),
+                    forbidden_capabilities=tuple(definition.forbidden_capabilities),
+                    socket_count=len(definition.sockets),
+                    growth_id=definition.growth_id,
+                    eligible=eligible,
+                    reasons=reasons,
+                )
+            )
         candidates = tuple(sorted(candidates, key=lambda x: (not bool(x.eligible), x.label.casefold(), x.equipment_id)))
 
         if self.selected_equipment_id not in {x.equipment_id for x in candidates}:
@@ -324,7 +335,7 @@ class EquipmentScreenRuntime:
             raise RuntimeError("equipment screen has not been projected")
         index = max(0, int(index))
         start = index * self.profile.page_size
-        return self._view.candidates[start:start + self.profile.page_size]
+        return self._view.candidates[start : start + self.profile.page_size]
 
     def snapshot(self):
         return {

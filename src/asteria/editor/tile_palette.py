@@ -16,9 +16,7 @@ class TilePaletteItem:
 
 def build_tile_palette(tileset):
     return tuple(
-        TilePaletteItem(
-            tile_id, tile.frame_index, tile.collision, tile.terrain, tile.tags
-        )
+        TilePaletteItem(tile_id, tile.frame_index, tile.collision, tile.terrain, tile.tags)
         for tile_id, tile in sorted(tileset.tiles.items())
     )
 

@@ -22,9 +22,7 @@ def test_state_contributed_tag_removed_when_last_owner_expires():
 
 
 def test_state_never_removes_preexisting_base_tag():
-    rt, tags = runtime(
-        [StateDefinition("blessing", 1, contributed_tags=["holy"])], ["holy"]
-    )
+    rt, tags = runtime([StateDefinition("blessing", 1, contributed_tags=["holy"])], ["holy"])
     rt.apply("blessing")
     rt.remove("blessing")
     assert tags.contains("holy")

@@ -1,4 +1,5 @@
 """Undoable prefab editing: create, place, change (with propagation), apply and revert."""
+
 from __future__ import annotations
 
 from asteria.core import Transform
@@ -159,8 +160,9 @@ def apply_instance_to_prefab_command(project, registry, entity):
     prefab_id = entity.get(PrefabInstanceComponent).prefab_id
     current = project.prefabs.require(prefab_id)
     captured = prefab_from_entity(entity, prefab_id, current.name, base_prefab_id=current.base_prefab_id)
-    definition = PrefabDefinition(prefab_id, current.name, captured.components, current.base_prefab_id,
-                                  current.removed_components)
+    definition = PrefabDefinition(
+        prefab_id, current.name, captured.components, current.base_prefab_id, current.removed_components
+    )
     return ReplacePrefabsCommand(project, registry, {prefab_id: definition}, label=f"Apply to Prefab {current.name}")
 
 

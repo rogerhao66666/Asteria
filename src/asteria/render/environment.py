@@ -11,9 +11,7 @@ class EnvironmentCommand:
     post_effects: tuple
 
 
-def build_environment_command(
-    *, ambient=None, fog=None, particle_emitters=(), post_stack=None
-):
+def build_environment_command(*, ambient=None, fog=None, particle_emitters=(), post_stack=None):
     ambient = ambient or AmbientLight2D()
     ambient.validate()
     if fog is not None:

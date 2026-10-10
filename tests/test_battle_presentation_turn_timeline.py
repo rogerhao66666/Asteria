@@ -3,8 +3,12 @@ from copy import deepcopy
 from asteria.gameplay import GameplaySubject, ResourcePool, StatBlock, TagSet
 from asteria.presentation import BattleTurnTimelineRuntime
 from asteria.rpg import (
-    ActionTimingDefinition, BattleAction, BattleActionTimingRuntime,
-    BattleScheduler, BattleSchedulerDefinition, PartyMember,
+    ActionTimingDefinition,
+    BattleAction,
+    BattleActionTimingRuntime,
+    BattleScheduler,
+    BattleSchedulerDefinition,
+    PartyMember,
 )
 
 
@@ -59,7 +63,7 @@ def test_timeline_without_pending_timing_has_no_invented_casts():
 
 
 def test_timeline_max_turns_is_presentation_only():
-    members = [member(str(i), "side", 10-i) for i in range(5)]
+    members = [member(str(i), "side", 10 - i) for i in range(5)]
     scheduler = BattleScheduler(members)
     view = BattleTurnTimelineRuntime(max_turns=2).sync(scheduler)
     assert len(view.turns) == 2

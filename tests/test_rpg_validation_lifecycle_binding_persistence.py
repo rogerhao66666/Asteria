@@ -48,18 +48,14 @@ def test_rpg_database_rejects_unknown_loot_item_and_progression_track():
     )
     with pytest.raises(ValueError) as exc:
         db.validate()
-    assert "unknown item" in str(exc.value) and "unknown progression track" in str(
-        exc.value
-    )
+    assert "unknown item" in str(exc.value) and "unknown progression track" in str(exc.value)
 
 
 def test_lifecycle_binding_roundtrip_in_project_v5():
     p = project()
     p.event_programs.register("after_anything", EventProgram([EventInstruction("END")]))
     p.lifecycle_event_bindings.append(
-        LifecycleEventBinding(
-            "custom.any.workflow.finished", "after_anything", source_entity_id="source"
-        )
+        LifecycleEventBinding("custom.any.workflow.finished", "after_anything", source_entity_id="source")
     )
     raw = p.to_data()
     assert raw["version"] == 10
@@ -81,7 +77,9 @@ def test_project_v4_backward_read_has_no_lifecycle_bindings():
     p = project()
     raw = p.to_data()
     raw["version"] = 4
-    raw.pop("game_start",None); raw.pop("input_map",None); raw.pop("prefabs",None)
+    raw.pop("game_start", None)
+    raw.pop("input_map", None)
+    raw.pop("prefabs", None)
     raw.pop("battle_presentation_library", None)
     raw.pop("lifecycle_event_bindings")
     raw.pop("gameplay_library")

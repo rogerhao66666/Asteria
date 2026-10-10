@@ -96,15 +96,10 @@ class BattleResourceDefinition:
         if start_mode == BattleResourceStartMode.FIXED and start_value is None:
             raise ValueError("fixed start mode requires start_value")
         end_mode = BattleResourceEndMode(end_mode)
-        overflow_limit = (
-            None if overflow_limit is None else _number(overflow_limit, "overflow_limit")
-        )
+        overflow_limit = None if overflow_limit is None else _number(overflow_limit, "overflow_limit")
         if overflow_limit is not None and maximum is not None and overflow_limit < maximum:
             raise ValueError("overflow_limit must be >= maximum")
-        normalized_rules = tuple(
-            x if isinstance(x, BattleResourceRule) else BattleResourceRule(**x)
-            for x in rules
-        )
+        normalized_rules = tuple(x if isinstance(x, BattleResourceRule) else BattleResourceRule(**x) for x in rules)
         object.__setattr__(self, "resource_id", resource_id)
         object.__setattr__(self, "minimum", minimum)
         object.__setattr__(self, "maximum", maximum)
@@ -252,9 +247,7 @@ class BattleResourceRuntime:
         for member_id, member in self.members.items():
             self.values[member_id] = {}
             for definition in definitions:
-                self.values[member_id][definition.resource_id] = self._initialize_value(
-                    member, definition
-                )
+                self.values[member_id][definition.resource_id] = self._initialize_value(member, definition)
 
     def register_member(self, member):
         if member.member_id in self.members:
@@ -280,9 +273,7 @@ class BattleResourceRuntime:
             else:
                 minimum = definition.minimum
             if definition.maximum is None:
-                raise ValueError(
-                    f"combat-only resource requires maximum: {definition.resource_id}"
-                )
+                raise ValueError(f"combat-only resource requires maximum: {definition.resource_id}")
             maximum = definition.maximum
             current = maximum
         if maximum < minimum:
@@ -316,9 +307,7 @@ class BattleResourceRuntime:
         if value.bound_to_subject:
             # Gameplay ResourcePool is bounded by logical maximum; overflow is a
             # combat-layer concept and intentionally does not corrupt persistent data.
-            member.subject.resources.set_current(
-                resource_id, max(value.minimum, min(value.maximum, value.current))
-            )
+            member.subject.resources.set_current(resource_id, max(value.minimum, min(value.maximum, value.current)))
 
     def get(self, member_id, resource_id):
         member_id = _id(member_id, "member_id")
@@ -431,10 +420,7 @@ class BattleResourceRuntime:
             "schema": self.SCHEMA,
             "version": self.VERSION,
             "values": {
-                member_id: {
-                    resource_id: value.to_data()
-                    for resource_id, value in member_values.items()
-                }
+                member_id: {resource_id: value.to_data() for resource_id, value in member_values.items()}
                 for member_id, member_values in self.values.items()
             },
         }
@@ -451,8 +437,7 @@ class BattleResourceRuntime:
             if set(raw_member) != set(member_values):
                 raise ValueError("battle resource definition set mismatch")
             rebuilt[member_id] = {
-                resource_id: BattleResourceValue.from_data(raw_member[resource_id])
-                for resource_id in member_values
+                resource_id: BattleResourceValue.from_data(raw_member[resource_id]) for resource_id in member_values
             }
         self.values = rebuilt
         for member_id, member_values in self.values.items():

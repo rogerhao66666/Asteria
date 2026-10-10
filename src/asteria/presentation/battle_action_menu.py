@@ -33,9 +33,21 @@ class BattleActionEntry:
     search_terms: tuple[str, ...] = ()
 
     def __init__(
-        self, action_id, label=None, *, category="default", kind="action",
-        icon_asset_id=None, detail="", cost_text="", enabled=True,
-        disabled_reason="", order=0, priority=0, tags=(), search_terms=(),
+        self,
+        action_id,
+        label=None,
+        *,
+        category="default",
+        kind="action",
+        icon_asset_id=None,
+        detail="",
+        cost_text="",
+        enabled=True,
+        disabled_reason="",
+        order=0,
+        priority=0,
+        tags=(),
+        search_terms=(),
     ):
         action_id = _id(action_id, "action_id")
         label = action_id if label is None else _id(label, "label")
@@ -47,7 +59,9 @@ class BattleActionEntry:
         object.__setattr__(self, "label", label)
         object.__setattr__(self, "category", category)
         object.__setattr__(self, "kind", kind)
-        object.__setattr__(self, "icon_asset_id", None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id"))
+        object.__setattr__(
+            self, "icon_asset_id", None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id")
+        )
         object.__setattr__(self, "detail", str(detail))
         object.__setattr__(self, "cost_text", str(cost_text))
         object.__setattr__(self, "enabled", bool(enabled))
@@ -62,8 +76,14 @@ class BattleActionEntry:
         if not query:
             return True
         haystack = (
-            self.action_id, self.label, self.category, self.kind, self.detail,
-            self.cost_text, *self.tags, *self.search_terms,
+            self.action_id,
+            self.label,
+            self.category,
+            self.kind,
+            self.detail,
+            self.cost_text,
+            *self.tags,
+            *self.search_terms,
         )
         return any(query in str(x).casefold() for x in haystack)
 
@@ -195,7 +215,8 @@ class BattleActionMenuRuntime:
             self.active_category = categories[0] if categories else self.policy.all_category_id
 
         values = [
-            x for x in self._source
+            x
+            for x in self._source
             if (self.active_category == self.policy.all_category_id or x.category == self.active_category)
             and x.matches(self.query)
         ]
@@ -207,12 +228,19 @@ class BattleActionMenuRuntime:
         else:
             self.page = min(max(self.page, 0), page_count - 1)
         start = self.page * self.policy.page_size
-        entries = tuple(values[start:start + self.policy.page_size])
+        entries = tuple(values[start : start + self.policy.page_size])
         self.cursor = 0 if not entries else min(max(self.cursor, 0), len(entries) - 1)
         self.revision += 1
         self._view = BattleActionMenuView(
-            categories, self.active_category, self.query, entries,
-            self.page, page_count, total, self.cursor, self.revision,
+            categories,
+            self.active_category,
+            self.query,
+            entries,
+            self.page,
+            page_count,
+            total,
+            self.cursor,
+            self.revision,
         )
         return self._view
 
@@ -254,9 +282,15 @@ class BattleActionMenuRuntime:
         self.cursor = value
         self.revision += 1
         self._view = BattleActionMenuView(
-            self._view.categories, self._view.active_category, self._view.query,
-            self._view.entries, self._view.page, self._view.page_count,
-            self._view.total_count, self.cursor, self.revision,
+            self._view.categories,
+            self._view.active_category,
+            self._view.query,
+            self._view.entries,
+            self._view.page,
+            self._view.page_count,
+            self._view.total_count,
+            self.cursor,
+            self.revision,
         )
         return self._view
 
@@ -293,8 +327,14 @@ class BattleActionMenuRuntime:
         self._refresh()
         self.revision = revision
         self._view = BattleActionMenuView(
-            self._view.categories, self._view.active_category, self._view.query,
-            self._view.entries, self._view.page, self._view.page_count,
-            self._view.total_count, self._view.cursor, revision,
+            self._view.categories,
+            self._view.active_category,
+            self._view.query,
+            self._view.entries,
+            self._view.page,
+            self._view.page_count,
+            self._view.total_count,
+            self._view.cursor,
+            revision,
         )
         return self

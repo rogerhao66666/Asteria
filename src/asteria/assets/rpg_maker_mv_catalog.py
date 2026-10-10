@@ -42,17 +42,18 @@ class RPGMakerMVCatalog:
     issues: list[MVReferenceIssue]
 
     @classmethod
-    def build(
-        cls, layout: RPGMakerMVProjectLayout, database: RPGMakerMVDatabase
-    ) -> "RPGMakerMVCatalog":
+    def build(cls, layout: RPGMakerMVProjectLayout, database: RPGMakerMVDatabase) -> "RPGMakerMVCatalog":
         assets = []
         if layout.img is not None:
             for path in sorted(layout.img.glob("**/*.png")):
                 relative = path.relative_to(layout.img).with_suffix("").as_posix()
                 category = relative.split("/", 1)[0]
-                kind = "tileset" if category == "tilesets" else (
-                    "sprite_sheet" if category in {"characters", "faces", "sv_actors", "animations"}
-                    else "texture"
+                kind = (
+                    "tileset"
+                    if category == "tilesets"
+                    else (
+                        "sprite_sheet" if category in {"characters", "faces", "sv_actors", "animations"} else "texture"
+                    )
                 )
                 assets.append(
                     CanonicalAsset(
@@ -108,9 +109,7 @@ class RPGMakerMVCatalog:
     def audio(self, kind: str, name: str) -> MVAudioReference:
         root = self.layout.root / "audio" / str(kind)
         candidates = tuple(
-            path.resolve()
-            for suffix in (".ogg", ".m4a")
-            if (path := root / f"{name}{suffix}").is_file()
+            path.resolve() for suffix in (".ogg", ".m4a") if (path := root / f"{name}{suffix}").is_file()
         )
         if not candidates:
             self.issues.append(MVReferenceIssue("audio.missing", str(kind), str(name)))

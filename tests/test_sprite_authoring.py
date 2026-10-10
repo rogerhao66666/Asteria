@@ -39,12 +39,8 @@ def test_entity_sprite_builds_texture_draw_from_canonical_components():
     e.add_component(Transform(32, 48))
     s = e.add_component(SpriteRenderer2D())
     s.sprite_sheet_asset_id = SHEET_ID
-    sheet = SpriteSheet(
-        AssetRef(TEX_ID, "texture"), [SpriteFrame(0, 0, 16, 24, 0.5, 1.0)]
-    )
-    draws = build_entity_sprite_draws(
-        scene, ViewportCamera(), lambda aid: sheet if aid == SHEET_ID else None
-    )
+    sheet = SpriteSheet(AssetRef(TEX_ID, "texture"), [SpriteFrame(0, 0, 16, 24, 0.5, 1.0)])
+    draws = build_entity_sprite_draws(scene, ViewportCamera(), lambda aid: sheet if aid == SHEET_ID else None)
     assert len(draws) == 1
     assert draws[0].texture_asset_id == TEX_ID
     assert (draws[0].screen_x, draws[0].screen_y) == (24, 24)

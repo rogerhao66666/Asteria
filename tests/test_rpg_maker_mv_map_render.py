@@ -25,11 +25,21 @@ def _context():
 def _write_map(path, tiles):
     data = [0] * (2 * 1 * 6)
     data[:2] = tiles
-    path.write_text(json.dumps({
-        "displayName": "Render", "width": 2, "height": 1, "tilesetId": 1,
-        "parallaxName": "", "scrollType": 0, "data": data,
-        "encounterList": [], "events": [None],
-    }))
+    path.write_text(
+        json.dumps(
+            {
+                "displayName": "Render",
+                "width": 2,
+                "height": 1,
+                "tilesetId": 1,
+                "parallaxName": "",
+                "scrollType": 0,
+                "data": data,
+                "encounterList": [],
+                "events": [None],
+            }
+        )
+    )
     return RPGMakerMVMap.load(path, map_id=1)
 
 

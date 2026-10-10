@@ -38,10 +38,12 @@ def _build():
 
 
 def _loadout():
-    loadout = EquipmentLoadout((
-        EquipmentSlotDefinition("main_hand", capacity=1),
-        EquipmentSlotDefinition("accessory", capacity=2),
-    ))
+    loadout = EquipmentLoadout(
+        (
+            EquipmentSlotDefinition("main_hand", capacity=1),
+            EquipmentSlotDefinition("accessory", capacity=2),
+        )
+    )
     blade = EquipmentDefinition("bronze_blade", "Bronze Blade", slot="main_hand")
     charm = EquipmentDefinition("swift_charm", "Swift Charm", slot="accessory")
     loadout.equip("main_hand", EquippedItem(blade, instance_id="blade:01"), validate_requirements=False)
@@ -119,12 +121,8 @@ def test_abilities_keep_provenance_from_resolved_build():
 
 
 def test_progression_projection_supports_arbitrary_tracks():
-    profile = CharacterScreenProfile(
-        progression_labels={"chemist_mastery": "Mixture Mastery"}
-    )
-    view = CharacterScreenRuntime(profile).project(
-        _build(), progression=_progression()
-    )
+    profile = CharacterScreenProfile(progression_labels={"chemist_mastery": "Mixture Mastery"})
+    view = CharacterScreenRuntime(profile).project(_build(), progression=_progression())
     track = view.progression[0]
     assert track.track_id == "chemist_mastery"
     assert track.label == "Mixture Mastery"

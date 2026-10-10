@@ -1,32 +1,54 @@
 import pytest
 
 from asteria.gameplay import (
-    AbilityDefinition, AbilityEffect, AbilityRegistry, AbilityRuntime,
-    AbilityTargetMode, Effect, EffectOperation, EffectOperationKind,
-    GameplaySubject, ResourcePool, StatBlock, TagSet, TargetingRule,
+    AbilityDefinition,
+    AbilityEffect,
+    AbilityRegistry,
+    AbilityRuntime,
+    AbilityTargetMode,
+    Effect,
+    EffectOperation,
+    EffectOperationKind,
+    GameplaySubject,
+    ResourcePool,
+    StatBlock,
+    TagSet,
+    TargetingRule,
 )
 from asteria.rpg import (
-    ActionTimingDefinition, BattleAction, BattleActionTimingRuntime,
-    BattleRuntime, BattleScheduler, BattleSchedulerDefinition,
-    Party, PartyMember, RpgDatabase,
+    ActionTimingDefinition,
+    BattleAction,
+    BattleActionTimingRuntime,
+    BattleRuntime,
+    BattleScheduler,
+    BattleSchedulerDefinition,
+    Party,
+    PartyMember,
+    RpgDatabase,
 )
 
 
 def subject(hp=100):
-    resources = ResourcePool(); resources.define("hp", 100, current=hp)
+    resources = ResourcePool()
+    resources.define("hp", 100, current=hp)
     return GameplaySubject(StatBlock(), resources, TagSet())
 
 
 def ability_runtime():
     registry = AbilityRegistry()
     for aid, damage in (("quick", 5), ("meteor", 25), ("heavy", 15)):
-        registry.register(AbilityDefinition(
-            aid,
-            targeting=TargetingRule(minimum_targets=1, maximum_targets=1, allow_self=False),
-            effects=[AbilityEffect(AbilityTargetMode.SELECTED, Effect(
-                aid, [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", -damage)]
-            ))],
-        ))
+        registry.register(
+            AbilityDefinition(
+                aid,
+                targeting=TargetingRule(minimum_targets=1, maximum_targets=1, allow_self=False),
+                effects=[
+                    AbilityEffect(
+                        AbilityTargetMode.SELECTED,
+                        Effect(aid, [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", -damage)]),
+                    )
+                ],
+            )
+        )
     return AbilityRuntime(registry)
 
 
@@ -34,7 +56,8 @@ def make_battle(timings=()):
     hero = PartyMember("hero", "heroes", subject(), ability_ids=("quick", "meteor", "heavy"), initiative=100)
     enemy = PartyMember("enemy", "enemies", subject(), ability_ids=("quick",), initiative=20)
     return BattleRuntime(
-        [Party("heroes", [hero]), Party("enemies", [enemy])], ability_runtime(),
+        [Party("heroes", [hero]), Party("enemies", [enemy])],
+        ability_runtime(),
         scheduler_definition=BattleSchedulerDefinition("ct", mode="continuous", timeline_scale=100),
         action_timing_definitions=timings,
     )
@@ -47,10 +70,12 @@ def test_timing_definition_roundtrip_and_windup():
 
 
 def test_pending_queue_orders_same_time_by_priority_then_sequence():
-    rt = BattleActionTimingRuntime([
-        ActionTimingDefinition("a", cast_time=5, priority=1),
-        ActionTimingDefinition("b", cast_time=5, priority=10),
-    ])
+    rt = BattleActionTimingRuntime(
+        [
+            ActionTimingDefinition("a", cast_time=5, priority=1),
+            ActionTimingDefinition("b", cast_time=5, priority=10),
+        ]
+    )
     rt.begin(BattleAction("x", "a", ("z",)), current_time=0)
     rt.begin(BattleAction("y", "b", ("z",)), current_time=0)
     assert [x.ability_id for x in rt.pending()] == ["b", "a"]
@@ -122,7 +147,8 @@ def test_interrupting_cast_prevents_effect_resolution():
 
 def test_shift_timeline_moves_both_actor_readiness_and_cast_resolution():
     battle = make_battle([ActionTimingDefinition("meteor", cast_time=5)])
-    battle.next_actor(); pending = battle.submit_action(BattleAction("hero", "meteor", ("enemy",)))
+    battle.next_actor()
+    pending = battle.submit_action(BattleAction("hero", "meteor", ("enemy",)))
     old_ready = next(x.ready_time for x in battle.scheduler.pending() if x.member_id == "hero")
     battle.shift_timeline("hero", 2)
     assert battle.action_timing.next_pending().resolve_at == pending.resolve_at + 2
@@ -137,10 +163,14 @@ def test_timing_runtime_snapshot_restores_pending_order():
 
 
 def test_database_v15_owns_action_timings_and_v14_backward_read():
-    db = RpgDatabase(); db.add_action_timing(ActionTimingDefinition("meteor", cast_time=5))
-    data = db.to_data(); assert data["version"] == 25
+    db = RpgDatabase()
+    db.add_action_timing(ActionTimingDefinition("meteor", cast_time=5))
+    data = db.to_data()
+    assert data["version"] == 25
     restored = RpgDatabase.from_data(data)
     assert restored.action_timings["meteor"].cast_time == 5
-    old = RpgDatabase().to_data(); old["version"] = 14; old.pop("action_timings")
+    old = RpgDatabase().to_data()
+    old["version"] = 14
+    old.pop("action_timings")
     restored_old = RpgDatabase.from_data(old)
     assert restored_old.action_timings == {}

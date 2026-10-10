@@ -79,9 +79,7 @@ def test_choice_result_can_drive_later_jump():
                         "variable_name": "route",
                     },
                 ),
-                EventInstruction(
-                    "JUMP_IF", {"condition": condition, "label": "forest"}
-                ),
+                EventInstruction("JUMP_IF", {"condition": condition, "label": "forest"}),
                 EventInstruction("SET_SWITCH", {"name": "town_path", "value": True}),
                 EventInstruction("END"),
                 EventInstruction("LABEL", {"name": "forest"}),

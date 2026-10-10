@@ -17,8 +17,15 @@ def _entries():
         BattleActionEntry("heal", "Heal", category="magic", kind="ability", order=40, cost_text="6 MP"),
         BattleActionEntry("mix", "Concoct", category="craft", kind="workflow", order=50, detail="Combine ingredients"),
         BattleActionEntry("summon", "Summon", category="special", kind="workflow", order=60),
-        BattleActionEntry("locked", "Forbidden Art", category="special", kind="ability", order=70,
-                          enabled=False, disabled_reason="Requires Overdrive"),
+        BattleActionEntry(
+            "locked",
+            "Forbidden Art",
+            category="special",
+            kind="ability",
+            order=70,
+            enabled=False,
+            disabled_reason="Requires Overdrive",
+        ),
         BattleActionEntry("bomb", "Bomb", category="item", kind="item", order=80, search_terms=("explosive",)),
     )
 
@@ -110,5 +117,6 @@ def test_policy_and_runtime_snapshot_roundtrip_preserve_view_state():
 def test_duplicate_action_ids_are_rejected():
     runtime = BattleActionMenuRuntime()
     import pytest
+
     with pytest.raises(ValueError):
         runtime.set_entries((BattleActionEntry("x"), BattleActionEntry("x")))

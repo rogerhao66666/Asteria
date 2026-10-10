@@ -1,4 +1,5 @@
 """pygame-ce device input -> backend-neutral RawInputState (keyboard + gamepads)."""
+
 from __future__ import annotations
 
 from asteria.runtime.input_map import RawInputState

@@ -48,13 +48,15 @@ from .battle_camera_feedback import (
     BattleTargetIndicator,
 )
 
-__all__.extend([
-    "BattleCameraFeedbackFrame",
-    "BattleCameraFeedbackRuntime",
-    "BattleCameraImpulse",
-    "BattleScreenFxCue",
-    "BattleTargetIndicator",
-])
+__all__.extend(
+    [
+        "BattleCameraFeedbackFrame",
+        "BattleCameraFeedbackRuntime",
+        "BattleCameraImpulse",
+        "BattleScreenFxCue",
+        "BattleTargetIndicator",
+    ]
+)
 
 from .battle_hud import (
     BattleHudGauge,
@@ -66,15 +68,17 @@ from .battle_hud import (
     BattleHudStatusStyle,
 )
 
-__all__.extend([
-    "BattleHudGauge",
-    "BattleHudMember",
-    "BattleHudProfile",
-    "BattleHudResourceStyle",
-    "BattleHudRuntime",
-    "BattleHudStatusIcon",
-    "BattleHudStatusStyle",
-])
+__all__.extend(
+    [
+        "BattleHudGauge",
+        "BattleHudMember",
+        "BattleHudProfile",
+        "BattleHudResourceStyle",
+        "BattleHudRuntime",
+        "BattleHudStatusIcon",
+        "BattleHudStatusStyle",
+    ]
+)
 
 from .battle_turn_timeline import (
     BattleCastEntry,
@@ -83,12 +87,14 @@ from .battle_turn_timeline import (
     BattleTurnTimelineView,
 )
 
-__all__.extend([
-    "BattleCastEntry",
-    "BattleTurnEntry",
-    "BattleTurnTimelineRuntime",
-    "BattleTurnTimelineView",
-])
+__all__.extend(
+    [
+        "BattleCastEntry",
+        "BattleTurnEntry",
+        "BattleTurnTimelineRuntime",
+        "BattleTurnTimelineView",
+    ]
+)
 
 from .battle_result import (
     BattleCurrencyRewardView,
@@ -99,14 +105,16 @@ from .battle_result import (
     BattleResultView,
 )
 
-__all__.extend([
-    "BattleCurrencyRewardView",
-    "BattleItemRewardView",
-    "BattleProgressionRewardView",
-    "BattleResultPresentationRuntime",
-    "BattleResultProfile",
-    "BattleResultView",
-])
+__all__.extend(
+    [
+        "BattleCurrencyRewardView",
+        "BattleItemRewardView",
+        "BattleProgressionRewardView",
+        "BattleResultPresentationRuntime",
+        "BattleResultProfile",
+        "BattleResultView",
+    ]
+)
 
 from .battle_ui import (
     BattleUiComposer,
@@ -119,16 +127,18 @@ from .battle_ui import (
     BattleUiText,
 )
 
-__all__.extend([
-    "BattleUiComposer",
-    "BattleUiFrame",
-    "BattleUiGaugeBar",
-    "BattleUiIcon",
-    "BattleUiLayoutProfile",
-    "BattleUiMarker",
-    "BattleUiPanel",
-    "BattleUiText",
-])
+__all__.extend(
+    [
+        "BattleUiComposer",
+        "BattleUiFrame",
+        "BattleUiGaugeBar",
+        "BattleUiIcon",
+        "BattleUiLayoutProfile",
+        "BattleUiMarker",
+        "BattleUiPanel",
+        "BattleUiText",
+    ]
+)
 
 from .battle_ui_renderer import (
     BattleUiRenderer,
@@ -136,18 +146,22 @@ from .battle_ui_renderer import (
     HeadlessBattleUiBackend,
 )
 
-__all__.extend([
-    "BattleUiRenderer",
-    "BattleUiTheme",
-    "HeadlessBattleUiBackend",
-])
+__all__.extend(
+    [
+        "BattleUiRenderer",
+        "BattleUiTheme",
+        "HeadlessBattleUiBackend",
+    ]
+)
 
 from .battle_screen import BattleScreenRenderResult, BattleScreenRuntime
 
-__all__.extend([
-    "BattleScreenRenderResult",
-    "BattleScreenRuntime",
-])
+__all__.extend(
+    [
+        "BattleScreenRenderResult",
+        "BattleScreenRuntime",
+    ]
+)
 
 from .battle_party_layout import (
     BattlePartyLayoutPolicy,
@@ -156,12 +170,14 @@ from .battle_party_layout import (
     BattlePartyZoneLayout,
 )
 
-__all__.extend([
-    "BattlePartyLayoutPolicy",
-    "BattlePartyLayoutResult",
-    "BattlePartyPlacement",
-    "BattlePartyZoneLayout",
-])
+__all__.extend(
+    [
+        "BattlePartyLayoutPolicy",
+        "BattlePartyLayoutResult",
+        "BattlePartyPlacement",
+        "BattlePartyZoneLayout",
+    ]
+)
 
 from .battle_action_menu import (
     BattleActionEntry,
@@ -170,12 +186,14 @@ from .battle_action_menu import (
     BattleActionMenuView,
 )
 
-__all__.extend([
-    "BattleActionEntry",
-    "BattleActionMenuPolicy",
-    "BattleActionMenuRuntime",
-    "BattleActionMenuView",
-])
+__all__.extend(
+    [
+        "BattleActionEntry",
+        "BattleActionMenuPolicy",
+        "BattleActionMenuRuntime",
+        "BattleActionMenuView",
+    ]
+)
 
 from .battle_action_workflow import (
     BattleActionWorkflowDefinition,
@@ -186,14 +204,16 @@ from .battle_action_workflow import (
     BattleWorkflowStep,
 )
 
-__all__.extend([
-    "BattleActionWorkflowDefinition",
-    "BattleActionWorkflowRuntime",
-    "BattleActionWorkflowView",
-    "BattleWorkflowOption",
-    "BattleWorkflowSelection",
-    "BattleWorkflowStep",
-])
+__all__.extend(
+    [
+        "BattleActionWorkflowDefinition",
+        "BattleActionWorkflowRuntime",
+        "BattleActionWorkflowView",
+        "BattleWorkflowOption",
+        "BattleWorkflowSelection",
+        "BattleWorkflowStep",
+    ]
+)
 
 from .battle_presentation_director import (
     BattleDirectedEvent,
@@ -204,14 +224,16 @@ from .battle_presentation_director import (
     BattlePresentationDirectorRule,
 )
 
-__all__.extend([
-    "BattleDirectedEvent",
-    "BattlePresentationDirection",
-    "BattlePresentationDirector",
-    "BattlePresentationDirectorAdvance",
-    "BattlePresentationDirectorProfile",
-    "BattlePresentationDirectorRule",
-])
+__all__.extend(
+    [
+        "BattleDirectedEvent",
+        "BattlePresentationDirection",
+        "BattlePresentationDirector",
+        "BattlePresentationDirectorAdvance",
+        "BattlePresentationDirectorProfile",
+        "BattlePresentationDirectorRule",
+    ]
+)
 
 from .battle_animation_timing import (
     BattleAnimationTimingProfile,
@@ -220,12 +242,14 @@ from .battle_animation_timing import (
     easing_value,
 )
 
-__all__.extend([
-    "BattleAnimationTimingProfile",
-    "BattleAnimationTimingRule",
-    "BattleHitRhythm",
-    "easing_value",
-])
+__all__.extend(
+    [
+        "BattleAnimationTimingProfile",
+        "BattleAnimationTimingRule",
+        "BattleHitRhythm",
+        "easing_value",
+    ]
+)
 
 from .battle_presentation_layering import (
     BattlePresentationChannelPolicy,
@@ -234,12 +258,14 @@ from .battle_presentation_layering import (
     BattlePresentationLayeringRuntime,
 )
 
-__all__.extend([
-    "BattlePresentationChannelPolicy",
-    "BattlePresentationLayerContext",
-    "BattlePresentationLayeringProfile",
-    "BattlePresentationLayeringRuntime",
-])
+__all__.extend(
+    [
+        "BattlePresentationChannelPolicy",
+        "BattlePresentationLayerContext",
+        "BattlePresentationLayeringProfile",
+        "BattlePresentationLayeringRuntime",
+    ]
+)
 
 from .battle_ui_polish import BattleUiPolishProfile
 
@@ -258,18 +284,20 @@ from .rpg_character_screen import (
     CharacterScreenView,
 )
 
-__all__.extend([
-    "CharacterScreenAbilityView",
-    "CharacterScreenEquipmentItemView",
-    "CharacterScreenEquipmentSlotView",
-    "CharacterScreenProfile",
-    "CharacterScreenProgressionView",
-    "CharacterScreenResourceView",
-    "CharacterScreenRuntime",
-    "CharacterScreenSection",
-    "CharacterScreenStatView",
-    "CharacterScreenView",
-])
+__all__.extend(
+    [
+        "CharacterScreenAbilityView",
+        "CharacterScreenEquipmentItemView",
+        "CharacterScreenEquipmentSlotView",
+        "CharacterScreenProfile",
+        "CharacterScreenProgressionView",
+        "CharacterScreenResourceView",
+        "CharacterScreenRuntime",
+        "CharacterScreenSection",
+        "CharacterScreenStatView",
+        "CharacterScreenView",
+    ]
+)
 
 from .rpg_party_screen import (
     PartyFormationSlotView,
@@ -280,14 +308,16 @@ from .rpg_party_screen import (
     PartyScreenView,
 )
 
-__all__.extend([
-    "PartyFormationSlotView",
-    "PartyGroupView",
-    "PartyMemberPresentation",
-    "PartyScreenProfile",
-    "PartyScreenRuntime",
-    "PartyScreenView",
-])
+__all__.extend(
+    [
+        "PartyFormationSlotView",
+        "PartyGroupView",
+        "PartyMemberPresentation",
+        "PartyScreenProfile",
+        "PartyScreenRuntime",
+        "PartyScreenView",
+    ]
+)
 
 from .rpg_equipment_screen import (
     EquipmentCandidateView,
@@ -300,16 +330,18 @@ from .rpg_equipment_screen import (
     EquippedItemView,
 )
 
-__all__.extend([
-    "EquipmentCandidateView",
-    "EquipmentGrowthView",
-    "EquipmentScreenProfile",
-    "EquipmentScreenRuntime",
-    "EquipmentScreenView",
-    "EquipmentSlotView",
-    "EquipmentSocketView",
-    "EquippedItemView",
-])
+__all__.extend(
+    [
+        "EquipmentCandidateView",
+        "EquipmentGrowthView",
+        "EquipmentScreenProfile",
+        "EquipmentScreenRuntime",
+        "EquipmentScreenView",
+        "EquipmentSlotView",
+        "EquipmentSocketView",
+        "EquippedItemView",
+    ]
+)
 
 from .rpg_ability_screen import (
     AbilityCollectionEntry,
@@ -320,14 +352,16 @@ from .rpg_ability_screen import (
     PassiveCollectionEntry,
 )
 
-__all__.extend([
-    "AbilityCollectionEntry",
-    "AbilityCollectionGroup",
-    "AbilityScreenProfile",
-    "AbilityScreenRuntime",
-    "AbilityScreenView",
-    "PassiveCollectionEntry",
-])
+__all__.extend(
+    [
+        "AbilityCollectionEntry",
+        "AbilityCollectionGroup",
+        "AbilityScreenProfile",
+        "AbilityScreenRuntime",
+        "AbilityScreenView",
+        "PassiveCollectionEntry",
+    ]
+)
 
 from .rpg_progression_screen import (
     ProgressionGraphView,
@@ -338,14 +372,16 @@ from .rpg_progression_screen import (
     ProgressionScreenView,
 )
 
-__all__.extend([
-    "ProgressionGraphView",
-    "ProgressionNodeView",
-    "ProgressionRequirementView",
-    "ProgressionScreenProfile",
-    "ProgressionScreenRuntime",
-    "ProgressionScreenView",
-])
+__all__.extend(
+    [
+        "ProgressionGraphView",
+        "ProgressionNodeView",
+        "ProgressionRequirementView",
+        "ProgressionScreenProfile",
+        "ProgressionScreenRuntime",
+        "ProgressionScreenView",
+    ]
+)
 
 from .rpg_inventory_screen import (
     InventoryGroupView,
@@ -355,13 +391,15 @@ from .rpg_inventory_screen import (
     InventoryScreenView,
 )
 
-__all__.extend([
-    "InventoryGroupView",
-    "InventoryItemView",
-    "InventoryScreenProfile",
-    "InventoryScreenRuntime",
-    "InventoryScreenView",
-])
+__all__.extend(
+    [
+        "InventoryGroupView",
+        "InventoryItemView",
+        "InventoryScreenProfile",
+        "InventoryScreenRuntime",
+        "InventoryScreenView",
+    ]
+)
 
 from .battle_interaction import (
     BattleInteractionContext,
@@ -456,5 +494,6 @@ from .composition import *
 from .choreography import *
 from .performance import *
 from .fidelity_editor import *
+
 # Export both legacy battle-presentation and generic composable-presentation APIs.
-__all__ = sorted(set(__all__) | {name for name in globals() if not name.startswith('_')})  # noqa: PLE0605 - sorted() returns a list
+__all__ = sorted(set(__all__) | {name for name in globals() if not name.startswith("_")})  # noqa: PLE0605 - sorted() returns a list

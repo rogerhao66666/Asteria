@@ -22,25 +22,46 @@ def make_db():
     db = RpgDatabase()
     db.add_class(ClassDefinition("warrior", granted_abilities=["power_strike"]))
     db.add_class(ClassDefinition("scholar", granted_abilities=["fireball"]))
-    db.add_progression_track(ProgressionTrackDefinition("scholar_rank", milestones=[
-        ProgressionMilestone(1, 0),
-        ProgressionMilestone(2, 10, granted_abilities=["focus"]),
-        ProgressionMilestone(3, 20),
-    ]))
-    db.add_actor(ActorDefinition("aria", class_assignments=[
-        ClassAssignment("warrior", assignment_id="job.warrior"),
-        ClassAssignment("scholar", assignment_id="job.scholar", progression_track_ids=["scholar_rank"]),
-    ], abilities=["basic_attack"], base_stats={"attack": 10}))
-    db.add_passive(PassiveDefinition(
-        "battle_instinct", "Battle Instinct",
-        tags=["passive.counter_ready"],
-        modifiers=[StatModifier("passive.attack", "attack", ModifierOperation.ADD, 5)],
-        granted_abilities=["counter_stance"],
-    ))
-    db.add_ability_evolution(AbilityEvolutionRule(
-        "fireball_to_firestorm", "fireball", "firestorm",
-        progression_track_id="scholar_rank", minimum_rank=3, priority=10,
-    ))
+    db.add_progression_track(
+        ProgressionTrackDefinition(
+            "scholar_rank",
+            milestones=[
+                ProgressionMilestone(1, 0),
+                ProgressionMilestone(2, 10, granted_abilities=["focus"]),
+                ProgressionMilestone(3, 20),
+            ],
+        )
+    )
+    db.add_actor(
+        ActorDefinition(
+            "aria",
+            class_assignments=[
+                ClassAssignment("warrior", assignment_id="job.warrior"),
+                ClassAssignment("scholar", assignment_id="job.scholar", progression_track_ids=["scholar_rank"]),
+            ],
+            abilities=["basic_attack"],
+            base_stats={"attack": 10},
+        )
+    )
+    db.add_passive(
+        PassiveDefinition(
+            "battle_instinct",
+            "Battle Instinct",
+            tags=["passive.counter_ready"],
+            modifiers=[StatModifier("passive.attack", "attack", ModifierOperation.ADD, 5)],
+            granted_abilities=["counter_stance"],
+        )
+    )
+    db.add_ability_evolution(
+        AbilityEvolutionRule(
+            "fireball_to_firestorm",
+            "fireball",
+            "firestorm",
+            progression_track_id="scholar_rank",
+            minimum_rank=3,
+            priority=10,
+        )
+    )
     return db
 
 
@@ -97,15 +118,30 @@ def test_evolution_rule_upgrades_skill_when_requirement_is_met():
 
 def test_selected_evolution_supports_branch_choice_deterministically():
     db = make_db()
-    db.add_ability_evolution(AbilityEvolutionRule("fireball_to_inferno", "fireball", "inferno", progression_track_id="scholar_rank", minimum_rank=3, priority=10))
+    db.add_ability_evolution(
+        AbilityEvolutionRule(
+            "fireball_to_inferno",
+            "fireball",
+            "inferno",
+            progression_track_id="scholar_rank",
+            minimum_rank=3,
+            priority=10,
+        )
+    )
     runtime = db.build_actor("aria")
     runtime.ability_state.select_evolution("fireball", "fireball_to_inferno")
     high = ProgressionRuntime(db.progression_tracks.values(), totals={"scholar_rank": 20})
-    assert runtime.effective_abilities(progression=high, evolution_rules=db.ability_evolutions.values())[-1] == "inferno"
+    assert (
+        runtime.effective_abilities(progression=high, evolution_rules=db.ability_evolutions.values())[-1] == "inferno"
+    )
 
 
 def test_actor_ability_state_and_snapshot_roundtrip():
-    state = ActorAbilityState(learned_abilities=["heal"], active_passives=["battle_instinct"], selected_evolutions={"fireball": "fireball_to_firestorm"})
+    state = ActorAbilityState(
+        learned_abilities=["heal"],
+        active_passives=["battle_instinct"],
+        selected_evolutions={"fireball": "fireball_to_firestorm"},
+    )
     loaded = ActorAbilityState.from_data(copy.deepcopy(state.to_data()))
     assert loaded.learned_abilities == ("heal",)
     db = make_db()

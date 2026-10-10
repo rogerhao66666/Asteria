@@ -25,31 +25,35 @@ def _value(current, maximum):
 
 
 def _resources():
-    return SimpleNamespace(values={
-        "hero": {
-            "hp": _value(75, 100),
-            "bp": _value(3, 5),
-            "sp": _value(17, 30),
-            "atb": _value(60, 100),
-            "guard": _value(2, 6),
-            "limit": _value(40, 100),
-            "heat": _value(4, 10),
-            "secret": _value(1, 1),
+    return SimpleNamespace(
+        values={
+            "hero": {
+                "hp": _value(75, 100),
+                "bp": _value(3, 5),
+                "sp": _value(17, 30),
+                "atb": _value(60, 100),
+                "guard": _value(2, 6),
+                "limit": _value(40, 100),
+                "heat": _value(4, 10),
+                "secret": _value(1, 1),
+            }
         }
-    })
+    )
 
 
 def _profile():
-    return BattleHudProfile((
-        BattleHudResourceStyle("hp", "HP", presentation="bar", order=0),
-        BattleHudResourceStyle("bp", "BP", presentation="pips", segments=5, order=10, compact=True),
-        BattleHudResourceStyle("sp", "SP", presentation="number", order=20),
-        BattleHudResourceStyle("atb", "ACT", presentation="action_gauge", order=30, show_value=False),
-        BattleHudResourceStyle("guard", "Guard", presentation="segmented_bar", segments=6, order=40),
-        BattleHudResourceStyle("limit", "Limit", presentation="ring", order=50, group="secondary"),
-        BattleHudResourceStyle("heat", "Heat", presentation="heat_orbit", order=60, priority=7),
-        BattleHudResourceStyle("secret", "Secret", presentation="hidden", order=70),
-    ))
+    return BattleHudProfile(
+        (
+            BattleHudResourceStyle("hp", "HP", presentation="bar", order=0),
+            BattleHudResourceStyle("bp", "BP", presentation="pips", segments=5, order=10, compact=True),
+            BattleHudResourceStyle("sp", "SP", presentation="number", order=20),
+            BattleHudResourceStyle("atb", "ACT", presentation="action_gauge", order=30, show_value=False),
+            BattleHudResourceStyle("guard", "Guard", presentation="segmented_bar", segments=6, order=40),
+            BattleHudResourceStyle("limit", "Limit", presentation="ring", order=50, group="secondary"),
+            BattleHudResourceStyle("heat", "Heat", presentation="heat_orbit", order=60, priority=7),
+            BattleHudResourceStyle("secret", "Secret", presentation="hidden", order=70),
+        )
+    )
 
 
 def test_resource_policy_is_project_defined_and_not_hp_mp_specific():

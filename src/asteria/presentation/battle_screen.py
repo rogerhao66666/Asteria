@@ -86,12 +86,8 @@ class BattleScreenRuntime:
         self.result = BattleResultPresentationRuntime(result_profile or BattleResultProfile())
         self.action_menu = BattleActionMenuRuntime(action_menu_policy or BattleActionMenuPolicy())
         self.action_workflow = BattleActionWorkflowRuntime()
-        self.director = BattlePresentationDirector(
-            director_profile or BattlePresentationDirectorProfile()
-        )
-        self.layering = BattlePresentationLayeringRuntime(
-            layering_profile or BattlePresentationLayeringProfile()
-        )
+        self.director = BattlePresentationDirector(director_profile or BattlePresentationDirectorProfile())
+        self.layering = BattlePresentationLayeringRuntime(layering_profile or BattlePresentationLayeringProfile())
         self.composer = BattleUiComposer(
             scene,
             layout or BattleUiLayoutProfile(),
@@ -100,9 +96,7 @@ class BattleScreenRuntime:
         )
 
         self.side_by_member: dict[str, str] = {}
-        self.placement_by_side = {
-            str(k): str(v) for k, v in dict(placement_by_side or {}).items()
-        }
+        self.placement_by_side = {str(k): str(v) for k, v in dict(placement_by_side or {}).items()}
         self.placement_by_member: dict[str, str] = {}
         self.current_member_id: str | None = None
         self.display_names: dict[str, str] = {}
@@ -166,10 +160,7 @@ class BattleScreenRuntime:
         # Presentation placement is explicit when configured. Otherwise sides are
         # assigned to visual zones deterministically without interpreting side names.
         side_ids = tuple(sorted(set(self.side_by_member.values())))
-        auto_zone = {
-            side_id: ("left" if index % 2 == 0 else "right")
-            for index, side_id in enumerate(side_ids)
-        }
+        auto_zone = {side_id: ("left" if index % 2 == 0 else "right") for index, side_id in enumerate(side_ids)}
         self.placement_by_member = {
             member_id: self.placement_by_side.get(side_id, auto_zone[side_id])
             for member_id, side_id in self.side_by_member.items()
@@ -264,9 +255,7 @@ class BattleScreenRuntime:
         self.placement_by_side = {
             str(k): str(v) for k, v in dict(data.get("placement_by_side", self.placement_by_side)).items()
         }
-        self.placement_by_member = {
-            str(k): str(v) for k, v in dict(data.get("placement_by_member", {})).items()
-        }
+        self.placement_by_member = {str(k): str(v) for k, v in dict(data.get("placement_by_member", {})).items()}
         current = data.get("current_member_id")
         self.current_member_id = None if current is None else str(current)
         self.animation.restore(data["animation"])

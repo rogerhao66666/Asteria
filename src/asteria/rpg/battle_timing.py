@@ -117,11 +117,16 @@ class PendingBattleAction:
     @classmethod
     def from_data(cls, data):
         return cls(
-            str(data["token"]), str(data["actor_id"]), str(data["ability_id"]),
+            str(data["token"]),
+            str(data["actor_id"]),
+            str(data["ability_id"]),
             tuple(str(x) for x in data.get("target_ids", ())),
-            float(data["started_at"]), float(data["resolve_at"]),
-            int(data.get("priority", 0)), int(data["sequence"]),
-            bool(data.get("interruptible", True)), float(data.get("interrupt_threshold", 0.0)),
+            float(data["started_at"]),
+            float(data["resolve_at"]),
+            int(data.get("priority", 0)),
+            int(data["sequence"]),
+            bool(data.get("interruptible", True)),
+            float(data.get("interrupt_threshold", 0.0)),
         )
 
 
@@ -162,9 +167,15 @@ class BattleActionTimingRuntime:
         self._sequence += 1
         token = f"action:{self._sequence}"
         pending = PendingBattleAction(
-            token, str(action.actor_id), str(action.ability_id), tuple(action.target_ids),
-            float(current_time), float(current_time) + definition.windup,
-            definition.priority, self._sequence, definition.interruptible,
+            token,
+            str(action.actor_id),
+            str(action.ability_id),
+            tuple(action.target_ids),
+            float(current_time),
+            float(current_time) + definition.windup,
+            definition.priority,
+            self._sequence,
+            definition.interruptible,
             definition.interrupt_threshold,
         )
         self._pending.append(pending)
@@ -214,9 +225,16 @@ class BattleActionTimingRuntime:
             if item.actor_id != actor_id:
                 continue
             replacement = PendingBattleAction(
-                item.token, item.actor_id, item.ability_id, item.target_ids,
-                item.started_at, max(item.started_at, item.resolve_at + delta),
-                item.priority, item.sequence, item.interruptible, item.interrupt_threshold,
+                item.token,
+                item.actor_id,
+                item.ability_id,
+                item.target_ids,
+                item.started_at,
+                max(item.started_at, item.resolve_at + delta),
+                item.priority,
+                item.sequence,
+                item.interruptible,
+                item.interrupt_threshold,
             )
             self._pending[i] = replacement
             changed.append(replacement)

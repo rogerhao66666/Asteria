@@ -32,8 +32,9 @@ class BattleSchedulerDefinition:
     timeline_scale: float = 100.0
     minimum_speed: float = 1.0
 
-    def __init__(self, scheduler_id, *, mode=BattleSchedulerMode.SPEED_ORDERED,
-                 timeline_scale=100.0, minimum_speed=1.0):
+    def __init__(
+        self, scheduler_id, *, mode=BattleSchedulerMode.SPEED_ORDERED, timeline_scale=100.0, minimum_speed=1.0
+    ):
         object.__setattr__(self, "scheduler_id", _id(scheduler_id, "scheduler_id"))
         object.__setattr__(self, "mode", BattleSchedulerMode(mode))
         object.__setattr__(self, "timeline_scale", _positive(timeline_scale, "timeline_scale"))
@@ -41,16 +42,24 @@ class BattleSchedulerDefinition:
 
     def to_data(self):
         return {
-            "schema": "asteria.rpg.battle_scheduler_definition", "version": 1,
-            "scheduler_id": self.scheduler_id, "mode": self.mode.value,
-            "timeline_scale": self.timeline_scale, "minimum_speed": self.minimum_speed,
+            "schema": "asteria.rpg.battle_scheduler_definition",
+            "version": 1,
+            "scheduler_id": self.scheduler_id,
+            "mode": self.mode.value,
+            "timeline_scale": self.timeline_scale,
+            "minimum_speed": self.minimum_speed,
         }
 
     @classmethod
     def from_data(cls, data):
         if data.get("schema") != "asteria.rpg.battle_scheduler_definition" or data.get("version") != 1:
             raise ValueError("unsupported battle scheduler definition")
-        return cls(data["scheduler_id"], mode=data["mode"], timeline_scale=data["timeline_scale"], minimum_speed=data["minimum_speed"])
+        return cls(
+            data["scheduler_id"],
+            mode=data["mode"],
+            timeline_scale=data["timeline_scale"],
+            minimum_speed=data["minimum_speed"],
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,11 +95,16 @@ class BattleScheduler:
         self._initialize()
 
     @property
-    def round_index(self): return self._round
+    def round_index(self):
+        return self._round
+
     @property
-    def current_time(self): return self._time
+    def current_time(self):
+        return self._time
+
     @property
-    def mode(self): return self.definition.mode
+    def mode(self):
+        return self.definition.mode
 
     def _speed(self, member):
         return max(self.definition.minimum_speed, float(member.initiative))
@@ -116,12 +130,21 @@ class BattleScheduler:
     def _schedule_continuous(self, member, *, from_time):
         speed = self._speed(member)
         self._sequence += 1
-        self._pending.append(ScheduledTurn(member.member_id, member.side, from_time + self.definition.timeline_scale / speed, speed, self._sequence))
+        self._pending.append(
+            ScheduledTurn(
+                member.member_id, member.side, from_time + self.definition.timeline_scale / speed, speed, self._sequence
+            )
+        )
         self._pending.sort(key=lambda x: (x.ready_time, x.member_id, x.sequence))
 
-    def peek(self): return self._pending[0] if self._pending else None
-    def pending(self): return tuple(self._pending)
-    def exhausted(self): return not self._pending
+    def peek(self):
+        return self._pending[0] if self._pending else None
+
+    def pending(self):
+        return tuple(self._pending)
+
+    def exhausted(self):
+        return not self._pending
 
     def advance_time(self, target_time):
         target_time = float(target_time)
@@ -145,8 +168,11 @@ class BattleScheduler:
             if entry.member_id != member_id:
                 continue
             replacement = ScheduledTurn(
-                entry.member_id, entry.side, max(self._time, entry.ready_time + delta),
-                entry.speed, entry.sequence,
+                entry.member_id,
+                entry.side,
+                max(self._time, entry.ready_time + delta),
+                entry.speed,
+                entry.sequence,
             )
             self._pending[i] = replacement
             changed.append(replacement)
@@ -154,7 +180,8 @@ class BattleScheduler:
         return tuple(changed)
 
     def pop(self):
-        if not self._pending: return None
+        if not self._pending:
+            return None
         entry = self._pending.pop(0)
         self._time = max(self._time, entry.ready_time)
         self._acted_this_round.add(entry.member_id)
@@ -178,20 +205,24 @@ class BattleScheduler:
         return self.start_next_round()
 
     def register_member(self, member, *, join_current_round=False):
-        if member.member_id in self._members: raise ValueError(f"duplicate scheduler member: {member.member_id}")
+        if member.member_id in self._members:
+            raise ValueError(f"duplicate scheduler member: {member.member_id}")
         self._members[member.member_id] = member
         if self.mode == BattleSchedulerMode.CONTINUOUS:
             self._schedule_continuous(member, from_time=self._time)
         elif join_current_round:
             self._sequence += 1
-            self._pending.append(ScheduledTurn(member.member_id, member.side, self._time, self._speed(member), self._sequence))
+            self._pending.append(
+                ScheduledTurn(member.member_id, member.side, self._time, self._speed(member), self._sequence)
+            )
             if self.mode == BattleSchedulerMode.SPEED_ORDERED:
                 self._pending.sort(key=lambda x: (-x.speed, x.member_id))
             else:
                 self._pending.sort(key=lambda x: x.member_id)
 
     def replace_member(self, member):
-        if member.member_id not in self._members: raise KeyError(member.member_id)
+        if member.member_id not in self._members:
+            raise KeyError(member.member_id)
         self._members[member.member_id] = member
         # Existing ready time is preserved; new speed applies on next schedule.
 
@@ -203,12 +234,21 @@ class BattleScheduler:
 
     def to_data(self):
         return {
-            "schema": "asteria.rpg.battle_scheduler", "version": 1,
-            "definition": self.definition.to_data(), "round_index": self._round,
-            "current_time": self._time, "sequence": self._sequence,
+            "schema": "asteria.rpg.battle_scheduler",
+            "version": 1,
+            "definition": self.definition.to_data(),
+            "round_index": self._round,
+            "current_time": self._time,
+            "sequence": self._sequence,
             "acted_this_round": sorted(self._acted_this_round),
             "pending": [
-                {"member_id": x.member_id, "side": x.side, "ready_time": x.ready_time, "speed": x.speed, "sequence": x.sequence}
+                {
+                    "member_id": x.member_id,
+                    "side": x.side,
+                    "ready_time": x.ready_time,
+                    "speed": x.speed,
+                    "sequence": x.sequence,
+                }
                 for x in self._pending
             ],
         }
@@ -220,7 +260,12 @@ class BattleScheduler:
         result = cls.__new__(cls)
         result.definition = BattleSchedulerDefinition.from_data(data["definition"])
         result._members = {m.member_id: m for m in members}
-        result._time = float(data["current_time"]); result._round = int(data["round_index"])
-        result._sequence = int(data["sequence"]); result._acted_this_round = set(data.get("acted_this_round", ()))
-        result._pending = [ScheduledTurn(x["member_id"], x["side"], float(x["ready_time"]), float(x["speed"]), int(x["sequence"])) for x in data["pending"]]
+        result._time = float(data["current_time"])
+        result._round = int(data["round_index"])
+        result._sequence = int(data["sequence"])
+        result._acted_this_round = set(data.get("acted_this_round", ()))
+        result._pending = [
+            ScheduledTurn(x["member_id"], x["side"], float(x["ready_time"]), float(x["speed"]), int(x["sequence"]))
+            for x in data["pending"]
+        ]
         return result
