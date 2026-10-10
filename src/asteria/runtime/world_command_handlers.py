@@ -21,6 +21,9 @@ STANDARD_WORLD_COMMANDS = (
     "ADVANCE_QUEST",
     "COMPLETE_QUEST",
     "FAIL_QUEST",
+    "CHANGE_REPUTATION",
+    "CHANGE_RELATIONSHIP",
+    "ADD_COUNTER",
     "PLAY_BGM",
     "STOP_BGM",
     "PLAY_SE",
@@ -41,6 +44,9 @@ WORLD_COMMAND_ARGUMENTS = {
     "ADVANCE_QUEST": ("quest_id", "objective_id", "amount"),
     "COMPLETE_QUEST": ("quest_id",),
     "FAIL_QUEST": ("quest_id",),
+    "CHANGE_REPUTATION": ("faction_id", "amount"),
+    "CHANGE_RELATIONSHIP": ("subject_id", "amount"),
+    "ADD_COUNTER": ("counter_id", "amount"),
     "PLAY_BGM": ("asset_id", "fade", "volume"),
     "STOP_BGM": ("fade",),
     "PLAY_SE": ("asset_id", "volume"),
@@ -137,6 +143,16 @@ def register_standard_world_commands(router, session):
     router.register("ADVANCE_QUEST", quest_command("advance_quest", objective=True))
     router.register("COMPLETE_QUEST", quest_command("complete_quest"))
     router.register("FAIL_QUEST", quest_command("fail_quest"))
+
+    def change_reputation(command):
+        faction_id = str(_required(command, "faction_id"))
+        if faction_id not in session.project.rpg_database.factions:
+            raise WorldCommandError(f"unknown faction: {faction_id}")
+        return session.change_reputation(faction_id, _amount(command, "amount", 0))
+
+    router.register("CHANGE_REPUTATION", change_reputation)
+    router.register("CHANGE_RELATIONSHIP", lambda c: session.change_relationship(str(_required(c, "subject_id")), _amount(c, "amount", 0)))
+    router.register("ADD_COUNTER", lambda c: session.add_counter(str(_required(c, "counter_id")), _amount(c, "amount", 1)))
     for name in PRESENTATION_COMMANDS:
         router.register(name, presentation_request)
     return router

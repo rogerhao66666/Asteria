@@ -26,7 +26,7 @@ def test_reference_save_loads_and_validates(name):
     p=load_project()
     save=GameRuntimeSave.load_json(save_path(name),p)
     assert save.validate(p)
-    assert save.rpg_state.to_data()["version"]==6
+    assert save.rpg_state.to_data()["version"]==7
     assert save.event_context.get_variable("reference_profile")==name
 
 
@@ -89,6 +89,7 @@ def test_rpg_runtime_v3_backward_read_defaults_actor_progression_empty():
     legacy.pop("party_placements")
     legacy.pop("shop_stock")
     legacy.pop("quests")
+    legacy.pop("world")
     restored=RpgRuntimeState.from_data(legacy,p.rpg_database)
     assert restored.actor_progression=={}
     assert restored.party_actor_ids

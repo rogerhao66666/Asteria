@@ -138,6 +138,7 @@ def test_runtime_state_v4_backward_read_defaults_active_party_to_roster():
     raw.pop("party_placements")
     raw.pop("shop_stock")
     raw.pop("quests")
+    raw.pop("world")
     from asteria.rpg import RpgRuntimeState
     restored=RpgRuntimeState.from_data(raw,p.rpg_database)
     assert restored.party_active_actor_ids==restored.party_actor_ids

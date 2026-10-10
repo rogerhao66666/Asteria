@@ -706,6 +706,9 @@ class RpgDatabase:
         self.battle_session_rules = {}
         self.shops = {}
         self.equipment_sets = {}
+        self.factions = {}
+        self.achievements = {}
+        self.capture_rules = {}
         self.quests = {}
 
     def add_actor(self, value):
@@ -984,6 +987,26 @@ class RpgDatabase:
         self.equipment_sets[value.set_id] = value
         return value
 
+    def _add_keyed(self, store, value, cls, key, label):
+        if not isinstance(value, cls):
+            raise TypeError(f"{label} must be {cls.__name__}")
+        if getattr(value, key) in store:
+            raise ValueError(f"duplicate {label}: {getattr(value, key)}")
+        store[getattr(value, key)] = value
+        return value
+
+    def add_faction(self, value):
+        from .world_record import FactionDefinition
+        return self._add_keyed(self.factions, value, FactionDefinition, "faction_id", "faction")
+
+    def add_achievement(self, value):
+        from .world_record import AchievementDefinition
+        return self._add_keyed(self.achievements, value, AchievementDefinition, "achievement_id", "achievement")
+
+    def add_capture_rule(self, value):
+        from .capture import CaptureRule
+        return self._add_keyed(self.capture_rules, value, CaptureRule, "enemy_id", "capture rule")
+
     def add_quest(self, value):
         from .quests import QuestDefinition
         if not isinstance(value, QuestDefinition):
@@ -1121,6 +1144,17 @@ class RpgDatabase:
             for equipment_id in equipment_set.equipment_ids:
                 if equipment_id not in self.equipment:
                     errors.append(f"equipment set {equipment_set.set_id} references unknown equipment {equipment_id}")
+        for rule in self.capture_rules.values():
+            if rule.enemy_id not in self.enemies:
+                errors.append(f"capture rule references unknown enemy {rule.enemy_id}")
+            if rule.actor_id not in self.actors:
+                errors.append(f"capture rule {rule.enemy_id} references unknown actor {rule.actor_id}")
+            if rule.item_id and rule.item_id not in self.items:
+                errors.append(f"capture rule {rule.enemy_id} references unknown item {rule.item_id}")
+        for achievement in self.achievements.values():
+            store = {"defeated": self.enemies, "reputation": self.factions, "quest": self.quests}.get(achievement.kind)
+            if store is not None and achievement.target not in store:
+                errors.append(f"achievement {achievement.achievement_id} references unknown {achievement.kind} target {achievement.target}")
         for shop in self.shops.values():
             for entry in shop.entries:
                 if entry.item_id not in self.items:
@@ -1261,6 +1295,9 @@ class RpgDatabase:
             ],
             "shops": [self.shops[k].to_data() for k in sorted(self.shops)],
             "equipment_sets": [self.equipment_sets[k].to_data() for k in sorted(self.equipment_sets)],
+            "factions": [self.factions[k].to_data() for k in sorted(self.factions)],
+            "achievements": [self.achievements[k].to_data() for k in sorted(self.achievements)],
+            "capture_rules": [self.capture_rules[k].to_data() for k in sorted(self.capture_rules)],
             "quests": [self.quests[k].to_data() for k in sorted(self.quests)],
         }
 
@@ -1416,4 +1453,12 @@ class RpgDatabase:
             from .equipment_sets import EquipmentSetDefinition
             for x in data.get("equipment_sets", ()):
                 result.add_equipment_set(EquipmentSetDefinition.from_data(x))
+            from .capture import CaptureRule
+            from .world_record import AchievementDefinition, FactionDefinition
+            for x in data.get("factions", ()):
+                result.add_faction(FactionDefinition.from_data(x))
+            for x in data.get("achievements", ()):
+                result.add_achievement(AchievementDefinition.from_data(x))
+            for x in data.get("capture_rules", ()):
+                result.add_capture_rule(CaptureRule.from_data(x))
         return result

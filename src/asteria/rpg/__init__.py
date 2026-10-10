@@ -1,6 +1,8 @@
 from .enemy_behavior import EnemyBehaviorBinding
 from .battle_session_rules import BattleSessionRules
 from .equipment_sets import EquipmentSetBonus, EquipmentSetDefinition
+from .capture import CaptureRule
+from .world_record import AchievementDefinition, FactionDefinition, WorldRecord
 from .economy import ShopDefinition, ShopEntry, ShopError, ShopRuntime, ShopTransaction
 from .quests import QuestDefinition, QuestError, QuestLog, QuestObjective, QuestProgress
 from .party_setup import PartyPlacementDefinition, PartyPresentationPolicyDefinition, PartySetupDefinition
@@ -175,6 +177,7 @@ __all__ = [
     "EnemyBehaviorBinding",
     "BattleSessionRules",
     "EquipmentSetBonus", "EquipmentSetDefinition",
+    "CaptureRule", "AchievementDefinition", "FactionDefinition", "WorldRecord",
     "ShopDefinition", "ShopEntry", "ShopError", "ShopRuntime", "ShopTransaction",
     "QuestDefinition", "QuestError", "QuestLog", "QuestObjective", "QuestProgress",
     "PartyPlacementDefinition", "PartyPresentationPolicyDefinition", "PartySetupDefinition",

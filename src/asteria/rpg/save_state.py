@@ -111,9 +111,10 @@ class RpgRuntimeState:
     party_placements: dict[str, str]
     shop_stock: dict[str, dict[str, int]]
     quests: dict
+    world: object
 
     SCHEMA = "asteria.rpg.runtime_state"
-    VERSION = 6
+    VERSION = 7
 
     def __init__(
         self,
@@ -130,8 +131,14 @@ class RpgRuntimeState:
         party_placements=None,
         shop_stock=None,
         quests=None,
+        world=None,
     ):
         from .quests import QuestProgress
+        from .world_record import WorldRecord
+
+        self.world = world if world is not None else WorldRecord()
+        if not isinstance(self.world, WorldRecord):
+            raise TypeError("world must be WorldRecord")
 
         self.shop_stock = {
             str(shop_id): {str(item_id): int(count) for item_id, count in dict(items).items()}
@@ -261,6 +268,12 @@ class RpgRuntimeState:
             for item_id in items:
                 if database.shops[shop_id].entry(item_id) is None:
                     raise ValueError(f"shop stock references unknown entry {shop_id}/{item_id}")
+        for faction_id in self.world.reputation:
+            if faction_id not in database.factions:
+                raise ValueError(f"world record references unknown faction {faction_id}")
+        for achievement_id in self.world.achievements:
+            if achievement_id not in database.achievements:
+                raise ValueError(f"world record references unknown achievement {achievement_id}")
         for quest_id in self.quests:
             if quest_id not in database.quests:
                 raise ValueError(f"quest progress references unknown quest {quest_id}")
@@ -300,13 +313,15 @@ class RpgRuntimeState:
             },
             "shop_stock": {k: dict(sorted(self.shop_stock[k].items())) for k in sorted(self.shop_stock)},
             "quests": {k: self.quests[k].to_data() for k in sorted(self.quests)},
+            "world": self.world.to_data(),
         }
 
     @classmethod
     def from_data(cls, data, database, *, hooks=None):
         from .quests import QuestProgress
+        from .world_record import WorldRecord
 
-        if data.get("schema") != cls.SCHEMA or data.get("version") not in {1, 2, 3, 4, 5, 6}:
+        if data.get("schema") != cls.SCHEMA or data.get("version") not in {1, 2, 3, 4, 5, 6, 7}:
             raise ValueError("unsupported RPG runtime state")
         version = data["version"]
         expected_v1 = {
@@ -323,7 +338,8 @@ class RpgRuntimeState:
         expected_v4 = expected_v3 | {"actor_progression"}
         expected_v5 = expected_v4 | {"party_active_actor_ids","party_placements"}
         expected_v6 = expected_v5 | {"shop_stock", "quests"}
-        expected = expected_v6 if version == 6 else expected_v5 if version == 5 else expected_v4 if version == 4 else expected_v3 if version == 3 else expected_v2 if version == 2 else expected_v1
+        expected_v7 = expected_v6 | {"world"}
+        expected = expected_v7 if version == 7 else expected_v6 if version == 6 else expected_v5 if version == 5 else expected_v4 if version == 4 else expected_v3 if version == 3 else expected_v2 if version == 2 else expected_v1
         if set(data) != expected:
             raise ValueError("invalid RPG runtime state")
         result = cls(
@@ -361,6 +377,7 @@ class RpgRuntimeState:
             },
             shop_stock=data.get("shop_stock", {}),
             quests={quest_id: QuestProgress.from_data(raw) for quest_id, raw in data.get("quests", {}).items()},
+            world=WorldRecord.from_data(data["world"]) if "world" in data else None,
         )
         result.bind_database(database)
         result.validate(database)

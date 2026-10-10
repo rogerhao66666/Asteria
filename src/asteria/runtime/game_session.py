@@ -29,7 +29,7 @@ class GameSessionError(RuntimeError):
 class BattleLogEntry:
     """One canonical battle fact, in order, for presentation adapters to consume.
 
-    kinds: ``battle_started``, ``turn``, ``action``, ``gauge``, ``battle_finished``.
+    kinds: ``battle_started``, ``turn``, ``action``, ``gauge``, ``capture``, ``battle_finished``.
     ``outcomes`` pairs each target with its non-mutating interaction outcome.
     """
 
@@ -69,6 +69,7 @@ class GameSessionRuntime:
         self.battle=None
         self.encounter_id=None
         self._enemy_ids=()
+        self._captured=set()
         self.battle_log=[]
         self._log_sequence=0
         self._logged_turn=None
@@ -438,6 +439,9 @@ class GameSessionRuntime:
         )
         self.encounter_id=str(encounter_id)
         self._enemy_ids=tuple(enemy_definition_ids)
+        self._captured=set()
+        for enemy_id in sorted(set(enemy_definition_ids)):
+            self.world.note_enemy(enemy_id,"seen")
         self.mode="battle"
         self.battle_log.clear(); self._logged_turn=None
         self._log("battle_started",data={"encounter_id":self.encounter_id})
@@ -718,7 +722,70 @@ class GameSessionRuntime:
         log=self.quest_log
         result=getattr(log,method)(*args)
         self._quest_switches()
+        self.refresh_achievements()
         return result
+
+    # --- world record: reputation, relationships, counters, achievements, bestiary
+
+    @property
+    def world(self):
+        return self.save.rpg_state.world
+
+    def refresh_achievements(self):
+        db=self.project.rpg_database
+        log=QuestLog(db.quests,self.save.rpg_state.quests)
+        unlocked=self.world.unlock_ready(db.achievements,factions=db.factions,
+                                         switches=self.save.event_context.get_switch,quest_status=log.status)
+        for achievement_id in unlocked:
+            self.save.event_context.set_switch(f"achievement.{achievement_id}.unlocked",True)
+        return unlocked
+
+    def change_reputation(self,faction_id,amount):
+        faction=self.project.rpg_database.factions.get(str(faction_id))
+        if faction is None: raise GameSessionError(f"unknown faction: {faction_id}")
+        value=self.world.change_reputation(faction,amount)
+        self.save.event_context.set_variable(f"reputation.{faction.faction_id}",value)
+        self.refresh_achievements()
+        return value
+
+    def change_relationship(self,subject_id,amount):
+        value=self.world.change_relationship(subject_id,amount)
+        self.save.event_context.set_variable(f"relationship.{subject_id}",value)
+        return value
+
+    def add_counter(self,counter_id,amount=1):
+        value=self.world.add_counter(counter_id,amount)
+        self.refresh_achievements()
+        return value
+
+    def attempt_capture(self,actor_id,target_id,*,rng=None):
+        """Try to capture enemy ``target_id``; on success it leaves battle and its actor joins the roster."""
+        if self.mode!="battle": raise GameSessionError("no active battle")
+        target_id=str(target_id)
+        if target_id not in self.active_enemy_ids(): raise GameSessionError(f"{target_id} cannot be captured now")
+        enemy_id=target_id.rsplit(":",1)[0]
+        rule=self.project.rpg_database.capture_rules.get(enemy_id)
+        if rule is None: raise GameSessionError(f"{enemy_id} cannot be captured")
+        state=self.save.rpg_state
+        if rule.item_id and not state.inventory.remove(rule.item_id,1):
+            raise GameSessionError(f"capturing needs {rule.item_id}")
+        resources=self.battle.member(target_id).subject.resources
+        resource=self.rules.knockout_resource_id
+        ratio=1.0
+        if resource and resource in resources.to_data()["values"] and resources.maximum(resource)>0:
+            ratio=resources.current(resource)/resources.maximum(resource)
+        roll=(rng or self.battle.rng).random()
+        success=roll<rule.chance(ratio)
+        self._log("capture",member_id=str(actor_id),target_ids=(target_id,),data={"success":success,"actor_id":rule.actor_id})
+        if not success:
+            return False
+        self.battle.remove_combatant(target_id,state_id="captured",reason="captured")
+        self._captured.add(target_id)
+        self.world.note_enemy(enemy_id,"captured")
+        if rule.actor_id not in state.party_actor_ids:
+            state.party_actor_ids=state.party_actor_ids+(rule.actor_id,)
+        self.refresh_achievements()
+        return True
 
     def start_quest(self,quest_id): return self._quest_call("start",quest_id)
     def advance_quest(self,quest_id,objective_id,amount=1): return self._quest_call("advance",quest_id,objective_id,amount)
@@ -749,15 +816,20 @@ class GameSessionRuntime:
         )
         applied=[]
         rng=random.Random(157)
-        for enemy_id in self._enemy_ids:
+        # Captured enemies joined the party: they give no reward and do not count as defeated.
+        defeated=tuple(enemy_id for serial,enemy_id in enumerate(self._enemy_ids,1)
+                       if f"{enemy_id}:{serial}" not in self._captured)
+        for enemy_id in defeated:
             reward=roll_reward(db.enemies[enemy_id].reward,rng,luck=self.loot_luck,switches=self.save.event_context.get_switch)
             applied.append(reward_runtime.apply(reward))
         self._log("battle_finished",data={"winning_sides":("heroes",),"defeated_sides":("enemies",)})
         self.save.event_context.set_switch(f"encounter.{self.encounter_id}.defeated",True)
         log=self.quest_log
-        for enemy_id in self._enemy_ids:
+        for enemy_id in defeated:
             log.record_defeat(enemy_id)
+            self.world.note_enemy(enemy_id,"defeated")
         self._quest_switches()
+        self.refresh_achievements()
         self.mode="field"; self.battle=None; self.encounter_id=None; self._enemy_ids=()
         self.interaction.reset()
         return tuple(applied)

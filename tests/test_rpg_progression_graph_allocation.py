@@ -150,7 +150,7 @@ def test_runtime_state_v3_roundtrip_persists_allocation_state_and_v2_is_readable
         progression=__import__("asteria.rpg", fromlist=["ProgressionRuntime"]).ProgressionRuntime(db.progression_tracks.values()),
     )
     raw = state.to_data()
-    assert raw["version"] == 6
+    assert raw["version"] == 7
     loaded = RpgRuntimeState.from_data(copy.deepcopy(raw), db)
     assert loaded.progression_allocations["actor:aria"].rank("aria_board", "strength") == 1
     assert loaded.progression_allocations["actor:aria"].balance("ap") == 4
@@ -163,6 +163,7 @@ def test_runtime_state_v3_roundtrip_persists_allocation_state_and_v2_is_readable
     del old["party_placements"]
     del old["shop_stock"]
     del old["quests"]
+    del old["world"]
     loaded_old = RpgRuntimeState.from_data(old, db)
     assert loaded_old.progression_allocations == {}
 
