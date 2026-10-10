@@ -13,7 +13,7 @@ from asteria.project import Project
 from asteria.runtime import ActorLinkComponent, Animator2DComponent, SpriteRenderer2D
 
 SHEET = (Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
-         / "playable_assets" / "player_field_sheet.png")  # 3x4, 64x64 frames (LPC, CC-BY-SA)
+         / "playable_assets" / "player_field_sheet.png")  # 3x4, 64x64 frames (CC0)
 
 
 def test_walking_sheet_visual_set_infers_frames_and_rejects_bad_grids(tmp_path):

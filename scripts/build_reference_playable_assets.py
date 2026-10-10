@@ -1,5 +1,8 @@
 """Build the reference project's playable test images from downloaded free packs.
 
+The field player sheet (``player_field_sheet.png``) is built by
+``build_reference_battle_presentation.py`` so it matches the battle party leader.
+
 Usage:
     python scripts/build_reference_playable_assets.py [FREE_ASSETS_DIR]
 
@@ -8,7 +11,6 @@ extracted packs (see reference_projects/complex_reference_rpg/playable_assets/
 CREDITS.md for sources and licenses):
 
 - kenney_tiny-town/extracted, kenney_tiny-dungeon/extracted   (CC0)
-- lpc_base_assets/extracted/LPC Base Assets                     (CC-BY-SA 3.0 / GPL 3.0)
 
 Skill effect sheets are drawn procedurally here (no third-party art).
 Output is deterministic.
@@ -38,10 +40,6 @@ ORANGE_TOP, ORANGE_BOTTOM = 3, 15
 BUSH = 5
 HOUSE = ((48, 49, 50), (60, 61, 62), (72, 73, 74), (84, 85, 86))
 
-# LPC walkcycle rows (up, left, down, right) -> engine rows (down, left, right, up).
-LPC_ROW_FOR_ENGINE_ROW = (2, 1, 3, 0)
-LPC_COLUMNS_FOR_PATTERN = (2, 0, 6)  # stride, standing, stride (engine plays 0-1-2-1)
-LPC_FRAME = 64
 
 
 def tile(sheet, index, columns=12):
@@ -84,17 +82,6 @@ def compose_battle_background(town):
     return canvas
 
 
-def convert_lpc_walkcycle(sheet):
-    """LPC 9x4 walkcycle (64px) -> engine 3x4 walking sheet (rows down/left/right/up)."""
-    out = Image.new("RGBA", (3 * LPC_FRAME, 4 * LPC_FRAME))
-    for engine_row, lpc_row in enumerate(LPC_ROW_FOR_ENGINE_ROW):
-        for pattern, lpc_col in enumerate(LPC_COLUMNS_FOR_PATTERN):
-            frame = sheet.crop((lpc_col * LPC_FRAME, lpc_row * LPC_FRAME,
-                                (lpc_col + 1) * LPC_FRAME, (lpc_row + 1) * LPC_FRAME))
-            out.alpha_composite(frame, (pattern * LPC_FRAME, engine_row * LPC_FRAME))
-    return out
-
-
 def effect_sheet(kind, color, frames=16, size=64):
     """Procedural 4x4 effect sheet: expanding ring, slash arcs, rising sparkles or falling star."""
     cols = 4
@@ -130,13 +117,11 @@ def effect_sheet(kind, color, frames=16, size=64):
 def build(free_assets: Path, output: Path = OUTPUT):
     dungeon = Image.open(free_assets / "kenney_tiny-dungeon/extracted/Tilemap/tilemap_packed.png").convert("RGBA")
     town = Image.open(free_assets / "kenney_tiny-town/extracted/Tilemap/tilemap_packed.png").convert("RGBA")
-    lpc = free_assets / "lpc_base_assets/extracted/LPC Base Assets/sprites/people"
     output.mkdir(parents=True, exist_ok=True)
 
     files = {
         "field_map.png": scaled(compose_field(town), (960, 540)),
         "battle_background.png": scaled(compose_battle_background(town), (960, 540)),
-        "player_field_sheet.png": convert_lpc_walkcycle(Image.open(lpc / "soldier.png").convert("RGBA")),
         "boss_field.png": scaled(tile(dungeon, BOSS_TILE), (96, 96)),
         "astral_tyrant_battle.png": scaled(tile(dungeon, BOSS_TILE), (220, 220)),
         "mender_wisp_battle.png": scaled(tile(dungeon, WISP_TILE), (96, 96)),

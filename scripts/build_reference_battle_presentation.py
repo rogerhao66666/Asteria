@@ -43,13 +43,14 @@ RIGHT = 3  # Ninja Adventure walk sheets: columns are down, up, left, right
 SCALE = 4
 
 HEROES = {
-    "hero_01": "NinjaBlue", "hero_02": "NinjaRed", "hero_03": "Knight", "hero_04": "SorcererOrange",
-    "hero_05": "Monk", "hero_06": "Hunter", "hero_07": "Samurai", "hero_08": "Princess",
+    "hero_01": "Hunter", "hero_02": "NinjaRed", "hero_03": "Knight", "hero_04": "SorcererOrange",
+    "hero_05": "Monk", "hero_06": "NinjaBlue", "hero_07": "Samurai", "hero_08": "Princess",
     "hero_09": "NinjaGreen", "hero_10": "Caveman", "hero_11": "Villager", "hero_12": "OldMan",
 }
 MONSTERS = {"mender_wisp": "Monster/Flam/SpriteSheet.png", "ember_hound": "Monster/Beast/Beast.png"}
 CHARACTER_ENEMIES = {"iron_guard": "Skeleton"}
 BOSS = ("astral_tyrant", "Boss/DemonCyclop")
+PLAYER_CHARACTER = HEROES["hero_01"]  # the party leader also walks the field
 EFFECTS = {  # asset id -> (source, frame width, frame height, scale)
     "battle.fx.slash": ("FX/Slash/SpriteSheetArc.png", 38, 34, 3),
     "battle.fx.flame": ("FX/Elemental/Flam/SpriteSheet.png", 25, 30, 3),
@@ -96,6 +97,20 @@ def character_sheet(root, name):
         "ko": {"frames": [7], "frame_duration": 0.5, "loop": False},
     }
     return _strip(frames, SCALE), (16 * SCALE, 16 * SCALE), clips
+
+
+def field_player_sheet(root, name, *, scale=3, frame=64):
+    """Ninja Adventure walk cycle -> engine 3x4 sheet (rows down/left/right/up; stride, stand, stride)."""
+    walk = Image.open(root / NINJA / "Actor" / "Character" / name / "SeparateAnim" / "Walk.png").convert("RGBA")
+    source_column = {"down": 0, "left": 2, "right": 3, "up": 1}   # Walk.png columns: down, up, left, right
+    pattern_row = (1, 0, 3)                                       # stride, standing, other stride
+    out = Image.new("RGBA", (3 * frame, 4 * frame), (0, 0, 0, 0))
+    size = 16 * scale
+    for engine_row, facing in enumerate(("down", "left", "right", "up")):
+        for pattern, source_row in enumerate(pattern_row):
+            cell = _crop(walk, source_column[facing], source_row, (16, 16)).resize((size, size), Image.NEAREST)
+            out.alpha_composite(cell, (pattern * frame + (frame - size) // 2, engine_row * frame + frame - size - 2))
+    return out
 
 
 def monster_sheet(root, relative):
@@ -186,6 +201,7 @@ def main(argv=None):
     if not (root / NINJA).is_dir():
         raise SystemExit(f"Ninja Adventure pack not found under {root}")
     OUT.mkdir(parents=True, exist_ok=True)
+    field_player_sheet(root, PLAYER_CHARACTER).save(PROJECT_DIR / "playable_assets" / "player_field_sheet.png")
     assets = []
     profiles = []
 

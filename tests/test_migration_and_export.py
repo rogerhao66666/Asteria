@@ -72,7 +72,7 @@ def test_export_copies_every_resource_and_license_notice(tmp_path):
     manifest = json.loads((out / "playable_test_manifest.json").read_text())
     assert (out / manifest["field"]["background"]).is_file()
     assert (out / manifest["audio"]["battle_theme"]).is_file()
-    assert (out / "playable_assets" / "CREDITS.md").is_file()      # CC-BY-SA attribution travels
+    assert (out / "playable_assets" / "CREDITS.md").is_file()      # credits / licence notices travel
     assert (out / "run_game.py").is_file()
     assert load_project(out / "project.asteria.json").to_data()["version"] == 10
 
