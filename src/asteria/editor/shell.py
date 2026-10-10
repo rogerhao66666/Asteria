@@ -279,6 +279,7 @@ class AsteriaEditorWindow(QMainWindow):
             dock_tabs.setDrawBase(False)
 
         self._build_actions()
+        QApplication.instance().focusChanged.connect(self._focus_changed)
         self._load_playtest_profiles()
         left.raise_()
         self._workspace_mode_changed(self.workspace.mode.value)
@@ -621,6 +622,9 @@ class AsteriaEditorWindow(QMainWindow):
         self.copy_action = QAction("Copy Entity", self)
         self.copy_action.setShortcut(QKeySequence.Copy)
         self.copy_action.triggered.connect(self.copy_selected)
+        self.cut_action = QAction("Cut Entity", self)
+        self.cut_action.setShortcut(QKeySequence.Cut)
+        self.cut_action.triggered.connect(self.cut_selected)
         self.paste_action = QAction("Paste Entity", self)
         self.paste_action.setShortcut(QKeySequence.Paste)
         self.paste_action.triggered.connect(self.paste_entity)
@@ -641,6 +645,7 @@ class AsteriaEditorWindow(QMainWindow):
             self.place_sheet_character_action,
             self.actor_appearance_action,
             self.add_component_action,
+            self.cut_action,
             self.copy_action,
             self.paste_action,
             self.duplicate_action,
@@ -759,6 +764,9 @@ class AsteriaEditorWindow(QMainWindow):
             "Asteria Editor\nCanonical Phase 1–7 development build",
         )
 
+    def _focus_changed(self, _old, _new):
+        self._refresh_actions()
+
     def _refresh_actions(self):
         if not hasattr(self, "undo_action"):
             return
@@ -793,9 +801,13 @@ class AsteriaEditorWindow(QMainWindow):
         self.toggle_entity_enabled_action.setEnabled(
             sel.kind == "entity" and not sel.multiple and sel.value is not None
         )
+        self.cut_action.setEnabled(sel.kind == "entity" and not sel.multiple)
         self.paste_action.setEnabled(
             self.document.clipboard.has_entity() and sel.kind in {"scene", "entity"} and not sel.multiple
         )
+        if self._focused_record_family() is not None:  # the shortcuts act on the focused record list
+            for action in (self.cut_action, self.copy_action, self.paste_action, self.delete_action):
+                action.setEnabled(True)
         active = self.play_session is not None and self.play_session.active
         self.play_action.setEnabled(project is not None and not active)
         self.stop_action.setEnabled(active)
@@ -1374,7 +1386,29 @@ class AsteriaEditorWindow(QMainWindow):
         self._execute_structure(command, "component", command.component)
         return True
 
+    def _focused_record_family(self):
+        """The authoring record list that has keyboard focus, if any (record copy/cut/paste/delete)."""
+        from .authoring_hub_widget import AdapterFamilyWidget
+
+        widget = QApplication.focusWidget()
+        while widget is not None and not isinstance(widget, AdapterFamilyWidget):
+            widget = widget.parentWidget()
+        return widget
+
+    def cut_selected(self):
+        family = self._focused_record_family()
+        if family is not None:
+            return family.cut_selected()
+        sel = self.document.selection
+        if sel.kind != "entity" or sel.value is None or sel.multiple:
+            return False
+        self.document.clipboard.copy_entity(sel.value)
+        return self.delete_selected()
+
     def copy_selected(self):
+        family = self._focused_record_family()
+        if family is not None:
+            return bool(family.copy_selected())
         sel = self.document.selection
         if sel.kind != "entity" or sel.value is None or sel.multiple:
             return False
@@ -1397,6 +1431,9 @@ class AsteriaEditorWindow(QMainWindow):
         return True
 
     def paste_entity(self):
+        family = self._focused_record_family()
+        if family is not None:
+            return bool(family.paste())
         sel = self.document.selection
         scene = (
             sel.value if sel.kind == "scene" else getattr(sel.value, "scene", None) if sel.kind == "entity" else None
@@ -1412,6 +1449,9 @@ class AsteriaEditorWindow(QMainWindow):
         return True
 
     def delete_selected(self):
+        family = self._focused_record_family()
+        if family is not None:
+            return family.delete_selected()
         sel = self.document.selection
         try:
             if sel.kind == "entity" and sel.values:

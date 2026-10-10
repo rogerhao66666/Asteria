@@ -11,9 +11,26 @@ class EntityClipboardPayload:
     entity_data: dict
 
 
+@dataclass(frozen=True, slots=True)
+class RecordClipboardPayload:
+    """Encoded definition records of one authoring category (EDT-13)."""
+
+    category_id: str
+    records: tuple  # ((record_id, encoded_data), ...)
+
+
 class EditorClipboard:
     def __init__(self):
         self.entity_payload = None
+        self.record_payload = None
+
+    def copy_records(self, category_id, records):
+        self.record_payload = RecordClipboardPayload(str(category_id), tuple(records))
+        return self.record_payload
+
+    def has_records(self, category_id=None):
+        payload = self.record_payload
+        return payload is not None and (category_id is None or payload.category_id == category_id)
 
     def copy_entity(self, entity):
         self.entity_payload = EntityClipboardPayload(serialize_entity(entity))

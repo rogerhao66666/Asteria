@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from asteria.gameplay import AbilityDefinition
 from asteria.rpg import (
@@ -46,6 +46,7 @@ class AuthoringCategoryAdapter:
     encode: Callable[[object], dict]
     decode: Callable[[dict], object]
     duplicate: Callable[[str, str], object] | None = None
+    create: Callable[[str, object], object] | None = None  # (new id, decoded record) — paste (EDT-13)
 
 
 class IntegratedAuthoringControllers:
@@ -341,7 +342,47 @@ class IntegratedAuthoringControllers:
                 None,
             ),
         ]
-        return tuple(categories)
+        mappings = {
+            "actors": db.actors,
+            "classes": db.classes,
+            "passives": db.passives,
+            "tracks": db.progression_tracks,
+            "graphs": db.progression_graphs,
+            "evolutions": db.ability_evolutions,
+            "items": db.items,
+            "equipment": db.equipment,
+            "attachments": db.attachments,
+            "growth": db.equipment_growth,
+            "recipes": db.composition_recipes,
+            "parties": db.party_setups,
+            "formations": db.formations,
+            "party_ui": db.party_presentation_policies,
+            "enemies": db.enemies,
+            "encounters": db.encounters,
+            "ai": db.enemy_ai,
+        }
+        result = []
+        for adapter in categories:
+            if adapter.category_id == "abilities":
+                create = lambda key, value: pr.create_ability(value)  # noqa: E731
+            elif adapter.category_id in mappings:
+                create = self._mapping_create(mappings[adapter.category_id], adapter.label)
+            else:
+                create = None
+            result.append(replace(adapter, create=create))
+        return tuple(result)
+
+    def _mapping_create(self, mapping, label):
+        def create(key, value):
+            from .rpg_actor_class_authoring import _DefinitionCommand
+
+            key = str(key)
+            if key in mapping:
+                raise ValueError(f"{label} {key} already exists")
+            self.document.execute(_DefinitionCommand(mapping, key, value, None, f"Add {label} {key}"))
+            return value
+
+        return create
 
     def battle_categories(self):
         c = self.battle
@@ -362,6 +403,7 @@ class IntegratedAuthoringControllers:
                     lambda value: value.to_data(),
                     lambda data, k=kind.kind_id: c.information_architecture.kind(k).definition_type.from_data(data),
                     None,
+                    lambda key, value, k=kind.kind_id: c.create(k, value),
                 )
             )
         return tuple(result)
@@ -402,6 +444,7 @@ class IntegratedAuthoringControllers:
                     lambda value, cat=category: c.library._encode(cat, value),
                     lambda data, cat=category: c.library._decode(cat, data),
                     lambda old, new, cat=category: c.duplicate(cat, old, new),
+                    lambda key, value, cat=category: c.create(cat, key, value),
                 )
             )
         return tuple(result)
@@ -427,6 +470,7 @@ class IntegratedAuthoringControllers:
                 lambda value, cat=cat: c.library._encode(cat, value),
                 lambda data, cat=cat: c.library._decode(cat, data),
                 lambda old, new, cat=cat: c.duplicate(cat, old, new),
+                lambda key, value, cat=cat: c.create(cat, key, value),
             )
             for cat in c.CATEGORIES
         )

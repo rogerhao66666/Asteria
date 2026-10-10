@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -91,6 +92,34 @@ class EditorDocument:
 
     def execute(self, command):
         self.commands.execute(command)
+
+    @contextmanager
+    def group(self, label):
+        """Run every command executed inside the block as one undo step.
+
+        If the block raises, everything it applied is undone and nothing is
+        recorded, so a failed multi-record operation leaves the project as it was.
+        """
+        from .commands import CommandTransaction
+
+        tx = CommandTransaction(label)
+        stack = self.commands
+        original = stack.execute
+
+        def capture(command):
+            command.redo()
+            tx.add(command)
+
+        stack.execute = capture
+        try:
+            yield tx
+        except BaseException:
+            stack.execute = original
+            tx.undo()
+            raise
+        stack.execute = original
+        if tx.commands:
+            stack.record_applied(tx)
 
     def undo(self):
         return self.commands.undo()

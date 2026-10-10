@@ -5,14 +5,21 @@ from copy import deepcopy
 try:
     from PySide6.QtCore import Qt, Signal
     from PySide6.QtWidgets import (
+        QAbstractItemView,
         QComboBox,
+        QDialog,
+        QDialogButtonBox,
+        QFormLayout,
         QGraphicsRectItem,
         QGraphicsScene,
         QGraphicsTextItem,
         QGraphicsView,
         QHBoxLayout,
         QLabel,
+        QLineEdit,
         QListWidget,
+        QMenu,
+        QMessageBox,
         QPushButton,
         QSplitter,
         QStackedWidget,
@@ -372,13 +379,15 @@ class AdapterFamilyWidget(QWidget):
     if QT_AVAILABLE:
         changed = Signal()
 
-    def __init__(self, title, adapters, parent=None):
+    def __init__(self, title, adapters, parent=None, *, document=None):
         if not QT_AVAILABLE:
             raise RuntimeError("PySide6 is required")
         super().__init__(parent)
         self.title = str(title)
+        self.document = document
         self.adapters = {x.category_id: x for x in adapters}
         self._ids = []
+        self.last_error = None
 
         header = QHBoxLayout()
         heading = QLabel(self.title)
@@ -391,15 +400,27 @@ class AdapterFamilyWidget(QWidget):
         header.addStretch(1)
         header.addWidget(self.category)
 
+        self.search = QLineEdit()
+        self.search.setPlaceholderText("Filter records…")
+        self.search.setClearButtonEnabled(True)
+        self.search.textChanged.connect(lambda _text: self.refresh(keep=self.selected_ids))
         self.browser = QListWidget()
+        self.browser.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.browser.currentRowChanged.connect(self._selection_changed)
+        self.browser.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.browser.customContextMenuRequested.connect(self._context_menu)
+        browser_panel = QWidget()
+        browser_layout = QVBoxLayout(browser_panel)
+        browser_layout.setContentsMargins(0, 0, 0, 0)
+        browser_layout.addWidget(self.search)
+        browser_layout.addWidget(self.browser, 1)
         self.editor = StructuredRecordEditor()
         self.graph_view = SkillTreeGraphView()
         self.detail_stack = QStackedWidget()
         self.detail_stack.addWidget(self.editor)
         self.detail_stack.addWidget(self.graph_view)
         split = QSplitter()
-        split.addWidget(self.browser)
+        split.addWidget(browser_panel)
         split.addWidget(self.detail_stack)
         split.setStretchFactor(1, 1)
 
@@ -440,14 +461,38 @@ class AdapterFamilyWidget(QWidget):
         row = self.browser.currentRow()
         return self._ids[row] if 0 <= row < len(self._ids) else None
 
-    def refresh(self):
+    @property
+    def selected_ids(self):
+        """Selected record ids in list order (multi-select, EDT-14)."""
+        rows = sorted(self.browser.row(item) for item in self.browser.selectedItems())
+        ids = [self._ids[r] for r in rows if 0 <= r < len(self._ids)]
+        if not ids and self.selected_id is not None:
+            ids = [self.selected_id]
+        return ids
+
+    def select_ids(self, ids):
+        wanted = set(ids)
+        self.browser.clearSelection()
+        first = None
+        for row, key in enumerate(self._ids):
+            if key in wanted:
+                self.browser.item(row).setSelected(True)
+                first = row if first is None else first
+        if first is not None:
+            self.browser.setCurrentRow(first, self.browser.selectionModel().SelectionFlag.NoUpdate)
+            self._selection_changed(first)
+
+    def refresh(self, *_args, keep=None):
         adapter = self.adapter
+        self.browser.blockSignals(True)
         self.browser.clear()
+        self.browser.blockSignals(False)
         self.editor.clear()
         self._ids = []
         if adapter is None:
             return
-        self._ids = list(adapter.ids())
+        needle = self.search.text().strip().lower()
+        self._ids = [key for key in adapter.ids() if not needle or needle in key.lower()]
         self.browser.addItems(self._ids)
         self.duplicate_button.setEnabled(adapter.duplicate is not None and bool(self._ids))
         is_graph = self.category_id == "graphs"
@@ -455,7 +500,10 @@ class AdapterFamilyWidget(QWidget):
         self.save_layout_button.setVisible(is_graph)
         if not is_graph:
             self.detail_stack.setCurrentWidget(self.editor)
-        if self._ids:
+        kept = [key for key in (keep or ()) if key in self._ids]
+        if kept:
+            self.select_ids(kept)
+        elif self._ids:
             self.browser.setCurrentRow(0)
 
     def _selection_changed(self, row):
@@ -503,15 +551,6 @@ class AdapterFamilyWidget(QWidget):
             self.browser.setCurrentRow(self._ids.index(current))
         return True
 
-    def delete_selected(self):
-        key = self.selected_id
-        if key is None:
-            return False
-        self.adapter.delete(key)
-        self.changed.emit()
-        self.refresh()
-        return True
-
     def duplicate_selected_as(self, new_id):
         key = self.selected_id
         if key is None:
@@ -534,6 +573,174 @@ class AdapterFamilyWidget(QWidget):
         if not ok or not value.strip():
             return False
         return self.duplicate_selected_as(value.strip())
+
+    # -- record clipboard, multi-delete, batch edit (EDT-03, EDT-13, EDT-14) ----------------
+    def _run(self, title, operation):
+        from .record_operations import RecordOperationError
+
+        if self.document is None:
+            self.last_error = "no editor document"
+            return None
+        try:
+            result = operation()
+        except (RecordOperationError, ValueError, KeyError, TypeError, RuntimeError) as exc:
+            self.last_error = str(exc)
+            if self.isVisible():
+                QMessageBox.warning(self, title, str(exc))
+            return None
+        self.last_error = None
+        return result
+
+    def copy_selected(self):
+        from .record_operations import copy_records
+
+        ids = self.selected_ids
+        return bool(ids) and self._run("Copy", lambda: copy_records(self.document.clipboard, self.adapter, ids))
+
+    def cut_selected(self):
+        from .record_operations import cut_records
+
+        ids = self.selected_ids
+        if not ids:
+            return False
+        done = self._run("Cut", lambda: cut_records(self.document, self.document.clipboard, self.adapter, ids))
+        if done:
+            self.changed.emit()
+            self.refresh()
+        return bool(done)
+
+    def can_paste(self):
+        return (
+            self.document is not None
+            and self.adapter is not None
+            and self.adapter.create is not None
+            and self.document.clipboard.has_records(self.category_id)
+        )
+
+    def paste(self):
+        from .record_operations import paste_records
+
+        created = self._run("Paste", lambda: paste_records(self.document, self.document.clipboard, self.adapter))
+        if created:
+            self.changed.emit()
+            self.refresh(keep=created)
+        return created or []
+
+    def delete_selected(self):
+        from .record_operations import delete_records
+
+        ids = self.selected_ids
+        if not ids:
+            return False
+        if self.document is None:
+            for key in ids:
+                self.adapter.delete(key)
+            done = True
+        else:
+            done = self._run("Delete", lambda: delete_records(self.document, self.adapter, ids))
+        if done:
+            self.changed.emit()
+            self.refresh()
+        return bool(done)
+
+    def batch_fields(self):
+        from .record_operations import common_fields
+
+        ids = self.selected_ids
+        return common_fields(self.adapter, ids) if ids else {}
+
+    def batch_edit_selected(self, path, value):
+        from .record_operations import batch_set
+
+        ids = self.selected_ids
+        if not ids:
+            return False
+        done = self._run("Batch Edit", lambda: batch_set(self.document, self.adapter, ids, path, value))
+        if done:
+            self.changed.emit()
+            self.refresh(keep=ids)
+        return bool(done)
+
+    def open_batch_edit(self):
+        fields = self.batch_fields()
+        if not fields:
+            return False
+        dialog = BatchEditDialog(fields, len(self.selected_ids), self)
+        if dialog.exec() != QDialog.Accepted:
+            return False
+        return self.batch_edit_selected(dialog.path, dialog.value)
+
+    def context_actions(self):
+        """(label, callable, enabled) entries of the record list's right-click menu."""
+        has = bool(self.selected_ids)
+        many = len(self.selected_ids) > 1
+        editable = self.document is not None
+        return [
+            ("Copy", self.copy_selected, has and editable),
+            ("Cut", self.cut_selected, has and editable),
+            ("Paste", self.paste, self.can_paste()),
+            ("Duplicate…", self.duplicate_selected, has and not many and self.adapter.duplicate is not None),
+            (None, None, False),
+            (f"Batch Edit {len(self.selected_ids)} Records…", self.open_batch_edit, many and editable),
+            ("Delete", self.delete_selected, has),
+        ]
+
+    def _context_menu(self, pos):
+        if self.adapter is None:
+            return
+        menu = QMenu(self)
+        for label, handler, enabled in self.context_actions():
+            if label is None:
+                menu.addSeparator()
+                continue
+            action = menu.addAction(label)
+            action.setEnabled(enabled)
+            action.triggered.connect(handler)
+        menu.exec(self.browser.viewport().mapToGlobal(pos))
+
+
+class BatchEditDialog(QDialog if QT_AVAILABLE else object):
+    """Pick one field shared by the selected records and the value to give all of them."""
+
+    def __init__(self, fields, count, parent=None):
+        super().__init__(parent)
+        from .record_operations import MIXED
+
+        self.setWindowTitle(f"Batch Edit — {count} records")
+        self.fields = fields
+        self.mixed = MIXED
+        self.field = QComboBox()
+        self.field.addItems(list(fields))
+        self.input = QLineEdit()
+        self.current = QLabel()
+        self.field.currentTextChanged.connect(self._field_changed)
+        form = QFormLayout(self)
+        form.addRow("Field", self.field)
+        form.addRow("Current", self.current)
+        form.addRow("New value", self.input)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        form.addRow(buttons)
+        self._field_changed(self.field.currentText())
+
+    def _field_changed(self, path):
+        value = self.fields.get(path)
+        if value is self.mixed:
+            self.current.setText("(differs between records)")
+            self.input.clear()
+        else:
+            text = ", ".join(map(str, value)) if isinstance(value, list) else str(value)
+            self.current.setText(text)
+            self.input.setText(text)
+
+    @property
+    def path(self):
+        return self.field.currentText()
+
+    @property
+    def value(self):
+        return self.input.text()
 
 
 class FamilyHostWidget(QWidget):
@@ -571,6 +778,7 @@ class FamilyHostWidget(QWidget):
         if project is None:
             self.child = QLabel("Open a Project to use this authoring workspace.")
         else:
-            self.child = AdapterFamilyWidget(self.title, self.builder())
+            document = getattr(getattr(self.builder, "__self__", None), "document", None)
+            self.child = AdapterFamilyWidget(self.title, self.builder(), document=document)
             self.child.changed.connect(self.changed.emit)
         self.layout.addWidget(self.child)
