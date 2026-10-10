@@ -26,7 +26,13 @@ from asteria.presentation import (
 )
 from asteria.presentation.battle_action_menu import BattleActionEntry
 from asteria.rpg import BattleOutcome
-from asteria.runtime.battle_visuals import BattleVisualError, BattleVisualResolver
+from asteria.runtime.battle_visuals import (
+    BattleVisualError,
+    BattleVisualResolver,
+    vfx_keyframe,
+    vfx_placement,
+    vfx_rect,
+)
 from asteria.runtime.camera import Camera2D
 
 CHANNEL_KINDS = {
@@ -125,7 +131,7 @@ class PygameTextureDrawer:
     def surface(self, asset_id):
         return self.host.load_image(self.resolver.source_uri(asset_id))
 
-    def blit_region(self, asset_id, source, x, y, width, height, *, flip_x=False, opacity=1.0):
+    def blit_region(self, asset_id, source, x, y, width, height, *, flip_x=False, opacity=1.0, blend="normal"):
         pg = self.host.pg
         image = self.surface(asset_id).subsurface(pg.Rect(*source))
         size = (max(1, round(width * self.scale)), max(1, round(height * self.scale)))
@@ -133,10 +139,16 @@ class PygameTextureDrawer:
             image = pg.transform.scale(image, size)
         if flip_x:
             image = pg.transform.flip(image, True, False)
-        if opacity < 1.0:
+        if opacity < 1.0 and blend == "add":
+            # additive blits ignore surface alpha: fade by darkening the colour instead
+            level = max(0, min(255, int(opacity * 255)))
+            image = image.copy()
+            image.fill((level, level, level), special_flags=pg.BLEND_RGB_MULT)
+        elif opacity < 1.0:
             image = image.copy()
             image.set_alpha(max(0, min(255, int(opacity * 255))))
-        self.host.screen.blit(image, (round(x * self.scale), round(y * self.scale)))
+        flags = pg.BLEND_RGB_ADD if blend == "add" else 0
+        self.host.screen.blit(image, (round(x * self.scale), round(y * self.scale)), special_flags=flags)
         self.draw_count += 1
 
     def render(self, draws):
@@ -575,15 +587,21 @@ class CanonicalBattleAdapter:
             return
         if clip is None:
             return
-        progress = min(0.999, max(0.0, effect.age / max(effect.duration, 1e-6)))
-        frame = sheet.frames[clip.keyframes[int(progress * len(clip.keyframes))].frame_index]
+        frame = sheet.frames[clip.keyframes[vfx_keyframe(effect.age, effect.duration, len(clip.keyframes))].frame_index]
         body = self.resolver.sprite_sheet(visual.sprite_sheet_asset_id).frames[0]
         height = body.height / visual.source_pixels_per_logical_pixel
-        scale = float(payload.get("scale", 0.6))
-        width, tall = frame.width * scale, frame.height * scale
-        cx, cy = self._view_camera.world_to_screen(visual.anchor.x, visual.anchor.y - height * 0.5)
+        placement = vfx_placement(self.resolver.sheet_meta(asset_id), payload)
+        x, y, width, tall = vfx_rect(placement, visual.anchor.x, visual.anchor.y, height, frame.width, frame.height)
+        cx, cy = self._view_camera.world_to_screen(x, y)
         self.textures.blit_region(
-            asset_id, (frame.x, frame.y, frame.width, frame.height), cx - width / 2, cy - tall / 2, width, tall
+            asset_id,
+            (frame.x, frame.y, frame.width, frame.height),
+            cx - width / 2,
+            cy - tall / 2,
+            width,
+            tall,
+            opacity=placement["opacity"],
+            blend=placement["blend"],
         )
 
 

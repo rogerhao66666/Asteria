@@ -189,6 +189,13 @@ class AsteriaEditorWindow(QMainWindow):
         self.ui_workspace.addTab(self.animation_editor, "Animation Editor")
         self.action_timeline_editor = ActionTimelineWidget(self.document, self)
         self.ui_workspace.addTab(self.action_timeline_editor, "Action Timeline")
+        from .vfx_widget import VFXEditorWidget
+
+        self.vfx_editor = VFXEditorWidget(self.document, self)
+        self.vfx_editor.changed.connect(self.refresh_all)
+        self.vfx_editor.openTimeline.connect(self._open_action_timeline)
+        self.vfx_editor.openAnimation.connect(self._open_animation_sheet)
+        self.ui_workspace.addTab(self.vfx_editor, "VFX")
 
         self.game_flow_overview = GameFlowOverviewWidget(self.document, self)
         self.events_workspace = QTabWidget(self)
@@ -1126,7 +1133,13 @@ class AsteriaEditorWindow(QMainWindow):
     def _refresh_game_systems(self):
         if self.document.project is None:
             return
-        for name in ("game_systems_editor", "enemy_ai_editor", "animation_editor", "action_timeline_editor"):
+        for name in (
+            "game_systems_editor",
+            "enemy_ai_editor",
+            "animation_editor",
+            "action_timeline_editor",
+            "vfx_editor",
+        ):
             editor = getattr(self, name, None)
             if editor is not None:
                 editor.refresh()
@@ -1404,6 +1417,18 @@ class AsteriaEditorWindow(QMainWindow):
             return False
         self._execute_structure(command, "component", command.component)
         return True
+
+    def _open_action_timeline(self, sequence_id):
+        self.workspace.set_mode(WorkspaceMode.UI)
+        self.ui_workspace.setCurrentWidget(self.action_timeline_editor)
+        self.action_timeline_editor.refresh(select=sequence_id)
+        return self.action_timeline_editor.sequence_id == sequence_id
+
+    def _open_animation_sheet(self, asset_id):
+        self.workspace.set_mode(WorkspaceMode.UI)
+        self.ui_workspace.setCurrentWidget(self.animation_editor)
+        self.animation_editor.refresh(sheet=asset_id)
+        return self.animation_editor.sheet == asset_id
 
     def navigate_to_problem(self, problem):
         """Open the editor that owns ``problem.target`` and select the offending item (EDT-15)."""

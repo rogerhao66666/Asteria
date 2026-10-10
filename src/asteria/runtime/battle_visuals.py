@@ -11,7 +11,13 @@ Data contract (all canonical project data, no runtime code per project):
   - ``clips``: ``{name: {"frames": [index, ...], "frame_duration": seconds,
     "loop": bool, "events": {"<keyframe position>": [names]}}}``.
 
-  Combatant sheets and VFX sheets use the same format.
+  Combatant sheets and VFX sheets use the same format. VFX sheets (tag
+  ``vfx``) play their ``play`` clip and may carry ``vfx`` placement
+  metadata (EDT-08): ``anchor`` (``feet`` / ``center`` / ``head`` of the
+  member), ``offset`` ``[x, y]`` in world pixels, ``scale``, ``opacity``
+  (0..1) and ``blend`` (``normal`` / ``add``). A beat payload may override
+  any of them. ``vfx_rect`` is the single placement rule used by the
+  battle renderer and the editor preview.
 
 * **Combatant visual profiles** — battle presentation library category
   ``combatant_visuals``. A member uses the profile whose id equals its actor
@@ -36,6 +42,38 @@ from asteria.runtime.animation_library import AnimationClipSet
 
 SPRITE_SHEET_KIND = "sprite_sheet"
 DEFAULT_SEQUENCE_ID = "default_action"
+VFX_ANCHORS = ("feet", "center", "head")
+VFX_BLENDS = ("normal", "add")
+VFX_DEFAULTS = {"anchor": "center", "offset": [0.0, 0.0], "scale": 0.6, "opacity": 1.0, "blend": "normal"}
+
+
+def vfx_placement(meta, overrides=None):
+    """Placement of a VFX sheet: defaults, then the sheet's ``vfx`` metadata, then beat payload overrides."""
+    placement = {**VFX_DEFAULTS, **dict((meta or {}).get("vfx", {}))}
+    for key in VFX_DEFAULTS:
+        if overrides and key in overrides:
+            placement[key] = overrides[key]
+    placement["offset"] = [float(placement["offset"][0]), float(placement["offset"][1])]
+    placement["scale"] = float(placement["scale"])
+    placement["opacity"] = max(0.0, min(1.0, float(placement["opacity"])))
+    if placement["anchor"] not in VFX_ANCHORS:
+        placement["anchor"] = VFX_DEFAULTS["anchor"]
+    if placement["blend"] not in VFX_BLENDS:
+        placement["blend"] = VFX_DEFAULTS["blend"]
+    return placement
+
+
+def vfx_keyframe(age, duration, keyframe_count):
+    """Keyframe a VFX shows ``age`` seconds into an effect lasting ``duration`` (played once, stretched to fit)."""
+    progress = min(0.999, max(0.0, float(age) / max(float(duration), 1e-6)))
+    return int(progress * int(keyframe_count))
+
+
+def vfx_rect(placement, anchor_x, anchor_y, body_height, frame_width, frame_height):
+    """World-space ``(centre_x, centre_y, width, height)`` of a VFX frame on a member standing at the anchor."""
+    lift = {"feet": 0.0, "center": 0.5, "head": 1.0}[placement["anchor"]] * body_height
+    width, height = frame_width * placement["scale"], frame_height * placement["scale"]
+    return (anchor_x + placement["offset"][0], anchor_y - lift + placement["offset"][1], width, height)
 
 
 class BattleVisualError(ValueError):
@@ -77,6 +115,9 @@ class BattleVisualResolver:
 
     def source_uri(self, asset_id):
         return self.asset(asset_id).source.uri
+
+    def sheet_meta(self, asset_id):
+        return self.asset(asset_id).meta()
 
     def sprite_sheet(self, asset_id):
         if asset_id not in self._sheets:
