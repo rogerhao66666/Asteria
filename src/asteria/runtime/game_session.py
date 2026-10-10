@@ -791,6 +791,30 @@ class GameSessionRuntime:
         self.refresh_achievements()
         return value
 
+    def capture_chance(self,target_id):
+        """Chance (0–1) that capturing ``target_id`` succeeds now, or None if it cannot be captured."""
+        if self.mode!="battle" or str(target_id) not in self.active_enemy_ids():
+            return None
+        rule=self.project.rpg_database.capture_rules.get(str(target_id).rsplit(":",1)[0])
+        if rule is None:
+            return None
+        resources=self.battle.member(str(target_id)).subject.resources
+        resource=self.rules.knockout_resource_id
+        ratio=1.0
+        if resource and resource in resources.to_data()["values"] and resources.maximum(resource)>0:
+            ratio=resources.current(resource)/resources.maximum(resource)
+        return rule.chance(ratio)
+
+    def capture_targets(self):
+        """``(member_id, chance, item_id)`` for every enemy that can be captured right now."""
+        result=[]
+        for member_id in self.active_enemy_ids():
+            chance=self.capture_chance(member_id)
+            if chance is not None:
+                rule=self.project.rpg_database.capture_rules[member_id.rsplit(":",1)[0]]
+                result.append((member_id,chance,rule.item_id))
+        return tuple(result)
+
     def attempt_capture(self,actor_id,target_id,*,rng=None):
         """Try to capture enemy ``target_id``; on success it leaves battle and its actor joins the roster."""
         if self.mode!="battle": raise GameSessionError("no active battle")
@@ -802,13 +826,8 @@ class GameSessionRuntime:
         state=self.save.rpg_state
         if rule.item_id and not state.inventory.remove(rule.item_id,1):
             raise GameSessionError(f"capturing needs {rule.item_id}")
-        resources=self.battle.member(target_id).subject.resources
-        resource=self.rules.knockout_resource_id
-        ratio=1.0
-        if resource and resource in resources.to_data()["values"] and resources.maximum(resource)>0:
-            ratio=resources.current(resource)/resources.maximum(resource)
         roll=(rng or self.battle.rng).random()
-        success=roll<rule.chance(ratio)
+        success=roll<self.capture_chance(target_id)
         self._log("capture",member_id=str(actor_id),target_ids=(target_id,),data={"success":success,"actor_id":rule.actor_id})
         if not success:
             return False

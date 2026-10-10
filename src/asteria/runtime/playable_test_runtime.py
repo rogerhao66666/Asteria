@@ -90,6 +90,7 @@ class PlayableTestRuntime:
         self._game_over_menu=MenuCursor(GAME_OVER_OPTIONS)
         self._shop_screen=None
         self._quest_return="field"
+        self._capture_menu=False
 
     def path(self, rel):
         return self.resource_root/str(rel)
@@ -476,6 +477,8 @@ class PlayableTestRuntime:
 
     def _draw_battle(self):
         self._battle_presentation.draw()
+        if self._capture_menu and self.game.mode=="battle":
+            self._draw_capture_menu()
 
     def _present_battle(self, dt):
         """Feed new canonical battle facts to the active presentation adapter and draw."""
@@ -536,7 +539,7 @@ class PlayableTestRuntime:
             self.text(f"{i}. {meta.get('label',ability_id)}",36+((i-1)%2)*190,100+((i-1)//2)*32,size=20,color=color)
 
         self.panel((460,22,480,92))
-        self.text("1–4: Skill   B: Boost   F5: Save   Esc: Quit",478,36,size=20)
+        self.text("1-4: Skill   B: Boost   X: Capture   F5: Save",478,36,size=20)
         self.text(self._last_action_name or "Choose an action",478,70,size=20,color=(172,220,255))
         boost_resource=self.game.rules.boost_resource_id
         if actor and self.game.rules.boost_enabled:
@@ -560,7 +563,7 @@ class PlayableTestRuntime:
         elif self._defeat:
             self.panel((300,190,360,130),fill=(25,12,18,240),border=(220,90,110))
             self.text("PARTY DEFEATED",480,225,size=38,color=(255,140,150),center=True)
-            self.text("Esc to quit / reopen save to retry",480,280,size=20,center=True)
+            self.text("Game over",480,280,size=20,center=True)
 
     def _play_fx(self, ability_id, target_is_enemy=True):
         meta=self.manifest["battle"].get("skills",{}).get(ability_id)
@@ -604,6 +607,10 @@ class PlayableTestRuntime:
         except Exception as exc:
             self._last_action_name=f"Action failed: {exc}"
             return
+        self._after_hero_action()
+
+    def _after_hero_action(self):
+        """End the hero's turn; finish the battle or run enemies until a hero acts."""
         self.game.end_turn()
         if not self.game.active_enemy_ids():
             try:
@@ -636,9 +643,13 @@ class PlayableTestRuntime:
                     self._last_action_name=""
             return
         if self._defeat:return
+        if self._capture_menu:
+            self._capture_input(events); return
         for event in events:
             if event.type!=self.pg.KEYDOWN:continue
-            if event.key==self.pg.K_b:
+            if event.key==self.pg.K_x and self._battle_actor() and self.game.capture_targets():
+                self._capture_menu=True
+            elif event.key==self.pg.K_b:
                 actor=self._battle_actor()
                 if actor:
                     self._boost_level=(self._boost_level+1)%(self.game.max_boost_level(actor)+1)
@@ -751,6 +762,43 @@ class PlayableTestRuntime:
         self.text(screen.wallet(),90,self.height-100,size=20,color=(175,235,255))
         if screen.message:self.text(screen.message,self.width/2,self.height-100,size=20,color=(255,220,124))
         self.text("Up/Down: select   Left/Right: buy/sell   Enter: confirm   Esc: leave",90,self.height-72,size=18,color=(170,210,240))
+
+    # --- capture (RPG-08) ----------------------------------------------------
+
+    def _capture_input(self, events):
+        targets=self.game.capture_targets()
+        for event in events:
+            if event.type!=self.pg.KEYDOWN:continue
+            if event.key in (self.pg.K_ESCAPE,self.pg.K_x,self.pg.K_BACKSPACE):
+                self._capture_menu=False; return
+            if self.pg.K_1<=event.key<=self.pg.K_9 and event.key-self.pg.K_1<len(targets):
+                self._attempt_capture(targets[event.key-self.pg.K_1][0]); return
+
+    def _attempt_capture(self, target_id):
+        actor=self._battle_actor()
+        self._capture_menu=False
+        if actor is None:return False
+        name=target_id.split(":",1)[0].replace("_"," ").title()
+        try:
+            captured=self.game.attempt_capture(actor,target_id)
+        except Exception as exc:
+            self._last_action_name=f"Capture failed: {exc}"; return False
+        self._last_action_name=f"Captured {name}!" if captured else f"{name} broke free"
+        self._sound(self.manifest.get("dialogue_confirm_sfx") if captured else None)
+        self._after_hero_action()
+        return captured
+
+    def _draw_capture_menu(self):
+        targets=self.game.capture_targets()
+        height=70+30*max(1,len(targets))
+        self.panel((300,190,360,height),fill=(12,18,28,240),border=(130,200,255))
+        self.text("Capture",480,200,size=28,color=(175,235,255),center=True)
+        inventory=self.save.rpg_state.inventory
+        for i,(member_id,chance,item_id) in enumerate(targets,1):
+            name=member_id.split(":",1)[0].replace("_"," ").title()
+            need=f"  (uses {item_id}: {inventory.count(item_id)})" if item_id else ""
+            self.text(f"{i}. {name}  {chance*100:.0f}%{need}",320,236+(i-1)*30,size=20)
+        self.text("Esc: cancel",480,190+height-24,size=16,color=(170,210,240),center=True)
 
     def save_playtest(self):
         self.game.sync_world_state()
