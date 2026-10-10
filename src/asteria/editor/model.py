@@ -39,7 +39,10 @@ class EditorDocument:
             Animator2DComponent,
             Camera2DComponent,
             Collider2DComponent,
+            FieldAIComponent,
             Interaction2DComponent,
+            SpawnZoneComponent,
+            VisibleEncounterComponent,
             SpriteRenderer2D,
             TileMap2DComponent,
         )
@@ -60,6 +63,9 @@ class EditorDocument:
             component_registry.register(PersistentComponent)
             component_registry.register(PrefabInstanceComponent)
             component_registry.register(Collider2DComponent)
+            component_registry.register(FieldAIComponent)
+            component_registry.register(SpawnZoneComponent)
+            component_registry.register(VisibleEncounterComponent)
         self.project = project
         self.selection = EditorSelection()
         self.component_registry = component_registry

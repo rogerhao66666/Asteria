@@ -10,6 +10,7 @@ from asteria.core import PersistentComponent
 from asteria.core.prefab import PrefabInstanceComponent
 from asteria.runtime.actor_link import ActorLinkComponent
 from asteria.runtime.collision import Collider2DComponent
+from asteria.runtime.field_ai import FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.components2d import (
     Animator2DComponent,
@@ -33,6 +34,9 @@ def build_preview_registry():
     registry.register(PersistentComponent)
     registry.register(PrefabInstanceComponent)
     registry.register(Collider2DComponent)
+    registry.register(FieldAIComponent)
+    registry.register(SpawnZoneComponent)
+    registry.register(VisibleEncounterComponent)
     return registry
 
 

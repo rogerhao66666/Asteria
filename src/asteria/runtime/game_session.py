@@ -106,6 +106,21 @@ class GameSessionRuntime:
         self.update_events(0.0)
         return trigger
 
+    def check_visible_encounter(self):
+        """Start the encounter of a field enemy (VisibleEncounterComponent) the player touches."""
+        from asteria.runtime.field_ai import VisibleEncounterComponent, touched_encounter
+        if self.mode!="field" or self.event_busy:
+            return None
+        entity=touched_encounter(self.scene,self.player)
+        if entity is None:
+            return None
+        spec=entity.get(VisibleEncounterComponent)
+        encounter_id=spec.encounter_id
+        if spec.remove_on_start:
+            self.scene.remove_entity(entity)
+        self.start_encounter(encounter_id)
+        return encounter_id
+
     def _build_scene_events(self):
         bindings=self.project.scene_event_bindings.get(self.scene.id)
         self.scene_events=None if bindings is None else SceneEventRuntime.build(
