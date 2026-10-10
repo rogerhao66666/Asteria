@@ -142,7 +142,7 @@ def test_database_v23_roundtrip_preserves_behavior_binding():
     p,doc,c=make()
     c.create_enemy(boss()); c.create_ai(ai()); c.bind_enemy_ai("boss","boss_ai")
     raw=p.to_data()
-    assert raw["rpg_database"]["version"]==24
+    assert raw["rpg_database"]["version"]==25
     clone=Project.from_data(raw,doc.component_registry)
     assert clone.to_data()==raw
     assert clone.rpg_database.enemy_behavior_bindings["boss"].ai_id=="boss_ai"

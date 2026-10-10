@@ -12,6 +12,9 @@ from asteria.rpg import (
     ActorAbilityState, ActorProgressionState, BattleAction, BattleRuntime, BattleSessionRules, ClassAssignment, EquipmentGrowthRuntime, EquippedItem, Party, PartyMember, RewardRuntime, RpgActorSnapshot,
     RpgActorRuntime, roll_reward, resolve_actor_build,
 )
+from asteria.rpg.economy import ShopRuntime
+from asteria.rpg.enemies import RewardDefinition
+from asteria.rpg.quests import QuestLog
 from asteria.rpg.targeting import TargetRelation
 from asteria.runtime.input import InputSnapshot
 from asteria.runtime.interaction import InteractionController
@@ -77,6 +80,7 @@ class GameSessionRuntime:
         if runtime_save.active_event is not None:
             self.events.restore(runtime_save.active_event)
         self.scene_events=None
+        self.open_shop_id=None
         self._build_scene_events()
 
     def set_player_position(self,x,y):
@@ -635,6 +639,68 @@ class GameSessionRuntime:
                 ability_state,
             )
 
+    # --- economy and quests -------------------------------------------------
+
+    def _reward_runtime(self):
+        return RewardRuntime(
+            inventory=self.save.rpg_state.inventory,
+            progression=self.save.rpg_state.progression,
+            currencies=self.save.rpg_state.currencies,
+        )
+
+    @property
+    def shops(self):
+        state=self.save.rpg_state
+        return ShopRuntime(self.project.rpg_database.shops,inventory=state.inventory,currencies=state.currencies,stock=state.shop_stock)
+
+    @property
+    def quest_log(self):
+        def grant(reward:RewardDefinition):
+            self._reward_runtime().apply(roll_reward(reward,random.Random(0)))
+        return QuestLog(
+            self.project.rpg_database.quests,self.save.rpg_state.quests,
+            inventory=self.save.rpg_state.inventory,
+            switches=self.save.event_context.get_switch,
+            grant_reward=grant,
+        )
+
+    def open_shop(self,shop_id):
+        shop_id=str(shop_id)
+        if shop_id not in self.project.rpg_database.shops:
+            raise GameSessionError(f"unknown shop: {shop_id}")
+        self.open_shop_id=shop_id
+        return shop_id
+
+    def close_shop(self):
+        self.open_shop_id=None
+
+    def buy(self,item_id,quantity=1,*,shop_id=None):
+        result=self.shops.buy(shop_id or self.open_shop_id,item_id,quantity)
+        self.refresh_quests()
+        return result
+
+    def sell(self,item_id,quantity=1,*,shop_id=None):
+        result=self.shops.sell(shop_id or self.open_shop_id,item_id,quantity)
+        self.refresh_quests()
+        return result
+
+    def _quest_switches(self):
+        for quest_id,progress in self.save.rpg_state.quests.items():
+            for status in ("active","completed","failed"):
+                self.save.event_context.set_switch(f"quest.{quest_id}.{status}",progress.status==status)
+
+    def _quest_call(self,method,*args):
+        log=self.quest_log
+        result=getattr(log,method)(*args)
+        self._quest_switches()
+        return result
+
+    def start_quest(self,quest_id): return self._quest_call("start",quest_id)
+    def advance_quest(self,quest_id,objective_id,amount=1): return self._quest_call("advance",quest_id,objective_id,amount)
+    def complete_quest(self,quest_id): return self._quest_call("complete",quest_id)
+    def fail_quest(self,quest_id): return self._quest_call("fail",quest_id)
+    def refresh_quests(self): return self._quest_call("refresh")
+
     def finish_victory(self):
         if self.mode!="battle": raise GameSessionError("no active battle")
         if self.active_enemy_ids():
@@ -653,6 +719,10 @@ class GameSessionRuntime:
             applied.append(reward_runtime.apply(reward))
         self._log("battle_finished",data={"winning_sides":("heroes",),"defeated_sides":("enemies",)})
         self.save.event_context.set_switch(f"encounter.{self.encounter_id}.defeated",True)
+        log=self.quest_log
+        for enemy_id in self._enemy_ids:
+            log.record_defeat(enemy_id)
+        self._quest_switches()
         self.mode="field"; self.battle=None; self.encounter_id=None; self._enemy_ids=()
         self.interaction.reset()
         return tuple(applied)

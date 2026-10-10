@@ -123,7 +123,7 @@ def test_runtime_save_state_v2_carries_actor_snapshots_and_v1_is_backward_readab
     )
     raw = state.to_data()
     assert (
-        raw["version"] == 5 and raw["actor_snapshots"]["pilot"]["actor_id"] == "pilot"
+        raw["version"] == 6 and raw["actor_snapshots"]["pilot"]["actor_id"] == "pilot"
     )
     restored = RpgRuntimeState.from_data(raw, db)
     actor2 = RpgActorRuntime(actor).restore(restored.actor_snapshots["pilot"])
@@ -136,5 +136,7 @@ def test_runtime_save_state_v2_carries_actor_snapshots_and_v1_is_backward_readab
     legacy.pop("actor_progression")
     legacy.pop("party_active_actor_ids")
     legacy.pop("party_placements")
+    legacy.pop("shop_stock")
+    legacy.pop("quests")
     restored_v1 = RpgRuntimeState.from_data(legacy, db)
     assert restored_v1.actor_snapshots == {}

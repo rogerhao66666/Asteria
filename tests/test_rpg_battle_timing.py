@@ -138,7 +138,7 @@ def test_timing_runtime_snapshot_restores_pending_order():
 
 def test_database_v15_owns_action_timings_and_v14_backward_read():
     db = RpgDatabase(); db.add_action_timing(ActionTimingDefinition("meteor", cast_time=5))
-    data = db.to_data(); assert data["version"] == 24
+    data = db.to_data(); assert data["version"] == 25
     restored = RpgDatabase.from_data(data)
     assert restored.action_timings["meteor"].cast_time == 5
     old = RpgDatabase().to_data(); old["version"] = 14; old.pop("action_timings")

@@ -206,7 +206,7 @@ def test_database_schema_v6_roundtrip_preserves_multiclass():
         )
     )
     raw = db.to_data()
-    assert raw["version"] == 24
+    assert raw["version"] == 25
     loaded = RpgDatabase.from_data(raw)
     assert [x.class_id for x in loaded.actors["hero"].enabled_class_assignments()] == [
         "warrior",

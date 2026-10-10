@@ -16,6 +16,11 @@ STANDARD_WORLD_COMMANDS = (
     "GIVE_ITEM",
     "TAKE_ITEM",
     "CHANGE_CURRENCY",
+    "OPEN_SHOP",
+    "START_QUEST",
+    "ADVANCE_QUEST",
+    "COMPLETE_QUEST",
+    "FAIL_QUEST",
     "PLAY_BGM",
     "STOP_BGM",
     "PLAY_SE",
@@ -23,6 +28,24 @@ STANDARD_WORLD_COMMANDS = (
 )
 
 PRESENTATION_COMMANDS = ("PLAY_BGM", "STOP_BGM", "PLAY_SE", "SCREEN_FADE")
+
+# Argument names each standard command reads; editors use these as prompts.
+WORLD_COMMAND_ARGUMENTS = {
+    "START_ENCOUNTER": ("encounter_id",),
+    "TRANSFER": ("scene_id", "x", "y", "facing"),
+    "GIVE_ITEM": ("item_id", "quantity"),
+    "TAKE_ITEM": ("item_id", "quantity"),
+    "CHANGE_CURRENCY": ("currency_id", "amount"),
+    "OPEN_SHOP": ("shop_id",),
+    "START_QUEST": ("quest_id",),
+    "ADVANCE_QUEST": ("quest_id", "objective_id", "amount"),
+    "COMPLETE_QUEST": ("quest_id",),
+    "FAIL_QUEST": ("quest_id",),
+    "PLAY_BGM": ("asset_id", "fade", "volume"),
+    "STOP_BGM": ("fade",),
+    "PLAY_SE": ("asset_id", "volume"),
+    "SCREEN_FADE": (),
+}
 
 
 class WorldCommandError(RuntimeError):
@@ -63,12 +86,14 @@ def register_standard_world_commands(router, session):
         if item_id not in session.project.rpg_database.items:
             raise WorldCommandError(f"unknown item: {item_id}")
         session.save.rpg_state.inventory.add(item_id, int(_amount(command, "quantity", 1)))
+        session.refresh_quests()
         return session.save.rpg_state.inventory.count(item_id)
 
     def take_item(command):
         item_id = str(_required(command, "item_id"))
         if not session.save.rpg_state.inventory.remove(item_id, int(_amount(command, "quantity", 1))):
             raise WorldCommandError(f"not enough {item_id} to take")
+        session.refresh_quests()
         return session.save.rpg_state.inventory.count(item_id)
 
     def change_currency(command):
@@ -80,6 +105,24 @@ def register_standard_world_commands(router, session):
         currencies[currency_id] = value
         return value
 
+    def quest_command(method, *, objective=False):
+        def handler(command):
+            from asteria.rpg.quests import QuestError
+
+            quest_id = str(_required(command, "quest_id"))
+            args = (quest_id, str(_required(command, "objective_id")), int(_amount(command, "amount", 1))) if objective else (quest_id,)
+            try:
+                return getattr(session, method)(*args)
+            except QuestError as exc:
+                raise WorldCommandError(str(exc)) from exc
+        return handler
+
+    def open_shop(command):
+        shop_id = str(_required(command, "shop_id"))
+        if shop_id not in session.project.rpg_database.shops:
+            raise WorldCommandError(f"unknown shop: {shop_id}")
+        return session.open_shop(shop_id)
+
     def presentation_request(command):
         session.presentation_requests.append(command)
         return command
@@ -89,6 +132,11 @@ def register_standard_world_commands(router, session):
     router.register("GIVE_ITEM", give_item)
     router.register("TAKE_ITEM", take_item)
     router.register("CHANGE_CURRENCY", change_currency)
+    router.register("OPEN_SHOP", open_shop)
+    router.register("START_QUEST", quest_command("start_quest"))
+    router.register("ADVANCE_QUEST", quest_command("advance_quest", objective=True))
+    router.register("COMPLETE_QUEST", quest_command("complete_quest"))
+    router.register("FAIL_QUEST", quest_command("fail_quest"))
     for name in PRESENTATION_COMMANDS:
         router.register(name, presentation_request)
     return router

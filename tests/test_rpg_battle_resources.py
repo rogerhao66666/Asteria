@@ -201,7 +201,7 @@ def test_rpg_database_owns_battle_resource_definitions_and_reads_v8_without_inve
         )
     )
     raw = db.to_data()
-    assert raw["version"] == 24
+    assert raw["version"] == 25
     restored = RpgDatabase.from_data(raw)
     assert restored.battle_resources["stagger"].maximum == 100
 

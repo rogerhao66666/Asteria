@@ -704,6 +704,8 @@ class RpgDatabase:
         self.party_presentation_policies = {}
         self.enemy_behavior_bindings = {}
         self.battle_session_rules = {}
+        self.shops = {}
+        self.quests = {}
 
     def add_actor(self, value):
         if not isinstance(value, ActorDefinition):
@@ -963,6 +965,24 @@ class RpgDatabase:
         self.battle_session_rules[value.rules_id] = value
         return value
 
+    def add_shop(self, value):
+        from .economy import ShopDefinition
+        if not isinstance(value, ShopDefinition):
+            raise TypeError("shop must be ShopDefinition")
+        if value.shop_id in self.shops:
+            raise ValueError(f"duplicate shop: {value.shop_id}")
+        self.shops[value.shop_id] = value
+        return value
+
+    def add_quest(self, value):
+        from .quests import QuestDefinition
+        if not isinstance(value, QuestDefinition):
+            raise TypeError("quest must be QuestDefinition")
+        if value.quest_id in self.quests:
+            raise ValueError(f"duplicate quest: {value.quest_id}")
+        self.quests[value.quest_id] = value
+        return value
+
     def add_party_presentation_policy(self, value):
         from .party_setup import PartyPresentationPolicyDefinition
         if not isinstance(value, PartyPresentationPolicyDefinition):
@@ -1084,6 +1104,25 @@ class RpgDatabase:
             for output in recipe.outputs:
                 if output.item_id not in self.items:
                     errors.append(f"composition recipe {recipe.recipe_id} references unknown output item {output.item_id}")
+        for shop in self.shops.values():
+            for entry in shop.entries:
+                if entry.item_id not in self.items:
+                    errors.append(f"shop {shop.shop_id} references unknown item {entry.item_id}")
+        for quest in self.quests.values():
+            for quest_id in quest.prerequisites + quest.next_quest_ids:
+                if quest_id not in self.quests:
+                    errors.append(f"quest {quest.quest_id} references unknown quest {quest_id}")
+            for objective in quest.objectives:
+                if objective.kind == "item" and objective.target not in self.items:
+                    errors.append(f"quest {quest.quest_id} references unknown item {objective.target}")
+                if objective.kind == "defeat_enemy" and objective.target not in self.enemies:
+                    errors.append(f"quest {quest.quest_id} references unknown enemy {objective.target}")
+            for entry in quest.reward.loot:
+                if entry.item_id not in self.items:
+                    errors.append(f"quest {quest.quest_id} reward references unknown item {entry.item_id}")
+            for track_id in quest.reward.experience:
+                if track_id not in self.progression_tracks:
+                    errors.append(f"quest {quest.quest_id} reward references unknown progression track {track_id}")
         for encounter in self.encounters.values():
             for member in encounter.members:
                 if member.enemy_id not in self.enemies:
@@ -1118,7 +1157,7 @@ class RpgDatabase:
     def to_data(self):
         return {
             "schema": "asteria.rpg.database",
-            "version": 24,
+            "version": 25,
             "actors": [self.actors[k].to_data() for k in sorted(self.actors)],
             "classes": [self.classes[k].to_data() for k in sorted(self.classes)],
             "items": [self.items[k].to_data() for k in sorted(self.items)],
@@ -1203,6 +1242,8 @@ class RpgDatabase:
                 self.battle_session_rules[k].to_data()
                 for k in sorted(self.battle_session_rules)
             ],
+            "shops": [self.shops[k].to_data() for k in sorted(self.shops)],
+            "quests": [self.quests[k].to_data() for k in sorted(self.quests)],
         }
 
     @classmethod
@@ -1232,6 +1273,7 @@ class RpgDatabase:
             22,
             23,
             24,
+            25,
         }:
             raise ValueError("unsupported RPG database")
         result = cls()
@@ -1346,4 +1388,11 @@ class RpgDatabase:
             from .battle_session_rules import BattleSessionRules
             for x in data.get("battle_session_rules", ()):
                 result.add_battle_session_rules(BattleSessionRules.from_data(x))
+        if data["version"] >= 25:
+            from .economy import ShopDefinition
+            from .quests import QuestDefinition
+            for x in data.get("shops", ()):
+                result.add_shop(ShopDefinition.from_data(x))
+            for x in data.get("quests", ()):
+                result.add_quest(QuestDefinition.from_data(x))
         return result

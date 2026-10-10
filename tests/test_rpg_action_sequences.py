@@ -35,7 +35,7 @@ def test_definition_roundtrip_preserves_open_policy_strings():
 
 def test_database_v16_owns_sequences_and_v15_backwards_reads():
     db=RpgDatabase(); db.add_action_sequence(ActionSequenceDefinition('x',[ActionSequenceStep('a')]))
-    data=db.to_data(); assert data['version']==24 and data['action_sequences'][0]['sequence_id']=='x'
+    data=db.to_data(); assert data['version']==25 and data['action_sequences'][0]['sequence_id']=='x'
     restored=RpgDatabase.from_data(data); assert 'x' in restored.action_sequences
     old=dict(data); old['version']=15; old.pop('action_sequences')
     assert RpgDatabase.from_data(old).action_sequences == {}

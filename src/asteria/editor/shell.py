@@ -79,6 +79,7 @@ except ImportError:
 
 from asteria.authoring import run_authoring_script
 from asteria.core.ids import new_id
+from asteria.runtime.world_command_handlers import WORLD_COMMAND_ARGUMENTS
 from asteria.events import (
     EventBinding,
     EventCondition,
@@ -993,7 +994,7 @@ class AsteriaEditorWindow(QMainWindow):
                 return None
             raw_args, ok = QInputDialog.getText(
                 self, "World Command", "Arguments (key=value, ...):",
-                text="encounter_id=" if command.strip().upper() == "START_ENCOUNTER" else "",
+                text=", ".join(f"{name}=" for name in WORLD_COMMAND_ARGUMENTS.get(command.strip().upper(), ())),
             )
             if not ok:
                 return None

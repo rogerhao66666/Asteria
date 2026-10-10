@@ -109,9 +109,11 @@ class RpgRuntimeState:
     actor_progression: dict[str, ActorProgressionState]
     party_active_actor_ids: tuple[str, ...]
     party_placements: dict[str, str]
+    shop_stock: dict[str, dict[str, int]]
+    quests: dict
 
     SCHEMA = "asteria.rpg.runtime_state"
-    VERSION = 5
+    VERSION = 6
 
     def __init__(
         self,
@@ -126,7 +128,20 @@ class RpgRuntimeState:
         actor_progression=None,
         party_active_actor_ids=None,
         party_placements=None,
+        shop_stock=None,
+        quests=None,
     ):
+        from .quests import QuestProgress
+
+        self.shop_stock = {
+            str(shop_id): {str(item_id): int(count) for item_id, count in dict(items).items()}
+            for shop_id, items in dict(shop_stock or {}).items()
+        }
+        if any(count < 0 for items in self.shop_stock.values() for count in items.values()):
+            raise ValueError("shop stock must be >= 0")
+        self.quests = dict(quests or {})
+        if any(not isinstance(x, QuestProgress) for x in self.quests.values()):
+            raise TypeError("quests must contain QuestProgress values")
         self.inventory = inventory or Inventory()
         self.progression = progression or ProgressionRuntime()
         self.loadouts = dict(loadouts or {})
@@ -233,6 +248,15 @@ class RpgRuntimeState:
             raise ValueError(
                 "progression runtime definitions do not match RPG database"
             )
+        for shop_id, items in self.shop_stock.items():
+            if shop_id not in database.shops:
+                raise ValueError(f"shop stock references unknown shop {shop_id}")
+            for item_id in items:
+                if database.shops[shop_id].entry(item_id) is None:
+                    raise ValueError(f"shop stock references unknown entry {shop_id}/{item_id}")
+        for quest_id in self.quests:
+            if quest_id not in database.quests:
+                raise ValueError(f"quest progress references unknown quest {quest_id}")
         expected_graphs = set(database.progression_graphs)
         for scope_id, allocation in self.progression_allocations.items():
             if not str(scope_id).strip():
@@ -267,11 +291,15 @@ class RpgRuntimeState:
                 k: self.actor_progression[k].to_data()
                 for k in sorted(self.actor_progression)
             },
+            "shop_stock": {k: dict(sorted(self.shop_stock[k].items())) for k in sorted(self.shop_stock)},
+            "quests": {k: self.quests[k].to_data() for k in sorted(self.quests)},
         }
 
     @classmethod
     def from_data(cls, data, database, *, hooks=None):
-        if data.get("schema") != cls.SCHEMA or data.get("version") not in {1, 2, 3, 4, 5}:
+        from .quests import QuestProgress
+
+        if data.get("schema") != cls.SCHEMA or data.get("version") not in {1, 2, 3, 4, 5, 6}:
             raise ValueError("unsupported RPG runtime state")
         version = data["version"]
         expected_v1 = {
@@ -287,7 +315,8 @@ class RpgRuntimeState:
         expected_v3 = expected_v2 | {"progression_allocations"}
         expected_v4 = expected_v3 | {"actor_progression"}
         expected_v5 = expected_v4 | {"party_active_actor_ids","party_placements"}
-        expected = expected_v5 if version == 5 else expected_v4 if version == 4 else expected_v3 if version == 3 else expected_v2 if version == 2 else expected_v1
+        expected_v6 = expected_v5 | {"shop_stock", "quests"}
+        expected = expected_v6 if version == 6 else expected_v5 if version == 5 else expected_v4 if version == 4 else expected_v3 if version == 3 else expected_v2 if version == 2 else expected_v1
         if set(data) != expected:
             raise ValueError("invalid RPG runtime state")
         result = cls(
@@ -323,6 +352,8 @@ class RpgRuntimeState:
                 actor_id: ActorProgressionState.from_data(raw)
                 for actor_id, raw in data.get("actor_progression", {}).items()
             },
+            shop_stock=data.get("shop_stock", {}),
+            quests={quest_id: QuestProgress.from_data(raw) for quest_id, raw in data.get("quests", {}).items()},
         )
         result.validate(database)
         return result

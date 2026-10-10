@@ -72,7 +72,7 @@ def make_db():
 def test_graph_roundtrip_and_database_v7_persistence():
     db = make_db()
     raw = db.to_data()
-    assert raw["version"] == 24
+    assert raw["version"] == 25
     loaded = RpgDatabase.from_data(copy.deepcopy(raw))
     assert loaded.progression_graphs["aria_board"].require_node("strength").max_rank == 3
 
@@ -150,7 +150,7 @@ def test_runtime_state_v3_roundtrip_persists_allocation_state_and_v2_is_readable
         progression=__import__("asteria.rpg", fromlist=["ProgressionRuntime"]).ProgressionRuntime(db.progression_tracks.values()),
     )
     raw = state.to_data()
-    assert raw["version"] == 5
+    assert raw["version"] == 6
     loaded = RpgRuntimeState.from_data(copy.deepcopy(raw), db)
     assert loaded.progression_allocations["actor:aria"].rank("aria_board", "strength") == 1
     assert loaded.progression_allocations["actor:aria"].balance("ap") == 4
@@ -161,6 +161,8 @@ def test_runtime_state_v3_roundtrip_persists_allocation_state_and_v2_is_readable
     del old["actor_progression"]
     del old["party_active_actor_ids"]
     del old["party_placements"]
+    del old["shop_stock"]
+    del old["quests"]
     loaded_old = RpgRuntimeState.from_data(old, db)
     assert loaded_old.progression_allocations == {}
 

@@ -184,7 +184,7 @@ def test_database_v17_owns_gauge_compositions_and_v16_remains_backward_readable(
     db = RpgDatabase()
     db.add_gauge_composition(break_composition())
     raw = db.to_data()
-    assert raw["version"] == 24
+    assert raw["version"] == 25
     restored = RpgDatabase.from_data(raw)
     assert "stagger_break" in restored.gauge_compositions
 
