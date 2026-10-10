@@ -53,6 +53,7 @@ class GameSessionRuntime:
 
     def __init__(self, project, runtime_save):
         runtime_save.validate(project)
+        runtime_save.rpg_state.bind_database(project.rpg_database)
         self.project=project
         self.save=runtime_save
         self.scene=project.scene(runtime_save.scene_id)

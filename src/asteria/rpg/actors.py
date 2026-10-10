@@ -705,6 +705,7 @@ class RpgDatabase:
         self.enemy_behavior_bindings = {}
         self.battle_session_rules = {}
         self.shops = {}
+        self.equipment_sets = {}
         self.quests = {}
 
     def add_actor(self, value):
@@ -974,6 +975,15 @@ class RpgDatabase:
         self.shops[value.shop_id] = value
         return value
 
+    def add_equipment_set(self, value):
+        from .equipment_sets import EquipmentSetDefinition
+        if not isinstance(value, EquipmentSetDefinition):
+            raise TypeError("equipment set must be EquipmentSetDefinition")
+        if value.set_id in self.equipment_sets:
+            raise ValueError(f"duplicate equipment set: {value.set_id}")
+        self.equipment_sets[value.set_id] = value
+        return value
+
     def add_quest(self, value):
         from .quests import QuestDefinition
         if not isinstance(value, QuestDefinition):
@@ -1104,6 +1114,10 @@ class RpgDatabase:
             for output in recipe.outputs:
                 if output.item_id not in self.items:
                     errors.append(f"composition recipe {recipe.recipe_id} references unknown output item {output.item_id}")
+        for equipment_set in self.equipment_sets.values():
+            for equipment_id in equipment_set.equipment_ids:
+                if equipment_id not in self.equipment:
+                    errors.append(f"equipment set {equipment_set.set_id} references unknown equipment {equipment_id}")
         for shop in self.shops.values():
             for entry in shop.entries:
                 if entry.item_id not in self.items:
@@ -1243,6 +1257,7 @@ class RpgDatabase:
                 for k in sorted(self.battle_session_rules)
             ],
             "shops": [self.shops[k].to_data() for k in sorted(self.shops)],
+            "equipment_sets": [self.equipment_sets[k].to_data() for k in sorted(self.equipment_sets)],
             "quests": [self.quests[k].to_data() for k in sorted(self.quests)],
         }
 
@@ -1395,4 +1410,7 @@ class RpgDatabase:
                 result.add_shop(ShopDefinition.from_data(x))
             for x in data.get("quests", ()):
                 result.add_quest(QuestDefinition.from_data(x))
+            from .equipment_sets import EquipmentSetDefinition
+            for x in data.get("equipment_sets", ()):
+                result.add_equipment_set(EquipmentSetDefinition.from_data(x))
         return result

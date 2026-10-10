@@ -1,5 +1,6 @@
 from .enemy_behavior import EnemyBehaviorBinding
 from .battle_session_rules import BattleSessionRules
+from .equipment_sets import EquipmentSetBonus, EquipmentSetDefinition
 from .economy import ShopDefinition, ShopEntry, ShopError, ShopRuntime, ShopTransaction
 from .quests import QuestDefinition, QuestError, QuestLog, QuestObjective, QuestProgress
 from .party_setup import PartyPlacementDefinition, PartyPresentationPolicyDefinition, PartySetupDefinition
@@ -173,6 +174,7 @@ from .save_state import ActorProgressionState, RpgRuntimeState
 __all__ = [
     "EnemyBehaviorBinding",
     "BattleSessionRules",
+    "EquipmentSetBonus", "EquipmentSetDefinition",
     "ShopDefinition", "ShopEntry", "ShopError", "ShopRuntime", "ShopTransaction",
     "QuestDefinition", "QuestError", "QuestLog", "QuestObjective", "QuestProgress",
     "PartyPlacementDefinition", "PartyPresentationPolicyDefinition", "PartySetupDefinition",

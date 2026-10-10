@@ -166,3 +166,32 @@ def test_conditional_and_luck_scaled_loot():
     assert roll_reward(reward, random.Random(1), luck=4, switches=switches).items == {"boss_emblem": 1, "focus_stone": 1}
     assert LootEntry.from_data(LootEntry("x", required_switch="s", luck_bonus=0.1).to_data()).required_switch == "s"
     assert "luck_bonus" not in LootEntry("x").to_data()   # old data stays byte-identical
+
+
+def test_equipment_set_bonuses_apply_by_piece_count_and_survive_save_load(tmp_path):
+    from asteria.gameplay import ModifierOperation, StatModifier
+    from asteria.rpg import EquipmentSetBonus, EquipmentSetDefinition
+
+    project, game = _session()
+    base_power = game.resolve_actor_build("hero_01").stats.get("power")
+    project.rpg_database.add_equipment_set(EquipmentSetDefinition("ember", "Ember Regalia", equipment_ids=[
+        "accessory_01", "accessory_02", "weapon_01",
+    ], bonuses=[
+        EquipmentSetBonus(2, modifiers=[StatModifier("p", "power", ModifierOperation.ADD, 10)]),
+        EquipmentSetBonus(3, tags=["set.ember"], granted_abilities=["strike"]),
+    ]))
+    project.rpg_database.validate()
+    game.save.rpg_state.bind_database(project.rpg_database)
+    hero01 = game.resolve_actor_build("hero_01")      # all 3 pieces
+    hero02 = game.resolve_actor_build("hero_02")      # 1 piece: no bonus
+    assert hero01.stats.get("power") == base_power + 10 and "set.ember" in hero01.tags.values()
+    assert "set.ember" not in hero02.tags.values()
+    assert [b.pieces for _, b in game.save.rpg_state.loadouts["hero_01"].active_set_bonuses()] == [2, 3]
+    path = tmp_path / "save.json"
+    game.sync_world_state().save_json(path)
+    restored = GameRuntimeSave.load_json(path, project)
+    assert len(restored.rpg_state.loadouts["hero_01"].active_set_bonuses()) == 2
+    loaded = RpgDatabase.from_data(json.loads(json.dumps(project.rpg_database.to_data())))
+    assert loaded.equipment_sets == project.rpg_database.equipment_sets
+    with pytest.raises(ValueError):
+        EquipmentSetDefinition("x", equipment_ids=["a"], bonuses=[EquipmentSetBonus(2)])

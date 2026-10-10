@@ -191,6 +191,13 @@ class RpgRuntimeState:
                 raise ValueError("currency value must be >= 0")
             self.currencies[key] = value
 
+    def bind_database(self, database):
+        """Attach database-owned rules (equipment set bonuses) to the saved loadouts."""
+        sets = tuple(database.equipment_sets.values())
+        for loadout in self.loadouts.values():
+            loadout.set_definitions = sets
+        return self
+
     def validate(self, database):
         if not isinstance(database, RpgDatabase):
             raise TypeError("database must be RpgDatabase")
@@ -355,5 +362,6 @@ class RpgRuntimeState:
             shop_stock=data.get("shop_stock", {}),
             quests={quest_id: QuestProgress.from_data(raw) for quest_id, raw in data.get("quests", {}).items()},
         )
+        result.bind_database(database)
         result.validate(database)
         return result

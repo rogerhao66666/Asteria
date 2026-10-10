@@ -551,8 +551,11 @@ class EquipmentSlotDefinition:
 class EquipmentLoadout:
     """Owns equipped instances; derives contributions without mutating base actor data."""
 
-    def __init__(self, slots=(), *, hooks=None):
+    def __init__(self, slots=(), *, hooks=None, set_definitions=()):
         self.hooks = hooks
+        # Equipment set definitions (EquipmentSetDefinition) whose bonuses this
+        # loadout contributes; bound from the RPG database when a save loads.
+        self.set_definitions = tuple(set_definitions)
         self._slots = {x.slot_id: x for x in slots}
         if len(self._slots) != len(tuple(slots)):
             raise ValueError("duplicate equipment slot")
@@ -705,8 +708,30 @@ class EquipmentLoadout:
             item for key in sorted(self._equipped) for item in self._equipped[key]
         )
 
+    def active_set_bonuses(self):
+        """``(set_id, EquipmentSetBonus)`` pairs active for the equipped pieces."""
+        equipped_ids = [item.equipment.equipment_id for item in self.equipped()]
+        return tuple(
+            (definition.set_id, bonus)
+            for definition in sorted(self.set_definitions, key=lambda x: x.set_id)
+            for bonus in definition.active_bonuses(equipped_ids)
+        )
+
     def modifier_set(self):
         result = ModifierSet()
+        for set_id, bonus in self.active_set_bonuses():
+            for modifier in bonus.modifiers:
+                result.add(
+                    StatModifier(
+                        f"set:{set_id}:{bonus.pieces}:{modifier.modifier_id}",
+                        modifier.stat,
+                        modifier.operation,
+                        modifier.value,
+                        priority=modifier.priority,
+                        required_tags=modifier.required_tags,
+                        blocked_tags=modifier.blocked_tags,
+                    )
+                )
         for item in self.equipped():
             for modifier in item.modifiers():
                 # Modifier IDs are definition-local.  Scope them by stable
@@ -729,6 +754,8 @@ class EquipmentLoadout:
         result = []
         for item in self.equipped():
             result.extend(item.abilities())
+        for _, bonus in self.active_set_bonuses():
+            result.extend(bonus.granted_abilities)
         return tuple(dict.fromkeys(result))
 
     def triggers(self):
@@ -741,6 +768,8 @@ class EquipmentLoadout:
         result = set()
         for item in self.equipped():
             result.update(item.tags())
+        for _, bonus in self.active_set_bonuses():
+            result.update(bonus.tags)
         return tuple(sorted(result))
 
 
