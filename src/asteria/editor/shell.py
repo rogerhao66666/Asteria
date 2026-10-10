@@ -177,6 +177,13 @@ class AsteriaEditorWindow(QMainWindow):
         self.ui_workspace.addTab(self.presentation_authoring, "Battle Presentation")
         self.ui_workspace.addTab(self.runtime_ui_authoring, "Runtime RPG UI")
         self.ui_workspace.addTab(self.animation_widget, "Animation")
+        from .action_timeline_widget import ActionTimelineWidget
+        from .animation_editor_widget import AnimationEditorWidget
+
+        self.animation_editor = AnimationEditorWidget(self.document, self)
+        self.ui_workspace.addTab(self.animation_editor, "Animation Editor")
+        self.action_timeline_editor = ActionTimelineWidget(self.document, self)
+        self.ui_workspace.addTab(self.action_timeline_editor, "Action Timeline")
 
         self.game_flow_overview = GameFlowOverviewWidget(self.document, self)
         self.events_workspace = QTabWidget(self)
@@ -510,6 +517,7 @@ class AsteriaEditorWindow(QMainWindow):
         elif current == WorkspaceMode.UI:
             self.presentation_authoring.rebuild()
             self.runtime_ui_authoring.rebuild()
+            self._refresh_game_systems()
         elif current == WorkspaceMode.EVENT:
             self.game_flow_overview.refresh()
 
@@ -1069,9 +1077,12 @@ class AsteriaEditorWindow(QMainWindow):
         self.refresh_all()
 
     def _refresh_game_systems(self):
-        editor = getattr(self, "game_systems_editor", None)
-        if editor is not None and self.document.project is not None:
-            editor.refresh()
+        if self.document.project is None:
+            return
+        for name in ("game_systems_editor", "animation_editor", "action_timeline_editor"):
+            editor = getattr(self, name, None)
+            if editor is not None:
+                editor.refresh()
 
     def refresh_all(self):
         self.project_tree.refresh()
