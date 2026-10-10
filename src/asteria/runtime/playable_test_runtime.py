@@ -697,6 +697,9 @@ class PlayableTestRuntime:
         if self._defeat:return
         if self._capture_menu:
             self._capture_input(events); return
+        busy=getattr(self._battle_presentation,"busy",None)
+        if callable(busy) and busy():
+            return  # the previous action's choreography is still playing
         for event in events:
             if event.type!=self.pg.KEYDOWN:continue
             if event.key==self.pg.K_x and self._battle_actor() and self.game.capture_targets():
@@ -1061,7 +1064,7 @@ class PlayableTestRuntime:
                 self._draw_field(moving)
 
 
-def run_playable_test_runtime(project, resource_root, *, runtime_save=None, save_path=None, width=960, height=540, target_fps=60, max_frames=None, profile_path=None):
+def run_playable_test_runtime(project, resource_root, *, runtime_save=None, save_path=None, width=960, height=540, target_fps=60, max_frames=None, profile_path=None, battle_presentation=None):
     resource_root=Path(resource_root)
     if runtime_save is None:
         if save_path is not None:
@@ -1071,6 +1074,9 @@ def run_playable_test_runtime(project, resource_root, *, runtime_save=None, save
                 "playable test content requires Project Game Start runtime state "
                 "or an explicit Player Save"
             )
-    return PlayableTestRuntime(
-        project,runtime_save,resource_root,width=width,height=height
-    ).run(target_fps, max_frames, profile_path=profile_path)
+    runtime=PlayableTestRuntime(project,runtime_save,resource_root,width=width,height=height)
+    if battle_presentation:
+        runtime.manifest.setdefault("battle",{})["presentation"]={
+            **runtime.manifest.get("battle",{}).get("presentation",{}),"adapter":battle_presentation}
+        runtime._battle_presentation=create_battle_presentation_adapter(runtime)
+    return runtime.run(target_fps, max_frames, profile_path=profile_path)

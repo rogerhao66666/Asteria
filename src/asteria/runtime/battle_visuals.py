@@ -1,0 +1,209 @@
+"""Resolve canonical battle visuals for the battle presentation (CB2).
+
+Data contract (all canonical project data, no runtime code per project):
+
+* **Sprite sheet assets** — ``CanonicalAsset`` of kind ``"sprite_sheet"``
+  whose ``source.uri`` is an image path relative to the project resource
+  root, with metadata:
+
+  - ``frame_size``: ``[width, height]`` of one frame (row-major grid);
+  - ``pivot``: ``[x, y]`` in 0..1 (default ``[0.5, 1.0]``, feet);
+  - ``clips``: ``{name: {"frames": [index, ...], "frame_duration": seconds,
+    "loop": bool, "events": {"<keyframe position>": [names]}}}``.
+
+  Combatant sheets and VFX sheets use the same format.
+
+* **Combatant visual profiles** — battle presentation library category
+  ``combatant_visuals``. A member uses the profile whose id equals its actor
+  id (heroes) or its enemy id (enemies). ``assets.battlefield_asset_id`` names
+  the sprite sheet asset; each state maps a battle role (``idle``,
+  ``attack``, ``hit``, ``ko``) to a clip; ``transform.scale_*`` scales the
+  sprite and ``offset_*`` shifts its anchor.
+
+* **Action choreography** — category ``motion_sequences``. The sequence
+  whose id equals the ability id (else ``"default_action"``) supplies timed
+  beats on the channels ``animation`` (cue = role), ``vfx`` (cue = sprite
+  sheet asset id), ``audio`` (cue = audio id), ``camera`` (cue = effect) and
+  ``screen_fx`` (cue = effect). A beat's ``member_id`` is ``"@source"`` or
+  ``"@target"`` (every target).
+"""
+from __future__ import annotations
+
+from asteria.graphics import SpriteClip, SpriteFrame, SpriteKeyframe, SpriteSheet
+from asteria.presentation.battle import BattleCombatantVisual, BattleVisualAnchor
+from asteria.runtime.animation_library import AnimationClipSet
+
+SPRITE_SHEET_KIND = "sprite_sheet"
+DEFAULT_SEQUENCE_ID = "default_action"
+
+
+class BattleVisualError(ValueError):
+    pass
+
+
+class _TextureRef:
+    """Minimal texture reference (``asset_id``) for SpriteSheet."""
+
+    __slots__ = ("asset_id",)
+    expected_kind = "texture"
+
+    def __init__(self, asset_id):
+        self.asset_id = asset_id
+
+
+class BattleVisualResolver:
+    """Builds SpriteSheets, AnimationClipSets, combatant visuals and choreography from project data.
+
+    ``image_size(uri) -> (width, height)`` measures source images (the host
+    loads them through its own cache).
+    """
+
+    def __init__(self, project, image_size):
+        self.project = project
+        self.image_size = image_size
+        self._sheets = {}
+        self._clips = {}
+
+    # -- assets ------------------------------------------------------------
+    def asset(self, asset_id):
+        try:
+            asset = self.project.assets.resolve(str(asset_id))
+        except KeyError:
+            raise BattleVisualError(f"unknown sprite sheet asset: {asset_id}") from None
+        if asset.kind != SPRITE_SHEET_KIND:
+            raise BattleVisualError(f"asset {asset_id} is {asset.kind}, not {SPRITE_SHEET_KIND}")
+        return asset
+
+    def source_uri(self, asset_id):
+        return self.asset(asset_id).source.uri
+
+    def sprite_sheet(self, asset_id):
+        if asset_id not in self._sheets:
+            asset = self.asset(asset_id)
+            meta = asset.meta()
+            try:
+                fw, fh = (int(x) for x in meta["frame_size"])
+            except (KeyError, TypeError, ValueError):
+                raise BattleVisualError(f"{asset_id}: frame_size metadata required") from None
+            px, py = (float(x) for x in meta.get("pivot", (0.5, 1.0)))
+            width, height = self.image_size(asset.source.uri)
+            columns, rows = width // fw, height // fh
+            if columns < 1 or rows < 1:
+                raise BattleVisualError(f"{asset_id}: image smaller than one frame")
+            frames = [SpriteFrame(c * fw, r * fh, fw, fh, px, py) for r in range(rows) for c in range(columns)]
+            sheet = SpriteSheet(_TextureRef(asset.asset_id), frames)
+            sheet.validate()
+            self._sheets[asset_id] = sheet
+        return self._sheets[asset_id]
+
+    def clip_set(self, asset_id):
+        if asset_id not in self._clips:
+            meta = self.asset(asset_id).meta()
+            clips = {}
+            for name, raw in dict(meta.get("clips", {})).items():
+                frames = [int(x) for x in raw["frames"]]
+                duration = float(raw.get("frame_duration", 0.12))
+                events = {int(k): tuple(v) for k, v in dict(raw.get("events", {})).items()}
+                clips[name] = SpriteClip(
+                    name, [SpriteKeyframe(f, duration, events.get(i, ())) for i, f in enumerate(frames)],
+                    bool(raw.get("loop", True)),
+                )
+            clip_set = AnimationClipSet(clips)
+            clip_set.validate(self.sprite_sheet(asset_id))
+            self._clips[asset_id] = clip_set
+        return self._clips[asset_id]
+
+    def clip_duration(self, asset_id, clip_name):
+        clip = self.clip_set(asset_id).get(clip_name)
+        return 0.0 if clip is None else sum(k.duration for k in clip.keyframes)
+
+    # -- combatants --------------------------------------------------------
+    @property
+    def library(self):
+        return self.project.battle_presentation_library
+
+    def profile_for(self, member_id):
+        key = str(member_id).split(":", 1)[0]
+        if key in self.library.ids("combatant_visuals"):
+            return self.library.require("combatant_visuals", key)
+        return None
+
+    def missing_profiles(self, member_ids):
+        return tuple(m for m in member_ids if self.profile_for(m) is None)
+
+    def combatant_visuals(self, sides, placement, layout):
+        """``sides``: ``{side_id: [member_id, ...]}``; ``placement``: ``{side_id: "left"|"right"}``.
+
+        Combatants stand in the free stage between the HUD columns of the UI
+        ``layout`` (BattleUiLayoutProfile), above the action menu: up to three
+        per column, the first column nearest the centre, the second staggered
+        behind it. Members on the right face left.
+        """
+        width = float(getattr(layout, "virtual_width", 320))
+        height = float(getattr(layout, "virtual_height", 180))
+        margin = float(getattr(layout, "margin", 8.0))
+        panel = float(getattr(layout, "hud_panel_width", 112.0))
+        left_edge, right_edge = margin + panel, width - margin - panel
+        stage = max(1.0, right_edge - left_edge)
+        top = float(getattr(layout, "timeline_y", 7.0)) + 52.0
+        bottom = height * 0.60
+        visuals = []
+        for side_id, members in sides.items():
+            zone = placement.get(side_id, "left")
+            direction = 1 if zone == "left" else -1
+            front_x = left_edge + stage * 0.30 if zone == "left" else right_edge - stage * 0.30
+            def logical_size(member_id):
+                profile = self.profile_for(member_id)
+                if profile is None:
+                    raise BattleVisualError(f"no combatant visual profile for {member_id}")
+                frame = self.sprite_sheet(profile.assets.battlefield_asset_id).frames[0]
+                return frame.width * float(profile.transform.scale_x), frame.height * float(profile.transform.scale_y)
+            sizes = {m: logical_size(m) for m in members}
+            smallest = min(h for _, h in sizes.values()) if sizes else 0.0
+            # Large combatants (bosses) get their own column behind the others.
+            large = [m for m in members if sizes[m][1] > smallest * 1.5]
+            regular = [m for m in members if m not in large]
+            columns = [regular[i:i + 3] for i in range(0, len(regular), 3)] + [[m] for m in large]
+            # Column centres: each column clears the previous one by the widest sprites.
+            xs, x = [], front_x
+            for index, column in enumerate(columns):
+                if index:
+                    previous = max(sizes[m][0] for m in columns[index - 1])
+                    x -= direction * (previous / 2 + max(sizes[m][0] for m in column) / 2 + 4)
+                xs.append(x)
+            edge = left_edge if zone == "left" else right_edge
+            outer = xs[-1] - direction * max(sizes[m][0] for m in columns[-1]) / 2 if columns else edge
+            overflow = (edge - outer) * direction if (outer - edge) * direction < 0 else 0.0
+            xs = [value + direction * overflow for value in xs]
+            for column_index, column in enumerate(columns):
+                x = xs[column_index]
+                for row_index, member_id in enumerate(column):
+                    profile = self.profile_for(member_id)
+                    if profile is None:
+                        raise BattleVisualError(f"no combatant visual profile for {member_id}")
+                    sheet_id = profile.assets.battlefield_asset_id
+                    self.clip_set(sheet_id)  # validates
+                    transform = profile.transform
+                    if len(column) == 1 and member_id in large:
+                        y = (top + bottom) / 2 + sizes[member_id][1] / 3
+                    else:
+                        y = top + (bottom - top) * ((row_index + 0.5 + 0.5 * column_index) / max(3, len(column) + 0.5))
+                    # Keep the whole sprite below the turn timeline.
+                    tall = self.sprite_sheet(sheet_id).frames[0].height * float(transform.scale_y)
+                    y = max(y, float(getattr(layout, "timeline_y", 7.0)) + 30.0 + tall)
+                    anchor = BattleVisualAnchor(x + transform.offset_x, y + transform.offset_y,
+                                                "right" if zone == "left" else "left", depth=y)
+                    roles = {state.state_id: state.clip_role for state in profile.states}
+                    visuals.append(BattleCombatantVisual(
+                        member_id, sheet_id, sheet_id, anchor, animation_roles=roles,
+                        source_pixels_per_logical_pixel=1.0 / float(transform.scale_x),
+                    ))
+        return tuple(visuals)
+
+    # -- choreography ----------------------------------------------------------
+    def motion_sequence(self, ability_id):
+        ids = self.library.ids("motion_sequences")
+        for key in (str(ability_id), DEFAULT_SEQUENCE_ID):
+            if key in ids:
+                return self.library.require("motion_sequences", key)
+        return None

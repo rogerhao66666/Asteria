@@ -207,6 +207,14 @@ class BattlePresentationCoordinator:
         self._pending.append(event)
         return event
 
+    def reemit(self, event):
+        """Queue a copy of an already-drained event with a new (later) sequence number.
+
+        Used by presentation adapters that show a Battle Core lifecycle event
+        (KO, revive, ...) later than it happened, keeping event order monotonic.
+        """
+        return self._emit(event.kind, event.source_id, dict(event.payload))
+
     def start(self):
         if self._active:
             return None

@@ -37,6 +37,9 @@ def resource_root(tmp_path):
         path = tmp_path / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         Image.new("RGBA", (512, 512), (90, 120, 200, 255)).save(path)
+    # Canonical battle presentation sheets (CC0) are real project assets; copy them as-is.
+    shutil.copytree(ROOT / "playable_assets" / "battle", tmp_path / "playable_assets" / "battle")
+    shutil.copy(ROOT / "playable_assets" / "fx_heal.png", tmp_path / "playable_assets" / "fx_heal.png")
     return tmp_path
 
 
@@ -179,6 +182,12 @@ def test_legacy_and_canonical_adapters_agree_on_battle_semantics(resource_root, 
             runtime._use_skill(0)
         log.extend(runtime.game.drain_battle_log())
         legacy.consume(log); canonical.consume(log)
+        # The canonical screen replays the actions on its presentation clock.
+        for _ in range(2000):
+            if not canonical.busy():
+                break
+            canonical.update(0.05)
+        assert not canonical.busy()
     finally:
         runtime.close()
     assert legacy.trace == [entry_semantics(e) for e in log]
@@ -207,8 +216,11 @@ def test_canonical_adapter_drives_hud_menu_feedback_and_renders(resource_root, m
         assert pygame.image.tobytes(runtime.screen, "RGB") != world_only  # UI layer drew something
 
         runtime._use_skill(0)
-        for _ in range(5):
+        for _ in range(400):
             runtime._present_battle(0.05)
+            if not runtime._battle_presentation.busy():
+                break
+        runtime._battle_presentation.finalize_trace()
         assert runtime._battle_presentation.trace.count(("battle_started",)) == 1
         assert any(t[0] == "action" for t in runtime._battle_presentation.trace)
     finally:
@@ -244,11 +256,16 @@ def test_full_frame_loop_with_canonical_adapter_reaches_victory(resource_root, m
         runtime._frame([key(pygame.K_e)], 0.016)
         runtime._frame([key(pygame.K_RETURN)], 0.016)
         assert runtime.game.mode == "battle"
-        for _ in range(60):
+        # Each action now plays its choreography before the next command is accepted.
+        for _ in range(3000):
             if runtime._victory or runtime._defeat:
                 break
             runtime._frame([key(pygame.K_1)], 0.05)
         assert runtime._victory
+        for _ in range(200):                          # let the final choreography and result play out
+            if not runtime._battle_presentation.busy():
+                break
+            runtime._frame([], 0.05)
         result = runtime._battle_presentation.screen.result.view
         assert result.finished and result.headline
         runtime._frame([key(pygame.K_RETURN)], 0.016)

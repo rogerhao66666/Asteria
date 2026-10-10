@@ -1,0 +1,148 @@
+"""CB2 / D14 #1: the canonical battle presentation draws animated combatants, plays authored
+VFX / audio / camera choreography in sync with Battle Core results, and stays a pure
+presentation layer (no second set of battle rules).
+
+Uses the reference project's committed CC0 battle sheets and its canonical
+combatant_visuals / motion_sequences data.
+"""
+
+import pytest
+
+pygame = pytest.importorskip("pygame")
+
+from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter  # noqa: E402
+from test_playable_battle_loop import _boss_runtime, resource_root  # noqa: E402,F401
+
+
+@pytest.fixture
+def battle(resource_root, monkeypatch):  # noqa: F811
+    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+    monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
+    runtime = _boss_runtime(resource_root)
+    runtime._battle_presentation = adapter = CanonicalBattleAdapter(runtime)
+    runtime.game.start_encounter("boss_room")
+    adapter.begin()
+    runtime._advance_to_hero_turn()
+    runtime._present_battle(0.016)
+    _settle(runtime)
+    yield runtime, adapter
+    runtime.close()
+
+
+def _settle(runtime, limit=400):
+    for _ in range(limit):
+        if not runtime._battle_presentation.busy():
+            return
+        runtime._present_battle(0.02)
+    raise AssertionError("presentation never became idle")
+
+
+def _role(animator):
+    return str(getattr(animator.role, "value", animator.role))
+
+
+def _use(runtime, ability_id):
+    skills = [s for s, _ in runtime._skills_for_actor(runtime._battle_actor())]
+    runtime._use_skill(skills.index(ability_id))
+
+
+def test_every_combatant_has_an_animated_sprite_with_default_staging(battle):
+    runtime, adapter = battle
+    assert adapter.visuals_enabled and adapter.fallback_reason == ""
+    visuals = {v.member_id: v for v in adapter.screen.scene.combatants}
+    assert set(visuals) == set(runtime.game.battle.members)
+    width = adapter.screen.composer.layout.virtual_width
+    heroes = [v for k, v in visuals.items() if k.startswith("hero")]
+    enemies = [v for k, v in visuals.items() if not k.startswith("hero")]
+    assert all(v.anchor.x > width / 2 and v.anchor.facing == "left" for v in heroes)    # party on the right
+    assert all(v.anchor.x < width / 2 and v.anchor.facing == "right" for v in enemies)  # enemies on the left
+    adapter.textures.draw_count = 0
+    runtime._present_battle(0.016)
+    assert adapter.textures.draw_count >= len(visuals)          # real texture blits, not a data mock
+    idle = adapter.screen.animation.combatant("astral_tyrant:1")
+    frames = set()
+    for _ in range(40):
+        runtime._present_battle(0.03)
+        frames.add(idle.frame_index)
+    assert len(frames) > 1                                       # idle animation actually advances
+
+
+def test_skill_choreography_plays_animation_vfx_audio_camera_in_order(battle):
+    runtime, adapter = battle
+    screen = adapter.screen
+    hero = runtime._battle_actor()
+    target = "astral_tyrant:1"
+    adapter.audio_cues.clear()
+    _use(runtime, "fire_arc")
+    runtime._present_battle(0.0)                               # the frame that consumes the action
+    assert adapter.busy()
+    seen = {"attack": None, "vfx": None, "hit": None, "shake": None, "audio": None, "value": None}
+    clock = 0.0
+    while adapter.busy() and clock < 2.0:
+        runtime._present_battle(0.02)
+        clock += 0.02
+        if seen["attack"] is None and _role(screen.animation.combatant(hero)) == "attack":
+            seen["attack"] = clock
+        if seen["vfx"] is None and any(v.payload.get("asset_id") == "battle.fx.flame" for v in screen.feedback.vfx):
+            seen["vfx"] = clock
+            assert adapter.particle_count() >= 1
+        if seen["hit"] is None and _role(screen.animation.combatant(target)) == "hit":
+            seen["hit"] = clock
+        if seen["shake"] is None and screen.camera_feedback.camera_offset() != (0.0, 0.0):
+            seen["shake"] = clock
+        if seen["audio"] is None and any(dict(c.payload).get("asset_id") == "hit" for c in adapter.audio_cues):
+            seen["audio"] = clock
+        if seen["value"] is None and any(v.target_id == target for v in screen.feedback.values):
+            seen["value"] = clock
+    assert all(v is not None for v in seen.values()), seen
+    # Authored order: swing -> effect -> impact (hit pose, damage number, sound and shake together).
+    assert seen["attack"] < seen["vfx"] < seen["hit"]
+    assert seen["hit"] == seen["value"] == seen["audio"] == seen["shake"]
+
+
+def test_battle_input_waits_for_the_choreography(battle):
+    runtime, adapter = battle
+    hero = runtime._battle_actor()
+    _use(runtime, "strike")
+    runtime._present_battle(0.0)
+    acted = runtime._battle_actor()
+    key = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_1)
+    log_before = len(runtime.game.battle_log)
+    runtime._battle_input([key])                               # ignored while the strike plays
+    assert len(runtime.game.battle_log) == log_before and runtime._battle_actor() == acted
+    _settle(runtime)
+    assert hero is not None
+
+
+def test_knockout_pose_waits_for_the_killing_blow(battle):
+    runtime, adapter = battle
+    game = runtime.game
+    wisp = next(m for m in game.active_enemy_ids() if m.startswith("mender_wisp"))
+    game.battle.member(wisp).subject.resources.set_current(game.rules.knockout_resource_id, 1)
+    hero = runtime._battle_actor()
+    runtime.game.use_ability(hero, "strike", (wisp,))
+    runtime._after_hero_action()
+    state = adapter.screen.animation.combatant(wisp)
+    runtime._present_battle(0.016)
+    assert not state.defeated                                  # Battle Core already knocked it out...
+    _settle(runtime)
+    assert state.defeated                                      # ...the KO pose follows the impact
+
+
+def test_capture_prompt_appears_in_the_canonical_action_menu(battle):
+    from asteria.rpg import CaptureRule
+
+    runtime, adapter = battle
+    db = runtime.game.project.rpg_database
+    db.add_capture_rule(CaptureRule("mender_wisp", "hero_01", base_chance=0.25))
+    runtime._present_battle(0.016)
+    labels = [e.label for e in adapter.screen.action_menu.view.entries]
+    assert any(label.startswith("X  Capture (") for label in labels)
+
+
+def test_missing_visual_profile_falls_back_to_the_legacy_world_layer(battle):
+    runtime, adapter = battle
+    runtime.game.project.battle_presentation_library.remove("combatant_visuals", "astral_tyrant")
+    fresh = CanonicalBattleAdapter(runtime)
+    fresh.begin()
+    assert not fresh.visuals_enabled and "astral_tyrant" in fresh.fallback_reason

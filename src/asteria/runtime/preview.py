@@ -70,6 +70,7 @@ def run_preview(
     backend_kind="pygame",
     max_frames=None,
     profile_path=None,
+    battle_presentation=None,
 ):
     registry = build_preview_registry()
     project = Project.load_json(project_path, registry)
@@ -131,6 +132,7 @@ def run_preview(
                 target_fps=target_fps,
                 max_frames=max_frames,
                 profile_path=profile_path,
+                battle_presentation=battle_presentation,
             )
         if (
             reference_sidecar.exists()
@@ -182,6 +184,8 @@ def main(argv=None):
     parser.add_argument("--frames", type=int, help="quit after this many frames (smoke tests)")
     parser.add_argument("--fps", type=int, default=60, help="target frame rate")
     parser.add_argument("--profile", help="write a runtime profile (JSON) to this path on exit")
+    parser.add_argument("--battle-presentation", choices=("legacy", "canonical"),
+                        help="battle screen to use (default: the project manifest's choice)")
     args = parser.parse_args(argv)
     return run_preview(
         args.project,
@@ -195,6 +199,7 @@ def main(argv=None):
         max_frames=args.frames,
         target_fps=args.fps,
         profile_path=args.profile,
+        battle_presentation=args.battle_presentation,
     )
 
 

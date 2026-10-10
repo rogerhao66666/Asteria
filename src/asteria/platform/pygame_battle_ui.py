@@ -152,9 +152,12 @@ class PygameBattleUiBackend:
             x -= image.get_width()
         self.screen.blit(image, (x, y))
 
+    # Set by the battle presentation adapter: draws one VFX cue (sprite sheet playback).
+    vfx_drawer = None
+
     def draw_vfx(self, effect):
-        # Authored VFX remains a separate visual-effect adapter responsibility.
-        pass
+        if self.vfx_drawer is not None:
+            self.vfx_drawer(effect)
 
     def draw_screen_fx(self, effect):
         payload = dict(getattr(effect, "payload", {}) or {})

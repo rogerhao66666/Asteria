@@ -1,8 +1,1655 @@
 {
   "assets": {
     "assets": [],
+    "canonical_assets": [
+      {
+        "asset_id": "battle.combatant.hero_01",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  1,
+                  3,
+                  5,
+                  5,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  6,
+                  0,
+                  6,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.22,
+                "frames": [
+                  0,
+                  0,
+                  2,
+                  0
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  7
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/hero_01.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "hero"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.hero_02",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  1,
+                  3,
+                  5,
+                  5,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  6,
+                  0,
+                  6,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.22,
+                "frames": [
+                  0,
+                  0,
+                  2,
+                  0
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  7
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/hero_02.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "hero"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.hero_03",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  1,
+                  3,
+                  5,
+                  5,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  6,
+                  0,
+                  6,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.22,
+                "frames": [
+                  0,
+                  0,
+                  2,
+                  0
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  7
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/hero_03.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "hero"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.hero_04",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  1,
+                  3,
+                  5,
+                  5,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  6,
+                  0,
+                  6,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.22,
+                "frames": [
+                  0,
+                  0,
+                  2,
+                  0
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  7
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/hero_04.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "hero"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.hero_05",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  1,
+                  3,
+                  5,
+                  5,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  6,
+                  0,
+                  6,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.22,
+                "frames": [
+                  0,
+                  0,
+                  2,
+                  0
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  7
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/hero_05.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "hero"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.hero_06",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  1,
+                  3,
+                  5,
+                  5,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  6,
+                  0,
+                  6,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.22,
+                "frames": [
+                  0,
+                  0,
+                  2,
+                  0
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  7
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/hero_06.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "hero"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.hero_07",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  1,
+                  3,
+                  5,
+                  5,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  6,
+                  0,
+                  6,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.22,
+                "frames": [
+                  0,
+                  0,
+                  2,
+                  0
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  7
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/hero_07.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "hero"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.hero_08",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  1,
+                  3,
+                  5,
+                  5,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  6,
+                  0,
+                  6,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.22,
+                "frames": [
+                  0,
+                  0,
+                  2,
+                  0
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  7
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/hero_08.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "hero"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.hero_09",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  1,
+                  3,
+                  5,
+                  5,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  6,
+                  0,
+                  6,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.22,
+                "frames": [
+                  0,
+                  0,
+                  2,
+                  0
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  7
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/hero_09.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "hero"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.hero_10",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  1,
+                  3,
+                  5,
+                  5,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  6,
+                  0,
+                  6,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.22,
+                "frames": [
+                  0,
+                  0,
+                  2,
+                  0
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  7
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/hero_10.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "hero"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.hero_11",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  1,
+                  3,
+                  5,
+                  5,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  6,
+                  0,
+                  6,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.22,
+                "frames": [
+                  0,
+                  0,
+                  2,
+                  0
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  7
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/hero_11.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "hero"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.hero_12",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  1,
+                  3,
+                  5,
+                  5,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  6,
+                  0,
+                  6,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.22,
+                "frames": [
+                  0,
+                  0,
+                  2,
+                  0
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  7
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/hero_12.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "hero"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.mender_wisp",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.07,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  4,
+                  0,
+                  4,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.16,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  5
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/mender_wisp.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "enemy"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.ember_hound",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.07,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  4,
+                  0,
+                  4,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.16,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  5
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/ember_hound.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "enemy"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.iron_guard",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  1,
+                  3,
+                  5,
+                  5,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  6,
+                  0,
+                  6,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.22,
+                "frames": [
+                  0,
+                  0,
+                  2,
+                  0
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  7
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/iron_guard.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "enemy"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.astral_tyrant",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.07,
+                "frames": [
+                  0,
+                  2,
+                  4,
+                  4,
+                  2,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.09,
+                "frames": [
+                  5,
+                  6,
+                  7
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.14,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  8
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              100,
+              100
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/astral_tyrant.png"
+        },
+        "tags": [
+          "battle",
+          "boss",
+          "combatant",
+          "enemy"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.fx.slash",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "play": {
+                "frame_duration": 0.06,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              114,
+              102
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              0.5
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/slash.png"
+        },
+        "tags": [
+          "battle",
+          "vfx"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.fx.flame",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "play": {
+                "frame_duration": 0.06,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              75,
+              90
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              0.5
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/flame.png"
+        },
+        "tags": [
+          "battle",
+          "vfx"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.fx.explosion",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "play": {
+                "frame_duration": 0.06,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              120,
+              120
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              0.5
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/explosion.png"
+        },
+        "tags": [
+          "battle",
+          "vfx"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.fx.heal",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "play": {
+                "frame_duration": 0.04,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8,
+                  9,
+                  10,
+                  11,
+                  12,
+                  13,
+                  14,
+                  15
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              0.5
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "repository"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/fx_heal.png"
+        },
+        "tags": [
+          "battle",
+          "vfx"
+        ],
+        "version": 1
+      }
+    ],
     "schema": "asteria.assets",
-    "version": 1
+    "version": 2
   },
   "battle_presentation_library": {
     "categories": {
@@ -20,7 +1667,808 @@
       },
       "action_workflows": {},
       "animation_timing": {},
-      "combatant_visuals": {},
+      "combatant_visuals": {
+        "astral_tyrant": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.astral_tyrant",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "astral_tyrant",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.8,
+            "scale_y": 0.8,
+            "z_order": 0
+          }
+        },
+        "ember_hound": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.ember_hound",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "ember_hound",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "hero_01": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.hero_01",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "hero_01",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "hero_02": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.hero_02",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "hero_02",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "hero_03": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.hero_03",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "hero_03",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "hero_04": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.hero_04",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "hero_04",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "hero_05": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.hero_05",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "hero_05",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "hero_06": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.hero_06",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "hero_06",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "hero_07": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.hero_07",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "hero_07",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "hero_08": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.hero_08",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "hero_08",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "hero_09": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.hero_09",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "hero_09",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "hero_10": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.hero_10",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "hero_10",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "hero_11": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.hero_11",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "hero_11",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "hero_12": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.hero_12",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "hero_12",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "iron_guard": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.iron_guard",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "iron_guard",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "mender_wisp": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.mender_wisp",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "mender_wisp",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        }
+      },
       "director": {},
       "feedback": {
         "premium": {
@@ -46,7 +2494,372 @@
       },
       "interaction": {},
       "layering": {},
-      "motion_sequences": {},
+      "motion_sequences": {
+        "default_action": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "default_action"
+        },
+        "fire_arc": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.2,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.flame",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "flash",
+              "channel": "screen_fx",
+              "cue": "flash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "alpha",
+                  40
+                ],
+                [
+                  "duration",
+                  0.08
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  5
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.9,
+          "recovery_at": null,
+          "sequence_id": "fire_arc"
+        },
+        "heal": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "raise",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.heal",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "heal",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.8,
+          "recovery_at": null,
+          "sequence_id": "heal"
+        },
+        "meteor": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.33,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.explosion",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.45,
+              "beat_id": "flash",
+              "channel": "screen_fx",
+              "cue": "flash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "alpha",
+                  80
+                ],
+                [
+                  "duration",
+                  0.08
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.45,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.45,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  9
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.45,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 1.1,
+          "recovery_at": null,
+          "sequence_id": "meteor"
+        },
+        "strike": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        }
+      },
       "party_layout": {
         "adaptive": {
           "compact_resource_limit": 3,
@@ -192,7 +3005,7 @@
       },
       "ui_polish": {
         "premium": {
-          "empty_label": "\u2014",
+          "empty_label": "—",
           "focus_member_emphasis": true,
           "idle_prefix": "  ",
           "interaction_bottom_gap": 8.0,
@@ -203,8 +3016,8 @@
           "interaction_width": 156.0,
           "page_separator": " / ",
           "schema": "asteria.battle_ui_polish_profile",
-          "selected_option_prefix": "\u2713 ",
-          "selected_prefix": "\u25b6 ",
+          "selected_option_prefix": "✓ ",
+          "selected_prefix": "▶ ",
           "version": 1
         }
       },
