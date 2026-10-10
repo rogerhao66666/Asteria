@@ -85,6 +85,8 @@ class GameSessionRuntime:
         self.open_shop_id=None
         self.open_crafting_station=None
         self._field_simulation={}
+        from asteria.runtime.profiler import NullProfiler
+        self.profiler=NullProfiler()
         self._build_scene_events()
 
     def set_player_position(self,x,y):
@@ -119,7 +121,8 @@ class GameSessionRuntime:
             scene=self.scene
             def blocking(entity):
                 # Enemies are blocked by solid colliders, not by the player they chase.
-                return CollisionWorld.from_scene(scene).blocking_query(exclude={entity.id,self.player.id})
+                with self.profiler.section("collision"):
+                    return CollisionWorld.from_scene(scene).blocking_query(exclude={entity.id,self.player.id})
             systems=(
                 SpawnSystem(self.project.prefabs,build_preview_registry(),switches=self.save.event_context.get_switch,
                             rng=random.Random(f"{scene.id}:spawn")),
@@ -132,8 +135,11 @@ class GameSessionRuntime:
         """Advance field enemies and spawn zones, then start any touched visible encounter."""
         if self.mode!="field" or self.event_busy:
             return None
-        for system in self._field_systems():
-            system.update(self.scene,float(dt))
+        spawn,ai=self._field_systems()
+        with self.profiler.section("spawn"):
+            spawn.update(self.scene,float(dt))
+        with self.profiler.section("ai"):
+            ai.update(self.scene,float(dt))
         return self.check_visible_encounter()
 
     def check_visible_encounter(self):

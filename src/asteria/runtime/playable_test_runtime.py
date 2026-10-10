@@ -10,6 +10,7 @@ from asteria.runtime.battle_presentation_adapters import create_battle_presentat
 from asteria.runtime.audio_mixer import AudioMixer
 from asteria.runtime.collision import CollisionWorld
 from asteria.runtime.input_map import InputActionTracker
+from asteria.runtime.profiler import NullProfiler, RuntimeProfiler
 from asteria.runtime.game_menus import (
     GAME_OVER_OPTIONS, PAUSE_OPTIONS, CraftingScreen, GameSettings, MenuCursor, ShopScreen, achievement_rows,
     bestiary_rows, quest_rows,
@@ -89,6 +90,9 @@ class PlayableTestRuntime:
         self._victory_summary=[]
         self._fonts={}
         self._battle_presentation=create_battle_presentation_adapter(self)
+        self.profiler=NullProfiler()
+        self._drawing=False
+        self._wrap_draw_methods()
         self._pause_menu=MenuCursor(PAUSE_OPTIONS)
         self._game_over_menu=MenuCursor(GAME_OVER_OPTIONS)
         self._shop_screen=None
@@ -105,8 +109,41 @@ class PlayableTestRuntime:
     def load_image(self, rel):
         rel=str(rel)
         if rel not in self._loaded:
-            self._loaded[rel]=self.pg.image.load(self.path(rel)).convert_alpha()
+            with self.profiler.section("asset_loading"):
+                self._loaded[rel]=self.pg.image.load(self.path(rel)).convert_alpha()
         return self._loaded[rel]
+
+    # Top-level drawing entry points; nested calls are timed once.
+    _DRAW_METHODS=("_draw_field","_draw_title","_draw_build_menu","_draw_overlay_menu","_draw_quests","_draw_shop",
+                   "_draw_crafting","_draw_list_screen","_draw_settings","_draw_capture_menu")
+
+    def _wrap_draw_methods(self):
+        for name in self._DRAW_METHODS:
+            method=getattr(self,name)
+            def timed(*args,_method=method,**kwargs):
+                if self._drawing:return _method(*args,**kwargs)
+                self._drawing=True
+                try:
+                    with self.profiler.section("render"):
+                        return _method(*args,**kwargs)
+                finally:
+                    self._drawing=False
+            setattr(self,name,timed)
+
+    def enable_profiling(self, profiler=None, *, target_fps=60.0):
+        """Attach a RuntimeProfiler (also to the game session) and declare what pygame cannot measure."""
+        self.profiler=profiler or RuntimeProfiler(target_fps=target_fps)
+        self.game.profiler=self.profiler
+        self.profiler.unsupported("draw_calls","pygame software blitting exposes no draw-call counter")
+        self.profiler.unsupported("gpu_time","pygame backend renders on the CPU; no GPU timer")
+        return self.profiler
+
+    def _sample_counters(self):
+        p=self.profiler
+        p.count("entity_count",len(self.game.scene.entities()))
+        p.count("asset_usage",len(self._loaded))
+        particles=getattr(self._battle_presentation,"particle_count",None)
+        if callable(particles):p.count("particles",particles())
 
     def open(self):
         self.pg.init()
@@ -493,9 +530,12 @@ class PlayableTestRuntime:
 
     def _present_battle(self, dt):
         """Feed new canonical battle facts to the active presentation adapter and draw."""
-        self._battle_presentation.consume(self.game.drain_battle_log())
-        self._battle_presentation.update(dt)
-        self._battle_presentation.draw()
+        with self.profiler.section("update"):
+            self._battle_presentation.consume(self.game.drain_battle_log())
+        with self.profiler.section("animation"):
+            self._battle_presentation.update(dt)
+        with self.profiler.section("render"):
+            self._battle_presentation.draw()
 
     def _draw_battle_world(self, show_labels=True):
         """Legacy world layer: background and combatant sprites (plus bars/names when show_labels)."""
@@ -924,17 +964,26 @@ class PlayableTestRuntime:
         self._last_action_name=self.message
         return out
 
-    def run(self, target_fps=60, max_frames=None):
+    def run(self, target_fps=60, max_frames=None, *, profile_path=None):
         self.open()
+        if profile_path is not None:
+            self.enable_profiling(target_fps=target_fps)
         frames=0
         try:
             while self.running:
                 dt=min(self.clock.tick(int(target_fps))/1000.0,0.05)
+                self.profiler.begin_frame()
                 self._frame(self.pg.event.get(),dt)
-                self.pg.display.flip()
+                with self.profiler.section("present"):
+                    self.pg.display.flip()
+                self._sample_counters()
+                self.profiler.end_frame()
                 frames+=1
                 if max_frames is not None and frames>=max_frames:break
         finally:
+            if profile_path is not None:
+                self.profiler.write(profile_path)
+                self.profiler.close()
             self.close()
         return 0
 
@@ -946,8 +995,9 @@ class PlayableTestRuntime:
 
     def _frame(self, events, dt):
         """Process one frame of input, event programs and drawing (no flip)."""
-        self.input_source.handle_events(events)
-        self.input.update(self.input_source.raw_state())
+        with self.profiler.section("input"):
+            self.input_source.handle_events(events)
+            self.input.update(self.input_source.raw_state())
         while self.game.presentation_requests:
             self.audio.handle_world_request(self.game.presentation_requests.pop(0))
         for cue in getattr(self._battle_presentation,"audio_cues",()):
@@ -991,13 +1041,15 @@ class PlayableTestRuntime:
                 self.audio.stop_music(fade_out=0.5)
         elif self.game.mode=="field":
             moving=self._field_input(events,dt)
-            self.game.update_events(dt)
+            with self.profiler.section("events"):
+                self.game.update_events(dt)
             if self._ui_mode=="field" and self.game.open_shop_id and not self.game.event_busy:
                 self._shop_screen=ShopScreen(self.game); self._ui_mode="shop"
             if self._ui_mode=="field" and self.game.open_crafting_station is not None and not self.game.event_busy:
                 self._open_crafting(self.game.open_crafting_station,back="field")
             if self.game.mode=="field" and self._ui_mode=="field":
-                self.game.field_update(dt)
+                with self.profiler.section("update"):
+                    self.game.field_update(dt)
             if self.game.mode=="battle":
                 self._turn_actor=None
                 self._battle_presentation.begin()
@@ -1009,7 +1061,7 @@ class PlayableTestRuntime:
                 self._draw_field(moving)
 
 
-def run_playable_test_runtime(project, resource_root, *, runtime_save=None, save_path=None, width=960, height=540, target_fps=60, max_frames=None):
+def run_playable_test_runtime(project, resource_root, *, runtime_save=None, save_path=None, width=960, height=540, target_fps=60, max_frames=None, profile_path=None):
     resource_root=Path(resource_root)
     if runtime_save is None:
         if save_path is not None:
@@ -1021,4 +1073,4 @@ def run_playable_test_runtime(project, resource_root, *, runtime_save=None, save
             )
     return PlayableTestRuntime(
         project,runtime_save,resource_root,width=width,height=height
-    ).run(target_fps, max_frames)
+    ).run(target_fps, max_frames, profile_path=profile_path)

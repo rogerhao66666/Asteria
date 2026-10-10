@@ -69,6 +69,7 @@ def run_preview(
     playtest_profile=None,
     backend_kind="pygame",
     max_frames=None,
+    profile_path=None,
 ):
     registry = build_preview_registry()
     project = Project.load_json(project_path, registry)
@@ -129,6 +130,7 @@ def run_preview(
                 height=height,
                 target_fps=target_fps,
                 max_frames=max_frames,
+                profile_path=profile_path,
             )
         if (
             reference_sidecar.exists()
@@ -178,6 +180,8 @@ def main(argv=None):
     parser.add_argument("--playtest-profile")
     parser.add_argument("--backend", choices=BACKENDS, default="pygame")
     parser.add_argument("--frames", type=int, help="quit after this many frames (smoke tests)")
+    parser.add_argument("--fps", type=int, default=60, help="target frame rate")
+    parser.add_argument("--profile", help="write a runtime profile (JSON) to this path on exit")
     args = parser.parse_args(argv)
     return run_preview(
         args.project,
@@ -189,6 +193,8 @@ def main(argv=None):
         playtest_profile=args.playtest_profile,
         backend_kind=args.backend,
         max_frames=args.frames,
+        target_fps=args.fps,
+        profile_path=args.profile,
     )
 
 
