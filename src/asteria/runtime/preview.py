@@ -70,6 +70,9 @@ def run_preview(
     max_frames=None,
     profile_path=None,
     battle_presentation=None,
+    debug_port=None,
+    debug_token=None,
+    spawn=None,
 ):
     registry = build_preview_registry()
     project = Project.load_json(project_path, registry)
@@ -129,6 +132,9 @@ def run_preview(
                 max_frames=max_frames,
                 profile_path=profile_path,
                 battle_presentation=battle_presentation,
+                debug_port=debug_port,
+                debug_token=debug_token,
+                spawn=spawn,
             )
         if reference_sidecar.exists() and hasattr(backend, "load_texture") and hasattr(backend, "draw_texture"):
             from asteria.runtime.reference_runtime import (
@@ -181,6 +187,9 @@ def main(argv=None):
         choices=("legacy", "canonical"),
         help="battle screen to use (default: the project manifest's choice)",
     )
+    parser.add_argument("--debug-port", type=int, help="open the editor debug channel on this loopback port")
+    parser.add_argument("--debug-token", help="token the editor debugger must present")
+    parser.add_argument("--spawn", type=float, nargs=2, metavar=("X", "Y"), help="start the player here")
     args = parser.parse_args(argv)
     return run_preview(
         args.project,
@@ -195,6 +204,9 @@ def main(argv=None):
         target_fps=args.fps,
         profile_path=args.profile,
         battle_presentation=args.battle_presentation,
+        debug_port=args.debug_port,
+        debug_token=args.debug_token,
+        spawn=args.spawn,
     )
 
 

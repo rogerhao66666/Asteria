@@ -18,6 +18,16 @@ class RuntimeProcess:
     process: object
     snapshot_path: Path
     save_snapshot_path: Path | None = None
+    debug_port: int | None = None
+    debug_token: str | None = None
+    log_path: Path | None = None
+    _log_file: object = None
+
+    def read_log(self):
+        """Everything the game wrote to stdout/stderr so far (empty when not captured)."""
+        if self.log_path is None or not self.log_path.exists():
+            return ""
+        return self.log_path.read_text(encoding="utf-8", errors="replace")
 
     @property
     def running(self):
@@ -31,6 +41,9 @@ class RuntimeProcess:
             except subprocess.TimeoutExpired:
                 self.process.kill()
                 self.process.wait()
+        if self._log_file is not None:
+            self._log_file.close()
+            self._log_file = None
         for path in (self.snapshot_path, self.save_snapshot_path):
             if path is None:
                 continue
@@ -40,7 +53,30 @@ class RuntimeProcess:
                 pass
 
 
-def launch_play_session(session, *, popen_factory=subprocess.Popen, python_executable=None):
+def _free_port():
+    import socket
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.bind(("127.0.0.1", 0))
+        return probe.getsockname()[1]
+
+
+def launch_play_session(
+    session,
+    *,
+    popen_factory=subprocess.Popen,
+    python_executable=None,
+    debug=False,
+    spawn=None,
+    capture_log=False,
+):
+    """Start the runtime for ``session``.
+
+    ``debug`` opens the loopback debug channel (port + random token are kept
+    on the returned RuntimeProcess); ``spawn`` = (x, y) starts the player at a
+    chosen point; ``capture_log`` writes the game's stdout/stderr to a log
+    file the editor can show.
+    """
     if not session.active:
         raise RuntimeLaunchError("Play session is not active")
     fd, path = tempfile.mkstemp(prefix="asteria-play-", suffix=".asteria.json")
@@ -71,8 +107,24 @@ def launch_play_session(session, *, popen_factory=subprocess.Popen, python_execu
             args += ["--save", str(save_snapshot_path)]
         if session.playtest_profile_id is not None:
             args += ["--playtest-profile", session.playtest_profile_id]
-        process = popen_factory(args)
-        return RuntimeProcess(process, snapshot_path, save_snapshot_path)
+        debug_port = debug_token = None
+        if debug:
+            import secrets
+
+            debug_port, debug_token = _free_port(), secrets.token_hex(16)
+            args += ["--debug-port", str(debug_port), "--debug-token", debug_token]
+        if spawn is not None:
+            args += ["--spawn", str(float(spawn[0])), str(float(spawn[1]))]
+        log_path = log_file = None
+        if capture_log:
+            fd3, path3 = tempfile.mkstemp(prefix="asteria-play-", suffix=".log")
+            os.close(fd3)
+            log_path = Path(path3)
+            log_file = open(log_path, "w", encoding="utf-8")  # noqa: SIM115 - closed by RuntimeProcess.stop
+            process = popen_factory(args, stdout=log_file, stderr=subprocess.STDOUT)
+        else:
+            process = popen_factory(args)
+        return RuntimeProcess(process, snapshot_path, save_snapshot_path, debug_port, debug_token, log_path, log_file)
     except Exception as exc:
         try:
             snapshot_path.unlink()

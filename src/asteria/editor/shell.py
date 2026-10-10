@@ -263,6 +263,15 @@ class AsteriaEditorWindow(QMainWindow):
         console.setWidget(console_panel)
         self.addDockWidget(Qt.BottomDockWidgetArea, console)
         self.tabifyDockWidget(bottom, console)
+        from .debugger_widget import DebuggerWidget
+
+        self.debugger_widget = DebuggerWidget(self)
+        debugger_dock = QDockWidget("Debugger", self)
+        debugger_dock.setObjectName("DebuggerDock")
+        debugger_dock.setWidget(self.debugger_widget)
+        self.addDockWidget(Qt.BottomDockWidgetArea, debugger_dock)
+        self.tabifyDockWidget(console, debugger_dock)
+        console.raise_()
 
         # The native macOS tab base draws a redundant rounded line behind
         # tabified docks. Individual tabs retain their own visual states.
@@ -675,6 +684,14 @@ class AsteriaEditorWindow(QMainWindow):
         self.play_scene_action.setShortcut("Ctrl+F6")
         self.play_scene_action.triggered.connect(self.play_current_scene)
         run_menu.addAction(self.play_scene_action)
+        self.play_selection_action = QAction("Play from Selection", self)
+        self.play_selection_action.setShortcut("Shift+F5")
+        self.play_selection_action.triggered.connect(self.play_from_selection)
+        run_menu.addAction(self.play_selection_action)
+        self.restart_play_action = QAction("Restart Play", self)
+        self.restart_play_action.setShortcut("Ctrl+Shift+F5")
+        self.restart_play_action.triggered.connect(self.restart_play)
+        run_menu.addAction(self.restart_play_action)
         run_menu.addAction(self.stop_action)
 
         help_menu = self.menuBar().addMenu("&Help")
@@ -1537,41 +1554,59 @@ class AsteriaEditorWindow(QMainWindow):
         value = self.playtest_profile_combo.currentData()
         return str(value) if value else None
 
-    def play_project(self):
+    def _start_play(self, *, from_start, spawn=None, title="Run Project"):
+        """Launch the play-test with the debug channel and log capture (EDT-10, EDT-11)."""
         try:
-            self.play_session = create_play_session(self.document, from_start=True)
-            self.runtime_process = launch_play_session(self.play_session)
+            self.play_session = create_play_session(self.document, from_start=from_start)
+            self.runtime_process = launch_play_session(self.play_session, debug=True, capture_log=True, spawn=spawn)
         except (PlayModeError, RuntimeLaunchError) as exc:
             if self.play_session is not None:
                 self.play_session.stop()
             self.play_session = None
             self.runtime_process = None
-            QMessageBox.warning(self, "Run Project", str(exc))
+            QMessageBox.warning(self, title, str(exc))
             return False
-        self.console.setText(f"Runtime preview: {self.play_session.runtime_scene.name}")
-        self.statusBar().showMessage(f"Playing — {self.play_session.runtime_scene.name}")
+        self._last_play = {"from_start": from_start, "spawn": spawn, "title": title}
+        self._shown_log = ""
+        if self.runtime_process.debug_port is not None:
+            self.debugger_widget.attach(self.runtime_process.debug_port, self.runtime_process.debug_token)
+        where = "" if spawn is None else f" from ({spawn[0]:g}, {spawn[1]:g})"
+        self.console.setText(f"Runtime preview: {self.play_session.runtime_scene.name}{where}")
+        self.statusBar().showMessage(f"Playing — {self.play_session.runtime_scene.name}{where}")
         self._refresh_actions()
         return True
 
+    def play_project(self):
+        return self._start_play(from_start=True)
+
     def play_current_scene(self):
-        try:
-            self.play_session = create_play_session(self.document)
-            self.runtime_process = launch_play_session(self.play_session)
-        except (PlayModeError, RuntimeLaunchError) as exc:
-            if self.play_session is not None:
-                self.play_session.stop()
-            self.play_session = None
-            self.runtime_process = None
-            QMessageBox.warning(self, "Play", str(exc))
+        return self._start_play(from_start=False, title="Play")
+
+    def play_from_selection(self):
+        """Play the current scene with the player starting at the selected entity's position."""
+        from asteria.core import Transform
+
+        entity = self._selected_entity()
+        if entity is None or not entity.has(Transform):
+            QMessageBox.information(self, "Play from Selection", "Select an entity in the scene first.")
             return False
-        self.console.setText(f"Runtime preview: {self.play_session.runtime_scene.name}")
-        self.statusBar().showMessage(f"Playing — {self.play_session.runtime_scene.name}")
-        self._refresh_actions()
-        return True
+        t = entity.get(Transform)
+        return self._start_play(from_start=False, spawn=(t.x, t.y), title="Play from Selection")
+
+    def restart_play(self):
+        """Fast restart: stop the running play-test and launch it again the same way."""
+        last = getattr(self, "_last_play", None)
+        if last is None:
+            return self.play_project()
+        if self.play_session is not None and self.play_session.active:
+            self.stop_play()
+        return self._start_play(**last)
 
     def stop_play(self):
         if self.play_session is None or not self.play_session.active:
             return False
+        self._flush_runtime_log()
+        self.debugger_widget.detach()
         if self.runtime_process is not None:
             self.runtime_process.stop()
             self.runtime_process = None
@@ -1581,14 +1616,34 @@ class AsteriaEditorWindow(QMainWindow):
         self._refresh_actions()
         return True
 
-    def _poll_runtime_process(self):
-        if self.runtime_process is None or self.runtime_process.running:
+    def _flush_runtime_log(self):
+        """Show what the game printed so far in the Console (play-test log panel)."""
+        if self.runtime_process is None:
             return
+        text = self.runtime_process.read_log()
+        if text and text != getattr(self, "_shown_log", ""):
+            self._shown_log = text
+            self.console.setText(text)
+
+    def _poll_runtime_process(self):
+        if self.runtime_process is None:
+            return
+        flush = getattr(self, "_flush_runtime_log", None)
+        if flush is not None:
+            flush()
+        if self.runtime_process.running:
+            return
+        debugger = getattr(self, "debugger_widget", None)
+        if debugger is not None:
+            debugger.detach()
         self.runtime_process.stop()
         self.runtime_process = None
         if self.play_session is not None and self.play_session.active:
             self.play_session.stop()
-        self.console.setText("Runtime preview closed")
+        if getattr(self, "_shown_log", ""):
+            self.console.append("Runtime preview closed")  # keep the play-test log visible
+        else:
+            self.console.setText("Runtime preview closed")
         self.statusBar().showMessage("Runtime preview closed", 2000)
         self._refresh_actions()
 

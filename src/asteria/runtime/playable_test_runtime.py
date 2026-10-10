@@ -94,6 +94,7 @@ class PlayableTestRuntime:
         # the "battle" scope and are released when play returns to the field.
         self._image_scope = {}
         self.released_images = 0
+        self.debug_server = None
         self._ui_mode = "title"
         self._menu_actor_index = 0
         self._boost_level = 0
@@ -134,6 +135,14 @@ class PlayableTestRuntime:
             self._image_scope.pop(rel, None)
         self.released_images += len(names)
         return len(names)
+
+    def enable_debugger(self, *, port=0, token=None):
+        """Start the editor debug channel (EDT-10); returns the DebugServer."""
+        from asteria.runtime.debug_server import DebugServer
+        from asteria.runtime.debugger import RuntimeDebugger
+
+        self.debug_server = DebugServer(RuntimeDebugger(self.game, self), port=port, token=token)
+        return self.debug_server
 
     def _update_resource_scope(self):
         in_battle = self.game.mode == "battle" or self._victory or self._defeat
@@ -219,6 +228,9 @@ class PlayableTestRuntime:
         return path if path.is_file() else None
 
     def close(self):
+        if self.debug_server is not None:
+            self.debug_server.close()
+            self.debug_server = None
         audio = getattr(self, "audio", None)
         if audio is not None:
             audio.stop_music()
@@ -1356,6 +1368,8 @@ class PlayableTestRuntime:
     def _frame(self, events, dt):
         """Process one frame of input, event programs and drawing (no flip)."""
         self._update_resource_scope()
+        if self.debug_server is not None:
+            self.debug_server.poll()
         with self.profiler.section("input"):
             self.input_source.handle_events(events)
             self.input.update(self.input_source.raw_state())
@@ -1449,6 +1463,9 @@ def run_playable_test_runtime(
     max_frames=None,
     profile_path=None,
     battle_presentation=None,
+    debug_port=None,
+    debug_token=None,
+    spawn=None,
 ):
     resource_root = Path(resource_root)
     if runtime_save is None:
@@ -1465,4 +1482,10 @@ def run_playable_test_runtime(
             "adapter": battle_presentation,
         }
         runtime._battle_presentation = create_battle_presentation_adapter(runtime)
+    if spawn is not None:
+        runtime.game.set_player_position(float(spawn[0]), float(spawn[1]))
+        runtime._ui_mode = "field"  # play-test from the chosen point skips the title screen
+    if debug_port is not None:
+        runtime.enable_debugger(port=debug_port, token=debug_token)
+        print(f"asteria-debug: listening on 127.0.0.1:{runtime.debug_server.port}", flush=True)
     return runtime.run(target_fps, max_frames, profile_path=profile_path)
