@@ -91,7 +91,7 @@ def test_preview_resolves_reference_assets_from_explicit_resource_root(
         captured["load"] = (loaded_project.id, loaded_scene.id, root)
         return runtime
 
-    def run_runtime(loaded_runtime, backend, width, height, target_fps):
+    def run_runtime(loaded_runtime, backend, width, height, target_fps, max_frames=None):
         captured["run"] = (loaded_runtime, width, height, target_fps)
 
     monkeypatch.setattr(reference_runtime.ReferenceRuntime, "load", load_runtime)
