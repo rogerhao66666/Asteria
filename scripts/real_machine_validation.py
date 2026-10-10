@@ -247,6 +247,49 @@ def check_battle_frame_pacing(out):
     ]
 
 
+def check_field_camera(out):
+    """CAM-02: the boss event's camera focus in a real window (zoom, map coverage, boss framing)."""
+    import pygame
+
+    from asteria.core import Transform
+
+    runtime = _runtime()
+    runtime.open()
+    driver = pygame.display.get_driver()
+    runtime._ui_mode = "field"
+    boss = next(e for e in runtime.game.scene.entities() if e.name == "Astral Tyrant").get(Transform)
+
+    def run(seconds):
+        start = time.perf_counter()
+        while time.perf_counter() - start < seconds:
+            dt = min(runtime.clock.tick(60) / 1000.0, 0.05)
+            runtime._frame(pygame.event.get(), dt)
+            pygame.display.flip()
+
+    run(0.5)
+    before = runtime._field_screen_xy(boss.x, boss.y)
+    pygame.image.save(runtime.screen, str(out / "field_camera_home.png"))
+    runtime.game.events.start("boss_interaction_event", replace=True)
+    run(1.5)  # focus blend is 0.8 s; the boss line is on screen meanwhile
+    after = runtime._field_screen_xy(boss.x, boss.y)
+    zoom = runtime.field_camera.zoom
+    bx, by, bw, bh = runtime.field_camera.background_rect()
+    covered = bx <= 0 and by <= 0 and bx + bw >= runtime.width - 1e-6 and by + bh >= runtime.height - 1e-6
+    pygame.image.save(runtime.screen, str(out / "field_camera_boss_focus.png"))
+    runtime.close()
+    centre = (runtime.width / 2, runtime.height / 2)
+    closer = abs(after[0] - centre[0]) < abs(before[0] - centre[0])
+    ok = abs(zoom - 1.6) < 1e-6 and covered and closer
+    return result(
+        "field_camera_boss_focus",
+        "PASS" if ok else "FAIL",
+        f"Boss event camera in a real {driver} window: zoom {zoom:.2f} (authored 1.6), map image covers the "
+        f"screen={covered}, boss moved from x={before[0]:.0f} to x={after[0]:.0f} (screen centre {centre[0]:.0f})",
+        screenshots=["field_camera_home.png", "field_camera_boss_focus.png"],
+        note="Whether the move feels right to a player is part of manual item M5.",
+    )
+
+
 def check_editor_playtest(out):
     from PySide6.QtWidgets import QApplication
 
@@ -348,6 +391,7 @@ CHECKS = {
     "input": check_input,
     "audio": check_audio,
     "battle": check_battle_frame_pacing,
+    "field_camera": check_field_camera,
     "editor": check_editor_playtest,
     "runtime": check_runtime_exit_and_recovery,
 }
