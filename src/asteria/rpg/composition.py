@@ -81,7 +81,8 @@ class CompositionRecipeDefinition:
     ``failure_outputs`` produced instead. On success a quality roll (plus the
     caller's bonus) picks the highest ``quality_tiers`` entry it reaches,
     whose outputs replace ``outputs``; ``experience`` maps progression tracks
-    to the experience a success grants.
+    to the experience a success grants. ``requires_discovery`` hides the
+    recipe from crafting menus until the player learns or discovers it.
     """
 
     recipe_id: str
@@ -94,9 +95,10 @@ class CompositionRecipeDefinition:
     failure_outputs: tuple[CompositionOutput,...]=()
     quality_tiers: tuple[CompositionQualityTier,...]=()
     experience: dict=None
+    requires_discovery: bool=False
 
     def __init__(self,recipe_id,display_name=None,*,selections,outputs,tags=(),station="",success_chance=1.0,
-                 failure_outputs=(),quality_tiers=(),experience=None):
+                 failure_outputs=(),quality_tiers=(),experience=None,requires_discovery=False):
         selections=tuple(x if isinstance(x,CompositionSelection) else CompositionSelection.from_data(x) for x in selections)
         outputs=tuple(x if isinstance(x,CompositionOutput) else CompositionOutput.from_data(x) for x in outputs)
         failure_outputs=tuple(x if isinstance(x,CompositionOutput) else CompositionOutput.from_data(x) for x in failure_outputs)
@@ -120,6 +122,7 @@ class CompositionRecipeDefinition:
         object.__setattr__(self,"failure_outputs",failure_outputs)
         object.__setattr__(self,"quality_tiers",quality_tiers)
         object.__setattr__(self,"experience",experience)
+        object.__setattr__(self,"requires_discovery",bool(requires_discovery))
 
     def matches(self,payload):
         selected={str(k):tuple(sorted(str(x) for x in v)) for k,v in dict(payload).items()}
@@ -128,7 +131,8 @@ class CompositionRecipeDefinition:
 
     @property
     def _extended(self):
-        return bool(self.station or self.success_chance<1.0 or self.failure_outputs or self.quality_tiers or self.experience)
+        return bool(self.station or self.success_chance<1.0 or self.failure_outputs or self.quality_tiers
+                    or self.experience or self.requires_discovery)
 
     def all_output_item_ids(self):
         ids=[x.item_id for x in self.outputs+self.failure_outputs]
@@ -148,6 +152,7 @@ class CompositionRecipeDefinition:
                 "failure_outputs":[x.to_data() for x in self.failure_outputs],
                 "quality_tiers":[x.to_data() for x in self.quality_tiers],
                 "experience":dict(sorted(self.experience.items())),
+                "requires_discovery":self.requires_discovery,
             })
         return data
 
@@ -161,7 +166,7 @@ class CompositionRecipeDefinition:
                    tags=data["tags"],station=data.get("station",""),success_chance=data.get("success_chance",1.0),
                    failure_outputs=[CompositionOutput.from_data(x) for x in data.get("failure_outputs",())],
                    quality_tiers=[CompositionQualityTier.from_data(x) for x in data.get("quality_tiers",())],
-                   experience=data.get("experience"))
+                   experience=data.get("experience"),requires_discovery=data.get("requires_discovery",False))
 
 
 @dataclass(frozen=True, slots=True)

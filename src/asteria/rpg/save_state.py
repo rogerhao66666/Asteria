@@ -271,6 +271,9 @@ class RpgRuntimeState:
         for faction_id in self.world.reputation:
             if faction_id not in database.factions:
                 raise ValueError(f"world record references unknown faction {faction_id}")
+        for recipe_id in self.world.known_recipes:
+            if recipe_id not in database.composition_recipes:
+                raise ValueError(f"world record references unknown recipe {recipe_id}")
         for achievement_id in self.world.achievements:
             if achievement_id not in database.achievements:
                 raise ValueError(f"world record references unknown achievement {achievement_id}")

@@ -24,6 +24,8 @@ STANDARD_WORLD_COMMANDS = (
     "CHANGE_REPUTATION",
     "CHANGE_RELATIONSHIP",
     "ADD_COUNTER",
+    "LEARN_RECIPE",
+    "OPEN_CRAFTING",
     "PLAY_BGM",
     "STOP_BGM",
     "PLAY_SE",
@@ -47,6 +49,8 @@ WORLD_COMMAND_ARGUMENTS = {
     "CHANGE_REPUTATION": ("faction_id", "amount"),
     "CHANGE_RELATIONSHIP": ("subject_id", "amount"),
     "ADD_COUNTER": ("counter_id", "amount"),
+    "LEARN_RECIPE": ("recipe_id",),
+    "OPEN_CRAFTING": ("station",),
     "PLAY_BGM": ("asset_id", "fade", "volume"),
     "STOP_BGM": ("fade",),
     "PLAY_SE": ("asset_id", "volume"),
@@ -152,6 +156,18 @@ def register_standard_world_commands(router, session):
 
     router.register("CHANGE_REPUTATION", change_reputation)
     router.register("CHANGE_RELATIONSHIP", lambda c: session.change_relationship(str(_required(c, "subject_id")), _amount(c, "amount", 0)))
+    def learn_recipe(command):
+        recipe_id = str(_required(command, "recipe_id"))
+        if recipe_id not in session.project.rpg_database.composition_recipes:
+            raise WorldCommandError(f"unknown recipe: {recipe_id}")
+        return session.learn_recipe(recipe_id)
+
+    def open_crafting(command):
+        session.open_crafting_station = str(command.args.get("station") or "")
+        return session.open_crafting_station
+
+    router.register("LEARN_RECIPE", learn_recipe)
+    router.register("OPEN_CRAFTING", open_crafting)
     router.register("ADD_COUNTER", lambda c: session.add_counter(str(_required(c, "counter_id")), _amount(c, "amount", 1)))
     for name in PRESENTATION_COMMANDS:
         router.register(name, presentation_request)

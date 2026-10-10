@@ -83,6 +83,7 @@ class GameSessionRuntime:
             self.events.restore(runtime_save.active_event)
         self.scene_events=None
         self.open_shop_id=None
+        self.open_crafting_station=None
         self._field_simulation={}
         self._build_scene_events()
 
@@ -717,12 +718,36 @@ class GameSessionRuntime:
             grant_reward=grant,
         )
 
+    def recipe_known(self,recipe_id):
+        recipe=self.project.rpg_database.composition_recipes[str(recipe_id)]
+        return not recipe.requires_discovery or recipe.recipe_id in self.world.known_recipes
+
+    def known_recipes(self,station=None):
+        """Recipes the player can see, optionally only those usable at ``station``."""
+        recipes=self.project.rpg_database.composition_recipes
+        return tuple(r for k,r in sorted(recipes.items()) if self.recipe_known(k)
+                     and (station is None or not r.station or r.station==station))
+
+    def learn_recipe(self,recipe_id):
+        recipe_id=str(recipe_id)
+        if recipe_id not in self.project.rpg_database.composition_recipes:
+            raise GameSessionError(f"unknown recipe: {recipe_id}")
+        newly=recipe_id not in self.world.known_recipes
+        if newly:
+            self.world.known_recipes.append(recipe_id)
+            self.save.event_context.set_switch(f"recipe.{recipe_id}.known",True)
+        return newly
+
     def craft(self,payload,*,station="",quality_bonus=0.0,rng=None):
-        """Craft with the project's recipes against the saved inventory and progression."""
+        """Craft with the project's recipes against the saved inventory and progression.
+
+        Crafting the exact materials of an undiscovered recipe discovers it.
+        """
         from asteria.rpg import CompositionRuntime
         runtime=CompositionRuntime(self.project.rpg_database.composition_recipes.values())
         state=self.save.rpg_state
         result=runtime.craft(state.inventory,payload,station=station,rng=rng,quality_bonus=quality_bonus,progression=state.progression)
+        self.learn_recipe(result.recipe_id)
         self.refresh_quests()
         return result
 

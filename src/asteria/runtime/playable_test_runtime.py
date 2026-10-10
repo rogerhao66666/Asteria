@@ -10,7 +10,10 @@ from asteria.runtime.battle_presentation_adapters import create_battle_presentat
 from asteria.runtime.audio_mixer import AudioMixer
 from asteria.runtime.collision import CollisionWorld
 from asteria.runtime.input_map import InputActionTracker
-from asteria.runtime.game_menus import GAME_OVER_OPTIONS, PAUSE_OPTIONS, MenuCursor, ShopScreen, quest_rows
+from asteria.runtime.game_menus import (
+    GAME_OVER_OPTIONS, PAUSE_OPTIONS, CraftingScreen, GameSettings, MenuCursor, ShopScreen, achievement_rows,
+    bestiary_rows, quest_rows,
+)
 
 
 WALK_ROW_BY_FACING = {"down": 0, "left": 1, "right": 2, "up": 3}
@@ -91,6 +94,10 @@ class PlayableTestRuntime:
         self._shop_screen=None
         self._quest_return="field"
         self._capture_menu=False
+        self._crafting_screen=None
+        self._list_scroll=0
+        self.settings=GameSettings.load(self._settings_path())
+        self._settings_menu=MenuCursor(GameSettings.OPTIONS)
 
     def path(self, rel):
         return self.resource_root/str(rel)
@@ -111,7 +118,11 @@ class PlayableTestRuntime:
         self.input=InputActionTracker(self.project.input_map)
         from asteria.platform.pygame_audio import open_audio_device
         self.audio=AudioMixer(open_audio_device(self.pg),self._audio_path)
+        self.settings.apply(self.audio)
         return self
+
+    def _settings_path(self):
+        return self.resource_root/"saves"/"settings.json"
 
     def _audio_path(self, asset_id):
         """Manifest audio map first, then a canonical project asset; None when missing."""
@@ -540,7 +551,8 @@ class PlayableTestRuntime:
 
         self.panel((460,22,480,92))
         self.text("1-4: Skill   B: Boost   X: Capture   F5: Save",478,36,size=20)
-        self.text(self._last_action_name or "Choose an action",478,70,size=20,color=(172,220,255))
+        if self.settings.show_battle_log:
+            self.text(self._last_action_name or "Choose an action",478,70,size=20,color=(172,220,255))
         boost_resource=self.game.rules.boost_resource_id
         if actor and self.game.rules.boost_enabled:
             amount=self.game.battle.battle_resources.current(actor,boost_resource)
@@ -680,6 +692,9 @@ class PlayableTestRuntime:
         choice=self._pause_menu.selected
         if choice=="resume":self._ui_mode="field"
         elif choice=="quests":self._quest_return="pause"; self._ui_mode="quests"
+        elif choice=="crafting":self._open_crafting("",back="pause")
+        elif choice in ("achievements","bestiary"):self._list_scroll=0; self._ui_mode=choice
+        elif choice=="settings":self._settings_menu.index=0; self._ui_mode="settings"
         elif choice=="save":self.save_playtest()
         elif choice=="load":
             if self._load_player_save():self._ui_mode="field"
@@ -707,6 +722,105 @@ class PlayableTestRuntime:
         if self.input.just_pressed("move_left") or self.input.just_pressed("move_right"):screen.switch_tab()
         if self.input.just_pressed("confirm") and screen.confirm() is not None:
             self._sound(self.manifest.get("dialogue_confirm_sfx"))
+
+    def _open_crafting(self, station, back="field"):
+        self._crafting_screen=CraftingScreen(self.game,station)
+        self._crafting_back=back
+        self._ui_mode="crafting"
+
+    def _crafting_input(self):
+        screen=self._crafting_screen
+        if screen is None or self.input.just_pressed("cancel"):
+            if screen is not None:screen.close()
+            self._crafting_screen=None
+            self._ui_mode=getattr(self,"_crafting_back","field"); return
+        if self.input.just_pressed("move_up"):screen.move(-1)
+        if self.input.just_pressed("move_down"):screen.move(1)
+        if self.input.just_pressed("confirm") and screen.confirm() is not None:
+            self._sound(self.manifest.get("dialogue_confirm_sfx"))
+
+    def _list_screen_input(self):
+        if self.input.just_pressed("cancel") or self.input.just_pressed("confirm"):
+            self._ui_mode="pause"; return
+        if self.input.just_pressed("move_down"):self._list_scroll+=1
+        if self.input.just_pressed("move_up"):self._list_scroll=max(0,self._list_scroll-1)
+
+    def _settings_input(self):
+        cursor=self._settings_menu
+        if self.input.just_pressed("cancel"):
+            self.settings.save(self._settings_path()); self._ui_mode="pause"; return
+        if self.input.just_pressed("move_up"):cursor.move(-1)
+        if self.input.just_pressed("move_down"):cursor.move(1)
+        key=cursor.selected
+        if key=="back":
+            if self.input.just_pressed("confirm"):
+                self.settings.save(self._settings_path()); self._ui_mode="pause"
+            return
+        delta=(1 if self.input.just_pressed("move_right") else 0)-(1 if self.input.just_pressed("move_left") else 0)
+        if self.input.just_pressed("confirm") and key=="show_battle_log":delta=1
+        if delta:
+            self.settings.adjust(key,delta); self.settings.apply(self.audio)
+
+    def _draw_crafting(self):
+        screen=self._crafting_screen
+        self._draw_backdrop()
+        if screen is None:return
+        self.panel((60,40,self.width-120,self.height-80))
+        title="Crafting"+(f" — {screen.station.replace('_',' ').title()}" if screen.station else "")
+        self.text(title,90,54,size=30,color=(255,220,124))
+        rows=screen.rows()
+        if not rows:self.text("No known recipes here.",90,110,size=22,color=(170,210,240))
+        y=104
+        for i,row in enumerate(rows):
+            if y>self.height-150:break
+            selected=i==screen.index
+            color=(255,226,129) if selected else (235,238,245) if row.craftable else (130,135,150)
+            self.text(("> " if selected else "   ")+f"{row.name}  ->  {row.outputs}",90,y,size=22,color=color); y+=26
+            materials="   ".join(f"{name} {have}/{need}" for name,need,have in row.materials)
+            self.text(materials,120,y,size=17,color=(170,210,240) if row.craftable else (200,130,130)); y+=30
+        hidden=screen.undiscovered()
+        if hidden:self.text(f"??? {hidden} recipe(s) not yet discovered",90,self.height-128,size=18,color=(150,155,175))
+        if screen.message:self.text(screen.message,90,self.height-100,size=20,color=(255,220,124))
+        self.text("Up/Down: select   Enter: craft   Esc: back",90,self.height-72,size=18,color=(170,210,240))
+
+    def _draw_list_screen(self, kind):
+        self._draw_backdrop()
+        self.panel((60,40,self.width-120,self.height-80))
+        if kind=="achievements":
+            rows=achievement_rows(self.game)
+            done=sum(1 for r in rows if r[2])
+            self.text(f"Achievements  {done}/{len(rows)}",self.width/2,56,size=30,color=(255,220,124),center=True)
+            lines=[((("[x] " if unlocked else "[ ] ")+name),description,(130,220,150) if unlocked else (150,155,175))
+                   for name,description,unlocked in rows]
+        else:
+            rows=bestiary_rows(self.game)
+            seen=sum(1 for r in rows if r[1])
+            self.text(f"Bestiary  {seen}/{len(rows)} seen",self.width/2,56,size=30,color=(255,220,124),center=True)
+            lines=[(name,("" if not s else f"seen {s}   defeated {d}   captured {c}"+(f"   {', '.join(tags)}" if tags else "")),
+                    (235,238,245) if s else (150,155,175)) for name,s,d,c,tags in rows]
+        if not lines:self.text("Nothing here yet.",90,110,size=22,color=(170,210,240))
+        self._list_scroll=min(self._list_scroll,max(0,len(lines)-1))
+        y=104
+        for title,detail,color in lines[self._list_scroll:]:
+            if y>self.height-110:break
+            self.text(title,90,y,size=22,color=color); y+=24
+            if detail:self.text(detail,120,y,size=17,color=(170,210,240)); y+=24
+            y+=6
+        self.text("Up/Down: scroll   Enter / Esc: back",self.width-360,self.height-72,size=18,color=(170,210,240))
+
+    def _draw_settings(self):
+        self._draw_backdrop()
+        cursor=self._settings_menu
+        x,y=self.width/2-220,self.height/2-130
+        self.panel((x,y,440,260))
+        self.text("Settings",self.width/2,y+18,size=34,color=(255,220,124),center=True)
+        for i,(key,label) in enumerate(cursor.options):
+            selected=i==cursor.index
+            color=(255,226,129) if selected else (235,238,245)
+            self.text(("> " if selected else "   ")+label,x+40,y+76+i*38,size=24,color=color)
+            value=self.settings.value_text(key)
+            if value:self.text(f"< {value} >" if selected else value,x+300,y+76+i*38,size=24,color=color)
+        self.text("Left/Right: change   Esc: save and back",self.width/2,y+236,size=16,color=(170,210,240),center=True)
 
     def _draw_backdrop(self, base="field"):
         if base=="battle":self._draw_battle_world(show_labels=False)
@@ -861,6 +975,12 @@ class PlayableTestRuntime:
             self._quests_input(); self._draw_quests()
         elif self._ui_mode=="shop":
             self._shop_input(); self._draw_shop()
+        elif self._ui_mode=="crafting":
+            self._crafting_input(); self._draw_crafting()
+        elif self._ui_mode in ("achievements","bestiary"):
+            self._list_screen_input(); self._draw_list_screen(self._ui_mode)
+        elif self._ui_mode=="settings":
+            self._settings_input(); self._draw_settings()
         elif self._ui_mode=="game_over":
             self._game_over_input(); self._draw_overlay_menu("Game Over",self._game_over_menu,base="battle")
         elif self.game.mode=="battle" or self._victory:
@@ -874,6 +994,8 @@ class PlayableTestRuntime:
             self.game.update_events(dt)
             if self._ui_mode=="field" and self.game.open_shop_id and not self.game.event_busy:
                 self._shop_screen=ShopScreen(self.game); self._ui_mode="shop"
+            if self._ui_mode=="field" and self.game.open_crafting_station is not None and not self.game.event_busy:
+                self._open_crafting(self.game.open_crafting_station,back="field")
             if self.game.mode=="field" and self._ui_mode=="field":
                 self.game.field_update(dt)
             if self.game.mode=="battle":

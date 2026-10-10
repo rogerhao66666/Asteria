@@ -111,13 +111,17 @@ class AchievementDefinition:
 
 @dataclass(slots=True)
 class WorldRecord:
-    """Saved world state; ``bestiary`` maps enemy id -> {"seen": n, "defeated": n, "captured": n}."""
+    """Saved world state; ``bestiary`` maps enemy id -> {"seen": n, "defeated": n, "captured": n}.
+
+    ``known_recipes`` lists discovered recipes that require discovery.
+    """
 
     reputation: dict = field(default_factory=dict)
     relationships: dict = field(default_factory=dict)
     counters: dict = field(default_factory=dict)
     achievements: list = field(default_factory=list)
     bestiary: dict = field(default_factory=dict)
+    known_recipes: list = field(default_factory=list)
 
     SCHEMA = "asteria.rpg.world_record"
 
@@ -176,6 +180,7 @@ class WorldRecord:
             "counters": dict(sorted(self.counters.items())),
             "achievements": list(self.achievements),
             "bestiary": {k: dict(sorted(v.items())) for k, v in sorted(self.bestiary.items())},
+            "known_recipes": sorted(self.known_recipes),
         }
 
     @classmethod
@@ -188,4 +193,5 @@ class WorldRecord:
             {str(k): float(v) for k, v in data["counters"].items()},
             [str(x) for x in data["achievements"]],
             {str(k): {str(a): int(b) for a, b in v.items()} for k, v in data["bestiary"].items()},
+            [str(x) for x in data.get("known_recipes", ())],
         )

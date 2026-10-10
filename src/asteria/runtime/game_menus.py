@@ -8,7 +8,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-PAUSE_OPTIONS = (("resume", "Resume"), ("quests", "Quest Log"), ("save", "Save Game"),
+PAUSE_OPTIONS = (("resume", "Resume"), ("quests", "Quest Log"), ("crafting", "Crafting"),
+                 ("achievements", "Achievements"), ("bestiary", "Bestiary"), ("settings", "Settings"), ("save", "Save Game"),
                  ("load", "Load Game"), ("title", "Return to Title"), ("quit", "Quit"))
 GAME_OVER_OPTIONS = (("load", "Load Last Save"), ("title", "Return to Title"))
 
@@ -133,3 +134,161 @@ def quest_rows(game):
             objectives.append((objective.description or objective.objective_id, value, required, value >= required))
         rows.append(QuestRow(quest_id, quest.display_name, progress.status, tuple(objectives)))
     return tuple(rows)
+
+
+# --- crafting (recipe discovery), achievements, bestiary, settings --------------
+
+@dataclass(frozen=True, slots=True)
+class CraftingRow:
+    recipe_id: str
+    name: str
+    outputs: str
+    materials: tuple  # (item name, needed, owned)
+    craftable: bool
+
+
+class CraftingScreen:
+    """Known recipes usable at ``station`` (empty: recipes without a station)."""
+
+    def __init__(self, game, station=""):
+        self.game = game
+        self.station = str(station or "")
+        self.index = 0
+        self.message = ""
+
+    def _name(self, item_id):
+        item = self.game.project.rpg_database.items.get(item_id)
+        return item.display_name if item else item_id
+
+    def rows(self):
+        inventory = self.game.save.rpg_state.inventory
+        rows = []
+        for recipe in self.game.known_recipes(self.station):
+            if recipe.station and recipe.station != self.station:
+                continue
+            needed = {}
+            for selection in recipe.selections:
+                for item_id in selection.item_ids:
+                    needed[item_id] = needed.get(item_id, 0) + 1
+            materials = tuple((self._name(k), n, inventory.count(k)) for k, n in sorted(needed.items()))
+            outputs = ", ".join(f"{self._name(o.item_id)} x{o.amount}" for o in recipe.outputs)
+            rows.append(CraftingRow(recipe.recipe_id, recipe.display_name, outputs, materials,
+                                    all(have >= need for _, need, have in materials)))
+        return tuple(rows)
+
+    def undiscovered(self):
+        recipes = self.game.project.rpg_database.composition_recipes
+        return sum(1 for k in recipes if not self.game.recipe_known(k))
+
+    def move(self, delta):
+        rows = self.rows()
+        if rows:
+            self.index = (self.index + int(delta)) % len(rows)
+
+    def confirm(self, rng=None):
+        rows = self.rows()
+        if not rows:
+            return None
+        row = rows[min(self.index, len(rows) - 1)]
+        recipe = self.game.project.rpg_database.composition_recipes[row.recipe_id]
+        payload = {s.step_id: list(s.item_ids) for s in recipe.selections}
+        try:
+            result = self.game.craft(payload, station=self.station, rng=rng)
+        except ValueError as exc:
+            self.message = str(exc)
+            return None
+        made = ", ".join(f"{self._name(k)} x{n}" for k, n in result.produced) or "nothing"
+        if result.success:
+            self.message = f"Crafted {made}" + (f" ({result.quality})" if result.quality else "")
+        else:
+            self.message = f"Crafting failed — got {made}"
+        return result
+
+    def close(self):
+        self.game.open_crafting_station = None
+
+
+def achievement_rows(game):
+    """``(name, description, unlocked)``; hidden locked achievements show as ???."""
+    unlocked = set(game.world.achievements)
+    rows = []
+    for key, achievement in sorted(game.project.rpg_database.achievements.items()):
+        done = key in unlocked
+        if achievement.hidden and not done:
+            rows.append(("???", "Hidden achievement", False))
+        else:
+            rows.append((achievement.display_name, achievement.description, done))
+    return tuple(rows)
+
+
+def bestiary_rows(game):
+    """``(name, seen, defeated, captured, tags)`` per enemy; unseen enemies show as ???."""
+    rows = []
+    for enemy_id, enemy in sorted(game.project.rpg_database.enemies.items()):
+        entry = game.world.bestiary.get(enemy_id)
+        if not entry or not entry.get("seen"):
+            rows.append(("???", 0, 0, 0, ()))
+            continue
+        rows.append((enemy.display_name, entry.get("seen", 0), entry.get("defeated", 0), entry.get("captured", 0),
+                     tuple(t for t in getattr(enemy, "tags", ()) if "." in t)))
+    return tuple(rows)
+
+
+@dataclass(slots=True)
+class GameSettings:
+    """Player preferences, stored outside save files."""
+
+    music_volume: float = 0.8
+    effects_volume: float = 0.8
+    show_battle_log: bool = True
+
+    OPTIONS = (("music_volume", "Music Volume"), ("effects_volume", "Effects Volume"),
+               ("show_battle_log", "Battle Messages"), ("back", "Back"))
+
+    def adjust(self, key, delta):
+        if key in ("music_volume", "effects_volume"):
+            setattr(self, key, round(min(1.0, max(0.0, getattr(self, key) + 0.1 * delta)), 2))
+        elif key == "show_battle_log":
+            self.show_battle_log = not self.show_battle_log
+        return self
+
+    def value_text(self, key):
+        if key in ("music_volume", "effects_volume"):
+            return f"{round(getattr(self, key) * 100):d}%"
+        if key == "show_battle_log":
+            return "On" if self.show_battle_log else "Off"
+        return ""
+
+    def apply(self, mixer):
+        mixer.set_volume("bgm", self.music_volume)
+        mixer.set_volume("ambient", self.music_volume)
+        mixer.set_volume("sfx", self.effects_volume)
+
+    def to_data(self):
+        return {"schema": "asteria.game_settings", "version": 1, "music_volume": self.music_volume,
+                "effects_volume": self.effects_volume, "show_battle_log": self.show_battle_log}
+
+    @classmethod
+    def from_data(cls, data):
+        if data.get("schema") != "asteria.game_settings" or data.get("version") != 1:
+            raise ValueError("unsupported game settings")
+        return cls(float(data["music_volume"]), float(data["effects_volume"]), bool(data["show_battle_log"]))
+
+    def save(self, path):
+        import json
+        from pathlib import Path
+
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(self.to_data(), indent=2), encoding="utf-8")
+        return path
+
+    @classmethod
+    def load(cls, path):
+        import json
+        from pathlib import Path
+
+        try:
+            return cls.from_data(json.loads(Path(path).read_text(encoding="utf-8")))
+        except (OSError, ValueError, KeyError):
+            return cls()

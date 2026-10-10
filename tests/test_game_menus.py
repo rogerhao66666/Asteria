@@ -63,7 +63,8 @@ def test_runtime_pause_quests_save_and_title(runtime, resource_root):
     assert runtime._ui_mode == "quests"
     _press(runtime, pygame.K_ESCAPE)
     assert runtime._ui_mode == "pause"
-    _press(runtime, pygame.K_DOWN)
+    for _ in range(5):                                                     # Crafting, Achievements, Bestiary, Settings, Save
+        _press(runtime, pygame.K_DOWN)
     _press(runtime, pygame.K_RETURN)                                       # Save Game
     assert (resource_root / "saves" / "playtest_autosave.asteria-save.json").is_file()
     _press(runtime, pygame.K_DOWN)
