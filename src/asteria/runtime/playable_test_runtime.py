@@ -184,8 +184,16 @@ class PlayableTestRuntime:
         self.screen.blit(self.pg.transform.smoothscale(bg,(self.width,self.height)),(0,0))
 
         sprites=self.manifest["field"].get("entity_sprites",{})
+        from asteria.runtime.field_ai import FieldAIComponent, VisibleEncounterComponent
         for entity in self.game.scene.entities():
             spec=sprites.get(entity.name)
+            if spec is None and entity is not self.game.player and entity.has(Transform) and (
+                    entity.has(FieldAIComponent) or entity.has(VisibleEncounterComponent)):
+                # Field enemies without a manifest sprite still need to be visible.
+                et=entity.get(Transform); ex,ey=self._field_screen_xy(et.x,et.y)
+                self.pg.draw.circle(self.screen,(200,70,80),(int(ex),int(ey)),14)
+                self.pg.draw.circle(self.screen,(255,230,230),(int(ex),int(ey)),14,2)
+                continue
             if spec is None or entity is self.game.player:continue
             et=entity.get(Transform); ex,ey=self._field_screen_xy(et.x,et.y)
             w,h=spec.get("size",(96,112))
@@ -818,8 +826,8 @@ class PlayableTestRuntime:
             self.game.update_events(dt)
             if self._ui_mode=="field" and self.game.open_shop_id and not self.game.event_busy:
                 self._shop_screen=ShopScreen(self.game); self._ui_mode="shop"
-            if self.game.mode=="field":
-                self.game.check_visible_encounter()
+            if self.game.mode=="field" and self._ui_mode=="field":
+                self.game.field_update(dt)
             if self.game.mode=="battle":
                 self._turn_actor=None
                 self._battle_presentation.begin()

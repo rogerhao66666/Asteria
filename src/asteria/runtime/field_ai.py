@@ -70,14 +70,21 @@ class FieldAIState:
 
 
 class FieldAISystem(System):
-    """Runs every FieldAIComponent; ``blocking`` is any ``collides_world_point`` query."""
+    """Runs every FieldAIComponent.
+
+    ``blocking`` is any ``collides_world_point`` query, or a callable
+    ``entity -> query`` (so an entity's own collider can be excluded).
+    ``default_target_id`` is chased / fled when a component names no target.
+    """
 
     order = 20
 
-    def __init__(self, blocking=None, rng=None):
+    def __init__(self, blocking=None, rng=None, *, default_target_id=""):
         self.blocking = blocking
         self.rng = rng or random.Random(0)
+        self.default_target_id = str(default_target_id or "")
         self.states: dict[str, FieldAIState] = {}
+        self._query = None
 
     def state(self, entity_id):
         return self.states.get(str(entity_id))
@@ -93,7 +100,7 @@ class FieldAISystem(System):
         if not away and step > distance:  # land exactly on the goal
             dx, dy = dx * distance / step, dy * distance / step
         mover = CharacterController2D(transform.x, transform.y, speed=spec.speed, half_width=0.0, half_height=0.0)
-        mover.move(dx / distance, dy / distance, dt, self.blocking or _Open())
+        mover.move(dx / distance, dy / distance, dt, self._query or _Open())
         transform.x, transform.y = mover.x, mover.y
         return False
 
@@ -102,7 +109,9 @@ class FieldAISystem(System):
             state = self.states.get(entity.id)
             if state is None:
                 state = self.states[entity.id] = FieldAIState(spec.behaviour, (transform.x, transform.y))
-            target = scene.get_entity(spec.target_entity_id) if spec.target_entity_id else None
+            self._query = self.blocking(entity) if callable(self.blocking) and not hasattr(self.blocking, "collides_world_point") else self.blocking
+            target_id = spec.target_entity_id or self.default_target_id
+            target = scene.get_entity(target_id) if target_id else None
             distance = None
             if target is not None and target.has(Transform):
                 t = target.get(Transform)

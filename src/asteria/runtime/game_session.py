@@ -83,6 +83,7 @@ class GameSessionRuntime:
             self.events.restore(runtime_save.active_event)
         self.scene_events=None
         self.open_shop_id=None
+        self._field_simulation={}
         self._build_scene_events()
 
     def set_player_position(self,x,y):
@@ -106,6 +107,33 @@ class GameSessionRuntime:
         self.events.start_trigger(trigger,replace=True)
         self.update_events(0.0)
         return trigger
+
+    def _field_systems(self):
+        """Field AI and spawn systems for the current scene (created on first use)."""
+        systems=self._field_simulation.get(self.scene.id)
+        if systems is None:
+            from asteria.runtime.collision import CollisionWorld
+            from asteria.runtime.field_ai import FieldAISystem, SpawnSystem
+            from asteria.runtime.preview import build_preview_registry
+            scene=self.scene
+            def blocking(entity):
+                # Enemies are blocked by solid colliders, not by the player they chase.
+                return CollisionWorld.from_scene(scene).blocking_query(exclude={entity.id,self.player.id})
+            systems=(
+                SpawnSystem(self.project.prefabs,build_preview_registry(),switches=self.save.event_context.get_switch,
+                            rng=random.Random(f"{scene.id}:spawn")),
+                FieldAISystem(blocking,rng=random.Random(f"{scene.id}:ai"),default_target_id=self.player.id),
+            )
+            self._field_simulation[scene.id]=systems
+        return systems
+
+    def field_update(self,dt):
+        """Advance field enemies and spawn zones, then start any touched visible encounter."""
+        if self.mode!="field" or self.event_busy:
+            return None
+        for system in self._field_systems():
+            system.update(self.scene,float(dt))
+        return self.check_visible_encounter()
 
     def check_visible_encounter(self):
         """Start the encounter of a field enemy (VisibleEncounterComponent) the player touches."""

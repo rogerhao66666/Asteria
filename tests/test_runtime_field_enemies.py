@@ -1,0 +1,76 @@
+"""D12 runtime integration: spawn zones and field enemy AI run inside the playable runtime.
+
+Uses a minimal test fixture (one prefab, one spawn zone) added to the
+reference project in memory; the reference project files are not changed.
+"""
+
+from math import hypot
+
+import pytest
+
+pygame = pytest.importorskip("pygame")
+
+from asteria.core import Entity, Transform  # noqa: E402
+from asteria.core.prefab import prefab_from_entity  # noqa: E402
+from asteria.runtime import FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent  # noqa: E402
+from test_playable_battle_loop import resource_root, runtime  # noqa: E402,F401
+
+
+def _install_fixture(game, *, behaviour="chase", radius=0.0, offset=(70.0, 0.0)):
+    template = Entity("Field Slime")
+    template.add_component(Transform())
+    ai = template.add_component(FieldAIComponent())
+    ai.behaviour, ai.speed, ai.detect_radius, ai.lose_radius = behaviour, 60.0, 200.0, 400.0
+    encounter = template.add_component(VisibleEncounterComponent())
+    encounter.encounter_id = "boss_room"
+    game.project.prefabs.add(prefab_from_entity(template, "field_slime"))
+    zone = Entity("Slime Zone")
+    p = game.player.get(Transform)
+    zone_transform = zone.add_component(Transform())
+    zone_transform.x, zone_transform.y = p.x + offset[0], p.y + offset[1]
+    spec = zone.add_component(SpawnZoneComponent())
+    spec.prefab_id, spec.max_alive, spec.radius, spec.respawn_seconds = "field_slime", 1, radius, 5.0
+    game.scene.add_entity(zone)
+    return zone
+
+
+def _spawned(game):
+    return [e for e in game.scene.entities() if e.has(FieldAIComponent)]
+
+
+def test_spawned_enemy_chases_player_and_starts_battle_in_the_runtime(runtime):
+    runtime._ui_mode = "field"
+    game = runtime.game
+    _install_fixture(game)
+    runtime._frame([], 0.016)
+    (slime,) = _spawned(game)
+    start = hypot(slime.get(Transform).x - game.player.get(Transform).x, slime.get(Transform).y - game.player.get(Transform).y)
+    pixel = runtime.screen.get_at(tuple(int(v) for v in runtime._field_screen_xy(slime.get(Transform).x, slime.get(Transform).y)))
+    assert tuple(pixel)[:3] == (200, 70, 80)                              # visible on the field
+    frames = 0
+    while game.mode == "field" and frames < 200:
+        runtime._frame([], 0.05)
+        frames += 1
+    assert game.mode == "battle" and game.encounter_id == "boss_room"
+    assert 0 < frames < 200 and start > 12
+    assert not _spawned(game)                                            # touched enemy removed
+
+
+def test_spawn_zone_respawns_and_field_ai_pauses_outside_the_field(runtime):
+    runtime._ui_mode = "field"
+    game = runtime.game
+    _install_fixture(game, behaviour="wander", radius=10.0, offset=(100.0, 0.0))
+    runtime._frame([], 0.016)
+    (slime,) = _spawned(game)
+    runtime._ui_mode = "pause"                                            # menus freeze the field
+    before = (slime.get(Transform).x, slime.get(Transform).y)
+    for _ in range(10):
+        runtime._frame([], 0.05)
+    assert (slime.get(Transform).x, slime.get(Transform).y) == before
+    runtime._ui_mode = "field"
+    game.scene.remove_entity(slime)
+    runtime._frame([], 0.016)
+    assert not _spawned(game)                                             # respawn waits
+    for _ in range(110):
+        runtime._frame([], 0.05)
+    assert len(_spawned(game)) == 1
