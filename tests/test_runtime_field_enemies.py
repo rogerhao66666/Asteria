@@ -97,6 +97,10 @@ def test_battle_capture_menu_captures_a_weakened_enemy(runtime):
     assert runtime._battle_actor() is not None
     targets = game.capture_targets()
     assert [t[0] for t in targets] == ["astral_tyrant:1"] and targets[0][1] == 0.0
+    for _ in range(400):
+        if not runtime._presentation_busy():
+            break
+        runtime._frame([], 0.05)
     _press(runtime, pygame.K_x)
     assert runtime._capture_menu
     _press(runtime, pygame.K_ESCAPE)
@@ -104,6 +108,10 @@ def test_battle_capture_menu_captures_a_weakened_enemy(runtime):
     tyrant = game.battle.member("astral_tyrant:1").subject.resources
     tyrant.set_current(game.rules.knockout_resource_id, 1)
     runtime._advance_to_hero_turn()
+    for _ in range(400):                        # commands are accepted once the choreography is idle
+        if not runtime._presentation_busy():
+            break
+        runtime._frame([], 0.05)
     _press(runtime, pygame.K_x)
     _press(runtime, pygame.K_1)
     assert "astral_tyrant:1" not in game.active_enemy_ids()

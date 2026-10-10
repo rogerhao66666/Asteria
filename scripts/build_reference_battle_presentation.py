@@ -34,6 +34,7 @@ from asteria.presentation.battle_combatant_visuals import (  # noqa: E402
 )
 from asteria.presentation.battle_motion_sequence import BattleMotionBeat, BattleMotionSequence  # noqa: E402
 from asteria.presentation.library import BattlePresentationLibrary  # noqa: E402
+from asteria.presentation.battle_hud import BattleHudProfile, BattleHudResourceStyle  # noqa: E402
 
 PROJECT_DIR = REPO / "reference_projects" / "complex_reference_rpg"
 OUT = PROJECT_DIR / "playable_assets" / "battle"
@@ -230,6 +231,17 @@ def main(argv=None):
         library.set("combatant_visuals", profile.profile_id, profile)
     for sequence in motion_sequences():
         library.set("motion_sequences", sequence.sequence_id, sequence)
+    # Side-view staging: party HUD as a bottom row, enemy bars over their heads,
+    # commands beside the acting hero, combatants on the ground below the horizon.
+    from dataclasses import replace
+    layout = library.require("ui_layout", "adaptive")
+    library.set("ui_layout", "adaptive", replace(layout, party_hud="bottom_row", overhead_zones=("left",),
+                                                 action_menu_placement="actor", stage_top=0.44))
+    library.set("hud", "adaptive", BattleHudProfile(
+        resources=[BattleHudResourceStyle("vitality", "HP", order=0, priority=10),
+                   BattleHudResourceStyle("technique", "SP", order=1, priority=5)],
+        show_unmapped_resources=True,
+    ))
     data["battle_presentation_library"] = library.to_data()
     project_path.write_text(json.dumps(data, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
     print(f"wrote {len(assets)} sprite sheet assets, {len(profiles)} combatant profiles to {project_path.name}")

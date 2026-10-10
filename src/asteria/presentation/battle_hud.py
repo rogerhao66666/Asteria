@@ -215,6 +215,19 @@ class BattleHudMember:
     statuses: tuple[BattleHudStatusIcon, ...]
 
 
+class _PoolValue:
+    """Adapts a gameplay ResourcePool entry to the battle-resource value shape."""
+
+    def __init__(self, raw):
+        self.current = float(raw["current"])
+        self.minimum = float(raw.get("minimum", 0.0))
+        self.maximum = float(raw["maximum"])
+        self.overflow = 0.0
+        span = self.maximum - self.minimum
+        self.normalized = 0.0 if span <= 0 else max(0.0, min(1.0, (self.current - self.minimum) / span))
+        self.full = self.current >= self.maximum
+
+
 class BattleHudRuntime:
     """Read-only battle HUD projection over canonical resource/state runtimes.
 
@@ -274,6 +287,12 @@ class BattleHudRuntime:
         member_id = _id(member_id, "member_id")
         values = battle_resources.values.get(member_id, {})
         gauges = [self._gauge(resource_id, values[resource_id]) for resource_id in sorted(values)]
+        # Gameplay resources (HP, SP, ...) appear only when the profile maps them explicitly.
+        pool = getattr(subject, "resources", None)
+        if pool is not None:
+            for resource_id, raw in sorted(pool.to_data()["values"].items()):
+                if resource_id not in values and self.profile.resource_style(resource_id) is not None:
+                    gauges.append(self._gauge(resource_id, _PoolValue(raw)))
         gauges = [x for x in gauges if x is not None]
         gauges.sort(key=lambda x: (x.order, x.resource_id))
 

@@ -2484,7 +2484,36 @@
       },
       "hud": {
         "adaptive": {
-          "resources": [],
+          "resources": [
+            {
+              "compact": false,
+              "group": "primary",
+              "icon_asset_id": null,
+              "label": "HP",
+              "order": 0,
+              "presentation": "bar",
+              "priority": 10,
+              "resource_id": "vitality",
+              "segments": 0,
+              "show_label": true,
+              "show_value": true,
+              "visible": true
+            },
+            {
+              "compact": false,
+              "group": "primary",
+              "icon_asset_id": null,
+              "label": "SP",
+              "order": 1,
+              "presentation": "bar",
+              "priority": 5,
+              "resource_id": "technique",
+              "segments": 0,
+              "show_label": true,
+              "show_value": true,
+              "visible": true
+            }
+          ],
           "schema": "asteria.battle_hud_profile",
           "show_unmapped_resources": true,
           "show_unmapped_statuses": false,
@@ -2993,11 +3022,17 @@
       "sideview_templates": {},
       "ui_layout": {
         "adaptive": {
+          "action_menu_placement": "actor",
           "hud_panel_width": 112.0,
           "hud_row_height": 10.0,
           "margin": 8.0,
+          "overhead_zones": [
+            "left"
+          ],
+          "party_hud": "bottom_row",
           "result_panel_height": 116.0,
           "result_panel_width": 196.0,
+          "stage_top": 0.44,
           "timeline_y": 7.0,
           "virtual_height": 270,
           "virtual_width": 480

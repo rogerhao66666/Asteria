@@ -35,10 +35,26 @@ class BattleUiLayoutProfile:
     timeline_y: float = 7.0
     result_panel_width: float = 196.0
     result_panel_height: float = 116.0
+    # Side-view staging options (defaults keep the original column HUD):
+    # party_hud "column" | "bottom_row" (one compact cell per member along the bottom);
+    # overhead_zones: placement zones whose members show a bar over their sprite
+    # instead of a HUD panel; action_menu_placement "bottom" | "actor" (beside the
+    # acting member); stage_top: fraction of the height where the ground begins.
+    party_hud: str = "column"
+    overhead_zones: tuple = ()
+    action_menu_placement: str = "bottom"
+    stage_top: float = 0.0
 
     def __post_init__(self):
         if self.virtual_width <= 0 or self.virtual_height <= 0:
             raise ValueError("virtual battle UI size must be positive")
+        object.__setattr__(self, "overhead_zones", tuple(str(x) for x in self.overhead_zones))
+        if self.party_hud not in {"column", "bottom_row"}:
+            raise ValueError("party_hud must be 'column' or 'bottom_row'")
+        if self.action_menu_placement not in {"bottom", "actor"}:
+            raise ValueError("action_menu_placement must be 'bottom' or 'actor'")
+        if not 0.0 <= float(self.stage_top) < 1.0:
+            raise ValueError("stage_top must be in [0, 1)")
         for name in ("margin", "hud_panel_width", "hud_row_height", "result_panel_width", "result_panel_height"):
             if _finite(getattr(self, name), name) < 0:
                 raise ValueError(f"{name} must be >= 0")
@@ -138,6 +154,9 @@ class BattleUiComposer:
         if not isinstance(self.polish, BattleUiPolishProfile):
             raise TypeError("polish must be BattleUiPolishProfile")
         self._display_names = {}
+        self._member_heights = {}
+        self._camera = None
+        self._focus = None
 
     def _name(self, member_id):
         return self._display_names.get(str(member_id), str(member_id))
@@ -193,6 +212,16 @@ class BattleUiComposer:
             else:
                 side = legacy.get(member_id, "")
                 zone_by_member[member_id] = fallback_zone.get(side, self.party_layout.default_zone)
+
+        overhead = [m for m in members if zone_by_member[m.member_id] in L.overhead_zones]
+        if overhead:
+            o_panels, o_texts, o_gauges = self._overhead_commands(overhead)
+            panels.extend(o_panels); texts.extend(o_texts); gauges.extend(o_gauges)
+            members = [m for m in members if zone_by_member[m.member_id] not in L.overhead_zones]
+        if L.party_hud == "bottom_row":
+            b_panels, b_texts, b_gauges = self._bottom_row_commands(members, focus_member_id)
+            panels.extend(b_panels); texts.extend(b_texts); gauges.extend(b_gauges)
+            return panels, texts, gauges, icons
 
         available_height = max(1.0, L.virtual_height - L.timeline_y - 42.0 - L.margin)
         layout = self.party_layout.resolve(
@@ -343,6 +372,61 @@ class BattleUiComposer:
                 ))
         return panels, texts, gauges, icons
 
+    @staticmethod
+    def _ranked_gauges(member, limit):
+        ordered = sorted(member.gauges, key=lambda g: (-int(getattr(g, "priority", 0)), g.order, g.resource_id))
+        return [g for g in ordered if str(g.presentation) not in {"number", "contextual", "hidden"}][:limit]
+
+    def _bar(self, member_id, gauge, x, y, width, height):
+        return BattleUiGaugeBar(
+            member_id, gauge.resource_id, gauge.label, x, y, width, height,
+            max(0.0, min(1.0, float(gauge.normalized))), float(gauge.current), float(gauge.maximum),
+            str(gauge.presentation), int(gauge.segments), gauge.icon_asset_id,
+        )
+
+    def _overhead_commands(self, members):
+        """Name and top-priority bar floating over each member's sprite (enemy-style HUD)."""
+        panels, texts, gauges = [], [], []
+        camera = self._camera
+        for member in members:
+            anchor = None if camera is None else self._anchor_screen(camera, member.member_id)
+            if anchor is None:
+                continue
+            ax, ay = anchor
+            top = ay - float(self._member_heights.get(member.member_id, 32.0))
+            width = 44.0
+            ranked = self._ranked_gauges(member, 1)
+            texts.append(BattleUiText(self._fit(self._name(member.member_id), 14), ax, top - 15, "overhead_name",
+                                      "center", member.member_id))
+            if ranked:
+                gauges.append(self._bar(member.member_id, ranked[0], ax - width / 2, top - 5, width, 3.0))
+        return panels, texts, gauges
+
+    def _bottom_row_commands(self, members, focus_member_id):
+        """Compact party cells in one row along the bottom (name + up to two bars)."""
+        panels, texts, gauges = [], [], []
+        L = self.layout
+        if not members:
+            return panels, texts, gauges
+        gap = 3.0
+        count = len(members)
+        width = min(120.0, (L.virtual_width - 2 * L.margin - gap * (count - 1)) / count)
+        height = 24.0
+        total = count * width + gap * (count - 1)
+        x0 = L.virtual_width - L.margin - total  # anchored to the party's side (right)
+        y = L.virtual_height - L.margin - height
+        for index, member in enumerate(members):
+            x = x0 + index * (width + gap)
+            focused = focus_member_id is not None and member.member_id == str(focus_member_id)
+            panels.append(BattleUiPanel(f"hud:{member.member_id}", x, y, width, height,
+                                        "hud:compact:focus" if focused else "hud:compact", member.member_id))
+            texts.append(BattleUiText(self._fit(self._name(member.member_id), int(width // 5)), x + 3, y + 2,
+                                      "member_name:compact:focus" if focused else "member_name:compact",
+                                      "left", member.member_id))
+            for row, gauge in enumerate(self._ranked_gauges(member, 2)):
+                gauges.append(self._bar(member.member_id, gauge, x + 3, y + 12 + row * 6, width - 6, 3.0))
+        return panels, texts, gauges
+
     def _action_menu_commands(self, menu):
         panels, texts, icons = [], [], []
         if menu is None:
@@ -368,6 +452,28 @@ class BattleUiComposer:
             L.timeline_y + 28.0,
             L.virtual_height - L.margin - P.interaction_bottom_gap - height,
         )
+        anchor = None
+        if L.action_menu_placement == "actor" and self._focus is not None and self._camera is not None:
+            anchor = self._anchor_screen(self._camera, self._focus)
+        if anchor is not None:
+            # Beside the acting member's group, on the side facing the stage
+            # centre, so the menu never covers other party members.
+            width = min(width, 88.0)
+            ax, ay = anchor
+            body = float(self._member_heights.get(self._focus, 32.0))
+            right_side = ax > L.virtual_width / 2
+            group = []
+            for visual in self.scene.combatants:
+                if (visual.anchor.x > L.virtual_width / 2) != right_side:
+                    continue
+                gx, _ = self._camera.world_to_screen(visual.anchor.x, visual.anchor.y)
+                half = float(self._member_heights.get(visual.member_id, 32.0)) / 2
+                group.append(gx - half if right_side else gx + half)
+            edge = (min(group) if right_side else max(group)) if group else (ax - body / 2 if right_side else ax + body / 2)
+            x = edge - 6 - width if right_side else edge + 6
+            x = max(L.margin, min(L.virtual_width - L.margin - width, x))
+            limit = L.virtual_height - L.margin - (28.0 if L.party_hud == "bottom_row" else 0.0) - height
+            y = max(L.timeline_y + 28.0, min(limit, ay - body / 2 - height / 2))
         panels.append(BattleUiPanel("action_menu", x, y, width, height, "interaction:action_menu"))
 
         ty = y + P.interaction_padding
@@ -580,9 +686,15 @@ class BattleUiComposer:
         placement_by_member=None,
         focus_member_id=None,
         display_names=None,
+        member_heights=None,
     ):
-        """``display_names`` maps member ids to the labels shown in HUD and timeline."""
+        """``display_names`` maps member ids to the labels shown in HUD and timeline;
+        ``member_heights`` (logical sprite heights) positions overhead bars and the
+        actor-anchored action menu."""
         self._display_names = {str(k): str(v) for k, v in dict(display_names or {}).items()}
+        self._member_heights = {str(k): float(v) for k, v in dict(member_heights or {}).items()}
+        self._camera = camera
+        self._focus = None if focus_member_id is None else str(focus_member_id)
         if not isinstance(camera, Camera2D):
             raise TypeError("camera must be Camera2D")
         if not isinstance(battle_frame, BattlePresentationFrame):

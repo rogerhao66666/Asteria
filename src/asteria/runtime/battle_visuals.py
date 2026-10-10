@@ -143,10 +143,17 @@ class BattleVisualResolver:
         height = float(getattr(layout, "virtual_height", 180))
         margin = float(getattr(layout, "margin", 8.0))
         panel = float(getattr(layout, "hud_panel_width", 112.0))
-        left_edge, right_edge = margin + panel, width - margin - panel
+        if getattr(layout, "party_hud", "column") == "bottom_row":
+            # Side-view staging: the whole width is stage; feet stand on the
+            # ground band between ``stage_top`` and the bottom HUD row.
+            left_edge, right_edge = margin, width - margin
+            top = max(float(getattr(layout, "timeline_y", 7.0)) + 30.0, height * float(getattr(layout, "stage_top", 0.0)))
+            bottom = height - margin - 24.0 - 6.0
+        else:
+            left_edge, right_edge = margin + panel, width - margin - panel
+            top = float(getattr(layout, "timeline_y", 7.0)) + 52.0
+            bottom = height * 0.60
         stage = max(1.0, right_edge - left_edge)
-        top = float(getattr(layout, "timeline_y", 7.0)) + 52.0
-        bottom = height * 0.60
         visuals = []
         for side_id, members in sides.items():
             zone = placement.get(side_id, "left")
@@ -188,9 +195,9 @@ class BattleVisualResolver:
                         y = (top + bottom) / 2 + sizes[member_id][1] / 3
                     else:
                         y = top + (bottom - top) * ((row_index + 0.5 + 0.5 * column_index) / max(3, len(column) + 0.5))
-                    # Keep the whole sprite below the turn timeline.
+                    # Keep the whole sprite below the turn timeline (and its overhead bar).
                     tall = self.sprite_sheet(sheet_id).frames[0].height * float(transform.scale_y)
-                    y = max(y, float(getattr(layout, "timeline_y", 7.0)) + 30.0 + tall)
+                    y = max(y, float(getattr(layout, "timeline_y", 7.0)) + 46.0 + tall)
                     anchor = BattleVisualAnchor(x + transform.offset_x, y + transform.offset_y,
                                                 "right" if zone == "left" else "left", depth=y)
                     roles = {state.state_id: state.clip_role for state in profile.states}

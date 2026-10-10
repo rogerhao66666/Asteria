@@ -1,7 +1,7 @@
 {
   "schema": "asteria.playable_test_content",
   "version": 1,
-  "title": "Asteria Complex Reference RPG \u2014 Playable Test",
+  "title": "Asteria Complex Reference RPG — Playable Test",
   "field": {
     "background": "playable_assets/field_map.png",
     "player_sheet": "playable_assets/player_field_sheet.png",
@@ -87,7 +87,10 @@
       }
     },
     "bgm": "battle_theme",
-    "victory_jingle": "victory"
+    "victory_jingle": "victory",
+    "presentation": {
+      "adapter": "canonical"
+    }
   },
   "controls": {
     "title": "N New Game / L Load Player Save",

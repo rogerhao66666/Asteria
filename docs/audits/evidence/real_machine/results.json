@@ -2,7 +2,7 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-10 21:01:59 +0800"
+    "time": "2026-10-10 21:12:58 +0800"
   },
   "results": [
     {
@@ -14,18 +14,18 @@
         "target_fps": 60.0,
         "measured_fps": 61.933,
         "interval_mean_ms": 16.1464,
-        "interval_jitter_ms": 1.8651,
-        "interval_p99_ms": 17.5368,
+        "interval_jitter_ms": 2.3042,
+        "interval_p99_ms": 16.0328,
         "frames_over_budget": 1
       },
       "frame": {
         "count": 240,
-        "mean_ms": 5.8799,
-        "p50_ms": 4.9392,
-        "p95_ms": 8.7543,
-        "p99_ms": 17.5306,
-        "max_ms": 44.2799,
-        "total_ms": 1411.1764
+        "mean_ms": 6.1868,
+        "p50_ms": 5.0433,
+        "p95_ms": 10.3916,
+        "p99_ms": 11.9017,
+        "max_ms": 51.6756,
+        "total_ms": 1484.8404
       },
       "screenshot": "gpu_window.png"
     },
@@ -48,7 +48,7 @@
     {
       "check": "audio_playback_device",
       "status": "PASS",
-      "evidence": "CoreAudio device opened (44100, -16, 2); hit.wav (0.340s) kept its channel busy for 0.351s; battle_theme.ogg streaming=True",
+      "evidence": "CoreAudio device opened (44100, -16, 2); hit.wav (0.340s) kept its channel busy for 0.350s; battle_theme.ogg streaming=True",
       "note": "Device-level playback only; audible confirmation is manual item M3."
     },
     {
@@ -74,31 +74,31 @@
     {
       "check": "frame_pacing",
       "status": "PASS",
-      "evidence": "588 frames: 58.877 fps (target 60), jitter 1.035 ms, p99 interval 17.9397 ms, 1 frames over 1.5x budget",
+      "evidence": "590 frames: 58.92 fps (target 60), jitter 1.166 ms, p99 interval 17.9607 ms, 1 frames over 1.5x budget",
       "pacing": {
         "target_fps": 60.0,
-        "measured_fps": 58.877,
-        "interval_mean_ms": 16.9845,
-        "interval_jitter_ms": 1.035,
-        "interval_p99_ms": 17.9397,
+        "measured_fps": 58.92,
+        "interval_mean_ms": 16.9723,
+        "interval_jitter_ms": 1.166,
+        "interval_p99_ms": 17.9607,
         "frames_over_budget": 1
       },
       "frame": {
-        "count": 588,
-        "mean_ms": 5.8897,
-        "p50_ms": 5.915,
-        "p95_ms": 6.5905,
-        "p99_ms": 8.8688,
-        "max_ms": 10.3925,
-        "total_ms": 3463.1473
+        "count": 590,
+        "mean_ms": 4.7047,
+        "p50_ms": 4.8056,
+        "p95_ms": 5.7738,
+        "p99_ms": 7.2356,
+        "max_ms": 10.4669,
+        "total_ms": 2775.7827
       },
       "sections": {
-        "animation": 0.8147,
-        "asset_loading": 0.7255,
-        "input": 0.0336,
-        "present": 0.3927,
-        "render": 4.5445,
-        "update": 0.0395
+        "animation": 1.1126,
+        "asset_loading": 1.219,
+        "input": 0.0402,
+        "present": 0.4569,
+        "render": 2.9699,
+        "update": 0.0512
       },
       "unsupported": {
         "draw_calls": "pygame software blitting exposes no draw-call counter",

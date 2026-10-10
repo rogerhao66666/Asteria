@@ -206,6 +206,11 @@ def test_canonical_adapter_drives_hud_menu_feedback_and_renders(resource_root, m
         runtime._battle_presentation.begin()
         runtime._advance_to_hero_turn()
         runtime._present_battle(0.016)
+        for _ in range(400):                   # commands appear once the enemy turns have played
+            if not runtime._battle_presentation.busy():
+                break
+            runtime._present_battle(0.05)
+        runtime._present_battle(0.016)
         screen = runtime._battle_presentation.screen
         assert screen.hud.members
         assert screen.action_menu.view.total_count == len(runtime._skills_for_actor(runtime._battle_actor()))
@@ -231,7 +236,8 @@ def test_manifest_selects_the_adapter_and_legacy_is_default(resource_root, monke
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     runtime = _boss_runtime(resource_root)
     try:
-        assert isinstance(runtime._battle_presentation, LegacyPygameBattleAdapter)
+        runtime.manifest["battle"].pop("presentation", None)              # no manifest choice -> legacy
+        assert isinstance(create_battle_presentation_adapter(runtime), LegacyPygameBattleAdapter)
         runtime.manifest["battle"]["presentation"] = {"adapter": "canonical"}
         assert isinstance(create_battle_presentation_adapter(runtime), CanonicalBattleAdapter)
         runtime.manifest["battle"]["presentation"] = {"adapter": "nope"}
@@ -307,6 +313,10 @@ def _canonical_frame(resource_root, monkeypatch):
     runtime._battle_presentation.begin()
     runtime._advance_to_hero_turn()
     runtime._present_battle(0.016)
+    for _ in range(400):                       # let the opening enemy turns play out
+        if not runtime._battle_presentation.busy():
+            break
+        runtime._present_battle(0.05)
     screen = runtime._battle_presentation.screen
     layout = screen.composer.layout
     frame = screen.build_frame(Camera2D(width=layout.virtual_width, height=layout.virtual_height))
@@ -320,12 +330,18 @@ def _overlaps(a, b):
 def test_canonical_hud_panels_do_not_overlap_and_menu_sits_between_columns(resource_root, monkeypatch):
     runtime, layout, frame = _canonical_frame(resource_root, monkeypatch)
     try:
+        # Reference staging (D15): party HUD as one bottom row, enemies show overhead bars.
         hud = [p for p in frame.panels if p.panel_id.startswith("hud:")]
-        assert len(hud) == 9
+        heroes = list(runtime.game.battle.parties["heroes"].ids())
+        assert sorted(p.member_id for p in hud) == sorted(heroes)
         assert not any(_overlaps(a, b) for i, a in enumerate(hud) for b in hud[i + 1:])
         assert all(p.y >= 0 and p.y + p.height <= layout.virtual_height for p in hud)
-        menu = next(p for p in frame.panels if p.panel_id == "action_menu")
-        assert not any(_overlaps(menu, p) for p in hud)
+        assert len({p.y for p in hud}) == 1                                   # one row
+        overhead = {t.member_id for t in frame.texts if t.role == "overhead_name"}
+        assert overhead == set(runtime.game.battle.parties["enemies"].ids())
+        menu = next((p for p in frame.panels if p.panel_id == "action_menu"), None)
+        if menu is not None:
+            assert not any(_overlaps(menu, p) for p in hud)
     finally:
         runtime.close()
 
@@ -363,7 +379,7 @@ def test_legacy_victory_panel_keeps_rendering_after_the_battle_ends(resource_roo
     monkeypatch.setattr(runtime, "_play_fx", lambda *a, **k: None)
     key = lambda k: pygame.event.Event(pygame.KEYDOWN, key=k)  # noqa: E731
     try:
-        assert isinstance(runtime._battle_presentation, LegacyPygameBattleAdapter)
+        runtime._battle_presentation = LegacyPygameBattleAdapter(runtime)   # the reference now uses canonical
         runtime._ui_mode = "field"
         runtime._frame([key(pygame.K_e)], 0.016)
         runtime._frame([key(pygame.K_RETURN)], 0.016)

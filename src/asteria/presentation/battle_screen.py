@@ -106,6 +106,7 @@ class BattleScreenRuntime:
         self.placement_by_member: dict[str, str] = {}
         self.current_member_id: str | None = None
         self.display_names: dict[str, str] = {}
+        self.member_heights: dict[str, float] = {}
         self.time = 0.0
 
     def _dispatch_presentation_events(self, values):
@@ -213,6 +214,7 @@ class BattleScreenRuntime:
             placement_by_member=self.placement_by_member,
             focus_member_id=self.current_member_id,
             display_names=self.display_names,
+            member_heights=self.member_heights,
         )
 
     def render(self, base_camera, *, ui_renderer: BattleUiRenderer, texture_renderer=None):

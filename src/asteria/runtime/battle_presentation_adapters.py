@@ -164,6 +164,7 @@ class CanonicalBattleAdapter:
         self._ui_backend = None
         self.audio_cues = []
         self.resolver = None
+        self._battle = None
         self.textures = None
         self.visuals_enabled = False
         self.fallback_reason = ""
@@ -191,6 +192,7 @@ class CanonicalBattleAdapter:
 
         self.trace.clear()
         game = self.host.game
+        self._battle = game.battle
         kwargs = {name: self._profile(category) for name, category in PRESENTATION_PROFILE_CATEGORIES.items()}
         kwargs = {name: value for name, value in kwargs.items() if value is not None}
         from asteria.presentation.battle_ui import BattleUiLayoutProfile
@@ -219,6 +221,11 @@ class CanonicalBattleAdapter:
             placement_by_side=self.placement_by_side, **kwargs,
         )
         self.screen.display_names = self._display_names(game)
+        self.screen.member_heights = {
+            v.member_id: self.resolver.sprite_sheet(v.sprite_sheet_asset_id).frames[0].height
+            / v.source_pixels_per_logical_pixel
+            for v in combatants
+        }
         self.screen.coordinator.attach(game.battle.hooks)
         layout = self.screen.composer.layout
         scale = min(self.host.width / layout.virtual_width, self.host.height / layout.virtual_height)
@@ -277,12 +284,23 @@ class CanonicalBattleAdapter:
 
     def busy(self):
         """True while queued action choreography has not finished playing."""
+        if self.screen is None:
+            return False
         return bool(self._schedule) or self._clock < self._cursor - 1e-9
 
     def particle_count(self):
         return 0 if self.screen is None else len(self.screen.feedback.vfx)
 
+    def _ensure(self):
+        """Set up for the session's current battle if begin() was not called for it."""
+        battle = self.host.game.battle
+        if battle is not None and (self.screen is None or self._battle is not battle):
+            self.begin()
+        return self.screen is not None
+
     def consume(self, entries):
+        if not self._ensure():
+            return
         coordinator = self.screen.coordinator
         # Lifecycle events (KO / revive) were queued by Battle Core hooks while the
         # actions resolved; show them when the choreography reaches the end.
@@ -444,24 +462,33 @@ class CanonicalBattleAdapter:
 
     # -- frame --------------------------------------------------------------
     def update(self, dt):
+        if not self._ensure():
+            return
         game = self.host.game
+        self._clock += float(dt)
+        self._release_due()
         if game.battle is not None:
             self.screen.sync_battle(game.battle, current_member_id=self.host._battle_actor())
-            skills = self.host._skills_for_actor(self.host._battle_actor())
+            actor = self.host._battle_actor()
+            skills = self.host._skills_for_actor(actor)
+            # Commands appear only while a hero is waiting for input.
+            if actor is None or self.busy() or self.host._victory or self.host._defeat:
+                skills = ()
             entries = [
                 BattleActionEntry(ability_id, f"{i + 1}  {meta.get('label', ability_id)}", order=i)
                 for i, (ability_id, meta) in enumerate(skills)
             ]
-            capture = game.capture_targets() if self.host._battle_actor() else ()
+            capture = game.capture_targets() if skills else ()
             if capture:
                 best = max(chance for _, chance, _ in capture)
                 entries.append(BattleActionEntry("capture", f"X  Capture ({best * 100:.0f}%)", order=len(entries)))
             self.screen.set_action_entries(entries)
-        self._clock += float(dt)
-        self._release_due()
         self.screen.update(dt)
 
     def draw(self):
+        if not self._ensure():
+            self.host._draw_battle_world(show_labels=False)
+            return None
         layout = self.screen.composer.layout
         base = Camera2D(width=layout.virtual_width, height=layout.virtual_height)
         textures = None

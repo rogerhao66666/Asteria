@@ -158,3 +158,55 @@ def test_canonical_screen_never_runs_the_blocking_legacy_effect_loop(battle, mon
     monkeypatch.setattr(runtime, "_play_fx", blocked)
     _use(runtime, "fire_arc")
     _settle(runtime)
+
+
+# --- D15: side-view staging requested after the first demo -------------------
+
+def _frame(adapter):
+    from asteria.runtime.camera import Camera2D
+
+    layout = adapter.screen.composer.layout
+    return layout, adapter.screen.build_frame(Camera2D(width=layout.virtual_width, height=layout.virtual_height))
+
+
+def test_combatants_stand_on_the_ground_below_the_backdrop(battle):
+    _, adapter = battle
+    layout = adapter.screen.composer.layout
+    assert layout.party_hud == "bottom_row" and layout.stage_top > 0
+    hud_top = layout.virtual_height - layout.margin - 24.0
+    for visual in adapter.screen.scene.combatants:
+        assert layout.virtual_height * layout.stage_top <= visual.anchor.y <= hud_top
+
+
+def test_enemy_hp_floats_over_enemies_and_party_hp_sits_in_a_bottom_row(battle):
+    runtime, adapter = battle
+    layout, frame = _frame(adapter)
+    enemies = set(runtime.game.battle.parties["enemies"].ids())
+    heroes = set(runtime.game.battle.parties["heroes"].ids())
+    overhead = {t.member_id: t for t in frame.texts if t.role == "overhead_name"}
+    assert set(overhead) == enemies
+    bars = {(g.member_id, g.resource_id) for g in frame.gauges}
+    assert all((enemy, "vitality") in bars for enemy in enemies)          # HP over each enemy
+    assert all((hero, "vitality") in bars for hero in heroes)             # HP in each party cell
+    for enemy in enemies:
+        visual = adapter.screen.scene.visual_for(enemy)
+        assert overhead[enemy].y < visual.anchor.y - adapter.screen.member_heights[enemy]  # above the head
+    hud = [p for p in frame.panels if p.panel_id.startswith("hud:")]
+    assert {p.member_id for p in hud} == heroes and len({p.y for p in hud}) == 1
+
+
+def test_commands_show_only_on_a_heroes_turn_and_never_cover_the_party(battle):
+    runtime, adapter = battle
+    layout, frame = _frame(adapter)
+    menu = next(p for p in frame.panels if p.panel_id == "action_menu")    # idle: hero waiting
+    camera_x = [v.anchor.x for v in adapter.screen.scene.combatants if v.member_id in runtime.game.battle.parties["heroes"].ids()]
+    assert menu.x + menu.width <= min(camera_x) - 8                         # left of the whole party
+    _use(runtime, "strike")
+    runtime._present_battle(0.016)
+    assert adapter.busy()
+    playing = _frame(adapter)[1]
+    assert not any(p.panel_id == "action_menu" for p in playing.panels)          # hidden during the action
+    _settle(runtime)
+    runtime._present_battle(0.016)
+    back = _frame(adapter)[1]
+    assert any(p.panel_id == "action_menu" for p in back.panels)

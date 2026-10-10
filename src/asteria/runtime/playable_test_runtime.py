@@ -528,6 +528,17 @@ class PlayableTestRuntime:
         if self._capture_menu and self.game.mode=="battle":
             self._draw_capture_menu()
 
+    def _presentation_busy(self):
+        busy=getattr(self._battle_presentation,"busy",None)
+        return bool(callable(busy) and busy())
+
+    def _flush_victory_audio(self):
+        pending_cues=getattr(self._battle_presentation,"audio_cues",())
+        if getattr(self,"_victory_audio_pending",False) and not self._presentation_busy() and not pending_cues:
+            self._victory_audio_pending=False
+            self.audio.stop_music(fade_out=0.3)
+            self._sound(self.manifest["battle"].get("victory_jingle"))
+
     def _present_battle(self, dt):
         """Feed new canonical battle facts to the active presentation adapter and draw."""
         with self.profiler.section("update"):
@@ -536,6 +547,7 @@ class PlayableTestRuntime:
             self._battle_presentation.update(dt)
         with self.profiler.section("render"):
             self._battle_presentation.draw()
+        self._flush_victory_audio()
 
     def _draw_battle_world(self, show_labels=True):
         """Legacy world layer: background and combatant sprites (plus bars/names when show_labels)."""
@@ -654,10 +666,11 @@ class PlayableTestRuntime:
             self.game.use_ability(actor,ability_id,boost_level=boost)
             self._last_action_name=f"{actor}: {meta.get('label',ability_id)} x{boost+1}"
             self._boost_level=0
-            self._sound(meta.get("sfx"))
             if getattr(self._battle_presentation,"name","legacy")=="legacy":
-                # The legacy screen plays a blocking effect loop; the canonical
-                # screen plays the ability's authored motion sequence instead.
+                # The legacy screen plays the manifest sound and a blocking effect
+                # loop; the canonical screen's motion sequence owns sound and VFX
+                # (timed to the impact beat), so nothing is played twice.
+                self._sound(meta.get("sfx"))
                 self._play_fx(ability_id,target_is_enemy=offensive)
         except Exception as exc:
             self._last_action_name=f"Action failed: {exc}"
@@ -681,8 +694,8 @@ class PlayableTestRuntime:
                     )
                     self._victory_summary.append(f"{hero_id}: Lv {info['old_level']}→{info['new_level']} +{info['levels_gained']*2:g} AP +{info['levels_gained']:g} ability pts")
                 self._victory=True
-                self.audio.stop_music(fade_out=0.3)
-                self._sound(self.manifest["battle"].get("victory_jingle"))
+                # The jingle waits for the presentation to finish showing the final blows.
+                self._victory_audio_pending=True  # played by _present_battle once the screen is idle
                 self._last_action_name="Victory — rewards + progression applied"
             except Exception as exc:
                 self._last_action_name=f"Victory finalize failed: {exc}"
@@ -691,6 +704,8 @@ class PlayableTestRuntime:
 
     def _battle_input(self, events):
         if self._victory:
+            if self._presentation_busy():
+                return  # the result is still being presented
             for event in events:
                 if event.type==self.pg.KEYDOWN and event.key in (self.pg.K_RETURN,self.pg.K_e,self.pg.K_SPACE):
                     self._victory=False
