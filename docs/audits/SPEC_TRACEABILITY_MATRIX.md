@@ -40,7 +40,7 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | ENG-07 | S§8 | Core | Scene 轉場、persistent entities | `core/scene_transition.py` `SceneTransition`、`PersistentComponent`；`Application.change_scene`／`advance_transition` | UT | HI | **B** | 缺 RM | CB4 |
 | ENG-08 | S§8 | Core | Transform 位置／旋轉／縮放 | `core/transform.py` | UT | HI | **A** | — | — |
 | ENG-09 | S§8 | Core | Transform 父子關係／階層 | `core/transform.py` `parent_id`、`world_transform`、`set_parent`；`editor/editing.py` `ReparentTransformCommand`；Inspector parent 下拉選單 | UT | GS | **B** | 缺 RM | CB4 |
-| ENG-10 | S§8 | Core | Event bus／resource lifetime | `core/events.py` `EventBus`、`core/services.py`、`assets/runtime_resources.py`、`presentation/render_resources.py` | UT | HI | **B** | 沒有實機資源回收驗證 | CB13 |
+| ENG-10 | S§8 | Core | Event bus／resource lifetime | `core/events.py` `EventBus`、`core/services.py`、`assets/runtime_resources.py`、`presentation/render_resources.py`；戰鬥範圍圖片釋放（`PlayableTestRuntime` `release_resource_scope`） | UT + HI | HI + RM（實機戰鬥 pacing 正常） | **B** | 沒有實機的記憶體回收量測 | CB13 |
 | ENG-11 | S§8 | Core | Rendering：sprite、tile、layer、transparency | `runtime/draw.py`、`runtime/tile_draw.py`、`platform/pygame_backend.py` | UT | RM（MV tile + 角色截圖） | **A** | — | — |
 | ENG-12 | S§8 | Core | Rendering：batching、render groups | `platform/moderngl_backend.py`（`16a6ebd` 復原，sprite batching）；`preview --backend moderngl` | UT（pygame／GL 像素對照） | RM（Apple M5 GPU 視窗 400 sprites/frame 61.9 fps；D15） | **B** | playable runtime 仍用 pygame；ModernGL 只在 scene preview | CB9 |
 | ENG-13 | S§8 | Core | Parallax、screen-space UI | `runtime/camera.py`、`runtime/draw.py`、MV parallax 匯入；`presentation/battle_ui_renderer.py` | UT | 部分 RM | **B** | battle UI 沒有實機接線 | CB2 |
@@ -62,10 +62,10 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | ANI-01 | S§11 | Core | Sprite-sheet 匯入、影格切割、clip、循環 | `graphics/sprites.py`、`runtime/animation.py` `AnimatorState`、`assets/rpg_maker_mv.py` | UT | RM（MV 行走 12 影格） | **A** | — | — |
 | ANI-02 | S§11 | Core | State machine、transition 參數 | `runtime/animation_state_machine.py`（參數、trigger、any-state、wait-for-finish、priority）；`reference_data` 載入 | UT | HI（AnimationSystem） | **B** | 沒有 state machine 圖形編輯器（CB10a） | CB8 |
 | ANI-03 | S§11、AP§25 | Core | Frame events | `SpriteKeyframe.events`；`AnimatorState.drain_events`；`AnimationSystem.listeners` | UT | HI | **B** | 缺 RM | CB8 |
-| ANI-04 | S§11 | Core | 預覽 | `editor/animation_widget.py`（59 行）、Generator 預覽 | GS | GS | **C** | 沒有通用動畫編輯器 | CB10 |
+| ANI-04 | S§11 | Core | 預覽 | `editor/animation_authoring.py`、`animation_editor_widget.py`（預覽用 runtime `AnimatorState`） | UT + GS | RM（Cocoa `editor_tools_gui`，截圖已檢視；D16） | **A** | — | — |
 | ANI-05 | S§11 | Core | Action timeline（動畫、移動、hitbox、i-frame、cancel、VFX、SFX、camera、事件） | `gameplay/action_timeline.py` `ActionTimeline`、`ActionCueKind` | UT | NE | **C** | 沒有 hitbox/i-frame/cancel cue；沒有接上 runtime | CB8／Deferred |
 | CAM-01 | S§12 | Core | Follow、smooth、dead zone、zoom、shake | `runtime/camera.py` `CameraFollow2D`、`presentation/camera_runtime.py` | UT | HI + RM（canonical 戰鬥 camera shake 依 motion beat；D15） | **B** | 缺人眼確認（M5） | CB2 |
-| CAM-02 | S§12 | Core | Look-ahead、bounds、target groups、boss／cutscene camera、transitions | 部分（`presentation/choreography.py`） | UT | NE | **C** | — | CB10 |
+| CAM-02 | S§12 | Core | Look-ahead、bounds、target groups、boss／cutscene camera、transitions | `runtime/camera.py`（look-ahead、`clamp_center_to_bounds`、`CameraTargetGroup`、`CameraDirector` 與 easing、shake）、`runtime/systems.py` `CameraFollowSystem`、`runtime/field_camera.py`、Camera2D component v2、WORLD 指令 `CAMERA_FOCUS／RELEASE／SHAKE` | UT + HI | RM（`field_camera_boss_focus`：boss 事件鏡頭 zoom 1.6、畫面不露邊；截圖已檢視） | **B** | look-ahead、target group 只有 UT／HI；playable field 是單畫面地圖，沒有跟隨鏡頭；戰鬥開場的 boss 鏡頭沒有做 | CB10 |
 | VFX-01 | S§12 | Core | 粒子、hit flash、damage numbers、screen effects | `runtime/battle_presentation_adapters.py` VFX sprite sheet 播放、hit flash（screen_fx）、damage numbers；`presentation/vfx_runtime.py` | UT | HI + RM（實機視窗 VFX 截圖；D15） | **B** | 沒有粒子發射器資料（VFX 為序列圖）；缺人眼確認 | CB2 |
 | VFX-02 | S§12、AD§12 | Core | 2D lights、normal maps、shadows、bloom、color grading、screen shaders | `render/lighting.py`、`render/postprocess.py`（headless 指令模型）；ModernGL 後端已復原 | UT | NE | **C** | lighting／bloom shader 尚未實作（需另提案） | CB9 |
 | VFX-03 | S§12 | Core | Trails、afterimages、fog/weather/water | 部分（`render/environment.py`） | UT | NE | **C** | — | CB9 |
@@ -123,19 +123,19 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 |---|---|---|---|---|---|---|---|---|---|
 | EDT-01 | S§5 | Core | Project/hierarchy、Scene/map workspace、Inspector | `editor/shell.py`、`widgets.py` `ProjectTreeWidget`/`InspectorWidget`、`viewport_widget.py`、`tile_edit.py` | UT + GS | GS Cocoa（9 張截圖已檢視） | **A** | — | — |
 | EDT-02 | S§5 | Core | Asset browser + asset 預覽 | `editor/asset_thumbnails.py`（已復原）；Inspector asset 下拉選單 | UT | GS | **B** | 缺 RM | CB14 |
-| EDT-03 | S§5、§30 | Core | 結構化資料庫（搜尋、複製一份、參照、驗證） | `editor/integrated_authoring.py`、`authoring_hub_widget.py`、9 個 authoring controller | UT + GS | GS | **B** | 沒有批次編輯 | CB10 |
+| EDT-03 | S§5、§30 | Core | 結構化資料庫（搜尋、複製一份、參照、驗證） | `editor/integrated_authoring.py`、`authoring_hub_widget.py`、`record_operations.py`（批次編輯、MIXED 值）、9 個 authoring controller | UT + GS | GS + RM（多選與批次欄位） | **B** | 批次套用沒有在 Cocoa 實機執行 | CB10 |
 | EDT-04 | S§5 | Core | Event editor | `editor/event_editor_widget.py`、`event_editing.py` | UT + GS | 輸出不會在 runtime 執行 | **B** | 依 EVT-01 | CB1 |
-| EDT-05 | S§5 | Core | Animation editor | `editor/animation_widget.py`（只有預覽） | GS | — | **C** | — | CB10 |
-| EDT-06 | S§5 | Core | Action timeline editor | — | — | — | **D** | — | CB10 |
-| EDT-07 | S§5 | Core | AI editor | 通用紀錄表單（`EnemyAIDefinition`） | UT | GS | **C** | 沒有專用編輯器 | CB10 |
-| EDT-08 | S§5 | Core | VFX tools | `presentation/visual_authoring.py`（模型） | UT | 沒有掛進 shell | **C** | — | CB10 |
-| EDT-09 | S§5、§32 | Core | Script editor（語法高亮、自動完成、API 補全、錯誤導覽、traceback、reload） | `editor/code_workspace.py`（執行 + diagnostic 跳轉）、`authoring/runner.py` | UT + GS | GS | **C** | 沒有語法高亮、自動完成、reload | CB10 |
-| EDT-10 | S§5、§34 | Core | Debugger／runtime 檢視／debug actions | — | — | — | **D** | — | CB10 |
-| EDT-11 | S§5、§34 | Core | Play-test：執行專案／目前場景／從選定點出生／快速重啟／log | `editor/runtime_launcher.py`、`playmode.py`、`runtime/preview.py` | UT | GS | **C** | 沒有選定點出生、快速重啟或 log 面板 | CB10 |
+| EDT-05 | S§5 | Core | Animation editor | `editor/animation_authoring.py`、`animation_editor_widget.py`（格線、clip、影格事件、pivot、undo） | UT + GS | RM（Cocoa `editor_tools_gui`，截圖已檢視；D16） | **A** | — | — |
+| EDT-06 | S§5 | Core | Action timeline editor | `editor/action_timeline_authoring.py`、`action_timeline_widget.py`（通道軌、拖曳 beat、預覽）；runtime 播放同一份 motion_sequences | UT + GS | RM（Cocoa `editor_tools_gui`，截圖已檢視；D16）；runtime 戰鬥播放 RM | **A** | — | — |
+| EDT-07 | S§5 | Core | AI editor | `editor/enemy_ai_authoring.py`、`enemy_ai_widget.py`（規則、條件、boss phase、綁定敵人、決策預覽用 `EnemyAIRuntime.explain`） | UT + GS + HI | RM（Cocoa `editor_tools_gui`，截圖已檢視；D16） | **A** | — | — |
+| EDT-08 | S§5 | Core | VFX tools | `editor/vfx_authoring.py`、`vfx_widget.py`；runtime `battle_visuals.vfx_placement／vfx_rect／vfx_keyframe` | UT + GS + HI | RM（Cocoa `editor_tools_gui`，截圖已檢視；D16）；戰鬥 renderer 依 placement 繪製（HI） | **A** | — | — |
+| EDT-09 | S§5、§32 | Core | Script editor（語法高亮、自動完成、API 補全、錯誤導覽、traceback、reload） | `editor/code_workspace.py`、`script_tools.py`（語法高亮、Authoring API 補全、traceback 跳行、腳本檔、reload）、`authoring/runner.py` | UT + GS | RM（Cocoa `editor_tools_gui`，截圖已檢視；D16）（補全清單量測；popup 是獨立視窗，截圖抓不到） | **A** | — | — |
+| EDT-10 | S§5、§34 | Core | Debugger／runtime 檢視／debug actions | `runtime/debugger.py`、`runtime/debug_server.py`（只限 loopback、token）、`editor/debugger_widget.py` | UT + HI | RM（Cocoa `editor_tools_gui`，截圖已檢視；D16）（附加到另外啟動的遊戲 process，give_item 成功） | **A** | — | — |
+| EDT-11 | S§5、§34 | Core | Play-test：執行專案／目前場景／從選定點出生／快速重啟／log | `editor/runtime_launcher.py`（debug、spawn、log）、`playmode.py`、`shell.py`（Play from Selection、Restart Play）、`runtime/preview.py --spawn` | UT + HI | RM（Run Project／Stop、debugger 附加） | **B** | Play from Selection 與 Restart 沒有在實機視窗執行 | CB10 |
 | EDT-12 | S§5 | Core | Undo/redo | `editor/commands.py`（共用 command stack） | UT + GS | GS | **A** | — | — |
-| EDT-13 | S§5 | Core | 複製／貼上／剪下、複製一份／刪除 | 實體 copy/paste/duplicate（`shell.py:438-447`）；紀錄只有 duplicate | UT | GS | **C** | 沒有 cut；紀錄不能 copy/paste | CB10 |
-| EDT-14 | S§5 | Core | 多選、拖放、搜尋／篩選／排序、右鍵選單、快捷鍵、批次編輯 | 多選只在 `widgets.py:33`；8 個模組有 filter；選單快捷鍵 | UT | GS | **C** | 沒有右鍵選單和批次編輯 | CB10 |
-| EDT-15 | S§5 | Core | 驗證 + 錯誤導覽 | 16 個 editor 模組有驗證；Code 工作區有 diagnostic 跳轉 | UT | GS | **C** | 沒有全域問題面板 | CB10 |
+| EDT-13 | S§5 | Core | 複製／貼上／剪下、複製一份／刪除 | 實體 cut／copy／paste／duplicate；紀錄 `record_operations.py` cut／copy／paste（新 id、單一 undo）；快捷鍵依焦點分派 | UT + GS | GS（offscreen，含焦點分派） | **B** | 缺 RM | CB10 |
+| EDT-14 | S§5 | Core | 多選、拖放、搜尋／篩選／排序、右鍵選單、快捷鍵、批次編輯 | 多選（實體與紀錄）、紀錄篩選、右鍵選單、Ctrl+C／X／V／Del、批次編輯 | UT + GS | GS + RM（多選） | **C** | 紀錄沒有拖放與排序 | CB10 |
+| EDT-15 | S§5 | Core | 驗證 + 錯誤導覽 | `editor/problems.py`（收集全部問題並附位置）、`problems_widget.py`（Problems dock、篩選、跳轉） | UT + GS | RM（Cocoa `editor_tools_gui`，截圖已檢視；D16）（含跳轉） | **A** | — | — |
 | EDT-16 | D2 | Core | 通用 Character/Entity Inspector（sprite 選擇、Actor 外觀、Entity↔Actor 連結、縮圖） | `runtime/actor_link.py`、`editor/actor_appearance.py`、`assets/character_visual.py`；shell「Place Character from Sprite Sheet…」「Set Actor Appearance…」 | UT | GS + HI E2E（匯入 sprite sheet → Actor → 放置 → 遊玩） | **B** | 缺 RM | CB14 |
 | EDT-17 | S§31 | Eventual | Gameplay System Builder | — | — | — | **D** | SPEC 原文寫「eventually」 | 後續 |
 | EDT-18 | S§32 | Eventual | Plugins（components、systems、panels、importers…） | — | — | — | **D** | — | 後續 |
@@ -146,16 +146,16 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | ID | 來源 | 優先 | 需求 | 程式碼證據 | 測試 | 整合 | 狀態 | 缺口 | Batch |
 |---|---|---|---|---|---|---|---|---|---|
 | AST-01 | AP§46 #1–6 | Core | Canonical 動畫／角色 schema、sprite 匯入、任意影格尺寸、grid slicing、方向對應 | `assets/canonical.py`、`importers.py`、`codecs.py`、`rpg_maker_mv.py` | UT | RM（MV 48×48 與 96×96） | **A** | — | — |
-| AST-02 | AP§46 #7 | Core | Pivot 編輯 | anchor 中繼資料 | UT | — | **C** | 沒有編輯 UI | CB10 |
+| AST-02 | AP§46 #7 | Core | Pivot 編輯 | anchor 中繼資料；Animation Editor pivot 欄位（`animation_authoring.set_pivot`） | UT + GS | RM（截圖可見欄位） | **B** | pivot 修改沒有在實機執行 | CB10 |
 | AST-03 | AP§46 #9–12 | Core | FPS／時序、驗證、canonical 存讀 | `assets/quality_gate.py`、`usability_gate.py`、`serialization.py`、`store.py` | UT | GS | **A** | — | — |
 | AST-04 | AP§46 #10、§48 | Core | 動畫事件會觸發 | 見 ANI-03 | UT | HI | **B** | — | CB8 |
 | AST-05 | AP§46 #13、§48 | Core | Runtime 播放整合 | field 行走 RM；battle／側視沒有 | UT | 部分 RM | **C** | — | CB2 |
 | AST-06 | AP§48 | Core | 專案 build 可以打包 | `project_tools.export_game`（資源 + CREDITS/LICENSE + `run_game.py`）；`asteria-export` CLI | UT | HI（匯出後在獨立 process 啟動） | **B** | 沒有打包成單一執行檔；缺 RM | CB12 |
 | AST-07 | AS§35 Phase A | Core | 類別：Character、NPC、Monster、Tileset、Prop、Portrait、Icon、VFX、Skill、Item、Equipment、Animation、Scene | `assets/*`（character_bundle、monster、tileset、prop、portrait、icon、vfx） | UT | 部分 RM | **B** | — | CB13 |
-| AST-08 | AS§35 Phase A | Core | 類別：Projectile、UI asset、Prefab、Audio（播放） | Prefab：`core/prefab.py`；Audio 播放：`runtime/audio_mixer.py` | UT | HI | **C** | Projectile、UI asset 類別仍未實作 | CB6、CB7 |
-| AST-09 | AS§34 | Core | Golden 測試套件（11 類） | — | — | — | **D** | — | CB13 |
+| AST-08 | AS§35 Phase A | Core | 類別：Projectile、UI asset、Prefab、Audio（播放） | Prefab：`core/prefab.py`；Audio：`runtime/audio_mixer.py`；Projectile、UI asset：`assets/sprite_kinds.py`（golden 涵蓋） | UT | HI | **B** | 缺 RM | CB13 |
+| AST-09 | AS§34 | Core | Golden 測試套件（11 類） | `validation/golden.py`（8 項檢查）、`tests/golden/`（11 個 golden asset、baseline、README 的更新規則）、`scripts/update_golden_baselines.py` | UT + HI | 每次 commit 都執行（測試基礎設施） | **A** | — | — |
 | AST-10 | AS§33、AD | Core（內容） | 正式 Starter Pack 美術 | — | — | — | **D（Deferred content）** | 依 SCOPE_DECISIONS，改用授權明確的免費素材；屬於 JRPG Demo 階段 | Deferred |
-| AST-11 | AP§17、§21 | Core | Atlas packing、auto-fix | `graphics/atlas.py`；auto-fix 沒有 | UT | NE | **C** | — | CB13 |
+| AST-11 | AP§17、§21 | Core | Atlas packing、auto-fix | `graphics/atlas.py`、`assets/autofix.py`、`assets/asset_package.py` | UT | HI | **B** | 缺 RM | CB13 |
 | AST-12 | AP Part A §33–36 | Eventual | Prompt／AI provider／video-to-sprite | — | — | — | **E** | 依 SCOPE_DECISIONS 停止 AI 生成 | — |
 | AST-13 | CODEX_HANDOFF | Core | MV 只在 asset 邊界（不進 Runtime/Battle/Scene/Presentation） | `assets/rpg_maker_mv*.py`；違反處：`runtime/rpg_maker_mv_map_render.py`（已 commit）、`graphics/mv_weapon_visual.py` + `presentation/battle_screen.py`／`battle_runtime.py`（工作樹） | UT（邊界由測試強制） | — | **B** | 尚未實機重驗 W-18 | CB0 |
 
@@ -181,16 +181,18 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | 子系統 | A | B | C | D | E | 不在本期 | Active 分母（A+B+C+D） | A 比例 | A+B 比例 |
 |---|---|---|---|---|---|---|---|---|---|
 | Engine Core（ENG） | 7 | 14 | 1 | 1 | 0 | 0 | 23 | 30% | 91% |
-| Animation／Camera／VFX／Composition | 1 | 8 | 5 | 0 | 0 | 0 | 14 | 7% | 64% |
+| Animation／Camera／VFX／Composition | 2 | 9 | 3 | 0 | 0 | 0 | 14 | 14% | 79% |
 | Gameplay（GP） | 4 | 2 | 0 | 0 | 0 | 0 | 6 | 67% | 100% |
 | RPG／Battle（BTL、RPG） | 1 | 12 | 1 | 0 | 0 | 0 | 14 | 7% | 93% |
 | 世界／事件／UI（EVT、WLD、UI） | 0 | 5 | 3 | 0 | 0 | 0 | 8 | 0% | 63% |
-| Editor（EDT） | 2 | 5 | 8 | 4 | 0 | 0 | 19 | 11% | 37% |
-| Asset Pipeline（AST） | 2 | 4 | 4 | 1 | 1 | 1 | 11 | 18% | 55% |
+| Editor（EDT） | 9 | 7 | 1 | 2 | 0 | 0 | 19 | 47% | 84% |
+| Asset Pipeline（AST） | 3 | 7 | 1 | 0 | 1 | 1 | 11 | 27% | 91% |
 | 壓力測試／範本／Generator | 0 | 0 | 2 | 0 | 1 | 2 | 2 | 0% | 0% |
-| **合計** | **17** | **50** | **24** | **6** | **2** | **3** | **97** | **18%** | **69%** |
+| **合計** | **26** | **56** | **12** | **3** | **2** | **3** | **97** | **27%** | **85%** |
 
 **2026-10-10 更新（CB3–CB14 及 CB11 之後）：** 2026-10-09 原始稽核時是 A 17／B 20／C 44／D 16；CB4–CB14 之後是 A17／B38／C33／D9。A 沒有增加，因為 A 需要實機（RM）驗證，而這一輪全部只有 UT／HI／offscreen GS。新的 B 項目都缺 RM，請見各列「缺口」欄。
+
+**2026-10-11 更新（D16：CB13、CB10、CAM-02）：** A17／B50／C24／D6 → **A26／B56／C12／D3**。9 項升為 A（ANI-04、EDT-05、EDT-06、EDT-07、EDT-08、EDT-09、EDT-10、EDT-15、AST-09）：Editor 工具依 EDT-01 同樣的標準——在實機 Cocoa 視窗執行、量測並由工程師檢視截圖（`evidence/real_machine/editor_*.png`）；AST-09 是每次 commit 都執行的測試基礎設施。這些 A 不包含「有人實際上手使用」，那仍是人工項目。
 
 （共 102 列 = 97 active + 2 E + 3 不在本期。統計由腳本從本表計算。）
 

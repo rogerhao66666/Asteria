@@ -378,3 +378,24 @@ playable-runtime fixtures moved to `tests/conftest.py`. CI runs
 
     .venv/bin/ruff check src tests scripts
     .venv/bin/ruff format src tests scripts
+
+## CB13 validation and CB10 editors, CAM-02 camera --- 2026-10-11
+
+Golden asset suite (11 assets × 8 checks) with regression/timing baselines
+and update rules, runtime benchmark, asset auto-fix and atlas, battle-scoped
+resource release. Editors: animation, action timeline, runtime debugger (live
+game over a loopback channel), play from selection / restart / log, script
+editor (highlighting, API completion, traceback navigation, reload), record
+cut/copy/paste, multi-select, filter, context menu and batch edit, a global
+Problems panel with navigation, an enemy AI / boss phase editor whose preview
+uses the battle's own selection logic, and a VFX tool whose placement the
+battle renderer reads. Camera: look-ahead, bounds, target groups, eased
+cutscene/boss shots and shake, driven by event commands. Fixed on the way:
+the reference boss crashed on its final phase (unregistered AI condition).
+
+Verification: **2097 passed**; real-machine run on macOS/Apple M5 with two new
+checks (boss camera, editor tools in a Cocoa window, screenshots reviewed —
+three UI defects found and fixed). Matrix: A26/B56/C12/D3 (DECISION_LOG D16).
+Not done: hands-on use by a person (M1–M5), record drag-and-drop/sort, field
+follow camera in the playable map, battle-intro boss camera. The engine is
+not complete.
