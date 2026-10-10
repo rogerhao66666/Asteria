@@ -307,3 +307,37 @@ runtime) → CB2 (incremental Battle Presentation integration).
 
 Verification: `QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q` →
 **1884 passed**. Real-window runs were not executed (headless SDL only).
+
+## Engine core, editor and packaging batches CB4–CB9, CB12, CB14 --- 2026-10-10
+
+- **Assets:** free-licensed playable test art and audio for the reference
+  project (CC0 Kenney / Ninja Adventure, CC-BY-SA 3.0 LPC soldier) with
+  `THIRD_PARTY_ASSETS.md` and `playable_assets/CREDITS.md` (closes F-1). The
+  Free Pixel Art Asset Pack stays local-only (no redistribution right).
+- **CB2 / F-2:** the canonical battle UI layout defects are fixed (`ebc5bf3`);
+  legacy remains the default.
+- **CB14:** `ActorLinkComponent`, actor appearance and asset thumbnails are
+  restored without the Generator; "Place Character from Sprite Sheet…" and
+  "Set Actor Appearance…" in the shell; Inspector dropdowns for actors,
+  assets and parents.
+- **CB4:** input action map (keyboard + gamepad, rebinding, Project v10),
+  fixed-step simulation, concrete Animation/Camera systems, transform
+  parent/child hierarchy, scene transitions with persistent entities.
+- **CB5:** colliders (box/circle), layers/masks, spatial-hash broad phase,
+  triggers; 1000 colliders → 948 candidate pairs in 3.7 ms.
+- **CB6:** `AudioMixer` with music/ambient/effect buses and fades on
+  `pygame.mixer`.
+- **CB7:** prefabs, variants, overrides and propagation, with editor commands.
+- **CB8:** animation state machines (parameters, triggers, any-state,
+  wait-for-finish) and runtime frame events.
+- **CB9:** ModernGL sprite-batching backend restored from `16a6ebd`;
+  `asteria-preview --backend moderngl`; pygame stays the default.
+- **CB12:** component migration chain, `asteria-upgrade` and `asteria-export`
+  (the exported folder launches in its own process).
+
+Verification: `QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q` →
+**1954 passed**; correctness lint passes. Real-window runs (gamepad, audio
+latency, GPU window) were not executed.
+
+**NEXT:** CB10 (editor tools), CB11 (game systems), CB13 (golden suite,
+profiler), then CB15 retirement after item-by-item approval.
