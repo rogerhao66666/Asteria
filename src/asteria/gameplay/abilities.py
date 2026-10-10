@@ -343,7 +343,15 @@ class AbilityRuntime:
         targets=(),
         *,
         prepaid_costs=None,
+        value_transform=None,
     ):
+        """Validate, pay costs and apply effects atomically.
+
+        ``value_transform(target_id, operation, value)`` (optional) adjusts each
+        operation value an effect applies to a selected target. It returns the
+        value for the target, or ``(target_value, source_value)`` to route part
+        of it back to the source as a delta of the same resource (reflection).
+        """
         definition = self.registry.require(ability_id)
         targets = tuple(targets)
         if any(not isinstance(x, AbilityTarget) for x in targets):
@@ -420,14 +428,28 @@ class AbilityRuntime:
             else:
                 for target in targets:
                     staged_target = staged_by_id[target.target_id]
+                    reflected = []
+                    transform = None
+                    if value_transform is not None:
+                        def transform(operation, value, _target_id=target.target_id, _reflected=reflected):
+                            routed = value_transform(_target_id, operation, value)
+                            if isinstance(routed, tuple):
+                                routed, back = routed
+                                if back:
+                                    _reflected.append((operation.target, float(back)))
+                            return routed
                     result = apply_effect(
                         ability_effect.effect,
                         staged_target.stats,
                         staged_target.resources,
                         staged_target.tags,
                         formula_context=_formula_context(staged_source, staged_target),
+                        value_transform=transform,
                     )
                     effect_results.append((target.target_id, result))
+                    for resource, amount in reflected:
+                        if staged_source.resources.contains(resource):
+                            staged_source.resources.change(resource, amount)
         for target_id in sorted(staged_by_id):
             _commit_subject(staged_by_id[target_id], actual_by_id[target_id])
 

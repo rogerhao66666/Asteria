@@ -90,7 +90,7 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | ID | 來源 | 優先 | 需求 | 程式碼證據 | 測試 | 整合 | 狀態 | 缺口 | Batch |
 |---|---|---|---|---|---|---|---|---|---|
 | BTL-01 | S§19 | Eventual | 隊伍／敵群、回合排程、速度順序 | `rpg/battle.py`、`battle_scheduler.py` | UT | HI；playable 回合順序由 scheduler 決定（CB3） | **B** | 缺 RM | CB3 |
-| BTL-02 | S§19 | Eventual | 多段攻擊、反擊／追擊／反應、弱點／抗性、break | `rpg/action_sequences.py`、`reactions.py`、`interactions.py`、`gauge_composition.py` | UT | HI | **B** | F-3：互動倍率沒有套用到實際傷害（待決）；缺 RM | CB3 |
+| BTL-02 | S§19 | Eventual | 多段攻擊、反擊／追擊／反應、弱點／抗性、break | `rpg/action_sequences.py`、`reactions.py`、`interactions.py`、`gauge_composition.py` | UT | HI | **B** | F-3 已修（CB-BR1：互動倍率進入實際傷害，Preview 一致）；DOT 不套用；缺 RM | CB3、CB-BR1 |
 | BTL-03 | S§19 | Eventual | 自訂資源、回合操作、boss 階段、戰鬥事件、戰鬥 AI | `rpg/battle_resources.py`、`enemy_ai.py` `BossPhaseDefinition` | UT | HI；boost／死亡資源由資料設定（CB3） | **B** | 缺 RM | CB3 |
 | BTL-04 | S§19、§29 | Core | 戰鬥 UI／演出（HUD、時間軸、結果、選單、動畫、VFX、camera、audio、hit-stop、多段、結果轉場） | `presentation/battle_*.py`；`runtime/battle_presentation_adapters.py` Canonical adapter；`platform/pygame_battle_ui.py` | UT | HI（版面缺陷 F-2 已修） | **C** | 非預設；缺戰鬥者 sprite、VFX 播放 | CB2 |
 | RPG-01 | S§21 | Core | 背包：可堆疊／唯一、分類、容量、關鍵道具、消耗品、貨幣 | `rpg/items.py` `Inventory` | UT | playable 選單 | **B** | 沒有容量規則的實機驗證 | CB11 |

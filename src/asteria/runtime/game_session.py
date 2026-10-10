@@ -617,6 +617,11 @@ class GameSessionRuntime:
             outcomes.append((target_id,outcome))
         return tuple(outcomes)
 
+    def preview(self,actor_id,ability_id,target_ids):
+        """Predicted resource changes of an action (same pipeline as execute; nothing mutates)."""
+        if self.mode!="battle": raise GameSessionError("no active battle")
+        return self.battle.preview_action(BattleAction(actor_id,ability_id,tuple(target_ids)))
+
     def execute(self,actor_id,ability_id,target_ids):
         if self.mode!="battle": raise GameSessionError("no active battle")
         return self.battle.execute(BattleAction(actor_id,ability_id,target_ids))

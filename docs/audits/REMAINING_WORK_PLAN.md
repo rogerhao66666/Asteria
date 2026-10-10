@@ -100,12 +100,23 @@ CB10、CB11 在 CB1–CB3 之後
 | 限制 | pygame 維持預設；**不替換** renderer；lighting／bloom 等 §12 shader 需求另外提案 |
 | 驗收 | 兩個後端在同一組 `TextureDraw` 契約測試下輸出一致（像素容差）；實機截圖（EXTERNAL GPU） |
 
+## CB-BR1 — Battle Rules Correction（S，D12 批准）
+| 需求 | BTL-02（F-3） |
+|---|---|
+| 範圍 | 互動規則（弱點／抗性倍率、NULLIFY／ABSORB／REFLECT）接入既有 `BattleRuntime.execute` → `AbilityRuntime` → `apply_effect` 傷害路徑；`BattleRuntime.preview_action` 用同一路徑預測 |
+| 限制 | 不建立第二套傷害計算；倍率只來自專案的 InteractionRule 資料；不改 SPEC 未要求的其他規則 |
+| 驗收 | 普通攻擊、技能、反擊（reaction）、敵人 AI 路徑；Preview 與 Runtime 一致；UT + 整合 + 回歸測試 |
+
 ## CB10 — Editor 工具（L，可拆）
+
+**D12 追加（優先）：** 10h 視覺化資料編輯器：Shop、Quest、Faction、Achievement、Equipment Set、Capture Rules（GUI 與 Python API 共用 canonical data model；不能只給 JSON 編輯器）
 | 需求 | ANI-04、CAM-02、EDT-03、05–11、13–15、AST-02 |
 |---|---|
 | 子項 | 10a 動畫編輯器（切割、時序、pivot、事件、state machine 圖）；10b action timeline 編輯器；10c debugger（檢視／修改 stats、states、開關、傳送、生成）；10d 右鍵選單、批次編輯、紀錄 copy/cut/paste、全域問題面板；10e script editor 語法高亮、自動完成；10f play-test 從選定點出生、快速重啟、log；10g VFX 面板掛進 shell |
 
 ## CB11 — 遊戲系統（L，依 JRPG 需要挑選）
+
+**D12 追加 — Runtime Integration（11-RI）：** Field Enemy AI、Spawn Zones 在 playable runtime 實際執行；戰鬥 Capture 選單；配方發現（Recipe Discovery）；Game Settings 畫面；Achievement 畫面；Bestiary／Encyclopedia 畫面。必須經過實際 runtime 整合，不能只靠單元測試。
 | 需求 | RPG-01、02、04–10、WLD-01、02、UI-02 |
 |---|---|
 | 子項 | 商店／經濟、任務、製作的成功率／品質／工作台、條件掉落、set bonus、field AI（idle/patrol/chase/flee）、spawn zone／wave／respawn、捕捉／收納、pause／存讀檔／game over 畫面 |
@@ -129,6 +140,8 @@ CB10、CB11 在 CB1–CB3 之後
 | 驗收 | 不靠 Generator 也能完成「匯入免費素材 sprite sheet → 指派給 Actor → 放上地圖 → 遊玩」的 E2E |
 
 ## CB15 — 已取消範圍的退役（S–M，需要逐項批准，依 D2／D3／D4）
+
+**D12：尚未批准。** 先提交 `docs/audits/CB15_RETIREMENT_REVIEW.md` 逐項審核，等明確批准後才能執行任何刪除。
 
 | 項目 | 內容 |
 |---|---|

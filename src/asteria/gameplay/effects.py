@@ -165,8 +165,13 @@ def apply_effect(
     tags: TagSet,
     *,
     formula_context: FormulaContext | None = None,
+    value_transform=None,
 ):
     """Apply an instantaneous effect atomically.
+
+    ``value_transform(operation, value) -> value`` lets a caller route each
+    evaluated operation value through its own rules (battle interaction
+    multipliers) before it is applied.
 
     All operations are executed against temporary copies first. If any
     operation is invalid (for example a missing resource), the original state
@@ -199,6 +204,8 @@ def apply_effect(
             if formula_context is None:
                 raise ValueError("formula-driven effect requires formula_context")
             value = value.evaluate(formula_context)
+        if value_transform is not None:
+            value = value_transform(operation, value)
 
         if operation.kind == EffectOperationKind.STAT_DELTA:
             staged_stats.add(operation.target, value)

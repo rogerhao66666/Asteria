@@ -239,6 +239,24 @@ class BattleAction:
 class BattleActionResult:
     action: BattleAction
     execution_result: object
+    # (target_id, resource_id, ValueResolutionResult) for every harmful resource
+    # delta the project's interaction rules resolved during this action.
+    interactions: tuple = ()
+
+
+@dataclass(frozen=True, slots=True)
+class BattleActionPreview:
+    """Predicted result of an action, computed by the same pipeline as execute.
+
+    ``resource_deltas`` maps member id -> {resource id: change}; nothing in the
+    battle is mutated.
+    """
+
+    action: BattleAction
+    executable: bool
+    errors: tuple[str, ...]
+    resource_deltas: dict
+    interactions: tuple = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -599,6 +617,69 @@ class BattleRuntime:
         emit_hook(self.hooks, "rpg.battle.timeline_shifted", source=str(member_id), data={"delta": float(delta), "scheduled": scheduled, "casting": casting})
         return scheduled, casting
 
+    def _interaction_transform(self, actor, ability_id, subjects, record):
+        """Route harmful resource deltas through the project's interaction rules.
+
+        A negative RESOURCE_DELTA on a selected target is damage: its magnitude
+        is resolved by ``InteractionResolver`` (weakness/resistance multipliers,
+        flat and stat terms) with the ability's tags as action tags. NULLIFY
+        drops it, ABSORB turns it into healing, REFLECT sends it to the actor.
+        Other operations pass through unchanged.
+        """
+        from asteria.gameplay.effects import EffectOperationKind
+        from .interactions import InteractionDisposition
+
+        if not self.interactions.rules:
+            return None
+        tags = self.ability_runtime.registry.require(ability_id).tags
+
+        def transform(target_id, operation, value):
+            if operation.kind != EffectOperationKind.RESOURCE_DELTA or value >= 0:
+                return value
+            resolved = self.interactions.resolve_value(-float(value), subjects[0], subjects[1][target_id], action_tags=tags)
+            record.append((target_id, operation.target, resolved))
+            if resolved.disposition == InteractionDisposition.NULLIFY:
+                return 0.0
+            if resolved.disposition == InteractionDisposition.ABSORB:
+                return resolved.resolved_value
+            if resolved.disposition == InteractionDisposition.REFLECT:
+                return (0.0, -resolved.resolved_value)
+            return -resolved.resolved_value
+
+        return transform
+
+    def preview_action(self, action, *, rng=None):
+        """Predict ``action`` without mutating the battle (same pipeline as :meth:`execute`)."""
+        from asteria.gameplay.abilities import _clone_subject
+
+        probe = random.Random()
+        probe.setstate((self.rng if rng is None else rng).getstate())
+        try:
+            effective = self._validate_action(action, rng=probe)
+        except ValueError as exc:
+            return BattleActionPreview(action, False, (str(exc),), {})
+        actor = self.member(effective.actor_id)
+        ids = (actor.member_id, *effective.target_ids)
+        clones = {member_id: _clone_subject(self.member(member_id).subject) for member_id in dict.fromkeys(ids)}
+        record = []
+        transform = self._interaction_transform(
+            actor, effective.ability_id, (actor.subject, {x: self.member(x).subject for x in effective.target_ids}), record)
+        result = self.ability_runtime.execute(
+            effective.ability_id, AbilityTarget(actor.member_id, clones[actor.member_id]),
+            tuple(AbilityTarget(x, clones[x]) for x in effective.target_ids), value_transform=transform,
+        )
+        deltas = {}
+        for member_id, clone in clones.items():
+            before = self.member(member_id).subject.resources
+            changes = {}
+            for resource_id in clone.resources.to_data()["values"]:
+                delta = clone.resources.current(resource_id) - before.current(resource_id)
+                if delta:
+                    changes[resource_id] = delta
+            if changes:
+                deltas[member_id] = changes
+        return BattleActionPreview(effective, result.executed, tuple(result.errors), deltas, tuple(record) if result.executed else ())
+
     def execute(self, action, *, rng=None, prepaid_costs=None):
         rng = self.rng if rng is None else rng
         effective_action = self._validate_action(action, rng=rng)
@@ -612,8 +693,12 @@ class BattleRuntime:
         )
         source = AbilityTarget(actor.member_id, actor.subject)
         target_values = tuple(AbilityTarget(x.member_id, x.subject) for x in targets)
-        result = self.ability_runtime.execute(action.ability_id, source, target_values, prepaid_costs=prepaid_costs)
-        wrapped = BattleActionResult(effective_action, result)
+        record = []
+        transform = self._interaction_transform(
+            actor, action.ability_id, (actor.subject, {x.member_id: x.subject for x in targets}), record)
+        result = self.ability_runtime.execute(action.ability_id, source, target_values, prepaid_costs=prepaid_costs,
+                                              value_transform=transform)
+        wrapped = BattleActionResult(effective_action, result, tuple(record) if result.executed else ())
         emit_hook(
             self.hooks,
             "rpg.battle.after_action",
