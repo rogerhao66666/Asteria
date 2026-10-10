@@ -1,94 +1,94 @@
 {
   "schema": "asteria.runtime_profile",
   "version": 1,
-  "frames": 587,
+  "frames": 588,
   "frame": {
-    "count": 587,
-    "mean_ms": 6.3472,
-    "p50_ms": 6.1244,
-    "p95_ms": 7.4775,
-    "p99_ms": 9.8628,
-    "max_ms": 24.2408,
-    "total_ms": 3725.8217
+    "count": 588,
+    "mean_ms": 6.5205,
+    "p50_ms": 6.3144,
+    "p95_ms": 7.7078,
+    "p99_ms": 10.092,
+    "max_ms": 27.1803,
+    "total_ms": 3834.0771
   },
   "pacing": {
     "target_fps": 60.0,
-    "measured_fps": 58.808,
-    "interval_mean_ms": 17.0046,
-    "interval_jitter_ms": 0.7233,
-    "interval_p99_ms": 18.0307,
-    "frames_over_budget": 0
+    "measured_fps": 58.86,
+    "interval_mean_ms": 16.9894,
+    "interval_jitter_ms": 1.0696,
+    "interval_p99_ms": 19.5462,
+    "frames_over_budget": 2
   },
   "sections": {
     "animation": {
-      "count": 587,
-      "mean_ms": 1.4472,
-      "p50_ms": 1.3926,
-      "p95_ms": 1.6685,
-      "p99_ms": 2.0794,
-      "max_ms": 5.8847,
-      "total_ms": 849.5277
+      "count": 588,
+      "mean_ms": 1.4925,
+      "p50_ms": 1.4384,
+      "p95_ms": 1.7125,
+      "p99_ms": 2.3413,
+      "max_ms": 5.3059,
+      "total_ms": 877.5969
     },
     "asset_loading": {
       "count": 13,
-      "mean_ms": 0.9947,
-      "p50_ms": 0.475,
-      "p95_ms": 2.8624,
-      "p99_ms": 4.1855,
-      "max_ms": 4.1855,
-      "total_ms": 12.9309
+      "mean_ms": 1.178,
+      "p50_ms": 0.7552,
+      "p95_ms": 3.5648,
+      "p99_ms": 3.5724,
+      "max_ms": 3.5724,
+      "total_ms": 15.314
     },
     "input": {
-      "count": 587,
-      "mean_ms": 0.0491,
-      "p50_ms": 0.0412,
-      "p95_ms": 0.0628,
-      "p99_ms": 0.0869,
-      "max_ms": 2.988,
-      "total_ms": 28.8032
+      "count": 588,
+      "mean_ms": 0.0475,
+      "p50_ms": 0.0452,
+      "p95_ms": 0.07,
+      "p99_ms": 0.0852,
+      "max_ms": 0.1429,
+      "total_ms": 27.9055
     },
     "present": {
-      "count": 587,
-      "mean_ms": 0.6525,
-      "p50_ms": 0.56,
-      "p95_ms": 0.9568,
-      "p99_ms": 1.5853,
-      "max_ms": 18.4268,
-      "total_ms": 383.0034
+      "count": 588,
+      "mean_ms": 0.7145,
+      "p50_ms": 0.6132,
+      "p95_ms": 1.0383,
+      "p99_ms": 1.4877,
+      "max_ms": 21.3241,
+      "total_ms": 420.152
     },
     "render": {
-      "count": 587,
-      "mean_ms": 4.0549,
-      "p50_ms": 3.9568,
-      "p95_ms": 4.6199,
-      "p99_ms": 5.4227,
-      "max_ms": 18.6965,
-      "total_ms": 2380.2116
+      "count": 588,
+      "mean_ms": 4.1094,
+      "p50_ms": 4.0147,
+      "p95_ms": 4.7097,
+      "p99_ms": 5.5907,
+      "max_ms": 15.1239,
+      "total_ms": 2416.3399
     },
     "update": {
-      "count": 587,
-      "mean_ms": 0.0594,
-      "p50_ms": 0.0526,
-      "p95_ms": 0.0804,
-      "p99_ms": 0.2973,
-      "max_ms": 0.4438,
-      "total_ms": 34.8693
+      "count": 588,
+      "mean_ms": 0.0641,
+      "p50_ms": 0.0575,
+      "p95_ms": 0.0927,
+      "p99_ms": 0.3045,
+      "max_ms": 0.5055,
+      "total_ms": 37.6622
     },
     "vfx": {
-      "count": 270,
-      "mean_ms": 0.1117,
-      "p50_ms": 0.1113,
-      "p95_ms": 0.1504,
-      "p99_ms": 0.1905,
-      "max_ms": 0.3025,
-      "total_ms": 30.1476
+      "count": 271,
+      "mean_ms": 0.1182,
+      "p50_ms": 0.1165,
+      "p95_ms": 0.1768,
+      "p99_ms": 0.2298,
+      "max_ms": 0.3054,
+      "total_ms": 32.037
     }
   },
   "counters": {
     "asset_usage": {
       "last": 13.0,
       "max": 13.0,
-      "mean": 11.6985
+      "mean": 11.7024
     },
     "entity_count": {
       "last": 2.0,
@@ -98,13 +98,13 @@
     "particles": {
       "last": 0.0,
       "max": 1.0,
-      "mean": 0.46
+      "mean": 0.4609
     }
   },
   "memory": {
-    "peak_rss_bytes": 197361664,
-    "python_heap_current_bytes": 820433,
-    "python_heap_peak_bytes": 843173
+    "peak_rss_bytes": 197312512,
+    "python_heap_current_bytes": 821386,
+    "python_heap_peak_bytes": 844158
   },
   "unsupported": {
     "draw_calls": "pygame software blitting exposes no draw-call counter",

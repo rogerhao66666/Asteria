@@ -141,6 +141,8 @@ class StructuredRecordEditor(QTreeWidget):
             self._data = deepcopy(data)
             self._append(None, self._data, "Record", ())
             self.expandToDepth(1)
+            self.resizeColumnToContents(0)  # full field names (they were cut to "def…", "resour…")
+            self.setColumnWidth(0, min(max(self.columnWidth(0), 140), 360))
         finally:
             self.blockSignals(False)
 
