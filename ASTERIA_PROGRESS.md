@@ -341,3 +341,14 @@ latency, GPU window) were not executed.
 
 **NEXT:** CB10 (editor tools), CB11 (game systems), CB13 (golden suite,
 profiler), then CB15 retirement after item-by-item approval.
+
+## Game systems batch CB11 --- 2026-10-10
+
+Shops and quests (RPG DB v25, save v6), conditional/luck loot, equipment set
+bonuses, crafting stations/chance/quality/experience, field AI and spawn
+zones with visible encounters, pause / quest log / shop / save-load / game
+over screens in the playable runtime, and faction reputation,
+relationships, achievements, bestiary and enemy capture (save v7). See
+`docs/audits/DECISION_LOG.md` D11 for commits and remaining gaps (no editor
+UIs for these definitions yet; field AI/spawns not yet run by the playable
+runtime). Verification: **1975 passed** offscreen; no real-window run.

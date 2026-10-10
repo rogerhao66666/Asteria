@@ -94,15 +94,15 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | BTL-03 | S§19 | Eventual | 自訂資源、回合操作、boss 階段、戰鬥事件、戰鬥 AI | `rpg/battle_resources.py`、`enemy_ai.py` `BossPhaseDefinition` | UT | HI；boost／死亡資源由資料設定（CB3） | **B** | 缺 RM | CB3 |
 | BTL-04 | S§19、§29 | Core | 戰鬥 UI／演出（HUD、時間軸、結果、選單、動畫、VFX、camera、audio、hit-stop、多段、結果轉場） | `presentation/battle_*.py`；`runtime/battle_presentation_adapters.py` Canonical adapter；`platform/pygame_battle_ui.py` | UT | HI（版面缺陷 F-2 已修） | **C** | 非預設；缺戰鬥者 sprite、VFX 播放 | CB2 |
 | RPG-01 | S§21 | Core | 背包：可堆疊／唯一、分類、容量、關鍵道具、消耗品、貨幣 | `rpg/items.py` `Inventory` | UT | playable 選單 | **B** | 沒有容量規則的實機驗證 | CB11 |
-| RPG-02 | S§21 | Core | 裝備：欄位、需求、modifier、tags、passives、set bonus、熟練度、升級 | `rpg/items.py`、`equipment_growth.py`、`resolved_build.py` | UT | playable 選單 | **C** | 沒有 set bonus | CB11 |
+| RPG-02 | S§21 | Core | 裝備：欄位、需求、modifier、tags、passives、set bonus、熟練度、升級 | `rpg/items.py`、`equipment_growth.py`、`resolved_build.py`；`rpg/equipment_sets.py`（件數門檻的 modifier／tag／能力） | UT | HI（build 解析） | **B** | 沒有 set 編輯器 UI；缺 RM | CB11 |
 | RPG-03 | S§21–22 | Core | 成長、職業／副職業、技能樹、多種解鎖貨幣、熟練度 | `rpg/progression*.py`、`actors.py`、`ability_build.py` | UT | GS（技能樹編輯器）+ playable | **A** | — | — |
-| RPG-04 | S§23 | Core | 掉落（權重／保底／稀有、數量範圍、條件、難度／幸運） | `rpg/enemies.py`（`chance`、min/max、weight） | UT | HI | **C** | 沒有條件掉落和難度／幸運 modifier | CB11 |
-| RPG-05 | S§23 | Core | 經濟（買賣、多貨幣、庫存、定價） | — | — | — | **D** | — | CB11 |
-| RPG-06 | S§23 | Core | 製作（配方、材料、需求、工作台、成功率、品質、經驗、發現、失敗） | `rpg/composition.py` | UT | HI | **C** | 只有配方／材料／產出 | CB11 |
+| RPG-04 | S§23 | Core | 掉落（權重／保底／稀有、數量範圍、條件、難度／幸運） | `rpg/enemies.py`（`chance`、min/max、`required_switch`、`luck_bonus`）；`loot.luck` 事件變數 | UT | HI（勝利結算） | **B** | 沒有權重／保底表；缺 RM | CB11 |
+| RPG-05 | S§23 | Core | 經濟（買賣、多貨幣、庫存、定價） | `rpg/economy.py` `ShopDefinition`／`ShopRuntime`（多貨幣、買賣、庫存）；`OPEN_SHOP`；`runtime/game_menus.py` 商店畫面 | UT | HI（按鍵驅動的 playable 畫面） | **B** | 沒有商店編輯器 UI；缺 RM | CB11 |
+| RPG-06 | S§23 | Core | 製作（配方、材料、需求、工作台、成功率、品質、經驗、發現、失敗） | `rpg/composition.py`（工作台、成功率、失敗產出、品質等級、經驗）；`GameSessionRuntime.craft` | UT | HI | **C** | 沒有配方發現；沒有製作畫面 | CB11 |
 | RPG-07 | S§24 | Core | 世界互動框架（talk…custom、需求、check、結果、獎勵） | `runtime/interaction.py`、`rpg/interactions.py` | UT | 只有 playable 的 talk → 遭遇戰 | **C** | 只執行 `START_ENCOUNTER`（見 EVT-02） | CB1、CB11 |
-| RPG-08 | S§25 | Core | 生物／夥伴（捕捉、收集、召喚、成長、收納） | `rpg/battle_lifecycle.py`（召喚） | UT | HI | **C** | 沒有捕捉、收集或收納 | CB11 |
-| RPG-09 | S§28 | Core | 基本 AI（idle/patrol/chase/attack/flee）、進階（狀態機、權重、門檻、階段） | `rpg/enemy_ai.py`（回合制規則 + 階段） | UT | HI | **C** | 沒有 field AI 和 behavior tree／utility | CB11 |
-| RPG-10 | S§28 | Core | 遭遇（隨機／可見、生成區、wave、重生、稀有、boss、條件） | `rpg/enemies.py` `EncounterDefinition` | UT | playable 觸發遭遇 | **C** | 沒有 spawn zone、wave、respawn、可見遭遇 | CB11 |
+| RPG-08 | S§25 | Core | 生物／夥伴（捕捉、收集、召喚、成長、收納） | `rpg/battle_lifecycle.py`（召喚）；`rpg/capture.py` `CaptureRule`；`attempt_capture`；bestiary captured 計數 | UT | HI | **C** | playable 戰鬥 UI 沒有捕捉指令；收納只有 roster | CB11 |
+| RPG-09 | S§28 | Core | 基本 AI（idle/patrol/chase/attack/flee）、進階（狀態機、權重、門檻、階段） | `rpg/enemy_ai.py`（回合制）；`runtime/field_ai.py` `FieldAISystem`（idle/patrol/wander/chase/flee、回家） | UT | HI（Scene systems） | **C** | playable runtime 尚未執行 field AI；沒有 behavior tree／utility | CB11 |
+| RPG-10 | S§28 | Core | 遭遇（隨機／可見、生成區、wave、重生、稀有、boss、條件） | `rpg/enemies.py` `EncounterDefinition`；`runtime/field_ai.py` `SpawnSystem`（radius、max alive、respawn、waves、稀有、條件）、`VisibleEncounterComponent` | UT | HI（觸碰可見遭遇會開戰） | **B** | spawn 沒有在 playable runtime 執行；缺 RM | CB11 |
 
 ## 5. 世界、事件、UI（S §26–§27、§29）
 
@@ -112,10 +112,10 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | EVT-02 | S§27 | Core | 對話／選項、場景轉移、動畫／音訊／畫面效果、背包／隊伍／世界狀態動作 | `events/dialogue.py`；`runtime/world_command_handlers.py` 標準 WORLD handler；Event Editor 可輸入 WORLD 參數 | UT | HI | **B** | 缺 RM | CB1 |
 | EVT-03 | S§27 | Core | Common events、battle events、cutscenes、存讀檔恢復 | 部分（VM 狀態可序列化） | UT | HI（存檔 v2 保存進行中的事件） | **C** | 沒有 common event 和 cutscene | CB1 |
 | EVT-04 | S§27 | Core | Sequencer（平行軌道：移動、動畫、對話、camera、音樂、VFX、轉場） | `presentation/choreography.py`（演出用） | UT | NE | **C** | 沒有事件層的 sequencer | CB1 |
-| WLD-01 | S§26 | Core | 任務／目標／相依／獎勵／串聯 | — | — | — | **D** | — | CB11 |
-| WLD-02 | S§26 | Core | NPC 狀態、聲望、關係、陣營、旗標、成就、圖鑑 | 只有旗標（event switches） | UT | — | **C** | 其他都沒有 | CB11 |
+| WLD-01 | S§26 | Core | 任務／目標／相依／獎勵／串聯 | `rpg/quests.py`（counter／item／defeat_enemy／switch 目標、前置、獎勵、串聯）；存檔 v6；`*_QUEST` WORLD 命令；任務日誌畫面 | UT | HI | **B** | 沒有任務編輯器 UI；缺 RM | CB11 |
+| WLD-02 | S§26 | Core | NPC 狀態、聲望、關係、陣營、旗標、成就、圖鑑 | event switches；`rpg/world_record.py`（陣營聲望／階級、關係、計數、成就、圖鑑）；存檔 v7；WORLD 命令 | UT | HI | **B** | 沒有 NPC 狀態模型；沒有成就／圖鑑畫面；缺 RM | CB11 |
 | UI-01 | S§29 | Core | 標題、HUD、對話、背包／裝備／狀態、技能 | `presentation/rpg_*_screen.py`（LIBRARY）；`playable_test_runtime._draw_title/_draw_build_menu`（寫死） | UT | RM 寫死版本 | **C** | 畫面模型未接線 | CB2 |
-| UI-02 | S§29 | Core | 商店、任務、暫停／設定、存讀檔、game over | — | — | — | **D** | — | CB11 |
+| UI-02 | S§29 | Core | 商店、任務、暫停／設定、存讀檔、game over | `runtime/game_menus.py`；playable 的 pause／任務／商店／存讀檔／game over 畫面 | UT | HI（按鍵驅動 + headless 截圖檢視） | **B** | 沒有設定畫面；缺 RM | CB11 |
 
 ## 6. Editor（S §5、§30、§32、§34）
 
@@ -183,14 +183,14 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | Engine Core（ENG） | 7 | 14 | 1 | 1 | 0 | 0 | 23 | 30% | 91% |
 | Animation／Camera／VFX／Composition | 1 | 8 | 5 | 0 | 0 | 0 | 14 | 7% | 64% |
 | Gameplay（GP） | 4 | 2 | 0 | 0 | 0 | 0 | 6 | 67% | 100% |
-| RPG／Battle（BTL、RPG） | 1 | 4 | 8 | 1 | 0 | 0 | 14 | 7% | 36% |
-| 世界／事件／UI（EVT、WLD、UI） | 0 | 2 | 4 | 2 | 0 | 0 | 8 | 0% | 25% |
+| RPG／Battle（BTL、RPG） | 1 | 8 | 5 | 0 | 0 | 0 | 14 | 7% | 64% |
+| 世界／事件／UI（EVT、WLD、UI） | 0 | 5 | 3 | 0 | 0 | 0 | 8 | 0% | 63% |
 | Editor（EDT） | 2 | 4 | 9 | 4 | 0 | 0 | 19 | 11% | 32% |
 | Asset Pipeline（AST） | 2 | 4 | 4 | 1 | 1 | 1 | 11 | 18% | 55% |
 | 壓力測試／範本／Generator | 0 | 0 | 2 | 0 | 1 | 2 | 2 | 0% | 0% |
-| **合計** | **17** | **38** | **33** | **9** | **2** | **3** | **97** | **18%** | **57%** |
+| **合計** | **17** | **45** | **29** | **6** | **2** | **3** | **97** | **18%** | **64%** |
 
-**2026-10-10 更新（CB3–CB14 之後）：** 2026-10-09 原始稽核時是 A 17／B 20／C 44／D 16。A 沒有增加，因為 A 需要實機（RM）驗證，而這一輪全部只有 UT／HI／offscreen GS。新的 B 項目都缺 RM，請見各列「缺口」欄。
+**2026-10-10 更新（CB3–CB14 及 CB11 之後）：** 2026-10-09 原始稽核時是 A 17／B 20／C 44／D 16；CB4–CB14 之後是 A17／B38／C33／D9。A 沒有增加，因為 A 需要實機（RM）驗證，而這一輪全部只有 UT／HI／offscreen GS。新的 B 項目都缺 RM，請見各列「缺口」欄。
 
 （共 102 列 = 97 active + 2 E + 3 不在本期。統計由腳本從本表計算。）
 
