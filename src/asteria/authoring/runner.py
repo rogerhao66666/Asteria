@@ -46,6 +46,29 @@ def _diagnostic_for_exception(exc, filename):
     return line, column
 
 
+def script_namespace(
+    project, *, execute=None, filename="<asteria-script>", selection_kind="none", selection_value=None
+):
+    """Globals a project script receives (also used by the editor for completion)."""
+    session = AuthoringSession(project, execute=execute)
+    selected = session.wrap_selection(selection_kind, selection_value)
+    scene = None
+    entity = None
+    if isinstance(selected, AuthoringScene):
+        scene = selected
+    elif isinstance(selected, AuthoringEntity):
+        entity = selected
+        scene = selected._scene
+    return {
+        "__name__": "__asteria_authoring__",
+        "__file__": filename,
+        "project": session,
+        "selected": selected,
+        "scene": scene,
+        "entity": entity,
+    }
+
+
 def run_authoring_script(
     source,
     project,
@@ -65,26 +88,10 @@ def run_authoring_script(
 
     This is deliberately not a security sandbox.
     """
-    session = AuthoringSession(project, execute=execute)
-    selected = session.wrap_selection(selection_kind, selection_value)
-
-    scene = None
-    entity = None
-    if isinstance(selected, AuthoringScene):
-        scene = selected
-    elif isinstance(selected, AuthoringEntity):
-        entity = selected
-        scene = selected._scene
-
+    namespace = script_namespace(
+        project, execute=execute, filename=filename, selection_kind=selection_kind, selection_value=selection_value
+    )
     output = io.StringIO()
-    namespace = {
-        "__name__": "__asteria_authoring__",
-        "__file__": filename,
-        "project": session,
-        "selected": selected,
-        "scene": scene,
-        "entity": entity,
-    }
 
     try:
         code = compile(str(source), filename, "exec")

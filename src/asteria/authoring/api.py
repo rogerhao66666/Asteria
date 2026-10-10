@@ -157,7 +157,7 @@ class AuthoringSession:
     def scenes(self):
         return tuple(AuthoringScene(self, s) for s in self._project.scenes())
 
-    def scene(self, name_or_id):
+    def scene(self, name_or_id) -> AuthoringScene:
         value = str(name_or_id)
         by_id = self._project.scene(value)
         if by_id is not None:
@@ -171,12 +171,12 @@ class AuthoringSession:
 
     scene_named = scene
 
-    def wrap_scene(self, scene):
+    def wrap_scene(self, scene) -> AuthoringScene:
         if scene is None:
             return None
         return AuthoringScene(self, scene)
 
-    def wrap_entity(self, entity):
+    def wrap_entity(self, entity) -> AuthoringEntity:
         if entity is None:
             return None
         scene = entity.scene
@@ -221,7 +221,7 @@ class AuthoringScene:
     def entities(self):
         return tuple(AuthoringEntity(self._session, self, e) for e in self._scene.entities())
 
-    def entity(self, name_or_id):
+    def entity(self, name_or_id) -> AuthoringEntity:
         value = str(name_or_id)
         by_id = self._scene.get_entity(value)
         if by_id is not None:
@@ -235,7 +235,7 @@ class AuthoringScene:
 
     entity_named = entity
 
-    def create_entity(self, name, *, x=0.0, y=0.0):
+    def create_entity(self, name, *, x=0.0, y=0.0) -> AuthoringEntity:
         entity = Entity(str(name))
         entity.add_component(Transform(float(x), float(y)))
         self._session._run(_AddEntity(self._scene, entity))
@@ -301,7 +301,7 @@ class AuthoringEvent:
     def program(self):
         return self._session.raw_project.event_programs.require(self.program_id)
 
-    def append(self, opcode, **args):
+    def append(self, opcode, **args) -> AuthoringEvent:
         old = self.program
         new = EventProgram(
             (*old.instructions, EventInstruction(opcode, args)),
@@ -317,25 +317,25 @@ class AuthoringEvent:
         )
         return self
 
-    def dialogue(self, speaker, text=None):
+    def dialogue(self, speaker, text=None) -> AuthoringEvent:
         if text is None:
             text = speaker
             speaker = ""
         return self.append("DIALOGUE", speaker=str(speaker), text=str(text))
 
-    def set_switch(self, name, value=True):
+    def set_switch(self, name, value=True) -> AuthoringEvent:
         return self.append("SET_SWITCH", name=str(name), value=bool(value))
 
-    def set_variable(self, name, value):
+    def set_variable(self, name, value) -> AuthoringEvent:
         return self.append("SET_VARIABLE", name=str(name), value=value)
 
-    def wait(self, seconds):
+    def wait(self, seconds) -> AuthoringEvent:
         return self.append("WAIT", seconds=float(seconds))
 
-    def world(self, command, **args):
+    def world(self, command, **args) -> AuthoringEvent:
         return self.append("WORLD", command=str(command).upper(), args=dict(args))
 
-    def transfer(self, destination, **args):
+    def transfer(self, destination, **args) -> AuthoringEvent:
         payload = {"destination": destination}
         payload.update(args)
         return self.world("TRANSFER", **payload)
@@ -509,7 +509,7 @@ class AuthoringEntity:
         self._session._run(_SetAttribute(self._entity, "enabled", bool(value), self._entity.enabled))
 
     @property
-    def transform(self):
+    def transform(self) -> AuthoringTransform:
         transform = self._entity.try_get(Transform)
         if transform is None:
             transform = Transform()
@@ -524,7 +524,7 @@ class AuthoringEntity:
             self._session._run(_AddComponent(self._entity, component))
         return AuthoringGameplayAttributes(self._session, component)
 
-    def event(self, name="Event", *, trigger="action"):
+    def event(self, name="Event", *, trigger="action") -> AuthoringEvent:
         project = self._session.raw_project
         program_id = new_id()
         binding_id = new_id()

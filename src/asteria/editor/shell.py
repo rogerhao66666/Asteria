@@ -551,6 +551,7 @@ class AsteriaEditorWindow(QMainWindow):
             selection_kind=sel.kind if not sel.multiple else "none",
             selection_value=sel.value if not sel.multiple else None,
         )
+        self.code_workspace.show_result(result)
         if not result.success:
             tx.undo()
             message = result.stdout + result.diagnostic
