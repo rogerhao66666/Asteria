@@ -162,7 +162,13 @@ class AsteriaEditorWindow(QMainWindow):
         self.viewport.characterCellClicked.connect(self._place_generated_character_at)
         self.rpg_workspace = QTabWidget(self)
         self.rpg_workspace.addTab(self.rpg_authoring, "Database")
+        from .game_systems_authoring import GameSystemsAuthoringController
+        from .game_systems_widget import GameSystemsEditorWidget
+
+        self.game_systems_editor = GameSystemsEditorWidget(GameSystemsAuthoringController(self.document), self)
+        self.game_systems_editor.changed.connect(self.refresh_all)
         self.rpg_workspace.addTab(self.character_creator, "Character Creator")
+        self.rpg_workspace.addTab(self.game_systems_editor, "Game Systems")
         self.battle_authoring = FamilyHostWidget(
             "Battle Rules", self.authoring_controllers.battle_categories, self
         )
@@ -500,6 +506,7 @@ class AsteriaEditorWindow(QMainWindow):
             self.code_workspace.refresh_project_context()
         elif current == WorkspaceMode.RPG:
             self.rpg_authoring.rebuild()
+            self._refresh_game_systems()
         elif current == WorkspaceMode.BATTLE:
             self.battle_authoring.rebuild()
         elif current == WorkspaceMode.UI:
@@ -1127,6 +1134,11 @@ class AsteriaEditorWindow(QMainWindow):
         )
         self.refresh_all()
 
+    def _refresh_game_systems(self):
+        editor = getattr(self, "game_systems_editor", None)
+        if editor is not None and self.document.project is not None:
+            editor.refresh()
+
     def refresh_all(self):
         self.project_tree.refresh()
         self.refresh_asset_list()
@@ -1136,6 +1148,7 @@ class AsteriaEditorWindow(QMainWindow):
         self._sync_event_context()
         self.code_workspace.refresh_project_context()
         self.rpg_authoring.rebuild()
+        self._refresh_game_systems()
         self.battle_authoring.rebuild()
         self.presentation_authoring.rebuild()
         self.runtime_ui_authoring.rebuild()

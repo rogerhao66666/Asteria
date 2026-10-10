@@ -194,7 +194,7 @@ def test_editor_shell_exposes_mv_character_creator_in_rpg_workspace():
     try:
         window.workspace.set_mode(WorkspaceMode.RPG)
         labels = [window.rpg_workspace.tabText(i) for i in range(window.rpg_workspace.count())]
-        assert labels == ["Database", "Character Creator"]
+        assert labels == ["Database", "Character Creator", "Game Systems"]
         assert window.character_creator.part_grid.objectName() == "CharacterPartGrid"
         assert not hasattr(window.character_creator, "starter_pack_combo")
     finally:
