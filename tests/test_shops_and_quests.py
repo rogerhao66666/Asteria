@@ -149,3 +149,20 @@ def test_database_and_save_round_trip_shops_and_quests(tmp_path):
         RpgDatabase.from_data(bad).validate()
     with pytest.raises(ValueError):
         RpgRuntimeState(shop_stock={"apothecary": {"ether_leaf": -1}})
+
+
+def test_conditional_and_luck_scaled_loot():
+    import random
+
+    from asteria.rpg.enemies import roll_reward
+
+    reward = RewardDefinition(loot=[
+        LootEntry("boss_emblem", required_switch="hard_mode"),
+        LootEntry("focus_stone", chance=0.0, luck_bonus=0.25),
+    ])
+    assert roll_reward(reward, random.Random(1)).items == {}
+    switches = {"hard_mode"}.__contains__
+    assert roll_reward(reward, random.Random(1), switches=switches).items == {"boss_emblem": 1}
+    assert roll_reward(reward, random.Random(1), luck=4, switches=switches).items == {"boss_emblem": 1, "focus_stone": 1}
+    assert LootEntry.from_data(LootEntry("x", required_switch="s", luck_bonus=0.1).to_data()).required_switch == "s"
+    assert "luck_bonus" not in LootEntry("x").to_data()   # old data stays byte-identical

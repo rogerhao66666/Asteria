@@ -27,15 +27,25 @@ def _tags(values):
 
 @dataclass(frozen=True, slots=True)
 class LootEntry:
+    """One possible drop.
+
+    ``required_switch`` makes the drop conditional on an event switch being
+    on; ``luck_bonus`` is added to ``chance`` per point of the luck the
+    caller passes to :func:`roll_reward` (difficulty or luck modifiers).
+    """
+
     item_id: str
     chance: float = 1.0
     minimum: int = 1
     maximum: int = 1
+    required_switch: str = ""
+    luck_bonus: float = 0.0
 
-    def __init__(self, item_id, *, chance=1.0, minimum=1, maximum=1):
+    def __init__(self, item_id, *, chance=1.0, minimum=1, maximum=1, required_switch="", luck_bonus=0.0):
         chance = _finite(chance, "chance")
         minimum = int(minimum)
         maximum = int(maximum)
+        luck_bonus = _finite(luck_bonus, "luck_bonus")
         if not 0.0 <= chance <= 1.0:
             raise ValueError("chance must be between 0 and 1")
         if minimum < 0 or maximum < minimum:
@@ -44,14 +54,24 @@ class LootEntry:
         object.__setattr__(self, "chance", chance)
         object.__setattr__(self, "minimum", minimum)
         object.__setattr__(self, "maximum", maximum)
+        object.__setattr__(self, "required_switch", str(required_switch).strip())
+        object.__setattr__(self, "luck_bonus", luck_bonus)
+
+    def effective_chance(self, luck=0.0):
+        return min(1.0, max(0.0, self.chance + float(luck) * self.luck_bonus))
 
     def to_data(self):
-        return {
+        data = {
             "item_id": self.item_id,
             "chance": self.chance,
             "minimum": self.minimum,
             "maximum": self.maximum,
         }
+        if self.required_switch:
+            data["required_switch"] = self.required_switch
+        if self.luck_bonus:
+            data["luck_bonus"] = self.luck_bonus
+        return data
 
     @classmethod
     def from_data(cls, data):
@@ -261,13 +281,16 @@ class RewardRoll:
     items: dict[str, int]
 
 
-def roll_reward(reward, rng=None):
+def roll_reward(reward, rng=None, *, luck=0.0, switches=None):
+    """Roll a reward's loot; ``switches`` (``name -> bool``) gates conditional drops."""
     if not isinstance(reward, RewardDefinition):
         raise TypeError("reward must be RewardDefinition")
     rng = rng or random.Random()
     items = {}
     for entry in reward.loot:
-        if rng.random() <= entry.chance:
+        if entry.required_switch and not (switches is not None and switches(entry.required_switch)):
+            continue
+        if rng.random() <= entry.effective_chance(luck):
             amount = rng.randint(entry.minimum, entry.maximum)
             if amount:
                 items[entry.item_id] = items.get(entry.item_id, 0) + amount

@@ -701,6 +701,16 @@ class GameSessionRuntime:
     def fail_quest(self,quest_id): return self._quest_call("fail",quest_id)
     def refresh_quests(self): return self._quest_call("refresh")
 
+    LOOT_LUCK_VARIABLE="loot.luck"
+
+    @property
+    def loot_luck(self):
+        """Luck applied to loot rolls; events set it through the ``loot.luck`` variable."""
+        try:
+            return float(self.save.event_context.get_variable(self.LOOT_LUCK_VARIABLE,0.0) or 0.0)
+        except (TypeError,ValueError):
+            return 0.0
+
     def finish_victory(self):
         if self.mode!="battle": raise GameSessionError("no active battle")
         if self.active_enemy_ids():
@@ -715,7 +725,7 @@ class GameSessionRuntime:
         applied=[]
         rng=random.Random(157)
         for enemy_id in self._enemy_ids:
-            reward=roll_reward(db.enemies[enemy_id].reward,rng)
+            reward=roll_reward(db.enemies[enemy_id].reward,rng,luck=self.loot_luck,switches=self.save.event_context.get_switch)
             applied.append(reward_runtime.apply(reward))
         self._log("battle_finished",data={"winning_sides":("heroes",),"defeated_sides":("enemies",)})
         self.save.event_context.set_switch(f"encounter.{self.encounter_id}.defeated",True)
