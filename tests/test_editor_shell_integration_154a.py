@@ -110,7 +110,13 @@ def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
     assert window.workspace.page(WorkspaceMode.BATTLE) is window.battle_authoring
     assert window.workspace.page(WorkspaceMode.UI) is window.ui_workspace
     assert window.workspace.page(WorkspaceMode.EVENT) is window.events_workspace
-    assert window.ui_workspace.count() == 3
+    assert [window.ui_workspace.tabText(i) for i in range(window.ui_workspace.count())] == [
+        "Battle Presentation",
+        "Runtime RPG UI",
+        "Animation",
+        "Animation Editor",
+        "Action Timeline",
+    ]
     assert window.events_workspace.count() == 2
     window.close()
     app.processEvents()
