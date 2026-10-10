@@ -1068,7 +1068,8 @@ class RpgDatabase:
         self.action_transactions[value.ability_id] = value
         return value
 
-    def validate(self):
+    def reference_errors(self):
+        """Every dangling cross-record reference, one message each (Problems panel, EDT-15)."""
         errors = []
         for actor in self.actors.values():
             for assignment in actor.class_assignments:
@@ -1210,8 +1211,12 @@ class RpgDatabase:
             for track_id in enemy.reward.experience:
                 if track_id not in self.progression_tracks:
                     errors.append(f"enemy {enemy.enemy_id} reward references unknown progression track {track_id}")
+        return sorted(errors)
+
+    def validate(self):
+        errors = self.reference_errors()
         if errors:
-            raise ValueError("invalid RPG database references: " + "; ".join(sorted(errors)))
+            raise ValueError("invalid RPG database references: " + "; ".join(errors))
         return True
 
     def build_actor(self, actor_id):

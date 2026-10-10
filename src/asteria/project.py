@@ -132,50 +132,53 @@ class Project:
             if binding.event_program_id not in self.event_programs.ids():
                 raise ValueError("lifecycle binding references unknown event program")
         if validate_gameplay_refs:
-            known = set(self.gameplay_library.abilities.ids())
-            refs = []
-            for actor in self.rpg_database.actors.values():
-                refs.extend((f"actor {actor.actor_id}", x) for x in actor.abilities)
-            for cls in self.rpg_database.classes.values():
-                refs.extend((f"class {cls.class_id}", x) for x in cls.granted_abilities)
-            for equipment in self.rpg_database.equipment.values():
-                refs.extend((f"equipment {equipment.equipment_id}", x) for x in equipment.granted_abilities)
-            for attachment in self.rpg_database.attachments.values():
-                refs.extend((f"attachment {attachment.attachment_id}", x) for x in attachment.granted_abilities)
-            for enemy in self.rpg_database.enemies.values():
-                refs.extend((f"enemy {enemy.enemy_id}", x) for x in enemy.abilities)
-            for track in self.rpg_database.progression_tracks.values():
-                for milestone in track.milestones:
-                    refs.extend(
-                        (f"progression {track.track_id} rank {milestone.rank}", x) for x in milestone.granted_abilities
-                    )
-            for passive in self.rpg_database.passives.values():
-                refs.extend((f"passive {passive.passive_id}", x) for x in passive.granted_abilities)
-            for rule in self.rpg_database.ability_evolutions.values():
-                refs.append((f"ability evolution {rule.rule_id} source", rule.source_ability_id))
-                refs.append((f"ability evolution {rule.rule_id} result", rule.result_ability_id))
-            for graph in self.rpg_database.progression_graphs.values():
-                for node in graph.nodes:
-                    for rank, reward in enumerate(node.rewards, start=1):
-                        refs.extend(
-                            (f"progression graph {graph.graph_id} node {node.node_id} rank {rank}", x)
-                            for x in reward.granted_abilities
-                        )
-            for growth in self.rpg_database.equipment_growth.values():
-                for node in growth.nodes:
-                    for rank, reward in enumerate(node.rewards, start=1):
-                        refs.extend(
-                            (f"equipment growth {growth.growth_id} node {node.node_id} rank {rank}", x)
-                            for x in reward.granted_abilities
-                        )
-            missing = [
-                f"{owner} references unknown ability {ability_id}"
-                for owner, ability_id in refs
-                if ability_id not in known
-            ]
+            missing = self.ability_reference_errors()
             if missing:
-                raise ValueError("invalid RPG gameplay references: " + "; ".join(sorted(missing)))
+                raise ValueError("invalid RPG gameplay references: " + "; ".join(missing))
         return True
+
+    def ability_reference_errors(self):
+        """Every RPG record that grants an ability the gameplay library does not define."""
+        known = set(self.gameplay_library.abilities.ids())
+        refs = []
+        for actor in self.rpg_database.actors.values():
+            refs.extend((f"actor {actor.actor_id}", x) for x in actor.abilities)
+        for cls in self.rpg_database.classes.values():
+            refs.extend((f"class {cls.class_id}", x) for x in cls.granted_abilities)
+        for equipment in self.rpg_database.equipment.values():
+            refs.extend((f"equipment {equipment.equipment_id}", x) for x in equipment.granted_abilities)
+        for attachment in self.rpg_database.attachments.values():
+            refs.extend((f"attachment {attachment.attachment_id}", x) for x in attachment.granted_abilities)
+        for enemy in self.rpg_database.enemies.values():
+            refs.extend((f"enemy {enemy.enemy_id}", x) for x in enemy.abilities)
+        for track in self.rpg_database.progression_tracks.values():
+            for milestone in track.milestones:
+                refs.extend(
+                    (f"progression {track.track_id} rank {milestone.rank}", x) for x in milestone.granted_abilities
+                )
+        for passive in self.rpg_database.passives.values():
+            refs.extend((f"passive {passive.passive_id}", x) for x in passive.granted_abilities)
+        for rule in self.rpg_database.ability_evolutions.values():
+            refs.append((f"ability evolution {rule.rule_id} source", rule.source_ability_id))
+            refs.append((f"ability evolution {rule.rule_id} result", rule.result_ability_id))
+        for graph in self.rpg_database.progression_graphs.values():
+            for node in graph.nodes:
+                for rank, reward in enumerate(node.rewards, start=1):
+                    refs.extend(
+                        (f"progression graph {graph.graph_id} node {node.node_id} rank {rank}", x)
+                        for x in reward.granted_abilities
+                    )
+        for growth in self.rpg_database.equipment_growth.values():
+            for node in growth.nodes:
+                for rank, reward in enumerate(node.rewards, start=1):
+                    refs.extend(
+                        (f"equipment growth {growth.growth_id} node {node.node_id} rank {rank}", x)
+                        for x in reward.granted_abilities
+                    )
+        missing = [
+            f"{owner} references unknown ability {ability_id}" for owner, ability_id in refs if ability_id not in known
+        ]
+        return sorted(missing)
 
     def to_data(self):
         self.validate()

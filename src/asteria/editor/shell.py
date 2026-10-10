@@ -271,6 +271,18 @@ class AsteriaEditorWindow(QMainWindow):
         debugger_dock.setWidget(self.debugger_widget)
         self.addDockWidget(Qt.BottomDockWidgetArea, debugger_dock)
         self.tabifyDockWidget(console, debugger_dock)
+        from .problems_widget import ProblemsWidget
+
+        self.problems_widget = ProblemsWidget(self.document, self)
+        self.problems_widget.navigate.connect(self.navigate_to_problem)
+        self.problems_dock = QDockWidget("Problems", self)
+        self.problems_dock.setObjectName("ProblemsDock")
+        self.problems_dock.setWidget(self.problems_widget)
+        self.problems_widget.counted.connect(
+            lambda n: self.problems_dock.setWindowTitle(f"Problems ({n})" if n else "Problems")
+        )
+        self.addDockWidget(Qt.BottomDockWidgetArea, self.problems_dock)
+        self.tabifyDockWidget(debugger_dock, self.problems_dock)
         console.raise_()
 
         # The native macOS tab base draws a redundant rounded line behind
@@ -1115,6 +1127,8 @@ class AsteriaEditorWindow(QMainWindow):
                 editor.refresh()
 
     def refresh_all(self):
+        if getattr(self, "problems_widget", None) is not None:
+            self.problems_widget.schedule_refresh()
         self.project_tree.refresh()
         self.refresh_asset_list()
         self.refresh_inspector()
@@ -1385,6 +1399,69 @@ class AsteriaEditorWindow(QMainWindow):
             return False
         self._execute_structure(command, "component", command.component)
         return True
+
+    def navigate_to_problem(self, problem):
+        """Open the editor that owns ``problem.target`` and select the offending item (EDT-15)."""
+        from pathlib import Path
+
+        target = tuple(problem.target)
+        if not target or self.document.project is None:
+            return False
+        kind = target[0]
+        project = self.document.project
+        if kind == "record":
+            _, family, category_id, record_id = target
+            mode, tabs, host = {
+                "rpg": (WorkspaceMode.RPG, self.rpg_workspace, self.rpg_authoring),
+                "battle": (WorkspaceMode.BATTLE, None, self.battle_authoring),
+                "presentation": (WorkspaceMode.UI, self.ui_workspace, self.presentation_authoring),
+                "runtime_ui": (WorkspaceMode.UI, self.ui_workspace, self.runtime_ui_authoring),
+            }[family]
+            self.workspace.set_mode(mode)
+            if tabs is not None:
+                tabs.setCurrentWidget(host)
+            host.rebuild()
+            child = host.child
+            index = child.category.findData(category_id)
+            if index < 0:
+                return False
+            child.category.setCurrentIndex(index)
+            child.search.clear()
+            child.select_ids([record_id])
+            return child.selected_ids == [record_id]
+        if kind == "game_system":
+            _, kind_id, record_id = target
+            self.workspace.set_mode(WorkspaceMode.RPG)
+            self.rpg_workspace.setCurrentWidget(self.game_systems_editor)
+            self.game_systems_editor.set_kind(kind_id)
+            self.game_systems_editor.refresh(select=record_id)
+            return self.game_systems_editor.selected_id == record_id
+        if kind in ("scene", "entity"):
+            scene = next((s for s in project.scenes() if s.id == target[1]), None)
+            if scene is None:
+                return False
+            self.workspace.set_mode(WorkspaceMode.SCENE)
+            value = scene if kind == "scene" else scene.get_entity(target[2])
+            if value is None:
+                return False
+            self.document.selection.set_single(kind, value)
+            self.refresh_all()
+            return True
+        if kind == "sprite":
+            self.workspace.set_mode(WorkspaceMode.UI)
+            self.ui_workspace.setCurrentWidget(self.animation_editor)
+            self.animation_editor.refresh(sheet=target[1])
+            return self.animation_editor.sheet == target[1]
+        if kind == "sequence":
+            self.workspace.set_mode(WorkspaceMode.UI)
+            self.ui_workspace.setCurrentWidget(self.action_timeline_editor)
+            self.action_timeline_editor.refresh(select=target[1])
+            return self.action_timeline_editor.sequence_id == target[1]
+        if kind == "script":
+            self.workspace.set_mode(WorkspaceMode.CODE)
+            self.code_workspace.open_script(Path(target[1]).name)
+            return self.code_workspace.jump_to_diagnostic(target[2], None)
+        return False
 
     def _focused_record_family(self):
         """The authoring record list that has keyboard focus, if any (record copy/cut/paste/delete)."""
