@@ -57,6 +57,10 @@ class BattleStatePolicy:
     tick_trigger: str | None = None
     tick_amount: float = 1.0
     remove_triggers: tuple[str, ...] = ()
+    # Opt-in: harmful periodic deltas of this state are resolved by the battle's
+    # interaction rules with these tags as action tags (e.g. "element.fire").
+    # Empty (default): damage-over-time ignores interaction multipliers.
+    interaction_tags: tuple[str, ...] = ()
 
     SCHEMA = "asteria.rpg.battle_state_policy"
     VERSION = 1
@@ -78,6 +82,7 @@ class BattleStatePolicy:
         tick_trigger=None,
         tick_amount=1.0,
         remove_triggers=(),
+        interaction_tags=(),
     ):
         minimum_chance = _number(minimum_chance, "minimum_chance")
         maximum_chance = _number(maximum_chance, "maximum_chance")
@@ -106,6 +111,7 @@ class BattleStatePolicy:
         object.__setattr__(self, "tick_trigger", tick_trigger)
         object.__setattr__(self, "tick_amount", tick_amount)
         object.__setattr__(self, "remove_triggers", remove_triggers)
+        object.__setattr__(self, "interaction_tags", _tags(interaction_tags))
 
     def to_data(self):
         return {
@@ -125,6 +131,7 @@ class BattleStatePolicy:
             "tick_trigger": self.tick_trigger,
             "tick_amount": self.tick_amount,
             "remove_triggers": list(self.remove_triggers),
+            **({"interaction_tags": list(self.interaction_tags)} if self.interaction_tags else {}),
         }
 
     @classmethod
@@ -146,6 +153,7 @@ class BattleStatePolicy:
             tick_trigger=data.get("tick_trigger"),
             tick_amount=data.get("tick_amount", 1),
             remove_triggers=data.get("remove_triggers", ()),
+            interaction_tags=data.get("interaction_tags", ()),
         )
 
 
@@ -179,6 +187,8 @@ class BattleStateRuntime:
                 raise ValueError(f"duplicate battle state policy: {policy.state_id}")
             self.policies[policy.state_id] = policy
         self.hooks = hooks
+        # Set by BattleRuntime: (member, active_state, policy) -> value_transform or None.
+        self.periodic_transform = None
 
     @staticmethod
     def _stat(subject, name):
@@ -257,7 +267,10 @@ class BattleStateRuntime:
                     continue
                 if policy.tick_trigger != trigger:
                     continue
-                if states.advance(active.state_id, policy.tick_amount):
+                transform = None
+                if self.periodic_transform is not None and policy.interaction_tags:
+                    transform = self.periodic_transform(member, active, policy)
+                if states.advance(active.state_id, policy.tick_amount, value_transform=transform):
                     expired.append((member.member_id, active.state_id))
                     emit_hook(self.hooks, "rpg.battle.state_expired", source=member.member_id, data={"state_id": active.state_id, "trigger": trigger})
         return tuple(expired)

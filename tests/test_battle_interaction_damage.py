@@ -138,3 +138,66 @@ def test_reference_session_skill_and_normal_attack_match_preview():
         assert preview.resource_deltas.get(boss, {}).get("vitality", 0) == -dealt
         matched = {r.matched_rules for t, _, r in result.interactions if t == boss}
         assert (("weak_fire",) in matched) == (ability_id == "fire_arc")
+
+
+# --- D14 #5: damage over time --------------------------------------------------
+
+def _scorch_harness(interaction_tags=()):
+    from asteria.rpg import BattleStatePolicy
+    from asteria.validation.playable_battle_mechanics import PlayableBattleMechanicsHarness
+
+    harness = PlayableBattleMechanicsHarness()
+    battle = harness.battle
+    battle.battle_states.policies["scorch"] = BattleStatePolicy(
+        "scorch", tick_trigger="rpg.battle.turn_ended", interaction_tags=interaction_tags)
+    return harness, battle
+
+
+def _tick(battle, member_id):
+    member = battle.member(member_id)
+    before = member.subject.resources.current("vitality")
+    battle.battle_states.apply_trigger("rpg.battle.turn_ended", (member,))
+    return before - member.subject.resources.current("vitality")
+
+
+def test_dot_ignores_elemental_multipliers_by_default():
+    harness, battle = _scorch_harness()
+    harness.apply_status("scorch")
+    raw = _tick(battle, "reference_enemy")                  # enemy is flame-fragile (x1.5 rule)
+    assert raw > 0 and battle.periodic_interactions == []
+
+
+def test_dot_opt_in_resolves_the_tick_once_through_the_rules():
+    h0, b0 = _scorch_harness()
+    h0.apply_status("scorch")
+    raw = _tick(b0, "reference_enemy")
+    h1, b1 = _scorch_harness(interaction_tags=("element.flame",))
+    h1.apply_status("scorch")
+    scaled = _tick(b1, "reference_enemy")
+    assert scaled == pytest.approx(raw * 1.5)               # the tick itself, multiplied once
+    assert [r.matched_rules for *_, r in b1.periodic_interactions] == [("flame_fragility",)]
+    h2, b2 = _scorch_harness(interaction_tags=("element.frost",))
+    h2.apply_status("scorch")
+    assert _tick(b2, "reference_enemy") == raw              # non-matching opt-in tags: unchanged
+
+
+def test_attack_multiplier_is_not_reapplied_to_the_dot_it_causes():
+    h, battle = _scorch_harness(interaction_tags=("element.flame",))
+    before = battle.member("reference_enemy").subject.resources.current("vitality")
+    h.battle.execute(BattleAction("validation_hero", "flame_slash", ("reference_enemy",)))
+    hit = before - battle.member("reference_enemy").subject.resources.current("vitality")
+    assert hit == 30                                        # 20 x 1.5, once
+    h.apply_status("scorch")
+    tick = _tick(battle, "reference_enemy")
+    h_raw, b_raw = _scorch_harness()
+    h_raw.apply_status("scorch")
+    assert tick == pytest.approx(_tick(b_raw, "reference_enemy") * 1.5)   # x1.5, not x2.25
+
+
+def test_state_policy_interaction_tags_round_trip_and_stay_backward_compatible():
+    from asteria.rpg import BattleStatePolicy
+
+    plain = BattleStatePolicy("poison", tick_trigger="t")
+    assert "interaction_tags" not in plain.to_data()
+    opted = BattleStatePolicy("burn", tick_trigger="t", interaction_tags=("element.fire",))
+    assert BattleStatePolicy.from_data(opted.to_data()) == opted

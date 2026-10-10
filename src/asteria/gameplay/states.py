@@ -338,8 +338,12 @@ class StateRuntime:
             apply_effect(effect, self.stats, self.resources, self.tags)
         return True
 
-    def advance(self, state_id, dt):
-        """Advance one active state only; returns True when it expires."""
+    def advance(self, state_id, dt, *, value_transform=None):
+        """Advance one active state only; returns True when it expires.
+
+        ``value_transform(operation, value)`` (optional) is passed to every
+        periodic effect application, as in :func:`apply_effect`.
+        """
         state_id = str(state_id)
         dt = float(dt)
         if not isfinite(dt) or dt < 0.0:
@@ -356,7 +360,8 @@ class StateRuntime:
                 active.periodic_elapsed[index] -= periodic.interval
                 repeat = active.stacks if definition.stacking == StackingPolicy.STACK else 1
                 for _ in range(repeat):
-                    apply_effect(periodic.effect, self.stats, self.resources, self.tags)
+                    apply_effect(periodic.effect, self.stats, self.resources, self.tags,
+                                 value_transform=value_transform)
         if active.remaining <= 0.0:
             self.expire(state_id)
             return True

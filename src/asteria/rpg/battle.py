@@ -348,6 +348,8 @@ class BattleRuntime:
             interaction_rules, outcome_checks, hooks=hooks
         )
         self.battle_states = BattleStateRuntime(state_policies, hooks=hooks)
+        self.battle_states.periodic_transform = self._periodic_interaction_transform
+        self.periodic_interactions = []
         formation_runtimes = {}
         for side, value in dict(formations or {}).items():
             if isinstance(value, BattleFormationRuntime):
@@ -644,6 +646,37 @@ class BattleRuntime:
                 return resolved.resolved_value
             if resolved.disposition == InteractionDisposition.REFLECT:
                 return (0.0, -resolved.resolved_value)
+            return -resolved.resolved_value
+
+        return transform
+
+    def _periodic_interaction_transform(self, member, active, policy):
+        """Damage-over-time opt-in (BattleStatePolicy.interaction_tags).
+
+        The tick's own magnitude is resolved once with the policy's tags; the
+        multiplier of the attack that applied the state is never reapplied.
+        The state's source (or the afflicted member itself) is the source subject.
+        """
+        from asteria.gameplay.effects import EffectOperationKind
+        from .interactions import InteractionDisposition
+
+        if not self.interactions.rules:
+            return None
+        source_id = active.source_id if active.source_id in self.members else member.member_id
+        source = self.member(source_id).subject
+
+        def transform(operation, value):
+            if operation.kind != EffectOperationKind.RESOURCE_DELTA or value >= 0:
+                return value
+            resolved = self.interactions.resolve_value(-float(value), source, member.subject,
+                                                       action_tags=policy.interaction_tags)
+            self.periodic_interactions.append((member.member_id, active.state_id, operation.target, resolved))
+            if resolved.disposition == InteractionDisposition.NULLIFY:
+                return 0.0
+            if resolved.disposition == InteractionDisposition.ABSORB:
+                return resolved.resolved_value
+            if resolved.disposition == InteractionDisposition.REFLECT:
+                return 0.0
             return -resolved.resolved_value
 
         return transform
