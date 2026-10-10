@@ -202,6 +202,10 @@ def collect_problems(document, *, resource_root=None):
         ("Scripts", lambda: _scripts(document, found)),
     ):
         _attempt(found, area, step)
+    # A validator that wraps others (Game Start validates the RPG database too) repeats their messages
+    # without a location; keep only the located copies.
+    located = [p.message for p in found if p.target]
+    found = [p for p in found if p.target or not any(m in p.message for m in located)]
     # Safety net: anything Project.validate rejects must be visible even if no collector above names it.
     try:
         project.validate()

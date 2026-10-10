@@ -325,6 +325,106 @@ def check_editor_playtest(out):
     )
 
 
+def check_editor_tools(out):
+    """CB10 editors in a real Cocoa editor window: each tool is driven, measured and screenshotted (nothing saved)."""
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor import EditorDocument
+    from asteria.editor.shell import AsteriaEditorWindow
+    from asteria.editor.workspace import WorkspaceMode
+    from asteria.project import Project
+
+    app = QApplication.instance() or QApplication([])
+    project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
+    window = AsteriaEditorWindow(project)
+    window.document.file_path = PROJECT_FILE
+    window.resize(1600, 1000)
+    window.show()
+    checks, shots = {}, []
+
+    def settle(seconds=0.3):
+        deadline = time.perf_counter() + seconds
+        while time.perf_counter() < deadline:
+            app.processEvents()
+            time.sleep(0.02)
+
+    def shot(name):
+        settle()
+        window.grab().save(str(out / name))
+        shots.append(name)
+
+    window.refresh_all()
+    window.workspace.set_mode(WorkspaceMode.UI)
+    window.ui_workspace.setCurrentWidget(window.animation_editor)
+    window.animation_editor.refresh(sheet="battle.combatant.hero_01")
+    checks["animation_editor"] = window.animation_editor.sheet == "battle.combatant.hero_01"
+    shot("editor_animation.png")
+    checks["action_timeline"] = window._open_action_timeline("fire_arc")
+    shot("editor_action_timeline.png")
+    window.ui_workspace.setCurrentWidget(window.vfx_editor)
+    checks["vfx_tool"] = window.vfx_editor.select_vfx("battle.fx.flame")
+    window.vfx_editor.scrub.setValue(450)
+    checks["vfx_preview"] = window.vfx_editor._render() is not None and not window.vfx_editor.stage.pixmap.isNull()
+    shot("editor_vfx.png")
+    window.workspace.set_mode(WorkspaceMode.RPG)
+    window.rpg_workspace.setCurrentWidget(window.enemy_ai_editor)
+    ai = window.enemy_ai_editor
+    ai.select_ai("astral_tyrant_ai")
+    ai.select_rule("nova")
+    ai.set_preview_resource("vitality", 1800)
+    preview = ai.set_preview_resource("rage", 40)
+    checks["enemy_ai_preview"] = preview is not None and preview.chances == (("nova", 1.0),)
+    shot("editor_enemy_ai.png")
+    window.rpg_workspace.setCurrentWidget(window.rpg_authoring)
+    family = window.rpg_authoring.child
+    family.category.setCurrentIndex(family.category.findData("enemies"))
+    family.select_ids(family._ids[:3])
+    checks["multi_select_batch_fields"] = len(family.selected_ids) == 3 and "stats.power" in family.batch_fields()
+    shot("editor_records_multiselect.png")
+    db = window.document.project.rpg_database
+    encounter = db.encounters["boss_room"]
+    removed = db.enemies.pop("mender_wisp")  # in-memory only: show a real problem, then restore
+    window.problems_widget.refresh()
+    window.problems_dock.raise_()
+    problem = next(
+        (p for p in window.problems_widget.problems if p.target[:3] == ("record", "rpg", "encounters")), None
+    )
+    checks["problems_panel"] = problem is not None and window.navigate_to_problem(problem)
+    shot("editor_problems.png")
+    db.enemies["mender_wisp"] = removed
+    window.problems_widget.refresh()
+    checks["problems_clear_again"] = window.problems_widget.problems == [] and encounter is db.encounters["boss_room"]
+    window.workspace.set_mode(WorkspaceMode.CODE)
+    code = window.code_workspace
+    code.editor.setPlainText('scene = project.scene_named("Map")\nscene.')
+    code.editor.moveCursor(code.editor.textCursor().MoveOperation.End)
+    checks["script_completion"] = "entities" in code.show_completions()
+    shot("editor_script.png")
+    started = window.play_project()
+    snapshot = None
+    deadline = time.perf_counter() + 20.0
+    while snapshot is None and time.perf_counter() < deadline:
+        settle(0.5)
+        snapshot = window.debugger_widget.refresh()
+    window.debugger_widget.set_args("give_item", item_id="ether_leaf", quantity=1)
+    given = window.debugger_widget.execute_current()
+    checks["debugger_live_game"] = bool(started and snapshot and snapshot.get("mode") and given)
+    window.debugger_widget.parentWidget().raise_()
+    shot("editor_debugger.png")
+    window.stop_play()
+    window.document.mark_saved()
+    window.close()
+    failed = sorted(k for k, ok in checks.items() if not ok)
+    return result(
+        "editor_tools_gui",
+        "PASS" if not failed else "FAIL",
+        f"Qt platform '{app.platformName()}': "
+        + ", ".join(f"{k}={'ok' if v else 'FAILED'}" for k, v in checks.items()),
+        screenshots=shots,
+        note="Screenshots are reviewed by the engineer; hands-on use by a person is not part of this check.",
+    )
+
+
 def check_runtime_exit_and_recovery(out):
     import signal
 
@@ -393,6 +493,7 @@ CHECKS = {
     "battle": check_battle_frame_pacing,
     "field_camera": check_field_camera,
     "editor": check_editor_playtest,
+    "editor_tools": check_editor_tools,
     "runtime": check_runtime_exit_and_recovery,
 }
 

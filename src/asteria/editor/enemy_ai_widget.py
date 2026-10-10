@@ -225,11 +225,7 @@ class EnemyAIEditorWidget(QWidget):
         self._wire_conditions(self.rule_conditions, "rule")
         rules_tab = QWidget()
         rules_layout = QVBoxLayout(rules_tab)
-        rules_layout.addWidget(self.rules, 1)
-        detail = QHBoxLayout()
-        detail.addWidget(rule_box, 1)
-        detail.addWidget(self.rule_conditions, 1)
-        rules_layout.addLayout(detail)
+        rules_layout.addWidget(self._table_over_detail(self.rules, rule_box, self.rule_conditions), 1)
 
         # -- phases tab ------------------------------------------------------------------
         self.phases = QTableWidget(0, len(self.PHASE_COLUMNS))
@@ -270,11 +266,7 @@ class EnemyAIEditorWidget(QWidget):
         self._wire_conditions(self.phase_conditions, "phase")
         phases_tab = QWidget()
         phases_layout = QVBoxLayout(phases_tab)
-        phases_layout.addWidget(self.phases, 1)
-        pdetail = QHBoxLayout()
-        pdetail.addWidget(phase_box, 1)
-        pdetail.addWidget(self.phase_conditions, 1)
-        phases_layout.addLayout(pdetail)
+        phases_layout.addWidget(self._table_over_detail(self.phases, phase_box, self.phase_conditions), 1)
 
         self.tabs = QTabWidget()
         self.tabs.addTab(rules_tab, "Decision Rules")
@@ -331,6 +323,22 @@ class EnemyAIEditorWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.addWidget(split)
         self.refresh()
+
+    @staticmethod
+    def _table_over_detail(table, box, conditions):
+        """Table above its inspector in a splitter; the table always shows several rows."""
+        table.setMinimumHeight(150)
+        detail = QWidget()
+        row = QHBoxLayout(detail)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.addWidget(box, 1)
+        row.addWidget(conditions, 1)
+        split = QSplitter(Qt.Vertical)
+        split.addWidget(table)
+        split.addWidget(detail)
+        split.setStretchFactor(0, 1)
+        split.setChildrenCollapsible(False)
+        return split
 
     # -- state --------------------------------------------------------------------------
     @property
@@ -414,6 +422,7 @@ class EnemyAIEditorWidget(QWidget):
             for col, text in enumerate(values):
                 self.rules.setItem(row, col, QTableWidgetItem(text))
         self.rules.blockSignals(False)
+        self.rules.resizeColumnsToContents()
         self.phases.blockSignals(True)
         self.phases.setRowCount(0)
         for p in ai.phases:
@@ -433,6 +442,7 @@ class EnemyAIEditorWidget(QWidget):
                     item.setToolTip("Starting phase")
                 self.phases.setItem(row, col, item)
         self.phases.blockSignals(False)
+        self.phases.resizeColumnsToContents()
         if not (rule and self._select_row(self.rules, rule)) and self.rules.rowCount():
             self.rules.selectRow(0)
         if not (phase and self._select_row(self.phases, phase)) and self.phases.rowCount():

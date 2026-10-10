@@ -42,6 +42,8 @@ def test_every_broken_reference_is_listed_with_its_record_not_just_the_first():
     assert ("record", "rpg", "actors", "hero_01") in by_target
     assert any(t[:3] == ("record", "rpg", "encounters") for t in by_target)
     assert len(problems) >= 2  # Project.validate alone would report a single combined error
+    located = [p.message for p in problems if p.target]
+    assert not [p for p in problems if not p.target and any(m in p.message for m in located)]  # no wrapped repeats
 
 
 def test_messages_map_to_the_editor_that_owns_the_record():

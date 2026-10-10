@@ -2,30 +2,30 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-11 02:32:15 +0800"
+    "time": "2026-10-11 02:36:35 +0800"
   },
   "results": [
     {
       "check": "gpu_window",
       "status": "PASS",
-      "evidence": "ModernGL window on 'Apple M5': 400 sprites/frame for 240 frames, 59.482 fps, read-back framebuffer has 8 sampled colours",
+      "evidence": "ModernGL window on 'Apple M5': 400 sprites/frame for 240 frames, 60.43 fps, read-back framebuffer has 8 sampled colours",
       "renderer": "Apple M5",
       "pacing": {
         "target_fps": 60.0,
-        "measured_fps": 59.482,
-        "interval_mean_ms": 16.8117,
-        "interval_jitter_ms": 5.2569,
-        "interval_p99_ms": 34.0926,
-        "frames_over_budget": 7
+        "measured_fps": 60.43,
+        "interval_mean_ms": 16.5481,
+        "interval_jitter_ms": 4.1541,
+        "interval_p99_ms": 29.1648,
+        "frames_over_budget": 4
       },
       "frame": {
         "count": 240,
-        "mean_ms": 12.1739,
-        "p50_ms": 10.1213,
-        "p95_ms": 18.2367,
-        "p99_ms": 34.0655,
-        "max_ms": 83.8873,
-        "total_ms": 2921.7311
+        "mean_ms": 11.424,
+        "p50_ms": 9.772,
+        "p95_ms": 16.6131,
+        "p99_ms": 29.1255,
+        "max_ms": 64.3003,
+        "total_ms": 2741.7537
       },
       "screenshot": "gpu_window.png"
     },
@@ -48,7 +48,7 @@
     {
       "check": "audio_playback_device",
       "status": "PASS",
-      "evidence": "CoreAudio device opened (44100, -16, 2); hit.wav (0.340s) kept its channel busy for 0.349s; battle_theme.ogg streaming=True",
+      "evidence": "CoreAudio device opened (44100, -16, 2); hit.wav (0.340s) kept its channel busy for 0.353s; battle_theme.ogg streaming=True",
       "note": "Device-level playback only; audible confirmation is manual item M3."
     },
     {
@@ -64,7 +64,7 @@
     {
       "check": "animation_smoothness",
       "status": "PASS",
-      "evidence": "Canonical battle screen in a real cocoa window: combatant sprites drawn, boss animation advanced 88 frames in 10.0s (8.8/s); 7 skills used through the key-event queue; VFX particles peaked at 1",
+      "evidence": "Canonical battle screen in a real cocoa window: combatant sprites drawn, boss animation advanced 89 frames in 10.0s (8.9/s); 7 skills used through the key-event queue; VFX particles peaked at 1",
       "screenshots": [
         "battle_window_0.png",
         "battle_window_1.png"
@@ -74,32 +74,32 @@
     {
       "check": "frame_pacing",
       "status": "PASS",
-      "evidence": "589 frames: 58.992 fps (target 60), jitter 0.6733 ms, p99 interval 18.2915 ms, 0 frames over 1.5x budget",
+      "evidence": "587 frames: 58.808 fps (target 60), jitter 0.7233 ms, p99 interval 18.0307 ms, 0 frames over 1.5x budget",
       "pacing": {
         "target_fps": 60.0,
-        "measured_fps": 58.992,
-        "interval_mean_ms": 16.9513,
-        "interval_jitter_ms": 0.6733,
-        "interval_p99_ms": 18.2915,
+        "measured_fps": 58.808,
+        "interval_mean_ms": 17.0046,
+        "interval_jitter_ms": 0.7233,
+        "interval_p99_ms": 18.0307,
         "frames_over_budget": 0
       },
       "frame": {
-        "count": 589,
-        "mean_ms": 7.3219,
-        "p50_ms": 7.1595,
-        "p95_ms": 9.536,
-        "p99_ms": 10.8513,
-        "max_ms": 24.7585,
-        "total_ms": 4312.581
+        "count": 587,
+        "mean_ms": 6.3472,
+        "p50_ms": 6.1244,
+        "p95_ms": 7.4775,
+        "p99_ms": 9.8628,
+        "max_ms": 24.2408,
+        "total_ms": 3725.8217
       },
       "sections": {
-        "animation": 1.6104,
-        "asset_loading": 1.4698,
-        "input": 0.068,
-        "present": 1.0046,
-        "render": 4.4273,
-        "update": 0.0836,
-        "vfx": 0.1405
+        "animation": 1.4472,
+        "asset_loading": 0.9947,
+        "input": 0.0491,
+        "present": 0.6525,
+        "render": 4.0549,
+        "update": 0.0594,
+        "vfx": 0.1117
       },
       "unsupported": {
         "draw_calls": "pygame software blitting exposes no draw-call counter",
@@ -122,9 +122,25 @@
       "evidence": "Qt platform 'cocoa': Run Project started the runtime process=True, still running after 4 s=True, Stop Play returned=True, process exited=True"
     },
     {
+      "check": "editor_tools_gui",
+      "status": "PASS",
+      "evidence": "Qt platform 'cocoa': animation_editor=ok, action_timeline=ok, vfx_tool=ok, vfx_preview=ok, enemy_ai_preview=ok, multi_select_batch_fields=ok, problems_panel=ok, problems_clear_again=ok, script_completion=ok, debugger_live_game=ok",
+      "screenshots": [
+        "editor_animation.png",
+        "editor_action_timeline.png",
+        "editor_vfx.png",
+        "editor_enemy_ai.png",
+        "editor_records_multiselect.png",
+        "editor_problems.png",
+        "editor_script.png",
+        "editor_debugger.png"
+      ],
+      "note": "Screenshots are reviewed by the engineer; hands-on use by a person is not part of this check."
+    },
+    {
       "check": "runtime_exit",
       "status": "PASS",
-      "evidence": "Real-window runtime ran 90 frames and exited with code 0 in 2.9s",
+      "evidence": "Real-window runtime ran 90 frames and exited with code 0 in 2.8s",
       "stderr": ""
     },
     {
