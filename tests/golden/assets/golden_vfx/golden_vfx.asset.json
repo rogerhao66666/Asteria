@@ -1,0 +1,63 @@
+{
+  "asset_id": "golden_vfx",
+  "dependencies": [],
+  "kind": "vfx",
+  "payload": {
+    "default_variant": "burst",
+    "presentation_tags": [
+      "fire",
+      "impact"
+    ],
+    "properties": {},
+    "variants": [
+      {
+        "anchor": {
+          "bone_or_socket": null,
+          "mode": "target",
+          "offset": [
+            0.0,
+            -24.0
+          ]
+        },
+        "clip": {
+          "frame_size": [
+            75,
+            90
+          ],
+          "frames": [
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7"
+          ],
+          "layers": [],
+          "loop": false,
+          "name": "burst",
+          "pivot": [
+            0.0,
+            0.0
+          ],
+          "timings": [
+            {
+              "duration_ms": 60
+            }
+          ]
+        },
+        "name": "burst",
+        "properties": {},
+        "rotation_deg": 0.0,
+        "scale": [
+          1.0,
+          1.0
+        ]
+      }
+    ]
+  },
+  "schema_version": 1,
+  "source": "golden_vfx/flame.png",
+  "tags": []
+}

@@ -1,0 +1,27 @@
+{
+  "asset_id": "golden_npc",
+  "dependencies": [
+    "golden_character"
+  ],
+  "kind": "npc",
+  "payload": {
+    "behaviour": "patrol",
+    "character_id": "golden_character",
+    "display_name": "Golden Villager",
+    "interaction_event": "golden.talk",
+    "patrol_path": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        32.0,
+        0.0
+      ]
+    ],
+    "prompt": "Talk"
+  },
+  "schema_version": 1,
+  "source": "golden_character/walk.png",
+  "tags": []
+}

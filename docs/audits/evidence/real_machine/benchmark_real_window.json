@@ -1,0 +1,254 @@
+{
+  "field": {
+    "schema": "asteria.runtime_profile",
+    "version": 1,
+    "frames": 600,
+    "frame": {
+      "count": 600,
+      "mean_ms": 8.0038,
+      "p50_ms": 7.739,
+      "p95_ms": 8.7086,
+      "p99_ms": 17.1527,
+      "max_ms": 47.2841,
+      "total_ms": 4802.29
+    },
+    "pacing": {
+      "target_fps": 60.0,
+      "measured_fps": 58.168,
+      "interval_mean_ms": 17.1917,
+      "interval_jitter_ms": 3.7956,
+      "interval_p99_ms": 22.7592,
+      "frames_over_budget": 6
+    },
+    "sections": {
+      "ai": {
+        "count": 600,
+        "mean_ms": 6.0527,
+        "p50_ms": 5.8901,
+        "p95_ms": 6.7303,
+        "p99_ms": 11.2632,
+        "max_ms": 25.1383,
+        "total_ms": 3631.5914
+      },
+      "asset_loading": {
+        "count": 1,
+        "mean_ms": 1.4101,
+        "p50_ms": 1.4101,
+        "p95_ms": 1.4101,
+        "p99_ms": 1.4101,
+        "max_ms": 1.4101,
+        "total_ms": 1.4101
+      },
+      "collision": {
+        "count": 600,
+        "mean_ms": 0.5907,
+        "p50_ms": 0.5666,
+        "p95_ms": 0.6912,
+        "p99_ms": 1.0973,
+        "max_ms": 2.0946,
+        "total_ms": 354.4413
+      },
+      "events": {
+        "count": 600,
+        "mean_ms": 0.0099,
+        "p50_ms": 0.0095,
+        "p95_ms": 0.013,
+        "p99_ms": 0.0202,
+        "max_ms": 0.074,
+        "total_ms": 5.9139
+      },
+      "input": {
+        "count": 600,
+        "mean_ms": 0.0317,
+        "p50_ms": 0.03,
+        "p95_ms": 0.0442,
+        "p99_ms": 0.0773,
+        "max_ms": 0.1364,
+        "total_ms": 19.0244
+      },
+      "present": {
+        "count": 600,
+        "mean_ms": 0.3917,
+        "p50_ms": 0.3345,
+        "p95_ms": 0.505,
+        "p99_ms": 0.7991,
+        "max_ms": 8.7733,
+        "total_ms": 234.9959
+      },
+      "render": {
+        "count": 600,
+        "mean_ms": 1.3158,
+        "p50_ms": 1.2743,
+        "p95_ms": 1.3641,
+        "p99_ms": 2.146,
+        "max_ms": 19.3143,
+        "total_ms": 789.4998
+      },
+      "spawn": {
+        "count": 600,
+        "mean_ms": 0.0606,
+        "p50_ms": 0.0539,
+        "p95_ms": 0.0645,
+        "p99_ms": 0.1175,
+        "max_ms": 2.7742,
+        "total_ms": 36.3548
+      },
+      "update": {
+        "count": 600,
+        "mean_ms": 6.1844,
+        "p50_ms": 6.0073,
+        "p95_ms": 6.8653,
+        "p99_ms": 11.6481,
+        "max_ms": 25.3895,
+        "total_ms": 3710.6175
+      }
+    },
+    "counters": {
+      "asset_usage": {
+        "last": 3.0,
+        "max": 3.0,
+        "mean": 3.0
+      },
+      "entity_count": {
+        "last": 53.0,
+        "max": 53.0,
+        "mean": 53.0
+      },
+      "particles": {
+        "last": 0.0,
+        "max": 0.0,
+        "mean": 0.0
+      }
+    },
+    "memory": {
+      "peak_rss_bytes": 189480960,
+      "python_heap_current_bytes": 1572259,
+      "python_heap_peak_bytes": 1707493
+    },
+    "unsupported": {
+      "draw_calls": "pygame software blitting exposes no draw-call counter",
+      "gpu_time": "pygame backend renders on the CPU; no GPU timer"
+    },
+    "not_recorded": [
+      "animation",
+      "vfx"
+    ]
+  },
+  "battle": {
+    "schema": "asteria.runtime_profile",
+    "version": 1,
+    "frames": 600,
+    "frame": {
+      "count": 600,
+      "mean_ms": 4.2138,
+      "p50_ms": 4.1488,
+      "p95_ms": 5.5407,
+      "p99_ms": 6.7115,
+      "max_ms": 11.2688,
+      "total_ms": 2528.2563
+    },
+    "pacing": {
+      "target_fps": 60.0,
+      "measured_fps": 59.086,
+      "interval_mean_ms": 16.9244,
+      "interval_jitter_ms": 0.6118,
+      "interval_p99_ms": 17.8844,
+      "frames_over_budget": 0
+    },
+    "sections": {
+      "animation": {
+        "count": 600,
+        "mean_ms": 0.8366,
+        "p50_ms": 0.7947,
+        "p95_ms": 1.1358,
+        "p99_ms": 1.3939,
+        "max_ms": 5.6183,
+        "total_ms": 501.971
+      },
+      "asset_loading": {
+        "count": 4,
+        "mean_ms": 2.507,
+        "p50_ms": 2.6552,
+        "p95_ms": 4.024,
+        "p99_ms": 4.024,
+        "max_ms": 4.024,
+        "total_ms": 10.0278
+      },
+      "input": {
+        "count": 600,
+        "mean_ms": 0.0417,
+        "p50_ms": 0.038,
+        "p95_ms": 0.0654,
+        "p99_ms": 0.0961,
+        "max_ms": 0.1257,
+        "total_ms": 25.002
+      },
+      "present": {
+        "count": 600,
+        "mean_ms": 0.4401,
+        "p50_ms": 0.4182,
+        "p95_ms": 0.6377,
+        "p99_ms": 0.8988,
+        "max_ms": 3.155,
+        "total_ms": 264.0671
+      },
+      "render": {
+        "count": 600,
+        "mean_ms": 2.7612,
+        "p50_ms": 2.7151,
+        "p95_ms": 3.6339,
+        "p99_ms": 4.106,
+        "max_ms": 7.6828,
+        "total_ms": 1656.73
+      },
+      "update": {
+        "count": 600,
+        "mean_ms": 0.0527,
+        "p50_ms": 0.0462,
+        "p95_ms": 0.0848,
+        "p99_ms": 0.1832,
+        "max_ms": 0.2963,
+        "total_ms": 31.6279
+      },
+      "vfx": {
+        "count": 302,
+        "mean_ms": 0.0632,
+        "p50_ms": 0.0597,
+        "p95_ms": 0.0972,
+        "p99_ms": 0.1303,
+        "max_ms": 0.3647,
+        "total_ms": 19.0883
+      }
+    },
+    "counters": {
+      "asset_usage": {
+        "last": 15.0,
+        "max": 15.0,
+        "mean": 14.625
+      },
+      "entity_count": {
+        "last": 53.0,
+        "max": 53.0,
+        "mean": 53.0
+      },
+      "particles": {
+        "last": 1.0,
+        "max": 1.0,
+        "mean": 0.5033
+      }
+    },
+    "memory": {
+      "peak_rss_bytes": 189480960,
+      "python_heap_current_bytes": 507348,
+      "python_heap_peak_bytes": 531168
+    },
+    "unsupported": {
+      "draw_calls": "pygame software blitting exposes no draw-call counter",
+      "gpu_time": "pygame backend renders on the CPU; no GPU timer"
+    },
+    "not_recorded": [
+      "ai",
+      "collision"
+    ]
+  }
+}

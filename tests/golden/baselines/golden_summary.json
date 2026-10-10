@@ -1,0 +1,477 @@
+{
+  "golden_character": {
+    "animations": {
+      "idle_down": [
+        1
+      ],
+      "idle_left": [
+        4
+      ],
+      "idle_right": [
+        7
+      ],
+      "idle_up": [
+        10
+      ],
+      "walk_down": [
+        0,
+        1,
+        2,
+        1,
+        0,
+        1,
+        2,
+        1,
+        0
+      ],
+      "walk_left": [
+        3,
+        4,
+        5,
+        4,
+        3,
+        4,
+        5,
+        4,
+        3
+      ],
+      "walk_right": [
+        6,
+        7,
+        8,
+        7,
+        6,
+        7,
+        8,
+        7,
+        6
+      ],
+      "walk_up": [
+        9,
+        10,
+        11,
+        10,
+        9,
+        10,
+        11,
+        10,
+        9
+      ]
+    },
+    "dependencies": [],
+    "dimensions": {
+      "golden_character/walk.png": {
+        "sha256": "5d5602fffb30193f",
+        "size": [
+          192,
+          256
+        ]
+      },
+      "grid": [
+        3,
+        4
+      ]
+    },
+    "events": {
+      "walk_down": [
+        [
+          0.0,
+          "footstep"
+        ],
+        [
+          0.3,
+          "footstep"
+        ],
+        [
+          0.6,
+          "footstep"
+        ],
+        [
+          0.9,
+          "footstep"
+        ],
+        [
+          1.2,
+          "footstep"
+        ]
+      ],
+      "walk_left": [
+        [
+          0.0,
+          "footstep"
+        ],
+        [
+          0.3,
+          "footstep"
+        ],
+        [
+          0.6,
+          "footstep"
+        ],
+        [
+          0.9,
+          "footstep"
+        ],
+        [
+          1.2,
+          "footstep"
+        ]
+      ],
+      "walk_right": [
+        [
+          0.0,
+          "footstep"
+        ],
+        [
+          0.3,
+          "footstep"
+        ],
+        [
+          0.6,
+          "footstep"
+        ],
+        [
+          0.9,
+          "footstep"
+        ],
+        [
+          1.2,
+          "footstep"
+        ]
+      ],
+      "walk_up": [
+        [
+          0.0,
+          "footstep"
+        ],
+        [
+          0.3,
+          "footstep"
+        ],
+        [
+          0.6,
+          "footstep"
+        ],
+        [
+          0.9,
+          "footstep"
+        ],
+        [
+          1.2,
+          "footstep"
+        ]
+      ]
+    },
+    "kind": "character",
+    "references": [],
+    "runtime_frames": 12,
+    "tags": []
+  },
+  "golden_icon": {
+    "dependencies": [],
+    "dimensions": {
+      "golden_icon/icon.png": {
+        "sha256": "afa91864739f8ff7",
+        "size": [
+          64,
+          64
+        ]
+      }
+    },
+    "kind": "icon",
+    "references": [],
+    "tags": []
+  },
+  "golden_monster": {
+    "animations": {
+      "hit": [
+        4,
+        0,
+        4,
+        0
+      ],
+      "idle": [
+        0,
+        1,
+        2,
+        3,
+        0,
+        1,
+        2,
+        3,
+        0
+      ]
+    },
+    "dependencies": [],
+    "dimensions": {
+      "golden_monster/monster.png": {
+        "sha256": "b20622196ce576bf",
+        "size": [
+          384,
+          64
+        ]
+      },
+      "grid": [
+        6,
+        1
+      ]
+    },
+    "events": {},
+    "kind": "monster",
+    "references": [],
+    "runtime_frames": 6,
+    "tags": []
+  },
+  "golden_npc": {
+    "dependencies": [
+      "golden_character"
+    ],
+    "dimensions": {
+      "golden_character/walk.png": {
+        "sha256": "5d5602fffb30193f",
+        "size": [
+          192,
+          256
+        ]
+      }
+    },
+    "kind": "npc",
+    "references": [
+      "golden_character"
+    ],
+    "tags": []
+  },
+  "golden_projectile": {
+    "animations": {
+      "fly": [
+        0,
+        1,
+        2,
+        3,
+        0,
+        1,
+        2,
+        3,
+        0
+      ]
+    },
+    "dependencies": [
+      "golden_vfx"
+    ],
+    "dimensions": {
+      "golden_projectile/orb.png": {
+        "sha256": "e8553bdfa2cd7666",
+        "size": [
+          96,
+          24
+        ]
+      },
+      "grid": [
+        4,
+        1
+      ]
+    },
+    "events": {
+      "fly": [
+        [
+          0.0,
+          "trail"
+        ],
+        [
+          0.2,
+          "trail"
+        ],
+        [
+          0.4,
+          "trail"
+        ]
+      ]
+    },
+    "kind": "projectile",
+    "references": [
+      "golden_vfx"
+    ],
+    "runtime_frames": 4,
+    "tags": []
+  },
+  "golden_prop": {
+    "dependencies": [],
+    "dimensions": {
+      "golden_prop/house.png": {
+        "sha256": "c83f96dd1b4e1f0e",
+        "size": [
+          144,
+          192
+        ]
+      }
+    },
+    "kind": "prop",
+    "references": [],
+    "tags": []
+  },
+  "golden_scene": {
+    "dependencies": [
+      "golden_tileset",
+      "golden_prop",
+      "golden_npc",
+      "golden_monster"
+    ],
+    "dimensions": {
+      "golden_tileset/tiles.png": {
+        "sha256": "cbf2ba0321ca1921",
+        "size": [
+          64,
+          32
+        ]
+      }
+    },
+    "kind": "scene",
+    "package": [
+      "golden_character/golden_character.asset.json",
+      "golden_character/walk.png",
+      "golden_monster/golden_monster.asset.json",
+      "golden_monster/monster.png",
+      "golden_npc/golden_npc.asset.json",
+      "golden_prop/golden_prop.asset.json",
+      "golden_prop/house.png",
+      "golden_scene/golden_scene.asset.json",
+      "golden_tileset/golden_tileset.asset.json",
+      "golden_tileset/tiles.png"
+    ],
+    "references": [
+      "golden_tileset",
+      "golden_prop",
+      "golden_npc",
+      "golden_monster"
+    ],
+    "tags": []
+  },
+  "golden_skill": {
+    "beats": [
+      [
+        0.0,
+        "animation",
+        "attack"
+      ],
+      [
+        0.1,
+        "projectile",
+        "golden_projectile"
+      ],
+      [
+        0.3333,
+        "audio",
+        "hit"
+      ],
+      [
+        0.3333,
+        "camera",
+        "shake"
+      ],
+      [
+        0.3333,
+        "vfx",
+        "golden_vfx"
+      ]
+    ],
+    "dependencies": [
+      "golden_icon",
+      "golden_projectile",
+      "golden_vfx"
+    ],
+    "dimensions": {
+      "golden_icon/icon.png": {
+        "sha256": "afa91864739f8ff7",
+        "size": [
+          64,
+          64
+        ]
+      }
+    },
+    "kind": "skill",
+    "references": [
+      "golden_icon",
+      "golden_projectile",
+      "golden_vfx"
+    ],
+    "tags": []
+  },
+  "golden_tileset": {
+    "animations": {
+      "tile_2": [
+        2,
+        6,
+        2,
+        6,
+        2
+      ]
+    },
+    "dependencies": [],
+    "dimensions": {
+      "golden_tileset/tiles.png": {
+        "sha256": "cbf2ba0321ca1921",
+        "size": [
+          64,
+          32
+        ]
+      },
+      "grid": [
+        4,
+        2
+      ]
+    },
+    "events": {},
+    "kind": "tileset",
+    "references": [],
+    "runtime_frames": 8,
+    "tags": []
+  },
+  "golden_ui": {
+    "dependencies": [],
+    "dimensions": {
+      "golden_ui/panel.png": {
+        "sha256": "83a1a1cca285d7a6",
+        "size": [
+          48,
+          144
+        ]
+      }
+    },
+    "kind": "ui",
+    "references": [],
+    "tags": []
+  },
+  "golden_vfx": {
+    "animations": {
+      "burst": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    "dependencies": [],
+    "dimensions": {
+      "golden_vfx/flame.png": {
+        "sha256": "8771e2ce5d9f4454",
+        "size": [
+          600,
+          90
+        ]
+      },
+      "grid": [
+        8,
+        1
+      ]
+    },
+    "events": {},
+    "kind": "vfx",
+    "references": [],
+    "runtime_frames": 8,
+    "tags": []
+  }
+}

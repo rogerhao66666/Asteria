@@ -1,0 +1,44 @@
+{
+  "asset_id": "golden_skill",
+  "dependencies": [
+    "golden_icon",
+    "golden_projectile",
+    "golden_vfx"
+  ],
+  "kind": "skill",
+  "payload": {
+    "ability_id": "fire_arc",
+    "beats": [
+      {
+        "at": 0.0,
+        "channel": "animation",
+        "cue": "attack"
+      },
+      {
+        "at": 0.1,
+        "channel": "projectile",
+        "cue": "golden_projectile"
+      },
+      {
+        "at": 0.32,
+        "channel": "audio",
+        "cue": "hit"
+      },
+      {
+        "at": 0.32,
+        "channel": "camera",
+        "cue": "shake"
+      },
+      {
+        "at": 0.32,
+        "channel": "vfx",
+        "cue": "golden_vfx"
+      }
+    ],
+    "duration": 0.9,
+    "icon_id": "golden_icon"
+  },
+  "schema_version": 1,
+  "source": "golden_icon/icon.png",
+  "tags": []
+}

@@ -1,0 +1,27 @@
+{
+  "boss_battle": {
+    "final_knockout_resource": {
+      "astral_tyrant:1": 0.0,
+      "hero_01": 0.0,
+      "hero_02": 1685.0,
+      "hero_03": 1775.0,
+      "hero_04": 1865.0,
+      "hero_05": 1955.0,
+      "hero_06": 2005.0,
+      "mender_wisp:2": 0.0,
+      "mender_wisp:3": 0.0
+    },
+    "hero_actions": 13,
+    "log_digest": "53d7821ba9e48deb",
+    "log_entries": 22,
+    "winner": "heroes"
+  },
+  "golden_summary": "c62f7777c117c9c6",
+  "reference_saves": {
+    "boss_stress.asteria-save.json": "1ebc8ceb193af4ce",
+    "early.asteria-save.json": "306921d5183c408d",
+    "endgame_complex.asteria-save.json": "80eb303290fdfd8c",
+    "mid.asteria-save.json": "dc9fd8752da1c849"
+  },
+  "rpg_database": "152ea6024ad70546"
+}

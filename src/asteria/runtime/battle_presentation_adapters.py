@@ -559,6 +559,10 @@ class CanonicalBattleAdapter:
 
     def _draw_vfx(self, effect):
         """Play a VFX sprite sheet cue centred on its member (camera shake applied)."""
+        with self.host.profiler.section("vfx"):
+            self._draw_vfx_cue(effect)
+
+    def _draw_vfx_cue(self, effect):
         payload = dict(getattr(effect, "payload", {}) or {})
         asset_id = payload.get("asset_id")
         if not asset_id or self._view_camera is None:

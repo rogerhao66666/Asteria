@@ -1,0 +1,56 @@
+{
+  "asset_id": "golden_prop",
+  "dependencies": [],
+  "kind": "prop",
+  "payload": {
+    "animation_ref": null,
+    "collisions": [
+      {
+        "kind": "rect",
+        "offset": [
+          0.0,
+          96.0
+        ],
+        "points": [],
+        "size": [
+          144.0,
+          96.0
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "metadata": {},
+        "name": "door",
+        "position": [
+          104.0,
+          176.0
+        ],
+        "tags": [
+          "enter"
+        ]
+      }
+    ],
+    "presentation_ref": null,
+    "properties": {},
+    "visuals": [
+      {
+        "image_uri": "golden_prop/house.png",
+        "material": null,
+        "opacity": 1.0,
+        "pivot": [
+          0.5,
+          1.0
+        ],
+        "size": [
+          144,
+          192
+        ],
+        "z_offset": 0.0
+      }
+    ]
+  },
+  "schema_version": 1,
+  "source": "golden_prop/house.png",
+  "tags": []
+}

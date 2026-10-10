@@ -1,0 +1,41 @@
+{
+  "asset_id": "golden_ui",
+  "dependencies": [],
+  "kind": "ui",
+  "payload": {
+    "image": "golden_ui/panel.png",
+    "size": [
+      48,
+      144
+    ],
+    "slices": [
+      8,
+      8,
+      8,
+      8
+    ],
+    "states": {
+      "hover": [
+        0,
+        48,
+        48,
+        48
+      ],
+      "normal": [
+        0,
+        0,
+        48,
+        48
+      ],
+      "pressed": [
+        0,
+        96,
+        48,
+        48
+      ]
+    }
+  },
+  "schema_version": 1,
+  "source": "golden_ui/panel.png",
+  "tags": []
+}

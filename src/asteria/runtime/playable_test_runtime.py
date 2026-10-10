@@ -90,6 +90,10 @@ class PlayableTestRuntime:
         self._victory = False
         self._defeat = False
         self._loaded = {}
+        # Resource lifetime (ENG-10): images first loaded during a battle belong to
+        # the "battle" scope and are released when play returns to the field.
+        self._image_scope = {}
+        self.released_images = 0
         self._ui_mode = "title"
         self._menu_actor_index = 0
         self._boost_level = 0
@@ -118,7 +122,23 @@ class PlayableTestRuntime:
         if rel not in self._loaded:
             with self.profiler.section("asset_loading"):
                 self._loaded[rel] = self.pg.image.load(self.path(rel)).convert_alpha()
+            in_battle = self.game.mode == "battle" or self._victory or self._defeat
+            self._image_scope[rel] = "battle" if in_battle else "field"
         return self._loaded[rel]
+
+    def release_resource_scope(self, scope):
+        """Drop every cached image owned by ``scope``; returns how many were released."""
+        names = [rel for rel, owner in self._image_scope.items() if owner == scope]
+        for rel in names:
+            self._loaded.pop(rel, None)
+            self._image_scope.pop(rel, None)
+        self.released_images += len(names)
+        return len(names)
+
+    def _update_resource_scope(self):
+        in_battle = self.game.mode == "battle" or self._victory or self._defeat
+        if not in_battle and "battle" in self._image_scope.values():
+            self.release_resource_scope("battle")
 
     # Top-level drawing entry points; nested calls are timed once.
     _DRAW_METHODS = (
@@ -1335,6 +1355,7 @@ class PlayableTestRuntime:
 
     def _frame(self, events, dt):
         """Process one frame of input, event programs and drawing (no flip)."""
+        self._update_resource_scope()
         with self.profiler.section("input"):
             self.input_source.handle_events(events)
             self.input.update(self.input_source.raw_state())

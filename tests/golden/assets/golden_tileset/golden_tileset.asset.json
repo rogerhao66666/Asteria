@@ -1,0 +1,105 @@
+{
+  "asset_id": "golden_tileset",
+  "dependencies": [],
+  "kind": "tileset",
+  "payload": {
+    "columns": 4,
+    "image_size": [
+      64,
+      32
+    ],
+    "margin": 0,
+    "rows": 2,
+    "spacing": 0,
+    "tile_size": [
+      16,
+      16
+    ],
+    "tiles": [
+      {
+        "animation": [],
+        "collision": {
+          "kind": "none",
+          "points": []
+        },
+        "frame_ms": null,
+        "properties": {},
+        "terrain": "grass",
+        "tile_id": 0
+      },
+      {
+        "animation": [],
+        "collision": {
+          "kind": "none",
+          "points": []
+        },
+        "frame_ms": null,
+        "properties": {},
+        "terrain": "path",
+        "tile_id": 1
+      },
+      {
+        "animation": [
+          2,
+          6
+        ],
+        "collision": {
+          "kind": "rect",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              16,
+              0
+            ],
+            [
+              16,
+              16
+            ],
+            [
+              0,
+              16
+            ]
+          ]
+        },
+        "frame_ms": 400,
+        "properties": {},
+        "terrain": "water",
+        "tile_id": 2
+      },
+      {
+        "animation": [],
+        "collision": {
+          "kind": "rect",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              16,
+              0
+            ],
+            [
+              16,
+              16
+            ],
+            [
+              0,
+              16
+            ]
+          ]
+        },
+        "frame_ms": null,
+        "properties": {},
+        "terrain": "wall",
+        "tile_id": 3
+      }
+    ]
+  },
+  "schema_version": 1,
+  "source": "golden_tileset/tiles.png",
+  "tags": []
+}

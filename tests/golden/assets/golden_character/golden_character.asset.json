@@ -1,0 +1,124 @@
+{
+  "asset_id": "golden_character",
+  "dependencies": [],
+  "kind": "character",
+  "payload": {
+    "default_clip": "idle_down",
+    "sprite": {
+      "clips": {
+        "idle_down": {
+          "frame_duration": 0.5,
+          "frames": [
+            1
+          ],
+          "loop": true
+        },
+        "idle_left": {
+          "frame_duration": 0.5,
+          "frames": [
+            4
+          ],
+          "loop": true
+        },
+        "idle_right": {
+          "frame_duration": 0.5,
+          "frames": [
+            7
+          ],
+          "loop": true
+        },
+        "idle_up": {
+          "frame_duration": 0.5,
+          "frames": [
+            10
+          ],
+          "loop": true
+        },
+        "walk_down": {
+          "events": {
+            "0": [
+              "footstep"
+            ],
+            "2": [
+              "footstep"
+            ]
+          },
+          "frame_duration": 0.15,
+          "frames": [
+            0,
+            1,
+            2,
+            1
+          ],
+          "loop": true
+        },
+        "walk_left": {
+          "events": {
+            "0": [
+              "footstep"
+            ],
+            "2": [
+              "footstep"
+            ]
+          },
+          "frame_duration": 0.15,
+          "frames": [
+            3,
+            4,
+            5,
+            4
+          ],
+          "loop": true
+        },
+        "walk_right": {
+          "events": {
+            "0": [
+              "footstep"
+            ],
+            "2": [
+              "footstep"
+            ]
+          },
+          "frame_duration": 0.15,
+          "frames": [
+            6,
+            7,
+            8,
+            7
+          ],
+          "loop": true
+        },
+        "walk_up": {
+          "events": {
+            "0": [
+              "footstep"
+            ],
+            "2": [
+              "footstep"
+            ]
+          },
+          "frame_duration": 0.15,
+          "frames": [
+            9,
+            10,
+            11,
+            10
+          ],
+          "loop": true
+        }
+      },
+      "frame_size": [
+        64,
+        64
+      ],
+      "image": "golden_character/walk.png",
+      "pivot": [
+        0.5,
+        1.0
+      ]
+    }
+  },
+  "schema_version": 1,
+  "source": "golden_character/walk.png",
+  "tags": []
+}

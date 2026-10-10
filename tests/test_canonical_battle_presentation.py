@@ -216,3 +216,42 @@ def test_commands_show_only_on_a_heroes_turn_and_never_cover_the_party(battle):
     runtime._present_battle(0.016)
     back = _frame(adapter)[1]
     assert any(p.panel_id == "action_menu" for p in back.panels)
+
+
+# --- ENG-10: battle resources are released when play returns to the field ---------
+
+
+def test_battle_images_are_released_after_the_battle(battle):
+    runtime, adapter = battle
+    runtime._present_battle(0.016)
+    battle_images = [rel for rel, scope in runtime._image_scope.items() if scope == "battle"]
+    assert any("battle/" in rel for rel in battle_images)
+    game = runtime.game
+    for enemy in game.active_enemy_ids():
+        game.battle.member(enemy).subject.resources.set_current(game.rules.knockout_resource_id, 0)
+    game.finish_victory()
+    runtime._victory = False
+    runtime._ui_mode = "field"
+    runtime._frame([], 0.016)
+    assert game.mode == "field"
+    assert not any(scope == "battle" for scope in runtime._image_scope.values())
+    assert all(rel not in runtime._loaded for rel in battle_images)
+    assert runtime.released_images >= len(battle_images)
+
+
+def test_repeated_battles_keep_the_image_cache_bounded(battle):
+    runtime, adapter = battle
+    game = runtime.game
+    sizes = []
+    for _ in range(3):
+        if game.mode != "battle":
+            game.start_encounter("boss_room")
+        runtime._ui_mode = "field"
+        runtime._frame([], 0.016)
+        runtime._present_battle(0.016)
+        for enemy in game.active_enemy_ids():
+            game.battle.member(enemy).subject.resources.set_current(game.rules.knockout_resource_id, 0)
+        game.finish_victory()
+        runtime._frame([], 0.016)
+        sizes.append(len(runtime._loaded))
+    assert sizes[0] == sizes[-1]  # nothing accumulates across battles

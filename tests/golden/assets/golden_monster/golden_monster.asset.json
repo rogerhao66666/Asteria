@@ -1,0 +1,83 @@
+{
+  "asset_id": "golden_monster",
+  "dependencies": [],
+  "kind": "monster",
+  "payload": {
+    "anchor": [
+      32.0,
+      64.0
+    ],
+    "animations": [
+      {
+        "clip": {
+          "frame_size": [
+            64,
+            64
+          ],
+          "frames": [
+            "0",
+            "1",
+            "2",
+            "3"
+          ],
+          "layers": [],
+          "loop": true,
+          "name": "idle",
+          "pivot": [
+            0.0,
+            0.0
+          ],
+          "timings": [
+            {
+              "duration_ms": 160
+            }
+          ]
+        },
+        "directions": [
+          "right"
+        ],
+        "name": "idle"
+      },
+      {
+        "clip": {
+          "frame_size": [
+            64,
+            64
+          ],
+          "frames": [
+            "4",
+            "0",
+            "4",
+            "0"
+          ],
+          "layers": [],
+          "loop": false,
+          "name": "hit",
+          "pivot": [
+            0.0,
+            0.0
+          ],
+          "timings": [
+            {
+              "duration_ms": 70
+            }
+          ]
+        },
+        "directions": [
+          "right"
+        ],
+        "name": "hit"
+      }
+    ],
+    "collision_bounds": [
+      8.0,
+      8.0,
+      48.0,
+      56.0
+    ],
+    "default_animation": "idle"
+  },
+  "schema_version": 1,
+  "source": "golden_monster/monster.png",
+  "tags": []
+}

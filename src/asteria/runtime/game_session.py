@@ -100,6 +100,7 @@ class GameSessionRuntime:
         self.open_shop_id = None
         self.open_crafting_station = None
         self._field_simulation = {}
+        self._frame_collision_world = None
         from asteria.runtime.profiler import NullProfiler
 
         self.profiler = NullProfiler()
@@ -142,8 +143,12 @@ class GameSessionRuntime:
 
             def blocking(entity):
                 # Enemies are blocked by solid colliders, not by the player they chase.
-                with self.profiler.section("collision"):
-                    return CollisionWorld.from_scene(scene).blocking_query(exclude={entity.id, self.player.id})
+                # The world is built once per field update (start-of-frame positions).
+                world = self._frame_collision_world
+                if world is None:
+                    with self.profiler.section("collision"):
+                        world = self._frame_collision_world = CollisionWorld.from_scene(scene)
+                return world.blocking_query(exclude={entity.id, self.player.id})
 
             systems = (
                 SpawnSystem(
@@ -164,8 +169,10 @@ class GameSessionRuntime:
         spawn, ai = self._field_systems()
         with self.profiler.section("spawn"):
             spawn.update(self.scene, float(dt))
+        self._frame_collision_world = None
         with self.profiler.section("ai"):
             ai.update(self.scene, float(dt))
+        self._frame_collision_world = None
         return self.check_visible_encounter()
 
     def check_visible_encounter(self):
