@@ -10,6 +10,7 @@ from asteria.runtime.battle_presentation_adapters import create_battle_presentat
 from asteria.runtime.audio_mixer import AudioMixer
 from asteria.runtime.collision import CollisionWorld
 from asteria.runtime.input_map import InputActionTracker
+from asteria.runtime.game_menus import GAME_OVER_OPTIONS, PAUSE_OPTIONS, MenuCursor, ShopScreen, quest_rows
 
 
 WALK_ROW_BY_FACING = {"down": 0, "left": 1, "right": 2, "up": 3}
@@ -85,6 +86,10 @@ class PlayableTestRuntime:
         self._victory_summary=[]
         self._fonts={}
         self._battle_presentation=create_battle_presentation_adapter(self)
+        self._pause_menu=MenuCursor(PAUSE_OPTIONS)
+        self._game_over_menu=MenuCursor(GAME_OVER_OPTIONS)
+        self._shop_screen=None
+        self._quest_return="field"
 
     def path(self, rel):
         return self.resource_root/str(rel)
@@ -195,7 +200,7 @@ class PlayableTestRuntime:
 
         self.panel((18,self.height-92,self.width-36,72))
         self.text("Field Test",34,self.height-82,size=24,color=(255,220,124))
-        self.text("Move: WASD / Arrows   C: Character/Build   E: Interact   F5: Save   Esc: Quit",
+        self.text("Move: WASD / Arrows   C: Build   Q: Quests   E: Interact   F5: Save   Esc: Pause",
                   34,self.height-52,size=19)
         candidate=self._interaction_candidate()
         if candidate is not None and not self.game.event_busy:
@@ -260,6 +265,10 @@ class PlayableTestRuntime:
 
         if self.input.just_pressed("menu"):
             self._ui_mode="build"
+        if self.input.just_pressed("cancel"):
+            self._pause_menu.index=0; self._ui_mode="pause"; return moving
+        if any(e.type==self.pg.KEYDOWN and e.key==self.pg.K_q for e in events):
+            self._quest_return="field"; self._ui_mode="quests"; return moving
         # GameSessionRuntime interaction is edge-triggered. Emit release after press.
         if self.input.just_pressed("interact"):
             self.game.field_step({"interact":1.0})
@@ -343,7 +352,7 @@ class PlayableTestRuntime:
             else:
                 ranks=allocation.allocations.get(graph.graph_id,{})
                 for i,node in enumerate(graph.nodes[:6]):
-                    self.text(("✓ " if ranks.get(node.node_id,0) else "○ ")+node.display_name,ox,155+i*38,size=18)
+                    self.text(("[x] " if ranks.get(node.node_id,0) else "[ ] ")+node.display_name,ox,155+i*38,size=18)
         self.text("All changes are Runtime State and are verified again after Save/Load.",44,480,size=18,color=(170,210,240))
 
     def _cycle_secondary_class(self, actor_id):
@@ -630,6 +639,111 @@ class PlayableTestRuntime:
             elif event.key in (self.pg.K_3,self.pg.K_KP3):self._use_skill(2)
             elif event.key in (self.pg.K_4,self.pg.K_KP4):self._use_skill(3)
 
+    # --- pause, quests, shop and game over (UI-02) --------------------------
+
+    def _menu_step(self, cursor):
+        if self.input.just_pressed("move_up"): cursor.move(-1)
+        if self.input.just_pressed("move_down"): cursor.move(1)
+        return self.input.just_pressed("confirm")
+
+    def _restart_to_title(self):
+        if self.project.game_start is not None:
+            self.save=self.project.game_start.instantiate(self.project)
+            self.game=GameSessionRuntime(self.project,self.save)
+        self._victory=False; self._defeat=False; self._shop_screen=None
+        self.audio.stop_music(fade_out=0.3)
+        self._ui_mode="title"
+
+    def _pause_input(self):
+        if self.input.just_pressed("cancel"):
+            self._ui_mode="field"; return
+        if not self._menu_step(self._pause_menu):return
+        choice=self._pause_menu.selected
+        if choice=="resume":self._ui_mode="field"
+        elif choice=="quests":self._quest_return="pause"; self._ui_mode="quests"
+        elif choice=="save":self.save_playtest()
+        elif choice=="load":
+            if self._load_player_save():self._ui_mode="field"
+        elif choice=="title":self._restart_to_title()
+        elif choice=="quit":self.running=False
+
+    def _game_over_input(self):
+        if not self._menu_step(self._game_over_menu):return
+        if self._game_over_menu.selected=="load":
+            self._load_player_save()
+        else:
+            self._restart_to_title()
+
+    def _quests_input(self):
+        if self.input.just_pressed("cancel") or self.input.just_pressed("confirm"):
+            self._ui_mode=self._quest_return
+
+    def _shop_input(self):
+        screen=self._shop_screen
+        if screen is None or screen.shop is None or self.input.just_pressed("cancel"):
+            if screen is not None:screen.close()
+            self._shop_screen=None; self._ui_mode="field"; return
+        if self.input.just_pressed("move_up"):screen.move(-1)
+        if self.input.just_pressed("move_down"):screen.move(1)
+        if self.input.just_pressed("move_left") or self.input.just_pressed("move_right"):screen.switch_tab()
+        if self.input.just_pressed("confirm") and screen.confirm() is not None:
+            self._sound(self.manifest.get("dialogue_confirm_sfx"))
+
+    def _draw_backdrop(self, base="field"):
+        if base=="battle":self._draw_battle_world(show_labels=False)
+        else:self._draw_field(False)
+        shade=self.pg.Surface((self.width,self.height),self.pg.SRCALPHA); shade.fill((5,8,16,170)); self.screen.blit(shade,(0,0))
+
+    def _draw_overlay_menu(self, title, cursor, base="field"):
+        self._draw_backdrop(base)
+        height=90+34*len(cursor.options)
+        x,y=self.width/2-170,self.height/2-height/2
+        self.panel((x,y,340,height))
+        self.text(title,self.width/2,y+18,size=34,color=(255,220,124),center=True)
+        for i,(_,label) in enumerate(cursor.options):
+            selected=i==cursor.index
+            self.text(("> " if selected else "   ")+label,x+40,y+70+i*34,size=24,color=(255,226,129) if selected else (235,238,245))
+        if self.message and self.pg.time.get_ticks()<self.message_until:
+            self.text(self.message,self.width/2,y+height+14,size=20,color=(175,235,255),center=True)
+
+    def _draw_quests(self):
+        self._draw_backdrop()
+        self.panel((60,40,self.width-120,self.height-80))
+        self.text("Quest Log",self.width/2,56,size=32,color=(255,220,124),center=True)
+        rows=quest_rows(self.game)
+        if not rows:
+            self.text("No quests yet.",90,110,size=22,color=(170,210,240))
+        y=104
+        colors={"active":(235,238,245),"completed":(130,220,150),"failed":(230,120,120)}
+        for row in rows:
+            if y>self.height-110:break
+            self.text(f"{row.name}  [{row.status}]",90,y,size=24,color=colors[row.status]); y+=30
+            for description,value,required,done in row.objectives:
+                self.text(f"{'[x]' if done else '[ ]'} {description}  {value}/{required}",120,y,size=19,color=(170,210,240)); y+=24
+            y+=8
+        self.text("Enter / Esc: back",self.width-260,self.height-72,size=18,color=(170,210,240))
+
+    def _draw_shop(self):
+        screen=self._shop_screen
+        self._draw_backdrop()
+        if screen is None or screen.shop is None:return
+        self.panel((60,40,self.width-120,self.height-80))
+        self.text(screen.shop.display_name,90,54,size=30,color=(255,220,124))
+        for i,tab in enumerate(("buy","sell")):
+            self.text(tab.title(),self.width-300+i*100,60,size=24,color=(255,226,129) if screen.tab==tab else (130,140,160))
+        self.text("Item",90,104,size=19,color=(170,210,240)); self.text("Price",420,104,size=19,color=(170,210,240))
+        self.text("Stock",640,104,size=19,color=(170,210,240)); self.text("Owned",740,104,size=19,color=(170,210,240))
+        for i,row in enumerate(screen.rows()):
+            y=134+i*30
+            if y>self.height-130:break
+            color=(255,226,129) if i==screen.index else (235,238,245) if row.available else (120,125,140)
+            self.text(("> " if i==screen.index else "   ")+row.name,90,y,size=22,color=color)
+            self.text(row.price,420,y,size=22,color=color); self.text(row.stock,640,y,size=22,color=color)
+            self.text(str(row.owned),740,y,size=22,color=color)
+        self.text(screen.wallet(),90,self.height-100,size=20,color=(175,235,255))
+        if screen.message:self.text(screen.message,self.width/2,self.height-100,size=20,color=(255,220,124))
+        self.text("Up/Down: select   Left/Right: buy/sell   Enter: confirm   Esc: leave",90,self.height-72,size=18,color=(170,210,240))
+
     def save_playtest(self):
         self.game.sync_world_state()
         out=self.resource_root/"saves"/"playtest_autosave.asteria-save.json"
@@ -674,7 +788,7 @@ class PlayableTestRuntime:
                 self.running=False
             elif event.type==self.pg.KEYDOWN and event.key==self.pg.K_ESCAPE:
                 if self._ui_mode=="build": self._ui_mode="field"
-                else: self.running=False
+                elif self._ui_mode=="title": self.running=False
             elif event.type==self.pg.KEYDOWN and event.key==self.pg.K_F5 and self._ui_mode!="title":
                 self.save_playtest()
 
@@ -685,12 +799,27 @@ class PlayableTestRuntime:
             self._draw_title()
         elif self._ui_mode=="build":
             self._build_menu_input(events); self._draw_build_menu()
+        elif self._ui_mode=="pause":
+            self._pause_input(); self._draw_overlay_menu("Paused",self._pause_menu)
+        elif self._ui_mode=="quests":
+            self._quests_input(); self._draw_quests()
+        elif self._ui_mode=="shop":
+            self._shop_input(); self._draw_shop()
+        elif self._ui_mode=="game_over":
+            self._game_over_input(); self._draw_overlay_menu("Game Over",self._game_over_menu,base="battle")
         elif self.game.mode=="battle" or self._victory:
             self._battle_input(events)
             self._present_battle(dt)
+            if self._defeat:
+                self._game_over_menu.index=0; self._ui_mode="game_over"
+                self.audio.stop_music(fade_out=0.5)
         elif self.game.mode=="field":
             moving=self._field_input(events,dt)
             self.game.update_events(dt)
+            if self._ui_mode=="field" and self.game.open_shop_id and not self.game.event_busy:
+                self._shop_screen=ShopScreen(self.game); self._ui_mode="shop"
+            if self.game.mode=="field":
+                self.game.check_visible_encounter()
             if self.game.mode=="battle":
                 self._turn_actor=None
                 self._battle_presentation.begin()
