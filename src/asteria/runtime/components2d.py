@@ -1,4 +1,5 @@
 from asteria.core import Component, Field, component_schema
+from asteria.core.migration import component_migration
 
 
 @component_schema(
@@ -30,7 +31,7 @@ class SpriteRenderer2D(Component):
 
 @component_schema(
     type_name="asteria.Camera2D",
-    version=1,
+    version=2,
     fields=(
         Field("width", int, 320, minimum=1),
         Field("height", int, 180, minimum=1),
@@ -40,6 +41,17 @@ class SpriteRenderer2D(Component):
         Field("deadzone_x", float, 0.0, minimum=0.0),
         Field("deadzone_y", float, 0.0, minimum=0.0),
         Field("smoothing", float, 0.0, minimum=0.0),
+        Field("look_ahead_x", float, 0.0, minimum=0.0, label="Look Ahead X"),
+        Field("look_ahead_y", float, 0.0, minimum=0.0, label="Look Ahead Y"),
+        Field("bounds_enabled", bool, False, label="Limit to Bounds"),
+        Field("bounds_min_x", float, 0.0, label="Bounds Left"),
+        Field("bounds_min_y", float, 0.0, label="Bounds Top"),
+        Field("bounds_max_x", float, 0.0, label="Bounds Right"),
+        Field("bounds_max_y", float, 0.0, label="Bounds Bottom"),
+        Field("group_entity_ids", str, "", label="Group Targets (ids, comma separated)"),
+        Field("group_padding", float, 32.0, minimum=0.0, label="Group Padding"),
+        Field("min_zoom", float, 0.5, minimum=0.01, label="Group Min Zoom"),
+        Field("max_zoom", float, 2.0, minimum=0.01, label="Group Max Zoom"),
     ),
 )
 class Camera2DComponent(Component):
@@ -53,6 +65,32 @@ class Camera2DComponent(Component):
         self.deadzone_x = 0.0
         self.deadzone_y = 0.0
         self.smoothing = 0.0
+        self.look_ahead_x = 0.0
+        self.look_ahead_y = 0.0
+        self.bounds_enabled = False
+        self.bounds_min_x = 0.0
+        self.bounds_min_y = 0.0
+        self.bounds_max_x = 0.0
+        self.bounds_max_y = 0.0
+        self.group_entity_ids = ""
+        self.group_padding = 32.0
+        self.min_zoom = 0.5
+        self.max_zoom = 2.0
+
+    @property
+    def bounds(self):
+        if not self.bounds_enabled:
+            return None
+        return (self.bounds_min_x, self.bounds_min_y, self.bounds_max_x, self.bounds_max_y)
+
+    @property
+    def group_ids(self):
+        return tuple(x.strip() for x in self.group_entity_ids.split(",") if x.strip())
+
+
+@component_migration("asteria.Camera2D", from_version=1)
+def _camera2d_v1_to_v2(fields):
+    return fields  # v2 only adds look-ahead, bounds and group fields; their defaults keep v1 behaviour
 
 
 @component_schema(

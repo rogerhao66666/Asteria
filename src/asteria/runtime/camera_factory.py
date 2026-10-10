@@ -21,5 +21,8 @@ def build_runtime_camera(entity):
             deadzone_x=spec.deadzone_x,
             deadzone_y=spec.deadzone_y,
             smoothing=spec.smoothing,
+            world_bounds=spec.bounds,
+            look_ahead_x=spec.look_ahead_x,
+            look_ahead_y=spec.look_ahead_y,
         )
     return camera, follow

@@ -29,5 +29,6 @@ class PlayerCameraSlice:
         if self.camera_follow is not None:
             target = self.camera_target or self.entity
             target_transform = target.get(Transform)
-            self.camera_follow.update(target_transform.x, target_transform.y, dt)
+            velocity = (actual_dx / dt, actual_dy / dt) if target is self.entity and dt > 0 else None
+            self.camera_follow.update(target_transform.x, target_transform.y, dt, velocity=velocity)
         return actual_dx, actual_dy, moving

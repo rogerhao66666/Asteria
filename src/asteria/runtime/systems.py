@@ -9,7 +9,7 @@ from asteria.core import System, Transform
 
 from .animation_binding import Animator2DBinding
 from .animation_state_machine import AnimationStateMachine
-from .camera import Camera2D, CameraFollow2D
+from .camera import Camera2D, CameraDirector, CameraFollow2D, CameraTargetGroup
 from .components2d import Animator2DComponent, Camera2DComponent, SpriteRenderer2D
 
 
@@ -96,28 +96,61 @@ class AnimationSystem(System):
 
 
 class CameraFollowSystem(System):
-    """Moves each active Camera2D toward the entity named by ``follow_entity_id``."""
+    """Drives each active Camera2D: follow (dead zone, smoothing, look-ahead, bounds) or a target group,
+    then authored shots and shake from its ``CameraDirector`` (cutscene / boss focus, CAM-02).
+
+    ``camera(entity_id)`` is the view to render; the camera entity's Transform tracks its top-left.
+    """
 
     order = 200
 
     def __init__(self, world_bounds=None):
         self.world_bounds = world_bounds
         self.cameras: dict[str, Camera2D] = {}
+        self._follow_cameras: dict[str, Camera2D] = {}
+        self._follows: dict[str, CameraFollow2D] = {}
+        self._last_target: dict[str, tuple[float, float]] = {}
+        self.directors: dict[str, CameraDirector] = {}
 
     def camera(self, entity_id):
         return self.cameras.get(str(entity_id))
+
+    def director(self, entity_id):
+        return self.directors.setdefault(str(entity_id), CameraDirector())
 
     def update(self, scene, dt):
         for entity, spec, transform in scene.query(Camera2DComponent, Transform):
             if not spec.active:
                 continue
-            camera = self.cameras.setdefault(entity.id, Camera2D())
-            camera.width, camera.height, camera.zoom = spec.width, spec.height, spec.zoom
+            base = self._follow_cameras.get(entity.id)
+            if base is None:
+                base = self._follow_cameras[entity.id] = Camera2D(transform.x, transform.y)
+            base.width, base.height, base.zoom = spec.width, spec.height, spec.zoom
+            follow = self._follows.get(entity.id)
+            if follow is None:
+                follow = self._follows[entity.id] = CameraFollow2D(base)
+            follow.deadzone_x, follow.deadzone_y, follow.smoothing = spec.deadzone_x, spec.deadzone_y, spec.smoothing
+            follow.world_bounds = spec.bounds or self.world_bounds
+            follow.look_ahead_x, follow.look_ahead_y = spec.look_ahead_x, spec.look_ahead_y
+            group = [scene.get_entity(x) for x in spec.group_ids]
+            group = [g.get(Transform) for g in group if g is not None and g.has(Transform)]
             target = scene.get_entity(spec.follow_entity_id) if spec.follow_entity_id else None
-            if target is None or not target.has(Transform):
-                camera.x, camera.y = transform.x, transform.y
-                continue
-            follow = CameraFollow2D(camera, spec.deadzone_x, spec.deadzone_y, spec.smoothing, self.world_bounds)
-            target_transform = target.get(Transform)
-            follow.update(target_transform.x, target_transform.y, dt)
-            transform.x, transform.y = camera.x, camera.y
+            if group:
+                frame = CameraTargetGroup(spec.group_padding, spec.min_zoom, spec.max_zoom)
+                cx, cy, base.zoom = frame.frame([(g.x, g.y) for g in group], spec.width, spec.height)
+                follow.update(cx, cy, dt)
+            elif target is not None and target.has(Transform):
+                tt = target.get(Transform)
+                last = self._last_target.get(entity.id)
+                velocity = ((tt.x - last[0]) / dt, (tt.y - last[1]) / dt) if last is not None and dt > 0 else None
+                self._last_target[entity.id] = (tt.x, tt.y)
+                follow.update(tt.x, tt.y, dt, velocity=velocity)
+            else:
+                base.x, base.y = transform.x, transform.y
+            view_w, view_h = base.width / base.zoom, base.height / base.zoom
+            cx, cy, zoom = self.director(entity.id).update(dt, (base.x + view_w / 2, base.y + view_h / 2, base.zoom))
+            camera = self.cameras.setdefault(entity.id, Camera2D())
+            camera.width, camera.height, camera.zoom = base.width, base.height, zoom
+            camera.x, camera.y = cx - base.width / zoom / 2, cy - base.height / zoom / 2
+            if target is not None or group:
+                transform.x, transform.y = base.x, base.y

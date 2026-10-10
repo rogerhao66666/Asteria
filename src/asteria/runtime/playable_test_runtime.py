@@ -7,6 +7,7 @@ from asteria.core import Transform
 from asteria.runtime.audio_mixer import AudioMixer
 from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
 from asteria.runtime.collision import CollisionWorld
+from asteria.runtime.field_camera import CAMERA_COMMANDS, FieldCameraError, FieldViewCamera
 from asteria.runtime.game_menus import (
     GAME_OVER_OPTIONS,
     PAUSE_OPTIONS,
@@ -263,12 +264,17 @@ class PlayableTestRuntime:
         self.pg.draw.rect(self.screen, fill, (x, y, int(w * ratio), h), border_radius=4)
         self.pg.draw.rect(self.screen, (220, 225, 235), (x, y, w, h), 1, border_radius=4)
 
+    @property
+    def field_camera(self):
+        """Field view camera (CAM-02); identity unless an event focuses or shakes it."""
+        camera = getattr(self, "_field_camera", None)
+        if camera is None:
+            scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0))
+            camera = self._field_camera = FieldViewCamera(self.width, self.height, scale)
+        return camera
+
     def _field_screen_xy(self, world_x, world_y):
-        scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0))
-        return (
-            self.width / 2 + float(world_x) * scale,
-            self.height / 2 + 65 + float(world_y) * scale,
-        )
+        return self.field_camera.world_to_screen(world_x, world_y)
 
     def _player_frame(self, facing, moving):
         sheet = self.load_image(self.manifest["field"]["player_sheet"])
@@ -285,7 +291,9 @@ class PlayableTestRuntime:
 
     def _draw_field(self, moving=False):
         bg = self.load_image(self.manifest["field"]["background"])
-        self.screen.blit(self.pg.transform.smoothscale(bg, (self.width, self.height)), (0, 0))
+        zoom = self.field_camera.zoom
+        bx, by, bw, bh = self.field_camera.background_rect()
+        self.screen.blit(self.pg.transform.smoothscale(bg, (round(bw), round(bh))), (round(bx), round(by)))
 
         sprites = self.manifest["field"].get("entity_sprites", {})
         from asteria.runtime.field_ai import FieldAIComponent, VisibleEncounterComponent
@@ -301,25 +309,25 @@ class PlayableTestRuntime:
                 # Field enemies without a manifest sprite still need to be visible.
                 et = entity.get(Transform)
                 ex, ey = self._field_screen_xy(et.x, et.y)
-                self.pg.draw.circle(self.screen, (200, 70, 80), (int(ex), int(ey)), 14)
-                self.pg.draw.circle(self.screen, (255, 230, 230), (int(ex), int(ey)), 14, 2)
+                self.pg.draw.circle(self.screen, (200, 70, 80), (int(ex), int(ey)), int(14 * zoom))
+                self.pg.draw.circle(self.screen, (255, 230, 230), (int(ex), int(ey)), int(14 * zoom), 2)
                 continue
             if spec is None or entity is self.game.player:
                 continue
             et = entity.get(Transform)
             ex, ey = self._field_screen_xy(et.x, et.y)
-            w, h = spec.get("size", (96, 112))
+            w, h = (v * zoom for v in spec.get("size", (96, 112)))
             image = self.pg.transform.scale(self.load_image(spec["sprite"]), (int(w), int(h)))
-            self.screen.blit(image, (int(ex - w / 2), int(ey - h + 12)))
+            self.screen.blit(image, (int(ex - w / 2), int(ey - h + 12 * zoom)))
 
         pt = self.game.player.get(Transform)
         px, py = self._field_screen_xy(pt.x, pt.y)
         pf = self._player_frame(self.game.facing, moving)
         render_w, render_h = field_player_render_size(
-            pf.get_size(), self.manifest["field"].get("player_render_width", 64)
+            pf.get_size(), self.manifest["field"].get("player_render_width", 64) * zoom
         )
         pf = self.pg.transform.scale(pf, (render_w, render_h))
-        self.screen.blit(pf, (int(px - render_w / 2), int(py - render_h + 10)))
+        self.screen.blit(pf, (int(px - render_w / 2), int(py - render_h + 10 * zoom)))
 
         self.panel((18, self.height - 92, self.width - 36, 72))
         self.text("Field Test", 34, self.height - 82, size=24, color=(255, 220, 124))
@@ -1374,7 +1382,14 @@ class PlayableTestRuntime:
             self.input_source.handle_events(events)
             self.input.update(self.input_source.raw_state())
         while self.game.presentation_requests:
-            self.audio.handle_world_request(self.game.presentation_requests.pop(0))
+            request = self.game.presentation_requests.pop(0)
+            if request.name in CAMERA_COMMANDS:
+                try:
+                    self.field_camera.handle(request, self.game.scene)
+                except (FieldCameraError, ValueError) as exc:
+                    self.game.event_errors.append(exc)
+            else:
+                self.audio.handle_world_request(request)
         for cue in getattr(self._battle_presentation, "audio_cues", ()):
             self._sound(dict(cue.payload).get("asset_id"))
         if hasattr(self._battle_presentation, "audio_cues"):
@@ -1440,6 +1455,7 @@ class PlayableTestRuntime:
             if self.game.mode == "field" and self._ui_mode == "field":
                 with self.profiler.section("update"):
                     self.game.field_update(dt)
+            self.field_camera.update(dt)
             if self.game.mode == "battle":
                 self._turn_actor = None
                 self._battle_presentation.begin()

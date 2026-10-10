@@ -389,7 +389,10 @@ def build_project():
 
     event_id="boss_interaction_event"; binding_id="boss_interaction"
     program=EventProgram((
+        # Boss camera (CAM-02): pan and zoom onto the boss while it speaks, cut back as the fight starts.
+        EventInstruction("WORLD",{"command":"CAMERA_FOCUS","args":{"entity":"Astral Tyrant","zoom":1.6,"blend":0.8}}),
         EventInstruction("DIALOGUE",{"speaker":"Astral Tyrant","text":"The gate yields only to those who endure."}),
+        EventInstruction("WORLD",{"command":"CAMERA_RELEASE","args":{"blend":0.0,"ease":"cut"}}),
         EventInstruction("WORLD",{"command":"START_ENCOUNTER","args":{"encounter_id":"boss_room"}}),
         EventInstruction("END"),
     ),name="Astral Tyrant Encounter")

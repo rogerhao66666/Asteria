@@ -3201,10 +3201,31 @@
       "instructions": [
         {
           "args": {
+            "args": {
+              "blend": 0.8,
+              "entity": "Astral Tyrant",
+              "zoom": 1.6
+            },
+            "command": "CAMERA_FOCUS"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
             "speaker": "Astral Tyrant",
             "text": "The gate yields only to those who endure."
           },
           "opcode": "DIALOGUE"
+        },
+        {
+          "args": {
+            "args": {
+              "blend": 0.0,
+              "ease": "cut"
+            },
+            "command": "CAMERA_RELEASE"
+          },
+          "opcode": "WORLD"
         },
         {
           "args": {

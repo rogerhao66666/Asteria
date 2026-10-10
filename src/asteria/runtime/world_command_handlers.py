@@ -31,9 +31,20 @@ STANDARD_WORLD_COMMANDS = (
     "STOP_BGM",
     "PLAY_SE",
     "SCREEN_FADE",
+    "CAMERA_FOCUS",
+    "CAMERA_RELEASE",
+    "CAMERA_SHAKE",
 )
 
-PRESENTATION_COMMANDS = ("PLAY_BGM", "STOP_BGM", "PLAY_SE", "SCREEN_FADE")
+PRESENTATION_COMMANDS = (
+    "PLAY_BGM",
+    "STOP_BGM",
+    "PLAY_SE",
+    "SCREEN_FADE",
+    "CAMERA_FOCUS",
+    "CAMERA_RELEASE",
+    "CAMERA_SHAKE",
+)
 
 # Argument names each standard command reads; editors use these as prompts.
 WORLD_COMMAND_ARGUMENTS = {
@@ -56,6 +67,9 @@ WORLD_COMMAND_ARGUMENTS = {
     "STOP_BGM": ("fade",),
     "PLAY_SE": ("asset_id", "volume"),
     "SCREEN_FADE": (),
+    "CAMERA_FOCUS": ("entity", "x", "y", "zoom", "blend", "ease"),
+    "CAMERA_RELEASE": ("blend", "ease"),
+    "CAMERA_SHAKE": ("intensity", "duration"),
 }
 
 

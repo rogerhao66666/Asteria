@@ -124,7 +124,7 @@ class ReferenceRuntime:
         self.camera.height = viewport_height
         self.camera.zoom = spec.zoom * output_scale
         if self.camera_follow is not None:
-            self.camera_follow.world_bounds = self._tilemap_world_bounds()
+            self.camera_follow.world_bounds = spec.bounds or self._tilemap_world_bounds()
             target_transform = self.player.camera_target.get(Transform)
             self.camera_follow.update(target_transform.x, target_transform.y, 0.0)
 
