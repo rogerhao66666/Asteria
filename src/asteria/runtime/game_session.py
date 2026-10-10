@@ -665,6 +665,15 @@ class GameSessionRuntime:
             grant_reward=grant,
         )
 
+    def craft(self,payload,*,station="",quality_bonus=0.0,rng=None):
+        """Craft with the project's recipes against the saved inventory and progression."""
+        from asteria.rpg import CompositionRuntime
+        runtime=CompositionRuntime(self.project.rpg_database.composition_recipes.values())
+        state=self.save.rpg_state
+        result=runtime.craft(state.inventory,payload,station=station,rng=rng,quality_bonus=quality_bonus,progression=state.progression)
+        self.refresh_quests()
+        return result
+
     def open_shop(self,shop_id):
         shop_id=str(shop_id)
         if shop_id not in self.project.rpg_database.shops:

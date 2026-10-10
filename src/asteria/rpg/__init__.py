@@ -4,7 +4,7 @@ from .equipment_sets import EquipmentSetBonus, EquipmentSetDefinition
 from .economy import ShopDefinition, ShopEntry, ShopError, ShopRuntime, ShopTransaction
 from .quests import QuestDefinition, QuestError, QuestLog, QuestObjective, QuestProgress
 from .party_setup import PartyPlacementDefinition, PartyPresentationPolicyDefinition, PartySetupDefinition
-from .composition import CompositionOutput, CompositionRecipeDefinition, CompositionResult, CompositionRuntime, CompositionSelection
+from .composition import CompositionOutput, CompositionQualityTier, CompositionRecipeDefinition, CompositionResult, CompositionRuntime, CompositionSelection
 from .battle_transactions import (
     ActionTransactionPolicy, BattleTransactionRuntime, CostCommitMode,
     InterruptCostPolicy, PendingCostReservation,
@@ -178,7 +178,7 @@ __all__ = [
     "ShopDefinition", "ShopEntry", "ShopError", "ShopRuntime", "ShopTransaction",
     "QuestDefinition", "QuestError", "QuestLog", "QuestObjective", "QuestProgress",
     "PartyPlacementDefinition", "PartyPresentationPolicyDefinition", "PartySetupDefinition",
-    "CompositionOutput", "CompositionRecipeDefinition", "CompositionResult", "CompositionRuntime", "CompositionSelection",
+    "CompositionOutput", "CompositionQualityTier", "CompositionRecipeDefinition", "CompositionResult", "CompositionRuntime", "CompositionSelection",
     "ActionTransactionPolicy", "BattleTransactionRuntime", "CostCommitMode", "InterruptCostPolicy", "PendingCostReservation",
     "BattleSnapshot", "capture_battle_snapshot", "restore_battle_snapshot",
     "AICondition", "AIDecision", "AIDecisionRule", "BossPhaseDefinition", "EnemyAIDefinition", "EnemyAIRuntime",

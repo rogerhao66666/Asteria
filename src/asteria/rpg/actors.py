@@ -1111,9 +1111,12 @@ class RpgDatabase:
                 for item_id in selection.item_ids:
                     if item_id not in self.items:
                         errors.append(f"composition recipe {recipe.recipe_id} references unknown input item {item_id}")
-            for output in recipe.outputs:
-                if output.item_id not in self.items:
-                    errors.append(f"composition recipe {recipe.recipe_id} references unknown output item {output.item_id}")
+            for item_id in recipe.all_output_item_ids():
+                if item_id not in self.items:
+                    errors.append(f"composition recipe {recipe.recipe_id} references unknown output item {item_id}")
+            for track_id in recipe.experience:
+                if track_id not in self.progression_tracks:
+                    errors.append(f"composition recipe {recipe.recipe_id} references unknown progression track {track_id}")
         for equipment_set in self.equipment_sets.values():
             for equipment_id in equipment_set.equipment_ids:
                 if equipment_id not in self.equipment:

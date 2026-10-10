@@ -195,3 +195,43 @@ def test_equipment_set_bonuses_apply_by_piece_count_and_survive_save_load(tmp_pa
     assert loaded.equipment_sets == project.rpg_database.equipment_sets
     with pytest.raises(ValueError):
         EquipmentSetDefinition("x", equipment_ids=["a"], bonuses=[EquipmentSetBonus(2)])
+
+
+def test_crafting_station_chance_quality_and_experience():
+    import random
+
+    from asteria.rpg import CompositionOutput, CompositionQualityTier, CompositionRecipeDefinition, CompositionRuntime
+    from asteria.rpg.progression import ProgressionRuntime
+
+    project, game = _session()
+    track = next(iter(project.rpg_database.progression_tracks))
+    recipe = CompositionRecipeDefinition(
+        "tonic", selections=[{"step_id": "base", "item_ids": ["ether_leaf", "fire_dust"]}],
+        outputs=[CompositionOutput("focus_stone")], station="alchemy_table", success_chance=0.5,
+        failure_outputs=[CompositionOutput("alchemy_salt")],
+        quality_tiers=[CompositionQualityTier("fine", 0.6, [CompositionOutput("focus_stone", 2)]),
+                       CompositionQualityTier("masterwork", 0.95, [CompositionOutput("boss_emblem")])],
+        experience={track: 25},
+    )
+    assert CompositionRecipeDefinition.from_data(json.loads(json.dumps(recipe.to_data()))) == recipe
+    project.rpg_database.add_composition_recipe(recipe)
+    project.rpg_database.validate()
+    inventory = Inventory()
+    inventory.add("ether_leaf", 10)
+    inventory.add("fire_dust", 10)
+    runtime = CompositionRuntime([recipe])
+    payload = {"base": ["ether_leaf", "fire_dust"]}
+    with pytest.raises(ValueError):
+        runtime.craft(inventory, payload, progression=ProgressionRuntime(project.rpg_database.progression_tracks.values()))
+    progression = ProgressionRuntime(project.rpg_database.progression_tracks.values())
+    results = [runtime.craft(inventory, payload, station="alchemy_table", rng=random.Random(seed),
+                             quality_bonus=0.3, progression=progression) for seed in range(8)]
+    failures = [r for r in results if not r.success]
+    assert failures and all(r.produced == (("alchemy_salt", 1),) and r.experience == () for r in failures)
+    successes = [r for r in results if r.success]
+    assert successes and {r.quality for r in successes} <= {"", "fine", "masterwork"}
+    assert any(r.quality for r in successes)                            # bonus pushes rolls into tiers
+    assert inventory.count("ether_leaf") == 2                           # 8 crafts consumed materials
+    assert progression.to_data() != ProgressionRuntime(project.rpg_database.progression_tracks.values()).to_data()
+    plain = CompositionRecipeDefinition("p", selections=[{"step_id": "a", "item_ids": ["x"]}], outputs=[{"item_id": "y", "amount": 1}])
+    assert plain.to_data()["version"] == 1 and "station" not in plain.to_data()
