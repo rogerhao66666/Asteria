@@ -165,6 +165,11 @@ class AsteriaEditorWindow(QMainWindow):
         self.game_systems_editor.changed.connect(self.refresh_all)
         self.rpg_workspace.addTab(self.character_creator, "Character Creator")
         self.rpg_workspace.addTab(self.game_systems_editor, "Game Systems")
+        from .enemy_ai_widget import EnemyAIEditorWidget
+
+        self.enemy_ai_editor = EnemyAIEditorWidget(self.document, self)
+        self.enemy_ai_editor.changed.connect(self.refresh_all)
+        self.rpg_workspace.addTab(self.enemy_ai_editor, "Enemy AI")
         self.battle_authoring = FamilyHostWidget("Battle Rules", self.authoring_controllers.battle_categories, self)
         self.presentation_authoring = FamilyHostWidget(
             "Battle Presentation", self.authoring_controllers.presentation_categories, self
@@ -1121,7 +1126,7 @@ class AsteriaEditorWindow(QMainWindow):
     def _refresh_game_systems(self):
         if self.document.project is None:
             return
-        for name in ("game_systems_editor", "animation_editor", "action_timeline_editor"):
+        for name in ("game_systems_editor", "enemy_ai_editor", "animation_editor", "action_timeline_editor"):
             editor = getattr(self, name, None)
             if editor is not None:
                 editor.refresh()

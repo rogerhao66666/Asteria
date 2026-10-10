@@ -6,6 +6,23 @@ from math import isfinite
 
 from asteria.core.lifecycle import emit_hook
 
+# Built-in vocabulary of EnemyAIRuntime (projects can add more through resolvers/handlers).
+CONDITION_KINDS = ("always", "round_index", "resource", "resource_ratio", "stat", "memory", "phase", "can_act")
+CONDITION_PARAMS = {
+    "always": (),
+    "round_index": ("op", "value"),
+    "resource": ("resource_id", "op", "value"),
+    "resource_ratio": ("resource_id", "op", "value"),
+    "stat": ("stat_id", "op", "value"),
+    "memory": ("key", "op", "value"),
+    "phase": ("op", "value"),
+    "can_act": (),
+}
+COMPARISONS = ("<", "<=", ">", ">=", "==", "!=")
+TARGET_SELECTORS = ("self", "first_opponent", "all_opponents", "first_ally", "random_opponent")
+TARGET_SELECTOR_PREFIXES = ("lowest_resource_ratio:",)
+ACTION_KINDS = ("ability", "hook")
+
 
 def _id(value, label):
     value = str(value).strip()
@@ -260,6 +277,13 @@ class AIDecision:
     tags: tuple[str, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class AIExplanation:
+    phase_id: str | None
+    eligible_rule_ids: tuple[str, ...]
+    chances: tuple[tuple[str, float], ...]  # (rule_id, probability) among the top-priority rules
+
+
 class EnemyAIRuntime:
     """Seedable generic decision engine with open condition/target/action seams."""
 
@@ -285,6 +309,14 @@ class EnemyAIRuntime:
 
     def get_memory(self, actor_id, key, default=None):
         return self.memory.get(str(actor_id), {}).get(str(key), default)
+
+    @staticmethod
+    def _amount(battle, actor_id, resource_id):
+        """Current amount; combat resources (rage, stagger...) live in the battle layer, others on the subject."""
+        layer = getattr(battle, "battle_resources", None)
+        if layer is not None and resource_id in layer.values.get(str(actor_id), {}):
+            return layer.current(actor_id, resource_id)
+        return battle.member(actor_id).subject.resources.get(resource_id).current
 
     def _ratio(self, member, resource_id):
         rv = member.subject.resources.get(str(resource_id))
@@ -316,6 +348,10 @@ class EnemyAIRuntime:
             value = True
         elif kind == "round_index":
             value = self._compare(battle.turn_queue.round_index, p.get("op", ">="), int(p.get("value", 0)))
+        elif kind == "resource":
+            value = self._compare(
+                self._amount(battle, actor_id, str(p["resource_id"])), p.get("op", ">="), float(p["value"])
+            )
         elif kind == "resource_ratio":
             value = self._compare(
                 self._ratio(battle.member(actor_id), p["resource_id"]), p.get("op", "<="), float(p["value"])
@@ -337,13 +373,15 @@ class EnemyAIRuntime:
     def _conditions(self, battle, actor_id, conditions, phase_id):
         return all(self._condition(battle, actor_id, x, phase_id) for x in conditions)
 
-    def _select_phase(self, definition, battle, actor_id):
-        current = self.phases.get(actor_id, definition.initial_phase_id)
+    def _pick_phase(self, definition, battle, actor_id, current):
         eligible = [p for p in definition.phases if self._conditions(battle, actor_id, p.conditions, current)]
         if eligible:
-            selected = sorted(eligible, key=lambda x: (-x.priority, x.phase_id))[0].phase_id
-        else:
-            selected = current
+            return sorted(eligible, key=lambda x: (-x.priority, x.phase_id))[0].phase_id
+        return current
+
+    def _select_phase(self, definition, battle, actor_id):
+        current = self.phases.get(actor_id, definition.initial_phase_id)
+        selected = self._pick_phase(definition, battle, actor_id, current)
         if selected != current:
             old = next((p for p in definition.phases if p.phase_id == current), None)
             new = next((p for p in definition.phases if p.phase_id == selected), None)
@@ -403,19 +441,47 @@ class EnemyAIRuntime:
             return (chosen.member_id,)
         raise KeyError(f"unknown AI target selector: {selector}")
 
-    def decide(self, battle, ai_id, actor_id, *, rng=None):
-        definition = self.definitions[str(ai_id)]
-        actor_id = str(actor_id)
-        rng = rng or random.Random()
-        phase_id = self._select_phase(definition, battle, actor_id)
+    def _eligible_rules(self, definition, battle, actor_id, phase_id):
         phase = next((x for x in definition.phases if x.phase_id == phase_id), None)
         allowed_ids = set(phase.decision_rule_ids) if phase and phase.decision_rule_ids else None
-        eligible = [
+        return [
             r
             for r in definition.rules
             if (allowed_ids is None or r.rule_id in allowed_ids)
             and self._conditions(battle, actor_id, r.conditions, phase_id)
         ]
+
+    @staticmethod
+    def _pool(eligible):
+        if not eligible:
+            return []
+        best_priority = max(x.priority for x in eligible)
+        return sorted((x for x in eligible if x.priority == best_priority and x.weight > 0), key=lambda x: x.rule_id)
+
+    def explain(self, battle, ai_id, actor_id):
+        """What ``decide`` would do now, without side effects: phase, eligible rules, pick chances.
+
+        Used by the AI editor preview so it shows exactly the runtime's selection logic.
+        """
+        definition = self.definitions[str(ai_id)]
+        actor_id = str(actor_id)
+        current = self.phases.get(actor_id, definition.initial_phase_id)
+        phase_id = self._pick_phase(definition, battle, actor_id, current)
+        eligible = self._eligible_rules(definition, battle, actor_id, phase_id)
+        pool = self._pool(eligible)
+        total = sum(x.weight for x in pool)
+        return AIExplanation(
+            phase_id,
+            tuple(x.rule_id for x in eligible),
+            tuple((x.rule_id, x.weight / total) for x in pool) if total else (),
+        )
+
+    def decide(self, battle, ai_id, actor_id, *, rng=None):
+        definition = self.definitions[str(ai_id)]
+        actor_id = str(actor_id)
+        rng = rng or random.Random()
+        phase_id = self._select_phase(definition, battle, actor_id)
+        eligible = self._eligible_rules(definition, battle, actor_id, phase_id)
         if not eligible:
             emit_hook(
                 self.hooks,
@@ -424,8 +490,7 @@ class EnemyAIRuntime:
                 data={"battle": battle, "ai_id": ai_id, "phase_id": phase_id},
             )
             return None
-        best_priority = max(x.priority for x in eligible)
-        pool = sorted((x for x in eligible if x.priority == best_priority and x.weight > 0), key=lambda x: x.rule_id)
+        pool = self._pool(eligible)
         if not pool:
             return None
         total = sum(x.weight for x in pool)

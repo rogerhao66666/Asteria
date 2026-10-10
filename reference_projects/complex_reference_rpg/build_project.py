@@ -305,7 +305,7 @@ def build_project():
         AIDecisionRule("cleave","ability",payload={"ability_id":"boss_cleave"},target_selector="first_opponent",priority=5),
         AIDecisionRule("roar","ability",payload={"ability_id":"boss_roar"},target_selector="all_opponents",priority=4),
         AIDecisionRule("nova","ability",payload={"ability_id":"boss_nova"},target_selector="all_opponents",priority=10,
-                       conditions=(AICondition("resource_at_least",params={"resource_id":"rage","value":30}),)),
+                       conditions=(AICondition("resource",params={"resource_id":"rage","op":">=","value":30}),)),
         AIDecisionRule("meteor","ability",payload={"ability_id":"meteor"},target_selector="first_opponent",priority=7),
     )
     phases=(

@@ -8009,9 +8009,10 @@
             "action_kind": "ability",
             "conditions": [
               {
-                "kind": "resource_at_least",
+                "kind": "resource",
                 "negate": false,
                 "params": {
+                  "op": ">=",
                   "resource_id": "rage",
                   "value": 30
                 }
