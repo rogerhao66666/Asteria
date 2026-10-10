@@ -1,18 +1,20 @@
 """Extensible canonical-asset -> backend request -> staged runtime resource bridge."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
-from .runtime_resources import StagedRuntimeObject, staged
-from .scene_binding import ResolvedSceneAsset
+from typing import Any
+
 from .runtime_adapters import (
     audio_request,
     font_request,
-    material_request,
     icon_request,
+    material_request,
+    monster_clip_request,
     portrait_request,
     vfx_request,
-    monster_clip_request,
 )
+from .runtime_resources import StagedRuntimeObject, staged
+from .scene_binding import ResolvedSceneAsset
 
 AssetAdapter = Callable[[Any], Any]
 ResourceFactory = Callable[[Any, Any], Any]

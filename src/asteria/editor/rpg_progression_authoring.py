@@ -9,8 +9,6 @@ from asteria.rpg import (
     ProgressionGraphDefinition,
     ProgressionMilestone,
     ProgressionNodeDefinition,
-    ProgressionNodeRequirement,
-    ProgressionNodeReward,
     ProgressionTrackDefinition,
 )
 

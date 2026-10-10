@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .battle_combatant_visuals import BattleCombatantVisualState
 from .battle_information import BattleInformationView, BattleRosterSummary
 from .battle_interaction import BattleInteractionView
 
@@ -188,7 +187,7 @@ class BattleUiAssemblyRuntime:
                 cards.append(card)
 
         battlefield = []
-        for member_id, state in sorted(visual_map.items()):
+        for _member_id, state in sorted(visual_map.items()):
             draw = self._battlefield_visual(state)
             if draw is not None:
                 battlefield.append(draw)

@@ -7,6 +7,7 @@ is persistent outside actions and what should happen after an action.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, replace
 from enum import Enum
 

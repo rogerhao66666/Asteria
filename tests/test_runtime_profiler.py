@@ -65,15 +65,17 @@ pygame = pytest.importorskip("pygame")
 
 
 def test_playable_runtime_writes_a_profile_with_real_measurements(tmp_path, monkeypatch):
-    from test_playable_battle_loop import _image_paths  # noqa: F401  (fixture helpers)
     import shutil
 
     from PIL import Image
+    from test_playable_battle_loop import (
+        ROOT,
+        _image_paths,  # noqa: F401  (fixture helpers)
+    )
 
     from asteria.editor import EditorDocument
     from asteria.project import Project
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
-    from test_playable_battle_loop import ROOT
 
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")

@@ -1,5 +1,21 @@
 from dataclasses import replace
-from asteria.assets import *
+
+from asteria.assets import (
+    AssetSource,
+    BackendCapabilities,
+    BackendPreflight,
+    CanonicalAsset,
+    CapabilityIssue,
+    CapabilityValidatorRegistry,
+    IconAsset,
+    IconVariant,
+    ResolvedSceneAsset,
+    RuntimeAdapterRegistry,
+    SceneAssetBinding,
+    SceneAssetRef,
+    install_builtin_capability_validators,
+    install_builtin_runtime_adapters,
+)
 
 
 def C(i, k):

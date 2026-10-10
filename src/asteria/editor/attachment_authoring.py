@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from asteria.presentation.attachments import Socket, SocketKey, SocketRig, Attachment
+
 from asteria.presentation.attachment_runtime import AttachmentRuntime
+from asteria.presentation.attachments import Socket, SocketKey, SocketRig
 
 
 @dataclass(frozen=True, slots=True)

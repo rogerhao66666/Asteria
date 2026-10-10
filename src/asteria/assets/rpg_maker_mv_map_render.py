@@ -10,7 +10,6 @@ from pathlib import Path
 from asteria.assets.local_reference import RPGMakerMVProjectLayout
 from asteria.assets.rpg_maker_mv_catalog import RPGMakerMVCatalog
 from asteria.assets.rpg_maker_mv_map import RPGMakerMVMap
-
 from asteria.runtime.draw import TextureDraw
 
 

@@ -1,5 +1,14 @@
 import json
-from asteria.assets import *
+
+from asteria.assets import (
+    AssetCodecRegistry,
+    AssetRegistry,
+    AssetStore,
+    EditorAssetImportService,
+    LiveAssetReconciler,
+    SemanticAssetImporter,
+    passthrough_codec,
+)
 
 
 def w(r, a, v=1, deps=()):

@@ -6,10 +6,11 @@ motion is not limited by authored sprite-frame rate.
 """
 
 from __future__ import annotations
+
+from collections.abc import Callable
 from dataclasses import dataclass
-from math import sin, cos, radians, tau
-from typing import Callable
-from .attachments import Transform2D
+from math import cos, radians, sin, tau
+
 from .actor_attachment import ActorAttachmentFrame
 
 

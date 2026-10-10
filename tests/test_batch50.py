@@ -1,4 +1,12 @@
-from asteria.assets import *
+from asteria.assets import (
+    AssetCodecRegistry,
+    AssetDocument,
+    install_common_passthrough_codecs,
+    install_complex_typed_codecs,
+    install_simple_typed_codecs,
+    manifest_from_dict,
+    passthrough_codec,
+)
 
 
 def reg():
@@ -147,7 +155,7 @@ def test_65536_tile_grid():
 
 def test_1000_roundtrips():
     r = reg()
-    m = manifest_from_dict({k: v for k, v in D("monster", {}).items() if k != "payload"})
+    manifest_from_dict({k: v for k, v in D("monster", {}).items() if k != "payload"})
     for i in range(1000):
         p = {"animations": [{"name": "x", "clip": clip(f"c{i}", n=3)}], "default_animation": "x"}
         d = D("monster", p)

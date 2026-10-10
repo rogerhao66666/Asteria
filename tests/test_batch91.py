@@ -1,7 +1,8 @@
 import pytest
-from asteria.presentation.vfx_runtime import *
-from asteria.presentation.property_animation import split_channels
+
 from asteria.presentation.channel_backend import PresentationChannelExecutor
+from asteria.presentation.property_animation import split_channels
+from asteria.presentation.vfx_runtime import Particle, VFXRuntime
 
 
 def test_particle_motion_is_continuous_not_sprite_frame_bound():

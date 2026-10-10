@@ -5,11 +5,14 @@ another scene, animator, AssetStore, or renderer model.
 """
 
 from __future__ import annotations
+
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Callable, Mapping
-from .actor_attachment import ActorAttachmentBinding, ActorAnimatorSource
+from typing import Any
+
+from .actor_attachment import ActorAnimatorSource, ActorAttachmentBinding
 from .attachment_runtime import AttachmentRuntime
-from .property_animation import PropertyAnimator, PresentationChannels, split_channels
+from .property_animation import PresentationChannels, PropertyAnimator, split_channels
 from .render_integration import DrawPacket, PresentationRenderComposer, RenderTransform
 
 

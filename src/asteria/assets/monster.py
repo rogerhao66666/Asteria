@@ -1,8 +1,10 @@
 """Monster asset contract: animated, arbitrary dimensions/counts/directions."""
 
 from dataclasses import dataclass
-from .canonical import CanonicalAsset, AssetSource, ValidationIssue, ValidationReport
+
 from asteria.presentation.fidelity import HighFidelityClip
+
+from .canonical import AssetSource, CanonicalAsset, ValidationIssue, ValidationReport
 
 
 @dataclass(frozen=True, slots=True)

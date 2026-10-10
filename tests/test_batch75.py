@@ -1,6 +1,7 @@
 import pytest
+
 from asteria.editor.attachment_authoring import AttachmentAuthoringModel
-from asteria.presentation.attachments import Socket, Attachment, Transform2D
+from asteria.presentation.attachments import Attachment, Socket, Transform2D
 
 
 def T(x=0, y=0):

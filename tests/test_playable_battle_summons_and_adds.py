@@ -1,6 +1,5 @@
 import pytest
 
-from asteria.rpg import BattleAction
 from asteria.validation import PlayableBattleSummonHarness, build_playable_summon_scenario
 
 

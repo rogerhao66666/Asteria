@@ -285,7 +285,7 @@ class ComplexPreBattleStressHarness:
     def report(self):
         snapshots = []
         ability_counts = []
-        for actor, allocations, loadout, build, level, rune_id in self.characters:
+        for actor, _allocations, _loadout, build, level, rune_id in self.characters:
             assignments = actor.class_assignments
             stats = tuple(sorted((k, float(v)) for k, v in build.stats.to_data()["values"].items()))
             resources = tuple(sorted(build.resources.to_data()["values"]))

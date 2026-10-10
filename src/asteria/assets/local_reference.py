@@ -16,7 +16,7 @@ class LocalReferenceLayout:
     dlc: Path
 
     @classmethod
-    def from_root(cls, repo_root: Path, root: Path) -> "LocalReferenceLayout":
+    def from_root(cls, repo_root: Path, root: Path) -> LocalReferenceLayout:
         resolved_repo = Path(repo_root).resolve()
         resolved_root = Path(root).resolve()
         return cls(
@@ -111,7 +111,7 @@ def discover_mv_projects(root: Path) -> tuple[RPGMakerMVProjectLayout, ...]:
             continue
         project_root = system_path.parent.parent.resolve()
 
-        def optional(name: str) -> Path | None:
+        def optional(name: str, project_root: Path = project_root) -> Path | None:
             path = project_root / name
             return path if path.is_dir() else None
 

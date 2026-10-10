@@ -1,7 +1,9 @@
 """Extensible typed asset codec registry; no central kind switch."""
 
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping
+from typing import Any
+
 from .package import AssetManifest, manifest_from_dict
 
 

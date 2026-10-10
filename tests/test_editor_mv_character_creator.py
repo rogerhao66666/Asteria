@@ -93,6 +93,7 @@ def test_mv_workspace_reloads_saved_recipe_for_editing(tmp_path):
 def test_mv_widget_exposes_all_four_full_sheet_previews_and_kid_family():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
+
     from asteria.editor.character_generator_widget import CharacterGeneratorWidget
 
     app = QApplication.instance() or QApplication([])
@@ -123,6 +124,7 @@ def test_mv_widget_exposes_all_four_full_sheet_previews_and_kid_family():
 def test_mv_widget_recomposes_hair_and_clothing_without_changing_body():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
+
     from asteria.editor.character_generator_widget import CharacterGeneratorWidget
 
     app = QApplication.instance() or QApplication([])
@@ -151,6 +153,7 @@ def test_mv_widget_recomposes_hair_and_clothing_without_changing_body():
 def test_mv_widget_can_inspect_every_side_view_and_damaged_frame():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
+
     from asteria.editor.character_generator_widget import CharacterGeneratorWidget
 
     app = QApplication.instance() or QApplication([])
@@ -172,6 +175,7 @@ def test_mv_widget_can_inspect_every_side_view_and_damaged_frame():
 def test_mv_widget_loads_saved_recipe_back_into_editable_controls(tmp_path, monkeypatch):
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication, QFileDialog
+
     from asteria.editor.character_generator_widget import CharacterGeneratorWidget
 
     saved = _workspace()
@@ -197,6 +201,7 @@ def test_mv_widget_loads_saved_recipe_back_into_editable_controls(tmp_path, monk
 def test_editor_shell_exposes_mv_character_creator_in_rpg_workspace():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
+
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.editor.workspace import WorkspaceMode
 
@@ -217,6 +222,7 @@ def test_editor_shell_exposes_mv_character_creator_in_rpg_workspace():
 def test_editor_shell_generated_bundle_enters_map_placement_mode(monkeypatch):
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
+
     from asteria.core import Entity, Scene
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.project import Project
@@ -246,10 +252,9 @@ def test_editor_shell_generated_bundle_enters_map_placement_mode(monkeypatch):
 
     app = QApplication.instance() or QApplication([])
     project = Project("Game")
-    scene = project.add_scene(Scene("Map"))
+    project.add_scene(Scene("Map"))
     window = AsteriaEditorWindow(project)
     command = Command()
-    captured = {}
     monkeypatch.setattr(window.character_creator.workspace, "create_character_command", lambda *args, **kwargs: command)
     monkeypatch.setattr(window, "refresh_all", lambda: None)
     window.character_creator.name_edit.setText("Hero")
@@ -269,6 +274,7 @@ def test_editor_shell_places_pending_generated_bundle_at_clicked_map_cell(monkey
     from PySide6.QtCore import QPoint, Qt
     from PySide6.QtTest import QTest
     from PySide6.QtWidgets import QApplication
+
     from asteria.core import Entity, Scene
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.editor.workspace import WorkspaceMode

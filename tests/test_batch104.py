@@ -58,7 +58,9 @@ def test_layer_track_roundtrip():
 
 
 def test_layer_track_is_generic_not_weapon_or_genre_specific():
-    import inspect, asteria.presentation.actor_visual_layers as mod
+    import inspect
+
+    import asteria.presentation.actor_visual_layers as mod
 
     s = inspect.getsource(mod).lower()
     assert "if jrpg" not in s and "if arpg" not in s and "if sword" not in s

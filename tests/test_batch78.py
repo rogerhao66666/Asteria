@@ -1,7 +1,8 @@
 import pytest
-from asteria.presentation.actor_attachment import *
-from asteria.presentation.attachments import Socket, SocketKey, SocketRig, Attachment, Transform2D
+
+from asteria.presentation.actor_attachment import ActorAnimationPose, ActorAttachmentBinding
 from asteria.presentation.attachment_runtime import AttachmentRuntime
+from asteria.presentation.attachments import Attachment, Socket, SocketKey, SocketRig, Transform2D
 
 
 class FakeAnimator:

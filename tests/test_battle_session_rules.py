@@ -143,7 +143,7 @@ def test_runtime_contains_no_project_specific_battle_ids():
         "meteor",
         "party_barrier",
     )
-    pattern = re.compile(r"""["'](%s)["']""" % "|".join(names))
+    pattern = re.compile(r"""["'](""" + "|".join(names) + r""")["']""")
     offenders = [
         f"{path.name}:{number}"
         for path in sorted((REPO / "src" / "asteria" / "runtime").glob("*.py"))

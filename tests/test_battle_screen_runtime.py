@@ -2,6 +2,7 @@ from copy import deepcopy
 from types import SimpleNamespace
 
 from asteria.assets import AssetRef
+from asteria.assets.rpg_maker_mv_weapon import apply_weapon_overlays, weapon_overlay_for_loadout
 from asteria.gameplay import (
     ActionCue,
     GameplaySubject,
@@ -11,8 +12,6 @@ from asteria.gameplay import (
     TagSet,
 )
 from asteria.graphics import SpriteClip, SpriteFrame, SpriteKeyframe, SpriteSheet
-from asteria.assets.rpg_maker_mv_weapon import apply_weapon_overlays, weapon_overlay_for_loadout
-from asteria.presentation import CombatantOverlay
 from asteria.presentation import (
     BattleAnimationRole,
     BattleCombatantVisual,
@@ -20,6 +19,7 @@ from asteria.presentation import (
     BattleScreenRuntime,
     BattleUiRenderer,
     BattleVisualAnchor,
+    CombatantOverlay,
     HeadlessBattleUiBackend,
 )
 from asteria.rpg import (
@@ -27,11 +27,11 @@ from asteria.rpg import (
     BattleResourceRuntime,
     BattleScheduler,
     BattleSchedulerDefinition,
-    PartyMember,
     EquipmentDefinition,
     EquipmentLoadout,
     EquipmentSlotDefinition,
     EquippedItem,
+    PartyMember,
 )
 from asteria.runtime import AnimationClipSet, Camera2D
 

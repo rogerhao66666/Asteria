@@ -6,10 +6,10 @@ from asteria.gameplay import (
     AbilityRuntime,
     GameplaySubject,
     ResourcePool,
+    StatBlock,
     StateDefinition,
     StateRegistry,
     StateRuntime,
-    StatBlock,
     TagSet,
 )
 from asteria.rpg import (

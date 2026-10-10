@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
 from enum import Enum
 from math import isfinite
-import random
 
-from asteria.gameplay import GameplaySubject, normalize_tag
 from asteria.core.lifecycle import emit_hook
+from asteria.gameplay import GameplaySubject, normalize_tag
 
 
 def _id(value, label):

@@ -1,9 +1,11 @@
 """Atomic filesystem installation of asset packages into a project's Assets directory."""
 
+import os
+import shutil
+import tempfile
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
-import os, shutil, tempfile, uuid
 
 
 @dataclass(frozen=True, slots=True)

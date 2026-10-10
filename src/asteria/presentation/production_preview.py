@@ -1,14 +1,16 @@
 """Editor production-preview bridge for generic presentation subsystems."""
 
 from __future__ import annotations
+
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Mapping
-from .property_animation import PropertyAnimator, split_channels
-from .channel_backend import PresentationChannelExecutor
+
+from .audio_runtime import AudioCommand, AudioRuntime
 from .camera_runtime import CameraRuntime, CameraState
+from .channel_backend import PresentationChannelExecutor
 from .material_runtime import MaterialRuntime, MaterialState
-from .vfx_runtime import VFXRuntime, VFXFrame
-from .audio_runtime import AudioRuntime, AudioCommand
+from .property_animation import PropertyAnimator, split_channels
+from .vfx_runtime import VFXFrame, VFXRuntime
 
 
 @dataclass(frozen=True, slots=True)

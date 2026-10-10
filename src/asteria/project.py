@@ -7,15 +7,15 @@ from asteria.assets import (
     serialize_asset_registry,
 )
 from asteria.core.ids import new_id, validate_id
+from asteria.core.prefab import PrefabLibrary
 from asteria.core.serialization import deserialize_scene, serialize_scene
 from asteria.events import EventProgram, EventProgramRegistry, SceneEventBindings
 from asteria.events.lifecycle_bridge import LifecycleEventBinding
 from asteria.gameplay import GameplayLibrary
-from asteria.rpg import RpgDatabase
 from asteria.presentation.library import BattlePresentationLibrary
+from asteria.rpg import RpgDatabase
 from asteria.runtime.game_start import GameStartDefinition
 from asteria.runtime.input_map import InputActionMap
-from asteria.core.prefab import PrefabLibrary
 
 
 class Project:

@@ -2,8 +2,9 @@
 
 from dataclasses import dataclass
 from typing import Any, Protocol
+
 from .project_load import ProjectLoadReport
-from .scene_binding import RuntimeBindingRegistry, ResolvedSceneAsset
+from .scene_binding import RuntimeBindingRegistry
 
 
 class RuntimeSceneTarget(Protocol):

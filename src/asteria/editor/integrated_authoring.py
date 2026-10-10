@@ -1,38 +1,38 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from asteria.gameplay import AbilityDefinition
 from asteria.rpg import (
-    ActorDefinition,
-    ClassDefinition,
-    PassiveDefinition,
-    ProgressionTrackDefinition,
-    ProgressionGraphDefinition,
     AbilityEvolutionRule,
-    ItemDefinition,
-    EquipmentDefinition,
+    ActorDefinition,
     AttachmentDefinition,
-    EquipmentGrowthDefinition,
+    ClassDefinition,
     CompositionRecipeDefinition,
-    FormationDefinition,
-    PartySetupDefinition,
-    PartyPresentationPolicyDefinition,
-    EnemyDefinition,
     EncounterDefinition,
     EnemyAIDefinition,
+    EnemyDefinition,
+    EquipmentDefinition,
+    EquipmentGrowthDefinition,
+    FormationDefinition,
+    ItemDefinition,
+    PartyPresentationPolicyDefinition,
+    PartySetupDefinition,
+    PassiveDefinition,
+    ProgressionGraphDefinition,
+    ProgressionTrackDefinition,
 )
 
+from .battle_presentation_authoring import BattlePresentationAuthoringController
+from .field_game_flow_authoring import FieldGameFlowAuthoringController
 from .rpg_actor_class_authoring import RpgActorClassAuthoringController
-from .rpg_progression_authoring import RpgProgressionAuthoringController
+from .rpg_battle_rules_authoring import RpgBattleRulesAuthoringController
+from .rpg_enemy_encounter_authoring import RpgEnemyEncounterAuthoringController
 from .rpg_item_equipment_authoring import RpgItemEquipmentAuthoringController
 from .rpg_party_formation_authoring import RpgPartyFormationAuthoringController
-from .rpg_enemy_encounter_authoring import RpgEnemyEncounterAuthoringController
-from .rpg_battle_rules_authoring import RpgBattleRulesAuthoringController
-from .battle_presentation_authoring import BattlePresentationAuthoringController
+from .rpg_progression_authoring import RpgProgressionAuthoringController
 from .runtime_rpg_ui_authoring import RuntimeRpgUiAuthoringController
-from .field_game_flow_authoring import FieldGameFlowAuthoringController
 
 
 @dataclass(frozen=True, slots=True)

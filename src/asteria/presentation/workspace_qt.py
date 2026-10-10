@@ -1,7 +1,7 @@
 """Optional PySide6 shell. No canonical state lives here."""
 
 try:
-    from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QLabel, QStackedWidget
+    from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QPushButton, QStackedWidget, QVBoxLayout, QWidget
 except Exception:
     QWidget = None
 

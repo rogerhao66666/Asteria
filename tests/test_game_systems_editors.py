@@ -5,6 +5,7 @@ one undoable controller; these tests drive both.
 """
 
 import pytest
+from test_session_events import _project
 
 from asteria.editor import EditorDocument
 from asteria.editor.game_systems_authoring import (
@@ -14,7 +15,6 @@ from asteria.editor.game_systems_authoring import (
     GameSystemsAuthoringError,
 )
 from asteria.rpg import QuestDefinition, ShopDefinition, ShopEntry
-from test_session_events import _project
 
 
 def _controller():
@@ -84,6 +84,7 @@ def test_validation_and_reference_protection():
 def window():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
+
     from asteria.editor.shell import AsteriaEditorWindow
 
     app = QApplication.instance() or QApplication([])

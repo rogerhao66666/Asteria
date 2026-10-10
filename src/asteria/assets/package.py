@@ -1,9 +1,11 @@
 """Common .asset.json manifest -> validation -> registry intake."""
 
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import PurePosixPath
-from typing import Any, Callable, Mapping
-from .canonical import CanonicalAsset, AssetSource, ValidationIssue, ValidationReport
+from typing import Any
+
+from .canonical import AssetSource, CanonicalAsset, ValidationIssue, ValidationReport
 from .registry import AssetRegistry
 
 

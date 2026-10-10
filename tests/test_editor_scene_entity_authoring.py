@@ -1,6 +1,6 @@
 import pytest
 
-from asteria.core import Entity, Scene, Transform
+from asteria.core import Scene, Transform
 from asteria.editor import EditorDocument, SceneEntityAuthoringController
 from asteria.project import Project
 from asteria.runtime import Camera2DComponent

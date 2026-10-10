@@ -1,4 +1,5 @@
-import json, random
+import json
+import random
 
 from asteria.gameplay import (
     AbilityDefinition,
@@ -18,10 +19,10 @@ from asteria.gameplay import (
 from asteria.rpg import (
     AICondition,
     AIDecisionRule,
+    BattleRuntime,
     BossPhaseDefinition,
     EnemyAIDefinition,
     EnemyAIRuntime,
-    BattleRuntime,
     Party,
     PartyMember,
     RpgDatabase,

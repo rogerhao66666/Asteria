@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from .workspace import PresentationWorkspaceModel
+
 from .visual_authoring import PresentationVisualProjection
 from .visual_editing import PresentationVisualEditor
+from .workspace import PresentationWorkspaceModel
 
 
 @dataclass(frozen=True, slots=True)

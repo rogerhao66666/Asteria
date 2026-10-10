@@ -1,4 +1,3 @@
-from pathlib import Path
 from dataclasses import replace
 
 import pytest
@@ -6,13 +5,13 @@ from PIL import Image
 
 from asteria.assets.canonical import AssetSource, CanonicalAsset
 from asteria.assets.character_bundle import GeneratedCharacterBundle
+from asteria.assets.rpg_maker_mv_generator import RPGMakerMVGeneratorCatalog
 from asteria.core import Entity, Scene, Transform
-from asteria.editor.create_character_command import CreateCharacterCommand
 from asteria.editor.character_generator_workspace import CharacterGeneratorWorkspace
+from asteria.editor.create_character_command import CreateCharacterCommand
 from asteria.project import Project
 from asteria.rpg import ActorDefinition
 from asteria.runtime import AnimationClipSet, Animator2DComponent, SpriteRenderer2D
-from asteria.assets.rpg_maker_mv_generator import RPGMakerMVGeneratorCatalog
 
 
 def _bundle(tmp_path):

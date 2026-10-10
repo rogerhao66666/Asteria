@@ -6,12 +6,12 @@ from math import isfinite
 from asteria.runtime import Camera2D
 
 from .battle import BattlePresentationScene
+from .battle_action_menu import BattleActionMenuView
+from .battle_action_workflow import BattleActionWorkflowView
 from .battle_camera_feedback import BattleCameraFeedbackFrame
 from .battle_feedback import BattleFeedbackRuntime, BattleValueKind
 from .battle_hud import BattleHudMember
 from .battle_party_layout import BattlePartyLayoutPolicy
-from .battle_action_menu import BattleActionMenuView
-from .battle_action_workflow import BattleActionWorkflowView
 from .battle_result import BattleResultView
 from .battle_runtime import BattlePresentationFrame
 from .battle_turn_timeline import BattleTurnTimelineView
@@ -239,7 +239,7 @@ class BattleUiComposer:
             right = zone_layout.zone == "right"
             center = zone_layout.zone == "center"
             stacked = 0.0
-            for row_index, member_id in enumerate(zone_layout.visible_member_ids):
+            for member_id in zone_layout.visible_member_ids:
                 member = member_by_id[member_id]
                 if center:
                     x = (L.virtual_width - L.hud_panel_width) / 2

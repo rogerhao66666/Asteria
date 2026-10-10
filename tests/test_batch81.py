@@ -1,5 +1,15 @@
 import pytest
-from asteria.presentation.property_animation import *
+
+from asteria.presentation.property_animation import (
+    Ease,
+    Envelope,
+    Modulation,
+    Oscillator,
+    PropertyAnimator,
+    PropertyCurve,
+    PropertyKey,
+    split_channels,
+)
 
 
 def test_linear_curve():

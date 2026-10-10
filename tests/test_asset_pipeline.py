@@ -1,4 +1,4 @@
-from asteria.assets import *
+from asteria.assets import AssetRecord, ImportCache, ImportPipeline, fingerprint_file
 
 
 def test_import_cache_pipeline(tmp_path):

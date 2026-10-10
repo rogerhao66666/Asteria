@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from asteria.graphics.placement import RenderPlacement2D
 from asteria.graphics.character_placement import CharacterPlacement, frame_rect_at_standing_point
+from asteria.graphics.placement import RenderPlacement2D
 
 
 @dataclass(frozen=True, slots=True)

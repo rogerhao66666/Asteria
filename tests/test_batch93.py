@@ -1,7 +1,8 @@
 import pytest
-from asteria.presentation.camera_runtime import *
-from asteria.presentation.property_animation import split_channels
+
+from asteria.presentation.camera_runtime import CameraModulation, CameraRuntime, CameraState
 from asteria.presentation.channel_backend import PresentationChannelExecutor
+from asteria.presentation.property_animation import split_channels
 
 
 def test_camera_channel_drives_zoom_pan_rotation():

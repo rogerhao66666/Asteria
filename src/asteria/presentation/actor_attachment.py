@@ -5,10 +5,12 @@ clip/frame/subframe state can drive the same SocketRig/AttachmentRuntime.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Protocol
-from .attachment_runtime import AttachmentRuntime, ResolvedAttachment
+
 from .actor_visual_layers import ActorVisualLayerTrack, ResolvedVisualLayer
+from .attachment_runtime import AttachmentRuntime, ResolvedAttachment
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,7 +102,7 @@ def _mirror_transform(t, axis_x: float):
 
 def _resolve_mirrored(runtime, instance, frame: int, subframe: float, axis_x: float) -> ResolvedAttachment:
     # Re-resolve from a mirrored socket target so GripTransform remains exact.
-    from .attachment_runtime import _combine, _place_asset_at_grip, AttachmentState
+    from .attachment_runtime import AttachmentState, _combine, _place_asset_at_grip
 
     spec = instance.spec
     target = runtime.socket_world_transform(spec.socket_id, frame, subframe)

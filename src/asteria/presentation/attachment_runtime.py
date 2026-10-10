@@ -6,10 +6,12 @@ attachment poses and manages attachment instances by stable project IDs.
 """
 
 from __future__ import annotations
+
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from enum import Enum
 from math import cos, radians, sin
-from typing import Any, Callable, Iterable
+from typing import Any
 
 from .attachments import Attachment, GripTransform, SocketRig, Transform2D, validate_attachments
 

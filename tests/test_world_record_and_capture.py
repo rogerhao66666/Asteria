@@ -4,6 +4,7 @@ import json
 import random
 
 import pytest
+from test_session_events import BOSS_PROGRAM, _interact, _replace_program, _session
 
 from asteria.events import EventInstruction
 from asteria.rpg import (
@@ -18,7 +19,6 @@ from asteria.rpg import (
 )
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionError
-from test_session_events import BOSS_PROGRAM, _interact, _replace_program, _session
 
 
 def _content(project):

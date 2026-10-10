@@ -1,11 +1,12 @@
 """Demanding reference workloads. These are fixtures, never engine vocabulary."""
 
 from dataclasses import dataclass
-from .fidelity import HighFidelityClip, FrameTiming, VisualLayer
-from .composition import SyncCue
+
 from .choreography import ChoreographyTimeline, TrackEvent, hold, time_scale
+from .composition import SyncCue
+from .fidelity import FrameTiming, HighFidelityClip, VisualLayer
 from .fidelity_editor import HighFidelityEditorModel
-from .performance import BoundedDispatcher, diagnose
+from .performance import BoundedDispatcher
 
 
 @dataclass(slots=True)

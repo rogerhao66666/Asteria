@@ -13,9 +13,9 @@ from asteria.gameplay import (
     EffectOperationKind,
     GameplaySubject,
     ResourcePool,
+    StatBlock,
     StateRegistry,
     StateRuntime,
-    StatBlock,
     TagSet,
     TargetingRule,
 )
@@ -27,6 +27,7 @@ from asteria.rpg import (
     Party,
     PartyMember,
 )
+
 from .playable_rpg import PlayableRpgValidationHarness
 
 

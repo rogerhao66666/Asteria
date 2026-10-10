@@ -1,7 +1,7 @@
-from asteria.presentation.fidelity import HighFidelityClip, FrameTiming, CAPABILITIES
-from asteria.presentation.fidelity_import import SourceFrame, FidelitySource, FidelityImporter
 from asteria.presentation.animation_attachment import AnimationClock
 from asteria.presentation.attachments import Socket, SocketKey, SocketRig, Transform2D
+from asteria.presentation.fidelity import CAPABILITIES
+from asteria.presentation.fidelity_import import FidelityImporter, FidelitySource, SourceFrame
 
 
 def test_high_resolution_24_frame_variable_timing_import():

@@ -1,7 +1,7 @@
 from .cache import ImportArtifact, ImportCache
+from .canonical import AssetSource, CanonicalAsset
 from .registry import AssetRegistry
 from .types import AssetRecord
-from .canonical import AssetSource, CanonicalAsset
 
 
 def serialize_asset(record):

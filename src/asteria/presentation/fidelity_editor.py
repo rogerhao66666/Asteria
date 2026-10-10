@@ -3,9 +3,9 @@ Qt/views remain thin. Progressive disclosure is view state, not canonical conten
 """
 
 from dataclasses import dataclass, replace
-from .fidelity import HighFidelityClip, FrameTiming, VisualLayer
-from .composition import SyncCue
-from .performance import diagnose, FrameBudget
+
+from .fidelity import FrameTiming, HighFidelityClip
+from .performance import FrameBudget, diagnose
 
 
 @dataclass(slots=True)

@@ -4,10 +4,13 @@ Protocols intentionally avoid defining replacement Scene/AssetStore models.
 """
 
 from __future__ import annotations
+
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Callable, Iterable, Mapping, Protocol
+from typing import Any, Protocol
+
 from .attachment_runtime import AttachmentRuntime
-from .e2e_pipeline import SceneActorBinding, PresentationE2EPipeline
+from .e2e_pipeline import PresentationE2EPipeline, SceneActorBinding
 from .property_animation import PropertyAnimator
 from .render_integration import RenderTransform
 

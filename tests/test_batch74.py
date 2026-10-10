@@ -1,5 +1,6 @@
 import pytest
-from asteria.presentation.animated_text import *
+
+from asteria.presentation.animated_text import AnimatedTextRuntime, AnimatedTextSpec, TextKey, TextTransform
 
 
 def test_anchor():

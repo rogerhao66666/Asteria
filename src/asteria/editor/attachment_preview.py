@@ -5,9 +5,11 @@ presentation data model.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
-from asteria.presentation.animation_attachment import AnimationClock, AnimationSample
+
 from asteria.editor.attachment_authoring import AttachmentAuthoringModel
+from asteria.presentation.animation_attachment import AnimationClock, AnimationSample
 
 
 @dataclass(frozen=True, slots=True)

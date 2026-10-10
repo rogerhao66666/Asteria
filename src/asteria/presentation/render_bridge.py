@@ -1,8 +1,9 @@
 """Backend-neutral bridge from Presentation layers to render submissions."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Protocol
-from .gap_hardening import SubmissionKey, Submission, stable_submission_batches
+
+from .gap_hardening import Submission, SubmissionKey, stable_submission_batches
 
 
 @dataclass(frozen=True, slots=True)

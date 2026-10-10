@@ -40,9 +40,9 @@ class EditorDocument:
             FieldAIComponent,
             Interaction2DComponent,
             SpawnZoneComponent,
-            VisibleEncounterComponent,
             SpriteRenderer2D,
             TileMap2DComponent,
+            VisibleEncounterComponent,
         )
 
         from .asset_views import EditorAssetViews

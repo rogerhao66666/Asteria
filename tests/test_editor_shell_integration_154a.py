@@ -4,7 +4,6 @@ from asteria.core import Scene
 from asteria.editor import EditorDocument
 from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
 from asteria.editor.workspace import WorkspaceMode
-from asteria.gameplay import AbilityDefinition
 from asteria.project import Project
 from asteria.rpg import ClassDefinition
 
@@ -100,6 +99,7 @@ def test_shell_does_not_expose_player_save_workflow_methods():
 def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
+
     from asteria.editor.shell import AsteriaEditorWindow
 
     app = QApplication.instance() or QApplication([])
@@ -119,6 +119,7 @@ def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
 def test_real_qt_shell_starts_without_project_when_qt_is_available():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication, QLabel
+
     from asteria.editor.shell import AsteriaEditorWindow
 
     app = QApplication.instance() or QApplication([])
@@ -133,6 +134,7 @@ def test_real_qt_shell_starts_without_project_when_qt_is_available():
 def test_real_qt_editor_has_no_player_save_actions_when_available():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
+
     from asteria.editor.shell import AsteriaEditorWindow
 
     app = QApplication.instance() or QApplication([])
@@ -161,6 +163,7 @@ def test_real_qt_editor_has_no_player_save_actions_when_available():
 def test_real_qt_rpg_structured_editor_modifies_canonical_project_when_available():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
+
     from asteria.editor.shell import AsteriaEditorWindow
 
     p = project()

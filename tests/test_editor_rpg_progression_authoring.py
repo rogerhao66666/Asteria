@@ -187,7 +187,7 @@ def test_ability_evolution_complete_fields():
 def test_delete_track_protects_actor_assignment_and_evolution_refs():
     p, doc, c = make()
     c.create_track("job", milestones=(ProgressionMilestone(1, 0),))
-    from asteria.rpg import ClassDefinition, ActorDefinition
+    from asteria.rpg import ActorDefinition, ClassDefinition
 
     p.rpg_database.add_class(ClassDefinition("mage"))
     p.rpg_database.add_actor(

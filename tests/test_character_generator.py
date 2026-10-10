@@ -1,8 +1,16 @@
-from pathlib import Path
-from PIL import Image
 import json
+from pathlib import Path
+
 import pytest
-from asteria.assets.character_generator import *
+from PIL import Image
+
+from asteria.assets.character_generator import (
+    DIRECTIONS,
+    CharacterGenerator,
+    CharacterGeneratorCatalog,
+    CharacterPart,
+    CharacterRecipe,
+)
 from asteria.editor.character_generator_workspace import CharacterGeneratorWorkspace
 
 

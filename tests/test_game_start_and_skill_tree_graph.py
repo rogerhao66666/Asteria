@@ -1,4 +1,4 @@
-from asteria.core import ComponentRegistry, Scene, Entity
+from asteria.core import ComponentRegistry, Entity, Scene
 from asteria.project import Project
 from asteria.rpg import ProgressionGraphDefinition, ProgressionNodeDefinition, ProgressionNodeRequirement
 from asteria.runtime.game_start import GameStartDefinition

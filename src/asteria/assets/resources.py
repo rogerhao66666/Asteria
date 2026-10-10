@@ -1,4 +1,7 @@
 from dataclasses import dataclass
+from typing import Any
+
+from .canonical import AssetSource, CanonicalAsset, ValidationIssue, ValidationReport
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,8 +40,6 @@ class TextureResourceCache:
 
 
 # Canonical non-image resources (Asset System branch)
-from typing import Any
-from .canonical import CanonicalAsset, AssetSource, ValidationIssue, ValidationReport
 
 
 @dataclass(frozen=True, slots=True)

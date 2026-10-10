@@ -1,9 +1,11 @@
 """Scene asset-reference serialization, resolution and runtime binding seam."""
 
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping
-from .scene_placement import SceneAssetRef
+from typing import Any
+
 from .registry import AssetRegistry
+from .scene_placement import SceneAssetRef
 
 
 def asset_ref_to_dict(ref: SceneAssetRef) -> dict[str, str]:

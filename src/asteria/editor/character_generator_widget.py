@@ -1,32 +1,33 @@
 from __future__ import annotations
 
 try:
-    from PySide6.QtCore import Qt, QTimer, Signal, QSize
-    from PySide6.QtGui import QImage, QPixmap, QIcon
+    from PySide6.QtCore import QSize, Qt, QTimer, Signal
+    from PySide6.QtGui import QIcon, QImage, QPixmap
     from PySide6.QtWidgets import (
-        QWidget,
-        QLabel,
         QComboBox,
-        QPushButton,
-        QHBoxLayout,
-        QVBoxLayout,
+        QFileDialog,
         QFormLayout,
         QFrame,
+        QHBoxLayout,
+        QLabel,
         QLineEdit,
-        QFileDialog,
         QListWidget,
         QListWidgetItem,
-        QTabWidget,
-        QSpinBox,
+        QPushButton,
         QScrollArea,
+        QSpinBox,
+        QTabWidget,
+        QVBoxLayout,
+        QWidget,
     )
 except ImportError:
     QWidget = object
     Qt = QTimer = Signal = QImage = QPixmap = None
 
+from PIL import Image, ImageDraw
+
 from asteria.assets.character_generator import DIRECTIONS, LAYER_ORDER
 from asteria.graphics.character_placement import CharacterPlacement, frame_rect_at_standing_point
-from PIL import Image, ImageDraw
 
 
 def character_grid_preview(image, *, canvas_size=(144, 144), tile_size=(48, 48)):

@@ -1,8 +1,8 @@
 """Common canonical asset contracts shared by all Asteria asset families."""
 
-from dataclasses import dataclass, field
-from typing import Any, Mapping
 import re
+from dataclasses import dataclass
+from typing import Any
 
 ID = re.compile(r"^[A-Za-z0-9_.:/-]+$")
 

@@ -1,6 +1,6 @@
-from pathlib import Path
 import pytest
-from asteria.assets import *
+
+from asteria.assets import AssetPackageInstaller
 
 
 def make(tmp, items):

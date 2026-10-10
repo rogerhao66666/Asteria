@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from asteria.gameplay import ResourcePool, StatBlock, TagSet
+
 from .ability_build import AbilityGrant
 from .actors import RpgActorRuntime
 

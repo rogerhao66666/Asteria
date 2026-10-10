@@ -5,10 +5,13 @@ duplicates AssetStore records and never assigns gameplay meaning to assets.
 """
 
 from __future__ import annotations
+
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Mapping
-from asteria.presentation.attachments import Attachment, GripTransform, Transform2D
+from typing import Any
+
 from asteria.editor.attachment_authoring import AttachmentAuthoringModel
+from asteria.presentation.attachments import Attachment, GripTransform, Transform2D
 
 
 @dataclass(frozen=True, slots=True)

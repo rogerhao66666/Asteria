@@ -15,10 +15,10 @@ from asteria.gameplay import (
     ModifierOperation,
     PeriodicEffect,
     ResourcePool,
+    StatBlock,
     StateDefinition,
     StateRegistry,
     StateRuntime,
-    StatBlock,
     StatModifier,
     TagSet,
     TargetingRule,
@@ -37,6 +37,7 @@ from asteria.rpg import (
     Party,
     PartyMember,
 )
+
 from .playable_rpg import PlayableRpgValidationHarness
 
 

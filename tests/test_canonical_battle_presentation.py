@@ -10,8 +10,9 @@ import pytest
 
 pygame = pytest.importorskip("pygame")
 
+from test_playable_battle_loop import _boss_runtime  # noqa: E402
+
 from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter  # noqa: E402
-from test_playable_battle_loop import _boss_runtime, resource_root  # noqa: E402,F401
 
 
 @pytest.fixture

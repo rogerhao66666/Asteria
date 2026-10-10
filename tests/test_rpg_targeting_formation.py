@@ -31,7 +31,6 @@ from asteria.rpg import (
     RpgDatabase,
     TargetMetricCondition,
     TargetRelation,
-    TargetSelectionMode,
 )
 
 

@@ -1,10 +1,11 @@
 """Typed codecs for Tileset, Monster and VFX, including HighFidelityClip."""
 
-from .codecs import AssetCodec, AssetDocument
-from .tileset import *
-from .monster import *
-from .vfx import *
-from asteria.presentation.fidelity import HighFidelityClip, FrameTiming, VisualLayer
+from asteria.presentation.fidelity import FrameTiming, HighFidelityClip, VisualLayer
+
+from .codecs import AssetCodec
+from .monster import MonsterAnimation, MonsterAsset
+from .tileset import TileCollision, TileDef, TilesetAsset
+from .vfx import VFXAnchor, VFXAsset, VFXVariant
 
 
 def _pairs(d):

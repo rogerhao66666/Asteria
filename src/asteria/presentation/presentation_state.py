@@ -1,12 +1,15 @@
 """Versioned persistence for generic composable presentation state."""
 
 from __future__ import annotations
-from dataclasses import dataclass, field, asdict
-from typing import Any, Mapping
+
 import json
-from .attachments import SocketRig, Attachment, GripTransform, Transform2D, validate_attachments
+from collections.abc import Mapping
+from dataclasses import asdict, dataclass, field
+from typing import Any
+
 from .attachment_runtime import AttachmentRuntime, AttachmentState
-from .property_animation import Ease, PropertyKey, PropertyCurve, Oscillator, Envelope, Modulation, PropertyAnimator
+from .attachments import Attachment, GripTransform, SocketRig, Transform2D, validate_attachments
+from .property_animation import Ease, Envelope, Modulation, Oscillator, PropertyAnimator, PropertyCurve, PropertyKey
 
 SCHEMA_VERSION = 1
 

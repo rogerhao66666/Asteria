@@ -4,9 +4,11 @@ Edits the SAME canonical Sequence/Node model used by runtime. Qt is a future vie
 """
 
 from __future__ import annotations
+
+from collections.abc import Callable
 from dataclasses import replace
-from typing import Callable
-from .canonical import Sequence, Node, Kind, Command
+
+from .canonical import Kind, Node, Sequence
 
 _CONTAINER = {Kind.SEQUENCE, Kind.PARALLEL, Kind.BRANCH, Kind.LOOP}
 
@@ -164,7 +166,7 @@ class PresentationEditorModel:
 
         def walk(n, depth, path):
             label = n.command.action if n.command else n.kind.value
-            if not query.lower() in (n.id + " " + label).lower() if query else False:
+            if query.lower() not in (n.id + " " + label).lower() if query else False:
                 pass
             else:
                 out.append((n.id, depth, label, path))

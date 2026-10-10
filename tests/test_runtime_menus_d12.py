@@ -10,11 +10,11 @@ import pytest
 
 pygame = pytest.importorskip("pygame")
 
+from test_session_events import BOSS_PROGRAM, _replace_program, _session  # noqa: E402
+
 from asteria.events import EventInstruction  # noqa: E402
 from asteria.rpg import AchievementDefinition, CompositionOutput, CompositionRecipeDefinition  # noqa: E402
 from asteria.runtime.game_menus import CraftingScreen, GameSettings, achievement_rows, bestiary_rows  # noqa: E402
-from test_playable_battle_loop import resource_root, runtime  # noqa: E402,F401
-from test_session_events import BOSS_PROGRAM, _replace_program, _session  # noqa: E402
 
 
 def _secret_recipe():

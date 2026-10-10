@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from asteria.rpg.items import Inventory, ItemDefinition
 
 

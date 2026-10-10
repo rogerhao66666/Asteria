@@ -1,10 +1,11 @@
 import pytest
-from asteria.presentation.attachments import SocketRig, Socket, SocketKey, Transform2D, Attachment
-from asteria.presentation.attachment_runtime import AttachmentRuntime
+
 from asteria.presentation.actor_attachment import ActorAnimationPose
-from asteria.presentation.property_animation import *
+from asteria.presentation.attachment_runtime import AttachmentRuntime
+from asteria.presentation.attachments import Attachment, Socket, SocketKey, SocketRig, Transform2D
+from asteria.presentation.e2e_pipeline import PresentationE2EPipeline, PropertyAnimator, SceneActorBinding
+from asteria.presentation.property_animation import Envelope, Modulation, Oscillator, PropertyCurve, PropertyKey
 from asteria.presentation.render_integration import RenderTransform
-from asteria.presentation.e2e_pipeline import *
 
 
 class Animator:

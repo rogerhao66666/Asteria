@@ -40,7 +40,7 @@ class InputBinding:
         if not 0.0 < float(self.threshold) <= 1.0:
             raise ValueError("threshold must be in (0, 1]")
 
-    def value(self, raw: "RawInputState") -> float:
+    def value(self, raw: RawInputState) -> float:
         if self.device == "key":
             return 1.0 if self.code in raw.keys else 0.0
         if self.device == "gamepad_button":

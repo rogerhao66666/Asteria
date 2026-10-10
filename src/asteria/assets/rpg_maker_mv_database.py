@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from .local_reference import RPGMakerMVProjectLayout
 
@@ -85,7 +85,7 @@ class RPGMakerMVDatabase:
     issues: tuple[MVReferenceIssue, ...] = ()
 
     @classmethod
-    def load(cls, layout: RPGMakerMVProjectLayout) -> "RPGMakerMVDatabase":
+    def load(cls, layout: RPGMakerMVProjectLayout) -> RPGMakerMVDatabase:
         issues: list[MVReferenceIssue] = []
 
         def load_json_array(name: str) -> tuple[Mapping[str, Any], ...]:

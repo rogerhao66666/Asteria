@@ -1,15 +1,16 @@
 import pytest
+
 from asteria.core import Scene
 from asteria.editor import EditorDocument
 from asteria.editor.runtime_rpg_ui_authoring import RuntimeRpgUiAuthoringController
 from asteria.editor.runtime_rpg_ui_workspace import RuntimeRpgUiWorkspaceModel
 from asteria.presentation import (
+    AbilityScreenProfile,
     CharacterScreenProfile,
     EquipmentScreenProfile,
-    AbilityScreenProfile,
-    ProgressionScreenProfile,
     InventoryScreenProfile,
     PartyScreenProfile,
+    ProgressionScreenProfile,
 )
 from asteria.project import Project
 

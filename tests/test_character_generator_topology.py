@@ -1,8 +1,15 @@
-from pathlib import Path
+import json
+
+import pytest
 from PIL import Image
-import json, pytest
+
 from asteria.assets.character_generator import DIRECTIONS
-from asteria.assets.character_generator_topology import *
+from asteria.assets.character_generator_topology import (
+    CharacterAnimationTopology,
+    CharacterPartManifest,
+    validate_part_manifest,
+    write_authoring_template,
+)
 
 
 def manifest(tmp_path, topology_id="rpg_like_48_walk_v1"):

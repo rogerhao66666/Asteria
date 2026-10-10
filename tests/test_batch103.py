@@ -1,4 +1,5 @@
 import inspect
+
 from asteria.presentation.action_binding import (
     ActionPresentationBinder,
     ActionPresentationRequest,

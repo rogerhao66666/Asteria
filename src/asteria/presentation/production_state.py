@@ -1,12 +1,15 @@
 """Versioned persistence for production Presentation subsystem state."""
 
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Mapping, Any
+
 import json
-from .camera_runtime import CameraState
-from .material_runtime import MaterialState, LightState
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any
+
 from .audio_runtime import AudioCue
+from .camera_runtime import CameraState
+from .material_runtime import LightState, MaterialState
 
 SCHEMA_VERSION = 1
 

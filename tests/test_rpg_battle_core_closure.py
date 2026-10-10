@@ -13,10 +13,10 @@ from asteria.gameplay import (
     EffectOperationKind,
     GameplaySubject,
     ResourcePool,
+    StatBlock,
     StateDefinition,
     StateRegistry,
     StateRuntime,
-    StatBlock,
     TagSet,
     TargetingRule,
     ValueFormula,
@@ -250,7 +250,6 @@ def test_reaction_chain_and_rng_replay_are_identical_after_snapshot_restore():
 
 def test_boss_phase_can_change_between_hits_via_normal_ai_hook_points():
     hooks = LifecycleHookBus()
-    holder = {}
     phases = []
     phase1 = BossPhaseDefinition(
         "p1",

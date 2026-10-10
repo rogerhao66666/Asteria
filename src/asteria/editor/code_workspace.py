@@ -23,7 +23,15 @@ except ImportError:
         pass
 
 
-DEFAULT_AUTHORING_SCRIPT = """# Asteria project script\n# Asteria Python Authoring API v1\n\n# Example:\n# scene = project.scene_named("Town")\n# npc = scene.entity_named("Village Girl")\n# npc.transform.position = (120, 88)\n"""
+DEFAULT_AUTHORING_SCRIPT = (
+    "# Asteria project script\n"
+    "# Asteria Python Authoring API v1\n"
+    "\n"
+    "# Example:\n"
+    '# scene = project.scene_named("Town")\n'
+    '# npc = scene.entity_named("Village Girl")\n'
+    "# npc.transform.position = (120, 88)\n"
+)
 
 
 @dataclass(slots=True)

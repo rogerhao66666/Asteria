@@ -1,9 +1,9 @@
 from asteria.presentation import (
     BattleCameraFeedbackFrame,
     BattleCombatantVisual,
+    BattleFeedbackLabel,
     BattleFeedbackRuntime,
     BattleFloatingValue,
-    BattleFeedbackLabel,
     BattleHudGauge,
     BattleHudMember,
     BattleHudStatusIcon,

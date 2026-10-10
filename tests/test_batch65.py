@@ -1,6 +1,6 @@
 import json
-from pathlib import Path
-from asteria.assets import *
+
+from asteria.assets import AssetCodecRegistry, AssetStore, SemanticAssetImporter, passthrough_codec
 
 
 def doc(a, kind="project.test", deps=(), source=None):

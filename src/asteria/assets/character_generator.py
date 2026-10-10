@@ -1,8 +1,10 @@
 from __future__ import annotations
-from dataclasses import dataclass, field, asdict
-from pathlib import Path
-from typing import Mapping, Sequence
+
 import json
+from collections.abc import Mapping, Sequence
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+
 from PIL import Image
 
 DIRECTIONS = ("down", "left", "right", "up")

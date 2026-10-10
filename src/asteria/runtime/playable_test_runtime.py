@@ -4,13 +4,9 @@ import json
 from pathlib import Path
 
 from asteria.core import Transform
-from asteria.runtime.game_save import GameRuntimeSave
-from asteria.runtime.game_session import GameSessionRuntime
-from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
 from asteria.runtime.audio_mixer import AudioMixer
+from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
 from asteria.runtime.collision import CollisionWorld
-from asteria.runtime.input_map import InputActionTracker
-from asteria.runtime.profiler import NullProfiler, RuntimeProfiler
 from asteria.runtime.game_menus import (
     GAME_OVER_OPTIONS,
     PAUSE_OPTIONS,
@@ -22,7 +18,10 @@ from asteria.runtime.game_menus import (
     bestiary_rows,
     quest_rows,
 )
-
+from asteria.runtime.game_save import GameRuntimeSave
+from asteria.runtime.game_session import GameSessionRuntime
+from asteria.runtime.input_map import InputActionTracker
+from asteria.runtime.profiler import NullProfiler, RuntimeProfiler
 
 WALK_ROW_BY_FACING = {"down": 0, "left": 1, "right": 2, "up": 3}
 WALK_PATTERN_SEQUENCE = (0, 1, 2, 1)
@@ -453,7 +452,8 @@ class PlayableTestRuntime:
         self.text("Character / Build Acceptance Menu", 44, 38, size=30, color=(255, 220, 120))
         self.text(f"Q/E Actor   C Close     Current: {actor_id}", 44, 76, size=19)
         self.text(
-            f"Level {state.level}   EXP {int(state.experience)}   AP {int(allocation.balance('ap'))}   Ability Pts {int(state.points.get('ability_points', 0))}",
+            f"Level {state.level}   EXP {int(state.experience)}   AP {int(allocation.balance('ap'))}"
+            f"   Ability Pts {int(state.points.get('ability_points', 0))}",
             44,
             106,
             size=20,
@@ -584,7 +584,6 @@ class PlayableTestRuntime:
 
     def _rotate_party(self):
         roster = list(self.save.rpg_state.party_actor_ids)
-        active = list(self.save.rpg_state.party_active_actor_ids)
         if len(roster) <= 1:
             return
         rotated = roster[1:] + roster[:1]
@@ -875,7 +874,8 @@ class PlayableTestRuntime:
                         ability_points_per_level=rewards.get("ability_points_per_level", 1),
                     )
                     self._victory_summary.append(
-                        f"{hero_id}: Lv {info['old_level']}→{info['new_level']} +{info['levels_gained'] * 2:g} AP +{info['levels_gained']:g} ability pts"
+                        f"{hero_id}: Lv {info['old_level']}→{info['new_level']} "
+                        f"+{info['levels_gained'] * 2:g} AP +{info['levels_gained']:g} ability pts"
                     )
                 self._victory = True
                 # The jingle waits for the presentation to finish showing the final blows.

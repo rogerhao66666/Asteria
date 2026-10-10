@@ -1,6 +1,7 @@
 import pytest
-from asteria.presentation.attachments import Attachment, Socket, SocketKey, SocketRig, Transform2D
+
 from asteria.presentation.attachment_runtime import AttachmentRuntime, AttachmentState
+from asteria.presentation.attachments import Attachment, Socket, SocketKey, SocketRig, Transform2D
 
 
 def T(x=0, y=0, r=0, sx=1, sy=1, **kw):

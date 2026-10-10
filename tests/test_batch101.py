@@ -1,11 +1,12 @@
 import math
+
 import pytest
 
-from asteria.presentation.attachments import Attachment, GripTransform, Socket, SocketRig, Transform2D
-from asteria.presentation.attachment_runtime import AttachmentRuntime
 from asteria.presentation.actor_attachment import ActorAnimationPose, ActorAttachmentBinding
-from asteria.presentation.render_integration import ActorVisualLayer, PresentationRenderComposer, RenderTransform
+from asteria.presentation.attachment_runtime import AttachmentRuntime
+from asteria.presentation.attachments import Attachment, GripTransform, Socket, SocketRig, Transform2D
 from asteria.presentation.presentation_state import PresentationStateCodec, capture_state, restore_state
+from asteria.presentation.render_integration import ActorVisualLayer, PresentationRenderComposer, RenderTransform
 
 
 class Animator:

@@ -1,7 +1,7 @@
 from asteria.gameplay import ResourcePool, StatBlock, TagSet
 from asteria.gameplay.abilities import AbilityDefinition
 from asteria.presentation import AbilityScreenProfile, AbilityScreenRuntime
-from asteria.rpg.ability_build import ActorAbilityState, AbilityGrant, PassiveDefinition
+from asteria.rpg.ability_build import AbilityGrant, ActorAbilityState, PassiveDefinition
 from asteria.rpg.resolved_build import ResolvedActorBuild
 
 

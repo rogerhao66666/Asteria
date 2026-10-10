@@ -1,31 +1,31 @@
 from __future__ import annotations
 
+import random
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from math import isfinite
-import random
 
 from asteria.core.lifecycle import emit_hook
 from asteria.gameplay import AbilityRuntime, AbilityTarget, GameplaySubject
 
-from .battle_resources import BattleResourceRuntime
-from .gauge_composition import BattleGaugeCompositionRuntime
-from .reactions import ReactionRuntime
-from .enemy_ai import EnemyAIRuntime
-from .battle_scheduler import BattleScheduler, BattleSchedulerDefinition, BattleSchedulerMode
-from .battle_states import BattleStateRuntime
-from .battle_timing import BattleActionTimingRuntime
 from .action_sequences import ActionSequenceRuntime
-from .battle_transactions import BattleTransactionRuntime
-from .battle_snapshot import capture_battle_snapshot, restore_battle_snapshot
 from .battle_lifecycle import (
     BattleEscapeRule,
     BattleObjectiveRuntime,
     CombatantLifecycleRuntime,
     attempt_escape,
 )
+from .battle_resources import BattleResourceRuntime
+from .battle_scheduler import BattleScheduler, BattleSchedulerDefinition, BattleSchedulerMode
+from .battle_snapshot import capture_battle_snapshot, restore_battle_snapshot
+from .battle_states import BattleStateRuntime
+from .battle_timing import BattleActionTimingRuntime
+from .battle_transactions import BattleTransactionRuntime
+from .enemy_ai import EnemyAIRuntime
+from .gauge_composition import BattleGaugeCompositionRuntime
 from .interactions import InteractionResolver
+from .reactions import ReactionRuntime
 from .targeting import BattleFormationRuntime, BattleTargetingRuntime
 
 
@@ -647,6 +647,7 @@ class BattleRuntime:
         Other operations pass through unchanged.
         """
         from asteria.gameplay.effects import EffectOperationKind
+
         from .interactions import InteractionDisposition
 
         if not self.interactions.rules:
@@ -678,6 +679,7 @@ class BattleRuntime:
         The state's source (or the afflicted member itself) is the source subject.
         """
         from asteria.gameplay.effects import EffectOperationKind
+
         from .interactions import InteractionDisposition
 
         if not self.interactions.rules:

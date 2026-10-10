@@ -1,7 +1,9 @@
 from __future__ import annotations
-from dataclasses import dataclass, field, replace
+
 from copy import deepcopy
-from .canonical import Node, Kind
+from dataclasses import dataclass, field, replace
+
+from .canonical import Node
 from .editor_model import PresentationEditorModel, _find
 
 

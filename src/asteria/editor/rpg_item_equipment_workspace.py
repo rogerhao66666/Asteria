@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 from .rpg_item_equipment_authoring import ItemEquipmentInformationArchitecture

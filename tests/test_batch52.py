@@ -1,4 +1,4 @@
-from asteria.assets import *
+from asteria.assets import AssetBrowserModel, AssetBrowserQuery, AssetRegistry, AssetSource, CanonicalAsset
 
 
 def model(n=20):

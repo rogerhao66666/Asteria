@@ -14,7 +14,9 @@ class FrameRenderPlan:
 
 
 def build_frame_plan(*, draws=(), shadow_casters=(), lights=(), environment=None):
-    key = lambda d: (d.layer, d.depth, d.screen_y)
+    def key(d):
+        return (d.layer, d.depth, d.screen_y)
+
     opaque = tuple(sorted((d for d in draws if d.opacity >= 1.0), key=key))
     trans = tuple(sorted((d for d in draws if d.opacity < 1.0), key=key))
     if environment is None:

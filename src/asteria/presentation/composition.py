@@ -1,9 +1,11 @@
 """Generic high-fidelity layered composition + choreography primitives."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Any
-from .fidelity import HighFidelityClip, VisualLayer
+
+from .fidelity import HighFidelityClip
 
 
 @dataclass(frozen=True, slots=True)

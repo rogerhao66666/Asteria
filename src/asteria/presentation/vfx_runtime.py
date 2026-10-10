@@ -5,9 +5,9 @@ properties carry no gameplay semantics.
 """
 
 from __future__ import annotations
+
+from collections.abc import Mapping
 from dataclasses import dataclass
-from math import cos, sin, radians
-from typing import Mapping
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,7 +24,7 @@ class Particle:
     opacity: float = 1
     asset_id: str | None = None
 
-    def sample(self, dt_ms: float) -> "Particle":
+    def sample(self, dt_ms: float) -> Particle:
         age = self.age_ms + dt_ms
         return Particle(
             self.id,

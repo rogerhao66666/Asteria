@@ -12,6 +12,7 @@ except ImportError:
 
 
 from asteria.runtime.components2d import Interaction2DComponent
+
 from .event_editing import bindings_for_scene
 
 
@@ -91,7 +92,7 @@ class GameFlowOverviewWidget(QWidget):
         b = bs[0] if bs else None
         c = entity.try_get(Interaction2DComponent)
         self.binding.setText(b.binding_id if b else "—")
-        self.program.setText((b.program_id if b else (c.event_program_id if c else "—")))
+        self.program.setText(b.program_id if b else (c.event_program_id if c else "—"))
         self.interaction.setText(
             f"range={c.range:g}, facing={'yes' if c.require_facing else 'no'}" if c else "No Interaction2D"
         )

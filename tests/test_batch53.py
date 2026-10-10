@@ -1,4 +1,11 @@
-from asteria.assets import *
+from asteria.assets import (
+    AssetBrowserModel,
+    AssetBrowserWorkspace,
+    AssetRegistry,
+    AssetSource,
+    CanonicalAsset,
+    PreviewProviderRegistry,
+)
 
 
 def ws(n=20):

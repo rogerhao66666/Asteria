@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
 from math import isfinite
-import random
 
 from asteria.core.lifecycle import emit_hook
 from asteria.gameplay import GameplaySubject, normalize_tag

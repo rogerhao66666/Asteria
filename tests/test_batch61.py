@@ -1,6 +1,25 @@
 from dataclasses import replace
+
 import pytest
-from asteria.assets import *
+
+from asteria.assets import (
+    AssetSource,
+    AudioRequest,
+    BackendCapabilities,
+    CanonicalAsset,
+    CapabilityError,
+    CapabilityIssue,
+    CapabilityValidatorRegistry,
+    FrameTiming,
+    HighFidelityClip,
+    ImageRequest,
+    MaterialRequest,
+    VFXRequest,
+    VisualLayer,
+    capability_checked_factory,
+    clip_request,
+    install_builtin_capability_validators,
+)
 
 
 def C(a, k):

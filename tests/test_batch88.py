@@ -1,8 +1,8 @@
 import pytest
-from asteria.presentation.render_integration import RenderTransform, combine, PresentationRenderComposer
-from asteria.presentation.attachments import *
-from asteria.presentation.attachment_runtime import AttachmentRuntime
-from asteria.presentation.actor_attachment import ActorAttachmentFrame, ActorAnimationPose
+
+from asteria.presentation.actor_attachment import ActorAnimationPose, ActorAttachmentFrame
+from asteria.presentation.attachments import Transform2D
+from asteria.presentation.render_integration import PresentationRenderComposer, RenderTransform, combine
 
 
 def test_parent_rotation_rotates_child_offset():

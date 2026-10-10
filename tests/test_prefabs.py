@@ -134,6 +134,7 @@ def test_prefabs_and_instances_round_trip_with_the_project():
 def test_editor_prefab_menu_flow_with_undo():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
+
     from asteria.editor.shell import AsteriaEditorWindow
 
     app = QApplication.instance() or QApplication([])

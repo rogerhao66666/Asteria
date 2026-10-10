@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
-from pathlib import Path
 import re
+from dataclasses import dataclass
+from pathlib import Path
 
 from PIL import Image
 
@@ -42,7 +42,7 @@ class RPGMakerMVCatalog:
     issues: list[MVReferenceIssue]
 
     @classmethod
-    def build(cls, layout: RPGMakerMVProjectLayout, database: RPGMakerMVDatabase) -> "RPGMakerMVCatalog":
+    def build(cls, layout: RPGMakerMVProjectLayout, database: RPGMakerMVDatabase) -> RPGMakerMVCatalog:
         assets = []
         if layout.img is not None:
             for path in sorted(layout.img.glob("**/*.png")):

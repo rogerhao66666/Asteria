@@ -1,7 +1,9 @@
 """Whole-scene backend capability preflight before resource allocation."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
+
 from .backend_capabilities import BackendCapabilities, CapabilityIssue, CapabilityValidatorRegistry
 from .runtime_adapter_registry import RuntimeAdapterRegistry
 from .scene_binding import ResolvedSceneAsset
@@ -65,7 +67,10 @@ class BackendPreflight:
                 continue
             fallback = None
             if fallback_selector is not None:
-                fallback = lambda req, caps, iss, r=resolved: fallback_selector(r, req, caps, iss)
+
+                def fallback(req, caps, iss, r=resolved):
+                    return fallback_selector(r, req, caps, iss)
+
             try:
                 result = self.validators.validate(request, self.caps, fallback=fallback)
             except Exception as e:

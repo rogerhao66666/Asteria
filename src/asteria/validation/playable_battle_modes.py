@@ -13,9 +13,9 @@ from asteria.gameplay import (
     EffectOperationKind,
     GameplaySubject,
     ResourcePool,
+    StatBlock,
     StateRegistry,
     StateRuntime,
-    StatBlock,
     TagSet,
     TargetingRule,
 )

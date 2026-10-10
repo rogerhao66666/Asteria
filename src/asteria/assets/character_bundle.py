@@ -12,9 +12,8 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageColor, ImageOps
 
 from .canonical import AssetSource, CanonicalAsset
-from .character_generator import CharacterRecipe, LAYER_ORDER
+from .character_generator import LAYER_ORDER, CharacterRecipe
 from .rpg_maker_mv_generator import MVGeneratorPart, MVGeneratorRepresentation, RPGMakerMVGeneratorCatalog
-
 
 _REPRESENTATIONS = ("walking", "face", "damaged", "side_view")
 _CANVASES = {"walking": (144, 192), "face": (144, 144), "damaged": (144, 48), "side_view": (576, 384)}

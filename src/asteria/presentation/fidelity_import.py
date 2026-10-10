@@ -1,9 +1,11 @@
 """Loss-aware source-to-canonical fidelity contract."""
 
 from __future__ import annotations
+
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Mapping
-from .fidelity import HighFidelityClip, FrameTiming, VisualLayer
+
+from .fidelity import FrameTiming, HighFidelityClip, VisualLayer
 
 
 @dataclass(frozen=True, slots=True)

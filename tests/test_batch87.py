@@ -1,8 +1,13 @@
 import pytest
-from asteria.presentation.attachments import *
-from asteria.presentation.attachment_runtime import AttachmentRuntime
+
 from asteria.presentation.actor_attachment import ActorAnimationPose
-from asteria.presentation.project_integration import *
+from asteria.presentation.attachment_runtime import AttachmentRuntime
+from asteria.presentation.attachments import Attachment, Socket, SocketRig
+from asteria.presentation.project_integration import (
+    ProjectActorRecord,
+    ProjectPresentationIntegrator,
+    ProjectPresentationRecord,
+)
 from asteria.presentation.render_integration import RenderTransform
 
 

@@ -14,7 +14,6 @@ from asteria.runtime import SpriteRenderer2D, TileMap2DComponent
 from .local_reference import RPGMakerMVProjectLayout
 from .rpg_maker_mv_catalog import RPGMakerMVCatalog
 
-
 _MV_ID_NAMESPACE = UUID("adabcfcb-dd74-4dc5-870b-55dd5efb7184")
 
 
@@ -72,7 +71,7 @@ class RPGMakerMVMap:
     events: tuple[MVMapEvent, ...]
 
     @classmethod
-    def load(cls, path: Path, *, map_id: int, name: str = "") -> "RPGMakerMVMap":
+    def load(cls, path: Path, *, map_id: int, name: str = "") -> RPGMakerMVMap:
         source = Path(path)
         try:
             raw = json.loads(source.read_text(encoding="utf-8-sig"))

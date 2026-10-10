@@ -1,6 +1,20 @@
 import json
 from pathlib import Path
-from asteria.assets import *
+
+from asteria.assets import (
+    AssetCodecRegistry,
+    AssetRegistry,
+    AssetSource,
+    AssetStore,
+    CanonicalAsset,
+    IconAsset,
+    ValidationIssue,
+    ValidationReport,
+    install_common_passthrough_codecs,
+    install_complex_typed_codecs,
+    install_simple_typed_codecs,
+    passthrough_codec,
+)
 
 
 def C():
@@ -103,14 +117,20 @@ def test_conflict_atomic(tmp_path):
 
 def test_warning(tmp_path):
     W(tmp_path, "a")
-    v = lambda a: ValidationReport(a.canonical.asset_id, (ValidationIssue("w", "review", "warning"),))
+
+    def v(a):
+        return ValidationReport(a.canonical.asset_id, (ValidationIssue("w", "review", "warning"),))
+
     r = AssetStore(C(), validators={"audio": v}).load(tmp_path)
     assert r.ok and r.issues[0].severity == "warning"
 
 
 def test_error_atomic(tmp_path):
     W(tmp_path, "a")
-    v = lambda a: ValidationReport(a.canonical.asset_id, (ValidationIssue("e", "bad"),))
+
+    def v(a):
+        return ValidationReport(a.canonical.asset_id, (ValidationIssue("e", "bad"),))
+
     s = AssetStore(C(), validators={"audio": v})
     assert not s.load(tmp_path).ok and not s.registry.snapshot()
 

@@ -1,8 +1,9 @@
 import pytest
-from asteria.presentation.render_integration import *
+
 from asteria.presentation.actor_attachment import ActorAnimationPose, ActorAttachmentBinding
-from asteria.presentation.attachments import Socket, SocketRig, Attachment, Transform2D
 from asteria.presentation.attachment_runtime import AttachmentRuntime
+from asteria.presentation.attachments import Attachment, Socket, SocketRig, Transform2D
+from asteria.presentation.render_integration import PresentationRenderComposer, RenderTransform, Vibration
 
 
 class A:

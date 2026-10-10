@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from .field_game_flow_authoring import FieldGameFlowInformationArchitecture
 
 

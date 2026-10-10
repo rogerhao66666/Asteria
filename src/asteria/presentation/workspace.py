@@ -3,8 +3,10 @@ Qt/PySide6 is a view/controller only; canonical Sequence remains authoritative.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
-from .canonical import Kind, Node, Command
+
+from .canonical import Command, Kind, Node
 from .editor_model import PresentationEditorModel
 
 

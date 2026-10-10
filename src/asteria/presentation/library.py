@@ -27,12 +27,12 @@ from .battle_sideview_template import BattleSideviewTemplateProfile, BattleSidev
 from .battle_ui import BattleUiLayoutProfile
 from .battle_ui_polish import BattleUiPolishProfile
 from .battle_ui_renderer import BattleUiTheme
+from .rpg_ability_screen import AbilityScreenProfile
 from .rpg_character_screen import CharacterScreenProfile
 from .rpg_equipment_screen import EquipmentScreenProfile
-from .rpg_ability_screen import AbilityScreenProfile
-from .rpg_progression_screen import ProgressionScreenProfile
 from .rpg_inventory_screen import InventoryScreenProfile
 from .rpg_party_screen import PartyScreenProfile
+from .rpg_progression_screen import ProgressionScreenProfile
 
 
 @dataclass(frozen=True, slots=True)

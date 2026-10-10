@@ -1,8 +1,9 @@
 import pytest
+
 from asteria.editor.attachment_authoring import AttachmentAuthoringModel
 from asteria.editor.attachment_preview import AttachmentPreviewController
 from asteria.presentation.animation_attachment import AnimationClock
-from asteria.presentation.attachments import Socket, Attachment, Transform2D
+from asteria.presentation.attachments import Attachment, Socket, Transform2D
 
 
 def setup(loop=True):

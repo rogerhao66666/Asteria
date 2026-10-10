@@ -1,10 +1,10 @@
 """Typed codecs for simple canonical asset families."""
 
-from .codecs import AssetCodec, AssetDocument
-from .icon import *
-from .portrait import *
-from .prop import *
-from .resources import *
+from .codecs import AssetCodec
+from .icon import AtlasRegion, IconAsset, IconVariant
+from .portrait import NormalizedRect, PortraitAsset, PortraitVariant
+from .prop import CollisionShape, InteractionPoint, PropAsset, PropVisual
+from .resources import AudioAsset, FontAsset, MaterialAsset
 
 
 def _canon(doc):

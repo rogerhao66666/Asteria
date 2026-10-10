@@ -13,8 +13,8 @@ from asteria.runtime import (
     AnimationStateMachineDefinition,
     AnimationSystem,
     AnimationTransition,
-    AnimatorState,
     Animator2DComponent,
+    AnimatorState,
     SpriteRenderer2D,
 )
 

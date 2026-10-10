@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
 from math import isfinite
-from typing import Iterable
 
 from asteria.core.lifecycle import LifecycleEvent, LifecycleHookBus
 from asteria.gameplay.action_timeline import PresentationCue

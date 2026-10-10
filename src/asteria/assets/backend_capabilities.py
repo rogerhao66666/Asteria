@@ -1,7 +1,8 @@
 """Backend capability validation. Never silently degrades high-fidelity requests."""
 
-from dataclasses import dataclass, replace
-from typing import Any, Callable
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
@@ -163,7 +164,7 @@ def audio_validator(q, caps):
 
 
 def install_builtin_capability_validators(r):
-    from .runtime_adapters import ImageRequest, ClipRequest, VFXRequest, MaterialRequest, AudioRequest
+    from .runtime_adapters import AudioRequest, ClipRequest, ImageRequest, MaterialRequest, VFXRequest
 
     for t, fn in (
         (ImageRequest, image_validator),

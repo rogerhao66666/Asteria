@@ -1,9 +1,12 @@
 from __future__ import annotations
-from dataclasses import dataclass, asdict
-from pathlib import Path
-from typing import Mapping, Sequence
+
 import json
+from collections.abc import Mapping, Sequence
+from dataclasses import asdict, dataclass
+from pathlib import Path
+
 from PIL import Image
+
 from .character_generator import DIRECTIONS, LAYER_ORDER, CharacterPart
 
 

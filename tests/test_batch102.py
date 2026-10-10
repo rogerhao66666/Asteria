@@ -101,7 +101,9 @@ def test_multi_visual_skill_is_composable_as_multiple_action_phases():
 
 
 def test_binding_contains_no_jrpg_or_arpg_branch():
-    import inspect, asteria.presentation.action_binding as mod
+    import inspect
+
+    import asteria.presentation.action_binding as mod
 
     src = inspect.getsource(mod).lower()
     assert "if jrpg" not in src and "if arpg" not in src

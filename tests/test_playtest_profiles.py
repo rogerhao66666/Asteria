@@ -1,7 +1,10 @@
-from pathlib import Path
 import json
+from pathlib import Path
 
 from asteria.core import ComponentRegistry, Transform
+from asteria.editor.model import EditorDocument
+from asteria.editor.playmode import create_play_session
+from asteria.editor.playtest_profiles import PlaytestProfileLibrary
 from asteria.gameplay import GameplayAttributesComponent
 from asteria.project import Project
 from asteria.runtime.components2d import (
@@ -11,10 +14,6 @@ from asteria.runtime.components2d import (
     SpriteRenderer2D,
     TileMap2DComponent,
 )
-from asteria.editor.playtest_profiles import PlaytestProfileLibrary
-from asteria.editor.model import EditorDocument
-from asteria.editor.playmode import create_play_session
-
 
 REF = Path(__file__).parents[1] / "reference_projects/complex_reference_rpg"
 

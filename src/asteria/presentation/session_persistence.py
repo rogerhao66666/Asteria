@@ -1,11 +1,13 @@
 """Integrated save/close/reload seam for the headless presentation pipeline."""
 
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Callable, Mapping
+
 import json
-from .e2e_pipeline import SceneActorBinding, PresentationE2EPipeline
-from .presentation_state import capture_state, restore_state, PresentationStateCodec
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
+
+from .e2e_pipeline import PresentationE2EPipeline, SceneActorBinding
+from .presentation_state import PresentationStateCodec, capture_state, restore_state
 from .render_integration import RenderTransform
 
 SESSION_SCHEMA_VERSION = 1

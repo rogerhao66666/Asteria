@@ -5,8 +5,11 @@ provide the small RendererBackend protocol (ModernGL/Pygame/etc.).
 """
 
 from __future__ import annotations
+
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Protocol, Sequence
+from typing import Any, Protocol
+
 from .render_integration import DrawPacket
 from .text_render_integration import TextRenderPacket
 

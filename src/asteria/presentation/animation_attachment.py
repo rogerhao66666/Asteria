@@ -6,8 +6,8 @@ project-defined presentation data.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Iterable
 
 from .attachment_runtime import AttachmentRuntime, ResolvedAttachment
 
@@ -35,7 +35,7 @@ class AnimationClock:
             raise ValueError("animation clock requires at least one frame")
 
     @classmethod
-    def uniform(cls, frame_count: int, fps: float, *, loop: bool = True) -> "AnimationClock":
+    def uniform(cls, frame_count: int, fps: float, *, loop: bool = True) -> AnimationClock:
         if frame_count <= 0:
             raise ValueError("frame_count must be > 0")
         if fps <= 0:
@@ -47,7 +47,7 @@ class AnimationClock:
     def duration_ms(self) -> float:
         return sum(f.duration_ms for f in self.frames)
 
-    def sample(self, time_ms: float) -> "AnimationSample":
+    def sample(self, time_ms: float) -> AnimationSample:
         if time_ms < 0:
             raise ValueError("animation time must be >= 0")
         total = self.duration_ms

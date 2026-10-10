@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -85,8 +86,8 @@ class Command:
 class Node:
     id: str
     kind: Kind
-    children: tuple["Node", ...] = ()
-    else_children: tuple["Node", ...] = ()
+    children: tuple[Node, ...] = ()
+    else_children: tuple[Node, ...] = ()
     command: Command | None = None
     duration_ms: float = 0
     event_name: str | None = None

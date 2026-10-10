@@ -1,8 +1,10 @@
 """Headless Asset Browser workspace/controller and extension seams."""
 
+from collections.abc import Callable
 from dataclasses import dataclass, replace
-from typing import Any, Callable
-from .browser import AssetBrowserModel, AssetBrowserQuery, AssetBrowserItem, AssetInspector
+from typing import Any
+
+from .browser import AssetBrowserModel, AssetBrowserQuery, AssetInspector
 
 
 @dataclass(frozen=True, slots=True)

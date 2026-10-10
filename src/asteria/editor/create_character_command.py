@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import os
 import tempfile
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Callable
 from uuid import NAMESPACE_URL, uuid5
 
 from asteria.assets.character_bundle import GeneratedCharacterBundle

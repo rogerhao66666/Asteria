@@ -1,4 +1,5 @@
 import pytest
+
 from asteria.core import Entity, Scene, Transform
 from asteria.editor import EditorDocument
 from asteria.editor.field_game_flow_authoring import FieldGameFlowAuthoringController, FieldGameFlowAuthoringError

@@ -1,4 +1,5 @@
 import random
+
 import pytest
 
 from asteria.gameplay import (
@@ -10,12 +11,10 @@ from asteria.gameplay import (
     GameplaySubject,
     PeriodicEffect,
     ResourcePool,
-    StackingPolicy,
     StatBlock,
     StateDefinition,
     StateRegistry,
     StateRuntime,
-    StatModifier,
     TagSet,
     TargetingRule,
 )

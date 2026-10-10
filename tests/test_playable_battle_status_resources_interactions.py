@@ -1,4 +1,3 @@
-from asteria.rpg import BattleAction
 from asteria.validation import PlayableBattleMechanicsHarness, build_playable_mechanics_scenario
 
 

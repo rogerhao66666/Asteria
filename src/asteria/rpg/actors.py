@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from math import isfinite
 
 from asteria.gameplay import ModifierSet, ResourcePool, StatBlock, TagSet
+
 from .ability_build import AbilityGrant, AbilityResolution, ActorAbilityState
 
 
@@ -1176,7 +1177,8 @@ class RpgDatabase:
             store = {"defeated": self.enemies, "reputation": self.factions, "quest": self.quests}.get(achievement.kind)
             if store is not None and achievement.target not in store:
                 errors.append(
-                    f"achievement {achievement.achievement_id} references unknown {achievement.kind} target {achievement.target}"
+                    f"achievement {achievement.achievement_id} references unknown "
+                    f"{achievement.kind} target {achievement.target}"
                 )
         for shop in self.shops.values():
             for entry in shop.entries:

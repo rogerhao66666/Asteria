@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import copy
-import random
+from dataclasses import dataclass
 
 from asteria.gameplay import (
     GameplaySubject,
     ResourcePool,
+    StatBlock,
     StateDefinition,
     StateRegistry,
     StateRuntime,
-    StatBlock,
     TagSet,
 )
 
@@ -154,9 +153,9 @@ def restore_battle_snapshot(battle, snapshot):
             battle.parties[replacement.side].members.append(replacement)
         battle.members[member_id] = replacement
     battle.targeting.members = dict(battle.members)
+    from .battle import TurnQueue
     from .battle_lifecycle import CombatantLifecycleRuntime
     from .battle_scheduler import BattleScheduler
-    from .battle import TurnQueue
     from .battle_timing import BattleActionTimingRuntime
 
     battle.combatants = CombatantLifecycleRuntime.from_data(data["combatants"], hooks=battle.hooks)

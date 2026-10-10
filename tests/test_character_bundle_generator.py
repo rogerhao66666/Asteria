@@ -4,8 +4,8 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from asteria.assets.character_generator import CharacterRecipe
 from asteria.assets.character_bundle import CharacterBundleGenerator
+from asteria.assets.character_generator import CharacterRecipe
 from asteria.assets.local_reference import resolve_rpg_maker_mv_root
 from asteria.assets.rpg_maker_mv_generator import (
     MVGeneratorPart,

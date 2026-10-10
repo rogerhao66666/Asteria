@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 from bisect import bisect_right
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)

@@ -6,11 +6,12 @@ asset. Commands operate on stable attachment IDs and generic asset/socket IDs.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Any
 
-from .attachments import Attachment, GripTransform, Transform2D
 from .attachment_runtime import AttachmentRuntime
+from .attachments import Attachment, GripTransform, Transform2D
 from .bridge import ExecutorSignal
 from .canonical import Command
 

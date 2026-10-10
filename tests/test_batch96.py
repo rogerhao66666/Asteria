@@ -1,5 +1,6 @@
 import pytest
-from asteria.presentation.fidelity_import import *
+
+from asteria.presentation.fidelity_import import FidelityImporter, FidelitySource, SourceFrame, SourceLayer
 
 
 def test_import_preserves_resolution_alpha_timing_layers_and_metadata():

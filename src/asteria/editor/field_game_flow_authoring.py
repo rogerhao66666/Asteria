@@ -1,8 +1,10 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 from asteria.events import EventBinding, EventProgram, EventTriggerKind
 from asteria.runtime.components2d import Interaction2DComponent
+
 from .editing import build_set_component_field_command
 from .event_editing import (
     AddEventBindingCommand,

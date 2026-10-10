@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from .rpg_battle_rules_authoring import BattleRulesInformationArchitecture
 
 

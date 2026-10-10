@@ -1,8 +1,9 @@
 from dataclasses import dataclass
-from .fidelity import HighFidelityClip, FrameTiming, VisualLayer
-from .choreography import TrackEvent, ChoreographyTimeline
-from .performance import BoundedDispatcher, diagnose
+
+from .choreography import ChoreographyTimeline, TrackEvent
+from .fidelity import FrameTiming, HighFidelityClip, VisualLayer
 from .fidelity_editor import HighFidelityEditorModel
+from .performance import BoundedDispatcher, diagnose
 
 
 @dataclass(frozen=True, slots=True)

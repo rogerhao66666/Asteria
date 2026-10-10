@@ -5,9 +5,12 @@ from types import SimpleNamespace
 
 from asteria.assets.character_visual import CharacterVisualSet
 
+from .authoring_hub_widget import FamilyHostWidget
 from .clipboard import build_duplicate_entity_command, build_paste_entity_command
 from .code_workspace import CodeWorkspaceWidget
+from .commands import CommandTransaction, SetAttributeCommand
 from .component_picker import build_component_choices
+from .create_character_command import CreateCharacterCommand
 from .editing import EditError, build_set_component_field_command
 from .event_editing import (
     AddEventBindingCommand,
@@ -22,9 +25,14 @@ from .event_editing import (
     replace_binding_fields,
 )
 from .event_editor_widget import EventEditorWidget
+from .game_flow_overview_widget import GameFlowOverviewWidget
+from .hierarchy import build_reorder_entity_command
 from .inspector import build_inspector_fields
+from .integrated_authoring import IntegratedAuthoringControllers
 from .model import EditorDocument
 from .playmode import PlayModeError, create_play_session
+from .playtest_profiles import PlaytestProfileLibrary
+from .project_workspace import ProjectWorkspaceController
 from .runtime_launcher import RuntimeLaunchError, launch_play_session
 from .scenes import (
     SceneEditError,
@@ -33,8 +41,6 @@ from .scenes import (
     build_reorder_scene_command,
 )
 from .storage import EditorStorageError, load_document, save_document
-from .hierarchy import build_reorder_entity_command
-from .commands import CommandTransaction, SetAttributeCommand
 from .structure import (
     StructureEditError,
     build_add_component_command,
@@ -44,12 +50,6 @@ from .structure import (
     build_rename_command,
 )
 from .workspace import EditorWorkspace, WorkspaceMode
-from .integrated_authoring import IntegratedAuthoringControllers
-from .authoring_hub_widget import FamilyHostWidget
-from .game_flow_overview_widget import GameFlowOverviewWidget
-from .project_workspace import ProjectWorkspaceController
-from .create_character_command import CreateCharacterCommand
-from .playtest_profiles import PlaytestProfileLibrary
 
 try:
     from PySide6.QtCore import Qt, QTimer
@@ -59,8 +59,6 @@ try:
         QDockWidget,
         QFileDialog,
         QInputDialog,
-        QComboBox,
-        QLabel,
         QListWidget,
         QListWidgetItem,
         QMainWindow,
@@ -79,7 +77,6 @@ except ImportError:
 
 from asteria.authoring import run_authoring_script
 from asteria.core.ids import new_id
-from asteria.runtime.world_command_handlers import WORLD_COMMAND_ARGUMENTS
 from asteria.events import (
     EventBinding,
     EventCondition,
@@ -89,6 +86,7 @@ from asteria.events import (
     EventTriggerKind,
 )
 from asteria.graphics import TileLayer
+from asteria.runtime.world_command_handlers import WORLD_COMMAND_ARGUMENTS
 
 from .animation_widget import AnimationWidget
 from .authoring_context import animation_context, scene_authoring_source
@@ -141,8 +139,10 @@ class AsteriaEditorWindow(QMainWindow):
 
         self.rpg_authoring = FamilyHostWidget("RPG Authoring", self.authoring_controllers.rpg_categories, self)
         from pathlib import Path
+
         from asteria.assets.character_generator import CharacterGeneratorCatalog
         from asteria.assets.local_reference import resolve_rpg_maker_mv_root
+
         from .character_generator_widget import CharacterGeneratorWidget
         from .character_generator_workspace import CharacterGeneratorWorkspace
 

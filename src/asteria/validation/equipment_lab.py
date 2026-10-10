@@ -6,14 +6,10 @@ from asteria.gameplay import ModifierOperation, StatModifier
 from asteria.rpg import (
     AttachmentDefinition,
     EquipmentDefinition,
-    EquipmentGrowthDefinition,
-    EquipmentGrowthNodeDefinition,
-    EquipmentGrowthReward,
     EquipmentGrowthRuntime,
     EquipmentLoadout,
     EquipmentSlotDefinition,
     EquippedItem,
-    SocketDefinition,
 )
 
 from .playable_rpg import ReferenceActorScenario, build_reference_actor_scenario

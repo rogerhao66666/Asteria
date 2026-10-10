@@ -2,8 +2,7 @@
 Defaults are presets, never hard engine limits.
 """
 
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)

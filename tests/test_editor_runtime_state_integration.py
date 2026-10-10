@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 
 from asteria.core import Entity, Scene, Transform
@@ -51,7 +49,7 @@ def test_save_file_roundtrip(tmp_path):
 
 def test_load_rejects_save_for_another_project(tmp_path):
     p, s, player, d, c = make(tmp_path)
-    save = c.new_save(scene_id=s.id, player_entity_id=player.id)
+    c.new_save(scene_id=s.id, player_entity_id=player.id)
     path = tmp_path / "slot.save.json"
     c.save(path)
     p2 = Project("Other")

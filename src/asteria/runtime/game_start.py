@@ -1,7 +1,10 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from asteria.events import EventContext
 from asteria.rpg import ProgressionRuntime, RpgRuntimeState
+
 from .game_save import GameRuntimeSave
 
 

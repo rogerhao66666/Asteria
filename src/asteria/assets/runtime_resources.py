@@ -1,10 +1,12 @@
 """Transactional ownership for resources created while staging a runtime scene."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
+
 from .project_load import ProjectLoadReport
+from .runtime_scene import RuntimeMaterializationIssue, RuntimeSceneTarget
 from .scene_binding import RuntimeBindingRegistry
-from .runtime_scene import RuntimeSceneTarget, RuntimeMaterializationIssue, RuntimeMaterializationReport
 
 Dispose = Callable[[], None]
 

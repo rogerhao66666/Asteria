@@ -74,7 +74,6 @@ def test_next_round_turn_queue_can_pick_incoming_and_skips_reserves():
     h = PlayableBattlePartyHarness()
     h.swap("party_00", "party_11")
     h.battle.start_next_round()
-    pending_ids = tuple(x.member_id for x in h.battle.turn_queue.pending())
     # Queue source still contains the complete party by design; next_actor filters inactive reserves.
     seen = []
     for _ in range(20):

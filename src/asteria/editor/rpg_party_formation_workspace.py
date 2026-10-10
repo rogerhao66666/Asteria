@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from .rpg_party_formation_authoring import PartyFormationInformationArchitecture
 
 

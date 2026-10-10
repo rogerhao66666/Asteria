@@ -1,8 +1,25 @@
 import pytest
-from asteria.presentation.attachments import *
-from asteria.presentation.attachment_runtime import *
-from asteria.presentation.property_animation import *
-from asteria.presentation.presentation_state import *
+
+from asteria.presentation.attachments import Socket, SocketKey
+from asteria.presentation.presentation_state import (
+    Attachment,
+    AttachmentRecord,
+    AttachmentRuntime,
+    AttachmentState,
+    Ease,
+    Envelope,
+    Modulation,
+    Oscillator,
+    PresentationState,
+    PresentationStateCodec,
+    PropertyAnimator,
+    PropertyCurve,
+    PropertyKey,
+    SocketRig,
+    Transform2D,
+    capture_state,
+    restore_state,
+)
 
 
 def fixture():

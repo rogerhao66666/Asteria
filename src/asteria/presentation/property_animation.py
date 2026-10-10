@@ -6,10 +6,11 @@ layered and sampled independently of sprite-frame rate.
 """
 
 from __future__ import annotations
+
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 from math import cos, pi, sin, tau
-from typing import Callable, Mapping
 
 
 class Ease(str, Enum):

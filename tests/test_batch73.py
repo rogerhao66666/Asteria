@@ -1,7 +1,8 @@
 import pytest
-from asteria.presentation.attachments import Socket, SocketRig, Transform2D
-from asteria.presentation.attachment_runtime import AttachmentRuntime, AttachmentState
+
 from asteria.presentation.attachment_commands import AttachmentCommandExecutor
+from asteria.presentation.attachment_runtime import AttachmentRuntime, AttachmentState
+from asteria.presentation.attachments import Socket, SocketRig
 from asteria.presentation.bridge import ExecutorRegistry, PresentationRunner
 from asteria.presentation.canonical import Command, Kind, Node, Sequence
 from asteria.presentation.runtime import Runtime

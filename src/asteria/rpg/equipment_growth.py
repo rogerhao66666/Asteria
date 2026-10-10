@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from asteria.core.lifecycle import emit_hook
 from asteria.gameplay import GameplayTrigger, StatModifier

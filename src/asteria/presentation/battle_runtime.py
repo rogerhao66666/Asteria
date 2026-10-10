@@ -7,14 +7,13 @@ from math import isfinite
 from asteria.gameplay.action_timeline import ActionCueKind
 from asteria.runtime import AnimatorState, TextureDraw
 
-from .battle_animation_timing import BattleAnimationTimingProfile, easing_value
-
 from .battle import (
     BattleCombatantVisual,
     BattlePresentationEvent,
     BattlePresentationEventKind,
     BattlePresentationScene,
 )
+from .battle_animation_timing import BattleAnimationTimingProfile, easing_value
 
 
 class BattleAnimationRole(str, Enum):

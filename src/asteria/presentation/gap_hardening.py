@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from typing import Any
+
 from .choreography import TrackEvent
 from .performance import BoundedDispatcher
 

@@ -5,9 +5,11 @@ shield, hat, wing, prop, VFX, UI marker, or any other visual resource.
 """
 
 from __future__ import annotations
-from dataclasses import dataclass, field, asdict
-from typing import Any, Iterable
+
 import bisect
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass, field
+from typing import Any
 
 
 def _lerp(a: float, b: float, t: float) -> float:
@@ -34,7 +36,7 @@ class Transform2D:
             raise ValueError("opacity must be within [0, 1]")
 
     @staticmethod
-    def interpolate(a: "Transform2D", b: "Transform2D", t: float) -> "Transform2D":
+    def interpolate(a: Transform2D, b: Transform2D, t: float) -> Transform2D:
         t = min(1.0, max(0.0, float(t)))
         # Discrete properties switch at the destination key rather than creating
         # impossible half-visible/half-flipped states.
@@ -185,7 +187,7 @@ class SocketRig:
         return {"version": 1, "sockets": [asdict(s) for s in self.sockets.values()]}
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "SocketRig":
+    def from_dict(cls, data: dict[str, Any]) -> SocketRig:
         rig = cls()
         for raw in data.get("sockets", []):
             keys = tuple(

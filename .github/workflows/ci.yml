@@ -34,8 +34,12 @@ jobs:
       - name: Compile
         run: python -m compileall -q src tests scripts
 
-      - name: Lint (correctness rules)
-        run: ruff check src tests scripts --select E9,F63,F7,F82,F601,PLE0605
+      # Rule set, line length and formatter options live in pyproject.toml.
+      - name: Lint
+        run: ruff check src tests scripts
+
+      - name: Format check
+        run: ruff format --check src tests scripts
 
       # Tests marked mv_reference skip automatically: the RPG Maker MV
       # reference is git-ignored and only exists on developer machines.

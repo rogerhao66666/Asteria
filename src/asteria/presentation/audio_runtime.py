@@ -1,8 +1,10 @@
 """Generic audio synchronization runtime for Presentation timelines."""
 
 from __future__ import annotations
-from dataclasses import dataclass, replace
-from typing import Mapping, Any, Protocol
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any, Protocol
 
 
 @dataclass(frozen=True, slots=True)

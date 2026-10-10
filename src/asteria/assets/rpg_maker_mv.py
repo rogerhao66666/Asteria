@@ -15,7 +15,6 @@ from PIL import Image, UnidentifiedImageError
 
 from .canonical import AssetSource, CanonicalAsset
 
-
 _LAYOUTS = {
     "faces": "faces_4x2",
     "sv_actors": "sv_actor_9x6",

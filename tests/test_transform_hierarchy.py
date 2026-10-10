@@ -99,6 +99,7 @@ def test_interaction_distance_uses_world_position():
 def test_editor_tree_nests_children_under_their_parent():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
+
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.project import Project
 

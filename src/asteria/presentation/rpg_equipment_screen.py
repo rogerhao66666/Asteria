@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from asteria.rpg.items import EquipmentDefinition, EquipmentLoadout, EquippedItem
+from asteria.rpg.items import EquipmentDefinition, EquipmentLoadout
 
 
 @dataclass(frozen=True, slots=True)

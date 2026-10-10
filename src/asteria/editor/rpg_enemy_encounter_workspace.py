@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from .rpg_enemy_encounter_authoring import EnemyEncounterInformationArchitecture
 
 

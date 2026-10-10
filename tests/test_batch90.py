@@ -1,6 +1,15 @@
 import pytest
-from asteria.presentation.property_animation import *
-from asteria.presentation.channel_backend import *
+
+from asteria.presentation.channel_backend import PresentationChannelExecutor
+from asteria.presentation.property_animation import (
+    Envelope,
+    Modulation,
+    Oscillator,
+    PropertyAnimator,
+    PropertyCurve,
+    PropertyKey,
+    split_channels,
+)
 
 
 class S:

@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
 from pathlib import Path
 
 from PIL import Image
 
 from asteria.assets.character_bundle import CharacterBundleGenerator
 from asteria.assets.character_generator import (
+    LAYER_ORDER,
     CharacterGenerator,
     CharacterGeneratorCatalog,
     CharacterRecipe,
-    LAYER_ORDER,
 )
 from asteria.assets.rpg_maker_mv_generator import RPGMakerMVGeneratorCatalog
 
@@ -99,7 +99,7 @@ class CharacterGeneratorWorkspace:
         if gender:
             choices = tuple(part for part in choices if getattr(part, "gender", "").casefold() == gender.casefold())
         elif self.is_mv and self.recipe.body_family:
-            body = self._part(self.recipe.parts["body"])
+            self._part(self.recipe.parts["body"])  # raises when the selected body part is unknown
             choices = tuple(part for part in choices if part.gender == self.recipe.body_family)
         return choices
 
@@ -111,7 +111,7 @@ class CharacterGeneratorWorkspace:
         if part.category != category:
             raise ValueError("category mismatch")
         if self.is_mv and self.recipe.body_family:
-            body = self._part(self.recipe.parts["body"])
+            self._part(self.recipe.parts["body"])  # raises when the selected body part is unknown
             if part.gender != self.recipe.body_family:
                 raise ValueError("part is incompatible with selected body family")
         self.recipe.parts[category] = part_id

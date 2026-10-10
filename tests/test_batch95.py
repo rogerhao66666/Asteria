@@ -1,7 +1,8 @@
 import pytest
-from asteria.presentation.property_animation import *
-from asteria.presentation.production_preview import *
+
 from asteria.presentation.audio_runtime import AudioCue, AudioRuntime
+from asteria.presentation.production_preview import ProductionPreviewSession, PropertyAnimator
+from asteria.presentation.property_animation import PropertyCurve, PropertyKey
 
 
 def session():

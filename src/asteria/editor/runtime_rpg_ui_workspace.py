@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from .runtime_rpg_ui_authoring import RuntimeRpgUiInformationArchitecture
 
 

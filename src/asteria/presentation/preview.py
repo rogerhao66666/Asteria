@@ -1,11 +1,13 @@
 """Non-destructive live Presentation preview session."""
 
 from __future__ import annotations
-from dataclasses import dataclass, field
+
 from copy import deepcopy
+from dataclasses import dataclass
+
+from .bridge import ExecutorRegistry, ExecutorSignal, ImmediateExecutor, PresentationRunner
 from .canonical import Context
 from .runtime import Runtime, RuntimeEvent
-from .bridge import ExecutorRegistry, PresentationRunner, ImmediateExecutor, TimedExecutor, ExecutorSignal
 
 
 @dataclass(frozen=True, slots=True)

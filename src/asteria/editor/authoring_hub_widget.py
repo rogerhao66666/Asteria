@@ -3,23 +3,23 @@ from __future__ import annotations
 from copy import deepcopy
 
 try:
-    from PySide6.QtCore import Signal, Qt
+    from PySide6.QtCore import Qt, Signal
     from PySide6.QtWidgets import (
         QComboBox,
+        QGraphicsRectItem,
+        QGraphicsScene,
+        QGraphicsTextItem,
+        QGraphicsView,
         QHBoxLayout,
         QLabel,
         QListWidget,
         QPushButton,
         QSplitter,
+        QStackedWidget,
         QTreeWidget,
         QTreeWidgetItem,
         QVBoxLayout,
         QWidget,
-        QGraphicsView,
-        QGraphicsScene,
-        QGraphicsRectItem,
-        QGraphicsTextItem,
-        QStackedWidget,
     )
 
     QT_AVAILABLE = True

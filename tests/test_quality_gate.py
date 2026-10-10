@@ -1,4 +1,5 @@
 import json
+
 from asteria.assets.quality_gate import PackQualityGate
 
 

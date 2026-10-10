@@ -1,9 +1,11 @@
 import math
+
 import pytest
-from asteria.presentation.attachments import Attachment, GripTransform, Socket, SocketRig, Transform2D
-from asteria.presentation.attachment_runtime import AttachmentRuntime
+
 from asteria.presentation.actor_attachment import ActorAnimationPose, ActorAttachmentBinding
 from asteria.presentation.actor_visual_layers import ActorVisualLayerTrack, FrameVisualLayer
+from asteria.presentation.attachment_runtime import AttachmentRuntime
+from asteria.presentation.attachments import Attachment, GripTransform, Socket, SocketRig, Transform2D
 
 
 def grip_world(t, g):

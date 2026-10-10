@@ -4,10 +4,10 @@ import pytest
 
 pygame = pytest.importorskip("pygame")
 
+from test_session_events import _session  # noqa: E402
+
 from asteria.rpg import QuestDefinition, QuestObjective, ShopDefinition, ShopEntry  # noqa: E402
 from asteria.runtime.game_menus import MenuCursor, ShopScreen, quest_rows  # noqa: E402
-from test_playable_battle_loop import resource_root, runtime  # noqa: E402,F401
-from test_session_events import _session  # noqa: E402
 
 
 def _add_content(project):

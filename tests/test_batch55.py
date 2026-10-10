@@ -1,5 +1,19 @@
 import json
-from asteria.assets import *
+
+from asteria.assets import (
+    AssetRegistry,
+    AssetSource,
+    CanonicalAsset,
+    RuntimeBindingRegistry,
+    SceneAssetBinding,
+    SceneAssetRef,
+    SceneAssetResolver,
+    asset_ref_from_dict,
+    asset_ref_to_dict,
+    binding_from_dict,
+    binding_to_dict,
+    generic_runtime_binder,
+)
 
 
 def registry():

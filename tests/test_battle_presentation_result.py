@@ -79,6 +79,7 @@ def test_snapshot_restore_roundtrip():
 
 def test_requires_applied_reward_result_not_reward_definition_or_roll():
     import pytest
+
     from asteria.rpg import RewardDefinition
 
     with pytest.raises(TypeError):

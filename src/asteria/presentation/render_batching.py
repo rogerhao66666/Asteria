@@ -1,8 +1,11 @@
 """Order-safe render batching and explicit backend resource lifetime."""
 
 from __future__ import annotations
+
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Protocol, Sequence
+from typing import Any, Protocol
+
 from .render_integration import DrawPacket
 
 

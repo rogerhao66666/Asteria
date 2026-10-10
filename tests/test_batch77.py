@@ -1,6 +1,7 @@
 import pytest
+
+from asteria.editor.asset_attachment import AssetAttachmentController, AssetDragPayload, AttachmentDropRequest
 from asteria.editor.attachment_authoring import AttachmentAuthoringModel
-from asteria.editor.asset_attachment import *
 from asteria.presentation.attachments import Socket, Transform2D
 
 

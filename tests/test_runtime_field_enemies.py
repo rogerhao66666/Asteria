@@ -10,10 +10,10 @@ import pytest
 
 pygame = pytest.importorskip("pygame")
 
+
 from asteria.core import Entity, Transform  # noqa: E402
 from asteria.core.prefab import prefab_from_entity  # noqa: E402
 from asteria.runtime import FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent  # noqa: E402
-from test_playable_battle_loop import resource_root, runtime  # noqa: E402,F401
 
 
 def _install_fixture(game, *, behaviour="chase", radius=0.0, offset=(70.0, 0.0)):

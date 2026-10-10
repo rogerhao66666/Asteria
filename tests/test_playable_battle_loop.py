@@ -1,14 +1,12 @@
 """Headless smoke test of the legacy pygame battle loop driven by session rules."""
 
 import json
-import shutil
 from pathlib import Path
 
 import pytest
 
 pygame = pytest.importorskip("pygame")
 
-from PIL import Image  # noqa: E402
 
 from asteria.editor import EditorDocument  # noqa: E402
 from asteria.project import Project  # noqa: E402
@@ -26,33 +24,6 @@ def _image_paths(value):
     elif isinstance(value, list):
         for item in value:
             yield from _image_paths(item)
-
-
-@pytest.fixture
-def resource_root(tmp_path):
-    """Reference manifest plus flat-colour placeholder images (no art is bundled)."""
-    shutil.copy(ROOT / "playable_test_manifest.json", tmp_path / "playable_test_manifest.json")
-    manifest = json.loads((tmp_path / "playable_test_manifest.json").read_text(encoding="utf-8"))
-    for relative in set(_image_paths(manifest)):
-        path = tmp_path / relative
-        path.parent.mkdir(parents=True, exist_ok=True)
-        Image.new("RGBA", (512, 512), (90, 120, 200, 255)).save(path)
-    # Canonical battle presentation sheets (CC0) are real project assets; copy them as-is.
-    shutil.copytree(ROOT / "playable_assets" / "battle", tmp_path / "playable_assets" / "battle")
-    shutil.copy(ROOT / "playable_assets" / "fx_heal.png", tmp_path / "playable_assets" / "fx_heal.png")
-    return tmp_path
-
-
-@pytest.fixture
-def runtime(resource_root, monkeypatch):
-    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
-    monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
-    value = PlayableTestRuntime(project, project.game_start.instantiate(project), resource_root, width=960, height=540)
-    value.open()
-    monkeypatch.setattr(value, "_play_fx", lambda *args, **kwargs: None)
-    yield value
-    value.close()
 
 
 def test_battle_loop_gives_turns_to_scheduled_heroes_and_uses_rules(runtime):

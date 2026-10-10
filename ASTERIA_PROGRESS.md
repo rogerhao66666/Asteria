@@ -363,3 +363,18 @@ API with scripts. Field enemy AI and spawn zones run in the playable game;
 battle capture menu; recipe discovery and crafting screen; achievement,
 bestiary and settings screens. Details and per-batch reports: DECISION_LOG
 D12/D13. Verification: **1998 passed** offscreen; no real-window run.
+
+## Code style unification --- 2026-10-10
+
+`ruff` is now the single style tool (configuration in `pyproject.toml`):
+line length 120, double quotes, rules E/W (pycodestyle), F (pyflakes), I
+(imports, except package `__init__.py` whose order is load-bearing), B
+(bugbear) and UP (pyupgrade), with four documented ignores. The whole code
+base was reformatted in one mechanical commit (`.git-blame-ignore-revs`
+lists it), star imports in tests/codecs were replaced by explicit imports,
+unused imports/variables and lambda assignments were fixed, and the shared
+playable-runtime fixtures moved to `tests/conftest.py`. CI runs
+`ruff check` and `ruff format --check`. Run both locally before committing:
+
+    .venv/bin/ruff check src tests scripts
+    .venv/bin/ruff format src tests scripts

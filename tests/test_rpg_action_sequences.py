@@ -1,4 +1,5 @@
 import pytest
+
 from asteria.rpg import ActionSequenceDefinition, ActionSequenceRuntime, ActionSequenceStep, RpgDatabase
 
 

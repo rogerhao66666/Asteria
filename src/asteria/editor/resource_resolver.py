@@ -1,12 +1,13 @@
+from PIL import Image
+
+from asteria.assets.canonical import AssetRef
+from asteria.graphics import SpriteFrame, SpriteSheet
 from asteria.reference_data import (
     load_animation_set,
     load_sprite_sheet,
     load_tilemap,
     load_tileset,
 )
-from asteria.assets.canonical import AssetRef
-from asteria.graphics import SpriteFrame, SpriteSheet
-from PIL import Image
 
 
 class EditorResourceError(RuntimeError):

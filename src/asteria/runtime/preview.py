@@ -3,15 +3,12 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from asteria.core import ComponentRegistry, Transform
+from asteria.core import ComponentRegistry, PersistentComponent, Transform
+from asteria.core.prefab import PrefabInstanceComponent
 from asteria.gameplay import GameplayAttributesComponent
 from asteria.project import Project
-from asteria.core import PersistentComponent
-from asteria.core.prefab import PrefabInstanceComponent
 from asteria.runtime.actor_link import ActorLinkComponent
 from asteria.runtime.collision import Collider2DComponent
-from asteria.runtime.field_ai import FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent
-from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.components2d import (
     Animator2DComponent,
     Camera2DComponent,
@@ -19,6 +16,8 @@ from asteria.runtime.components2d import (
     SpriteRenderer2D,
     TileMap2DComponent,
 )
+from asteria.runtime.field_ai import FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent
+from asteria.runtime.game_save import GameRuntimeSave
 
 
 def build_preview_registry():

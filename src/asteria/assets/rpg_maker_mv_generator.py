@@ -7,8 +7,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from .character_generator import CharacterPart, DIRECTIONS
-
+from .character_generator import DIRECTIONS, CharacterPart
 
 _NAME = re.compile(
     r"^(?P<prefix>TV|TVD|SV|FG|icon)_(?P<category>[^_]+)_p(?P<number>[A-Za-z]*\d+)(?P<suffix>.*)$",
@@ -118,7 +117,7 @@ class RPGMakerMVGeneratorCatalog:
     source_file_count: int
 
     @classmethod
-    def discover(cls, reference_root: Path) -> "RPGMakerMVGeneratorCatalog":
+    def discover(cls, reference_root: Path) -> RPGMakerMVGeneratorCatalog:
         root = Path(reference_root).expanduser().resolve()
         roots = tuple(sorted(path.resolve() for path in root.glob("**/Generator") if path.is_dir()))
         issues = []
@@ -155,7 +154,7 @@ class RPGMakerMVGeneratorCatalog:
             digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:12]
             part_id = f"mvgen.{digest}.{source_category.lower()}.{str(number).lower()}"
 
-            def rep(name):
+            def rep(name, representations=representations):
                 value = representations.get(name)
                 if value is None:
                     return None

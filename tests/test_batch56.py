@@ -1,6 +1,20 @@
 import json
 from pathlib import Path
-from asteria.assets import *
+
+from asteria.assets import (
+    AssetCodecRegistry,
+    AssetStore,
+    ProjectLoader,
+    SceneAssetBinding,
+    SceneAssetRef,
+    ValidationIssue,
+    ValidationReport,
+    binding_to_dict,
+    install_common_passthrough_codecs,
+    install_complex_typed_codecs,
+    install_simple_typed_codecs,
+    passthrough_codec,
+)
 
 
 def C():
@@ -157,7 +171,10 @@ def test_custom_kind(tmp_path):
 
 def test_warning_asset_can_activate(tmp_path):
     asset(tmp_path)
-    v = lambda a: ValidationReport(a.canonical.asset_id, (ValidationIssue("review", "review", "warning"),))
+
+    def v(a):
+        return ValidationReport(a.canonical.asset_id, (ValidationIssue("review", "review", "warning"),))
+
     r = ProjectLoader(AssetStore(C(), validators={"audio": v})).load(tmp_path)
     assert r.ok and r.activated and r.issues[0].severity == "warning"
 

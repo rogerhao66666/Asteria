@@ -36,6 +36,7 @@ def result(check, status, evidence, **details):
 
 def check_gpu_window(out):
     import pygame
+
     from asteria.platform.moderngl_backend import ModernglRuntimeBackend
     from asteria.runtime.draw import TextureDraw
     from asteria.runtime.profiler import RuntimeProfiler
@@ -80,6 +81,7 @@ def check_gpu_window(out):
 
 def check_input(out):
     import pygame
+
     from asteria.platform.pygame_input import PygameInputSource
     from asteria.runtime.input_map import InputActionMap, InputActionTracker
 
@@ -151,7 +153,7 @@ def check_audio(out):
             "audio_latency",
             "NOT EXECUTED",
             "Output latency needs an acoustic or loopback measurement (procedure M4); "
-            f"the configured mixer buffer is not reported by pygame and is not presented as latency.",
+            "the configured mixer buffer is not reported by pygame and is not presented as latency.",
         ),
     ]
 
@@ -171,6 +173,7 @@ def _runtime(battle_presentation="canonical"):
 
 def check_battle_frame_pacing(out):
     import pygame
+
     from asteria.runtime.profiler import RuntimeProfiler
 
     runtime = _runtime()
@@ -246,6 +249,7 @@ def check_battle_frame_pacing(out):
 
 def check_editor_playtest(out):
     from PySide6.QtWidgets import QApplication
+
     from asteria.editor import EditorDocument
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.project import Project

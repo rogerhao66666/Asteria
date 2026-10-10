@@ -108,6 +108,7 @@ def test_inspector_offers_actor_sprite_and_clip_choices():
 def test_editor_places_sheet_character_copies_it_and_lists_it_with_a_thumbnail(tmp_path, monkeypatch):
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox
+
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.editor.storage import save_document
 

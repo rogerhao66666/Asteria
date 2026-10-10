@@ -36,9 +36,9 @@ from asteria.presentation.battle_combatant_visuals import (  # noqa: E402
     BattleVisualStateDefinition,
     BattleVisualTransform,
 )
+from asteria.presentation.battle_hud import BattleHudProfile, BattleHudResourceStyle  # noqa: E402
 from asteria.presentation.battle_motion_sequence import BattleMotionBeat, BattleMotionSequence  # noqa: E402
 from asteria.presentation.library import BattlePresentationLibrary  # noqa: E402
-from asteria.presentation.battle_hud import BattleHudProfile, BattleHudResourceStyle  # noqa: E402
 
 PROJECT_DIR = REPO / "reference_projects" / "complex_reference_rpg"
 OUT = PROJECT_DIR / "playable_assets" / "battle"

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from .canonical import AssetRef as CanonicalAssetRef
 
 

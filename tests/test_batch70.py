@@ -1,6 +1,8 @@
 import json
+
 import pytest
-from asteria.presentation.attachments import *
+
+from asteria.presentation.attachments import Attachment, Socket, SocketKey, SocketRig, Transform2D, validate_attachments
 
 
 def T(x=0, y=0, r=0, sx=1, sy=1, **kw):

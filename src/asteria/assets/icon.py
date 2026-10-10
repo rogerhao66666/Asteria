@@ -2,7 +2,8 @@
 
 from dataclasses import dataclass
 from typing import Any
-from .canonical import CanonicalAsset, AssetSource, ValidationIssue, ValidationReport
+
+from .canonical import AssetSource, CanonicalAsset, ValidationIssue, ValidationReport
 
 
 @dataclass(frozen=True, slots=True)

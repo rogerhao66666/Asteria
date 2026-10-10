@@ -1,7 +1,17 @@
 from asteria.assets import AssetRef
 from asteria.core.ids import new_id
-from asteria.graphics import *
-from asteria.runtime import *
+from asteria.graphics import DirectionalClips, SpriteClip, SpriteFrame, SpriteKeyframe, SpriteSheet, TileLayer, TileMap
+from asteria.runtime import (
+    AnimatorState,
+    Camera2D,
+    CameraFollow2D,
+    CharacterAnimationController,
+    CharacterController2D,
+    InputSnapshot,
+    PlayerRuntime,
+    SpriteRendererState,
+    TileMapQuery,
+)
 
 
 def test_character_animation_camera_runtime():

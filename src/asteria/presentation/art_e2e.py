@@ -5,15 +5,17 @@ and renderer contracts. It intentionally adds no gameplay vocabulary.
 """
 
 from __future__ import annotations
+
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Mapping, Sequence
+
 from .e2e_pipeline import PresentationE2EPipeline
-from .production_preview import ProductionPreviewSession
 from .material_runtime import LightingRuntime, MaterialState
-from .vfx_runtime import VFXRuntime
+from .production_preview import ProductionPreviewSession
+from .render_backend import BackendFrameStats, PresentationBackendExecutor
 from .render_integration import DrawPacket, RenderTransform
 from .text_render_integration import TextRenderPacket
-from .render_backend import PresentationBackendExecutor, BackendFrameStats
+from .vfx_runtime import VFXRuntime
 
 
 def apply_light_channels(lighting: LightingRuntime, values: Mapping[str, float]) -> None:
