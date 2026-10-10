@@ -352,3 +352,14 @@ relationships, achievements, bestiary and enemy capture (save v7). See
 `docs/audits/DECISION_LOG.md` D11 for commits and remaining gaps (no editor
 UIs for these definitions yet; field AI/spawns not yet run by the playable
 runtime). Verification: **1975 passed** offscreen; no real-window run.
+
+## D12 closure decisions executed --- 2026-10-10
+
+F-3 fixed (interaction multipliers reach actual damage through the existing
+pipeline; preview matches runtime). CB15 retirement review submitted for
+approval (nothing removed). Form-based Game Systems editors (shops, quests,
+factions, achievements, equipment sets, capture rules) share one undoable
+API with scripts. Field enemy AI and spawn zones run in the playable game;
+battle capture menu; recipe discovery and crafting screen; achievement,
+bestiary and settings screens. Details and per-batch reports: DECISION_LOG
+D12/D13. Verification: **1998 passed** offscreen; no real-window run.
