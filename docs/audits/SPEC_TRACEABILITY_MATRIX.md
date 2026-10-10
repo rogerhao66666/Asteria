@@ -42,13 +42,13 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | ENG-09 | S§8 | Core | Transform 父子關係／階層 | `core/transform.py` `parent_id`、`world_transform`、`set_parent`；`editor/editing.py` `ReparentTransformCommand`；Inspector parent 下拉選單 | UT | GS | **B** | 缺 RM | CB4 |
 | ENG-10 | S§8 | Core | Event bus／resource lifetime | `core/events.py` `EventBus`、`core/services.py`、`assets/runtime_resources.py`、`presentation/render_resources.py` | UT | HI | **B** | 沒有實機資源回收驗證 | CB13 |
 | ENG-11 | S§8 | Core | Rendering：sprite、tile、layer、transparency | `runtime/draw.py`、`runtime/tile_draw.py`、`platform/pygame_backend.py` | UT | RM（MV tile + 角色截圖） | **A** | — | — |
-| ENG-12 | S§8 | Core | Rendering：batching、render groups | `platform/moderngl_backend.py`（`16a6ebd` 復原，sprite batching）；`preview --backend moderngl` | UT（pygame／GL 像素對照） | HI（offscreen GPU context） | **B** | 沒有實機視窗截圖（EXTERNAL GPU）；pygame 仍是預設 | CB9 |
+| ENG-12 | S§8 | Core | Rendering：batching、render groups | `platform/moderngl_backend.py`（`16a6ebd` 復原，sprite batching）；`preview --backend moderngl` | UT（pygame／GL 像素對照） | RM（Apple M5 GPU 視窗 400 sprites/frame 61.9 fps；D15） | **B** | playable runtime 仍用 pygame；ModernGL 只在 scene preview | CB9 |
 | ENG-13 | S§8 | Core | Parallax、screen-space UI | `runtime/camera.py`、`runtime/draw.py`、MV parallax 匯入；`presentation/battle_ui_renderer.py` | UT | 部分 RM | **B** | battle UI 沒有實機接線 | CB2 |
 | ENG-14 | S§8 | Core | 輸入：鍵盤／滑鼠 | `runtime/input_map.py` `InputActionMap`；`platform/pygame_input.py` `PygameInputSource`；playable runtime 改走 action map | UT | HI | **B** | 缺 RM | CB4 |
 | ENG-15 | S§8 | Core | 輸入：Gamepad、input actions、rebinding、多組控制方案 | `runtime/input_map.py` `InputBinding`（鍵盤／gamepad 按鈕／軸）、rebinding、序列化（Project v10 `input_map`） | UT（rebinding 存讀） | HI | **B** | gamepad 實機驗證是 EXTERNAL；沒有 rebinding UI | CB4 |
 | ENG-16 | S§8 | Core | Collision：collider、trigger、layers/masks、broad phase、角色碰撞 | `runtime/collision.py` AABB／圓形、layers/masks、`SpatialHash` broad phase、trigger、`CombinedQuery`（tile + collider） | UT + benchmark（1000 colliders：948 對、3.7 ms） | HI（playable runtime 使用） | **B** | 沒有 CharacterController component；缺 RM | CB5 |
 | ENG-17 | S§8 | Core | Hitbox/hurtbox、地面／平台偵測 | — | — | — | **D** | ARPG 相關 → 見 ARPG-* | CB5／Deferred |
-| ENG-18 | S§8 | Core | 音訊：BGM、ambient、SFX、mixer、fades、spatial | `runtime/audio_mixer.py` `AudioMixer`（music／ambient／sfx 匯流排、淡入淡出）；`platform/pygame_audio.py`；CC0 音效 6 個 | UT（RecordingAudioDevice） | HI（SDL dummy audio） | **B** | 沒有 spatial audio；實機播放／延遲是 EXTERNAL | CB6 |
+| ENG-18 | S§8 | Core | 音訊：BGM、ambient、SFX、mixer、fades、spatial | `runtime/audio_mixer.py` `AudioMixer`（music／ambient／sfx 匯流排、淡入淡出）；`platform/pygame_audio.py`；CC0 音效 6 個 | UT（RecordingAudioDevice） | RM（CoreAudio 裝置播放 PASS；D15） | **B** | 可聽確認與延遲 NOT EXECUTED（M3／M4）；沒有 spatial audio | CB6 |
 | ENG-19 | S§33 | Core | 穩定 ID、參照、驗證、可讀格式 | `core/ids.py`、`assets/registry.py`、`assets/serialization.py` | UT | GS | **A** | — | — |
 | ENG-20 | S§33 | Core | 版本化 + 遷移 | `core/migration.py` `component_migration` 遷移鏈；`deserialize_component` 逐版遷移；`asteria-upgrade` CLI | UT | HI | **B** | — | CB12 |
 | ENG-21 | S§33 | Core | Runtime 存檔（隊伍、背包、任務、開關、NPC、場景） | `rpg/save_state.py`、`runtime/game_save.py`、`events/state.py` | UT + 完整 playable 存讀比對 | HI | **B** | 沒有任務模型；沒有存檔欄位 UI；沒有實機存讀流程 | CB7、CB12 |
@@ -64,9 +64,9 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | ANI-03 | S§11、AP§25 | Core | Frame events | `SpriteKeyframe.events`；`AnimatorState.drain_events`；`AnimationSystem.listeners` | UT | HI | **B** | 缺 RM | CB8 |
 | ANI-04 | S§11 | Core | 預覽 | `editor/animation_widget.py`（59 行）、Generator 預覽 | GS | GS | **C** | 沒有通用動畫編輯器 | CB10 |
 | ANI-05 | S§11 | Core | Action timeline（動畫、移動、hitbox、i-frame、cancel、VFX、SFX、camera、事件） | `gameplay/action_timeline.py` `ActionTimeline`、`ActionCueKind` | UT | NE | **C** | 沒有 hitbox/i-frame/cancel cue；沒有接上 runtime | CB8／Deferred |
-| CAM-01 | S§12 | Core | Follow、smooth、dead zone、zoom、shake | `runtime/camera.py` `CameraFollow2D`、`presentation/camera_runtime.py` | UT | HI | **B** | battle camera 沒有實機接線 | CB2 |
+| CAM-01 | S§12 | Core | Follow、smooth、dead zone、zoom、shake | `runtime/camera.py` `CameraFollow2D`、`presentation/camera_runtime.py` | UT | HI + RM（canonical 戰鬥 camera shake 依 motion beat；D15） | **B** | 缺人眼確認（M5） | CB2 |
 | CAM-02 | S§12 | Core | Look-ahead、bounds、target groups、boss／cutscene camera、transitions | 部分（`presentation/choreography.py`） | UT | NE | **C** | — | CB10 |
-| VFX-01 | S§12 | Core | 粒子、hit flash、damage numbers、screen effects | `presentation/vfx_runtime.py`、`animated_text.py`、`render/environment.py` | UT | NE | **B** | runtime 沒有消費者 | CB2 |
+| VFX-01 | S§12 | Core | 粒子、hit flash、damage numbers、screen effects | `runtime/battle_presentation_adapters.py` VFX sprite sheet 播放、hit flash（screen_fx）、damage numbers；`presentation/vfx_runtime.py` | UT | HI + RM（實機視窗 VFX 截圖；D15） | **B** | 沒有粒子發射器資料（VFX 為序列圖）；缺人眼確認 | CB2 |
 | VFX-02 | S§12、AD§12 | Core | 2D lights、normal maps、shadows、bloom、color grading、screen shaders | `render/lighting.py`、`render/postprocess.py`（headless 指令模型）；ModernGL 後端已復原 | UT | NE | **C** | lighting／bloom shader 尚未實作（需另提案） | CB9 |
 | VFX-03 | S§12 | Core | Trails、afterimages、fog/weather/water | 部分（`render/environment.py`） | UT | NE | **C** | — | CB9 |
 | CMP-01 | S§44 | Core | Baked/Layered/Attached/Procedural/Hybrid 並存 | `presentation/canonical.py`、`composition.py`、`actor_visual_layers.py` | UT（Batch 94–106） | NE | **B** | 遊玩中沒有消費者 | CB2 |
@@ -92,7 +92,7 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | BTL-01 | S§19 | Eventual | 隊伍／敵群、回合排程、速度順序 | `rpg/battle.py`、`battle_scheduler.py` | UT | HI；playable 回合順序由 scheduler 決定（CB3） | **B** | 缺 RM | CB3 |
 | BTL-02 | S§19 | Eventual | 多段攻擊、反擊／追擊／反應、弱點／抗性、break | `rpg/action_sequences.py`、`reactions.py`、`interactions.py`、`gauge_composition.py` | UT | HI | **B** | F-3 已修（CB-BR1：互動倍率進入實際傷害，Preview 一致）；DOT 不套用；缺 RM | CB3、CB-BR1 |
 | BTL-03 | S§19 | Eventual | 自訂資源、回合操作、boss 階段、戰鬥事件、戰鬥 AI | `rpg/battle_resources.py`、`enemy_ai.py` `BossPhaseDefinition` | UT | HI；boost／死亡資源由資料設定（CB3） | **B** | 缺 RM | CB3 |
-| BTL-04 | S§19、§29 | Core | 戰鬥 UI／演出（HUD、時間軸、結果、選單、動畫、VFX、camera、audio、hit-stop、多段、結果轉場） | `presentation/battle_*.py`；`runtime/battle_presentation_adapters.py` Canonical adapter；`platform/pygame_battle_ui.py` | UT | HI（版面缺陷 F-2 已修） | **C** | 非預設；缺戰鬥者 sprite、VFX 播放 | CB2 |
+| BTL-04 | S§19、§29 | Core | 戰鬥 UI／演出（HUD、時間軸、結果、選單、動畫、VFX、camera、audio、hit-stop、多段、結果轉場） | `runtime/battle_presentation_adapters.py` Canonical（動畫 sprite、motion sequence：動畫／VFX／audio／camera／flash、KO 同步、捕捉指令、側視 staging）；`runtime/battle_visuals.py` | UT（`test_canonical_battle_presentation.py`） | HI + RM（animation_smoothness、frame_pacing PASS；D15） | **B** | 可聽音訊、實體按鍵、手把未驗證（M1–M3）；hit-stop 未接 | CB2 |
 | RPG-01 | S§21 | Core | 背包：可堆疊／唯一、分類、容量、關鍵道具、消耗品、貨幣 | `rpg/items.py` `Inventory` | UT | playable 選單 | **B** | 沒有容量規則的實機驗證 | CB11 |
 | RPG-02 | S§21 | Core | 裝備：欄位、需求、modifier、tags、passives、set bonus、熟練度、升級 | `rpg/items.py`、`equipment_growth.py`、`resolved_build.py`；`rpg/equipment_sets.py`（件數門檻的 modifier／tag／能力） | UT | HI（build 解析） | **B** | 套裝編輯器已有（D13）；缺 RM | CB11 |
 | RPG-03 | S§21–22 | Core | 成長、職業／副職業、技能樹、多種解鎖貨幣、熟練度 | `rpg/progression*.py`、`actors.py`、`ability_build.py` | UT | GS（技能樹編輯器）+ playable | **A** | — | — |
@@ -139,7 +139,7 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | EDT-16 | D2 | Core | 通用 Character/Entity Inspector（sprite 選擇、Actor 外觀、Entity↔Actor 連結、縮圖） | `runtime/actor_link.py`、`editor/actor_appearance.py`、`assets/character_visual.py`；shell「Place Character from Sprite Sheet…」「Set Actor Appearance…」 | UT | GS + HI E2E（匯入 sprite sheet → Actor → 放置 → 遊玩） | **B** | 缺 RM | CB14 |
 | EDT-17 | S§31 | Eventual | Gameplay System Builder | — | — | — | **D** | SPEC 原文寫「eventually」 | 後續 |
 | EDT-18 | S§32 | Eventual | Plugins（components、systems、panels、importers…） | — | — | — | **D** | — | 後續 |
-| EDT-19 | S§34 | Eventual | Profiling（frame/AI/collision/entity/particles/draw calls/memory） | `presentation/performance.py`、`battle_render_performance.py`（合成負載） | UT | NE | **C** | 沒有 runtime profiler | CB13 |
+| EDT-19 | S§34 | Eventual | Profiling（frame/AI/collision/entity/particles/draw calls/memory） | `runtime/profiler.py` `RuntimeProfiler`（frame/update/render/ai/collision/animation/asset_loading、pacing、entity/particles/asset 計數、記憶體；draw_calls 與 gpu_time 標 Unsupported）；`asteria-preview --profile` | UT | HI + RM（實機 profile；D15） | **B** | draw calls 在 pygame 標 Unsupported；沒有 Editor 內 profiler 面板 | CB13 |
 
 ## 7. Asset Pipeline（AS、AP、AD）
 
@@ -183,12 +183,12 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | Engine Core（ENG） | 7 | 14 | 1 | 1 | 0 | 0 | 23 | 30% | 91% |
 | Animation／Camera／VFX／Composition | 1 | 8 | 5 | 0 | 0 | 0 | 14 | 7% | 64% |
 | Gameplay（GP） | 4 | 2 | 0 | 0 | 0 | 0 | 6 | 67% | 100% |
-| RPG／Battle（BTL、RPG） | 1 | 11 | 2 | 0 | 0 | 0 | 14 | 7% | 86% |
+| RPG／Battle（BTL、RPG） | 1 | 12 | 1 | 0 | 0 | 0 | 14 | 7% | 93% |
 | 世界／事件／UI（EVT、WLD、UI） | 0 | 5 | 3 | 0 | 0 | 0 | 8 | 0% | 63% |
-| Editor（EDT） | 2 | 4 | 9 | 4 | 0 | 0 | 19 | 11% | 32% |
+| Editor（EDT） | 2 | 5 | 8 | 4 | 0 | 0 | 19 | 11% | 37% |
 | Asset Pipeline（AST） | 2 | 4 | 4 | 1 | 1 | 1 | 11 | 18% | 55% |
 | 壓力測試／範本／Generator | 0 | 0 | 2 | 0 | 1 | 2 | 2 | 0% | 0% |
-| **合計** | **17** | **48** | **26** | **6** | **2** | **3** | **97** | **18%** | **67%** |
+| **合計** | **17** | **50** | **24** | **6** | **2** | **3** | **97** | **18%** | **69%** |
 
 **2026-10-10 更新（CB3–CB14 及 CB11 之後）：** 2026-10-09 原始稽核時是 A 17／B 20／C 44／D 16；CB4–CB14 之後是 A17／B38／C33／D9。A 沒有增加，因為 A 需要實機（RM）驗證，而這一輪全部只有 UT／HI／offscreen GS。新的 B 項目都缺 RM，請見各列「缺口」欄。
 
