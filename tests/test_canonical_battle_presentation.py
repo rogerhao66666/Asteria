@@ -141,23 +141,33 @@ def test_capture_prompt_appears_in_the_canonical_action_menu(battle):
     assert any(label.startswith("X  Capture (") for label in labels)
 
 
-def test_missing_visual_profile_falls_back_to_the_legacy_world_layer(battle):
+def test_missing_visual_profile_gets_a_generated_combatant_not_the_legacy_screen(battle, monkeypatch):
     runtime, adapter = battle
     runtime.game.project.battle_presentation_library.remove("combatant_visuals", "astral_tyrant")
+    monkeypatch.setattr(
+        runtime, "_draw_battle_world", lambda *a, **k: pytest.fail("legacy drawing used"), raising=False
+    )
     fresh = CanonicalBattleAdapter(runtime)
     fresh.begin()
-    assert not fresh.visuals_enabled and "astral_tyrant" in fresh.fallback_reason
+    assert fresh.visuals_enabled and not fresh.fallback_reason
+    boss = next(v for v in fresh.screen.scene.combatants if v.member_id.startswith("astral_tyrant"))
+    assert boss.sprite_sheet_asset_id == "generated.combatant.astral_tyrant"
+    assert fresh.resolver.generated_image(boss.sprite_sheet_asset_id) is not None
+    assert set(fresh.resolver.clip_set(boss.sprite_sheet_asset_id).clips) == {"idle", "attack", "hit", "ko"}
+    runtime._battle_presentation = fresh
+    runtime._present_battle(0.016)  # draws through the canonical screen
 
 
-def test_canonical_screen_never_runs_the_blocking_legacy_effect_loop(battle, monkeypatch):
-    # Real-machine finding (D15): the legacy _play_fx loop blocked ~430 ms per skill.
+def test_using_a_skill_never_blocks_the_frame_loop(battle):
+    """Real-machine finding (D15): the retired legacy effect loop blocked ~430 ms per skill."""
+    import time
+
     runtime, adapter = battle
-
-    def blocked(*args, **kwargs):
-        raise AssertionError("legacy blocking effect loop called under the canonical screen")
-
-    monkeypatch.setattr(runtime, "_play_fx", blocked)
+    start = time.perf_counter()
     _use(runtime, "fire_arc")
+    assert time.perf_counter() - start < 0.2  # choreography plays on later frames
+    runtime._present_battle(0.016)
+    assert adapter.busy()
     _settle(runtime)
 
 

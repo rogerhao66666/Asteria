@@ -172,7 +172,7 @@ def main(argv=None):
     parser.add_argument("--profile", help="write a runtime profile (JSON) to this path on exit")
     parser.add_argument(
         "--battle-presentation",
-        choices=("legacy", "canonical"),
+        choices=("canonical",),
         help="battle screen to use (default: the project manifest's choice)",
     )
     parser.add_argument("--debug-port", type=int, help="open the editor debug channel on this loopback port")

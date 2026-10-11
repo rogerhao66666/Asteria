@@ -1,16 +1,16 @@
-"""Battle presentation adapters for the playable runtime (CB2, incremental).
+"""Battle presentation for the playable runtime: the canonical battle screen.
 
-Both adapters consume the same canonical ``BattleLogEntry`` stream produced by
-``GameSessionRuntime``; neither decides any battle rule. ``LegacyPygameBattle
-Adapter`` keeps the original hand-drawn pygame screen. ``CanonicalBattle
-Adapter`` routes the log through ``BattleScreenRuntime`` (HUD, turn timeline,
-action menu, value popups, camera feedback, result) and renders it with
-``PygameBattleUiBackend``. Combatant sprites come from authored combatant
-visuals when a project provides them; until then the legacy world layer is
-drawn underneath.
+``CanonicalBattleAdapter`` consumes the ``BattleLogEntry`` stream produced by
+``GameSessionRuntime`` (it decides no battle rule) and routes it through
+``BattleScreenRuntime`` (HUD, turn timeline, action menu, value popups, camera
+feedback, VFX, audio cues, hit-stop, result), rendered with
+``PygameBattleUiBackend`` on the pygame or ModernGL presenter. Combatants come
+from authored combatant visuals; a project without battle art gets generated
+combatants built from its manifest images (or silhouettes). The legacy pygame
+battle screen was retired in D19 (CB15 A9).
 
-``entry_semantics`` is the comparison contract for behaviour parity tests:
-each adapter records, in ``trace``, what it understood from the log.
+``entry_semantics`` is the comparison contract: the adapter records, in
+``trace``, what it understood from the log.
 """
 
 from __future__ import annotations
@@ -97,29 +97,6 @@ class BattlePresentationAdapter(Protocol):
     def draw(self) -> None: ...
 
 
-class LegacyPygameBattleAdapter:
-    """The original pygame battle screen, unchanged, behind the adapter interface."""
-
-    name = "legacy"
-
-    def __init__(self, host):
-        self.host = host
-        self.trace = []
-
-    def begin(self):
-        self.trace.clear()
-
-    def consume(self, entries):
-        self.trace.extend(entry_semantics(e) for e in entries)
-
-    def update(self, dt):
-        pass
-
-    def draw(self):
-        self.host._draw_battle_world()
-        self.host._draw_battle_hud()
-
-
 class PygameTextureDrawer:
     """Draws ``TextureDraw`` commands (virtual coordinates) onto the host's pygame screen."""
 
@@ -130,6 +107,10 @@ class PygameTextureDrawer:
         self.draw_count = 0
 
     def surface(self, asset_id):
+        lookup = getattr(self.resolver, "generated_image", None)
+        generated = lookup(asset_id) if lookup is not None else None
+        if generated is not None:
+            return generated
         return self.host.load_image(self.resolver.source_uri(asset_id))
 
     def blit_region(
@@ -249,6 +230,8 @@ class CanonicalBattleAdapter:
     def begin(self):
         from asteria.platform.pygame_battle_ui import PygameBattleUiBackend
 
+        self._background_image = None
+
         self.trace.clear()
         game = self.host.game
         self._battle = game.battle
@@ -260,6 +243,7 @@ class CanonicalBattleAdapter:
         self.resolver = BattleVisualResolver(game.project, lambda uri: self.host.load_image(uri).get_size())
         sides = {side: [m.member_id for m in party.members] for side, party in game.battle.parties.items()}
         combatants = ()
+        self._register_fallback_visuals(sides, layout)
         missing = self.resolver.missing_profiles([m for members in sides.values() for m in members])
         self.fallback_reason = f"no combatant visual profile for {', '.join(missing)}" if missing else ""
         if not missing:
@@ -408,6 +392,121 @@ class CanonicalBattleAdapter:
     def particle_count(self):
         return 0 if self.screen is None else len(self.screen.feedback.vfx)
 
+    # -- projects without battle art: generated combatant and effect sheets --------------------------
+    FRAME_HEIGHT = 96
+
+    def _source_image(self, member_id, side, index):
+        """The manifest image a project without battle art shows for a combatant (None: draw a silhouette)."""
+        battle = self.host.manifest.get("battle", {})
+        try:
+            if side == "heroes" and battle.get("heroes"):
+                return self.host.load_image(battle["heroes"][index % len(battle["heroes"])]), False
+            enemy = str(member_id).split(":", 1)[0]
+            rel = battle.get("enemy_sprites", {}).get(enemy)
+            if rel:
+                return self.host.load_image(rel), True  # legacy screens drew enemies facing left: flip
+        except Exception as exc:  # pygame.error for an unreadable image: fall back to a silhouette
+            if type(exc).__name__ not in ("error", "FileNotFoundError"):
+                raise
+        return None, False
+
+    def _silhouette(self, member_id, side):
+        pg = self.host.pg
+        image = pg.Surface((64, 96), pg.SRCALPHA)
+        color = (90, 140, 220) if side == "heroes" else (210, 90, 100)
+        dark = tuple(c // 2 for c in color)
+        pg.draw.ellipse(image, color, (10, 36, 44, 58))
+        pg.draw.ellipse(image, dark, (10, 36, 44, 58), 3)
+        pg.draw.circle(image, color, (32, 24), 18)
+        pg.draw.circle(image, dark, (32, 24), 18, 3)
+        pg.font.init()
+        label = pg.font.Font(None, 30).render(str(member_id)[:1].upper(), True, (250, 250, 255))
+        image.blit(label, label.get_rect(center=(32, 64)))
+        return image
+
+    def _combatant_sheet(self, image, *, flip):
+        """Four frames from one picture: idle, attack (lunge), hit (flash), ko (fallen, dark)."""
+        pg = self.host.pg
+        if flip:
+            image = pg.transform.flip(image, True, False)
+        height = self.FRAME_HEIGHT
+        w, h = image.get_size()
+        width = max(1, round(w * height / h))
+        if image.get_bitsize() < 24:
+            image = image.convert(32, pg.SRCALPHA)
+        body = pg.transform.smoothscale(image, (width, height))
+        fw, fh = width + 20, height + 8
+        sheet = pg.Surface((fw * 4, fh), pg.SRCALPHA)
+        y = fh - height
+        sheet.blit(body, (10, y))
+        sheet.blit(body, (fw + 16, y - 3))  # lunge forward
+        hit = body.copy()
+        hit.fill((110, 110, 110, 0), special_flags=pg.BLEND_RGBA_ADD)
+        sheet.blit(hit, (fw * 2 + 5, y))
+        fallen = pg.transform.rotate(body, 80)
+        fallen.fill((120, 115, 130, 255), special_flags=pg.BLEND_RGBA_MULT)
+        if fallen.get_width() > fw or fallen.get_height() > fh:
+            k = min(fw / fallen.get_width(), fh / fallen.get_height())
+            fallen = pg.transform.smoothscale(
+                fallen, (max(1, int(fallen.get_width() * k)), max(1, int(fallen.get_height() * k)))
+            )
+        sheet.blit(fallen, (fw * 3 + (fw - fallen.get_width()) // 2, fh - fallen.get_height()))
+        clips = {
+            "idle": {"frames": [0], "frame_duration": 0.5, "loop": True},
+            "attack": {"frames": [1, 1, 0], "frame_duration": 0.1, "loop": False},
+            "hit": {"frames": [2, 2, 0], "frame_duration": 0.1, "loop": False},
+            "ko": {"frames": [3], "frame_duration": 0.5, "loop": True},
+        }
+        return sheet, (fw, fh), clips
+
+    def _register_fallback_visuals(self, sides, layout):
+        """Every combatant without a combatant_visuals profile gets a generated one (no legacy fallback)."""
+        target = float(getattr(layout, "virtual_height", 180)) * 0.16  # logical height of a regular combatant
+        done = set()
+        for side, members in sides.items():
+            for index, member_id in enumerate(members):
+                key = str(member_id).split(":", 1)[0]
+                if key in done or self.resolver.profile_for(member_id) is not None:
+                    continue
+                done.add(key)
+                image, flip = self._source_image(member_id, side, index)
+                sheet, frame_size, clips = self._combatant_sheet(
+                    image if image is not None else self._silhouette(key, side), flip=flip
+                )
+                asset_id = f"generated.combatant.{key}"
+                self.resolver.register_generated(asset_id, sheet, sheet.get_size(), frame_size=frame_size, clips=clips)
+                size = (self.host._enemy_layout(member_id) or {}).get("size") if side != "heroes" else None
+                logical = target * (float(size[1]) / 120.0 if size else 1.0)
+                self.resolver.register_generated_profile(key, asset_id, logical / frame_size[1])
+
+    def _manifest_skill_fx(self, ability_id):
+        """Generated VFX sheet for a manifest skill ``fx`` image (4 columns, ``frames`` cells), or None."""
+        meta = self.host.manifest.get("battle", {}).get("skills", {}).get(ability_id) or {}
+        if not meta.get("fx"):
+            return None
+        asset_id = f"generated.fx.{ability_id}"
+        if not self.resolver.is_generated(asset_id):
+            try:
+                image = self.host.load_image(meta["fx"])
+            except Exception as exc:  # pygame.error / missing file: no effect, the action still plays
+                if type(exc).__name__ not in ("error", "FileNotFoundError"):
+                    raise
+                return None
+            count = int(meta.get("frames", 16))
+            columns = 4
+            rows = max(1, (count + columns - 1) // columns)
+            frame = (image.get_width() // columns, image.get_height() // rows)
+            self.resolver.register_generated(
+                asset_id,
+                image,
+                image.get_size(),
+                frame_size=frame,
+                clips={"play": {"frames": list(range(count)), "frame_duration": 0.42 / max(1, count), "loop": False}},
+                pivot=(0.5, 0.5),
+                vfx={"anchor": "center", "scale": 1.0},
+            )
+        return asset_id
+
     def _ensure(self):
         """Set up for the session's current battle if begin() was not called for it."""
         battle = self.host.game.battle
@@ -548,6 +647,33 @@ class CanonicalBattleAdapter:
                     )
                     for target, _ in entry.outcomes
                 )
+                # Effects configured per skill in the manifest (projects without motion sequences).
+                skill = self.host.manifest.get("battle", {}).get("skills", {}).get(entry.ability_id) or {}
+                fx = self._manifest_skill_fx(entry.ability_id)
+                for target in [t for t, _ in entry.outcomes][:1] if fx else ():
+                    cues.append(
+                        PresentationCue(
+                            f"action.{entry.ability_id}",
+                            ActionCue(
+                                f"{target}.fx",
+                                0.0,
+                                ActionCueKind.VFX,
+                                {"member_id": target, "asset_id": fx, "duration": 0.42},
+                            ),
+                        )
+                    )
+                if skill.get("sfx"):
+                    cues.append(
+                        PresentationCue(
+                            f"action.{entry.ability_id}",
+                            ActionCue(
+                                f"{entry.member_id}.sfx",
+                                0.0,
+                                ActionCueKind.AUDIO,
+                                {"member_id": entry.member_id, "asset_id": skill["sfx"]},
+                            ),
+                        )
+                    )
                 coordinator.consume_timeline_cues(cues)
 
             self._at(start, default_cues)
@@ -661,12 +787,38 @@ class CanonicalBattleAdapter:
             if capture:
                 best = max(chance for _, chance, _ in capture)
                 entries.append(BattleActionEntry("capture", f"X  Capture ({best * 100:.0f}%)", order=len(entries)))
+            if skills and game.rules.boost_enabled and game.max_boost_level(actor) > 0:
+                amount = game.battle.battle_resources.current(actor, game.rules.boost_resource_id)
+                label = game.rules.boost_resource_id.replace("_", " ").title()
+                level = getattr(self.host, "_boost_level", 0)
+                entries.append(
+                    BattleActionEntry("boost", f"B  Boost x{level + 1} ({label} {int(amount)})", order=len(entries))
+                )
             self.screen.set_action_entries(entries)
         self.screen.update(dt)
 
+    def _background(self):
+        """The battle background image, or a plain backdrop when the project has none."""
+        cached = getattr(self, "_background_image", None)
+        if cached is not None:
+            return cached
+        pg = self.host.pg
+        try:
+            image = self.host.load_image(self.screen.scene.background_asset_id)
+        except Exception as exc:  # pygame.error / missing file
+            if type(exc).__name__ not in ("error", "FileNotFoundError"):
+                raise
+            image = pg.Surface((self.host.width, self.host.height))
+            for y in range(self.host.height):  # sky-to-ground gradient
+                t = y / max(1, self.host.height - 1)
+                pg.draw.line(
+                    image, (int(28 + 30 * t), int(34 + 50 * t), int(52 + 10 * t)), (0, y), (self.host.width, y)
+                )
+        self._background_image = image
+        return image
+
     def draw(self):
         if not self._ensure():
-            self.host._draw_battle_world(show_labels=False)
             return None
         layout = self.screen.composer.layout
         cx, cy, zoom = getattr(self, "_camera_view", None) or (layout.virtual_width / 2, layout.virtual_height / 2, 1.0)
@@ -677,19 +829,15 @@ class CanonicalBattleAdapter:
             layout.virtual_height,
             zoom,
         )
-        textures = None
-        if self.screen.scene.combatants:
-            background = self.host.load_image(self.screen.scene.background_asset_id)
-            # The background zooms with the camera (the battlefield is the virtual layout rectangle).
-            bx, by = base.world_to_screen(0.0, 0.0)
-            scale = self.host.width / layout.virtual_width
-            size = (round(self.host.width * zoom), round(self.host.height * zoom))
-            self.host.screen.blit(
-                self.host.pg.transform.smoothscale(background, size), (round(bx * scale), round(by * scale))
-            )
-            textures = self.textures
-        else:
-            self.host._draw_battle_world(show_labels=False)
+        background = self._background()
+        # The background zooms with the camera (the battlefield is the virtual layout rectangle).
+        bx, by = base.world_to_screen(0.0, 0.0)
+        scale = self.host.width / layout.virtual_width
+        size = (round(self.host.width * zoom), round(self.host.height * zoom))
+        self.host.screen.blit(
+            self.host.pg.transform.smoothscale(background, size), (round(bx * scale), round(by * scale))
+        )
+        textures = self.textures if self.screen.scene.combatants else None
         self._view_camera = self.screen.camera_feedback.camera_view(base)
         self._ui_backend.screen = self.host.screen  # the world layer, until the textures are drawn
         world_then_ui = _WorldThenUi(self, textures)
@@ -754,15 +902,20 @@ class CanonicalBattleAdapter:
 
 
 def create_battle_presentation_adapter(host):
-    """Pick the adapter named by the manifest (``battle.presentation.adapter``); legacy by default."""
+    """The battle presentation for the manifest (``battle.presentation``): the canonical screen.
+
+    The legacy pygame screen was retired (CB15 A9, D19); a manifest that still names ``legacy`` gets
+    the canonical screen, which draws generated combatants from the manifest images when a project
+    has no battle art. ``legacy_requested`` records that for the Problems panel / logs.
+    """
     settings = host.manifest.get("battle", {}).get("presentation", {})
-    kind = settings.get("adapter", "legacy")
-    if kind == "legacy":
-        return LegacyPygameBattleAdapter(host)
-    if kind == "canonical":
-        return CanonicalBattleAdapter(
-            host,
-            profile_ids=settings.get("profiles"),
-            placement_by_side=settings.get("placement_by_side"),
-        )
-    raise ValueError(f"unknown battle presentation adapter: {kind}")
+    kind = settings.get("adapter", "canonical")
+    if kind not in ("canonical", "legacy"):
+        raise ValueError(f"unknown battle presentation adapter: {kind}")
+    adapter = CanonicalBattleAdapter(
+        host,
+        profile_ids=settings.get("profiles"),
+        placement_by_side=settings.get("placement_by_side"),
+    )
+    adapter.legacy_requested = kind == "legacy"
+    return adapter

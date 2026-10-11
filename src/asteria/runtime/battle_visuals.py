@@ -102,6 +102,38 @@ class BattleVisualResolver:
         self.image_size = image_size
         self._sheets = {}
         self._clips = {}
+        # Generated sheets / profiles for combatants and effects that have no authored battle art
+        # (asset id -> {"image", "size", "meta"}; member key -> profile). The host builds the images.
+        self._generated = {}
+        self._generated_profiles = {}
+
+    # -- generated visuals (projects without battle art) ------------------------
+    def register_generated(self, asset_id, image, size, *, frame_size, clips, pivot=(0.5, 1.0), **meta):
+        """A sheet the host drew itself; ``clips`` uses the asset-metadata form ({name: {frames, ...}})."""
+        data = {"frame_size": list(frame_size), "pivot": list(pivot), "clips": dict(clips), **meta}
+        self._generated[str(asset_id)] = {"image": image, "size": tuple(size), "meta": data}
+        self._sheets.pop(str(asset_id), None)
+        self._clips.pop(str(asset_id), None)
+
+    def register_generated_profile(self, member_key, asset_id, scale):
+        from asteria.presentation.battle_combatant_visuals import (
+            BattleCombatantVisualProfile,
+            BattleVisualAssetSet,
+            BattleVisualStateDefinition,
+            BattleVisualTransform,
+        )
+
+        states = tuple(BattleVisualStateDefinition(role, role) for role in ("idle", "attack", "hit", "ko"))
+        self._generated_profiles[str(member_key)] = BattleCombatantVisualProfile(
+            str(member_key), BattleVisualAssetSet(str(asset_id)), states, BattleVisualTransform(scale, scale)
+        )
+
+    def is_generated(self, asset_id):
+        return str(asset_id) in self._generated
+
+    def generated_image(self, asset_id):
+        entry = self._generated.get(str(asset_id))
+        return None if entry is None else entry["image"]
 
     # -- assets ------------------------------------------------------------
     def asset(self, asset_id):
@@ -114,33 +146,39 @@ class BattleVisualResolver:
         return asset
 
     def source_uri(self, asset_id):
+        if self.is_generated(asset_id):
+            raise BattleVisualError(f"{asset_id} is generated in memory; use generated_image()")
         return self.asset(asset_id).source.uri
 
     def sheet_meta(self, asset_id):
+        if self.is_generated(asset_id):
+            return dict(self._generated[str(asset_id)]["meta"])
         return self.asset(asset_id).meta()
 
     def sprite_sheet(self, asset_id):
         if asset_id not in self._sheets:
-            asset = self.asset(asset_id)
-            meta = asset.meta()
+            meta = self.sheet_meta(asset_id)
             try:
                 fw, fh = (int(x) for x in meta["frame_size"])
             except (KeyError, TypeError, ValueError):
                 raise BattleVisualError(f"{asset_id}: frame_size metadata required") from None
             px, py = (float(x) for x in meta.get("pivot", (0.5, 1.0)))
-            width, height = self.image_size(asset.source.uri)
+            if self.is_generated(asset_id):
+                width, height = self._generated[str(asset_id)]["size"]
+            else:
+                width, height = self.image_size(self.asset(asset_id).source.uri)
             columns, rows = width // fw, height // fh
             if columns < 1 or rows < 1:
                 raise BattleVisualError(f"{asset_id}: image smaller than one frame")
             frames = [SpriteFrame(c * fw, r * fh, fw, fh, px, py) for r in range(rows) for c in range(columns)]
-            sheet = SpriteSheet(_TextureRef(asset.asset_id), frames)
+            sheet = SpriteSheet(_TextureRef(str(asset_id)), frames)
             sheet.validate()
             self._sheets[asset_id] = sheet
         return self._sheets[asset_id]
 
     def clip_set(self, asset_id):
         if asset_id not in self._clips:
-            meta = self.asset(asset_id).meta()
+            meta = self.sheet_meta(asset_id)
             clips = {}
             for name, raw in dict(meta.get("clips", {})).items():
                 frames = [int(x) for x in raw["frames"]]
@@ -175,7 +213,7 @@ class BattleVisualResolver:
         key = str(member_id).split(":", 1)[0]
         if key in self.library.ids("combatant_visuals"):
             return self.library.require("combatant_visuals", key)
-        return None
+        return self._generated_profiles.get(key)
 
     def missing_profiles(self, member_ids):
         return tuple(m for m in member_ids if self.profile_for(m) is None)

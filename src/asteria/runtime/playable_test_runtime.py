@@ -1013,13 +1013,6 @@ class PlayableTestRuntime:
             elif event.key == self.pg.K_7:
                 self._rotate_party()
 
-    def _member_resource(self, member_id, resource=None):
-        resource = resource or self.game.rules.knockout_resource_id
-        pool = self.game.battle.member(member_id).subject.resources
-        if not resource or resource not in pool.to_data()["values"]:
-            return None
-        return pool.current(resource), pool.maximum(resource)
-
     def _battle_actor(self):
         return None if self.game.battle is None else self._turn_actor
 
@@ -1058,11 +1051,6 @@ class PlayableTestRuntime:
         enemy_id = str(member_id).split(":", 1)[0]
         return self.manifest["battle"].get("enemy_layouts", {}).get(enemy_id)
 
-    def _enemy_sprite(self, member_id):
-        enemy_id = str(member_id).split(":", 1)[0]
-        rel = self.manifest["battle"]["enemy_sprites"].get(enemy_id)
-        return None if rel is None else self.load_image(rel)
-
     def _draw_battle(self):
         self._battle_presentation.draw()
         if self._capture_menu and self.game.mode == "battle":
@@ -1089,148 +1077,6 @@ class PlayableTestRuntime:
             self._battle_presentation.draw()
         self._flush_victory_audio()
 
-    def _draw_battle_world(self, show_labels=True):
-        """Legacy world layer: background and combatant sprites (plus bars/names when show_labels)."""
-        bg = self.load_image(self.manifest["battle"]["background"])
-        self.screen.blit(self.pg.transform.smoothscale(bg, (self.width, self.height)), (0, 0))
-        if self.game.battle is None:
-            return
-
-        hero_ids = list(self.game.battle.parties["heroes"].ids())
-        active = set(self.game.active_hero_ids())
-        for i, hid in enumerate(hero_ids[:6]):
-            img = self.load_image(self.manifest["battle"]["heroes"][i % len(self.manifest["battle"]["heroes"])])
-            img = self.pg.transform.smoothscale(img, (96, 120))
-            x = 85 + (i % 3) * 112
-            y = 235 + (i // 3) * 120
-            if hid not in active:
-                ghost = img.copy()
-                ghost.set_alpha(80)
-                img = ghost
-            self.screen.blit(img, (x, y))
-            if not show_labels:
-                continue
-            vital = self._member_resource(hid)
-            if vital is not None:
-                self.bar(x, y + 103, 92, 10, *vital)
-            self.text(hid, x, y + 116, size=15)
-
-        enemies = list(self.game.battle.parties["enemies"].ids())
-        live = set(self.game.active_enemy_ids())
-        for i, eid in enumerate(enemies):
-            img = self._enemy_sprite(eid)
-            if img is None:
-                continue
-            layout = self._enemy_layout(eid)
-            if layout is not None:
-                size = tuple(layout["size"])
-                x, y = layout["position"]
-            else:
-                size = (90, 90)
-                x, y = 610 + (i - 1) * 120, 315
-            img = self.pg.transform.smoothscale(img, size)
-            if eid not in live:
-                dead = img.copy()
-                dead.set_alpha(50)
-                img = dead
-            self.screen.blit(img, (x, y))
-            if not show_labels:
-                continue
-            vital = self._member_resource(eid)
-            if vital is not None:
-                self.bar(x, y + size[1] - 8, size[0], 10, *vital, fill=(215, 86, 105))
-            self.text(eid, x, y + size[1] + 5, size=16)
-
-    def _draw_battle_hud(self):
-        """Legacy HUD: action list, controls, boost and gauge text, result panels."""
-        enemies = [] if self.game.battle is None else list(self.game.battle.parties["enemies"].ids())
-        live = set(self.game.active_enemy_ids())
-        actor = self._battle_actor()
-        skills = self._skills_for_actor(actor)
-        self.panel((20, 22, 420, 155))
-        self.text("Battle Test", 36, 34, size=28, color=(255, 219, 126))
-        self.text(f"Current: {actor or '—'}", 36, 67, size=19)
-        for i, (ability_id, meta) in enumerate(skills, 1):
-            color = (255, 234, 150) if i - 1 == self._battle_skill_index else (235, 238, 245)
-            self.text(
-                f"{i}. {meta.get('label', ability_id)}",
-                36 + ((i - 1) % 2) * 190,
-                100 + ((i - 1) // 2) * 32,
-                size=20,
-                color=color,
-            )
-
-        self.panel((460, 22, 480, 92))
-        self.text("1-4: Skill   B: Boost   X: Capture   F5: Save", 478, 36, size=20)
-        if self.settings.show_battle_log:
-            self.text(self._last_action_name or "Choose an action", 478, 70, size=20, color=(172, 220, 255))
-        boost_resource = self.game.rules.boost_resource_id
-        if actor and self.game.rules.boost_enabled:
-            amount = self.game.battle.battle_resources.current(actor, boost_resource)
-            label = boost_resource.replace("_", " ").title()
-            self.text(
-                f"{label} {int(amount)}   Boost x{self._boost_level + 1}", 700, 70, size=18, color=(255, 220, 120)
-            )
-        for eid in enemies:
-            gauge = (self._enemy_layout(eid) or {}).get("gauge")
-            if gauge is None or eid not in live:
-                continue
-            resource = gauge["resource"]
-            current = self.game.battle.battle_resources.current(eid, resource)
-            maximum = self.game.battle.battle_resources.definitions[resource].maximum
-            self.text(
-                f"{gauge.get('label', resource)} {int(current)}/{int(maximum)}",
-                730,
-                118,
-                size=18,
-                color=(255, 205, 120),
-            )
-
-        if self._victory:
-            self.panel((300, 190, 360, 150), fill=(12, 18, 28, 240), border=(240, 201, 93))
-            self.text("VICTORY", 480, 225, size=44, color=(255, 220, 105), center=True)
-            self.text("Rewards / EXP / AP / Ability Points applied", 480, 266, size=20, center=True)
-            if self._victory_summary:
-                self.text(self._victory_summary[0], 480, 293, size=17, center=True)
-            self.text("Press Enter to return to field", 480, 318, size=18, center=True)
-        elif self._defeat:
-            self.panel((300, 190, 360, 130), fill=(25, 12, 18, 240), border=(220, 90, 110))
-            self.text("PARTY DEFEATED", 480, 225, size=38, color=(255, 140, 150), center=True)
-            self.text("Game over", 480, 280, size=20, center=True)
-
-    def _play_fx(self, ability_id, target_is_enemy=True):
-        meta = self.manifest["battle"].get("skills", {}).get(ability_id)
-        if not meta or "fx" not in meta:
-            return
-        sheet = self.load_image(meta["fx"])
-        frame_count = int(meta.get("frames", 16))
-        cols = 4
-        rows = max(1, (frame_count + cols - 1) // cols)
-        fw = sheet.get_width() // cols
-        fh = sheet.get_height() // rows
-        start = self.pg.time.get_ticks()
-        duration = 420
-        while self.running:
-            elapsed = self.pg.time.get_ticks() - start
-            if elapsed >= duration:
-                break
-            for event in self.pg.event.get():
-                if event.type == self.pg.QUIT:
-                    self.running = False
-                    return
-                if event.type == self.pg.KEYDOWN and event.key == self.pg.K_ESCAPE:
-                    self.running = False
-                    return
-            self._draw_battle()
-            index = min(frame_count - 1, int(elapsed / duration * frame_count))
-            src = self.pg.Rect((index % cols) * fw, (index // cols) * fh, fw, fh)
-            frame = sheet.subsurface(src)
-            frame = self.pg.transform.smoothscale(frame, (160, 160))
-            pos = (700, 170) if target_is_enemy else (180, 250)
-            self.screen.blit(frame, pos)
-            self.present()
-            self.clock.tick(60)
-
     def _use_skill(self, slot):
         actor = self._battle_actor()
         skills = self._skills_for_actor(actor)
@@ -1239,16 +1085,11 @@ class PlayableTestRuntime:
         ability_id, meta = skills[slot]
         boost = self._boost_level
         try:
-            offensive = self.game.ability_relation(ability_id).value == "opponent"
             self.game.use_ability(actor, ability_id, boost_level=boost)
             self._last_action_name = f"{actor}: {meta.get('label', ability_id)} x{boost + 1}"
             self._boost_level = 0
-            if getattr(self._battle_presentation, "name", "legacy") == "legacy":
-                # The legacy screen plays the manifest sound and a blocking effect
-                # loop; the canonical screen's motion sequence owns sound and VFX
-                # (timed to the impact beat), so nothing is played twice.
-                self._sound(meta.get("sfx"))
-                self._play_fx(ability_id, target_is_enemy=offensive)
+            # Sound and VFX belong to the battle screen's choreography (motion sequence, or the
+            # manifest skill's sfx / fx in the default cues), timed to the impact.
         except Exception as exc:
             self._last_action_name = f"Action failed: {exc}"
             return
@@ -1739,7 +1580,7 @@ class PlayableTestRuntime:
 
     def _draw_backdrop(self, base="field"):
         if base == "battle":
-            self._draw_battle_world(show_labels=False)
+            self._battle_presentation.draw()  # the canonical battle screen as it was left
         else:
             self._draw_field(False)
         shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)

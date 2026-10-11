@@ -94,7 +94,6 @@ def test_playable_runtime_plays_field_battle_and_victory_audio(monkeypatch, tmp_
     runtime.open()
     device = RecordingAudioDevice()
     runtime.audio.device = device
-    monkeypatch.setattr(runtime, "_play_fx", lambda *a, **k: None)
     key = lambda k: pygame.event.Event(pygame.KEYDOWN, key=k)  # noqa: E731
     try:
         runtime._ui_mode = "field"

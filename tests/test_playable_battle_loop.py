@@ -1,4 +1,4 @@
-"""Headless smoke test of the legacy pygame battle loop driven by session rules."""
+"""Headless tests of the playable battle loop (canonical battle screen) driven by session rules."""
 
 import json
 from pathlib import Path
@@ -85,7 +85,6 @@ def test_field_interaction_shows_dialogue_then_enters_battle(resource_root, monk
 
 from asteria.runtime.battle_presentation_adapters import (  # noqa: E402
     CanonicalBattleAdapter,
-    LegacyPygameBattleAdapter,
     create_battle_presentation_adapter,
     entry_semantics,
 )
@@ -118,7 +117,6 @@ def _scripted_battle(runtime, *, rounds=12):
 def test_session_battle_log_records_turns_actions_and_outcomes(resource_root, monkeypatch):
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     runtime = _boss_runtime(resource_root)
-    monkeypatch.setattr(runtime, "_play_fx", lambda *a, **k: None)
     try:
         log = _scripted_battle(runtime)
     finally:
@@ -135,15 +133,12 @@ def test_session_battle_log_records_turns_actions_and_outcomes(resource_root, mo
     assert any(outcome.value.resolved_value > 1.0 for e in offensive for _, outcome in e.outcomes)
 
 
-def test_legacy_and_canonical_adapters_agree_on_battle_semantics(resource_root, monkeypatch):
+def test_canonical_adapter_understands_every_battle_fact_in_order(resource_root, monkeypatch):
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     runtime = _boss_runtime(resource_root)
-    monkeypatch.setattr(runtime, "_play_fx", lambda *a, **k: None)
     try:
-        legacy = LegacyPygameBattleAdapter(runtime)
         canonical = CanonicalBattleAdapter(runtime)
         runtime.game.start_encounter("boss_room")
-        legacy.begin()
         canonical.begin()  # canonical subscribes to this battle's hooks
         log = list(runtime.game.drain_battle_log())
         runtime._advance_to_hero_turn()
@@ -153,7 +148,6 @@ def test_legacy_and_canonical_adapters_agree_on_battle_semantics(resource_root, 
                 break
             runtime._use_skill(0)
         log.extend(runtime.game.drain_battle_log())
-        legacy.consume(log)
         canonical.consume(log)
         # The canonical screen replays the actions on its presentation clock.
         for _ in range(2000):
@@ -163,16 +157,14 @@ def test_legacy_and_canonical_adapters_agree_on_battle_semantics(resource_root, 
         assert not canonical.busy()
     finally:
         runtime.close()
-    assert legacy.trace == [entry_semantics(e) for e in log]
-    assert canonical.trace == legacy.trace
-    assert legacy.trace[-1] == ("battle_finished", ("heroes",))
-    assert sum(1 for t in legacy.trace if t[0] == "action") >= 5
+    assert canonical.trace == [entry_semantics(e) for e in log]  # the parity contract the legacy screen met
+    assert canonical.trace[-1] == ("battle_finished", ("heroes",))
+    assert sum(1 for t in canonical.trace if t[0] == "action") >= 5
 
 
 def test_canonical_adapter_drives_hud_menu_feedback_and_renders(resource_root, monkeypatch):
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     runtime = _boss_runtime(resource_root)
-    monkeypatch.setattr(runtime, "_play_fx", lambda *a, **k: None)
     try:
         runtime._battle_presentation = CanonicalBattleAdapter(runtime)
         runtime.game.start_encounter("boss_room")
@@ -186,12 +178,16 @@ def test_canonical_adapter_drives_hud_menu_feedback_and_renders(resource_root, m
         runtime._present_battle(0.016)
         screen = runtime._battle_presentation.screen
         assert screen.hud.members
-        assert screen.action_menu.view.total_count == len(runtime._skills_for_actor(runtime._battle_actor()))
+        actor = runtime._battle_actor()
+        ids = [e.action_id for e in screen.action_menu.view.entries]
+        skills = [a for a, _ in runtime._skills_for_actor(actor)]
+        boost = ["boost"] if runtime.game.max_boost_level(actor) > 0 else []
+        assert ids == skills + boost  # skills, then the boost command (legacy HUD parity)
 
-        runtime._draw_battle_world(show_labels=False)
-        world_only = pygame.image.tobytes(runtime.screen, "RGB")
+        runtime.screen.fill((0, 0, 0))
+        blank = pygame.image.tobytes(runtime.screen, "RGB")
         runtime._battle_presentation.draw()
-        assert pygame.image.tobytes(runtime.screen, "RGB") != world_only  # UI layer drew something
+        assert pygame.image.tobytes(runtime.screen, "RGB") != blank  # the canonical screen drew
 
         runtime._use_skill(0)
         for _ in range(400):
@@ -205,14 +201,16 @@ def test_canonical_adapter_drives_hud_menu_feedback_and_renders(resource_root, m
         runtime.close()
 
 
-def test_manifest_selects_the_adapter_and_legacy_is_default(resource_root, monkeypatch):
+def test_the_canonical_screen_is_the_only_battle_presentation(resource_root, monkeypatch):
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     runtime = _boss_runtime(resource_root)
     try:
-        runtime.manifest["battle"].pop("presentation", None)  # no manifest choice -> legacy
-        assert isinstance(create_battle_presentation_adapter(runtime), LegacyPygameBattleAdapter)
-        runtime.manifest["battle"]["presentation"] = {"adapter": "canonical"}
-        assert isinstance(create_battle_presentation_adapter(runtime), CanonicalBattleAdapter)
+        runtime.manifest["battle"].pop("presentation", None)  # no manifest choice -> canonical
+        default = create_battle_presentation_adapter(runtime)
+        assert isinstance(default, CanonicalBattleAdapter) and not default.legacy_requested
+        runtime.manifest["battle"]["presentation"] = {"adapter": "legacy"}  # retired (CB15 A9)
+        retired = create_battle_presentation_adapter(runtime)
+        assert isinstance(retired, CanonicalBattleAdapter) and retired.legacy_requested
         runtime.manifest["battle"]["presentation"] = {"adapter": "nope"}
         with pytest.raises(ValueError):
             create_battle_presentation_adapter(runtime)
@@ -227,7 +225,6 @@ def test_full_frame_loop_with_canonical_adapter_reaches_victory(resource_root, m
     manifest["battle"]["presentation"] = {"adapter": "canonical"}
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     runtime = _boss_runtime(resource_root)
-    monkeypatch.setattr(runtime, "_play_fx", lambda *a, **k: None)
     key = lambda k: pygame.event.Event(pygame.KEYDOWN, key=k)  # noqa: E731
     try:
         assert isinstance(runtime._battle_presentation, CanonicalBattleAdapter)
@@ -281,7 +278,6 @@ def _canonical_frame(resource_root, monkeypatch):
 
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     runtime = _boss_runtime(resource_root)
-    monkeypatch.setattr(runtime, "_play_fx", lambda *a, **k: None)
     runtime._battle_presentation = CanonicalBattleAdapter(runtime)
     runtime.game.start_encounter("boss_room")
     runtime._battle_presentation.begin()
@@ -346,24 +342,26 @@ def test_pygame_backend_replaces_glyphs_the_font_cannot_draw(monkeypatch):
     assert backend._renderable(font, "Plain text 123") == "Plain text 123"
 
 
-def test_legacy_victory_panel_keeps_rendering_after_the_battle_ends(resource_root, monkeypatch):
+def test_victory_panel_keeps_rendering_after_the_battle_ends(resource_root, monkeypatch):
     """Regression: the frame after victory drew the HUD against a finished (None) battle."""
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     runtime = _boss_runtime(resource_root)
-    monkeypatch.setattr(runtime, "_play_fx", lambda *a, **k: None)
     key = lambda k: pygame.event.Event(pygame.KEYDOWN, key=k)  # noqa: E731
     try:
-        runtime._battle_presentation = LegacyPygameBattleAdapter(runtime)  # the reference now uses canonical
         runtime._ui_mode = "field"
         runtime._frame([key(pygame.K_e)], 0.016)
         runtime._frame([key(pygame.K_RETURN)], 0.016)
-        for _ in range(60):
+        for _ in range(3000):  # one command whenever the canonical screen is idle and waiting for a hero
             if runtime._victory:
                 break
-            runtime._frame([key(pygame.K_1)], 0.05)
+            waiting = not runtime._battle_presentation.busy()
+            runtime._frame([key(pygame.K_1)] if waiting else [], 0.05)
         assert runtime._victory and runtime.game.battle is None
         runtime._frame([], 0.016)
-        runtime._frame([], 0.016)
+        for _ in range(400):  # the result screen and victory jingle play out first
+            if not runtime._battle_presentation.busy():
+                break
+            runtime._frame([], 0.05)
         runtime._frame([key(pygame.K_RETURN)], 0.016)
         assert runtime.game.mode == "field" and not runtime._victory
     finally:

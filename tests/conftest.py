@@ -75,6 +75,5 @@ def runtime(resource_root, monkeypatch):
     project = Project.load_json(REFERENCE_PROJECT / "project.asteria.json", EditorDocument().component_registry)
     value = PlayableTestRuntime(project, project.game_start.instantiate(project), resource_root, width=960, height=540)
     value.open()
-    monkeypatch.setattr(value, "_play_fx", lambda *args, **kwargs: None)
     yield value
     value.close()
