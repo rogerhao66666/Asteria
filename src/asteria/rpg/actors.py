@@ -698,6 +698,7 @@ class RpgDatabase:
         self.achievements = {}
         self.capture_rules = {}
         self.world_interactions = {}
+        self.drop_tables = {}
         self.quests = {}
 
     def add_actor(self, value):
@@ -1014,6 +1015,11 @@ class RpgDatabase:
 
         return self._add_keyed(self.achievements, value, AchievementDefinition, "achievement_id", "achievement")
 
+    def add_drop_table(self, value):
+        from .drop_tables import DropTable
+
+        return self._add_keyed(self.drop_tables, value, DropTable, "table_id", "drop table")
+
     def add_world_interaction(self, value):
         from .world_interactions import WorldInteraction
 
@@ -1173,6 +1179,15 @@ class RpgDatabase:
             for equipment_id in equipment_set.equipment_ids:
                 if equipment_id not in self.equipment:
                     errors.append(f"equipment set {equipment_set.set_id} references unknown equipment {equipment_id}")
+        for table in self.drop_tables.values():
+            for item_id in sorted(table.item_ids()):
+                if item_id not in self.items:
+                    errors.append(f"drop table {table.table_id} references unknown item {item_id}")
+        for enemy in self.enemies.values():
+            if enemy.reward.drop_table_id and enemy.reward.drop_table_id not in self.drop_tables:
+                errors.append(
+                    f"enemy {enemy.enemy_id} reward references unknown drop table {enemy.reward.drop_table_id}"
+                )
         for interaction in self.world_interactions.values():
             where = f"world interaction {interaction.interaction_id}"
             for item_id in {*interaction.cost_items, *interaction.success_items} | (
@@ -1245,7 +1260,7 @@ class RpgDatabase:
     def to_data(self):
         return {
             "schema": "asteria.rpg.database",
-            "version": 26,
+            "version": 27,
             "actors": [self.actors[k].to_data() for k in sorted(self.actors)],
             "classes": [self.classes[k].to_data() for k in sorted(self.classes)],
             "items": [self.items[k].to_data() for k in sorted(self.items)],
@@ -1291,6 +1306,7 @@ class RpgDatabase:
             "capture_rules": [self.capture_rules[k].to_data() for k in sorted(self.capture_rules)],
             "quests": [self.quests[k].to_data() for k in sorted(self.quests)],
             "world_interactions": [self.world_interactions[k].to_data() for k in sorted(self.world_interactions)],
+            "drop_tables": [self.drop_tables[k].to_data() for k in sorted(self.drop_tables)],
         }
 
     @classmethod
@@ -1322,6 +1338,7 @@ class RpgDatabase:
             24,
             25,
             26,
+            27,
         }:
             raise ValueError("unsupported RPG database")
         result = cls()
@@ -1455,6 +1472,11 @@ class RpgDatabase:
 
             for x in data.get("battle_session_rules", ()):
                 result.add_battle_session_rules(BattleSessionRules.from_data(x))
+        if data["version"] >= 27:
+            from .drop_tables import DropTable
+
+            for x in data.get("drop_tables", ()):
+                result.add_drop_table(DropTable.from_data(x))
         if data["version"] >= 26:
             from .world_interactions import WorldInteraction
 

@@ -152,7 +152,7 @@ def test_database_v19_owns_enemy_ai_and_v18_is_backward_readable():
     db = RpgDatabase()
     db.add_enemy_ai(ai_def())
     raw = db.to_data()
-    assert raw["version"] == 26 and "boss_ai" in RpgDatabase.from_data(raw).enemy_ai
+    assert raw["version"] == 27 and "boss_ai" in RpgDatabase.from_data(raw).enemy_ai
     old = json.loads(json.dumps(raw))
     old["version"] = 18
     old.pop("enemy_ai")

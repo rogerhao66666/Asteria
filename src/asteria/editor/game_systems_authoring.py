@@ -22,6 +22,7 @@ from asteria.rpg import (
     QuestObjective,
     ShopDefinition,
 )
+from asteria.rpg.drop_tables import RARITIES, DropTable
 from asteria.rpg.quests import OBJECTIVE_KINDS
 from asteria.rpg.world_interactions import OPERATORS, VERBS, WorldInteraction
 from asteria.rpg.world_record import ACHIEVEMENT_KINDS
@@ -115,7 +116,32 @@ _REQUIREMENT = (
     F("value", "Value", "text", default="true"),
 )
 
+_DROP = (
+    F("item_id", "Item", "ref", source="items"),
+    F("weight", "Weight", "float", default=1.0),
+    F("minimum", "Minimum", "int", default=1),
+    F("maximum", "Maximum", "int", default=1),
+    F("rarity", "Rarity", "choice", choices=RARITIES, default="common"),
+    F("required_switch", "Required Switch", "text", default=""),
+)
+
 FORMS = {
+    "drop_tables": (
+        F("table_id", "Table ID", "id"),
+        F("display_name", "Name", "text", default=""),
+        F("rolls", "Weighted Picks per Kill", "int", default=1),
+        F("nothing_weight", "Weight of No Drop", "float", default=0.0),
+        F("entries", "Weighted Entries", "table", fields=_DROP, default=()),
+        F("guaranteed", "Always Drops", "table", fields=_DROP, default=()),
+        F(
+            "pity",
+            "Pity (guarantee after misses)",
+            "table",
+            fields=(F("item_id", "Item", "ref", source="items"), F("after_misses", "After Misses", "int", default=10)),
+            default=(),
+        ),
+        F("luck_weight_bonus", "Luck Bonus to Rare Weights", "float", default=0.0),
+    ),
     "world_interactions": (
         F("interaction_id", "Interaction ID", "id"),
         F("display_name", "Name", "text", default=""),
@@ -240,6 +266,7 @@ def _templates():
         "equipment_sets": lambda key, c: EquipmentSetDefinition(key, key),
         "capture_rules": lambda key, c: CaptureRule(key, next(iter(sorted(c.database.actors)), "actor")),
         "world_interactions": lambda key, c: WorldInteraction(key, key),
+        "drop_tables": lambda key, c: DropTable(key, key),
     }
 
 
@@ -251,6 +278,7 @@ KINDS = (
     _Kind("equipment_sets", "Equipment Sets", "equipment_sets", "set_id", EquipmentSetDefinition),
     _Kind("capture_rules", "Capture Rules", "capture_rules", "enemy_id", CaptureRule),
     _Kind("world_interactions", "World Interactions", "world_interactions", "interaction_id", WorldInteraction),
+    _Kind("drop_tables", "Drop Tables", "drop_tables", "table_id", DropTable),
 )
 _BY_ID = {k.kind_id: k for k in KINDS}
 

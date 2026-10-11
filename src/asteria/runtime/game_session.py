@@ -1381,9 +1381,22 @@ class GameSessionRuntime:
             if f"{enemy_id}:{serial}" not in self._captured
         )
         for enemy_id in defeated:
-            reward = roll_reward(
-                db.enemies[enemy_id].reward, rng, luck=self.loot_luck, switches=self.save.event_context.get_switch
-            )
+            definition = db.enemies[enemy_id].reward
+            reward = roll_reward(definition, rng, luck=self.loot_luck, switches=self.save.event_context.get_switch)
+            if definition.drop_table_id:
+                from asteria.rpg.drop_tables import roll_drop_table
+
+                extra = roll_drop_table(
+                    db.drop_tables[definition.drop_table_id],
+                    rng,
+                    counters=self.world.counters,  # pity counters are saved with the world state
+                    luck=self.loot_luck,
+                    switches=self.save.event_context.get_switch,
+                )
+                items = dict(reward.items)
+                for item_id, amount in extra.items():
+                    items[item_id] = items.get(item_id, 0) + amount
+                reward = type(reward)(reward.currencies, reward.experience, items)
             applied.append(reward_runtime.apply(reward))
         self._log("battle_finished", data={"winning_sides": ("heroes",), "defeated_sides": ("enemies",)})
         self.save.event_context.set_switch(f"encounter.{self.encounter_id}.defeated", True)

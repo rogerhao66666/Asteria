@@ -48,7 +48,7 @@ def test_database_v24_persists_rules_and_v23_still_loads():
     db = RpgDatabase()
     db.add_battle_session_rules(BattleSessionRules("r", knockout_resource_id="hp"))
     raw = db.to_data()
-    assert raw["version"] == 26
+    assert raw["version"] == 27
     assert RpgDatabase.from_data(raw).battle_session_rules["r"].knockout_resource_id == "hp"
     legacy = dict(raw, version=23)
     legacy.pop("battle_session_rules")

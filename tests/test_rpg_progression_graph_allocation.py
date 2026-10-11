@@ -72,7 +72,7 @@ def make_db():
 def test_graph_roundtrip_and_database_v7_persistence():
     db = make_db()
     raw = db.to_data()
-    assert raw["version"] == 26
+    assert raw["version"] == 27
     loaded = RpgDatabase.from_data(copy.deepcopy(raw))
     assert loaded.progression_graphs["aria_board"].require_node("strength").max_rank == 3
 

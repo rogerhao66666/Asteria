@@ -83,8 +83,9 @@ class RewardDefinition:
     currencies: dict[str, float] = field(default_factory=dict)
     experience: dict[str, float] = field(default_factory=dict)
     loot: tuple[LootEntry, ...] = ()
+    drop_table_id: str = ""  # RPG-04: a weighted / guaranteed / pity DropTable rolled with this reward
 
-    def __init__(self, *, currencies=None, experience=None, loot=()):
+    def __init__(self, *, currencies=None, experience=None, loot=(), drop_table_id=""):
         def vals(raw, label):
             out = {}
             for k, v in dict(raw or {}).items():
@@ -101,13 +102,17 @@ class RewardDefinition:
         object.__setattr__(self, "currencies", vals(currencies, "currency"))
         object.__setattr__(self, "experience", vals(experience, "experience"))
         object.__setattr__(self, "loot", loot)
+        object.__setattr__(self, "drop_table_id", str(drop_table_id or "").strip())
 
     def to_data(self):
-        return {
+        data = {
             "currencies": dict(sorted(self.currencies.items())),
             "experience": dict(sorted(self.experience.items())),
             "loot": [x.to_data() for x in self.loot],
         }
+        if self.drop_table_id:
+            data["drop_table_id"] = self.drop_table_id
+        return data
 
     @classmethod
     def from_data(cls, data):
@@ -115,6 +120,7 @@ class RewardDefinition:
             currencies=data["currencies"],
             experience=data["experience"],
             loot=[LootEntry.from_data(x) for x in data["loot"]],
+            drop_table_id=data.get("drop_table_id", ""),
         )
 
 
