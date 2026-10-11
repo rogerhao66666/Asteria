@@ -4967,6 +4967,11 @@
                   "kind": "tag_add",
                   "target": "buff.haste",
                   "value": null
+                },
+                {
+                  "kind": "stat_delta",
+                  "target": "speed",
+                  "value": 20.0
                 }
               ],
               "required_tags": [],
@@ -5377,7 +5382,30 @@
             "resource": "technique"
           }
         ],
-        "effects": [],
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "slow_hex.effect",
+              "operations": [
+                {
+                  "kind": "tag_add",
+                  "target": "debuff.slow",
+                  "value": null
+                },
+                {
+                  "kind": "stat_delta",
+                  "target": "speed",
+                  "value": -20.0
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",

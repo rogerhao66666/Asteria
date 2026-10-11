@@ -107,7 +107,7 @@ class BattleScheduler:
         return self.definition.mode
 
     def _speed(self, member):
-        return max(self.definition.minimum_speed, float(member.initiative))
+        return max(self.definition.minimum_speed, float(getattr(member, "current_initiative", member.initiative)))
 
     def _initialize(self):
         if self.mode == BattleSchedulerMode.CONTINUOUS:

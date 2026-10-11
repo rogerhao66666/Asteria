@@ -833,7 +833,9 @@ class GameSessionRuntime:
         build = self.resolve_actor_build(actor_id)
         subject = self._battle_subject(build.stats, build.resources, build.tags)
         speed = build.stats.get("speed")
-        return PartyMember(str(actor_id), "heroes", subject, ability_ids=build.abilities, initiative=speed)
+        return PartyMember(
+            str(actor_id), "heroes", subject, ability_ids=build.abilities, initiative=speed, initiative_stat="speed"
+        )
 
     def _enemy_member(self, enemy_id, index):
         definition = self.project.rpg_database.enemies[enemy_id]
@@ -846,6 +848,7 @@ class GameSessionRuntime:
             subject,
             ability_ids=definition.abilities,
             initiative=speed,
+            initiative_stat="speed",
         )
 
     def start_encounter(self, encounter_id):

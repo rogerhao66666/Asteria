@@ -50,8 +50,9 @@ class PartyMember:
     subject: GameplaySubject
     ability_ids: tuple[str, ...] = ()
     initiative: float = 0.0
+    initiative_stat: str = ""
 
-    def __init__(self, member_id, side, subject, *, ability_ids=(), initiative=0.0):
+    def __init__(self, member_id, side, subject, *, ability_ids=(), initiative=0.0, initiative_stat=""):
         if not isinstance(subject, GameplaySubject):
             raise TypeError("subject must be GameplaySubject")
         object.__setattr__(self, "member_id", _id(member_id, "member_id"))
@@ -63,6 +64,16 @@ class PartyMember:
             tuple(dict.fromkeys(_id(x, "ability_id") for x in ability_ids)),
         )
         object.__setattr__(self, "initiative", _number(initiative, "initiative"))
+        object.__setattr__(self, "initiative_stat", str(initiative_stat or ""))
+
+    @property
+    def current_initiative(self):
+        """Initiative now: the ``initiative_stat`` of the subject when named (so speed changes in battle -
+        haste, slow - move later turns), else the fixed ``initiative``."""
+        stats = self.subject.stats
+        if self.initiative_stat and stats.contains(self.initiative_stat):
+            return float(stats.get(self.initiative_stat))
+        return self.initiative
 
 
 class TurnOrderPolicy(str, Enum):

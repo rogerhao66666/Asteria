@@ -35,3 +35,40 @@ def test_breaking_the_boss_applies_the_broken_state_and_delays_its_turn():
     assert battle.member(boss).subject.states.get("broken") is not None
     assert {t.member_id: t.ready_time for t in battle.scheduler.pending()}[boss] == ready + 1.5
     assert battle.battle_resources.current(boss, "stagger") == 5  # reset after the break
+
+
+def test_haste_and_slow_change_speed_and_the_next_rounds_turn_order():
+    """Regression: haste_song only added a tag nothing read; slow_hex had no effect at all."""
+    from asteria.runtime.game_session import GameSessionRuntime
+
+    project = load_project(ROOT / "project.asteria.json")
+    game = GameSessionRuntime(project, project.game_start.instantiate(project))
+    battle = game.start_encounter("boss_room")
+    boss = next(x for x in game.active_enemy_ids() if x.startswith("astral_tyrant"))
+    singer = next(h for h in game.active_hero_ids() if "haste_song" in game.resolve_actor_build(h).abilities)
+    hexer = next(h for h in game.active_hero_ids() if "slow_hex" in game.resolve_actor_build(h).abilities)
+    target = next(h for h in game.active_hero_ids() if h != singer)
+    speed_before = battle.member(target).current_initiative
+    boss_before = battle.member(boss).current_initiative
+    build_speed = game.resolve_actor_build(target).stats.get("speed")
+    game.use_ability(singer, "haste_song", (target,))
+    game.use_ability(hexer, "slow_hex", (boss,))
+    assert battle.member(target).current_initiative == speed_before + 20
+    assert battle.member(boss).current_initiative == boss_before - 20
+    # speed_timeline is a CONTINUOUS scheduler: the next ready time after a member's own turn uses its speed now
+    acted = set()
+    for _ in range(40):
+        actor = game.current_turn_actor()
+        if actor in (target, boss):
+            acted.add(actor)
+        if battle.member(actor).side == "heroes":
+            game.use_ability(actor, "guard", (actor,))
+            game.end_turn()
+        else:
+            game.enemy_act(actor)
+            game.end_turn()
+        if acted == {target, boss}:
+            break
+    scheduled = {t.member_id: t.speed for t in battle.scheduler.pending()}
+    assert scheduled[target] == speed_before + 20 and scheduled[boss] == boss_before - 20
+    assert game.resolve_actor_build(target).stats.get("speed") == build_speed  # a battle buff, not persistent

@@ -149,7 +149,6 @@ def build_project():
             tag_effects={
                 "poison_edge":"status.poison",
                 "armor_break":"debuff.armor_down",
-                "slow_hex":"debuff.slow",
                 "boss_roar":"debuff.fear",
             }
             if aid in tag_effects:
@@ -164,8 +163,14 @@ def build_project():
                 "haste_song":"buff.haste","party_barrier":"buff.barrier",
                 "counter_stance":"state.counter","guard":"buff.guard","focus_charge":"buff.focus",
             }[aid]
+            ops=[EffectOperation(EffectOperationKind.TAG_ADD,tag)]
+            if aid=="haste_song":  # turn-order manipulation: faster allies act sooner (speed feeds the scheduler)
+                ops.append(EffectOperation(EffectOperationKind.STAT_DELTA,"speed",20.0))
+            effects=(AbilityEffect(AbilityTargetMode.SELECTED,Effect(f"{aid}.effect",tuple(ops))),)
+        elif aid=="slow_hex":  # and a slowed enemy acts later
             effects=(AbilityEffect(AbilityTargetMode.SELECTED,Effect(f"{aid}.effect",(
-                EffectOperation(EffectOperationKind.TAG_ADD,tag),
+                EffectOperation(EffectOperationKind.TAG_ADD,"debuff.slow"),
+                EffectOperation(EffectOperationKind.STAT_DELTA,"speed",-20.0),
             ))),)
         ability=AbilityDefinition(
             aid,
