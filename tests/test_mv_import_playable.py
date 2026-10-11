@@ -115,8 +115,9 @@ def test_player_walks_collides_talks_and_transfers_through_the_door(imported):
     assert stop < cx and not _blocked(field, stop, cy) and _blocked(field, stop - 1, cy)
     _walk(field, "move_right", (cx - stop) * 48 / 180 + 0.05)  # back to the start column
     # talk: walk up to the NPC two cells above the door path and press interact
-    while not session.pending_dialogue and session.player.get(Transform).y > 9 * 48 + 20:
-        field.step({"move_up": 1.0}, 1 / 60)
+    _walk(field, "move_up", 3.0)  # blocked by the NPC (solid: "same as characters") one cell below it
+    t = session.player.get(Transform)
+    assert (int(t.x // 48), int(t.y // 48)) == (8, 9)
     field.step({}, 1 / 60)
     field.step({"interact": 1.0}, 1 / 60)
     assert field.dialogue and "アウト" in field.dialogue
@@ -124,6 +125,9 @@ def test_player_walks_collides_talks_and_transfers_through_the_door(imported):
     field.step({"interact": 1.0}, 1 / 60)  # acknowledge
     field.step({}, 1 / 60)
     assert session.pending_dialogue is None
+    npc = next(e for e in session.scene.entities() if e.name == "謎の存在")
+    assert not npc.enabled  # page 2 (self switch A) is empty in MV: the NPC is gone, its state saved
+    assert session.world.npc("mv.map001.event002")["visible"] is False
     # the door (player touch) on the path above transfers to map 2 at (8, 23) facing up
     for _ in range(600):
         if session.scene.id != start_scene:

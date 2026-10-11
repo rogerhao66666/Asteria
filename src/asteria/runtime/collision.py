@@ -219,7 +219,11 @@ class CollisionWorld:
     @classmethod
     def from_scene(cls, scene, cell_size=64.0):
         return cls(
-            (shape_of(e, c) for e, c in scene.query(Collider2DComponent) if c.enabled and e.has(Transform)),
+            (
+                shape_of(e, c)
+                for e, c in scene.query(Collider2DComponent)
+                if c.enabled and e.enabled and e.has(Transform)
+            ),
             cell_size,
         )
 

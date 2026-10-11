@@ -9,7 +9,8 @@ scene from canonical project assets resolved through the asset registry:
   with its ``Animator2D`` clip set's ``idle_*`` / ``walk_*`` clips)
 
 Tile layers with ``order < 100`` draw under characters, ``order >= 100`` above them;
-the player collides with every ``collision_enabled`` layer. Nothing here knows
+the player collides with every ``collision_enabled`` layer and with solid ``Collider2D``
+entities; its box (``CharacterController2D`` half sizes) stands on its feet. Nothing here knows
 where the data came from (no MV code is imported).
 """
 
@@ -234,8 +235,12 @@ class TileMapField:
         elif session.mode == "field" and not session.event_busy:
             dx, dy = InputSnapshot(actions).movement_vector()
             t = session.player.get(Transform)
-            self.controller.x, self.controller.y = t.x, t.y
-            moved = self.controller.move(dx, dy, dt, self.query)
+            hh = self.controller.half_height  # the collision box stands on the feet (bottom edge = feet)
+            self.controller.x, self.controller.y = t.x, t.y - hh
+            from .collision import CollisionWorld, CombinedQuery
+
+            solids = CollisionWorld.from_scene(session.scene).blocking_query(exclude={session.player.id})
+            moved = self.controller.move(dx, dy, dt, CombinedQuery(self.query, solids))  # tiles + solid entities
             x0, y0, x1, y1 = self.world_bounds()  # the map edge blocks like a wall
             self.controller.x = min(
                 max(self.controller.x, x0 + self.controller.half_width), x1 - self.controller.half_width
@@ -243,8 +248,8 @@ class TileMapField:
             self.controller.y = min(
                 max(self.controller.y, y0 + self.controller.half_height), y1 - self.controller.half_height
             )
-            moved = (self.controller.x - t.x, self.controller.y - t.y)
-            session.set_player_position(self.controller.x, self.controller.y)
+            moved = (self.controller.x - t.x, self.controller.y + hh - t.y)
+            session.set_player_position(self.controller.x, self.controller.y + hh)
             if self.animation is not None:
                 self.animation.update_motion(*moved)
                 session.set_player_facing(self.animation.facing)

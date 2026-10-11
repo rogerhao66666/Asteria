@@ -2,7 +2,7 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-11 15:27:25 +0800"
+    "time": "2026-10-11 16:26:25 +0800"
   },
   "results": [
     {
@@ -228,6 +228,17 @@
         "editor_profiler.png"
       ],
       "note": "Nothing saved to the project. Hands-on use by a person is manual item M7."
+    },
+    {
+      "check": "mv_import_real_window",
+      "status": "PASS",
+      "evidence": "Parallax sample (maps 1-2) imported, saved, reloaded in a fresh process and played in a real cocoa window by real key events: NPC said '\u30a2\u30a4\u30ea\u30b9\\u3000\u30a2\u30a6\u30c8\u30fb\u30fb\u30fb'; the door transferred to '\u3010\u8fd1\u666f\u3011\u30b9\u30e2\u30c3\u30b0' cell [8, 23] (expected [8, 23]); event errors 0; MV modules loaded while playing []",
+      "screenshots": [
+        "mv_import_start.png",
+        "mv_import_dialogue.png",
+        "mv_import_after_transfer.png"
+      ],
+      "note": "Visual review of the tiles and characters is part of manual item M9."
     }
   ]
 }

@@ -105,5 +105,5 @@ def test_scene_conversion_uses_tilemap_host_and_event_standing_points(tmp_path):
 
     assert host.has(TileMap2DComponent)
     assert event.name == "Guide"
-    assert (event.get(Transform).x, event.get(Transform).y) == (72.0, 96.0)
+    assert (event.get(Transform).x, event.get(Transform).y) == (72.0, 88.0)
     assert event.rpg_maker_mv_event.image.character_name == "Actor1"

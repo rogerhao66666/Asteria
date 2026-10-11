@@ -913,6 +913,116 @@ def check_packaged_app(out):
     )
 
 
+MV_PLAY_SCRIPT = """
+import json, sys, time
+from pathlib import Path
+import pygame
+from asteria.core import Transform
+from asteria.platform.pygame_backend import PygameRuntimeBackend
+from asteria.project_tools import load_project
+from asteria.runtime.game_session import GameSessionRuntime
+from asteria.runtime.tilemap_field import TileMapField, run_tilemap_field
+
+root, out = Path(sys.argv[1]), Path(sys.argv[2])
+project = load_project(root / "project.asteria.json")
+field = TileMapField(GameSessionRuntime(project, project.game_start.instantiate(project)), root)
+backend = PygameRuntimeBackend(project.input_map)
+backend.open("Imported MV project", 816, 624)
+start_scene = field.session.scene.id
+log = {"driver": pygame.display.get_driver(), "start": list(field.session.save.player_position)}
+state = {"phase": "walk", "shots": []}
+
+def shot(name):
+    pygame.image.save(backend.screen, str(out / name))
+    state["shots"].append(name)
+
+def key(k, up=False):
+    pygame.event.post(pygame.event.Event(pygame.KEYUP if up else pygame.KEYDOWN, key=k))
+
+def on_frame(frame):
+    s, session = state, field.session
+    if frame == 2:
+        shot("mv_import_start.png")
+        key(pygame.K_UP)
+    if s["phase"] == "walk" and frame == 200:  # walked up until the NPC blocks the way
+        key(pygame.K_UP, up=True); key(pygame.K_e); s["phase"] = "talk"; s["talk_frame"] = frame
+    elif s["phase"] == "talk" and frame == s["talk_frame"] + 3:
+        key(pygame.K_e, up=True)
+    elif s["phase"] == "talk" and frame == s["talk_frame"] + 8:
+        log["dialogue"] = field.dialogue
+        shot("mv_import_dialogue.png")
+        key(pygame.K_e)
+    elif s["phase"] == "talk" and frame == s["talk_frame"] + 12:
+        key(pygame.K_e, up=True); key(pygame.K_UP); s["phase"] = "door"
+    elif s["phase"] == "door" and session.scene.id != start_scene:
+        key(pygame.K_UP, up=True); s["phase"] = "arrived"; s["arrived"] = frame
+    elif s["phase"] == "arrived" and frame == s["arrived"] + 20:
+        shot("mv_import_after_transfer.png")
+
+frames = run_tilemap_field(field, backend, 816, 624, max_frames=900, on_frame=on_frame)
+t = field.session.player.get(Transform)
+log.update(frames=frames, transferred=field.session.scene.id != start_scene, scene=field.session.scene.name,
+           cell=[int(t.x // 48), int(t.y // 48)], errors=[str(e) for e in field.session.event_errors],
+           shots=state["shots"], mv_modules=sorted(m for m in sys.modules if "rpg_maker" in m))
+backend.close()
+print("MV_PLAY:" + json.dumps(log, ensure_ascii=False))
+"""
+
+
+def check_mv_import(out):
+    """W-18: an imported RPG Maker MV project (local reference) plays in a real window as a native project."""
+    import tempfile
+
+    from asteria.assets.local_reference import discover_mv_projects, resolve_rpg_maker_mv_root
+
+    root = resolve_rpg_maker_mv_root(REPO)
+    layouts = (
+        []
+        if root is None
+        else [
+            l for l in discover_mv_projects(root) if l.relative_path.endswith("parallax_Resource_Pack/sample_project")
+        ]
+    )
+    if not layouts:
+        return result(
+            "mv_import_real_window", "BLOCKED", "The local RPG Maker MV reference (parallax sample) is absent."
+        )
+    from asteria.assets.rpg_maker_mv_project import import_mv_project
+
+    with tempfile.TemporaryDirectory() as tmp:
+        project_path, imported = import_mv_project(layouts[0].root, Path(tmp) / "imported", map_ids=(1, 2))
+        proc = subprocess.run(
+            [sys.executable, "-c", MV_PLAY_SCRIPT, str(project_path.parent), str(Path(out).resolve())],
+            capture_output=True,
+            text=True,
+            timeout=300,
+            cwd=tmp,
+        )
+    line = next((l for l in proc.stdout.splitlines() if l.startswith("MV_PLAY:")), None)
+    if line is None:
+        return result(
+            "mv_import_real_window", "FAIL", f"play process exited {proc.returncode}", stderr=proc.stderr[-1500:]
+        )
+    log = json.loads(line[len("MV_PLAY:") :])
+    ok = (
+        log["transferred"]
+        and log["cell"] == [8, 23]
+        and log.get("dialogue")
+        and not log["errors"]
+        and log["mv_modules"] == []
+    )
+    return result(
+        "mv_import_real_window",
+        "PASS" if ok else "FAIL",
+        f"Parallax sample (maps 1-2) imported, saved, reloaded in a fresh process and played in a real "
+        f"{log['driver']} window by real key events: NPC said {log.get('dialogue')!r}; the door transferred "
+        f"to '{log['scene']}' cell {log['cell']} (expected [8, 23]); event errors {len(log['errors'])}; "
+        f"MV modules loaded while playing {log['mv_modules']}",
+        screenshots=log["shots"],
+        note="Visual review of the tiles and characters is part of manual item M9.",
+    )
+
+
 CHECKS = {
     "gpu_window": check_gpu_window,
     "input": check_input,
@@ -928,6 +1038,7 @@ CHECKS = {
     "menus": check_game_menus,
     "follow_camera": check_follow_camera,
     "packaged_app": check_packaged_app,
+    "mv_import": check_mv_import,
 }
 
 

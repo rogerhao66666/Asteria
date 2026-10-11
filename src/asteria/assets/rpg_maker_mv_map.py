@@ -171,11 +171,31 @@ def _first_page(event: MVMapEvent):
     return pages[0] if pages and isinstance(pages[0], dict) else None
 
 
+def _vanish_page(event: MVMapEvent, channel: str):
+    """True when turning self switch ``channel`` on selects an empty page (no image, no commands): the
+    common "talk once, then the event is gone" idiom."""
+    for page in (dict(event.raw).get("pages") or ())[1:]:
+        c = page.get("conditions") or {}
+        only_self = c.get("selfSwitchValid") and c.get("selfSwitchCh") == channel
+        others = any(c.get(k) for k in ("switch1Valid", "switch2Valid", "variableValid", "itemValid", "actorValid"))
+        image = page.get("image") or {}
+        empty = not image.get("characterName") and not image.get("tileId")
+        commands = [cmd for cmd in page.get("list") or () if cmd.get("code") != 0]
+        if only_self and not others:
+            return empty and not commands
+    return False
+
+
+def npc_id_for(mv_map: RPGMakerMVMap, event: MVMapEvent) -> str:
+    return f"mv.map{mv_map.map_id:03d}.event{event.id:03d}"
+
+
 def convert_event_page(mv_map: RPGMakerMVMap, event: MVMapEvent):
     """``(trigger, instructions, unsupported)`` for the event's first page.
 
     Supported: Show Text (101/401) -> DIALOGUE, Transfer Player with direct coordinates
-    (201) -> WORLD TRANSFER to the imported scene, Wait (230) -> WAIT. Triggers: action
+    (201) -> WORLD TRANSFER to the imported scene, Wait (230) -> WAIT, Control Self Switch ON
+    (123) whose page is empty -> WORLD SET_NPC visible=false (the event's NPC state). Triggers: action
     button -> ``action``; player/event touch -> ``touch``; autorun / parallel -> ``None``
     (not converted). Every other command is listed in ``unsupported`` (never dropped silently).
     """
@@ -208,6 +228,9 @@ def convert_event_page(mv_map: RPGMakerMVMap, event: MVMapEvent):
             instructions.append(EventInstruction("WORLD", {"command": "TRANSFER", "args": args}))
         elif code == 230 and params:
             instructions.append(EventInstruction("WAIT", {"seconds": int(params[0]) / 60.0}))
+        elif code == 123 and len(params) >= 2 and int(params[1]) == 0 and _vanish_page(event, str(params[0])):
+            args = {"npc": npc_id_for(mv_map, event), "key": "visible", "value": False}
+            instructions.append(EventInstruction("WORLD", {"command": "SET_NPC", "args": args}))
         else:
             unsupported.append(code)
     flush()
@@ -248,7 +271,7 @@ def to_asteria_scene(
                 entity_id=str(uuid5(_MV_ID_NAMESPACE, f"map:{mv_map.map_id}:event:{event.id}")),
             )
         )
-        entity.add_component(Transform(event.x * 48 + 24, event.y * 48 + 48))
+        entity.add_component(Transform(event.x * 48 + 24, event.y * 48 + 40))  # feet: same as the player
         if event.image.character_name:
             sprite = entity.add_component(SpriteRenderer2D())
             baked_character = characters.get((event.image.character_name, event.image.character_index))
@@ -256,6 +279,16 @@ def to_asteria_scene(
             row = _MV_DIRECTION_ROW.get(event.image.direction, 0)
             sprite.frame_index = row * 3 + max(0, min(2, event.image.pattern))
         entity.rpg_maker_mv_event = event
+        from asteria.runtime.npc_state import NpcIdentity2DComponent
+
+        entity.add_component(NpcIdentity2DComponent()).npc_id = npc_id_for(mv_map, event)  # saved event state
+        page = _first_page(event)
+        if page is not None and int(page.get("priorityType", 0)) == 1 and not page.get("through", False):
+            from asteria.runtime.collision import Collider2DComponent
+
+            solid = entity.add_component(Collider2DComponent())  # "same as characters": blocks the player
+            solid.width = solid.height = 46.0
+            solid.offset_y = -16.0  # centred on the event's cell (feet are 40 px into it)
         if event_programs is not None:
             from asteria.events import EventProgram
             from asteria.runtime import Interaction2DComponent
@@ -265,12 +298,13 @@ def to_asteria_scene(
             if unsupported and issues is not None:
                 issues.append(("event.unsupported_commands", f"{where}: commands {sorted(set(unsupported))} kept out"))
             pages = dict(event.raw).get("pages") or ()
-            if len(pages) > 1 and issues is not None:
+            vanishes = any(_vanish_page(event, ch) for ch in "ABCD")
+            if len(pages) > (2 if vanishes else 1) and issues is not None:
                 issues.append(("event.extra_pages", f"{where}: only the first of {len(pages)} pages is converted"))
             if trigger is None and instructions and issues is not None:
                 issues.append(("event.trigger", f"{where}: autorun / parallel pages are not converted"))
             if trigger is not None and instructions:
-                program_id = f"mv.map{mv_map.map_id:03d}.event{event.id:03d}"
+                program_id = npc_id_for(mv_map, event)
                 event_programs.register(program_id, EventProgram(instructions))
                 interaction = entity.add_component(Interaction2DComponent())
                 interaction.event_program_id = program_id
@@ -292,7 +326,7 @@ def to_asteria_scene(
         controller = player.add_component(CharacterController2DComponent())
         controller.speed = 180.0  # MV move speed 4: 1/16 tile per frame at 60 fps
         controller.half_width = 14.0
-        controller.half_height = 6.0
+        controller.half_height = 19.0  # the box stands on the feet: most of the cell, like an MV character
         camera_entity = scene.add_entity(Entity("Camera", entity_id=_stable_id("map-camera", mv_map.map_id)))
         camera_entity.add_component(Transform(x * 48 + 24, y * 48 + 24))
         camera = camera_entity.add_component(Camera2DComponent())
