@@ -129,7 +129,7 @@ class ActionTimelineWidget(QWidget):
         dup_button.clicked.connect(self._duplicate_clicked)
         del_button.clicked.connect(self.delete_sequence)
         left = QVBoxLayout()
-        left.addWidget(QLabel("Ability timelines"))
+        left.addWidget(QLabel("Ability Timelines"))
         left.addWidget(self.sequence_list, 1)
         row = QHBoxLayout()
         for b in (new_button, dup_button, del_button):

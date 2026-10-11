@@ -174,7 +174,7 @@ def window():
 
 def test_vfx_tab_previews_applies_and_links_to_the_timeline_and_animation_editor(window):
     widget = window.vfx_editor
-    assert window.ui_workspace.tabText(window.ui_workspace.indexOf(widget)) == "VFX"
+    assert window.ui_workspace.tabText(window.ui_workspace.indexOf(widget)) == "Battle Effects"
     assert widget.select_vfx("battle.fx.flame")
     assert widget.problems.item(0).text() == "No problems" and widget.usages.count() >= 1
     widget.anchor.setCurrentText("head")

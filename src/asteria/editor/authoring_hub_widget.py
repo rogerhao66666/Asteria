@@ -83,6 +83,11 @@ except ImportError:
             pass
 
 
+def _count_heading(label, category_label, count):
+    """The list heading names what is listed: "Actors · 12 records"."""
+    label.setText(f"{category_label} · {count} record" + ("" if count == 1 else "s"))
+
+
 def _category_icons(browser, category_label):
     """Give every record in a database list its category's icon (actor, skill, item...)."""
     from .decor import label_icon
@@ -124,6 +129,63 @@ def _coerce_like(text, original):
     return str(text)
 
 
+_FORMAT_KEYS = ("schema", "version")
+_ACRONYMS = {
+    "id": "ID",
+    "ids": "IDs",
+    "hp": "HP",
+    "mp": "MP",
+    "sp": "SP",
+    "tp": "TP",
+    "xp": "XP",
+    "exp": "EXP",
+    "ui": "UI",
+    "hud": "HUD",
+    "ai": "AI",
+    "vfx": "VFX",
+    "sfx": "SFX",
+    "bgm": "BGM",
+    "fx": "FX",
+    "uri": "URI",
+    "x": "X",
+    "y": "Y",
+    "z": "Z",
+    "rpg": "RPG",
+}
+
+
+def field_label(key):
+    """``display_name`` -> "Display Name", ``actor_id`` -> "Actor ID" (the data key itself is unchanged)."""
+    words = str(key).replace("-", "_").split("_")
+    return " ".join(_ACRONYMS.get(w.lower(), w[:1].upper() + w[1:]) for w in words if w) or str(key)
+
+
+def _summary(value):
+    """A short name for a list entry: its id / name if it has one, the value itself if it is short."""
+    if isinstance(value, dict):
+        for key in ("id", "name", "display_name", "label", "title"):
+            if isinstance(value.get(key), (str, int)) and str(value[key]):
+                return str(value[key])
+        for key, val in value.items():
+            if key.endswith("_id") and isinstance(val, (str, int)) and str(val):
+                return str(val)
+        return ""
+    if isinstance(value, (str, int, float)) and len(str(value)) <= 32:
+        return ""  # shown in the value column
+    return ""
+
+
+def _record_title(data):
+    if isinstance(data, dict):
+        for key, val in data.items():
+            if key.endswith("_id") and isinstance(val, str) and val:
+                return val
+        for key in ("id", "name", "display_name"):
+            if isinstance(data.get(key), str) and data[key]:
+                return data[key]
+    return "Record"
+
+
 class StructuredRecordEditor(QTreeWidget):
     """Small recursive structured-data editor.
 
@@ -145,19 +207,21 @@ class StructuredRecordEditor(QTreeWidget):
         self._data = None
         self.itemChanged.connect(lambda *_: self.changed.emit())
 
-    def set_record(self, data):
+    def set_record(self, data, title=None):
         self.blockSignals(True)
         try:
             self.clear()
             self._data = deepcopy(data)
-            self._append(None, self._data, "Record", ())
+            root = self._append(None, self._data, title or _record_title(self._data), (), root=True)
+            if isinstance(self._data, dict) and ("schema" in self._data or "version" in self._data):
+                root.setToolTip(0, f"Format {self._data.get('schema', '?')} v{self._data.get('version', '?')}")
             self.expandToDepth(1)
             self.resizeColumnToContents(0)  # full field names (they were cut to "def…", "resour…")
             self.setColumnWidth(0, min(max(self.columnWidth(0), 140), 360))
         finally:
             self.blockSignals(False)
 
-    def _append(self, parent, value, label, path):
+    def _append(self, parent, value, label, path, *, root=False):
         item = QTreeWidgetItem([str(label), ""])
         item.setData(0, Qt.UserRole, path)
         if parent is None:
@@ -166,10 +230,19 @@ class StructuredRecordEditor(QTreeWidget):
             parent.addChild(item)
         if isinstance(value, dict):
             for key, val in value.items():
-                self._append(item, val, key, path + (key,))
+                if root and key in _FORMAT_KEYS:
+                    continue  # file-format bookkeeping, not game data (kept as is; shown in the tooltip)
+                child = self._append(item, val, field_label(key), path + (key,))
+                child.setToolTip(0, str(key))
+            if not root:
+                item.setText(1, f"{len(value)} field" + ("" if len(value) == 1 else "s"))
+                item.setForeground(1, self.palette().placeholderText())
         elif isinstance(value, list):
             for index, val in enumerate(value):
-                self._append(item, val, f"[{index}]", path + (index,))
+                summary = _summary(val)
+                self._append(item, val, f"#{index + 1}" + (f" · {summary}" if summary else ""), path + (index,))
+            item.setText(1, f"{len(value)} item" + ("" if len(value) == 1 else "s"))
+            item.setForeground(1, self.palette().placeholderText())
         else:
             item.setText(1, _scalar_text(value))
             item.setData(1, Qt.UserRole, deepcopy(value))
@@ -225,7 +298,7 @@ class AuthoringHubWidget(QWidget):
         self._ids = []
 
         header = QHBoxLayout()
-        heading = QLabel(self.title)
+        heading = self.heading = QLabel(self.title)
         heading.setObjectName("SectionLabel")
         self.category = QComboBox()
         self.category.setProperty("decorate", True)  # category icons (decor.py)
@@ -278,6 +351,7 @@ class AuthoringHubWidget(QWidget):
         self._ids = list(self._list_ids(category))
         self.browser.addItems(self._ids)
         _category_icons(self.browser, self.category.currentText())
+        _count_heading(self.heading, self.category.currentText(), len(self._ids))
         if self._ids:
             self.browser.setCurrentRow(0)
 
@@ -405,7 +479,7 @@ class AdapterFamilyWidget(QWidget):
         self.last_error = None
 
         header = QHBoxLayout()
-        heading = QLabel(self.title)
+        heading = self.heading = QLabel(self.title)
         heading.setObjectName("SectionLabel")
         self.category = QComboBox()
         self.category.setProperty("decorate", True)  # category icons (decor.py)
@@ -532,6 +606,7 @@ class AdapterFamilyWidget(QWidget):
         self._ids = self._sorted([key for key in adapter.ids() if not needle or needle in key.lower()])
         self.browser.addItems(self._ids)
         _category_icons(self.browser, self.category.currentText())
+        _count_heading(self.heading, self.category.currentText(), len(self._ids))
         self.duplicate_button.setEnabled(adapter.duplicate is not None and bool(self._ids))
         is_graph = self.category_id == "graphs"
         self.view_button.setVisible(is_graph)
@@ -814,7 +889,7 @@ class FamilyHostWidget(QWidget):
             self.child = None
         self.project_id = pid
         if project is None:
-            self.child = QLabel("Open a Project to use this authoring workspace.")
+            self.child = QLabel("Open a project to edit its data.")
         else:
             document = getattr(getattr(self.builder, "__self__", None), "document", None)
             self.child = AdapterFamilyWidget(self.title, self.builder(), document=document)

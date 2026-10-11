@@ -120,7 +120,7 @@ class AnimationEditorWidget(QWidget):
         remove_clip.clicked.connect(self.remove_clip)
         rename_clip.clicked.connect(self._rename_clicked)
         left = QVBoxLayout()
-        left.addWidget(QLabel("Sprite sheets"))
+        left.addWidget(QLabel("Sprite Sheets"))
         left.addWidget(self.sheet_list, 1)
         left.addWidget(QLabel("Clips"))
         left.addWidget(self.clip_list, 1)

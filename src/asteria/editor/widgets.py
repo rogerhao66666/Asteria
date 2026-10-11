@@ -410,6 +410,6 @@ class SceneViewportPlaceholder(QWidget):
             raise RuntimeError("PySide6 is required for editor UI")
         super().__init__(parent)
         layout = QVBoxLayout(self)
-        label = QLabel("Scene Viewport\n(runtime renderer integration comes next)")
+        label = QLabel("Scene View")
         label.setAlignment(Qt.AlignCenter)
         layout.addWidget(label)

@@ -19,41 +19,65 @@
         "text": "Layers"
       }
     ],
-    "rpg_database": [],
+    "rpg_game_data": [],
     "rpg_game_systems": [],
     "rpg_enemy_ai": [],
     "rpg_behavior_trees": [],
     "battle": [],
-    "ui_battle_presentation": [
+    "ui_battle_screen": [
       {
         "kind": "scrolled",
         "widget": "QTabBar",
         "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
-        "text": "Input Map"
+        "text": "Battle Effects"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Controls"
       }
     ],
-    "ui_runtime_rpg_ui": [
+    "ui_menu_screens": [
       {
         "kind": "scrolled",
         "widget": "QTabBar",
         "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
-        "text": "Input Map"
+        "text": "Battle Effects"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Controls"
       }
     ],
-    "ui_animation": [
+    "ui_animation_preview": [
       {
         "kind": "scrolled",
         "widget": "QTabBar",
         "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
-        "text": "Input Map"
+        "text": "Battle Effects"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Controls"
       }
     ],
-    "ui_animation_editor": [
+    "ui_sprite_animation": [
       {
         "kind": "scrolled",
         "widget": "QTabBar",
         "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
-        "text": "Input Map"
+        "text": "Battle Effects"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Controls"
       }
     ],
     "ui_animation_states": [
@@ -61,7 +85,13 @@
         "kind": "scrolled",
         "widget": "QTabBar",
         "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
-        "text": "Input Map"
+        "text": "Battle Effects"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Controls"
       }
     ],
     "ui_character_composition": [
@@ -69,41 +99,59 @@
         "kind": "scrolled",
         "widget": "QTabBar",
         "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
-        "text": "Input Map"
-      }
-    ],
-    "ui_action_timeline": [
-      {
-        "kind": "scrolled",
-        "widget": "QTabBar",
-        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
-        "text": "Input Map"
-      }
-    ],
-    "ui_vfx": [
-      {
-        "kind": "scrolled",
-        "widget": "QTabBar",
-        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
-        "text": "Battle Presentation"
+        "text": "Battle Effects"
       },
       {
         "kind": "scrolled",
         "widget": "QTabBar",
         "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
-        "text": "Input Map"
+        "text": "Controls"
       }
     ],
-    "ui_input_map": [
+    "ui_ability_timelines": [
       {
         "kind": "scrolled",
         "widget": "QTabBar",
         "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
-        "text": "Battle Presentation"
+        "text": "Battle Effects"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Controls"
       }
     ],
-    "event_event_program": [],
-    "event_field_-_game_flow": [],
+    "ui_battle_effects": [
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Battle Screen"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Controls"
+      }
+    ],
+    "ui_controls": [
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Battle Screen"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Menu Screens"
+      }
+    ],
+    "event_entity_events": [],
+    "event_interaction_overview": [],
     "event_common_and_battle_events": [],
     "code": []
   },

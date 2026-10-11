@@ -100,7 +100,7 @@ def _structure(project, found):
 
 def _references(project, found):
     for message in project.rpg_database.reference_errors():
-        found.append(Problem("error", "RPG Database", message, locate_record_message(message)))
+        found.append(Problem("error", "Game Data", message, locate_record_message(message)))
     for message in project.ability_reference_errors():
         found.append(Problem("error", "Abilities", message, locate_record_message(message)))
 
@@ -155,7 +155,7 @@ def _sprites(document, found, resource_root):
             messages = controller.problems(asset_id)
         except Exception as exc:  # noqa: BLE001
             messages = [f"{asset_id}: {exc}"]
-        found.extend(Problem("error", "Sprites", m, ("sprite", asset_id)) for m in messages)
+        found.extend(Problem("error", "Sprite Animation", m, ("sprite", asset_id)) for m in messages)
 
 
 def _timelines(document, found):
@@ -167,7 +167,7 @@ def _timelines(document, found):
             messages = controller.problems(controller.get(sequence_id))
         except Exception as exc:  # noqa: BLE001
             messages = [f"{sequence_id}: {exc}"]
-        found.extend(Problem("error", "Action Timeline", m, ("sequence", sequence_id)) for m in messages)
+        found.extend(Problem("error", "Ability Timelines", m, ("sequence", sequence_id)) for m in messages)
 
 
 def _scripts(document, found):

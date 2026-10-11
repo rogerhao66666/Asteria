@@ -90,8 +90,8 @@ class VFXEditorWidget(QWidget):
         self.vfx_list.currentTextChanged.connect(lambda _t: self._load())
         import_button, use_button, unuse_button = (
             QPushButton("Import…"),
-            QPushButton("Use Sheet…"),
-            QPushButton("Not a VFX"),
+            QPushButton("Add Existing Sheet…"),
+            QPushButton("Remove from Effects"),
         )
         import_button.setToolTip("Copy a sprite sheet image into the project and add it as a VFX")
         use_button.setToolTip("Mark an existing sprite sheet as a battle VFX")
@@ -99,7 +99,7 @@ class VFXEditorWidget(QWidget):
         use_button.clicked.connect(self._use_clicked)
         unuse_button.clicked.connect(lambda: self.mark_selected(False))
         left = QVBoxLayout()
-        left.addWidget(QLabel("Battle VFX"))
+        left.addWidget(QLabel("Battle Effects"))
         left.addWidget(self.vfx_list, 1)
         row = QHBoxLayout()
         for b in (import_button, use_button, unuse_button):
@@ -148,7 +148,7 @@ class VFXEditorWidget(QWidget):
         offset_row = QHBoxLayout()
         offset_row.addWidget(self.offset_x)
         offset_row.addWidget(self.offset_y)
-        placement = QGroupBox("Placement in battle")
+        placement = QGroupBox("Battle Placement")
         form = QFormLayout(placement)
         form.addRow("Anchor on member", self.anchor)
         form.addRow("Offset x / y", offset_row)

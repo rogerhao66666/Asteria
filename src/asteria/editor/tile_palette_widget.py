@@ -40,7 +40,7 @@ class TilePaletteWidget(QWidget):
         self.fill_button = QToolButton()
         self.fill_button.setText("Fill")
         self.rect_button = QToolButton()
-        self.rect_button.setText("Rect")
+        self.rect_button.setText("Rectangle")
         for button in (
             self.select_button,
             self.paint_button,

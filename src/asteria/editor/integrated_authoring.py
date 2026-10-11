@@ -300,7 +300,7 @@ class IntegratedAuthoringControllers:
             ),
             AuthoringCategoryAdapter(
                 "party_ui",
-                "Party UI Policy",
+                "Party Menu Rules",
                 lambda: tuple(sorted(db.party_presentation_policies)),
                 lambda k: db.party_presentation_policies[k],
                 lambda k, v: pa.set_presentation_profile(k, v),
@@ -366,11 +366,11 @@ class IntegratedAuthoringControllers:
         categories.append(
             AuthoringCategoryAdapter(
                 "action_timelines",
-                "Action Timelines (entity actions)",
+                "Field Action Timelines",
                 lambda: tuple(sorted(timelines)),
                 lambda k: timelines[k],
-                lambda key, value: self._mapping_edit(timelines, "Action Timeline")(key, value),
-                lambda key: self._mapping_delete(timelines, "Action Timeline")(key),
+                lambda key, value: self._mapping_edit(timelines, "Field Action Timeline")(key, value),
+                lambda key: self._mapping_delete(timelines, "Field Action Timeline")(key),
                 td,
                 fd(ActionTimeline),
                 None,
@@ -448,23 +448,23 @@ class IntegratedAuthoringControllers:
     def presentation_categories(self):
         c = self.presentation
         labels = {
-            "combatant_visuals": "Combatant Visuals",
-            "feedback": "Feedback",
+            "combatant_visuals": "Combatant Sprites",
+            "feedback": "Damage Numbers & Labels",
             "hud": "Battle HUD",
-            "ui_layout": "UI Layout",
-            "ui_polish": "UI Polish",
-            "sideview_templates": "Side View",
-            "portrait_templates": "Portrait Party",
+            "ui_layout": "Battle UI Layout",
+            "ui_polish": "Battle UI Spacing",
+            "sideview_templates": "Side-View Positions",
+            "portrait_templates": "Portrait Party Layout",
             "animation_timing": "Animation Timing",
-            "director": "Presentation Director",
-            "layering": "Layering",
+            "director": "Camera & Choreography",
+            "layering": "Effect & Sound Channels",
             "action_menu": "Action Menu",
-            "interaction": "Battle Interaction",
-            "results": "Battle Result",
+            "interaction": "Command Menu Pages",
+            "results": "Result Screen",
             "party_layout": "Party Layout",
-            "ui_theme": "UI Theme",
+            "ui_theme": "Battle UI Theme",
             "motion_sequences": "Motion Sequences",
-            "action_workflows": "Action Workflows",
+            "action_workflows": "Command Input Steps",
         }
         result = []
         for category in c.library.categories():

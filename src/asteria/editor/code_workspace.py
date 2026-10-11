@@ -88,7 +88,7 @@ class CodeWorkspaceWidget(QWidget):
 
         self.context_label = QLabel("No project loaded")
         self.context_label.setObjectName("MutedLabel")
-        self.selection_label = QLabel("Selection context: none")
+        self.selection_label = QLabel("Selection: none")
         self.selection_label.setObjectName("MutedLabel")
         self.path_label = QLabel("scripts/main.py")
         for label in (self.context_label, self.selection_label, self.path_label):
@@ -208,18 +208,18 @@ class CodeWorkspaceWidget(QWidget):
         project = self.document.project
         if project is None:
             self.context_label.setText("No project loaded")
-            self.selection_label.setText("Selection context: none")
+            self.selection_label.setText("Selection: none")
             self.save_button.setEnabled(False)
             self.run_button.setEnabled(False)
             return
-        self.context_label.setText(f"Project context: {project.name}  ·  canonical Project/Scene/Entity data")
+        self.context_label.setText(f"Project: {project.name}")
         sel = self.document.selection
         if sel.value is None or sel.multiple:
             text = "none" if sel.value is None else f"{len(sel.values)} selected"
         else:
             name = getattr(sel.value, "name", type(sel.value).__name__)
             text = f"{sel.kind}: {name}"
-        self.selection_label.setText(f"Selection context: {text}  ·  globals: selected / scene / entity")
+        self.selection_label.setText(f"Selection: {text}  ·  scripts can use project, selected, scene, entity")
         self.save_button.setEnabled(self.document.file_path is not None)
         self.run_button.setEnabled(project is not None)
         target = self.default_script_path()

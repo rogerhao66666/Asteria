@@ -190,5 +190,5 @@ def test_runtime_monitor_cleans_up_an_exited_preview():
     AsteriaEditorWindow._poll_runtime_process(window)
     assert window.runtime_process is None
     assert not window.play_session.active
-    assert window.console.text == "Runtime preview closed"
+    assert window.console.text == "Game closed"
     assert window.refreshed

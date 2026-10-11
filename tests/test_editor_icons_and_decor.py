@@ -82,3 +82,33 @@ def test_compact_pass_keeps_panels_narrow():
     compact(page)
     assert isinstance(column.itemAt(1).layout(), FlowLayout)  # the button row wraps when narrow
     assert combo.minimumWidth() > 0 and page.minimumSize().width() < wide
+
+
+def test_record_editor_shows_readable_field_names_and_keeps_the_data():
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.authoring_hub_widget import StructuredRecordEditor, field_label
+
+    QApplication.instance() or QApplication([])
+    assert field_label("display_name") == "Display Name"
+    assert field_label("actor_id") == "Actor ID"
+    assert field_label("max_hp") == "Max HP"
+    data = {
+        "schema": "asteria.rpg.actor",
+        "version": 2,
+        "actor_id": "hero_01",
+        "display_name": "Hero 01",
+        "class_assignments": [{"class_id": "fighter", "level": 1}],
+        "base_stats": {"power": 40.0},
+    }
+    editor = StructuredRecordEditor()
+    editor.set_record(data)
+    root = editor.topLevelItem(0)
+    assert root.text(0) == "hero_01" and "asteria.rpg.actor" in root.toolTip(0)
+    labels = [root.child(i).text(0) for i in range(root.childCount())]
+    assert labels == ["Actor ID", "Display Name", "Class Assignments", "Base Stats"]  # no schema / version rows
+    assignments = root.child(2)
+    assert assignments.text(1) == "1 item" and assignments.child(0).text(0) == "#1 · fighter"
+    root.child(1).setText(1, "Aria")
+    record = editor.record()
+    assert record["display_name"] == "Aria" and record["schema"] == "asteria.rpg.actor" and record["version"] == 2

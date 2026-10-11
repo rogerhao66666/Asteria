@@ -139,11 +139,11 @@ class AsteriaEditorWindow(QMainWindow):
         self.project_workspace_controller = ProjectWorkspaceController(self.document)
         self.playtest_profile_library = None
 
-        self.rpg_authoring = FamilyHostWidget("RPG Authoring", self.authoring_controllers.rpg_categories, self)
+        self.rpg_authoring = FamilyHostWidget("Game Data", self.authoring_controllers.rpg_categories, self)
         # Generic placement: "Place Character from Sprite Sheet…" waits for one map-cell click (CB14).
         self.viewport.characterCellClicked.connect(self._place_character_at)
         self.rpg_workspace = ScrollingTabWidget(self)
-        self.rpg_workspace.addTab(self.rpg_authoring, "Database")
+        self.rpg_workspace.addTab(self.rpg_authoring, "Game Data")
         from .game_systems_authoring import GameSystemsAuthoringController
         from .game_systems_widget import GameSystemsEditorWidget
 
@@ -169,14 +169,14 @@ class AsteriaEditorWindow(QMainWindow):
         )
 
         self.ui_workspace = ScrollingTabWidget(self)
-        self.ui_workspace.addTab(self.presentation_authoring, "Battle Presentation")
-        self.ui_workspace.addTab(self.runtime_ui_authoring, "Runtime RPG UI")
-        self.ui_workspace.addTab(self.animation_widget, "Animation")
+        self.ui_workspace.addTab(self.presentation_authoring, "Battle Screen")
+        self.ui_workspace.addTab(self.runtime_ui_authoring, "Menu Screens")
+        self.ui_workspace.addTab(self.animation_widget, "Animation Preview")
         from .action_timeline_widget import ActionTimelineWidget
         from .animation_editor_widget import AnimationEditorWidget
 
         self.animation_editor = AnimationEditorWidget(self.document, self)
-        self.ui_workspace.addTab(self.animation_editor, "Animation Editor")
+        self.ui_workspace.addTab(self.animation_editor, "Sprite Animation")
         from .animation_state_machine_widget import AnimationStateMachineWidget
 
         self.state_machine_editor = AnimationStateMachineWidget(self.document, self)
@@ -188,24 +188,24 @@ class AsteriaEditorWindow(QMainWindow):
         self.composition_editor.changed.connect(self.refresh_all)
         self.ui_workspace.addTab(self.composition_editor, "Character Composition")
         self.action_timeline_editor = ActionTimelineWidget(self.document, self)
-        self.ui_workspace.addTab(self.action_timeline_editor, "Action Timeline")
+        self.ui_workspace.addTab(self.action_timeline_editor, "Ability Timelines")
         from .vfx_widget import VFXEditorWidget
 
         self.vfx_editor = VFXEditorWidget(self.document, self)
         self.vfx_editor.changed.connect(self.refresh_all)
         self.vfx_editor.openTimeline.connect(self._open_action_timeline)
         self.vfx_editor.openAnimation.connect(self._open_animation_sheet)
-        self.ui_workspace.addTab(self.vfx_editor, "VFX")
+        self.ui_workspace.addTab(self.vfx_editor, "Battle Effects")
         from .input_map_widget import InputMapWidget
 
         self.input_map_editor = InputMapWidget(self.document, self)
         self.input_map_editor.changed.connect(self.refresh_all)
-        self.ui_workspace.addTab(self.input_map_editor, "Input Map")
+        self.ui_workspace.addTab(self.input_map_editor, "Controls")
 
         self.game_flow_overview = GameFlowOverviewWidget(self.document, self)
         self.events_workspace = ScrollingTabWidget(self)
-        self.events_workspace.addTab(self.event_editor, "Event Program")
-        self.events_workspace.addTab(self.game_flow_overview, "Field / Game Flow")
+        self.events_workspace.addTab(self.event_editor, "Entity Events")
+        self.events_workspace.addTab(self.game_flow_overview, "Interaction Overview")
         from .event_flow_widget import EventFlowWidget
 
         self.event_flow_editor = EventFlowWidget(self.document, self)
@@ -646,7 +646,7 @@ class AsteriaEditorWindow(QMainWindow):
         if tx.commands:
             self.document.commands.record_applied(tx)
         self.console.setText(result.stdout.rstrip() if result.stdout else "Script completed successfully")
-        self.statusBar().showMessage("Authoring script completed", 3000)
+        self.statusBar().showMessage("Script finished", 3000)
         self.refresh_all()
 
     def _build_actions(self):
@@ -1961,7 +1961,7 @@ class AsteriaEditorWindow(QMainWindow):
         if self.runtime_process.debug_port is not None:
             self.debugger_widget.attach(self.runtime_process.debug_port, self.runtime_process.debug_token)
         where = "" if spawn is None else f" from ({spawn[0]:g}, {spawn[1]:g})"
-        self.console.setText(f"Runtime preview: {self.play_session.runtime_scene.name}{where}")
+        self.console.setText(f"Playing: {self.play_session.runtime_scene.name}{where}")
         console_dock = self.findChild(QDockWidget, "ConsoleDock")
         console_dock.show()  # the play log, even in a workspace that keeps its bottom panels closed
         console_dock.raise_()
@@ -2034,10 +2034,10 @@ class AsteriaEditorWindow(QMainWindow):
         if self.play_session is not None and self.play_session.active:
             self.play_session.stop()
         if getattr(self, "_shown_log", ""):
-            self.console.append("Runtime preview closed")  # keep the play-test log visible
+            self.console.append("Game closed")  # keep the play-test log visible
         else:
-            self.console.setText("Runtime preview closed")
-        self.statusBar().showMessage("Runtime preview closed", 2000)
+            self.console.setText("Game closed")
+        self.statusBar().showMessage("Game closed", 2000)
         self._refresh_actions()
 
     def closeEvent(self, event):

@@ -154,7 +154,7 @@ class CharacterCompositionWidget(QWidget):
         self.status.setWordWrap(True)
         left = QWidget()
         lv = QVBoxLayout(left)
-        lv.addWidget(QLabel("Body sheets"))
+        lv.addWidget(QLabel("Body Sheets"))
         lv.addWidget(self.sheet_list, 1)
         middle = QWidget()
         mv = QVBoxLayout(middle)

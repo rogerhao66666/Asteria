@@ -73,7 +73,7 @@ class BattleRulesInformationArchitecture:
         self.kinds = (
             BattleRuleKind(
                 "resources",
-                "Resources",
+                "Battle Resources",
                 "battle_resources",
                 BattleResourceDefinition,
                 "resource_id",
@@ -81,7 +81,7 @@ class BattleRulesInformationArchitecture:
             ),
             BattleRuleKind(
                 "states",
-                "States / Status",
+                "Status Effects",
                 "battle_state_policies",
                 BattleStatePolicy,
                 "state_id",
@@ -89,7 +89,7 @@ class BattleRulesInformationArchitecture:
             ),
             BattleRuleKind(
                 "interactions",
-                "Interactions",
+                "Damage Interactions",
                 "interaction_rules",
                 InteractionRule,
                 "rule_id",
@@ -97,7 +97,7 @@ class BattleRulesInformationArchitecture:
             ),
             BattleRuleKind(
                 "outcome_checks",
-                "Outcome Checks",
+                "Chance Checks",
                 "outcome_checks",
                 OutcomeCheckDefinition,
                 "check_id",
@@ -113,7 +113,7 @@ class BattleRulesInformationArchitecture:
             ),
             BattleRuleKind(
                 "schedulers",
-                "Schedulers",
+                "Turn Order",
                 "battle_schedulers",
                 BattleSchedulerDefinition,
                 "scheduler_id",
@@ -121,7 +121,7 @@ class BattleRulesInformationArchitecture:
             ),
             BattleRuleKind(
                 "timing",
-                "Action Timing",
+                "Cast & Recovery Timing",
                 "action_timings",
                 ActionTimingDefinition,
                 "ability_id",
@@ -137,7 +137,7 @@ class BattleRulesInformationArchitecture:
             ),
             BattleRuleKind(
                 "gauges",
-                "Gauge Composition",
+                "Break Gauges",
                 "gauge_compositions",
                 GaugeCompositionDefinition,
                 "composition_id",
@@ -145,7 +145,7 @@ class BattleRulesInformationArchitecture:
             ),
             BattleRuleKind(
                 "reactions",
-                "Reactions",
+                "Counters & Follow-ups",
                 "reactions",
                 ReactionDefinition,
                 "reaction_id",
@@ -153,7 +153,7 @@ class BattleRulesInformationArchitecture:
             ),
             BattleRuleKind(
                 "objectives",
-                "Objectives",
+                "Victory & Defeat Conditions",
                 "battle_objectives",
                 BattleObjectiveDefinition,
                 "objective_id",
@@ -169,7 +169,7 @@ class BattleRulesInformationArchitecture:
             ),
             BattleRuleKind(
                 "transactions",
-                "Action Transactions",
+                "Action Costs",
                 "action_transactions",
                 ActionTransactionPolicy,
                 "ability_id",
@@ -177,7 +177,7 @@ class BattleRulesInformationArchitecture:
             ),
             BattleRuleKind(
                 "session",
-                "Session Rules",
+                "General Battle Rules",
                 "battle_session_rules",
                 BattleSessionRules,
                 "rules_id",

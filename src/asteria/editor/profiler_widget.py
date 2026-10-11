@@ -55,7 +55,7 @@ class ProfilerWidget(QWidget):
         body.addWidget(self.sections, 3)
         body.addWidget(self.counters, 2)
         layout.addLayout(body, 1)
-        layout.addWidget(QLabel("Not measurable on this backend (reported, never invented)"))
+        layout.addWidget(QLabel("Not measured on this backend"))
         layout.addWidget(self.unsupported)
         self.timer = QTimer(self)
         self.timer.setInterval(1000)

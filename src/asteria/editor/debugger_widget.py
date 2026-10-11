@@ -81,7 +81,7 @@ class DebuggerWidget(QWidget):
         top.addWidget(self.refresh_button)
 
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["Runtime state", "Value"])
+        self.tree.setHeaderLabels(["Game State", "Value"])
         self.tree.setColumnWidth(0, 220)
 
         self.command = QComboBox()
@@ -95,7 +95,7 @@ class DebuggerWidget(QWidget):
         self.result = QLabel("")
         self.result.setWordWrap(True)
         self.history = QListWidget()
-        actions = QGroupBox("Debug actions")
+        actions = QGroupBox("Debug Actions")
         box = QVBoxLayout(actions)
         box.addWidget(self.command)
         box.addLayout(self.args_form)

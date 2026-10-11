@@ -27,7 +27,7 @@ class AnimationWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setSpacing(6)
-        title = QLabel("ANIMATION PREVIEW")
+        title = QLabel("Animation Preview")
         title.setObjectName("SectionLabel")
         layout.addWidget(title)
         self.clip = QComboBox()

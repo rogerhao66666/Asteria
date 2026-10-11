@@ -39,7 +39,7 @@ class TileLayersWidget(QWidget):
         group_layout.setContentsMargins(0, 0, 0, 0)
         group_layout.setSpacing(0)
 
-        header = QLabel("MAP LAYERS")
+        header = QLabel("Map Layers")
         header.setObjectName("LayerSectionLabel")
         group_layout.addWidget(header)
 
