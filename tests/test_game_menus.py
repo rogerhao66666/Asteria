@@ -85,7 +85,11 @@ def test_runtime_pause_quests_save_and_title(runtime, resource_root):
     _press(runtime, pygame.K_ESCAPE)
     assert runtime._ui_mode == "pause"
     _choose(runtime, "save")
-    assert (resource_root / "saves" / "playtest_autosave.asteria-save.json").is_file()
+    assert runtime._ui_mode == "slots"
+    _press(runtime, pygame.K_RETURN)  # slot 1
+    assert (resource_root / "saves" / "slot1.asteria-save.json").is_file()
+    _press(runtime, pygame.K_ESCAPE)
+    assert runtime._ui_mode == "pause"
     _choose(runtime, "title")
     assert runtime._ui_mode == "title"
 

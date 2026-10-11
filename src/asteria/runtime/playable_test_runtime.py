@@ -510,11 +510,11 @@ class PlayableTestRuntime:
         self.text("Complex Reference RPG", self.width / 2, 180, size=36, center=True)
         self.panel((280, 250, 400, 150))
         self.text("N   New Game", 330, 282, size=28)
-        self.text("L   Load Player Save", 330, 330, size=28)
-        save_path = self.resource_root / "saves" / "playtest_autosave.asteria-save.json"
-        self.text(
-            "Save found" if save_path.exists() else "No player save yet", 330, 372, size=18, color=(170, 210, 240)
-        )
+        self.text("L   Load Game", 330, 330, size=28)
+        from asteria.runtime.save_slots import SaveSlots
+
+        used = sum(1 for s in SaveSlots(self.resource_root / "saves", self.project).slots() if self._slot_exists(s))
+        self.text(f"{used} save(s) found" if used else "No saves yet", 330, 372, size=18, color=(170, 210, 240))
 
     def _load_player_save(self):
         path = self.resource_root / "saves" / "playtest_autosave.asteria-save.json"
@@ -1141,10 +1141,9 @@ class PlayableTestRuntime:
             self._settings_menu.index = 0
             self._ui_mode = "settings"
         elif choice == "save":
-            self.save_playtest()
+            self.open_slots("save", back="pause")
         elif choice == "load":
-            if self._load_player_save():
-                self._ui_mode = "field"
+            self.open_slots("load", back="pause")
         elif choice == "title":
             self._restart_to_title()
         elif choice == "quit":
@@ -1237,6 +1236,62 @@ class PlayableTestRuntime:
         if delta:
             self.settings.adjust(key, delta)
             self.settings.apply(self.audio)
+
+    # -- save slots (ENG-21) -------------------------------------------------------------------------
+    def _slot_exists(self, slot):
+        from asteria.runtime.save_slots import SaveSlots
+
+        return SaveSlots(self.resource_root / "saves", self.project).path(slot).exists()
+
+    def open_slots(self, mode, back="pause"):
+        from asteria.runtime.save_slots import SaveSlots, SlotMenu
+
+        self.slot_menu = SlotMenu(SaveSlots(self.resource_root / "saves", self.project), mode)
+        self._slots_back = back
+        self._ui_mode = "slots"
+
+    def _slots_input(self, events):
+        menu = self.slot_menu
+        for event in events:
+            if event.type != self.pg.KEYDOWN:
+                continue
+            if event.key == self.pg.K_ESCAPE:
+                self._ui_mode = self._slots_back
+            elif event.key in (self.pg.K_UP, self.pg.K_w):
+                menu.move(-1)
+            elif event.key in (self.pg.K_DOWN, self.pg.K_s):
+                menu.move(1)
+            elif event.key in (self.pg.K_DELETE, self.pg.K_BACKSPACE):
+                menu.delete()
+            elif event.key in (self.pg.K_RETURN, self.pg.K_SPACE):
+                outcome, value = menu.activate(self.game)
+                if outcome == "loaded":
+                    self.save = value
+                    self.game = GameSessionRuntime(self.project, value)
+                    self._victory = self._defeat = False
+                    self._ui_mode = "field"
+                    self.message = f"Loaded slot {menu.slot}"
+                    self.message_until = self.pg.time.get_ticks() + 1800
+                elif outcome == "saved":
+                    self.message = menu.message
+                    self.message_until = self.pg.time.get_ticks() + 1800
+
+    def _draw_slots(self):
+        self._draw_backdrop()
+        menu = self.slot_menu
+        self.panel((100, 60, self.width - 200, self.height - 120))
+        title = "Save Game" if menu.mode == "save" else "Load Game"
+        self.text(title, self.width / 2, 76, size=32, color=(255, 220, 124), center=True)
+        for i, info in enumerate(menu.rows()):
+            y = 140 + i * 64
+            selected = i == menu.row
+            if selected:
+                self.pg.draw.rect(self.screen, (40, 52, 78), (120, y - 8, self.width - 240, 54), border_radius=6)
+            name = "Autosave (F5)" if info.slot == "autosave" else f"Slot {info.slot}"
+            self.text(name, 140, y, size=24, color=(255, 226, 129) if selected else (235, 238, 245))
+            self.text(info.summary, 140, y + 24, size=18, color=(170, 210, 240))
+        hint = menu.message or "Enter: choose   Delete: erase   Esc: back"
+        self.text(hint, self.width / 2, self.height - 96, size=19, color=(255, 226, 129), center=True)
 
     # -- controls / rebinding (ENG-15) ----------------------------------------------------------------
     def _controls_input(self, events):
@@ -1617,7 +1672,7 @@ class PlayableTestRuntime:
                 if event.type == self.pg.KEYDOWN and event.key == self.pg.K_n:
                     self._ui_mode = "field"
                 elif event.type == self.pg.KEYDOWN and event.key == self.pg.K_l:
-                    self._load_player_save()
+                    self.open_slots("load", back="title")
             self._draw_title()
         elif self._ui_mode == "build":
             self._build_menu_input(events)
@@ -1625,6 +1680,9 @@ class PlayableTestRuntime:
         elif self._ui_mode == "pause":
             self._pause_input()
             self._draw_overlay_menu("Paused", self._pause_menu)
+        elif self._ui_mode == "slots":
+            self._slots_input(events)
+            self._draw_slots()
         elif self._ui_mode == "controls":
             self._controls_input(events)
             self._draw_controls()
