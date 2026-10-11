@@ -1084,6 +1084,164 @@ def check_gpu_playable(out):
     )
 
 
+def _vfx_scene(runtime, *, weather="rain", particles=400):
+    """In-memory (never saved) environment on the reference field: lights, shadow, water, weather, post."""
+    from asteria.core import Entity, Transform
+    from asteria.runtime.environment2d import (
+        Environment2DComponent,
+        LightSource2DComponent,
+        ShadowCaster2DComponent,
+        WaterRegion2DComponent,
+    )
+
+    scene = runtime.game.scene
+    settings = scene.add_entity(Entity("RM Scene Settings"))
+    settings.add_component(Transform())
+    env = settings.add_component(Environment2DComponent())
+    env.lighting_enabled, env.ambient_intensity = True, 0.35
+    env.ambient_r, env.ambient_g, env.ambient_b = 0.6, 0.7, 1.0
+    env.weather, env.weather_intensity, env.weather_max_particles = weather, 0.8, particles
+    env.bloom_enabled, env.bloom_threshold, env.bloom_intensity = True, 0.85, 0.5
+    env.saturation, env.vignette = 1.1, 0.35
+    glow = runtime.game.player.add_component(LightSource2DComponent())
+    glow.radius, glow.intensity, glow.height = 60.0, 1.3, 16.0
+    boss = next(e for e in scene.entities() if e.name == "Astral Tyrant")
+    bt = boss.get(Transform)
+    lamp = scene.add_entity(Entity("RM Lamp"))
+    lamp.add_component(Transform(bt.x - 50, bt.y - 10))
+    light = lamp.add_component(LightSource2DComponent())
+    light.radius, light.intensity, light.casts_shadow = 120.0, 1.6, True
+    light.color_r, light.color_g, light.color_b = 1.0, 0.75, 0.45
+    wall = scene.add_entity(Entity("RM Wall"))
+    wall.add_component(Transform(bt.x - 25, bt.y - 10))
+    caster = wall.add_component(ShadowCaster2DComponent())
+    caster.width, caster.height, caster.offset_y = 6.0, 30.0, 0.0
+    pond = scene.add_entity(Entity("RM Pond"))
+    pond.add_component(Transform(-60.0, 30.0))
+    water = pond.add_component(WaterRegion2DComponent())
+    water.width, water.height = 70.0, 30.0
+    return env
+
+
+def check_vfx_environment(out):
+    """VFX-02 / VFX-03 in real windows: GPU effect chain, the pygame fallback, battle afterimages, weather load."""
+    import pygame
+
+    from asteria.runtime.profiler import RuntimeProfiler
+
+    results = []
+    for backend in ("moderngl", "pygame"):
+        runtime = _runtime(backend=backend)
+        runtime.open()
+        driver = pygame.display.get_driver()
+        if backend == "moderngl" and runtime.gpu is None:
+            results.append(
+                result("vfx_gpu_field", "FAIL", f"GPU presenter did not start: {runtime.gpu_fallback_reason}")
+            )
+            runtime.close()
+            continue
+        _vfx_scene(runtime)
+        profiler = runtime.enable_profiling(RuntimeProfiler(target_fps=60))
+        runtime._ui_mode = "field"
+        runtime.game.set_player_position(-40.0, 10.0)
+
+        def measured(frame, profiler=profiler):
+            profiler.end_frame()
+            profiler.begin_frame()
+
+        profiler.begin_frame()
+        _pump(runtime, 5.0, after=measured)
+        name = f"vfx_{backend}_field.png"
+        pygame.image.save(runtime.capture(), str(out / name))
+        report = profiler.report()
+        pacing = report["pacing"]
+        errors = list(runtime.environment_errors)
+        unsupported = list(runtime.environment_unsupported)
+        particles = report["counters"].get("particles", {}).get("max", 0)
+        draw_calls = report["counters"].get("draw_calls", {}).get("max")
+        runtime.close()
+        ok = pacing["measured_fps"] >= 55 and not errors and particles > 0
+        if backend == "pygame":
+            ok = ok and set(unsupported) >= {"bloom", "grade", "vignette", "shadows"}
+        results.append(
+            result(
+                f"vfx_{backend}_field",
+                "PASS" if ok else "FAIL",
+                f"{backend} ({driver}): field with lighting (ambient + player light + shadow-casting lamp), water, "
+                f"rain ({particles:g} particles), bloom, grading, vignette for 5 s: {pacing['measured_fps']} fps, "
+                f"p99 interval {pacing['interval_p99_ms']} ms, frame interval mean {report['frame']['mean_ms']} ms, "
+                f"draw calls/frame {draw_calls}; shader errors {errors}; "
+                f"GPU-only effects reported unsupported {unsupported}",
+                screenshots=[name],
+                sections={k: v["mean_ms"] for k, v in report["sections"].items()},
+            )
+        )
+
+    # battle: bloom + afterimages from a motion_fx beat, on the GPU
+    runtime = _runtime(backend="moderngl")
+    from asteria.editor.action_timeline_authoring import ActionTimelineController
+    from asteria.editor.model import EditorDocument
+
+    document = EditorDocument()
+    document.set_project(runtime.game.project)
+    timeline = ActionTimelineController(document)
+    for sequence_id in timeline.sequences():
+        timeline.add_beat(sequence_id, "rm_echo", 0.0, "motion_fx", "afterimage", "@source", duration=1.2)
+    runtime.open()
+    env = _vfx_scene(runtime, weather="none")
+    env.lighting_enabled = False
+    runtime._ui_mode = "field"
+    runtime.game.start_encounter("boss_room")
+    adapter = runtime._battle_presentation
+    adapter.begin()
+    runtime._advance_to_hero_turn()
+    _pump(runtime, 1.5)
+    runtime._use_skill(0)  # the acting hero's first skill: its motion sequence carries the motion_fx beat
+    ghosts = {"max": 0}
+
+    def count(frame):
+        echoes = adapter.screen.animation.echoes.by_key.values()
+        ghosts["max"] = max([ghosts["max"], *[len(e.snapshots) for e in echoes]])
+        if frame == 25:
+            pygame.image.save(runtime.capture(), str(out / "vfx_gpu_battle_afterimage.png"))
+
+    _pump(runtime, 2.0, after=count)
+    runtime.close()
+    results.append(
+        result(
+            "vfx_gpu_battle_afterimage",
+            "PASS" if ghosts["max"] >= 2 else "FAIL",
+            f"Canonical battle on the GPU with bloom, grading and vignette; a skill's motion_fx beat produced up to "
+            f"{ghosts['max']} afterimage copies of the acting member",
+            screenshots=["vfx_gpu_battle_afterimage.png"],
+            note="Whether the effects look good is manual item M10.",
+        )
+    )
+
+    # weather load: 2000 rain particles on the GPU path
+    runtime = _runtime(backend="moderngl")
+    runtime.open()
+    _vfx_scene(runtime, particles=2500)
+    profiler = runtime.enable_profiling(RuntimeProfiler(target_fps=60))
+    runtime._ui_mode = "field"
+    profiler.begin_frame()
+    _pump(runtime, 4.0, after=lambda f: (profiler.end_frame(), profiler.begin_frame()))
+    report = profiler.report()
+    runtime.close()
+    pacing = report["pacing"]
+    particles = report["counters"].get("particles", {}).get("max", 0)
+    results.append(
+        result(
+            "vfx_weather_load",
+            "PASS" if pacing["measured_fps"] >= 55 else "FAIL",
+            f"Rain at {particles:g} particles plus the full GPU chain for 4 s: {pacing['measured_fps']} fps, "
+            f"p99 interval {pacing['interval_p99_ms']} ms, vfx section mean "
+            f"{report['sections'].get('vfx', {}).get('mean_ms')} ms",
+        )
+    )
+    return results
+
+
 CHECKS = {
     "gpu_window": check_gpu_window,
     "input": check_input,
@@ -1101,6 +1259,7 @@ CHECKS = {
     "packaged_app": check_packaged_app,
     "mv_import": check_mv_import,
     "gpu_playable": check_gpu_playable,
+    "vfx": check_vfx_environment,
 }
 
 

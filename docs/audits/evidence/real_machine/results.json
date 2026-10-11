@@ -2,7 +2,7 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-11 16:37:46 +0800"
+    "time": "2026-10-11 16:53:16 +0800"
   },
   "results": [
     {
@@ -265,6 +265,60 @@
         "vfx": 0.0747
       },
       "note": "Same workload as frame_pacing (pygame) for comparison; see gpu_battle_profile.json."
+    },
+    {
+      "check": "vfx_moderngl_field",
+      "status": "PASS",
+      "evidence": "moderngl (cocoa): field with lighting (ambient + player light + shadow-casting lamp), water, rain (320 particles), bloom, grading, vignette for 5 s: 55.969 fps, p99 interval 19.1231 ms, frame interval mean 17.862 ms, draw calls/frame 15.0; shader errors []; GPU-only effects reported unsupported []",
+      "screenshots": [
+        "vfx_moderngl_field.png"
+      ],
+      "sections": {
+        "ai": 0.0162,
+        "asset_loading": 1.2775,
+        "collision": 0.0396,
+        "events": 0.0332,
+        "gpu_present": 3.2517,
+        "gpu_time": 0.7813,
+        "input": 0.0354,
+        "render": 3.7341,
+        "spawn": 0.0107,
+        "update": 0.1466,
+        "vfx": 1.1636
+      }
+    },
+    {
+      "check": "vfx_pygame_field",
+      "status": "PASS",
+      "evidence": "pygame (cocoa): field with lighting (ambient + player light + shadow-casting lamp), water, rain (320 particles), bloom, grading, vignette for 5 s: 55.952 fps, p99 interval 18.9674 ms, frame interval mean 17.8687 ms, draw calls/frame None; shader errors []; GPU-only effects reported unsupported ['bloom', 'grade', 'vignette', 'shadows']",
+      "screenshots": [
+        "vfx_pygame_field.png"
+      ],
+      "sections": {
+        "ai": 0.0154,
+        "asset_loading": 1.5527,
+        "collision": 0.0371,
+        "events": 0.0273,
+        "input": 0.0337,
+        "render": 4.4356,
+        "spawn": 0.0098,
+        "update": 0.0964,
+        "vfx": 1.6305
+      }
+    },
+    {
+      "check": "vfx_gpu_battle_afterimage",
+      "status": "PASS",
+      "evidence": "Canonical battle on the GPU with bloom, grading and vignette; a skill's motion_fx beat produced up to 4 afterimage copies of the acting member",
+      "screenshots": [
+        "vfx_gpu_battle_afterimage.png"
+      ],
+      "note": "Whether the effects look good is manual item M10."
+    },
+    {
+      "check": "vfx_weather_load",
+      "status": "PASS",
+      "evidence": "Rain at 2000 particles plus the full GPU chain for 4 s: 60.058 fps, p99 interval 17.956 ms, vfx section mean 4.3304 ms"
     }
   ]
 }

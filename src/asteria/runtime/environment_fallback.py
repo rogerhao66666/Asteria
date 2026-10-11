@@ -35,7 +35,7 @@ class PygameEnvironmentRenderer:
             size = max(2, int(radius) * 2)
             image = pg.Surface((size, size))
             image.fill((0, 0, 0))
-            steps = 24
+            steps = 96  # fine steps: no visible rings
             for i in range(steps, 0, -1):  # concentric discs approximate (1 - d/r)^2
                 t = i / steps
                 fall = (1 - t) ** 2
