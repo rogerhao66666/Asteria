@@ -169,7 +169,7 @@ CB10、CB11 在 CB1–CB3 之後
 
 | ID | 狀態 | 缺口類型 | 目前缺口 | 下一步 |
 |---|---|---|---|---|
-| ENG-02 | C | Functional | 沒有 CharacterController、AIController component（AI 屬 CB11） | D17-2：CharacterController／AIController component |
+| ENG-02 | B | Validation | D17-2 完成：CharacterController／AIController 已接 runtime；缺 RM | Phase 6 實機驗證 |
 | ENG-03 | B | Validation | playable 的 field AI 與 spawn 走 Scene systems（D13）；Ability 由 battle runtime 處理，不是 Scene system；缺 RM | 實機 field 流程（M6） |
 | ENG-05 | B | Validation | 缺 RM | 實機 fixed-step 量測 |
 | ENG-07 | B | Validation | 缺 RM | 實機場景轉場（M6） |
@@ -178,62 +178,63 @@ CB10、CB11 在 CB1–CB3 之後
 | ENG-12 | B | Proposal | playable runtime 仍用 pygame；ModernGL 只在 scene preview | D17-P 技術提案（等待 Review） |
 | ENG-13 | B | Validation | canonical 戰鬥 UI 已在實機接線（D15）；parallax 缺 RM | parallax 實機 |
 | ENG-14 | B | Validation | 缺 RM | M1 實體鍵盤／滑鼠 |
-| ENG-15 | B | Functional | gamepad 實機驗證是 EXTERNAL；沒有 rebinding UI | D17-3：按鍵重設 UI；M2 手把 |
-| ENG-16 | B | Functional | 沒有 CharacterController component；缺 RM | D17-2：CharacterController（與 ENG-02） |
-| ENG-17 | D | Functional | ARPG 相關 → 見 ARPG-* | D17-2：通用 hitbox／hurtbox、地面／平台偵測（SPEC §8 為 Core） |
+| ENG-15 | B | Validation | D17-3 完成：rebinding UI 已完成；gamepad 實機是 EXTERNAL；缺 RM | Phase 6 實機驗證 |
+| ENG-16 | B | Validation | D17-2 完成：CharacterController 已完成；缺 RM | Phase 6 實機驗證 |
+| ENG-17 | B | Validation | D17-2 完成：通用 hitbox／hurtbox 已完成；缺 RM | Phase 6 實機驗證 |
 | ENG-18 | B | Validation | 可聽確認與延遲 NOT EXECUTED（M3／M4）；沒有 spatial audio | M3／M4；spatial 依 SPEC『where useful』，不列 blocker |
 | ENG-20 | B | Validation | — | 遷移 CLI 實機流程 |
-| ENG-21 | B | Functional | 任務已在存檔（runtime state v7）；沒有存檔欄位 UI；實機 recovery 只驗證玩家位置 | D17-3：存檔欄位 UI |
+| ENG-21 | B | Validation | D17-3 完成：存檔欄位 UI 已完成；缺 RM | Phase 6 實機驗證 |
 | ENG-23 | B | Validation | 缺 Editor 實機流程驗證 | Editor prefab 實機流程 |
-| ANI-02 | B | Functional | 沒有 state machine 圖形編輯器（CB10a） | D17-3：圖形化狀態機編輯器 |
+| ANI-02 | B | Validation | D17-3 完成：圖形化狀態機編輯器已完成；缺 RM | Phase 6 實機驗證 |
 | ANI-03 | B | Validation | 缺 RM | 實機 frame event |
-| ANI-05 | C | Functional | 沒有 hitbox/i-frame/cancel cue；沒有接上 runtime | D17-2：通用 hitbox／i-frame／cancel／combo cue（SPEC §11 為 Core）；ARPG 戰鬥本身仍 Deferred |
+| ANI-05 | B | Validation | D17-2 完成：hitbox／i-frame／cancel cue 已接 runtime；缺 RM | Phase 6 實機驗證 |
 | CAM-01 | B | Validation | 缺人眼確認（M5） | M5 |
-| CAM-02 | B | Functional | look-ahead、target group 只有 UT／HI；playable field 是單畫面地圖，沒有跟隨鏡頭；戰鬥開場的 boss 鏡頭沒有做 | D17-3：跟隨鏡頭、戰鬥 boss 開場鏡頭 |
+| CAM-02 | B | Validation | D17-3 完成：跟隨鏡頭、boss 開場鏡頭已完成；缺 RM | Phase 6 實機驗證 |
 | VFX-01 | B | Validation | 沒有粒子發射器資料（VFX 為序列圖）；缺人眼確認 | M5；粒子發射器併入 D17-P 提案 |
 | VFX-02 | C | Proposal | lighting／bloom shader 尚未實作（需另提案） | D17-P 技術提案 |
 | VFX-03 | C | Proposal | — | D17-P 技術提案 |
-| CMP-01 | B | Functional | 遊玩中沒有消費者 | D17-3：分層角色 runtime |
-| CMP-02 | B | Functional | runtime 沒有繪製；工作樹中的 MV 武器路徑繞過了通用模型（見 RISK-03） | D17-3：attachment runtime 繪製 |
+| CMP-01 | B | Validation | D17-3 完成：戰鬥已消費分層角色；field 角色尚未消費；缺 RM | Phase 6 實機驗證 |
+| CMP-02 | B | Validation | D17-3 完成：runtime 已繪製 socket／attachment；缺 RM | Phase 6 實機驗證 |
 | CMP-03 | B | Validation | — | 戰鬥 damage number 實機 |
-| CMP-04 | B | Functional | 行為 parity 不成立（runtime 不消費） | D17-3：editor／python parity 隨 CMP-01/02 |
+| CMP-04 | B | Validation | D17-3 完成：editor／Python 與 runtime 使用同一份 parts()；缺 RM | Phase 6 實機驗證 |
 | GP-02 | B | Validation | 缺 RM | 實機戰鬥 |
 | GP-05 | B | Validation | 缺 RM | 實機戰鬥 |
 | BTL-01 | B | Validation | 缺 RM | 實機戰鬥（M6） |
 | BTL-02 | B | Validation | F-3 已修（CB-BR1：互動倍率進入實際傷害，Preview 一致）；DOT 不套用；缺 RM | 實機戰鬥（M6） |
 | BTL-03 | B | Validation | 缺 RM | 實機戰鬥（M6） |
-| BTL-04 | B | Functional | 可聽音訊、實體按鍵、手把未驗證（M1–M3）；hit-stop 未接 | D17-2：hit-stop 接進 canonical；M1–M3 |
+| BTL-04 | B | Validation | D17-2 完成：hit-stop 已接；可聽音訊、實體按鍵、手把待 M1–M3；缺 RM | Phase 6 實機驗證 |
 | RPG-01 | B | Validation | 沒有容量規則的實機驗證 | 實機背包流程 |
 | RPG-02 | B | Validation | 套裝編輯器已有（D13）；缺 RM | 實機裝備流程 |
-| RPG-04 | B | Functional | 沒有權重／保底表；缺 RM | D17-3：權重／保底掉落表 |
+| RPG-04 | B | Validation | D17-3 完成：權重／保底表已完成；缺 RM | Phase 6 實機驗證 |
 | RPG-05 | B | Validation | 商店編輯器已有（D13）；缺 RM | 實機商店 |
 | RPG-06 | B | Validation | 沒有 RM；配方發現已有（D13） | 實機製作 |
-| RPG-07 | C | Functional | talk／inspect／open／buy／craft／challenge／capture 由事件 + WORLD 指令組成；沒有 SPEC §24 的通用互動定義（actor capability、target type、cost、check 成敗、consequence、follow-up） | D17-2：SPEC §24 通用互動定義 |
+| RPG-07 | B | Validation | D17-2 完成：互動類型已有 runtime；缺 RM | Phase 6 實機驗證 |
 | RPG-08 | B | Validation | 捕捉選單已接進 playable 戰鬥（D13）；缺 RM | 實機捕捉 |
-| RPG-09 | B | Functional | field AI 已在 playable runtime 執行（D13）；沒有 behavior tree／utility；缺 RM | D17-3：behavior tree runtime |
+| RPG-09 | B | Validation | D17-3 完成：behavior tree runtime 與編輯器已完成；缺 RM | Phase 6 實機驗證 |
 | RPG-10 | B | Validation | spawn 已在 playable runtime 執行（`GameSessionRuntime.field_update` 的 `SpawnSystem`，D13）；缺 RM | 實機 spawn |
 | EVT-01 | B | Validation | 缺 RM | 實機事件流程 |
 | EVT-02 | B | Validation | 缺 RM | 實機事件流程 |
-| EVT-03 | C | Functional | 沒有 common event 和 cutscene | D17-2：common／battle events、cutscene |
-| EVT-04 | C | Functional | 沒有事件層的 sequencer | D17-2：平行 sequencer |
+| EVT-03 | B | Validation | D17-2 完成：common／battle events、cutscene 已完成；缺 RM | Phase 6 實機驗證 |
+| EVT-04 | B | Validation | D17-2 完成：平行 sequencer 已完成；缺 RM | Phase 6 實機驗證 |
 | WLD-01 | B | Validation | 任務編輯器已有（D13）；缺 RM | 實機任務 |
-| WLD-02 | B | Functional | 陣營／成就編輯器與成就、圖鑑畫面已有（D13）；沒有 NPC 狀態模型；缺 RM | D17-3：NPC 狀態模型 |
-| UI-01 | C | Functional | 背包／裝備／狀態／技能畫面沒有接進 runtime；`presentation/rpg_*_screen` 模型仍未被消費 | D17-2：背包／裝備／狀態／技能畫面接進 runtime |
+| WLD-02 | B | Validation | D17-3 完成：NPC 狀態模型已完成；缺 RM | Phase 6 實機驗證 |
+| UI-01 | B | Validation | D17-2 完成：背包／裝備／狀態畫面已接 runtime；缺 RM | Phase 6 實機驗證 |
 | UI-02 | B | Validation | 設定畫面已有（`game_menus.GameSettings`，D13）；缺 RM | 實機選單流程 |
 | EDT-02 | B | Validation | 缺 RM | 實機 asset browser |
 | EDT-03 | B | Validation | 批次套用沒有在 Cocoa 實機執行 | 實機批次套用 |
 | EDT-04 | B | Validation | Event VM 會執行編輯器產出的程式；缺「編輯器撰寫 → 實機遊玩」的流程驗證 | 編輯器 → 實機遊玩 |
 | EDT-11 | B | Validation | Play from Selection 與 Restart 沒有在實機視窗執行 | 實機 Play from Selection／Restart |
 | EDT-13 | B | Validation | 缺 RM | 實機剪貼簿 |
-| EDT-14 | C | Functional | 紀錄沒有拖放與排序 | D17-2：拖放、排序 |
+| EDT-14 | B | Validation | D17-2 完成：拖放、排序已完成；缺 RM | Phase 6 實機驗證 |
 | EDT-16 | B | Validation | 缺 RM | 實機 inspector |
 | EDT-17 | D | Eventually | SPEC 原文寫「eventually」 | SPEC §31『should eventually』；不列 blocker |
 | EDT-18 | D | Eventually | — | SPEC §32 plugins 未要求當前版本；保留既有擴充介面 |
-| EDT-19 | B | Functional | draw calls 在 pygame 標 Unsupported；沒有 Editor 內 profiler 面板 | D17-3：Editor profiler 面板 |
+| EDT-19 | B | Validation | D17-3 完成：Profiler dock 已完成；pygame draw calls 標 Unsupported；缺 RM | Phase 6 實機驗證 |
 | AST-02 | B | Validation | pivot 修改沒有在實機執行 | 實機 pivot 修改 |
 | AST-04 | B | Validation | — | 見 ANI-03 |
-| AST-06 | B | Functional | 沒有打包成單一執行檔；缺 RM | D17-3：獨立執行檔打包 |
+| AST-06 | B | Validation | D17-3 完成：folder／.pyz／.app 打包與 Export Game 已完成；缺 RM | Phase 6 實機驗證 |
 | AST-07 | B | Validation | — | 實機類別播放 |
 | AST-08 | B | Validation | 缺 RM | 實機 |
 | AST-11 | B | Validation | 缺 RM | 實機 |
-| AST-13 | B | Validation | 尚未實機重驗 W-18 | D17-3：MV 邊界規則重驗 |
+| AST-13 | B | Validation | D17-3 完成：邊界已在文字與 import 兩層關閉；缺 RM | Phase 6 實機驗證 |
+| W-18 | — | Functional（新發現） | MV 專案匯入後地圖無法遊玩：`to_asteria_scene` 只把 MV 地圖掛在未序列化的屬性，`TileMap2DComponent` 指向不存在的 `mv.tileset.N`；runtime 沒有繪製一般 TileMap scene 的路徑 | 需要你決定是否納入（見 DECISION_LOG D17-3） |

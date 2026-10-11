@@ -28,7 +28,7 @@
 | W-07 | GUI → canonical data | 單一 model | PASS | PASS | PASS | PASS〔AR〕 | N/A | N/A | N/A | `editor/integrated_authoring.py`（共用 `EditorDocument` command stack） | — |
 | W-08 | Python API → GUI parity | API 改動在 GUI 可見 | PASS | PASS | PASS | PARTIAL | N/A | N/A | N/A | `authoring/api.py`、`editor/code_workspace.py` | 沒有實機互動驗證 |
 | W-09 | Editor playtest → 返回 Editor | 子程序啟動、結束、回到 Editor | PASS | PASS | N/A | PARTIAL | PASS〔AR：3 影格後結束〕 | N/A | N/A | `editor/runtime_launcher.py`、`playmode.py` | 沒有從選定點出生和快速重啟 |
-| W-10 | 獨立打包啟動 | 不靠 repo 也能執行 | PARTIAL | PASS（package 模型） | NE | N/A | NE | **NE** | NE | `assets/package.py`、`package_installer.py` | 沒有 launcher／匯出流程（AST-06） |
+| W-10 | 獨立打包啟動 | 不靠 repo 也能執行 | PASS | PASS | PASS（`python -I`、暫時 HOME、在 repo 外啟動 folder／.pyz／.app；確認載入內附引擎） | PASS（editor Export Game） | NE | PASS（.pyz、.app 啟動 5 影格） | NE | `tests/test_migration_and_export.py` | 實機雙擊 .app 未執行；不產生免直譯器執行檔 |
 | W-11 | 遊玩存檔 → 讀檔 → 繼續 | 狀態完全相同 | PASS | PASS | PASS（完整 playable 存讀比對〔AR〕） | N/A | PARTIAL | NE | N/A | `runtime/game_save.py`、`validation/playable_runtime_loop.py` | 事件中斷點無法恢復（因為 VM 不跑） |
 | W-12 | Attachment 撰寫 → 預覽 → runtime | 裝備可見 | PASS | PASS | PASS | PASS（預覽） | **N/A** | NE | NE | `editor/attachment_preview.py` | G-1 |
 | W-13 | Battle presentation 設定（Editor）→ 遊玩 | 設定生效 | PASS | PASS | PASS | PASS（編輯） | **N/A** | NE | NE | `editor/battle_presentation_authoring.py` | G-1 |
@@ -36,7 +36,7 @@
 | W-15 | 音訊 cue → 裝置播放 | 正確時序 | PASS | PASS（cue 排程） | PASS | N/A | **N/A**（沒有後端） | NE | NE | `presentation/audio_runtime.py` | G-4 |
 | W-16 | GPU 渲染路徑（shader、lighting、批次） | 與 pygame 等價或更好 | PARTIAL | PASS（headless 指令） | PASS | N/A | **N/A**（後端已移除） | NE | NE | `render/*`；`git show 16a6ebd:src/asteria/platform/moderngl_backend.py` | D1、G-5 |
 | W-17 | 遺失／錯誤 asset 處理 | 結構化診斷 | PASS | PASS | PASS | PARTIAL | PASS〔AR〕 | NE | N/A | `assets/quality_gate.py`、`editor/resource_resolver.py` `EditorResourceError` | — |
-| W-18 | MV 專案 → Asteria 專案 → Run | 地圖和角色可遊玩 | PASS | PASS | PASS | PASS（原生 Cocoa，本次） | PASS〔AR：3 影格〕 | NE | NE | `tests/test_mv_character_creator_e2e.py`、`test_rpg_maker_mv_project.py` | 需要本機 MV 安裝；違反 MV 邊界（G-6） |
+| W-18 | MV 專案 → Asteria 專案 → Run | 地圖和角色可遊玩 | PASS | PASS（匯入、序列化、驗證；39 個 `mv_reference`） | **FAIL**（2026-10-11：匯入 MAP001 → 存檔 → 重載 → `run_preview` 3 影格：地圖資料在重載後不見，只畫出 3 個 marker、0 個 texture） | NE | NE（HI 已 FAIL；先前的 RM PASS 來自已取消的 Character Generator 驗證腳本，不是匯入的專案） | NE | NE | `tests/test_rpg_maker_mv_project.py`、`test_rpg_maker_mv_map_render.py` | 匯入的地圖沒有轉成 canonical TileMap、tileset 參照懸空，runtime 只畫出 marker；MV 邊界本身已關閉（AST-13） |
 | W-19 | 輸入 → 移動 → 攝影機跟隨（實機） | 即時操作 | PASS | PASS | PASS | N/A | **PARTIAL**〔AR：沒有驗證即時鍵盤操作和攝影機跟隨〕 | NE | NE | `runtime/player.py` | 沒有 gamepad 和 rebinding |
 | W-20 | 回歸套件 | 全綠 | — | **1922 PASS / 3 FAIL**（B 類美術） | — | — | — | — | — | `QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q -p no:cacheprovider` | 沒有 CI |
 
