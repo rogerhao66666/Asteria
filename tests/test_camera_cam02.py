@@ -231,7 +231,14 @@ def test_boss_battles_open_with_a_boss_intro_camera(resource_root, monkeypatch):
             zooms.append(adapter._camera_view[2])
             centres.append(adapter._camera_view[0])
         boss = adapter.screen.scene.visual_for(adapter.intro_boss_id)
-        assert max(zooms) == pytest.approx(1.35) and abs(centres[-1] - boss.anchor.x) < 1.0
+        half_w = layout.virtual_width / (2 * 1.35)
+        assert max(zooms) == pytest.approx(1.35)
+        # moves onto the boss as far as the battlefield edge allows (never shows past the background)
+        expected = min(max(boss.anchor.x, half_w), layout.virtual_width - half_w)
+        assert centres[-1] == pytest.approx(expected, abs=1.0)
+        for cx, zoom in zip(centres, zooms, strict=True):
+            view_w = layout.virtual_width / zoom
+            assert cx - view_w / 2 >= -1e-6 and cx + view_w / 2 <= layout.virtual_width + 1e-6
         assert not adapter.screen.action_menu.view.total_count  # no commands during the intro
         for _ in range(60):
             runtime._present_battle(0.02)

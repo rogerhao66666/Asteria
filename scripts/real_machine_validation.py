@@ -486,6 +486,325 @@ def check_runtime_exit_and_recovery(out):
     ]
 
 
+# -- D17 features in real windows ----------------------------------------------------------------
+
+
+def _pump(runtime, seconds, *, before=None, after=None):
+    """Run real frames (ticked at 60 fps, flipped to the window) for ``seconds``; returns the frame count."""
+    import pygame
+
+    start, frames = time.perf_counter(), 0
+    while time.perf_counter() - start < seconds and runtime.running:
+        dt = min(runtime.clock.tick(60) / 1000.0, 0.05)
+        if before is not None:
+            before(frames)
+        runtime._frame(pygame.event.get(), dt)
+        pygame.display.flip()
+        if after is not None:
+            after(frames)
+        frames += 1
+    return frames
+
+
+def _key(key, up=False):
+    import pygame
+
+    pygame.event.post(pygame.event.Event(pygame.KEYUP if up else pygame.KEYDOWN, key=key))
+
+
+def check_cutscene(out):
+    """EVT-03 / EVT-04: a skippable cutscene (move, camera, VFX, fade in parallel) through real key events."""
+    import pygame
+
+    from asteria.core import Transform
+    from asteria.editor.event_flow_authoring import track
+    from asteria.events import EventInstruction, EventProgram
+
+    runtime = _runtime()
+    runtime.open()
+    driver = pygame.display.get_driver()
+    game = runtime.game
+    runtime._ui_mode = "field"
+    game.set_player_position(0.0, 0.0)
+
+    def world(command, wait=0.0, **args):
+        return ("WORLD", {"command": command, "args": args, **({"wait": wait} if wait else {})})
+
+    tracks = [
+        track("hero", ("MOVE", {"entity": "player", "x": 20, "y": 0, "duration": 1.5})),
+        track("camera", world("CAMERA_FOCUS", entity="Astral Tyrant", zoom=1.4, blend=0.3)),
+        track("effects", world("PLAY_VFX", wait=0.3, asset_id="battle.fx.flame", entity="Astral Tyrant")),
+    ]
+    program = EventProgram(
+        (
+            EventInstruction("SEQUENCE", {"tracks": tracks, "cutscene": True, "skippable": True, "wait": "all"}),
+            EventInstruction("WORLD", {"command": "CAMERA_RELEASE", "args": {"blend": 0}}),
+            EventInstruction("SET_SWITCH", {"name": "rm_cutscene_done", "value": True}),
+        )
+    )
+    game.project.event_programs.register("rm_cutscene", program)
+    game.events.start("rm_cutscene")
+    _key(pygame.K_RIGHT)  # held through the cutscene: must not move the player
+    vfx_seen = []
+    _pump(runtime, 0.6, after=lambda _f: vfx_seen.append(len(runtime.field_effects.vfx)))
+    mid_x = game.player.get(Transform).x
+    zoom = runtime.field_camera.zoom
+    letterbox = tuple(runtime.screen.get_at((runtime.width // 2, 3))[:3])
+    vfx = max(vfx_seen, default=0)
+    pygame.image.save(runtime.screen, str(out / "cutscene_mid.png"))
+    _key(pygame.K_RIGHT, up=True)
+    _key(pygame.K_ESCAPE)  # skip
+    _pump(runtime, 0.4)
+    end_x = game.player.get(Transform).x
+    done = game.save.event_context.get_switch("rm_cutscene_done")
+    active = game.cutscene_active
+    pygame.image.save(runtime.screen, str(out / "cutscene_skipped.png"))
+    errors = list(game.event_errors)
+    runtime.close()
+    ok = 4.0 < mid_x < 14.0 and zoom > 1.0 and letterbox == (0, 0, 0) and vfx > 0
+    ok = ok and end_x == 20.0 and done and not active and not errors
+    return result(
+        "cutscene_real_window",
+        "PASS" if ok else "FAIL",
+        f"Real {driver} window: after 0.6 s the tween had moved the player to x={mid_x:.1f} of 20 with the arrow "
+        f"key held (input locked), camera zoom {zoom:.2f}, letterbox pixel {letterbox}, "
+        f"{vfx} VFX at peak (parallel track); "
+        f"Esc (real key event) skipped to x={end_x:.1f}, switch set={done}, cutscene active={active}, "
+        f"errors={len(errors)}",
+        screenshots=["cutscene_mid.png", "cutscene_skipped.png"],
+        note="Whether the cutscene reads well to a player is part of manual item M5.",
+    )
+
+
+def check_battle_features(out):
+    """CAM-02 boss intro and CMP-01/02 layered characters in the canonical battle screen."""
+    import pygame
+
+    from asteria.editor import EditorDocument
+    from asteria.editor.character_composition_authoring import CharacterCompositionAuthoring
+
+    runtime = _runtime()
+    document = EditorDocument()
+    document.set_project(runtime.game.project, file_path=PROJECT_FILE)
+    api = CharacterCompositionAuthoring(document)
+    heroes = [s for s in api.sheets() if s.startswith("battle.combatant.hero")]
+    for sheet in heroes:
+        api.add_socket(sheet, "hand", 10, -30)
+        api.set_socket_key(sheet, "hand", 4, 18, -22, rotation=40)
+        api.attach(sheet, "charm", "battle.fx.heal", "hand", scale=0.3, frame=5)
+        api.add_layer(sheet, "battle.fx.heal", component_id="aura", z=-1)
+    runtime.open()
+    driver = pygame.display.get_driver()
+    runtime._ui_mode = "field"
+    runtime.game.start_encounter("boss_room")
+    adapter = runtime._battle_presentation
+    adapter.begin()
+    runtime._advance_to_hero_turn()
+    zooms, busy = [], []
+    shots = []
+
+    def sample(frame):
+        view = getattr(adapter, "_camera_view", None)
+        zooms.append(view[2] if view else 1.0)
+        busy.append(adapter.busy())
+        if frame == 40:
+            pygame.image.save(runtime.screen, str(out / "battle_boss_intro.png"))
+            shots.append("battle_boss_intro.png")
+
+    _pump(runtime, 3.0, after=sample)
+    pygame.image.save(runtime.screen, str(out / "battle_layered_characters.png"))
+    shots.append("battle_layered_characters.png")
+    from asteria.runtime.camera import Camera2D
+
+    layout = adapter.screen.composer.layout
+    frame = adapter.screen.animation.build_frame(Camera2D(width=layout.virtual_width, height=layout.virtual_height))
+    parts = sum(1 for d in frame.combatant_draws if d.texture_asset_id == "battle.fx.heal")
+    composed = len(adapter.screen.animation.compositions)
+    runtime.close()
+    peak = max(zooms) if zooms else 1.0
+    settled = zooms[-1] if zooms else 1.0
+    intro_ok = peak >= 1.3 and abs(settled - 1.0) < 1e-3 and busy[0] and not busy[-1]
+    layered_ok = composed > 0 and parts >= 2 * composed and not adapter.composition_errors
+    return [
+        result(
+            "battle_boss_intro_camera",
+            "PASS" if intro_ok else "FAIL",
+            f"Real {driver} window, boss encounter: camera zoom peaked at {peak:.2f} (authored 1.35) and settled at "
+            f"{settled:.2f}; commands blocked during the intro={busy[0] if busy else None}, free afterwards="
+            f"{not busy[-1] if busy else None}",
+            screenshots=shots[:1],
+            note="How the intro feels is part of manual item M5.",
+        ),
+        result(
+            "battle_layered_characters",
+            "PASS" if layered_ok else "FAIL",
+            f"{composed} heroes carry an authored socket attachment + back layer; {parts} part draws in the frame "
+            f"(expected >= {2 * composed}); drawn in a real {driver} window",
+            screenshots=shots[1:],
+        ),
+    ]
+
+
+def check_game_menus(out):
+    """ENG-21 save slots, ENG-15 rebinding and UI-01 status screen, driven by real key events."""
+    import pygame
+
+    from asteria.core import Transform
+
+    saves = PROJECT / "saves"
+    touched = [saves / "slot1.asteria-save.json", saves / "settings.json"]
+    backups = {path: path.read_bytes() if path.exists() else None for path in touched}
+    runtime = _runtime()
+    try:
+        runtime.open()
+        driver = pygame.display.get_driver()
+        runtime._ui_mode = "field"
+        _pump(runtime, 0.2)
+        # status screen from the field (I)
+        _key(pygame.K_i)
+        _pump(runtime, 0.3)
+        status_open = runtime._ui_mode == "status"
+        pygame.image.save(runtime.screen, str(out / "menu_status.png"))
+        _key(pygame.K_ESCAPE)
+        _pump(runtime, 0.2)
+        # save into slot 1 (overwrite asks twice), move, then load it back
+        runtime.game.set_player_position(11.0, 4.0)
+        runtime.open_slots("save", back="field")
+        for _ in range(2):
+            _key(pygame.K_RETURN)
+            _pump(runtime, 0.2)
+        saved = (saves / "slot1.asteria-save.json").exists()
+        pygame.image.save(runtime.screen, str(out / "menu_save_slots.png"))
+        _key(pygame.K_ESCAPE)
+        _pump(runtime, 0.1)
+        runtime.game.set_player_position(-20.0, 0.0)
+        runtime.open_slots("load", back="field")
+        _key(pygame.K_DOWN)  # autosave -> slot 1
+        _key(pygame.K_RETURN)
+        _pump(runtime, 0.3)
+        loaded = tuple(runtime.game.player.get(Transform).x for _ in (0,))[0]
+        # rebind "move_right" to D through the Controls screen, then walk with it
+        from asteria.runtime.input_rebinding import ControlsMenu
+
+        runtime.controls_menu = ControlsMenu(runtime.project.input_map, runtime.settings.input_overrides)
+        runtime._ui_mode = "controls"
+        rows = [action for action, _ in runtime.controls_menu.rows()]
+        target = rows.index("move_right")
+        for _ in range(target):
+            _key(pygame.K_DOWN)
+        _key(pygame.K_RETURN)
+        _pump(runtime, 0.2)
+        _key(pygame.K_d)
+        _pump(runtime, 0.2)
+        pygame.image.save(runtime.screen, str(out / "menu_controls.png"))
+        rebound = (
+            [b.code for b in runtime.input.input_map.bindings("move_right")]
+            if hasattr(runtime.input, "input_map")
+            else []
+        )
+        runtime._ui_mode = "field"
+        runtime.game.set_player_position(0.0, 0.0)
+        _key(pygame.K_d)
+        _pump(runtime, 0.6)
+        _key(pygame.K_d, up=True)
+        _pump(runtime, 0.1)
+        walked = runtime.game.player.get(Transform).x
+        runtime.close()
+    finally:
+        for path, data in backups.items():
+            if data is None:
+                path.unlink(missing_ok=True)
+            else:
+                path.write_bytes(data)
+    return [
+        result(
+            "status_menu_real_window",
+            "PASS" if status_open else "FAIL",
+            f"I key (real event) opened the status screen={status_open} in a {driver} window",
+            screenshots=["menu_status.png"],
+        ),
+        result(
+            "save_slots_real_window",
+            "PASS" if saved and abs(loaded - 11.0) < 1e-6 else "FAIL",
+            f"Save to slot 1 through the slot screen (overwrite confirmed with a second Enter) wrote the file="
+            f"{saved}; loading slot 1 restored player x={loaded:.1f} (saved 11.0)",
+            screenshots=["menu_save_slots.png"],
+        ),
+        result(
+            "controls_rebinding_real_window",
+            "PASS" if walked > 5.0 else "FAIL",
+            f"move_right rebound to D on the Controls screen (bindings now {rebound or 'n/a'}); holding D moved the "
+            f"player to x={walked:.1f} in 0.6 s",
+            screenshots=["menu_controls.png"],
+            note="Physical key presses by a person remain manual item M1; gamepad rebinding needs a controller (M2).",
+        ),
+    ]
+
+
+def check_follow_camera(out):
+    """CAM-02: the field follow camera (manifest field.camera.follow) tracks the walking player."""
+    import pygame
+
+    runtime = _runtime()
+    runtime.manifest["field"].setdefault("camera", {})["follow"] = {"zoom": 1.8, "smoothing": 8.0}
+    runtime.open()
+    driver = pygame.display.get_driver()
+    runtime._ui_mode = "field"
+    runtime.game.set_player_position(-60.0, 0.0)
+    _pump(runtime, 0.6)
+    start = runtime.field_camera.view
+    pygame.image.save(runtime.screen, str(out / "follow_camera_start.png"))
+    _key(pygame.K_RIGHT)
+    _pump(runtime, 1.5)
+    _key(pygame.K_RIGHT, up=True)
+    _pump(runtime, 0.6)
+    end = runtime.field_camera.view
+    pygame.image.save(runtime.screen, str(out / "follow_camera_end.png"))
+    from asteria.core import Transform
+
+    player_x = runtime.game.player.get(Transform).x
+    runtime.close()
+    moved = end[0] - start[0]
+    ok = abs(end[2] - 1.8) < 1e-6 and player_x > -60.0 + 20 and moved > 10.0
+    return result(
+        "field_follow_camera",
+        "PASS" if ok else "FAIL",
+        f"Real {driver} window: follow zoom {end[2]:.2f}; the player walked from x=-60 to x={player_x:.1f} and the "
+        f"camera centre moved {moved:.1f} world units with it",
+        screenshots=["follow_camera_start.png", "follow_camera_end.png"],
+    )
+
+
+def check_packaged_app(out):
+    """AST-06: the exported macOS .app starts the game in a real window, outside the repository."""
+    import tempfile
+
+    from asteria.project_tools import package_game
+
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        built = package_game(PROJECT_FILE, tmp / "dist", name="Asteria RM", app=True)
+        env = dict(os.environ, HOME=str(tmp / "home"), ASTERIA_PYTHON=sys.executable)
+        for key in ("SDL_VIDEODRIVER", "SDL_AUDIODRIVER"):
+            env.pop(key, None)
+        exe = built["app"] / "Contents" / "MacOS" / "Asteria_RM"
+        t0 = time.perf_counter()
+        proc = subprocess.run(
+            [str(exe), "--frames", "120"], cwd=tmp, env=env, capture_output=True, text=True, timeout=180
+        )
+        elapsed = time.perf_counter() - t0
+        size = built["pyz"].stat().st_size
+    ok = proc.returncode == 0
+    return result(
+        "packaged_app_real_window",
+        "PASS" if ok else "FAIL",
+        f"Asteria RM.app ({size / 1e6:.1f} MB .pyz inside) launched from a temporary folder outside the repo, ran "
+        f"120 frames in a real window and exited {proc.returncode} in {elapsed:.1f}s",
+        stderr=proc.stderr[-800:],
+        note="Double-clicking the .app in Finder (Gatekeeper, unsigned app) is manual item M6.",
+    )
+
+
 CHECKS = {
     "gpu_window": check_gpu_window,
     "input": check_input,
@@ -495,6 +814,11 @@ CHECKS = {
     "editor": check_editor_playtest,
     "editor_tools": check_editor_tools,
     "runtime": check_runtime_exit_and_recovery,
+    "cutscene": check_cutscene,
+    "battle_features": check_battle_features,
+    "menus": check_game_menus,
+    "follow_camera": check_follow_camera,
+    "packaged_app": check_packaged_app,
 }
 
 
@@ -530,7 +854,12 @@ def main(argv=None):
         "python": platform.python_version(),
         "time": time.strftime("%Y-%m-%d %H:%M:%S %z"),
     }
-    (out / "results.json").write_text(json.dumps({"meta": meta, "results": results}, indent=2))
+    results_path = out / "results.json"
+    if args.only and results_path.exists():  # keep evidence of checks that were not re-run
+        rerun = {r["check"] for r in results}
+        previous = json.loads(results_path.read_text()).get("results", [])
+        results = [r for r in previous if r["check"] not in rerun] + results
+    results_path.write_text(json.dumps({"meta": meta, "results": results}, indent=2))
     for item in results:
         print(f"{item['status']:<13} {item['check']}: {item['evidence']}")
     return 0 if all(r["status"] != "FAIL" for r in results) else 1

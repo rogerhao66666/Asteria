@@ -324,6 +324,17 @@ class CanonicalBattleAdapter:
         self.intro_boss_id = bosses[0]
         self._at(release_at, lambda: self.camera_director.release(blend=float(intro["blend"])))
 
+    def _clamped_view(self, director, view):
+        """Keep a zoomed battle camera inside the battlefield so the background always covers the screen."""
+        from asteria.runtime.camera import clamp_center_to_bounds
+
+        layout = self.screen.composer.layout
+        width, height = layout.virtual_width, layout.virtual_height
+        x, y, zoom = view
+        sx, sy = director.shake_offset
+        x, y = clamp_center_to_bounds(x - sx, y - sy, width / zoom, height / zoom, (0.0, 0.0, width, height))
+        return (x + sx, y + sy, zoom)
+
     @staticmethod
     def _display_names(game):
         """Member id -> project display name; repeated enemy kinds get their index."""
@@ -599,7 +610,7 @@ class CanonicalBattleAdapter:
         self._release_due()
         director = getattr(self, "camera_director", None)
         if director is not None:
-            self._camera_view = director.update(dt, (*self._camera_center, 1.0))
+            self._camera_view = self._clamped_view(director, director.update(dt, (*self._camera_center, 1.0)))
         if game.battle is not None:
             self.screen.sync_battle(game.battle, current_member_id=self.host._battle_actor())
             actor = self.host._battle_actor()

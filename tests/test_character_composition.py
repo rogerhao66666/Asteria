@@ -215,3 +215,13 @@ def test_composition_tab_authors_through_its_forms_and_previews_the_parts():
     widget.api.document.undo()  # the layer
     widget.refresh()
     assert widget.layers.count() == 0
+
+
+def test_game_text_falls_back_to_ascii_for_glyphs_the_font_lacks():
+    pygame = pytest.importorskip("pygame")
+    from asteria.platform.pygame_battle_ui import renderable_text
+
+    pygame.font.init()
+    font = pygame.font.Font(None, 20)  # the default font has no arrow glyph
+    assert renderable_text(pygame, font, "move_right → D", {}) == "move_right -> D"
+    assert renderable_text(pygame, font, "Lv 1→2 ok", {}) == "Lv 1->2 ok"

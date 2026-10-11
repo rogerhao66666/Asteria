@@ -1,5 +1,44 @@
 from __future__ import annotations
 
+GLYPH_FALLBACKS = {
+    "▶": ">",
+    "▸": ">",
+    "►": ">",
+    "◀": "<",
+    "◂": "<",
+    "…": "...",
+    "•": "*",
+    "→": "->",
+    "←": "<-",
+    "↑": "^",
+    "↓": "v",
+    "−": "-",
+    "–": "-",
+    "—": "-",
+    "·": "-",
+}
+
+
+def renderable_text(pg, font, value, cache):
+    """``value`` with characters ``font`` cannot draw (empty boxes) replaced by ASCII fallbacks.
+
+    ``cache`` maps ``(id(font), char)`` to whether the font has the glyph.
+    """
+
+    def has_glyph(char):
+        key = (id(font), char)
+        cached = cache.get(key)
+        if cached is None:
+
+            def pixels(text):
+                return pg.image.tobytes(font.render(text, True, (255, 255, 255)), "RGBA")
+
+            cached = char.isspace() or char.isascii() or pixels(char) != pixels("\ue000")
+            cache[key] = cached
+        return cached
+
+    return "".join(char if has_glyph(char) else GLYPH_FALLBACKS.get(char, "?") for char in str(value))
+
 
 class PygameBattleUiBackend:
     """Concrete pygame-ce adapter for Asteria BattleUiFrame commands.
@@ -136,26 +175,9 @@ class PygameBattleUiBackend:
             width=max(1, self._s(2)),
         )
 
-    GLYPH_FALLBACKS = {"▶": ">", "▸": ">", "►": ">", "◀": "<", "◂": "<", "…": "...", "•": "*"}
-
-    def _has_glyph(self, font, char):
-        """True when ``font`` draws ``char`` differently from its missing-glyph box."""
-        key = (id(font), char)
-        cached = self._glyph_cache.get(key)
-        if cached is None:
-
-            def pixels(value):
-                return self.pg.image.tobytes(font.render(value, True, (255, 255, 255)), "RGBA")
-
-            cached = char.isspace() or char.isascii() or pixels(char) != pixels("\ue000")
-            self._glyph_cache[key] = cached
-        return cached
-
     def _renderable(self, font, value):
         """Replace characters the font cannot draw (shown as empty boxes otherwise)."""
-        return "".join(
-            char if self._has_glyph(font, char) else self.GLYPH_FALLBACKS.get(char, "?") for char in str(value)
-        )
+        return renderable_text(self.pg, font, value, self._glyph_cache)
 
     def draw_text(self, text, *, color, size):
         font = self._font(size)

@@ -107,6 +107,7 @@ class PlayableTestRuntime:
         self._turn_actor = None
         self._victory_summary = []
         self._fonts = {}
+        self._glyphs = {}  # (font, char) -> the font can draw it
         self._battle_presentation = create_battle_presentation_adapter(self)
         self.profiler = NullProfiler()
         self._drawing = False
@@ -250,7 +251,9 @@ class PlayableTestRuntime:
         f = self._fonts.get(int(size))
         if f is None:
             f = self._fonts[int(size)] = self.pg.font.Font(None, int(size))
-        surf = f.render(str(value), True, color)
+        from asteria.platform.pygame_battle_ui import renderable_text
+
+        surf = f.render(renderable_text(self.pg, f, value, self._glyphs), True, color)
         rect = surf.get_rect()
         if center:
             rect.center = (int(x), int(y))
@@ -1115,7 +1118,7 @@ class PlayableTestRuntime:
             self.text(detail, self.width - 420, y, size=20, color=(170, 210, 240))
         if not rows:
             self.text("Nothing here yet.", 56, 92, size=20, color=(150, 160, 180))
-        hint = "Tab: next tab   ↑↓: choose   Enter: use / equip / unequip   Esc: back"
+        hint = "Tab: next tab   Up/Down: choose   Enter: use / equip / unequip   Esc: back"
         self.text(hint, 44, self.height - 60, size=18, color=(170, 210, 240))
         if menu.message:
             self.text(menu.message, 44, self.height - 88, size=19, color=(255, 226, 129))

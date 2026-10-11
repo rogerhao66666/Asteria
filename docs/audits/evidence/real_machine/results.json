@@ -2,7 +2,7 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-11 02:38:54 +0800"
+    "time": "2026-10-11 15:25:01 +0800"
   },
   "results": [
     {
@@ -147,6 +147,74 @@
       "check": "runtime_recovery",
       "status": "PASS",
       "evidence": "Runtime saved (SAVED), was killed with SIGKILL (exit -9); the save reloaded with player position (7.0, 3.0)"
+    },
+    {
+      "check": "field_follow_camera",
+      "status": "PASS",
+      "evidence": "Real cocoa window: follow zoom 1.80; the player walked from x=-60 to x=-5.1 and the camera centre moved 48.9 world units with it",
+      "screenshots": [
+        "follow_camera_start.png",
+        "follow_camera_end.png"
+      ]
+    },
+    {
+      "check": "packaged_app_real_window",
+      "status": "PASS",
+      "evidence": "Asteria RM.app (2.4 MB .pyz inside) launched from a temporary folder outside the repo, ran 120 frames in a real window and exited 0 in 3.5s",
+      "stderr": "",
+      "note": "Double-clicking the .app in Finder (Gatekeeper, unsigned app) is manual item M6."
+    },
+    {
+      "check": "cutscene_real_window",
+      "status": "PASS",
+      "evidence": "Real cocoa window: after 0.6 s the tween had moved the player to x=7.8 of 20 with the arrow key held (input locked), camera zoom 1.40, letterbox pixel (0, 0, 0), 1 VFX at peak (parallel track); Esc (real key event) skipped to x=20.0, switch set=True, cutscene active=False, errors=0",
+      "screenshots": [
+        "cutscene_mid.png",
+        "cutscene_skipped.png"
+      ],
+      "note": "Whether the cutscene reads well to a player is part of manual item M5."
+    },
+    {
+      "check": "battle_boss_intro_camera",
+      "status": "PASS",
+      "evidence": "Real cocoa window, boss encounter: camera zoom peaked at 1.35 (authored 1.35) and settled at 1.00; commands blocked during the intro=True, free afterwards=True",
+      "screenshots": [
+        "battle_boss_intro.png"
+      ],
+      "note": "How the intro feels is part of manual item M5."
+    },
+    {
+      "check": "battle_layered_characters",
+      "status": "PASS",
+      "evidence": "6 heroes carry an authored socket attachment + back layer; 12 part draws in the frame (expected >= 12); drawn in a real cocoa window",
+      "screenshots": [
+        "battle_layered_characters.png"
+      ]
+    },
+    {
+      "check": "status_menu_real_window",
+      "status": "PASS",
+      "evidence": "I key (real event) opened the status screen=True in a cocoa window",
+      "screenshots": [
+        "menu_status.png"
+      ]
+    },
+    {
+      "check": "save_slots_real_window",
+      "status": "PASS",
+      "evidence": "Save to slot 1 through the slot screen (overwrite confirmed with a second Enter) wrote the file=True; loading slot 1 restored player x=11.0 (saved 11.0)",
+      "screenshots": [
+        "menu_save_slots.png"
+      ]
+    },
+    {
+      "check": "controls_rebinding_real_window",
+      "status": "PASS",
+      "evidence": "move_right rebound to D on the Controls screen (bindings now ['d', '0', 'x:0']); holding D moved the player to x=15.9 in 0.6 s",
+      "screenshots": [
+        "menu_controls.png"
+      ],
+      "note": "Physical key presses by a person remain manual item M1; gamepad rebinding needs a controller (M2)."
     }
   ]
 }
