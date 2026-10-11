@@ -1944,6 +1944,116 @@ def check_engine_systems(out):
     )
 
 
+def check_m10_compare(out):
+    """M10 (automatable part): the same field frame on ModernGL and on the pygame fallback, compared by numbers,
+    plus a 30 s soak per backend. Whether the effects look right stays manual (M10 visual confirmation)."""
+    import pygame
+    from PIL import Image, ImageChops, ImageStat
+
+    from asteria.runtime.profiler import RuntimeProfiler
+
+    frames, soak, notes = {}, {}, {}
+    for backend in ("moderngl", "pygame"):
+        for mode in ("plain", "effects"):
+            runtime = _runtime(backend=backend)
+            runtime.open()
+            if backend == "moderngl" and runtime.gpu is None:
+                runtime.close()
+                return result("m10_compare", "FAIL", f"GPU presenter did not start: {runtime.gpu_fallback_reason}")
+            if mode == "effects":
+                _vfx_scene(runtime, weather="none")
+            runtime._ui_mode = "field"
+            runtime.game.set_player_position(-40.0, 10.0)
+            _pump(runtime, 1.5)
+            name = f"m10_{backend}_{mode}.png"
+            pygame.image.save(runtime.capture(), str(out / name))
+            frames[(backend, mode)] = out / name
+            if mode == "effects":
+                notes[backend] = {
+                    "unsupported": sorted(runtime.environment_unsupported),
+                    "errors": [str(e) for e in runtime.environment_errors],
+                }
+            runtime.close()
+        # stability: rain and the full chain for 30 s, real frames
+        runtime = _runtime(backend=backend)
+        runtime.open()
+        _vfx_scene(runtime, weather="rain", particles=800)
+        runtime._ui_mode = "field"
+        profiler = runtime.enable_profiling(RuntimeProfiler(target_fps=60))
+        rss_start = _rss_mb()
+        profiler.begin_frame()
+        tick = lambda f, p=profiler: (p.end_frame(), p.begin_frame())  # noqa: E731
+        count = _pump(runtime, 10.0, after=tick)
+        rss_warm = _rss_mb()  # after warm-up (GPU driver allocations settle in the first seconds)
+        count += _pump(runtime, 20.0, after=tick)
+        report = profiler.report()
+        soak[backend] = {
+            "frames": count,
+            "fps": report["pacing"]["measured_fps"],
+            "p99_ms": report["pacing"]["interval_p99_ms"],
+            "max_ms": report["frame"].get("max_ms"),
+            "over_budget": report["pacing"].get("frames_over_budget", report["pacing"].get("over_1_5x")),
+            "errors": len(runtime.environment_errors) + len(runtime.game.event_errors),
+            "rss_growth_mb": round(_rss_mb() - rss_start, 1),
+            "rss_growth_after_warmup_mb": round(_rss_mb() - rss_warm, 1),
+        }
+        runtime.close()
+
+    def load(key):
+        return Image.open(frames[key]).convert("RGB")
+
+    def stats(image):
+        luma = ImageStat.Stat(image.convert("L"))
+        return round(luma.mean[0], 1), round(luma.stddev[0], 1)
+
+    def differ(a, b):
+        diff = ImageChops.difference(a, b).convert("L")
+        hist = diff.histogram()
+        total = sum(hist)
+        return round(sum(i * n for i, n in enumerate(hist)) / total, 2), round(sum(hist[24:]) / total * 100, 2)
+
+    plain = differ(load(("moderngl", "plain")), load(("pygame", "plain")))
+    effects = differ(load(("moderngl", "effects")), load(("pygame", "effects")))
+    gpu, cpu = load(("moderngl", "effects")), load(("pygame", "effects"))
+    heat = ImageChops.difference(gpu, cpu).convert("L").point(lambda v: min(255, v * 4)).convert("RGB")
+    sheet = Image.new("RGB", (gpu.width * 3 + 40, gpu.height), (12, 12, 16))
+    for i, image in enumerate((gpu, cpu, heat)):
+        sheet.paste(image, (i * (gpu.width + 20), 0))
+    sheet.save(out / "m10_moderngl_pygame_diff.png")
+    lum = {b: stats(load((b, "effects"))) for b in ("moderngl", "pygame")}
+    ok = (
+        plain[1] < 1.0  # without environment effects the two backends draw the same frame
+        and all(v["errors"] == 0 and v["fps"] >= 55 and v["rss_growth_after_warmup_mb"] < 10 for v in soak.values())
+        and set(notes["pygame"]["unsupported"]) >= {"bloom", "grade", "vignette", "shadows"}
+        and not notes["moderngl"]["unsupported"]
+    )
+    detail = {
+        "plain_frame_diff": {"mean_abs": plain[0], "pixels_over_24_pct": plain[1]},
+        "effects_frame_diff": {"mean_abs": effects[0], "pixels_over_24_pct": effects[1]},
+        "effects_luma_mean_std": lum,
+        "unsupported_on_backend": {b: v["unsupported"] for b, v in notes.items()},
+        "soak_30s": soak,
+    }
+    (out / "m10_compare.json").write_text(json.dumps(detail, indent=2) + "\n")
+    return result(
+        "m10_compare",
+        "PASS" if ok else "FAIL",
+        f"Same field frame on both backends in real cocoa windows. Without environment effects: mean |diff| "
+        f"{plain[0]}, {plain[1]}% pixels differ by >24. With lighting, shadow, water, bloom, grading, vignette: "
+        f"mean |diff| {effects[0]}, {effects[1]}% pixels differ; luma mean/std ModernGL {lum['moderngl']} vs "
+        f"pygame {lum['pygame']}; pygame reports unsupported {notes['pygame']['unsupported']}, ModernGL "
+        f"{notes['moderngl']['unsupported'] or 'none'}. 30 s soak with rain (800 particles): "
+        + "; ".join(
+            f"{b} {v['frames']} frames {v['fps']} fps p99 {v['p99_ms']} ms max {v['max_ms']} ms errors {v['errors']} "
+            f"RSS {v['rss_growth_mb']:+} MB ({v['rss_growth_after_warmup_mb']:+} MB after the first 10 s)"
+            for b, v in soak.items()
+        ),
+        screenshots=["m10_moderngl_pygame_diff.png", *[p.name for p in frames.values()]],
+        note="Numbers only. Whether the GPU effects look right (and whether the fallback is acceptable) is M10's "
+        "visual confirmation, still NOT EXECUTED.",
+    )
+
+
 def _rss_mb():
     value = subprocess.run(["ps", "-o", "rss=", "-p", str(os.getpid())], capture_output=True, text=True).stdout
     return int(value.strip()) / 1024.0
@@ -2125,6 +2235,7 @@ CHECKS = {
     "b_items_replay": check_b_items_replay,
     "engine_systems": check_engine_systems,
     "battle_memory": check_battle_memory,
+    "m10_compare": check_m10_compare,
 }
 
 

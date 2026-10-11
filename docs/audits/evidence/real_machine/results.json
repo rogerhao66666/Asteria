@@ -2,7 +2,7 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-11 23:05:54 +0800"
+    "time": "2026-10-11 23:11:50 +0800"
   },
   "results": [
     {
@@ -525,6 +525,19 @@
       "check": "b_items_replay_run",
       "status": "PASS",
       "evidence": "pytest exit 0; 70 tests in 12 files, 119 frames presented in total; 70 passed in 12.19s"
+    },
+    {
+      "check": "m10_compare",
+      "status": "PASS",
+      "evidence": "Same field frame on both backends in real cocoa windows. Without environment effects: mean |diff| 0.0, 0.0% pixels differ by >24. With lighting, shadow, water, bloom, grading, vignette: mean |diff| 12.56, 10.13% pixels differ; luma mean/std ModernGL (51.2, 46.0) vs pygame (59.6, 40.4); pygame reports unsupported ['bloom', 'grade', 'shadows', 'vignette'], ModernGL none. 30 s soak with rain (800 particles): moderngl 1792 frames 59.693 fps p99 23.2027 ms max 37.4966 ms errors 0 RSS +4.4 MB (+3.1 MB after the first 10 s); pygame 1768 frames 58.882 fps p99 18.0311 ms max 29.5587 ms errors 0 RSS -7.4 MB (-7.8 MB after the first 10 s)",
+      "screenshots": [
+        "m10_moderngl_pygame_diff.png",
+        "m10_moderngl_plain.png",
+        "m10_moderngl_effects.png",
+        "m10_pygame_plain.png",
+        "m10_pygame_effects.png"
+      ],
+      "note": "Numbers only. Whether the GPU effects look right (and whether the fallback is acceptable) is M10's visual confirmation, still NOT EXECUTED."
     }
   ]
 }

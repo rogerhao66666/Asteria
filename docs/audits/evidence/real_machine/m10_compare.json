@@ -1,0 +1,51 @@
+{
+  "plain_frame_diff": {
+    "mean_abs": 0.0,
+    "pixels_over_24_pct": 0.0
+  },
+  "effects_frame_diff": {
+    "mean_abs": 12.56,
+    "pixels_over_24_pct": 10.13
+  },
+  "effects_luma_mean_std": {
+    "moderngl": [
+      51.2,
+      46.0
+    ],
+    "pygame": [
+      59.6,
+      40.4
+    ]
+  },
+  "unsupported_on_backend": {
+    "moderngl": [],
+    "pygame": [
+      "bloom",
+      "grade",
+      "shadows",
+      "vignette"
+    ]
+  },
+  "soak_30s": {
+    "moderngl": {
+      "frames": 1792,
+      "fps": 59.693,
+      "p99_ms": 23.2027,
+      "max_ms": 37.4966,
+      "over_budget": 3,
+      "errors": 0,
+      "rss_growth_mb": 4.4,
+      "rss_growth_after_warmup_mb": 3.1
+    },
+    "pygame": {
+      "frames": 1768,
+      "fps": 58.882,
+      "p99_ms": 18.0311,
+      "max_ms": 29.5587,
+      "over_budget": 1,
+      "errors": 0,
+      "rss_growth_mb": -7.4,
+      "rss_growth_after_warmup_mb": -7.8
+    }
+  }
+}
