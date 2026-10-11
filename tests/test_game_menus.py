@@ -66,22 +66,27 @@ def _press(rt, key):
     rt._frame([pygame.event.Event(pygame.KEYUP, key=key)], 0.016)
 
 
+def _choose(rt, key):
+    """Move the pause menu cursor to entry ``key`` with Down presses, then confirm."""
+    for _ in range(len(rt._pause_menu.options)):
+        if rt._pause_menu.selected == key:
+            break
+        _press(rt, pygame.K_DOWN)
+    assert rt._pause_menu.selected == key
+    _press(rt, pygame.K_RETURN)
+
+
 def test_runtime_pause_quests_save_and_title(runtime, resource_root):
     runtime._ui_mode = "field"
     _press(runtime, pygame.K_ESCAPE)
     assert runtime._ui_mode == "pause" and runtime.running
-    _press(runtime, pygame.K_DOWN)
-    _press(runtime, pygame.K_RETURN)  # Quest Log
+    _choose(runtime, "quests")
     assert runtime._ui_mode == "quests"
     _press(runtime, pygame.K_ESCAPE)
     assert runtime._ui_mode == "pause"
-    for _ in range(5):  # Crafting, Achievements, Bestiary, Settings, Save
-        _press(runtime, pygame.K_DOWN)
-    _press(runtime, pygame.K_RETURN)  # Save Game
+    _choose(runtime, "save")
     assert (resource_root / "saves" / "playtest_autosave.asteria-save.json").is_file()
-    _press(runtime, pygame.K_DOWN)
-    _press(runtime, pygame.K_DOWN)
-    _press(runtime, pygame.K_RETURN)  # Return to Title
+    _choose(runtime, "title")
     assert runtime._ui_mode == "title"
 
 

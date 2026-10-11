@@ -135,6 +135,8 @@ class InventoryScreenRuntime:
             definition = defs.get(item_id)
             count = inventory.count(item_id)
             label = self.profile.item_label(item_id)
+            if label == item_id and definition is not None and definition.display_name:
+                label = definition.display_name  # no profile override: the item's own name
             tags = () if definition is None else tuple(definition.tags)
             group = self.profile.group_for(item_id)
             haystack = " ".join((item_id, label, group, *tags)).casefold()

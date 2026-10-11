@@ -481,6 +481,9 @@ class PlayableTestRuntime:
             self._pause_menu.index = 0
             self._ui_mode = "pause"
             return moving
+        if any(e.type == self.pg.KEYDOWN and e.key == self.pg.K_i for e in events):
+            self.open_status_menu(back="field")
+            return moving
         if any(e.type == self.pg.KEYDOWN and e.key == self.pg.K_q for e in events):
             self._quest_return = "field"
             self._ui_mode = "quests"
@@ -1045,6 +1048,71 @@ class PlayableTestRuntime:
         self.audio.stop_music(fade_out=0.3)
         self._ui_mode = "title"
 
+    # -- status menu (UI-01) -----------------------------------------------------------------------
+    def open_status_menu(self, back="field"):
+        from asteria.runtime.status_menu import StatusMenu
+
+        self.status_menu = StatusMenu(self.game)
+        self._status_back = back
+        self._ui_mode = "status"
+
+    def _status_input(self, events):
+        menu = self.status_menu
+        for event in events:
+            if event.type != self.pg.KEYDOWN:
+                continue
+            if event.key in (self.pg.K_ESCAPE, self.pg.K_i):
+                self._ui_mode = self._status_back
+            elif event.key == self.pg.K_TAB:
+                menu.next_tab(-1 if event.mod & self.pg.KMOD_SHIFT else 1)
+            elif event.key in (self.pg.K_q, self.pg.K_PAGEUP):
+                menu.next_actor(-1)
+            elif event.key in (self.pg.K_e, self.pg.K_PAGEDOWN):
+                menu.next_actor(1)
+            elif event.key in (self.pg.K_UP, self.pg.K_w):
+                menu.move(-1)
+            elif event.key in (self.pg.K_DOWN, self.pg.K_s):
+                menu.move(1)
+            elif event.key in (self.pg.K_RETURN, self.pg.K_SPACE):
+                try:
+                    menu.activate()
+                except Exception as exc:  # noqa: BLE001 - shown to the player, the game keeps running
+                    menu.message = str(exc)
+
+    def _draw_status_menu(self):
+        from asteria.runtime.status_menu import TABS
+
+        self._draw_field(False)
+        shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
+        shade.fill((6, 9, 18, 215))
+        self.screen.blit(shade, (0, 0))
+        menu = self.status_menu
+        self.panel((24, 22, self.width - 48, self.height - 44), fill=(11, 15, 25, 242))
+        x = 44
+        for tab in TABS:
+            label = tab.title()
+            active = tab == menu.tab
+            self.text(label, x, 36, size=24, color=(255, 220, 120) if active else (150, 160, 180))
+            x += 150
+        actor = menu.actor_id or "—"
+        name = getattr(self.project.rpg_database.actors.get(actor), "display_name", actor)
+        self.text(f"Q / E  {name}", self.width - 330, 40, size=20, color=(170, 220, 255))
+        rows = menu.rows()
+        start = max(0, menu.row - 13)
+        for i, (_kind, _key, label, detail) in enumerate(rows[start : start + 14]):
+            y = 92 + i * 28
+            selected = start + i == menu.row
+            if selected:
+                self.pg.draw.rect(self.screen, (40, 52, 78), (40, y - 4, self.width - 80, 26), border_radius=4)
+            self.text(label, 56, y, size=20, color=(255, 255, 255) if selected else (210, 215, 225))
+            self.text(detail, self.width - 420, y, size=20, color=(170, 210, 240))
+        if not rows:
+            self.text("Nothing here yet.", 56, 92, size=20, color=(150, 160, 180))
+        hint = "Tab: next tab   ↑↓: choose   Enter: use / equip / unequip   Esc: back"
+        self.text(hint, 44, self.height - 60, size=18, color=(170, 210, 240))
+        if menu.message:
+            self.text(menu.message, 44, self.height - 88, size=19, color=(255, 226, 129))
+
     def _pause_input(self):
         if self.input.just_pressed("cancel"):
             self._ui_mode = "field"
@@ -1054,6 +1122,8 @@ class PlayableTestRuntime:
         choice = self._pause_menu.selected
         if choice == "resume":
             self._ui_mode = "field"
+        elif choice == "status":
+            self.open_status_menu(back="pause")
         elif choice == "quests":
             self._quest_return = "pause"
             self._ui_mode = "quests"
@@ -1489,6 +1559,9 @@ class PlayableTestRuntime:
         elif self._ui_mode == "pause":
             self._pause_input()
             self._draw_overlay_menu("Paused", self._pause_menu)
+        elif self._ui_mode == "status":
+            self._status_input(events)
+            self._draw_status_menu()
         elif self._ui_mode == "quests":
             self._quests_input()
             self._draw_quests()

@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 PAUSE_OPTIONS = (
     ("resume", "Resume"),
+    ("status", "Status / Items / Equipment / Skills"),
     ("quests", "Quest Log"),
     ("crafting", "Crafting"),
     ("achievements", "Achievements"),

@@ -592,6 +592,55 @@ class GameSessionRuntime:
         self._store_ability_state(actor_id, state)
         return values
 
+    # -- field menus: item use and equipment from the bag (UI-01) ----------------------------------
+    def use_item(self, actor_id, item_id):
+        """Use a consumable on a party member outside battle (the canonical ``use_inventory_item``)."""
+        from dataclasses import replace
+
+        from asteria.gameplay import ResourcePool, StatBlock, TagSet
+        from asteria.rpg.items import use_inventory_item
+
+        actor_id, item_id = str(actor_id), str(item_id)
+        item = self.project.rpg_database.items.get(item_id)
+        snapshot = self.save.rpg_state.actor_snapshots.get(actor_id)
+        if item is None or snapshot is None:
+            raise GameSessionError(f"cannot use {item_id} on {actor_id}")
+        stats = StatBlock.from_data(snapshot.stats)
+        resources = ResourcePool.from_data(snapshot.resources)
+        tags = TagSet.from_data(snapshot.tags)
+        result = use_inventory_item(self.save.rpg_state.inventory, item, stats, resources, tags)
+        if result.used:
+            self.save.rpg_state.actor_snapshots[actor_id] = replace(
+                snapshot, stats=stats.to_data(), resources=resources.to_data(), tags=tags.to_data()
+            )
+            self.refresh_quests()
+        return result
+
+    def equip_from_inventory(self, actor_id, equipment_id, slot_id=None):
+        """Move an equipment item from the bag to a slot; whatever was there goes back to the bag."""
+        actor_id, equipment_id = str(actor_id), str(equipment_id)
+        inventory = self.save.rpg_state.inventory
+        if inventory.count(equipment_id) < 1:
+            raise GameSessionError(f"no {equipment_id} in the bag")
+        definition = self.project.rpg_database.equipment[equipment_id]
+        slot_id = slot_id or definition.slot
+        loadout = self.save.rpg_state.loadouts[actor_id]
+        for previous in tuple(loadout.equipped(slot_id)):
+            loadout.unequip(slot_id, 0)
+            inventory.add(previous.equipment.equipment_id, 1)
+        instance = self.equip_definition(actor_id, equipment_id, slot_id=slot_id, replace=True)
+        inventory.remove(equipment_id, 1)
+        return instance
+
+    def unequip_to_inventory(self, actor_id, slot_id):
+        loadout = self.save.rpg_state.loadouts[str(actor_id)]
+        items = loadout.equipped(str(slot_id))
+        if not items:
+            return None
+        loadout.unequip(str(slot_id), 0)
+        self.save.rpg_state.inventory.add(items[0].equipment.equipment_id, 1)
+        return items[0].equipment.equipment_id
+
     def equip_definition(self, actor_id, equipment_id, *, slot_id=None, replace=True):
         actor_id = str(actor_id)
         equipment_id = str(equipment_id)
