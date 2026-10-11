@@ -759,6 +759,20 @@ class AsteriaEditorWindow(QMainWindow):
         self.reset_layout_action = QAction("Reset Layout", self)
         self.reset_layout_action.triggered.connect(self.reset_layout)
         view_menu.addAction(self.reset_layout_action)
+        from PySide6.QtGui import QActionGroup
+
+        from .theme import CURRENT, PALETTES
+
+        theme_menu = view_menu.addMenu("Theme")
+        group = QActionGroup(self)
+        self.theme_actions = {}
+        for key, palette in PALETTES.items():
+            action = QAction(palette.name, self, checkable=True)
+            action.setChecked(CURRENT["palette"] is palette)
+            action.triggered.connect(lambda checked=False, k=key: self.set_theme(k))
+            group.addAction(action)
+            theme_menu.addAction(action)
+            self.theme_actions[key] = action
 
         prefab_menu = self.menuBar().addMenu("&Prefab")
         self.create_prefab_action = QAction("Create Prefab from Selected Entity…", self)
@@ -2098,6 +2112,16 @@ class AsteriaEditorWindow(QMainWindow):
             if not self._layout_restored:  # dock sizes only apply once the window has its real size
                 QTimer.singleShot(0, self._apply_default_dock_sizes)
 
+    def set_theme(self, name):
+        """Switch the editor palette live and remember it."""
+        from .theme import apply_asteria_theme
+
+        apply_asteria_theme(QApplication.instance(), name)
+        if name in getattr(self, "theme_actions", {}):
+            self.theme_actions[name].setChecked(True)
+        if self.layout_settings is not None:
+            self.layout_settings.setValue("editor/theme", name)
+
     def reset_layout(self):
         """Back to the default dock arrangement (every panel docked and visible)."""
         for dock in self.findChildren(QDockWidget):
@@ -2123,12 +2147,15 @@ class AsteriaEditorWindow(QMainWindow):
 def launch_editor(project=None):
     import sys
 
-    app = QApplication.instance() or QApplication(sys.argv)
-    apply_asteria_theme(app)
-    window = AsteriaEditorWindow(project)
     from PySide6.QtCore import QSettings
 
-    window.restore_layout(QSettings("Asteria", "Editor"))
+    from .theme import palette_name
+
+    app = QApplication.instance() or QApplication(sys.argv)
+    settings = QSettings("Asteria", "Editor")
+    apply_asteria_theme(app, palette_name(settings))
+    window = AsteriaEditorWindow(project)
+    window.restore_layout(settings)
     window.show()
     return app.exec()
 

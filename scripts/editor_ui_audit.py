@@ -7,7 +7,8 @@ sub-tab, take a screenshot of each and list visible defects a person would see:
 * ``tiny``     - an interactive control squeezed under 12 px
 * ``scrolled`` - (informational) a tab outside its bar's visible part, reached with the scroll buttons
 
-Usage: python scripts/editor_ui_audit.py OUTPUT_DIR [--size 1600x1000] [--tag before]
+Usage: python scripts/editor_ui_audit.py OUTPUT_DIR [--size 1600x1000] [--tag before] [--theme twilight]
+                                         [--surfaces scene rpg_database ...]
 Writes OUTPUT_DIR/<tag>_<workspace>.png and OUTPUT_DIR/<tag>_report.json.
 """
 
@@ -176,6 +177,8 @@ def main(argv=None):
     parser.add_argument("output")
     parser.add_argument("--size", default="1600x1000")
     parser.add_argument("--tag", default="audit")
+    parser.add_argument("--theme", default=None, help="palette: graphite, twilight or daylight")
+    parser.add_argument("--surfaces", nargs="*", help="only these surface names")
     args = parser.parse_args(argv)
     out = Path(args.output)
     out.mkdir(parents=True, exist_ok=True)
@@ -189,7 +192,7 @@ def main(argv=None):
     from asteria.project import Project
 
     app = QApplication.instance() or QApplication([])
-    apply_asteria_theme(app)
+    apply_asteria_theme(app, args.theme)
     project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
     window = AsteriaEditorWindow(project)
     window.resize(width, height)
@@ -204,6 +207,8 @@ def main(argv=None):
     settle(1.0)
     report = {"size": [width, height], "dpr": window.devicePixelRatioF(), "surfaces": {}}
     for name, activate in surfaces(window):
+        if args.surfaces and name not in args.surfaces:
+            continue
         activate()
         settle()
         window.grab().save(str(out / f"{args.tag}_{name}.png"))

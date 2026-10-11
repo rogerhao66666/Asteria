@@ -1,0 +1,34 @@
+{
+  "size": [
+    1440,
+    900
+  ],
+  "dpr": 2.0,
+  "surfaces": {
+    "scene": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      }
+    ],
+    "rpg_database": [],
+    "rpg_enemy_ai": [],
+    "ui_character_composition": [
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Input Map"
+      }
+    ]
+  },
+  "total": 0
+}

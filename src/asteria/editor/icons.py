@@ -15,28 +15,28 @@ from PySide6.QtGui import QColor, QIcon, QPainter, QPainterPath, QPen, QPixmap
 
 ACCENTS = {
     # workspaces
-    "scene": "#3fd0a8",
-    "rpg": "#f4b545",
-    "battle": "#f06a6a",
-    "ui": "#a98bff",
-    "events": "#56c1f5",
-    "code": "#7f9dff",
+    "scene": "#46b896",
+    "rpg": "#dca545",
+    "battle": "#e06a5c",
+    "ui": "#9a84e0",
+    "events": "#4aa9dc",
+    "code": "#738ee8",
     # panels
-    "project": "#3fd0a8",
-    "tiles": "#8bd35c",
-    "layers": "#56c1f5",
-    "inspector": "#a98bff",
-    "assets": "#f4b545",
-    "console": "#9aa3b2",
-    "debugger": "#ff9a4d",
-    "profiler": "#5fd38d",
-    "problems": "#f5c542",
+    "project": "#46b896",
+    "tiles": "#86bf58",
+    "layers": "#4aa9dc",
+    "inspector": "#9a84e0",
+    "assets": "#dca545",
+    "console": "#8f96a3",
+    "debugger": "#e8894a",
+    "profiler": "#52b884",
+    "problems": "#dcb23e",
     # roles
-    "primary": "#6c8cff",
-    "success": "#4cc38a",
-    "danger": "#ef5f67",
-    "warning": "#f5c542",
-    "muted": "#9aa3b2",
+    "primary": "#6a83e8",
+    "success": "#3fae7a",
+    "danger": "#de5a62",
+    "warning": "#dcb23e",
+    "muted": "#8f96a3",
 }
 
 _STROKE = 1.9
@@ -202,8 +202,8 @@ def _layers(p, c):
 def _sliders(p, c):  # inspector
     for y, x in ((6, 15), (12, 8), (18, 13)):
         p.drawLine(QPointF(3, y), QPointF(21, y))
-        p.setBrush(QColor("#1b1e25"))
-        p.drawEllipse(QPointF(x, y), 2.4, 2.4)
+        p.setBrush(QColor(c))
+        p.drawEllipse(QPointF(x, y), 2.2, 2.2)
 
 
 def _terminal(p, c):
@@ -286,7 +286,11 @@ def _search(p, c):
 def _gear(p, c):
     p.setBrush(_fill(c))
     p.drawPath(_star(12, 12, 9, 6.8, n=8, rot=0))
-    p.setBrush(QColor("#1b1e25"))
+    p.setCompositionMode(QPainter.CompositionMode_Clear)
+    p.setBrush(QColor(0, 0, 0))
+    p.drawEllipse(QPointF(12, 12), 3, 3)
+    p.setCompositionMode(QPainter.CompositionMode_SourceOver)
+    p.setBrush(Qt.NoBrush)
     p.drawEllipse(QPointF(12, 12), 3, 3)
 
 
@@ -587,20 +591,20 @@ DEFAULT_COLOR = {
     "search": "muted",
     "settings": "muted",
     "export": "rpg",
-    "actor": "#f4b545",
-    "class": "#56c1f5",
-    "skill": "#a98bff",
-    "item": "#3fd0a8",
-    "weapon": "#ff9a4d",
-    "armor": "#7f9dff",
-    "enemy": "#f06a6a",
-    "troop": "#f06a6a",
-    "state": "#5fd38d",
+    "actor": "#dca545",
+    "class": "#4aa9dc",
+    "skill": "#9a84e0",
+    "item": "#46b896",
+    "weapon": "#e8894a",
+    "armor": "#738ee8",
+    "enemy": "#e06a5c",
+    "troop": "#e06a5c",
+    "state": "#52b884",
     "animation": "ui",
-    "vfx": "#ff9a4d",
+    "vfx": "#e8894a",
     "input": "events",
     "timeline": "battle",
-    "behavior_tree": "#5fd38d",
+    "behavior_tree": "#52b884",
     "composition": "rpg",
     "state_machine": "ui",
     "flow": "events",
@@ -642,6 +646,6 @@ def icon(name, color=None):
     for size in (16, 20, 24, 32):
         for ratio in (1.0, 2.0, 3.0):
             result.addPixmap(pixmap(name, size, color, ratio))
-    disabled = pixmap(name, 24, "#5b6270", 2.0)
+    disabled = pixmap(name, 24, "#8a8f99", 2.0)
     result.addPixmap(disabled, QIcon.Disabled)
     return result

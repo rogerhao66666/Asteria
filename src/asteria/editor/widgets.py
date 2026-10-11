@@ -232,7 +232,7 @@ class InspectorWidget(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
         self.table.itemChanged.connect(self._item_changed)
         self.title.setObjectName("SectionLabel")
-        self.error.setStyleSheet("color: #ff8f96;")
+        self.error.setObjectName("ErrorLabel")
         self.empty_state = self._empty_state()
         layout = QVBoxLayout(self)
         layout.addWidget(self.title)
@@ -248,7 +248,9 @@ class InspectorWidget(QWidget):
         column = QVBoxLayout(box)
         column.addStretch(1)
         picture = QLabel()
-        picture.setPixmap(pixmap("inspector", 44, "#4a5470", 2.0))
+        from .theme import CURRENT
+
+        picture.setPixmap(pixmap("inspector", 44, CURRENT["palette"].text_muted, 2.0))
         picture.setAlignment(Qt.AlignCenter)
         heading = QLabel("Nothing selected")
         heading.setObjectName("EmptyStateTitle")
