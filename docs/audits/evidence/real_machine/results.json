@@ -2,7 +2,7 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-11 15:25:01 +0800"
+    "time": "2026-10-11 15:27:25 +0800"
   },
   "results": [
     {
@@ -215,6 +215,19 @@
         "menu_controls.png"
       ],
       "note": "Physical key presses by a person remain manual item M1; gamepad rebinding needs a controller (M2)."
+    },
+    {
+      "check": "editor_d17_gui",
+      "status": "PASS",
+      "evidence": "Qt platform 'cocoa': export_game=ok, animation_states=ok, character_composition=ok, input_map=ok, behavior_trees=ok, profiler_dock=ok, project_file_untouched=ok",
+      "screenshots": [
+        "editor_animation_states.png",
+        "editor_character_composition.png",
+        "editor_input_map.png",
+        "editor_behavior_trees.png",
+        "editor_profiler.png"
+      ],
+      "note": "Nothing saved to the project. Hands-on use by a person is manual item M7."
     }
   ]
 }

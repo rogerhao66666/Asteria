@@ -178,25 +178,25 @@ CB10、CB11 在 CB1–CB3 之後
 | ENG-12 | B | Proposal | playable runtime 仍用 pygame；ModernGL 只在 scene preview | D17-P 技術提案（等待 Review） |
 | ENG-13 | B | Validation | canonical 戰鬥 UI 已在實機接線（D15）；parallax 缺 RM | parallax 實機 |
 | ENG-14 | B | Validation | 缺 RM | M1 實體鍵盤／滑鼠 |
-| ENG-15 | B | Validation | D17-3 完成：rebinding UI 已完成；gamepad 實機是 EXTERNAL；缺 RM | Phase 6 實機驗證 |
+| ENG-15 | B | Validation | 鍵盤重綁已 RM；gamepad BLOCKED | M2／M8（需要手把） |
 | ENG-16 | B | Validation | D17-2 完成：CharacterController 已完成；缺 RM | Phase 6 實機驗證 |
 | ENG-17 | B | Validation | D17-2 完成：通用 hitbox／hurtbox 已完成；缺 RM | Phase 6 實機驗證 |
 | ENG-18 | B | Validation | 可聽確認與延遲 NOT EXECUTED（M3／M4）；沒有 spatial audio | M3／M4；spatial 依 SPEC『where useful』，不列 blocker |
 | ENG-20 | B | Validation | — | 遷移 CLI 實機流程 |
-| ENG-21 | B | Validation | D17-3 完成：存檔欄位 UI 已完成；缺 RM | Phase 6 實機驗證 |
+| ENG-21 | A | 完成 | D17-3 + Phase 6 實機 | — |
 | ENG-23 | B | Validation | 缺 Editor 實機流程驗證 | Editor prefab 實機流程 |
-| ANI-02 | B | Validation | D17-3 完成：圖形化狀態機編輯器已完成；缺 RM | Phase 6 實機驗證 |
+| ANI-02 | B | Validation | 編輯器已 RM；runtime 只有 HI | 實機：以撰寫的狀態機驅動戰鬥動畫 |
 | ANI-03 | B | Validation | 缺 RM | 實機 frame event |
 | ANI-05 | B | Validation | D17-2 完成：hitbox／i-frame／cancel cue 已接 runtime；缺 RM | Phase 6 實機驗證 |
 | CAM-01 | B | Validation | 缺人眼確認（M5） | M5 |
-| CAM-02 | B | Validation | D17-3 完成：跟隨鏡頭、boss 開場鏡頭已完成；缺 RM | Phase 6 實機驗證 |
+| CAM-02 | B | Validation | target group、look-ahead 只有 UT／HI | 實機：多目標與 look-ahead 場景 |
 | VFX-01 | B | Validation | 沒有粒子發射器資料（VFX 為序列圖）；缺人眼確認 | M5；粒子發射器併入 D17-P 提案 |
 | VFX-02 | C | Proposal | lighting／bloom shader 尚未實作（需另提案） | D17-P 技術提案 |
 | VFX-03 | C | Proposal | — | D17-P 技術提案 |
-| CMP-01 | B | Validation | D17-3 完成：戰鬥已消費分層角色；field 角色尚未消費；缺 RM | Phase 6 實機驗證 |
-| CMP-02 | B | Validation | D17-3 完成：runtime 已繪製 socket／attachment；缺 RM | Phase 6 實機驗證 |
+| CMP-01 | B | Functional + Validation | field 角色尚未消費分層角色 | field 消費（小）＋ RM |
+| CMP-02 | A | 完成 | D17-3 + Phase 6 實機 | — |
 | CMP-03 | B | Validation | — | 戰鬥 damage number 實機 |
-| CMP-04 | B | Validation | D17-3 完成：editor／Python 與 runtime 使用同一份 parts()；缺 RM | Phase 6 實機驗證 |
+| CMP-04 | B | Validation | 編輯器已 RM | 人工 M7 |
 | GP-02 | B | Validation | 缺 RM | 實機戰鬥 |
 | GP-05 | B | Validation | 缺 RM | 實機戰鬥 |
 | BTL-01 | B | Validation | 缺 RM | 實機戰鬥（M6） |
@@ -210,15 +210,15 @@ CB10、CB11 在 CB1–CB3 之後
 | RPG-06 | B | Validation | 沒有 RM；配方發現已有（D13） | 實機製作 |
 | RPG-07 | B | Validation | D17-2 完成：互動類型已有 runtime；缺 RM | Phase 6 實機驗證 |
 | RPG-08 | B | Validation | 捕捉選單已接進 playable 戰鬥（D13）；缺 RM | 實機捕捉 |
-| RPG-09 | B | Validation | D17-3 完成：behavior tree runtime 與編輯器已完成；缺 RM | Phase 6 實機驗證 |
+| RPG-09 | B | Validation | field 行為只有 HI | 實機：field 實體依樹追擊 |
 | RPG-10 | B | Validation | spawn 已在 playable runtime 執行（`GameSessionRuntime.field_update` 的 `SpawnSystem`，D13）；缺 RM | 實機 spawn |
 | EVT-01 | B | Validation | 缺 RM | 實機事件流程 |
 | EVT-02 | B | Validation | 缺 RM | 實機事件流程 |
-| EVT-03 | B | Validation | D17-2 完成：common／battle events、cutscene 已完成；缺 RM | Phase 6 實機驗證 |
-| EVT-04 | B | Validation | D17-2 完成：平行 sequencer 已完成；缺 RM | Phase 6 實機驗證 |
+| EVT-03 | B | Validation | common／battle events 只有 HI | 實機：common／battle event |
+| EVT-04 | B | Validation | dialogue、music track 只有 HI | 實機：含對話與音樂 track 的 sequence；人工 M3 聽音 |
 | WLD-01 | B | Validation | 任務編輯器已有（D13）；缺 RM | 實機任務 |
 | WLD-02 | B | Validation | D17-3 完成：NPC 狀態模型已完成；缺 RM | Phase 6 實機驗證 |
-| UI-01 | B | Validation | D17-2 完成：背包／裝備／狀態畫面已接 runtime；缺 RM | Phase 6 實機驗證 |
+| UI-01 | B | Validation | 使用道具、換裝只有 HI | 實機：status 畫面內使用／換裝 |
 | UI-02 | B | Validation | 設定畫面已有（`game_menus.GameSettings`，D13）；缺 RM | 實機選單流程 |
 | EDT-02 | B | Validation | 缺 RM | 實機 asset browser |
 | EDT-03 | B | Validation | 批次套用沒有在 Cocoa 實機執行 | 實機批次套用 |
@@ -229,10 +229,10 @@ CB10、CB11 在 CB1–CB3 之後
 | EDT-16 | B | Validation | 缺 RM | 實機 inspector |
 | EDT-17 | D | Eventually | SPEC 原文寫「eventually」 | SPEC §31『should eventually』；不列 blocker |
 | EDT-18 | D | Eventually | — | SPEC §32 plugins 未要求當前版本；保留既有擴充介面 |
-| EDT-19 | B | Validation | D17-3 完成：Profiler dock 已完成；pygame draw calls 標 Unsupported；缺 RM | Phase 6 實機驗證 |
+| EDT-19 | A | 完成 | D17-3 + Phase 6 實機（Profiler dock） | — |
 | AST-02 | B | Validation | pivot 修改沒有在實機執行 | 實機 pivot 修改 |
 | AST-04 | B | Validation | — | 見 ANI-03 |
-| AST-06 | B | Validation | D17-3 完成：folder／.pyz／.app 打包與 Export Game 已完成；缺 RM | Phase 6 實機驗證 |
+| AST-06 | A | 完成 | D17-3 + Phase 6 實機（.app） | 人工 M6（Finder 雙擊）僅記錄 Gatekeeper 行為 |
 | AST-07 | B | Validation | — | 實機類別播放 |
 | AST-08 | B | Validation | 缺 RM | 實機 |
 | AST-11 | B | Validation | 缺 RM | 實機 |

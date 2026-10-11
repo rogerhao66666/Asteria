@@ -3,7 +3,7 @@
 D14 #4. Run on a real macOS machine with real windows and devices: no dummy SDL drivers and no offscreen Qt. Each item is **PASS**, **FAIL**, **BLOCKED** (a required device or permission is missing) or **NOT EXECUTED** (needs a person). Nothing is marked PASS without a measurement.
 
 - **Machine:** macOS 27.0.1 arm64, Apple M5 GPU (OpenGL 4.1 Metal), Python 3.13.15, pygame-ce 2.5.8 (SDL 2.32.10), PySide6.
-- **Run:** 2026-10-11 (re-run after D16: CB10 editors, VFX placement, CAM-02 camera; two checks added).
+- **Run:** 2026-10-11 (re-run after D16; items 11–19 added in D17 Phase 6).
 - **Command:** `python scripts/real_machine_validation.py docs/audits/evidence/real_machine`
 - **Raw results:** [`evidence/real_machine/results.json`](evidence/real_machine/results.json). Profile: [`battle_profile.json`](evidence/real_machine/battle_profile.json).
 
@@ -25,6 +25,15 @@ D14 #4. Run on a real macOS machine with real windows and devices: no dummy SDL 
 | 8b | Runtime recovery | **PASS** | The runtime wrote a player save and was killed with SIGKILL (exit −9). The save reloaded with the saved player position (7.0, 3.0). |
 | 9 | Boss camera (CAM-02) | **PASS** | Boss event camera in a real cocoa window: zoom 1.60 (authored 1.6), map image covers the screen=True, boss moved from x=624 to x=480 (screen centre 480). Before / after: [field_camera_home.png](evidence/real_machine/field_camera_home.png), [field_camera_boss_focus.png](evidence/real_machine/field_camera_boss_focus.png). Whether it feels right is M5. |
 | 10 | Editor tools (CB10) | **PASS** | Qt platform 'cocoa': animation_editor=ok, action_timeline=ok, vfx_tool=ok, vfx_preview=ok, enemy_ai_preview=ok, multi_select_batch_fields=ok, problems_panel=ok, problems_clear_again=ok, script_completion=ok, debugger_live_game=ok. Screenshots reviewed: [animation](evidence/real_machine/editor_animation.png), [action timeline](evidence/real_machine/editor_action_timeline.png), [VFX](evidence/real_machine/editor_vfx.png), [enemy AI](evidence/real_machine/editor_enemy_ai.png), [records](evidence/real_machine/editor_records_multiselect.png), [problems](evidence/real_machine/editor_problems.png), [script](evidence/real_machine/editor_script.png), [debugger](evidence/real_machine/editor_debugger.png). Hands-on use by a person is not part of this check. |
+| 11 | Cutscene (EVT-03/04) | **PASS** | Tween moved the player to x=7.8 of 20 after 0.6 s with the arrow key held (input locked); camera zoom 1.40; letterbox; parallel VFX track; a real Esc event skipped to the end state. [mid](evidence/real_machine/cutscene_mid.png), [skipped](evidence/real_machine/cutscene_skipped.png) |
+| 12 | Boss intro camera (CAM-02) | **PASS** | Zoom peaked at 1.35 and settled at 1.00; commands blocked during the intro. [screenshot](evidence/real_machine/battle_boss_intro.png) |
+| 13 | Layered characters (CMP-01/02) | **PASS** | 6 heroes with an authored socket attachment and back layer, 12 part draws; the charm is visible and mirrored with the body. [screenshot](evidence/real_machine/battle_layered_characters.png) |
+| 14 | Status screen (UI-01) | **PASS** | The I key opened the status screen. [screenshot](evidence/real_machine/menu_status.png) |
+| 15 | Save slots (ENG-21) | **PASS** | Saved to slot 1 (overwrite confirmed), loaded it back: player x=11.0 restored. [screenshot](evidence/real_machine/menu_save_slots.png) |
+| 16 | Rebinding (ENG-15) | **PASS** (keyboard) | move_right rebound to D on the Controls screen; holding D moved the player. Gamepad rebinding is BLOCKED (no controller, M2). [screenshot](evidence/real_machine/menu_controls.png) |
+| 17 | Follow camera (CAM-02) | **PASS** | Follow zoom 1.80; the camera centre moved 48.9 units with the walking player. [start](evidence/real_machine/follow_camera_start.png), [end](evidence/real_machine/follow_camera_end.png) |
+| 18 | Packaged .app (AST-06) | **PASS** | The .app (2.4 MB .pyz) ran 120 frames in a real window from a temporary folder outside the repo, exit 0. Double-click in Finder is M6. |
+| 19 | D17 editor surfaces | **PASS** | Cocoa: export_game, animation_states, character_composition, input_map, behavior_trees, profiler_dock (live game), project file untouched. [states](evidence/real_machine/editor_animation_states.png), [composition](evidence/real_machine/editor_character_composition.png), [input map](evidence/real_machine/editor_input_map.png), [trees](evidence/real_machine/editor_behavior_trees.png), [profiler](evidence/real_machine/editor_profiler.png) |
 
 ## Defect found and fixed by this run
 
@@ -47,6 +56,12 @@ All three were fixed in the same batch, and the check was re-run:
 - The record editor truncated field names ("def…", "resour…"). The field column now fits its contents.
 
 Still open: a stray "Assets | Console" tab strip is drawn inside the bottom dock when the Debugger or Problems dock is raised. It looks like a Qt rendering artifact of tabified docks; it needs a person to check whether it is visible in normal use.
+
+## Defects found by the D17 Phase 6 review of the screenshots
+
+Fixed in `c8b7616` and re-run:
+- Boss intro: zooming onto a boss near the edge left screen areas without background, showing smeared earlier frames. The battle camera is now clamped to the battlefield.
+- The default font has no arrow glyphs: the rebinding message showed a box and the status hint showed "??". Game text now uses ASCII fallbacks.
 
 ## Manual procedures (macOS) for the items that need a person or a device
 
@@ -75,6 +90,11 @@ Each item stays NOT EXECUTED or BLOCKED until someone runs its procedure and rec
   3. Report the median of 10 presses. Target: under 100 ms.
 - **M5 — Perceived smoothness.** Watch 2 minutes of battle (M1). PASS if there are no visible hitches, sprites animate continuously, and effects play without stutter.
 
+- **M6 — Packaged app in Finder.** Export with File → Export Game… (macOS app ticked). Double-click the `.app` in Finder. Note what Gatekeeper shows for an unsigned app (Open from the context menu if needed). PASS if the game window opens and plays; record the Gatekeeper behaviour either way.
+- **M7 — Editor hands-on (D17 tabs).** A person uses Animation States (drag nodes, add a transition, preview), Character Composition (socket, key at frame, attach, layer), Behavior Trees, Input Map, Event Flow (sequence editor) and the Profiler dock while playing. PASS if every action works with the mouse and keyboard without errors.
+- **M8 — Gamepad rebinding.** With a controller (M2), open Settings → Controls, rebind confirm to another pad button and use it. PASS if the new button works and the old one no longer does.
+- **M9 — D17 visual review.** Watch the boss intro, a cutscene with Esc skip, layered characters in battle and the follow camera (enable `field.camera.follow`). PASS if nothing looks wrong (popping, smearing, misplaced parts).
+
 ## Rerunning
 
-Run `python scripts/real_machine_validation.py OUTPUT_DIR [--only gpu_window input audio battle editor runtime]`. The script restores `saves/playtest_autosave.asteria-save.json` after the recovery check.
+Run `python scripts/real_machine_validation.py OUTPUT_DIR [--only CHECK ...]` (checks: gpu_window input audio battle field_camera editor editor_tools editor_d17 runtime cutscene battle_features menus follow_camera packaged_app). `--only` merges into the existing results. The script restores `saves/playtest_autosave.asteria-save.json`, the slot 1 save and `settings.json` after the checks that write them.

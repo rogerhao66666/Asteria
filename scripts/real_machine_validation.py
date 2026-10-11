@@ -425,6 +425,114 @@ def check_editor_tools(out):
     )
 
 
+def check_editor_d17(out):
+    """D17 editor surfaces in a real Cocoa editor: export, state machine, composition, trees, input map, profiler."""
+    import tempfile
+
+    from PySide6.QtWidgets import QApplication, QGraphicsPixmapItem
+
+    from asteria.editor import EditorDocument
+    from asteria.editor.shell import AsteriaEditorWindow
+    from asteria.editor.workspace import WorkspaceMode
+    from asteria.project import Project
+
+    app = QApplication.instance() or QApplication([])
+    original = PROJECT_FILE.read_bytes()
+    project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
+    window = AsteriaEditorWindow(project)
+    window.document.file_path = PROJECT_FILE
+    window.document.mark_saved()
+    window.resize(1600, 1000)
+    window.show()
+    checks, shots = {}, []
+
+    def settle(seconds=0.3):
+        deadline = time.perf_counter() + seconds
+        while time.perf_counter() < deadline:
+            app.processEvents()
+            time.sleep(0.02)
+
+    def shot(name):
+        settle()
+        window.grab().save(str(out / name))
+        shots.append(name)
+
+    window.refresh_all()
+    # Export Game first, while the document is clean (export saves a dirty project).
+    with tempfile.TemporaryDirectory() as tmp:
+        exported = window.export_game(Path(tmp) / "dist", name="RM Export", pyz=True, app=True)
+        checks["export_game"] = exported["pyz"].is_file() and (exported["app"] / "Contents" / "Info.plist").is_file()
+    sheet = "battle.combatant.hero_01"
+    window.workspace.set_mode(WorkspaceMode.UI)
+    machine = window.state_machine_editor
+    window.ui_workspace.setCurrentWidget(machine)
+    machine.refresh(select=sheet)
+    machine._try(lambda: machine.api.create(sheet), "Created")
+    checks["animation_states"] = bool(machine.add_state("attack", "attack")) and set(machine.graph.nodes) >= {
+        "idle",
+        "attack",
+    }
+    shot("editor_animation_states.png")
+    composition = window.composition_editor
+    window.ui_workspace.setCurrentWidget(composition)
+    composition.refresh(select=sheet)
+    composition.socket_id.setText("hand")
+    composition.socket_x.setValue(10)
+    composition.socket_y.setValue(-30)
+    composition.add_socket_from_form()
+    composition.attachment_id.setText("charm")
+    composition.item_sheet.setCurrentText("battle.fx.heal")
+    composition.attach_socket.setCurrentText("hand")
+    composition.attach_scale.setValue(0.4)
+    composition.item_frame.setValue(5)
+    composition.attach_from_form()
+    pixmaps = [i for i in composition.preview.scene().items() if isinstance(i, QGraphicsPixmapItem)]
+    checks["character_composition"] = composition.attachments.count() == 1 and len(pixmaps) == 2
+    shot("editor_character_composition.png")
+    inputs = window.input_map_editor
+    window.ui_workspace.setCurrentWidget(inputs)
+    inputs.refresh(select="interact")
+    inputs.device.setCurrentText("key")
+    inputs.code.setText("f")
+    checks["input_map"] = bool(inputs.add_binding_from_form()) and any(
+        b.code == "f" for b in window.document.project.input_map.bindings("interact")
+    )
+    shot("editor_input_map.png")
+    window.workspace.set_mode(WorkspaceMode.RPG)
+    trees = window.behavior_tree_editor
+    window.rpg_workspace.setCurrentWidget(trees)
+    checks["behavior_trees"] = bool(
+        trees.create_tree("rm_sentry", "selector") and trees.add_child("sequence") and trees.select_node((1,))
+    )
+    shot("editor_behavior_trees.png")
+    # Profiler dock reads the running game (Play), then Stop.
+    window.document.mark_saved()  # the edits above are in memory only; Play uses the file on disk
+    started = window.play_project()
+    report = None
+    deadline = time.perf_counter() + 20.0
+    while (report is None or report.get("frames", 0) < 30) and time.perf_counter() < deadline:
+        settle(0.5)
+        report = window.profiler_widget.refresh()
+    checks["profiler_dock"] = bool(started and report and report.get("frames", 0) >= 30)
+    window.profiler_widget.parentWidget().raise_()
+    shot("editor_profiler.png")
+    window.stop_play()
+    window.document.mark_saved()
+    window.close()
+    checks["project_file_untouched"] = PROJECT_FILE.read_bytes() == original
+    if not checks["project_file_untouched"]:
+        PROJECT_FILE.write_bytes(original)
+    failed = sorted(k for k, ok in checks.items() if not ok)
+    return result(
+        "editor_d17_gui",
+        "PASS" if not failed else "FAIL",
+        f"Qt platform '{app.platformName()}': "
+        + ", ".join(f"{k}={'ok' if v else 'FAILED'}" for k, v in checks.items()),
+        screenshots=shots,
+        note="Nothing saved to the project. Hands-on use by a person is manual item M7.",
+    )
+
+
 def check_runtime_exit_and_recovery(out):
     import signal
 
@@ -813,6 +921,7 @@ CHECKS = {
     "field_camera": check_field_camera,
     "editor": check_editor_playtest,
     "editor_tools": check_editor_tools,
+    "editor_d17": check_editor_d17,
     "runtime": check_runtime_exit_and_recovery,
     "cutscene": check_cutscene,
     "battle_features": check_battle_features,
