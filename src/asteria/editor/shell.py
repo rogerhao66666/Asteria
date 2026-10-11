@@ -192,6 +192,11 @@ class AsteriaEditorWindow(QMainWindow):
 
         self.animation_editor = AnimationEditorWidget(self.document, self)
         self.ui_workspace.addTab(self.animation_editor, "Animation Editor")
+        from .animation_state_machine_widget import AnimationStateMachineWidget
+
+        self.state_machine_editor = AnimationStateMachineWidget(self.document, self)
+        self.state_machine_editor.changed.connect(self.refresh_all)
+        self.ui_workspace.addTab(self.state_machine_editor, "Animation States")
         self.action_timeline_editor = ActionTimelineWidget(self.document, self)
         self.ui_workspace.addTab(self.action_timeline_editor, "Action Timeline")
         from .vfx_widget import VFXEditorWidget
@@ -1190,6 +1195,7 @@ class AsteriaEditorWindow(QMainWindow):
             "enemy_ai_editor",
             "behavior_tree_editor",
             "animation_editor",
+            "state_machine_editor",
             "action_timeline_editor",
             "vfx_editor",
             "event_flow_editor",

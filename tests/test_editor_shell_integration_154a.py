@@ -115,6 +115,7 @@ def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
         "Runtime RPG UI",
         "Animation",
         "Animation Editor",
+        "Animation States",
         "Action Timeline",
         "VFX",
         "Input Map",

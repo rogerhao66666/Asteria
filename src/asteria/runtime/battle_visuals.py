@@ -151,7 +151,13 @@ class BattleVisualResolver:
                     [SpriteKeyframe(f, duration, events.get(i, ())) for i, f in enumerate(frames)],
                     bool(raw.get("loop", True)),
                 )
-            clip_set = AnimationClipSet(clips)
+            machine = None
+            if meta.get("state_machine"):
+                from asteria.runtime.animation_state_machine import AnimationStateMachineDefinition
+
+                # ANI-02: a sheet's authored state machine travels with its clips
+                machine = AnimationStateMachineDefinition.from_data(meta["state_machine"])
+            clip_set = AnimationClipSet(clips, machine)
             clip_set.validate(self.sprite_sheet(asset_id))
             self._clips[asset_id] = clip_set
         return self._clips[asset_id]
