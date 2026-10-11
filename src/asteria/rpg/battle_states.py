@@ -61,6 +61,8 @@ class BattleStatePolicy:
     # interaction rules with these tags as action tags (e.g. "element.fire").
     # Empty (default): damage-over-time ignores interaction multipliers.
     interaction_tags: tuple[str, ...] = ()
+    # shown in the editor even when empty (left out of the saved data while empty)
+    OPTIONAL_DATA = {"interaction_tags": []}
 
     SCHEMA = "asteria.rpg.battle_state_policy"
     VERSION = 1

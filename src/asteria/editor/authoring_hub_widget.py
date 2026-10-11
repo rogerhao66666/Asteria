@@ -83,6 +83,15 @@ except ImportError:
             pass
 
 
+def with_optional_fields(data, value):
+    """Show optional fields a definition leaves out of its data when they are empty (``OPTIONAL_DATA``), so an
+    author can find and fill them; empty values are still left out when saved."""
+    optional = getattr(type(value), "OPTIONAL_DATA", None)
+    if not isinstance(data, dict) or not optional:
+        return data
+    return {**data, **{k: deepcopy(v) for k, v in optional.items() if k not in data}}
+
+
 def _count_heading(label, category_label, count):
     """The list heading names what is listed: "Actors · 12 records"."""
     label.setText(f"{category_label} · {count} record" + ("" if count == 1 else "s"))
@@ -127,6 +136,15 @@ def _coerce_like(text, original):
     if isinstance(original, float):
         return float(text)
     return str(text)
+
+
+_SCALARS = (str, int, float, bool)
+
+
+def _coerce_list(text, original):
+    """``"a, b"`` -> ``["a", "b"]``; each entry takes the type of the list's existing entries (text if empty)."""
+    template = original[0] if original else ""
+    return [_coerce_like(part.strip(), template) for part in str(text).split(",") if part.strip()]
 
 
 _FORMAT_KEYS = ("schema", "version")
@@ -237,6 +255,12 @@ class StructuredRecordEditor(QTreeWidget):
             if not root:
                 item.setText(1, f"{len(value)} field" + ("" if len(value) == 1 else "s"))
                 item.setForeground(1, self.palette().placeholderText())
+        elif isinstance(value, list) and all(isinstance(v, _SCALARS) for v in value):
+            # a list of plain values (tags, ids, numbers) is edited as one comma-separated text
+            item.setText(1, ", ".join(_scalar_text(v) for v in value))
+            item.setData(1, Qt.UserRole, deepcopy(value))
+            item.setFlags(item.flags() | Qt.ItemIsEditable)
+            item.setToolTip(1, "Comma-separated list; leave empty for none")
         elif isinstance(value, list):
             for index, val in enumerate(value):
                 summary = _summary(val)
@@ -262,11 +286,14 @@ class StructuredRecordEditor(QTreeWidget):
                 original = self._data
                 for part in path:
                     original = original[part]
-                if isinstance(original, (dict, list)):
+                if isinstance(original, list) and not child.childCount():
+                    value = _coerce_list(child.text(1), original)
+                elif isinstance(original, (dict, list)):
                     if child.childCount():
                         walk(child)
                     continue
-                value = _coerce_like(child.text(1), original)
+                else:
+                    value = _coerce_like(child.text(1), original)
                 target = result
                 for part in path[:-1]:
                     target = target[part]
@@ -624,7 +651,8 @@ class AdapterFamilyWidget(QWidget):
         if key is None:
             self.editor.clear()
             return
-        data = self.adapter.encode(self.adapter.get(key))
+        value = self.adapter.get(key)
+        data = with_optional_fields(self.adapter.encode(value), value)
         self.editor.set_record(data)
         if self.category_id == "graphs":
             self.graph_view.set_graph_data(data)

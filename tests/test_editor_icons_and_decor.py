@@ -112,3 +112,27 @@ def test_record_editor_shows_readable_field_names_and_keeps_the_data():
     root.child(1).setText(1, "Aria")
     record = editor.record()
     assert record["display_name"] == "Aria" and record["schema"] == "asteria.rpg.actor" and record["version"] == 2
+
+
+def test_tag_lists_are_editable_and_optional_dot_tags_show_in_the_editor():
+    """BTL-02: damage over time is fixed by default or uses the interaction rules when the author gives it
+    tags; both are reachable from the editor (the empty field is shown, a list is typed as text)."""
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.authoring_hub_widget import StructuredRecordEditor, with_optional_fields
+    from asteria.rpg.battle_states import BattleStatePolicy
+
+    QApplication.instance() or QApplication([])
+    policy = BattleStatePolicy("scorch", tick_trigger="rpg.battle.turn_ended")
+    data = with_optional_fields(policy.to_data(), policy)
+    assert data["interaction_tags"] == [] and "interaction_tags" not in policy.to_data()
+    editor = StructuredRecordEditor()
+    editor.set_record(data)
+    root = editor.topLevelItem(0)
+    tags = next(root.child(i) for i in range(root.childCount()) if root.child(i).toolTip(0) == "interaction_tags")
+    tags.setText(1, "element.fire, dot.burn")
+    edited = BattleStatePolicy.from_data(editor.record())
+    assert set(edited.interaction_tags) == {"element.fire", "dot.burn"}  # DOT now resolved through the rules
+    tags.setText(1, "")
+    assert BattleStatePolicy.from_data(editor.record()).interaction_tags == ()  # back to fixed damage
+    assert "interaction_tags" not in BattleStatePolicy.from_data(editor.record()).to_data()
