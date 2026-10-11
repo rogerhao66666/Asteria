@@ -176,7 +176,7 @@ def test_database_v18_owns_reactions_and_v17_is_backward_readable():
     db = RpgDatabase()
     db.add_reaction(ReactionDefinition("counter", "custom", "event_targets"))
     raw = db.to_data()
-    assert raw["version"] == 25
+    assert raw["version"] == 26
     assert "counter" in RpgDatabase.from_data(raw).reactions
     legacy = json.loads(json.dumps(raw))
     legacy["version"] = 17

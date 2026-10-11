@@ -105,6 +105,7 @@ class GameSessionRuntime:
             sequence_host=self,
         )
         self.battle_events = None
+        self.pending_followups = []  # event programs queued by world interactions (RPG-07)
         self.entity_facing = {}
         self.entity_animation = {}
         self.scene_events = None
@@ -410,6 +411,9 @@ class GameSessionRuntime:
             except Exception as exc:
                 self.event_errors.append(exc)
                 self.common_events.stop_all()
+        if self.pending_followups and not self.events.busy:
+            self.events.clear_completed()
+            self.events.start(self.pending_followups.pop(0))  # an interaction's follow-up event
         if self.mode == "battle" and self.battle_events is not None and not self.events.busy:
             self.battle_events.pump()  # queued battle events start once the previous one finished
         return output
@@ -1125,6 +1129,87 @@ class GameSessionRuntime:
         for achievement_id in unlocked:
             self.save.event_context.set_switch(f"achievement.{achievement_id}.unlocked", True)
         return unlocked
+
+    # -- world interactions (RPG-07) ---------------------------------------------------------------
+    def perform_interaction(self, interaction_id):
+        """Run a world interaction: capability, requirements, cost, check, outcome, follow-up event.
+
+        Returns ``(outcome, detail)`` with outcome ``success`` / ``failure`` / ``refused``; the outcome is
+        also stored in the event variable ``interaction.<id>`` so the calling event can branch on it.
+        """
+        import random
+
+        from asteria.events.conditions import EventCondition
+
+        db = self.project.rpg_database
+        interaction = db.world_interactions.get(str(interaction_id))
+        if interaction is None:
+            raise GameSessionError(f"unknown world interaction {interaction_id}")
+        ctx = self.save.event_context
+        state = self.save.rpg_state
+        key = f"interaction.{interaction.interaction_id}"
+
+        def finish(outcome, detail=""):
+            ctx.set_variable(key, outcome)
+            return outcome, detail
+
+        if not interaction.repeatable and ctx.get_switch(f"{key}.done"):
+            return finish("refused", "already done")
+        party = [a for a in state.party_active_actor_ids if a in db.actors]
+        if interaction.actor_tag and not any(interaction.actor_tag in db.actors[a].tags for a in party):
+            return finish("refused", f"needs a party member with {interaction.actor_tag}")
+        if interaction.required_item and state.inventory.count(interaction.required_item) < 1:
+            return finish("refused", f"needs {interaction.required_item}")
+        for requirement in interaction.requirements:
+            condition = EventCondition(
+                requirement["source"], requirement["name"], requirement["operator"], requirement["value"]
+            )
+            if not condition.evaluate(ctx):
+                return finish(
+                    "refused", f"requires {requirement['name']} {requirement['operator']} {requirement['value']}"
+                )
+        for item_id, quantity in interaction.cost_items.items():
+            if state.inventory.count(item_id) < quantity:
+                return finish("refused", f"not enough {item_id}")
+        for currency_id, amount in interaction.cost_currencies.items():
+            if state.currencies.get(currency_id, 0.0) < amount:
+                return finish("refused", f"not enough {currency_id}")
+        for item_id, quantity in interaction.cost_items.items():
+            state.inventory.remove(item_id, int(quantity))
+        for currency_id, amount in interaction.cost_currencies.items():
+            state.currencies[currency_id] = state.currencies.get(currency_id, 0.0) - amount
+        best = 0.0
+        if interaction.check_stat:
+            values = [
+                state.actor_snapshots[a].stats["values"].get(interaction.check_stat, 0.0)
+                for a in party
+                if a in state.actor_snapshots
+            ]
+            best = max(values, default=0.0)
+        attempts = int(ctx.get_variable(f"{key}.attempts", 0) or 0) + 1
+        ctx.set_variable(f"{key}.attempts", attempts)
+        roll = random.Random(f"{interaction.interaction_id}:{attempts}").random()  # deterministic per attempt
+        if roll < interaction.chance(best):
+            for item_id, quantity in interaction.success_items.items():
+                state.inventory.add(item_id, int(quantity))
+            for currency_id, amount in interaction.success_currencies.items():
+                state.currencies[currency_id] = state.currencies.get(currency_id, 0.0) + amount
+            for faction_id, amount in interaction.reputation.items():
+                self.change_reputation(faction_id, amount)
+            if interaction.success_switch:
+                ctx.set_switch(interaction.success_switch, True)
+            if not interaction.repeatable:
+                ctx.set_switch(f"{key}.done", True)
+            if interaction.success_event:
+                self.pending_followups.append(interaction.success_event)
+            self.refresh_quests()
+            return finish("success")
+        if interaction.failure_switch:
+            ctx.set_switch(interaction.failure_switch, True)
+        if interaction.failure_event:
+            self.pending_followups.append(interaction.failure_event)
+        self.refresh_quests()
+        return finish("failure")
 
     def change_reputation(self, faction_id, amount):
         faction = self.project.rpg_database.factions.get(str(faction_id))

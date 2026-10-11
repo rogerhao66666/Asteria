@@ -23,6 +23,7 @@ from asteria.rpg import (
     ShopDefinition,
 )
 from asteria.rpg.quests import OBJECTIVE_KINDS
+from asteria.rpg.world_interactions import OPERATORS, VERBS, WorldInteraction
 from asteria.rpg.world_record import ACHIEVEMENT_KINDS
 
 
@@ -107,7 +108,37 @@ _REWARD = (
     F("loot", "Loot", "table", fields=_LOOT, default=()),
 )
 
+_REQUIREMENT = (
+    F("source", "Source", "choice", choices=("switch", "variable"), default="switch"),
+    F("name", "Name", "text", default=""),
+    F("operator", "Operator", "choice", choices=OPERATORS, default="=="),
+    F("value", "Value", "text", default="true"),
+)
+
 FORMS = {
+    "world_interactions": (
+        F("interaction_id", "Interaction ID", "id"),
+        F("display_name", "Name", "text", default=""),
+        F("verb", "Verb", "choice", choices=VERBS, default="talk"),
+        F("target_type", "Target Type", "text", default=""),
+        F("actor_tag", "Needs Party Member Tag", "text", default=""),
+        F("required_item", "Needs Item", "optional_ref", source="items", default=""),
+        F("requirements", "Requirements", "table", fields=_REQUIREMENT, default=()),
+        F("cost_items", "Cost: Items", "amounts", source="items", default={}),
+        F("cost_currencies", "Cost: Currencies", "amounts", default={}),
+        F("check_stat", "Check Stat (empty = always succeeds)", "text", default=""),
+        F("difficulty", "Difficulty", "float", default=0.0),
+        F("base_chance", "Base Chance (0–1)", "float", default=0.5),
+        F("chance_per_point", "Chance per Stat Point", "float", default=0.05),
+        F("success_items", "Success: Items", "amounts", source="items", default={}),
+        F("success_currencies", "Success: Currencies", "amounts", default={}),
+        F("success_switch", "Success: Set Switch", "text", default=""),
+        F("success_event", "Success: Follow-up Event", "optional_ref", source="event_programs", default=""),
+        F("failure_switch", "Failure: Set Switch", "text", default=""),
+        F("failure_event", "Failure: Follow-up Event", "optional_ref", source="event_programs", default=""),
+        F("reputation", "Consequence: Reputation", "amounts", source="factions", default={}),
+        F("repeatable", "Repeatable", "bool", default=True),
+    ),
     "shops": (
         F("shop_id", "Shop ID", "id"),
         F("display_name", "Name", "text"),
@@ -208,6 +239,7 @@ def _templates():
         "achievements": lambda key, c: AchievementDefinition(key, key, target="switch.name"),
         "equipment_sets": lambda key, c: EquipmentSetDefinition(key, key),
         "capture_rules": lambda key, c: CaptureRule(key, next(iter(sorted(c.database.actors)), "actor")),
+        "world_interactions": lambda key, c: WorldInteraction(key, key),
     }
 
 
@@ -218,6 +250,7 @@ KINDS = (
     _Kind("achievements", "Achievements", "achievements", "achievement_id", AchievementDefinition),
     _Kind("equipment_sets", "Equipment Sets", "equipment_sets", "set_id", EquipmentSetDefinition),
     _Kind("capture_rules", "Capture Rules", "capture_rules", "enemy_id", CaptureRule),
+    _Kind("world_interactions", "World Interactions", "world_interactions", "interaction_id", WorldInteraction),
 )
 _BY_ID = {k.kind_id: k for k in KINDS}
 
@@ -304,6 +337,8 @@ class GameSystemsAuthoringController:
         db = self.database
         if source == "abilities":
             return tuple(sorted(self.project.gameplay_library.abilities.ids()))
+        if source == "event_programs":
+            return tuple(sorted(self.project.event_programs.ids()))
         stores = {
             "items": db.items,
             "enemies": db.enemies,

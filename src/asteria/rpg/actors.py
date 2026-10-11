@@ -697,6 +697,7 @@ class RpgDatabase:
         self.factions = {}
         self.achievements = {}
         self.capture_rules = {}
+        self.world_interactions = {}
         self.quests = {}
 
     def add_actor(self, value):
@@ -1013,6 +1014,11 @@ class RpgDatabase:
 
         return self._add_keyed(self.achievements, value, AchievementDefinition, "achievement_id", "achievement")
 
+    def add_world_interaction(self, value):
+        from .world_interactions import WorldInteraction
+
+        return self._add_keyed(self.world_interactions, value, WorldInteraction, "interaction_id", "world interaction")
+
     def add_capture_rule(self, value):
         from .capture import CaptureRule
 
@@ -1167,6 +1173,16 @@ class RpgDatabase:
             for equipment_id in equipment_set.equipment_ids:
                 if equipment_id not in self.equipment:
                     errors.append(f"equipment set {equipment_set.set_id} references unknown equipment {equipment_id}")
+        for interaction in self.world_interactions.values():
+            where = f"world interaction {interaction.interaction_id}"
+            for item_id in {*interaction.cost_items, *interaction.success_items} | (
+                {interaction.required_item} if interaction.required_item else set()
+            ):
+                if item_id not in self.items:
+                    errors.append(f"{where} references unknown item {item_id}")
+            for faction_id in interaction.reputation:
+                if faction_id not in self.factions:
+                    errors.append(f"{where} references unknown faction {faction_id}")
         for rule in self.capture_rules.values():
             if rule.enemy_id not in self.enemies:
                 errors.append(f"capture rule references unknown enemy {rule.enemy_id}")
@@ -1229,7 +1245,7 @@ class RpgDatabase:
     def to_data(self):
         return {
             "schema": "asteria.rpg.database",
-            "version": 25,
+            "version": 26,
             "actors": [self.actors[k].to_data() for k in sorted(self.actors)],
             "classes": [self.classes[k].to_data() for k in sorted(self.classes)],
             "items": [self.items[k].to_data() for k in sorted(self.items)],
@@ -1274,6 +1290,7 @@ class RpgDatabase:
             "achievements": [self.achievements[k].to_data() for k in sorted(self.achievements)],
             "capture_rules": [self.capture_rules[k].to_data() for k in sorted(self.capture_rules)],
             "quests": [self.quests[k].to_data() for k in sorted(self.quests)],
+            "world_interactions": [self.world_interactions[k].to_data() for k in sorted(self.world_interactions)],
         }
 
     @classmethod
@@ -1304,6 +1321,7 @@ class RpgDatabase:
             23,
             24,
             25,
+            26,
         }:
             raise ValueError("unsupported RPG database")
         result = cls()
@@ -1437,6 +1455,11 @@ class RpgDatabase:
 
             for x in data.get("battle_session_rules", ()):
                 result.add_battle_session_rules(BattleSessionRules.from_data(x))
+        if data["version"] >= 26:
+            from .world_interactions import WorldInteraction
+
+            for x in data.get("world_interactions", ()):
+                result.add_world_interaction(WorldInteraction.from_data(x))
         if data["version"] >= 25:
             from .economy import ShopDefinition
             from .quests import QuestDefinition
