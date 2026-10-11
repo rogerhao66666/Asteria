@@ -68,7 +68,7 @@ class PlayableTestRuntime:
     input, pixels, simple menu navigation and VFX playback.
     """
 
-    def __init__(self, project, runtime_save, resource_root, *, width=960, height=540):
+    def __init__(self, project, runtime_save, resource_root, *, width=960, height=540, backend=None):
         try:
             import pygame
         except ImportError as exc:
@@ -84,6 +84,10 @@ class PlayableTestRuntime:
         self.save = runtime_save
         self.width = int(width)
         self.height = int(height)
+        # ENG-12: "pygame" (default) or "moderngl" (GPU presentation + post-processing); manifest render.backend
+        self.backend_kind = backend or self.manifest.get("render", {}).get("backend", "pygame")
+        self.gpu = None
+        self.gpu_fallback_reason = ""
         self.screen = None
         self.clock = None
         self.running = True
@@ -190,8 +194,9 @@ class PlayableTestRuntime:
         """Attach a RuntimeProfiler (also to the game session) and declare what pygame cannot measure."""
         self.profiler = profiler or RuntimeProfiler(target_fps=target_fps)
         self.game.profiler = self.profiler
-        self.profiler.unsupported("draw_calls", "pygame software blitting exposes no draw-call counter")
-        self.profiler.unsupported("gpu_time", "pygame backend renders on the CPU; no GPU timer")
+        if self.gpu is None:
+            self.profiler.unsupported("draw_calls", "pygame software blitting exposes no draw-call counter")
+            self.profiler.unsupported("gpu_time", "pygame backend renders on the CPU; no GPU timer")
         return self.profiler
 
     def _sample_counters(self):
@@ -204,8 +209,19 @@ class PlayableTestRuntime:
 
     def open(self):
         self.pg.init()
-        self.screen = self.pg.display.set_mode((self.width, self.height))
-        self.pg.display.set_caption(self.manifest.get("title", "Asteria Playable Test"))
+        title = self.manifest.get("title", "Asteria Playable Test")
+        self.screen = None
+        if self.backend_kind == "moderngl":
+            from asteria.platform.gpu_presenter import GpuPresenter, GpuPresenterError
+
+            try:
+                self.gpu = GpuPresenter.open_window(self.pg, (self.width, self.height), title)
+                self.screen = self.pg.Surface((self.width, self.height), 0, 32)  # composed here, shown by the GPU
+            except GpuPresenterError as exc:
+                self.gpu, self.gpu_fallback_reason = None, str(exc)  # keep playing on the pygame window
+        if self.screen is None:
+            self.screen = self.pg.display.set_mode((self.width, self.height))
+        self.pg.display.set_caption(title)
         self.clock = self.pg.time.Clock()
         from asteria.platform.pygame_input import PygameInputSource
 
@@ -237,7 +253,24 @@ class PlayableTestRuntime:
                 path = self.resource_root / path
         return path if path.is_file() else None
 
+    def present(self):
+        """Show the composed frame: GPU presenter (upload + post chain) or the pygame window flip."""
+        if self.gpu is not None:
+            with self.profiler.section("gpu_present"):
+                self.gpu.present(self.screen, self.pg)
+            self.profiler.count("draw_calls", self.gpu.last_draw_calls)
+            if self.gpu.last_gpu_ms is not None:
+                self.profiler.add_time("gpu_time", self.gpu.last_gpu_ms / 1000.0)
+        self.pg.display.flip()
+
+    def capture(self):
+        """The frame as the player sees it (after GPU post-processing when active)."""
+        return self.gpu.read(self.pg) if self.gpu is not None else self.screen.copy()
+
     def close(self):
+        if self.gpu is not None:
+            self.gpu.release()
+            self.gpu = None
         if self.debug_server is not None:
             self.debug_server.close()
             self.debug_server = None
@@ -948,7 +981,7 @@ class PlayableTestRuntime:
             frame = self.pg.transform.smoothscale(frame, (160, 160))
             pos = (700, 170) if target_is_enemy else (180, 250)
             self.screen.blit(frame, pos)
-            self.pg.display.flip()
+            self.present()
             self.clock.tick(60)
 
     def _use_skill(self, slot):
@@ -1612,7 +1645,7 @@ class PlayableTestRuntime:
                 self.profiler.begin_frame()
                 self._frame(self.pg.event.get(), dt)
                 with self.profiler.section("present"):
-                    self.pg.display.flip()
+                    self.present()
                 self._sample_counters()
                 self.profiler.end_frame()
                 frames += 1
@@ -1768,6 +1801,7 @@ def run_playable_test_runtime(
     debug_port=None,
     debug_token=None,
     spawn=None,
+    backend=None,
 ):
     resource_root = Path(resource_root)
     if runtime_save is None:
@@ -1777,7 +1811,7 @@ def run_playable_test_runtime(
             raise ValueError(
                 "playable test content requires Project Game Start runtime state or an explicit Player Save"
             )
-    runtime = PlayableTestRuntime(project, runtime_save, resource_root, width=width, height=height)
+    runtime = PlayableTestRuntime(project, runtime_save, resource_root, width=width, height=height, backend=backend)
     if battle_presentation:
         runtime.manifest.setdefault("battle", {})["presentation"] = {
             **runtime.manifest.get("battle", {}).get("presentation", {}),

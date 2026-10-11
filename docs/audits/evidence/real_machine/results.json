@@ -2,7 +2,7 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-11 16:26:25 +0800"
+    "time": "2026-10-11 16:37:46 +0800"
   },
   "results": [
     {
@@ -60,51 +60,6 @@
       "check": "audio_latency",
       "status": "NOT EXECUTED",
       "evidence": "Output latency needs an acoustic or loopback measurement (procedure M4); the configured mixer buffer is not reported by pygame and is not presented as latency."
-    },
-    {
-      "check": "animation_smoothness",
-      "status": "PASS",
-      "evidence": "Canonical battle screen in a real cocoa window: combatant sprites drawn, boss animation advanced 88 frames in 10.0s (8.8/s); 7 skills used through the key-event queue; VFX particles peaked at 1",
-      "screenshots": [
-        "battle_window_0.png",
-        "battle_window_1.png"
-      ],
-      "note": "Perceived smoothness by a person is manual item M5."
-    },
-    {
-      "check": "frame_pacing",
-      "status": "PASS",
-      "evidence": "588 frames: 58.86 fps (target 60), jitter 1.0696 ms, p99 interval 19.5462 ms, 2 frames over 1.5x budget",
-      "pacing": {
-        "target_fps": 60.0,
-        "measured_fps": 58.86,
-        "interval_mean_ms": 16.9894,
-        "interval_jitter_ms": 1.0696,
-        "interval_p99_ms": 19.5462,
-        "frames_over_budget": 2
-      },
-      "frame": {
-        "count": 588,
-        "mean_ms": 6.5205,
-        "p50_ms": 6.3144,
-        "p95_ms": 7.7078,
-        "p99_ms": 10.092,
-        "max_ms": 27.1803,
-        "total_ms": 3834.0771
-      },
-      "sections": {
-        "animation": 1.4925,
-        "asset_loading": 1.178,
-        "input": 0.0475,
-        "present": 0.7145,
-        "render": 4.1094,
-        "update": 0.0641,
-        "vfx": 0.1182
-      },
-      "unsupported": {
-        "draw_calls": "pygame software blitting exposes no draw-call counter",
-        "gpu_time": "pygame backend renders on the CPU; no GPU timer"
-      }
     },
     {
       "check": "field_camera_boss_focus",
@@ -239,6 +194,77 @@
         "mv_import_after_transfer.png"
       ],
       "note": "Visual review of the tiles and characters is part of manual item M9."
+    },
+    {
+      "check": "animation_smoothness",
+      "status": "PASS",
+      "evidence": "Canonical battle screen in a real cocoa window: combatant sprites drawn, boss animation advanced 86 frames in 10.0s (8.6/s); 7 skills used through the key-event queue; VFX particles peaked at 1",
+      "screenshots": [
+        "battle_window_0.png",
+        "battle_window_1.png"
+      ],
+      "note": "Perceived smoothness by a person is manual item M5."
+    },
+    {
+      "check": "frame_pacing",
+      "status": "PASS",
+      "evidence": "559 frames: 55.842 fps (target 60), jitter 0.5505 ms, p99 interval 18.8495 ms, 0 frames over 1.5x budget",
+      "pacing": {
+        "target_fps": 60.0,
+        "measured_fps": 55.842,
+        "interval_mean_ms": 17.9078,
+        "interval_jitter_ms": 0.5505,
+        "interval_p99_ms": 18.8495,
+        "frames_over_budget": 0
+      },
+      "frame": {
+        "count": 559,
+        "mean_ms": 5.3632,
+        "p50_ms": 5.3449,
+        "p95_ms": 6.1454,
+        "p99_ms": 7.1197,
+        "max_ms": 7.8685,
+        "total_ms": 2998.0265
+      },
+      "sections": {
+        "animation": 1.2647,
+        "asset_loading": 0.3235,
+        "events": 0.0042,
+        "input": 0.0371,
+        "present": 0.4083,
+        "render": 3.5066,
+        "update": 0.047,
+        "vfx": 0.0914
+      },
+      "unsupported": {
+        "draw_calls": "pygame software blitting exposes no draw-call counter",
+        "gpu_time": "pygame backend renders on the CPU; no GPU timer"
+      }
+    },
+    {
+      "check": "gpu_playable_runtime",
+      "status": "PASS",
+      "evidence": "Playable game on the ModernGL presenter (Apple M5): field and canonical battle in a real window; the GPU frame equals the composed frame pixel for pixel (field=True, battle=True); battle workload 562 frames, 56.086 fps, p99 interval 18.816 ms; frame mean 6.0701 ms; upload mean 0.414 ms; GPU time mean 0.582 ms; draw calls 1.0 per frame; 7 skills used",
+      "screenshots": [
+        "gpu_field.png",
+        "gpu_battle.png"
+      ],
+      "sections": {
+        "ai": 0.0275,
+        "animation": 1.354,
+        "asset_loading": 1.1119,
+        "collision": 0.0778,
+        "events": 0.0126,
+        "gpu_present": 1.319,
+        "gpu_time": 0.582,
+        "input": 0.0413,
+        "present": 1.5049,
+        "render": 2.9038,
+        "spawn": 0.0186,
+        "update": 0.0835,
+        "vfx": 0.0747
+      },
+      "note": "Same workload as frame_pacing (pygame) for comparison; see gpu_battle_profile.json."
     }
   ]
 }

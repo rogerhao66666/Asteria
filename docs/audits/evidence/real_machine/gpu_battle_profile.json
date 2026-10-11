@@ -1,0 +1,170 @@
+{
+  "schema": "asteria.runtime_profile",
+  "version": 1,
+  "frames": 562,
+  "frame": {
+    "count": 562,
+    "mean_ms": 6.0701,
+    "p50_ms": 6.0252,
+    "p95_ms": 6.8716,
+    "p99_ms": 8.1863,
+    "max_ms": 10.0831,
+    "total_ms": 3411.386
+  },
+  "pacing": {
+    "target_fps": 60.0,
+    "measured_fps": 56.086,
+    "interval_mean_ms": 17.8297,
+    "interval_jitter_ms": 0.5795,
+    "interval_p99_ms": 18.816,
+    "frames_over_budget": 0
+  },
+  "sections": {
+    "ai": {
+      "count": 57,
+      "mean_ms": 0.0275,
+      "p50_ms": 0.0205,
+      "p95_ms": 0.0466,
+      "p99_ms": 0.0629,
+      "max_ms": 0.0888,
+      "total_ms": 1.5662
+    },
+    "animation": {
+      "count": 562,
+      "mean_ms": 1.354,
+      "p50_ms": 1.3315,
+      "p95_ms": 1.5826,
+      "p99_ms": 1.9722,
+      "max_ms": 4.7507,
+      "total_ms": 760.9443
+    },
+    "asset_loading": {
+      "count": 16,
+      "mean_ms": 1.1119,
+      "p50_ms": 0.5913,
+      "p95_ms": 2.9621,
+      "p99_ms": 2.9926,
+      "max_ms": 2.9926,
+      "total_ms": 17.7902
+    },
+    "collision": {
+      "count": 57,
+      "mean_ms": 0.0778,
+      "p50_ms": 0.0551,
+      "p95_ms": 0.1187,
+      "p99_ms": 0.1263,
+      "max_ms": 0.5542,
+      "total_ms": 4.4323
+    },
+    "events": {
+      "count": 619,
+      "mean_ms": 0.0126,
+      "p50_ms": 0.0044,
+      "p95_ms": 0.078,
+      "p99_ms": 0.141,
+      "max_ms": 0.2975,
+      "total_ms": 7.8169
+    },
+    "gpu_present": {
+      "count": 619,
+      "mean_ms": 1.319,
+      "p50_ms": 1.2911,
+      "p95_ms": 1.6885,
+      "p99_ms": 2.3855,
+      "max_ms": 14.6998,
+      "total_ms": 816.4596
+    },
+    "gpu_time": {
+      "count": 619,
+      "mean_ms": 0.582,
+      "p50_ms": 0.5943,
+      "p95_ms": 0.7687,
+      "p99_ms": 0.8389,
+      "max_ms": 1.1378,
+      "total_ms": 360.287
+    },
+    "input": {
+      "count": 619,
+      "mean_ms": 0.0413,
+      "p50_ms": 0.0369,
+      "p95_ms": 0.0706,
+      "p99_ms": 0.1267,
+      "max_ms": 0.191,
+      "total_ms": 25.5803
+    },
+    "present": {
+      "count": 562,
+      "mean_ms": 1.5049,
+      "p50_ms": 1.5321,
+      "p95_ms": 1.7447,
+      "p99_ms": 1.8293,
+      "max_ms": 2.0177,
+      "total_ms": 845.7401
+    },
+    "render": {
+      "count": 619,
+      "mean_ms": 2.9038,
+      "p50_ms": 2.9321,
+      "p95_ms": 3.6096,
+      "p99_ms": 3.8723,
+      "max_ms": 6.6048,
+      "total_ms": 1797.428
+    },
+    "spawn": {
+      "count": 57,
+      "mean_ms": 0.0186,
+      "p50_ms": 0.0169,
+      "p95_ms": 0.0305,
+      "p99_ms": 0.0352,
+      "max_ms": 0.0371,
+      "total_ms": 1.0587
+    },
+    "update": {
+      "count": 619,
+      "mean_ms": 0.0835,
+      "p50_ms": 0.0447,
+      "p95_ms": 0.2289,
+      "p99_ms": 0.3632,
+      "max_ms": 12.3288,
+      "total_ms": 51.658
+    },
+    "vfx": {
+      "count": 243,
+      "mean_ms": 0.0747,
+      "p50_ms": 0.0721,
+      "p95_ms": 0.1025,
+      "p99_ms": 0.1275,
+      "max_ms": 0.2542,
+      "total_ms": 18.1446
+    }
+  },
+  "counters": {
+    "asset_usage": {
+      "last": 16.0,
+      "max": 16.0,
+      "mean": 14.4039
+    },
+    "draw_calls": {
+      "last": 1.0,
+      "max": 1.0,
+      "mean": 1.0
+    },
+    "entity_count": {
+      "last": 2.0,
+      "max": 2.0,
+      "mean": 2.0
+    },
+    "particles": {
+      "last": 1.0,
+      "max": 1.0,
+      "mean": 0.4324
+    }
+  },
+  "memory": {
+    "peak_rss_bytes": 294453248,
+    "python_heap_current_bytes": 1438496,
+    "python_heap_peak_bytes": 4540540
+  },
+  "unsupported": {},
+  "not_recorded": []
+}

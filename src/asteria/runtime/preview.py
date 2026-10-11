@@ -112,6 +112,7 @@ def run_preview(
                 debug_port=debug_port,
                 debug_token=debug_token,
                 spawn=spawn,
+                backend=backend_kind if backend_kind != "pygame" else None,
             )
         from asteria.runtime.tilemap_field import can_play
 

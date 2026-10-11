@@ -1,94 +1,103 @@
 {
   "schema": "asteria.runtime_profile",
   "version": 1,
-  "frames": 588,
+  "frames": 559,
   "frame": {
-    "count": 588,
-    "mean_ms": 6.5205,
-    "p50_ms": 6.3144,
-    "p95_ms": 7.7078,
-    "p99_ms": 10.092,
-    "max_ms": 27.1803,
-    "total_ms": 3834.0771
+    "count": 559,
+    "mean_ms": 5.3632,
+    "p50_ms": 5.3449,
+    "p95_ms": 6.1454,
+    "p99_ms": 7.1197,
+    "max_ms": 7.8685,
+    "total_ms": 2998.0265
   },
   "pacing": {
     "target_fps": 60.0,
-    "measured_fps": 58.86,
-    "interval_mean_ms": 16.9894,
-    "interval_jitter_ms": 1.0696,
-    "interval_p99_ms": 19.5462,
-    "frames_over_budget": 2
+    "measured_fps": 55.842,
+    "interval_mean_ms": 17.9078,
+    "interval_jitter_ms": 0.5505,
+    "interval_p99_ms": 18.8495,
+    "frames_over_budget": 0
   },
   "sections": {
     "animation": {
-      "count": 588,
-      "mean_ms": 1.4925,
-      "p50_ms": 1.4384,
-      "p95_ms": 1.7125,
-      "p99_ms": 2.3413,
-      "max_ms": 5.3059,
-      "total_ms": 877.5969
+      "count": 559,
+      "mean_ms": 1.2647,
+      "p50_ms": 1.2384,
+      "p95_ms": 1.5007,
+      "p99_ms": 1.8077,
+      "max_ms": 2.5806,
+      "total_ms": 706.9558
     },
     "asset_loading": {
       "count": 13,
-      "mean_ms": 1.178,
-      "p50_ms": 0.7552,
-      "p95_ms": 3.5648,
-      "p99_ms": 3.5724,
-      "max_ms": 3.5724,
-      "total_ms": 15.314
+      "mean_ms": 0.3235,
+      "p50_ms": 0.1783,
+      "p95_ms": 0.787,
+      "p99_ms": 0.8645,
+      "max_ms": 0.8645,
+      "total_ms": 4.206
+    },
+    "events": {
+      "count": 559,
+      "mean_ms": 0.0042,
+      "p50_ms": 0.0041,
+      "p95_ms": 0.0059,
+      "p99_ms": 0.0078,
+      "max_ms": 0.0142,
+      "total_ms": 2.3729
     },
     "input": {
-      "count": 588,
-      "mean_ms": 0.0475,
-      "p50_ms": 0.0452,
-      "p95_ms": 0.07,
-      "p99_ms": 0.0852,
-      "max_ms": 0.1429,
-      "total_ms": 27.9055
+      "count": 559,
+      "mean_ms": 0.0371,
+      "p50_ms": 0.0362,
+      "p95_ms": 0.0478,
+      "p99_ms": 0.0529,
+      "max_ms": 0.0637,
+      "total_ms": 20.7469
     },
     "present": {
-      "count": 588,
-      "mean_ms": 0.7145,
-      "p50_ms": 0.6132,
-      "p95_ms": 1.0383,
-      "p99_ms": 1.4877,
-      "max_ms": 21.3241,
-      "total_ms": 420.152
+      "count": 559,
+      "mean_ms": 0.4083,
+      "p50_ms": 0.3972,
+      "p95_ms": 0.5327,
+      "p99_ms": 0.7265,
+      "max_ms": 0.8795,
+      "total_ms": 228.2399
     },
     "render": {
-      "count": 588,
-      "mean_ms": 4.1094,
-      "p50_ms": 4.0147,
-      "p95_ms": 4.7097,
-      "p99_ms": 5.5907,
-      "max_ms": 15.1239,
-      "total_ms": 2416.3399
+      "count": 559,
+      "mean_ms": 3.5066,
+      "p50_ms": 3.4517,
+      "p95_ms": 4.1611,
+      "p99_ms": 4.3352,
+      "max_ms": 5.8228,
+      "total_ms": 1960.2113
     },
     "update": {
-      "count": 588,
-      "mean_ms": 0.0641,
-      "p50_ms": 0.0575,
-      "p95_ms": 0.0927,
-      "p99_ms": 0.3045,
-      "max_ms": 0.5055,
-      "total_ms": 37.6622
+      "count": 559,
+      "mean_ms": 0.047,
+      "p50_ms": 0.0426,
+      "p95_ms": 0.0548,
+      "p99_ms": 0.2218,
+      "max_ms": 0.3551,
+      "total_ms": 26.289
     },
     "vfx": {
-      "count": 271,
-      "mean_ms": 0.1182,
-      "p50_ms": 0.1165,
-      "p95_ms": 0.1768,
-      "p99_ms": 0.2298,
-      "max_ms": 0.3054,
-      "total_ms": 32.037
+      "count": 236,
+      "mean_ms": 0.0914,
+      "p50_ms": 0.0908,
+      "p95_ms": 0.1259,
+      "p99_ms": 0.161,
+      "max_ms": 0.1831,
+      "total_ms": 21.5759
     }
   },
   "counters": {
     "asset_usage": {
       "last": 13.0,
       "max": 13.0,
-      "mean": 11.7024
+      "mean": 11.3936
     },
     "entity_count": {
       "last": 2.0,
@@ -96,15 +105,15 @@
       "mean": 2.0
     },
     "particles": {
-      "last": 0.0,
+      "last": 1.0,
       "max": 1.0,
-      "mean": 0.4609
+      "mean": 0.4222
     }
   },
   "memory": {
-    "peak_rss_bytes": 197312512,
-    "python_heap_current_bytes": 821386,
-    "python_heap_peak_bytes": 844158
+    "peak_rss_bytes": 277528576,
+    "python_heap_current_bytes": 836599,
+    "python_heap_peak_bytes": 858479
   },
   "unsupported": {
     "draw_calls": "pygame software blitting exposes no draw-call counter",

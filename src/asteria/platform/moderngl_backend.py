@@ -195,6 +195,32 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
             rotation_deg=getattr(draw_command, "rotation_deg", 0.0),
         )
 
+    def draw_text_box(self, text):
+        """Dialogue box along the bottom: drawn once into an RGBA texture (cached per text), then one quad."""
+        width, height = self.screen_size
+        key = (str(text), width)
+        cached = getattr(self, "_text_box", None)
+        if cached is None or cached[0] != key:
+            from .pygame_backend import dialogue_font
+            from .pygame_battle_ui import renderable_text
+
+            pg = self.pg
+            if not hasattr(self, "_font"):
+                self._font, self._glyphs = dialogue_font(pg, 26), {}
+            box = pg.Surface((width - 32, 116), pg.SRCALPHA)
+            box.fill((13, 17, 28, 225))
+            pg.draw.rect(box, (124, 145, 190), box.get_rect(), 2, border_radius=6)
+            for row, line in enumerate(str(text).split("\n")[:4]):
+                image = self._font.render(renderable_text(pg, self._font, line, self._glyphs), True, (240, 242, 248))
+                box.blit(image, (18, 12 + row * self._font.get_linesize()))
+            if cached is not None:
+                cached[1].release()
+            texture = self.ctx.texture(box.get_size(), 4, pg.image.tobytes(box, "RGBA"))
+            texture.filter = (self._gl.NEAREST, self._gl.NEAREST)
+            self._text_box = cached = (key, texture, box.get_size())
+        _, texture, (tw, th) = cached
+        self._enqueue_quad(texture, tw, th, (0, 0, tw, th), 16, height - 132, tw, th, 1.0, False)
+
     # ---- shared quad batching ----
 
     def _reset_batch(self):

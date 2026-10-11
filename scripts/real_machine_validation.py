@@ -158,14 +158,14 @@ def check_audio(out):
     ]
 
 
-def _runtime(battle_presentation="canonical"):
+def _runtime(battle_presentation="canonical", backend=None):
     from asteria.editor import EditorDocument
     from asteria.project import Project
     from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
-    runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), PROJECT)
+    runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), PROJECT, backend=backend)
     runtime.manifest["battle"]["presentation"] = {"adapter": battle_presentation}
     runtime._battle_presentation = create_battle_presentation_adapter(runtime)
     return runtime
@@ -199,7 +199,7 @@ def check_battle_frame_pacing(out):
         profiler.begin_frame()
         runtime._frame(events, dt)
         with profiler.section("present"):
-            pygame.display.flip()
+            runtime.present()
         runtime._sample_counters()
         profiler.end_frame()
         frames += 1
@@ -607,7 +607,7 @@ def _pump(runtime, seconds, *, before=None, after=None):
         if before is not None:
             before(frames)
         runtime._frame(pygame.event.get(), dt)
-        pygame.display.flip()
+        runtime.present()
         if after is not None:
             after(frames)
         frames += 1
@@ -1023,6 +1023,67 @@ def check_mv_import(out):
     )
 
 
+def check_gpu_playable(out):
+    """ENG-12: the playable game on the ModernGL presenter, same battle workload as frame_pacing (pygame)."""
+    import pygame
+
+    from asteria.runtime.profiler import RuntimeProfiler
+
+    runtime = _runtime(backend="moderngl")
+    runtime.open()
+    if runtime.gpu is None:
+        runtime.close()
+        return result("gpu_playable_runtime", "FAIL", f"GPU presenter did not start: {runtime.gpu_fallback_reason}")
+    renderer = runtime.gpu.renderer
+    profiler = runtime.enable_profiling(RuntimeProfiler(target_fps=60))
+    runtime._ui_mode = "field"
+    _pump(runtime, 1.0)
+    field_identity = pygame.image.tobytes(runtime.capture(), "RGB") == pygame.image.tobytes(runtime.screen, "RGB")
+    pygame.image.save(runtime.capture(), str(out / "gpu_field.png"))
+    runtime.game.start_encounter("boss_room")
+    runtime._battle_presentation.begin()
+    runtime._advance_to_hero_turn()
+    adapter = runtime._battle_presentation
+    frames, uses, uploads = 0, 0, []
+    start = time.perf_counter()
+    while time.perf_counter() - start < 10.0 and runtime.running:
+        dt = min(runtime.clock.tick(60) / 1000.0, 0.05)
+        events = pygame.event.get()
+        if not adapter.busy() and runtime.game.mode == "battle" and not runtime._victory and frames % 20 == 0:
+            events.append(pygame.event.Event(pygame.KEYDOWN, key=(pygame.K_2, pygame.K_1, pygame.K_1)[uses % 3]))
+            uses += 1
+        profiler.begin_frame()
+        runtime._frame(events, dt)
+        with profiler.section("present"):
+            runtime.present()
+        uploads.append(runtime.gpu.last_upload_ms)
+        runtime._sample_counters()
+        profiler.end_frame()
+        frames += 1
+        if frames == 120:
+            pygame.image.save(runtime.capture(), str(out / "gpu_battle.png"))
+    battle_identity = pygame.image.tobytes(runtime.capture(), "RGB") == pygame.image.tobytes(runtime.screen, "RGB")
+    report = profiler.report()
+    runtime.close()
+    pacing = report["pacing"]
+    (out / "gpu_battle_profile.json").write_text(json.dumps(report, indent=2))
+    ok = field_identity and battle_identity and pacing["measured_fps"] >= 55 and pacing["interval_p99_ms"] <= 25.0
+    gpu = report["sections"].get("gpu_time", {})
+    return result(
+        "gpu_playable_runtime",
+        "PASS" if ok else "FAIL",
+        f"Playable game on the ModernGL presenter ({renderer}): field and canonical battle in a real window; "
+        f"the GPU frame equals the composed frame pixel for pixel (field={field_identity}, "
+        f"battle={battle_identity}); battle workload {frames} frames, {pacing['measured_fps']} fps, p99 interval "
+        f"{pacing['interval_p99_ms']} ms; frame mean {report['frame']['mean_ms']} ms; upload mean "
+        f"{sum(uploads) / max(1, len(uploads)):.3f} ms; GPU time mean {gpu.get('mean_ms')} ms; draw calls "
+        f"{report['counters'].get('draw_calls', {}).get('max')} per frame; {uses} skills used",
+        screenshots=["gpu_field.png", "gpu_battle.png"],
+        sections={k: v["mean_ms"] for k, v in report["sections"].items()},
+        note="Same workload as frame_pacing (pygame) for comparison; see gpu_battle_profile.json.",
+    )
+
+
 CHECKS = {
     "gpu_window": check_gpu_window,
     "input": check_input,
@@ -1039,6 +1100,7 @@ CHECKS = {
     "follow_camera": check_follow_camera,
     "packaged_app": check_packaged_app,
     "mv_import": check_mv_import,
+    "gpu_playable": check_gpu_playable,
 }
 
 
