@@ -12,7 +12,7 @@ import pytest
 from asteria.core import Component, ComponentRegistry, Field, component_schema
 from asteria.core.migration import component_migration
 from asteria.core.serialization import deserialize_component
-from asteria.project_tools import export_game, load_project, upgrade_project
+from asteria.project_tools import export_game, load_project, package_game, upgrade_project
 
 REF = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
 
@@ -89,12 +89,18 @@ def test_export_refuses_missing_resources_unless_allowed(tmp_path):
     assert report.missing == ["playable_assets/audio/hit.wav"]
 
 
-def test_exported_game_launches_in_its_own_process(tmp_path):
-    pytest.importorskip("pygame")
-    export_game(REF / "project.asteria.json", tmp_path / "game")
-    env = dict(os.environ, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy")
+def _run_isolated(tmp_path, *command, home=None):
+    """Run outside the repo: ``python -I`` (no PYTHONPATH, no cwd on sys.path), reporting the engine it imported."""
+    env = dict(os.environ, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", HOME=str(home or tmp_path / "home"))
+    probe = (
+        "import runpy, sys\n"
+        "target = sys.argv[1]; sys.argv = [target, '--frames', '5']\n"
+        "try:\n    runpy.run_path(target, run_name='__main__')\n"
+        "except SystemExit as exc:\n    assert not exc.code, exc.code\n"
+        "import asteria; print('ENGINE', asteria.__file__)\n"
+    )
     result = subprocess.run(
-        [sys.executable, str(tmp_path / "game" / "run_game.py"), "--frames", "5"],
+        [sys.executable, "-I", "-c", probe, *command],
         cwd=tmp_path,
         env=env,
         capture_output=True,
@@ -102,3 +108,87 @@ def test_exported_game_launches_in_its_own_process(tmp_path):
         timeout=120,
     )
     assert result.returncode == 0, result.stderr[-2000:]
+    return Path(result.stdout.split("ENGINE ")[-1].strip())
+
+
+def test_exported_game_launches_in_its_own_process_with_its_own_engine(tmp_path):
+    pytest.importorskip("pygame")
+    export_game(REF / "project.asteria.json", tmp_path / "game")
+    assert (tmp_path / "game" / "engine" / "asteria" / "runtime" / "preview.py").is_file()
+    assert not list((tmp_path / "game" / "engine").rglob("__pycache__"))
+    engine = _run_isolated(tmp_path, str(tmp_path / "game" / "run_game.py"))
+    assert engine.is_relative_to(tmp_path / "game" / "engine")  # not the repository's copy
+
+
+def test_single_file_build_unpacks_once_and_keeps_saves_in_the_user_data_folder(tmp_path):
+    pytest.importorskip("pygame")
+    result = package_game(REF / "project.asteria.json", tmp_path / "dist", name="Ref Game", app=True)
+    pyz = result["pyz"]
+    assert pyz.name == "Ref_Game.pyz" and pyz.read_bytes().startswith(b"#!/usr/bin/env python3")
+    engine = _run_isolated(tmp_path, str(pyz))
+    cache = tmp_path / "home" / "Library" / "Caches" / "Asteria"
+    if sys.platform != "darwin":
+        cache = tmp_path / "home" / ".cache" / "Asteria"
+    (build,) = cache.iterdir()
+    assert engine.is_relative_to(build / "engine") and (build / ".complete").is_file()
+    saves = build / "game" / "saves"
+    assert saves.is_symlink() and saves.resolve().name == "saves" and "Ref_Game" in str(saves.resolve())
+    stamp = (build / ".complete").stat().st_mtime_ns
+    _run_isolated(tmp_path, str(pyz))  # the second start reuses the unpacked build
+    assert (build / ".complete").stat().st_mtime_ns == stamp
+    app = result["app"]
+    import plistlib
+
+    info = plistlib.loads((app / "Contents" / "Info.plist").read_bytes())
+    executable = app / "Contents" / "MacOS" / info["CFBundleExecutable"]
+    assert info["CFBundlePackageType"] == "APPL" and os.access(executable, os.X_OK)
+    assert (app / "Contents" / "Resources" / pyz.name).read_bytes() == pyz.read_bytes()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="the .app launcher is a POSIX shell script")
+def test_macos_app_launcher_starts_the_game(tmp_path):
+    pytest.importorskip("pygame")
+    app = package_game(REF / "project.asteria.json", tmp_path / "dist", name="Ref Game", app=True)["app"]
+    env = dict(
+        os.environ,
+        SDL_VIDEODRIVER="dummy",
+        SDL_AUDIODRIVER="dummy",
+        HOME=str(tmp_path / "home"),
+        ASTERIA_PYTHON=sys.executable,
+    )
+    result = subprocess.run(
+        [str(app / "Contents" / "MacOS" / "Ref_Game"), "--frames", "5"],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert result.returncode == 0, result.stderr[-2000:]
+
+
+def test_editor_export_game_saves_and_packages(tmp_path):
+    pytest.importorskip("PySide6")
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.shell import AsteriaEditorWindow
+
+    app = QApplication.instance() or QApplication([])
+    source = tmp_path / "project"
+    shutil.copytree(REF, source, ignore=shutil.ignore_patterns("saves", "__pycache__"))
+    window = AsteriaEditorWindow(None)
+    window.document.set_project(
+        load_project(source / "project.asteria.json"), file_path=source / "project.asteria.json"
+    )
+    from asteria.editor.commands import SetAttributeCommand
+
+    window.document.execute(
+        SetAttributeCommand(window.document.project, "name", "Exported From Editor", window.document.project.name)
+    )
+    assert window.document.dirty
+    assert window.export_action.text() == "Export Game…"
+    result = window.export_game(tmp_path / "dist", pyz=True, app=False)
+    assert result["pyz"].name == "Exported_From_Editor.pyz" and result["app"] is None
+    assert load_project(result["folder"] / "project.asteria.json").name == "Exported From Editor"  # saved first
+    window.close()
+    app.processEvents()

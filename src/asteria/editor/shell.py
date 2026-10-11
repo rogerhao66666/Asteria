@@ -1,4 +1,5 @@
 import shutil
+import sys
 from functools import lru_cache
 from pathlib import Path
 from types import SimpleNamespace
@@ -640,6 +641,10 @@ class AsteriaEditorWindow(QMainWindow):
         self.save_as_action.setShortcut("Ctrl+Shift+S")
         self.save_as_action.triggered.connect(self.save_project_as)
         file_menu.addActions([self.open_action, self.save_action, self.save_as_action])
+        file_menu.addSeparator()
+        self.export_action = QAction("Export Game…", self)
+        self.export_action.triggered.connect(self.export_game_dialog)
+        file_menu.addAction(self.export_action)
 
         edit = self.menuBar().addMenu("&Edit")
         self.undo_action = QAction("Undo", self)
@@ -1713,6 +1718,62 @@ class AsteriaEditorWindow(QMainWindow):
         self.statusBar().showMessage(f"Saved {self.document.file_path}", 3000)
         self.refresh_all()
         return True
+
+    def export_game(self, output, *, name=None, pyz=True, app=False):
+        """Save, then package the project (AST-06): game folder, single-file .pyz, optional macOS .app."""
+        from asteria.project_tools import package_game
+
+        if self.document.project is None or not self.document.file_path:
+            raise ValueError("save the project to a file before exporting")
+        if self.document.dirty and not self.save_project():
+            raise ValueError("the project could not be saved")
+        result = package_game(self.document.file_path, output, name=name, pyz=pyz, app=app)
+        self.statusBar().showMessage(f"Exported {result['pyz'] or result['folder']}", 5000)
+        return result
+
+    def export_game_dialog(self):
+        from PySide6.QtWidgets import QCheckBox, QDialog, QDialogButtonBox, QFormLayout, QLabel, QLineEdit
+
+        if self.document.project is None:
+            return None
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Export Game")
+        name = QLineEdit(self.document.project.name or "Asteria Game")
+        pyz = QCheckBox("Single-file game (.pyz)")
+        pyz.setChecked(True)
+        app = QCheckBox("macOS app (.app)")
+        app.setChecked(sys.platform == "darwin")
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        form = QFormLayout(dialog)
+        form.addRow("Game name", name)
+        form.addRow("", pyz)
+        form.addRow("", app)
+        form.addRow(QLabel("The game folder always carries the engine; players need Python 3.12+ with pygame-ce."))
+        form.addRow(buttons)
+        if dialog.exec() != QDialog.Accepted:
+            return None
+        output = QFileDialog.getExistingDirectory(self, "Export To Folder")
+        if not output:
+            return None
+        try:
+            result = self.export_game(
+                output, name=name.text().strip() or None, pyz=pyz.isChecked(), app=app.isChecked()
+            )
+        except (OSError, ValueError) as exc:
+            QMessageBox.critical(self, "Export Game", str(exc))
+            return None
+        lines = [f"Game folder: {result['folder']}"]
+        if result["pyz"]:
+            lines.append(f"Single file: {result['pyz']}")
+        if result["app"]:
+            lines.append(f"macOS app: {result['app']}")
+        missing = result["report"].missing
+        if missing:
+            lines.append("Missing: " + ", ".join(missing))
+        QMessageBox.information(self, "Export Game", "\n".join(lines))
+        return result
 
     def open_project(self):
         if self.document.dirty:
