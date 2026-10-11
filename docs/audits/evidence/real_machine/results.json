@@ -2,7 +2,7 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-11 16:53:16 +0800"
+    "time": "2026-10-11 16:56:37 +0800"
   },
   "results": [
     {
@@ -185,17 +185,6 @@
       "note": "Nothing saved to the project. Hands-on use by a person is manual item M7."
     },
     {
-      "check": "mv_import_real_window",
-      "status": "PASS",
-      "evidence": "Parallax sample (maps 1-2) imported, saved, reloaded in a fresh process and played in a real cocoa window by real key events: NPC said '\u30a2\u30a4\u30ea\u30b9\\u3000\u30a2\u30a6\u30c8\u30fb\u30fb\u30fb'; the door transferred to '\u3010\u8fd1\u666f\u3011\u30b9\u30e2\u30c3\u30b0' cell [8, 23] (expected [8, 23]); event errors 0; MV modules loaded while playing []",
-      "screenshots": [
-        "mv_import_start.png",
-        "mv_import_dialogue.png",
-        "mv_import_after_transfer.png"
-      ],
-      "note": "Visual review of the tiles and characters is part of manual item M9."
-    },
-    {
       "check": "animation_smoothness",
       "status": "PASS",
       "evidence": "Canonical battle screen in a real cocoa window: combatant sprites drawn, boss animation advanced 86 frames in 10.0s (8.6/s); 7 skills used through the key-event queue; VFX particles peaked at 1",
@@ -319,6 +308,27 @@
       "check": "vfx_weather_load",
       "status": "PASS",
       "evidence": "Rain at 2000 particles plus the full GPU chain for 4 s: 60.058 fps, p99 interval 17.956 ms, vfx section mean 4.3304 ms"
+    },
+    {
+      "check": "mv_import_real_window",
+      "status": "PASS",
+      "evidence": "Parallax sample (maps 1-2) imported, saved, reloaded in a fresh process and played in a real cocoa window by real key events: NPC said '\u30a2\u30a4\u30ea\u30b9\\u3000\u30a2\u30a6\u30c8\u30fb\u30fb\u30fb'; the door transferred to '\u3010\u8fd1\u666f\u3011\u30b9\u30e2\u30c3\u30b0' cell [8, 23] (expected [8, 23]); event errors 0; MV modules loaded while playing []",
+      "screenshots": [
+        "mv_import_start.png",
+        "mv_import_dialogue.png",
+        "mv_import_after_transfer.png"
+      ],
+      "note": "Visual review of the tiles and characters is part of manual item M9."
+    },
+    {
+      "check": "mv_import_gpu_night",
+      "status": "PASS",
+      "evidence": "Imported parallax sample with an authored night environment (Environment2D + a light on the player, rain, bloom) on the ModernGL backend in a real cocoa window: dialogue '\u30a2\u30a4\u30ea\u30b9\\u3000\u30a2\u30a6\u30c8\u30fb\u30fb\u30fb', door transfer to cell [8, 23], event errors 0, MV modules []",
+      "screenshots": [
+        "mv_import_gpu_start.png",
+        "mv_import_gpu_dialogue.png",
+        "mv_import_gpu_after_transfer.png"
+      ]
     }
   ]
 }

@@ -924,15 +924,26 @@ from asteria.runtime.game_session import GameSessionRuntime
 from asteria.runtime.tilemap_field import TileMapField, run_tilemap_field
 
 root, out = Path(sys.argv[1]), Path(sys.argv[2])
+kind = sys.argv[3] if len(sys.argv) > 3 else "pygame"
+prefix = "mv_import" if kind == "pygame" else "mv_import_gpu"
 project = load_project(root / "project.asteria.json")
 field = TileMapField(GameSessionRuntime(project, project.game_start.instantiate(project)), root)
-backend = PygameRuntimeBackend(project.input_map)
+if kind == "moderngl":
+    from asteria.platform.moderngl_backend import ModernglRuntimeBackend
+    backend = ModernglRuntimeBackend(project.input_map)
+else:
+    backend = PygameRuntimeBackend(project.input_map)
 backend.open("Imported MV project", 816, 624)
 start_scene = field.session.scene.id
 log = {"driver": pygame.display.get_driver(), "start": list(field.session.save.player_position)}
 state = {"phase": "walk", "shots": []}
 
 def shot(name):
+    name = name.replace("mv_import", prefix)
+    if kind == "moderngl":
+        state["pending_shot"] = name
+        backend.request_capture()
+        return
     pygame.image.save(backend.screen, str(out / name))
     state["shots"].append(name)
 
@@ -941,6 +952,10 @@ def key(k, up=False):
 
 def on_frame(frame):
     s, session = state, field.session
+    if s.get("pending_shot") and getattr(backend, "captured", None) is not None:
+        pygame.image.save(backend.captured, str(out / s["pending_shot"]))
+        s["shots"].append(s.pop("pending_shot"))
+        backend.captured = None
     if frame == 2:
         shot("mv_import_start.png")
         key(pygame.K_UP)
@@ -961,6 +976,7 @@ def on_frame(frame):
 
 frames = run_tilemap_field(field, backend, 816, 624, max_frames=900, on_frame=on_frame)
 t = field.session.player.get(Transform)
+log.update(environment_unsupported=getattr(backend, "environment_unsupported", []))
 log.update(frames=frames, transferred=field.session.scene.id != start_scene, scene=field.session.scene.name,
            cell=[int(t.x // 48), int(t.y // 48)], errors=[str(e) for e in field.session.event_errors],
            shots=state["shots"], mv_modules=sorted(m for m in sys.modules if "rpg_maker" in m))
@@ -1242,6 +1258,71 @@ def check_vfx_environment(out):
     return results
 
 
+def check_mv_import_gpu(out):
+    """W-18 + ENG-12 + VFX: the imported MV project on the ModernGL backend, at night (lights, rain, bloom)."""
+    import tempfile
+
+    from asteria.assets.local_reference import discover_mv_projects, resolve_rpg_maker_mv_root
+
+    root = resolve_rpg_maker_mv_root(REPO)
+    layouts = (
+        []
+        if root is None
+        else [
+            l for l in discover_mv_projects(root) if l.relative_path.endswith("parallax_Resource_Pack/sample_project")
+        ]
+    )
+    if not layouts:
+        return result("mv_import_gpu_night", "BLOCKED", "The local RPG Maker MV reference (parallax sample) is absent.")
+    from asteria.assets.rpg_maker_mv_project import import_mv_project
+    from asteria.core import Entity, Transform
+    from asteria.project_tools import load_project
+    from asteria.runtime.environment2d import Environment2DComponent, LightSource2DComponent
+
+    with tempfile.TemporaryDirectory() as tmp:
+        project_path, _ = import_mv_project(layouts[0].root, Path(tmp) / "imported", map_ids=(1, 2))
+        project = load_project(project_path)  # author a night environment on map 1, as an editor user would
+        scene = project.scene(project.startup_scene_id)
+        settings = scene.add_entity(Entity("Night"))
+        settings.add_component(Transform())
+        env = settings.add_component(Environment2DComponent())
+        env.lighting_enabled, env.ambient_intensity = True, 0.3
+        env.ambient_r, env.ambient_g, env.ambient_b = 0.5, 0.6, 1.0
+        env.weather, env.weather_intensity, env.bloom_enabled = "rain", 0.7, True
+        player = scene.get_entity(project.game_start.player_entity_id)
+        lamp = player.add_component(LightSource2DComponent())
+        lamp.radius, lamp.intensity = 150.0, 1.4
+        project.save_json(project_path)
+        proc = subprocess.run(
+            [sys.executable, "-c", MV_PLAY_SCRIPT, str(project_path.parent), str(Path(out).resolve()), "moderngl"],
+            capture_output=True,
+            text=True,
+            timeout=300,
+            cwd=tmp,
+        )
+    line = next((l for l in proc.stdout.splitlines() if l.startswith("MV_PLAY:")), None)
+    if line is None:
+        return result(
+            "mv_import_gpu_night", "FAIL", f"play process exited {proc.returncode}", stderr=proc.stderr[-1500:]
+        )
+    log = json.loads(line[len("MV_PLAY:") :])
+    ok = (
+        log["transferred"]
+        and log["cell"] == [8, 23]
+        and log.get("dialogue")
+        and not log["errors"]
+        and not log["mv_modules"]
+    )
+    return result(
+        "mv_import_gpu_night",
+        "PASS" if ok else "FAIL",
+        f"Imported parallax sample with an authored night environment (Environment2D + a light on the player, "
+        f"rain, bloom) on the ModernGL backend in a real {log['driver']} window: dialogue {log.get('dialogue')!r}, "
+        f"door transfer to cell {log['cell']}, event errors {len(log['errors'])}, MV modules {log['mv_modules']}",
+        screenshots=log["shots"],
+    )
+
+
 CHECKS = {
     "gpu_window": check_gpu_window,
     "input": check_input,
@@ -1260,6 +1341,7 @@ CHECKS = {
     "mv_import": check_mv_import,
     "gpu_playable": check_gpu_playable,
     "vfx": check_vfx_environment,
+    "mv_import_gpu": check_mv_import_gpu,
 }
 
 

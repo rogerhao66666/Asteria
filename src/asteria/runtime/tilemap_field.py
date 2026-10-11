@@ -106,6 +106,7 @@ class TileMapField:
         self.viewport = (816, 624)
         self._scene_id = None
         self._confirm_down = False
+        self._last_dt = 0.0
         self._load_scene()
 
     # -- scene binding ----------------------------------------------------------------------------
@@ -223,6 +224,7 @@ class TileMapField:
     def step(self, actions, dt):
         """One frame: dialogue / movement / interactions / events. Returns the player's (dx, dy)."""
         session = self.session
+        self._last_dt = float(dt)
         actions = dict(actions)
         confirm = any(actions.get(a, 0.0) > 0 for a in ("confirm", "interact"))
         pressed = confirm and not self._confirm_down
@@ -318,6 +320,48 @@ class TileMapField:
         )
         return tuple(sorted((*tiles, *self._sprite_draws()), key=lambda d: (d.layer, d.depth, d.screen_y, d.screen_x)))
 
+    def environment(self, time=0.0):
+        """The current scene's Environment2D / lights / water projected through the field camera."""
+        from .environment2d import resolve_environment
+
+        def read_shader(asset_id):
+            try:
+                return self.resources.path(asset_id, "shader").read_text(encoding="utf-8")
+            except TileMapFieldError:
+                return None
+
+        env = resolve_environment(
+            self.session.scene, to_screen=self.camera.world_to_screen, scale=self.camera.zoom, read_shader=read_shader
+        )
+        if env.weather != "none":
+            from .weather import WeatherSystem
+
+            weather = self.__dict__.get("_weather")
+            if weather is None or (weather.width, weather.height) != tuple(self.viewport):
+                weather = self._weather = WeatherSystem(*self.viewport, seed=f"{self.session.scene.id}:weather")
+            center = (self.camera.x + self.camera.width / (2 * self.camera.zoom), self.camera.y)
+            weather.update(
+                self._last_dt,
+                env.weather,
+                env.weather_intensity,
+                env.weather_max_particles,
+                env.weather_wind,
+                camera=center,
+                scale=self.camera.zoom,
+            )
+        return env
+
+    def weather_rects(self):
+        weather = self.__dict__.get("_weather")
+        if weather is None or weather.kind == "none":
+            return []
+        from .weather import _KINDS
+
+        color = _KINDS[weather.kind][2]
+        if weather.kind == "rain":
+            return [(x, y, 1, s * 2, color) for x, y, s in zip(weather.x, weather.y, weather.size, strict=True)]
+        return [(x, y, s, s, color) for x, y, s in zip(weather.x, weather.y, weather.size, strict=True)]
+
     def texture_sources(self):
         ids = {self.tile_sheet.texture.asset_id}
         for entity in self.session.scene.entities():
@@ -339,7 +383,7 @@ def run_tilemap_field(field, backend, width, height, target_fps=60, max_frames=N
     field.prepare_viewport(width, height)
     cache = TextureResourceCache(backend.load_texture)
     scene_id, renderer = None, None
-    frames = 0
+    frames, clock = 0, 0.0
     while not backend.should_close():
         dt = backend.tick(target_fps) if hasattr(backend, "tick") else 1.0 / target_fps
         actions = backend.poll_actions() if hasattr(backend, "poll_actions") else {}
@@ -348,8 +392,14 @@ def run_tilemap_field(field, backend, width, height, target_fps=60, max_frames=N
             field.prepare_viewport(width, height)
             renderer = TextureRenderer(backend, cache, field.texture_sources())
             scene_id = field.session.scene.id
+        clock += dt
+        if hasattr(backend, "set_environment"):
+            env = field.environment(clock)
+            backend.set_environment(env if env.active else None, clock)
         backend.begin_frame()
         renderer.render(field.draw_commands())
+        if hasattr(backend, "draw_rects"):
+            backend.draw_rects(field.weather_rects())
         if field.dialogue and hasattr(backend, "draw_text_box"):
             backend.draw_text_box(field.dialogue)
         backend.end_frame()

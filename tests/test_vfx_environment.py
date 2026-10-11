@@ -335,3 +335,24 @@ def test_field_trail_and_environment_layers_on_the_pygame_path(resource_root, mo
         assert runtime.environment_unsupported == []
     finally:
         runtime.close()
+
+
+def test_framebuffer_world_is_sampled_upright(gl):
+    """The ModernGL backend renders the world into a framebuffer (v flipped) before the effect chain."""
+    from asteria.platform.gpu_effects import EffectChain
+
+    world_tex = gl.texture((W, H), 4)
+    world_fbo = gl.framebuffer(color_attachments=[world_tex])  # as ModernglRuntimeBackend does
+    world_fbo.use()
+    gl.viewport = (0, 0, W, H)
+    world_fbo.clear(0, 0, 0, 1)
+    gl.scissor = (0, H - 8, 8, 8)  # GL origin is bottom-left: this is the TOP-left 8x8 of the screen
+    world_fbo.clear(1, 0, 0, 1)
+    gl.scissor = None
+    chain = EffectChain(gl, (W, H))
+    chain.environment = _env(_scene(vignette=0.0001))
+    target = gl.simple_framebuffer((W, H), components=4)
+    chain.render(world_tex, target, world_flipped=True)
+    image = pygame.transform.flip(pygame.image.frombytes(target.read(components=3), (W, H), "RGB"), False, True)
+    assert image.get_at((2, 2))[:3] == (255, 0, 0) and image.get_at((2, H - 3))[:3] == (0, 0, 0)
+    chain.release()

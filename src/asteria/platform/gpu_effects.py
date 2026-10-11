@@ -85,6 +85,7 @@ uniform int u_water_count;
 uniform vec4 u_water_rect[8];   // x0, y0, x1, y1 (screen px)
 uniform vec4 u_water_wave[8];   // amplitude px, wavelength px, speed, tint strength
 uniform vec3 u_water_tint[8];
+uniform int u_world_flip;   // 1 when the world was rendered into a framebuffer (v = 0 at the bottom)
 in vec2 v_px;
 out vec4 f_color;
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -109,7 +110,7 @@ void main() {
             tint_amount = w.w;
         }
     }
-    vec3 c = texture(u_world, uv).rgb;
+    vec3 c = texture(u_world, u_world_flip == 1 ? vec2(uv.x, 1.0 - uv.y) : uv).rgb;
     c = mix(c, c * tint * 1.6, tint_amount);
     if (u_lighting == 1) c *= texture(u_light, vec2(uv.x, 1.0 - uv.y)).rgb;
     if (u_fog > 0.0) {
@@ -405,7 +406,7 @@ class EffectChain:
             self.ctx.disable(self.gl.BLEND)
         return calls
 
-    def render(self, world, target):
+    def render(self, world, target, *, world_flipped=False):
         env = self.environment
         calls = 0
         self.ctx.disable(self.gl.BLEND)
@@ -434,6 +435,7 @@ class EffectChain:
             u_fog_color=fog_color,
             u_time=self.time,
             u_drift=env.fog_drift,
+            u_world_flip=1 if world_flipped else 0,
         )
         bloom = env.post_effect("bloom")
         bloom_tex, bloom_intensity = self._black, 0.0

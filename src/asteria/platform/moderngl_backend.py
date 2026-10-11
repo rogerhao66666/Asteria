@@ -65,6 +65,12 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         self._batch_indices = []
         self.clock = None
         self._close = False
+        self.environment = None
+        self.environment_time = 0.0
+        self._world_fbo = None
+        self._world_tex = None
+        self._chain = None
+        self._pending_text = None
 
     # ---- RuntimeBackend ----
 
@@ -111,7 +117,33 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
                 self.screen_size = (event.w, event.h)
         self.ctx.viewport = (0, 0, *self.screen_size)
         self.ctx.clear(*_CLEAR_COLOR)
+        self._pending_text = None
+        if self._environment_active():
+            if self._world_fbo is None or self._world_fbo.size != tuple(self.screen_size):
+                if self._world_fbo is not None:
+                    self._world_fbo.release()
+                    self._world_tex.release()
+                self._world_tex = self.ctx.texture(tuple(self.screen_size), 4)
+                self._world_fbo = self.ctx.framebuffer(color_attachments=[self._world_tex])
+            self._world_fbo.use()
+            self.ctx.viewport = (0, 0, *self.screen_size)
+            self._world_fbo.clear(*_CLEAR_COLOR)
         self._reset_batch()
+
+    # ---- scene environment (VFX-02 / VFX-03) ----
+
+    def set_environment(self, environment, time=0.0):
+        """Run the GPU effect chain over this frame's world draws (``None`` / inactive: draw directly)."""
+        self.environment, self.environment_time = environment, float(time)
+
+    def _environment_active(self):
+        env = getattr(self, "environment", None)
+        return env is not None and env.active
+
+    def draw_rects(self, rects):
+        """Flat rectangles ``(x, y, w, h, (r, g, b, a))`` in screen pixels (weather particles)."""
+        for x, y, w, h, color in rects:
+            self._enqueue_solid(x, y, w, h, tuple(c / 255 for c in color[:3]), color[3] / 255 if len(color) > 3 else 1)
 
     def draw_grid(self, spacing=32, offset_x=0, offset_y=0):
         if self.ctx is None:
@@ -144,7 +176,33 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         if self.ctx is None:
             return
         self._flush_batch()
+        if self._environment_active():
+            from .gpu_effects import EffectChain
+
+            if self._chain is None or self._chain.size != tuple(self.screen_size):
+                if self._chain is not None:
+                    self._chain.release()
+                self._chain = EffectChain(self.ctx, self.screen_size)
+            self._chain.environment = self.environment
+            self._chain.time = self.environment_time
+            self._chain.render(self._world_tex, self.ctx.screen, world_flipped=True)
+            self.ctx.screen.use()
+            self.ctx.viewport = (0, 0, *self.screen_size)
+            self.ctx.enable(self._gl.BLEND)
+            self.ctx.blend_func = self._gl.SRC_ALPHA, self._gl.ONE_MINUS_SRC_ALPHA
+            if self._pending_text is not None:
+                self.draw_text_box(self._pending_text, _now=True)
+                self._flush_batch()
+        if getattr(self, "_capture_requested", False):  # read before the swap (the back buffer is then undefined)
+            self._capture_requested = False
+            width, height = self.ctx.screen.size
+            image = self.pg.image.frombytes(self.ctx.screen.read(components=3), (width, height), "RGB")
+            self.captured = self.pg.transform.flip(image, False, True)
         self.pg.display.flip()
+
+    def request_capture(self):
+        """Keep a copy of the next presented frame in ``captured`` (a pygame Surface)."""
+        self._capture_requested = True
 
     def should_close(self):
         return self._close
@@ -195,8 +253,11 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
             rotation_deg=getattr(draw_command, "rotation_deg", 0.0),
         )
 
-    def draw_text_box(self, text):
+    def draw_text_box(self, text, _now=False):
         """Dialogue box along the bottom: drawn once into an RGBA texture (cached per text), then one quad."""
+        if self._environment_active() and not _now:
+            self._pending_text = text  # UI: drawn after the effect chain, never lit or graded
+            return
         width, height = self.screen_size
         key = (str(text), width)
         cached = getattr(self, "_text_box", None)

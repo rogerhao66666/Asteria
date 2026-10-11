@@ -119,8 +119,26 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
             image.set_alpha(max(0, min(255, int(draw_command.opacity * 255))))
         self.screen.blit(image, (round(draw_command.screen_x), round(draw_command.screen_y)))
 
-    def draw_text_box(self, text):
+    def set_environment(self, environment, time=0.0):
+        """Apply the scene environment (pygame fallback: approximate lights, fog, water) at end of frame."""
+        self.environment, self.environment_time = environment, float(time)
+
+    def draw_rects(self, rects):
+        """Flat rectangles ``(x, y, w, h, (r, g, b, a))`` in screen pixels (weather particles)."""
+        layer = getattr(self, "_rect_layer", None)
+        if layer is None or layer.get_size() != self.screen.get_size():
+            layer = self._rect_layer = self.pg.Surface(self.screen.get_size(), self.pg.SRCALPHA)
+        layer.fill((0, 0, 0, 0))
+        for x, y, w, h, color in rects:
+            layer.fill(color, (int(x), int(y), max(1, int(w)), max(1, int(h))))
+        self.screen.blit(layer, (0, 0))
+
+    def draw_text_box(self, text, _now=False):
         """A dialogue box along the bottom of the window (event DIALOGUE lines)."""
+        env = getattr(self, "environment", None)
+        if env is not None and env.active and not _now:
+            self._pending_text = text  # UI goes on top of the environment effects
+            return
         from .pygame_battle_ui import renderable_text
 
         width, height = self.screen.get_size()
@@ -136,8 +154,21 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
             self.screen.blit(image, (box.x + 18, box.y + 12 + row * self._font.get_linesize()))
 
     def end_frame(self):
-        if self.screen is not None:
-            self.pg.display.flip()
+        if self.screen is None:
+            return
+        env = getattr(self, "environment", None)
+        if env is not None and env.active:
+            from asteria.runtime.environment_fallback import PygameEnvironmentRenderer, unsupported
+
+            if getattr(self, "_l0", None) is None:
+                self._l0 = PygameEnvironmentRenderer(self.pg)
+            self._l0.time = self.environment_time
+            self._l0.apply(self.screen, env)
+            self.environment_unsupported = unsupported(env)
+            text, self._pending_text = getattr(self, "_pending_text", None), None
+            if text is not None:
+                self.draw_text_box(text, _now=True)
+        self.pg.display.flip()
 
     def should_close(self):
         return self._close
