@@ -2,30 +2,30 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-11 23:18:39 +0800"
+    "time": "2026-10-11 23:24:34 +0800"
   },
   "results": [
     {
       "check": "gpu_window",
       "status": "PASS",
-      "evidence": "ModernGL window on 'Apple M5': 400 sprites/frame for 240 frames, 61.424 fps, read-back framebuffer has 8 sampled colours",
+      "evidence": "ModernGL window on 'Apple M5': 400 sprites/frame for 240 frames, 61.789 fps, read-back framebuffer has 8 sampled colours",
       "renderer": "Apple M5",
       "pacing": {
         "target_fps": 60.0,
-        "measured_fps": 61.424,
-        "interval_mean_ms": 16.2803,
-        "interval_jitter_ms": 3.1367,
-        "interval_p99_ms": 17.4553,
-        "frames_over_budget": 2
+        "measured_fps": 61.789,
+        "interval_mean_ms": 16.1841,
+        "interval_jitter_ms": 2.4671,
+        "interval_p99_ms": 16.0165,
+        "frames_over_budget": 1
       },
       "frame": {
         "count": 240,
-        "mean_ms": 7.808,
-        "p50_ms": 6.6964,
-        "p95_ms": 11.2369,
-        "p99_ms": 17.446,
-        "max_ms": 59.3281,
-        "total_ms": 1873.9104
+        "mean_ms": 7.9212,
+        "p50_ms": 6.9735,
+        "p95_ms": 11.3802,
+        "p99_ms": 13.4165,
+        "max_ms": 53.3789,
+        "total_ms": 1901.0931
       },
       "screenshot": "gpu_window.png"
     },
@@ -48,7 +48,7 @@
     {
       "check": "audio_playback_device",
       "status": "PASS",
-      "evidence": "CoreAudio device opened (44100, -16, 2); hit.wav (0.340s) kept its channel busy for 0.354s; battle_theme.ogg streaming=True",
+      "evidence": "CoreAudio device opened (44100, -16, 2); hit.wav (0.340s) kept its channel busy for 0.348s; battle_theme.ogg streaming=True",
       "note": "Device-level playback only; audible confirmation is manual item M3."
     },
     {
@@ -64,7 +64,7 @@
     {
       "check": "animation_smoothness",
       "status": "PASS",
-      "evidence": "Canonical battle screen in a real cocoa window: combatant sprites drawn, boss animation advanced 86 frames in 10.0s (8.6/s); 7 skills used through the key-event queue; VFX particles peaked at 1",
+      "evidence": "Canonical battle screen in a real cocoa window: combatant sprites drawn, boss animation advanced 87 frames in 10.0s (8.7/s); 7 skills used through the key-event queue; VFX particles peaked at 1",
       "screenshots": [
         "battle_window_0.png",
         "battle_window_1.png"
@@ -74,33 +74,33 @@
     {
       "check": "frame_pacing",
       "status": "PASS",
-      "evidence": "559 frames: 55.989 fps (target 60), jitter 0.716 ms, p99 interval 18.8108 ms, 0 frames over 1.5x budget",
+      "evidence": "559 frames: 55.799 fps (target 60), jitter 1.6779 ms, p99 interval 18.8624 ms, 1 frames over 1.5x budget",
       "pacing": {
         "target_fps": 60.0,
-        "measured_fps": 55.989,
-        "interval_mean_ms": 17.8607,
-        "interval_jitter_ms": 0.716,
-        "interval_p99_ms": 18.8108,
-        "frames_over_budget": 0
+        "measured_fps": 55.799,
+        "interval_mean_ms": 17.9215,
+        "interval_jitter_ms": 1.6779,
+        "interval_p99_ms": 18.8624,
+        "frames_over_budget": 1
       },
       "frame": {
         "count": 559,
-        "mean_ms": 5.0262,
-        "p50_ms": 5.0671,
-        "p95_ms": 5.8465,
-        "p99_ms": 6.7479,
-        "max_ms": 9.5904,
-        "total_ms": 2809.6567
+        "mean_ms": 5.1473,
+        "p50_ms": 5.0745,
+        "p95_ms": 5.9039,
+        "p99_ms": 7.915,
+        "max_ms": 14.2392,
+        "total_ms": 2877.3562
       },
       "sections": {
-        "animation": 1.1754,
-        "asset_loading": 0.6223,
-        "events": 0.0047,
-        "input": 0.0372,
-        "present": 0.4558,
-        "render": 3.2098,
-        "update": 0.0474,
-        "vfx": 0.1069
+        "animation": 1.1893,
+        "asset_loading": 0.9739,
+        "events": 0.0055,
+        "input": 0.0378,
+        "present": 0.5148,
+        "render": 3.2521,
+        "update": 0.0501,
+        "vfx": 0.1166
       },
       "unsupported": {
         "draw_calls": "pygame software blitting exposes no draw-call counter",
@@ -118,9 +118,43 @@
       "note": "Whether the move feels right to a player is part of manual item M5."
     },
     {
+      "check": "editor_to_runtime_playtest",
+      "status": "PASS",
+      "evidence": "Qt platform 'cocoa': Run Project started the runtime process=True, still running after 4 s=True, Stop Play returned=True, process exited=True"
+    },
+    {
+      "check": "editor_tools_gui",
+      "status": "PASS",
+      "evidence": "Qt platform 'cocoa': animation_editor=ok, action_timeline=ok, vfx_tool=ok, vfx_preview=ok, enemy_ai_preview=ok, multi_select_batch_fields=ok, problems_panel=ok, problems_clear_again=ok, script_completion=ok, debugger_live_game=ok",
+      "screenshots": [
+        "editor_animation.png",
+        "editor_action_timeline.png",
+        "editor_vfx.png",
+        "editor_enemy_ai.png",
+        "editor_records_multiselect.png",
+        "editor_problems.png",
+        "editor_script.png",
+        "editor_debugger.png"
+      ],
+      "note": "Screenshots are reviewed by the engineer; hands-on use by a person is not part of this check."
+    },
+    {
+      "check": "editor_d17_gui",
+      "status": "PASS",
+      "evidence": "Qt platform 'cocoa': export_game=ok, animation_states=ok, character_composition=ok, input_map=ok, behavior_trees=ok, profiler_dock=ok, project_file_untouched=ok",
+      "screenshots": [
+        "editor_animation_states.png",
+        "editor_character_composition.png",
+        "editor_input_map.png",
+        "editor_behavior_trees.png",
+        "editor_profiler.png"
+      ],
+      "note": "Nothing saved to the project. Hands-on use by a person is manual item M7."
+    },
+    {
       "check": "runtime_exit",
       "status": "PASS",
-      "evidence": "Real-window runtime ran 90 frames and exited with code 0 in 2.4s",
+      "evidence": "Real-window runtime ran 90 frames and exited with code 0 in 2.6s",
       "stderr": ""
     },
     {
@@ -183,7 +217,7 @@
     {
       "check": "field_follow_camera",
       "status": "PASS",
-      "evidence": "Real cocoa window: follow zoom 1.80; the player walked from x=-60 to x=-5.6 and the camera centre moved 48.4 world units with it",
+      "evidence": "Real cocoa window: follow zoom 1.80; the player walked from x=-60 to x=-5.4 and the camera centre moved 48.5 world units with it",
       "screenshots": [
         "follow_camera_start.png",
         "follow_camera_end.png"
@@ -192,7 +226,7 @@
     {
       "check": "packaged_app_real_window",
       "status": "PASS",
-      "evidence": "Asteria RM.app (2.4 MB .pyz inside) launched from a temporary folder outside the repo, ran 120 frames in a real window and exited 0 in 3.5s",
+      "evidence": "Asteria RM.app (2.5 MB .pyz inside) launched from a temporary folder outside the repo, ran 120 frames in a real window and exited 0 in 3.6s",
       "stderr": "",
       "note": "Double-clicking the .app in Finder (Gatekeeper, unsigned app) is manual item M6."
     },
@@ -210,66 +244,66 @@
     {
       "check": "gpu_playable_runtime",
       "status": "PASS",
-      "evidence": "Playable game on the ModernGL presenter (Apple M5): field and canonical battle in a real window; the GPU frame equals the composed frame pixel for pixel (field=True, battle=True); battle workload 568 frames, 56.664 fps, p99 interval 18.8615 ms; frame mean 6.1795 ms; upload mean 0.377 ms; GPU time mean 0.4937 ms; draw calls 1.0 per frame; 7 skills used",
+      "evidence": "Playable game on the ModernGL presenter (Apple M5): field and canonical battle in a real window; the GPU frame equals the composed frame pixel for pixel (field=True, battle=True); battle workload 569 frames, 56.815 fps, p99 interval 18.8818 ms; frame mean 6.3035 ms; upload mean 0.380 ms; GPU time mean 0.4906 ms; draw calls 1.0 per frame; 6 skills used",
       "screenshots": [
         "gpu_field.png",
         "gpu_battle.png"
       ],
       "sections": {
-        "ai": 0.0116,
-        "animation": 1.1917,
-        "asset_loading": 0.8773,
-        "collision": 0.032,
-        "events": 0.0089,
-        "gpu_present": 1.1314,
-        "gpu_time": 0.4937,
-        "input": 0.036,
-        "present": 2.1023,
-        "render": 2.563,
-        "spawn": 0.0098,
-        "update": 0.0668,
-        "vfx": 0.0926
+        "ai": 0.0147,
+        "animation": 1.1927,
+        "asset_loading": 0.8931,
+        "collision": 0.0405,
+        "events": 0.0104,
+        "gpu_present": 1.1496,
+        "gpu_time": 0.4906,
+        "input": 0.0377,
+        "present": 2.2233,
+        "render": 2.5843,
+        "spawn": 0.0125,
+        "update": 0.083,
+        "vfx": 0.0931
       },
       "note": "Same workload as frame_pacing (pygame) for comparison; see gpu_battle_profile.json."
     },
     {
       "check": "vfx_moderngl_field",
       "status": "PASS",
-      "evidence": "moderngl (cocoa): field with lighting (ambient + player light + shadow-casting lamp), water, rain (320 particles), bloom, grading, vignette for 5 s: 55.283 fps, p99 interval 24.218 ms, frame interval mean 18.0835 ms, draw calls/frame 15.0; shader errors []; GPU-only effects reported unsupported []",
+      "evidence": "moderngl (cocoa): field with lighting (ambient + player light + shadow-casting lamp), water, rain (320 particles), bloom, grading, vignette for 5 s: 56.34 fps, p99 interval 23.9886 ms, frame interval mean 17.7437 ms, draw calls/frame 15.0; shader errors []; GPU-only effects reported unsupported []",
       "screenshots": [
         "vfx_moderngl_field.png"
       ],
       "sections": {
-        "ai": 0.0143,
-        "asset_loading": 2.2293,
-        "collision": 0.0348,
-        "events": 0.0359,
-        "gpu_present": 3.3343,
-        "gpu_time": 0.8371,
-        "input": 0.031,
-        "render": 3.3514,
+        "ai": 0.0137,
+        "asset_loading": 1.3373,
+        "collision": 0.034,
+        "events": 0.0351,
+        "gpu_present": 3.1783,
+        "gpu_time": 0.8766,
+        "input": 0.0302,
+        "render": 3.2682,
         "spawn": 0.0103,
-        "update": 0.1243,
-        "vfx": 1.0222
+        "update": 0.1176,
+        "vfx": 0.9915
       }
     },
     {
       "check": "vfx_pygame_field",
       "status": "PASS",
-      "evidence": "pygame (cocoa): field with lighting (ambient + player light + shadow-casting lamp), water, rain (320 particles), bloom, grading, vignette for 5 s: 55.715 fps, p99 interval 19.0834 ms, frame interval mean 17.9437 ms, draw calls/frame None; shader errors []; GPU-only effects reported unsupported ['bloom', 'grade', 'vignette', 'shadows']",
+      "evidence": "pygame (cocoa): field with lighting (ambient + player light + shadow-casting lamp), water, rain (320 particles), bloom, grading, vignette for 5 s: 55.676 fps, p99 interval 19.068 ms, frame interval mean 17.9563 ms, draw calls/frame None; shader errors []; GPU-only effects reported unsupported ['bloom', 'grade', 'vignette', 'shadows']",
       "screenshots": [
         "vfx_pygame_field.png"
       ],
       "sections": {
-        "ai": 0.0151,
-        "asset_loading": 1.4382,
-        "collision": 0.0362,
-        "events": 0.032,
-        "input": 0.0329,
-        "render": 4.3243,
-        "spawn": 0.0103,
-        "update": 0.0947,
-        "vfx": 1.5518
+        "ai": 0.0152,
+        "asset_loading": 1.8404,
+        "collision": 0.0367,
+        "events": 0.0325,
+        "input": 0.0324,
+        "render": 4.3097,
+        "spawn": 0.0104,
+        "update": 0.096,
+        "vfx": 1.5487
       }
     },
     {
@@ -284,7 +318,7 @@
     {
       "check": "vfx_weather_load",
       "status": "PASS",
-      "evidence": "Rain at 2000 particles plus the full GPU chain for 4 s: 59.467 fps, p99 interval 19.9047 ms, vfx section mean 4.3974 ms"
+      "evidence": "Rain at 2000 particles plus the full GPU chain for 4 s: 59.257 fps, p99 interval 21.7354 ms, vfx section mean 4.3858 ms"
     },
     {
       "check": "mv_import_gpu_night",
@@ -299,7 +333,7 @@
     {
       "check": "gameplay_systems_real_window",
       "status": "PASS",
-      "evidence": "JRPG stress playthrough (STR-01) in the real playable cocoa window with the canonical battle screen presenting every step (788 frames): 13/13 items, outcome victory, missing [], event errors 0. four_character_party: active party ('hero_01', 'hero_02', 'hero_03', 'hero_04'); jobs_secondary_jobs: hero_01 secondary job alchemist: +['revive']; passives: hero_01 passives ('passive_01', 'passive_02'); equipment_interactions: weapon_12 equipped on hero_01: grants ['ice_lance']; npc_interactions: talk interaction succeeded and set its switch; capture_companion: mender_wisp:2 captured in battle; hero_07 joined the roster; boost_resource: hero_01 boost 2 (momentum): 3 actions; multi_hit: fire_arc landed 3 hits from one command; weaknesses: fire_arc hit the boss's fire weakness: stagger 5.0 -> 2.0; guard_shield_resource: boss stagger shield 5.0 -> 1.0; break_mechanic: boss stagger shield broken after 5 turns (broken=True); turn_order_manipulation: the break pushed the boss's next turn back 4.167 -> 5.667; multi_phase_boss: boss phases ['phase_1', 'phase_3']",
+      "evidence": "JRPG stress playthrough (STR-01) in the real playable cocoa window with the canonical battle screen presenting every step (789 frames): 13/13 items, outcome victory, missing [], event errors 0. four_character_party: active party ('hero_01', 'hero_02', 'hero_03', 'hero_04'); jobs_secondary_jobs: hero_01 secondary job alchemist: +['revive']; passives: hero_01 passives ('passive_01', 'passive_02'); equipment_interactions: weapon_12 equipped on hero_01: grants ['ice_lance']; npc_interactions: talk interaction succeeded and set its switch; capture_companion: mender_wisp:2 captured in battle; hero_07 joined the roster; boost_resource: hero_01 boost 2 (momentum): 3 actions; multi_hit: fire_arc landed 3 hits from one command; weaknesses: fire_arc hit the boss's fire weakness: stagger 5.0 -> 2.0; guard_shield_resource: boss stagger shield 5.0 -> 1.0; break_mechanic: boss stagger shield broken after 6 turns (broken=True); turn_order_manipulation: the break pushed the boss's next turn back 4.167 -> 5.667; multi_phase_boss: boss phases ['phase_1', 'phase_3']",
       "screenshots": [
         "gameplay_battle_started.png",
         "gameplay_captured.png",
@@ -321,56 +355,6 @@
       ]
     },
     {
-      "check": "battle_without_art_pygame",
-      "status": "PASS",
-      "evidence": "pygame (cocoa): no combatant visuals / motion sequences; generated combatants=True, manifest fx played as VFX (peak 4), victory=True after 232 frames by real key events, back to the field=True, F5 save=True; 55.189 fps, p99 25.661 ms",
-      "screenshots": [
-        "no_art_pygame_battle.png"
-      ]
-    },
-    {
-      "check": "battle_without_art_moderngl",
-      "status": "PASS",
-      "evidence": "moderngl (cocoa): no combatant visuals / motion sequences; generated combatants=True, manifest fx played as VFX (peak 4), victory=True after 232 frames by real key events, back to the field=True, F5 save=True; 56.847 fps, p99 25.7537 ms",
-      "screenshots": [
-        "no_art_moderngl_battle.png"
-      ]
-    },
-    {
-      "check": "editor_to_runtime_playtest",
-      "status": "PASS",
-      "evidence": "Qt platform 'cocoa': Run Project started the runtime process=True, still running after 4 s=True, Stop Play returned=True, process exited=True"
-    },
-    {
-      "check": "editor_tools_gui",
-      "status": "PASS",
-      "evidence": "Qt platform 'cocoa': animation_editor=ok, action_timeline=ok, vfx_tool=ok, vfx_preview=ok, enemy_ai_preview=ok, multi_select_batch_fields=ok, problems_panel=ok, problems_clear_again=ok, script_completion=ok, debugger_live_game=ok",
-      "screenshots": [
-        "editor_animation.png",
-        "editor_action_timeline.png",
-        "editor_vfx.png",
-        "editor_enemy_ai.png",
-        "editor_records_multiselect.png",
-        "editor_problems.png",
-        "editor_script.png",
-        "editor_debugger.png"
-      ],
-      "note": "Screenshots are reviewed by the engineer; hands-on use by a person is not part of this check."
-    },
-    {
-      "check": "editor_d17_gui",
-      "status": "PASS",
-      "evidence": "Qt platform 'cocoa': export_game=ok, animation_states=ok, character_composition=ok, input_map=ok, behavior_trees=ok, profiler_dock=ok, project_file_untouched=ok",
-      "screenshots": [
-        "editor_animation_states.png",
-        "editor_character_composition.png",
-        "editor_input_map.png",
-        "editor_behavior_trees.png",
-        "editor_profiler.png"
-      ],
-      "note": "Nothing saved to the project. Hands-on use by a person is manual item M7."
-    },
-    {
       "check": "editor_workflows_gui",
       "status": "PASS",
       "evidence": "Qt platform 'cocoa', shown editor: asset_browser_thumbnails=ok, record_search=ok, record_copy_paste_cut_shortcuts=ok, batch_edit_and_undo=ok, hierarchy_drop_and_undo=ok, prefab_create_place_apply_revert=ok, pivot_edit_and_undo=ok, editor_event_runs_in_live_game=ok, play_from_selection_and_restart=ok, project_file_untouched=ok",
@@ -384,35 +368,20 @@
       "note": "Hands-on use by a person (mouse drags, typing) is manual item M7."
     },
     {
-      "check": "engine_systems_real_window",
+      "check": "battle_without_art_pygame",
       "status": "PASS",
-      "evidence": "Application.run with the pygame backend in a real cocoa window for 8.5 s (318 town frames, real clock, 8.00 s simulated): fixed steps 400 at 50 Hz (expected ~400); trigger events ['enter', 'exit', 'stay']; contact pairs [('Hero', 'Wall'), ('Hero', 'Zone')]; hits ['lunge']; frame events ['footstep']; action cues ['hitbox', 'movement', 'vfx']; camera lead 50..58 px; hero moved to Cave. fixed_update=ok, trigger_enter_stay_exit=ok, layers_masks=ok, hitbox=ok, frame_events=ok, action_timeline_cues=ok, look_ahead=ok, persistent_entity=ok",
+      "evidence": "pygame (cocoa): no combatant visuals / motion sequences; generated combatants=True, manifest fx played as VFX (peak 4), victory=True after 232 frames by real key events, back to the field=True, F5 save=True; 55.514 fps, p99 22.7301 ms",
       "screenshots": [
-        "engine_systems_town.png",
-        "engine_systems_cave.png"
-      ],
-      "note": "Movement is scripted (no keys); key-driven input is covered by the input / menus / battle checks."
-    },
-    {
-      "check": "battle_memory_real_window",
-      "status": "PASS",
-      "evidence": "12 boss battles entered and left in the real playable cocoa window: battle-scoped images left in the cache after each battle [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; 108 images released in total; process RSS per battle (MB) [257.0, 265.7, 260.2, 236.3, 210.7, 184.4, 235.7, 235.8, 212.2, 185.9, 184.5, 185.1]; growth from battle 2 to 12 -80.6 MB (limit +25 MB)",
-      "screenshots": [
-        "battle_memory_after_12.png"
+        "no_art_pygame_battle.png"
       ]
     },
     {
-      "check": "m10_compare",
+      "check": "battle_without_art_moderngl",
       "status": "PASS",
-      "evidence": "Same field frame on both backends in real cocoa windows. Without environment effects: mean |diff| 0.0, 0.0% pixels differ by >24. With lighting, shadow, water, bloom, grading, vignette: mean |diff| 12.56, 10.13% pixels differ; luma mean/std ModernGL (51.2, 46.0) vs pygame (59.6, 40.4); pygame reports unsupported ['bloom', 'grade', 'shadows', 'vignette'], ModernGL none. 30 s soak with rain (800 particles): moderngl 1792 frames 59.693 fps p99 23.2027 ms max 37.4966 ms errors 0 RSS +4.4 MB (+3.1 MB after the first 10 s); pygame 1768 frames 58.882 fps p99 18.0311 ms max 29.5587 ms errors 0 RSS -7.4 MB (-7.8 MB after the first 10 s)",
+      "evidence": "moderngl (cocoa): no combatant visuals / motion sequences; generated combatants=True, manifest fx played as VFX (peak 4), victory=True after 232 frames by real key events, back to the field=True, F5 save=True; 56.485 fps, p99 24.5702 ms",
       "screenshots": [
-        "m10_moderngl_pygame_diff.png",
-        "m10_moderngl_plain.png",
-        "m10_moderngl_effects.png",
-        "m10_pygame_plain.png",
-        "m10_pygame_effects.png"
-      ],
-      "note": "Numbers only. Whether the GPU effects look right (and whether the fallback is acceptable) is M10's visual confirmation, still NOT EXECUTED."
+        "no_art_moderngl_battle.png"
+      ]
     },
     {
       "check": "replay_RPG-02",
@@ -425,7 +394,7 @@
     {
       "check": "replay_RPG-04",
       "status": "PASS",
-      "evidence": "RPG-04: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_victory_rolls_the_enemy_drop_table_and_pity_survives_save_and_load: passed, 4 frames",
+      "evidence": "RPG-04: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_victory_rolls_the_enemy_drop_table_and_pity_survives_save_and_load: passed, 3 frames",
       "screenshots": [
         "replay/test_victory_rolls_the_enemy_drop_table_and_pity_survives_save_and_load.png"
       ]
@@ -442,7 +411,7 @@
     {
       "check": "replay_RPG-06",
       "status": "PASS",
-      "evidence": "RPG-06: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_crafting_screen_opened_by_event_crafts_in_the_runtime: passed, 16 frames; test_recipe_discovery_by_event_and_by_experiment: passed, 7 frames",
+      "evidence": "RPG-06: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_crafting_screen_opened_by_event_crafts_in_the_runtime: passed, 7 frames; test_recipe_discovery_by_event_and_by_experiment: passed, 6 frames",
       "screenshots": [
         "replay/test_crafting_screen_opened_by_event_crafts_in_the_runtime.png",
         "replay/test_recipe_discovery_by_event_and_by_experiment.png"
@@ -451,7 +420,7 @@
     {
       "check": "replay_RPG-07",
       "status": "PASS",
-      "evidence": "RPG-07: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_refusals_cost_success_rewards_and_one_time_use: passed, 4 frames; test_party_capability_and_cost_are_checked: passed, 3 frames; test_stat_checks_are_deterministic_and_failures_run_their_branch: passed, 3 frames; test_an_event_runs_an_interaction_and_branches_on_its_outcome: passed, 2 frames",
+      "evidence": "RPG-07: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_refusals_cost_success_rewards_and_one_time_use: passed, 6 frames; test_party_capability_and_cost_are_checked: passed, 3 frames; test_stat_checks_are_deterministic_and_failures_run_their_branch: passed, 3 frames; test_an_event_runs_an_interaction_and_branches_on_its_outcome: passed, 2 frames",
       "screenshots": [
         "replay/test_refusals_cost_success_rewards_and_one_time_use.png",
         "replay/test_party_capability_and_cost_are_checked.png",
@@ -479,7 +448,7 @@
     {
       "check": "replay_ANI-05",
       "status": "PASS",
-      "evidence": "ANI-05: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_controllers_actions_and_hits_run_in_the_game_session_field_update: passed, 22 frames; test_project_action_timelines_are_authored_as_records_and_played_from_events: passed, 3 frames",
+      "evidence": "ANI-05: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_controllers_actions_and_hits_run_in_the_game_session_field_update: passed, 4 frames; test_project_action_timelines_are_authored_as_records_and_played_from_events: passed, 32 frames",
       "screenshots": [
         "replay/test_controllers_actions_and_hits_run_in_the_game_session_field_update.png",
         "replay/test_project_action_timelines_are_authored_as_records_and_played_from_events.png"
@@ -488,7 +457,7 @@
     {
       "check": "replay_RPG-10",
       "status": "PASS",
-      "evidence": "RPG-10: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_spawned_enemy_chases_player_and_starts_battle_in_the_runtime: passed, 21 frames; test_spawn_zone_respawns_and_field_ai_pauses_outside_the_field: passed, 122 frames; test_touching_a_visible_encounter_starts_the_battle: passed, 2 frames",
+      "evidence": "RPG-10: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_spawned_enemy_chases_player_and_starts_battle_in_the_runtime: passed, 21 frames; test_spawn_zone_respawns_and_field_ai_pauses_outside_the_field: passed, 118 frames; test_touching_a_visible_encounter_starts_the_battle: passed, 2 frames",
       "screenshots": [
         "replay/test_spawned_enemy_chases_player_and_starts_battle_in_the_runtime.png",
         "replay/test_spawn_zone_respawns_and_field_ai_pauses_outside_the_field.png",
@@ -498,7 +467,7 @@
     {
       "check": "replay_WLD-01",
       "status": "PASS",
-      "evidence": "WLD-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_victory_advances_defeat_objectives_and_events_drive_quests: passed, 12 frames; test_quest_rows_and_menu_cursor: passed, 2 frames",
+      "evidence": "WLD-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_victory_advances_defeat_objectives_and_events_drive_quests: passed, 4 frames; test_quest_rows_and_menu_cursor: passed, 2 frames",
       "screenshots": [
         "replay/test_victory_advances_defeat_objectives_and_events_drive_quests.png",
         "replay/test_quest_rows_and_menu_cursor.png"
@@ -507,7 +476,7 @@
     {
       "check": "replay_WLD-02",
       "status": "PASS",
-      "evidence": "WLD-02: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_events_drive_reputation_counters_and_unlock_achievements: passed, 3 frames; test_achievement_and_bestiary_screens_from_the_pause_menu: passed, 22 frames",
+      "evidence": "WLD-02: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_events_drive_reputation_counters_and_unlock_achievements: passed, 4 frames; test_achievement_and_bestiary_screens_from_the_pause_menu: passed, 21 frames",
       "screenshots": [
         "replay/test_events_drive_reputation_counters_and_unlock_achievements.png",
         "replay/test_achievement_and_bestiary_screens_from_the_pause_menu.png"
@@ -516,7 +485,7 @@
     {
       "check": "replay_EVT-01",
       "status": "PASS",
-      "evidence": "EVT-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_authored_dialogue_choice_branch_and_encounter_run_in_order: passed, 3 frames; test_failed_world_command_stops_the_event_and_is_reported: passed, 3 frames; test_event_waiting_on_dialogue_survives_save_and_reload: passed, 4 frames; test_autorun_binding_runs_once_until_its_condition_turns_off: passed, 4 frames",
+      "evidence": "EVT-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_authored_dialogue_choice_branch_and_encounter_run_in_order: passed, 6 frames; test_failed_world_command_stops_the_event_and_is_reported: passed, 3 frames; test_event_waiting_on_dialogue_survives_save_and_reload: passed, 3 frames; test_autorun_binding_runs_once_until_its_condition_turns_off: passed, 4 frames",
       "screenshots": [
         "replay/test_authored_dialogue_choice_branch_and_encounter_run_in_order.png",
         "replay/test_failed_world_command_stops_the_event_and_is_reported.png",
@@ -537,7 +506,7 @@
     {
       "check": "replay_EVT-03",
       "status": "PASS",
-      "evidence": "EVT-03: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_common_events_autorun_and_parallel_follow_their_switches: passed, 9 frames; test_battle_event_fires_on_its_condition_once_and_holds_battle_input: passed, 4 frames",
+      "evidence": "EVT-03: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_common_events_autorun_and_parallel_follow_their_switches: passed, 8 frames; test_battle_event_fires_on_its_condition_once_and_holds_battle_input: passed, 5 frames",
       "screenshots": [
         "replay/test_common_events_autorun_and_parallel_follow_their_switches.png",
         "replay/test_battle_event_fires_on_its_condition_once_and_holds_battle_input.png"
@@ -546,7 +515,38 @@
     {
       "check": "b_items_replay_run",
       "status": "PASS",
-      "evidence": "pytest exit 0; 79 tests in 13 files, 459 frames presented in total; 79 passed in 18.41s"
+      "evidence": "pytest exit 0; 79 tests in 13 files, 456 frames presented in total; 79 passed in 17.55s"
+    },
+    {
+      "check": "engine_systems_real_window",
+      "status": "PASS",
+      "evidence": "Application.run with the pygame backend in a real cocoa window for 8.5 s (319 town frames, real clock, 8.01 s simulated): fixed steps 400 at 50 Hz (expected ~400); trigger events ['enter', 'exit', 'stay']; contact pairs [('Hero', 'Wall'), ('Hero', 'Zone')]; hits ['lunge']; frame events ['footstep']; action cues ['hitbox', 'movement', 'vfx']; camera lead 50..58 px; hero moved to Cave. fixed_update=ok, trigger_enter_stay_exit=ok, layers_masks=ok, hitbox=ok, frame_events=ok, action_timeline_cues=ok, look_ahead=ok, persistent_entity=ok",
+      "screenshots": [
+        "engine_systems_town.png",
+        "engine_systems_cave.png"
+      ],
+      "note": "Movement is scripted (no keys); key-driven input is covered by the input / menus / battle checks."
+    },
+    {
+      "check": "battle_memory_real_window",
+      "status": "PASS",
+      "evidence": "12 boss battles entered and left in the real playable cocoa window: battle-scoped images left in the cache after each battle [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; 108 images released in total; process RSS per battle (MB) [256.7, 263.9, 221.5, 196.9, 203.7, 172.7, 172.8, 172.8, 172.9, 173.0, 173.0, 173.1]; growth from battle 2 to 12 -90.8 MB (limit +25 MB)",
+      "screenshots": [
+        "battle_memory_after_12.png"
+      ]
+    },
+    {
+      "check": "m10_compare",
+      "status": "PASS",
+      "evidence": "Same field frame on both backends in real cocoa windows. Without environment effects: mean |diff| 0.0, 0.0% pixels differ by >24. With lighting, shadow, water, bloom, grading, vignette: mean |diff| 12.56, 10.13% pixels differ; luma mean/std ModernGL (51.2, 46.0) vs pygame (59.6, 40.4); pygame reports unsupported ['bloom', 'grade', 'shadows', 'vignette'], ModernGL none. 30 s soak with rain (800 particles): moderngl 1725 frames 57.466 fps p99 23.4224 ms max 34.8134 ms errors 0 RSS -12.8 MB (-3.8 MB after the first 10 s); pygame 1675 frames 55.772 fps p99 19.1381 ms max 30.6274 ms errors 0 RSS +0.2 MB (-1.1 MB after the first 10 s)",
+      "screenshots": [
+        "m10_moderngl_pygame_diff.png",
+        "m10_moderngl_plain.png",
+        "m10_moderngl_effects.png",
+        "m10_pygame_plain.png",
+        "m10_pygame_effects.png"
+      ],
+      "note": "Numbers only. Whether the GPU effects look right (and whether the fallback is acceptable) is M10's visual confirmation, still NOT EXECUTED."
     }
   ]
 }

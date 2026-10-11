@@ -190,7 +190,7 @@ Conditions applied to every item: unused or migrated first; a complete replaceme
 | A6 `CreateCharacterCommand` | **KEPT** (bundle branch removed) | — | it is the replacement | — | ported tests above |
 | A7 validation script | **RETIRED** | `scripts/validate_mv_character_creator.py`, `tests/test_mv_character_creator_e2e.py` | W-18 real-window check `mv_import_real_window` covers MV content end to end | no other user | — |
 | A8 generator tests | **RETIRED** | `test_character_generator.py`, `test_character_generator_topology.py`, `test_character_bundle_generator.py`, `test_rpg_maker_mv_generator_catalog.py`, `test_editor_mv_character_creator.py` | generic assertions ported first (A4 row) | — | 2206 → 2165 tests: the 41 removed tests covered only removed code |
-| A9 legacy battle presentation | **BLOCKED (kept)** | — | `CanonicalBattleAdapter` is real-machine validated, but it still falls back to the legacy world layer (`_draw_battle_world`) for projects without combatant visuals, and `legacy` stays the default adapter for manifests that do not choose one | replacement not complete for those projects | — |
+| A9 legacy battle presentation | **RETIRED in D19** (was BLOCKED in D18) | see Part E | `CanonicalBattleAdapter` for every project, including projects without battle art | see Part E | see Part E |
 | A10 runtime host | **KEPT** | — | none (only host) | — | — |
 
 **Other candidates reviewed in WS6 (kept):**
@@ -201,3 +201,39 @@ Conditions applied to every item: unused or migrated first; a complete replaceme
 | `assets/rpg_maker_mv_map_render.py` (`compose_mv_map_draws`) | MV import adapter (Part C, AST-13); `MVTileResolver` is used by the W-18 baker |
 | `runtime/reference_runtime.py` | Still the runtime for tile-map projects without a game-start player (e.g. the Reference World); `TileMapField` covers the others |
 | `runtime/preview.build_preview_registry` | Public API; now delegates to the single `default_component_registry()` |
+
+## Part E — D19: A9 legacy battle presentation retired (2026-10-11)
+
+D18 kept A9 because the canonical screen still fell back to the legacy world layer for projects without
+combatant visuals, and "legacy" was the default adapter. D19 completed the replacement first and then
+retired the legacy code.
+
+| | |
+|---|---|
+| **Decision** | RETIRED (`94a71b2`) |
+| **Removed** | `LegacyPygameBattleAdapter`; `PlayableTestRuntime._draw_battle_world`, `_draw_battle_hud`, `_play_fx` (the blocking effect loop), `_member_resource`, `_enemy_sprite`; the legacy branch of `_use_skill`; the "legacy" choice of `preview --battle-presentation`. The pygame renderer and every runtime backend are kept. |
+| **Replacement** | `CanonicalBattleAdapter` is the only battle screen. For any combatant without a `combatant_visuals` profile it builds a canonical sprite sheet (idle, attack lunge, hit flash, KO) from the manifest hero portrait or enemy sprite, or a silhouette. The default choreography plays the manifest skill fx as canonical VFX and its sfx as an audio cue. The boost readout moved into the action menu, and a missing background gets a generated backdrop. A manifest that still asks for "legacy" gets canonical (`legacy_requested` is recorded). |
+| **Dependency check** | No reference to the removed names in `src/`, `scripts/`, `tests/` (grep). Every manifest in the repository resolves to canonical. Generic Animation / Attachment, Battle Presentation and the runtime backends are untouched. |
+| **Parity** | Animation, VFX, camera, audio, hit-stop, multi-hit, status, capture, boost, victory / defeat / game-over, battle entry and exit, save / load — on art-less projects too (`tests/test_battle_without_art.py`). |
+| **Regression tests** | Full suite 2168 at `94a71b2` (now 2180). `test_battle_without_art.py` (3), `test_canonical_battle_presentation.py`, `test_playable_battle_loop.py`. Real windows: `battle_without_art_pygame` and `battle_without_art_moderngl` PASS (victory by real key events, back to the field, F5 save), plus every earlier battle check. |
+| **Backup** | `/Users/roger/Documents/Vscode/Asteria_backup_2026-10-11_cb15_legacy_battle.zip` (outside the repository) |
+| **Rollback** | `git revert 94a71b2` (single commit); its parent `37b0013` is the last state with the legacy screen. |
+
+**CB15 status after D19:** A1–A5, A7, A8 and A9 are retired; A6 (CreateCharacterCommand without the
+bundle branch) and A10 (runtime host) are kept. Nothing is BLOCKED. The four candidates reviewed in D18 are
+still imported by product code and stay.
+
+**D19 sweep (kept, uncertain → keep):** 23 modules under `src/asteria` are imported by neither `src/` nor
+`scripts/` (static grep, which can miss lazy imports): `reference_world`, `assets.rpg_maker_mv_weapon`,
+`assets.usability_gate`, `assets.autofix`, `presentation.reference_workload`, `presentation.attachment_commands`,
+`presentation.workspace_qt`, `presentation.stress_profile`, `presentation.production_state`,
+`presentation.session_persistence`, `presentation.render_batching`, `presentation.arpg_reference_workload`,
+`presentation.render_resources`, `presentation.project_integration`, `presentation.fidelity_import`,
+`presentation.art_e2e`, `presentation.executor_contracts`, `presentation.equipment_presets`,
+`editor.animation_preview`, `editor.drop_logic`, `editor.asset_attachment`, `editor.attachment_preview`,
+`validation.presentation_timing`.
+- Several are cited by the traceability matrix as generic capabilities (`render_resources` ENG-10, `autofix` and
+  `usability_gate` AST-11, `arpg_reference_workload` ARPG-01).
+- Most have their own tests.
+- None was retired in D19. Telling dead code from a generic capability that is not wired up yet needs a review
+  per module. That is a candidate list for a separate CB15 batch, which needs your approval per item.

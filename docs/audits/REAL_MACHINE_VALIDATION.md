@@ -3,7 +3,7 @@
 D14 #4. Run on a real macOS machine with real windows and devices: no dummy SDL drivers and no offscreen Qt. Each item is **PASS**, **FAIL**, **BLOCKED** (a required device or permission is missing) or **NOT EXECUTED** (needs a person). Nothing is marked PASS without a measurement.
 
 - **Machine:** macOS 27.0.1 arm64, Apple M5 GPU (OpenGL 4.1 Metal), Python 3.13.15, pygame-ce 2.5.8 (SDL 2.32.10), PySide6.
-- **Run:** 2026-10-11 (re-run after D16; items 11–19 added in D17 Phase 6).
+- **Run:** 2026-10-11 23:24 (full re-run in D19; items 11–19 added in D17 Phase 6, 20–28 in D18, 29–35 in D19).
 - **Command:** `python scripts/real_machine_validation.py docs/audits/evidence/real_machine`
 - **Raw results:** [`evidence/real_machine/results.json`](evidence/real_machine/results.json). Profile: [`battle_profile.json`](evidence/real_machine/battle_profile.json).
 
@@ -43,8 +43,17 @@ D14 #4. Run on a real macOS machine with real windows and devices: no dummy SDL 
 | 26 | Gameplay systems (STR-01) | **PASS** | JRPG stress playthrough presented in the real window: 13/13 items, victory. [break](evidence/real_machine/gameplay_broken.png) |
 | 27 | More menus (UI-01/02) | **PASS** | Quest log, shop buy, item use, equip cycle, settings, game over → title by real key events. |
 | 28 | Editor workflows | **PASS** | Thumbnails, record search/copy/paste/cut shortcuts, batch edit, hierarchy drop, prefab apply/propagate/revert, pivot, editor event in the live game, Play from Selection + Restart. |
+| 29 | Battle without art (A9 replacement) | **PASS** | No combatant visuals and no motion sequences. On both pygame and ModernGL: generated combatants, manifest fx played as canonical VFX, victory by real key events, back to the field, F5 save. pygame 55.5 fps / p99 22.7 ms; ModernGL 56.5 fps / p99 24.6 ms. [pygame](evidence/real_machine/no_art_pygame_battle.png), [ModernGL](evidence/real_machine/no_art_moderngl_battle.png) |
+| 30 | Session tests replayed in the real window (`b_items_replay`) | **PASS** (14 items) | 79 session-level integration tests from 13 files run unchanged inside the real playable cocoa window. After each session call the current state is drawn and flipped; nothing advances and nothing is loaded. Items: RPG-02/04/05/06/07/09/10, WLD-01/02, EVT-01/02/03, ANI-05, CMP-01. Tests that never drove the window are not counted. Per-test frames: [`b_items_replay.json`](evidence/real_machine/b_items_replay.json); screenshots in `evidence/real_machine/replay/`. These are session-API scenarios, not key-driven play. |
+| 31 | Engine systems in `Application.run` | **PASS** | The engine's own main loop with the pygame backend, real clock, 8 s. Fixed step: 400 steps at 50 Hz for 8.00 s. Trigger: enter / stay / exit. Layer / mask: Hero–Wall pairs, Ghost filtered out. Action-timeline hitbox hit. Frame events. Camera look-ahead 50–58 px. Persistent entity carried through a fade. Movement is scripted. [town](evidence/real_machine/engine_systems_town.png), [cave](evidence/real_machine/engine_systems_cave.png) |
+| 32 | Battle memory (ENG-10) | **PASS** | 12 boss battles: 0 battle-scoped images left after each, 108 released. RSS per battle settles at about 173 MB (battle 2 → 12: −90.8 MB, limit +25 MB). |
+| 33 | M10 automatable comparison | **PASS** | Same field frame on both backends. Without effects: identical. With effects: 10.1 % of pixels differ; pygame reports bloom / grade / shadows / vignette unsupported. 30 s soak with 800 rain particles, 0 errors on both: ModernGL 57.5 fps, p99 23.4 ms; pygame 55.8 fps, p99 19.1 ms. A separate 90 s ModernGL run held RSS flat (175.2–175.7 MB). [side by side + diff](evidence/real_machine/m10_moderngl_pygame_diff.png), [`m10_compare.json`](evidence/real_machine/m10_compare.json). Whether it looks right is M10. |
+| 34 | Editor dock tabs (D19) | **PASS** | Cocoa: one tab strip per dock group (the stale "Assets / Console" bar is gone); layout saved and restored; Reset Layout. `tests/test_editor_dock_tabs.py` also passes in Cocoa. |
+| 35 | Editor UI audit (D19) | **PASS** | `scripts/editor_ui_audit.py` in real Cocoa windows, 19 workspace surfaces at 1280×800 and 1440×900, all three palettes: 0 clipped / overflow / tiny-control defects. Minimum window 763×435 (was 1721×1772, larger than the 1470×840 screen). [before / after](evidence/ui_audit/before_after_theme.png), [palettes](evidence/ui_audit/themes_graphite_twilight_daylight.png) |
 
 **Full re-run 2026-10-11 (D18):** 29 PASS, 3 NOT EXECUTED (M1, M3, M4), 1 BLOCKED (controller, M2). An earlier commit message said "34 PASS"; that was a miscount — the results file is authoritative.
+
+**Full re-run 2026-10-11 23:24 (D19):** `results.json` holds 53 results: **49 PASS, 3 NOT EXECUTED (M1, M3, M4), 1 BLOCKED (controller, M2), 0 FAIL.** Items 34–35 are editor GUI runs outside that script (dock test in Cocoa, `editor_ui_audit.py`).
 
 ## Defect found and fixed by this run
 
@@ -105,7 +114,7 @@ Each item stays NOT EXECUTED or BLOCKED until someone runs its procedure and rec
 - **M7 — Editor hands-on (D17 tabs).** A person uses Animation States (drag nodes, add a transition, preview), Character Composition (socket, key at frame, attach, layer), Behavior Trees, Input Map, Event Flow (sequence editor) and the Profiler dock while playing. PASS if every action works with the mouse and keyboard without errors.
 - **M8 — Gamepad rebinding.** With a controller (M2), open Settings → Controls, rebind confirm to another pad button and use it. PASS if the new button works and the old one no longer does.
 - **M9 — D17 visual review.** Watch the boss intro, a cutscene with Esc skip, layered characters in battle and the follow camera (enable `field.camera.follow`). PASS if nothing looks wrong (popping, smearing, misplaced parts).
-- **M10 — VFX visual review.** Run the reference game with `--backend moderngl` after adding an Environment2D (lighting, a light, rain, bloom) to the field in the editor (do not save), then compare with `--backend pygame`. PASS if lights, shadows and bloom look right on the GPU, nothing flickers, and the pygame fallback stays playable.
+- **M10 — VFX visual review.** The automatable part is done (item 33: pixel diff, unsupported list, soak). What is left is the visual judgement. Run the reference game with `--backend moderngl` after adding an Environment2D (lighting, a light, rain, bloom) to the field in the editor (do not save), then compare with `--backend pygame`. PASS if lights, shadows and bloom look right on the GPU, nothing flickers, and the pygame fallback stays playable.
 - **M11 — MV import by a person.** File → Import RPG Maker MV Project… with your own MV project; play it. Record which MV commands the Console lists as not converted.
 
 ## Rerunning

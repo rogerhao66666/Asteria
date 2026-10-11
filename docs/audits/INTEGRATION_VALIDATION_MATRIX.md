@@ -50,3 +50,32 @@
 - RM 的 9 個 N/A 中，有 6 個（W-04、W-12、W-13、W-14、W-15、W-16）是「**路徑不存在**」：不是「還沒測」，而是「沒有可以測的整合」。另外 3 個（W-01、W-07、W-08）本來就沒有 runtime 段落。
 - **打包啟動完全沒有被驗證過。**
 - 結論：單元層非常紮實；**整合層和實機層是 closure 的主要阻擋**。
+
+## D19 現況（2026-10-11，依目前證據逐列重評）
+
+上方各表保留原始稽核時的結果作為歷史，這張表是目前的狀態。RM 證據見 `REAL_MACHINE_VALIDATION.md` 的項目編號。
+
+| ID | 流程 | 目前結果 | 依據 |
+|---|---|---|---|
+| W-01 | 建立 → 編輯 → 存檔 → 重開 | PASS | 原表 AR（Cocoa） |
+| W-02 | 匯入 asset → 動畫 → runtime 播放 | PASS | W-18 實機（MV 角色 sheet 在 field 播放，RM #20） |
+| W-03 | Entity + components + behavior | PASS | RM #31：`Application.run` 中的 collision、controller、animation、camera |
+| W-04 | Event → 狀態更新（Editor → Run） | PASS | RM #11 cutscene、#28 editor event 在 live game、#30 EVT-01／02／03 replay |
+| W-05 | 戰鬥 → 演出 → 結果 | PASS | canonical 是唯一戰鬥畫面（A9 已退役）；RM #6、#26、#29（無美術專案也能完整呈現） |
+| W-06 | 動畫 編輯 → 存檔 → 播放 | PASS | RM #10（animation editor）、#13（戰鬥中的分層動畫） |
+| W-07 | GUI → canonical data | PASS | 原表 |
+| W-08 | Python API → GUI parity | PASS（offscreen GS） | 原表；沒有 RM 段落 |
+| W-09 | Editor playtest → 返回 | PASS | RM #7 |
+| W-10 | 獨立打包啟動 | PASS | RM #18（.app 在 repo 外執行）；在 Finder 雙擊開啟仍為人工 M6 |
+| W-11 | 遊玩存檔 → 讀檔 → 繼續 | PASS | RM #8b（SIGKILL 後讀回）、#15（存檔欄位） |
+| W-12 | Attachment 撰寫 → runtime | PASS | RM #13、#30 CMP-01（field 與戰鬥） |
+| W-13 | Battle presentation 設定 → 遊玩 | PASS | RM #19（Character Composition 編輯器）＋#13 |
+| W-14 | Runtime RPG UI 設定 → 遊玩選單 | PASS | RM #14、#27（狀態、任務、商店、裝備、設定畫面） |
+| W-15 | 音訊 cue → 裝置播放 | PASS（裝置） | RM #3a；可聽確認與延遲仍為人工 M3、M4 |
+| W-16 | GPU 渲染路徑 | PASS | RM #22（GPU 畫面與合成畫面逐像素相同）、#23、#33（與 pygame 的量化比較）；目視為人工 M10 |
+| W-17 | 遺失／錯誤 asset | PASS | 原表 AR；#29（沒有任何圖片時改用剪影與產生的背景） |
+| W-18 | MV 專案 → Run | PASS | RM #20、#21 |
+| W-19 | 輸入 → 移動 → 鏡頭跟隨 | PASS（OS 事件佇列） | RM #2a、#16、#17；實體按鍵為人工 M1 |
+| W-20 | 回歸套件 | PASS | 2180 passed（`9576dda`） |
+
+19 個流程全部有整合證據（W-08 只有 GS）。剩下的人工項目只有實體按鍵（M1）、可聽音訊與延遲（M3、M4）、Finder 開啟 .app（M6）與 GPU 目視（M10）。
