@@ -39,6 +39,7 @@ STANDARD_WORLD_COMMANDS = (
     "INTERACT",
     "SET_NPC",
     "MOVE_NPC",
+    "SUMMON",
 )
 
 PRESENTATION_COMMANDS = (
@@ -81,6 +82,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "CAMERA_FOCUS": ("entity", "x", "y", "zoom", "blend", "ease"),
     "CAMERA_RELEASE": ("blend", "ease"),
     "CAMERA_SHAKE": ("intensity", "duration"),
+    "SUMMON": ("enemy_id", "actor_id", "count", "owner_id"),
 }
 
 
@@ -168,6 +170,19 @@ def register_standard_world_commands(router, session):
         session.presentation_requests.append(command)
         return command
 
+    def summon(command):
+        enemy_id, actor_id = command.args.get("enemy_id") or None, command.args.get("actor_id") or None
+        try:
+            return session.summon(
+                enemy_id=enemy_id,
+                actor_id=actor_id,
+                count=int(_amount(command, "count", 1)),
+                owner_id=command.args.get("owner_id") or None,
+            )
+        except Exception as exc:
+            raise WorldCommandError(str(exc)) from exc
+
+    router.register("SUMMON", summon)
     router.register("START_ENCOUNTER", start_encounter)
     router.register("TRANSFER", transfer)
     router.register("GIVE_ITEM", give_item)

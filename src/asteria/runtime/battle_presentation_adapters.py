@@ -239,7 +239,7 @@ class CanonicalBattleAdapter:
         kwargs = {name: value for name, value in kwargs.items() if value is not None}
         from asteria.presentation.battle_ui import BattleUiLayoutProfile
 
-        layout = kwargs.get("layout") or BattleUiLayoutProfile()
+        layout = self._layout = kwargs.get("layout") or BattleUiLayoutProfile()
         self.resolver = BattleVisualResolver(game.project, lambda uri: self.host.load_image(uri).get_size())
         sides = {side: [m.member_id for m in party.members] for side, party in game.battle.parties.items()}
         combatants = ()
@@ -458,6 +458,27 @@ class CanonicalBattleAdapter:
             "ko": {"frames": [3], "frame_duration": 0.5, "loop": True},
         }
         return sheet, (fw, fh), clips
+
+    def _show_new_combatants(self, game):
+        """Members that joined after the battle began (SUMMON, reinforcements) get a visual and appear."""
+        if not self.visuals_enabled:
+            return
+        shown = {v.member_id for v in self.screen.scene.combatants}
+        sides = {side: [m.member_id for m in party.members] for side, party in game.battle.parties.items()}
+        new = {side: [m for m in members if m not in shown] for side, members in sides.items()}
+        if not any(new.values()):
+            return
+        self._register_fallback_visuals(new, self._layout)
+        visuals = self.resolver.combatant_visuals(sides, self.placement_by_side, self._layout)
+        added = [v for v in visuals if v.member_id not in shown]
+        for visual in added:
+            self.screen.add_combatant(visual)
+            self.screen.member_heights[visual.member_id] = (
+                self.resolver.sprite_sheet(visual.sprite_sheet_asset_id).frames[0].height
+                / visual.source_pixels_per_logical_pixel
+            )
+        self.screen.display_names = self._display_names(game)
+        self.screen.animation.compositions.update(self._compositions(added))
 
     def _register_fallback_visuals(self, sides, layout):
         """Every combatant without a combatant_visuals profile gets a generated one (no legacy fallback)."""
@@ -773,6 +794,7 @@ class CanonicalBattleAdapter:
         if director is not None:
             self._camera_view = self._clamped_view(director, director.update(dt, (*self._camera_center, 1.0)))
         if game.battle is not None:
+            self._show_new_combatants(game)
             self.screen.sync_battle(game.battle, current_member_id=self.host._battle_actor())
             actor = self.host._battle_actor()
             skills = self.host._skills_for_actor(actor)

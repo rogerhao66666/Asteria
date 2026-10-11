@@ -103,6 +103,21 @@ class BattleScreenRuntime:
         self.member_heights: dict[str, float] = {}
         self.time = 0.0
 
+    def add_combatant(self, visual):
+        """Show a combatant that joined the battle after it started (summon, reinforcement)."""
+        from .battle import BattlePresentationScene
+
+        old = self.scene
+        scene = BattlePresentationScene(
+            old.scene_id, old.background_asset_id, (*old.combatants, visual), old.camera_preset_id
+        )
+        self.scene = scene
+        self.coordinator.scene = scene
+        self.camera_feedback.scene = scene
+        self.composer.scene = scene
+        self.animation.add_combatant(visual, scene)
+        return visual
+
     def _dispatch_presentation_events(self, values):
         values = tuple(values)
         if not values:

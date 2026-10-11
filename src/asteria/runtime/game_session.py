@@ -42,7 +42,7 @@ class GameSessionError(RuntimeError):
 class BattleLogEntry:
     """One canonical battle fact, in order, for presentation adapters to consume.
 
-    kinds: ``battle_started``, ``turn``, ``action``, ``gauge``, ``capture``, ``battle_finished``.
+    kinds: ``battle_started``, ``turn``, ``action``, ``gauge``, ``capture``, ``summoned``, ``battle_finished``.
     ``outcomes`` pairs each target with its non-mutating interaction outcome.
     """
 
@@ -628,6 +628,18 @@ class GameSessionRuntime:
             allocation.grant("ap", point_amounts["ap"])
         return dict(points)
 
+    def ensure_actor_progression(self, actor_id):
+        """The actor's progression record, created at level 1 with its authored classes when it joins later
+        (a captured companion, a guest) - so every party member can level up."""
+        actor_id = str(actor_id)
+        records = self.save.rpg_state.actor_progression
+        if actor_id not in records:
+            actor = self.project.rpg_database.actors[actor_id]
+            classes = tuple(a.class_id for a in actor.class_assignments)
+            primary = tuple(a.class_id for a in actor.class_assignments if a.role == "primary") or classes[:1]
+            records[actor_id] = ActorProgressionState(unlocked_class_ids=classes, active_class_ids=primary)
+        return records[actor_id]
+
     def grant_actor_experience(
         self, actor_id, amount, *, level_threshold=1000.0, ap_per_level=2.0, ability_points_per_level=1.0
     ):
@@ -641,7 +653,7 @@ class GameSessionRuntime:
         threshold = float(level_threshold)
         if amount < 0 or threshold <= 0:
             raise ValueError("experience amount must be >= 0 and threshold > 0")
-        state = self.save.rpg_state.actor_progression[actor_id]
+        state = self.ensure_actor_progression(actor_id)
         total = state.experience + amount
         old_level = state.level
         new_level = max(old_level, int(total // threshold) + 1)
@@ -851,6 +863,35 @@ class GameSessionRuntime:
             initiative=speed,
             initiative_stat="speed",
         )
+
+    def summon(self, *, enemy_id=None, actor_id=None, count=1, owner_id=None, join_current_round=True):
+        """Bring combatants into the running battle (RPG-08): ``enemy_id`` joins the enemies (a boss calling
+        minions), ``actor_id`` joins the heroes (a companion from the roster, e.g. one in reserve).
+        ``owner_id`` makes them the owner's summons. Returns the new member ids."""
+        if self.battle is None:
+            raise GameSessionError("summon needs a running battle")
+        if (enemy_id is None) == (actor_id is None):
+            raise GameSessionError("summon needs exactly one of enemy_id or actor_id")
+        battle = self.battle
+        added = []
+        for _ in range(max(1, int(count))):
+            if enemy_id is not None:
+                if str(enemy_id) not in self.project.rpg_database.enemies:
+                    raise GameSessionError(f"unknown enemy: {enemy_id}")
+                index = 1 + sum(1 for m in battle.members if m.split(":", 1)[0] == str(enemy_id))
+                while f"{enemy_id}:{index}" in battle.members:
+                    index += 1
+                member = self._enemy_member(str(enemy_id), index)
+            else:
+                if str(actor_id) not in self.project.rpg_database.actors:
+                    raise GameSessionError(f"unknown actor: {actor_id}")
+                if str(actor_id) in battle.members:
+                    raise GameSessionError(f"{actor_id} is already in the battle")
+                member = self._actor_member(str(actor_id))
+            battle.summon(member, owner_id=owner_id, join_current_round=join_current_round)
+            added.append(member.member_id)
+            self._log("summoned", member_id=member.member_id, data={"owner_id": owner_id})
+        return tuple(added)
 
     def start_encounter(self, encounter_id):
         if self.mode != "field":
@@ -1457,6 +1498,7 @@ class GameSessionRuntime:
         self.world.note_enemy(enemy_id, "captured")
         if rule.actor_id not in state.party_actor_ids:
             state.party_actor_ids = state.party_actor_ids + (rule.actor_id,)
+        self.ensure_actor_progression(rule.actor_id)
         self.refresh_achievements()
         return True
 

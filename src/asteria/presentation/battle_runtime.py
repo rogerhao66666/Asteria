@@ -288,27 +288,36 @@ class BattlePresentationRuntime:
         self.echoes = MotionEchoes()  # afterimages / trails (VFX-03), started by motion_fx timeline beats
         self._part_sheets = {}
         self._member_order = tuple(x.member_id for x in scene.combatants)
+        self._resolve_clip_set = resolve_clip_set
         for visual in scene.combatants:
-            clip_set = resolve_clip_set(visual.clip_set_id)
-            if clip_set is None:
-                raise ValueError(f"missing animation clip set: {visual.clip_set_id}")
-            sheet = resolve_sprite_sheet(visual.sprite_sheet_asset_id)
-            if sheet is None:
-                raise ValueError(f"missing sprite sheet: {visual.sprite_sheet_asset_id}")
-            clip_set.validate(sheet)
-            self._sprite_sheets[visual.member_id] = sheet
-            if visual.aura_sprite_sheet_asset_id is not None:
-                aura_sheet = resolve_sprite_sheet(visual.aura_sprite_sheet_asset_id)
-                if aura_sheet is None:
-                    raise ValueError(f"missing aura sprite sheet: {visual.aura_sprite_sheet_asset_id}")
-                if tuple(aura_sheet.frames) != tuple(sheet.frames):
-                    raise ValueError(
-                        f"aura sprite sheet frame layout must match character sheet for {visual.member_id}"
-                    )
-                self._aura_sprite_sheets[visual.member_id] = aura_sheet
-            self._combatants[visual.member_id] = BattleCombatantAnimator.create(visual, clip_set, self.timing_profile)
+            self._register_visual(visual)
         self.time = 0.0
         self.last_sequence = 0
+
+    def add_combatant(self, visual, scene):
+        """A combatant that joined mid-battle (summon, reinforcement); ``scene`` already lists it."""
+        self._register_visual(visual)
+        self.scene = scene
+        self._member_order = tuple(x.member_id for x in scene.combatants)
+
+    def _register_visual(self, visual):
+        resolve_clip_set, resolve_sprite_sheet = self._resolve_clip_set, self._resolve_sprite_sheet
+        clip_set = resolve_clip_set(visual.clip_set_id)
+        if clip_set is None:
+            raise ValueError(f"missing animation clip set: {visual.clip_set_id}")
+        sheet = resolve_sprite_sheet(visual.sprite_sheet_asset_id)
+        if sheet is None:
+            raise ValueError(f"missing sprite sheet: {visual.sprite_sheet_asset_id}")
+        clip_set.validate(sheet)
+        self._sprite_sheets[visual.member_id] = sheet
+        if visual.aura_sprite_sheet_asset_id is not None:
+            aura_sheet = resolve_sprite_sheet(visual.aura_sprite_sheet_asset_id)
+            if aura_sheet is None:
+                raise ValueError(f"missing aura sprite sheet: {visual.aura_sprite_sheet_asset_id}")
+            if tuple(aura_sheet.frames) != tuple(sheet.frames):
+                raise ValueError(f"aura sprite sheet frame layout must match character sheet for {visual.member_id}")
+            self._aura_sprite_sheets[visual.member_id] = aura_sheet
+        self._combatants[visual.member_id] = BattleCombatantAnimator.create(visual, clip_set, self.timing_profile)
 
     def combatant(self, member_id):
         return self._combatants[str(member_id)]
