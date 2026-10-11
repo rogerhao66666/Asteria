@@ -202,3 +202,75 @@ def test_boss_event_focuses_the_camera_on_the_boss_then_cuts_back_for_the_battle
         assert not runtime.field_camera.director.active
     finally:
         runtime.close()
+
+
+def _canonical_battle(resource_root, monkeypatch, encounter="boss_room", **presentation):
+    pytest.importorskip("pygame")
+    from test_playable_battle_loop import _boss_runtime
+
+    from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter
+
+    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+    monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
+    runtime = _boss_runtime(resource_root)
+    runtime.manifest["battle"].setdefault("presentation", {}).update(presentation)
+    runtime._battle_presentation = adapter = CanonicalBattleAdapter(runtime)
+    runtime.game.start_encounter(encounter)
+    adapter.begin()
+    return runtime, adapter
+
+
+def test_boss_battles_open_with_a_boss_intro_camera(resource_root, monkeypatch):
+    runtime, adapter = _canonical_battle(resource_root, monkeypatch)
+    try:
+        assert adapter.busy() and adapter.intro_boss_id.startswith("astral_tyrant")
+        layout = adapter.screen.composer.layout
+        zooms, centres = [], []
+        for _ in range(40):  # 0.8 s: blending in and holding
+            runtime._present_battle(0.02)
+            zooms.append(adapter._camera_view[2])
+            centres.append(adapter._camera_view[0])
+        boss = adapter.screen.scene.visual_for(adapter.intro_boss_id)
+        assert max(zooms) == pytest.approx(1.35) and abs(centres[-1] - boss.anchor.x) < 1.0
+        assert not adapter.screen.action_menu.view.total_count  # no commands during the intro
+        for _ in range(60):
+            runtime._present_battle(0.02)
+        assert adapter._camera_view == pytest.approx((layout.virtual_width / 2, layout.virtual_height / 2, 1.0))
+        assert not adapter.busy()
+    finally:
+        runtime.close()
+
+
+def test_boss_intro_can_be_switched_off(resource_root, monkeypatch):
+    runtime, adapter = _canonical_battle(resource_root, monkeypatch, boss_intro=False)
+    try:
+        assert not adapter.busy() and adapter._intro_until == 0.0
+    finally:
+        runtime.close()
+
+
+def test_field_follow_camera_follows_the_player_inside_the_map(runtime):
+    from asteria.runtime.field_camera import FieldViewCamera
+
+    camera = FieldViewCamera(960, 540, 3.0, follow={"zoom": 2.0, "smoothing": 0, "deadzone": (5, 5)})
+    camera.update(0.016, (0.0, 0.0))
+    start = camera.view
+    camera.update(0.016, (3.0, 0.0))
+    assert camera.view[0] == start[0]  # inside the dead zone
+    camera.update(0.016, (40.0, 0.0))
+    assert camera.view[0] == pytest.approx(35.0) and camera.view[2] == 2.0
+    camera.update(0.016, (10_000.0, 0.0))
+    x, y, w, h = camera.background_rect()
+    assert x + w >= 960 - 1e-6 and x <= 0  # clamped: never past the map edge
+    camera.director.focus(CameraShot(0, 0, zoom=2.5), blend=0)
+    camera.update(0.016, (10_000.0, 0.0))
+    assert camera.zoom == 2.5
+    camera.director.release(blend=0)
+    camera.update(0.016, (10_000.0, 0.0))
+    assert camera.zoom == 2.0  # back to the follow view
+    runtime.manifest["field"]["camera"] = {"follow": {"zoom": 1.5, "smoothing": 0}}
+    runtime._field_camera = None
+    runtime._ui_mode = "field"
+    runtime.game.set_player_position(20.0, 0.0)
+    runtime._frame([], 0.016)
+    assert runtime.field_camera.zoom == 1.5 and runtime.field_camera.view[0] > 0

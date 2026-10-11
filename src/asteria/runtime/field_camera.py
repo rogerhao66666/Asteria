@@ -27,11 +27,22 @@ class FieldCameraError(ValueError):
 
 
 class FieldViewCamera:
-    def __init__(self, width, height, scale, *, anchor_offset_y=65.0, max_zoom=3.0):
+    def __init__(self, width, height, scale, *, anchor_offset_y=65.0, max_zoom=3.0, follow=None):
         self.width, self.height, self.scale = float(width), float(height), float(scale)
         self.anchor_offset_y = float(anchor_offset_y)
         self.max_zoom = float(max_zoom)
         self.director = CameraDirector()
+        # Follow mode (manifest "field.camera"): zoom >= 1 around the player, dead zone, smoothing, look-ahead.
+        self.follow = None
+        if follow:
+            self.follow = {
+                "zoom": max(1.0, float(follow.get("zoom", 1.5))),
+                "smoothing": float(follow.get("smoothing", 6.0)),
+                "deadzone": tuple(float(v) for v in follow.get("deadzone", (6.0, 4.0))),
+                "look_ahead": tuple(float(v) for v in follow.get("look_ahead", (0.0, 0.0))),
+            }
+        self._base = None
+        self._look = (0.0, 0.0)
         self.view = self.home
 
     @property
@@ -44,8 +55,40 @@ class FieldViewCamera:
         s, a = self.scale, self.anchor_offset_y
         return (-self.width / (2 * s), -(self.height / 2 + a) / s, self.width / (2 * s), (self.height / 2 - a) / s)
 
-    def update(self, dt):
-        x, y, zoom = self.director.update(dt, self.home)
+    def _follow_base(self, dt, target, velocity):
+        from math import exp
+
+        cfg = self.follow
+        zoom = cfg["zoom"]
+        if target is None:
+            return self._base or self.home
+        vx, vy = velocity or (0.0, 0.0)
+        want = (
+            cfg["look_ahead"][0] * ((vx > 1e-6) - (vx < -1e-6)),
+            cfg["look_ahead"][1] * ((vy > 1e-6) - (vy < -1e-6)),
+        )
+        if not (abs(vx) > 1e-6 or abs(vy) > 1e-6):
+            want = self._look
+        k = 1.0 if cfg["smoothing"] <= 0 or dt <= 0 else 1.0 - exp(-cfg["smoothing"] * dt)
+        self._look = tuple(a + (b - a) * k for a, b in zip(self._look, want))
+        goal_x, goal_y = target[0] + self._look[0], target[1] + self._look[1]
+        if self._base is None:
+            cx, cy = goal_x, goal_y
+        else:
+            cx, cy = self._base[0], self._base[1]
+            dz_x, dz_y = cfg["deadzone"]
+            if abs(goal_x - cx) > dz_x:
+                cx += (goal_x - cx - dz_x * (1 if goal_x > cx else -1)) * k
+            if abs(goal_y - cy) > dz_y:
+                cy += (goal_y - cy - dz_y * (1 if goal_y > cy else -1)) * k
+        view_w, view_h = self.width / (self.scale * zoom), self.height / (self.scale * zoom)
+        cx, cy = clamp_center_to_bounds(cx, cy, view_w, view_h, self.bounds)
+        self._base = (cx, cy, zoom)
+        return self._base
+
+    def update(self, dt, target=None, velocity=None):
+        base = self._follow_base(dt, target, velocity) if self.follow else self.home
+        x, y, zoom = self.director.update(dt, base)
         x, y = x - self.director.shake_offset[0], y - self.director.shake_offset[1]
         zoom = max(1.0, min(self.max_zoom, zoom))
         view_w, view_h = self.width / (self.scale * zoom), self.height / (self.scale * zoom)

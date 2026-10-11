@@ -271,6 +271,46 @@ class CanonicalBattleAdapter:
         self._cursor = self._clock = self._last_impact = 0.0
         self._schedule = []
         self._shown_down = {}
+        self._start_boss_intro(game, layout)
+
+    # -- boss intro camera (CAM-02) -------------------------------------------------------------------
+    BOSS_INTRO = {"zoom": 1.35, "blend": 0.5, "hold": 0.9}
+
+    def _start_boss_intro(self, game, layout):
+        """Encounters tagged "boss" open with the camera on the boss, then ease back to the whole field."""
+        from asteria.runtime.camera import CameraDirector, CameraShot
+
+        self.camera_director = CameraDirector()
+        self._camera_center = (layout.virtual_width / 2, layout.virtual_height / 2)
+        self._intro_until = 0.0
+        settings = self.host.manifest.get("battle", {}).get("presentation", {})
+        encounter = game.project.rpg_database.encounters.get(game.encounter_id)
+        if not self.visuals_enabled or encounter is None or "boss" not in encounter.tags:
+            return
+        if settings.get("boss_intro", True) is False:
+            return
+        db = game.project.rpg_database
+        bosses = [
+            m.member_id
+            for m in game.battle.parties.get("enemies", ()).members
+            if "boss" in getattr(db.enemies.get(m.member_id.split(":", 1)[0]), "tags", ())
+        ]
+        if not bosses:
+            return
+        visual = self.screen.scene.visual_for(bosses[0])
+        height = self.screen.member_heights.get(bosses[0], 0.0)
+        intro = (
+            {**self.BOSS_INTRO, **dict(settings.get("boss_intro") or {})}
+            if isinstance(settings.get("boss_intro"), dict)
+            else self.BOSS_INTRO
+        )
+        shot = CameraShot(visual.anchor.x, visual.anchor.y - height * 0.5, zoom=float(intro["zoom"]))
+        self.camera_director.update(0.0, (*self._camera_center, 1.0))
+        self.camera_director.focus(shot, blend=float(intro["blend"]))
+        release_at = float(intro["blend"]) + float(intro["hold"])
+        self._intro_until = release_at + float(intro["blend"])
+        self.intro_boss_id = bosses[0]
+        self._at(release_at, lambda: self.camera_director.release(blend=float(intro["blend"])))
 
     @staticmethod
     def _display_names(game):
@@ -317,10 +357,11 @@ class CanonicalBattleAdapter:
             self.screen.consume_events(events)
 
     def busy(self):
-        """True while queued action choreography has not finished playing."""
+        """True while queued action choreography (or the boss intro) has not finished playing."""
         if self.screen is None:
             return False
-        return bool(self._schedule) or self._clock < self._cursor - 1e-9
+        intro = self._clock < getattr(self, "_intro_until", 0.0) - 1e-9
+        return intro or bool(self._schedule) or self._clock < self._cursor - 1e-9
 
     def particle_count(self):
         return 0 if self.screen is None else len(self.screen.feedback.vfx)
@@ -544,6 +585,9 @@ class CanonicalBattleAdapter:
             dt -= frozen  # the presentation clock and animations hold during hit-stop
         self._clock += dt
         self._release_due()
+        director = getattr(self, "camera_director", None)
+        if director is not None:
+            self._camera_view = director.update(dt, (*self._camera_center, 1.0))
         if game.battle is not None:
             self.screen.sync_battle(game.battle, current_member_id=self.host._battle_actor())
             actor = self.host._battle_actor()
@@ -567,12 +611,23 @@ class CanonicalBattleAdapter:
             self.host._draw_battle_world(show_labels=False)
             return None
         layout = self.screen.composer.layout
-        base = Camera2D(width=layout.virtual_width, height=layout.virtual_height)
+        cx, cy, zoom = getattr(self, "_camera_view", None) or (layout.virtual_width / 2, layout.virtual_height / 2, 1.0)
+        base = Camera2D(
+            cx - layout.virtual_width / (2 * zoom),
+            cy - layout.virtual_height / (2 * zoom),
+            layout.virtual_width,
+            layout.virtual_height,
+            zoom,
+        )
         textures = None
         if self.screen.scene.combatants:
             background = self.host.load_image(self.screen.scene.background_asset_id)
+            # The background zooms with the camera (the battlefield is the virtual layout rectangle).
+            bx, by = base.world_to_screen(0.0, 0.0)
+            scale = self.host.width / layout.virtual_width
+            size = (round(self.host.width * zoom), round(self.host.height * zoom))
             self.host.screen.blit(
-                self.host.pg.transform.smoothscale(background, (self.host.width, self.host.height)), (0, 0)
+                self.host.pg.transform.smoothscale(background, size), (round(bx * scale), round(by * scale))
             )
             textures = self.textures
         else:

@@ -278,7 +278,9 @@ class PlayableTestRuntime:
         camera = getattr(self, "_field_camera", None)
         if camera is None:
             scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0))
-            camera = self._field_camera = FieldViewCamera(self.width, self.height, scale)
+            camera = self._field_camera = FieldViewCamera(
+                self.width, self.height, scale, follow=self.manifest["field"].get("camera", {}).get("follow")
+            )
         return camera
 
     @property
@@ -1731,7 +1733,11 @@ class PlayableTestRuntime:
             if self.game.mode == "field" and self._ui_mode == "field":
                 with self.profiler.section("update"):
                     self.game.field_update(dt)
-            self.field_camera.update(dt)
+            pt = self.game.player.get(Transform)
+            last = getattr(self, "_last_player_xy", None)
+            velocity = ((pt.x - last[0]) / dt, (pt.y - last[1]) / dt) if last is not None and dt > 0 else None
+            self._last_player_xy = (pt.x, pt.y)
+            self.field_camera.update(dt, (pt.x, pt.y), velocity)
             self.field_effects.update(dt)
             if self.game.mode == "battle":
                 self._turn_actor = None
