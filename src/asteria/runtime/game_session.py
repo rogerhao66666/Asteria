@@ -176,12 +176,29 @@ class GameSessionRuntime:
                 ),
                 FieldAISystem(blocking, rng=random.Random(f"{scene.id}:ai"), default_target_id=self.player.id),
             )
+            from asteria.runtime.behavior_tree import BehaviorTreeSystem
             from asteria.runtime.character_control import CharacterControllerSystem, HitboxSystem
             from asteria.runtime.entity_actions import EntityActionSystem
 
             hits = HitboxSystem()
-            # ENG-02 / ENG-17 / ANI-05: controllers, entity action timelines and hit detection
-            systems = (*systems, EntityActionSystem(hitboxes=hits), CharacterControllerSystem(), hits)
+            behavior = BehaviorTreeSystem(
+                self.project.rpg_database.behavior_trees,  # RPG-09
+                target_id=self.player.id,
+                switches=self.save.event_context.get_switch,
+                set_switch=self.save.event_context.set_switch,
+                start_encounter=lambda encounter_id: setattr(self, "_pending_tree_encounter", encounter_id),
+                rng=random.Random(f"{scene.id}:bt"),
+            )
+            # ENG-02 / ENG-17 / ANI-05 / RPG-09: behavior trees, entity action timelines, controllers, hits
+            spawn, ai = systems
+            systems = {
+                "spawn": spawn,
+                "ai": ai,
+                "behavior": behavior,
+                "actions": EntityActionSystem(hitboxes=hits),
+                "controllers": CharacterControllerSystem(),
+                "hits": hits,
+            }
             self._field_simulation[scene.id] = systems
         return systems
 
@@ -189,23 +206,34 @@ class GameSessionRuntime:
         """Advance field enemies and spawn zones, then start any touched visible encounter."""
         if self.mode != "field" or self.event_busy:
             return None
-        spawn, ai, actions, controllers, hits = self._field_systems()
+        systems = self._field_systems()
         with self.profiler.section("spawn"):
-            spawn.update(self.scene, float(dt))
+            systems["spawn"].update(self.scene, float(dt))
         self._frame_collision_world = None
         with self.profiler.section("ai"):
-            ai.update(self.scene, float(dt))
+            systems["ai"].update(self.scene, float(dt))
+            systems["behavior"].update(self.scene, float(dt))
         self._frame_collision_world = None
-        actions.update(self.scene, float(dt))
+        systems["actions"].update(self.scene, float(dt))
         with self.profiler.section("collision"):
-            controllers.update(self.scene, float(dt))
-            hits.update(self.scene, float(dt))
+            systems["controllers"].update(self.scene, float(dt))
+            systems["hits"].update(self.scene, float(dt))
+        pending = getattr(self, "_pending_tree_encounter", None)
+        if pending:
+            self._pending_tree_encounter = None
+            self.start_encounter(pending)
+            return pending
         return self.check_visible_encounter()
+
+    @property
+    def behavior_trees(self):
+        """Behavior tree runtime (RPG-09) for the current scene; ``status`` per entity."""
+        return self._field_systems()["behavior"]
 
     @property
     def entity_actions(self):
         """Action timelines on field entities (ANI-05) for the current scene."""
-        return self._field_systems()[2]
+        return self._field_systems()["actions"]
 
     def play_action(self, entity_key, timeline_id):
         """Start a project action timeline (gameplay library) on a field entity — scripts and PLAY_ACTION."""
@@ -219,7 +247,7 @@ class GameSessionRuntime:
     @property
     def hits(self):
         """Hitbox / hurtbox detection (ENG-17) for the current scene; ``hits.events`` per update."""
-        return self._field_systems()[4]
+        return self._field_systems()["hits"]
 
     def check_visible_encounter(self):
         """Start the encounter of a field enemy (VisibleEncounterComponent) the player touches."""

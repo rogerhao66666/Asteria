@@ -155,7 +155,7 @@ def test_actor_ability_state_and_snapshot_roundtrip():
 def test_rpg_database_v6_persists_passives_and_evolutions_and_v5_remains_readable():
     db = make_db()
     raw = db.to_data()
-    assert raw["version"] == 27
+    assert raw["version"] == 28
     loaded = RpgDatabase.from_data(copy.deepcopy(raw))
     assert "battle_instinct" in loaded.passives
     assert "fireball_to_firestorm" in loaded.ability_evolutions

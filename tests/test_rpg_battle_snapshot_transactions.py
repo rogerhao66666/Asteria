@@ -192,7 +192,7 @@ def test_database_v20_persists_transaction_policy_and_v19_is_backward_readable()
         )
     )
     raw = db.to_data()
-    assert raw["version"] == 27
+    assert raw["version"] == 28
     restored = RpgDatabase.from_data(raw)
     assert restored.action_transactions["meteor"].interrupt_cost == InterruptCostPolicy.REFUND
     old = json.loads(json.dumps(raw))

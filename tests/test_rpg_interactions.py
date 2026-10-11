@@ -152,7 +152,7 @@ def test_database_v10_owns_rules_and_checks_and_reads_v9():
     db.add_interaction_rule(InteractionRule("weak", source_tags_all=("fire",), multiplier=2))
     db.add_outcome_check(OutcomeCheckDefinition("hit", 0.9))
     raw = db.to_data()
-    assert raw["version"] == 27
+    assert raw["version"] == 28
     restored = RpgDatabase.from_data(raw)
     assert "weak" in restored.interaction_rules and "hit" in restored.outcome_checks
 

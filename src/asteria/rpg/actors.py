@@ -699,6 +699,7 @@ class RpgDatabase:
         self.capture_rules = {}
         self.world_interactions = {}
         self.drop_tables = {}
+        self.behavior_trees = {}
         self.quests = {}
 
     def add_actor(self, value):
@@ -1015,6 +1016,11 @@ class RpgDatabase:
 
         return self._add_keyed(self.achievements, value, AchievementDefinition, "achievement_id", "achievement")
 
+    def add_behavior_tree(self, value):
+        from .behavior_tree import BehaviorTree
+
+        return self._add_keyed(self.behavior_trees, value, BehaviorTree, "tree_id", "behavior tree")
+
     def add_drop_table(self, value):
         from .drop_tables import DropTable
 
@@ -1179,6 +1185,10 @@ class RpgDatabase:
             for equipment_id in equipment_set.equipment_ids:
                 if equipment_id not in self.equipment:
                     errors.append(f"equipment set {equipment_set.set_id} references unknown equipment {equipment_id}")
+        for tree in self.behavior_trees.values():
+            for encounter_id in sorted(tree.encounter_ids()):
+                if encounter_id not in self.encounters:
+                    errors.append(f"behavior tree {tree.tree_id} references unknown encounter {encounter_id}")
         for table in self.drop_tables.values():
             for item_id in sorted(table.item_ids()):
                 if item_id not in self.items:
@@ -1260,7 +1270,7 @@ class RpgDatabase:
     def to_data(self):
         return {
             "schema": "asteria.rpg.database",
-            "version": 27,
+            "version": 28,
             "actors": [self.actors[k].to_data() for k in sorted(self.actors)],
             "classes": [self.classes[k].to_data() for k in sorted(self.classes)],
             "items": [self.items[k].to_data() for k in sorted(self.items)],
@@ -1307,6 +1317,7 @@ class RpgDatabase:
             "quests": [self.quests[k].to_data() for k in sorted(self.quests)],
             "world_interactions": [self.world_interactions[k].to_data() for k in sorted(self.world_interactions)],
             "drop_tables": [self.drop_tables[k].to_data() for k in sorted(self.drop_tables)],
+            "behavior_trees": [self.behavior_trees[k].to_data() for k in sorted(self.behavior_trees)],
         }
 
     @classmethod
@@ -1339,6 +1350,7 @@ class RpgDatabase:
             25,
             26,
             27,
+            28,
         }:
             raise ValueError("unsupported RPG database")
         result = cls()
@@ -1472,6 +1484,11 @@ class RpgDatabase:
 
             for x in data.get("battle_session_rules", ()):
                 result.add_battle_session_rules(BattleSessionRules.from_data(x))
+        if data["version"] >= 28:
+            from .behavior_tree import BehaviorTree
+
+            for x in data.get("behavior_trees", ()):
+                result.add_behavior_tree(BehaviorTree.from_data(x))
         if data["version"] >= 27:
             from .drop_tables import DropTable
 

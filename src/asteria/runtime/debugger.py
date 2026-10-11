@@ -71,7 +71,8 @@ class RuntimeDebugger:
         ai_states = {}
         simulation = getattr(game, "_field_simulation", {}).get(game.scene.id)
         if simulation:
-            ai_states = {k: v.mode for k, v in simulation[1].states.items()}
+            ai_states = {k: v.mode for k, v in simulation["ai"].states.items()}
+            ai_states.update({k: f"tree:{v}" for k, v in simulation["behavior"].status.items()})
         for entity in game.scene.entities():
             if not entity.has(Transform) or entity is game.player:
                 continue

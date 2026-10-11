@@ -166,7 +166,7 @@ def test_database_v15_owns_action_timings_and_v14_backward_read():
     db = RpgDatabase()
     db.add_action_timing(ActionTimingDefinition("meteor", cast_time=5))
     data = db.to_data()
-    assert data["version"] == 27
+    assert data["version"] == 28
     restored = RpgDatabase.from_data(data)
     assert restored.action_timings["meteor"].cast_time == 5
     old = RpgDatabase().to_data()

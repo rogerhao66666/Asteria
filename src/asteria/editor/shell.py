@@ -170,6 +170,11 @@ class AsteriaEditorWindow(QMainWindow):
         self.enemy_ai_editor = EnemyAIEditorWidget(self.document, self)
         self.enemy_ai_editor.changed.connect(self.refresh_all)
         self.rpg_workspace.addTab(self.enemy_ai_editor, "Enemy AI")
+        from .behavior_tree_widget import BehaviorTreeEditorWidget
+
+        self.behavior_tree_editor = BehaviorTreeEditorWidget(self.document, self)
+        self.behavior_tree_editor.changed.connect(self.refresh_all)
+        self.rpg_workspace.addTab(self.behavior_tree_editor, "Behavior Trees")
         self.battle_authoring = FamilyHostWidget("Battle Rules", self.authoring_controllers.battle_categories, self)
         self.presentation_authoring = FamilyHostWidget(
             "Battle Presentation", self.authoring_controllers.presentation_categories, self
@@ -1170,6 +1175,7 @@ class AsteriaEditorWindow(QMainWindow):
         for name in (
             "game_systems_editor",
             "enemy_ai_editor",
+            "behavior_tree_editor",
             "animation_editor",
             "action_timeline_editor",
             "vfx_editor",
