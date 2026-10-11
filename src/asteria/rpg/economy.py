@@ -159,6 +159,9 @@ class ShopRuntime:
             raise ShopError(f"{shop.shop_id} has only {remaining} {entry.item_id}")
         if not self.can_afford(entry.buy_prices, quantity):
             raise ShopError(f"cannot afford {quantity} {entry.item_id}")
+        room = self.inventory.room_for(entry.item_id) if hasattr(self.inventory, "room_for") else None
+        if room is not None and room < quantity:  # never charge for items the bag cannot hold (RPG-01 rules)
+            raise ShopError(f"no room for {quantity} {entry.item_id} (room for {room})")
         change = {k: -v * quantity for k, v in entry.buy_prices.items()}
         for key, delta in change.items():
             self.currencies[key] = self.currencies.get(key, 0.0) + delta

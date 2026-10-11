@@ -298,18 +298,127 @@ class ItemDefinition:
         )
 
 
+INVENTORY_OVERFLOW = ("fill", "reject")
+
+
+@dataclass(frozen=True, slots=True)
+class InventoryRules:
+    """How much the party can carry (RPG-01). Every rule is optional; with none, the bag is unlimited.
+
+    * ``stack_limits``  - an item stacks up to its own ``stack_limit`` (``stack_limit=1`` makes it unique)
+    * ``max_kinds``     - how many different items fit (``None`` = no limit); items carrying one of
+      ``exempt_tags`` (key items by default) never take a place
+    * ``overflow``      - what happens when an amount does not fit: ``"fill"`` keeps what fits, ``"reject"``
+      keeps none of it. What did not fit is reported in ``Inventory.overflow``.
+    """
+
+    rules_id: str
+    display_name: str = ""
+    stack_limits: bool = True
+    max_kinds: int | None = None
+    exempt_tags: tuple[str, ...] = ("item.key",)
+    overflow: str = "fill"
+
+    def __init__(
+        self,
+        rules_id,
+        display_name="",
+        *,
+        stack_limits=True,
+        max_kinds=None,
+        exempt_tags=("item.key",),
+        overflow="fill",
+    ):
+        if max_kinds is not None:
+            max_kinds = int(max_kinds)
+            if max_kinds < 1:
+                raise ValueError("max_kinds must be >= 1 or None")
+        if overflow not in INVENTORY_OVERFLOW:
+            raise ValueError(f"overflow must be one of {INVENTORY_OVERFLOW}")
+        object.__setattr__(self, "rules_id", _id(rules_id, "rules_id"))
+        object.__setattr__(self, "display_name", str(display_name or ""))
+        object.__setattr__(self, "stack_limits", bool(stack_limits))
+        object.__setattr__(self, "max_kinds", max_kinds)
+        object.__setattr__(self, "exempt_tags", _tags(exempt_tags))
+        object.__setattr__(self, "overflow", overflow)
+
+    def to_data(self):
+        return {
+            "schema": "asteria.rpg.inventory_rules",
+            "version": 1,
+            "rules_id": self.rules_id,
+            "display_name": self.display_name,
+            "stack_limits": self.stack_limits,
+            "max_kinds": self.max_kinds,
+            "exempt_tags": list(self.exempt_tags),
+            "overflow": self.overflow,
+        }
+
+    @classmethod
+    def from_data(cls, data):
+        if data.get("schema") != "asteria.rpg.inventory_rules" or data.get("version") != 1:
+            raise ValueError("unsupported inventory rules")
+        return cls(
+            data["rules_id"],
+            data.get("display_name", ""),
+            stack_limits=data.get("stack_limits", True),
+            max_kinds=data.get("max_kinds"),
+            exempt_tags=data.get("exempt_tags", ("item.key",)),
+            overflow=data.get("overflow", "fill"),
+        )
+
+
 class Inventory:
     def __init__(self):
         self._counts = {}
+        self.rules = None  # InventoryRules; None = unlimited (set by the game session)
+        self._lookup = lambda item_id: None
+        self.overflow = []  # (item_id, amount that did not fit), newest last
+
+    def configure(self, rules, lookup):
+        """Apply ``rules`` (or ``None``); ``lookup(item_id)`` gives the item's definition (stack_limit, tags)."""
+        self.rules = rules
+        self._lookup = lookup
+        return self
 
     def count(self, item_id):
         return self._counts.get(str(item_id), 0)
+
+    def room_for(self, item_id):
+        """How many more of ``item_id`` fit (``None`` = unlimited)."""
+        rules = self.rules
+        if rules is None:
+            return None
+        item_id = str(item_id)
+        definition = self._lookup(item_id)
+        room = None
+        limit = getattr(definition, "stack_limit", None) if rules.stack_limits else None
+        if limit is not None:
+            room = max(0, int(limit) - self.count(item_id))
+        if rules.max_kinds is not None and self.count(item_id) == 0 and not self._exempt(item_id):
+            if self.kinds_used() >= rules.max_kinds:
+                room = 0
+        return room
+
+    def kinds_used(self):
+        return sum(1 for item_id in self._counts if not self._exempt(item_id))
+
+    def _exempt(self, item_id):
+        tags = set(getattr(self._lookup(item_id), "tags", ()) or ())
+        return bool(self.rules is not None and tags & set(self.rules.exempt_tags))
 
     def add(self, item_id, amount=1):
         item_id = _id(item_id, "item_id")
         amount = int(amount)
         if amount < 1:
             raise ValueError("amount must be >= 1")
+        room = self.room_for(item_id)
+        if room is not None and amount > room:
+            if self.rules.overflow == "reject" or room == 0:
+                self.overflow.append((item_id, amount))
+                return self.count(item_id)
+            self.overflow.append((item_id, amount - room))
+            amount = room
         self._counts[item_id] = self.count(item_id) + amount
         return self._counts[item_id]
 
@@ -340,7 +449,7 @@ class Inventory:
             raise ValueError("unsupported inventory")
         result = cls()
         for key, value in data["counts"].items():
-            result.add(key, value)
+            result._counts[_id(key, "item_id")] = int(value)
         return result
 
     def replace_from(self, other):

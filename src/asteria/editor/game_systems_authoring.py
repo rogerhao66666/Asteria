@@ -23,6 +23,7 @@ from asteria.rpg import (
     ShopDefinition,
 )
 from asteria.rpg.drop_tables import RARITIES, DropTable
+from asteria.rpg.items import INVENTORY_OVERFLOW, InventoryRules
 from asteria.rpg.quests import OBJECTIVE_KINDS
 from asteria.rpg.world_interactions import OPERATORS, VERBS, WorldInteraction
 from asteria.rpg.world_record import ACHIEVEMENT_KINDS
@@ -126,6 +127,14 @@ _DROP = (
 )
 
 FORMS = {
+    "inventory_rules": (
+        F("rules_id", "Rules ID", "id"),
+        F("display_name", "Name", "text", default=""),
+        F("stack_limits", "Items Stack Up to Their Stack Limit", "bool", default=True),
+        F("max_kinds", "Most Different Items Carried (empty = no limit)", "optional_int", default=None),
+        F("exempt_tags", "Tags That Never Take a Place (key items)", "string_list", default=("item.key",)),
+        F("overflow", "When Items Do Not Fit", "choice", choices=INVENTORY_OVERFLOW, default="fill"),
+    ),
     "drop_tables": (
         F("table_id", "Table ID", "id"),
         F("display_name", "Name", "text", default=""),
@@ -267,6 +276,7 @@ def _templates():
         "capture_rules": lambda key, c: CaptureRule(key, next(iter(sorted(c.database.actors)), "actor")),
         "world_interactions": lambda key, c: WorldInteraction(key, key),
         "drop_tables": lambda key, c: DropTable(key, key),
+        "inventory_rules": lambda key, c: InventoryRules(key, key),
     }
 
 
@@ -279,6 +289,7 @@ KINDS = (
     _Kind("capture_rules", "Capture Rules", "capture_rules", "enemy_id", CaptureRule),
     _Kind("world_interactions", "World Interactions", "world_interactions", "interaction_id", WorldInteraction),
     _Kind("drop_tables", "Drop Tables", "drop_tables", "table_id", DropTable),
+    _Kind("inventory_rules", "Inventory Rules", "inventory_rules", "rules_id", InventoryRules),
 )
 _BY_ID = {k.kind_id: k for k in KINDS}
 

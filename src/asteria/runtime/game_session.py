@@ -69,6 +69,7 @@ class GameSessionRuntime:
         runtime_save.rpg_state.bind_database(project.rpg_database)
         self.project = project
         self.save = runtime_save
+        self._configure_inventory()
         self.scene = project.scene(runtime_save.scene_id)
         self.player = self.scene.get_entity(runtime_save.player_entity_id)
         if self.player is None and runtime_save.player_entity_id:
@@ -906,6 +907,22 @@ class GameSessionRuntime:
         self._logged_turn = None
         self._log("battle_started", data={"encounter_id": self.encounter_id})
         return self.battle
+
+    def _configure_inventory(self):
+        """The project's inventory rules (RPG-01; the first by id) apply to every way items arrive."""
+        db = self.project.rpg_database
+        rules = getattr(db, "inventory_rules", {})
+        chosen = rules[sorted(rules)[0]] if rules else None
+
+        def lookup(item_id):
+            return db.items.get(item_id) or db.equipment.get(item_id) or db.attachments.get(item_id)
+
+        self.save.rpg_state.inventory.configure(chosen, lookup)
+
+    @property
+    def inventory_overflow(self):
+        """``(item_id, amount)`` that did not fit in the bag, newest last (for "bag full" messages)."""
+        return self.save.rpg_state.inventory.overflow
 
     @property
     def rules(self):

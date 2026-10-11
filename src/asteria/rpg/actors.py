@@ -699,6 +699,7 @@ class RpgDatabase:
         self.capture_rules = {}
         self.world_interactions = {}
         self.drop_tables = {}
+        self.inventory_rules = {}
         self.behavior_trees = {}
         self.quests = {}
 
@@ -1026,6 +1027,11 @@ class RpgDatabase:
 
         return self._add_keyed(self.drop_tables, value, DropTable, "table_id", "drop table")
 
+    def add_inventory_rules(self, value):
+        from .items import InventoryRules
+
+        return self._add_keyed(self.inventory_rules, value, InventoryRules, "rules_id", "inventory rules")
+
     def add_world_interaction(self, value):
         from .world_interactions import WorldInteraction
 
@@ -1270,7 +1276,7 @@ class RpgDatabase:
     def to_data(self):
         return {
             "schema": "asteria.rpg.database",
-            "version": 28,
+            "version": 29,
             "actors": [self.actors[k].to_data() for k in sorted(self.actors)],
             "classes": [self.classes[k].to_data() for k in sorted(self.classes)],
             "items": [self.items[k].to_data() for k in sorted(self.items)],
@@ -1318,6 +1324,7 @@ class RpgDatabase:
             "world_interactions": [self.world_interactions[k].to_data() for k in sorted(self.world_interactions)],
             "drop_tables": [self.drop_tables[k].to_data() for k in sorted(self.drop_tables)],
             "behavior_trees": [self.behavior_trees[k].to_data() for k in sorted(self.behavior_trees)],
+            "inventory_rules": [self.inventory_rules[k].to_data() for k in sorted(self.inventory_rules)],
         }
 
     @classmethod
@@ -1351,6 +1358,7 @@ class RpgDatabase:
             26,
             27,
             28,
+            29,
         }:
             raise ValueError("unsupported RPG database")
         result = cls()
@@ -1489,6 +1497,11 @@ class RpgDatabase:
 
             for x in data.get("behavior_trees", ()):
                 result.add_behavior_tree(BehaviorTree.from_data(x))
+        if data["version"] >= 29:
+            from .items import InventoryRules
+
+            for x in data.get("inventory_rules", ()):
+                result.add_inventory_rules(InventoryRules.from_data(x))
         if data["version"] >= 27:
             from .drop_tables import DropTable
 
