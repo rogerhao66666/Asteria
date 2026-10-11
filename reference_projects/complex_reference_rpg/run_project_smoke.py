@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from asteria.editor import EditorDocument
 from asteria.project import Project
 

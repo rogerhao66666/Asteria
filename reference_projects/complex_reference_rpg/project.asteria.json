@@ -5537,7 +5537,22 @@
     ],
     "formulas": {},
     "schema": "asteria.gameplay_library",
-    "states": [],
+    "states": [
+      {
+        "contributed_tags": [],
+        "duration": 1.0,
+        "max_stacks": 1,
+        "modifiers": [],
+        "on_apply": [],
+        "on_expire": [],
+        "on_remove": [],
+        "periodic": [],
+        "schema": "asteria.state_definition",
+        "stacking": "refresh",
+        "state_id": "broken",
+        "version": 3
+      }
+    ],
     "timelines": [],
     "triggers": [],
     "version": 1
@@ -6956,7 +6971,7 @@
       },
       {
         "end_mode": "persist",
-        "maximum": 8.0,
+        "maximum": 5.0,
         "minimum": 0.0,
         "overflow_limit": null,
         "resource_id": "stagger",
@@ -7758,7 +7773,7 @@
         "enemy_id": "astral_tyrant",
         "resources": {
           "rage": 0.0,
-          "stagger": 8.0,
+          "stagger": 5.0,
           "technique": 999.0,
           "vitality": 9000.0
         },
@@ -8798,13 +8813,13 @@
             "emit_trigger": "battle.break",
             "include_cast_in_shift": true,
             "priority": 0,
-            "reset_to": 8.0,
+            "reset_to": 5.0,
             "resource_id": "stagger",
             "schema": "asteria.rpg.gauge_threshold_rule",
             "state_id": "broken",
             "threshold": 0.0,
             "threshold_id": "break",
-            "timeline_shift": 0.0,
+            "timeline_shift": 1.5,
             "version": 1
           }
         ],

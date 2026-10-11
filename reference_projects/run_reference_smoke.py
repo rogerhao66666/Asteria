@@ -2,10 +2,11 @@
 PYTHONPATH=src python reference_projects/run_reference_smoke.py
 """
 from asteria.validation import (
+    BattlePresentationStressHarness,
     EverythingCombinedScenario,
     NonOctopathGeneralityHarness,
-    BattlePresentationStressHarness,
 )
+
 
 def main():
     combined=EverythingCombinedScenario().run()

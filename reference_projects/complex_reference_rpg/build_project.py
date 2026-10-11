@@ -1,38 +1,93 @@
 from __future__ import annotations
+
 from pathlib import Path
 
 from asteria.core import Entity, Scene, Transform
 from asteria.events import EventBinding, EventInstruction, EventProgram, EventTriggerKind, SceneEventBindings
-from asteria.gameplay import AbilityCost, AbilityDefinition, AbilityEffect, AbilityTargetMode, Effect, EffectOperation, EffectOperationKind, TargetingRule
+from asteria.gameplay import (
+    AbilityCost,
+    AbilityDefinition,
+    AbilityEffect,
+    AbilityTargetMode,
+    Effect,
+    EffectOperation,
+    EffectOperationKind,
+    TargetingRule,
+)
 from asteria.presentation import (
-    AbilityScreenProfile, BattleActionMenuPolicy, BattleFeedbackProfile,
-    BattleHudProfile, BattlePartyLayoutPolicy, BattleResultProfile,
-    BattleUiLayoutProfile, BattleUiPolishProfile, BattleUiTheme,
-    CharacterScreenProfile, EquipmentScreenProfile, InventoryScreenProfile,
-    PartyScreenProfile, ProgressionScreenProfile,
+    AbilityScreenProfile,
+    BattleActionMenuPolicy,
+    BattleFeedbackProfile,
+    BattleHudProfile,
+    BattlePartyLayoutPolicy,
+    BattleResultProfile,
+    BattleUiLayoutProfile,
+    BattleUiPolishProfile,
+    BattleUiTheme,
+    CharacterScreenProfile,
+    EquipmentScreenProfile,
+    InventoryScreenProfile,
+    PartyScreenProfile,
+    ProgressionScreenProfile,
 )
 from asteria.project import Project
 from asteria.rpg import (
+    ActionSequenceDefinition,
+    ActionSequenceStep,
+    ActionTimingDefinition,
+    ActionTransactionPolicy,
+    ActorDefinition,
+    AICondition,
+    AIDecisionRule,
+    AttachmentDefinition,
+    BattleEscapeRule,
+    BattleObjectiveCondition,
+    BattleObjectiveDefinition,
+    BattleResourceDefinition,
+    BattleResourceRule,
+    BattleSchedulerDefinition,
     BattleSessionRules,
-    AICondition, AIDecisionRule, ActionSequenceDefinition, ActionSequenceStep,
-    ActionTimingDefinition, ActionTransactionPolicy, ActorDefinition,
-    AttachmentDefinition, BattleEscapeRule, BattleObjectiveCondition,
-    BattleObjectiveDefinition, BattleResourceDefinition, BattleResourceRule, BattleSchedulerDefinition,
-    BattleStatePolicy, BattleTargetingDefinition, BossPhaseDefinition,
-    ClassAssignment, ClassDefinition, CompositionOutput, CompositionRecipeDefinition,
-    CompositionSelection, EncounterDefinition, EncounterMember, EnemyAIDefinition,
-    EnemyBehaviorBinding, EnemyDefinition, EquipmentDefinition,
-    EquipmentGrowthDefinition, EquipmentGrowthNodeDefinition, EquipmentGrowthReward,
-    FormationDefinition, FormationSlotDefinition, GaugeCompositionDefinition,
-    GaugeImpactRule, GaugeThresholdRule, InteractionRule, ItemDefinition, LootEntry,
-    OutcomeCheckDefinition, PartyPlacementDefinition, PartyPresentationPolicyDefinition,
-    PartySetupDefinition, PassiveDefinition, ProgressionGraphDefinition,
-    ProgressionMilestone, ProgressionNodeDefinition, ProgressionNodeRequirement,
-    ProgressionNodeReward, ProgressionTrackDefinition, ReactionDefinition,
-    RewardDefinition, SocketDefinition,
+    BattleStatePolicy,
+    BattleTargetingDefinition,
+    BossPhaseDefinition,
+    ClassAssignment,
+    ClassDefinition,
+    CompositionOutput,
+    CompositionRecipeDefinition,
+    CompositionSelection,
+    EncounterDefinition,
+    EncounterMember,
+    EnemyAIDefinition,
+    EnemyBehaviorBinding,
+    EnemyDefinition,
+    EquipmentDefinition,
+    EquipmentGrowthDefinition,
+    EquipmentGrowthNodeDefinition,
+    EquipmentGrowthReward,
+    FormationDefinition,
+    FormationSlotDefinition,
+    GaugeCompositionDefinition,
+    GaugeImpactRule,
+    GaugeThresholdRule,
+    InteractionRule,
+    ItemDefinition,
+    LootEntry,
+    OutcomeCheckDefinition,
+    PartyPlacementDefinition,
+    PartyPresentationPolicyDefinition,
+    PartySetupDefinition,
+    PassiveDefinition,
+    ProgressionGraphDefinition,
+    ProgressionMilestone,
+    ProgressionNodeDefinition,
+    ProgressionNodeRequirement,
+    ProgressionNodeReward,
+    ProgressionTrackDefinition,
+    ReactionDefinition,
+    RewardDefinition,
+    SocketDefinition,
 )
 from asteria.runtime import Interaction2DComponent
-
 
 ABILITY_IDS = (
     "strike","guard","fire_arc","ice_lance","storm_chain","heal","revive",
@@ -292,7 +347,7 @@ def build_project():
     db.add_enemy(EnemyDefinition(
         "astral_tyrant","Astral Tyrant",
         stats={"power":125,"defense":105,"speed":72,"magic":135},
-        resources={"vitality":9000,"technique":999,"rage":0,"stagger":8},
+        resources={"vitality":9000,"technique":999,"rage":0,"stagger":5},
         tags=("enemy","boss","weak.fire","weak.ice","weak.lightning"),
         abilities=("boss_cleave","boss_roar","boss_nova","summon_wisp","meteor"),
         reward=boss_reward,
@@ -319,7 +374,7 @@ def build_project():
     db.add_enemy_behavior_binding(EnemyBehaviorBinding("astral_tyrant","astral_tyrant_ai"))
 
     # --- Battle rules: generic equivalents, never game-specific engine assumptions ---
-    db.add_battle_resource(BattleResourceDefinition("stagger",minimum=0,maximum=8,start_mode="maximum",end_mode="persist"))
+    db.add_battle_resource(BattleResourceDefinition("stagger",minimum=0,maximum=5,start_mode="maximum",end_mode="persist"))
     db.add_battle_resource(BattleResourceDefinition("rage",minimum=0,maximum=100,start_mode="fixed",start_value=0,end_mode="reset_to_start"))
     # Generic boost-like resource. The reference game calls it Momentum; the engine
     # attaches no BP-specific meaning to the resource name or lifecycle.
@@ -328,6 +383,8 @@ def build_project():
         rules=(BattleResourceRule("rpg.battle.turn_ready",1),),
     ))
     db.add_battle_state_policy(BattleStatePolicy("broken",prevent_action=True,duration_multiplier=1.0,remove_triggers=("round.end",)))
+    from asteria.gameplay.states import StateDefinition
+    project.gameplay_library.add_state(StateDefinition("broken", 1.0))  # the state the break threshold applies
     for element in ("fire","ice","lightning"):
         db.add_interaction_rule(InteractionRule(
             f"weak_{element}",source_tags_all=(f"damage.{element}",),target_tags_all=(f"weak.{element}",),
@@ -345,7 +402,7 @@ def build_project():
     db.add_gauge_composition(GaugeCompositionDefinition(
         "stagger_system",
         impacts=(GaugeImpactRule("weak_hit","stagger","battle.hit",delta=-1,required_outcome_tags_all=("outcome.weak",)),),
-        thresholds=(GaugeThresholdRule("break","stagger","at_or_below",0,state_id="broken",reset_to=8,emit_trigger="battle.break"),),
+        thresholds=(GaugeThresholdRule("break","stagger","at_or_below",0,state_id="broken",reset_to=5,emit_trigger="battle.break",timeline_shift=1.5),),
     ))
     db.add_reaction(ReactionDefinition("counter_reaction","battle.after_action","event_targets",target_selector="event_source",ability_id="strike",required_tags=("state.counter",)))
     db.add_battle_objective(BattleObjectiveDefinition(

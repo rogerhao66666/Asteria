@@ -822,16 +822,23 @@ class GameSessionRuntime:
             evolution_rules=db.ability_evolutions.values(),
         )
 
+    def _battle_subject(self, stats, resources, tags):
+        """A combatant subject that can hold battle states (break, buffs...) from the project's state registry."""
+        from asteria.gameplay import StateRuntime
+
+        states = StateRuntime(self.project.gameplay_library.states, stats, resources, tags)
+        return GameplaySubject(stats, resources, tags, states)
+
     def _actor_member(self, actor_id):
         build = self.resolve_actor_build(actor_id)
-        subject = GameplaySubject(build.stats, build.resources, build.tags)
+        subject = self._battle_subject(build.stats, build.resources, build.tags)
         speed = build.stats.get("speed")
         return PartyMember(str(actor_id), "heroes", subject, ability_ids=build.abilities, initiative=speed)
 
     def _enemy_member(self, enemy_id, index):
         definition = self.project.rpg_database.enemies[enemy_id]
         runtime = definition.instantiate()
-        subject = GameplaySubject(runtime.stats, runtime.resources, runtime.tags)
+        subject = self._battle_subject(runtime.stats, runtime.resources, runtime.tags)
         speed = runtime.stats.get("speed")
         return PartyMember(
             f"{enemy_id}:{index}",

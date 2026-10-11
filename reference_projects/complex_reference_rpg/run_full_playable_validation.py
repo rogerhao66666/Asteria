@@ -1,6 +1,7 @@
 from __future__ import annotations
-from pathlib import Path
+
 import tempfile
+from pathlib import Path
 
 from asteria.editor import EditorDocument
 from asteria.project import Project

@@ -1,18 +1,24 @@
 from __future__ import annotations
+
 from pathlib import Path
 
-from asteria.core import Transform
 from asteria.editor import EditorDocument
 from asteria.events import EventContext
 from asteria.project import Project
 from asteria.rpg import (
-    ActorAbilityState, ActorProgressionState, EquipmentGrowthRuntime,
-    EquipmentLoadout, EquipmentSlotDefinition, EquippedItem, Inventory,
-    ProgressionAllocationRuntime, ProgressionRuntime, RpgActorRuntime,
+    ActorAbilityState,
+    ActorProgressionState,
+    EquipmentGrowthRuntime,
+    EquipmentLoadout,
+    EquipmentSlotDefinition,
+    EquippedItem,
+    Inventory,
+    ProgressionAllocationRuntime,
+    ProgressionRuntime,
+    RpgActorRuntime,
     RpgRuntimeState,
 )
 from asteria.runtime.game_save import GameRuntimeSave
-
 
 PROFILE = {
     "early": dict(level=12, exp=11500, roster=6, inventory=10, tree_nodes=1, passives=1, growth=0, gold=3500, pos=(0,0)),
