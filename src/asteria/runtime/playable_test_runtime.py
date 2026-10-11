@@ -209,7 +209,10 @@ class PlayableTestRuntime:
         from asteria.platform.pygame_input import PygameInputSource
 
         self.input_source = PygameInputSource(self.pg)
-        self.input = InputActionTracker(self.project.input_map)
+        from asteria.runtime.input_rebinding import effective_input_map
+
+        # ENG-15: the player's rebinding (settings) over the project's default bindings
+        self.input = InputActionTracker(effective_input_map(self.project.input_map, self.settings.input_overrides))
         from asteria.platform.pygame_audio import open_audio_device
 
         self.audio = AudioMixer(open_audio_device(self.pg), self._audio_path)
@@ -1221,12 +1224,73 @@ class PlayableTestRuntime:
                 self.settings.save(self._settings_path())
                 self._ui_mode = "pause"
             return
+        if key == "controls":
+            if self.input.just_pressed("confirm"):
+                from asteria.runtime.input_rebinding import ControlsMenu
+
+                self.controls_menu = ControlsMenu(self.project.input_map, self.settings.input_overrides)
+                self._ui_mode = "controls"
+            return
         delta = (1 if self.input.just_pressed("move_right") else 0) - (1 if self.input.just_pressed("move_left") else 0)
         if self.input.just_pressed("confirm") and key == "show_battle_log":
             delta = 1
         if delta:
             self.settings.adjust(key, delta)
             self.settings.apply(self.audio)
+
+    # -- controls / rebinding (ENG-15) ----------------------------------------------------------------
+    def _controls_input(self, events):
+        from asteria.runtime.input_map import InputBinding
+
+        menu = self.controls_menu
+        for event in events:
+            if menu.capturing is not None:
+                if event.type == self.pg.KEYDOWN and event.key == self.pg.K_ESCAPE:
+                    menu.cancel_capture()
+                elif event.type == self.pg.KEYDOWN:
+                    menu.capture(InputBinding("key", self.pg.key.name(event.key)))
+                    self._apply_controls()
+                elif event.type == getattr(self.pg, "JOYBUTTONDOWN", -1):
+                    menu.capture(InputBinding("gamepad_button", str(event.button)))
+                    self._apply_controls()
+                continue
+            if event.type != self.pg.KEYDOWN:
+                continue
+            if event.key == self.pg.K_ESCAPE:
+                self.settings.save(self._settings_path())
+                self._ui_mode = "settings"
+            elif event.key in (self.pg.K_UP, self.pg.K_w):
+                menu.move(-1)
+            elif event.key in (self.pg.K_DOWN, self.pg.K_s):
+                menu.move(1)
+            elif event.key in (self.pg.K_RETURN, self.pg.K_SPACE):
+                menu.select()
+                if menu.capturing is None:  # reset all
+                    self._apply_controls()
+            elif event.key in (self.pg.K_BACKSPACE, self.pg.K_DELETE):
+                menu.reset(menu.rows()[menu.row][0])
+                self._apply_controls()
+
+    def _apply_controls(self):
+        from asteria.runtime.input_rebinding import effective_input_map
+
+        self.settings.input_overrides = dict(self.controls_menu.overrides)
+        self.input = InputActionTracker(effective_input_map(self.project.input_map, self.settings.input_overrides))
+        self.settings.save(self._settings_path())
+
+    def _draw_controls(self):
+        self._draw_backdrop()
+        menu = self.controls_menu
+        self.panel((60, 30, self.width - 120, self.height - 60))
+        self.text("Controls", self.width / 2, 44, size=32, color=(255, 220, 124), center=True)
+        for i, (action, bindings) in enumerate(menu.rows()):
+            y = 92 + i * 30
+            selected = i == menu.row
+            color = (255, 226, 129) if selected else (235, 238, 245)
+            self.text(("> " if selected else "   ") + action, 90, y, size=21, color=color)
+            self.text(bindings, self.width / 2, y, size=21, color=(170, 210, 240))
+        hint = menu.message or "Enter: rebind   Backspace: reset action   Esc: save and back"
+        self.text(hint, self.width / 2, self.height - 58, size=19, color=(255, 226, 129), center=True)
 
     def _draw_crafting(self):
         screen = self._crafting_screen
@@ -1561,6 +1625,9 @@ class PlayableTestRuntime:
         elif self._ui_mode == "pause":
             self._pause_input()
             self._draw_overlay_menu("Paused", self._pause_menu)
+        elif self._ui_mode == "controls":
+            self._controls_input(events)
+            self._draw_controls()
         elif self._ui_mode == "status":
             self._status_input(events)
             self._draw_status_menu()

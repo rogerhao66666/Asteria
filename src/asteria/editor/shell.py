@@ -201,6 +201,11 @@ class AsteriaEditorWindow(QMainWindow):
         self.vfx_editor.openTimeline.connect(self._open_action_timeline)
         self.vfx_editor.openAnimation.connect(self._open_animation_sheet)
         self.ui_workspace.addTab(self.vfx_editor, "VFX")
+        from .input_map_widget import InputMapWidget
+
+        self.input_map_editor = InputMapWidget(self.document, self)
+        self.input_map_editor.changed.connect(self.refresh_all)
+        self.ui_workspace.addTab(self.input_map_editor, "Input Map")
 
         self.game_flow_overview = GameFlowOverviewWidget(self.document, self)
         self.events_workspace = QTabWidget(self)
@@ -1180,6 +1185,7 @@ class AsteriaEditorWindow(QMainWindow):
             "action_timeline_editor",
             "vfx_editor",
             "event_flow_editor",
+            "input_map_editor",
         ):
             editor = getattr(self, name, None)
             if editor is not None:

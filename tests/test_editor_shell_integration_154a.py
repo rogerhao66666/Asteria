@@ -117,6 +117,7 @@ def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
         "Animation Editor",
         "Action Timeline",
         "VFX",
+        "Input Map",
     ]
     assert window.events_workspace.count() == 3
     window.close()

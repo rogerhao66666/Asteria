@@ -275,13 +275,19 @@ class GameSettings:
     music_volume: float = 0.8
     effects_volume: float = 0.8
     show_battle_log: bool = True
+    input_overrides: dict = None  # ENG-15: action -> [binding data], laid over the project input map
 
     OPTIONS = (
         ("music_volume", "Music Volume"),
         ("effects_volume", "Effects Volume"),
         ("show_battle_log", "Battle Messages"),
+        ("controls", "Controls…"),
         ("back", "Back"),
     )
+
+    def __post_init__(self):
+        if self.input_overrides is None:
+            self.input_overrides = {}
 
     def adjust(self, key, delta):
         if key in ("music_volume", "effects_volume"):
@@ -305,17 +311,23 @@ class GameSettings:
     def to_data(self):
         return {
             "schema": "asteria.game_settings",
-            "version": 1,
+            "version": 2,
             "music_volume": self.music_volume,
             "effects_volume": self.effects_volume,
             "show_battle_log": self.show_battle_log,
+            "input_overrides": {k: list(v) for k, v in sorted(self.input_overrides.items())},
         }
 
     @classmethod
     def from_data(cls, data):
-        if data.get("schema") != "asteria.game_settings" or data.get("version") != 1:
+        if data.get("schema") != "asteria.game_settings" or data.get("version") not in (1, 2):
             raise ValueError("unsupported game settings")
-        return cls(float(data["music_volume"]), float(data["effects_volume"]), bool(data["show_battle_log"]))
+        return cls(
+            float(data["music_volume"]),
+            float(data["effects_volume"]),
+            bool(data["show_battle_log"]),
+            dict(data.get("input_overrides", {})),
+        )
 
     def save(self, path):
         import json
