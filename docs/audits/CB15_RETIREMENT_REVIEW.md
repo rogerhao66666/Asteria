@@ -1,6 +1,6 @@
 # CB15_RETIREMENT_REVIEW
 
-**Status:** PROPOSAL — **nothing below has been removed.** Per D12 #5 and D14 #6, each item needs your explicit approval (approve / reject / defer) before any change. Fields follow D14 #6: Module / Feature, Source Paths, Current Dependencies, Original SPEC Requirement, Replacement Availability, Regression Risk, Proposed Action, Rollback Plan.
+**Status:** EXECUTED 2026-10-11 under the CB15 conditional approval — see **Part D (execution record)** at the end. Part A below is the original proposal, kept for reference. Fields follow D14 #6: Module / Feature, Source Paths, Current Dependencies, Original SPEC Requirement, Replacement Availability, Regression Risk, Proposed Action, Rollback Plan.
 **Evidence date:** 2026-10-10, `main` @ `2f14a7e`. Reference counts come from `grep` over `src/`, `tests/` and `scripts/` (the build-generated `src/asteria.egg-info/SOURCES.txt` is excluded).
 **Scope basis:** `SCOPE_DECISIONS.md` cancels the Character Generator (status E). `ASTERIA_SPEC.md` §"Character Generator" (line 822) calls it *optional*. D2 lists generic capabilities that must survive. CB14 (generic sprite-sheet placement, actor appearance, actor link, thumbnails) is complete, so no generic capability now depends only on the Generator UI.
 
@@ -169,3 +169,35 @@ These were removed on 2026-10-09 under your D7 authorization ("先備份後處�
 3. Remove the approved items in one commit, plus the `shell.py` and `assets/__init__.py` wiring.
 4. Run the full suite, `compileall`, the lint gate, and the GUI smoke tests. Record the before and after test counts.
 5. Update the traceability matrix (CG rows) and the decision log.
+
+
+---
+
+## Part D — Execution record (2026-10-11, conditional approval)
+
+Conditions applied to every item: unused or migrated first; a complete replacement exists and passes tests; the canonical SPEC is unaffected; no generic engine capability is lost. Uncertain → kept and marked BLOCKED.
+
+**Backup:** `/Users/roger/Documents/Vscode/Asteria_backup_2026-10-11_cb15_generator.zip` (18 files, outside the repo).
+**Rollback reference:** `git revert 71e76c1` (the single retirement commit); the parent `3c6dd57` is the last state with the Generator.
+
+| Item | Decision | Removed Files | Replacement | Dependency Check | Regression Tests |
+|---|---|---|---|---|---|
+| A1 compositor | **RETIRED** | `assets/character_generator.py` | `CharacterVisualSet.from_walking_sheet` + `CreateCharacterCommand` (CB14) | no import left in `src/`, `scripts/`, `tests/` (grep); `compileall` clean | full suite 2165 passed; `test_generic_character_inspector.py` (real shell placement from a sprite sheet) |
+| A2 topology | **RETIRED** | `assets/character_generator_topology.py` | not needed | only its own test used it | as above |
+| A3 MV generator catalog | **RETIRED** | `assets/rpg_maker_mv_generator.py`; lazy export removed from `assets/__init__.py` | MV import stays in the other `rpg_maker_mv_*` adapters | no import left; the remaining `mv_reference` tests pass (23; the other 16 lived in the removed generator test files) | `test_architecture_boundaries.py`, `test_mv_import_playable.py` |
+| A4 bundle | **RETIRED** | `assets/character_bundle.py`; `CharacterVisualSet.from_bundle`; the bundle branch of `CreateCharacterCommand` | `CharacterVisualSet` (owned files supported) | existing projects: generated characters are plain canonical assets / actor ids — load unchanged | ported `test_create_character_command.py` (execute, undo/redo identical ids, owned files only, extra owned sheet, rollback at files / assets / actor / entity) |
+| A5 Character Creator UI | **RETIRED** | `editor/character_generator_widget.py`, `editor/character_generator_workspace.py`, the RPG "Character Creator" tab, its styles | shell "Place Character from Sprite Sheet…", "Set Actor Appearance…", Inspector pickers; click-to-place kept (`_place_character_at`, `CharacterVisualSet` only) | `test_editor_shell_integration_154a.py` updated (Game Systems is now the second RPG tab) | GUI smoke in the full suite; real Cocoa editor checks re-run in WS7 |
+| A6 `CreateCharacterCommand` | **KEPT** (bundle branch removed) | — | it is the replacement | — | ported tests above |
+| A7 validation script | **RETIRED** | `scripts/validate_mv_character_creator.py`, `tests/test_mv_character_creator_e2e.py` | W-18 real-window check `mv_import_real_window` covers MV content end to end | no other user | — |
+| A8 generator tests | **RETIRED** | `test_character_generator.py`, `test_character_generator_topology.py`, `test_character_bundle_generator.py`, `test_rpg_maker_mv_generator_catalog.py`, `test_editor_mv_character_creator.py` | generic assertions ported first (A4 row) | — | 2206 → 2165 tests: the 41 removed tests covered only removed code |
+| A9 legacy battle presentation | **BLOCKED (kept)** | — | `CanonicalBattleAdapter` is real-machine validated, but it still falls back to the legacy world layer (`_draw_battle_world`) for projects without combatant visuals, and `legacy` stays the default adapter for manifests that do not choose one | replacement not complete for those projects | — |
+| A10 runtime host | **KEPT** | — | none (only host) | — | — |
+
+**Other candidates reviewed in WS6 (kept):**
+
+| Candidate | Why kept |
+|---|---|
+| `editor/attachment_authoring.py` (`AttachmentAuthoringModel`) | Generic attachment authoring model (protected: "generic Animation/Attachment"); Character Composition uses the persisted path but the model has its own tests and users |
+| `assets/rpg_maker_mv_map_render.py` (`compose_mv_map_draws`) | MV import adapter (Part C, AST-13); `MVTileResolver` is used by the W-18 baker |
+| `runtime/reference_runtime.py` | Still the runtime for tile-map projects without a game-start player (e.g. the Reference World); `TileMapField` covers the others |
+| `runtime/preview.build_preview_registry` | Public API; now delegates to the single `default_component_registry()` |
