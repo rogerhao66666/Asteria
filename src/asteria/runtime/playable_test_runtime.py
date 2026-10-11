@@ -556,6 +556,52 @@ class PlayableTestRuntime:
             echo.record(self._clock_seconds, (image, position), moving=moving or not trail.only_while_moving)
         self.screen.blit(image, position)
 
+    def _field_composition(self, image_path):
+        """CharacterComposition of the canonical sprite-sheet asset whose image is ``image_path`` (CMP-01)."""
+        cache = self.__dict__.setdefault("_field_compositions", {})
+        if image_path not in cache:
+            from asteria.presentation.character_composition import CharacterComposition
+
+            composition = None
+            for asset in self.project.assets.snapshot():
+                if asset.source.uri == image_path and asset.kind == "sprite_sheet":
+                    composition = CharacterComposition.from_meta(asset.meta())
+                    break
+            cache[image_path] = composition
+        return cache[image_path]
+
+    def _composition_parts(self, image_path, frame_index, clip, frame_size, render_size, position):
+        """``(behind, front)`` lists of ``(surface, position)`` for a field sprite's layers and attachments."""
+        composition = self._field_composition(image_path)
+        if composition is None:
+            return (), ()
+        scale = render_size[0] / frame_size[0]
+        pivot = (position[0] + render_size[0] / 2, position[1] + render_size[1])  # feet: bottom centre
+        behind, front = [], []
+        for part in composition.parts(clip, frame_index):
+            try:
+                asset = self.project.assets.resolve(part.asset_id)
+            except KeyError:
+                continue
+            meta = asset.meta()
+            fw, fh = meta.get("frame_size", frame_size)
+            sheet = self.load_image(asset.source.uri)
+            columns = max(1, sheet.get_width() // fw)
+            index = part.frame_index % max(1, columns * max(1, sheet.get_height() // fh))
+            image = sheet.subsurface(((index % columns) * fw, (index // columns) * fh, fw, fh))
+            size = (max(1, round(fw * part.scale_x * scale)), max(1, round(fh * part.scale_y * scale)))
+            image = self.pg.transform.scale(image, size)
+            if part.rotation_deg:
+                image = self.pg.transform.rotate(image, -part.rotation_deg)
+            if part.opacity < 1.0:
+                image.set_alpha(int(part.opacity * 255))
+            if part.kind == "layer":
+                x, y = position[0] + part.x * scale, position[1] + part.y * scale
+            else:
+                x, y = pivot[0] + part.x * scale, pivot[1] + part.y * scale
+            (behind if part.behind else front).append((image, (round(x), round(y))))
+        return behind, front
+
     def _prune_field_echoes(self):
         echoes = self.__dict__.get("_field_echoes")
         if echoes is None:
@@ -608,8 +654,19 @@ class PlayableTestRuntime:
         )
         pf = self.pg.transform.scale(pf, (render_w, render_h))
         position = (int(px - render_w / 2), int(py - render_h + 10 * zoom))
-        self._blit_with_trail(self.game.player, pf, position)
         sheet_path = self.manifest["field"]["player_sheet"]
+        fw, fh = self.manifest["field"]["player_frame_size"]
+        sheet_columns = max(1, self.load_image(sheet_path).get_width() // fw)
+        frame_index = walking_row_index(self.game.facing) * sheet_columns + (
+            walking_pattern_index(self._field_step) if moving else 1
+        )
+        clip = f"{'walk' if moving else 'idle'}_{self.game.facing}"
+        behind, front = self._composition_parts(sheet_path, frame_index, clip, (fw, fh), (render_w, render_h), position)
+        for image, at in behind:
+            self.screen.blit(image, at)
+        self._blit_with_trail(self.game.player, pf, position)
+        for image, at in front:
+            self.screen.blit(image, at)
         if getattr(self, "_normal_layer_active", False) and self._normal_image(sheet_path) is not None:
             fw, fh = self.manifest["field"]["player_frame_size"]
             row = walking_row_index(self.game.facing)

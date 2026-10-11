@@ -225,3 +225,38 @@ def test_game_text_falls_back_to_ascii_for_glyphs_the_font_lacks():
     font = pygame.font.Font(None, 20)  # the default font has no arrow glyph
     assert renderable_text(pygame, font, "move_right → D", {}) == "move_right -> D"
     assert renderable_text(pygame, font, "Lv 1→2 ok", {}) == "Lv 1->2 ok"
+
+
+def test_the_playable_field_draws_the_players_layers_and_attachments(resource_root, monkeypatch):
+    """CMP-01 in the field: a composition authored on the player's canonical sheet is drawn with the player."""
+    pytest.importorskip("pygame")
+    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+    monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
+    from test_playable_battle_loop import _boss_runtime
+
+    from asteria.assets.canonical import AssetSource, CanonicalAsset
+
+    runtime = _boss_runtime(resource_root)
+    try:
+        project = runtime.game.project
+        sheet = runtime.manifest["field"]["player_sheet"]
+        fw, fh = runtime.manifest["field"]["player_frame_size"]
+        project.assets.register(
+            CanonicalAsset(
+                "field.player", "sprite_sheet", AssetSource(sheet), metadata=(("frame_size", [fw, fh]), ("clips", {}))
+            )
+        )
+        api = _api(project)
+        api.add_socket("field.player", "hand", 12, -20)
+        api.attach("field.player", "charm", ITEM, "hand", scale=0.5, frame=5)
+        api.add_layer("field.player", ITEM, component_id="halo", z=-1)
+        runtime._ui_mode = "field"
+        runtime._frame([], 0.016)
+        plain_counts = (len(runtime.__dict__.get("_field_compositions", {})),)
+        behind, front = runtime._composition_parts(sheet, 1, "idle_down", (fw, fh), (64, 64), (100, 100))
+        assert len(behind) == 1 and len(front) == 1 and plain_counts == (1,)
+        charm_image, (cx, cy) = front[0]
+        assert charm_image.get_width() == round(64 * 0.5)  # ITEM frames are 64 px, scaled with the body
+        assert (cx, cy) == (100 + 32 + 12, 100 + 64 - 20)  # pivot (feet) + socket offset
+    finally:
+        runtime.close()
