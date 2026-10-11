@@ -40,7 +40,7 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | ENG-07 | S§8 | Core | Scene 轉場、persistent entities | `core/scene_transition.py` `SceneTransition`、`PersistentComponent`；`Application.change_scene`／`advance_transition` | UT | RM（W-18 場景轉移；D19 `engine_systems_real_window`：persistent entity 經淡入淡出帶到下一個場景） | **A** | — | CB4、D19 |
 | ENG-08 | S§8 | Core | Transform 位置／旋轉／縮放 | `core/transform.py` | UT | HI | **A** | — | — |
 | ENG-09 | S§8 | Core | Transform 父子關係／階層 | `core/transform.py` `parent_id`、`world_transform`、`set_parent`；`editor/editing.py` `ReparentTransformCommand`；Inspector parent 下拉選單 | UT | RM（`editor_workflows_gui`：拖放改父層並保持世界座標，undo 還原） | **A** | — | CB4 |
-| ENG-10 | S§8 | Core | Event bus／resource lifetime | `core/events.py` `EventBus`、`core/services.py`、`assets/runtime_resources.py`、`presentation/render_resources.py`；戰鬥範圍圖片釋放（`PlayableTestRuntime` `release_resource_scope`） | UT + HI | HI + RM（D19 `battle_memory_real_window`：12 場戰鬥，每場後戰鬥範圍圖片 0 殘留、共釋放 108 張，RSS 無增長） | **A** | — | CB13、D19 |
+| ENG-10 | S§8 | Core | Event bus／resource lifetime | `core/events.py` `EventBus`、`core/services.py`、`assets/runtime_resources.py`；戰鬥範圍圖片釋放（`PlayableTestRuntime` `release_resource_scope`） | UT + HI | HI + RM（D19 `battle_memory_real_window`：12 場戰鬥，每場後戰鬥範圍圖片 0 殘留、共釋放 108 張，RSS 無增長） | **A** | — | CB13、D19 |
 | ENG-11 | S§8 | Core | Rendering：sprite、tile、layer、transparency | `runtime/draw.py`、`runtime/tile_draw.py`、`platform/pygame_backend.py` | UT | RM（MV tile + 角色截圖） | **A** | — | — |
 | ENG-12 | S§8 | Core | Rendering：batching、render groups | `platform/moderngl_backend.py`（`16a6ebd` 復原，sprite batching）；`preview --backend moderngl` | UT（pygame／GL 像素對照） | RM（`gpu_playable_runtime`：GPU 畫面與合成畫面逐像素相同，56 fps；`vfx_moderngl_field` 15 draw calls／frame；`mv_import_gpu_night`） | **A** | —；pygame 仍為預設後端（依提案，待你決定是否改預設）；不宣稱效能提升 | CB9 |
 | ENG-13 | S§8 | Core | Parallax、screen-space UI | `runtime/camera.py`、`runtime/draw.py`、MV parallax 匯入；`presentation/battle_ui_renderer.py` | UT | 部分 RM | **B** | canonical 戰鬥 UI 已在實機接線（D15）；parallax 缺 RM | CB2 |
@@ -64,9 +64,9 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | ANI-03 | S§11、AP§25 | Core | Frame events | `SpriteKeyframe.events`；`AnimatorState.drain_events`；`AnimationSystem.listeners` | UT | RM（D19 `engine_systems_real_window`：AnimationSystem frame events 在實機主迴圈發出） | **A** | — | CB8、D19 |
 | ANI-04 | S§11 | Core | 預覽 | `editor/animation_authoring.py`、`animation_editor_widget.py`（預覽用 runtime `AnimatorState`） | UT + GS | RM（Cocoa `editor_tools_gui`，截圖已檢視；D16） | **A** | — | — |
 | ANI-05 | S§11 | Core | Action timeline（動畫、移動、hitbox、i-frame、cancel、VFX、SFX、camera、事件） | `gameplay/action_timeline.py`（movement、hitbox、iframe、cancel／combo window、gameplay_event cue）、`runtime/entity_actions.py`、PLAY_ACTION | UT + HI | RM（D19 `engine_systems_real_window` 的 movement／hitbox／vfx cue；`replay_ANI-05`） | **A** | —（ARPG 戰鬥本身依 SPEC §20 維持 Deferred） | D17-6、D19 |
-| CAM-01 | S§12 | Core | Follow、smooth、dead zone、zoom、shake | `runtime/camera.py` `CameraFollow2D`、`presentation/camera_runtime.py` | UT | HI + RM（canonical 戰鬥 camera shake 依 motion beat；D15） | **B** | 缺人眼確認（M5） | CB2 |
+| CAM-01 | S§12 | Core | Follow、smooth、dead zone、zoom、shake | `runtime/camera.py` `CameraFollow2D`、`presentation/battle_camera_feedback.py` | UT | HI + RM（canonical 戰鬥 camera shake 依 motion beat；D15） | **B** | 缺人眼確認（M5） | CB2 |
 | CAM-02 | S§12 | Core | Look-ahead、bounds、target groups、boss／cutscene camera、transitions | `runtime/camera.py`（look-ahead、bounds、`CameraTargetGroup`、`CameraDirector`、shake）、`systems.py` `CameraFollowSystem`、`field_camera.py`（manifest `field.camera.follow` 跟隨鏡頭）、WORLD `CAMERA_FOCUS／RELEASE／SHAKE`；戰鬥 boss 開場鏡頭（encounter tag `boss`） | UT + HI | RM（`field_camera_boss_focus`） | **B** | 跟隨鏡頭、boss 開場鏡頭、事件 focus 已 RM；look-ahead 已 RM（D19 `engine_systems_real_window`）；target group 只有 UT／HI | CB10、D17-3（`ca6cff1`） |
-| VFX-01 | S§12 | Core | 粒子、hit flash、damage numbers、screen effects | `runtime/battle_presentation_adapters.py` VFX sprite sheet 播放、hit flash（screen_fx）、damage numbers；`presentation/vfx_runtime.py` | UT | HI + RM（實機視窗 VFX 截圖；D15） | **B** | 沒有粒子發射器資料（VFX 為序列圖）；缺人眼確認 | CB2 |
+| VFX-01 | S§12 | Core | 粒子、hit flash、damage numbers、screen effects | `runtime/battle_presentation_adapters.py` VFX sprite sheet 播放、hit flash（screen_fx）、damage numbers（`presentation/battle_feedback.py`）；天氣粒子（`runtime/weather.py`） | UT | HI + RM（實機視窗 VFX 截圖；D15） | **B** | 沒有粒子發射器資料（VFX 為序列圖）；缺人眼確認 | CB2 |
 | VFX-02 | S§12、AD§12 | Core | 2D lights、normal maps、shadows、bloom、color grading、screen shaders | `render/lighting.py`、`render/postprocess.py`（headless 指令模型）；ModernGL 後端已復原 | UT | RM（`vfx_moderngl_field`、`vfx_pygame_field`、`vfx_gpu_battle_afterimage`、`mv_import_gpu_night`） | **B** | 光照、陰影、bloom、grading、vignette 已 RM；normal map 與 screen shader（內建／專案）只有 GL 測試；人工目視 M10 | CB9 |
 | VFX-03 | S§12 | Core | Trails、afterimages、fog/weather/water | 部分（`render/environment.py`） | UT | RM（battle afterimage、雨 2000 粒子、水面） | **B** | afterimage、weather、water 已 RM；field trail 與 fog 只有 HI／GL 測試；人工目視 M10 | CB9 |
 | CMP-01 | S§44 | Core | Baked/Layered/Attached/Procedural/Hybrid 並存 | `presentation/canonical.py`、`composition.py`、`actor_visual_layers.py`；`presentation/character_composition.py`（body sheet metadata 的 layer／attachment 解析成繪製部件）；`BattlePresentationRuntime` 在 body 前後繪製 | UT + HI（真實 canonical 戰鬥：layer 在後、attachment 在前、隨朝向鏡像） | RM（戰鬥；D19 replay `replay_CMP-01`：field 玩家的 layer／attachment 與戰鬥分層在實機 playable 視窗繪製） | **A** | — | CB2、D17-3（`c499639`）、D19 |
@@ -165,7 +165,7 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 |---|---|---|---|---|---|
 | STR-01 | S§35 | Core | JRPG stress test（四人隊伍、職業、弱點、break、boost、passive、回合操作、NPC 互動、捕捉／夥伴、多階段 boss） | **A** | `validation/jrpg_stress.py` 在參考專案的真實 session 一次展示 13 項；RM `gameplay_systems_real_window`（實機視窗、canonical 戰鬥畫面）。找到並修正：戰鬥主體缺 StateRuntime、break 不可達、`broken` 未定義（D18）。haste_song／slow_hex 改變速度並影響排程器的下一個回合（D19 `aa25d27`，根因：速度變化沒進到 scheduler） |
 | STR-02 | S§35 | Deferred | ARPG stress test | **D（Deferred）** | 依 SCOPE_DECISIONS 延後 |
-| ARPG-01 | S§20 | Deferred | 即時 ARPG（jump、dash、i-frame、combo、cancel、hitbox、knockback、projectile、lock-on、hitstop、即時 AI） | **D（Deferred）** | `presentation/arpg_reference_workload.py` 只是合成演出負載 |
+| ARPG-01 | S§20 | Deferred | 即時 ARPG（jump、dash、i-frame、combo、cancel、hitbox、knockback、projectile、lock-on、hitstop、即時 AI） | **D（Deferred）** | 沒有 ARPG 實作（D19 退役了沒人使用的合成演出負載 `arpg_reference_workload.py`）；character controller、hitbox、action timeline 等通用元件已存在 |
 | TPL-01 | S§36 | Eventual | Starter 範本（Empty／Classic JRPG／Advanced JRPG／ARPG） | **C** | 只有 Empty（New Project + starter tileset）和 Reference World。D18 重新分類：SPEC §36 原文為「Potential templates」，依本表圖例屬 Eventual，不列 blocker |
 | CG-01 | S「Character Generator」 | Cancelled | Editor 端可選的分層角色產生器 | **E** | `SCOPE_DECISIONS.md`；通用能力的處理見 D2 |
 
@@ -199,6 +199,8 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 - 既有的 `gameplay_systems_real_window`：升級 BTL-03。
 
 CAM-02 補上 look-ahead 實機證據，target group 仍缺，維持 B。→ **A72／B22／C1／D2**（D18 為 A49／B45／C1／D2）。
+
+**D19 CB15 掃描：** 退役 35 個無法從產品進入點觸及的模組（見 CB15_RETIREMENT_REVIEW Part F）。原本引用其中模組的 ENG-10、CAM-01、VFX-01、ARPG-01 已改為引用產品實際使用的模組；狀態不變。
 
 **2026-10-10 更新（CB3–CB14 及 CB11 之後）：** 2026-10-09 原始稽核時是 A 17／B 20／C 44／D 16；CB4–CB14 之後是 A17／B38／C33／D9。A 沒有增加，因為 A 需要實機（RM）驗證，而這一輪全部只有 UT／HI／offscreen GS。新的 B 項目都缺 RM，請見各列「缺口」欄。
 

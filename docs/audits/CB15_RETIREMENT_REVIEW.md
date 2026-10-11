@@ -235,5 +235,37 @@ still imported by product code and stay.
 - Several are cited by the traceability matrix as generic capabilities (`render_resources` ENG-10, `autofix` and
   `usability_gate` AST-11, `arpg_reference_workload` ARPG-01).
 - Most have their own tests.
-- None was retired in D19. Telling dead code from a generic capability that is not wired up yet needs a review
-  per module. That is a candidate list for a separate CB15 batch, which needs your approval per item.
+- The review was approved and done in D19 (Part F).
+
+## Part F — D19: unused modules retired after review (2026-10-11, user approval: remove what is unused)
+
+**Method.** A static import graph of `src/asteria` from every product entry point covers lazy imports,
+relative imports, `importlib` and the lazy export tables:
+- the `pyproject` scripts (`asteria-editor`, `asteria-preview`, `asteria-upgrade`, `asteria-export`, `asteria-import-mv`);
+- `asteria.editor.__main__`;
+- every module that `scripts/*.py` imports.
+
+Before: 438 modules, 42 unreachable. The 23 modules of Part E were the first ring; removing them would orphan a
+second ring of the same early "headless presentation pipeline" (batches 72–106), which was never wired into
+the product.
+
+**Kept (7, unreachable but needed):**
+- `assets.autofix`: AST-11's implementation.
+- `assets.usability_gate`: AST-03 evidence.
+- `assets.rpg_maker_mv_weapon`: a public MV adapter through the lazy export table, protected (Part C).
+- `reference_world`: content of the Reference World template, TPL-01.
+- `validation.presentation_timing`: the golden timing tests' tool.
+- `presentation.animated_text` and `presentation.text_render_integration`: the CMP-03 requirement; to be wired
+  into the runtime.
+
+**Retired (35):** `editor.animation_preview`, `editor.asset_attachment`, `editor.attachment_authoring`, `editor.attachment_preview`, `editor.drop_logic`, `presentation.action_binding`, `presentation.actor_attachment`, `presentation.animation_attachment`, `presentation.arpg_reference_workload`, `presentation.art_e2e`, `presentation.attachment_commands`, `presentation.audio_runtime`, `presentation.camera_runtime`, `presentation.channel_backend`, `presentation.e2e_pipeline`, `presentation.equipment_presets`, `presentation.executor_contracts`, `presentation.fidelity_import`, `presentation.gap_hardening`, `presentation.material_runtime`, `presentation.presentation_state`, `presentation.production_preview`, `presentation.production_state`, `presentation.project_integration`, `presentation.property_animation`, `presentation.reference_workload`, `presentation.render_backend`, `presentation.render_batching`, `presentation.render_bridge`, `presentation.render_integration`, `presentation.render_resources`, `presentation.session_persistence`, `presentation.stress_profile`, `presentation.vfx_runtime`, `presentation.workspace_qt`.
+
+| | |
+|---|---|
+| **Replacement** | Nothing in the product used them. The product's equivalents: attachments → `presentation/character_composition.py` + `attachment_runtime.py` (kept); presentation save → `GameRuntimeSave`; profiling → `RuntimeProfiler`; batching → `ModernglRuntimeBackend` / `GpuPresenter`; camera → `runtime/camera.py`, `battle_camera_feedback.py`; VFX → `battle_presentation_adapters.py`, `runtime/weather.py`; audio → `runtime/audio_mixer.py`; hierarchy drop → `editor/widgets.py`; editor attachments → Character Composition. |
+| **Dependency check** | After the removal only the 7 kept modules are unreachable. No reference is left in `src/`, `scripts/` or `tests/` (grep). `compileall` is clean. The layering exception `presentation/workspace_qt.py` (RISK-05) is gone with the module. |
+| **Tests** | 254 test functions that exercised only retired code were removed (31 batch-era files deleted, 6 trimmed by symbol, keeping their product tests). Line coverage of the kept product modules was measured before and after with a `sys.settrace` plugin. `attachments.py` 170 → 170 lines, `actor_visual_layers.py` 54 → 54, `fidelity.py` 7 → 7. `attachment_runtime.py` 207 → 206; the one lost line (replace an active attachment) has a new test, `test_attachment_runtime_replace.py`. Full suite 2181 → 1928 passed. |
+| **Regression** | Real machine re-run of battle, battle_features, battle_no_art, gameplay, editor, editor_tools, editor_d17, editor_workflows, b_items_replay and vfx: all PASS. The suite total is unchanged (49 PASS, 0 FAIL). |
+| **Matrix** | ENG-10, CAM-01, VFX-01 and ARPG-01 cited retired modules; they now cite the product modules. No status changed. |
+| **Backup** | `/Users/roger/Documents/Vscode/Asteria_backup_2026-10-11_cb15_unused_modules.zip` (35 modules + 33 test files as they were before the change) |
+| **Rollback** | `git revert <this commit>` (single commit; see DECISION_LOG D19-6) |

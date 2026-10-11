@@ -14,7 +14,6 @@ EDITOR_IMPORT = re.compile(r"^\s*(from|import)\s+(asteria\.editor|PySide6)\b", r
 # Known pre-existing exceptions, tracked in docs/audits (RISK-05); do not add more.
 EDITOR_IMPORT_ALLOWED = {
     "runtime/preview.py",
-    "presentation/workspace_qt.py",
 }
 
 

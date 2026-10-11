@@ -1,44 +1,11 @@
-from asteria.presentation.actor_attachment import ActorAnimationPose, ActorAttachmentBinding
 from asteria.presentation.actor_visual_layers import ActorVisualLayerTrack, FrameVisualLayer
-from asteria.presentation.attachment_runtime import AttachmentRuntime
-from asteria.presentation.attachments import Attachment, Socket, SocketRig, Transform2D
-from asteria.presentation.render_integration import PresentationRenderComposer
-
-
-class Animator:
-    def __init__(self, clip="one_hand_slash", frame=0):
-        self.clip = clip
-        self.frame = frame
-
-    def presentation_pose(self):
-        return ActorAnimationPose(self.clip, self.frame)
+from asteria.presentation.attachments import Socket, SocketRig, Transform2D
 
 
 def rig():
     r = SocketRig()
     r.add(Socket("hand_r", default=Transform2D(x=24, y=20)))
     return r
-
-
-def test_foreground_hand_layer_is_frame_aware_and_composed_over_attachment():
-    rt = AttachmentRuntime(rig())
-    rt.attach(Attachment("held", "iron_sword", "hand_r", render_layer="held"))
-    track = ActorVisualLayerTrack(
-        (FrameVisualLayer("hero.hand.f0", "hand_foreground", 20, frames=(0,), clips=("one_hand_slash",)),)
-    )
-    frame = ActorAttachmentBinding("hero", Animator(frame=0), rt, track).resolve()
-    packets = PresentationRenderComposer().actor_packets(frame, "hero.body", layer_z={"held": 10})
-    assert [p.asset_id for p in packets] == ["hero.body", "iron_sword", "hero.hand.f0"]
-
-
-def test_foreground_layer_does_not_leak_to_other_frame():
-    rt = AttachmentRuntime(rig())
-    rt.attach(Attachment("held", "iron_sword", "hand_r", render_layer="held"))
-    track = ActorVisualLayerTrack((FrameVisualLayer("hero.hand.f0", "hand_foreground", 20, frames=(0,)),))
-    frame = ActorAttachmentBinding("hero", Animator(frame=1), rt, track).resolve()
-    assert [
-        p.asset_id for p in PresentationRenderComposer().actor_packets(frame, "hero.body", layer_z={"held": 10})
-    ] == ["hero.body", "iron_sword"]
 
 
 def test_layers_can_be_clip_specific():

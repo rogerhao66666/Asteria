@@ -1,7 +1,5 @@
-from asteria.assets import AssetRef
 from asteria.core import ComponentRegistry, Entity, deserialize_entity, serialize_entity
-from asteria.editor.animation_preview import AnimationPreview
-from asteria.graphics import SpriteClip, SpriteFrame, SpriteKeyframe, SpriteSheet
+from asteria.graphics import SpriteClip, SpriteKeyframe
 from asteria.runtime import (
     AnimationClipSet,
     Animator2DBinding,
@@ -31,22 +29,6 @@ def test_animator_component_serializes():
     clone = deserialize_entity(serialize_entity(e), reg)
     got = clone.get(Animator2DComponent)
     assert got.clip_set_id == "hero" and got.speed == 1.5
-
-
-def test_clip_set_validation_and_editor_preview():
-    sheet = SpriteSheet(
-        AssetRef(TEX, "texture"),
-        [SpriteFrame(0, 0, 16, 16), SpriteFrame(16, 0, 16, 16)],
-    )
-    cs = clips()
-    cs.validate(sheet)
-    p = AnimationPreview()
-    p.set_clip(cs.get("walk_down"))
-    assert p.frame_index == 0
-    p.update(0.11)
-    assert p.frame_index == 1
-    p.restart()
-    assert p.frame_index == 0
 
 
 def test_runtime_binding_drives_persistent_sprite_frame():
