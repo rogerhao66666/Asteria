@@ -238,3 +238,63 @@ CB10、CB11 在 CB1–CB3 之後
 | AST-11 | B | Validation | 缺 RM | 實機 |
 | AST-13 | B | Validation | D17-3 完成：邊界已在文字與 import 兩層關閉；缺 RM | Phase 6 實機驗證 |
 | W-18 | — | Functional（新發現） | MV 專案匯入後地圖無法遊玩：`to_asteria_scene` 只把 MV 地圖掛在未序列化的屬性，`TileMap2DComponent` 指向不存在的 `mv.tileset.N`；runtime 沒有繪製一般 TileMap scene 的路徑 | 需要你決定是否納入（見 DECISION_LOG D17-3） |
+
+## D18 — 剩餘項目（2026-10-11，依矩陣重算）
+
+W-18 已修復並通過實機（見 DECISION_LOG D18）；D17 列出的 W-18 Functional 列已關閉。
+
+### Functional（C／D，全為 Eventual，不列 blocker）
+| 需求 | 狀態 | 優先級 | 說明 |
+|---|---|---|---|
+| EDT-17 | D | Eventual | SPEC §31『should eventually』— Eventually，不是 release blocker |
+| EDT-18 | D | Eventual | SPEC §32 未要求當前版本的 plugin runtime — Eventually；保留既有擴充介面 |
+| TPL-01 | C | Eventual | 只有 Empty（New Project + starter tileset）和 Reference World。D18 重新分類：SPEC §36 原文為「Potential templates」，依本表圖例屬 Eventual，不列 blocker |
+
+### Validation（B：功能完成，缺的證據）
+| 需求 | 優先級 | 缺少的證據 |
+|---|---|---|
+| ENG-03 | Core | playable 的 field AI 與 spawn 走 Scene systems（D13）；Ability 由 battle runtime 處理，不是 Scene system；缺 RM |
+| ENG-05 | Core | 缺 RM |
+| ENG-07 | Core | 場景轉移已 RM（W-18 門 → 地圖 2）；persistent entities 只有 HI |
+| ENG-10 | Core | 沒有實機的記憶體回收量測 |
+| ENG-13 | Core | canonical 戰鬥 UI 已在實機接線（D15）；parallax 缺 RM |
+| ENG-14 | Core | 缺 RM |
+| ENG-15 | Core | 鍵盤重綁已 RM（`controls_rebinding_real_window`）；gamepad 重綁 BLOCKED（無手把，M2／M8） |
+| ENG-16 | Core | tile 碰撞與實體 Collider2D 已 RM（W-18）；trigger、layers／masks 只有 UT／HI |
+| ENG-17 | Core | 缺 RM |
+| ENG-18 | Core | 可聽確認與延遲 NOT EXECUTED（M3／M4）；沒有 spatial audio |
+| ENG-20 | Core | — |
+| ANI-02 | Core | 編輯器已 RM（Cocoa `editor_d17_gui`）；狀態機驅動戰鬥動畫只有 HI |
+| ANI-03 | Core | 缺 RM |
+| ANI-05 | Core | 缺 RM；ARPG 戰鬥本身依 SPEC §20 維持 Deferred |
+| CAM-01 | Core | 缺人眼確認（M5） |
+| CAM-02 | Core | 跟隨鏡頭、boss 開場鏡頭、事件 focus 已 RM；target group 與 look-ahead 只有 UT／HI |
+| VFX-01 | Core | 沒有粒子發射器資料（VFX 為序列圖）；缺人眼確認 |
+| VFX-02 | Core | 光照、陰影、bloom、grading、vignette 已 RM；normal map 與 screen shader（內建／專案）只有 GL 測試；人工目視 M10 |
+| VFX-03 | Core | afterimage、weather、water 已 RM；field trail 與 fog 只有 HI／GL 測試；人工目視 M10 |
+| CMP-01 | Core | 戰鬥已 RM；field 消費分層角色已實作（D18），只有 HI |
+| CMP-03 | Core | — |
+| GP-02 | Core | 缺 RM |
+| BTL-02 | Eventual | F-3 已修（CB-BR1：互動倍率進入實際傷害，Preview 一致）；DOT 不套用；缺 RM |
+| BTL-03 | Eventual | 缺 RM |
+| BTL-04 | Core | hit-stop 已接（D17）；可聽音訊、實體按鍵、手把未驗證（M1–M3） |
+| RPG-01 | Core | 沒有容量規則的實機驗證 |
+| RPG-02 | Core | 套裝編輯器已有（D13）；缺 RM |
+| RPG-04 | Core | 缺實機 |
+| RPG-05 | Core | 買入（事件開啟的商店）已 RM；賣出、多貨幣、庫存上限只有 HI |
+| RPG-06 | Core | 沒有 RM；配方發現已有（D13） |
+| RPG-07 | Core | 缺 RM |
+| RPG-08 | Core | 戰鬥中捕捉並加入隊伍已 RM（`gameplay_systems_real_window`）；召喚、成長、收納只有 HI |
+| RPG-09 | Core | 編輯器已 RM（Cocoa）；field 中依樹行為只有 HI |
+| RPG-10 | Core | spawn 已在 playable runtime 執行（`GameSessionRuntime.field_update` 的 `SpawnSystem`，D13）；缺 RM |
+| EVT-01 | Core | 缺 RM |
+| EVT-02 | Core | 對話、場景轉移、畫面淡出、NPC 狀態已 RM（W-18、cutscene）；選項與背包／隊伍動作只有 HI |
+| EVT-03 | Core | cutscene 已 RM（`cutscene_real_window`）；common／battle events 只有 HI |
+| EVT-04 | Core | movement／camera／VFX／letterbox／skip 已 RM；dialogue、music track 只有 HI |
+| WLD-01 | Core | 任務編輯器已有（D13）；缺 RM |
+| WLD-02 | Core | NPC 消失狀態經 SET_NPC 保存已 RM（W-18）；聲望、關係、成就畫面只有 HI |
+| EDT-16 | Core | 缺 RM |
+| AST-04 | Core | — |
+| AST-07 | Core | — |
+| AST-08 | Core | 缺 RM |
+| AST-11 | Core | 缺 RM |

@@ -34,6 +34,17 @@ D14 #4. Run on a real macOS machine with real windows and devices: no dummy SDL 
 | 17 | Follow camera (CAM-02) | **PASS** | Follow zoom 1.80; the camera centre moved 48.9 units with the walking player. [start](evidence/real_machine/follow_camera_start.png), [end](evidence/real_machine/follow_camera_end.png) |
 | 18 | Packaged .app (AST-06) | **PASS** | The .app (2.4 MB .pyz) ran 120 frames in a real window from a temporary folder outside the repo, exit 0. Double-click in Finder is M6. |
 | 19 | D17 editor surfaces | **PASS** | Cocoa: export_game, animation_states, character_composition, input_map, behavior_trees, profiler_dock (live game), project file untouched. [states](evidence/real_machine/editor_animation_states.png), [composition](evidence/real_machine/editor_character_composition.png), [input map](evidence/real_machine/editor_input_map.png), [trees](evidence/real_machine/editor_behavior_trees.png), [profiler](evidence/real_machine/editor_profiler.png) |
+| 20 | MV import (W-18) | **PASS** | Parallax sample imported, saved, reloaded in a fresh process and played by real key events: blocked by the NPC, Japanese dialogue, NPC gone, door to map 2 (8, 23); no MV module loaded. [dialogue](evidence/real_machine/mv_import_dialogue.png), [after transfer](evidence/real_machine/mv_import_after_transfer.png) |
+| 21 | MV import on the GPU, night environment | **PASS** | Same flow on the ModernGL backend with an authored Environment2D (ambient, player light, rain, bloom). [screenshot](evidence/real_machine/mv_import_gpu_dialogue.png) |
+| 22 | GPU playable runtime (ENG-12) | **PASS** | GPU frame == composed frame pixel for pixel (field, battle); 56.1 fps, p99 18.8 ms, upload 0.41 ms, GPU 0.58 ms, 1 draw call. [battle](evidence/real_machine/gpu_battle.png) |
+| 23 | VFX on the GPU / on pygame | **PASS** | Lights, shadow, water, rain, bloom, grading, vignette: 56 fps on both; pygame reports bloom / grade / vignette / shadows unsupported. [GPU](evidence/real_machine/vfx_moderngl_field.png), [pygame](evidence/real_machine/vfx_pygame_field.png) |
+| 24 | Battle afterimages (VFX-03) | **PASS** | motion_fx beat: up to 4 copies. [screenshot](evidence/real_machine/vfx_gpu_battle_afterimage.png) |
+| 25 | Weather load | **PASS** | 2000 rain particles + full chain: 59.5–60.1 fps. |
+| 26 | Gameplay systems (STR-01) | **PASS** | JRPG stress playthrough presented in the real window: 13/13 items, victory. [break](evidence/real_machine/gameplay_broken.png) |
+| 27 | More menus (UI-01/02) | **PASS** | Quest log, shop buy, item use, equip cycle, settings, game over → title by real key events. |
+| 28 | Editor workflows | **PASS** | Thumbnails, record search/copy/paste/cut shortcuts, batch edit, hierarchy drop, prefab apply/propagate/revert, pivot, editor event in the live game, Play from Selection + Restart. |
+
+**Full re-run 2026-10-11 (D18):** 29 PASS, 3 NOT EXECUTED (M1, M3, M4), 1 BLOCKED (controller, M2). An earlier commit message said "34 PASS"; that was a miscount — the results file is authoritative.
 
 ## Defect found and fixed by this run
 
@@ -94,6 +105,8 @@ Each item stays NOT EXECUTED or BLOCKED until someone runs its procedure and rec
 - **M7 — Editor hands-on (D17 tabs).** A person uses Animation States (drag nodes, add a transition, preview), Character Composition (socket, key at frame, attach, layer), Behavior Trees, Input Map, Event Flow (sequence editor) and the Profiler dock while playing. PASS if every action works with the mouse and keyboard without errors.
 - **M8 — Gamepad rebinding.** With a controller (M2), open Settings → Controls, rebind confirm to another pad button and use it. PASS if the new button works and the old one no longer does.
 - **M9 — D17 visual review.** Watch the boss intro, a cutscene with Esc skip, layered characters in battle and the follow camera (enable `field.camera.follow`). PASS if nothing looks wrong (popping, smearing, misplaced parts).
+- **M10 — VFX visual review.** Run the reference game with `--backend moderngl` after adding an Environment2D (lighting, a light, rain, bloom) to the field in the editor (do not save), then compare with `--backend pygame`. PASS if lights, shadows and bloom look right on the GPU, nothing flickers, and the pygame fallback stays playable.
+- **M11 — MV import by a person.** File → Import RPG Maker MV Project… with your own MV project; play it. Record which MV commands the Console lists as not converted.
 
 ## Rerunning
 

@@ -36,7 +36,7 @@
 | W-15 | 音訊 cue → 裝置播放 | 正確時序 | PASS | PASS（cue 排程） | PASS | N/A | **N/A**（沒有後端） | NE | NE | `presentation/audio_runtime.py` | G-4 |
 | W-16 | GPU 渲染路徑（shader、lighting、批次） | 與 pygame 等價或更好 | PARTIAL | PASS（headless 指令） | PASS | N/A | **N/A**（後端已移除） | NE | NE | `render/*`；`git show 16a6ebd:src/asteria/platform/moderngl_backend.py` | D1、G-5 |
 | W-17 | 遺失／錯誤 asset 處理 | 結構化診斷 | PASS | PASS | PASS | PARTIAL | PASS〔AR〕 | NE | N/A | `assets/quality_gate.py`、`editor/resource_resolver.py` `EditorResourceError` | — |
-| W-18 | MV 專案 → Asteria 專案 → Run | 地圖和角色可遊玩 | PASS | PASS（匯入、序列化、驗證；39 個 `mv_reference`） | **FAIL**（2026-10-11：匯入 MAP001 → 存檔 → 重載 → `run_preview` 3 影格：地圖資料在重載後不見，只畫出 3 個 marker、0 個 texture） | NE | NE（HI 已 FAIL；先前的 RM PASS 來自已取消的 Character Generator 驗證腳本，不是匯入的專案） | NE | NE | `tests/test_rpg_maker_mv_project.py`、`test_rpg_maker_mv_map_render.py` | 匯入的地圖沒有轉成 canonical TileMap、tileset 參照懸空，runtime 只畫出 marker；MV 邊界本身已關閉（AST-13） |
+| W-18 | MV 專案 → Asteria 專案 → Run | 地圖和角色可遊玩 | PASS | PASS | PASS（`test_mv_import_playable.py`：匯入→存檔→重載→遊玩，碰撞、對話、轉移、存讀檔） | PASS（editor File → Import RPG Maker MV Project…） | **PASS**（`mv_import_real_window`、`mv_import_gpu_night`：實機視窗、真實按鍵，NPC 對話、門轉移到 (8, 23)，遊玩時不載入 MV 模組） | NE | NE | `assets/rpg_maker_mv_map_bake.py`、`runtime/tilemap_field.py` | 依本機 MV reference（git-ignored）；未轉換的 MV 指令列為匯入問題 |
 | W-19 | 輸入 → 移動 → 攝影機跟隨（實機） | 即時操作 | PASS | PASS | PASS | N/A | **PARTIAL**〔AR：沒有驗證即時鍵盤操作和攝影機跟隨〕 | NE | NE | `runtime/player.py` | 沒有 gamepad 和 rebinding |
 | W-20 | 回歸套件 | 全綠 | — | **1922 PASS / 3 FAIL**（B 類美術） | — | — | — | — | — | `QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest -q -p no:cacheprovider` | 沒有 CI |
 
