@@ -27,6 +27,7 @@ from .event_editing import (
 from .event_editor_widget import EventEditorWidget
 from .game_flow_overview_widget import GameFlowOverviewWidget
 from .hierarchy import build_reorder_entity_command
+from .icons import icon as workspace_icon
 from .inspector import build_inspector_fields
 from .integrated_authoring import IntegratedAuthoringControllers
 from .model import EditorDocument
@@ -53,7 +54,7 @@ from .structure import (
 from .workspace import EditorWorkspace, WorkspaceMode
 
 try:
-    from PySide6.QtCore import Qt, QTimer
+    from PySide6.QtCore import QSize, Qt, QTimer
     from PySide6.QtGui import QAction, QKeySequence
     from PySide6.QtWidgets import (
         QApplication,
@@ -102,7 +103,16 @@ from .tile_edit import (
 from .tile_layers_widget import TileLayersWidget
 from .tile_palette_widget import TilePaletteWidget
 from .viewport_widget import SceneViewportWidget
-from .widgets import InspectorWidget, ProjectTreeWidget
+from .widgets import InspectorWidget, ProjectTreeWidget, asset_icon_name
+
+_WORKSPACE_ICON = {
+    WorkspaceMode.SCENE: "scene",
+    WorkspaceMode.RPG: "rpg",
+    WorkspaceMode.BATTLE: "battle",
+    WorkspaceMode.UI: "ui",
+    WorkspaceMode.EVENT: "events",
+    WorkspaceMode.CODE: "code",
+}
 
 
 class AsteriaEditorWindow(QMainWindow):
@@ -321,6 +331,20 @@ class AsteriaEditorWindow(QMainWindow):
         # tabified docks. Individual tabs retain their own visual states.
         for dock_tabs in self.findChildren(QTabBar):
             dock_tabs.setDrawBase(False)
+        from .dock_title import decorate_dock
+
+        for dock, (icon_name, accent) in {
+            left: ("project", "project"),
+            palette_dock: ("tiles", "tiles"),
+            layers_dock: ("layers", "layers"),
+            right: ("inspector", "inspector"),
+            bottom: ("assets", "assets"),
+            console: ("console", "console"),
+            debugger_dock: ("debugger", "debugger"),
+            profiler_dock: ("profiler", "profiler"),
+            self.problems_dock: ("problems", "problems"),
+        }.items():
+            decorate_dock(dock, icon_name, accent)
         for dock in self.findChildren(QDockWidget):
             dock.dockLocationChanged.connect(self._schedule_dock_tab_cleanup)
             dock.topLevelChanged.connect(self._schedule_dock_tab_cleanup)
@@ -345,9 +369,13 @@ class AsteriaEditorWindow(QMainWindow):
         duplicate "Assets / Console" strip). Hiding every dock tab bar and invalidating the layout
         lets Qt show again exactly the bars its layout still uses."""
         bars = [bar for bar in self.findChildren(QTabBar) if bar.parent() is self]
+        icons = {dock.windowTitle(): dock.windowIcon() for dock in self.findChildren(QDockWidget)}
         for bar in bars:
             bar.setUsesScrollButtons(True)  # a dock's tab titles never set the dock's minimum width
             bar.setElideMode(Qt.ElideNone)
+            for index in range(bar.count()):
+                if bar.tabText(index) in icons:
+                    bar.setTabIcon(index, icons[bar.tabText(index)])
             bar.hide()
         self.layout().invalidate()
         return bars
@@ -775,6 +803,8 @@ class AsteriaEditorWindow(QMainWindow):
         toolbar.setObjectName("AsteriaRunToolbar")
         toolbar.setMovable(False)
         toolbar.setFloatable(False)
+        toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        toolbar.setIconSize(QSize(18, 18))
         self.scene_workspace_action = QAction("Scene", self)
         self.rpg_workspace_action = QAction("RPG", self)
         self.battle_workspace_action = QAction("Battle", self)
@@ -791,7 +821,9 @@ class AsteriaEditorWindow(QMainWindow):
         ):
             action.setCheckable(True)
             action.triggered.connect(lambda checked=False, m=mode: self.workspace.set_mode(m))
+            action.setIcon(workspace_icon(_WORKSPACE_ICON[mode]))
             toolbar.addAction(action)
+            toolbar.widgetForAction(action).setProperty("workspace", _WORKSPACE_ICON[mode])
         workspace_menu = self.view_menu.addMenu("Workspace")
         for number, action in enumerate(
             (
@@ -811,9 +843,14 @@ class AsteriaEditorWindow(QMainWindow):
         # and took the central area's width, so it stays hidden.
         self.workspace.tabs.hide()
         toolbar.addSeparator()
+        self.play_action.setIcon(workspace_icon("play"))
+        self.stop_action.setIcon(workspace_icon("stop"))
+        self.reset_view_action.setIcon(workspace_icon("target"))
         toolbar.addAction(self.play_action)
         toolbar.addAction(self.stop_action)
         toolbar.addAction(self.reset_view_action)
+        toolbar.widgetForAction(self.play_action).setObjectName("PlayButton")
+        toolbar.widgetForAction(self.stop_action).setObjectName("StopButton")
         self.addToolBar(Qt.TopToolBarArea, toolbar)
         self._refresh_actions()
 
@@ -1287,14 +1324,12 @@ class AsteriaEditorWindow(QMainWindow):
         for record in self.document.project.assets.records():
             item = QListWidgetItem(f"{record.kind}: {record.source_path}")
             icon = asset_thumbnail(self.document, record, cache)
-            if icon is not None:
-                item.setIcon(icon)
+            item.setIcon(icon if icon is not None else workspace_icon(asset_icon_name(record.source_path)))
             self.asset_list.addItem(item)
         for asset in self.document.project.assets.snapshot():
             item = QListWidgetItem(f"{asset.kind}: {asset.source.uri}")
             icon = canonical_asset_thumbnail(self.document, asset, cache)
-            if icon is not None:
-                item.setIcon(icon)
+            item.setIcon(icon if icon is not None else workspace_icon(asset_icon_name(asset.source.uri)))
             self.asset_list.addItem(item)
 
     def refresh_inspector(self):

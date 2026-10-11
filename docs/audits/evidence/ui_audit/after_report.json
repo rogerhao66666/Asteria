@@ -1,11 +1,17 @@
 {
   "size": [
-    1280,
-    800
+    1440,
+    900
   ],
   "dpr": 2.0,
   "surfaces": {
     "scene": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
       {
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
@@ -18,10 +24,22 @@
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
         "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
         "text": "Layers"
       }
     ],
     "rpg_game_systems": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
       {
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
@@ -34,10 +52,22 @@
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
         "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
         "text": "Layers"
       }
     ],
     "rpg_behavior_trees": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
       {
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
@@ -50,10 +80,22 @@
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
         "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
         "text": "Layers"
       }
     ],
     "ui_battle_presentation": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
       {
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
@@ -90,6 +132,12 @@
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
         "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
         "text": "Layers"
       },
       {
@@ -118,6 +166,12 @@
       }
     ],
     "ui_animation": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
       {
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
@@ -154,6 +208,12 @@
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
         "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
         "text": "Layers"
       },
       {
@@ -182,6 +242,12 @@
       }
     ],
     "ui_animation_states": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
       {
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
@@ -218,6 +284,12 @@
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
         "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
         "text": "Layers"
       },
       {
@@ -246,6 +318,12 @@
       }
     ],
     "ui_action_timeline": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
       {
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
@@ -282,6 +360,12 @@
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
         "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
         "text": "Layers"
       },
       {
@@ -310,6 +394,12 @@
       }
     ],
     "ui_input_map": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
       {
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
@@ -346,10 +436,22 @@
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
         "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
         "text": "Layers"
       }
     ],
     "event_field_-_game_flow": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
       {
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
@@ -362,10 +464,22 @@
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",
         "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
         "text": "Layers"
       }
     ],
     "code": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Tile Palette"
+      },
       {
         "kind": "scrolled",
         "widget": "QMainWindowTabBar",

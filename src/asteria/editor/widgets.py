@@ -121,8 +121,20 @@ class ProjectTreeWidget(QWidget):
             if project is None:
                 return
 
+            from .icons import icon
+
+            folder_icons = {"Scenes": "scene", "Prefabs": "prefab", "Assets": "folder"}
+            kind_icons = {"project": "project", "scene": "scene", "entity": "entity", "component": "settings"}
+
             def item(label, kind=None, value=None):
                 tree_item = QTreeWidgetItem([label])
+                name = kind_icons.get(kind) or (folder_icons.get(label) if kind is None else None)
+                if kind == "asset":
+                    name = asset_icon_name(getattr(value, "source_path", ""))
+                elif kind is None and name is None:
+                    name = "prefab"
+                if name:
+                    tree_item.setIcon(0, icon(name))
                 if kind is not None:
                     tree_item.setData(0, Qt.UserRole, (kind, value))
                     if (kind, id(value)) in selected:
@@ -190,6 +202,19 @@ class ProjectTreeWidget(QWidget):
             self.tree.blockSignals(False)
 
 
+def asset_icon_name(path):
+    suffix = str(path).rsplit(".", 1)[-1].lower() if "." in str(path) else ""
+    if suffix in ("png", "jpg", "jpeg", "gif", "bmp", "webp"):
+        return "image"
+    if suffix in ("ogg", "wav", "mp3", "flac", "m4a"):
+        return "audio"
+    if suffix in ("py",):
+        return "code"
+    if suffix in ("json", "tsj", "tmj", "tsx", "tmx"):
+        return "list"
+    return "folder"
+
+
 class InspectorWidget(QWidget):
     def __init__(self, document, parent=None):
         if not QT_AVAILABLE:
@@ -206,10 +231,41 @@ class InspectorWidget(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
         self.table.itemChanged.connect(self._item_changed)
+        self.title.setObjectName("SectionLabel")
+        self.error.setStyleSheet("color: #ff8f96;")
+        self.empty_state = self._empty_state()
         layout = QVBoxLayout(self)
         layout.addWidget(self.title)
         layout.addWidget(self.error)
         layout.addWidget(self.table)
+        layout.addWidget(self.empty_state, 1)
+        self._set_empty(True)
+
+    def _empty_state(self):
+        from .icons import pixmap
+
+        box = QWidget()
+        column = QVBoxLayout(box)
+        column.addStretch(1)
+        picture = QLabel()
+        picture.setPixmap(pixmap("inspector", 44, "#4a5470", 2.0))
+        picture.setAlignment(Qt.AlignCenter)
+        heading = QLabel("Nothing selected")
+        heading.setObjectName("EmptyStateTitle")
+        heading.setAlignment(Qt.AlignCenter)
+        hint = QLabel("Pick an entity in the scene or the project tree to edit its properties here.")
+        hint.setObjectName("EmptyStateHint")
+        hint.setAlignment(Qt.AlignCenter)
+        hint.setWordWrap(True)
+        for widget in (picture, heading, hint):
+            column.addWidget(widget)
+        column.addStretch(2)
+        return box
+
+    def _set_empty(self, empty):
+        self.empty_state.setVisible(empty)
+        self.table.setVisible(not empty)
+        self.title.setVisible(not empty)
 
     def show_message(self, message):
         self._refreshing = True
@@ -218,10 +274,12 @@ class InspectorWidget(QWidget):
             self.error.setText("")
             self.table.setRowCount(0)
             self._field_models = {}
+            self._set_empty(message == "Nothing selected")
         finally:
             self._refreshing = False
 
     def show_properties(self, title, rows):
+        self._set_empty(False)
         self._refreshing = True
         try:
             self.title.setText(title)

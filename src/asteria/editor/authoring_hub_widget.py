@@ -83,6 +83,17 @@ except ImportError:
             pass
 
 
+def _category_icons(browser, category_label):
+    """Give every record in a database list its category's icon (actor, skill, item...)."""
+    from .decor import label_icon
+    from .icons import icon
+
+    name = label_icon(category_label)
+    if name:
+        for row in range(browser.count()):
+            browser.item(row).setIcon(icon(name))
+
+
 class AuthoringHubError(RuntimeError):
     pass
 
@@ -217,6 +228,7 @@ class AuthoringHubWidget(QWidget):
         heading = QLabel(self.title)
         heading.setObjectName("SectionLabel")
         self.category = QComboBox()
+        self.category.setProperty("decorate", True)  # category icons (decor.py)
         for key, label in self.categories:
             self.category.addItem(label, key)
         self.category.currentIndexChanged.connect(self.refresh)
@@ -265,6 +277,7 @@ class AuthoringHubWidget(QWidget):
             return
         self._ids = list(self._list_ids(category))
         self.browser.addItems(self._ids)
+        _category_icons(self.browser, self.category.currentText())
         if self._ids:
             self.browser.setCurrentRow(0)
 
@@ -395,6 +408,7 @@ class AdapterFamilyWidget(QWidget):
         heading = QLabel(self.title)
         heading.setObjectName("SectionLabel")
         self.category = QComboBox()
+        self.category.setProperty("decorate", True)  # category icons (decor.py)
         for adapter in adapters:
             self.category.addItem(adapter.label, adapter.category_id)
         self.category.currentIndexChanged.connect(self.refresh)
@@ -517,6 +531,7 @@ class AdapterFamilyWidget(QWidget):
         needle = self.search.text().strip().lower()
         self._ids = self._sorted([key for key in adapter.ids() if not needle or needle in key.lower()])
         self.browser.addItems(self._ids)
+        _category_icons(self.browser, self.category.currentText())
         self.duplicate_button.setEnabled(adapter.duplicate is not None and bool(self._ids))
         is_graph = self.category_id == "graphs"
         self.view_button.setVisible(is_graph)
