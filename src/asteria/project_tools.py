@@ -101,9 +101,9 @@ exec "${{ASTERIA_PYTHON:-python3}}" "$HERE/../Resources/{archive}" "$@"
 
 
 def _registry():
-    from asteria.editor.model import EditorDocument
+    from asteria.runtime.component_registry import default_component_registry
 
-    return EditorDocument().component_registry
+    return default_component_registry()
 
 
 def load_project(path):

@@ -3,46 +3,17 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from asteria.core import ComponentRegistry, PersistentComponent, Transform
-from asteria.core.prefab import PrefabInstanceComponent
-from asteria.gameplay import GameplayAttributesComponent
+from asteria.core import Transform
 from asteria.project import Project
-from asteria.runtime.actor_link import ActorLinkComponent
-from asteria.runtime.collision import Collider2DComponent
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.components2d import (
-    Animator2DComponent,
     Camera2DComponent,
-    Interaction2DComponent,
-    SpriteRenderer2D,
-    TileMap2DComponent,
 )
-from asteria.runtime.field_ai import FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent
 from asteria.runtime.game_save import GameRuntimeSave
 
 
 def build_preview_registry():
-    registry = ComponentRegistry()
-    registry.register(Transform)
-    registry.register(SpriteRenderer2D)
-    registry.register(Camera2DComponent)
-    registry.register(Interaction2DComponent)
-    registry.register(Animator2DComponent)
-    registry.register(TileMap2DComponent)
-    registry.register(GameplayAttributesComponent)
-    registry.register(ActorLinkComponent)
-    registry.register(PersistentComponent)
-    registry.register(PrefabInstanceComponent)
-    registry.register(Collider2DComponent)
-    from asteria.runtime.character_control import register_character_components
-
-    register_character_components(registry)
-    from asteria.runtime.npc_state import NpcIdentity2DComponent
-
-    registry.register(NpcIdentity2DComponent)
-    registry.register(FieldAIComponent)
-    registry.register(SpawnZoneComponent)
-    registry.register(VisibleEncounterComponent)
-    return registry
+    return default_component_registry()
 
 
 BACKENDS = ("pygame", "moderngl")

@@ -30,47 +30,13 @@ class EditorSelection:
 
 class EditorDocument:
     def __init__(self, project=None, *, component_registry=None, clipboard=None, file_path=None):
-        from asteria.core import ComponentRegistry, PersistentComponent, Transform
-        from asteria.core.prefab import PrefabInstanceComponent
-        from asteria.gameplay import GameplayAttributesComponent
-        from asteria.runtime import (
-            ActorLinkComponent,
-            Animator2DComponent,
-            Camera2DComponent,
-            Collider2DComponent,
-            FieldAIComponent,
-            Interaction2DComponent,
-            SpawnZoneComponent,
-            SpriteRenderer2D,
-            TileMap2DComponent,
-            VisibleEncounterComponent,
-        )
-
         from .asset_views import EditorAssetViews
         from .clipboard import EditorClipboard
 
         if component_registry is None:
-            component_registry = ComponentRegistry()
-            component_registry.register(Transform)
-            component_registry.register(SpriteRenderer2D)
-            component_registry.register(Camera2DComponent)
-            component_registry.register(Interaction2DComponent)
-            component_registry.register(Animator2DComponent)
-            component_registry.register(TileMap2DComponent)
-            component_registry.register(GameplayAttributesComponent)
-            component_registry.register(ActorLinkComponent)
-            component_registry.register(PersistentComponent)
-            component_registry.register(PrefabInstanceComponent)
-            component_registry.register(Collider2DComponent)
-            from asteria.runtime.character_control import register_character_components
+            from asteria.runtime.component_registry import default_component_registry
 
-            register_character_components(component_registry)
-            from asteria.runtime.npc_state import NpcIdentity2DComponent
-
-            component_registry.register(NpcIdentity2DComponent)
-            component_registry.register(FieldAIComponent)
-            component_registry.register(SpawnZoneComponent)
-            component_registry.register(VisibleEncounterComponent)
+            component_registry = default_component_registry()
         self.project = project
         self.selection = EditorSelection()
         self.component_registry = component_registry

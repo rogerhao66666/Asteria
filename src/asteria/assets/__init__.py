@@ -38,8 +38,28 @@ from .import_transaction import *
 from .reconciliation import *
 from .editor_import_service import *
 from .quality_gate import *
-from .rpg_maker_mv_database import *
-from .rpg_maker_mv_catalog import *
-from .rpg_maker_mv_generator import *
-from .character_bundle import *
-from .rpg_maker_mv_weapon import *
+
+# RPG Maker MV adapters stay at the asset boundary (AST-13): they are imported only when one of
+# their names is asked for, so the runtime never loads MV code.
+_LAZY_MODULES = (
+    "rpg_maker_mv_database",
+    "rpg_maker_mv_catalog",
+    "rpg_maker_mv_generator",
+    "character_bundle",
+    "rpg_maker_mv_weapon",
+)
+
+
+def __getattr__(name):
+    if name.startswith("__"):
+        raise AttributeError(name)
+    import importlib
+
+    for module_name in _LAZY_MODULES:
+        module = importlib.import_module(f".{module_name}", __name__)
+        public = getattr(module, "__all__", None) or [n for n in vars(module) if not n.startswith("_")]
+        if name in public:
+            value = getattr(module, name)
+            globals()[name] = value
+            return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
