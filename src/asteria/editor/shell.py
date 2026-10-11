@@ -1,6 +1,5 @@
 import shutil
 import sys
-from functools import lru_cache
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -106,14 +105,6 @@ from .viewport_widget import SceneViewportWidget
 from .widgets import InspectorWidget, ProjectTreeWidget
 
 
-@lru_cache(maxsize=1)
-def _discover_mv_generator_catalog(reference_root):
-    """Share the immutable MV file index while keeping each recipe independent."""
-    from asteria.assets.rpg_maker_mv_generator import RPGMakerMVGeneratorCatalog
-
-    return RPGMakerMVGeneratorCatalog.discover(reference_root)
-
-
 class AsteriaEditorWindow(QMainWindow):
     def __init__(self, project=None, component_registry=None):
         if QApplication is None:
@@ -139,24 +130,8 @@ class AsteriaEditorWindow(QMainWindow):
         self.playtest_profile_library = None
 
         self.rpg_authoring = FamilyHostWidget("RPG Authoring", self.authoring_controllers.rpg_categories, self)
-        from pathlib import Path
-
-        from asteria.assets.character_generator import CharacterGeneratorCatalog
-        from asteria.assets.local_reference import resolve_rpg_maker_mv_root
-
-        from .character_generator_widget import CharacterGeneratorWidget
-        from .character_generator_workspace import CharacterGeneratorWorkspace
-
-        reference_root = resolve_rpg_maker_mv_root(Path(__file__).resolve().parents[3])
-        if reference_root is None:
-            character_workspace = CharacterGeneratorWorkspace.create(CharacterGeneratorCatalog())
-        else:
-            character_workspace = CharacterGeneratorWorkspace.create_mv(_discover_mv_generator_catalog(reference_root))
-        self.character_creator = CharacterGeneratorWidget(character_workspace, self)
-        self.character_creator.generated.connect(
-            lambda bundle: self.begin_character_placement(bundle, self.character_creator)
-        )
-        self.viewport.characterCellClicked.connect(self._place_generated_character_at)
+        # Generic placement: "Place Character from Sprite Sheet…" waits for one map-cell click (CB14).
+        self.viewport.characterCellClicked.connect(self._place_character_at)
         self.rpg_workspace = QTabWidget(self)
         self.rpg_workspace.addTab(self.rpg_authoring, "Database")
         from .game_systems_authoring import GameSystemsAuthoringController
@@ -164,7 +139,6 @@ class AsteriaEditorWindow(QMainWindow):
 
         self.game_systems_editor = GameSystemsEditorWidget(GameSystemsAuthoringController(self.document), self)
         self.game_systems_editor.changed.connect(self.refresh_all)
-        self.rpg_workspace.addTab(self.character_creator, "Character Creator")
         self.rpg_workspace.addTab(self.game_systems_editor, "Game Systems")
         from .enemy_ai_widget import EnemyAIEditorWidget
 
@@ -345,15 +319,16 @@ class AsteriaEditorWindow(QMainWindow):
         self.refresh_all()
         QTimer.singleShot(0, self.viewport.frame_game_camera)
 
-    def begin_character_placement(self, bundle, status_widget=None):
-        """Switch to Scene and wait for one map-cell click to place a bundle."""
-        status_widget = status_widget or self.character_creator
+    def begin_character_placement(self, visual, status_widget=None):
+        """Switch to Scene and wait for one map-cell click to place a ``CharacterVisualSet``."""
+        status_widget = status_widget or self._status_sink()
+        bundle = visual
         project = self.document.project
         scene = self.viewport.current_scene()
         if project is None or scene is None:
             status_widget.status.setText("Open a project and select a scene before creating a character")
             return None
-        self._pending_character_bundle = bundle
+        self._pending_character_visual = bundle
         self._placement_status_widget = status_widget
         self.workspace.set_mode(WorkspaceMode.SCENE)
         self.viewport.begin_character_placement()
@@ -517,46 +492,30 @@ class AsteriaEditorWindow(QMainWindow):
         command = RevertInstanceCommand(self.document.project, self.document.component_registry, entity)
         return self._run_prefab_command(command, f"{entity.name} matches its prefab again")
 
-    def _place_generated_character_at(self, cell):
-        """Commit the pending generated bundle using the cell clicked in Scene."""
-        bundle = getattr(self, "_pending_character_bundle", None)
-        if bundle is None:
+    def _place_character_at(self, cell):
+        """Commit the pending ``CharacterVisualSet`` at the map cell clicked in Scene."""
+        visual = getattr(self, "_pending_character_visual", None)
+        if visual is None:
             return None
         project = self.document.project
         scene = self.viewport.current_scene()
-        status_widget = getattr(self, "_placement_status_widget", None) or self.character_creator
+        status_widget = getattr(self, "_placement_status_widget", None) or self._status_sink()
         if project is None or scene is None:
             self.viewport.end_character_placement()
-            self._pending_character_bundle = None
+            self._pending_character_visual = None
             self._placement_status_widget = None
             status_widget.status.setText("Character placement cancelled: no active scene")
             return None
-        cell = (
-            int(cell[0]),
-            int(cell[1]),
-        )
+        cell = (int(cell[0]), int(cell[1]))
         try:
-            if isinstance(bundle, CharacterVisualSet):
-                command = CreateCharacterCommand(
-                    bundle,
-                    project,
-                    scene,
-                    cell,
-                    display_name=getattr(self, "_pending_character_name", None),
-                )
-            else:
-                command = self.character_creator.workspace.create_character_command(
-                    bundle,
-                    project,
-                    scene,
-                    cell,
-                    display_name=self.character_creator.name_edit.text().strip() or None,
-                )
+            command = CreateCharacterCommand(
+                visual, project, scene, cell, display_name=getattr(self, "_pending_character_name", None)
+            )
             self.document.execute(command)
         except Exception as exc:
             status_widget.status.setText(f"Character creation failed: {exc}")
             return None
-        self._pending_character_bundle = None
+        self._pending_character_visual = None
         self._placement_status_widget = None
         self.viewport.end_character_placement()
         self.document.select_entity(command.created.entity)

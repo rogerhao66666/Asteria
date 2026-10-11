@@ -106,7 +106,7 @@ def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
     window = AsteriaEditorWindow(project())
     assert window.workspace.page(WorkspaceMode.RPG) is window.rpg_workspace
     assert window.rpg_workspace.widget(0) is window.rpg_authoring
-    assert window.rpg_workspace.widget(1) is window.character_creator
+    assert window.rpg_workspace.widget(1) is window.game_systems_editor  # Character Creator retired (CB15)
     assert window.workspace.page(WorkspaceMode.BATTLE) is window.battle_authoring
     assert window.workspace.page(WorkspaceMode.UI) is window.ui_workspace
     assert window.workspace.page(WorkspaceMode.EVENT) is window.events_workspace

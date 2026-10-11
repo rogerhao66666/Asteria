@@ -75,9 +75,3 @@ class CharacterVisualSet:
             metadata=(("representation", "walking"),),
         )
         return cls(key, (asset,), frame_size, (frame_size[0] // 2, frame_size[1]))
-
-    @classmethod
-    def from_bundle(cls, bundle):
-        """Adapt a Character Generator bundle (cancelled feature, kept for existing data)."""
-        owned = tuple(bundle.all_visual_paths) + (bundle.metadata_path,) if bundle.files_owned else ()
-        return cls(bundle.recipe_id, tuple(bundle.canonical_assets), (48, 48), tuple(bundle.anchor), owned)

@@ -44,8 +44,6 @@ from .quality_gate import *
 _LAZY_MODULES = (
     "rpg_maker_mv_database",
     "rpg_maker_mv_catalog",
-    "rpg_maker_mv_generator",
-    "character_bundle",
     "rpg_maker_mv_weapon",
 )
 

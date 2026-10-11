@@ -1,4 +1,4 @@
-"""Transactional creation of a playable character from a walking sheet or generated bundle."""
+"""Transactional creation of a playable character from a walking sheet (``CharacterVisualSet``)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,6 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from uuid import NAMESPACE_URL, uuid5
 
-from asteria.assets.character_bundle import GeneratedCharacterBundle
 from asteria.assets.character_visual import CharacterVisualSet
 from asteria.assets.scene_placement import character_cell_position
 from asteria.core import Entity, Transform
@@ -50,7 +49,7 @@ class CreateCharacterCommand:
 
     def __init__(
         self,
-        bundle: GeneratedCharacterBundle | CharacterVisualSet,
+        bundle: CharacterVisualSet,
         project: Project,
         scene,
         cell: tuple[int, int],
@@ -60,11 +59,10 @@ class CreateCharacterCommand:
     ):
         if project.scene(scene.id) is not scene:
             raise ValueError("target scene does not belong to project")
-        generated = isinstance(bundle, GeneratedCharacterBundle)
-        visual = CharacterVisualSet.from_bundle(bundle) if generated else bundle
+        visual = bundle
         if not isinstance(visual, CharacterVisualSet):
-            raise TypeError("bundle must be CharacterVisualSet or GeneratedCharacterBundle")
-        prefix = "generated." if generated else ""
+            raise TypeError("bundle must be a CharacterVisualSet")
+        prefix = ""
         self.bundle = bundle
         self.visual = visual
         self.project = project
@@ -75,7 +73,7 @@ class CreateCharacterCommand:
         actor_id = f"actor.{prefix}{key}"
         entity_id = str(uuid5(NAMESPACE_URL, f"asteria:{project.id}:{scene.id}:{key}:entity"))
         clip_set_id = f"animation.{prefix}{key}"
-        tags = ("generated", "playable") if generated else ("playable",)
+        tags = ("playable",)
         actor = ActorDefinition(actor_id, display_name or key, tags=tags)
         clip_set = _directional_clips()
         entity = Entity(display_name or key, entity_id=entity_id)

@@ -123,7 +123,7 @@ def test_editor_places_sheet_character_copies_it_and_lists_it_with_a_thumbnail(t
         assert (tmp_path / "characters" / "field_hero.png").is_file()
         assert visual.walking_asset.source.uri == str(Path("characters") / "field_hero.png")
 
-        created = window._place_generated_character_at((4, 5))
+        created = window._place_character_at((4, 5))
         assert created is not None and created.entity.get(ActorLinkComponent).actor_id == "actor.field_hero"
         assert created.entity.get(Transform).x > 0
 

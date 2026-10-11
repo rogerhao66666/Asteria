@@ -1,13 +1,16 @@
+"""CreateCharacterCommand: one reversible unit (files, assets, actor, entity) for a CharacterVisualSet.
+
+Ported from the retired Character Generator bundle tests (CB15): the generic guarantees stay covered.
+"""
+
 from dataclasses import replace
 
 import pytest
 from PIL import Image
 
 from asteria.assets.canonical import AssetSource, CanonicalAsset
-from asteria.assets.character_bundle import GeneratedCharacterBundle
-from asteria.assets.rpg_maker_mv_generator import RPGMakerMVGeneratorCatalog
+from asteria.assets.character_visual import CharacterVisualSet
 from asteria.core import Entity, Scene, Transform
-from asteria.editor.character_generator_workspace import CharacterGeneratorWorkspace
 from asteria.editor.create_character_command import CreateCharacterCommand
 from asteria.project import Project
 from asteria.rpg import ActorDefinition
@@ -15,30 +18,26 @@ from asteria.runtime import AnimationClipSet, Animator2DComponent, SpriteRendere
 
 
 def _bundle(tmp_path):
-    output = tmp_path / "generated" / "hero-one"
+    """A visual set that owns its files (undo removes them, redo restores them)."""
+    output = tmp_path / "characters" / "hero-one"
     output.mkdir(parents=True)
     paths = {}
     for name, size in (("walking", (144, 192)), ("face", (144, 144)), ("side_view", (576, 384))):
         path = output / f"{name}.png"
         Image.new("RGBA", size, (10, 20, 30, 0)).save(path)
         paths[name] = path
-    metadata = output / "character.bundle.json"
-    metadata.write_text('{"schema":"asteria.character.bundle.v1"}', encoding="utf-8")
+    metadata = output / "character.json"
+    metadata.write_text('{"schema":"example.character"}', encoding="utf-8")
     assets = tuple(
-        CanonicalAsset(f"generated/hero-one/{name}", f"character.{name}", AssetSource(str(paths[name]), "generated"))
+        CanonicalAsset(f"characters/hero-one/{name}", f"character.{name}", AssetSource(str(paths[name]), "sheet"))
         for name in ("walking", "face", "side_view")
     )
-    return GeneratedCharacterBundle(
-        "hero-one",
-        output,
-        paths["walking"],
-        paths["face"],
-        paths["side_view"],
-        metadata,
-        (24, 48),
-        ("mvgen.source",),
-        assets,
-    )
+    owned = (paths["walking"], paths["face"], paths["side_view"], metadata)
+    return CharacterVisualSet("hero-one", assets, (48, 48), (24, 48), owned)
+
+
+def _owned(visual):
+    return tuple(visual.owned_paths)
 
 
 def _world(tmp_path):
@@ -78,7 +77,7 @@ def test_execute_creates_actor_assets_clips_and_cell_aligned_entity(tmp_path):
     assert scene.get_entity(created.entity_id) is created.entity
     transform = created.entity.get(Transform)
     assert (transform.x, transform.y) == (120.0, 192.0)
-    assert created.entity.get(SpriteRenderer2D).sprite_sheet_asset_id == "generated/hero-one/walking"
+    assert created.entity.get(SpriteRenderer2D).sprite_sheet_asset_id == "characters/hero-one/walking"
     animator = created.entity.get(Animator2DComponent)
     assert animator.clip_set_id == created.clip_set_id
     assert animator.default_clip == "idle_down"
@@ -86,7 +85,7 @@ def test_execute_creates_actor_assets_clips_and_cell_aligned_entity(tmp_path):
 
 def test_undo_and_redo_restore_identical_ids_and_only_owned_files(tmp_path):
     project, scene, bundle = _world(tmp_path)
-    sentinel = bundle.output_dir / "keep.txt"
+    sentinel = bundle.owned_paths[0].parent / "keep.txt"
     sentinel.write_text("pre-existing", encoding="utf-8")
     command = CreateCharacterCommand(bundle, project, scene, (0, 0))
     first = command.execute()
@@ -96,22 +95,24 @@ def test_undo_and_redo_restore_identical_ids_and_only_owned_files(tmp_path):
 
     assert first.actor_id not in project.rpg_database.actors
     assert scene.get_entity(first.entity_id) is None
-    assert not any(path.exists() for path in bundle.visual_paths + (bundle.metadata_path,))
+    assert not any(path.exists() for path in _owned(bundle))
     assert sentinel.read_text(encoding="utf-8") == "pre-existing"
     assert project.assets.snapshot() == ()
 
     second = command.redo()
     assert (second.actor_id, second.entity_id, second.clip_set_id) == ids
-    assert all(path.exists() for path in bundle.visual_paths + (bundle.metadata_path,))
+    assert all(path.exists() for path in _owned(bundle))
     assert sentinel.exists()
 
 
-def test_undo_removes_owned_damaged_sheet_and_redo_restores_it(tmp_path):
+def test_undo_removes_an_extra_owned_sheet_and_redo_restores_it(tmp_path):
     project, scene, bundle = _world(tmp_path)
-    damaged = bundle.output_dir / "damaged.png"
+    damaged = bundle.owned_paths[0].parent / "damaged.png"
     Image.new("RGBA", (144, 48), (0, 0, 0, 0)).save(damaged)
-    asset = CanonicalAsset("generated/hero-one/damaged", "character.damaged", AssetSource(str(damaged), "generated"))
-    bundle = replace(bundle, damaged_path=damaged, canonical_assets=bundle.canonical_assets + (asset,))
+    asset = CanonicalAsset("characters/hero-one/damaged", "character.damaged", AssetSource(str(damaged), "sheet"))
+    bundle = replace(
+        bundle, canonical_assets=bundle.canonical_assets + (asset,), owned_paths=_owned(bundle) + (damaged,)
+    )
     command = CreateCharacterCommand(bundle, project, scene, (0, 0))
 
     command.execute()
@@ -121,17 +122,6 @@ def test_undo_removes_owned_damaged_sheet_and_redo_restores_it(tmp_path):
     assert damaged.is_file()
 
 
-def test_workspace_builds_scene_creation_command_from_generated_bundle(tmp_path):
-    project, scene, bundle = _world(tmp_path)
-    workspace = CharacterGeneratorWorkspace.create_mv(RPGMakerMVGeneratorCatalog((), (), (), 0), "hero-one")
-
-    command = workspace.create_character_command(bundle, project, scene, (4, 5), display_name="Hero")
-
-    assert isinstance(command, CreateCharacterCommand)
-    created = command.execute()
-    assert (created.entity.get(Transform).x, created.entity.get(Transform).y) == (216.0, 288.0)
-
-
 @pytest.mark.parametrize("boundary", ["files", "assets", "actor", "entity"])
 def test_failure_at_each_boundary_rolls_back_without_touching_preexisting_state(tmp_path, boundary):
     project, scene, bundle = _world(tmp_path)
@@ -139,7 +129,7 @@ def test_failure_at_each_boundary_rolls_back_without_touching_preexisting_state(
     project.assets.register(existing_asset)
     existing_actor = project.rpg_database.add_actor(ActorDefinition("existing.actor", "Existing"))
     existing_entity = scene.add_entity(Entity("Existing"))
-    sentinel = bundle.output_dir / "keep.txt"
+    sentinel = bundle.owned_paths[0].parent / "keep.txt"
     sentinel.write_text("keep", encoding="utf-8")
 
     def fail(stage):
@@ -154,4 +144,4 @@ def test_failure_at_each_boundary_rolls_back_without_touching_preexisting_state(
     assert project.rpg_database.actors == {existing_actor.actor_id: existing_actor}
     assert scene.entities() == (existing_entity,)
     assert sentinel.read_text(encoding="utf-8") == "keep"
-    assert not any(path.exists() for path in bundle.visual_paths + (bundle.metadata_path,))
+    assert not any(path.exists() for path in _owned(bundle))

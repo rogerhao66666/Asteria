@@ -69,12 +69,6 @@ QPushButton:hover { background: #323a45; }
 QPushButton:pressed { background: #22272e; }
 QPushButton#PrimaryButton { background: #3c5f87; border-color: #557aa5; font-weight: 600; padding: 8px 12px; }
 QPushButton#PrimaryButton:hover { background: #466d99; }
-QFrame#CharacterGeneratorControls, QFrame#CharacterGeneratorPreview, QFrame#CharacterPartBrowser {
-    background: #1b1e23; border: 1px solid #292e36; border-radius: 6px;
-}
-QLabel#CharacterPreviewCanvas { background: #121419; border: 1px solid #343a44; border-radius: 6px; }
-QListWidget#CharacterPartGrid { background: #121419; border: 1px solid #343a44; border-radius: 4px; }
-QListWidget#CharacterPartGrid::item { min-width: 88px; min-height: 92px; padding: 5px; }
 
 QToolButton {
     background: transparent; border: 1px solid transparent; border-radius: 4px;
