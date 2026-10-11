@@ -13,6 +13,10 @@ _MV_REFERENCE_AVAILABLE = resolve_rpg_maker_mv_root(_REPO) is not None
 
 
 def pytest_configure(config):
+    import real_window
+
+    if real_window.enabled():
+        real_window.install()
     config.addinivalue_line(
         "markers",
         "mv_reference: needs the git-ignored local RPG Maker MV reference "
@@ -63,17 +67,61 @@ def resource_root(tmp_path):
 
 
 @pytest.fixture
-def runtime(resource_root, monkeypatch):
+def runtime(resource_root, monkeypatch, request):
     """A headless PlayableTestRuntime on the reference project (blocking legacy effects disabled)."""
     pytest.importorskip("pygame")
+    import real_window
+
     from asteria.editor import EditorDocument
     from asteria.project import Project
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
-    monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
+    if real_window.enabled():  # real-window replay (D19): a real playable window, no dummy driver
+        monkeypatch.delenv("SDL_VIDEODRIVER", raising=False)
+        monkeypatch.delenv("SDL_AUDIODRIVER", raising=False)
+    else:
+        monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+        monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
     project = Project.load_json(REFERENCE_PROJECT / "project.asteria.json", EditorDocument().component_registry)
     value = PlayableTestRuntime(project, project.game_start.instantiate(project), resource_root, width=960, height=540)
     value.open()
+    if real_window.enabled():
+        real_window.set_stage(value)
     yield value
+    if real_window.enabled() and real_window.STATE["stage"] is value:
+        real_window.save_screenshot(request.node.name)
+        real_window.STATE["stage"] = None
     value.close()
+
+
+# --- real-window replay (tests/real_window.py) ----------------------------------------
+
+_REPLAY_RESULTS = {}
+
+
+@pytest.fixture(autouse=True)
+def _real_window_test_name(request):
+    import real_window
+
+    if not real_window.enabled():
+        yield
+        return
+    real_window.STATE["test"] = request.node.nodeid
+    yield
+    stage = real_window.STATE["stage"]
+    if stage is not None:  # a window opened by test_session_events._session (the runtime fixture closes its own)
+        real_window.save_screenshot(request.node.name)
+        real_window.STATE["stage"] = None
+        stage.close()
+
+
+def pytest_runtest_logreport(report):
+    if report.when == "call" or (report.when == "setup" and report.outcome != "passed"):
+        _REPLAY_RESULTS[report.nodeid] = report.outcome
+
+
+def pytest_sessionfinish(session, exitstatus):
+    import real_window
+
+    if real_window.enabled():
+        real_window.write_report(_REPLAY_RESULTS)

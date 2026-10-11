@@ -1741,6 +1741,108 @@ def check_battle_without_art(out):
     return results
 
 
+# -- D19: session-level integration tests replayed in the real playable window ----------------------
+
+REPLAY = {
+    "RPG-02": ["shops_and_quests::test_equipment_set_bonuses_apply_by_piece_count_and_survive_save_load"],
+    "RPG-04": ["drop_tables::test_victory_rolls_the_enemy_drop_table_and_pity_survives_save_and_load"],
+    "RPG-05": [
+        "shops_and_quests::test_shop_buys_sells_and_tracks_limited_stock",
+        "game_menus::test_runtime_opens_shop_from_an_event_and_buys",
+    ],
+    "RPG-06": [
+        "runtime_menus_d12::test_crafting_screen_opened_by_event_crafts_in_the_runtime",
+        "runtime_menus_d12::test_recipe_discovery_by_event_and_by_experiment",
+    ],
+    "RPG-07": [
+        "world_interactions::test_refusals_cost_success_rewards_and_one_time_use",
+        "world_interactions::test_party_capability_and_cost_are_checked",
+        "world_interactions::test_stat_checks_are_deterministic_and_failures_run_their_branch",
+        "world_interactions::test_an_event_runs_an_interaction_and_branches_on_its_outcome",
+    ],
+    "RPG-09": ["behavior_trees::test_a_tree_in_the_game_session_starts_its_encounter"],
+    "RPG-10": [
+        "runtime_field_enemies::test_spawned_enemy_chases_player_and_starts_battle_in_the_runtime",
+        "runtime_field_enemies::test_spawn_zone_respawns_and_field_ai_pauses_outside_the_field",
+        "field_ai_and_spawning::test_touching_a_visible_encounter_starts_the_battle",
+    ],
+    "WLD-01": [
+        "shops_and_quests::test_victory_advances_defeat_objectives_and_events_drive_quests",
+        "game_menus::test_quest_rows_and_menu_cursor",
+    ],
+    "WLD-02": [
+        "world_record_and_capture::test_events_drive_reputation_counters_and_unlock_achievements",
+        "runtime_menus_d12::test_achievement_and_bestiary_screens_from_the_pause_menu",
+    ],
+    "EVT-01": [
+        "session_events::test_authored_dialogue_choice_branch_and_encounter_run_in_order",
+        "session_events::test_failed_world_command_stops_the_event_and_is_reported",
+        "session_events::test_event_waiting_on_dialogue_survives_save_and_reload",
+        "session_events::test_autorun_binding_runs_once_until_its_condition_turns_off",
+    ],
+    "EVT-02": [
+        "session_events::test_refusing_takes_the_other_branch_and_starts_no_battle",
+        "session_events::test_item_currency_and_presentation_commands_change_session_state",
+        "session_events::test_transfer_moves_the_player_to_another_scene_and_its_events",
+    ],
+    "EVT-03": [
+        "event_flow_integration::test_common_events_autorun_and_parallel_follow_their_switches",
+        "event_flow_integration::test_battle_event_fires_on_its_condition_once_and_holds_battle_input",
+    ],
+}
+
+
+def check_b_items_replay(out):
+    """B items whose remaining gap was "no real-machine run": their session-level integration tests run
+    inside the real playable window (tests/real_window.py), unchanged, with frames presented after each
+    session call. Tests that never drove the window do not count."""
+    report_path = out / "b_items_replay.json"
+    shots = out / "replay"
+    files = sorted({f"tests/test_{name.split('::')[0]}.py" for names in REPLAY.values() for name in names})
+    env = dict(os.environ, ASTERIA_REAL_WINDOW="1", ASTERIA_REAL_WINDOW_REPORT=str(report_path))
+    env["ASTERIA_REAL_WINDOW_SHOTS"] = str(shots)
+    for key in ("SDL_VIDEODRIVER", "SDL_AUDIODRIVER", "QT_QPA_PLATFORM"):
+        env.pop(key, None)
+    proc = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", *files],
+        capture_output=True,
+        text=True,
+        timeout=900,
+        cwd=REPO,
+        env=env,
+    )
+    report = json.loads(report_path.read_text())
+    summary = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ""
+    results = []
+    for item, names in REPLAY.items():
+        rows = []
+        for name in names:
+            nodeid = f"tests/test_{name.replace('::', '.py::', 1)}"
+            outcome = report["results"].get(nodeid, "not run")
+            frames = report["per_test"].get(nodeid, 0)
+            rows.append((name.split("::")[1], outcome, frames))
+        ok = report["driver"] == "cocoa" and all(o == "passed" and f > 0 for _, o, f in rows)
+        detail = "; ".join(f"{n}: {o}, {f} frames" for n, o, f in rows)
+        results.append(
+            result(
+                f"replay_{item}",
+                "PASS" if ok else "FAIL",
+                f"{item}: session-level integration tests replayed in the real playable {report['driver']} window "
+                f"(same assertions; frames presented after each session call): {detail}",
+                screenshots=[f"replay/{n}.png" for n, _, _ in rows],
+            )
+        )
+    results.append(
+        result(
+            "b_items_replay_run",
+            "PASS" if proc.returncode == 0 else "FAIL",
+            f"pytest exit {proc.returncode}; {len(report['results'])} tests in {len(files)} files, "
+            f"{report['frames']} frames presented in total; {summary}",
+        )
+    )
+    return results
+
+
 CHECKS = {
     "gpu_window": check_gpu_window,
     "input": check_input,
@@ -1764,6 +1866,7 @@ CHECKS = {
     "menus_more": check_game_menus_more,
     "editor_workflows": check_editor_workflows,
     "battle_no_art": check_battle_without_art,
+    "b_items_replay": check_b_items_replay,
 }
 
 

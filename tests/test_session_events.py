@@ -33,6 +33,10 @@ def _session(project=None):
     """Session from the reference save that stands in front of the boss."""
     project = project or _project()
     save = GameRuntimeSave.load_json(ROOT / "saves" / "boss_stress.asteria-save.json", project)
+    import real_window
+
+    if real_window.enabled():  # real-window replay: the session runs inside the playable window
+        return project, real_window.session_runtime(project, save, ROOT).game
     return project, GameSessionRuntime(project, save)
 
 
