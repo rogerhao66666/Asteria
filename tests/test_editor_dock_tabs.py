@@ -81,3 +81,34 @@ def test_dock_layout_persists_and_resets(tmp_path):
         second.close()
         second.deleteLater()
         first.deleteLater()
+
+
+def test_each_workspace_keeps_its_own_panels():
+    from PySide6.QtWidgets import QApplication, QDockWidget
+
+    from asteria.editor.shell import AsteriaEditorWindow
+    from asteria.editor.workspace import WorkspaceMode
+
+    app = QApplication.instance() or QApplication([])
+    window = AsteriaEditorWindow()
+    try:
+        window.show()
+        _settle(app)
+        inspector = window.findChild(QDockWidget, "InspectorDock")
+        console = window.findChild(QDockWidget, "ConsoleDock")
+        assert inspector.isVisible() and console.isVisible()  # Scene keeps the Inspector and the bottom panels
+        window.workspace.set_mode(WorkspaceMode.RPG)
+        _settle(app)
+        assert not inspector.isVisible() and not console.isVisible()  # the database uses the whole window
+        console.show()  # the user opens the console in the Database workspace...
+        window.workspace.set_mode(WorkspaceMode.SCENE)
+        _settle(app)
+        assert inspector.isVisible()
+        window.workspace.set_mode(WorkspaceMode.RPG)
+        _settle(app)
+        assert console.isVisible() and not inspector.isVisible()  # ...and it stays open there
+        assert window.rpg_workspace_action.text() == "Database"
+        assert window.ui_workspace_action.text() == "Presentation"
+    finally:
+        window.close()
+        window.deleteLater()

@@ -60,3 +60,25 @@ def test_editor_has_icons_roles_and_titled_docks():
     finally:
         window.close()
         window.deleteLater()
+
+
+def test_compact_pass_keeps_panels_narrow():
+    from PySide6.QtWidgets import QApplication, QComboBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+
+    from asteria.editor.decor import compact
+    from asteria.editor.flow_layout import FlowLayout
+
+    QApplication.instance() or QApplication([])
+    page = QWidget()
+    column = QVBoxLayout(page)
+    combo = QComboBox()
+    combo.addItems(["battle.combatant.a_very_long_asset_identifier_for_testing"])
+    column.addWidget(combo)
+    row = QHBoxLayout()
+    for text in ("Add Socket", "Key at Frame", "Remove"):
+        row.addWidget(QPushButton(text))
+    column.addLayout(row)
+    wide = page.minimumSizeHint().width()
+    compact(page)
+    assert isinstance(column.itemAt(1).layout(), FlowLayout)  # the button row wraps when narrow
+    assert combo.minimumWidth() > 0 and page.minimumSize().width() < wide

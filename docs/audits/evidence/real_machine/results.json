@@ -2,7 +2,7 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-11 19:33:10 +0800"
+    "time": "2026-10-11 22:36:18 +0800"
   },
   "results": [
     {
@@ -118,40 +118,6 @@
       "note": "Whether the move feels right to a player is part of manual item M5."
     },
     {
-      "check": "editor_to_runtime_playtest",
-      "status": "PASS",
-      "evidence": "Qt platform 'cocoa': Run Project started the runtime process=True, still running after 4 s=True, Stop Play returned=True, process exited=True"
-    },
-    {
-      "check": "editor_tools_gui",
-      "status": "PASS",
-      "evidence": "Qt platform 'cocoa': animation_editor=ok, action_timeline=ok, vfx_tool=ok, vfx_preview=ok, enemy_ai_preview=ok, multi_select_batch_fields=ok, problems_panel=ok, problems_clear_again=ok, script_completion=ok, debugger_live_game=ok",
-      "screenshots": [
-        "editor_animation.png",
-        "editor_action_timeline.png",
-        "editor_vfx.png",
-        "editor_enemy_ai.png",
-        "editor_records_multiselect.png",
-        "editor_problems.png",
-        "editor_script.png",
-        "editor_debugger.png"
-      ],
-      "note": "Screenshots are reviewed by the engineer; hands-on use by a person is not part of this check."
-    },
-    {
-      "check": "editor_d17_gui",
-      "status": "PASS",
-      "evidence": "Qt platform 'cocoa': export_game=ok, animation_states=ok, character_composition=ok, input_map=ok, behavior_trees=ok, profiler_dock=ok, project_file_untouched=ok",
-      "screenshots": [
-        "editor_animation_states.png",
-        "editor_character_composition.png",
-        "editor_input_map.png",
-        "editor_behavior_trees.png",
-        "editor_profiler.png"
-      ],
-      "note": "Nothing saved to the project. Hands-on use by a person is manual item M7."
-    },
-    {
       "check": "runtime_exit",
       "status": "PASS",
       "evidence": "Real-window runtime ran 90 frames and exited with code 0 in 2.4s",
@@ -233,7 +199,7 @@
     {
       "check": "mv_import_real_window",
       "status": "PASS",
-      "evidence": "Parallax sample (maps 1-2) imported, saved, reloaded in a fresh process and played in a real cocoa window by real key events: NPC said '\u30a2\u30a4\u30ea\u30b9\\u3000\u30a2\u30a6\u30c8\u30fb\u30fb\u30fb'; the door transferred to '\u3010\u8fd1\u666f\u3011\u30b9\u30e2\u30c3\u30b0' cell [8, 23] (expected [8, 23]); event errors 0; MV modules loaded while playing []",
+      "evidence": "Parallax sample (maps 1-2) imported, saved, reloaded in a fresh process and played in a real cocoa window by real key events: NPC said 'アイリス\\u3000アウト・・・'; the door transferred to '【近景】スモッグ' cell [8, 23] (expected [8, 23]); event errors 0; MV modules loaded while playing []",
       "screenshots": [
         "mv_import_start.png",
         "mv_import_dialogue.png",
@@ -323,7 +289,7 @@
     {
       "check": "mv_import_gpu_night",
       "status": "PASS",
-      "evidence": "Imported parallax sample with an authored night environment (Environment2D + a light on the player, rain, bloom) on the ModernGL backend in a real cocoa window: dialogue '\u30a2\u30a4\u30ea\u30b9\\u3000\u30a2\u30a6\u30c8\u30fb\u30fb\u30fb', door transfer to cell [8, 23], event errors 0, MV modules []",
+      "evidence": "Imported parallax sample with an authored night environment (Environment2D + a light on the player, rain, bloom) on the ModernGL backend in a real cocoa window: dialogue 'アイリス\\u3000アウト・・・', door transfer to cell [8, 23], event errors 0, MV modules []",
       "screenshots": [
         "mv_import_gpu_start.png",
         "mv_import_gpu_dialogue.png",
@@ -355,19 +321,6 @@
       ]
     },
     {
-      "check": "editor_workflows_gui",
-      "status": "PASS",
-      "evidence": "Qt platform 'cocoa', shown editor: asset_browser_thumbnails=ok, record_search=ok, record_copy_paste_cut_shortcuts=ok, batch_edit_and_undo=ok, hierarchy_drop_and_undo=ok, prefab_create_place_apply_revert=ok, pivot_edit_and_undo=ok, editor_event_runs_in_live_game=ok, play_from_selection_and_restart=ok, project_file_untouched=ok",
-      "screenshots": [
-        "workflow_records.png",
-        "workflow_hierarchy.png",
-        "workflow_prefab.png",
-        "workflow_pivot.png",
-        "workflow_play_from_selection.png"
-      ],
-      "note": "Hands-on use by a person (mouse drags, typing) is manual item M7."
-    },
-    {
       "check": "battle_without_art_pygame",
       "status": "PASS",
       "evidence": "pygame (cocoa): no combatant visuals / motion sequences; generated combatants=True, manifest fx played as VFX (peak 4), victory=True after 232 frames by real key events, back to the field=True, F5 save=True; 55.189 fps, p99 25.661 ms",
@@ -382,6 +335,53 @@
       "screenshots": [
         "no_art_moderngl_battle.png"
       ]
+    },
+    {
+      "check": "editor_to_runtime_playtest",
+      "status": "PASS",
+      "evidence": "Qt platform 'cocoa': Run Project started the runtime process=True, still running after 4 s=True, Stop Play returned=True, process exited=True"
+    },
+    {
+      "check": "editor_tools_gui",
+      "status": "PASS",
+      "evidence": "Qt platform 'cocoa': animation_editor=ok, action_timeline=ok, vfx_tool=ok, vfx_preview=ok, enemy_ai_preview=ok, multi_select_batch_fields=ok, problems_panel=ok, problems_clear_again=ok, script_completion=ok, debugger_live_game=ok",
+      "screenshots": [
+        "editor_animation.png",
+        "editor_action_timeline.png",
+        "editor_vfx.png",
+        "editor_enemy_ai.png",
+        "editor_records_multiselect.png",
+        "editor_problems.png",
+        "editor_script.png",
+        "editor_debugger.png"
+      ],
+      "note": "Screenshots are reviewed by the engineer; hands-on use by a person is not part of this check."
+    },
+    {
+      "check": "editor_d17_gui",
+      "status": "PASS",
+      "evidence": "Qt platform 'cocoa': export_game=ok, animation_states=ok, character_composition=ok, input_map=ok, behavior_trees=ok, profiler_dock=ok, project_file_untouched=ok",
+      "screenshots": [
+        "editor_animation_states.png",
+        "editor_character_composition.png",
+        "editor_input_map.png",
+        "editor_behavior_trees.png",
+        "editor_profiler.png"
+      ],
+      "note": "Nothing saved to the project. Hands-on use by a person is manual item M7."
+    },
+    {
+      "check": "editor_workflows_gui",
+      "status": "PASS",
+      "evidence": "Qt platform 'cocoa', shown editor: asset_browser_thumbnails=ok, record_search=ok, record_copy_paste_cut_shortcuts=ok, batch_edit_and_undo=ok, hierarchy_drop_and_undo=ok, prefab_create_place_apply_revert=ok, pivot_edit_and_undo=ok, editor_event_runs_in_live_game=ok, play_from_selection_and_restart=ok, project_file_untouched=ok",
+      "screenshots": [
+        "workflow_records.png",
+        "workflow_hierarchy.png",
+        "workflow_prefab.png",
+        "workflow_pivot.png",
+        "workflow_play_from_selection.png"
+      ],
+      "note": "Hands-on use by a person (mouse drags, typing) is manual item M7."
     }
   ]
 }

@@ -64,7 +64,7 @@ class CharacterCompositionWidget(QWidget):
         self.clip = QComboBox()
         self.clip.currentTextChanged.connect(lambda _t: self._draw_preview())
         self.preview = QGraphicsView(QGraphicsScene(self))
-        self.preview.setMinimumSize(300, 300)
+        self.preview.setMinimumSize(220, 220)
 
         # sockets
         self.sockets = QListWidget()

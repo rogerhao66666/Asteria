@@ -596,6 +596,7 @@ class AsteriaEditorWindow(QMainWindow):
         ):
             if action is not None:
                 action.setChecked(current == candidate)
+        self._switch_workspace_docks(current)
         if current == WorkspaceMode.CODE:
             self.code_workspace.refresh_project_context()
         elif current == WorkspaceMode.RPG:
@@ -806,9 +807,9 @@ class AsteriaEditorWindow(QMainWindow):
         toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         toolbar.setIconSize(QSize(18, 18))
         self.scene_workspace_action = QAction("Scene", self)
-        self.rpg_workspace_action = QAction("RPG", self)
+        self.rpg_workspace_action = QAction("Database", self)
         self.battle_workspace_action = QAction("Battle", self)
-        self.ui_workspace_action = QAction("UI", self)
+        self.ui_workspace_action = QAction("Presentation", self)
         self.event_workspace_action = QAction("Events", self)
         self.code_workspace_action = QAction("Code", self)
         for action, mode in (
@@ -1947,6 +1948,9 @@ class AsteriaEditorWindow(QMainWindow):
             self.debugger_widget.attach(self.runtime_process.debug_port, self.runtime_process.debug_token)
         where = "" if spawn is None else f" from ({spawn[0]:g}, {spawn[1]:g})"
         self.console.setText(f"Runtime preview: {self.play_session.runtime_scene.name}{where}")
+        console_dock = self.findChild(QDockWidget, "ConsoleDock")
+        console_dock.show()  # the play log, even in a workspace that keeps its bottom panels closed
+        console_dock.raise_()
         self.statusBar().showMessage(f"Playing — {self.play_session.runtime_scene.name}{where}")
         self._refresh_actions()
         return True
@@ -2049,6 +2053,38 @@ class AsteriaEditorWindow(QMainWindow):
     def save_layout(self):
         self.layout_settings.setValue("editor/geometry", self.saveGeometry())
         self.layout_settings.setValue("editor/dock_state", self.saveState(self.LAYOUT_VERSION))
+
+    # Panels a workspace starts without (it keeps whatever the user opens or closes afterwards).
+    # The database, battle, presentation, event and code editors use the whole window, the way RPG
+    # Maker's database does; the Scene workspace keeps the Inspector and the bottom panels.
+    WORKSPACE_HIDDEN_DOCKS = (
+        "InspectorDock",
+        "AssetsDock",
+        "ConsoleDock",
+        "DebuggerDock",
+        "ProfilerDock",
+        "ProblemsDock",
+        "TilePaletteDock",
+        "LayersDock",
+    )
+
+    def _switch_workspace_docks(self, mode):
+        states = self.__dict__.setdefault("_workspace_dock_states", {})
+        previous = getattr(self, "_docks_mode", None)
+        if previous == mode or not hasattr(self, "_default_dock_state"):
+            self._docks_mode = mode
+            return
+        if previous is not None:
+            states[previous] = self.saveState(self.LAYOUT_VERSION)
+        self._docks_mode = mode
+        if mode in states:
+            self.restoreState(states[mode], self.LAYOUT_VERSION)
+        elif mode != WorkspaceMode.SCENE:
+            for name in self.WORKSPACE_HIDDEN_DOCKS:
+                dock = self.findChild(QDockWidget, name)
+                if dock is not None and not dock.isFloating():
+                    dock.hide()
+        self.hide_stale_dock_tab_bars()
 
     def _apply_default_dock_sizes(self):
         horizontal, widths, vertical, heights = self._default_dock_sizes

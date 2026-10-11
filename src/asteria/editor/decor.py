@@ -7,15 +7,32 @@ watches widgets as they appear and gives them an icon and a colour role from the
   "Add" / "New" get a green plus; every known verb gets its icon
 * tab titles, and entries of combo boxes marked ``decorate=True`` (database categories), get the matching icon
 
-It only sets icons and the ``role`` property the theme styles; it never changes text or behaviour.
+It only sets icons and the ``role`` property the theme styles; it never changes behaviour.
+
+``compact`` keeps panels narrow so more columns fit on screen (``compact_widget``): combo boxes stop
+growing to their longest entry (the drop-down still shows it), long one-line labels wrap, and a long
+group title keeps its name while its explanation moves into a wrapped hint inside the group.
 """
 
 from __future__ import annotations
 
 import re
 
-from PySide6.QtCore import QEvent, QObject
-from PySide6.QtWidgets import QAbstractButton, QComboBox, QPushButton, QTabWidget, QToolButton
+from PySide6.QtCore import QEvent, QObject, Qt
+from PySide6.QtWidgets import (
+    QAbstractButton,
+    QAbstractSpinBox,
+    QBoxLayout,
+    QComboBox,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QTabWidget,
+    QToolButton,
+    QWidget,
+)
 
 from .icons import icon
 
@@ -132,6 +149,106 @@ def decorate_combo(combo):
                 combo.setItemIcon(index, icon(name))
 
 
+COMBO_CHARS = 8  # a combo box shows about this many characters; its drop-down is as wide as it needs
+WRAP_AT = 48  # one-line labels longer than this wrap
+COMBO_MIN_WIDTH = 96
+SPIN_MIN_WIDTH = 64
+
+
+def compact_widget(widget):
+    if isinstance(widget, QComboBox):
+        if widget.sizeAdjustPolicy() != QComboBox.AdjustToMinimumContentsLengthWithIcon and not widget.isEditable():
+            widget.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+            widget.setMinimumContentsLength(COMBO_CHARS)
+        if widget.minimumWidth() == 0:
+            widget.setMinimumWidth(COMBO_MIN_WIDTH)  # explicit: the styled size hint ignores the policy
+    elif isinstance(widget, QAbstractSpinBox):
+        if widget.minimumWidth() == 0:
+            widget.setMinimumWidth(SPIN_MIN_WIDTH)
+    elif isinstance(widget, QLabel):
+        text = widget.text()
+        if not widget.wordWrap() and len(text) > WRAP_AT and "\n" not in text and widget.pixmap().isNull():
+            widget.setWordWrap(True)
+    elif isinstance(widget, QGroupBox) and widget.property("compacted") is None:
+        widget.setProperty("compacted", True)
+        for form in widget.findChildren(QFormLayout):
+            _wrap_form(form)
+        title = widget.title()
+        if len(title) > 28 and " (" in title and title.endswith(")"):
+            head, detail = title.split(" (", 1)
+            widget.setTitle(head)
+            widget.setToolTip(title)
+            hint = QLabel(detail[:-1][0].upper() + detail[:-1][1:])
+            hint.setObjectName("MutedLabel")
+            hint.setWordWrap(True)
+            layout = widget.layout()
+            if isinstance(layout, QBoxLayout):
+                layout.insertWidget(0, hint)
+            elif isinstance(layout, QFormLayout):
+                layout.insertRow(0, hint)
+            else:
+                hint.deleteLater()
+
+
+def _widen_popup(container):
+    """A compact combo box's drop-down still shows its longest entry (sized when it opens, so the
+    combo box itself stays narrow)."""
+    combo = container.parentWidget()
+    if not isinstance(combo, QComboBox):
+        return
+    metrics = combo.fontMetrics()
+    widest = max((metrics.horizontalAdvance(combo.itemText(i)) for i in range(combo.count())), default=0)
+    icon = combo.iconSize().width() + 8 if any(not combo.itemIcon(i).isNull() for i in range(combo.count())) else 0
+    container.setMinimumWidth(min(520, max(combo.width(), widest + icon + 44)))
+
+
+def _wrap_form(form):
+    # a label goes above its field only when the pane is too narrow for both side by side
+    form.setRowWrapPolicy(QFormLayout.WrapLongRows)
+    form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+
+
+def flow_button_rows(layout):
+    """Rows of two or more buttons wrap onto a second line in narrow panels."""
+    from .flow_layout import FlowLayout
+
+    for index in range(layout.count()):
+        child = layout.itemAt(index).layout()
+        if child is None:
+            continue
+        if (
+            isinstance(child, QHBoxLayout)
+            and isinstance(layout, QBoxLayout)
+            and not isinstance(child, FlowLayout)
+            and _button_row(child)
+        ):
+            leading_stretch = child.itemAt(0).spacerItem() is not None
+            flow = FlowLayout(spacing=max(4, child.spacing()))
+            if leading_stretch:
+                flow.setAlignment(Qt.AlignRight)
+            for widget in [child.itemAt(i).widget() for i in range(child.count()) if child.itemAt(i).widget()]:
+                child.removeWidget(widget)
+                flow.addWidget(widget)
+            layout.takeAt(index)
+            child.deleteLater()
+            layout.insertLayout(index, flow)
+        else:
+            flow_button_rows(child)
+
+
+def _button_row(row):
+    widgets = [row.itemAt(i).widget() for i in range(row.count()) if row.itemAt(i).widget() is not None]
+    return len(widgets) >= 2 and all(isinstance(w, QAbstractButton) for w in widgets)
+
+
+def compact(widget):
+    for w in (widget, *widget.findChildren(QObject)):
+        if isinstance(w, (QComboBox, QLabel, QGroupBox, QAbstractSpinBox)):
+            compact_widget(w)
+        if isinstance(w, QWidget) and isinstance(QWidget.layout(w), QBoxLayout):
+            flow_button_rows(QWidget.layout(w))
+
+
 def decorate(widget):
     """Decorate ``widget`` and everything inside it (safe to call again)."""
     for w in (widget, *widget.findChildren(QObject)):
@@ -147,6 +264,16 @@ class _Decorator(QObject):
     def eventFilter(self, obj, event):
         kind = event.type()
         if kind == QEvent.Show:
+            if isinstance(obj, (QComboBox, QLabel, QGroupBox, QAbstractSpinBox)):
+                compact_widget(obj)
+            elif obj.metaObject().className() == "QComboBoxPrivateContainer":
+                _widen_popup(obj)
+            layout = QWidget.layout(obj) if isinstance(obj, QWidget) else None  # some editors override layout()
+            if isinstance(layout, QFormLayout):
+                _wrap_form(layout)
+            elif isinstance(layout, QBoxLayout) and obj.property("flowed") is None:
+                obj.setProperty("flowed", True)
+                flow_button_rows(layout)
             if isinstance(obj, QTabWidget):
                 decorate_tabs(obj)
             elif isinstance(obj, QComboBox) and obj.property("decorate") is True:

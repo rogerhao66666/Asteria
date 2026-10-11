@@ -57,7 +57,7 @@ class StateMachineGraphView(QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setScene(QGraphicsScene(self))
-        self.setMinimumSize(420, 320)
+        self.setMinimumSize(260, 220)
         self.nodes = {}
         self.scene().selectionChanged.connect(self._selection)
 
