@@ -1,0 +1,270 @@
+{
+  "size": [
+    1600,
+    1000
+  ],
+  "dpr": 2.0,
+  "surfaces": {
+    "scene": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      }
+    ],
+    "rpg_database": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      }
+    ],
+    "rpg_game_systems": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      }
+    ],
+    "rpg_enemy_ai": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      }
+    ],
+    "rpg_behavior_trees": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      }
+    ],
+    "battle": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      }
+    ],
+    "ui_battle_presentation": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "VFX"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Input Map"
+      }
+    ],
+    "ui_runtime_rpg_ui": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "VFX"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Input Map"
+      }
+    ],
+    "ui_animation": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "VFX"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Input Map"
+      }
+    ],
+    "ui_animation_editor": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "VFX"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Input Map"
+      }
+    ],
+    "ui_animation_states": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "VFX"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Input Map"
+      }
+    ],
+    "ui_character_composition": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "VFX"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Input Map"
+      }
+    ],
+    "ui_action_timeline": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "VFX"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Input Map"
+      }
+    ],
+    "ui_vfx": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Battle Presentation"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Input Map"
+      }
+    ],
+    "ui_input_map": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Battle Presentation"
+      },
+      {
+        "kind": "scrolled",
+        "widget": "QTabBar",
+        "where": "EditorWorkspace/ScrollingTabWidget/qt_tabwidget_tabbar",
+        "text": "Runtime RPG UI"
+      }
+    ],
+    "event_event_program": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      }
+    ],
+    "event_field_-_game_flow": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      }
+    ],
+    "event_common_and_battle_events": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      }
+    ],
+    "code": [
+      {
+        "kind": "scrolled",
+        "widget": "QMainWindowTabBar",
+        "where": "QMainWindowTabBar",
+        "text": "Layers"
+      }
+    ]
+  },
+  "total": 0
+}

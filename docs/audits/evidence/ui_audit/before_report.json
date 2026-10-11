@@ -1,0 +1,552 @@
+{
+  "size": [
+    1600,
+    1000
+  ],
+  "dpr": 2.0,
+  "surfaces": {
+    "scene": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "rpg_database": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "rpg_game_systems": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "rpg_enemy_ai": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "EditorWorkspace/qt_tabwidget_stackedwidget/EnemyAIEditorWidget/qt_tabwidget_stackedwidget",
+        "text": "Weight",
+        "need": 51,
+        "have": 48
+      }
+    ],
+    "rpg_behavior_trees": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "battle": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "ui_battle_presentation": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "ui_runtime_rpg_ui": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "ui_animation": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "ui_animation_editor": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "ui_animation_states": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "ui_character_composition": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "ui_action_timeline": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "ui_vfx": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      },
+      {
+        "kind": "clipped",
+        "widget": "QComboBox",
+        "where": "EditorWorkspace/qt_tabwidget_stackedwidget/VFXEditorWidget",
+        "text": "normal",
+        "need": 75,
+        "have": 73
+      }
+    ],
+    "ui_input_map": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "event_event_program": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "event_field_-_game_flow": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ],
+    "event_common_and_battle_events": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "EditorWorkspace/qt_tabwidget_stackedwidget/EventFlowWidget",
+        "text": "Program",
+        "need": 59,
+        "have": 57
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "EditorWorkspace/qt_tabwidget_stackedwidget/EventFlowWidget",
+        "text": "Trigger",
+        "need": 51,
+        "have": 49
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "EditorWorkspace/qt_tabwidget_stackedwidget/EventFlowWidget",
+        "text": "When",
+        "need": 44,
+        "have": 41
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "EditorWorkspace/qt_tabwidget_stackedwidget/EventFlowWidget",
+        "text": "Only if",
+        "need": 48,
+        "have": 45
+      }
+    ],
+    "code": [
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Property",
+        "need": 60,
+        "have": 58
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Value",
+        "need": 43,
+        "have": 19
+      },
+      {
+        "kind": "clipped",
+        "widget": "QHeaderView",
+        "where": "InspectorDock/InspectorWidget",
+        "text": "Type",
+        "need": 39,
+        "have": 35
+      }
+    ]
+  },
+  "total": 63
+}

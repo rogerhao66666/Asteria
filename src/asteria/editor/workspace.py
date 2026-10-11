@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 
 try:
-    from PySide6.QtCore import Signal
+    from PySide6.QtCore import Qt, Signal
     from PySide6.QtWidgets import QStackedWidget, QTabBar, QVBoxLayout, QWidget
 
     QT_AVAILABLE = True
@@ -52,6 +52,8 @@ class EditorWorkspace(QWidget):
 
         self.tabs = QTabBar(self)
         self.tabs.setExpanding(False)
+        self.tabs.setUsesScrollButtons(True)  # never sets the window's minimum width
+        self.tabs.setElideMode(Qt.ElideNone)
         self.tabs.setDrawBase(False)
         self.stack = QStackedWidget(self)
         self._modes = list(self.ORDER)
@@ -67,7 +69,7 @@ class EditorWorkspace(QWidget):
         }
         for mode in self._modes:
             self.tabs.addTab(labels[mode])
-            self.stack.addWidget(self._pages[mode])
+            self.stack.addWidget(self._scrolling(self._pages[mode]))
 
         self.tabs.currentChanged.connect(self._tab_changed)
 
@@ -77,6 +79,18 @@ class EditorWorkspace(QWidget):
         layout.addWidget(self.tabs)
         layout.addWidget(self.stack, 1)
         self.set_mode(WorkspaceMode.SCENE)
+
+    @staticmethod
+    def _scrolling(page):
+        """Pages that do not scroll by themselves get a scroll area, so one large editor never makes the
+        window larger than the screen (tab pages and the scene view already scroll)."""
+        from PySide6.QtWidgets import QAbstractScrollArea, QTabWidget
+
+        if isinstance(page, (QAbstractScrollArea, QTabWidget)):
+            return page
+        from .scrolling_tabs import scrollable
+
+        return scrollable(page)
 
     @property
     def mode(self):

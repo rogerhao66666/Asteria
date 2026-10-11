@@ -91,6 +91,8 @@ class CodeWorkspaceWidget(QWidget):
         self.selection_label = QLabel("Selection context: none")
         self.selection_label.setObjectName("MutedLabel")
         self.path_label = QLabel("scripts/main.py")
+        for label in (self.context_label, self.selection_label, self.path_label):
+            label.setWordWrap(True)  # long paths and contexts wrap instead of widening the editor window
 
         self.editor = QPlainTextEdit()
         self.editor.setPlainText(self.buffer.text)

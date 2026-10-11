@@ -37,6 +37,7 @@ QTabBar::tab {
     border-right: 1px solid #292e36;
     min-width: 92px; padding: 6px 10px; margin: 0;
 }
+QMainWindow > QTabBar::tab { min-width: 0; padding: 6px 12px; }
 QTabBar::tab:selected { background: #34465f; color: #ffffff; }
 QTabBar::tab:hover:!selected { background: #252b33; color: #d9dde5; }
 QTreeWidget, QListWidget, QTableWidget {
