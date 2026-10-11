@@ -91,6 +91,7 @@ class FieldAISystem(System):
         self.default_target_id = str(default_target_id or "")
         self.states: dict[str, FieldAIState] = {}
         self._query = None
+        self._controller = None
 
     def state(self, entity_id):
         return self.states.get(str(entity_id))
@@ -102,6 +103,11 @@ class FieldAISystem(System):
         distance = hypot(dx, dy)
         if distance <= (0.0 if away else spec.arrive_distance):
             return True
+        if self._controller is not None:
+            # ENG-02: an AI entity with a CharacterController2D moves through it (same collision as the player)
+            scale = min(1.0, distance / max(self._controller.speed * dt, 1e-9)) if not away else 1.0
+            self._controller.set_intent(dx / distance * scale, dy / distance * scale)
+            return False
         step = spec.speed * dt
         if not away and step > distance:  # land exactly on the goal
             dx, dy = dx * distance / step, dy * distance / step
@@ -112,6 +118,15 @@ class FieldAISystem(System):
 
     def update(self, scene, dt):
         for entity, spec, transform in scene.query(FieldAIComponent, Transform):
+            from asteria.runtime.character_control import AIController2DComponent, CharacterController2DComponent
+
+            ai = entity.try_get(AIController2DComponent)
+            if ai is not None and (not ai.enabled or ai.driver != "field_ai"):
+                continue  # another driver (behavior tree) or none owns this entity
+            controller = entity.try_get(CharacterController2DComponent)
+            self._controller = controller if controller is not None and controller.enabled else None
+            if self._controller is not None:
+                self._controller.set_intent(0.0, 0.0)
             state = self.states.get(entity.id)
             if state is None:
                 state = self.states[entity.id] = FieldAIState(spec.behaviour, (transform.x, transform.y))

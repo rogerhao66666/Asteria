@@ -35,6 +35,7 @@ STANDARD_WORLD_COMMANDS = (
     "CAMERA_RELEASE",
     "CAMERA_SHAKE",
     "PLAY_VFX",
+    "PLAY_ACTION",
 )
 
 PRESENTATION_COMMANDS = (
@@ -70,6 +71,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "PLAY_SE": ("asset_id", "volume"),
     "SCREEN_FADE": ("to", "duration", "color"),
     "PLAY_VFX": ("asset_id", "entity", "x", "y", "scale", "anchor"),
+    "PLAY_ACTION": ("entity", "timeline_id"),
     "CAMERA_FOCUS": ("entity", "x", "y", "zoom", "blend", "ease"),
     "CAMERA_RELEASE": ("blend", "ease"),
     "CAMERA_SHAKE": ("intensity", "duration"),
@@ -193,6 +195,10 @@ def register_standard_world_commands(router, session):
         session.open_crafting_station = str(command.args.get("station") or "")
         return session.open_crafting_station
 
+    router.register(
+        "PLAY_ACTION",
+        lambda c: session.play_action(str(_required(c, "entity")), str(_required(c, "timeline_id"))),
+    )
     router.register("LEARN_RECIPE", learn_recipe)
     router.register("OPEN_CRAFTING", open_crafting)
     router.register(

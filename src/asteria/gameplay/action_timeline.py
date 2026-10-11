@@ -15,6 +15,13 @@ class ActionCueKind(str, Enum):
     CAMERA = "camera"
     LIGHT = "light"
     SCREEN_FX = "screen_fx"
+    # ANI-05 (ASTERIA_SPEC §11): gameplay windows an entity action timeline drives
+    MOVEMENT = "movement"  # payload: x, y (intent), duration
+    HITBOX = "hitbox"  # payload: duration, hit_tag
+    IFRAME = "iframe"  # payload: duration
+    CANCEL_WINDOW = "cancel_window"  # payload: duration
+    COMBO_WINDOW = "combo_window"  # payload: duration, next (optional follow-up timeline id)
+    GAMEPLAY_EVENT = "gameplay_event"  # payload: name, ...
 
 
 @dataclass(frozen=True, slots=True)

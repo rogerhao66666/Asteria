@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 
 from asteria.gameplay import AbilityDefinition
+from asteria.gameplay.action_timeline import ActionTimeline
 from asteria.rpg import (
     AbilityEvolutionRule,
     ActorDefinition,
@@ -361,6 +362,21 @@ class IntegratedAuthoringControllers:
             "encounters": db.encounters,
             "ai": db.enemy_ai,
         }
+        timelines = self.project.gameplay_library.timelines
+        categories.append(
+            AuthoringCategoryAdapter(
+                "action_timelines",
+                "Action Timelines (entity actions)",
+                lambda: tuple(sorted(timelines)),
+                lambda k: timelines[k],
+                lambda key, value: self._mapping_edit(timelines, "Action Timeline")(key, value),
+                lambda key: self._mapping_delete(timelines, "Action Timeline")(key),
+                td,
+                fd(ActionTimeline),
+                None,
+            )
+        )
+        mappings["action_timelines"] = timelines
         result = []
         for adapter in categories:
             if adapter.category_id == "abilities":
@@ -371,6 +387,27 @@ class IntegratedAuthoringControllers:
                 create = None
             result.append(replace(adapter, create=create))
         return tuple(result)
+
+    def _mapping_edit(self, mapping, label):
+        def edit(key, value):
+            from .rpg_actor_class_authoring import _DefinitionCommand
+
+            key = str(key)
+            if key not in mapping:
+                raise ValueError(f"unknown {label} {key}")
+            self.document.execute(_DefinitionCommand(mapping, key, value, mapping[key], f"Edit {label} {key}"))
+            return value
+
+        return edit
+
+    def _mapping_delete(self, mapping, label):
+        def delete(key):
+            from .rpg_actor_class_authoring import _DefinitionCommand
+
+            key = str(key)
+            self.document.execute(_DefinitionCommand(mapping, key, None, mapping[key], f"Delete {label} {key}"))
+
+        return delete
 
     def _mapping_create(self, mapping, label):
         def create(key, value):

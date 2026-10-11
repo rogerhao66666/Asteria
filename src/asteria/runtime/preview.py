@@ -33,6 +33,9 @@ def build_preview_registry():
     registry.register(PersistentComponent)
     registry.register(PrefabInstanceComponent)
     registry.register(Collider2DComponent)
+    from asteria.runtime.character_control import register_character_components
+
+    register_character_components(registry)
     registry.register(FieldAIComponent)
     registry.register(SpawnZoneComponent)
     registry.register(VisibleEncounterComponent)

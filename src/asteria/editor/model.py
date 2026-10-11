@@ -62,6 +62,9 @@ class EditorDocument:
             component_registry.register(PersistentComponent)
             component_registry.register(PrefabInstanceComponent)
             component_registry.register(Collider2DComponent)
+            from asteria.runtime.character_control import register_character_components
+
+            register_character_components(component_registry)
             component_registry.register(FieldAIComponent)
             component_registry.register(SpawnZoneComponent)
             component_registry.register(VisibleEncounterComponent)

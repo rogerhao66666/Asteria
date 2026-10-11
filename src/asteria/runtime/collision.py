@@ -14,13 +14,14 @@ from dataclasses import dataclass
 from math import floor, hypot
 
 from asteria.core import Component, Field, System, Transform, component_schema, world_position
+from asteria.core.migration import component_migration
 
 ALL_LAYERS = 0xFFFFFFFF
 
 
 @component_schema(
     type_name="asteria.Collider2D",
-    version=1,
+    version=2,
     fields=(
         Field("shape", str, "box", choices=("box", "circle")),
         Field("width", float, 16.0, minimum=0.0),
@@ -31,6 +32,7 @@ ALL_LAYERS = 0xFFFFFFFF
         Field("layer", int, 0, minimum=0, maximum=31, tooltip="Bit index of this collider's layer."),
         Field("mask", int, ALL_LAYERS, minimum=0, maximum=ALL_LAYERS, tooltip="Bitmask of layers it collides with."),
         Field("is_trigger", bool, False, label="Trigger"),
+        Field("one_way", bool, False, label="One-way platform", tooltip="Side view: blocks only from above."),
         Field("enabled", bool, True),
     ),
 )
@@ -46,7 +48,13 @@ class Collider2DComponent(Component):
         self.layer = 0
         self.mask = ALL_LAYERS
         self.is_trigger = False
+        self.one_way = False
         self.enabled = True
+
+
+@component_migration("asteria.Collider2D", from_version=1)
+def _collider2d_v1_to_v2(fields):
+    return fields  # v2 adds one_way (default False keeps v1 behaviour)
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,6 +69,7 @@ class ColliderShape:
     layer_bit: int
     mask: int
     is_trigger: bool
+    one_way: bool = False
 
     @property
     def bounds(self):
@@ -96,6 +105,7 @@ def shape_of(entity, collider):
         1 << int(collider.layer),
         int(collider.mask),
         bool(collider.is_trigger),
+        bool(getattr(collider, "one_way", False)),
     )
 
 
