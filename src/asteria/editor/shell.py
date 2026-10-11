@@ -218,11 +218,13 @@ class AsteriaEditorWindow(QMainWindow):
 
         self.project_tree = ProjectTreeWidget(self.document)
         left = QDockWidget("Project / Scene", self)
+        left.setObjectName("ProjectSceneDock")
         left.setWidget(self.project_tree)
         self.addDockWidget(Qt.LeftDockWidgetArea, left)
 
         self.tile_palette = TilePaletteWidget(self)
         palette_dock = QDockWidget("Tile Palette", self)
+        palette_dock.setObjectName("TilePaletteDock")
         palette_dock.setWidget(self.tile_palette)
         self.addDockWidget(Qt.LeftDockWidgetArea, palette_dock)
         self.tabifyDockWidget(left, palette_dock)
@@ -231,6 +233,7 @@ class AsteriaEditorWindow(QMainWindow):
 
         self.tile_layers = TileLayersWidget(self)
         layers_dock = QDockWidget("Layers", self)
+        layers_dock.setObjectName("LayersDock")
         layers_dock.setWidget(self.tile_layers)
         self.addDockWidget(Qt.LeftDockWidgetArea, layers_dock)
         self.tabifyDockWidget(left, layers_dock)
@@ -253,11 +256,13 @@ class AsteriaEditorWindow(QMainWindow):
 
         self.inspector = InspectorWidget(self.document)
         right = QDockWidget("Inspector", self)
+        right.setObjectName("InspectorDock")
         right.setWidget(self.inspector)
         self.addDockWidget(Qt.RightDockWidgetArea, right)
 
         self.asset_list = QListWidget()
         bottom = QDockWidget("Assets", self)
+        bottom.setObjectName("AssetsDock")
         bottom.setWidget(self.asset_list)
         self.addDockWidget(Qt.BottomDockWidgetArea, bottom)
 
@@ -273,6 +278,7 @@ class AsteriaEditorWindow(QMainWindow):
         console_layout.addWidget(self.console)
 
         console = QDockWidget("Console", self)
+        console.setObjectName("ConsoleDock")
         console.setWidget(console_panel)
         self.addDockWidget(Qt.BottomDockWidgetArea, console)
         self.tabifyDockWidget(bottom, console)
@@ -283,7 +289,7 @@ class AsteriaEditorWindow(QMainWindow):
         debugger_dock.setObjectName("DebuggerDock")
         debugger_dock.setWidget(self.debugger_widget)
         self.addDockWidget(Qt.BottomDockWidgetArea, debugger_dock)
-        self.tabifyDockWidget(console, debugger_dock)
+        self.tabifyDockWidget(bottom, debugger_dock)
         from .profiler_widget import ProfilerWidget
 
         self.profiler_widget = ProfilerWidget(lambda: self.debugger_widget.client, self)
@@ -291,7 +297,7 @@ class AsteriaEditorWindow(QMainWindow):
         profiler_dock.setObjectName("ProfilerDock")
         profiler_dock.setWidget(self.profiler_widget)
         self.addDockWidget(Qt.BottomDockWidgetArea, profiler_dock)
-        self.tabifyDockWidget(debugger_dock, profiler_dock)
+        self.tabifyDockWidget(bottom, profiler_dock)
         from .problems_widget import ProblemsWidget
 
         self.problems_widget = ProblemsWidget(self.document, self)
@@ -303,13 +309,17 @@ class AsteriaEditorWindow(QMainWindow):
             lambda n: self.problems_dock.setWindowTitle(f"Problems ({n})" if n else "Problems")
         )
         self.addDockWidget(Qt.BottomDockWidgetArea, self.problems_dock)
-        self.tabifyDockWidget(debugger_dock, self.problems_dock)
+        self.tabifyDockWidget(bottom, self.problems_dock)
         console.raise_()
 
         # The native macOS tab base draws a redundant rounded line behind
         # tabified docks. Individual tabs retain their own visual states.
         for dock_tabs in self.findChildren(QTabBar):
             dock_tabs.setDrawBase(False)
+        for dock in self.findChildren(QDockWidget):
+            dock.dockLocationChanged.connect(self._schedule_dock_tab_cleanup)
+            dock.topLevelChanged.connect(self._schedule_dock_tab_cleanup)
+        self._schedule_dock_tab_cleanup()
 
         self._build_actions()
         QApplication.instance().focusChanged.connect(self._focus_changed)
@@ -318,6 +328,22 @@ class AsteriaEditorWindow(QMainWindow):
         self._workspace_mode_changed(self.workspace.mode.value)
         self.refresh_all()
         QTimer.singleShot(0, self.viewport.frame_game_camera)
+
+    def _schedule_dock_tab_cleanup(self, *_):
+        QTimer.singleShot(0, self.hide_stale_dock_tab_bars)
+
+    def hide_stale_dock_tab_bars(self):
+        """Drop dock tab bars Qt left behind.
+
+        Qt 6 (QMainWindowLayout) keeps tab bars it made while tab groups were being tabified or a
+        layout was restored; they stay visible listing an earlier subset of a group's docks (the
+        duplicate "Assets / Console" strip). Hiding every dock tab bar and invalidating the layout
+        lets Qt show again exactly the bars its layout still uses."""
+        bars = [bar for bar in self.findChildren(QTabBar) if bar.parent() is self]
+        for bar in bars:
+            bar.hide()
+        self.layout().invalidate()
+        return bars
 
     def begin_character_placement(self, visual, status_widget=None):
         """Switch to Scene and wait for one map-cell click to place a ``CharacterVisualSet``."""
@@ -690,6 +716,13 @@ class AsteriaEditorWindow(QMainWindow):
         self.reset_view_action.triggered.connect(self.viewport.reset_view)
         view_menu = self.menuBar().addMenu("&View")
         view_menu.addAction(self.reset_view_action)
+        panels_menu = view_menu.addMenu("Panels")  # reopen a closed dock
+        for dock in self.findChildren(QDockWidget):
+            panels_menu.addAction(dock.toggleViewAction())
+        self._default_dock_state = self.saveState(self.LAYOUT_VERSION)
+        self.reset_layout_action = QAction("Reset Layout", self)
+        self.reset_layout_action.triggered.connect(self.reset_layout)
+        view_menu.addAction(self.reset_layout_action)
 
         prefab_menu = self.menuBar().addMenu("&Prefab")
         self.create_prefab_action = QAction("Create Prefab from Selected Entity…", self)
@@ -1946,7 +1979,35 @@ class AsteriaEditorWindow(QMainWindow):
             if answer == QMessageBox.Save and not self.save_project():
                 event.ignore()
                 return
+        if self.layout_settings is not None:
+            self.save_layout()
         event.accept()
+
+    layout_settings = None  # a QSettings; set by launch_editor so tests never touch the user's layout
+    LAYOUT_VERSION = 1
+
+    def save_layout(self):
+        self.layout_settings.setValue("editor/geometry", self.saveGeometry())
+        self.layout_settings.setValue("editor/dock_state", self.saveState(self.LAYOUT_VERSION))
+
+    def reset_layout(self):
+        """Back to the default dock arrangement (every panel docked and visible)."""
+        for dock in self.findChildren(QDockWidget):
+            dock.setFloating(False)
+            dock.show()
+        self.restoreState(self._default_dock_state, self.LAYOUT_VERSION)
+        self.hide_stale_dock_tab_bars()
+
+    def restore_layout(self, settings):
+        """Restore the dock layout and window geometry saved when the editor last closed."""
+        self.layout_settings = settings
+        geometry = settings.value("editor/geometry")
+        state = settings.value("editor/dock_state")
+        if geometry is not None:
+            self.restoreGeometry(geometry)
+        restored = state is not None and self.restoreState(state, self.LAYOUT_VERSION)
+        self.hide_stale_dock_tab_bars()
+        return restored
 
 
 def launch_editor(project=None):
@@ -1955,6 +2016,9 @@ def launch_editor(project=None):
     app = QApplication.instance() or QApplication(sys.argv)
     apply_asteria_theme(app)
     window = AsteriaEditorWindow(project)
+    from PySide6.QtCore import QSettings
+
+    window.restore_layout(QSettings("Asteria", "Editor"))
     window.show()
     return app.exec()
 
