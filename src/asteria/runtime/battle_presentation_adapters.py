@@ -175,6 +175,25 @@ class PygameTextureDrawer:
             )
 
 
+class _WorldThenUi:
+    """Texture pass of the battle screen; afterwards the host switches drawing to its UI layer (VFX-02)."""
+
+    def __init__(self, adapter, textures):
+        self.adapter, self.textures, self.done = adapter, textures, False
+
+    def render(self, draws):
+        if self.textures is not None:
+            self.textures.render(draws)
+        self.finish()
+
+    def finish(self):
+        self.done = True
+        host = self.adapter.host
+        if hasattr(host, "world_done"):
+            host.world_done("battle")
+            self.adapter._ui_backend.screen = host.screen
+
+
 class CanonicalBattleAdapter:
     """Canonical Battle Presentation driven by the session's battle log.
 
@@ -536,6 +555,22 @@ class CanonicalBattleAdapter:
             self._last_impact = start
             return
         for beat in sequence.beats:
+            if beat.channel == "motion_fx":  # afterimage / trail echoes of the source or targets (VFX-03)
+                payload = dict(beat.payload_dict())
+                hold = float(payload.pop("duration", beat.duration) or 0.3)
+                members = (
+                    (entry.member_id,)
+                    if beat.member_id in (None, "@source")
+                    else (tuple(entry.target_ids) if beat.member_id == "@target" else (beat.member_id,))
+                )
+                for member in members:
+                    self._at(
+                        start + beat.at,
+                        lambda m=member, c=beat.cue, d=hold, p=payload: self.screen.animation.start_motion_fx(
+                            m, c, d, **p
+                        ),
+                    )
+                continue
             if beat.channel == "timing" and beat.cue == "hit_stop":
                 hold = float(beat.payload_dict().get("duration", beat.duration) or 0.0)
                 self._at(start + beat.at, lambda d=hold: self._start_hit_stop(d))
@@ -656,7 +691,11 @@ class CanonicalBattleAdapter:
         else:
             self.host._draw_battle_world(show_labels=False)
         self._view_camera = self.screen.camera_feedback.camera_view(base)
-        result = self.screen.render(base, ui_renderer=self.renderer, texture_renderer=textures)
+        self._ui_backend.screen = self.host.screen  # the world layer, until the textures are drawn
+        world_then_ui = _WorldThenUi(self, textures)
+        result = self.screen.render(base, ui_renderer=self.renderer, texture_renderer=world_then_ui)
+        if not world_then_ui.done:
+            world_then_ui.finish()
         self.audio_cues.extend(result.audio_cues)
         return result
 
@@ -674,9 +713,14 @@ class CanonicalBattleAdapter:
         return out
 
     def _draw_vfx(self, effect):
-        """Play a VFX sprite sheet cue centred on its member (camera shake applied)."""
+        """Play a VFX sprite sheet cue centred on its member (camera shake applied), in the world layer."""
+        drawing_world = getattr(self.host, "drawing_world", None)
         with self.host.profiler.section("vfx"):
-            self._draw_vfx_cue(effect)
+            if drawing_world is None:
+                self._draw_vfx_cue(effect)
+            else:
+                with drawing_world():
+                    self._draw_vfx_cue(effect)
 
     def _draw_vfx_cue(self, effect):
         payload = dict(getattr(effect, "payload", {}) or {})

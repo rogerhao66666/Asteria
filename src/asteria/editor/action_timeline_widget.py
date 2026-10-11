@@ -32,6 +32,7 @@ COLORS = {
     "camera": "#d08ae0",
     "screen_fx": "#f0d060",
     "timing": "#e06060",
+    "motion_fx": "#60d0d0",
 }
 
 

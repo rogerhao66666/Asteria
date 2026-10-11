@@ -2,9 +2,10 @@
 
 Edits the battle presentation library's ``motion_sequences``: per-ability
 choreography of timed beats on the channels ``animation`` (cue = role),
-``vfx`` (cue = sprite sheet asset), ``audio`` (cue = audio id), ``camera``
-and ``screen_fx`` (cue = effect). These are exactly the sequences the
-canonical battle screen plays. Changes are undoable document commands;
+``vfx`` (cue = sprite sheet asset), ``audio`` (cue = audio id), ``camera``,
+``screen_fx`` (cue = effect), ``timing`` (hit_stop) and ``motion_fx``
+(afterimage / trail). These are exactly the sequences the canonical battle
+screen plays. Changes are undoable document commands;
 ``preview`` reports what has fired at a given time.
 """
 
@@ -14,8 +15,9 @@ from dataclasses import dataclass
 
 from asteria.presentation.battle_motion_sequence import BattleMotionBeat, BattleMotionSequence
 
-CHANNELS = ("animation", "vfx", "audio", "camera", "screen_fx", "timing")
+CHANNELS = ("animation", "vfx", "audio", "camera", "screen_fx", "timing", "motion_fx")
 TIMING_CUES = ("hit_stop",)
+MOTION_FX_CUES = ("afterimage", "trail")  # payload: duration, interval, count, fade, lifetime
 ROLES = ("idle", "attack", "hit", "ko")
 TARGETS = ("@source", "@target")
 CATEGORY = "motion_sequences"
@@ -93,6 +95,8 @@ class ActionTimelineController:
                 found.append(f"{where}: animation cue must be one of {ROLES}")
             if beat.channel == "timing" and beat.cue not in TIMING_CUES:
                 found.append(f"{where}: timing cue must be one of {TIMING_CUES}")
+            if beat.channel == "motion_fx" and beat.cue not in MOTION_FX_CUES:
+                found.append(f"{where}: motion_fx cue must be one of {MOTION_FX_CUES}")
             if beat.channel == "vfx" and vfx and beat.cue not in vfx:
                 found.append(f"{where}: unknown VFX sheet {beat.cue}")
             if beat.member_id not in (None, *TARGETS):

@@ -136,6 +136,42 @@ class GpuPresenter:
         self.uploads += 1
         self.last_upload_ms = (time.perf_counter() - start) * 1000.0
 
+    def _layer_texture(self, name, surface, pg, *, alpha):
+        """Upload an extra layer (UI with alpha, normals) into a cached texture of the presenter's size."""
+        textures = self.__dict__.setdefault("_layers", {})
+        texture = textures.get(name)
+        if texture is None:
+            import moderngl
+
+            texture = textures[name] = self.ctx.texture(self.size, 4)
+            texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        swizzle = _swizzle_for(surface)
+        if swizzle is not None and alpha:  # keep the real alpha byte (UI layers are SRCALPHA)
+            swizzle = swizzle[:3] + ("RGBA"[surface.get_shifts()[3] // 8] if surface.get_masks()[3] else "1")
+        if swizzle is not None:
+            texture.swizzle = swizzle
+            texture.write(surface.get_buffer())
+        else:
+            texture.swizzle = "RGBA"
+            texture.write(pg.image.tobytes(surface, "RGBA"))
+        return texture
+
+    def present_layers(self, world, ui, pg, *, environment=None, normals=None, time=0.0):
+        """World (lit, fogged, post-processed by ``environment``) with the UI layer on top."""
+        from .gpu_effects import EffectChain
+
+        if environment is None or not environment.active:
+            if self.post is not None:
+                self.post.environment = None
+            return self.present(world, pg)
+        if self.post is None:
+            self.post = EffectChain(self.ctx, self.size)
+        self.post.environment = environment
+        self.post.time = float(time)
+        self.post.ui = None if ui is None else self._layer_texture("ui", ui, pg, alpha=True)
+        self.post.normals = None if normals is None else self._layer_texture("normals", normals, pg, alpha=False)
+        return self.present(world, pg)
+
     def _draw(self):
         target = self.target or self.ctx.screen
         target.use()

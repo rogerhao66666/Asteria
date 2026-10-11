@@ -39,4 +39,7 @@ def default_component_registry():
     register_character_components(registry)
     for component in (NpcIdentity2DComponent, FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent):
         registry.register(component)
+    from .environment2d import register_environment_components
+
+    register_environment_components(registry)  # VFX-02 / VFX-03 scene environment, lights, shadow casters
     return registry

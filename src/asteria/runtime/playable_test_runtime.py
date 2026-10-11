@@ -88,6 +88,15 @@ class PlayableTestRuntime:
         self.backend_kind = backend or self.manifest.get("render", {}).get("backend", "pygame")
         self.gpu = None
         self.gpu_fallback_reason = ""
+        self._world_layer = None
+        self._ui_layer = None
+        self._frame_env = None
+        self._frame_dt = 0.0
+        self._clock_seconds = 0.0
+        self._weather = None
+        self._l0 = None
+        self.environment_errors = []
+        self.environment_unsupported = []
         self.screen = None
         self.clock = None
         self.running = True
@@ -253,12 +262,109 @@ class PlayableTestRuntime:
                 path = self.resource_root / path
         return path if path.is_file() else None
 
+    # -- scene environment: lighting, fog, weather, post-processing (VFX-02 / VFX-03) -----------------
+    def _resolve_environment(self, kind):
+        from asteria.runtime.environment2d import resolve_environment
+
+        defaults = self.manifest.get("render", {}).get("environment")
+        if kind == "field":
+            scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0)) * self.field_camera.zoom
+            return resolve_environment(
+                self.game.scene,
+                defaults=defaults,
+                to_screen=self.field_camera.world_to_screen,
+                scale=scale,
+                read_shader=self._read_shader,
+            )
+        env = resolve_environment(self.game.scene, defaults=defaults, read_shader=self._read_shader)
+        env.lighting = False  # scene lights are placed in the field; battles keep fog, weather and post effects
+        return env
+
+    def _read_shader(self, asset_id):
+        """A project ``shader`` asset's GLSL source (asset registry), or None."""
+        record = self.project.assets.get(str(asset_id))
+        if record is None or record.kind != "shader":
+            return None
+        path = self.resource_root / record.source_path
+        return path.read_text(encoding="utf-8") if path.is_file() else None
+
+    def world_done(self, kind):
+        """The world layer for this frame is drawn: weather goes on it, and what follows (HUD, menus,
+        dialogue, fades) is drawn on a separate UI layer so lighting and post effects never touch it."""
+        env = self._resolve_environment(kind)
+        self._frame_env = env
+        if env is None or not env.active:
+            return
+        if env.weather != "none" or self._weather is not None:
+            from asteria.runtime.weather import WeatherSystem
+
+            if self._weather is None:
+                self._weather = WeatherSystem(self.width, self.height, seed=f"{self.game.scene.id}:weather")
+            camera = self.field_camera.view[:2] if kind == "field" else None
+            scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0)) * self.field_camera.zoom
+            self._weather.update(
+                self._frame_dt,
+                env.weather,
+                env.weather_intensity,
+                env.weather_max_particles,
+                env.weather_wind,
+                camera=camera,
+                scale=scale,
+            )
+            with self.profiler.section("vfx"):
+                self.profiler.count("particles", self._weather.draw(self.pg, self.screen, env.weather_wind))
+        self._world_layer = self.screen
+        if self._ui_layer is None or self._ui_layer.get_size() != self.screen.get_size():
+            self._ui_layer = self.pg.Surface(self.screen.get_size(), self.pg.SRCALPHA, 32)
+        self._ui_layer.fill((0, 0, 0, 0))
+        self.screen = self._ui_layer
+
+    def drawing_world(self):
+        """Context manager: draw into the world layer even after ``world_done`` (e.g. battle VFX)."""
+        from contextlib import contextmanager
+
+        @contextmanager
+        def scope():
+            if self._world_layer is None:
+                yield
+                return
+            ui, self.screen = self.screen, self._world_layer
+            try:
+                yield
+            finally:
+                self.screen = ui
+
+        return scope()
+
     def present(self):
-        """Show the composed frame: GPU presenter (upload + post chain) or the pygame window flip."""
+        """Show the composed frame: GPU presenter (upload + effect chain) or the pygame window flip."""
+        world, ui = self.screen, None
+        if self._world_layer is not None:
+            world, ui = self._world_layer, self.screen
+            self.screen = world
+            self._world_layer = None
+        env, self._frame_env = self._frame_env, None
+        self._lit_last_frame = bool(env is not None and env.lighting)
+        normals = self._normal_layer if getattr(self, "_normal_layer_active", False) else None
+        self._normal_layer_active = False
         if self.gpu is not None:
             with self.profiler.section("gpu_present"):
-                self.gpu.present(self.screen, self.pg)
-            self.profiler.count("draw_calls", self.gpu.last_draw_calls)
+                self.gpu.present_layers(world, ui, self.pg, environment=env, normals=normals, time=self._clock_seconds)
+            if self.gpu.post is not None and self.gpu.post.errors:
+                self.environment_errors = list(self.gpu.post.errors)
+        else:
+            if env is not None and env.active:
+                from asteria.runtime.environment_fallback import PygameEnvironmentRenderer, unsupported
+
+                if self._l0 is None:
+                    self._l0 = PygameEnvironmentRenderer(self.pg)
+                self._l0.time = self._clock_seconds
+                self._l0.apply(world, env)
+                self.environment_unsupported = unsupported(env)
+            if ui is not None:
+                world.blit(ui, (0, 0))
+        if self.gpu is not None:
+            self.profiler.count("draw_calls", self.gpu.last_draw_calls)  # presenter + effect passes
             if self.gpu.last_gpu_ms is not None:
                 self.profiler.add_time("gpu_time", self.gpu.last_gpu_ms / 1000.0)
         self.pg.display.flip()
@@ -356,6 +462,7 @@ class PlayableTestRuntime:
                 image.set_alpha(int(effect.placement["opacity"] * 255))
             flags = self.pg.BLEND_RGB_ADD if effect.placement["blend"] == "add" else 0
             self.screen.blit(image, (round(sx - size[0] / 2), round(sy - size[1] / 2)), special_flags=flags)
+        self.world_done("field")
         alpha = self.field_effects.fade_alpha
         if alpha > 0:
             shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
@@ -384,7 +491,81 @@ class PlayableTestRuntime:
         except Exception:
             return None
 
+    def _normal_image(self, image_path):
+        """The normal map for an image, from its canonical asset's ``material.normal_asset_id`` (or None)."""
+        cache = self.__dict__.setdefault("_normal_images", {})
+        if image_path not in cache:
+            normal = None
+            for asset in self.project.assets.snapshot():
+                if asset.source.uri != image_path:
+                    continue
+                normal_id = dict(asset.meta().get("material") or {}).get("normal_asset_id")
+                if normal_id:
+                    try:
+                        normal = self.load_image(self.project.assets.resolve(normal_id).source.uri)
+                    except KeyError:
+                        normal = None
+                break
+            cache[image_path] = normal
+        return cache[image_path]
+
+    def _begin_normals(self):
+        """Prepare a flat normal layer when last frame's environment lit the world on the GPU."""
+        if self.gpu is None or not getattr(self, "_lit_last_frame", False):
+            self._normal_layer_active = False
+            return
+        if getattr(self, "_normal_layer", None) is None or self._normal_layer.get_size() != (self.width, self.height):
+            self._normal_layer = self.pg.Surface((self.width, self.height), 0, 32)
+        self._normal_layer.fill((128, 128, 255))
+        self._normal_layer_active = True
+
+    def _blit_normal(self, image_path, source_rect, size, position):
+        """Draw the normal-map frame matching a world sprite blit (same source rect, size and place)."""
+        if not getattr(self, "_normal_layer_active", False):
+            return
+        normal = self._normal_image(image_path)
+        if normal is None:
+            return
+        frame = normal.subsurface(source_rect) if source_rect is not None else normal
+        if frame.get_size() != tuple(size):
+            frame = self.pg.transform.scale(frame, tuple(size))
+        self._normal_layer.blit(frame, position)
+
+    def _blit_with_trail(self, entity, image, position):
+        """Blit a field sprite; with MotionTrail2D, fading echoes of earlier positions go behind it (VFX-03)."""
+        from asteria.presentation.motion_fx import EchoSettings, MotionEchoes
+        from asteria.runtime.environment2d import MotionTrail2DComponent
+
+        trail = entity.try_get(MotionTrail2DComponent)
+        if trail is not None and trail.enabled:
+            echoes = self.__dict__.setdefault("_field_echoes", MotionEchoes())
+            settings = EchoSettings.of(
+                trail.kind, interval=trail.interval, count=trail.count, fade=trail.fade, lifetime=trail.lifetime
+            )
+            echo = echoes.get(entity.id, settings)
+            t = entity.get(Transform)
+            last = self.__dict__.setdefault("_trail_last_xy", {}).get(entity.id)
+            moving = last is not None and (abs(t.x - last[0]) + abs(t.y - last[1])) > 1e-3
+            self._trail_last_xy[entity.id] = (t.x, t.y)
+            for ghost_image, ghost_position, opacity in (
+                (img, pos, a) for (img, pos), a in echo.ghosts(self._clock_seconds)
+            ):
+                ghost = ghost_image.copy()
+                ghost.set_alpha(int(200 * opacity))
+                self.screen.blit(ghost, ghost_position)
+            echo.record(self._clock_seconds, (image, position), moving=moving or not trail.only_while_moving)
+        self.screen.blit(image, position)
+
+    def _prune_field_echoes(self):
+        echoes = self.__dict__.get("_field_echoes")
+        if echoes is None:
+            return
+        alive = {e.id for e in self.game.scene.entities() if e.enabled}
+        echoes.prune(alive)  # entity removed / hidden / another scene: its echoes go too
+
     def _draw_field(self, moving=False):
+        self._begin_normals()
+        self._prune_field_echoes()
         bg = self.load_image(self.manifest["field"]["background"])
         zoom = self.field_camera.zoom
         bx, by, bw, bh = self.field_camera.background_rect()
@@ -415,7 +596,9 @@ class PlayableTestRuntime:
             ex, ey = self._field_screen_xy(et.x, et.y)
             w, h = (v * zoom for v in spec.get("size", (96, 112)))
             image = self.pg.transform.scale(self.load_image(spec["sprite"]), (int(w), int(h)))
-            self.screen.blit(image, (int(ex - w / 2), int(ey - h + 12 * zoom)))
+            position = (int(ex - w / 2), int(ey - h + 12 * zoom))
+            self._blit_with_trail(entity, image, position)
+            self._blit_normal(spec["sprite"], None, (int(w), int(h)), position)
 
         pt = self.game.player.get(Transform)
         px, py = self._field_screen_xy(pt.x, pt.y)
@@ -424,7 +607,14 @@ class PlayableTestRuntime:
             pf.get_size(), self.manifest["field"].get("player_render_width", 64) * zoom
         )
         pf = self.pg.transform.scale(pf, (render_w, render_h))
-        self.screen.blit(pf, (int(px - render_w / 2), int(py - render_h + 10 * zoom)))
+        position = (int(px - render_w / 2), int(py - render_h + 10 * zoom))
+        self._blit_with_trail(self.game.player, pf, position)
+        sheet_path = self.manifest["field"]["player_sheet"]
+        if getattr(self, "_normal_layer_active", False) and self._normal_image(sheet_path) is not None:
+            fw, fh = self.manifest["field"]["player_frame_size"]
+            row = walking_row_index(self.game.facing)
+            col = walking_pattern_index(self._field_step) if moving else 1
+            self._blit_normal(sheet_path, (col * fw, row * fh, fw, fh), (render_w, render_h), position)
         self._draw_field_effects()
         if self.game.cutscene_active:
             self._draw_dialogue()
@@ -1668,6 +1858,8 @@ class PlayableTestRuntime:
 
     def _frame(self, events, dt):
         """Process one frame of input, event programs and drawing (no flip)."""
+        self._frame_dt = float(dt)
+        self._clock_seconds += float(dt)
         self._update_resource_scope()
         if self.debug_server is not None:
             self.debug_server.poll()

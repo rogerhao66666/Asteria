@@ -283,6 +283,9 @@ class BattlePresentationRuntime:
         self._overlays: dict[str, CombatantOverlay] = {}
         # member id -> CharacterComposition (attachments / layers drawn with the body; CMP-01/02/04)
         self.compositions = {}
+        from .motion_fx import MotionEchoes
+
+        self.echoes = MotionEchoes()  # afterimages / trails (VFX-03), started by motion_fx timeline beats
         self._part_sheets = {}
         self._member_order = tuple(x.member_id for x in scene.combatants)
         for visual in scene.combatants:
@@ -466,20 +469,37 @@ class BattlePresentationRuntime:
                         flip_x=visual.anchor.facing.lower() == "left",
                     )
                 )
-            draws.append(
-                TextureDraw(
-                    sheet.texture.asset_id,
-                    (frame.x, frame.y, frame.width, frame.height),
-                    sx,
-                    sy,
-                    frame_width * camera.zoom,
-                    frame_height * camera.zoom,
-                    layer=0,
-                    depth=visual.anchor.depth,
-                    opacity=max(0.0, min(1.0, mix)),
-                    flip_x=visual.anchor.facing.lower() == "left",
-                )
+            body = TextureDraw(
+                sheet.texture.asset_id,
+                (frame.x, frame.y, frame.width, frame.height),
+                sx,
+                sy,
+                frame_width * camera.zoom,
+                frame_height * camera.zoom,
+                layer=0,
+                depth=visual.anchor.depth,
+                opacity=max(0.0, min(1.0, mix)),
+                flip_x=visual.anchor.facing.lower() == "left",
             )
+            echo = self.echoes.by_key.get(visual.member_id)
+            if echo is not None:
+                echo.record(self.time, body, moving=False)
+                for order, (ghost, opacity) in enumerate(echo.ghosts(self.time)):
+                    draws.append(
+                        TextureDraw(
+                            ghost.texture_asset_id,
+                            ghost.source,
+                            ghost.screen_x,
+                            ghost.screen_y,
+                            ghost.width,
+                            ghost.height,
+                            layer=0,
+                            depth=visual.anchor.depth - 2e-4 + order * 1e-6,
+                            opacity=ghost.opacity * opacity * 0.8,
+                            flip_x=ghost.flip_x,
+                        )
+                    )
+            draws.append(body)
             composition = self.compositions.get(visual.member_id)
             if composition is not None:
                 draws.extend(
@@ -509,6 +529,13 @@ class BattlePresentationRuntime:
                 )
         draws.sort(key=lambda d: (d.layer, d.depth, d.screen_y, d.screen_x))
         return BattlePresentationFrame(self.scene.scene_id, self.scene.background_asset_id, tuple(draws))
+
+    def start_motion_fx(self, member_id, kind, duration, **params):
+        """Afterimage / trail echoes of ``member_id``'s sprite for ``duration`` seconds (VFX-03)."""
+        from .motion_fx import EchoSettings
+
+        settings = EchoSettings.of(kind, **params)
+        self.echoes.get(member_id, settings).activate(self.time, duration)
 
     def _part_sheet(self, asset_id):
         if asset_id not in self._part_sheets:
