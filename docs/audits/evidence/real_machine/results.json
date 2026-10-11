@@ -2,30 +2,30 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-11 16:56:37 +0800"
+    "time": "2026-10-11 17:34:06 +0800"
   },
   "results": [
     {
       "check": "gpu_window",
       "status": "PASS",
-      "evidence": "ModernGL window on 'Apple M5': 400 sprites/frame for 240 frames, 60.737 fps, read-back framebuffer has 8 sampled colours",
+      "evidence": "ModernGL window on 'Apple M5': 400 sprites/frame for 240 frames, 61.424 fps, read-back framebuffer has 8 sampled colours",
       "renderer": "Apple M5",
       "pacing": {
         "target_fps": 60.0,
-        "measured_fps": 60.737,
-        "interval_mean_ms": 16.4644,
-        "interval_jitter_ms": 3.8721,
-        "interval_p99_ms": 38.4033,
-        "frames_over_budget": 3
+        "measured_fps": 61.424,
+        "interval_mean_ms": 16.2803,
+        "interval_jitter_ms": 3.1367,
+        "interval_p99_ms": 17.4553,
+        "frames_over_budget": 2
       },
       "frame": {
         "count": 240,
-        "mean_ms": 11.0557,
-        "p50_ms": 9.6794,
-        "p95_ms": 14.8584,
-        "p99_ms": 38.3851,
-        "max_ms": 59.5694,
-        "total_ms": 2653.3568
+        "mean_ms": 7.808,
+        "p50_ms": 6.6964,
+        "p95_ms": 11.2369,
+        "p99_ms": 17.446,
+        "max_ms": 59.3281,
+        "total_ms": 1873.9104
       },
       "screenshot": "gpu_window.png"
     },
@@ -48,7 +48,7 @@
     {
       "check": "audio_playback_device",
       "status": "PASS",
-      "evidence": "CoreAudio device opened (44100, -16, 2); hit.wav (0.340s) kept its channel busy for 0.349s; battle_theme.ogg streaming=True",
+      "evidence": "CoreAudio device opened (44100, -16, 2); hit.wav (0.340s) kept its channel busy for 0.354s; battle_theme.ogg streaming=True",
       "note": "Device-level playback only; audible confirmation is manual item M3."
     },
     {
@@ -60,6 +60,52 @@
       "check": "audio_latency",
       "status": "NOT EXECUTED",
       "evidence": "Output latency needs an acoustic or loopback measurement (procedure M4); the configured mixer buffer is not reported by pygame and is not presented as latency."
+    },
+    {
+      "check": "animation_smoothness",
+      "status": "PASS",
+      "evidence": "Canonical battle screen in a real cocoa window: combatant sprites drawn, boss animation advanced 86 frames in 10.0s (8.6/s); 7 skills used through the key-event queue; VFX particles peaked at 1",
+      "screenshots": [
+        "battle_window_0.png",
+        "battle_window_1.png"
+      ],
+      "note": "Perceived smoothness by a person is manual item M5."
+    },
+    {
+      "check": "frame_pacing",
+      "status": "PASS",
+      "evidence": "559 frames: 55.989 fps (target 60), jitter 0.716 ms, p99 interval 18.8108 ms, 0 frames over 1.5x budget",
+      "pacing": {
+        "target_fps": 60.0,
+        "measured_fps": 55.989,
+        "interval_mean_ms": 17.8607,
+        "interval_jitter_ms": 0.716,
+        "interval_p99_ms": 18.8108,
+        "frames_over_budget": 0
+      },
+      "frame": {
+        "count": 559,
+        "mean_ms": 5.0262,
+        "p50_ms": 5.0671,
+        "p95_ms": 5.8465,
+        "p99_ms": 6.7479,
+        "max_ms": 9.5904,
+        "total_ms": 2809.6567
+      },
+      "sections": {
+        "animation": 1.1754,
+        "asset_loading": 0.6223,
+        "events": 0.0047,
+        "input": 0.0372,
+        "present": 0.4558,
+        "render": 3.2098,
+        "update": 0.0474,
+        "vfx": 0.1069
+      },
+      "unsupported": {
+        "draw_calls": "pygame software blitting exposes no draw-call counter",
+        "gpu_time": "pygame backend renders on the CPU; no GPU timer"
+      }
     },
     {
       "check": "field_camera_boss_focus",
@@ -93,9 +139,22 @@
       "note": "Screenshots are reviewed by the engineer; hands-on use by a person is not part of this check."
     },
     {
+      "check": "editor_d17_gui",
+      "status": "PASS",
+      "evidence": "Qt platform 'cocoa': export_game=ok, animation_states=ok, character_composition=ok, input_map=ok, behavior_trees=ok, profiler_dock=ok, project_file_untouched=ok",
+      "screenshots": [
+        "editor_animation_states.png",
+        "editor_character_composition.png",
+        "editor_input_map.png",
+        "editor_behavior_trees.png",
+        "editor_profiler.png"
+      ],
+      "note": "Nothing saved to the project. Hands-on use by a person is manual item M7."
+    },
+    {
       "check": "runtime_exit",
       "status": "PASS",
-      "evidence": "Real-window runtime ran 90 frames and exited with code 0 in 2.9s",
+      "evidence": "Real-window runtime ran 90 frames and exited with code 0 in 2.4s",
       "stderr": ""
     },
     {
@@ -104,25 +163,9 @@
       "evidence": "Runtime saved (SAVED), was killed with SIGKILL (exit -9); the save reloaded with player position (7.0, 3.0)"
     },
     {
-      "check": "field_follow_camera",
-      "status": "PASS",
-      "evidence": "Real cocoa window: follow zoom 1.80; the player walked from x=-60 to x=-5.1 and the camera centre moved 48.9 world units with it",
-      "screenshots": [
-        "follow_camera_start.png",
-        "follow_camera_end.png"
-      ]
-    },
-    {
-      "check": "packaged_app_real_window",
-      "status": "PASS",
-      "evidence": "Asteria RM.app (2.4 MB .pyz inside) launched from a temporary folder outside the repo, ran 120 frames in a real window and exited 0 in 3.5s",
-      "stderr": "",
-      "note": "Double-clicking the .app in Finder (Gatekeeper, unsigned app) is manual item M6."
-    },
-    {
       "check": "cutscene_real_window",
       "status": "PASS",
-      "evidence": "Real cocoa window: after 0.6 s the tween had moved the player to x=7.8 of 20 with the arrow key held (input locked), camera zoom 1.40, letterbox pixel (0, 0, 0), 1 VFX at peak (parallel track); Esc (real key event) skipped to x=20.0, switch set=True, cutscene active=False, errors=0",
+      "evidence": "Real cocoa window: after 0.6 s the tween had moved the player to x=7.9 of 20 with the arrow key held (input locked), camera zoom 1.40, letterbox pixel (0, 0, 0), 1 VFX at peak (parallel track); Esc (real key event) skipped to x=20.0, switch set=True, cutscene active=False, errors=0",
       "screenshots": [
         "cutscene_mid.png",
         "cutscene_skipped.png"
@@ -172,127 +215,95 @@
       "note": "Physical key presses by a person remain manual item M1; gamepad rebinding needs a controller (M2)."
     },
     {
-      "check": "editor_d17_gui",
+      "check": "field_follow_camera",
       "status": "PASS",
-      "evidence": "Qt platform 'cocoa': export_game=ok, animation_states=ok, character_composition=ok, input_map=ok, behavior_trees=ok, profiler_dock=ok, project_file_untouched=ok",
+      "evidence": "Real cocoa window: follow zoom 1.80; the player walked from x=-60 to x=-5.6 and the camera centre moved 48.4 world units with it",
       "screenshots": [
-        "editor_animation_states.png",
-        "editor_character_composition.png",
-        "editor_input_map.png",
-        "editor_behavior_trees.png",
-        "editor_profiler.png"
-      ],
-      "note": "Nothing saved to the project. Hands-on use by a person is manual item M7."
+        "follow_camera_start.png",
+        "follow_camera_end.png"
+      ]
     },
     {
-      "check": "animation_smoothness",
+      "check": "packaged_app_real_window",
       "status": "PASS",
-      "evidence": "Canonical battle screen in a real cocoa window: combatant sprites drawn, boss animation advanced 86 frames in 10.0s (8.6/s); 7 skills used through the key-event queue; VFX particles peaked at 1",
-      "screenshots": [
-        "battle_window_0.png",
-        "battle_window_1.png"
-      ],
-      "note": "Perceived smoothness by a person is manual item M5."
+      "evidence": "Asteria RM.app (2.4 MB .pyz inside) launched from a temporary folder outside the repo, ran 120 frames in a real window and exited 0 in 3.5s",
+      "stderr": "",
+      "note": "Double-clicking the .app in Finder (Gatekeeper, unsigned app) is manual item M6."
     },
     {
-      "check": "frame_pacing",
+      "check": "mv_import_real_window",
       "status": "PASS",
-      "evidence": "559 frames: 55.842 fps (target 60), jitter 0.5505 ms, p99 interval 18.8495 ms, 0 frames over 1.5x budget",
-      "pacing": {
-        "target_fps": 60.0,
-        "measured_fps": 55.842,
-        "interval_mean_ms": 17.9078,
-        "interval_jitter_ms": 0.5505,
-        "interval_p99_ms": 18.8495,
-        "frames_over_budget": 0
-      },
-      "frame": {
-        "count": 559,
-        "mean_ms": 5.3632,
-        "p50_ms": 5.3449,
-        "p95_ms": 6.1454,
-        "p99_ms": 7.1197,
-        "max_ms": 7.8685,
-        "total_ms": 2998.0265
-      },
-      "sections": {
-        "animation": 1.2647,
-        "asset_loading": 0.3235,
-        "events": 0.0042,
-        "input": 0.0371,
-        "present": 0.4083,
-        "render": 3.5066,
-        "update": 0.047,
-        "vfx": 0.0914
-      },
-      "unsupported": {
-        "draw_calls": "pygame software blitting exposes no draw-call counter",
-        "gpu_time": "pygame backend renders on the CPU; no GPU timer"
-      }
+      "evidence": "Parallax sample (maps 1-2) imported, saved, reloaded in a fresh process and played in a real cocoa window by real key events: NPC said '\u30a2\u30a4\u30ea\u30b9\\u3000\u30a2\u30a6\u30c8\u30fb\u30fb\u30fb'; the door transferred to '\u3010\u8fd1\u666f\u3011\u30b9\u30e2\u30c3\u30b0' cell [8, 23] (expected [8, 23]); event errors 0; MV modules loaded while playing []",
+      "screenshots": [
+        "mv_import_start.png",
+        "mv_import_dialogue.png",
+        "mv_import_after_transfer.png"
+      ],
+      "note": "Visual review of the tiles and characters is part of manual item M9."
     },
     {
       "check": "gpu_playable_runtime",
       "status": "PASS",
-      "evidence": "Playable game on the ModernGL presenter (Apple M5): field and canonical battle in a real window; the GPU frame equals the composed frame pixel for pixel (field=True, battle=True); battle workload 562 frames, 56.086 fps, p99 interval 18.816 ms; frame mean 6.0701 ms; upload mean 0.414 ms; GPU time mean 0.582 ms; draw calls 1.0 per frame; 7 skills used",
+      "evidence": "Playable game on the ModernGL presenter (Apple M5): field and canonical battle in a real window; the GPU frame equals the composed frame pixel for pixel (field=True, battle=True); battle workload 568 frames, 56.664 fps, p99 interval 18.8615 ms; frame mean 6.1795 ms; upload mean 0.377 ms; GPU time mean 0.4937 ms; draw calls 1.0 per frame; 7 skills used",
       "screenshots": [
         "gpu_field.png",
         "gpu_battle.png"
       ],
       "sections": {
-        "ai": 0.0275,
-        "animation": 1.354,
-        "asset_loading": 1.1119,
-        "collision": 0.0778,
-        "events": 0.0126,
-        "gpu_present": 1.319,
-        "gpu_time": 0.582,
-        "input": 0.0413,
-        "present": 1.5049,
-        "render": 2.9038,
-        "spawn": 0.0186,
-        "update": 0.0835,
-        "vfx": 0.0747
+        "ai": 0.0116,
+        "animation": 1.1917,
+        "asset_loading": 0.8773,
+        "collision": 0.032,
+        "events": 0.0089,
+        "gpu_present": 1.1314,
+        "gpu_time": 0.4937,
+        "input": 0.036,
+        "present": 2.1023,
+        "render": 2.563,
+        "spawn": 0.0098,
+        "update": 0.0668,
+        "vfx": 0.0926
       },
       "note": "Same workload as frame_pacing (pygame) for comparison; see gpu_battle_profile.json."
     },
     {
       "check": "vfx_moderngl_field",
       "status": "PASS",
-      "evidence": "moderngl (cocoa): field with lighting (ambient + player light + shadow-casting lamp), water, rain (320 particles), bloom, grading, vignette for 5 s: 55.969 fps, p99 interval 19.1231 ms, frame interval mean 17.862 ms, draw calls/frame 15.0; shader errors []; GPU-only effects reported unsupported []",
+      "evidence": "moderngl (cocoa): field with lighting (ambient + player light + shadow-casting lamp), water, rain (320 particles), bloom, grading, vignette for 5 s: 55.283 fps, p99 interval 24.218 ms, frame interval mean 18.0835 ms, draw calls/frame 15.0; shader errors []; GPU-only effects reported unsupported []",
       "screenshots": [
         "vfx_moderngl_field.png"
       ],
       "sections": {
-        "ai": 0.0162,
-        "asset_loading": 1.2775,
-        "collision": 0.0396,
-        "events": 0.0332,
-        "gpu_present": 3.2517,
-        "gpu_time": 0.7813,
-        "input": 0.0354,
-        "render": 3.7341,
-        "spawn": 0.0107,
-        "update": 0.1466,
-        "vfx": 1.1636
+        "ai": 0.0143,
+        "asset_loading": 2.2293,
+        "collision": 0.0348,
+        "events": 0.0359,
+        "gpu_present": 3.3343,
+        "gpu_time": 0.8371,
+        "input": 0.031,
+        "render": 3.3514,
+        "spawn": 0.0103,
+        "update": 0.1243,
+        "vfx": 1.0222
       }
     },
     {
       "check": "vfx_pygame_field",
       "status": "PASS",
-      "evidence": "pygame (cocoa): field with lighting (ambient + player light + shadow-casting lamp), water, rain (320 particles), bloom, grading, vignette for 5 s: 55.952 fps, p99 interval 18.9674 ms, frame interval mean 17.8687 ms, draw calls/frame None; shader errors []; GPU-only effects reported unsupported ['bloom', 'grade', 'vignette', 'shadows']",
+      "evidence": "pygame (cocoa): field with lighting (ambient + player light + shadow-casting lamp), water, rain (320 particles), bloom, grading, vignette for 5 s: 55.715 fps, p99 interval 19.0834 ms, frame interval mean 17.9437 ms, draw calls/frame None; shader errors []; GPU-only effects reported unsupported ['bloom', 'grade', 'vignette', 'shadows']",
       "screenshots": [
         "vfx_pygame_field.png"
       ],
       "sections": {
-        "ai": 0.0154,
-        "asset_loading": 1.5527,
-        "collision": 0.0371,
-        "events": 0.0273,
-        "input": 0.0337,
-        "render": 4.4356,
-        "spawn": 0.0098,
-        "update": 0.0964,
-        "vfx": 1.6305
+        "ai": 0.0151,
+        "asset_loading": 1.4382,
+        "collision": 0.0362,
+        "events": 0.032,
+        "input": 0.0329,
+        "render": 4.3243,
+        "spawn": 0.0103,
+        "update": 0.0947,
+        "vfx": 1.5518
       }
     },
     {
@@ -307,18 +318,7 @@
     {
       "check": "vfx_weather_load",
       "status": "PASS",
-      "evidence": "Rain at 2000 particles plus the full GPU chain for 4 s: 60.058 fps, p99 interval 17.956 ms, vfx section mean 4.3304 ms"
-    },
-    {
-      "check": "mv_import_real_window",
-      "status": "PASS",
-      "evidence": "Parallax sample (maps 1-2) imported, saved, reloaded in a fresh process and played in a real cocoa window by real key events: NPC said '\u30a2\u30a4\u30ea\u30b9\\u3000\u30a2\u30a6\u30c8\u30fb\u30fb\u30fb'; the door transferred to '\u3010\u8fd1\u666f\u3011\u30b9\u30e2\u30c3\u30b0' cell [8, 23] (expected [8, 23]); event errors 0; MV modules loaded while playing []",
-      "screenshots": [
-        "mv_import_start.png",
-        "mv_import_dialogue.png",
-        "mv_import_after_transfer.png"
-      ],
-      "note": "Visual review of the tiles and characters is part of manual item M9."
+      "evidence": "Rain at 2000 particles plus the full GPU chain for 4 s: 59.467 fps, p99 interval 19.9047 ms, vfx section mean 4.3974 ms"
     },
     {
       "check": "mv_import_gpu_night",
@@ -329,6 +329,43 @@
         "mv_import_gpu_dialogue.png",
         "mv_import_gpu_after_transfer.png"
       ]
+    },
+    {
+      "check": "gameplay_systems_real_window",
+      "status": "PASS",
+      "evidence": "JRPG stress playthrough (STR-01) in the real playable cocoa window with the canonical battle screen presenting every step (788 frames): 13/13 items, outcome victory, missing [], event errors 0. four_character_party: active party ('hero_01', 'hero_02', 'hero_03', 'hero_04'); jobs_secondary_jobs: hero_01 secondary job alchemist: +['revive']; passives: hero_01 passives ('passive_01', 'passive_02'); equipment_interactions: weapon_12 equipped on hero_01: grants ['ice_lance']; npc_interactions: talk interaction succeeded and set its switch; capture_companion: mender_wisp:2 captured in battle; hero_07 joined the roster; boost_resource: hero_01 boost 2 (momentum): 3 actions; multi_hit: fire_arc landed 3 hits from one command; weaknesses: fire_arc hit the boss's fire weakness: stagger 5.0 -> 2.0; guard_shield_resource: boss stagger shield 5.0 -> 1.0; break_mechanic: boss stagger shield broken after 5 turns (broken=True); turn_order_manipulation: the break pushed the boss's next turn back 4.167 -> 5.667; multi_phase_boss: boss phases ['phase_1', 'phase_3']",
+      "screenshots": [
+        "gameplay_battle_started.png",
+        "gameplay_captured.png",
+        "gameplay_end.png"
+      ],
+      "note": "Actions go through the game session API; keys and menus are covered by the battle / menus checks."
+    },
+    {
+      "check": "game_menus_more_real_window",
+      "status": "PASS",
+      "evidence": "Real cocoa window, real key events: quest_log=ok, shop_opened_by_event_state=ok, shop_buy=ok, item_use=ok, equip_cycle=ok, settings=ok, game_over=ok, game_over_to_title=ok",
+      "screenshots": [
+        "menus_quest_log.png",
+        "menus_shop.png",
+        "menus_item_used.png",
+        "menus_equipment.png",
+        "menus_settings.png",
+        "menus_game_over.png"
+      ]
+    },
+    {
+      "check": "editor_workflows_gui",
+      "status": "PASS",
+      "evidence": "Qt platform 'cocoa', shown editor: asset_browser_thumbnails=ok, record_search=ok, record_copy_paste_cut_shortcuts=ok, batch_edit_and_undo=ok, hierarchy_drop_and_undo=ok, prefab_create_place_apply_revert=ok, pivot_edit_and_undo=ok, editor_event_runs_in_live_game=ok, play_from_selection_and_restart=ok, project_file_untouched=ok",
+      "screenshots": [
+        "workflow_records.png",
+        "workflow_hierarchy.png",
+        "workflow_prefab.png",
+        "workflow_pivot.png",
+        "workflow_play_from_selection.png"
+      ],
+      "note": "Hands-on use by a person (mouse drags, typing) is manual item M7."
     }
   ]
 }

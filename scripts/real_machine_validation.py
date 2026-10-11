@@ -617,7 +617,7 @@ def _pump(runtime, seconds, *, before=None, after=None):
 def _key(key, up=False):
     import pygame
 
-    pygame.event.post(pygame.event.Event(pygame.KEYUP if up else pygame.KEYDOWN, key=key))
+    pygame.event.post(pygame.event.Event(pygame.KEYUP if up else pygame.KEYDOWN, key=key, mod=0))
 
 
 def check_cutscene(out):
@@ -1323,6 +1323,350 @@ def check_mv_import_gpu(out):
     )
 
 
+def check_gameplay_systems(out):
+    """STR-01 / BTL / RPG: the JRPG stress playthrough in the real playable window, canonical battle drawn."""
+    import pygame
+
+    from asteria.validation.jrpg_stress import run_jrpg_stress
+
+    runtime = _runtime()
+    runtime.open()
+    driver = pygame.display.get_driver()
+    runtime._ui_mode = "field"
+    adapter = runtime._battle_presentation
+    state = {"begun": False, "frames": 0, "shots": []}
+
+    def present(seconds):
+        start = time.perf_counter()
+        while time.perf_counter() - start < seconds:
+            dt = min(runtime.clock.tick(60) / 1000.0, 0.05)
+            runtime._frame(pygame.event.get(), dt)
+            runtime.present()
+            state["frames"] += 1
+            if runtime.game.mode == "battle" and not adapter.busy() and time.perf_counter() - start > 0.3:
+                break
+
+    def on_step(name):
+        if runtime.game.mode == "battle" and not state["begun"]:
+            adapter.begin()
+            state["begun"] = True
+        present(2.5 if name != "turn" else 1.5)
+        if name in ("battle_started", "captured", "broken") and name not in state["shots"]:
+            pygame.image.save(runtime.capture(), str(out / f"gameplay_{name}.png"))
+            state["shots"].append(name)
+
+    report, game = run_jrpg_stress(runtime.game.project, game=runtime.game, on_step=on_step)
+    present(3.0)
+    pygame.image.save(runtime.capture(), str(out / "gameplay_end.png"))
+    errors = list(game.event_errors)
+    runtime.close()
+    ok = not report.missing and report.outcome == "victory" and not errors and state["begun"]
+    items = "; ".join(f"{k}: {v}" for k, v in report.evidence.items())
+    return result(
+        "gameplay_systems_real_window",
+        "PASS" if ok else "FAIL",
+        f"JRPG stress playthrough (STR-01) in the real playable {driver} window with the canonical battle screen "
+        f"presenting every step ({state['frames']} frames): {len(report.evidence)}/13 items, outcome "
+        f"{report.outcome}, missing {report.missing}, event errors {len(errors)}. {items}",
+        screenshots=[f"gameplay_{n}.png" for n in state["shots"]] + ["gameplay_end.png"],
+        note="Actions go through the game session API; keys and menus are covered by the battle / menus checks.",
+    )
+
+
+def check_game_menus_more(out):
+    """UI-01 / UI-02 / RPG-05 / WLD-01: pause, quest log, shop, item use, equipment, settings, game over by keys."""
+    import pygame
+
+    from asteria.gameplay.effects import Effect, EffectOperation, EffectOperationKind
+    from asteria.rpg import QuestDefinition, QuestObjective, ShopDefinition, ShopEntry
+    from asteria.rpg.items import ItemDefinition
+    from asteria.runtime.game_menus import PAUSE_OPTIONS
+
+    runtime = _runtime()
+    db = runtime.game.project.rpg_database  # in-memory content (nothing is saved)
+    db.add_shop(ShopDefinition("rm_shop", "RM Shop", [ShopEntry("ether_leaf", buy_prices={"gold": 30}, stock=3)]))
+    db.add_quest(
+        QuestDefinition(
+            "rm_quest",
+            "RM Quest",
+            objectives=[
+                QuestObjective("leaves", "item", target="ether_leaf", required=99, description="Collect ether leaves")
+            ],
+        )
+    )
+    db.add_item(
+        ItemDefinition(
+            "rm_potion",
+            "RM Potion",
+            use_effects=[Effect("rm.heal", [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "vitality", 30)])],
+        )
+    )
+    saves = PROJECT / "saves"
+    touched = [saves / "settings.json"]
+    backups = {path: path.read_bytes() if path.exists() else None for path in touched}
+    checks, shots = {}, []
+
+    def shot(name):
+        pygame.image.save(runtime.capture(), str(out / name))
+        shots.append(name)
+
+    def press(*keys, wait=0.15):
+        for key in keys:
+            _key(key)
+            _pump(runtime, 0.05)
+            _key(key, up=True)
+            _pump(runtime, wait)
+
+    def choose_pause(option):
+        index = [o for o, _ in PAUSE_OPTIONS].index(option)
+        press(pygame.K_ESCAPE)
+        for _ in range(index):
+            press(pygame.K_DOWN, wait=0.05)
+        press(pygame.K_RETURN)
+
+    try:
+        runtime.open()
+        driver = pygame.display.get_driver()
+        runtime._ui_mode = "field"
+        game = runtime.game
+        game.start_quest("rm_quest")
+        _pump(runtime, 0.3)
+        choose_pause("quests")
+        checks["quest_log"] = runtime._ui_mode == "quests"
+        shot("menus_quest_log.png")
+        press(pygame.K_ESCAPE, pygame.K_ESCAPE)
+        game.open_shop("rm_shop")
+        game.save.rpg_state.currencies["gold"] = game.save.rpg_state.currencies.get("gold", 0.0) + 100
+        gold = game.save.rpg_state.currencies["gold"]
+        leaves = game.save.rpg_state.inventory.count("ether_leaf")
+        _pump(runtime, 0.2)
+        checks["shop_opened_by_event_state"] = runtime._ui_mode == "shop"
+        press(pygame.K_RETURN)
+        shot("menus_shop.png")
+        checks["shop_buy"] = (
+            game.save.rpg_state.currencies["gold"] == gold - 30
+            and game.save.rpg_state.inventory.count("ether_leaf") == leaves + 1
+        )
+        press(pygame.K_ESCAPE)
+        actor = game.save.rpg_state.party_active_actor_ids[0]
+        values = game.save.rpg_state.actor_snapshots[actor].resources["values"]["vitality"]
+        values["current"] = values["maximum"] - 50
+        game.save.rpg_state.inventory.add("rm_potion", 1)
+        runtime.open_status_menu()
+        menu = runtime.status_menu
+        while menu.tab != "items":
+            press(pygame.K_TAB, wait=0.05)
+        target = next(i for i, r in enumerate(menu.rows()) if r[1] == "rm_potion")
+        for _ in range(target - menu.row):
+            press(pygame.K_DOWN, wait=0.05)
+        press(pygame.K_RETURN)
+        healed = game.save.rpg_state.actor_snapshots[actor].resources["values"]["vitality"]["current"]
+        checks["item_use"] = healed == values["maximum"] - 20 and game.save.rpg_state.inventory.count("rm_potion") == 0
+        shot("menus_item_used.png")
+        while menu.tab != "equipment":
+            press(pygame.K_TAB, wait=0.05)
+        loadout = game.save.rpg_state.loadouts[menu.actor_id]
+        weapon = loadout.equipped("weapon")[0].equipment.equipment_id
+        slot_row = next(i for i, r in enumerate(menu.rows()) if r[0] == "slot" and r[1] == "weapon")
+        while menu.row != slot_row:
+            press(pygame.K_DOWN if menu.row < slot_row else pygame.K_UP, wait=0.05)
+        press(pygame.K_RETURN)
+        unequipped = not loadout.equipped("weapon")
+        candidate = next(i for i, r in enumerate(menu.rows()) if r[0] == "candidate" and r[1] == weapon)
+        while menu.row != candidate:
+            press(pygame.K_DOWN if menu.row < candidate else pygame.K_UP, wait=0.05)
+        press(pygame.K_RETURN)
+        checks["equip_cycle"] = unequipped and loadout.equipped("weapon")[0].equipment.equipment_id == weapon
+        shot("menus_equipment.png")
+        press(pygame.K_ESCAPE)
+        choose_pause("settings")
+        checks["settings"] = runtime._ui_mode == "settings"
+        shot("menus_settings.png")
+        press(pygame.K_ESCAPE, pygame.K_ESCAPE)
+        game.start_encounter("boss_room")
+        for member_id in tuple(game.active_hero_ids()):
+            game.battle.member(member_id).subject.resources.set_current(game.rules.knockout_resource_id, 0)
+        runtime._defeat = True
+        _pump(runtime, 0.3)
+        checks["game_over"] = runtime._ui_mode == "game_over"
+        shot("menus_game_over.png")
+        press(pygame.K_DOWN, pygame.K_RETURN)
+        checks["game_over_to_title"] = runtime._ui_mode == "title"
+        runtime.close()
+    finally:
+        for path, data in backups.items():
+            if data is None:
+                path.unlink(missing_ok=True)
+            else:
+                path.write_bytes(data)
+    failed = sorted(k for k, v in checks.items() if not v)
+    return result(
+        "game_menus_more_real_window",
+        "PASS" if not failed else "FAIL",
+        f"Real {driver} window, real key events: "
+        + ", ".join(f"{k}={'ok' if v else 'FAILED'}" for k, v in checks.items()),
+        screenshots=shots,
+    )
+
+
+def check_editor_workflows(out):
+    """Editor workflows in a shown Cocoa editor (EDT-02/03/04/11/13/14/16, AST-02, ENG-23); nothing is saved."""
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.core import Transform
+    from asteria.core.prefab import PrefabInstanceComponent
+    from asteria.editor import EditorDocument
+    from asteria.editor.commands import SetAttributeCommand
+    from asteria.editor.hierarchy import drop_entities
+    from asteria.editor.shell import AsteriaEditorWindow
+    from asteria.editor.workspace import WorkspaceMode
+    from asteria.events import EventInstruction
+    from asteria.project import Project
+    from asteria.runtime import Interaction2DComponent
+
+    app = QApplication.instance() or QApplication([])
+    original = PROJECT_FILE.read_bytes()
+    project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
+    window = AsteriaEditorWindow(project)
+    window.document.file_path = PROJECT_FILE
+    window._resolve_project_resources()
+    window.resize(1600, 1000)
+    window.show()
+    window.raise_()
+    window.activateWindow()
+    checks, shots = {}, []
+
+    def settle(seconds=0.3):
+        deadline = time.perf_counter() + seconds
+        while time.perf_counter() < deadline:
+            app.processEvents()
+            time.sleep(0.02)
+
+    def shot(name):
+        settle()
+        window.grab().save(str(out / name))
+        shots.append(name)
+
+    window.refresh_all()
+    settle(0.5)
+    # EDT-02 asset browser with thumbnails
+    window.refresh_asset_list()
+    items = [window.asset_list.item(i) for i in range(window.asset_list.count())]
+    checks["asset_browser_thumbnails"] = bool(items) and any(not i.icon().isNull() for i in items)
+    # EDT-03 / EDT-13 / EDT-14 records: search, copy / paste / cut by the window's shortcuts, batch edit
+    window.workspace.set_mode(WorkspaceMode.RPG)
+    window.rpg_workspace.setCurrentWidget(window.rpg_authoring)
+    family = window.rpg_authoring.child
+    family.category.setCurrentIndex(family.category.findData("items"))
+    everything = list(family._ids)
+    family.search.setText("leaf")
+    checks["record_search"] = bool(family._ids) and len(family._ids) < len(everything)
+    family.search.clear()
+    family.browser.setFocus()
+    settle()
+    if window._focused_record_family() is family:
+        family.select_ids([family._ids[0]])
+        window.copy_action.trigger()
+        window.paste_action.trigger()
+        copy_id = f"{family._ids[0]}_copy"
+        pasted = copy_id in window.document.project.rpg_database.items
+        family.select_ids([copy_id])
+        window.cut_action.trigger()
+        checks["record_copy_paste_cut_shortcuts"] = pasted and copy_id not in window.document.project.rpg_database.items
+    else:
+        checks["record_copy_paste_cut_shortcuts"] = False
+    shot("workflow_records.png")
+    family.category.setCurrentIndex(family.category.findData("enemies"))
+    ids = family._ids[:2]
+    family.select_ids(ids)
+    enemies = window.document.project.rpg_database.enemies
+    batch = family.batch_edit_selected("stats.power", "77") and all(enemies[k].stats["power"] == 77 for k in ids)
+    window.document.undo()
+    checks["batch_edit_and_undo"] = batch and not all(enemies[k].stats["power"] == 77 for k in ids)
+    # EDT-14 hierarchy drag and drop (the drop the tree performs), one undo step
+    window.workspace.set_mode(WorkspaceMode.SCENE)
+    scene = window.document.project.scene(window.document.project.startup_scene_id)
+    movable = [e for e in scene.entities() if e.has(Transform) and e is not None][:2]
+    child, parent = movable[0], movable[1]
+    drop_entities(window.document, [child], "entity", parent, "on")
+    window.refresh_all()
+    reparented = child.get(Transform).parent_id == parent.id
+    window.document.undo()
+    checks["hierarchy_drop_and_undo"] = reparented and child.get(Transform).parent_id != parent.id
+    shot("workflow_hierarchy.png")
+    # ENG-23 prefab: create, place two, edit one, apply to prefab (propagates), revert
+    boss = next(e for e in scene.entities() if e.has(Interaction2DComponent))
+    window.document.select_entity(boss)
+    created = window.create_prefab_from_selection("rm_prefab") is not None
+    a = window.place_prefab("rm_prefab", 10, 10)
+    a = window._selected_entity()
+    window.place_prefab("rm_prefab", 30, 10)
+    b = window._selected_entity()
+    talk = a.get(Interaction2DComponent)
+    window.document.execute(SetAttributeCommand(talk, "range", 99.0, talk.range))
+    window.document.select_entity(a)
+    window.apply_instance_to_prefab()
+    propagated = b.get(Interaction2DComponent).range == 99.0
+    window.document.select_entity(b)
+    reverted = window.revert_instance_to_prefab() is not None
+    checks["prefab_create_place_apply_revert"] = created and a.has(PrefabInstanceComponent) and propagated and reverted
+    shot("workflow_prefab.png")
+    # AST-02 pivot edit in the animation editor
+    window.workspace.set_mode(WorkspaceMode.UI)
+    window.ui_workspace.setCurrentWidget(window.animation_editor)
+    window.animation_editor.refresh(sheet="battle.combatant.hero_01")
+    editor = window.animation_editor
+    editor.pivot_x.setValue(0.4)
+    pivot = editor.apply_sheet() and editor.api.data("battle.combatant.hero_01")["pivot"][0] == 0.4
+    shot("workflow_pivot.png")
+    window.document.undo()
+    checks["pivot_edit_and_undo"] = pivot and editor.api.data("battle.combatant.hero_01")["pivot"][0] != 0.4
+    # EDT-04 + EDT-11: an event authored in the editor runs in the live game; Play from Selection, Restart
+    window.event_flow_editor.api.new_program(
+        "rm_editor_event", "RM", [EventInstruction("SET_SWITCH", {"name": "rm_editor_event_ran", "value": True})]
+    )
+    player = next(e for e in scene.entities() if e.id == window.document.project.game_start.player_entity_id)
+    window.document.selection.set_single("entity", player)
+    started = window.play_from_selection()
+    ran = restarted = False
+    snapshot = None
+    deadline = time.perf_counter() + 20.0
+    while snapshot is None and time.perf_counter() < deadline:
+        settle(0.5)
+        snapshot = window.debugger_widget.refresh()
+    if snapshot is not None:
+        window.debugger_widget.set_args("trigger_event", program_id="rm_editor_event")
+        window.debugger_widget.execute_current()
+        settle(0.5)
+        snapshot = window.debugger_widget.refresh()
+        ran = bool(snapshot and snapshot.get("switches", {}).get("rm_editor_event_ran"))
+        restarted = window.restart_play()
+        again = None
+        deadline = time.perf_counter() + 20.0
+        while again is None and time.perf_counter() < deadline:
+            settle(0.5)
+            again = window.debugger_widget.refresh()
+        restarted = bool(restarted and again and not again.get("switches", {}).get("rm_editor_event_ran"))
+    checks["editor_event_runs_in_live_game"] = bool(started and ran)
+    checks["play_from_selection_and_restart"] = bool(started and restarted)
+    shot("workflow_play_from_selection.png")
+    window.stop_play()
+    window.document.mark_saved()
+    window.close()
+    checks["project_file_untouched"] = PROJECT_FILE.read_bytes() == original
+    if not checks["project_file_untouched"]:
+        PROJECT_FILE.write_bytes(original)
+    failed = sorted(k for k, v in checks.items() if not v)
+    return result(
+        "editor_workflows_gui",
+        "PASS" if not failed else "FAIL",
+        f"Qt platform '{app.platformName()}', shown editor: "
+        + ", ".join(f"{k}={'ok' if v else 'FAILED'}" for k, v in checks.items()),
+        screenshots=shots,
+        note="Hands-on use by a person (mouse drags, typing) is manual item M7.",
+    )
+
+
 CHECKS = {
     "gpu_window": check_gpu_window,
     "input": check_input,
@@ -1342,6 +1686,9 @@ CHECKS = {
     "gpu_playable": check_gpu_playable,
     "vfx": check_vfx_environment,
     "mv_import_gpu": check_mv_import_gpu,
+    "gameplay": check_gameplay_systems,
+    "menus_more": check_game_menus_more,
+    "editor_workflows": check_editor_workflows,
 }
 
 
@@ -1379,7 +1726,7 @@ def main(argv=None):
     }
     results_path = out / "results.json"
     if args.only and results_path.exists():  # keep evidence of checks that were not re-run
-        rerun = {r["check"] for r in results}
+        rerun = {r["check"] for r in results} | set(args.only)  # also drop old crash entries (named by key)
         previous = json.loads(results_path.read_text()).get("results", [])
         results = [r for r in previous if r["check"] not in rerun] + results
     results_path.write_text(json.dumps({"meta": meta, "results": results}, indent=2))

@@ -1354,7 +1354,7 @@ class PlayableTestRuntime:
             if event.key in (self.pg.K_ESCAPE, self.pg.K_i):
                 self._ui_mode = self._status_back
             elif event.key == self.pg.K_TAB:
-                menu.next_tab(-1 if event.mod & self.pg.KMOD_SHIFT else 1)
+                menu.next_tab(-1 if getattr(event, "mod", 0) & self.pg.KMOD_SHIFT else 1)
             elif event.key in (self.pg.K_q, self.pg.K_PAGEUP):
                 menu.next_actor(-1)
             elif event.key in (self.pg.K_e, self.pg.K_PAGEDOWN):

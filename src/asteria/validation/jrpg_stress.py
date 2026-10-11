@@ -58,8 +58,12 @@ def _queue(battle):
     return [(t.member_id, round(t.ready_time, 3)) for t in battle.scheduler.pending()]
 
 
-def run_jrpg_stress(project, *, seed=7, max_turns=400):
+def run_jrpg_stress(project, *, seed=7, max_turns=400, game=None, on_step=None):
+    """Play the scenario. ``game``: an existing session (e.g. the playable runtime's, so a real window shows
+    it); ``on_step(name)`` is called after each step (presentation, screenshots). Returns (report, game)."""
     from asteria.runtime.game_session import GameSessionRuntime
+
+    step = on_step or (lambda name: None)
 
     report = StressReport()
     ev = report.evidence
@@ -76,8 +80,9 @@ def run_jrpg_stress(project, *, seed=7, max_turns=400):
             )
         )
 
-    save = project.game_start.instantiate(project)
-    game = GameSessionRuntime(project, save)
+    if game is None:
+        game = GameSessionRuntime(project, project.game_start.instantiate(project))
+    save = game.save
     state = save.rpg_state
 
     # -- party, jobs, passives, equipment (field, before the battle) ------------------------------
@@ -108,8 +113,10 @@ def run_jrpg_stress(project, *, seed=7, max_turns=400):
     if outcome == "success" and save.event_context.get_switch("stress_talked"):
         ev["npc_interactions"] = "talk interaction succeeded and set its switch"
 
+    step("build")
     # -- the boss, turn by turn under the battle scheduler -------------------------------------------
     battle = game.start_encounter("boss_room")
+    step("battle_started")
     boss = next(x for x in game.active_enemy_ids() if x.startswith("astral_tyrant"))
     rules = game.rules
     phases_seen = []
@@ -138,6 +145,7 @@ def run_jrpg_stress(project, *, seed=7, max_turns=400):
             if game.attempt_capture(actor, wisp, rng=random.Random(seed)):
                 joined = db.capture_rules["mender_wisp"].actor_id
                 ev["capture_companion"] = f"{wisp} captured in battle; {joined} joined the roster"
+                step("captured")
         elif "haste" not in done and "haste_song" in abilities:
             done.add("haste")
             ally = next(h for h in game.active_hero_ids() if h != actor)
@@ -185,6 +193,7 @@ def run_jrpg_stress(project, *, seed=7, max_turns=400):
             game.use_ability(actor, "strike", (target,))
         note_phase()
         game.end_turn()
+        step("turn")
     for entry in game.drain_battle_log():
         report.log_kinds[entry.kind] = report.log_kinds.get(entry.kind, 0) + 1
     if len(phases_seen) >= 2:
