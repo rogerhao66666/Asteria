@@ -23,13 +23,32 @@ except ImportError:
         pass
 
 
+class _HierarchyTree(QTreeWidget if QT_AVAILABLE else object):
+    """Drops are applied to the scene model (reparent / reorder / move scene), never as a visual-only move."""
+
+    def __init__(self, owner):
+        super().__init__()
+        self._owner = owner
+
+    def dropEvent(self, event):  # noqa: N802 - Qt API
+        target = self.itemAt(event.position().toPoint())
+        position = {
+            QAbstractItemView.OnItem: "on",
+            QAbstractItemView.AboveItem: "above",
+            QAbstractItemView.BelowItem: "below",
+        }.get(self.dropIndicatorPosition(), "on")
+        payload = None if target is None else target.data(0, Qt.UserRole)
+        self._owner.drop_selected(payload, position)
+        event.ignore()  # the tree is rebuilt from the model
+
+
 class ProjectTreeWidget(QWidget):
     def __init__(self, document, parent=None):
         if not QT_AVAILABLE:
             raise RuntimeError("PySide6 is required for editor UI")
         super().__init__(parent)
         self.document = document
-        self.tree = QTreeWidget()
+        self.tree = _HierarchyTree(self)
         self.tree.setHeaderLabels(["Project"])
         self.tree.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.tree.setDragEnabled(True)
@@ -41,6 +60,29 @@ class ProjectTreeWidget(QWidget):
         layout.addWidget(self.tree)
         self.tree.itemSelectionChanged.connect(self._on_selection_changed)
         self.refresh()
+
+    def drop_selected(self, target_payload, position="on"):
+        """Drag-and-drop of the selected entities onto a scene or an entity (EDT-14); one undo step."""
+        from .hierarchy import HierarchyEditError, drop_entities
+
+        entities = [p[1] for p in (i.data(0, Qt.UserRole) for i in self.tree.selectedItems()) if p and p[0] == "entity"]
+        if not entities or target_payload is None or target_payload[0] not in ("scene", "entity"):
+            return False
+        try:
+            drop_entities(self.document, entities, target_payload[0], target_payload[1], position)
+        except (HierarchyEditError, ValueError) as exc:
+            self.last_error = str(exc)
+            window = self.window()
+            if hasattr(window, "statusBar"):
+                window.statusBar().showMessage(f"Can't drop there: {exc}", 4000)
+            return False
+        self.last_error = None
+        window = self.window()
+        if hasattr(window, "refresh_all"):
+            window.refresh_all()
+        else:
+            self.refresh()
+        return True
 
     def _on_selection_changed(self):
         items = self.tree.selectedItems()

@@ -406,6 +406,9 @@ class AdapterFamilyWidget(QWidget):
         self.search.setPlaceholderText("Filter records…")
         self.search.setClearButtonEnabled(True)
         self.search.textChanged.connect(lambda _text: self.refresh(keep=self.selected_ids))
+        self.sort = QComboBox()
+        self.sort.addItems(["ID A→Z", "ID Z→A", "Name A→Z", "Name Z→A"])
+        self.sort.currentIndexChanged.connect(lambda _i: self.refresh(keep=self.selected_ids))
         self.browser = QListWidget()
         self.browser.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.browser.currentRowChanged.connect(self._selection_changed)
@@ -414,7 +417,10 @@ class AdapterFamilyWidget(QWidget):
         browser_panel = QWidget()
         browser_layout = QVBoxLayout(browser_panel)
         browser_layout.setContentsMargins(0, 0, 0, 0)
-        browser_layout.addWidget(self.search)
+        filter_row = QHBoxLayout()
+        filter_row.addWidget(self.search, 1)
+        filter_row.addWidget(self.sort)
+        browser_layout.addLayout(filter_row)
         browser_layout.addWidget(self.browser, 1)
         self.editor = StructuredRecordEditor()
         self.graph_view = SkillTreeGraphView()
@@ -463,6 +469,21 @@ class AdapterFamilyWidget(QWidget):
         row = self.browser.currentRow()
         return self._ids[row] if 0 <= row < len(self._ids) else None
 
+    def _display_name(self, key):
+        try:
+            data = self.adapter.encode(self.adapter.get(key))
+        except Exception:  # noqa: BLE001 - a record that can't be encoded sorts by id
+            return key
+        return str(data.get("display_name") or data.get("name") or key)
+
+    def _sorted(self, ids):
+        mode = self.sort.currentText() if hasattr(self, "sort") else "ID A→Z"
+        if mode.startswith("Name"):
+            ids = sorted(ids, key=lambda k: (self._display_name(k).lower(), k))
+        else:
+            ids = sorted(ids)
+        return ids[::-1] if mode.endswith("Z→A") else ids
+
     @property
     def selected_ids(self):
         """Selected record ids in list order (multi-select, EDT-14)."""
@@ -494,7 +515,7 @@ class AdapterFamilyWidget(QWidget):
         if adapter is None:
             return
         needle = self.search.text().strip().lower()
-        self._ids = [key for key in adapter.ids() if not needle or needle in key.lower()]
+        self._ids = self._sorted([key for key in adapter.ids() if not needle or needle in key.lower()])
         self.browser.addItems(self._ids)
         self.duplicate_button.setEnabled(adapter.duplicate is not None and bool(self._ids))
         is_graph = self.category_id == "graphs"
