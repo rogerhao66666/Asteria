@@ -1741,6 +1741,258 @@ def check_battle_without_art(out):
     return results
 
 
+def check_engine_systems(out):
+    """ENG-05 / ENG-07 / ENG-16 / ENG-17 / ANI-03 / ANI-05 / CAM-02 in the engine's own main loop:
+    ``Application.run`` with the pygame backend in a real window, real clock, 8 s, scene drawn every frame."""
+
+    from asteria.core import (
+        Application,
+        ApplicationConfig,
+        Entity,
+        PersistentComponent,
+        Scene,
+        SceneTransition,
+        System,
+        Transform,
+    )
+    from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
+    from asteria.graphics import SpriteClip, SpriteKeyframe
+    from asteria.platform.pygame_backend import PygameRuntimeBackend
+    from asteria.runtime import (
+        AnimationClipSet,
+        AnimationSystem,
+        Animator2DComponent,
+        Collider2DComponent,
+        CollisionSystem,
+        CollisionWorld,
+        SpriteRenderer2D,
+    )
+    from asteria.runtime.character_control import (
+        CharacterController2DComponent,
+        CharacterControllerSystem,
+        Hitbox2DComponent,
+        HitboxSystem,
+        Hurtbox2DComponent,
+    )
+    from asteria.runtime.components2d import Camera2DComponent
+    from asteria.runtime.entity_actions import EntityActionSystem
+    from asteria.runtime.systems import CameraFollowSystem
+
+    seen = {"fixed": 0, "frames": 0, "trigger": [], "pairs": set(), "hits": [], "anim": [], "cues": [], "lead": []}
+
+    def body(scene, name, x, y, size=24, layer=0, mask=0xFFFFFFFF, trigger=False, *extra):
+        entity = scene.add_entity(Entity(name))
+        entity.add_component(Transform(x, y))
+        collider = entity.add_component(Collider2DComponent())
+        collider.width = collider.height = size
+        collider.layer, collider.mask, collider.is_trigger = layer, mask, trigger
+        for component in extra:
+            entity.add_component(component)
+        return entity
+
+    town, cave = Scene("Town"), Scene("Cave")
+    collisions, hitboxes, camera = CollisionSystem(), HitboxSystem(), CameraFollowSystem()
+    actions = EntityActionSystem(hitboxes=hitboxes)
+    clips = {
+        "hero": AnimationClipSet(
+            {
+                "walk": SpriteClip("walk", [SpriteKeyframe(1, 0.1, ("footstep",)), SpriteKeyframe(2, 0.1)], True),
+            }
+        )
+    }
+    animation = AnimationSystem(clips.get)
+
+    class Counter(System):
+        def update(self, scene, dt):
+            seen["frames"] += 1
+
+        def fixed_update(self, scene, dt):
+            seen["fixed"] += 1
+
+    for system in (Counter(), actions, CharacterControllerSystem(), collisions, hitboxes, animation, camera):
+        town.scheduler.add(system)
+    sword = Hitbox2DComponent()
+    sword.team, sword.width = "hero", 24
+    hero = body(town, "Hero", 100, 200, 24, 1, 0b100, False, sword, Hurtbox2DComponent(), SpriteRenderer2D())
+    controller = hero.add_component(CharacterController2DComponent())
+    controller.speed = 60
+    spec = hero.add_component(Animator2DComponent())
+    spec.clip_set_id, spec.default_clip = "hero", "walk"
+    hero.add_component(PersistentComponent())
+    body(town, "Zone", 300, 200, 64, 2, 0xFFFFFFFF, True)  # layer 2: in the hero's mask
+    body(town, "Wall", 420, 200, 24, 2, 0b010)  # layer 2 collides with the hero's layer 1
+    body(town, "Ghost", 420, 200, 24, 3)  # layer 3 is not in the hero's mask
+    foe_box = Hurtbox2DComponent()
+    foe_box.team = "enemy"
+    foe = town.add_entity(Entity("Foe"))
+    foe.add_component(Transform(495, 200))
+    foe.add_component(foe_box)
+    rig = town.add_entity(Entity("Camera"))
+    rig.add_component(Transform())
+    cam = rig.add_component(Camera2DComponent())
+    cam.follow_entity_id, cam.look_ahead_x, cam.look_ahead_smoothing = hero.id, 60, 0
+    collisions.listeners.append(lambda kind, trigger, other: seen["trigger"].append(kind))
+    hitboxes.listeners.append(lambda event: seen["hits"].append(event.hit_tag))
+    animation.listeners.append(lambda entity_id, clip, index, name: seen["anim"].append(name))
+    lunge = ActionTimeline(
+        "lunge",
+        [
+            ActionCue("step", 0.0, "movement", {"x": 1, "y": 0, "duration": 0.4}),
+            ActionCue("swing", 0.2, "hitbox", {"duration": 0.2, "hit_tag": "lunge"}),
+            ActionCue("spark", 0.2, "vfx", {"asset_id": "battle.fx.slash"}),
+        ],
+    )
+
+    class Backend(PygameRuntimeBackend):
+        def tick(self, target_fps=60):
+            dt = super().tick(target_fps)
+            self.elapsed = getattr(self, "elapsed", 0.0) + dt
+            self.wall_start = getattr(self, "wall_start", time.perf_counter())
+            return dt
+
+        def end_frame(self):
+            t = self.elapsed
+            scene = app.scene
+            if scene is town:
+                transform = hero.get(Transform)
+                if t < 3.0:  # walk right through the trigger zone toward the wall
+                    transform.x = 100 + 120 * t
+                elif t < 3.1 and not actions.active(hero.id):
+                    transform.x = 470
+                    actions.play(hero.id, lunge)
+                    seen["lunge_started"] = True
+                for contact in CollisionWorld.from_scene(town).contacts():
+                    names = tuple(sorted((town.get_entity(contact.a).name, town.get_entity(contact.b).name)))
+                    seen["pairs"].add(names)
+                seen["cues"] += [c.kind for c in actions.events]
+                view = camera.camera(rig.id)
+                if view is not None and 0.5 < t < 2.9:
+                    centre = view.x + view.width / view.zoom / 2
+                    seen["lead"].append(centre - transform.x)
+                if t > 5.0 and app._transition is None and not seen.get("changed"):
+                    seen["changed"] = True
+                    app.change_scene(cave, SceneTransition(fade_out=0.3, fade_in=0.3, color=(0, 0, 0)))
+            self.draw(scene, t)
+            super().end_frame()
+            if t > 8.0:
+                app.stop()
+
+        def draw(self, scene, t):
+            view = camera.camera(rig.id) if scene is town else None
+            ox = (view.x if view is not None else 0) - 0
+            colors = {"Hero": (90, 170, 255), "Zone": (90, 220, 140), "Wall": (230, 120, 90), "Ghost": (150, 150, 160)}
+            for entity in scene.entities():
+                tr = entity.get(Transform)
+                if tr is None or entity.name == "Camera":
+                    continue
+                color = colors.get(entity.name, (240, 200, 90))
+                rect = (tr.x - ox - 14, tr.y - 14, 28, 28)
+                self.pg.draw.rect(self.screen, color, rect, 2 if entity.name == "Zone" else 0)
+            font = self.pg.font.Font(None, 24)
+            lines = [
+                f"Application.run  t={t:4.1f}s  scene={scene.name}  fixed steps={seen['fixed']}",
+                f"trigger {seen['trigger'][-3:]}  hits {seen['hits'][-2:]}  anim events {len(seen['anim'])}",
+            ]
+            for i, line in enumerate(lines):
+                self.screen.blit(font.render(line, True, (230, 232, 240)), (12, 12 + 22 * i))
+            if app.transition_cover:
+                shade = self.pg.Surface(self.screen.get_size(), self.pg.SRCALPHA)
+                shade.fill((0, 0, 0, int(255 * app.transition_cover)))
+                self.screen.blit(shade, (0, 0))
+            if 2.0 < t < 2.05 or (scene is cave and "shot" not in seen):
+                name = "engine_systems_town.png" if scene is town else "engine_systems_cave.png"
+                if scene is cave:
+                    seen["shot"] = True
+                self.pg.image.save(self.screen, str(out / name))
+
+    backend = Backend()
+    app = Application(backend, ApplicationConfig("Asteria engine systems", 960, 400, fixed_timestep=1 / 50))
+    app.set_scene(town)
+    start = time.perf_counter()
+    app.run()
+    wall = time.perf_counter() - start
+    driver = "cocoa"  # the backend opened a pygame window; pygame quit at the end of run()
+    simulated = backend.elapsed  # the frame times Application.run received from the real clock
+    expected_fixed = simulated * 50
+    seen["fixed"] = app.time.fixed_steps
+    checks = {
+        "fixed_update": abs(seen["fixed"] - expected_fixed) <= max(6, expected_fixed * 0.05),
+        "trigger_enter_stay_exit": seen["trigger"][:1] == ["enter"]
+        and "stay" in seen["trigger"]
+        and "exit" in seen["trigger"],
+        "layers_masks": ("Hero", "Wall") in seen["pairs"] and ("Ghost", "Hero") not in seen["pairs"],
+        "hitbox": "lunge" in seen["hits"],
+        "frame_events": "footstep" in seen["anim"],
+        "action_timeline_cues": "vfx" in seen["cues"],
+        "look_ahead": bool(seen["lead"]) and min(seen["lead"]) > 20,
+        "persistent_entity": hero.scene is cave and app.scene is cave,
+    }
+    ok = all(checks.values())
+    return result(
+        "engine_systems_real_window",
+        "PASS" if ok else "FAIL",
+        f"Application.run with the pygame backend in a real {driver} window for {wall:.1f} s "
+        f"({seen['frames']} town frames, real clock, {simulated:.2f} s simulated): "
+        f"fixed steps {seen['fixed']} at 50 Hz "
+        f"(expected ~{expected_fixed:.0f}); "
+        f"trigger events {sorted(set(seen['trigger']))}; contact pairs {sorted(seen['pairs'])}; hits {seen['hits']}; "
+        f"frame events {sorted(set(seen['anim']))}; action cues {sorted(set(seen['cues']))}; camera lead "
+        f"{min(seen['lead'] or [0]):.0f}..{max(seen['lead'] or [0]):.0f} px; hero moved to {hero.scene.name}. "
+        + ", ".join(f"{k}={'ok' if v else 'FAIL'}" for k, v in checks.items()),
+        screenshots=["engine_systems_town.png", "engine_systems_cave.png"],
+        note="Movement is scripted (no keys); key-driven input is covered by the input / menus / battle checks.",
+    )
+
+
+def _rss_mb():
+    value = subprocess.run(["ps", "-o", "rss=", "-p", str(os.getpid())], capture_output=True, text=True).stdout
+    return int(value.strip()) / 1024.0
+
+
+def check_battle_memory(out):
+    """ENG-10: battle-scoped images are released after every battle; process memory stays flat over 12 battles
+    in the real playable window."""
+    import pygame
+
+    runtime = _runtime()
+    runtime.open()
+    driver = pygame.display.get_driver()
+    runtime._ui_mode = "field"
+    game = runtime.game
+    samples, field_cache = [], []
+
+    def one_battle():
+        game.start_encounter("boss_room")
+        runtime._battle_presentation.begin()
+        _pump(runtime, 0.4)
+        for enemy_id in tuple(game.active_enemy_ids()):
+            while enemy_id in game.active_enemy_ids():
+                for hero_id in tuple(game.active_hero_ids()):
+                    if enemy_id in game.active_enemy_ids():
+                        game.execute(hero_id, "strike", (enemy_id,))
+        game.finish_victory()
+        _pump(runtime, 0.3)
+        field_cache.append(sum(1 for owner in runtime._image_scope.values() if owner == "battle"))
+        samples.append(_rss_mb())
+
+    _pump(runtime, 0.5)
+    for _ in range(12):
+        one_battle()
+    pygame.image.save(runtime.capture(), str(out / "battle_memory_after_12.png"))
+    released = runtime.released_images
+    runtime.close()
+    growth = samples[-1] - samples[1]  # after the first battle the caches and fonts are warm
+    ok = all(count == 0 for count in field_cache) and released > 0 and growth < 25.0
+    return result(
+        "battle_memory_real_window",
+        "PASS" if ok else "FAIL",
+        f"12 boss battles entered and left in the real playable {driver} window: battle-scoped images left in the "
+        f"cache after each battle {field_cache}; {released} images released in total; process RSS per battle (MB) "
+        f"{[round(x, 1) for x in samples]}; growth from battle 2 to 12 {growth:+.1f} MB (limit +25 MB)",
+        screenshots=["battle_memory_after_12.png"],
+    )
+
+
 # -- D19: session-level integration tests replayed in the real playable window ----------------------
 
 REPLAY = {
@@ -1761,6 +2013,10 @@ REPLAY = {
         "world_interactions::test_an_event_runs_an_interaction_and_branches_on_its_outcome",
     ],
     "RPG-09": ["behavior_trees::test_a_tree_in_the_game_session_starts_its_encounter"],
+    "ANI-05": [
+        "character_control::test_controllers_actions_and_hits_run_in_the_game_session_field_update",
+        "character_control::test_project_action_timelines_are_authored_as_records_and_played_from_events",
+    ],
     "RPG-10": [
         "runtime_field_enemies::test_spawned_enemy_chases_player_and_starts_battle_in_the_runtime",
         "runtime_field_enemies::test_spawn_zone_respawns_and_field_ai_pauses_outside_the_field",
@@ -1867,6 +2123,8 @@ CHECKS = {
     "editor_workflows": check_editor_workflows,
     "battle_no_art": check_battle_without_art,
     "b_items_replay": check_b_items_replay,
+    "engine_systems": check_engine_systems,
+    "battle_memory": check_battle_memory,
 }
 
 
