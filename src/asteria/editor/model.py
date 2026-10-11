@@ -65,6 +65,9 @@ class EditorDocument:
             from asteria.runtime.character_control import register_character_components
 
             register_character_components(component_registry)
+            from asteria.runtime.npc_state import NpcIdentity2DComponent
+
+            component_registry.register(NpcIdentity2DComponent)
             component_registry.register(FieldAIComponent)
             component_registry.register(SpawnZoneComponent)
             component_registry.register(VisibleEncounterComponent)

@@ -353,6 +353,8 @@ class PlayableTestRuntime:
         from asteria.runtime.field_ai import FieldAIComponent, VisibleEncounterComponent
 
         for entity in self.game.scene.entities():
+            if not entity.enabled:
+                continue  # hidden / relocated NPCs (WLD-02) and disabled entities are not drawn
             spec = sprites.get(entity.name)
             if (
                 spec is None

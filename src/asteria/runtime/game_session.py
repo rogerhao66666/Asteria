@@ -117,6 +117,11 @@ class GameSessionRuntime:
 
         self.profiler = NullProfiler()
         self._build_scene_events()
+        # WLD-02: saved NPC state (visibility, position, flags...) and the "npc" condition source
+        runtime_save.event_context.providers["npc"] = self._npc_value
+        from asteria.runtime.npc_state import apply_npc_states
+
+        apply_npc_states(self.scene, self.world, self.entity_facing)
 
     def set_player_position(self, x, y):
         t = self.player.get(Transform)
@@ -299,13 +304,60 @@ class GameSessionRuntime:
             return self.set_player_position(x, y)
         t = entity.get(Transform)
         t.x, t.y = float(x), float(y)
+        self._record_npc(entity)
         return (t.x, t.y)
+
+    # -- NPC state (WLD-02) ------------------------------------------------------------------------
+    def _record_npc(self, entity):
+        from asteria.runtime.npc_state import NpcIdentity2DComponent
+
+        identity = entity.try_get(NpcIdentity2DComponent)
+        if identity is None or not identity.npc_id:
+            return None
+        state = self.world.npc(identity.npc_id)
+        t = entity.get(Transform)
+        state["scene_id"], state["position"] = self.scene.id, [t.x, t.y]
+        if entity.id in self.entity_facing:
+            state["facing"] = self.entity_facing[entity.id]
+        return state
+
+    def _npc_value(self, name):
+        npc_id, _, key = str(name).partition(".")
+        return self.world.npc_value(npc_id, key)
+
+    def set_npc(self, npc_id, key, value):
+        """Change an NPC's saved state: visible, alive, mood, stage or flag.<name>; applied to the scene now."""
+        from asteria.runtime.npc_state import NPC_KEYS, apply_npc_states, coerce_npc_value
+
+        key = str(key)
+        state = self.world.npc(npc_id)
+        if key.startswith("flag."):
+            state["flags"][key[5:]] = value
+        elif key in NPC_KEYS:
+            state[key] = coerce_npc_value(key, value)
+        else:
+            raise GameSessionError(f"unknown NPC field {key}")
+        apply_npc_states(self.scene, self.world, self.entity_facing)
+        self.refresh_quests()
+        return state
+
+    def move_npc(self, npc_id, scene_id, x, y):
+        """Relocate an NPC (possibly to another scene); it appears there when that scene is entered."""
+        from asteria.runtime.npc_state import apply_npc_states
+
+        if self.project.scene(str(scene_id)) is None:
+            raise GameSessionError(f"unknown scene: {scene_id}")
+        state = self.world.npc(npc_id)
+        state["scene_id"], state["position"] = str(scene_id), [float(x), float(y)]
+        apply_npc_states(self.scene, self.world, self.entity_facing)
+        return state
 
     def set_facing(self, key, facing):
         entity = self._sequence_entity(key)
         if entity is self.player:
             return self.set_player_facing(facing)
         self.entity_facing[entity.id] = str(facing)
+        self._record_npc(entity)
         return self.entity_facing[entity.id]
 
     def play_animation(self, key, clip):
@@ -436,6 +488,9 @@ class GameSessionRuntime:
         if changed:
             self.interaction.reset()
             self._build_scene_events()
+            from asteria.runtime.npc_state import apply_npc_states
+
+            apply_npc_states(destination, self.world, self.entity_facing)
         return destination
 
     def set_active_classes(self, actor_id, class_ids):
@@ -1420,4 +1475,9 @@ class GameSessionRuntime:
         self.save.player_facing = self.facing
         self.save.player_position = (t.x, t.y)
         self.save.active_event = self.events.snapshot()
+        from asteria.runtime.npc_state import npc_entities
+
+        for npc_id, entity in npc_entities(self.scene).items():
+            if entity.enabled and npc_id in self.world.npcs:
+                self._record_npc(entity)  # keep where moved NPCs stand
         return self.save

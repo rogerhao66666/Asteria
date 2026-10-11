@@ -36,6 +36,9 @@ def build_preview_registry():
     from asteria.runtime.character_control import register_character_components
 
     register_character_components(registry)
+    from asteria.runtime.npc_state import NpcIdentity2DComponent
+
+    registry.register(NpcIdentity2DComponent)
     registry.register(FieldAIComponent)
     registry.register(SpawnZoneComponent)
     registry.register(VisibleEncounterComponent)

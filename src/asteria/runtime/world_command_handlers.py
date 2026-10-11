@@ -37,6 +37,8 @@ STANDARD_WORLD_COMMANDS = (
     "PLAY_VFX",
     "PLAY_ACTION",
     "INTERACT",
+    "SET_NPC",
+    "MOVE_NPC",
 )
 
 PRESENTATION_COMMANDS = (
@@ -74,6 +76,8 @@ WORLD_COMMAND_ARGUMENTS = {
     "PLAY_VFX": ("asset_id", "entity", "x", "y", "scale", "anchor"),
     "PLAY_ACTION": ("entity", "timeline_id"),
     "INTERACT": ("interaction_id",),
+    "SET_NPC": ("npc", "key", "value"),
+    "MOVE_NPC": ("npc", "scene_id", "x", "y"),
     "CAMERA_FOCUS": ("entity", "x", "y", "zoom", "blend", "ease"),
     "CAMERA_RELEASE": ("blend", "ease"),
     "CAMERA_SHAKE": ("intensity", "duration"),
@@ -197,6 +201,15 @@ def register_standard_world_commands(router, session):
         session.open_crafting_station = str(command.args.get("station") or "")
         return session.open_crafting_station
 
+    router.register(
+        "SET_NPC", lambda c: session.set_npc(str(_required(c, "npc")), str(_required(c, "key")), c.args.get("value"))
+    )
+    router.register(
+        "MOVE_NPC",
+        lambda c: session.move_npc(
+            str(_required(c, "npc")), str(_required(c, "scene_id")), _amount(c, "x", 0), _amount(c, "y", 0)
+        ),
+    )
     router.register("INTERACT", lambda c: session.perform_interaction(str(_required(c, "interaction_id")))[0])
     router.register(
         "PLAY_ACTION",

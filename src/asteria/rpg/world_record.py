@@ -153,8 +153,35 @@ class WorldRecord:
     achievements: list = field(default_factory=list)
     bestiary: dict = field(default_factory=dict)
     known_recipes: list = field(default_factory=list)
+    # WLD-02: per-NPC saved state, npc_id -> {scene_id, position, facing, visible, alive, mood, stage, flags}
+    npcs: dict = field(default_factory=dict)
 
     SCHEMA = "asteria.rpg.world_record"
+
+    def npc(self, npc_id):
+        """The saved state of ``npc_id`` (created with defaults on first use)."""
+        return self.npcs.setdefault(
+            _id(npc_id, "npc id"),
+            {
+                "scene_id": None,
+                "position": None,
+                "facing": None,
+                "visible": True,
+                "alive": True,
+                "mood": "",
+                "stage": 0,
+                "flags": {},
+            },
+        )
+
+    def npc_value(self, npc_id, key):
+        """``visible``, ``alive``, ``mood``, ``stage``, ``scene_id`` or ``flag.<name>`` of an NPC."""
+        state = self.npcs.get(str(npc_id))
+        if state is None:
+            return {"visible": True, "alive": True, "mood": "", "stage": 0}.get(key)
+        if key.startswith("flag."):
+            return state["flags"].get(key[5:])
+        return state.get(key)
 
     def change_reputation(self, faction, amount):
         value = self.reputation.get(faction.faction_id, faction.initial) + float(amount)
@@ -208,18 +235,19 @@ class WorldRecord:
     def to_data(self):
         return {
             "schema": self.SCHEMA,
-            "version": 1,
+            "version": 2,
             "reputation": dict(sorted(self.reputation.items())),
             "relationships": dict(sorted(self.relationships.items())),
             "counters": dict(sorted(self.counters.items())),
             "achievements": list(self.achievements),
             "bestiary": {k: dict(sorted(v.items())) for k, v in sorted(self.bestiary.items())},
             "known_recipes": sorted(self.known_recipes),
+            "npcs": {k: dict(v, flags=dict(sorted(v["flags"].items()))) for k, v in sorted(self.npcs.items())},
         }
 
     @classmethod
     def from_data(cls, data):
-        if data.get("schema") != cls.SCHEMA or data.get("version") != 1:
+        if data.get("schema") != cls.SCHEMA or data.get("version") not in (1, 2):
             raise ValueError("unsupported world record")
         return cls(
             {str(k): float(v) for k, v in data["reputation"].items()},
@@ -228,4 +256,5 @@ class WorldRecord:
             [str(x) for x in data["achievements"]],
             {str(k): {str(a): int(b) for a, b in v.items()} for k, v in data["bestiary"].items()},
             [str(x) for x in data.get("known_recipes", ())],
+            {str(k): dict(v, flags=dict(v.get("flags", {}))) for k, v in data.get("npcs", {}).items()},
         )
