@@ -14,7 +14,8 @@ from dataclasses import dataclass
 
 from asteria.presentation.battle_motion_sequence import BattleMotionBeat, BattleMotionSequence
 
-CHANNELS = ("animation", "vfx", "audio", "camera", "screen_fx")
+CHANNELS = ("animation", "vfx", "audio", "camera", "screen_fx", "timing")
+TIMING_CUES = ("hit_stop",)
 ROLES = ("idle", "attack", "hit", "ko")
 TARGETS = ("@source", "@target")
 CATEGORY = "motion_sequences"
@@ -90,6 +91,8 @@ class ActionTimelineController:
                 found.append(f"{where}: unknown channel {beat.channel}")
             if beat.channel == "animation" and beat.cue not in ROLES:
                 found.append(f"{where}: animation cue must be one of {ROLES}")
+            if beat.channel == "timing" and beat.cue not in TIMING_CUES:
+                found.append(f"{where}: timing cue must be one of {TIMING_CUES}")
             if beat.channel == "vfx" and vfx and beat.cue not in vfx:
                 found.append(f"{where}: unknown VFX sheet {beat.cue}")
             if beat.member_id not in (None, *TARGETS):

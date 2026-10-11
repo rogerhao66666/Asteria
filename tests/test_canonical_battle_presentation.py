@@ -255,3 +255,53 @@ def test_repeated_battles_keep_the_image_cache_bounded(battle):
         runtime._frame([], 0.016)
         sizes.append(len(runtime._loaded))
     assert sizes[0] == sizes[-1]  # nothing accumulates across battles
+
+
+def _impact_time(runtime, adapter, ability):
+    screen = adapter.screen
+    _use(runtime, ability)
+    runtime._present_battle(0.0)
+    clock = 0.0
+    while adapter.busy() and clock < 3.0:
+        runtime._present_battle(0.01)
+        clock += 0.01
+        if _role(screen.animation.combatant("astral_tyrant:1")) == "hit":
+            return clock
+    raise AssertionError("no impact")
+
+
+def test_hit_stop_beat_freezes_the_action_at_the_impact(battle):
+    """BTL-04: a timing/hit_stop beat holds the presentation clock and animation for its duration."""
+    from asteria.editor import EditorDocument
+    from asteria.editor.action_timeline_authoring import ActionTimelineController
+
+    runtime, adapter = battle
+    baseline = _impact_time(runtime, adapter, "fire_arc")
+
+    def to_fire_arc_caster():
+        for _ in range(12):
+            _settle(runtime)
+            runtime._advance_to_hero_turn()
+            _settle(runtime)
+            skills = [s for s, _ in runtime._skills_for_actor(runtime._battle_actor())]
+            if "fire_arc" in skills:
+                return
+            runtime._use_skill(0)
+            runtime._present_battle(0.0)
+        raise AssertionError("no hero with fire_arc came up")
+
+    to_fire_arc_caster()
+    document = EditorDocument()
+    document.set_project(runtime.game.project)
+    api = ActionTimelineController(document)
+    flame_at = next(b.at for b in api.beats("fire_arc") if b.channel == "vfx")
+    api.add_beat("fire_arc", "freeze", flame_at, "timing", "hit_stop", member="@source", duration=0.2)
+    assert api.problems(api.get("fire_arc")) == []
+    frozen_clock = adapter._clock
+    adapter._start_hit_stop(0.1)
+    adapter.update(0.05)
+    assert adapter._clock == frozen_clock  # held
+    adapter.update(0.1)
+    assert adapter._clock == pytest.approx(frozen_clock + 0.05)  # resumes after the hold
+    delayed = _impact_time(runtime, adapter, "fire_arc")
+    assert delayed == pytest.approx(baseline + 0.2, abs=0.03)

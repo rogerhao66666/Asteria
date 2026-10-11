@@ -472,6 +472,10 @@ class CanonicalBattleAdapter:
             self._last_impact = start
             return
         for beat in sequence.beats:
+            if beat.channel == "timing" and beat.cue == "hit_stop":
+                hold = float(beat.payload_dict().get("duration", beat.duration) or 0.0)
+                self._at(start + beat.at, lambda d=hold: self._start_hit_stop(d))
+                continue
             self._at(start + beat.at, lambda b=beat: coordinator.consume_timeline_cues(self._beat_cues(entry, b)))
         impact = next((b.at for b in sequence.beats if b.channel == "animation" and b.cue == "hit"), 0.0)
         self._at(start + impact, values)
@@ -525,11 +529,20 @@ class CanonicalBattleAdapter:
         return self.trace
 
     # -- frame --------------------------------------------------------------
+    def _start_hit_stop(self, duration):
+        """Freeze the action for ``duration`` seconds at an impact (BTL-04 hit-stop)."""
+        self._hit_stop = max(getattr(self, "_hit_stop", 0.0), float(duration))
+
     def update(self, dt):
         if not self._ensure():
             return
         game = self.host.game
-        self._clock += float(dt)
+        dt = float(dt)
+        frozen = min(dt, getattr(self, "_hit_stop", 0.0))
+        if frozen > 0:
+            self._hit_stop -= frozen
+            dt -= frozen  # the presentation clock and animations hold during hit-stop
+        self._clock += dt
         self._release_due()
         if game.battle is not None:
             self.screen.sync_battle(game.battle, current_member_id=self.host._battle_actor())
