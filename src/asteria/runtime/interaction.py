@@ -56,6 +56,8 @@ class InteractionQuery:
                 continue
             if not interaction.enabled or not interaction.event_program_id:
                 continue
+            if getattr(interaction, "trigger", "action") != "action":
+                continue  # touch interactions start by walking in (TouchTriggerController)
 
             ex, ey = world_position(entity)
             dx = ex - actor_x
@@ -109,3 +111,47 @@ class InteractionController:
             event_program_id=component.event_program_id,
             local_scope_id=scope_id,
         )
+
+
+class TouchTriggerController:
+    """Touch interactions (``trigger == "touch"``): fire once when the actor walks into range.
+
+    The interaction re-arms after the actor leaves its range, so standing on a
+    door does not loop. ``arm(scene, actor)`` marks everything currently in
+    range as already touched (used after a transfer so the destination door
+    does not send the player straight back).
+    """
+
+    def __init__(self):
+        self._inside = set()
+
+    def reset(self):
+        self._inside.clear()
+
+    def _touching(self, scene, actor):
+        from .components2d import Interaction2DComponent
+
+        ax, ay = world_position(actor)
+        for entity in scene.entities():
+            if entity is actor or not entity.enabled:
+                continue
+            interaction = entity.try_get(Interaction2DComponent)
+            if interaction is None or entity.try_get(Transform) is None:
+                continue
+            if not interaction.enabled or not interaction.event_program_id or interaction.trigger != "touch":
+                continue
+            ex, ey = world_position(entity)
+            if hypot(ex - ax, ey - ay) <= interaction.range:
+                yield entity, interaction
+
+    def arm(self, scene, actor):
+        self._inside = {entity.id for entity, _ in self._touching(scene, actor)}
+
+    def step(self, scene, actor):
+        touching = list(self._touching(scene, actor))
+        fresh = [(e, i) for e, i in touching if e.id not in self._inside]
+        self._inside = {e.id for e, _ in touching}
+        if not fresh:
+            return None
+        entity, interaction = min(fresh, key=lambda item: item[0].id)
+        return InteractionTrigger(entity.id, interaction.event_program_id, interaction.local_scope_id or entity.id)

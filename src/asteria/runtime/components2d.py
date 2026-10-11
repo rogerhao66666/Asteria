@@ -133,15 +133,29 @@ class TileMap2DComponent(Component):
         self.visible = True
 
 
+@component_migration("asteria.Interaction2D", from_version=1)
+def _interaction2d_v1_to_v2(fields):
+    fields.setdefault("trigger", "action")  # v1 interactions were all action-button
+    return fields
+
+
 @component_schema(
     type_name="asteria.Interaction2D",
-    version=1,
+    version=2,
     fields=(
         Field("event_binding_id", str, "", label="Event Binding"),
         Field("event_program_id", str, "", label="Event Program"),
         Field("range", float, 24.0, minimum=0.0, label="Interaction Range"),
         Field("require_facing", bool, True, label="Require Facing"),
         Field("local_scope_id", str, "", label="Local State Scope"),
+        Field(
+            "trigger",
+            str,
+            "action",
+            choices=("action", "touch"),
+            label="Trigger",
+            tooltip="action: the interact button while in range; touch: walking into range (doors, transfers).",
+        ),
     ),
 )
 class Interaction2DComponent(Component):
@@ -154,3 +168,4 @@ class Interaction2DComponent(Component):
         self.range = 24.0
         self.require_facing = True
         self.local_scope_id = ""
+        self.trigger = "action"

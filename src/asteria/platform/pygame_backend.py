@@ -2,6 +2,27 @@ from asteria.assets import TextureResource
 
 from .backend import RuntimeBackend, TextureBackend
 
+# System fonts that also cover CJK text (imported projects are often Japanese); the default font is the fallback.
+DIALOGUE_FONTS = (
+    "hiraginosans",
+    "hiraginosansgb",
+    "arialunicode",
+    "applesdgothicneo",
+    "notosanscjkjp",
+    "notosanscjk",
+    "yugothic",
+    "msgothic",
+)
+
+
+def dialogue_font(pg, size):
+    pg.font.init()
+    for name in DIALOGUE_FONTS:
+        path = pg.font.match_font(name)
+        if path:
+            return pg.font.Font(path, size)
+    return pg.font.Font(None, size)
+
 
 class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
     """Low-level runtime window/input/primitive preview adapter.
@@ -97,6 +118,22 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
             image = image.copy()
             image.set_alpha(max(0, min(255, int(draw_command.opacity * 255))))
         self.screen.blit(image, (round(draw_command.screen_x), round(draw_command.screen_y)))
+
+    def draw_text_box(self, text):
+        """A dialogue box along the bottom of the window (event DIALOGUE lines)."""
+        from .pygame_battle_ui import renderable_text
+
+        width, height = self.screen.get_size()
+        box = self.pg.Rect(16, height - 132, width - 32, 116)
+        panel = self.pg.Surface(box.size, self.pg.SRCALPHA)
+        panel.fill((13, 17, 28, 225))
+        self.screen.blit(panel, box.topleft)
+        self.pg.draw.rect(self.screen, (124, 145, 190), box, 2, border_radius=6)
+        if not hasattr(self, "_font"):
+            self._font, self._glyphs = dialogue_font(self.pg, 26), {}
+        for row, line in enumerate(str(text).split("\n")[:4]):
+            image = self._font.render(renderable_text(self.pg, self._font, line, self._glyphs), True, (240, 242, 248))
+            self.screen.blit(image, (box.x + 18, box.y + 12 + row * self._font.get_linesize()))
 
     def end_frame(self):
         if self.screen is not None:

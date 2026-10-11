@@ -51,7 +51,8 @@ class GameRuntimeSave:
             raise ValueError("save belongs to another project")
         if project.scene(self.scene_id) is None:
             raise ValueError("save references unknown scene")
-        if self.player_entity_id and project.scene(self.scene_id).get_entity(self.player_entity_id) is None:
+        # The player may have been transferred: it is saved in another scene than the project file places it.
+        if self.player_entity_id and not any(s.get_entity(self.player_entity_id) for s in project.scenes()):
             raise ValueError("save references unknown player entity")
         self.rpg_state.validate(project.rpg_database)
         return True

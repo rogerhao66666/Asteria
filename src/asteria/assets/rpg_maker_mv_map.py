@@ -162,13 +162,85 @@ def discover_mv_maps(layout: RPGMakerMVProjectLayout) -> tuple[MVMapEntry, ...]:
     return tuple(sorted(entries, key=lambda item: (item.order, item.map_id)))
 
 
-def to_asteria_scene(mv_map: RPGMakerMVMap, catalog: RPGMakerMVCatalog) -> Scene:
+_MV_DIRECTION_ROW = {2: 0, 4: 1, 6: 2, 8: 3}
+_MV_FACING = {2: "down", 4: "left", 6: "right", 8: "up"}
+
+
+def _first_page(event: MVMapEvent):
+    pages = dict(event.raw).get("pages") or ()
+    return pages[0] if pages and isinstance(pages[0], dict) else None
+
+
+def convert_event_page(mv_map: RPGMakerMVMap, event: MVMapEvent):
+    """``(trigger, instructions, unsupported)`` for the event's first page.
+
+    Supported: Show Text (101/401) -> DIALOGUE, Transfer Player with direct coordinates
+    (201) -> WORLD TRANSFER to the imported scene, Wait (230) -> WAIT. Triggers: action
+    button -> ``action``; player/event touch -> ``touch``; autorun / parallel -> ``None``
+    (not converted). Every other command is listed in ``unsupported`` (never dropped silently).
+    """
+    from asteria.events import EventInstruction
+
+    page = _first_page(event)
+    if page is None:
+        return None, (), ()
+    trigger = {0: "action", 1: "touch", 2: "touch"}.get(int(page.get("trigger", 0)))
+    instructions, unsupported, text = [], [], []
+
+    def flush():
+        if text:
+            instructions.append(EventInstruction("DIALOGUE", {"speaker": "", "text": "\n".join(text)}))
+            text.clear()
+
+    for command in page.get("list") or ():
+        code, params = int(command.get("code", 0)), command.get("parameters") or []
+        if code == 401:
+            text.append(str(params[0]) if params else "")
+            continue
+        flush()
+        if code in (0, 101):
+            continue
+        if code == 201 and params and int(params[0]) == 0:
+            target, x, y, direction = int(params[1]), int(params[2]), int(params[3]), int(params[4])
+            args = {"scene_id": _stable_id("map", target), "x": float(x * 48 + 24), "y": float(y * 48 + 40)}
+            if direction in _MV_FACING:
+                args["facing"] = _MV_FACING[direction]
+            instructions.append(EventInstruction("WORLD", {"command": "TRANSFER", "args": args}))
+        elif code == 230 and params:
+            instructions.append(EventInstruction("WAIT", {"seconds": int(params[0]) / 60.0}))
+        else:
+            unsupported.append(code)
+    flush()
+    return trigger, tuple(instructions), tuple(unsupported)
+
+
+def to_asteria_scene(
+    mv_map: RPGMakerMVMap,
+    catalog: RPGMakerMVCatalog,
+    *,
+    baked=None,
+    characters=None,
+    start=None,
+    event_programs=None,
+    issues=None,
+) -> Scene:
+    """Scene for an MV map. ``baked`` (``BakedMap``) binds the canonical tilemap; ``characters`` maps
+    ``(character_name, index)`` to ``BakedCharacter``; ``start`` = ``(x, y, character_key)`` adds the
+    player (feet in its start cell, MV walking speed) and a follow camera. With ``event_programs`` (the
+    project's library) each event's first page becomes an event program on an ``Interaction2D``;
+    anything not converted is appended to ``issues`` as ``(code, message)``.
+
+    Without ``baked`` the tile map binding stays empty (never a dangling asset id).
+    """
+    from asteria.runtime import Animator2DComponent, Camera2DComponent
+    from asteria.runtime.character_control import CharacterController2DComponent
+
+    characters = characters or {}
     scene = Scene(mv_map.display_name or mv_map.name, scene_id=_stable_id("map", mv_map.map_id))
     host = scene.add_entity(Entity("Tile Map", entity_id=_stable_id("map-tiles", mv_map.map_id)))
     host.add_component(Transform())
     tilemap = host.add_component(TileMap2DComponent())
-    tilemap.tilemap_asset_id = f"mv.tileset.{mv_map.tileset_id}"
-    host.rpg_maker_mv_map = mv_map
+    tilemap.tilemap_asset_id = "" if baked is None else baked.tilemap_id
     for event in mv_map.events:
         entity = scene.add_entity(
             Entity(
@@ -179,8 +251,52 @@ def to_asteria_scene(mv_map: RPGMakerMVMap, catalog: RPGMakerMVCatalog) -> Scene
         entity.add_component(Transform(event.x * 48 + 24, event.y * 48 + 48))
         if event.image.character_name:
             sprite = entity.add_component(SpriteRenderer2D())
-            source = catalog.resolve_image("characters", event.image.character_name)
-            sprite.sprite_sheet_asset_id = "" if source is None else source.stem
-            sprite.frame_index = event.image.pattern
+            baked_character = characters.get((event.image.character_name, event.image.character_index))
+            sprite.sprite_sheet_asset_id = "" if baked_character is None else baked_character.sprite_sheet_id
+            row = _MV_DIRECTION_ROW.get(event.image.direction, 0)
+            sprite.frame_index = row * 3 + max(0, min(2, event.image.pattern))
         entity.rpg_maker_mv_event = event
+        if event_programs is not None:
+            from asteria.events import EventProgram
+            from asteria.runtime import Interaction2DComponent
+
+            trigger, instructions, unsupported = convert_event_page(mv_map, event)
+            where = f"map {mv_map.map_id} event {event.id} ({event.name})"
+            if unsupported and issues is not None:
+                issues.append(("event.unsupported_commands", f"{where}: commands {sorted(set(unsupported))} kept out"))
+            pages = dict(event.raw).get("pages") or ()
+            if len(pages) > 1 and issues is not None:
+                issues.append(("event.extra_pages", f"{where}: only the first of {len(pages)} pages is converted"))
+            if trigger is None and instructions and issues is not None:
+                issues.append(("event.trigger", f"{where}: autorun / parallel pages are not converted"))
+            if trigger is not None and instructions:
+                program_id = f"mv.map{mv_map.map_id:03d}.event{event.id:03d}"
+                event_programs.register(program_id, EventProgram(instructions))
+                interaction = entity.add_component(Interaction2DComponent())
+                interaction.event_program_id = program_id
+                interaction.trigger = trigger
+                interaction.require_facing = trigger == "action"
+                interaction.range = 56.0 if trigger == "action" else 20.0
+    if start is not None and characters.get(start[2]) is not None:
+        x, y, key = start
+        baked_character = characters[key]
+        player = scene.add_entity(Entity("Player", entity_id=_stable_id("map-player", mv_map.map_id)))
+        player.add_component(Transform(x * 48 + 24, y * 48 + 40))  # collision box stays inside the cell
+        sprite = player.add_component(SpriteRenderer2D())
+        sprite.sprite_sheet_asset_id = baked_character.sprite_sheet_id
+        sprite.frame_index = 1
+        sprite.layer = 5
+        animator = player.add_component(Animator2DComponent())
+        animator.clip_set_id = baked_character.animation_id
+        animator.default_clip = "idle_down"
+        controller = player.add_component(CharacterController2DComponent())
+        controller.speed = 180.0  # MV move speed 4: 1/16 tile per frame at 60 fps
+        controller.half_width = 14.0
+        controller.half_height = 6.0
+        camera_entity = scene.add_entity(Entity("Camera", entity_id=_stable_id("map-camera", mv_map.map_id)))
+        camera_entity.add_component(Transform(x * 48 + 24, y * 48 + 24))
+        camera = camera_entity.add_component(Camera2DComponent())
+        camera.width, camera.height = 816, 624  # the MV screen
+        camera.follow_entity_id = player.id
+        camera.smoothing = 12.0
     return scene

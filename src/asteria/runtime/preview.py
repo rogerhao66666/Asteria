@@ -113,7 +113,17 @@ def run_preview(
                 debug_token=debug_token,
                 spawn=spawn,
             )
-        if reference_sidecar.exists() and hasattr(backend, "load_texture") and hasattr(backend, "draw_texture"):
+        from asteria.runtime.tilemap_field import can_play
+
+        if can_play(project, root) and hasattr(backend, "load_texture"):
+            # Canonical tile map scenes (imported RPG Maker MV projects, authored tile maps): the normal
+            # game session (events, transfers, saves) drawn from registry-resolved tile assets.
+            from asteria.runtime.game_session import GameSessionRuntime
+            from asteria.runtime.tilemap_field import TileMapField, run_tilemap_field
+
+            field = TileMapField(GameSessionRuntime(project, runtime_save), root)
+            run_tilemap_field(field, backend, width, height, target_fps, max_frames=max_frames)
+        elif reference_sidecar.exists() and hasattr(backend, "load_texture") and hasattr(backend, "draw_texture"):
             from asteria.runtime.reference_runtime import (
                 ReferenceRuntime,
                 run_reference_runtime,

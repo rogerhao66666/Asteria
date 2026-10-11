@@ -71,6 +71,14 @@ class GameSessionRuntime:
         self.save = runtime_save
         self.scene = project.scene(runtime_save.scene_id)
         self.player = self.scene.get_entity(runtime_save.player_entity_id)
+        if self.player is None and runtime_save.player_entity_id:
+            # saved after a transfer: bring the player from the scene the project file puts it in
+            for other in project.scenes():
+                entity = other.get_entity(runtime_save.player_entity_id)
+                if entity is not None:
+                    move_entity_to_scene(entity, other, self.scene)
+                    self.player = entity
+                    break
         if self.player is None:
             raise GameSessionError("saved player entity does not exist")
         self.facing = runtime_save.player_facing
@@ -78,6 +86,10 @@ class GameSessionRuntime:
             transform = self.player.get(Transform)
             transform.x, transform.y = runtime_save.player_position
         self.interaction = InteractionController(action="interact")
+        from .interaction import TouchTriggerController
+
+        self.touch = TouchTriggerController()
+        self.touch.arm(self.scene, self.player)
         self.mode = "field"
         self.battle = None
         self.encounter_id = None
@@ -142,6 +154,8 @@ class GameSessionRuntime:
         if self.event_busy:
             return None
         trigger = self.interaction.step(InputSnapshot(dict(actions or {})), self.scene, self.player, self.facing)
+        if trigger is None:
+            trigger = self.touch.step(self.scene, self.player)  # doors / transfers walked into
         if trigger is None:
             return None
         self.events.start_trigger(trigger, replace=True)
@@ -513,6 +527,7 @@ class GameSessionRuntime:
         self.save.player_position = (transform.x, transform.y)
         if facing:
             self.set_player_facing(facing)
+        self.touch.arm(destination, self.player)  # arriving on a door must not send the player back
         if changed:
             self.interaction.reset()
             self._build_scene_events()

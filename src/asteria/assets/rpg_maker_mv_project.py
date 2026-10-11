@@ -35,8 +35,11 @@ class RPGMakerMVProjectImport:
 class RPGMakerMVProjectImporter:
     @staticmethod
     def import_project(
-        layout: RPGMakerMVProjectLayout, *, map_ids: Iterable[int] | None = None
+        layout: RPGMakerMVProjectLayout, *, map_ids: Iterable[int] | None = None, output_root=None
     ) -> RPGMakerMVProjectImport:
+        """Convert an MV project. With ``output_root`` (the new Asteria project folder) every map is baked
+        into canonical tile assets there, the party leader becomes the player at the MV start position and
+        the game starts on the MV start map (W-18)."""
         database = RPGMakerMVDatabase.load(layout)
         catalog = RPGMakerMVCatalog.build(layout, database)
         project = Project(database.system.game_title or layout.root.name)
@@ -152,17 +155,145 @@ class RPGMakerMVProjectImporter:
 
         entries = discover_mv_maps(layout)
         selected = {entry.map_id for entry in entries} if map_ids is None else {int(value) for value in map_ids}
+        system = database.system
+        leader = next((a for a in database.actors if system.party_members and a.id == system.party_members[0]), None)
+        leader_key = (
+            None
+            if leader is None or not leader.character_name
+            else (
+                leader.character_name,
+                leader.character_index,
+            )
+        )
+        characters = {}
+
+        def character(key):
+            if output_root is None or key in characters:
+                return
+            from .rpg_maker_mv_map_bake import bake_character
+
+            baked_character = bake_character(catalog, key[0], key[1], output_root)
+            characters[key] = baked_character
+            if baked_character is None:
+                issues.append(MVReferenceIssue("character.missing", "characters", f"character {key} not found"))
+            else:
+                for record in baked_character.records:
+                    project.assets.add(record)
+
+        start_scene = None
+        player_entity = None
         for entry in entries:
             if entry.map_id not in selected:
                 continue
             mv_map = RPGMakerMVMap.load(entry.path, map_id=entry.map_id, name=entry.name)
-            scene = project.add_scene(to_asteria_scene(mv_map, catalog))
+            baked = None
+            start = None
+            if output_root is not None:
+                from .rpg_maker_mv_map_bake import bake_map
+
+                baked = bake_map(layout, catalog, mv_map, output_root)
+                for record in baked.records:
+                    project.assets.add(record)
+                for tile_id in baked.unsupported_tiles:
+                    issues.append(
+                        MVReferenceIssue("map.unsupported_tile", entry.path.name, f"tile {tile_id} has no image")
+                    )
+                for event in mv_map.events:
+                    if event.image.character_name:
+                        character((event.image.character_name, event.image.character_index))
+                if leader_key is not None and entry.map_id == system.start_map_id:
+                    character(leader_key)
+                    start = (system.start_x, system.start_y, leader_key)
+            else:
+                issues.append(
+                    MVReferenceIssue("map.not_baked", entry.path.name, "map tiles need an output folder to be baked")
+                )
+            event_issues = []
+            scene = project.add_scene(
+                to_asteria_scene(
+                    mv_map,
+                    catalog,
+                    baked=baked,
+                    characters=characters,
+                    start=start,
+                    event_programs=project.event_programs if output_root is not None else None,
+                    issues=event_issues,
+                )
+            )
+            issues.extend(MVReferenceIssue(code, entry.path.name, message) for code, message in event_issues)
+            if start is not None:
+                start_scene = scene
+                player_entity = next((e for e in scene.entities() if e.name == "Player"), None)
             source_ids["maps"][entry.map_id] = scene.id
             source_metadata["maps"][entry.map_id] = {
                 "tileset_id": mv_map.tileset_id,
                 "display_name": mv_map.display_name,
                 "parallax_name": mv_map.parallax_name,
+                "tilemap_asset_id": None if baked is None else baked.tilemap_id,
+                "blocked_cells": None if baked is None else baked.blocked_cells,
             }
+        if output_root is not None:  # a door to a map that was not imported would fail at runtime: say so now
+            for program_id in project.event_programs.ids():
+                for instruction in project.event_programs.get(program_id).instructions:
+                    args = instruction.args.get("args", {}) if instruction.opcode == "WORLD" else {}
+                    if instruction.args.get("command") == "TRANSFER" and project.scene(args.get("scene_id")) is None:
+                        issues.append(
+                            MVReferenceIssue(
+                                "event.transfer_target_missing",
+                                program_id,
+                                "transfer to a map that was not imported (import it too, or edit the event)",
+                            )
+                        )
+        if start_scene is not None:
+            from asteria.core import Transform
+            from asteria.runtime.game_start import GameStartDefinition
+
+            project.startup_scene_id = start_scene.id
+            position = None
+            if player_entity is not None:
+                t = player_entity.get(Transform)
+                position = (t.x, t.y)
+            project.game_start = GameStartDefinition(
+                start_scene.id, "" if player_entity is None else player_entity.id, "down", position
+            )
 
         issues.extend(catalog.issues[len(database.issues) :])
         return RPGMakerMVProjectImport(project, tuple(issues), source_ids, source_metadata)
+
+
+def import_mv_project(source, output, *, map_ids=None, name=None):
+    """Import the MV project folder ``source`` (with ``data/System.json``) as a new Asteria project in ``output``.
+
+    Returns ``(project_path, RPGMakerMVProjectImport)``.
+    """
+    from pathlib import Path
+
+    from .local_reference import RPGMakerMVProjectLayout
+
+    source, output = Path(source).expanduser().resolve(), Path(output).expanduser().resolve()
+    if not (source / "data" / "System.json").is_file():
+        raise ValueError(f"{source} is not an RPG Maker MV project (no data/System.json)")
+    layout = RPGMakerMVProjectLayout.from_root(source)
+    output.mkdir(parents=True, exist_ok=True)
+    result = RPGMakerMVProjectImporter.import_project(layout, map_ids=map_ids, output_root=output)
+    if name:
+        result.project.name = name
+    project_path = output / "project.asteria.json"
+    result.project.save_json(project_path)
+    return project_path, result
+
+
+def import_mv_main(argv=None):
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Import an RPG Maker MV project as a new Asteria project")
+    parser.add_argument("source", help="MV project folder (contains data/System.json)")
+    parser.add_argument("output", help="new Asteria project folder")
+    parser.add_argument("--maps", type=int, nargs="*", help="map ids to import (default: all)")
+    args = parser.parse_args(argv)
+    project_path, result = import_mv_project(args.source, args.output, map_ids=args.maps)
+    print(f"Imported {len(result.project.scenes())} maps into {project_path}")
+    for issue in result.issues:
+        print(f"  {issue.code}: {issue.message}")
+    print(f"Run: asteria-preview {project_path}")
+    return 0

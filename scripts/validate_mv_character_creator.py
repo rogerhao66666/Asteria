@@ -12,7 +12,7 @@ from PIL import Image
 from asteria.assets.local_reference import discover_mv_projects, resolve_rpg_maker_mv_root
 from asteria.assets.rpg_maker_mv import RPGMakerMVImporter
 from asteria.assets.rpg_maker_mv_generator import RPGMakerMVGeneratorCatalog
-from asteria.assets.rpg_maker_mv_map import discover_mv_maps
+from asteria.assets.rpg_maker_mv_map import RPGMakerMVMap, discover_mv_maps
 from asteria.assets.rpg_maker_mv_project import RPGMakerMVProjectImporter
 from asteria.assets.rpg_maker_mv_weapon import weapon_visual_for_type
 from asteria.editor.character_generator_widget import CharacterGeneratorWidget
@@ -237,7 +237,7 @@ def run_validation(output_dir: str | Path, *, max_frames: int = 3, show_windows:
         and reopened_project.assets.resolve(bundle.canonical_assets[0].asset_id) is not None
         and reopened_workspace.recipe.parts["hair_front"] == selections["hair_front"].id
     )
-    mv_map = next(entity.rpg_maker_mv_map for entity in scene.entities() if hasattr(entity, "rpg_maker_mv_map"))
+    mv_map = RPGMakerMVMap.load(map_entry.path, map_id=map_entry.map_id, name=map_entry.name)
     runtime = _render_runtime(output, mv_map, bundle, reference_root, max_frames, show_windows)
     battle_visual = _render_battle_weapons(output, bundle, reference_root, show_windows)
     result = {

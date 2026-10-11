@@ -38,6 +38,28 @@ class RPGMakerMVProjectLayout:
     fonts: Path | None
     js: Path | None
 
+    @classmethod
+    def from_root(cls, root) -> RPGMakerMVProjectLayout:
+        """Layout of one MV project folder (``root/data/System.json``), e.g. a user's own project."""
+        root = Path(root).expanduser().resolve()
+        if not (root / "data" / "System.json").is_file():
+            raise ValueError(f"{root} is not an RPG Maker MV project")
+
+        def optional(name):
+            path = root / name
+            return path if path.is_dir() else None
+
+        return cls(
+            root.parent,
+            root,
+            root.name,
+            root / "data",
+            optional("img"),
+            optional("audio"),
+            optional("fonts"),
+            optional("js"),
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class ReferenceFile:

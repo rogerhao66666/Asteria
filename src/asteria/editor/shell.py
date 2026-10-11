@@ -642,6 +642,9 @@ class AsteriaEditorWindow(QMainWindow):
         self.save_as_action.triggered.connect(self.save_project_as)
         file_menu.addActions([self.open_action, self.save_action, self.save_as_action])
         file_menu.addSeparator()
+        self.import_mv_action = QAction("Import RPG Maker MV Project…", self)
+        self.import_mv_action.triggered.connect(self.import_mv_project_dialog)
+        file_menu.addAction(self.import_mv_action)
         self.export_action = QAction("Export Game…", self)
         self.export_action.triggered.connect(self.export_game_dialog)
         file_menu.addAction(self.export_action)
@@ -1802,6 +1805,50 @@ class AsteriaEditorWindow(QMainWindow):
         self.refresh_all()
         QTimer.singleShot(0, self.viewport.frame_game_camera)
         return True
+
+    def import_mv_project(self, source, output):
+        """Import an RPG Maker MV project into a new Asteria project folder and open it (W-18)."""
+        from asteria.assets.rpg_maker_mv_project import import_mv_project
+
+        project_path, result = import_mv_project(source, output)
+        load_document(self.document, project_path)
+        self._resolve_project_resources()
+        self.play_session = None
+        self._load_playtest_profiles()
+        self.refresh_all()
+        lines = [f"{issue.code}: {issue.message}" for issue in result.issues]
+        self.console.setText(f"Imported {len(result.project.scenes())} maps from {source}\n" + "\n".join(lines[:200]))
+        return project_path, result
+
+    def import_mv_project_dialog(self):
+        if self.document.dirty:
+            answer = QMessageBox.question(
+                self,
+                "Unsaved Changes",
+                "This project has unsaved changes. Import into a new project anyway?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No,
+            )
+            if answer != QMessageBox.Yes:
+                return None
+        source = QFileDialog.getExistingDirectory(self, "RPG Maker MV Project Folder (contains data/)")
+        if not source:
+            return None
+        output = QFileDialog.getExistingDirectory(self, "New Asteria Project Folder")
+        if not output:
+            return None
+        try:
+            project_path, result = self.import_mv_project(source, output)
+        except (OSError, ValueError, EditorStorageError, EditorResourceError) as exc:
+            QMessageBox.critical(self, "Import RPG Maker MV Project", str(exc))
+            return None
+        QMessageBox.information(
+            self,
+            "Import RPG Maker MV Project",
+            f"Imported {len(result.project.scenes())} maps into {project_path}.\n"
+            f"{len(result.issues)} notes (content kept out or simplified) are listed in the Console.",
+        )
+        return project_path
 
     def _load_playtest_profiles(self):
         if not hasattr(self, "playtest_profile_combo"):
