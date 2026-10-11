@@ -20,7 +20,7 @@ from asteria.runtime.input_map import InputActionMap
 
 class Project:
     SCHEMA = "asteria.project"
-    VERSION = 10
+    VERSION = 11
 
     def __init__(
         self,
@@ -33,6 +33,7 @@ class Project:
         scene_event_bindings=None,
         rpg_database=None,
         lifecycle_event_bindings=None,
+        common_events=None,
         gameplay_library=None,
         battle_presentation_library=None,
         game_start=None,
@@ -66,6 +67,11 @@ class Project:
             raise TypeError("prefabs must be PrefabLibrary")
         self.prefabs = prefabs or PrefabLibrary()
         self.lifecycle_event_bindings = list(lifecycle_event_bindings or ())
+        from asteria.events.common import CommonEvent
+
+        self.common_events = list(common_events or ())
+        if any(not isinstance(x, CommonEvent) for x in self.common_events):
+            raise TypeError("common_events must contain CommonEvent values")
         if any(not isinstance(x, LifecycleEventBinding) for x in self.lifecycle_event_bindings):
             raise TypeError("lifecycle_event_bindings must contain LifecycleEventBinding values")
         self._scenes = {}
@@ -131,6 +137,9 @@ class Project:
         for binding in self.lifecycle_event_bindings:
             if binding.event_program_id not in self.event_programs.ids():
                 raise ValueError("lifecycle binding references unknown event program")
+        for common in self.common_events:
+            if common.program_id not in self.event_programs.ids():
+                raise ValueError(f"common event references unknown event program {common.program_id}")
         if validate_gameplay_refs:
             missing = self.ability_reference_errors()
             if missing:
@@ -204,12 +213,15 @@ class Project:
             "input_map": self.input_map.to_data(),
             "prefabs": self.prefabs.to_data(),
             "lifecycle_event_bindings": [binding.to_data() for binding in self.lifecycle_event_bindings],
+            "common_events": [x.to_data() for x in self.common_events],
         }
 
     @classmethod
     def from_data(cls, data, registry):
+        from asteria.events.common import CommonEvent
+
         version = data.get("version")
-        if data.get("schema") != cls.SCHEMA or version not in {2, 3, 4, 5, 6, 7, 8, 9, 10}:
+        if data.get("schema") != cls.SCHEMA or version not in {2, 3, 4, 5, 6, 7, 8, 9, 10, 11}:
             raise ValueError("unsupported project")
 
         expected_v2 = {
@@ -229,8 +241,11 @@ class Project:
         expected_v8 = expected_v7 | {"game_start"}
         expected_v9 = expected_v8 | {"input_map"}
         expected_v10 = expected_v9 | {"prefabs"}
+        expected_v11 = expected_v10 | {"common_events"}
         expected = (
-            expected_v10
+            expected_v11
+            if version == 11
+            else expected_v10
             if version == 10
             else expected_v9
             if version == 9
@@ -283,6 +298,7 @@ class Project:
             lifecycle_event_bindings=[LifecycleEventBinding.from_data(x) for x in data["lifecycle_event_bindings"]]
             if version >= 5
             else (),
+            common_events=[CommonEvent.from_data(x) for x in data["common_events"]] if version >= 11 else (),
         )
         for sd in data["scenes"]:
             p.add_scene(deserialize_scene(sd, registry))

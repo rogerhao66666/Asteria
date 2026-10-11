@@ -12,7 +12,7 @@ def test_project_v8_owns_canonical_game_start_and_fresh_run_state():
     p.add_scene(s)
     p.game_start = GameStartDefinition(s.id, e.id, "right", (12, 8))
     raw = p.to_data()
-    assert raw["version"] == 10 and raw["game_start"]["schema"] == "asteria.game_start"
+    assert raw["version"] == 11 and raw["game_start"]["schema"] == "asteria.game_start"
     clone = Project.from_data(raw, ComponentRegistry())
     a = clone.game_start.instantiate(clone)
     b = clone.game_start.instantiate(clone)

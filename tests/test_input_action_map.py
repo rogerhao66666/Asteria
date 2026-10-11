@@ -42,13 +42,14 @@ def test_input_map_persists_with_the_project_and_old_projects_get_the_default():
     project.input_map.rebind("interact", None, InputBinding("key", "f"))
     registry = EditorDocument().component_registry
     data = project.to_data()
-    assert data["version"] == 10
+    assert data["version"] == 11
     restored = Project.from_data(data, registry)
     assert InputBinding("key", "f") in restored.input_map.bindings("interact")
 
     data["version"] = 8
     data.pop("input_map")
     data.pop("prefabs")
+    data.pop("common_events", None)
     assert Project.from_data(data, registry).input_map.to_data() == InputActionMap.default().to_data()
 
 

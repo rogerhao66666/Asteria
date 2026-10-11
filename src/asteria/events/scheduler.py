@@ -41,6 +41,7 @@ class EventScheduler:
     registry: EventProgramRegistry
     context: EventContext = field(default_factory=EventContext)
     world_commands: WorldCommandRouter | None = None
+    sequence_host: object = None
     _specs: dict[str, ScheduledEventSpec] = field(default_factory=dict)
     _instances: dict[str, ScheduledEventInstance] = field(default_factory=dict)
 
@@ -65,6 +66,9 @@ class EventScheduler:
     def instance(self, event_id: str):
         return self._instances.get(str(event_id))
 
+    def runners(self):
+        return tuple(inst.runner for inst in self._instances.values())
+
     @property
     def autorun_busy(self):
         return any(
@@ -78,6 +82,7 @@ class EventScheduler:
         inst = self._instances.get(spec.event_id)
         if inst is None:
             runner = EventRunner(self.registry, context=self.context, world_commands=self.world_commands)
+            runner.sequence_host = self.sequence_host
             runner.start(
                 spec.program_id,
                 source_entity_id=spec.source_entity_id,
@@ -108,7 +113,13 @@ class EventScheduler:
                 continue
             inst = self._ensure_instance(spec)
             outputs[event_id] = inst.runner.update(dt)
-            if inst.runner.vm is not None and inst.runner.vm.completed and not inst.runner.call_stack:
+            # finished only when nothing is still showing (a last dialogue line) or running (sequence tracks)
+            if (
+                inst.runner.vm is not None
+                and inst.runner.vm.completed
+                and not inst.runner.call_stack
+                and not inst.runner.busy
+            ):
                 completed.append(event_id)
 
         for event_id in completed:
@@ -156,5 +167,6 @@ class EventScheduler:
             if spec is None:
                 raise KeyError(f"snapshot references unknown scheduled event: {event_id}")
             runner = EventRunner(self.registry, context=self.context, world_commands=self.world_commands)
+            runner.sequence_host = self.sequence_host
             runner.restore(runner_data)
             self._instances[event_id] = ScheduledEventInstance(spec, runner)

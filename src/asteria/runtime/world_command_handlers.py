@@ -34,6 +34,7 @@ STANDARD_WORLD_COMMANDS = (
     "CAMERA_FOCUS",
     "CAMERA_RELEASE",
     "CAMERA_SHAKE",
+    "PLAY_VFX",
 )
 
 PRESENTATION_COMMANDS = (
@@ -44,6 +45,7 @@ PRESENTATION_COMMANDS = (
     "CAMERA_FOCUS",
     "CAMERA_RELEASE",
     "CAMERA_SHAKE",
+    "PLAY_VFX",
 )
 
 # Argument names each standard command reads; editors use these as prompts.
@@ -66,7 +68,8 @@ WORLD_COMMAND_ARGUMENTS = {
     "PLAY_BGM": ("asset_id", "fade", "volume"),
     "STOP_BGM": ("fade",),
     "PLAY_SE": ("asset_id", "volume"),
-    "SCREEN_FADE": (),
+    "SCREEN_FADE": ("to", "duration", "color"),
+    "PLAY_VFX": ("asset_id", "entity", "x", "y", "scale", "anchor"),
     "CAMERA_FOCUS": ("entity", "x", "y", "zoom", "blend", "ease"),
     "CAMERA_RELEASE": ("blend", "ease"),
     "CAMERA_SHAKE": ("intensity", "duration"),

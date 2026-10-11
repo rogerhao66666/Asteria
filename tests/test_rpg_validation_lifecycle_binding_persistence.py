@@ -58,7 +58,7 @@ def test_lifecycle_binding_roundtrip_in_project_v5():
         LifecycleEventBinding("custom.any.workflow.finished", "after_anything", source_entity_id="source")
     )
     raw = p.to_data()
-    assert raw["version"] == 10
+    assert raw["version"] == 11
     restored = Project.from_data(raw, ComponentRegistry())
     b = restored.lifecycle_event_bindings[0]
     assert b.hook_name == "custom.any.workflow.finished"
@@ -80,6 +80,7 @@ def test_project_v4_backward_read_has_no_lifecycle_bindings():
     raw.pop("game_start", None)
     raw.pop("input_map", None)
     raw.pop("prefabs", None)
+    raw.pop("common_events", None)
     raw.pop("battle_presentation_library", None)
     raw.pop("lifecycle_event_bindings")
     raw.pop("gameplay_library")

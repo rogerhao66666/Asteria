@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 from asteria.core import Transform
 from asteria.core.lifecycle import LifecycleHookBus
 from asteria.core.scene_transition import carry_persistent_entities
-from asteria.events import EventRunner, SceneEventRuntime, WorldCommandRouter
+from asteria.events import EventRunner, EventScheduler, SceneEventRuntime, WorldCommandRouter
 from asteria.gameplay import AbilityRegistry, AbilityRuntime, GameplaySubject
 from asteria.rpg import (
     ActorAbilityState,
@@ -94,8 +94,19 @@ class GameSessionRuntime:
         self.events = EventRunner(
             project.event_programs, context=runtime_save.event_context, world_commands=self.world_commands
         )
+        self.events.sequence_host = self
         if runtime_save.active_event is not None:
             self.events.restore(runtime_save.active_event)
+        # Project-wide common events (EVT-03): autorun / parallel ones run while their switch is on.
+        self.common_events = EventScheduler(
+            project.event_programs,
+            context=runtime_save.event_context,
+            world_commands=self.world_commands,
+            sequence_host=self,
+        )
+        self.battle_events = None
+        self.entity_facing = {}
+        self.entity_animation = {}
         self.scene_events = None
         self.open_shop_id = None
         self.open_crafting_station = None
@@ -201,23 +212,128 @@ class GameSessionRuntime:
                 self.project.event_programs,
                 context=self.save.event_context,
                 world_commands=self.world_commands,
+                sequence_host=self,
             )
         )
 
     @property
     def event_busy(self):
         """True while a foreground or autorun event blocks player control."""
-        return self.events.busy or (self.scene_events is not None and self.scene_events.scheduler.autorun_busy)
+        return (
+            self.events.busy
+            or (self.scene_events is not None and self.scene_events.scheduler.autorun_busy)
+            or self.common_events.autorun_busy
+        )
+
+    def _all_runners(self):
+        yield self.events
+        if self.scene_events is not None:
+            yield from self.scene_events.scheduler.runners()
+        yield from self.common_events.runners()
 
     def _dialogue_runner(self):
-        if self.events.dialogue.blocked:
-            return self.events
-        if self.scene_events is not None:
-            for spec in self.scene_events.scheduler.specs():
-                instance = self.scene_events.scheduler.instance(spec.event_id)
-                if instance is not None and instance.runner.dialogue.blocked:
-                    return instance.runner
-        return None
+        return next((r for r in self._all_runners() if r.dialogue.blocked), None)
+
+    # -- cutscenes and the sequence host (EVT-03 / EVT-04) ------------------------------------
+    @property
+    def cutscene_active(self):
+        """A cutscene sequence is running: hosts lock player control (and may letterbox)."""
+        return any(r.cutscene for r in self._all_runners())
+
+    @property
+    def cutscene_skippable(self):
+        return any(r.can_skip for r in self._all_runners())
+
+    def skip_cutscene(self):
+        """Fast-forward skippable cutscenes to their end state (moves land, world commands still run)."""
+        skipped = sum(r.skip_sequences() for r in self._all_runners())
+        self.update_events(0.0)
+        return skipped
+
+    def _sequence_entity(self, key):
+        key = str(key)
+        if key in ("player", "@player", self.player.id):
+            return self.player
+        entity = self.scene.get_entity(key) or next((e for e in self.scene.entities() if e.name == key), None)
+        if entity is None or not entity.has(Transform):
+            raise GameSessionError(f"sequence: no entity {key} with a position in {self.scene.name}")
+        return entity
+
+    def position(self, key):
+        t = self._sequence_entity(key).get(Transform)
+        return (t.x, t.y)
+
+    def set_position(self, key, x, y):
+        entity = self._sequence_entity(key)
+        if entity is self.player:
+            return self.set_player_position(x, y)
+        t = entity.get(Transform)
+        t.x, t.y = float(x), float(y)
+        return (t.x, t.y)
+
+    def set_facing(self, key, facing):
+        entity = self._sequence_entity(key)
+        if entity is self.player:
+            return self.set_player_facing(facing)
+        self.entity_facing[entity.id] = str(facing)
+        return self.entity_facing[entity.id]
+
+    def play_animation(self, key, clip):
+        from asteria.runtime.components2d import Animator2DComponent
+
+        entity = self._sequence_entity(key)
+        animator = entity.try_get(Animator2DComponent)
+        if animator is not None:
+            animator.default_clip = str(clip)
+        self.entity_animation[entity.id] = str(clip)
+        return str(clip)
+
+    # -- battle events (EVT-03) --------------------------------------------------------------------
+    def _battle_hook_bus(self):
+        """A fresh hook bus per battle; project lifecycle bindings on ``rpg.battle.*`` hooks run as battle events."""
+        from asteria.events import LifecycleEventBridge
+
+        bus = LifecycleHookBus()
+        bindings = [b for b in self.project.lifecycle_event_bindings if b.hook_name.startswith("rpg.battle.")]
+        self.battle_events = LifecycleEventBridge(bus, self.events, bindings) if bindings else None
+        self.save.event_context.providers["battle"] = self._battle_value
+        return bus
+
+    def _battle_value(self, name):
+        """Values battle-event conditions can read: ``round``, ``hp_ratio:<member or enemy id>``, ``alive:<id>``."""
+        battle = self.battle
+        if battle is None:
+            return None
+        if name == "round":
+            return battle.turn_queue.round_index
+        kind, _, key = str(name).partition(":")
+        members = [m for m in battle.members.values() if m.member_id == key or m.member_id.split(":", 1)[0] == key]
+        if kind == "alive":
+            return any(battle.is_active(m) for m in members)
+        if kind == "hp_ratio":
+            resource = self.rules.knockout_resource_id
+            for member in members:
+                value = member.subject.resources.get(resource)
+                return 0.0 if value.maximum == 0 else value.current / value.maximum
+            return None
+        raise KeyError(f"unknown battle value {name}")
+
+    def _refresh_common_events(self):
+        from asteria.events.scheduler import EventScheduleMode, ScheduledEventSpec
+
+        desired = {}
+        for common in self.project.common_events:
+            if common.active(self.save.event_context):
+                mode = EventScheduleMode.AUTORUN if common.trigger == "autorun" else EventScheduleMode.PARALLEL
+                spec = ScheduledEventSpec(f"common:{common.program_id}", common.program_id, mode)
+                desired[spec.event_id] = spec
+        for spec in self.common_events.specs():
+            if spec.event_id not in desired:
+                self.common_events.remove(spec.event_id)
+        existing = {s.event_id for s in self.common_events.specs()}
+        for event_id, spec in desired.items():
+            if event_id not in existing:
+                self.common_events.add(spec)
 
     @property
     def pending_dialogue(self):
@@ -258,6 +374,15 @@ class GameSessionRuntime:
             except Exception as exc:
                 self.event_errors.append(exc)
                 self.scene_events.scheduler.stop_all()
+        if self.mode == "field" and not self.events.busy:
+            try:
+                self._refresh_common_events()
+                self.common_events.update(dt)
+            except Exception as exc:
+                self.event_errors.append(exc)
+                self.common_events.stop_all()
+        if self.mode == "battle" and self.battle_events is not None and not self.events.busy:
+            self.battle_events.pump()  # queued battle events start once the previous one finished
         return output
 
     def transfer_player(self, scene_id, x=None, y=None, *, facing=None):
@@ -579,7 +704,7 @@ class GameSessionRuntime:
             enemy_ai_definitions=db.enemy_ai.values(),
             transaction_policies=db.action_transactions.values(),
             rng_seed=157,
-            hooks=LifecycleHookBus(),
+            hooks=self._battle_hook_bus(),
         )
         self.encounter_id = str(encounter_id)
         self._enemy_ids = tuple(enemy_definition_ids)

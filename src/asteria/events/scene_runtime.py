@@ -14,9 +14,11 @@ class SceneEventRuntime:
     context: EventContext
 
     @classmethod
-    def build(cls, bindings, registry, *, context=None, world_commands=None):
+    def build(cls, bindings, registry, *, context=None, world_commands=None, sequence_host=None):
         context = context or EventContext()
-        scheduler = EventScheduler(registry, context=context, world_commands=world_commands)
+        scheduler = EventScheduler(
+            registry, context=context, world_commands=world_commands, sequence_host=sequence_host
+        )
         runtime = cls(bindings, scheduler, context)
         runtime.refresh_scheduled_bindings()
         return runtime

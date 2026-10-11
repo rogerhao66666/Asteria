@@ -30,6 +30,7 @@ class EventEditorWidget(QWidget):
         addConditionRequested = Signal()
         removeCommandRequested = Signal(int)
         moveCommandRequested = Signal(int, int)
+        editCommandRequested = Signal(int)
 
     def __init__(self, parent=None):
         if not QT_AVAILABLE:
@@ -71,6 +72,9 @@ class EventEditorWidget(QWidget):
         condition_row.addWidget(add_condition)
 
         self.commands = QListWidget()
+        self.commands.itemDoubleClicked.connect(
+            lambda _item: self.editCommandRequested.emit(self.commands.currentRow())
+        )
 
         buttons = QHBoxLayout()
         for text, kind in [
@@ -80,6 +84,7 @@ class EventEditorWidget(QWidget):
             ("Switch", "switch"),
             ("Variable", "variable"),
             ("World", "world"),
+            ("Sequence…", "sequence"),
         ]:
             b = QPushButton(text)
             b.clicked.connect(lambda checked=False, k=kind: self.addCommandRequested.emit(k))

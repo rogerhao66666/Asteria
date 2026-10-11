@@ -28,6 +28,8 @@ class EventCondition:
             if not self.scope_id:
                 raise ValueError("local condition requires scope_id")
             current = context.get_local(self.scope_id, self.name)
+        elif source in context.providers:
+            current = context.providers[source](self.name)
         else:
             raise ValueError(f"unsupported condition source: {self.source}")
 

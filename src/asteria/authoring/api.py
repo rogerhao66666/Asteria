@@ -204,6 +204,32 @@ class AuthoringSession:
         self._execute(command)
         return command
 
+    # -- common and battle events (EVT-03) ----------------------------------------------------------
+    @property
+    def _event_flow(self):
+        from types import SimpleNamespace
+
+        from asteria.editor.event_flow_authoring import EventFlowAuthoring
+
+        return EventFlowAuthoring(SimpleNamespace(project=self._project, execute=self._run))
+
+    def new_event(self, program_id, name="") -> AuthoringEvent:
+        """Create an empty event program (for common / battle events) and return it for building."""
+        self._event_flow.new_program(program_id, name)
+        return AuthoringEvent(self, str(program_id))
+
+    def event_program(self, program_id) -> AuthoringEvent:
+        self._project.event_programs.require(str(program_id))
+        return AuthoringEvent(self, str(program_id))
+
+    def common_event(self, program_id, trigger="call", switch=""):
+        """Make a program a common event: ``call`` (CALL only), ``autorun`` or ``parallel`` while ``switch`` is on."""
+        return self._event_flow.add_common_event(program_id, trigger, switch)
+
+    def battle_event(self, hook, program_id, *, conditions=(), once=False):
+        """Run ``program_id`` at a battle moment (``rpg.battle.round_started``...) when ``conditions`` hold."""
+        return self._event_flow.add_battle_event(hook, program_id, conditions=conditions, once=once)
+
 
 class AuthoringScene:
     def __init__(self, session, scene):
@@ -339,6 +365,13 @@ class AuthoringEvent:
         payload = {"destination": destination}
         payload.update(args)
         return self.world("TRANSFER", **payload)
+
+    def sequence(self, *tracks, cutscene=False, skippable=False, wait="all") -> AuthoringEvent:
+        """Add a SEQUENCE: ``tracks`` built with ``track(name, move(...), say(...), ...)`` run in parallel."""
+        from asteria.editor.event_flow_authoring import EventFlowAuthoring
+
+        args = EventFlowAuthoring.sequence_args(tracks, cutscene=cutscene, skippable=skippable, wait=wait)
+        return self.append("SEQUENCE", **args)
 
     def end(self):
         return self.append("END")
@@ -539,3 +572,38 @@ class AuthoringEntity:
         self._session._run(_AddProgram(project.event_programs, program_id, program))
         self._session._run(_AddBinding(bindings, binding))
         return AuthoringEvent(self._session, program_id)
+
+
+# -- sequence track helpers (EVT-04) -----------------------------------------------------------------
+def track(name, *steps):
+    """A parallel track: ``track("hero", move("player", 40, 0, 1.0), face("player", "left"))``."""
+    from asteria.editor.event_flow_authoring import track as make_track
+
+    return make_track(name, *steps)
+
+
+def move(entity, x, y, duration=1.0, *, relative=False, wait=True):
+    return ("MOVE", {"entity": str(entity), "x": x, "y": y, "duration": duration, "relative": relative, "wait": wait})
+
+
+def face(entity, facing):
+    return ("FACE", {"entity": str(entity), "facing": str(facing)})
+
+
+def animate(entity, clip):
+    return ("ANIMATE", {"entity": str(entity), "clip": str(clip)})
+
+
+def say(speaker, text):
+    return ("DIALOGUE", {"speaker": str(speaker), "text": str(text)})
+
+
+def world(command, *, wait=0.0, **args):
+    data = {"command": str(command).upper(), "args": dict(args)}
+    if wait:
+        data["wait"] = float(wait)
+    return ("WORLD", data)
+
+
+def pause(seconds):
+    return ("WAIT", {"seconds": float(seconds)})

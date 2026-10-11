@@ -6,8 +6,10 @@ from pathlib import Path
 from asteria.core import Transform
 from asteria.runtime.audio_mixer import AudioMixer
 from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
+from asteria.runtime.battle_visuals import vfx_rect
 from asteria.runtime.collision import CollisionWorld
 from asteria.runtime.field_camera import CAMERA_COMMANDS, FieldCameraError, FieldViewCamera
+from asteria.runtime.field_presentation import FIELD_EFFECT_COMMANDS, FieldEffectError, FieldEffects
 from asteria.runtime.game_menus import (
     GAME_OVER_OPTIONS,
     PAUSE_OPTIONS,
@@ -35,6 +37,9 @@ def walking_row_index(facing: str) -> int:
 def walking_pattern_index(field_step: int) -> int:
     """Use MV's 0-1-2-1 walk loop; never jump directly from stride to stride."""
     return WALK_PATTERN_SEQUENCE[(max(0, int(field_step)) // 8) % len(WALK_PATTERN_SEQUENCE)]
+
+
+FIELD_BODY_HEIGHT = 24.0  # world units a field character stands tall (VFX anchors)
 
 
 def field_player_render_size(frame_size, render_width=64) -> tuple[int, int]:
@@ -273,6 +278,55 @@ class PlayableTestRuntime:
             camera = self._field_camera = FieldViewCamera(self.width, self.height, scale)
         return camera
 
+    @property
+    def field_effects(self):
+        """Screen fades and field VFX started by event programs (EVT-02 / EVT-04)."""
+        effects = getattr(self, "_field_effects", None)
+        if effects is None:
+            effects = self._field_effects = FieldEffects()
+        return effects
+
+    def _draw_field_effects(self):
+        scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0))
+        camera = self.field_camera
+        for effect in self.field_effects.vfx:
+            asset = self.game.project.assets.resolve(effect.asset_id)
+            meta = asset.meta()
+            frames = meta["clips"]["play"]["frames"]
+            fw, fh = meta["frame_size"]
+            sheet = self.load_image(asset.source.uri)
+            columns = max(1, sheet.get_width() // fw)
+            index = frames[FieldEffects.keyframe(effect, len(frames))]
+            if effect.entity_id is not None:
+                entity = self.game.scene.get_entity(effect.entity_id)
+                if entity is None:
+                    continue
+                t = entity.get(Transform)
+                ax, ay = t.x, t.y
+            else:
+                ax, ay = effect.x, effect.y
+            x, y, w, h = vfx_rect(effect.placement, ax, ay, FIELD_BODY_HEIGHT, fw / scale, fh / scale)
+            sx, sy = camera.world_to_screen(x, y)
+            size = (max(1, round(w * scale * camera.zoom)), max(1, round(h * scale * camera.zoom)))
+            image = self.pg.transform.scale(
+                sheet.subsurface(((index % columns) * fw, (index // columns) * fh, fw, fh)), size
+            )
+            if effect.placement["opacity"] < 1.0:
+                image.set_alpha(int(effect.placement["opacity"] * 255))
+            flags = self.pg.BLEND_RGB_ADD if effect.placement["blend"] == "add" else 0
+            self.screen.blit(image, (round(sx - size[0] / 2), round(sy - size[1] / 2)), special_flags=flags)
+        alpha = self.field_effects.fade_alpha
+        if alpha > 0:
+            shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
+            shade.fill((*self.field_effects.fade_color, int(alpha * 255)))
+            self.screen.blit(shade, (0, 0))
+        if self.game.cutscene_active:  # letterbox while a cutscene runs
+            bar = int(self.height * 0.09)
+            self.pg.draw.rect(self.screen, (0, 0, 0), (0, 0, self.width, bar))
+            self.pg.draw.rect(self.screen, (0, 0, 0), (0, self.height - bar, self.width, bar))
+            if self.game.cutscene_skippable:
+                self.text("Esc: skip", self.width - 130, self.height - bar + 8, size=18, color=(190, 200, 215))
+
     def _field_screen_xy(self, world_x, world_y):
         return self.field_camera.world_to_screen(world_x, world_y)
 
@@ -328,6 +382,10 @@ class PlayableTestRuntime:
         )
         pf = self.pg.transform.scale(pf, (render_w, render_h))
         self.screen.blit(pf, (int(px - render_w / 2), int(py - render_h + 10 * zoom)))
+        self._draw_field_effects()
+        if self.game.cutscene_active:
+            self._draw_dialogue()
+            return
 
         self.panel((18, self.height - 92, self.width - 36, 72))
         self.text("Field Test", 34, self.height - 82, size=24, color=(255, 220, 124))
@@ -388,6 +446,12 @@ class PlayableTestRuntime:
         return True
 
     def _field_input(self, events, dt):
+        if self.game.cutscene_active:
+            if self.game.cutscene_skippable and self.input.just_pressed("cancel"):
+                self.game.skip_cutscene()
+                return False
+            self._dialogue_input(events)
+            return False
         if self._dialogue_input(events) or self.game.event_busy:
             return False
         # Project input map: keyboard and gamepad (stick / d-pad) both drive movement.
@@ -1388,6 +1452,13 @@ class PlayableTestRuntime:
                     self.field_camera.handle(request, self.game.scene)
                 except (FieldCameraError, ValueError) as exc:
                     self.game.event_errors.append(exc)
+            elif request.name in FIELD_EFFECT_COMMANDS:
+                try:
+                    self.field_effects.handle(
+                        request, self.game.scene, self.game.project.assets, player=self.game.player
+                    )
+                except (FieldEffectError, ValueError) as exc:
+                    self.game.event_errors.append(exc)
             else:
                 self.audio.handle_world_request(request)
         for cue in getattr(self._battle_presentation, "audio_cues", ()):
@@ -1437,8 +1508,13 @@ class PlayableTestRuntime:
             self._game_over_input()
             self._draw_overlay_menu("Game Over", self._game_over_menu, base="battle")
         elif self.game.mode == "battle" or self._victory:
-            self._battle_input(events)
+            if self.game.mode == "battle":
+                with self.profiler.section("events"):
+                    self.game.update_events(dt)  # battle events (EVT-03)
+            if not (self._dialogue_input(events) or (self.game.mode == "battle" and self.game.event_busy)):
+                self._battle_input(events)
             self._present_battle(dt)
+            self._draw_dialogue()
             if self._defeat:
                 self._game_over_menu.index = 0
                 self._ui_mode = "game_over"
@@ -1456,6 +1532,7 @@ class PlayableTestRuntime:
                 with self.profiler.section("update"):
                     self.game.field_update(dt)
             self.field_camera.update(dt)
+            self.field_effects.update(dt)
             if self.game.mode == "battle":
                 self._turn_actor = None
                 self._battle_presentation.begin()

@@ -94,7 +94,7 @@ def test_presentation_library_project_v7_roundtrip():
     for category, value in profiles().items():
         c.create(category, "default", value)
     raw = p.to_data()
-    assert raw["version"] == 10
+    assert raw["version"] == 11
     clone = Project.from_data(raw, doc.component_registry)
     assert clone.to_data() == raw
     for category in profiles():
@@ -108,6 +108,7 @@ def test_old_project_v6_remains_backward_readable():
     raw.pop("game_start", None)
     raw.pop("input_map", None)
     raw.pop("prefabs", None)
+    raw.pop("common_events", None)
     raw.pop("battle_presentation_library")
     clone = Project.from_data(raw, doc.component_registry)
     assert clone.battle_presentation_library.categories()

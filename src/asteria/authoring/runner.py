@@ -59,6 +59,9 @@ def script_namespace(
     elif isinstance(selected, AuthoringEntity):
         entity = selected
         scene = selected._scene
+    from asteria.authoring import api
+    from asteria.editor.event_flow_authoring import battle_condition
+
     return {
         "__name__": "__asteria_authoring__",
         "__file__": filename,
@@ -66,6 +69,15 @@ def script_namespace(
         "selected": selected,
         "scene": scene,
         "entity": entity,
+        # sequence / battle event helpers (EVT-03, EVT-04)
+        "track": api.track,
+        "move": api.move,
+        "face": api.face,
+        "animate": api.animate,
+        "say": api.say,
+        "world": api.world,
+        "pause": api.pause,
+        "battle_condition": battle_condition,
     }
 
 

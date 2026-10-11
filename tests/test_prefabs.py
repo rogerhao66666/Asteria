@@ -123,7 +123,7 @@ def test_prefabs_and_instances_round_trip_with_the_project():
     project, scene = _project_with_chest()
     InstantiatePrefabCommand(project, REGISTRY, scene, "chest", 5, 6).execute()
     data = project.to_data()
-    assert data["version"] == 10
+    assert data["version"] == 11
     restored = Project.from_data(data, REGISTRY)
     assert restored.prefabs.ids() == ("chest",)
     entity = next(e for e in restored.scene(scene.id).entities() if e.has(PrefabInstanceComponent))

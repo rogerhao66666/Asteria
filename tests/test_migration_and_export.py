@@ -61,8 +61,8 @@ def test_upgrade_rewrites_an_old_project_at_the_current_version(tmp_path):
     shutil.copy(REF / "project.asteria.json", path)
     old_version = json.loads(path.read_text())["version"]
     assert old_version < 10
-    assert upgrade_project(path) == (old_version, 10)
-    assert json.loads(path.read_text())["version"] == 10
+    assert upgrade_project(path) == (old_version, 11)
+    assert json.loads(path.read_text())["version"] == 11
     assert json.loads((tmp_path / "project.asteria.json.bak").read_text())["version"] == old_version
     assert load_project(path).name == load_project(REF / "project.asteria.json").name
 
@@ -76,7 +76,7 @@ def test_export_copies_every_resource_and_license_notice(tmp_path):
     assert (out / manifest["audio"]["battle_theme"]).is_file()
     assert (out / "playable_assets" / "CREDITS.md").is_file()  # credits / licence notices travel
     assert (out / "run_game.py").is_file()
-    assert load_project(out / "project.asteria.json").to_data()["version"] == 10
+    assert load_project(out / "project.asteria.json").to_data()["version"] == 11
 
 
 def test_export_refuses_missing_resources_unless_allowed(tmp_path):

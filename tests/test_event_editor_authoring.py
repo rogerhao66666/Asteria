@@ -49,7 +49,7 @@ def test_project_v4_persists_event_programs_scene_bindings_and_rpg_database():
     )
 
     data = json.loads(json.dumps(project.to_data()))
-    assert data["version"] == 10
+    assert data["version"] == 11
     registry = ComponentRegistry()
     registry.register(Transform)
     restored = Project.from_data(data, registry)
@@ -66,6 +66,7 @@ def test_project_v2_remains_loadable_with_empty_event_data():
     data.pop("game_start", None)
     data.pop("input_map", None)
     data.pop("prefabs", None)
+    data.pop("common_events", None)
     data.pop("battle_presentation_library", None)
     data.pop("event_programs")
     data.pop("scene_event_bindings")

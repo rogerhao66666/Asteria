@@ -91,6 +91,8 @@ def test_v2_active_event_snapshot_remains_backward_compatible():
     data = runner.snapshot()
     data["version"] = 2
     data.pop("dialogue_state")
+    data.pop("sequences")
+    data.pop("background_tweens")
 
     restored = EventRunner(registry)
     restored.restore(data)

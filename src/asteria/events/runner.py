@@ -31,8 +31,10 @@ class ActiveEvent:
 class EventRunner:
     """Runtime orchestration layer for a single foreground event.
 
-    Phase 5 Batch 39 intentionally supports one active event at a time.
-    Parallel/common/autorun scheduling belongs to a later batch.
+    One foreground program at a time (plus its CALL stack). Its ``SEQUENCE``
+    instructions run parallel tracks (``events.sequencer``); autorun, parallel
+    and common events each get their own runner (``EventScheduler``).
+    ``sequence_host`` (the game session) moves, turns and animates entities.
     """
 
     def __init__(
@@ -51,16 +53,77 @@ class EventRunner:
         self.active: ActiveEvent | None = None
         self.dialogue = DialogueRuntimeState()
         self.call_stack: list[EventCallFrame] = []
+        self.sequence_host = None
+        self.sequences: list = []  # (program_id, EventSequence); foreground (blocking) ones hold the program
+        self.background_tweens: list = []
+
+    @property
+    def local_scope(self):
+        return self.active.local_scope_id if self.active is not None else ""
+
+    @property
+    def sequence_active(self):
+        return any(not s.done for _, s in self.sequences)
+
+    @property
+    def cutscene(self):
+        """True while a cutscene sequence runs (hosts lock player input)."""
+        return any(s.cutscene and not s.done for _, s in self.sequences)
+
+    @property
+    def can_skip(self):
+        return any(s.skippable and not s.done for _, s in self.sequences)
+
+    def skip_sequences(self):
+        """Fast-forward skippable sequences to their end state; returns how many were skipped."""
+        skipped = 0
+        for _, sequence in self.sequences:
+            if sequence.skippable and not sequence.done:
+                sequence.skip()
+                skipped += 1
+        self.background_tweens = [t for t in self.background_tweens if not self._finish_tween(t)]
+        return skipped
+
+    def _finish_tween(self, tween):
+        tween.elapsed = tween.duration
+        if self.sequence_host is not None:
+            self.sequence_host.set_position(tween.entity_id, *tween.end)
+        return True
+
+    def _advance_sequences(self, dt):
+        """Run parallel tracks; returns True while a blocking sequence still holds the program."""
+        remaining = []
+        for tween in self.background_tweens:
+            tween.elapsed = min(tween.duration, tween.elapsed + dt)
+            k = 1.0 if tween.duration <= 0 else tween.elapsed / tween.duration
+            x = tween.start[0] + (tween.end[0] - tween.start[0]) * k
+            y = tween.start[1] + (tween.end[1] - tween.start[1]) * k
+            self.sequence_host.set_position(tween.entity_id, x, y)
+            if tween.elapsed < tween.duration:
+                remaining.append(tween)
+        self.background_tweens = remaining
+        holding = False
+        for _, sequence in self.sequences:
+            if not sequence.done:
+                sequence.update(dt)
+            if sequence.blocking and not sequence.done:
+                holding = True
+        self.sequences = [(pid, s) for pid, s in self.sequences if not s.done]
+        return holding
 
     @property
     def busy(self) -> bool:
-        return self.dialogue.blocked or (
-            self.vm is not None
-            and self.vm.state.status
-            not in {
-                EventVMStatus.COMPLETED,
-                EventVMStatus.STOPPED,
-            }
+        return (
+            self.dialogue.blocked
+            or self.sequence_active
+            or (
+                self.vm is not None
+                and self.vm.state.status
+                not in {
+                    EventVMStatus.COMPLETED,
+                    EventVMStatus.STOPPED,
+                }
+            )
         )
 
     @property
@@ -84,6 +147,9 @@ class EventRunner:
         scope = str(local_scope_id or source_entity_id)
         self.dialogue.clear()
         self.call_stack.clear()
+        for _, sequence in self.sequences:
+            sequence.cancel()
+        self.sequences = []
         self.vm = EventVM(
             program,
             context=self.context,
@@ -111,7 +177,12 @@ class EventRunner:
         Dialogue and choice are true blocking commands: instructions after them
         are not consumed until the presentation layer responds.
         """
-        if self.vm is None or self.dialogue.blocked:
+        if self.vm is None:
+            return ()
+        if self.sequences or self.background_tweens:
+            if self._advance_sequences(dt) or self.dialogue.blocked:
+                return ()
+        if self.dialogue.blocked:
             return ()
 
         if self.vm.waiting:
@@ -154,6 +225,18 @@ class EventRunner:
 
             if instruction.opcode == "WORLD":
                 self._dispatch_world_command(instruction)
+                continue
+
+            if instruction.opcode == "SEQUENCE":
+                from .sequencer import EventSequence
+
+                sequence = EventSequence.start(instruction, self, result.pc_before)
+                self.sequences.append((self.active.program_id, sequence))
+                sequence.update(0.0)  # every track starts in this frame
+                if sequence.blocking and not sequence.done:
+                    break
+                if sequence.done:
+                    self.sequences.remove((self.active.program_id, sequence))
                 continue
 
             if instruction.opcode not in intrinsic:
@@ -310,7 +393,7 @@ class EventRunner:
         return selected
 
     def clear_completed(self) -> bool:
-        if self.vm is None:
+        if self.vm is None or self.sequence_active:
             return False
         if self.vm.state.status not in {
             EventVMStatus.COMPLETED,
@@ -326,6 +409,10 @@ class EventRunner:
     def stop(self) -> None:
         if self.vm is not None:
             self.vm.stop()
+        for _, sequence in self.sequences:
+            sequence.cancel()
+        self.sequences = []
+        self.background_tweens = []
         self.dialogue.clear()
 
     def snapshot(self):
@@ -333,13 +420,15 @@ class EventRunner:
             return None
         return {
             "schema": "asteria.active_event",
-            "version": 3,
+            "version": 4,
             "program_id": self.active.program_id,
             "source_entity_id": self.active.source_entity_id,
             "local_scope_id": self.active.local_scope_id,
             "vm_state": self.vm.state.to_data(),
             "call_stack": [frame.to_data() for frame in self.call_stack],
             "dialogue_state": self.dialogue.to_data(),
+            "sequences": [{"program_id": pid, **s.to_data()} for pid, s in self.sequences],
+            "background_tweens": [x.to_data() for x in self.background_tweens],
         }
 
     def restore(self, data):
@@ -350,7 +439,7 @@ class EventRunner:
             self.call_stack.clear()
             return
         version = data.get("version")
-        if data.get("schema") != "asteria.active_event" or version not in {1, 2, 3}:
+        if data.get("schema") != "asteria.active_event" or version not in {1, 2, 3, 4}:
             raise ValueError("unsupported active event")
 
         expected = {
@@ -361,10 +450,12 @@ class EventRunner:
             "local_scope_id",
             "vm_state",
         }
-        if version in {2, 3}:
+        if version in {2, 3, 4}:
             expected.add("call_stack")
-        if version == 3:
+        if version in {3, 4}:
             expected.add("dialogue_state")
+        if version == 4:
+            expected |= {"sequences", "background_tweens"}
         if set(data) != expected:
             raise ValueError("invalid active event")
 
@@ -381,7 +472,16 @@ class EventRunner:
             source_entity_id=str(data["source_entity_id"]),
             local_scope_id=str(data["local_scope_id"]),
         )
-        self.call_stack = [EventCallFrame.from_data(item) for item in data["call_stack"]] if version in {2, 3} else []
+        self.call_stack = [EventCallFrame.from_data(item) for item in data["call_stack"]] if version >= 2 else []
         self.dialogue = (
-            DialogueRuntimeState.from_data(data["dialogue_state"]) if version == 3 else DialogueRuntimeState()
+            DialogueRuntimeState.from_data(data["dialogue_state"]) if version >= 3 else DialogueRuntimeState()
         )
+        self.sequences = []
+        self.background_tweens = []
+        if version >= 4:
+            from .sequencer import EventSequence, _Tween
+
+            for saved in data["sequences"]:
+                program = self.registry.require(saved["program_id"])
+                self.sequences.append((saved["program_id"], EventSequence.from_data(saved, program, self)))
+            self.background_tweens = [_Tween.from_data(x) for x in data["background_tweens"]]

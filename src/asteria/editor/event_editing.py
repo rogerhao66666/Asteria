@@ -166,6 +166,20 @@ def describe_instruction(instruction):
         return f"Wait  {a.get('seconds', 0)}s"
     if op == "END":
         return "End"
+    if op == "SEQUENCE":
+        flags = [f for f in ("cutscene", "skippable") if a.get(f)]
+        names = ", ".join(str(x.get("name", "")) for x in a.get("tracks", []))
+        return f"Sequence  {len(a.get('tracks', []))} parallel tracks ({names})" + (
+            f"  [{', '.join(flags)}]" if flags else ""
+        )
+    if op == "MOVE":
+        return f"Move  {a.get('entity', '')} → ({a.get('x', 0)}, {a.get('y', 0)})" + (
+            " relative" if a.get("relative") else ""
+        )
+    if op == "FACE":
+        return f"Face  {a.get('entity', '')} {a.get('facing', '')}"
+    if op == "ANIMATE":
+        return f"Animate  {a.get('entity', '')} {a.get('clip', '')}"
     return op.replace("_", " ").title()
 
 

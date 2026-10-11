@@ -201,6 +201,11 @@ class AsteriaEditorWindow(QMainWindow):
         self.events_workspace = QTabWidget(self)
         self.events_workspace.addTab(self.event_editor, "Event Program")
         self.events_workspace.addTab(self.game_flow_overview, "Field / Game Flow")
+        from .event_flow_widget import EventFlowWidget
+
+        self.event_flow_editor = EventFlowWidget(self.document, self)
+        self.event_flow_editor.changed.connect(self.refresh_all)
+        self.events_workspace.addTab(self.event_flow_editor, "Common && Battle Events")
 
         self.workspace = EditorWorkspace(
             {
@@ -247,6 +252,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.event_editor.addCommandRequested.connect(self._event_add_command)
         self.event_editor.removeCommandRequested.connect(self._event_remove_command)
         self.event_editor.moveCommandRequested.connect(self._event_move_command)
+        self.event_editor.editCommandRequested.connect(self._event_edit_command)
         self.code_workspace.saved.connect(self._code_script_saved)
         self.code_workspace.runRequested.connect(self._run_authoring_script)
 
@@ -960,7 +966,35 @@ class AsteriaEditorWindow(QMainWindow):
         self.document.execute(ReplaceEventBindingCommand(bindings, replacement, binding))
         self.refresh_all()
 
+    def _sequence_dialog(self, args=None):
+        """Modal sequence editor; returns SEQUENCE args or None (tests replace this)."""
+        from .event_flow_widget import SequenceEditorDialog
+
+        dialog = SequenceEditorDialog(args, self)
+        return dialog.result_args() if dialog.exec() == SequenceEditorDialog.Accepted else None
+
+    def _event_edit_command(self, index):
+        """Double-click on a SEQUENCE step opens the track editor; the edit is one undo step."""
+        from .event_flow_authoring import EventFlowAuthoring
+
+        project = self.document.project
+        _, binding = self._current_event_binding()
+        if project is None or binding is None:
+            return False
+        program = project.event_programs.require(binding.program_id)
+        if not 0 <= index < len(program.instructions) or program.instructions[index].opcode != "SEQUENCE":
+            return False
+        args = self._sequence_dialog(program.instructions[index].args)
+        if args is None:
+            return False
+        EventFlowAuthoring(self.document).replace_sequence(binding.program_id, index, **_sequence_kwargs(args))
+        self.refresh_all()
+        return True
+
     def _event_make_instruction(self, kind):
+        if kind == "sequence":
+            args = self._sequence_dialog()
+            return None if args is None else EventInstruction("SEQUENCE", args)
         if kind == "dialogue":
             text, ok = QInputDialog.getText(self, "Dialogue", "Text:")
             if not ok:
@@ -1139,6 +1173,7 @@ class AsteriaEditorWindow(QMainWindow):
             "animation_editor",
             "action_timeline_editor",
             "vfx_editor",
+            "event_flow_editor",
         ):
             editor = getattr(self, name, None)
             if editor is not None:
@@ -1823,3 +1858,12 @@ def launch_editor(project=None):
     window = AsteriaEditorWindow(project)
     window.show()
     return app.exec()
+
+
+def _sequence_kwargs(args):
+    return {
+        "tracks": args["tracks"],
+        "cutscene": args.get("cutscene", False),
+        "skippable": args.get("skippable", False),
+        "wait": args.get("wait", "all"),
+    }

@@ -118,7 +118,7 @@ def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
         "Action Timeline",
         "VFX",
     ]
-    assert window.events_workspace.count() == 2
+    assert window.events_workspace.count() == 3
     window.close()
     app.processEvents()
 
