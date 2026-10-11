@@ -299,6 +299,14 @@ class AsteriaEditorWindow(QMainWindow):
         debugger_dock.setWidget(self.debugger_widget)
         self.addDockWidget(Qt.BottomDockWidgetArea, debugger_dock)
         self.tabifyDockWidget(console, debugger_dock)
+        from .profiler_widget import ProfilerWidget
+
+        self.profiler_widget = ProfilerWidget(lambda: self.debugger_widget.client, self)
+        profiler_dock = QDockWidget("Profiler", self)
+        profiler_dock.setObjectName("ProfilerDock")
+        profiler_dock.setWidget(self.profiler_widget)
+        self.addDockWidget(Qt.BottomDockWidgetArea, profiler_dock)
+        self.tabifyDockWidget(debugger_dock, profiler_dock)
         from .problems_widget import ProblemsWidget
 
         self.problems_widget = ProblemsWidget(self.document, self)

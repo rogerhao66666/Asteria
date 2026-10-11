@@ -126,6 +126,34 @@ class RuntimeDebugger:
     def cmd_snapshot(self):
         return self.snapshot()
 
+    # -- profiling (EDT-19) ----------------------------------------------------------------------
+    def _profiler(self, start=False):
+        from asteria.runtime.profiler import RuntimeProfiler
+
+        host = self.host
+        if host is None:
+            raise DebuggerError("profiling needs the playable runtime")
+        if not isinstance(host.profiler, RuntimeProfiler):
+            if not start:
+                raise DebuggerError("profiler not running")
+            host.enable_profiling(RuntimeProfiler(target_fps=60.0, track_python_heap=False))
+        return host.profiler
+
+    def cmd_profile_start(self):
+        self._profiler(start=True)
+        return True
+
+    def cmd_profile(self):
+        """The live runtime profile (frame, pacing, sections, counters, memory, unsupported metrics)."""
+        return self._profiler(start=True).report()
+
+    def cmd_profile_reset(self):
+        from asteria.runtime.profiler import RuntimeProfiler
+
+        old = self._profiler(start=True)
+        self.host.enable_profiling(RuntimeProfiler(target_fps=old.target_fps, track_python_heap=False))
+        return True
+
     def cmd_give_item(self, item_id, quantity=1):
         if item_id not in self.game.project.rpg_database.items:
             raise DebuggerError(f"unknown item {item_id}")
