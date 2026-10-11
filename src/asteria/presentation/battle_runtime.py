@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from enum import Enum
 from math import isfinite
@@ -280,6 +281,9 @@ class BattlePresentationRuntime:
         self._sprite_sheets = {}
         self._aura_sprite_sheets = {}
         self._overlays: dict[str, CombatantOverlay] = {}
+        # member id -> CharacterComposition (attachments / layers drawn with the body; CMP-01/02/04)
+        self.compositions = {}
+        self._part_sheets = {}
         self._member_order = tuple(x.member_id for x in scene.combatants)
         for visual in scene.combatants:
             clip_set = resolve_clip_set(visual.clip_set_id)
@@ -476,6 +480,13 @@ class BattlePresentationRuntime:
                     flip_x=visual.anchor.facing.lower() == "left",
                 )
             )
+            composition = self.compositions.get(visual.member_id)
+            if composition is not None:
+                draws.extend(
+                    self._composition_draws(
+                        composition, state, visual, frame, (draw_x, draw_y), camera, max(0.0, min(1.0, mix))
+                    )
+                )
             overlay = self._overlays.get(visual.member_id)
             if overlay is not None and _role_name(state.role) == overlay.role:
                 source = overlay.frames[state.animator.frame_cursor % len(overlay.frames)]
@@ -498,6 +509,51 @@ class BattlePresentationRuntime:
                 )
         draws.sort(key=lambda d: (d.layer, d.depth, d.screen_y, d.screen_x))
         return BattlePresentationFrame(self.scene.scene_id, self.scene.background_asset_id, tuple(draws))
+
+    def _part_sheet(self, asset_id):
+        if asset_id not in self._part_sheets:
+            self._part_sheets[asset_id] = self._resolve_sprite_sheet(asset_id)
+        return self._part_sheets[asset_id]
+
+    def _composition_draws(self, composition, state, visual, body, body_origin, camera, opacity):
+        """Attachment / layer draws for a body frame; depth nudges keep back parts behind and front parts on top."""
+        ratio = visual.source_pixels_per_logical_pixel
+        mirrored = visual.anchor.facing.lower() == "left"
+        out = []
+        for order, part in enumerate(composition.parts(_role_name(state.role), state.frame_index)):
+            sheet = self._part_sheet(part.asset_id)
+            if sheet is None or not sheet.frames:
+                continue
+            frame = sheet.frames[part.frame_index % len(sheet.frames)]
+            width, height = frame.width * part.scale_x, frame.height * part.scale_y
+            a = math.radians(part.rotation_deg)
+            # centre of the (rotated) part in body source pixels, from the pivot or from the frame's left edge
+            cx = part.x + width / 2 * math.cos(a) - height / 2 * math.sin(a)
+            cy = part.y + width / 2 * math.sin(a) + height / 2 * math.cos(a)
+            if part.kind == "layer":
+                cx = body.width - cx if mirrored else cx
+                wx, wy = body_origin[0] + cx / ratio, body_origin[1] + cy / ratio
+            else:
+                cx = -cx if mirrored else cx
+                wx, wy = visual.anchor.x + cx / ratio, visual.anchor.y + cy / ratio
+            sx, sy = camera.world_to_screen(wx - width / ratio / 2, wy - height / ratio / 2)
+            nudge = (1e-4 if part.z >= 0 else -1e-4) + order * 1e-6
+            out.append(
+                TextureDraw(
+                    sheet.texture.asset_id,
+                    (frame.x, frame.y, frame.width, frame.height),
+                    sx,
+                    sy,
+                    width / ratio * camera.zoom,
+                    height / ratio * camera.zoom,
+                    layer=0,
+                    depth=visual.anchor.depth + nudge,
+                    opacity=opacity * part.opacity,
+                    flip_x=mirrored,
+                    rotation_deg=-part.rotation_deg if mirrored else part.rotation_deg,
+                )
+            )
+        return out
 
     def snapshot(self):
         return {

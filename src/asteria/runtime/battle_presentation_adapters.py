@@ -25,6 +25,7 @@ from asteria.presentation import (
     BattleUiRenderer,
 )
 from asteria.presentation.battle_action_menu import BattleActionEntry
+from asteria.presentation.character_composition import CharacterComposition
 from asteria.rpg import BattleOutcome
 from asteria.runtime.battle_visuals import (
     BattleVisualError,
@@ -131,7 +132,9 @@ class PygameTextureDrawer:
     def surface(self, asset_id):
         return self.host.load_image(self.resolver.source_uri(asset_id))
 
-    def blit_region(self, asset_id, source, x, y, width, height, *, flip_x=False, opacity=1.0, blend="normal"):
+    def blit_region(
+        self, asset_id, source, x, y, width, height, *, flip_x=False, opacity=1.0, blend="normal", rotation_deg=0.0
+    ):
         pg = self.host.pg
         image = self.surface(asset_id).subsurface(pg.Rect(*source))
         size = (max(1, round(width * self.scale)), max(1, round(height * self.scale)))
@@ -139,6 +142,12 @@ class PygameTextureDrawer:
             image = pg.transform.scale(image, size)
         if flip_x:
             image = pg.transform.flip(image, True, False)
+        position = (round(x * self.scale), round(y * self.scale))
+        if rotation_deg:
+            # pygame rotates counter-clockwise and grows the surface: keep the quad centre fixed
+            centre = (x * self.scale + size[0] / 2, y * self.scale + size[1] / 2)
+            image = pg.transform.rotate(image, -rotation_deg)
+            position = (round(centre[0] - image.get_width() / 2), round(centre[1] - image.get_height() / 2))
         if opacity < 1.0 and blend == "add":
             # additive blits ignore surface alpha: fade by darkening the colour instead
             level = max(0, min(255, int(opacity * 255)))
@@ -148,7 +157,7 @@ class PygameTextureDrawer:
             image = image.copy()
             image.set_alpha(max(0, min(255, int(opacity * 255))))
         flags = pg.BLEND_RGB_ADD if blend == "add" else 0
-        self.host.screen.blit(image, (round(x * self.scale), round(y * self.scale)), special_flags=flags)
+        self.host.screen.blit(image, position, special_flags=flags)
         self.draw_count += 1
 
     def render(self, draws):
@@ -162,6 +171,7 @@ class PygameTextureDrawer:
                 draw.height,
                 flip_x=draw.flip_x,
                 opacity=draw.opacity,
+                rotation_deg=draw.rotation_deg,
             )
 
 
@@ -197,6 +207,7 @@ class CanonicalBattleAdapter:
         self.textures = None
         self.visuals_enabled = False
         self.fallback_reason = ""
+        self.composition_errors = []
         self._cursor = 0.0
         self._clock = 0.0
         self._last_impact = 0.0
@@ -255,6 +266,7 @@ class CanonicalBattleAdapter:
             **kwargs,
         )
         self.screen.display_names = self._display_names(game)
+        self.screen.animation.compositions = self._compositions(combatants)
         self.screen.member_heights = {
             v.member_id: self.resolver.sprite_sheet(v.sprite_sheet_asset_id).frames[0].height
             / v.source_pixels_per_logical_pixel
@@ -636,6 +648,19 @@ class CanonicalBattleAdapter:
         result = self.screen.render(base, ui_renderer=self.renderer, texture_renderer=textures)
         self.audio_cues.extend(result.audio_cues)
         return result
+
+    def _compositions(self, combatants):
+        """Attachments and layers authored on each body sheet (Character Composition tab)."""
+        out = {}
+        for visual in combatants:
+            try:
+                composition = CharacterComposition.from_meta(self.resolver.sheet_meta(visual.sprite_sheet_asset_id))
+            except (KeyError, TypeError, ValueError) as exc:
+                self.composition_errors.append(f"{visual.sprite_sheet_asset_id}: {exc}")
+                continue
+            if composition is not None:
+                out[visual.member_id] = composition
+        return out
 
     def _draw_vfx(self, effect):
         """Play a VFX sprite sheet cue centred on its member (camera shake applied)."""

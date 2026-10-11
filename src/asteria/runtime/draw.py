@@ -16,6 +16,7 @@ class TextureDraw:
     depth: float = 0.0
     opacity: float = 1.0
     flip_x: bool = False
+    rotation_deg: float = 0.0  # clockwise on screen, about the quad centre
 
 
 def sprite_draw(

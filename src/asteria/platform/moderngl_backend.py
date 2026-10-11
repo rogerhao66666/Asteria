@@ -16,6 +16,7 @@ batching — reordering across a texture boundary could change how translucent
 sprites blend.
 """
 
+import math
 from array import array
 
 from asteria.assets import TextureResource
@@ -191,6 +192,7 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
             draw_command.height,
             draw_command.opacity,
             draw_command.flip_x,
+            rotation_deg=getattr(draw_command, "rotation_deg", 0.0),
         )
 
     # ---- shared quad batching ----
@@ -228,6 +230,7 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         opacity,
         flip_x,
         color=(1.0, 1.0, 1.0),
+        rotation_deg=0.0,
     ):
         if texture is not self._batch_texture:
             self._flush_batch()
@@ -243,43 +246,16 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         x1, y1 = x0 + float(width), y0 + float(height)
         r, g, b = color
         a = max(0.0, min(1.0, float(opacity)))
+        corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+        if rotation_deg:
+            angle = math.radians(float(rotation_deg))
+            ca, sa = math.cos(angle), math.sin(angle)
+            cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+            corners = [(cx + (x - cx) * ca - (y - cy) * sa, cy + (x - cx) * sa + (y - cy) * ca) for x, y in corners]
+        uvs = ((u0, v0), (u1, v0), (u1, v1), (u0, v1))
         base = len(self._batch_vertices) // _FLOATS_PER_VERTEX
-        self._batch_vertices.extend(
-            (
-                x0,
-                y0,
-                u0,
-                v0,
-                r,
-                g,
-                b,
-                a,
-                x1,
-                y0,
-                u1,
-                v0,
-                r,
-                g,
-                b,
-                a,
-                x1,
-                y1,
-                u1,
-                v1,
-                r,
-                g,
-                b,
-                a,
-                x0,
-                y1,
-                u0,
-                v1,
-                r,
-                g,
-                b,
-                a,
-            )
-        )
+        for (x, y), (u, v) in zip(corners, uvs, strict=True):
+            self._batch_vertices.extend((x, y, u, v, r, g, b, a))
         self._batch_indices.extend((base, base + 1, base + 2, base, base + 2, base + 3))
 
     def _flush_batch(self):
