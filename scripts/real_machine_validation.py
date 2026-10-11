@@ -1667,6 +1667,80 @@ def check_editor_workflows(out):
     )
 
 
+def check_battle_without_art(out):
+    """D19 / CB15 A9: a project without battle art fights on the canonical screen (pygame and ModernGL)."""
+    import pygame
+
+    from asteria.runtime.profiler import RuntimeProfiler
+
+    results = []
+    autosave = PROJECT / "saves" / "playtest_autosave.asteria-save.json"
+    backup = autosave.read_bytes() if autosave.exists() else None
+    try:
+        for backend in ("pygame", "moderngl"):
+            runtime = _runtime(backend=backend)
+            library = runtime.game.project.battle_presentation_library  # in memory only
+            for category in ("combatant_visuals", "motion_sequences"):
+                for profile_id in list(library.ids(category)):
+                    library.remove(category, profile_id)
+            runtime.open()
+            driver = pygame.display.get_driver()
+            profiler = runtime.enable_profiling(RuntimeProfiler(target_fps=60))
+            runtime._ui_mode = "field"
+            runtime.game.start_encounter("boss_room")
+            adapter = runtime._battle_presentation
+            adapter.begin()
+            runtime._advance_to_hero_turn()
+            frames, vfx, shots = 0, 0, []
+            start = time.perf_counter()
+            profiler.begin_frame()
+            while time.perf_counter() - start < 90 and not (runtime._victory or runtime._defeat):
+                dt = min(runtime.clock.tick(60) / 1000.0, 0.05)
+                events = pygame.event.get()
+                if not adapter.busy() and runtime.game.mode == "battle" and frames % 10 == 0:
+                    _key(pygame.K_1)
+                runtime._frame(events, dt)
+                runtime.present()
+                profiler.end_frame()
+                profiler.begin_frame()
+                frames += 1
+                vfx = max(vfx, adapter.particle_count())
+                if frames == 90:
+                    name = f"no_art_{backend}_battle.png"
+                    pygame.image.save(runtime.capture(), str(out / name))
+                    shots.append(name)
+            generated = all(v.sprite_sheet_asset_id.startswith("generated.") for v in adapter.screen.scene.combatants)
+            victory = runtime._victory
+            _pump(runtime, 3.0)
+            _key(pygame.K_RETURN)
+            _pump(runtime, 0.4)
+            back_to_field = runtime.game.mode == "field" and not runtime._victory
+            _key(pygame.K_F5)
+            _pump(runtime, 0.3)
+            saved = autosave.exists()
+            report = profiler.report()
+            runtime.close()
+            pacing = report["pacing"]
+            ok = generated and victory and back_to_field and saved and vfx > 0 and pacing["measured_fps"] >= 55
+            results.append(
+                result(
+                    f"battle_without_art_{backend}",
+                    "PASS" if ok else "FAIL",
+                    f"{backend} ({driver}): no combatant visuals / motion sequences; generated combatants={generated}, "
+                    f"manifest fx played as VFX (peak {vfx}), victory={victory} after {frames} frames by real key "
+                    f"events, back to the field={back_to_field}, F5 save={saved}; {pacing['measured_fps']} fps, "
+                    f"p99 {pacing['interval_p99_ms']} ms",
+                    screenshots=shots,
+                )
+            )
+    finally:
+        if backup is None:
+            autosave.unlink(missing_ok=True)
+        else:
+            autosave.write_bytes(backup)
+    return results
+
+
 CHECKS = {
     "gpu_window": check_gpu_window,
     "input": check_input,
@@ -1689,6 +1763,7 @@ CHECKS = {
     "gameplay": check_gameplay_systems,
     "menus_more": check_game_menus_more,
     "editor_workflows": check_editor_workflows,
+    "battle_no_art": check_battle_without_art,
 }
 
 

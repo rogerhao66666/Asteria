@@ -2,7 +2,7 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-11 17:34:06 +0800"
+    "time": "2026-10-11 19:33:10 +0800"
   },
   "results": [
     {
@@ -366,6 +366,22 @@
         "workflow_play_from_selection.png"
       ],
       "note": "Hands-on use by a person (mouse drags, typing) is manual item M7."
+    },
+    {
+      "check": "battle_without_art_pygame",
+      "status": "PASS",
+      "evidence": "pygame (cocoa): no combatant visuals / motion sequences; generated combatants=True, manifest fx played as VFX (peak 4), victory=True after 232 frames by real key events, back to the field=True, F5 save=True; 55.189 fps, p99 25.661 ms",
+      "screenshots": [
+        "no_art_pygame_battle.png"
+      ]
+    },
+    {
+      "check": "battle_without_art_moderngl",
+      "status": "PASS",
+      "evidence": "moderngl (cocoa): no combatant visuals / motion sequences; generated combatants=True, manifest fx played as VFX (peak 4), victory=True after 232 frames by real key events, back to the field=True, F5 save=True; 56.847 fps, p99 25.7537 ms",
+      "screenshots": [
+        "no_art_moderngl_battle.png"
+      ]
     }
   ]
 }
