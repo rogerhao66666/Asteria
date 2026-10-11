@@ -2,7 +2,7 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-11 23:11:50 +0800"
+    "time": "2026-10-11 23:18:39 +0800"
   },
   "results": [
     {
@@ -402,9 +402,22 @@
       ]
     },
     {
+      "check": "m10_compare",
+      "status": "PASS",
+      "evidence": "Same field frame on both backends in real cocoa windows. Without environment effects: mean |diff| 0.0, 0.0% pixels differ by >24. With lighting, shadow, water, bloom, grading, vignette: mean |diff| 12.56, 10.13% pixels differ; luma mean/std ModernGL (51.2, 46.0) vs pygame (59.6, 40.4); pygame reports unsupported ['bloom', 'grade', 'shadows', 'vignette'], ModernGL none. 30 s soak with rain (800 particles): moderngl 1792 frames 59.693 fps p99 23.2027 ms max 37.4966 ms errors 0 RSS +4.4 MB (+3.1 MB after the first 10 s); pygame 1768 frames 58.882 fps p99 18.0311 ms max 29.5587 ms errors 0 RSS -7.4 MB (-7.8 MB after the first 10 s)",
+      "screenshots": [
+        "m10_moderngl_pygame_diff.png",
+        "m10_moderngl_plain.png",
+        "m10_moderngl_effects.png",
+        "m10_pygame_plain.png",
+        "m10_pygame_effects.png"
+      ],
+      "note": "Numbers only. Whether the GPU effects look right (and whether the fallback is acceptable) is M10's visual confirmation, still NOT EXECUTED."
+    },
+    {
       "check": "replay_RPG-02",
       "status": "PASS",
-      "evidence": "RPG-02: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_equipment_set_bonuses_apply_by_piece_count_and_survive_save_load: passed, 4 frames",
+      "evidence": "RPG-02: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_equipment_set_bonuses_apply_by_piece_count_and_survive_save_load: passed, 5 frames",
       "screenshots": [
         "replay/test_equipment_set_bonuses_apply_by_piece_count_and_survive_save_load.png"
       ]
@@ -420,7 +433,7 @@
     {
       "check": "replay_RPG-05",
       "status": "PASS",
-      "evidence": "RPG-05: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_shop_buys_sells_and_tracks_limited_stock: passed, 3 frames; test_runtime_opens_shop_from_an_event_and_buys: passed, 2 frames",
+      "evidence": "RPG-05: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_shop_buys_sells_and_tracks_limited_stock: passed, 3 frames; test_runtime_opens_shop_from_an_event_and_buys: passed, 7 frames",
       "screenshots": [
         "replay/test_shop_buys_sells_and_tracks_limited_stock.png",
         "replay/test_runtime_opens_shop_from_an_event_and_buys.png"
@@ -429,7 +442,7 @@
     {
       "check": "replay_RPG-06",
       "status": "PASS",
-      "evidence": "RPG-06: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_crafting_screen_opened_by_event_crafts_in_the_runtime: passed, 4 frames; test_recipe_discovery_by_event_and_by_experiment: passed, 5 frames",
+      "evidence": "RPG-06: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_crafting_screen_opened_by_event_crafts_in_the_runtime: passed, 16 frames; test_recipe_discovery_by_event_and_by_experiment: passed, 7 frames",
       "screenshots": [
         "replay/test_crafting_screen_opened_by_event_crafts_in_the_runtime.png",
         "replay/test_recipe_discovery_by_event_and_by_experiment.png"
@@ -438,7 +451,7 @@
     {
       "check": "replay_RPG-07",
       "status": "PASS",
-      "evidence": "RPG-07: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_refusals_cost_success_rewards_and_one_time_use: passed, 3 frames; test_party_capability_and_cost_are_checked: passed, 3 frames; test_stat_checks_are_deterministic_and_failures_run_their_branch: passed, 3 frames; test_an_event_runs_an_interaction_and_branches_on_its_outcome: passed, 1 frames",
+      "evidence": "RPG-07: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_refusals_cost_success_rewards_and_one_time_use: passed, 4 frames; test_party_capability_and_cost_are_checked: passed, 3 frames; test_stat_checks_are_deterministic_and_failures_run_their_branch: passed, 3 frames; test_an_event_runs_an_interaction_and_branches_on_its_outcome: passed, 2 frames",
       "screenshots": [
         "replay/test_refusals_cost_success_rewards_and_one_time_use.png",
         "replay/test_party_capability_and_cost_are_checked.png",
@@ -455,9 +468,18 @@
       ]
     },
     {
+      "check": "replay_CMP-01",
+      "status": "PASS",
+      "evidence": "CMP-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_the_playable_field_draws_the_players_layers_and_attachments: passed, 1 frames; test_battle_draws_layers_behind_and_attachments_in_front_of_the_body: passed, 2 frames",
+      "screenshots": [
+        "replay/test_the_playable_field_draws_the_players_layers_and_attachments.png",
+        "replay/test_battle_draws_layers_behind_and_attachments_in_front_of_the_body.png"
+      ]
+    },
+    {
       "check": "replay_ANI-05",
       "status": "PASS",
-      "evidence": "ANI-05: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_controllers_actions_and_hits_run_in_the_game_session_field_update: passed, 4 frames; test_project_action_timelines_are_authored_as_records_and_played_from_events: passed, 3 frames",
+      "evidence": "ANI-05: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_controllers_actions_and_hits_run_in_the_game_session_field_update: passed, 22 frames; test_project_action_timelines_are_authored_as_records_and_played_from_events: passed, 3 frames",
       "screenshots": [
         "replay/test_controllers_actions_and_hits_run_in_the_game_session_field_update.png",
         "replay/test_project_action_timelines_are_authored_as_records_and_played_from_events.png"
@@ -466,7 +488,7 @@
     {
       "check": "replay_RPG-10",
       "status": "PASS",
-      "evidence": "RPG-10: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_spawned_enemy_chases_player_and_starts_battle_in_the_runtime: passed, 1 frames; test_spawn_zone_respawns_and_field_ai_pauses_outside_the_field: passed, 1 frames; test_touching_a_visible_encounter_starts_the_battle: passed, 2 frames",
+      "evidence": "RPG-10: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_spawned_enemy_chases_player_and_starts_battle_in_the_runtime: passed, 21 frames; test_spawn_zone_respawns_and_field_ai_pauses_outside_the_field: passed, 122 frames; test_touching_a_visible_encounter_starts_the_battle: passed, 2 frames",
       "screenshots": [
         "replay/test_spawned_enemy_chases_player_and_starts_battle_in_the_runtime.png",
         "replay/test_spawn_zone_respawns_and_field_ai_pauses_outside_the_field.png",
@@ -476,7 +498,7 @@
     {
       "check": "replay_WLD-01",
       "status": "PASS",
-      "evidence": "WLD-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_victory_advances_defeat_objectives_and_events_drive_quests: passed, 3 frames; test_quest_rows_and_menu_cursor: passed, 2 frames",
+      "evidence": "WLD-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_victory_advances_defeat_objectives_and_events_drive_quests: passed, 12 frames; test_quest_rows_and_menu_cursor: passed, 2 frames",
       "screenshots": [
         "replay/test_victory_advances_defeat_objectives_and_events_drive_quests.png",
         "replay/test_quest_rows_and_menu_cursor.png"
@@ -485,7 +507,7 @@
     {
       "check": "replay_WLD-02",
       "status": "PASS",
-      "evidence": "WLD-02: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_events_drive_reputation_counters_and_unlock_achievements: passed, 3 frames; test_achievement_and_bestiary_screens_from_the_pause_menu: passed, 2 frames",
+      "evidence": "WLD-02: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_events_drive_reputation_counters_and_unlock_achievements: passed, 3 frames; test_achievement_and_bestiary_screens_from_the_pause_menu: passed, 22 frames",
       "screenshots": [
         "replay/test_events_drive_reputation_counters_and_unlock_achievements.png",
         "replay/test_achievement_and_bestiary_screens_from_the_pause_menu.png"
@@ -494,7 +516,7 @@
     {
       "check": "replay_EVT-01",
       "status": "PASS",
-      "evidence": "EVT-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_authored_dialogue_choice_branch_and_encounter_run_in_order: passed, 4 frames; test_failed_world_command_stops_the_event_and_is_reported: passed, 3 frames; test_event_waiting_on_dialogue_survives_save_and_reload: passed, 4 frames; test_autorun_binding_runs_once_until_its_condition_turns_off: passed, 4 frames",
+      "evidence": "EVT-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_authored_dialogue_choice_branch_and_encounter_run_in_order: passed, 3 frames; test_failed_world_command_stops_the_event_and_is_reported: passed, 3 frames; test_event_waiting_on_dialogue_survives_save_and_reload: passed, 4 frames; test_autorun_binding_runs_once_until_its_condition_turns_off: passed, 4 frames",
       "screenshots": [
         "replay/test_authored_dialogue_choice_branch_and_encounter_run_in_order.png",
         "replay/test_failed_world_command_stops_the_event_and_is_reported.png",
@@ -515,7 +537,7 @@
     {
       "check": "replay_EVT-03",
       "status": "PASS",
-      "evidence": "EVT-03: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_common_events_autorun_and_parallel_follow_their_switches: passed, 2 frames; test_battle_event_fires_on_its_condition_once_and_holds_battle_input: passed, 3 frames",
+      "evidence": "EVT-03: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_common_events_autorun_and_parallel_follow_their_switches: passed, 9 frames; test_battle_event_fires_on_its_condition_once_and_holds_battle_input: passed, 4 frames",
       "screenshots": [
         "replay/test_common_events_autorun_and_parallel_follow_their_switches.png",
         "replay/test_battle_event_fires_on_its_condition_once_and_holds_battle_input.png"
@@ -524,20 +546,7 @@
     {
       "check": "b_items_replay_run",
       "status": "PASS",
-      "evidence": "pytest exit 0; 70 tests in 12 files, 119 frames presented in total; 70 passed in 12.19s"
-    },
-    {
-      "check": "m10_compare",
-      "status": "PASS",
-      "evidence": "Same field frame on both backends in real cocoa windows. Without environment effects: mean |diff| 0.0, 0.0% pixels differ by >24. With lighting, shadow, water, bloom, grading, vignette: mean |diff| 12.56, 10.13% pixels differ; luma mean/std ModernGL (51.2, 46.0) vs pygame (59.6, 40.4); pygame reports unsupported ['bloom', 'grade', 'shadows', 'vignette'], ModernGL none. 30 s soak with rain (800 particles): moderngl 1792 frames 59.693 fps p99 23.2027 ms max 37.4966 ms errors 0 RSS +4.4 MB (+3.1 MB after the first 10 s); pygame 1768 frames 58.882 fps p99 18.0311 ms max 29.5587 ms errors 0 RSS -7.4 MB (-7.8 MB after the first 10 s)",
-      "screenshots": [
-        "m10_moderngl_pygame_diff.png",
-        "m10_moderngl_plain.png",
-        "m10_moderngl_effects.png",
-        "m10_pygame_plain.png",
-        "m10_pygame_effects.png"
-      ],
-      "note": "Numbers only. Whether the GPU effects look right (and whether the fallback is acceptable) is M10's visual confirmation, still NOT EXECUTED."
+      "evidence": "pytest exit 0; 79 tests in 13 files, 459 frames presented in total; 79 passed in 18.41s"
     }
   ]
 }

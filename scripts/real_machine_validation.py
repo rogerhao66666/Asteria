@@ -2123,6 +2123,10 @@ REPLAY = {
         "world_interactions::test_an_event_runs_an_interaction_and_branches_on_its_outcome",
     ],
     "RPG-09": ["behavior_trees::test_a_tree_in_the_game_session_starts_its_encounter"],
+    "CMP-01": [
+        "character_composition::test_the_playable_field_draws_the_players_layers_and_attachments",
+        "character_composition::test_battle_draws_layers_behind_and_attachments_in_front_of_the_body",
+    ],
     "ANI-05": [
         "character_control::test_controllers_actions_and_hits_run_in_the_game_session_field_update",
         "character_control::test_project_action_timelines_are_authored_as_records_and_played_from_events",

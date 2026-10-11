@@ -94,8 +94,17 @@ from asteria.runtime.game_save import GameRuntimeSave  # noqa: E402
 def _boss_runtime(resource_root):
     project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
     save = GameRuntimeSave.load_json(ROOT / "saves" / "boss_stress.asteria-save.json", project)
+    import real_window
+
+    if real_window.enabled():  # real-window replay (tests/real_window.py): no dummy driver for this window
+        import os
+
+        os.environ.pop("SDL_VIDEODRIVER", None)
+        os.environ.pop("SDL_AUDIODRIVER", None)
     runtime = PlayableTestRuntime(project, save, resource_root, width=960, height=540)
     runtime.open()
+    if real_window.enabled():
+        real_window.set_stage(runtime)
     return runtime
 
 

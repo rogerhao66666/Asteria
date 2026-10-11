@@ -298,3 +298,35 @@ W-18 已修復並通過實機（見 DECISION_LOG D18）；D17 列出的 W-18 Fun
 | AST-07 | Core | — |
 | AST-08 | Core | 缺 RM |
 | AST-11 | Core | 缺 RM |
+
+## D19 — 剩餘項目（2026-10-11，依矩陣重算）
+
+D19 以實機證據把 23 項由 B 升為 A（見 DECISION_LOG D19）。剩下的 C／D 不變，全為 Eventual（EDT-17、EDT-18、TPL-01）。
+
+### Validation（B：功能完成，缺的證據）
+| 需求 | 優先級 | 缺少的證據 | 下一步 |
+|---|---|---|---|
+| ENG-13 | Core | canonical 戰鬥 UI 已在實機接線（D15）；parallax 缺 RM | 可自動化，下一批 |
+| ENG-14 | Core | 缺 RM | 需要人或裝置（M1） |
+| ENG-15 | Core | 鍵盤重綁已 RM（`controls_rebinding_real_window`）；gamepad 重綁 BLOCKED（無手把，M2／M8） | 需要人或裝置（M2、M8） |
+| ENG-18 | Core | 可聽確認與延遲 NOT EXECUTED（M3／M4）；沒有 spatial audio | 需要人或裝置（M3、M4） |
+| ENG-20 | Core | 缺 RM：舊版專案經遷移後在實機開啟並遊玩 | 可自動化，下一批 |
+| ANI-02 | Core | 編輯器已 RM（Cocoa `editor_d17_gui`）；狀態機驅動戰鬥動畫只有 HI | 可自動化，下一批 |
+| CAM-01 | Core | 缺人眼確認（M5） | 需要人或裝置（M5） |
+| CAM-02 | Core | 跟隨鏡頭、boss 開場鏡頭、事件 focus 已 RM；look-ahead 已 RM（D19 `engine_systems_real_window`）；target group 只有 UT／HI | 可自動化，下一批 |
+| VFX-01 | Core | 沒有粒子發射器資料（VFX 為序列圖）；缺人眼確認 | 需要人或裝置（M10） |
+| VFX-02 | Core | 光照、陰影、bloom、grading、vignette 已 RM；normal map 與 screen shader（內建／專案）只有 GL 測試；人工目視 M10 | 需要人或裝置（M10） |
+| VFX-03 | Core | afterimage、weather、water 已 RM；field trail 與 fog 只有 HI／GL 測試；人工目視 M10 | 需要人或裝置（M10） |
+| CMP-03 | Core | 沒有 runtime 消費者（戰鬥數字由 `battle_feedback` 自行繪製）；缺 RM | 可自動化，下一批 |
+| GP-02 | Core | 缺 RM | 可自動化，下一批 |
+| BTL-02 | Eventual | F-3 已修（CB-BR1：互動倍率進入實際傷害，Preview 一致）；DOT 不套用；缺 RM | 待你決定：DOT 是否套用屬性倍率 |
+| BTL-04 | Core | hit-stop 已接（D17）；可聽音訊、實體按鍵、手把未驗證（M1–M3） | 需要人或裝置（M1–M3） |
+| RPG-01 | Core | 沒有容量規則的實機驗證 | 可自動化，下一批 |
+| RPG-08 | Core | 戰鬥中捕捉並加入隊伍已 RM（`gameplay_systems_real_window`）；召喚、成長、收納只有 HI | 可自動化，下一批 |
+| EVT-04 | Core | movement／camera／VFX／letterbox／skip 已 RM；dialogue、music track 只有 HI | 可自動化，下一批 |
+| EDT-16 | Core | 缺 RM | 可自動化，下一批 |
+| AST-07 | Core | 部分類別已在實機使用（角色、tileset、VFX、立繪）；未逐類做實機驗證 | 可自動化，下一批 |
+| AST-08 | Core | 缺 RM | 可自動化，下一批 |
+| AST-11 | Core | 缺 RM | 可自動化，下一批 |
+
+共 22 項：8 項需要人或裝置，1 項待你決定，13 項可再自動化。

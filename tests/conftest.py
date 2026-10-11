@@ -112,7 +112,8 @@ def _real_window_test_name(request):
     if stage is not None:  # a window opened by test_session_events._session (the runtime fixture closes its own)
         real_window.save_screenshot(request.node.name)
         real_window.STATE["stage"] = None
-        stage.close()
+        if real_window._alive(stage):
+            stage.close()
 
 
 def pytest_runtest_logreport(report):

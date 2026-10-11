@@ -46,11 +46,21 @@ def set_stage(runtime):
         STATE["driver"] = None
 
 
+def _alive(stage):
+    """The stage window is still open (a test may close its own runtime before teardown)."""
+    try:
+        import pygame
+
+        return stage is not None and pygame.display.get_init() and getattr(stage, "screen", None) is not None
+    except Exception:
+        return False
+
+
 def present(force=False):
     import time
 
     stage = STATE["stage"]
-    if stage is None or not getattr(stage, "running", True):
+    if not _alive(stage) or not getattr(stage, "running", True):
         return
     now = time.perf_counter()
     if not force and now - STATE["last"] < FRAME:
@@ -75,34 +85,36 @@ def present(force=False):
 
 
 def _draw(stage):
-    """Draw the game as it is now, without advancing it (no input, no time, no event programs)."""
+    """Draw the game as it is now, without advancing it (no input, no time, no event programs) and without
+    loading images the game has not loaded itself (image scopes stay exactly as the test left them)."""
     game = stage.game
     adapter = stage._battle_presentation
-    if game.mode == "battle" and getattr(adapter, "visuals_enabled", False) and adapter.screen is not None:
-        adapter.draw()
+    in_battle = game.mode == "battle" or stage._victory or stage._defeat
+    if in_battle and getattr(adapter, "visuals_enabled", False) and adapter.screen is not None:
+        adapter.draw()  # its images are already loaded (battle scope)
         return
-    stage._draw_field(False)
-    if game.mode == "battle":  # the battle runs through the session API; show who is fighting and their HP
-        font = stage.pg.font.Font(None, 26)
-        lines = ["Battle (session API)"]
-        battle = game.battle
-        for side in ("heroes", "enemies"):
-            party = battle.parties.get(side) if battle is not None and hasattr(battle, "parties") else None
-            for member_id in party.ids() if party is not None else ():
-                member = battle.member(member_id)
-                lines.append(f"{side[:-1]} {member_id}: {getattr(member, 'hp', '?')}")
-        panel = stage.pg.Surface((420, 24 * len(lines) + 16), stage.pg.SRCALPHA)
-        panel.fill((10, 12, 20, 210))
-        stage.screen.blit(panel, (20, 20))
-        for i, line in enumerate(lines):
-            stage.screen.blit(font.render(line, True, (230, 232, 240)), (32, 28 + 24 * i))
+    if not in_battle:
+        stage._draw_field(False)
+        return
+    # a battle driven through the session API: show who is fighting and their HP
+    stage.screen.fill((14, 16, 24))
+    font = stage.pg.font.Font(None, 26)
+    lines = ["Battle (session API)"]
+    battle = game.battle
+    for side in ("heroes", "enemies"):
+        party = battle.parties.get(side) if battle is not None and hasattr(battle, "parties") else None
+        for member_id in party.ids() if party is not None else ():
+            member = battle.member(member_id)
+            lines.append(f"{side[:-1]} {member_id}: {getattr(member, 'hp', '?')}")
+    for i, line in enumerate(lines):
+        stage.screen.blit(font.render(line, True, (230, 232, 240)), (32, 28 + 24 * i))
 
 
 def save_screenshot(name):
     present(force=True)  # the test's final state is on screen
     stage = STATE["stage"]
     folder = os.environ.get("ASTERIA_REAL_WINDOW_SHOTS")
-    if stage is None or not folder:
+    if not _alive(stage) or not folder:
         return
     import pygame
 
@@ -167,6 +179,8 @@ def install():
             return frame(self, *args, **kwargs)
         finally:
             STATE["in_frame"] = outer
+            if not outer and STATE["stage"] is self:
+                present()  # the test's own frame is shown too
 
     PlayableTestRuntime._frame = guarded_frame
 
