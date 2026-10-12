@@ -267,3 +267,37 @@ def test_script_authors_the_same_cutscene_and_events(tmp_path):
     roundtrip = Project.from_data(project.to_data(), document.component_registry)
     assert roundtrip.common_events == project.common_events
     assert roundtrip.lifecycle_event_bindings[-1].conditions == project.lifecycle_event_bindings[-1].conditions
+
+
+def test_a_sequence_runs_dialogue_and_music_tracks_in_parallel(runtime, resource_root):
+    """EVT-04: dialogue and music are ordinary tracks of a SEQUENCE; the music starts while the line waits."""
+    import shutil
+    from pathlib import Path
+
+    from asteria.runtime.audio_mixer import RecordingAudioDevice
+
+    reference = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
+    shutil.copytree(reference / "playable_assets" / "audio", resource_root / "playable_assets" / "audio")
+
+    runtime.audio.device = device = RecordingAudioDevice()
+    game = runtime.game
+    runtime._ui_mode = "field"
+    tracks = [
+        track("talk", ("DIALOGUE", {"speaker": "Guide", "text": "The gate opens at dusk."})),
+        track("music", W("PLAY_BGM", asset_id="battle_theme", fade=0.0)),
+    ]
+    _program(
+        runtime,
+        "scene_with_music",
+        EventInstruction("SEQUENCE", {"tracks": tracks, "cutscene": False, "wait": "all"}),
+        EventInstruction("SET_SWITCH", {"name": "scene_done", "value": True}),
+    )
+    game.events.start("scene_with_music")
+    _frames(runtime, 3)
+    assert game.pending_dialogue is not None and game.pending_dialogue.line.text == "The gate opens at dusk."
+    assert any(call[0] == "play_music" and "battle_theme" in call[1] for call in device.calls)  # alongside the line
+    assert not game.save.event_context.get_switch("scene_done")  # the sequence waits for every track
+    _frames(runtime, 1, [pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN, mod=0)])
+    _frames(runtime, 3)
+    assert game.pending_dialogue is None and game.save.event_context.get_switch("scene_done")
+    assert not game.event_errors

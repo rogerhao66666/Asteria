@@ -109,6 +109,7 @@ class EventSequence:
     pc: int  # program counter of the SEQUENCE instruction in the owning program
     tracks: list = field(default_factory=list)
     skipping: bool = False
+    showed_line: bool = False  # a track opened a dialogue line (the scene ends once it has been read)
 
     @classmethod
     def start(cls, instruction, runner, pc):
@@ -134,7 +135,9 @@ class EventSequence:
 
     @property
     def done(self):
-        return all(t.done for t in self.tracks)
+        # a line a track showed (often its last instruction) must still be read before the scene ends
+        reading = self.showed_line and self.runner.dialogue.blocked and not self.skipping
+        return all(t.done for t in self.tracks) and not reading
 
     # -- host operations -------------------------------------------------------------------
     def _host(self, opcode):
@@ -194,6 +197,7 @@ class EventSequence:
             return False
         self.runner._open_dialogue(track.pending_dialogue)
         track.pending_dialogue = None
+        self.showed_line = True
         return True
 
     def _step_track(self, track, dt):
@@ -270,6 +274,7 @@ class EventSequence:
         return {
             "pc": self.pc,
             "skipping": self.skipping,
+            **({"showed_line": True} if self.showed_line else {}),
             "tracks": [
                 {
                     "vm_state": t.vm.state.to_data(),
@@ -287,6 +292,7 @@ class EventSequence:
             raise SequenceError("saved sequence does not point at a SEQUENCE instruction")
         sequence = cls.start(instruction, runner, int(data["pc"]))
         sequence.skipping = bool(data.get("skipping", False))
+        sequence.showed_line = bool(data.get("showed_line", False))
         for track, saved in zip(sequence.tracks, data["tracks"], strict=True):
             track.vm = EventVM.restore(
                 track.vm.program, saved["vm_state"], context=runner.context, local_scope_id=runner.local_scope or None
