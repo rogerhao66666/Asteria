@@ -315,3 +315,40 @@ def test_hit_stop_beat_freezes_the_action_at_the_impact(battle):
     assert adapter._clock == pytest.approx(frozen_clock + 0.05)  # resumes after the hold
     delayed = _impact_time(runtime, adapter, "fire_arc")
     assert delayed == pytest.approx(baseline + 0.2, abs=0.03)
+
+
+def test_an_authored_state_machine_chooses_the_battle_clips(resource_root, monkeypatch):
+    """ANI-02: a sheet's state machine (Animation States editor) drives the battle animation: battle roles
+    fire its triggers and it picks the clip - here "attack" deliberately plays the sheet's "hit" clip."""
+    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+    monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
+    from asteria.editor import EditorDocument
+    from asteria.editor.animation_state_machine_authoring import AnimationStateMachineAuthoring
+
+    runtime = _boss_runtime(resource_root)
+    try:
+        project = runtime.game.project
+        sheet = "battle.combatant.hero_01"
+        document = EditorDocument(project)
+        api = AnimationStateMachineAuthoring(document, resource_root=resource_root)
+        clips = api.clips(sheet)
+        assert {"idle", "hit"} <= set(clips)
+        api.create(sheet, initial_clip="idle")
+        api.add_state(sheet, "struck_pose", "hit")
+        api.add_parameter(sheet, "attack", trigger=True)
+        api.add_transition(sheet, "*", "struck_pose", conditions=(("attack", "==", True),), priority=5)
+        api.add_transition(sheet, "struck_pose", api.definition(sheet).initial, when_finished=True)
+        runtime._battle_presentation = adapter = CanonicalBattleAdapter(runtime)
+        runtime.game.start_encounter("boss_room")
+        adapter.begin()
+        animator = adapter.screen.animation.combatant("hero_01")
+        assert animator.machine is not None and animator.clip_name == "idle"
+        animator.set_role("attack")
+        assert animator.machine.state == "struck_pose" and animator.clip_name == "hit"  # the machine chose
+        for _ in range(200):
+            animator.update(0.05)
+            if animator.machine.state == animator.machine.definition.initial:
+                break
+        assert animator.clip_name == "idle" and animator.role.value == "idle"  # back to rest when finished
+    finally:
+        runtime.close()

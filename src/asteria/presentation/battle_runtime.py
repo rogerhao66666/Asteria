@@ -100,6 +100,9 @@ class BattleCombatantAnimator:
     transition_easing: str = "linear"
     recovery_remaining: float = 0.0
     timing_cache: dict[str, object] = field(default_factory=dict, repr=False)
+    # ANI-02: when the sheet carries an authored state machine, battle roles are its triggers (attack, hit,
+    # ko...) and it chooses the clips; parameters "role" / "defeated" are set when the machine declares them
+    machine: object = None
 
     @classmethod
     def create(cls, visual: BattleCombatantVisual, clip_set, timing_profile=None):
@@ -112,7 +115,13 @@ class BattleCombatantAnimator:
         timing_profile = timing_profile or BattleAnimationTimingProfile()
         if not isinstance(timing_profile, BattleAnimationTimingProfile):
             raise TypeError("timing_profile must be BattleAnimationTimingProfile")
-        return cls(visual, clip_set, AnimatorState(idle), timing_profile=timing_profile)
+        animator = AnimatorState(idle)
+        machine = None
+        if getattr(clip_set, "state_machine", None) is not None:
+            from asteria.runtime.animation_state_machine import AnimationStateMachine
+
+            machine = AnimationStateMachine(clip_set.state_machine, clip_set, animator)
+        return cls(visual, clip_set, animator, timing_profile=timing_profile, machine=machine)
 
     @property
     def clip_name(self):
@@ -155,10 +164,29 @@ class BattleCombatantAnimator:
             self.transition_age / self.transition_duration,
         )
 
+    def _drive_machine(self, role):
+        machine, name = self.machine, _role_name(role)
+        if name in machine.definition.triggers:
+            machine.trigger(name)
+        if "role" in machine.parameters:
+            machine.set("role", name)
+        if "defeated" in machine.parameters:
+            machine.set("defeated", self.defeated)
+        old_frame = self.frame_index
+        before = machine.state
+        machine.evaluate()
+        self.role = role
+        self.recovery_remaining = 0.0
+        if machine.state != before:
+            self._begin_transition(old_frame, self._timing_rule(role))
+        return True
+
     def set_role(self, role, *, restart=True, allow_idle_fallback=True):
         role = _normalize_role(role)
         if self.defeated and _role_name(role) != BattleAnimationRole.KO.value:
             return False
+        if self.machine is not None:
+            return self._drive_machine(role)
         clip = self._clip_for_role(role)
         selected_role = role
         if clip is None and allow_idle_fallback:
@@ -207,6 +235,11 @@ class BattleCombatantAnimator:
                 self.transition_age = self.transition_duration
 
         rule = self._timing_rule(self.role)
+        if self.machine is not None:
+            self.machine.update(dt * rule.playback_rate)
+            if self.machine.state == self.machine.definition.initial and not self.defeated:
+                self.role = BattleAnimationRole.IDLE  # the machine went back to rest
+            return
         if self.animator.playing:
             self.animator.update(dt * rule.playback_rate)
 
