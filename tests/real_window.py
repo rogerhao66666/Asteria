@@ -101,11 +101,16 @@ def _draw(stage):
     font = stage.pg.font.Font(None, 26)
     lines = ["Battle (session API)"]
     battle = game.battle
-    for side in ("heroes", "enemies"):
+    hp = game.rules.knockout_resource_id
+    for side, label in (("heroes", "Hero"), ("enemies", "Enemy")):
         party = battle.parties.get(side) if battle is not None and hasattr(battle, "parties") else None
         for member_id in party.ids() if party is not None else ():
-            member = battle.member(member_id)
-            lines.append(f"{side[:-1]} {member_id}: {getattr(member, 'hp', '?')}")
+            pool = battle.member(member_id).subject.resources
+            try:
+                value = f"{pool.current(hp):g} / {pool.maximum(hp):g} {hp}"
+            except Exception:  # a resource the project does not define
+                value = "-"
+            lines.append(f"{label} {member_id}: {value}")
     for i, line in enumerate(lines):
         stage.screen.blit(font.render(line, True, (230, 232, 240)), (32, 28 + 24 * i))
 
@@ -183,6 +188,17 @@ def install():
                 present()  # the test's own frame is shown too
 
     PlayableTestRuntime._frame = guarded_frame
+
+    close = PlayableTestRuntime.close
+
+    @functools.wraps(close)
+    def close_with_shot(self, *args, **kwargs):  # a test that closes its own runtime: keep its last frame
+        test = STATE["test"]
+        if STATE["stage"] is self and test and not STATE["in_frame"]:
+            save_screenshot(test.split("::")[-1])
+        return close(self, *args, **kwargs)
+
+    PlayableTestRuntime.close = close_with_shot
 
 
 def write_report(results):

@@ -271,6 +271,9 @@ class AsteriaEditorWindow(QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, right)
 
         self.asset_list = QListWidget()
+        self.asset_list.setSelectionMode(QListWidget.ExtendedSelection)
+        self.asset_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.asset_list.customContextMenuRequested.connect(self._asset_context_menu)
         bottom = QDockWidget("Assets", self)
         bottom.setObjectName("AssetsDock")
         bottom.setWidget(self.asset_list)
@@ -581,6 +584,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.viewport.end_character_placement()
         self.document.select_entity(command.created.entity)
         status_widget.status.setText(f"Created {command.created.actor.display_name} at map cell {cell[0]}, {cell[1]}")
+        self._resolve_project_resources()  # the new sheet joins the sprite sheet choices and draws in Scene
         self.refresh_all()
         return command.created
 
@@ -1338,14 +1342,84 @@ class AsteriaEditorWindow(QMainWindow):
         cache = ImageCache()
         for record in self.document.project.assets.records():
             item = QListWidgetItem(f"{record.kind}: {record.source_path}")
+            item.setData(Qt.UserRole, str(record.source_path))
             icon = asset_thumbnail(self.document, record, cache)
             item.setIcon(icon if icon is not None else workspace_icon(asset_icon_name(record.source_path)))
             self.asset_list.addItem(item)
         for asset in self.document.project.assets.snapshot():
             item = QListWidgetItem(f"{asset.kind}: {asset.source.uri}")
+            item.setData(Qt.UserRole, str(asset.source.uri))
             icon = canonical_asset_thumbnail(self.document, asset, cache)
             item.setIcon(icon if icon is not None else workspace_icon(asset_icon_name(asset.source.uri)))
             self.asset_list.addItem(item)
+
+    def selected_asset_images(self):
+        """Absolute paths of the selected Asset list entries that are PNG files on disk."""
+        from .image_tools import project_root
+
+        root = project_root(self.document)
+        paths = []
+        for item in self.asset_list.selectedItems():
+            source = item.data(Qt.UserRole)
+            if not source:
+                continue
+            path = Path(source)
+            path = path if path.is_absolute() else root / path
+            if path.suffix.lower() == ".png" and path.is_file():
+                paths.append(path)
+        return paths
+
+    def _asset_context_menu(self, position):
+        from PySide6.QtWidgets import QMenu
+
+        images = self.selected_asset_images()
+        menu = QMenu(self.asset_list)
+        fix = menu.addAction("Auto-fix Image…", lambda: self.auto_fix_selected_image())
+        fix.setEnabled(len(images) == 1)
+        pack = menu.addAction("Pack into Atlas…", lambda: self.pack_selected_images())
+        pack.setEnabled(len(images) >= 1)
+        menu.exec(self.asset_list.viewport().mapToGlobal(position))
+
+    def auto_fix_selected_image(self, *, dialog_hook=None):
+        """AST-11: preview a safe fix on the selected image and apply it (original kept as .bak)."""
+        from .image_tools import ImageFixDialog
+
+        images = self.selected_asset_images()
+        if len(images) != 1:
+            self.statusBar().showMessage("Select one PNG image in Assets to auto-fix")
+            return None
+        dialog = ImageFixDialog(images[0], self)
+        if dialog_hook is not None:
+            dialog_hook(dialog)
+        else:
+            dialog.exec()
+        if dialog.applied is not None:
+            self.refresh_asset_list()
+            self.statusBar().showMessage(f"Fixed {images[0].name}; original kept as {images[0].stem}.bak.png")
+        return dialog.applied
+
+    def pack_selected_images(self, output=None):
+        """AST-11: pack the selected images into one atlas PNG plus a JSON of named regions."""
+        from .image_tools import pack_atlas, project_root
+
+        images = self.selected_asset_images()
+        if not images:
+            self.statusBar().showMessage("Select PNG images in Assets to pack")
+            return None
+        if output is None:
+            output, _ = QFileDialog.getSaveFileName(
+                self, "Pack into Atlas", str(project_root(self.document) / "atlas.png"), "PNG (*.png)"
+            )
+            if not output:
+                return None
+        try:
+            image, meta, report = pack_atlas(images, output)
+        except (OSError, ValueError) as error:
+            QMessageBox.warning(self, "Pack into Atlas", str(error))
+            return None
+        size = report.after_size
+        self.statusBar().showMessage(f"Packed {len(images)} images into {image.name} ({size[0]}x{size[1]})")
+        return image, meta
 
     def refresh_inspector(self):
         sel = self.document.selection

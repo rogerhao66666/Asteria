@@ -1869,6 +1869,17 @@ def check_engine_systems(out):
                 if view is not None and 0.5 < t < 2.9:
                     centre = view.x + view.width / view.zoom / 2
                     seen["lead"].append(centre - transform.x)
+                    # ENG-13 parallax: a far layer (0.5) moves half as fast on screen as the play layer
+                    near = view.world_to_screen(500.0, 100.0)[0]
+                    far = view.world_to_screen(500.0, 100.0, 0.5, 1.0)[0]
+                    seen.setdefault("parallax", []).append((near, far))
+                if 3.4 < t < 4.6 and not seen.get("grouped"):
+                    seen["grouped"] = True  # CAM-02 target group: frame the hero and the foe together
+                    cam.follow_entity_id, cam.group_entity_ids, cam.group_padding = "", f"{hero.id}, {foe.id}", 0
+                if seen.get("grouped") and 4.0 < t < 4.6 and view is not None:
+                    middle = (hero.get(Transform).x + foe.get(Transform).x) / 2
+                    centre = view.x + view.width / view.zoom / 2
+                    seen.setdefault("group", []).append((abs(centre - middle), view.zoom))
                 if t > 5.0 and app._transition is None and not seen.get("changed"):
                     seen["changed"] = True
                     app.change_scene(cave, SceneTransition(fade_out=0.3, fade_in=0.3, color=(0, 0, 0)))
@@ -1881,6 +1892,9 @@ def check_engine_systems(out):
             view = camera.camera(rig.id) if scene is town else None
             ox = (view.x if view is not None else 0) - 0
             colors = {"Hero": (90, 170, 255), "Zone": (90, 220, 140), "Wall": (230, 120, 90), "Ghost": (150, 150, 160)}
+            if view is not None:  # the far (parallax 0.5) backdrop column
+                fx, _ = view.world_to_screen(500.0, 100.0, 0.5, 1.0)
+                self.pg.draw.rect(self.screen, (60, 64, 90), (fx - 40, 60, 80, 300))
             for entity in scene.entities():
                 tr = entity.get(Transform)
                 if tr is None or entity.name == "Camera":
@@ -1915,6 +1929,9 @@ def check_engine_systems(out):
     simulated = backend.elapsed  # the frame times Application.run received from the real clock
     expected_fixed = simulated * 50
     seen["fixed"] = app.time.fixed_steps
+    points = seen.get("parallax") or []
+    moved_near = points[-1][0] - points[0][0] if len(points) > 1 else 0.0
+    parallax_ratio = (points[-1][1] - points[0][1]) / moved_near if moved_near else None
     checks = {
         "fixed_update": abs(seen["fixed"] - expected_fixed) <= max(6, expected_fixed * 0.05),
         "trigger_enter_stay_exit": seen["trigger"][:1] == ["enter"]
@@ -1926,6 +1943,8 @@ def check_engine_systems(out):
         "action_timeline_cues": "vfx" in seen["cues"],
         "look_ahead": bool(seen["lead"]) and min(seen["lead"]) > 20,
         "persistent_entity": hero.scene is cave and app.scene is cave,
+        "parallax": parallax_ratio is not None and abs(parallax_ratio - 0.5) < 0.02,
+        "target_group": bool(seen.get("group")) and min(d for d, _ in seen["group"]) < 2.0,
     }
     ok = all(checks.values())
     return result(
@@ -1937,7 +1956,10 @@ def check_engine_systems(out):
         f"(expected ~{expected_fixed:.0f}); "
         f"trigger events {sorted(set(seen['trigger']))}; contact pairs {sorted(seen['pairs'])}; hits {seen['hits']}; "
         f"frame events {sorted(set(seen['anim']))}; action cues {sorted(set(seen['cues']))}; camera lead "
-        f"{min(seen['lead'] or [0]):.0f}..{max(seen['lead'] or [0]):.0f} px; hero moved to {hero.scene.name}. "
+        f"{min(seen['lead'] or [0]):.0f}..{max(seen['lead'] or [0]):.0f} px; parallax 0.5 layer moved "
+        f"{(parallax_ratio or 0):.3f}x the play layer; target group centre off the hero-foe midpoint by "
+        f"{min((d for d, _ in seen.get('group') or [(99, 0)])):.1f} px (zoom "
+        f"{(seen.get('group') or [(0, 0)])[-1][1]:.2f}); hero moved to {hero.scene.name}. "
         + ", ".join(f"{k}={'ok' if v else 'FAIL'}" for k, v in checks.items()),
         screenshots=["engine_systems_town.png", "engine_systems_cave.png"],
         note="Movement is scripted (no keys); key-driven input is covered by the input / menus / battle checks.",
@@ -2054,6 +2076,321 @@ def check_m10_compare(out):
     )
 
 
+def check_migrated_project_plays(out):
+    """ENG-20: the reference project is stored in older formats (project v8, RPG database v24, component
+    Interaction2D v1). Copy it, upgrade it with the asteria-upgrade CLI in its own process, then play the
+    upgraded project in a real window: walk, talk to the boss by key, save with F5 and load the save."""
+    import shutil
+    import tempfile
+
+    import pygame
+
+    from asteria.editor import EditorDocument
+    from asteria.project import Project
+    from asteria.runtime.game_save import GameRuntimeSave
+    from asteria.runtime.playable_test_runtime import PlayableTestRuntime
+
+    before = json.loads(PROJECT_FILE.read_text())
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp) / "old_project"
+        shutil.copytree(PROJECT, root, ignore=shutil.ignore_patterns("saves", "__pycache__", "*.bak"))
+        path = root / "project.asteria.json"
+        upgrade = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "import sys; from asteria.project_tools import upgrade_main; sys.exit(upgrade_main([sys.argv[1]]))",
+                str(path),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=REPO,
+            env=dict(os.environ, PYTHONPATH=str(REPO / "src")),
+        )
+        after = json.loads(path.read_text())
+        project = Project.load_json(path, EditorDocument().component_registry)
+        runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), root)
+        runtime.open()
+        driver = pygame.display.get_driver()
+        runtime._ui_mode = "field"
+        game = runtime.game
+        start = tuple(game.save.player_position)
+        _key(pygame.K_RIGHT)
+        _pump(runtime, 0.6)
+        _key(pygame.K_RIGHT, up=True)
+        _pump(runtime, 0.1)
+        walked = tuple(game.save.player_position) != start or game.player is not None
+        boss = next(e for e in game.scene.entities() if e.name == "Astral Tyrant")
+        from asteria.core import Transform
+
+        bt = boss.get(Transform)
+        game.set_player_position(bt.x - 30.0, bt.y)
+        _pump(runtime, 0.1)
+        _key(pygame.K_RIGHT)  # face the boss (its interaction needs facing)
+        _pump(runtime, 0.08)
+        _key(pygame.K_RIGHT, up=True)
+        _pump(runtime, 0.2)
+        _key(pygame.K_e)
+        _pump(runtime, 0.4)
+        talked = game.pending_dialogue is not None or game.event_busy or game.mode == "battle"
+        pygame.image.save(runtime.capture(), str(out / "migrated_project_playing.png"))
+        _key(pygame.K_F5)
+        _pump(runtime, 0.2)
+        save = root / "saves" / "playtest_autosave.asteria-save.json"
+        loaded = GameRuntimeSave.load_json(save, project) if save.is_file() else None
+        runtime.close()
+    ok = (
+        upgrade.returncode == 0
+        and before.get("version") < after.get("version")
+        and walked
+        and talked
+        and loaded is not None
+    )
+    return result(
+        "migrated_project_plays",
+        "PASS" if ok else "FAIL",
+        f"Reference project copied in its stored format (project v{before.get('version')}), upgraded by the "
+        f"asteria-upgrade CLI in its own process ({upgrade.stdout.strip() or upgrade.stderr.strip()[-200:]}) to "
+        f"v{after.get('version')}, then played in a real {driver} window: walked by key events={walked}, "
+        f"pressed E at the boss -> dialogue / event / battle={talked}, F5 save written and loaded="
+        f"{loaded is not None}",
+        screenshots=["migrated_project_playing.png"],
+    )
+
+
+def check_asset_categories(out):
+    """AST-07 / AST-08: one asset of every canonical category (the golden set: character, NPC, monster,
+    tileset, prop, icon, VFX, skill, scene, projectile, UI) loaded through the canonical asset store the
+    editor and runtime use, and shown in a real window - animated categories play their first clip."""
+    import pygame
+
+    from asteria.runtime.animation import AnimatorState
+    from asteria.validation.golden import _clips_of, _sprite_source, _store
+
+    root = REPO / "tests" / "golden" / "assets"
+    loaded = _store(root).load(root)
+    pygame.init()
+    screen = pygame.display.set_mode((960, 540))
+    pygame.display.set_caption("Asteria asset categories")
+    driver = pygame.display.get_driver()
+    clock = pygame.time.Clock()
+    items = sorted(loaded.loaded, key=lambda x: x.manifest.kind)
+    cells, rows = [], {}
+    for item in items:
+        manifest, asset = item.manifest, item.asset
+        source = _sprite_source(asset, manifest)
+        uri = source[0] if source else manifest.source
+        image = None
+        for candidate in (uri, getattr(asset, "image", ""), *(v.image_uri for v in getattr(asset, "visuals", ()))):
+            if candidate and str(candidate).endswith(".png") and (root / candidate).is_file():
+                image = pygame.image.load(str(root / candidate)).convert_alpha()
+                break
+        clips = _clips_of(asset)
+        clip = next(iter(clips.values()), None)
+        frame = tuple(source[1]) if source else (image.get_size() if image else (32, 32))
+        cells.append((manifest.kind, manifest.asset_id, image, frame, AnimatorState(clip) if clip else None))
+        rows[manifest.asset_id] = {"kind": manifest.kind, "frames_seen": set(), "pixels": 0}
+    start = time.perf_counter()
+    while time.perf_counter() - start < 1.2:
+        dt = clock.tick(60) / 1000.0
+        pygame.event.pump()
+        screen.fill((24, 26, 32))
+        for i, (kind, asset_id, image, frame, animator) in enumerate(cells):
+            cx, cy = 20 + (i % 6) * 156, 20 + (i // 6) * 250
+            if image is not None:
+                columns = max(1, image.get_width() // frame[0])
+                index = animator.frame_index if animator else 0
+                if animator:
+                    animator.update(dt)
+                rect = pygame.Rect((index % columns) * frame[0], (index // columns) * frame[1], *frame)
+                rect = rect.clip(image.get_rect())
+                part = image.subsurface(rect)
+                scale = min(130 / max(1, part.get_width()), 170 / max(1, part.get_height()), 4)
+                part = pygame.transform.scale(
+                    part, (max(1, int(part.get_width() * scale)), max(1, int(part.get_height() * scale)))
+                )
+                screen.blit(part, (cx, cy))
+                rows[asset_id]["frames_seen"].add(index)
+                rows[asset_id]["pixels"] = max(
+                    rows[asset_id]["pixels"],
+                    sum(
+                        1
+                        for x in range(0, part.get_width(), 4)
+                        for y in range(0, part.get_height(), 4)
+                        if part.get_at((x, y))[3] > 0
+                    ),
+                )
+            label = pygame.font.Font(None, 22).render(kind, True, (230, 232, 240))
+            screen.blit(label, (cx, cy + 180))
+        pygame.display.flip()
+    pygame.image.save(screen, str(out / "asset_categories.png"))
+    pygame.quit()
+    kinds = sorted({r["kind"] for r in rows.values()})
+    drawn = sorted(r["kind"] for r in rows.values() if r["pixels"] > 0)
+    animated = sorted(r["kind"] for r in rows.values() if len(r["frames_seen"]) > 1)
+    ok = loaded.ok and set(drawn) == set(kinds) and len(kinds) >= 11
+    return result(
+        "asset_categories_real_window",
+        "PASS" if ok else "FAIL",
+        f"{len(rows)} golden assets in {len(kinds)} categories {kinds} loaded through the canonical asset store and "
+        f"drawn in a real {driver} window; drawn {drawn}; animated in the window (more than one frame shown) "
+        f"{animated}. Audio playback (AST-08) is item 3a; prefabs are item 28 (editor workflows).",
+        screenshots=["asset_categories.png"],
+    )
+
+
+def check_editor_characters(out):
+    """EDT-16 + AST-11 in a shown Cocoa editor on a copy of the reference project: import a walking sprite
+    sheet, place the character (Actor + linked entity), give an Actor that appearance, play the project and
+    find the character in the live game; then auto-fix an image (preview, backup, confirmation) and pack an
+    atlas from the Asset list."""
+    import shutil
+    import tempfile
+
+    from PIL import Image
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor import EditorDocument
+    from asteria.editor.shell import AsteriaEditorWindow
+    from asteria.editor.workspace import WorkspaceMode
+    from asteria.project import Project
+    from asteria.runtime import ActorLinkComponent, SpriteRenderer2D
+
+    app = QApplication.instance() or QApplication([])
+    original = PROJECT_FILE.read_bytes()
+    sheet = PROJECT / "playable_assets" / "player_field_sheet.png"
+    checks, shots, notes = {}, [], {}
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp) / "project"
+        shutil.copytree(PROJECT, root, ignore=shutil.ignore_patterns("saves", "__pycache__", "*.bak"))
+        path = root / "project.asteria.json"
+        project = Project.load_json(path, EditorDocument().component_registry)
+        window = AsteriaEditorWindow(project)
+        window.document.file_path = path
+        window._resolve_project_resources()
+        window.resize(1600, 1000)
+        window.show()
+        window.raise_()
+        window.activateWindow()
+
+        def settle(seconds=0.3):
+            deadline = time.perf_counter() + seconds
+            while time.perf_counter() < deadline:
+                app.processEvents()
+                time.sleep(0.02)
+
+        def shot(name, widget=None):
+            settle()
+            (widget or window).grab().save(str(out / name))
+            shots.append(name)
+
+        window.workspace.set_mode(WorkspaceMode.SCENE)
+        window.refresh_all()
+        settle(0.5)
+        # EDT-16: sprite sheet -> character -> placed entity linked to its Actor, with a thumbnail
+        visual = window.place_character_from_sheet(sheet, "RM Walker")
+        copied = (root / "characters" / "rm_walker.png").is_file()
+        created = window._place_character_at((6, 6)) if visual is not None else None
+        entity = created.entity if created is not None else None
+        link = entity.get(ActorLinkComponent).actor_id if entity is not None else None
+        checks["sheet_copied_into_project"] = copied
+        checks["character_placed_and_linked_to_actor"] = bool(link) and link in project.rpg_database.actors
+        window.refresh_asset_list()
+        items = [window.asset_list.item(i) for i in range(window.asset_list.count())]
+        walker = [i for i in items if "rm_walker" in i.text()]
+        checks["asset_list_thumbnail"] = bool(walker) and not walker[0].icon().isNull()
+        if entity is not None:
+            window.document.select_component(entity.get(SpriteRenderer2D))
+            window.refresh_inspector()
+        shot("characters_placed.png")
+        # Actor appearance: another actor takes the new sheet
+        sheet_id = entity.get(SpriteRenderer2D).sprite_sheet_asset_id if entity is not None else None
+        other = next((a for a in sorted(project.rpg_database.actors) if a != link), None)
+        applied = bool(other and sheet_id and window.set_actor_appearance(other, sheet_id) is not False)
+        checks["actor_appearance_applied"] = applied
+        notes["sheet"] = sheet_id
+        # play from the placed character: the live game shows it in its field
+        window.document.select_entity(entity)
+        started = window.play_from_selection()
+        snapshot = None
+        deadline = time.perf_counter() + 25.0
+        while snapshot is None and time.perf_counter() < deadline:
+            settle(0.5)
+            snapshot = window.debugger_widget.refresh()
+        names = [e["name"] for e in (snapshot or {}).get("field_entities", [])]
+        checks["character_in_live_game"] = bool(started and snapshot and entity is not None and entity.name in names)
+        notes["live_entities"] = len(names)
+        shot("characters_playing.png")
+        window.stop_play()
+        # AST-11: auto-fix from the Asset list - a padded copy of the sheet, cropped with preview and backup
+        padded = root / "playable_assets" / "rm_padded.png"
+        with Image.open(sheet) as source:
+            frame = source.convert("RGBA").crop((0, 0, 64, 64))
+        canvas = Image.new("RGBA", (96, 96), (0, 0, 0, 0))
+        canvas.alpha_composite(frame, (16, 16))
+        canvas.save(padded)
+        from asteria.assets import AssetRecord
+
+        project.assets.add(AssetRecord.create(kind="texture", source_path="playable_assets/rm_padded.png"))
+        window.refresh_asset_list()
+        for i in range(window.asset_list.count()):
+            item = window.asset_list.item(i)
+            item.setSelected("rm_padded.png" in item.text())
+        seen = {}
+
+        def drive(dialog):
+            dialog.show()
+            dialog.fix.setCurrentIndex(dialog.fix.findData("crop_transparent_border"))
+            shot("autofix_preview.png", dialog)
+            seen["preview"] = dialog.report.text()
+            dialog.apply()
+
+        report = window.auto_fix_selected_image(dialog_hook=drive)
+        with Image.open(padded) as fixed:
+            fixed_size = fixed.size
+        checks["autofix_preview_apply_backup"] = (
+            report is not None and fixed_size[0] < 96 and (padded.parent / "rm_padded.bak.png").is_file()
+        )
+        notes["autofix"] = f"{seen.get('preview')} -> {fixed_size}"
+        soft = root / "playable_assets" / "rm_soft.png"
+        Image.new("RGBA", (8, 8), (200, 40, 40, 100)).save(soft)
+        project.assets.add(AssetRecord.create(kind="texture", source_path="playable_assets/rm_soft.png"))
+        window.refresh_asset_list()
+        for i in range(window.asset_list.count()):
+            item = window.asset_list.item(i)
+            item.setSelected("rm_soft.png" in item.text())
+        refused = window.auto_fix_selected_image(
+            dialog_hook=lambda d: (d.fix.setCurrentIndex(d.fix.findData("normalize_alpha")), d.apply(confirm=False))
+        )
+        checks["destructive_fix_needs_confirmation"] = (
+            refused is None and not (soft.parent / "rm_soft.bak.png").exists()
+        )
+        for i in range(window.asset_list.count()):
+            item = window.asset_list.item(i)
+            item.setSelected(any(n in item.text() for n in ("rm_padded.png", "rm_walker", "rm_soft.png")))
+        packed = window.pack_selected_images(root / "atlas" / "rm_atlas.png")
+        regions = json.loads(packed[1].read_text())["regions"] if packed else {}
+        checks["atlas_packed_with_regions"] = len(regions) >= 3
+        notes["atlas"] = sorted(regions)
+        shot("characters_assets.png")
+        window.document.mark_saved()
+        window.close()
+        settle(0.2)
+    checks["reference_project_untouched"] = PROJECT_FILE.read_bytes() == original
+    failed = sorted(k for k, v in checks.items() if not v)
+    return result(
+        "editor_characters_gui",
+        "PASS" if not failed else "FAIL",
+        f"Qt platform '{app.platformName()}', shown editor on a copy of the reference project: "
+        + ", ".join(f"{k}={'ok' if v else 'FAILED'}" for k, v in checks.items())
+        + f"; sheet {notes.get('sheet')}, {notes.get('live_entities')} live field entities, auto-fix "
+        f"{notes.get('autofix')}, atlas regions {notes.get('atlas')}",
+        screenshots=shots,
+        note="Hands-on use by a person (mouse drags, typing) is manual item M7.",
+    )
+
+
 def _rss_mb():
     value = subprocess.run(["ps", "-o", "rss=", "-p", str(os.getpid())], capture_output=True, text=True).stdout
     return int(value.strip()) / 1024.0
@@ -2159,6 +2496,31 @@ REPLAY = {
         "event_flow_integration::test_common_events_autorun_and_parallel_follow_their_switches",
         "event_flow_integration::test_battle_event_fires_on_its_condition_once_and_holds_battle_input",
     ],
+    "EVT-04": ["event_flow_integration::test_a_sequence_runs_dialogue_and_music_tracks_in_parallel"],
+    "RPG-01": ["inventory_rules::test_the_game_session_applies_the_project_rules_to_events_and_shops"],
+    "RPG-08": [
+        "companions_and_summons::test_a_boss_summons_minions_it_owns_and_they_take_turns",
+        "companions_and_summons::test_a_companion_in_reserve_is_called_into_the_battle_and_events_can_summon",
+        "companions_and_summons::test_a_captured_companion_grows_and_is_kept_in_reserve_across_save_and_load",
+        "companions_and_summons::test_summoned_combatants_appear_on_the_battle_screen",
+    ],
+    "GP-02": [
+        "ability_rules_in_battle::test_cost_is_paid_and_targets_follow_the_ability_targeting_data",
+        "ability_rules_in_battle::test_cooldown_blocks_the_ability_for_its_users_next_turns",
+        "ability_rules_in_battle::test_timeline_mode_casts_resolve_later_and_recovery_delays_the_next_turn",
+    ],
+    "BTL-02": [
+        "dot_in_session::test_damage_over_time_is_fixed_unless_the_author_gives_it_interaction_tags",
+        "octopath_style_battle::test_two_weapons_weapon_weakness_and_resistance",
+        "octopath_style_battle::test_weakness_hits_break_the_shield_and_the_break_doubles_damage",
+        "octopath_style_battle::test_boost_repeats_attacks_and_powers_spells",
+        "octopath_style_battle::test_secondary_job_and_a_poison_that_worsens_every_turn",
+    ],
+    "ANI-02": ["canonical_battle_presentation::test_an_authored_state_machine_chooses_the_battle_clips"],
+    "CMP-03": [
+        "field_popups::test_item_gains_and_authored_popups_rise_and_fade_above_characters",
+        "field_popups::test_a_full_bag_says_so",
+    ],
 }
 
 
@@ -2240,6 +2602,9 @@ CHECKS = {
     "engine_systems": check_engine_systems,
     "battle_memory": check_battle_memory,
     "m10_compare": check_m10_compare,
+    "migrated_project": check_migrated_project_plays,
+    "asset_categories": check_asset_categories,
+    "editor_characters": check_editor_characters,
 }
 
 

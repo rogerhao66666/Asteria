@@ -337,6 +337,7 @@ class InspectorWidget(QWidget):
                     if f.tooltip:
                         combo.setToolTip(f.tooltip)
                     combo.currentIndexChanged.connect(lambda _index, r=row, c=combo: self._choice_changed(r, c))
+                    v.setText("")  # the widget shows the value; text beneath would show through
                     self.table.setItem(row, 1, v)
                     self.table.setCellWidget(row, 1, combo)
                 elif f.value_type is bool:
@@ -346,6 +347,7 @@ class InspectorWidget(QWidget):
                     if f.tooltip:
                         checkbox.setToolTip(f.tooltip)
                     checkbox.toggled.connect(lambda checked, r=row: self._bool_changed(r, checked))
+                    v.setText("")  # the widget shows the value; text beneath would show through
                     self.table.setItem(row, 1, v)
                     self.table.setCellWidget(row, 1, checkbox)
                 else:
