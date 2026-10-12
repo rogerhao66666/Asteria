@@ -43,6 +43,9 @@ def default_component_registry():
     from .action_combat import register_action_combat_components
 
     register_action_combat_components(registry)  # ASTERIA_SPEC §20 real-time ability use
+    from .loot import register_loot_components
+
+    register_loot_components(registry)  # ASTERIA_SPEC §35 loot on the ground
     for component in (NpcIdentity2DComponent, FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent):
         registry.register(component)
     from .environment2d import register_environment_components

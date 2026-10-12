@@ -112,7 +112,7 @@ def test_runtime_save_state_v2_carries_actor_snapshots_and_v1_is_backward_readab
         actor_snapshots={"pilot": runtime.snapshot()},
     )
     raw = state.to_data()
-    assert raw["version"] == 7 and raw["actor_snapshots"]["pilot"]["actor_id"] == "pilot"
+    assert raw["version"] == 8 and raw["actor_snapshots"]["pilot"]["actor_id"] == "pilot"
     restored = RpgRuntimeState.from_data(raw, db)
     actor2 = RpgActorRuntime(actor).restore(restored.actor_snapshots["pilot"])
     assert actor2.resources.current("charge") == 70
@@ -127,5 +127,6 @@ def test_runtime_save_state_v2_carries_actor_snapshots_and_v1_is_backward_readab
     legacy.pop("shop_stock")
     legacy.pop("quests")
     legacy.pop("world")
+    legacy.pop("equipment_bag")
     restored_v1 = RpgRuntimeState.from_data(legacy, db)
     assert restored_v1.actor_snapshots == {}

@@ -699,6 +699,8 @@ class RpgDatabase:
         self.capture_rules = {}
         self.world_interactions = {}
         self.drop_tables = {}
+        self.rarities = {}  # rpg.loot RarityDefinition; empty = loot.DEFAULT_RARITIES
+        self.affixes = {}  # rpg.loot AffixDefinition
         self.inventory_rules = {}
         self.behavior_trees = {}
         self.quests = {}
@@ -1022,6 +1024,22 @@ class RpgDatabase:
 
         return self._add_keyed(self.behavior_trees, value, BehaviorTree, "tree_id", "behavior tree")
 
+    def add_rarity(self, value):
+        from .loot import RarityDefinition
+
+        return self._add_keyed(self.rarities, value, RarityDefinition, "rarity_id", "rarity")
+
+    def add_affix(self, value):
+        from .loot import AffixDefinition
+
+        return self._add_keyed(self.affixes, value, AffixDefinition, "affix_id", "affix")
+
+    def loot_rarities(self):
+        """The project's rarities, or the defaults when it authored none."""
+        from .loot import DEFAULT_RARITIES
+
+        return dict(self.rarities) if self.rarities else {r.rarity_id: r for r in DEFAULT_RARITIES}
+
     def add_drop_table(self, value):
         from .drop_tables import DropTable
 
@@ -1197,7 +1215,7 @@ class RpgDatabase:
                     errors.append(f"behavior tree {tree.tree_id} references unknown encounter {encounter_id}")
         for table in self.drop_tables.values():
             for item_id in sorted(table.item_ids()):
-                if item_id not in self.items:
+                if item_id not in self.items and item_id not in self.equipment:  # equipment drops are rolled loot
                     errors.append(f"drop table {table.table_id} references unknown item {item_id}")
         for enemy in self.enemies.values():
             if enemy.reward.drop_table_id and enemy.reward.drop_table_id not in self.drop_tables:
@@ -1276,7 +1294,7 @@ class RpgDatabase:
     def to_data(self):
         return {
             "schema": "asteria.rpg.database",
-            "version": 29,
+            "version": 30,
             "actors": [self.actors[k].to_data() for k in sorted(self.actors)],
             "classes": [self.classes[k].to_data() for k in sorted(self.classes)],
             "items": [self.items[k].to_data() for k in sorted(self.items)],
@@ -1325,6 +1343,8 @@ class RpgDatabase:
             "drop_tables": [self.drop_tables[k].to_data() for k in sorted(self.drop_tables)],
             "behavior_trees": [self.behavior_trees[k].to_data() for k in sorted(self.behavior_trees)],
             "inventory_rules": [self.inventory_rules[k].to_data() for k in sorted(self.inventory_rules)],
+            "rarities": [self.rarities[k].to_data() for k in sorted(self.rarities)],
+            "affixes": [self.affixes[k].to_data() for k in sorted(self.affixes)],
         }
 
     @classmethod
@@ -1359,6 +1379,7 @@ class RpgDatabase:
             27,
             28,
             29,
+            30,
         }:
             raise ValueError("unsupported RPG database")
         result = cls()
@@ -1497,6 +1518,13 @@ class RpgDatabase:
 
             for x in data.get("behavior_trees", ()):
                 result.add_behavior_tree(BehaviorTree.from_data(x))
+        if data["version"] >= 30:
+            from .loot import AffixDefinition, RarityDefinition
+
+            for x in data.get("rarities", ()):
+                result.add_rarity(RarityDefinition.from_data(x))
+            for x in data.get("affixes", ()):
+                result.add_affix(AffixDefinition.from_data(x))
         if data["version"] >= 29:
             from .items import InventoryRules
 

@@ -45,8 +45,8 @@ class DropEntry:
             raise ValueError("invalid drop quantity")
         object.__setattr__(self, "minimum", int(self.minimum))
         object.__setattr__(self, "maximum", int(self.maximum))
-        if self.rarity not in RARITIES:
-            raise ValueError(f"rarity must be one of {RARITIES}")
+        if not str(self.rarity).strip():
+            raise ValueError("rarity is required (any authored rarity id; RARITIES are the defaults)")
 
     def to_data(self):
         return {

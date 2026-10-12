@@ -100,6 +100,11 @@ def parse_tags(text):
         Field("hurt_iframes", float, 0.0, minimum=0.0, tooltip="Invincible seconds after every hit it takes."),
         Field("death", str, "remove", choices=DEATH_BEHAVIOURS, tooltip="What happens to the entity when it dies."),
         Field("drop_table_id", str, "", tooltip="Drop table rolled when it dies."),
+        Field("currency_drop", str, "", tooltip="Currencies dropped when it dies, e.g. 'gold=5-12; gems=0-1'."),
+        Field(
+            "loot_level", int, 1, minimum=0, tooltip="Item level of the equipment it drops (which affixes can roll)."
+        ),
+        Field("loot_luck", float, 0.0, minimum=0.0, tooltip="Makes rarer drops more likely (elites, bosses)."),
         Field("death_event", str, "", tooltip="Gameplay event reported when it dies."),
         Field("enabled", bool, True),
     ),
@@ -128,6 +133,9 @@ class CombatantComponent(Component):
         self.hurt_iframes = 0.0
         self.death = "remove"
         self.drop_table_id = ""
+        self.currency_drop = ""
+        self.loot_level = 1
+        self.loot_luck = 0.0
         self.death_event = ""
         self.enabled = True
         # runtime (not serialized)
@@ -478,12 +486,31 @@ class CombatSystem(System):
         state.dead = True
         self._emit("death", target, data={"event": combatant.death_event}, **common)
         table = self.drop_tables.get(combatant.drop_table_id) if combatant.drop_table_id else None
+        items = {}
         if table is not None:
             from asteria.rpg.drop_tables import roll_drop_table
 
-            items = roll_drop_table(table, self.rng, counters=self.counters, switches=self.switches)
-            if items:
-                self._emit("drop", target, data={"items": items, "table_id": table.table_id}, **common)
+            items = roll_drop_table(
+                table, self.rng, counters=self.counters, luck=combatant.loot_luck, switches=self.switches
+            )
+        currencies = {}
+        for chunk in str(combatant.currency_drop or "").replace(",", ";").split(";"):
+            if chunk.strip():
+                name, _, span = chunk.partition("=")
+                low, _, high = span.strip().partition("-")
+                low = int(float(low))
+                amount = self.rng.randint(low, int(float(high)) if high.strip() else low)
+                if amount > 0:
+                    currencies[name.strip()] = currencies.get(name.strip(), 0) + amount
+        if items or currencies:
+            data = {
+                "items": items,
+                "currencies": currencies,
+                "table_id": table.table_id if table is not None else "",
+                "level": combatant.loot_level,
+                "luck": combatant.loot_luck,
+            }
+            self._emit("drop", target, data=data, **common)
         if combatant.death == "remove":
             removed.append(target)
         elif combatant.death == "disable":

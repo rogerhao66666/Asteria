@@ -258,7 +258,7 @@ def test_database_v13_roundtrip_and_v12_backward_read():
     db.add_battle_objective(objective)
     db.add_escape_rule(rule)
     data = db.to_data()
-    assert data["version"] == 29
+    assert data["version"] == 30
     restored = RpgDatabase.from_data(data)
     assert restored.battle_objectives["obj"] == objective
     assert restored.escape_rules["escape"] == rule

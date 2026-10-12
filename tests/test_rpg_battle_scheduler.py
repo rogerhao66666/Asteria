@@ -85,7 +85,7 @@ def test_database_latest_owns_scheduler_definitions():
     db = RpgDatabase()
     db.add_battle_scheduler(BattleSchedulerDefinition("ct", mode="continuous"))
     data = db.to_data()
-    assert data["version"] == 29
+    assert data["version"] == 30
     restored = RpgDatabase.from_data(data)
     assert restored.battle_schedulers["ct"].mode == BattleSchedulerMode.CONTINUOUS
 

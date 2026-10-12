@@ -72,7 +72,7 @@ def make_db():
 def test_graph_roundtrip_and_database_v7_persistence():
     db = make_db()
     raw = db.to_data()
-    assert raw["version"] == 29
+    assert raw["version"] == 30
     loaded = RpgDatabase.from_data(copy.deepcopy(raw))
     assert loaded.progression_graphs["aria_board"].require_node("strength").max_rank == 3
 
@@ -152,7 +152,7 @@ def test_runtime_state_v3_roundtrip_persists_allocation_state_and_v2_is_readable
         ),
     )
     raw = state.to_data()
-    assert raw["version"] == 7
+    assert raw["version"] == 8
     loaded = RpgRuntimeState.from_data(copy.deepcopy(raw), db)
     assert loaded.progression_allocations["actor:aria"].rank("aria_board", "strength") == 1
     assert loaded.progression_allocations["actor:aria"].balance("ap") == 4
@@ -166,6 +166,7 @@ def test_runtime_state_v3_roundtrip_persists_allocation_state_and_v2_is_readable
     del old["shop_stock"]
     del old["quests"]
     del old["world"]
+    del old["equipment_bag"]
     loaded_old = RpgRuntimeState.from_data(old, db)
     assert loaded_old.progression_allocations == {}
 

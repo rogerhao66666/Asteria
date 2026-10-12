@@ -185,7 +185,7 @@ def test_database_v22_roundtrip_preserves_party_setup_and_ui_policy():
         "default", PartyPresentationPolicyDefinition("default", visible_limits={"active": 4, "reserve": 8})
     )
     raw = p.to_data()
-    assert raw["rpg_database"]["version"] == 29
+    assert raw["rpg_database"]["version"] == 30
     clone = Project.from_data(raw, doc.component_registry)
     assert clone.to_data() == raw
     assert clone.rpg_database.party_setups["main"].reserve_actor_ids == ("b",)

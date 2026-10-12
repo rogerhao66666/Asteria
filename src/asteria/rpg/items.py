@@ -485,6 +485,10 @@ class EquippedItem:
     attachments: dict[str, AttachmentDefinition] = field(default_factory=dict)
     instance_id: str = ""
     growth: object | None = None
+    # rolled loot (rpg.loot): written only when set, so plain instances save as before
+    item_level: int = 1
+    rarity: str = ""
+    rolled_affixes: tuple = ()
 
     def __post_init__(self):
         from .equipment_growth import EquipmentGrowthRuntime
@@ -511,6 +515,9 @@ class EquippedItem:
             "equipment_id": self.equipment.equipment_id,
             "attachments": {key: value.attachment_id for key, value in sorted(self.attachments.items())},
             "growth": None if self.growth is None else self.growth.to_data(),
+            **({"item_level": self.item_level} if self.item_level != 1 else {}),
+            **({"rarity": self.rarity} if self.rarity else {}),
+            **({"rolled_affixes": [a.to_data() for a in self.rolled_affixes]} if self.rolled_affixes else {}),
         }
 
     @classmethod
@@ -530,7 +537,16 @@ class EquippedItem:
                 hooks=hooks,
                 source=data["instance_id"],
             )
-        item = cls(equipment[equipment_id], instance_id=data["instance_id"], growth=growth)
+        from .loot import RolledAffix
+
+        item = cls(
+            equipment[equipment_id],
+            instance_id=data["instance_id"],
+            growth=growth,
+            item_level=int(data.get("item_level", 1)),
+            rarity=str(data.get("rarity", "")),
+            rolled_affixes=tuple(RolledAffix.from_data(x) for x in data.get("rolled_affixes", ())),
+        )
         for socket_id, attachment_id in data["attachments"].items():
             if attachment_id not in attachments:
                 raise KeyError(f"unknown attachment: {attachment_id}")
@@ -587,6 +603,8 @@ class EquippedItem:
 
     def modifiers(self):
         result = list(self.equipment.modifiers)
+        for affix in self.rolled_affixes:
+            result.extend(affix.modifiers(self.instance_id))
         contribution = self.growth_contribution()
         if contribution is not None:
             result.extend(contribution.modifiers)

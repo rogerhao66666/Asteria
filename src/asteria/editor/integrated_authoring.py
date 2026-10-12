@@ -412,6 +412,27 @@ class IntegratedAuthoringControllers:
             )
         )
         mappings["projectiles"] = projectiles
+        from asteria.rpg.loot import AffixDefinition, RarityDefinition
+
+        # ASTERIA_SPEC §35 loot: authored rarities and random affixes
+        for category_id, label, mapping, record in (
+            ("rarities", "Loot Rarities", db.rarities, RarityDefinition),
+            ("affixes", "Loot Affixes", db.affixes, AffixDefinition),
+        ):
+            categories.append(
+                AuthoringCategoryAdapter(
+                    category_id,
+                    label,
+                    lambda m=mapping: tuple(sorted(m)),
+                    lambda k, m=mapping: m[k],
+                    lambda key, value, m=mapping, n=label: self._mapping_edit(m, n)(key, value),
+                    lambda key, m=mapping, n=label: self._mapping_delete(m, n)(key),
+                    td,
+                    fd(record),
+                    None,
+                )
+            )
+            mappings[category_id] = mapping
         result = []
         for adapter in categories:
             if adapter.category_id == "abilities":

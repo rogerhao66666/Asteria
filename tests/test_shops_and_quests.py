@@ -162,7 +162,7 @@ def test_database_and_save_round_trip_shops_and_quests(tmp_path):
     _with_content(project)
     db = project.rpg_database
     data = json.loads(json.dumps(db.to_data()))
-    assert data["version"] == 29
+    assert data["version"] == 30
     loaded = RpgDatabase.from_data(data)
     assert loaded.shops == db.shops and loaded.quests == db.quests
     game.open_shop("apothecary")

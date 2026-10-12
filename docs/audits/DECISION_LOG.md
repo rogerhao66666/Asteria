@@ -1173,3 +1173,37 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **還沒做：** 橫向的鏡頭預設（垂直死區、前瞻），會和 A8 的實機畫面一起做。橫向角色仍然是逐個處理，敵人多的橫向關卡如果量到瓶頸再改成欄位運算。
 
 **狀態：** A5 完成。
+
+### D22-A6 — 掉寶
+
+**改動的檔案：**
+- `rpg/loot.py`（新）：
+  - `RarityDefinition` 欄位：名稱、顏色、詞綴數量範圍、擲骰權重、排序、前綴和後綴各自的上限。權重 0 的稀有度只能由掉落表指定，可用來做唯一裝備。專案沒有自訂時，用 `DEFAULT_RARITIES`。
+  - `AffixDefinition` 欄位：位置（前綴、後綴，或作者自訂）、可出現的裝備標籤或欄位、物品等級範圍、權重、互斥群組、限定的稀有度，以及數值範圍（可設為整數、可隨物品等級成長）。
+  - `RolledAffix` 會把擲出的數值存在自己身上，之後作者修改詞綴時，已經掉落的裝備不會跟著變。
+  - `roll_rarity`、`roll_affixes`、`roll_equipment`、`item_display_name`。
+- `rpg/items.py`：`EquippedItem` 新增 `item_level`、`rarity`、`rolled_affixes`。詞綴的數值經由原本的 `modifiers()` 計入角色數值；只在有設定時才寫入存檔，普通裝備的存檔內容和以前一樣。
+- `rpg/resolved_build.py`：角色數值明細中，詞綴的來源標為 `affix`。
+- `rpg/actors.py`：RPG 資料庫 v30 新增 `rarities`、`affixes`（v29 照樣能讀），加上 `loot_rarities()`。掉落表現在可以引用裝備。
+- `rpg/drop_tables.py`：掉落項目的稀有度改成任何作者定義的 id，不再限定寫死的五種。
+- `rpg/save_state.py`：存檔 v8 新增 `equipment_bag`（未裝備的裝備），v1 到 v7 照樣能讀。
+- `runtime/loot.py`（新）：`LootComponent`（地上的物品、裝備、貨幣）、`LooterComponent`（撿取範圍；自動撿取規則：none、currency、items、all、rarity_at_least）、`LootSystem`（`drop` 灑出掉落物，裝備在掉落時就擲好；`pick_up_nearest`；拒絕撿取時東西留在地上；`labels()` 提供依稀有度上色的名稱）。
+- `runtime/combat.py`：Combatant 新增 `currency_drop`（例如 `gold=5-12`）、`loot_level`（掉落裝備的物品等級）、`loot_luck`；死亡時的 drop 事件會帶上這些資料。
+- `runtime/game_session.py`：combat 的 drop 事件會產生地上掉落物；撿到的東西放進存檔（貨幣、背包，背包滿了就留在地上，裝備放進 equipment_bag）。
+- `editor/integrated_authoring.py`：新增「Loot Rarities」「Loot Affixes」紀錄分類。
+- 既有測試：更新「最新版本號」的斷言（資料庫 29 → 30、存檔 7 → 8），舊版存檔測試多移除 `equipment_bag`，和過去每次升版的做法相同。
+- 黃金基準：用 `scripts/update_golden_baselines.py` 更新。**只有** 4 個參考存檔和 RPG 資料庫的摘要改變，原因是存檔格式升到 v8（多了空的 `equipment_bag`）、資料庫升到 v30（多了空的 `rarities` 和 `affixes`）。Boss 戰的結果和黃金素材摘要都沒有改變。
+- 測試：`tests/test_loot.py`（新，9 項）。
+
+**整合證據：**
+- 稀有度分布：擲 4000 次，平凡 70%、魔法 25%，誤差都在 3% 以內；幸運值 2 時遺物的數量變成兩倍以上；權重 0 的唯一裝備不會被擲出。
+- 詞綴：遵守標籤、欄位、物品等級（第 10 級才會出現強化版）、互斥群組、前綴和後綴各 1 個的上限；數值有隨等級成長。
+- 「Sharp Sword of the Bear」：攻擊 10 + 5（基礎）+ 7（詞綴）= 22、HP 115，存讀檔後相同。
+- `GameSession` 中：敵人死亡 → 地上出現斧頭和 5 金幣 → 金幣自動撿起 → 按撿取拿到斧頭 → 斧頭進入 equipment_bag，物品等級 7 → 存檔 JSON 存讀後相同。
+- 編輯器：新增稀有度和詞綴，修改後可以復原。
+
+**執行的測試：** 完整套件 **2122 passed**。
+
+**還沒做：** 格子背包（物品佔格子）。目前背包是清單，A8 的背包畫面也先用清單。
+
+**狀態：** A6 完成。

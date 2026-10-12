@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .actors import RpgActorSnapshot, RpgDatabase
-from .items import EquipmentLoadout, Inventory
+from .items import EquipmentLoadout, EquippedItem, Inventory
 from .progression import ProgressionRuntime
 from .progression_graph import ProgressionAllocationRuntime
 
@@ -117,9 +117,10 @@ class RpgRuntimeState:
     shop_stock: dict[str, dict[str, int]]
     quests: dict
     world: object
+    equipment_bag: list
 
     SCHEMA = "asteria.rpg.runtime_state"
-    VERSION = 7
+    VERSION = 8
 
     def __init__(
         self,
@@ -137,11 +138,13 @@ class RpgRuntimeState:
         shop_stock=None,
         quests=None,
         world=None,
+        equipment_bag=None,
     ):
         from .quests import QuestProgress
         from .world_record import WorldRecord
 
         self.world = world if world is not None else WorldRecord()
+        self.equipment_bag = list(equipment_bag or [])  # unequipped EquippedItem instances (rolled loot)
         if not isinstance(self.world, WorldRecord):
             raise TypeError("world must be WorldRecord")
 
@@ -300,6 +303,7 @@ class RpgRuntimeState:
             "shop_stock": {k: dict(sorted(self.shop_stock[k].items())) for k in sorted(self.shop_stock)},
             "quests": {k: self.quests[k].to_data() for k in sorted(self.quests)},
             "world": self.world.to_data(),
+            "equipment_bag": [item.to_data() for item in self.equipment_bag],
         }
 
     @classmethod
@@ -307,7 +311,7 @@ class RpgRuntimeState:
         from .quests import QuestProgress
         from .world_record import WorldRecord
 
-        if data.get("schema") != cls.SCHEMA or data.get("version") not in {1, 2, 3, 4, 5, 6, 7}:
+        if data.get("schema") != cls.SCHEMA or data.get("version") not in {1, 2, 3, 4, 5, 6, 7, 8}:
             raise ValueError("unsupported RPG runtime state")
         version = data["version"]
         expected_v1 = {
@@ -325,8 +329,11 @@ class RpgRuntimeState:
         expected_v5 = expected_v4 | {"party_active_actor_ids", "party_placements"}
         expected_v6 = expected_v5 | {"shop_stock", "quests"}
         expected_v7 = expected_v6 | {"world"}
+        expected_v8 = expected_v7 | {"equipment_bag"}
         expected = (
-            expected_v7
+            expected_v8
+            if version == 8
+            else expected_v7
             if version == 7
             else expected_v6
             if version == 6
@@ -373,6 +380,16 @@ class RpgRuntimeState:
             shop_stock=data.get("shop_stock", {}),
             quests={quest_id: QuestProgress.from_data(raw) for quest_id, raw in data.get("quests", {}).items()},
             world=WorldRecord.from_data(data["world"]) if "world" in data else None,
+            equipment_bag=[
+                EquippedItem.from_data(
+                    raw,
+                    equipment=database.equipment,
+                    attachments=database.attachments,
+                    growth_definitions=database.equipment_growth,
+                    hooks=hooks,
+                )
+                for raw in data.get("equipment_bag", ())
+            ],
         )
         result.bind_database(database)
         result.validate(database)

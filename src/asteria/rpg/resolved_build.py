@@ -180,6 +180,13 @@ def resolve_actor_build(
                         "stat_modifier", modifier.stat, "equipment", item.instance_id, modifier.modifier_id
                     )
                 )
+            for affix in item.rolled_affixes:  # rpg.loot: random affixes rolled on this instance
+                for modifier in affix.modifiers(item.instance_id):
+                    contributions.append(
+                        BuildContribution(
+                            "stat_modifier", modifier.stat, "affix", item.instance_id, modifier.modifier_id
+                        )
+                    )
             for socket_id in sorted(item.attachments):
                 attachment = item.attachments[socket_id]
                 source_id = f"{item.instance_id}:{socket_id}"

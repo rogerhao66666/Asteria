@@ -137,6 +137,7 @@ def test_runtime_state_v4_backward_read_defaults_active_party_to_roster():
     raw.pop("shop_stock")
     raw.pop("quests")
     raw.pop("world")
+    raw.pop("equipment_bag")
     from asteria.rpg import RpgRuntimeState
 
     restored = RpgRuntimeState.from_data(raw, p.rpg_database)

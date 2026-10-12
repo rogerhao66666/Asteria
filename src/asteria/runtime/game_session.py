@@ -257,6 +257,27 @@ class GameSessionRuntime:
                 world=frame_world,
                 spawn=summon,
             )
+            from asteria.runtime.loot import LootSystem
+
+            # ASTERIA_SPEC §35: drops become loot on the ground; picking it up puts it in the save
+            loot = LootSystem(
+                self.project.rpg_database, rng=random.Random(f"{scene.id}:loot"), collect=self._collect_loot
+            )
+
+            def drop_loot(event):
+                if event.kind == "drop":
+                    data = event.data
+                    loot.drop(
+                        scene,
+                        event.x,
+                        event.y,
+                        items=data.get("items"),
+                        currencies=data.get("currencies"),
+                        level=data.get("level", 1),
+                        luck=data.get("luck", 0.0),
+                    )
+
+            combat.listeners.append(drop_loot)
             # ENG-02 / ENG-17 / ANI-05 / RPG-09: behavior trees, entity action timelines, controllers, hits
             spawn, ai = systems
             systems = {
@@ -270,6 +291,7 @@ class GameSessionRuntime:
                 "hits": hits,
                 "projectiles": projectiles,
                 "combat": combat,
+                "loot": loot,
             }
             self._field_simulation[scene.id] = systems
         return systems
@@ -295,6 +317,7 @@ class GameSessionRuntime:
             systems["projectiles"].update(self.scene, float(dt))
         with self.profiler.section("combat"):
             systems["combat"].update(self.scene, float(dt))
+        systems["loot"].update(self.scene, float(dt))
         pending = getattr(self, "_pending_tree_encounter", None)
         if pending:
             self._pending_tree_encounter = None
@@ -320,6 +343,28 @@ class GameSessionRuntime:
         entity = self._sequence_entity(entity_key)
         self.entity_actions.play(entity.id, timeline)
         return entity.id
+
+    @property
+    def loot(self):
+        """Loot on the ground (ASTERIA_SPEC §35): ``drop``, ``pick_up_nearest``, ``labels``."""
+        return self._field_systems()["loot"]
+
+    def _collect_loot(self, looter, loot, equipment):
+        """A picked-up stack goes into the save: currencies, the inventory, or the equipment bag."""
+        state = self.save.rpg_state
+        if loot.kind == "currency":
+            state.currencies[loot.item_id] = state.currencies.get(loot.item_id, 0) + loot.amount
+            return True
+        if loot.kind == "equipment":
+            if equipment is None:
+                return False
+            state.equipment_bag.append(equipment)
+            return True
+        room = state.inventory.room_for(loot.item_id)
+        if room is not None and room < loot.amount:
+            return False  # the bag is full: it stays on the ground
+        state.inventory.add(loot.item_id, loot.amount)
+        return True
 
     def set_field_input(self, actions=None):
         """This frame's input actions for real-time control (``ActionCombat`` bindings, lock-on); ``None`` = none."""

@@ -57,7 +57,7 @@ def test_rules_round_trip_and_old_databases_have_none():
     db = RpgDatabase()
     db.add_inventory_rules(rules)
     data = db.to_data()
-    assert data["version"] == 29 and RpgDatabase.from_data(data).inventory_rules == {"bag": rules}
+    assert data["version"] == 30 and RpgDatabase.from_data(data).inventory_rules == {"bag": rules}
     old = dict(data, version=28)
     old.pop("inventory_rules")
     assert RpgDatabase.from_data(old).inventory_rules == {}
