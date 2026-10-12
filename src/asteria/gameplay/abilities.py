@@ -184,7 +184,27 @@ class AbilityDefinition:
     tags: tuple[str, ...] = ()
     # Turns of its user before the ability can be used again (0 = none). Left out of the data while 0.
     cooldown_turns: int = 0
-    OPTIONAL_DATA = {"cooldown_turns": 0}
+    # Battle extras, all optional and left out of the data while empty:
+    # battle_costs           {resource: amount} paid from battle resources (e.g. boost points)
+    # hits                   [{"tags": [...], "power": 1.0}] - the action lands once per hit; each hit adds its
+    #                        tags (damage types) for the interaction rules and scales the damage by its power
+    # battle_resource_gains  [{"to": "self" | "targets" | "allies", "resource": id, "amount": n}] after the action
+    # commands               [{"command": "SUMMON", "args": {...}}] world commands run after the action;
+    #                        "@actor" / "@target" in string args are replaced by member ids
+    # concoct_station        the action combines ingredients the player picks (recipes of that station)
+    battle_costs: dict = None
+    hits: tuple = ()
+    battle_resource_gains: tuple = ()
+    commands: tuple = ()
+    concoct_station: str = ""
+    OPTIONAL_DATA = {
+        "cooldown_turns": 0,
+        "battle_costs": {},
+        "hits": [],
+        "battle_resource_gains": [],
+        "commands": [],
+        "concoct_station": "",
+    }
 
     def __init__(
         self,
@@ -196,6 +216,11 @@ class AbilityDefinition:
         effects=(),
         tags=(),
         cooldown_turns=0,
+        battle_costs=None,
+        hits=(),
+        battle_resource_gains=(),
+        commands=(),
+        concoct_station="",
     ):
         ability_id = str(ability_id).strip()
         if not ability_id:
@@ -224,6 +249,45 @@ class AbilityDefinition:
         if cooldown_turns < 0:
             raise ValueError("cooldown_turns must be >= 0")
         object.__setattr__(self, "cooldown_turns", cooldown_turns)
+        battle_costs = {str(k): float(v) for k, v in dict(battle_costs or {}).items()}
+        if any(v < 0 for v in battle_costs.values()):
+            raise ValueError("battle_costs must be >= 0")
+        object.__setattr__(self, "battle_costs", battle_costs)
+        clean_hits = []
+        for hit in hits:
+            hit = dict(hit)
+            unknown = set(hit) - {"tags", "power"}
+            if unknown:
+                raise ValueError(f"unknown hit fields: {sorted(unknown)}")
+            clean_hits.append(
+                {"tags": sorted({normalize_tag(t) for t in hit.get("tags", ())}), "power": float(hit.get("power", 1.0))}
+            )
+        object.__setattr__(self, "hits", tuple(clean_hits))
+        gains = []
+        for gain in battle_resource_gains:
+            gain = dict(gain)
+            if gain.get("to", "self") not in ("self", "targets", "allies"):
+                raise ValueError('battle_resource_gains "to" must be self, targets or allies')
+            if not str(gain.get("resource", "")).strip():
+                raise ValueError("battle_resource_gains need a resource")
+            gains.append(
+                {
+                    "to": gain.get("to", "self"),
+                    "resource": str(gain["resource"]),
+                    "amount": float(gain.get("amount", 1)),
+                }
+            )
+        object.__setattr__(self, "battle_resource_gains", tuple(gains))
+        clean_commands = []
+        for command in commands:
+            command = dict(command)
+            if not str(command.get("command", "")).strip():
+                raise ValueError("commands need a command name")
+            clean_commands.append(
+                {"command": str(command["command"]).strip().upper(), "args": dict(command.get("args", {}))}
+            )
+        object.__setattr__(self, "commands", tuple(clean_commands))
+        object.__setattr__(self, "concoct_station", str(concoct_station or "").strip())
 
     def to_data(self):
         return {
@@ -236,6 +300,15 @@ class AbilityDefinition:
             "effects": [x.to_data() for x in self.effects],
             "tags": list(self.tags),
             **({"cooldown_turns": self.cooldown_turns} if self.cooldown_turns else {}),
+            **({"battle_costs": dict(self.battle_costs)} if self.battle_costs else {}),
+            **({"hits": [dict(h) for h in self.hits]} if self.hits else {}),
+            **(
+                {"battle_resource_gains": [dict(g) for g in self.battle_resource_gains]}
+                if self.battle_resource_gains
+                else {}
+            ),
+            **({"commands": [dict(c) for c in self.commands]} if self.commands else {}),
+            **({"concoct_station": self.concoct_station} if self.concoct_station else {}),
         }
 
     @classmethod
@@ -250,7 +323,7 @@ class AbilityDefinition:
             "effects",
             "tags",
         }
-        if set(data) - {"cooldown_turns"} != expected:
+        if set(data) - set(cls.OPTIONAL_DATA) != expected:
             raise ValueError("invalid ability definition")
         if data["schema"] != "asteria.ability_definition" or data["version"] != 1:
             raise ValueError("unsupported ability definition")
@@ -262,6 +335,11 @@ class AbilityDefinition:
             effects=[AbilityEffect.from_data(x) for x in data["effects"]],
             tags=data["tags"],
             cooldown_turns=data.get("cooldown_turns", 0),
+            battle_costs=data.get("battle_costs"),
+            hits=data.get("hits", ()),
+            battle_resource_gains=data.get("battle_resource_gains", ()),
+            commands=data.get("commands", ()),
+            concoct_station=data.get("concoct_station", ""),
         )
 
 

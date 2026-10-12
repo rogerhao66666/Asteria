@@ -522,7 +522,8 @@ class BattleRuntime:
         actor = self.member(action.actor_id)
         if not self.can_act(actor.member_id):
             raise ValueError("actor cannot act in current combatant lifecycle state")
-        if action.ability_id not in actor.ability_ids:
+        granted = getattr(self, "granted_abilities", ())  # e.g. the ability of an item used in battle
+        if action.ability_id not in actor.ability_ids and (actor.member_id, action.ability_id) not in granted:
             raise ValueError("actor does not know ability")
         availability = self.ability_availability(actor.member_id, action.ability_id)
         if not availability.allowed:
@@ -666,15 +667,23 @@ class BattleRuntime:
 
         from .interactions import InteractionDisposition
 
+        scale = float(getattr(self, "action_scale", 1.0))  # a hit's power (ability "hits")
         if not self.interactions.rules:
-            return None
+            if scale == 1.0:
+                return None
+
+            def scaled(target_id, operation, value):
+                harmful = operation.kind == EffectOperationKind.RESOURCE_DELTA and value < 0
+                return value * scale if harmful else value
+
+            return scaled
         tags = self.ability_runtime.registry.require(ability_id).tags
 
         def transform(target_id, operation, value):
             if operation.kind != EffectOperationKind.RESOURCE_DELTA or value >= 0:
                 return value
             resolved = self.interactions.resolve_value(
-                -float(value), subjects[0], subjects[1][target_id], action_tags=tags
+                -float(value) * scale, subjects[0], subjects[1][target_id], action_tags=tags
             )
             record.append((target_id, operation.target, resolved))
             if resolved.disposition == InteractionDisposition.NULLIFY:

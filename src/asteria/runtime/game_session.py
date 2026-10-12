@@ -420,10 +420,15 @@ class GameSessionRuntime:
         from asteria.events import LifecycleEventBridge
 
         bus = LifecycleHookBus()
+        bus.subscribe("rpg.battle.turn_skipped", self._turn_skipped)  # asleep, stunned, broken...: shown in battle
         bindings = [b for b in self.project.lifecycle_event_bindings if b.hook_name.startswith("rpg.battle.")]
         self.battle_events = LifecycleEventBridge(bus, self.events, bindings) if bindings else None
         self.save.event_context.providers["battle"] = self._battle_value
         return bus
+
+    def _turn_skipped(self, event):
+        data = event.data or {}
+        self._log("turn_skipped", member_id=str(event.source), data={"states": tuple(data.get("blocking_states", ()))})
 
     def _battle_value(self, name):
         """Values battle-event conditions can read: ``round``, ``hp_ratio:<member or enemy id>``, ``alive:<id>``."""
@@ -1030,10 +1035,27 @@ class GameSessionRuntime:
         boost_level = int(boost_level)
         if boost_level < 0 or boost_level > self.max_boost_level(actor_id):
             raise GameSessionError(f"boost level {boost_level} is not available")
+        definition = self.battle.ability_runtime.registry.get(ability_id)
+        if definition is not None and definition.concoct_station:
+            raise GameSessionError(f"{ability_id} concocts: use concoct() with the chosen ingredients")
+        if definition is not None and ability_id in self.battle.member(actor_id).ability_ids:
+            reason = self.ability_unavailable(actor_id, ability_id)
+            if reason and not reason.startswith(("Ready in", "Blocked by")):  # those keep their own errors
+                raise GameSessionError(f"{ability_id}: {reason}")
         targets = tuple(target_ids) if target_ids is not None else self.default_targets(actor_id, ability_id)
         if not targets:
             raise GameSessionError(f"{ability_id} has no valid targets")
         offensive = self.ability_relation(ability_id) == TargetRelation.OPPONENT
+        battle_costs = dict(getattr(definition, "battle_costs", None) or {})
+        if boost_level:  # boost and the ability's own battle costs come from the same gauges
+            key = rules.boost_resource_id
+            battle_costs[key] = battle_costs.get(key, 0.0) + boost_level * rules.boost_cost_per_level
+        for resource_id, amount in battle_costs.items():
+            have = self.battle.battle_resources.current(actor_id, resource_id)
+            if have < amount:
+                raise GameSessionError(f"{ability_id} needs {amount:g} {resource_id} ({have:g})")
+        for resource_id, amount in (getattr(definition, "battle_costs", None) or {}).items():
+            self.battle.battle_resources.spend(actor_id, resource_id, amount, trigger="rpg.session.ability_cost")
         if boost_level:
             self.battle.battle_resources.spend(
                 actor_id,
@@ -1044,7 +1066,6 @@ class GameSessionRuntime:
         timing = self.battle.action_timing.definition_for(ability_id)
         if timing.windup > 0 and rules.action_timing == "timeline":  # GP-02: the cast resolves later
             return self._begin_cast(actor_id, ability_id, targets, timing)
-        definition = self.battle.ability_runtime.registry.get(ability_id)
         ability_tags = set(getattr(definition, "tags", ()) or ())
         repeats = boost_level + 1
         if "boost.power" in ability_tags or (rules.boost_mode == "power" and "boost.repeat" not in ability_tags):
@@ -1055,42 +1076,207 @@ class GameSessionRuntime:
         for tag in added:
             actor_tags.add(tag)
         try:
-            return self._repeat_action(actor_id, ability_id, targets, offensive, repeats)
+            results = self._repeat_action(actor_id, ability_id, targets, offensive, repeats)
         finally:
             for tag in added:
                 actor_tags.remove(tag)
+        if any(getattr(r, "success", True) for r in results):
+            self._after_ability(actor_id, definition, targets)
+        return results
+
+    def _after_ability(self, actor_id, definition, targets):
+        """An ability's battle extras once it landed: battle resource gains (e.g. giving boost points to an
+        ally) and world commands (e.g. SUMMON a companion)."""
+        from asteria.events import WorldCommand
+
+        if definition is None:
+            return
+        battle = self.battle
+        side = battle.member(actor_id).side
+        for gain in definition.battle_resource_gains:
+            if gain["to"] == "self":
+                members = (actor_id,)
+            elif gain["to"] == "targets":
+                members = tuple(targets)
+            else:
+                members = tuple(m.member_id for m in battle.members.values() if m.side == side and battle.is_active(m))
+            for member_id in members:
+                if battle.battle_resources.get(member_id, gain["resource"]) is not None:
+                    battle.battle_resources.change(
+                        member_id, gain["resource"], gain["amount"], trigger="rpg.session.gain"
+                    )
+                    self._log("resource_gain", member_id=str(member_id), data=dict(gain))
+        for command in definition.commands:
+            first = targets[0] if targets else ""
+            args = {
+                k: (v.replace("@actor", str(actor_id)).replace("@target", str(first)) if isinstance(v, str) else v)
+                for k, v in command["args"].items()
+            }
+            self.world_commands.dispatch(WorldCommand(command["command"], args))
+
+    def ability_unavailable(self, actor_id, ability_id):
+        """Why ``actor_id`` cannot use ``ability_id`` now ("" when it can): a blocking state, a cooldown,
+        battle costs (boost points...), resource costs, unmet conditions (e.g. weapons it needs), or no
+        ingredients to concoct. Menus show this as the disabled reason."""
+        from asteria.gameplay.conditions import GameplayConditionContext
+
+        battle = self.battle
+        if battle is None:
+            return "Not in battle"
+        definition = battle.ability_runtime.registry.get(ability_id)
+        if definition is None:
+            return f"Unknown ability {ability_id}"
+        member = battle.member(actor_id)
+        availability = battle.ability_availability(actor_id, ability_id)
+        if not availability.allowed:
+            return "Blocked by " + ", ".join(availability.blocking_states)
+        wait = battle.cooldown_remaining(actor_id, ability_id)
+        if wait:
+            return f"Ready in {wait} turn" + ("" if wait == 1 else "s")
+        for resource_id, amount in definition.battle_costs.items():
+            have = battle.battle_resources.current(actor_id, resource_id)
+            if have < amount:
+                return f"Needs {amount:g} {resource_id.replace('_', ' ')} (has {have:g})"
+        resources = member.subject.resources
+        for cost in definition.costs:
+            try:
+                amount = float(cost.amount.evaluate({}))
+            except Exception:  # formulas reading stats: the action itself checks them
+                continue
+            if resources.contains(cost.resource) and resources.current(cost.resource) < amount:
+                return f"Needs {amount:g} {cost.resource.replace('_', ' ')}"
+        try:
+            met = definition.conditions.evaluate(GameplayConditionContext(member.subject, None))
+        except Exception:  # conditions about a target are checked against the chosen target
+            met = True
+        if not met:
+            return "Needs " + describe_condition(definition.conditions)
+        if definition.concoct_station and not self.concoct_ingredients(definition.concoct_station):
+            return "No ingredients"
+        return ""
+
+    def concoct_ingredients(self, station):
+        """Items in the bag that a recipe of ``station`` uses (what a concoct ability can pick from)."""
+        db = self.project.rpg_database
+        used = set()
+        for recipe in db.composition_recipes.values():
+            if recipe.station != station:
+                continue
+            for selection in recipe.selections:
+                used.update(getattr(selection, "item_ids", ()) or ())
+        inventory = self.save.rpg_state.inventory
+        return tuple(sorted(i for i in used if inventory.count(i) > 0))
+
+    def concoct(self, actor_id, ability_id, ingredients, target_ids=None, *, rng=None):
+        """Use a concoct ability: the recipe of its station matching ``ingredients`` (``{slot: [item ids]}``)
+        consumes them and its product - an item with a ``battle_ability`` - acts at once on the targets."""
+        from asteria.rpg import CompositionRuntime
+
+        definition = self.battle.ability_runtime.registry.require(ability_id)
+        if not definition.concoct_station:
+            raise GameSessionError(f"{ability_id} does not concoct")
+        reason = self.ability_unavailable(actor_id, ability_id)
+        if reason:
+            raise GameSessionError(reason)
+        recipes = [
+            r for r in self.project.rpg_database.composition_recipes.values() if r.station == definition.concoct_station
+        ]
+        runtime = CompositionRuntime(recipes)
+        recipe = runtime.resolve(ingredients)
+        if recipe is None:
+            raise GameSessionError("these ingredients make nothing")
+        state = self.save.rpg_state
+        before = {o.item_id: state.inventory.count(o.item_id) for o in recipe.outputs}
+        result = runtime.craft(state.inventory, ingredients, station=definition.concoct_station, rng=rng)
+        self.learn_recipe(result.recipe_id)
+        made = [k for k, n in before.items() if state.inventory.count(k) > n]
+        self._log("concocted", member_id=str(actor_id), ability_id=str(ability_id), data={"recipe": recipe.recipe_id})
+        if not made:
+            return ()  # the recipe failed (success chance): materials are gone, nothing acts
+        return self.use_battle_item(actor_id, made[0], target_ids)
+
+    def use_battle_item(self, actor_id, item_id, target_ids=None):
+        """Use an item in battle: its ``battle_ability`` runs for ``actor_id`` (targets, interaction rules, gauges,
+        VFX); the item is consumed. Items without one apply their use effects to the target member."""
+        from asteria.gameplay.effects import apply_effect
+
+        item = self.project.rpg_database.items.get(str(item_id))
+        if item is None:
+            raise GameSessionError(f"unknown item {item_id}")
+        inventory = self.save.rpg_state.inventory
+        if inventory.count(item.item_id) < 1:
+            raise GameSessionError(f"no {item.display_name} left")
+        battle = self.battle
+        if item.battle_ability:
+            targets = tuple(target_ids) if target_ids else self.default_targets(actor_id, item.battle_ability)
+            offensive = self.ability_relation(item.battle_ability) == TargetRelation.OPPONENT
+            inventory.remove(item.item_id, 1)
+            battle.granted_abilities = {(str(actor_id), item.battle_ability)}
+            try:
+                results = self._repeat_action(actor_id, item.battle_ability, targets, offensive, 1)
+            finally:
+                battle.granted_abilities = set()
+            self._log("item_used", member_id=str(actor_id), data={"item": item.item_id})
+            return results
+        targets = tuple(target_ids) if target_ids else (actor_id,)
+        inventory.remove(item.item_id, 1)
+        for target_id in targets:
+            subject = battle.member(target_id).subject
+            for effect in item.use_effects:
+                apply_effect(effect, subject.stats, subject.resources, subject.tags)
+        self._log("item_used", member_id=str(actor_id), data={"item": item.item_id})
+        return ()
 
     def _repeat_action(self, actor_id, ability_id, targets, offensive, repeats):
-        rules = self.rules
+        definition = self.battle.ability_runtime.registry.get(ability_id)
+        hits = tuple(getattr(definition, "hits", ()) or ()) or ({"tags": [], "power": 1.0},)
         results = []
+        actor_tags = self.battle.member(actor_id).subject.tags
         for _ in range(repeats):
-            if offensive:
-                targets = tuple(t for t in targets if self.battle.is_active(self.battle.member(t)))
+            for hit in hits:  # each hit lands on its own: its damage types meet weaknesses and shields
+                added = [t for t in hit["tags"] if not actor_tags.contains(t)]
+                for tag in added:
+                    actor_tags.add(tag)
+                self.battle.action_scale = hit["power"]
+                try:
+                    targets = self._one_hit(actor_id, ability_id, targets, offensive, results)
+                finally:
+                    self.battle.action_scale = 1.0
+                    for tag in added:
+                        actor_tags.remove(tag)
                 if not targets:
-                    break
-            before = self._knockout_values(targets)
-            result = self.execute(actor_id, ability_id, targets)
-            results.append(result)
-            outcomes = self._action_outcomes(actor_id, ability_id, targets, before) if offensive else ()
-            self._log(
-                "action",
-                member_id=str(actor_id),
-                ability_id=str(ability_id),
-                target_ids=tuple(targets),
-                outcomes=outcomes,
-            )
-            for target_id, outcome in outcomes:
-                for composition_id in sorted(self.battle.gauge_compositions.definitions):
-                    gauge = self.battle.apply_gauge_impact(
-                        composition_id,
-                        actor_id,
-                        target_id,
-                        trigger=rules.hit_trigger,
-                        outcome=outcome,
-                    )
-                    if getattr(gauge, "thresholds", ()):
-                        self._log("gauge", member_id=str(target_id), data=gauge)
+                    return tuple(results)
         return tuple(results)
+
+    def _one_hit(self, actor_id, ability_id, targets, offensive, results):
+        rules = self.rules
+        if offensive:
+            targets = tuple(t for t in targets if self.battle.is_active(self.battle.member(t)))
+            if not targets:
+                return ()
+        before = self._knockout_values(targets)
+        result = self.execute(actor_id, ability_id, targets)
+        results.append(result)
+        outcomes = self._action_outcomes(actor_id, ability_id, targets, before) if offensive else ()
+        self._log(
+            "action",
+            member_id=str(actor_id),
+            ability_id=str(ability_id),
+            target_ids=tuple(targets),
+            outcomes=outcomes,
+        )
+        for target_id, outcome in outcomes:
+            for composition_id in sorted(self.battle.gauge_compositions.definitions):
+                gauge = self.battle.apply_gauge_impact(
+                    composition_id,
+                    actor_id,
+                    target_id,
+                    trigger=rules.hit_trigger,
+                    outcome=outcome,
+                )
+                if getattr(gauge, "thresholds", ()):
+                    self._log("gauge", member_id=str(target_id), data=gauge)
+        return targets
 
     def current_turn_actor(self):
         """Member whose turn it is under the battle's scheduler; starts new rounds as needed."""
@@ -1101,7 +1287,7 @@ class GameSessionRuntime:
         self.resolve_casts()
         if not self.active_enemy_ids() or not self.active_hero_ids():
             return None
-        actor = self.battle.next_actor()
+        actor = self.battle.next_actor()  # members who cannot act (asleep, broken...) are skipped there
         if actor is None:
             self.battle.start_next_round()
             actor = self.battle.next_actor()
@@ -1112,6 +1298,20 @@ class GameSessionRuntime:
             self._logged_turn = key
             self._log("turn", member_id=actor.member_id)
         return actor.member_id
+
+    def turn_prevented(self, member_id):
+        """States of ``member_id`` whose battle policy prevents acting (``prevent_action``); empty when free."""
+        subject = self.battle.member(member_id).subject
+        if subject.states is None:
+            return ()
+        policies = self.battle.battle_states.policies
+        return tuple(
+            sorted(
+                a.state_id
+                for a in subject.states.active_states()
+                if getattr(policies.get(a.state_id), "prevent_action", False)
+            )
+        )
 
     def end_turn(self):
         if self.mode != "battle":
@@ -1666,3 +1866,23 @@ class GameSessionRuntime:
             if entity.enabled and npc_id in self.world.npcs:
                 self._record_npc(entity)  # keep where moved NPCs stand
         return self.save
+
+
+def describe_condition(condition):
+    """Plain words for an ability condition (menus: why it cannot be used)."""
+    from asteria.gameplay.conditions import ConditionGroup, NumericCondition, StateCondition, TagCondition
+
+    if isinstance(condition, TagCondition):
+        text = (
+            condition.tag.split(".", 1)[-1].replace("_", " ") if condition.tag.startswith("equip.") else condition.tag
+        )
+        return text if condition.present else f"no {text}"
+    if isinstance(condition, ConditionGroup):
+        parts = [describe_condition(c) for c in condition.conditions]
+        joiner = " or " if str(getattr(condition.mode, "value", condition.mode)) == "any" else " + "
+        return joiner.join(parts) if parts else "conditions"
+    if isinstance(condition, StateCondition):
+        return f"state {getattr(condition, 'state_id', '')}"
+    if isinstance(condition, NumericCondition):
+        return f"{condition.key} {condition.operator} {condition.value:g}"
+    return "conditions"

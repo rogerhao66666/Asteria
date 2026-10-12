@@ -263,9 +263,12 @@ class ItemDefinition:
     stack_limit: int = 99
     use_effects: tuple[Effect, ...] = ()
     icon_id: str = ""  # a project icon asset shown in menus; written only when set
-    OPTIONAL_DATA = {"icon_id": ""}
+    battle_ability: str = ""  # used in battle, the item runs this ability (its targets, rules and VFX)
+    OPTIONAL_DATA = {"icon_id": "", "battle_ability": ""}
 
-    def __init__(self, item_id, display_name=None, *, tags=(), stack_limit=99, use_effects=(), icon_id=""):
+    def __init__(
+        self, item_id, display_name=None, *, tags=(), stack_limit=99, use_effects=(), icon_id="", battle_ability=""
+    ):
         item_id = _id(item_id, "item_id")
         stack_limit = int(stack_limit)
         use_effects = tuple(use_effects)
@@ -279,6 +282,7 @@ class ItemDefinition:
         object.__setattr__(self, "stack_limit", stack_limit)
         object.__setattr__(self, "use_effects", use_effects)
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
+        object.__setattr__(self, "battle_ability", str(battle_ability or "").strip())
 
     def to_data(self):
         return {
@@ -290,6 +294,7 @@ class ItemDefinition:
             "stack_limit": self.stack_limit,
             "use_effects": [x.to_data() for x in self.use_effects],
             **({"icon_id": self.icon_id} if self.icon_id else {}),
+            **({"battle_ability": self.battle_ability} if self.battle_ability else {}),
         }
 
     @classmethod
@@ -306,6 +311,7 @@ class ItemDefinition:
             stack_limit=data["stack_limit"],
             use_effects=[] if data["version"] == 1 else [Effect.from_data(x) for x in data["use_effects"]],
             icon_id=data.get("icon_id", ""),
+            battle_ability=data.get("battle_ability", ""),
         )
 
 
