@@ -149,6 +149,9 @@ class GaugeThresholdRule:
     emit_trigger: str | None = None
     include_cast_in_shift: bool = True
     priority: int = 0
+    # Reset to the member's own maximum (e.g. each enemy's shield count) instead of ``reset_to``.
+    reset_to_maximum: bool = False
+    OPTIONAL_DATA = {"reset_to_maximum": False}
 
     SCHEMA = "asteria.rpg.gauge_threshold_rule"
     VERSION = 1
@@ -166,6 +169,7 @@ class GaugeThresholdRule:
         emit_trigger=None,
         include_cast_in_shift=True,
         priority=0,
+        reset_to_maximum=False,
     ):
         object.__setattr__(self, "threshold_id", _id(threshold_id, "threshold_id"))
         object.__setattr__(self, "resource_id", _id(resource_id, "resource_id"))
@@ -177,6 +181,7 @@ class GaugeThresholdRule:
         object.__setattr__(self, "emit_trigger", None if emit_trigger is None else _id(emit_trigger, "emit_trigger"))
         object.__setattr__(self, "include_cast_in_shift", bool(include_cast_in_shift))
         object.__setattr__(self, "priority", int(priority))
+        object.__setattr__(self, "reset_to_maximum", bool(reset_to_maximum))
 
     def crossed(self, before, after):
         before = float(before)
@@ -199,6 +204,7 @@ class GaugeThresholdRule:
             "emit_trigger": self.emit_trigger,
             "include_cast_in_shift": self.include_cast_in_shift,
             "priority": self.priority,
+            **({"reset_to_maximum": True} if self.reset_to_maximum else {}),
         }
 
     @classmethod
@@ -216,6 +222,7 @@ class GaugeThresholdRule:
             emit_trigger=data.get("emit_trigger"),
             include_cast_in_shift=data.get("include_cast_in_shift", True),
             priority=data.get("priority", 0),
+            reset_to_maximum=data.get("reset_to_maximum", False),
         )
 
 
@@ -362,12 +369,15 @@ class BattleGaugeCompositionRuntime:
                         source=member_id,
                         data={"composition_id": composition.composition_id, "threshold_id": threshold.threshold_id},
                     )
-                if threshold.reset_to is not None:
+                target = threshold.reset_to
+                if threshold.reset_to_maximum:
+                    target = battle.battle_resources.get(member_id, threshold.resource_id).maximum
+                if target is not None:
                     current = battle.battle_resources.current(member_id, threshold.resource_id)
                     battle.battle_resources.change(
                         member_id,
                         threshold.resource_id,
-                        threshold.reset_to - current,
+                        target - current,
                         trigger=f"gauge.{composition.composition_id}.{threshold.threshold_id}.reset",
                     )
                 threshold_result = GaugeThresholdResult(

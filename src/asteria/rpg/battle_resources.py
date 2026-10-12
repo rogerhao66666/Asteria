@@ -70,6 +70,10 @@ class BattleResourceDefinition:
     end_mode: BattleResourceEndMode = BattleResourceEndMode.PERSIST
     overflow_limit: float | None = None
     rules: tuple[BattleResourceRule, ...] = ()
+    # A member whose own subject carries this resource uses its maximum instead of ``maximum`` (e.g. every
+    # enemy its own shield count); the others use ``maximum``. Left out of the data while False.
+    subject_maximum: bool = False
+    OPTIONAL_DATA = {"subject_maximum": False}
 
     SCHEMA = "asteria.rpg.battle_resource"
     VERSION = 1
@@ -85,6 +89,7 @@ class BattleResourceDefinition:
         end_mode=BattleResourceEndMode.PERSIST,
         overflow_limit=None,
         rules=(),
+        subject_maximum=False,
     ):
         resource_id = _id(resource_id, "resource_id")
         minimum = None if minimum is None else _number(minimum, "minimum")
@@ -108,6 +113,7 @@ class BattleResourceDefinition:
         object.__setattr__(self, "end_mode", end_mode)
         object.__setattr__(self, "overflow_limit", overflow_limit)
         object.__setattr__(self, "rules", normalized_rules)
+        object.__setattr__(self, "subject_maximum", bool(subject_maximum))
 
     def to_data(self):
         return {
@@ -121,6 +127,7 @@ class BattleResourceDefinition:
             "end_mode": self.end_mode.value,
             "overflow_limit": self.overflow_limit,
             "rules": [x.to_data() for x in self.rules],
+            **({"subject_maximum": True} if self.subject_maximum else {}),
         }
 
     @classmethod
@@ -136,6 +143,7 @@ class BattleResourceDefinition:
             end_mode=data.get("end_mode", BattleResourceEndMode.PERSIST.value),
             overflow_limit=data.get("overflow_limit"),
             rules=[BattleResourceRule.from_data(x) for x in data.get("rules", ())],
+            subject_maximum=data.get("subject_maximum", False),
         )
 
 
@@ -265,7 +273,8 @@ class BattleResourceRuntime:
         if bound:
             subject_value = pool.get(definition.resource_id)
             minimum = subject_value.minimum if definition.minimum is None else definition.minimum
-            maximum = subject_value.maximum if definition.maximum is None else definition.maximum
+            own = definition.maximum is None or definition.subject_maximum
+            maximum = subject_value.maximum if own else definition.maximum
             current = subject_value.current
         else:
             if definition.minimum is None:

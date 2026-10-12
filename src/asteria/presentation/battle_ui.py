@@ -511,10 +511,13 @@ class BattleUiComposer:
             raise TypeError("action_menu must be BattleActionMenuView")
         L, P = self.layout, self.polish
         width = min(P.interaction_width, L.virtual_width - 2 * L.margin)
+        # as wide as the longest row (name + cost) needs, so costs never run into names
+        chars = max((len(e.label) + 2 + (len(e.cost_text) + 2 if e.cost_text else 0) for e in menu.entries), default=0)
+        wanted = min(width, max(88.0, min(150.0, chars * 3.8 + 2 * P.interaction_padding)))
         # Keep the menu between left/right HUD columns when there is room for it.
         hud_gap = L.virtual_width - 2 * (L.margin + L.hud_panel_width) - 2 * L.margin
         if hud_gap >= self.MIN_MENU_WIDTH:
-            width = min(width, hud_gap)
+            width = min(width, max(hud_gap, wanted))
         x = (L.virtual_width - width) / 2
         header_rows = (1 if menu.categories else 0) + (1 if menu.query else 0)
         body_rows = max(1, len(menu.entries))
@@ -533,8 +536,9 @@ class BattleUiComposer:
             anchor = self._anchor_screen(self._camera, self._focus)
         if anchor is not None:
             # Beside the acting member's group, on the side facing the stage
-            # centre, so the menu never covers other party members.
-            width = min(width, 88.0)
+            # centre, so the menu never covers other party members; as wide as its longest row
+            # (name + cost) needs, within 88..150 virtual pixels.
+            width = min(width, wanted)
             ax, ay = anchor
             body = float(self._member_heights.get(self._focus, 32.0))
             right_side = ax > L.virtual_width / 2

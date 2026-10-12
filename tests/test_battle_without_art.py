@@ -51,8 +51,8 @@ def test_a_project_without_battle_art_plays_a_full_battle_on_the_canonical_scree
             break
         runtime._frame([], 0.05)
     runtime._frame([], 0.016)
-    entries = [e.action_id for e in adapter.screen.action_menu.view.entries]
-    assert "boost" in entries  # the legacy HUD's boost readout lives in the action menu now
+    entries = [e.action_id for e in adapter.screen.action_menu._source]  # every page of the menu
+    assert "boost" in entries  # the legacy HUD's boost readout lives in the action menu now (and as pips)
     vfx_seen = sounds_before = 0
     sounds_before = sum(1 for call in device.calls if call[0] == "play_sound")
     for _ in range(4000):

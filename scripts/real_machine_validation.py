@@ -2669,6 +2669,163 @@ def check_editor_particles(out):
     )
 
 
+def check_octopath_demo(out):
+    """BTL-02 / BTL-03 / GP-02: the Octopath-style demo project played in a real window by key events through
+    the battle command menu: boost and a chosen target, a divine skill (three boost points, particle burst),
+    concocting two ingredients, then the battle won. Enemies are worn down in memory to keep the run short."""
+    import pygame
+
+    from asteria.editor import EditorDocument
+    from asteria.project import Project
+    from asteria.runtime.playable_test_runtime import PlayableTestRuntime
+
+    root = REPO / "reference_projects" / "octopath_demo"
+    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), root, width=960, height=540)
+    runtime.open()
+    driver = pygame.display.get_driver()
+    game, checks, shots = runtime.game, {}, []
+
+    def press(key, wait=0.1):
+        _key(key)
+        _pump(runtime, 0.04)
+        _key(key, up=True)
+        _pump(runtime, wait)
+
+    def shot(name):
+        pygame.image.save(runtime.capture(), str(out / name))
+        shots.append(name)
+
+    def hero_turn(limit=12.0):
+        deadline = time.perf_counter() + limit
+        while time.perf_counter() < deadline:
+            if game.battle is None or runtime._victory:
+                return None
+            if not runtime._battle_presentation.busy() and runtime._battle_actor():
+                return runtime._battle_actor()
+            _pump(runtime, 0.1)
+        return None
+
+    def select(actor, ability_id):
+        commands = runtime.battle_commands
+        ids = [r.action_id for r in commands.entries(actor)]
+        for _ in range(ids.index(ability_id) - commands.cursor):
+            press(pygame.K_DOWN, 0.04)
+        press(pygame.K_RETURN)
+
+    executed = []  # what landed (the battle screen drains the battle log every frame)
+    execute = game.execute
+
+    def counting_execute(actor_id, ability_id, target_ids):
+        executed.append(ability_id)
+        return execute(actor_id, ability_id, target_ids)
+
+    game.execute = counting_execute
+    runtime._ui_mode = "field"
+    _pump(runtime, 0.4)
+    shot("octo_field.png")
+    game.start_encounter("boss_room")
+    runtime._battle_presentation.begin()
+    runtime._advance_to_hero_turn()
+    actor = hero_turn()
+    checks["command_menu"] = actor is not None and bool(runtime.battle_commands.entries(actor))
+    shot("octo_menu.png")
+    # boost x2 and a chosen target
+    game.battle.battle_resources.change(actor, "bp", 3)
+    press(pygame.K_RIGHT)
+    checks["boost_set_by_key"] = runtime.battle_commands.boost == 1
+    attack = next(r.action_id for r in runtime.battle_commands.entries(actor) if r.action_id.startswith("attack_"))
+    select(actor, attack)
+    checks["target_menu"] = runtime.battle_commands.mode == "target"
+    shot("octo_target.png")
+    press(pygame.K_RETURN, 0.3)
+    checks["boosted_attack_two_hits"] = executed.count(attack) == 2
+    # a divine skill: three boost points, a particle burst
+    divine = None
+    for _ in range(8):
+        actor = hero_turn()
+        if actor is None:
+            break
+        known = game.battle.member(actor).ability_ids
+        divine = next((a for a in known if "divine" in game.project.gameplay_library.abilities.get(a).tags), None)
+        if divine is not None:
+            break
+        press(pygame.K_RETURN)
+        press(pygame.K_RETURN)
+    peak = {"n": 0, "shot": False}
+    draw = runtime.particle_drawer.draw
+
+    def counted(*args, **kwargs):
+        n = draw(*args, **kwargs)
+        peak["n"] = max(peak["n"], n)
+        if n >= 40 and not peak["shot"] and args[1] and args[1][0].age >= 0.15:
+            peak["due"] = True
+        return n
+
+    runtime.particle_drawer.draw = counted
+    if divine is not None:
+        game.battle.battle_resources.change(actor, "bp", 3 - game.battle.battle_resources.current(actor, "bp"))
+        before = game.battle.battle_resources.current(actor, "bp")
+        select(actor, divine)
+        if runtime.battle_commands.mode == "target":
+            press(pygame.K_RETURN)
+        for _ in range(40):
+            _pump(runtime, 0.05)
+            if peak.get("due") and not peak["shot"]:
+                shot("octo_divine.png")
+                peak["shot"] = True
+        checks["divine_spends_three_bp"] = before - game.battle.battle_resources.current(actor, "bp") >= 3
+        checks["divine_particle_burst"] = peak["shot"]
+    else:
+        checks["divine_spends_three_bp"] = checks["divine_particle_burst"] = False
+    # concoct with the apothecary when his turn comes
+    concocted = False
+    for _ in range(10):
+        actor = hero_turn()
+        if actor is None:
+            break
+        if "concoct" in game.battle.member(actor).ability_ids:
+            herbs = game.save.rpg_state.inventory.count("healing_herb")
+            select(actor, "concoct")
+            select(actor, "healing_herb")  # base
+            shot("octo_concoct.png")
+            select(actor, "fire_dust")  # catalyst: a fire bomb on every enemy
+            if runtime.battle_commands.mode == "target":
+                press(pygame.K_RETURN)
+            concocted = game.save.rpg_state.inventory.count("healing_herb") < herbs and "bomb_fire" in executed
+            break
+        press(pygame.K_RETURN)
+        press(pygame.K_RETURN)
+    checks["concoct_by_keys"] = concocted
+    # win: wear the enemies down and keep pressing Enter
+    for _ in range(400):
+        if runtime._victory or game.battle is None:
+            break
+        for enemy in game.active_enemy_ids():
+            pool = game.battle.member(enemy).subject.resources
+            pool.set_current("vitality", min(pool.current("vitality"), 400))
+        if not runtime._battle_presentation.busy() and runtime._battle_actor():
+            if runtime.battle_commands.mode == "ingredients":
+                press(pygame.K_ESCAPE, 0.05)
+            press(pygame.K_RETURN, 0.05)
+        else:
+            _pump(runtime, 0.05)
+    checks["battle_won_by_keys"] = bool(runtime._victory)
+    _pump(runtime, 0.6)
+    shot("octo_victory.png")
+    runtime.close()
+    failed = sorted(k for k, v in checks.items() if not v)
+    return result(
+        "octopath_demo_real_window",
+        "PASS" if not failed and driver == "cocoa" else "FAIL",
+        f"Octopath-style demo in a real {driver} window, real key events: "
+        + ", ".join(f"{k}={'ok' if v else 'FAILED'}" for k, v in checks.items())
+        + f"; divine skill {divine}, up to {peak['n']} particles in a frame",
+        screenshots=shots,
+        note="Whether it plays well is for a person (M5 / M10).",
+    )
+
+
 def _rss_mb():
     value = subprocess.run(["ps", "-o", "rss=", "-p", str(os.getpid())], capture_output=True, text=True).stdout
     return int(value.strip()) / 1024.0
@@ -2795,6 +2952,15 @@ REPLAY = {
         "octopath_style_battle::test_secondary_job_and_a_poison_that_worsens_every_turn",
     ],
     "ANI-02": ["canonical_battle_presentation::test_an_authored_state_machine_chooses_the_battle_clips"],
+    "BTL-03": [
+        "octopath_demo::test_boosted_sword_attack_hits_three_times_breaks_shields_and_reveals_the_weakness",
+        "octopath_demo::test_break_skips_the_enemy_turn_and_doubles_damage",
+        "octopath_demo::test_divine_skill_needs_three_boost_points_and_spends_them",
+        "octopath_demo::test_one_spell_of_three_elements_reveals_three_weaknesses",
+        "octopath_demo::test_donate_boost_call_the_pet_and_concoct",
+        "octopath_demo::test_poison_worsens_sleep_skips_turns_and_attack_up_raises_damage",
+        "octopath_demo::test_the_demo_battle_is_won_with_the_keyboard",
+    ],
     "CMP-03": [
         "field_popups::test_item_gains_and_authored_popups_rise_and_fade_above_characters",
         "field_popups::test_a_full_bag_says_so",
@@ -2885,6 +3051,7 @@ CHECKS = {
     "editor_characters": check_editor_characters,
     "icons_and_particles": check_icons_and_particles,
     "editor_particles": check_editor_particles,
+    "octopath_demo": check_octopath_demo,
 }
 
 

@@ -42,7 +42,16 @@ class BattleSessionRules:
     # during the action, so rules can scale anything; an ability tagged "boost.repeat" or "boost.power"
     # overrides the project default (e.g. attacks repeat, spells grow stronger).
     boost_mode: str = "repeat"
-    OPTIONAL_DATA = {"action_timing": "immediate", "boost_mode": "repeat"}
+    # Battle screen: the battle resource shown as each enemy's shield count ("" = the first break gauge's), and
+    # the interaction outcome tag that marks a weakness hit (its rule is then shown as revealed for that enemy).
+    shield_resource_id: str = ""
+    weakness_outcome_tag: str = "outcome.weak"
+    OPTIONAL_DATA = {
+        "action_timing": "immediate",
+        "boost_mode": "repeat",
+        "shield_resource_id": "",
+        "weakness_outcome_tag": "outcome.weak",
+    }
 
     def __init__(
         self,
@@ -55,6 +64,8 @@ class BattleSessionRules:
         boost_max_level=0,
         action_timing="immediate",
         boost_mode="repeat",
+        shield_resource_id="",
+        weakness_outcome_tag="outcome.weak",
     ):
         cost = float(boost_cost_per_level)
         if not isfinite(cost) or cost <= 0:
@@ -74,6 +85,8 @@ class BattleSessionRules:
         if boost_mode not in BOOST_MODES:
             raise ValueError(f"boost_mode must be one of {BOOST_MODES}")
         object.__setattr__(self, "boost_mode", boost_mode)
+        object.__setattr__(self, "shield_resource_id", str(shield_resource_id or "").strip())
+        object.__setattr__(self, "weakness_outcome_tag", str(weakness_outcome_tag or "").strip())
 
     @property
     def boost_enabled(self):
@@ -91,6 +104,12 @@ class BattleSessionRules:
             "boost_max_level": self.boost_max_level,
             **({"action_timing": self.action_timing} if self.action_timing != "immediate" else {}),
             **({"boost_mode": self.boost_mode} if self.boost_mode != "repeat" else {}),
+            **({"shield_resource_id": self.shield_resource_id} if self.shield_resource_id else {}),
+            **(
+                {"weakness_outcome_tag": self.weakness_outcome_tag}
+                if self.weakness_outcome_tag != "outcome.weak"
+                else {}
+            ),
         }
 
     @classmethod
@@ -106,4 +125,6 @@ class BattleSessionRules:
             boost_max_level=data["boost_max_level"],
             action_timing=data.get("action_timing", "immediate"),
             boost_mode=data.get("boost_mode", "repeat"),
+            shield_resource_id=data.get("shield_resource_id", ""),
+            weakness_outcome_tag=data.get("weakness_outcome_tag", "outcome.weak"),
         )

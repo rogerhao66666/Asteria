@@ -192,11 +192,14 @@ class AbilityDefinition:
     # commands               [{"command": "SUMMON", "args": {...}}] world commands run after the action;
     #                        "@actor" / "@target" in string args are replaced by member ids
     # concoct_station        the action combines ingredients the player picks (recipes of that station)
+    # apply_states           [{"state": id, "to": "targets" | "self" | "allies", "remove": false}] after the
+    #                        action: states go through the battle's state policies (chance, immunity, duration)
     battle_costs: dict = None
     hits: tuple = ()
     battle_resource_gains: tuple = ()
     commands: tuple = ()
     concoct_station: str = ""
+    apply_states: tuple = ()
     OPTIONAL_DATA = {
         "cooldown_turns": 0,
         "battle_costs": {},
@@ -204,6 +207,7 @@ class AbilityDefinition:
         "battle_resource_gains": [],
         "commands": [],
         "concoct_station": "",
+        "apply_states": [],
     }
 
     def __init__(
@@ -221,6 +225,7 @@ class AbilityDefinition:
         battle_resource_gains=(),
         commands=(),
         concoct_station="",
+        apply_states=(),
     ):
         ability_id = str(ability_id).strip()
         if not ability_id:
@@ -288,6 +293,21 @@ class AbilityDefinition:
             )
         object.__setattr__(self, "commands", tuple(clean_commands))
         object.__setattr__(self, "concoct_station", str(concoct_station or "").strip())
+        states = []
+        for entry in apply_states:
+            entry = dict(entry)
+            if not str(entry.get("state", "")).strip():
+                raise ValueError("apply_states entries need a state")
+            if entry.get("to", "targets") not in ("self", "targets", "allies"):
+                raise ValueError('apply_states "to" must be self, targets or allies')
+            states.append(
+                {
+                    "state": str(entry["state"]),
+                    "to": entry.get("to", "targets"),
+                    "remove": bool(entry.get("remove", False)),
+                }
+            )
+        object.__setattr__(self, "apply_states", tuple(states))
 
     def to_data(self):
         return {
@@ -309,6 +329,7 @@ class AbilityDefinition:
             ),
             **({"commands": [dict(c) for c in self.commands]} if self.commands else {}),
             **({"concoct_station": self.concoct_station} if self.concoct_station else {}),
+            **({"apply_states": [dict(x) for x in self.apply_states]} if self.apply_states else {}),
         }
 
     @classmethod
@@ -340,6 +361,7 @@ class AbilityDefinition:
             battle_resource_gains=data.get("battle_resource_gains", ()),
             commands=data.get("commands", ()),
             concoct_station=data.get("concoct_station", ""),
+            apply_states=data.get("apply_states", ()),
         )
 
 
@@ -379,14 +401,26 @@ class AbilityExecutionResult:
     effect_results: tuple[tuple[str, EffectApplicationResult], ...] = ()
 
 
+def _effective_stats(subject: GameplaySubject):
+    """The subject's stats with its active states' modifiers applied (attack up, defence down...)."""
+    states = subject.states
+    modifiers = states.modifiers() if states is not None else None
+    if not modifiers or not modifiers.modifiers():
+        return subject.stats
+    values = {
+        name: modifiers.evaluate(name, subject.stats.get(name), tags=subject.tags) for name in subject.stats.names()
+    }
+    return StatBlock(values)
+
+
 def _formula_context(source: GameplaySubject, target: GameplaySubject | None):
     if target is None:
         target = source
     return FormulaContext(
-        source.stats,
+        _effective_stats(source),
         source.resources,
         source.tags,
-        target.stats,
+        _effective_stats(target),
         target.resources,
         target.tags,
     )

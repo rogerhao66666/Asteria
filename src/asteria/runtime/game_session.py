@@ -426,6 +426,42 @@ class GameSessionRuntime:
         self.save.event_context.providers["battle"] = self._battle_value
         return bus
 
+    @property
+    def revealed_weaknesses(self):
+        """``{(enemy kind, interaction rule id)}`` found by hitting a weakness (kept for the whole session)."""
+        values = getattr(self, "_revealed_weaknesses", None)
+        if values is None:
+            values = self._revealed_weaknesses = set()
+        return values
+
+    def shield_resource(self):
+        """The battle resource shown as shields: the rules' ``shield_resource_id``, else the first break gauge's."""
+        if self.rules.shield_resource_id:
+            return self.rules.shield_resource_id
+        for composition_id in sorted(self.battle.gauge_compositions.definitions):
+            for impact in self.battle.gauge_compositions.definitions[composition_id].impacts:
+                return impact.resource_id
+        return ""
+
+    def weaknesses(self, member_id):
+        """The member's weaknesses for the battle screen: ``[(label, revealed)]`` from the interaction rules whose
+        outcome is the weakness tag and whose target tags the member carries (labels from their source tags)."""
+        weak = self.rules.weakness_outcome_tag
+        tags = self.battle.member(member_id).subject.tags
+        kind = str(member_id).split(":", 1)[0]
+        found = []
+        for rule in self.battle.interactions.rules.values():
+            if weak not in rule.outcome_tags:
+                continue
+            if rule.target_tags_all and not all(tags.contains(t) for t in rule.target_tags_all):
+                continue
+            if rule.target_tags_any and not any(tags.contains(t) for t in rule.target_tags_any):
+                continue
+            names = rule.source_tags_all or rule.source_tags_any or (rule.rule_id,)
+            label = "/".join(n.split(".")[-1] for n in names)
+            found.append((label, (kind, rule.rule_id) in self.revealed_weaknesses))
+        return found
+
     def _turn_skipped(self, event):
         data = event.data or {}
         self._log("turn_skipped", member_id=str(event.source), data={"states": tuple(data.get("blocking_states", ()))})
@@ -920,12 +956,10 @@ class GameSessionRuntime:
                 enemies.append(self._enemy_member(member.enemy_id, serial))
                 enemy_definition_ids.append(member.enemy_id)
 
-        registry = AbilityRegistry()
-        used = {a for member in (*heroes, *enemies) for a in member.ability_ids}
-        for ability_id in sorted(used):
-            definition = self.project.gameplay_library.abilities.get(ability_id)
-            if definition is not None:
-                registry.register(definition)
+        registry = AbilityRegistry()  # every project ability: items, summons and granted skills can act too
+        library = self.project.gameplay_library.abilities
+        for ability_id in library.ids():
+            registry.register(library.get(ability_id))
 
         scheduler = next(iter(db.battle_schedulers.values()), None)
         self.battle = BattleRuntime(
@@ -1106,6 +1140,28 @@ class GameSessionRuntime:
                         member_id, gain["resource"], gain["amount"], trigger="rpg.session.gain"
                     )
                     self._log("resource_gain", member_id=str(member_id), data=dict(gain))
+        for entry in definition.apply_states:
+            if entry["to"] == "self":
+                members = (actor_id,)
+            elif entry["to"] == "targets":
+                members = tuple(targets)
+            else:
+                members = tuple(m.member_id for m in battle.members.values() if m.side == side and battle.is_active(m))
+            for member_id in members:
+                if not battle.is_active(battle.member(member_id)):
+                    continue
+                if entry["remove"]:
+                    states = battle.member(member_id).subject.states
+                    if states is not None and states.get(entry["state"]) is not None:
+                        states.remove(entry["state"])
+                        self._log("state_removed", member_id=str(member_id), data={"state": entry["state"]})
+                else:
+                    result = battle.apply_state(entry["state"], actor_id, member_id)
+                    self._log(
+                        "state_applied",
+                        member_id=str(member_id),
+                        data={"state": entry["state"], "applied": result.applied},
+                    )
         for command in definition.commands:
             first = targets[0] if targets else ""
             args = {
@@ -1139,10 +1195,10 @@ class GameSessionRuntime:
                 return f"Needs {amount:g} {resource_id.replace('_', ' ')} (has {have:g})"
         resources = member.subject.resources
         for cost in definition.costs:
-            try:
-                amount = float(cost.amount.evaluate({}))
-            except Exception:  # formulas reading stats: the action itself checks them
-                continue
+            terms = cost.amount.terms
+            if not terms or any(t.source.value != "constant" for t in terms):
+                continue  # formulas reading stats: the action itself checks them
+            amount = sum(t.coefficient for t in terms)
             if resources.contains(cost.resource) and resources.current(cost.resource) < amount:
                 return f"Needs {amount:g} {cost.resource.replace('_', ' ')}"
         try:
@@ -1265,7 +1321,11 @@ class GameSessionRuntime:
             target_ids=tuple(targets),
             outcomes=outcomes,
         )
+        weak = self.rules.weakness_outcome_tag
         for target_id, outcome in outcomes:
+            if weak and weak in outcome.outcome_tags:  # a weakness hit reveals its rule for that enemy kind
+                kind = str(target_id).split(":", 1)[0]
+                self.revealed_weaknesses.update((kind, r) for r in outcome.value.matched_rules)
             for composition_id in sorted(self.battle.gauge_compositions.definitions):
                 gauge = self.battle.apply_gauge_impact(
                     composition_id,
@@ -1344,6 +1404,8 @@ class GameSessionRuntime:
             target_ids=targets,
             outcomes=self._action_outcomes(member_id, ability_id, targets, before),
         )
+        if getattr(result, "success", True):  # enemy abilities apply their states, gains and commands too
+            self._after_ability(member_id, self.battle.ability_runtime.registry.get(ability_id), targets)
         return result
 
     def run_enemy_turns(self, *, limit=1000):
@@ -1470,6 +1532,9 @@ class GameSessionRuntime:
                 target_ids=tuple(decision.target_ids),
                 outcomes=self._action_outcomes(member_id, ability_id, decision.target_ids, before),
             )
+            if self.battle is not None and getattr(result, "success", True):
+                definition = self.battle.ability_runtime.registry.get(ability_id)
+                self._after_ability(member_id, definition, tuple(decision.target_ids))
         return result
 
     def active_enemy_ids(self):

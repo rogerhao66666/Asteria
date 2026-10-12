@@ -236,6 +236,8 @@ class StructuredRecordEditor(QTreeWidget):
         # drop-down of suggestions (any typed value is still accepted)
         self.field_choices = {}
         self.itemChanged.connect(lambda *_: self.changed.emit())
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._structure_menu)
 
     def set_record(self, data, title=None):
         self.blockSignals(True)
@@ -305,6 +307,70 @@ class StructuredRecordEditor(QTreeWidget):
         item.setForeground(1, QBrush(Qt.transparent))  # the combo shows the value; the text stays for record()
         self.setItemWidget(item, 1, combo)
         return combo
+
+    # Entries a list field starts from when "Add Entry" is used on an empty list (any field may have one).
+    LIST_TEMPLATES = {
+        "hits": {"tags": [], "power": 1.0},
+        "battle_resource_gains": {"to": "targets", "resource": "", "amount": 1.0},
+        "commands": {"command": "", "args": {}},
+        "apply_states": {"state": "", "to": "targets", "remove": False},
+    }
+
+    def _value_at(self, data, path):
+        for part in path:
+            data = data[part]
+        return data
+
+    def _structure_menu(self, position):
+        """Add or remove list entries and dict fields (hits, commands, battle costs...) - the tree's structure."""
+        item = self.itemAt(position)
+        if item is None or self._data is None:
+            return
+        path = tuple(item.data(0, Qt.UserRole) or ())
+        menu = QMenu(self)
+        target = self._value_at(self.record(), path)
+        if isinstance(target, list) and not (target and all(isinstance(v, _SCALARS) for v in target)):
+            menu.addAction("Add Entry", lambda: self.add_entry(path))
+        if isinstance(target, dict) and path:
+            menu.addAction("Add Field…", lambda: self.add_field(path))
+        if path and isinstance(path[-1], int):
+            menu.addAction("Remove Entry", lambda: self.remove_entry(path))
+        if not menu.isEmpty():
+            menu.exec(self.viewport().mapToGlobal(position))
+
+    def _restructure(self, data):
+        title = self.topLevelItem(0).text(0) if self.topLevelItem(0) is not None else None
+        self.set_record(data, title)
+        self.changed.emit()
+
+    def add_entry(self, path):
+        data = self.record()
+        values = self._value_at(data, path)
+        key = next((p for p in reversed(path) if isinstance(p, str)), "")
+        if values:
+            entry = deepcopy(values[-1])
+        else:
+            entry = deepcopy(self.LIST_TEMPLATES.get(key, {}))
+        values.append(entry)
+        self._restructure(data)
+        return entry
+
+    def remove_entry(self, path):
+        data = self.record()
+        del self._value_at(data, path[:-1])[path[-1]]
+        self._restructure(data)
+
+    def add_field(self, path, name=None, value=0.0):
+        if name is None:
+            from PySide6.QtWidgets import QInputDialog
+
+            name, ok = QInputDialog.getText(self, "Add Field", "Name (e.g. a resource id):")
+            if not ok or not str(name).strip():
+                return None
+        data = self.record()
+        self._value_at(data, path)[str(name).strip()] = value
+        self._restructure(data)
+        return name
 
     def record(self):
         if self._data is None:

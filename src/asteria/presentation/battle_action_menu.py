@@ -265,6 +265,17 @@ class BattleActionMenuRuntime:
         self.cursor = 0
         return self._refresh()
 
+    def show(self, entries, category, index):
+        """Entries, the active category and the selected row (``index`` within that category, any page) at once:
+        for a controller that keeps its own cursor."""
+        self._source = tuple(entries)
+        self.active_category = _id(category, "category")
+        self.query = ""
+        index = max(0, int(index))
+        self.page = index // self.policy.page_size
+        self.cursor = index % self.policy.page_size
+        return self._refresh()
+
     def set_page(self, page):
         self.page = int(page)
         self.cursor = 0

@@ -117,7 +117,6 @@ class PlayableTestRuntime:
         self.debug_server = None
         self._ui_mode = "title"
         self._menu_actor_index = 0
-        self._boost_level = 0
         self._turn_actor = None
         self._victory_summary = []
         self._fonts = {}
@@ -1163,6 +1162,26 @@ class PlayableTestRuntime:
         if not self.game.active_hero_ids():
             self._defeat = True
 
+    @property
+    def battle_commands(self):
+        """The player's battle command menu for the current game (skills, items, concoct, boost, targets)."""
+        from .battle_commands import BattleCommands
+
+        commands = getattr(self, "_battle_commands", None)
+        if commands is None or commands.game is not self.game:
+            labels = self.manifest.get("battle", {}).get("skills", {})
+            commands = self._battle_commands = BattleCommands(self.game, labels=labels)
+        return commands
+
+    @property
+    def _boost_level(self):
+        commands = getattr(self, "_battle_commands", None)
+        return commands.boost if commands is not None and commands.game is self.game else 0
+
+    @_boost_level.setter
+    def _boost_level(self, value):
+        self.battle_commands.boost = int(value)
+
     def _skills_for_actor(self, actor_id):
         if actor_id is None:
             return []
@@ -1210,7 +1229,66 @@ class PlayableTestRuntime:
             self._battle_presentation.update(dt)
         with self.profiler.section("render"):
             self._battle_presentation.draw()
+            self._draw_battle_extras()
         self._flush_victory_audio()
+
+    def _draw_battle_extras(self):
+        """Shields and weaknesses under each enemy, boost points under each hero, the chosen boost level."""
+        game, adapter = self.game, self._battle_presentation
+        box = getattr(adapter, "member_screen_box", None)
+        if game.battle is None or box is None or self._victory or self._defeat:
+            return
+        pg, battle = self.pg, game.battle
+        shield = game.shield_resource()
+        bp = game.rules.boost_resource_id if game.rules.boost_enabled else ""
+        for member in battle.members.values():
+            if not battle.is_active(member):
+                continue
+            where = box(member.member_id)
+            if where is None:
+                continue
+            x, top, feet = where
+            y = feet + 6
+            if member.side != "heroes":
+                y = top + 4  # just under its name and bar: rows of stacked enemies never overlap
+                cells = []
+                held = game.turn_prevented(member.member_id)
+                if held:  # broken, asleep...: the state that holds it
+                    cells.append((held[0].replace("_", " ").upper()[:7], (220, 70, 70)))
+                elif shield and battle.battle_resources.get(member.member_id, shield) is not None:
+                    value = battle.battle_resources.current(member.member_id, shield)
+                    cells.append((f"{value:g}", (120, 150, 210)))
+                for label, revealed in game.weaknesses(member.member_id):
+                    cells.append((label[:5] if revealed else "?", (70, 80, 100) if not revealed else (200, 170, 70)))
+                widths = [max(16, len(text) * 7 + 6) for text, _ in cells]
+                cx = x - (sum(widths) + 2 * (len(cells) - 1)) / 2
+                for (text, color), width in zip(cells, widths, strict=True):
+                    pg.draw.rect(self.screen, (16, 18, 28), (cx - 1, y - 1, width + 2, 16), border_radius=3)
+                    pg.draw.rect(self.screen, color, (cx, y, width, 14), border_radius=3)
+                    self.text(text, cx + width / 2, y, size=15, color=(250, 250, 255), center=True)
+                    cx += width + 2
+            elif bp and battle.battle_resources.get(member.member_id, bp) is not None:
+                value = battle.battle_resources.current(member.member_id, bp)
+                top = battle.battle_resources.get(member.member_id, bp).maximum
+                for i in range(int(top)):
+                    filled = i < value
+                    centre = (round(x - (top - 1) * 5 + i * 10), round(y + 4))
+                    pg.draw.circle(self.screen, (255, 196, 70) if filled else (60, 66, 84), centre, 4)
+            states = member.subject.states
+            names = [a.state_id for a in states.active_states()] if states is not None else []
+            if names:  # poison, silence, attack up...
+                label = " ".join(n.replace("_", " ") for n in names)[:28]
+                self.text(label, x, y + 20, size=15, color=(220, 180, 255), center=True)
+        actor = self._battle_actor()
+        commands = getattr(self, "_battle_commands", None)
+        if actor is not None and commands is not None and commands.game is game:
+            where = box(actor)
+            if where is not None and commands.boost:
+                self.text(
+                    f"BOOST x{commands.boost + 1}", where[0], where[1] - 22, size=22, color=(255, 210, 90), center=True
+                )
+            if commands.message:
+                self.text(commands.message, self.width / 2, 70, size=20, color=(255, 170, 150), center=True)
 
     def _use_skill(self, slot):
         actor = self._battle_actor()
@@ -1259,6 +1337,26 @@ class PlayableTestRuntime:
             return
         self._advance_to_hero_turn()
 
+    @property
+    def _COMMAND_KEYS(self):  # noqa: N802 - a key table
+        pg = self.pg
+        return {
+            pg.K_UP: "up",
+            pg.K_w: "up",
+            pg.K_DOWN: "down",
+            pg.K_s: "down",
+            pg.K_LEFT: "left",
+            pg.K_a: "left",
+            pg.K_RIGHT: "right",
+            pg.K_d: "right",
+            pg.K_RETURN: "confirm",
+            pg.K_SPACE: "confirm",
+            pg.K_e: "confirm",
+            pg.K_ESCAPE: "cancel",
+            pg.K_BACKSPACE: "cancel",
+            pg.K_TAB: "category",
+        }
+
     def _battle_input(self, events):
         if self._victory:
             if self._presentation_busy():
@@ -1286,6 +1384,16 @@ class PlayableTestRuntime:
                 actor = self._battle_actor()
                 if actor:
                     self._boost_level = (self._boost_level + 1) % (self.game.max_boost_level(actor) + 1)
+            elif event.key in self._COMMAND_KEYS:
+                actor = self._battle_actor()
+                commands = self.battle_commands
+                if commands.press(self._COMMAND_KEYS[event.key], actor):
+                    self._last_action_name = f"{actor} acts"
+                    self._after_hero_action()
+                    return
+                if commands.message == "capture":
+                    commands.message = ""
+                    self._capture_menu = bool(self.game.capture_targets())
             elif event.key in (self.pg.K_1, self.pg.K_KP1):
                 self._use_skill(0)
             elif event.key in (self.pg.K_2, self.pg.K_KP2):

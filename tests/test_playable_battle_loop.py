@@ -188,10 +188,11 @@ def test_canonical_adapter_drives_hud_menu_feedback_and_renders(resource_root, m
         screen = runtime._battle_presentation.screen
         assert screen.hud.members
         actor = runtime._battle_actor()
-        ids = [e.action_id for e in screen.action_menu.view.entries]
+        ids = [e.action_id for e in screen.action_menu._source]  # every page of the command menu
         skills = [a for a, _ in runtime._skills_for_actor(actor)]
-        boost = ["boost"] if runtime.game.max_boost_level(actor) > 0 else []
-        assert ids == skills + boost  # skills, then the boost command (legacy HUD parity)
+        assert ids[: len(skills)] == skills  # the authored skills first (keys 1-4), then every other one
+        if runtime.game.max_boost_level(actor) > 0:
+            assert "boost" in ids
 
         runtime.screen.fill((0, 0, 0))
         blank = pygame.image.tobytes(runtime.screen, "RGB")

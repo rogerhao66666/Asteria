@@ -808,6 +808,11 @@ class CanonicalBattleAdapter:
             # Commands appear only while a hero is waiting for input.
             if actor is None or self.busy() or self.host._victory or self.host._defeat:
                 skills = ()
+            commands = getattr(self.host, "battle_commands", None)
+            if commands is not None:  # the full command menu (skills, items, concoct, targets)
+                self._show_commands(commands, actor if skills else None)
+                self.screen.update(dt)
+                return
             entries = []
             for i, (ability_id, meta) in enumerate(skills):
                 wait = game.battle.cooldown_remaining(actor, ability_id)  # GP-02 cooldowns
@@ -827,6 +832,44 @@ class CanonicalBattleAdapter:
                 )
             self.screen.set_action_entries(entries)
         self.screen.update(dt)
+
+    def member_screen_box(self, member_id):
+        """``(centre_x, top_y, feet_y)`` of a combatant on the window in pixels, or None when not shown."""
+        view = self._view_camera
+        if view is None or self.screen is None:
+            return None
+        try:
+            visual = self.screen.scene.visual_for(member_id)
+        except KeyError:
+            return None
+        try:
+            body = self.resolver.sprite_sheet(visual.sprite_sheet_asset_id).frames[0]
+            height = body.height / visual.source_pixels_per_logical_pixel
+        except (KeyError, BattleVisualError, AttributeError, IndexError):
+            height = 32.0
+        scale = self.textures.scale if self.textures is not None else 1.0
+        x, feet = view.world_to_screen(visual.anchor.x, visual.anchor.y)
+        _, top = view.world_to_screen(visual.anchor.x, visual.anchor.y - height)
+        return x * scale, top * scale, feet * scale
+
+    def _show_commands(self, commands, actor):
+        menu, feedback = self.screen.action_menu, self.screen.camera_feedback
+        if menu.policy.include_all_category:  # the command menu shows its own categories only
+            from dataclasses import replace
+
+            menu.policy = replace(menu.policy, include_all_category=False)
+        if actor is None:
+            menu.show((), "Skills", 0)
+            feedback.target_ids, feedback.primary_target_id = (), None
+            return
+        rows = commands.entries(actor)
+        if commands.mode == "command":
+            everything = commands.skill_rows(actor) + commands.item_rows()
+            menu.show(everything, commands.category, commands.cursor)
+        else:
+            menu.show(rows, rows[0].category if rows else "Target", commands.cursor)
+        target = commands.selected_target(actor)
+        feedback.target_ids, feedback.primary_target_id = ((target,), target) if target else ((), None)
 
     def _background(self):
         """The battle background image, or a plain backdrop when the project has none."""

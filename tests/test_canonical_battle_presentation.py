@@ -137,7 +137,7 @@ def test_capture_prompt_appears_in_the_canonical_action_menu(battle):
     db = runtime.game.project.rpg_database
     db.add_capture_rule(CaptureRule("mender_wisp", "hero_01", base_chance=0.25))
     runtime._present_battle(0.016)
-    labels = [e.label for e in adapter.screen.action_menu.view.entries]
+    labels = [e.label for e in adapter.screen.action_menu._source]  # every page of the command menu
     assert any(label.startswith("X  Capture (") for label in labels)
 
 
