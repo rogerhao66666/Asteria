@@ -27,6 +27,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import exp
 
+from asteria import kernels
 from asteria.core import Component, Field, System, Transform, component_schema, world_position
 from asteria.core.migration import component_migration
 
@@ -409,6 +410,8 @@ class HitEvent:
     target_id: str
     hit_tag: str
     team: str
+    origin: tuple | None = None  # where the hit came from when it is not the attacker (a projectile)
+    direction: tuple | None = None  # the hit's travel direction (a projectile's velocity)
 
 
 def facing_box(entity, spec):
@@ -432,6 +435,15 @@ def facing_box(entity, spec):
 _box = facing_box
 
 
+def _columns(boxes):
+    """``(x0, y0, x1, y1)`` boxes -> four columns for the kernels."""
+    columns = ([], [], [], [])
+    for box in boxes:
+        for column, value in zip(columns, box, strict=True):
+            column.append(value)
+    return columns
+
+
 def _overlaps(a, b):
     return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
 
@@ -445,7 +457,8 @@ class HitboxSystem(System):
 
     order = 60
 
-    def __init__(self):
+    def __init__(self, cell_size=64.0):
+        self.cell_size = float(cell_size)
         self.events: list[HitEvent] = []
         self.listeners = []
         self.iframes: dict[str, float] = {}
@@ -459,20 +472,31 @@ class HitboxSystem(System):
 
     def update(self, scene, dt):
         self.iframes = {k: v - dt for k, v in self.iframes.items() if v - dt > 0}
-        hurtboxes = [(e, h, _box(e, h)) for e, h in scene.query(Hurtbox2DComponent) if h.enabled and e.has(Transform)]
-        events = []
+        hurtboxes = [(e, h) for e, h in scene.query(Hurtbox2DComponent) if h.enabled and e.has(Transform)]
+        attackers = []
         for attacker, hitbox in scene.query(Hitbox2DComponent):
             if not (hitbox.enabled and hitbox.active and attacker.has(Transform)):
                 self._hit_this_activation.pop(attacker.id, None)  # next activation can hit again
                 continue
-            already = self._hit_this_activation.setdefault(attacker.id, set())
-            box = _box(attacker, hitbox)
-            for target, hurtbox, target_box in hurtboxes:
+            self._hit_this_activation.setdefault(attacker.id, set())
+            attackers.append((attacker, hitbox))
+        events = []
+        if attackers and hurtboxes:
+            # one batched overlap test (asteria.kernels) instead of every hitbox against every hurtbox
+            pairs = kernels.active().aabb_cross_pairs(
+                _columns(facing_box(e, h) for e, h in attackers),
+                _columns(facing_box(e, h) for e, h in hurtboxes),
+                self.cell_size,
+            )
+            for i, j in pairs:  # sorted: attacker order, then hurtbox order
+                attacker, hitbox = attackers[i]
+                target, hurtbox = hurtboxes[j]
+                already = self._hit_this_activation[attacker.id]
                 if target is attacker or target.id in already:
                     continue
                 if hitbox.team and hitbox.team == hurtbox.team:
                     continue
-                if self.invincible(target.id, hurtbox) or not _overlaps(box, target_box):
+                if self.invincible(target.id, hurtbox):
                     continue
                 already.add(target.id)
                 events.append(HitEvent(attacker.id, target.id, hitbox.hit_tag, hitbox.team))

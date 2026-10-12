@@ -8,6 +8,8 @@ an entity; each update applies the cues it crosses:
 * ``movement``       → the ``CharacterController2D`` intent (``x``, ``y``) for ``duration``
 * ``hitbox``         → the entity's ``Hitbox2D`` is active for ``duration`` (``hit_tag`` optional)
 * ``iframe``         → invincibility for ``duration`` (``HitboxSystem.grant_invincibility``)
+* ``projectile``     → fires ``projectile_id`` from the entity (``projectiles.fire_from``: count, spread,
+  angle, offset turned with the facing)
 * ``armor``          → super armor ``level`` for ``duration`` (``armor.grant_armor``, e.g. ``CombatSystem``); it
   ends with the action
 * ``cancel_window`` / ``combo_window`` → open for ``duration``; ``cancel()`` / ``window_open()``
@@ -56,8 +58,9 @@ class ActionEvent:
 class EntityActionSystem(System):
     order = 25  # after input (10) and AI (20), before CharacterControllerSystem (30) so cues move this frame
 
-    def __init__(self, hitboxes=None, *, paused=None, armor=None):
+    def __init__(self, hitboxes=None, *, paused=None, armor=None, projectiles=None):
         self.hitboxes = hitboxes
+        self.projectiles = projectiles  # fire_from(entity, payload), e.g. ProjectileSystem
         self.armor = armor  # grant_armor(entity_id, level, seconds) / end_armor(entity_id), e.g. CombatSystem
         self.paused = paused  # optional callable(entity_id) -> True while frozen (hitstop)
         self.running: dict[str, _Running] = {}
@@ -135,6 +138,10 @@ class EntityActionSystem(System):
         elif kind == ActionCueKind.IFRAME:
             if self.hitboxes is not None:
                 self.hitboxes.grant_invincibility(entity.id, float(payload.get("duration", 0.0)))
+        elif kind == ActionCueKind.PROJECTILE:
+            if self.projectiles is None:
+                raise ValueError(f"{entity.name} fired a projectile cue but no projectile system is running")
+            self.projectiles.fire_from(entity, payload)
         elif kind == ActionCueKind.ARMOR:
             if self.armor is not None:
                 self.armor.grant_armor(entity.id, int(payload.get("level", 1)), float(payload.get("duration", 0.0)))

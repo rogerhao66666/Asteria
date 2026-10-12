@@ -296,7 +296,7 @@ class CombatSystem(System):
         state = self.state(target)
         if state.dead:
             return
-        if attack.max_targets:
+        if attack.max_targets and hit.origin is None:  # projectiles count targets with their own pierce
             landed = self._landed.get(hit.attacker_id, 0)
             if landed >= attack.max_targets:
                 return
@@ -377,7 +377,7 @@ class CombatSystem(System):
 
         if react and controller is not None and (attack.knockback or attack.knockback_lift):
             scale = 1.0 - combatant.knockback_resistance
-            dx, dy = self._knock_direction(attack, attacker, target)
+            dx, dy = self._knock_direction(attack, attacker, target, hit)
             controller.apply_impulse(
                 dx * attack.knockback * scale, (dy * attack.knockback - attack.knockback_lift) * scale
             )
@@ -400,14 +400,21 @@ class CombatSystem(System):
             self._die(scene, target, combatant, state, removed, common)
 
     @staticmethod
-    def _knock_direction(attack, attacker, target):
+    def _knock_direction(attack, attacker, target, hit=None):
         if attack.knockback_direction == "fixed":
             angle = radians(attack.knockback_angle)
             return cos(angle), sin(angle)
         dx = dy = 0.0
-        if attack.knockback_direction == "away" and attacker is not None:
-            (ax, ay), (tx, ty) = world_position(attacker), world_position(target)
+        origin = getattr(hit, "origin", None)
+        direction = getattr(hit, "direction", None)
+        if attack.knockback_direction == "away" and (origin is not None or attacker is not None):
+            ax, ay = origin if origin is not None else world_position(attacker)
+            tx, ty = world_position(target)
             dx, dy = tx - ax, ty - ay
+        elif attack.knockback_direction == "attacker_facing" and direction is not None:
+            dx, dy = direction  # a projectile pushes along its flight
+        if hypot(dx, dy) < 1e-9 and direction is not None:
+            dx, dy = direction
         if hypot(dx, dy) < 1e-9 and attacker is not None:
             controller = attacker.try_get(CharacterController2DComponent)
             dx, dy = facing_vector(controller.facing if controller is not None else "right")

@@ -193,8 +193,8 @@ def test_attack_definitions_round_trip_and_live_in_the_gameplay_library():
     library = GameplayLibrary()
     library.add_attack(attack)
     data = library.to_data()
-    assert data["version"] == 2 and GameplayLibrary.from_data(data).attacks["slash"] == attack
-    old = {k: v for k, v in data.items() if k != "attacks"} | {"version": 1}
+    assert data["version"] == 3 and GameplayLibrary.from_data(data).attacks["slash"] == attack
+    old = {k: v for k, v in data.items() if k not in ("attacks", "projectiles")} | {"version": 1}
     assert GameplayLibrary.from_data(old).attacks == {}
     with pytest.raises(ValueError):
         AttackDefinition("x", knockback_direction="sideways")

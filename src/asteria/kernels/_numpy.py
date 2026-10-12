@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from asteria.kernels._python import FIELDS, WEATHER_FIELDS
+from asteria.kernels._python import FIELDS, PROJECTILE_FIELDS, WEATHER_FIELDS, _turn_cosines
 
 NAME = "numpy"
 
@@ -162,3 +162,102 @@ def aabb_pairs(x0, y0, x1, y1, cell_size=64.0):
     lo, hi = np.minimum(i[hit], j[hit]), np.maximum(i[hit], j[hit])
     ranked = np.lexsort((hi, lo))
     return list(zip(lo[ranked].tolist(), hi[ranked].tolist(), strict=True))
+
+
+def _cells(x0, y0, x1, y1, cell_size):
+    """(row, cell key) for every grid cell each box covers."""
+    cx0, cx1 = np.floor(x0 / cell_size).astype(np.int64), np.floor(x1 / cell_size).astype(np.int64)
+    cy0, cy1 = np.floor(y0 / cell_size).astype(np.int64), np.floor(y1 / cell_size).astype(np.int64)
+    w, h = cx1 - cx0 + 1, cy1 - cy0 + 1
+    counts = w * h
+    row = np.repeat(np.arange(len(x0)), counts)
+    k = np.arange(int(counts.sum())) - np.repeat(np.cumsum(counts) - counts, counts)
+    cx = cx0[row] + k % w[row]
+    cy = cy0[row] + k // w[row]
+    return row, (cx << 32) ^ (cy & 0xFFFFFFFF)
+
+
+def aabb_cross_pairs(a, b, cell_size=64.0):
+    """Same pairs as the reference: a grid join (cells of ``a`` matched to sorted cells of ``b``)."""
+    if cell_size <= 0:
+        raise ValueError("cell_size must be positive")
+    ax0, ay0, ax1, ay1 = (np.asarray(v, dtype=float) for v in a)
+    bx0, by0, bx1, by1 = (np.asarray(v, dtype=float) for v in b)
+    if not len(ax0) or not len(bx0):
+        return []
+    a_row, a_key = _cells(ax0, ay0, ax1, ay1, cell_size)
+    b_row, b_key = _cells(bx0, by0, bx1, by1, cell_size)
+    order = np.argsort(b_key, kind="stable")
+    b_row, b_key = b_row[order], b_key[order]
+    lo = np.searchsorted(b_key, a_key, side="left")
+    counts = np.searchsorted(b_key, a_key, side="right") - lo
+    total = int(counts.sum())
+    if not total:
+        return []
+    i = np.repeat(a_row, counts)
+    j = b_row[np.repeat(lo, counts) + np.arange(total) - np.repeat(np.cumsum(counts) - counts, counts)]
+    hit = (ax0[i] < bx1[j]) & (bx0[j] < ax1[i]) & (ay0[i] < by1[j]) & (by0[j] < ay1[i])
+    code = np.unique(i[hit] * len(bx0) + j[hit])
+    return list(zip((code // len(bx0)).tolist(), (code % len(bx0)).tolist(), strict=True))
+
+
+class ProjectileStore:
+    _INDEX = {name: k for k, name in enumerate(PROJECTILE_FIELDS)}
+
+    def __init__(self):
+        self._data = np.empty((len(PROJECTILE_FIELDS), 0))
+
+    def __len__(self):
+        return self._data.shape[1]
+
+    def column(self, name):
+        return self._data[self._INDEX[name]].tolist()
+
+    def add(self, rows):
+        rows = list(rows)
+        if rows:
+            self._data = np.concatenate((self._data, np.array(rows, dtype=float).T), axis=1)
+
+    def set_velocity(self, index, vx, vy):
+        self._data[2, index], self._data[3, index] = float(vx), float(vy)
+
+    def set_values(self, index, **values):
+        for name, value in values.items():
+            self._data[self._INDEX[name], index] = float(value)
+
+    def keep(self, indices):
+        self._data = self._data[:, np.asarray(indices, dtype=np.int64)]
+
+    def step(self, dt, target_x=None, target_y=None):
+        x, y, vx, vy, gravity, age, _life, _hw, _hh, turn, _uid = self._data
+        if target_x is not None and len(x):
+            tx, ty = np.asarray(target_x, dtype=float), np.asarray(target_y, dtype=float)
+            rot = _turn_cosines(turn.tolist(), dt)
+            c = np.ones_like(turn)
+            s = np.zeros_like(turn)
+            for t, (ct, st) in rot.items():
+                c[turn == t], s[turn == t] = ct, st
+            dx, dy = tx - x, ty - y
+            dist = np.sqrt(dx * dx + dy * dy)
+            speed = np.sqrt(vx * vx + vy * vy)
+            live = (turn > 0) & (tx == tx) & (dist != 0.0) & (speed != 0.0)
+            with np.errstate(divide="ignore", invalid="ignore"):
+                aim = live & ((vx * dx + vy * dy) / (speed * dist) >= c)
+                aim_vx, aim_vy = dx / dist * speed, dy / dist * speed
+            turning = live & ~aim
+            s = np.where(vx * dy - vy * dx > 0, s, -s)
+            rot_vx, rot_vy = vx * c - vy * s, vx * s + vy * c
+            new_vx = np.where(aim, aim_vx, np.where(turning, rot_vx, vx))
+            new_vy = np.where(aim, aim_vy, np.where(turning, rot_vy, vy))
+            vx[:], vy[:] = new_vx, new_vy
+        vy += gravity * dt
+        x += vx * dt
+        y += vy * dt
+        age += dt
+
+    def boxes(self):
+        x, y, hw, hh = self._data[0], self._data[1], self._data[7], self._data[8]
+        return (x - hw, y - hh, x + hw, y + hh)
+
+    def expired(self):
+        return np.flatnonzero(self._data[5] >= self._data[6]).tolist()

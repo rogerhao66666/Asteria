@@ -209,7 +209,19 @@ class GameSessionRuntime:
                 counters=self.world.counters,  # drop table pity is saved with the world state
                 switches=self.save.event_context.get_switch,
             )
-            actions = EntityActionSystem(hitboxes=hits, paused=combat.paused, armor=combat)
+            from asteria.runtime.projectiles import ProjectileSystem
+
+            def frame_world():
+                world = self._frame_collision_world
+                if world is None:
+                    with self.profiler.section("collision"):
+                        world = self._frame_collision_world = CollisionWorld.from_scene(scene)
+                return world
+
+            projectiles = ProjectileSystem(
+                library.projectiles, hits=hits, combat=combat, world=frame_world, paused=combat.paused
+            )
+            actions = EntityActionSystem(hitboxes=hits, paused=combat.paused, armor=combat, projectiles=projectiles)
             combat.actions = actions
             behavior = BehaviorTreeSystem(
                 self.project.rpg_database.behavior_trees,  # RPG-09
@@ -228,6 +240,7 @@ class GameSessionRuntime:
                 "actions": actions,
                 "controllers": CharacterControllerSystem(paused=combat.paused),
                 "hits": hits,
+                "projectiles": projectiles,
                 "combat": combat,
             }
             self._field_simulation[scene.id] = systems
@@ -249,6 +262,9 @@ class GameSessionRuntime:
         with self.profiler.section("collision"):
             systems["controllers"].update(self.scene, float(dt))
             systems["hits"].update(self.scene, float(dt))
+        self._frame_collision_world = None  # walls for projectiles: after this frame's movement
+        with self.profiler.section("projectiles"):
+            systems["projectiles"].update(self.scene, float(dt))
         with self.profiler.section("combat"):
             systems["combat"].update(self.scene, float(dt))
         pending = getattr(self, "_pending_tree_encounter", None)
@@ -281,6 +297,11 @@ class GameSessionRuntime:
     def combat(self):
         """Real-time combat resolution (ASTERIA_SPEC §20) for the current scene; ``combat.events`` per update."""
         return self._field_systems()["combat"]
+
+    @property
+    def projectiles(self):
+        """Projectiles in flight (ASTERIA_SPEC §20) for the current scene; ``fire`` / ``views()`` / ``events``."""
+        return self._field_systems()["projectiles"]
 
     @property
     def hits(self):

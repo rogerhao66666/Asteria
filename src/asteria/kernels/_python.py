@@ -11,6 +11,8 @@ NAME = "python"
 FIELDS = ("px", "py", "vx", "vy", "life", "max_life", "size_k", "angle", "spin")
 # column order of a weather particle row
 WEATHER_FIELDS = ("x", "y", "vy", "size", "phase")
+# column order of a projectile row (turn = homing turn rate, radians per second; uid = caller's id)
+PROJECTILE_FIELDS = ("x", "y", "vx", "vy", "gravity", "age", "life", "hw", "hh", "turn", "uid")
 
 
 class ParticleStore:
@@ -132,3 +134,107 @@ def aabb_pairs(x0, y0, x1, y1, cell_size=64.0):
                 if x0[i] <= x1[j] and x0[j] <= x1[i] and y0[i] <= y1[j] and y0[j] <= y1[i]:
                     pairs.add((i, j) if i < j else (j, i))
     return sorted(pairs)
+
+
+def aabb_cross_pairs(a, b, cell_size=64.0):
+    """Pairs ``(i, j)`` where box ``a[i]`` overlaps box ``b[j]`` (strictly: touching edges do not count), sorted.
+
+    ``a`` and ``b`` are ``(x0, y0, x1, y1)`` column tuples. A uniform grid over ``b`` finds the candidates.
+    """
+    if cell_size <= 0:
+        raise ValueError("cell_size must be positive")
+    ax0, ay0, ax1, ay1 = a
+    bx0, by0, bx1, by1 = b
+    cells = {}
+    for j in range(len(bx0)):
+        for cx in range(floor(bx0[j] / cell_size), floor(bx1[j] / cell_size) + 1):
+            for cy in range(floor(by0[j] / cell_size), floor(by1[j] / cell_size) + 1):
+                cells.setdefault((cx, cy), []).append(j)
+    pairs = set()
+    for i in range(len(ax0)):
+        for cx in range(floor(ax0[i] / cell_size), floor(ax1[i] / cell_size) + 1):
+            for cy in range(floor(ay0[i] / cell_size), floor(ay1[i] / cell_size) + 1):
+                for j in cells.get((cx, cy), ()):
+                    if ax0[i] < bx1[j] and bx0[j] < ax1[i] and ay0[i] < by1[j] and by0[j] < ay1[i]:
+                        pairs.add((i, j))
+    return sorted(pairs)
+
+
+def _turn_cosines(turns, dt):
+    """cos / sin of each distinct per-step turn angle, computed once with ``math`` (shared by every kernel set)."""
+    return {t: (math.cos(t * dt), math.sin(t * dt)) for t in set(turns) if t > 0}
+
+
+class ProjectileStore:
+    """Projectile columns: homing, gravity, motion, ageing; boxes for hit tests."""
+
+    def __init__(self):
+        for name in PROJECTILE_FIELDS:
+            setattr(self, name, [])
+
+    def __len__(self):
+        return len(self.x)
+
+    def column(self, name):
+        return list(getattr(self, name))
+
+    def add(self, rows):
+        """Append projectiles; each row holds the ``PROJECTILE_FIELDS`` values in order."""
+        columns = [getattr(self, name) for name in PROJECTILE_FIELDS]
+        for row in rows:
+            for column, value in zip(columns, row, strict=True):
+                column.append(float(value))
+
+    def set_velocity(self, index, vx, vy):
+        self.vx[index], self.vy[index] = float(vx), float(vy)
+
+    def set_values(self, index, **values):
+        """Overwrite named columns of one row (e.g. ``x``, ``y``, ``gravity``)."""
+        for name, value in values.items():
+            getattr(self, name)[index] = float(value)
+
+    def keep(self, indices):
+        """Keep only the rows at ``indices`` (ascending)."""
+        for name in PROJECTILE_FIELDS:
+            values = getattr(self, name)
+            setattr(self, name, [values[i] for i in indices])
+
+    def step(self, dt, target_x=None, target_y=None):
+        """Homing toward ``target_x/y`` (``nan`` = no target; at most ``turn * dt`` per step, no trig on rows),
+        then gravity, motion and ageing."""
+        x, y, vx, vy = self.x, self.y, self.vx, self.vy
+        if target_x is not None:
+            rot = _turn_cosines(self.turn, dt)
+            for i in range(len(x)):
+                tx, ty, turn = target_x[i], target_y[i], self.turn[i]
+                if turn <= 0 or tx != tx:
+                    continue
+                dx, dy = tx - x[i], ty - y[i]
+                dist = math.sqrt(dx * dx + dy * dy)
+                speed = math.sqrt(vx[i] * vx[i] + vy[i] * vy[i])
+                if dist == 0.0 or speed == 0.0:
+                    continue
+                c, s = rot[turn]
+                if (vx[i] * dx + vy[i] * dy) / (speed * dist) >= c:
+                    vx[i], vy[i] = dx / dist * speed, dy / dist * speed  # within this step's turn: aim straight
+                else:
+                    s = s if vx[i] * dy - vy[i] * dx > 0 else -s
+                    vx[i], vy[i] = vx[i] * c - vy[i] * s, vx[i] * s + vy[i] * c
+        for i in range(len(x)):
+            vy[i] += self.gravity[i] * dt
+            x[i] += vx[i] * dt
+            y[i] += vy[i] * dt
+            self.age[i] += dt
+
+    def boxes(self):
+        x, y, hw, hh = self.x, self.y, self.hw, self.hh
+        n = range(len(x))
+        return (
+            [x[i] - hw[i] for i in n],
+            [y[i] - hh[i] for i in n],
+            [x[i] + hw[i] for i in n],
+            [y[i] + hh[i] for i in n],
+        )
+
+    def expired(self):
+        return [i for i in range(len(self.x)) if self.age[i] >= self.life[i]]

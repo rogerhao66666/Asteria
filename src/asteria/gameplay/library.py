@@ -6,6 +6,7 @@ from .abilities import AbilityDefinition, AbilityRegistry
 from .action_timeline import ActionTimeline
 from .attacks import AttackDefinition
 from .formulas import ValueFormula
+from .projectiles import ProjectileDefinition
 from .states import StateDefinition, StateRegistry
 from .triggers import GameplayTrigger
 
@@ -24,6 +25,7 @@ class GameplayLibrary:
     triggers: dict[str, GameplayTrigger]
     timelines: dict[str, ActionTimeline]
     attacks: dict[str, AttackDefinition]
+    projectiles: dict[str, ProjectileDefinition]
 
     def __init__(self):
         self.abilities = AbilityRegistry()
@@ -32,6 +34,7 @@ class GameplayLibrary:
         self.triggers = {}
         self.timelines = {}
         self.attacks = {}
+        self.projectiles = {}
 
     def add_formula(self, key, formula):
         key = str(key).strip()
@@ -72,16 +75,25 @@ class GameplayLibrary:
         self.attacks[attack.attack_id] = attack
         return attack
 
+    def add_projectile(self, projectile):
+        if not isinstance(projectile, ProjectileDefinition):
+            raise TypeError("projectile must be ProjectileDefinition")
+        if projectile.projectile_id in self.projectiles:
+            raise ValueError(f"duplicate projectile: {projectile.projectile_id}")
+        self.projectiles[projectile.projectile_id] = projectile
+        return projectile
+
     def to_data(self):
         return {
             "schema": "asteria.gameplay_library",
-            "version": 2,
+            "version": 3,
             "formulas": {k: self.formulas[k].to_data() for k in sorted(self.formulas)},
             "abilities": [self.abilities.require(k).to_data() for k in self.abilities.ids()],
             "states": [self.states.require(k).to_data() for k in self.states.ids()],
             "triggers": [self.triggers[k].to_data() for k in sorted(self.triggers)],
             "timelines": [self.timelines[k].to_data() for k in sorted(self.timelines)],
             "attacks": [self.attacks[k].to_data() for k in sorted(self.attacks)],
+            "projectiles": [self.projectiles[k].to_data() for k in sorted(self.projectiles)],
         }
 
     @classmethod
@@ -95,10 +107,12 @@ class GameplayLibrary:
             "triggers",
             "timelines",
         }
-        if data.get("schema") != "asteria.gameplay_library" or data.get("version") not in {1, 2}:
+        if data.get("schema") != "asteria.gameplay_library" or data.get("version") not in {1, 2, 3}:
             raise ValueError("unsupported gameplay library")
         if data["version"] >= 2:
             expected = expected | {"attacks"}  # v2 adds attacks
+        if data["version"] >= 3:
+            expected = expected | {"projectiles"}  # v3 adds projectiles
         if set(data) != expected:
             raise ValueError("invalid gameplay library")
         result = cls()
@@ -114,4 +128,6 @@ class GameplayLibrary:
             result.add_timeline(ActionTimeline.from_data(x))
         for x in data.get("attacks", ()):
             result.add_attack(AttackDefinition.from_data(x))
+        for x in data.get("projectiles", ()):
+            result.add_projectile(ProjectileDefinition.from_data(x))
         return result

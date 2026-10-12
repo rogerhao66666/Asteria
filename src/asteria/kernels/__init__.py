@@ -8,6 +8,10 @@ A kernel set is a module with the same names in every implementation:
   (pixels identical to the reference).
 - ``aabb_pairs(x0, y0, x1, y1, cell_size)`` - every pair ``(i, j)``, ``i < j``, whose boxes overlap or touch,
   sorted.
+- ``aabb_cross_pairs(a, b, cell_size)`` - every pair ``(i, j)`` where box ``a[i]`` overlaps box ``b[j]`` (strictly),
+  sorted; ``a`` / ``b`` are ``(x0, y0, x1, y1)`` columns (hitboxes x hurtboxes, projectiles x targets).
+- ``ProjectileStore`` - projectile columns (position, velocity, gravity, age, life, box, homing turn, uid) with
+  ``add``, ``step`` (homing toward per-row targets, gravity, motion, ageing), ``boxes``, ``expired``, ``keep``.
 
 ``python`` is the reference and is always available. ``numpy`` runs the same arithmetic on arrays when numpy is
 installed; a native module can be added the same way later. Implementations must give the same results as

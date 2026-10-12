@@ -23,6 +23,7 @@ class ActionCueKind(str, Enum):
     COMBO_WINDOW = "combo_window"  # payload: duration, next (optional follow-up timeline id)
     GAMEPLAY_EVENT = "gameplay_event"  # payload: name, ...
     ARMOR = "armor"  # payload: duration, level (default 1) — super armor while the action runs
+    PROJECTILE = "projectile"  # payload: projectile_id, count, spread (deg), angle (deg), offset_x, offset_y
 
 
 @dataclass(frozen=True, slots=True)

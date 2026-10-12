@@ -395,6 +395,23 @@ class IntegratedAuthoringControllers:
             )
         )
         mappings["attacks"] = attacks
+        from asteria.gameplay.projectiles import ProjectileDefinition
+
+        projectiles = self.project.gameplay_library.projectiles
+        categories.append(
+            AuthoringCategoryAdapter(
+                "projectiles",
+                "Projectiles (Real-Time Combat)",
+                lambda: tuple(sorted(projectiles)),
+                lambda k: projectiles[k],
+                lambda key, value: self._mapping_edit(projectiles, "Projectile")(key, value),
+                lambda key: self._mapping_delete(projectiles, "Projectile")(key),
+                td,
+                fd(ProjectileDefinition),
+                None,
+            )
+        )
+        mappings["projectiles"] = projectiles
         result = []
         for adapter in categories:
             if adapter.category_id == "abilities":

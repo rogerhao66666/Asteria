@@ -964,3 +964,39 @@ autofix 原本沒有產品入口，已在 D20-4 接上編輯器。animated_text 
 - 接觸傷害（碰到敵人就受傷）在 A4。
 
 **狀態：** A1 完成，接著做 A2。
+
+### D22-A2 — 投射物和壓力場景
+
+**改動的檔案：**
+- `kernels/_python.py`、`kernels/_numpy.py`：新增 `aabb_cross_pairs`（兩組框互相比對；numpy 用網格 join，全部向量化）和 `ProjectileStore`（追蹤、重力、移動、計時；判定框、到期、保留、改值）。追蹤只用向量運算和 `sqrt`；每種轉向速率的 cos/sin 由 `math` 算一次，兩套共用，所以兩套結果**逐位元相同**。
+- `gameplay/projectiles.py`（新）：`ProjectileDefinition` 欄位包括命中時用的攻擊、速度、壽命、重力、判定框、穿透（-1 = 不限）、碰牆行為（消失／反彈／停住／穿過）、牆的圖層、反彈次數、追蹤轉速和範圍、外觀、結束事件。gameplay library v3 新增 `projectiles`，v1、v2 照樣能讀。
+- `runtime/projectiles.py`（新）：`ProjectileSystem`。投射物**不是** entity，數值都在 kernel 的陣列裡。發射時可以設數量、扇形角度和偏移，偏移和角度會隨朝向轉；每幀做追蹤、重力、碰牆、批次判定，命中交給 combat 結算（擊退會從投射物的位置推開）；發出 fired、hit、ended 事件，提供 `views()` 給畫面。
+- `gameplay/action_timeline.py`、`runtime/entity_actions.py`：新 cue `projectile`。
+- `runtime/character_control.py`：`HitboxSystem` 改用 kernel 一次比對所有判定框和受擊框（事件和順序不變）；`HitEvent` 新增選填的 `origin`、`direction`。
+- `runtime/combat.py`：擊退方向會用命中的來源點和飛行方向；投射物的命中不算進近戰的 `max_targets`。
+- `runtime/game_session.py`：場景系統加入 `projectiles`，有 profiler 區段。
+- `editor/integrated_authoring.py`：新增「Projectiles (Real-Time Combat)」紀錄分類。
+- `validation/arpg_stress.py`、`scripts/arpg_stress.py`（新）：壓力場景。
+- 測試：`tests/test_projectiles.py`（新，17 項，python／numpy 都跑）、`tests/test_kernels.py`（+8）。
+
+**執行的測試：** 完整套件 **2068 passed**。
+
+**整合證據：** `GameSession` 中，玩家的時間軸 `projectile` cue 射出箭，打中敵人並扣血；同一個齊射場景用 python 和 numpy 跑，傷害、結束原因、每個事件的座標全部相同。
+
+**量測：壓力場景**（`scripts/arpg_stress.py`，低耗電模式關閉，headless，只有引擎運算、沒有繪製）。設定是 300 隻追擊敵人（控制器、碰撞框、受擊框、戰鬥數值）、500 顆在飛的穿透投射物、每 0.5 秒一次近戰；跑 120 幀，單位 ms：
+
+| kernel | 每幀平均 | p95 | ai | collision | projectiles | combat |
+|---|---|---|---|---|---|---|
+| python | 45.2 | 47.5 | 6.7 | 28.8 | 12.2 | 1.3 |
+| numpy | 42.8 | 44.3 | 6.9 | 29.3 | 9.1 | 1.3 |
+
+兩套 kernel 命中數相同（3889）。**離目標（numpy ≤ 6 ms）很遠。**
+
+**cProfile 找到的瓶頸：**
+1. 控制器逐個角色、逐個角點查詢碰撞：60 幀裡 `query_point` 被呼叫約 16 萬次，約佔一半時間。
+2. 碰撞世界每幀重建約 3 次（AI、控制器、投射物各一次），每次逐個 entity 產生 Python 物件：每幀約 15 ms。
+3. 場景 AI 逐個 entity 跑 Python 邏輯：每幀約 6 ms。
+
+**決定（依量測）：** 這正是設計文件預留的情況，所以移動也要改成陣列運算。接著做 **A2-2**：控制器整批比對碰撞、同一幀共用碰撞世界；改完再量一次。
+
+**狀態：** A2 完成，基準數字已記錄。
