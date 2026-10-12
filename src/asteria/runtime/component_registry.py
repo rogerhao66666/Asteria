@@ -46,6 +46,9 @@ def default_component_registry():
     from .loot import register_loot_components
 
     register_loot_components(registry)  # ASTERIA_SPEC §35 loot on the ground
+    from .action_play import register_action_play_components
+
+    register_action_play_components(registry)  # ASTERIA_SPEC §20 action scenes
     for component in (NpcIdentity2DComponent, FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent):
         registry.register(component)
     from .environment2d import register_environment_components

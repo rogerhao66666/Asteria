@@ -134,6 +134,8 @@ class GameSessionRuntime:
         # real-time play with RPG actors (D22 A7): experience from defeated foes, level-ups this field update
         self.action_progression = {"level_threshold": 1000.0, "ap_per_level": 2.0, "ability_points_per_level": 1.0}
         self.progression_events = []
+        self.player_down = 0.0  # seconds until the fallen player respawns (action scenes)
+        self._action_spawn = {}  # scene id -> where the player respawns
         self._build_scene_events()
         # WLD-02: saved NPC state (visibility, position, flags...) and the "npc" condition source
         runtime_save.event_context.providers["npc"] = self._npc_value
@@ -197,7 +199,7 @@ class GameSessionRuntime:
                 FieldAISystem(blocking, rng=random.Random(f"{scene.id}:ai"), default_target_id=self.player.id),
             )
             from asteria.runtime.behavior_tree import BehaviorTreeSystem
-            from asteria.runtime.character_control import CharacterControllerSystem, HitboxSystem
+            from asteria.runtime.character_control import CharacterControllerSystem, HitboxSystem, PlayerInputSystem
             from asteria.runtime.combat import CombatSystem
             from asteria.runtime.entity_actions import EntityActionSystem
 
@@ -216,6 +218,8 @@ class GameSessionRuntime:
                 stats_provider=self._actor_combat_state,  # an ActorLink entity fights with its RPG actor's build
             )
             combat.listeners.append(self._award_experience)
+            combat.listeners.append(self._player_fell)
+            combat.protected.add(self.player.id)  # the player falls and respawns; death never removes it
             from asteria.runtime.projectiles import ProjectileSystem
 
             def frame_world():
@@ -290,6 +294,7 @@ class GameSessionRuntime:
                 "spawn": spawn,
                 "ai": ai,
                 "behavior": behavior,
+                "player_input": PlayerInputSystem(lambda: self.field_input),  # PlayerInput2D -> controller
                 "action_combat": action_combat,
                 "actions": actions,
                 # controllers build the frame's world after AI, keep it current as they move, projectiles reuse it
@@ -308,6 +313,15 @@ class GameSessionRuntime:
             return None
         systems = self._field_systems()
         self.progression_events = []
+        action = self.action_scene
+        if action:
+            start = self.player.get(Transform)
+            self._action_spawn.setdefault(self.scene.id, (start.x, start.y))  # where the player respawns
+            if self.player_down > 0:
+                self.player_down = max(0.0, self.player_down - float(dt))
+                if self.player_down == 0.0:
+                    self._respawn_player()
+        systems["player_input"].update(self.scene, float(dt))
         with self.profiler.section("spawn"):
             systems["spawn"].update(self.scene, float(dt))
         self._frame_collision_world = None
@@ -330,6 +344,8 @@ class GameSessionRuntime:
             self._pending_tree_encounter = None
             self.start_encounter(pending)
             return pending
+        if action:
+            return None  # action scenes fight in real time: touching an enemy is not a turn-based encounter
         return self.check_visible_encounter()
 
     @property
@@ -406,6 +422,92 @@ class GameSessionRuntime:
         for entity, link in self.scene.query(ActorLinkComponent):
             if link.actor_id == str(actor_id):
                 self.refresh_combatant(entity)
+
+    @property
+    def combat_scene(self):
+        """The current scene's ``CombatScene`` settings (``None``: a classic encounter scene)."""
+        from asteria.runtime.action_play import combat_scene
+
+        return combat_scene(self.scene)
+
+    @property
+    def action_scene(self):
+        settings = self.combat_scene
+        return settings is not None and settings.combat_mode == "action"
+
+    def prepare_action_player(self):
+        """In an action scene, give the player what real-time play needs and does not have yet: a controller (in
+        the scene's view), player input, hit / hurt boxes, a combatant, ability use, a looter and a link to the first
+        party actor (so it fights with that actor's build). Authored components are left as they are."""
+        settings = self.combat_scene
+        if settings is None or settings.combat_mode != "action":
+            return
+        from asteria.runtime.action_combat import ActionCombatComponent
+        from asteria.runtime.actor_link import ActorLinkComponent
+        from asteria.runtime.character_control import (
+            CharacterController2DComponent,
+            Hitbox2DComponent,
+            Hurtbox2DComponent,
+            PlayerInput2DComponent,
+        )
+        from asteria.runtime.combat import CombatantComponent
+        from asteria.runtime.loot import LooterComponent
+
+        player = self.player
+        controller = player.try_get(CharacterController2DComponent)
+        if controller is None:
+            controller = player.add_component(CharacterController2DComponent())
+            controller.speed, controller.half_width, controller.half_height = 70.0, 6.0, 8.0
+            controller.coyote_time, controller.jump_buffer, controller.jump_cut = 0.1, 0.12, 0.45
+        controller.mode = settings.view
+        if not player.has(PlayerInput2DComponent):
+            player.add_component(PlayerInput2DComponent())
+        if not player.has(ActorLinkComponent) and self.save.rpg_state.party_actor_ids:
+            player.add_component(ActorLinkComponent()).actor_id = self.save.rpg_state.party_actor_ids[0]
+        if not player.has(CombatantComponent):
+            player.add_component(CombatantComponent()).team = "hero"
+        if settings.player_life_resource:
+            player.get(CombatantComponent).life_resource = settings.player_life_resource
+        team = player.get(CombatantComponent).team or "hero"
+        if not player.has(Hurtbox2DComponent):
+            hurt = player.add_component(Hurtbox2DComponent())
+            hurt.team, hurt.width, hurt.height = team, 12.0, 16.0
+        if not player.has(Hitbox2DComponent):
+            hit = player.add_component(Hitbox2DComponent())
+            hit.team, hit.width, hit.height, hit.offset_x, hit.follow_facing = team, 24.0, 16.0, 14.0, True
+        if not player.has(ActionCombatComponent):
+            player.add_component(ActionCombatComponent())
+        if not player.has(LooterComponent):
+            player.add_component(LooterComponent())
+
+    def _player_fell(self, event):
+        if event.kind != "death" or event.target_id != self.player.id or not self.action_scene:
+            return
+        settings = self.combat_scene
+        if settings.on_player_death == "game_over":
+            self.player_defeated = True
+            return
+        self.player_down = max(settings.respawn_delay, 1e-6)
+        from asteria.runtime.character_control import CharacterController2DComponent
+
+        controller = self.player.try_get(CharacterController2DComponent)
+        if controller is not None:
+            controller.lock_control(self.player_down)
+
+    def _respawn_player(self):
+        from asteria.runtime.combat import CombatantComponent
+
+        x, y = self._action_spawn.get(self.scene.id, (self.player.get(Transform).x, self.player.get(Transform).y))
+        self.set_player_position(x, y)
+        combatant = self.player.try_get(CombatantComponent)
+        if combatant is not None and combatant.state is not None:
+            state = combatant.state
+            state.dead = False
+            state.down_phase, state.down_left = "", 0.0
+            if self.combat_scene.respawn_heal:
+                for name in state.resources.names():
+                    state.resources.set_current(name, state.resources.maximum(name))
+            self.hits.grant_invincibility(self.player.id, 1.5)
 
     def _award_experience(self, event):
         if event.kind != "death" or not event.data.get("experience") or not event.attacker_id:

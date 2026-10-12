@@ -301,7 +301,9 @@ def test_strafing_circles_the_player():
     start = atan2(0, 80)
     a.run(1.0)
     t = dancer.get(Transform)
-    assert degrees(atan2(t.y, t.x) - start) < -20 and 70 < hypot(t.x, t.y) < 110  # direction 1: counter-clockwise on screen
+    assert (
+        degrees(atan2(t.y, t.x) - start) < -20 and 70 < hypot(t.x, t.y) < 110
+    )  # direction 1: counter-clockwise on screen
     b = Arena([BehaviorTree("dancer", _n("strafe", direction=-1, seconds=10))])
     b.player(0, 0)
     other = b.enemy("Dancer", "dancer", 80, 0)

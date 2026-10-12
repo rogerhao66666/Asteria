@@ -219,6 +219,7 @@ class CombatSystem(System):
         self._frozen: dict[str, float] = {}
         self._landed: dict[str, int] = {}
         self._armor_requests: dict[str, tuple] = {}
+        self.protected: set = set()  # entity ids never removed or disabled by death (the player: it respawns)
 
     # -- queries ---------------------------------------------------------------------------------
     def state(self, entity):
@@ -380,14 +381,15 @@ class CombatSystem(System):
         if armored:
             amount *= combatant.armor_damage_multiplier
         common = {"attacker_id": hit.attacker_id, "attack_id": attack.attack_id}
-        if state.resources.contains(attack.damage_resource):
-            state.resources.change(attack.damage_resource, -amount)
+        resource = attack.damage_resource or combatant.life_resource  # "" = whatever this target lives on
+        if state.resources.contains(resource):
+            state.resources.change(resource, -amount)
         self._emit(
             "damage",
             target,
             amount=amount,
             critical=critical,
-            data={"resource": attack.damage_resource, "armored": armored},
+            data={"resource": resource, "armored": armored},
             **common,
         )
 
@@ -513,7 +515,9 @@ class CombatSystem(System):
                 "luck": combatant.loot_luck,
             }
             self._emit("drop", target, data=data, **common)
-        if combatant.death == "remove":
+        if target.id in self.protected:
+            pass
+        elif combatant.death == "remove":
             removed.append(target)
         elif combatant.death == "disable":
             for component_type in (Hurtbox2DComponent, Hitbox2DComponent, CharacterController2DComponent):

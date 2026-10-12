@@ -297,7 +297,12 @@ class PlayableTestRuntime:
         from asteria.runtime.input_rebinding import effective_input_map
 
         # ENG-15: the player's rebinding (settings) over the project's default bindings
-        self.input = InputActionTracker(effective_input_map(self.project.input_map, self.settings.input_overrides))
+        input_map = effective_input_map(self.project.input_map, self.settings.input_overrides)
+        from asteria.runtime.action_play import missing_action_bindings
+
+        for action, bindings in missing_action_bindings(input_map).items():  # action-scene controls (not saved)
+            input_map.set_bindings(action, bindings)
+        self.input = InputActionTracker(input_map)
         from asteria.platform.pygame_audio import open_audio_device
 
         self.audio = AudioMixer(open_audio_device(self.pg), self._audio_path)
@@ -677,10 +682,15 @@ class PlayableTestRuntime:
     def _draw_field(self, moving=False):
         self._begin_normals()
         self._prune_field_echoes()
-        bg = self.load_image(self.manifest["field"]["background"])
         zoom = self.field_camera.zoom
-        bx, by, bw, bh = self.field_camera.background_rect()
-        self.screen.blit(self.pg.transform.smoothscale(bg, (round(bw), round(bh))), (round(bx), round(by)))
+        settings = self.game.combat_scene
+        if settings is not None and settings.background_color:  # a block-out level: a flat colour, no field image
+            color = settings.background_color.lstrip("#")
+            self.screen.fill(tuple(int(color[i : i + 2], 16) for i in (0, 2, 4)))
+        else:
+            bg = self.load_image(self.manifest["field"]["background"])
+            bx, by, bw, bh = self.field_camera.background_rect()
+            self.screen.blit(self.pg.transform.smoothscale(bg, (round(bw), round(bh))), (round(bx), round(by)))
 
         sprites = self.manifest["field"].get("entity_sprites", {})
         from asteria.runtime.field_ai import FieldAIComponent, VisibleEncounterComponent
@@ -737,9 +747,17 @@ class PlayableTestRuntime:
             row = walking_row_index(self.game.facing)
             col = walking_pattern_index(self._field_step) if moving else 1
             self._blit_normal(sheet_path, (col * fw, row * fh, fw, fh), (render_w, render_h), position)
+        if self.game.action_scene:
+            self.action_hud.draw_world(self)
         self._draw_field_effects()
         self._draw_popups()
         if self.game.cutscene_active:
+            self._draw_dialogue()
+            return
+        if self.game.action_scene:
+            self.action_hud.draw_overlay(self)
+            if self.message and self.pg.time.get_ticks() < self.message_until:
+                self.text(self.message, self.width / 2, 92, size=22, color=(175, 235, 255), center=True)
             self._draw_dialogue()
             return
 
@@ -877,7 +895,10 @@ class PlayableTestRuntime:
             self._dialogue_input(events)
             return False
         if self._dialogue_input(events) or self.game.event_busy:
+            self.game.set_field_input(None)
             return False
+        if self.game.action_scene:
+            return self._action_input(events)
         # Project input map: keyboard and gamepad (stick / d-pad) both drive movement.
         dx, dy = self.input.current.movement_vector()
         moving = bool(dx or dy)
@@ -918,6 +939,101 @@ class PlayableTestRuntime:
             if self.game.mode == "field":
                 self.game.field_step({"interact": 0.0})
         return moving
+
+    # -- action scenes (ASTERIA_SPEC §20; D22 A8) ---------------------------------------------------------------------
+    @property
+    def action_hud(self):
+        hud = getattr(self, "_action_hud", None)
+        if hud is None:
+            from asteria.runtime.action_play import ActionHud
+
+            hud = self._action_hud = ActionHud()
+        return hud
+
+    def _action_input(self, events):
+        """Real-time control: the input actions drive the player's controller and abilities through the session."""
+        self.game.prepare_action_player()
+        self.game.set_field_input(dict(self.input.current.actions))
+        if self.input.just_pressed("pickup"):
+            self.game.loot.pick_up_nearest(self.game.scene, self.game.player)
+        if self.input.just_pressed("bag"):
+            self._bag_index = 0
+            self._ui_mode = "bag"
+        if self.input.just_pressed("menu"):
+            self._ui_mode = "build"
+        if self.input.just_pressed("cancel"):
+            self._pause_menu.index = 0
+            self._ui_mode = "pause"
+        if self.input.just_pressed("interact") and not self.input.just_pressed("jump"):
+            self.game.field_step({"interact": 1.0})
+            if self.game.mode == "field":
+                self.game.field_step({"interact": 0.0})
+        from asteria.runtime.character_control import CharacterController2DComponent
+
+        controller = self.game.player.try_get(CharacterController2DComponent)
+        moving = controller is not None and bool(controller.intent_x or controller.intent_y)
+        if controller is not None:
+            self.game.set_player_facing(controller.facing)
+        if moving:
+            self._field_step += 1
+        return moving
+
+    def _bag_actor(self):
+        actor = self.game._actor_of(self.game.player)
+        return actor or (self._menu_actor_ids() or [None])[0]
+
+    def _bag_input(self, events):
+        bag = self.game.save.rpg_state.equipment_bag
+        index = getattr(self, "_bag_index", 0)
+        if self.input.just_pressed("move_down"):
+            index += 1
+        if self.input.just_pressed("move_up"):
+            index -= 1
+        self._bag_index = max(0, min(index, len(bag) - 1)) if bag else 0
+        if (self.input.just_pressed("confirm") or self.input.just_pressed("interact")) and bag:
+            try:
+                item = self.game.equip_from_bag(self._bag_actor(), self._bag_index)
+                self.message = f"Equipped {item.equipment.display_name}"
+            except Exception as exc:  # requirements not met: say why
+                self.message = f"Cannot equip: {exc}"
+            self.message_until = self.pg.time.get_ticks() + 2000
+        if self.input.just_pressed("cancel") or self.input.just_pressed("bag"):
+            self._ui_mode = "field"
+
+    def _draw_bag(self):
+        from asteria.rpg.loot import item_display_name
+
+        self.screen.fill((10, 12, 20))
+        db = self.game.project.rpg_database
+        rarities = db.loot_rarities()
+        self.text("Equipment Bag", 40, 28, size=32, color=(255, 220, 124))
+        self.text("Up / Down: choose   Enter: equip   B / Esc: back", 40, 64, size=18, color=(170, 180, 200))
+        bag = self.game.save.rpg_state.equipment_bag
+        for row, item in enumerate(bag[:14]):
+            rarity = rarities.get(item.rarity)
+            color = rarity.rgb() if rarity is not None else (230, 230, 230)
+            prefix = "> " if row == getattr(self, "_bag_index", 0) else "  "
+            name = item_display_name(item, db.affixes)
+            self.text(f"{prefix}{name}  (ilvl {item.item_level})", 40, 100 + row * 26, size=22, color=color)
+        selected = bag[getattr(self, "_bag_index", 0)] if bag else None
+        x = self.width / 2 + 40
+        self.text("Equipped", x, 100, size=24, color=(255, 220, 124))
+        actor = self._bag_actor()
+        loadout = self.game.save.rpg_state.loadouts.get(actor) if actor else None
+        row = 0
+        if loadout is not None:
+            for item in loadout.equipped():
+                rarity = rarities.get(item.rarity)
+                color = rarity.rgb() if rarity is not None else (230, 230, 230)
+                self.text(item_display_name(item, db.affixes), x, 132 + row * 24, size=20, color=color)
+                row += 1
+        if selected is not None:
+            self.text("Selected", x, 160 + row * 24, size=24, color=(255, 220, 124))
+            for k, modifier in enumerate(selected.modifiers()):
+                sign = "x" if modifier.operation.value == "multiply" else "+"
+                self.text(f"{modifier.stat} {sign}{modifier.value:.1f}", x, 192 + row * 24 + k * 22, size=19)
+        if self.message and self.pg.time.get_ticks() < self.message_until:
+            self.text(self.message, self.width / 2, self.height - 30, size=20, color=(175, 235, 255), center=True)
 
     def _draw_title(self):
         bg = self.load_image(self.manifest["field"]["background"])
@@ -2086,6 +2202,9 @@ class PlayableTestRuntime:
         elif self._ui_mode == "settings":
             self._settings_input()
             self._draw_settings()
+        elif self._ui_mode == "bag":
+            self._bag_input(events)
+            self._draw_bag()
         elif self._ui_mode == "game_over":
             self._game_over_input()
             self._draw_overlay_menu("Game Over", self._game_over_menu, base="battle")
@@ -2113,6 +2232,12 @@ class PlayableTestRuntime:
             if self.game.mode == "field" and self._ui_mode == "field":
                 with self.profiler.section("update"):
                     self.game.field_update(dt)
+                if self.game.action_scene:
+                    self.action_hud.observe(self.game, dt)
+                    if getattr(self.game, "player_defeated", False):
+                        self.game.player_defeated = False
+                        self._game_over_menu.index = 0
+                        self._ui_mode = "game_over"
             pt = self.game.player.get(Transform)
             last = getattr(self, "_last_player_xy", None)
             velocity = ((pt.x - last[0]) / dt, (pt.y - last[1]) / dt) if last is not None and dt > 0 else None

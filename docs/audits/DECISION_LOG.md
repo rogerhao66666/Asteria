@@ -1238,3 +1238,42 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **還沒做：** 開場選職業、技能樹、背包、技能列這些畫面在 A8。目前可以透過 `set_active_classes` 和 `allocate_progression` 這些 API 操作。
 
 **狀態：** A7 完成。
+
+### D22-A8 — 遊戲整合和畫面上的介面
+
+**改動的檔案：**
+- `runtime/action_play.py`（新）：
+  - `CombatSceneComponent` 是場景設定，和環境設定一樣放在場景裡的任一 entity 上。欄位包括 `combat_mode`（`encounter` 是預設，維持碰到就進回合制；`action` 是即時戰鬥）、`view`（俯視／橫向）、`on_player_death`（重生或 game over）、重生延遲、重生時是否補滿、`draw_colliders`（畫出碰撞框，用於 block-out 關卡）、`camera_look_ahead`、`player_life_resource`、`background_color`。
+  - `ARPG_ACTIONS` 是預設的動作按鍵，**只補專案輸入表裡沒有的**，不寫入專案。
+  - `ActionHud` 畫出：頭上的敵人 HP、傷害數字、硬直和倒地文字、狀態名稱、受擊閃白、投射物、依稀有度上色的掉落物名稱（靠得近時會堆疊）、鎖定標記；畫面下方有生命和資源條（生命資源排第一）、等級和經驗條、技能列和冷卻遮罩、按鍵說明、升級提示、倒下後的重生倒數。
+- `runtime/game_session.py`：`combat_scene`、`action_scene`；即時戰鬥場景會加入 `PlayerInputSystem`（輸入驅動玩家的控制器），碰到敵人不會進回合制；`prepare_action_player()` 會替玩家補上缺少的元件（控制器依場景視角、輸入、攻擊和受擊判定框、戰鬥數值、技能使用、撿取、連結第一位隊員），作者已經設定的不會被覆蓋；玩家倒下後鎖住操作、延遲後在起點重生並給短暫無敵，也可以設定成 game over。
+- `runtime/combat.py`：`protected`，玩家死亡時永遠不會被移除或停用，只會倒下等待重生。
+- `gameplay/attacks.py`：`damage_resource` 預設改成空字串，代表扣目標自己的生命資源。這是實機測試抓到的問題：參考專案的角色用的是 vitality 而不是 hp，原本敵人完全打不痛玩家。明確寫 hp 的舊資料行為不變。
+- `runtime/playable_test_runtime.py`：即時戰鬥場景改走新的輸入路徑（移動、攻擊、閃避、技能、鎖定、撿取 F、背包 B、建構 C、暫停 Esc）、加上 HUD、背包畫面（依稀有度上色、物品等級、選中裝備的數值、Enter 裝備；不符需求時會說明原因）、game over；設有 `background_color` 時用單色背景。
+- `validation/arpg_playground.py`、`scripts/arpg_playground.py`（新）：把參考專案的場景改成即時戰鬥場景，有三段連擊、閃避、追蹤火球、追擊的小怪、弓手、HP 一半以下會用霸體重擊的 Boss、掉落（金幣和隨機詞綴的劍）。`--side` 是橫向 block-out 關卡（地面、單向平台、斜坡、高台、梯子）。內容全部是一般專案資料，不是引擎程式。
+- `scripts/arpg_live_check.py`（新）：在真實視窗跑上面的關卡，按鍵放進 pygame 的事件佇列（和實際按鍵走同一條路），在固定幀存截圖，並輸出 JSON 摘要。
+- 測試：`tests/test_action_play.py`（新，5 項，透過 PlayableTestRuntime 送出按鍵事件）。
+
+**實機驗證（Cocoa 真實視窗，1280×720，參考專案的真實素材）：** 截圖和摘要在 `docs/audits/evidence/real_machine/arpg_*`。
+- **俯視**：660 幀，平均 55.4 fps；玩家使用技能 20 次（連擊、閃避、火球、鎖定），擊殺 3 隻（含 Boss），命中 5 次、被打 10 次，等級 12 → 13，金幣 +69（走過自動撿取）；地上有白色的「Blade」和藍色魔法等級的「Sharp Blade of the Bear」。
+- **橫向**：320 幀，平均 55.2 fps；跳躍、短跳、攻擊；擊殺 1 隻；斜坡、梯子、單向平台、高台都正常顯示。
+- 另外 78 個 A1–A8 的整合測試，用真實視窗模式在 Cocoa 重跑一次（709 幀）全部通過；那個模式使用 conftest 的單色替代圖。
+
+**實機測試時發現並修正的問題：**
+1. 參考專案的角色沒有 hp 資源，敵人打不痛玩家 → 攻擊預設扣目標的生命資源。
+2. 敵人的圓點大小沒有乘上場景的世界縮放 → 改用每個世界單位實際的像素數。
+3. 敵人每一下小攻擊都會打斷玩家的連擊 → playground 設定 `hitstun_rule = never`（暗黑式手感）和自動瞄準最近的敵人。兩者都是引擎原本就有的選項。
+4. 參考專案原本回合制的 Boss 精靈站在競技場裡擋住玩家 → playground 停用場景裡的回合制遭遇。
+
+**執行的測試：** 完整套件 **2132 passed**。
+
+**量測（300 + 500 壓力場景，numpy）：** 13.4 ms。
+
+**還沒做：**
+- 橫向的玩家精靈目前沿用參考專案俯視角色的走路圖，比例偏大；A10 的 demo 會換成 Pixel Platformer 的橫向素材。
+- 開場選職業畫面、技能樹專用畫面：目前用建構選單（C）配點和換職業；暗黑式技能樹畫面放在 A10 的 demo。
+- 鏡頭的 `camera_look_ahead` 欄位已經有了，但還沒接到 field camera。
+- 真實視窗約 55 fps，沒有到 60；瓶頸在既有的繪製（每幀縮放整張場景背景），留給 A11 量測。
+- 格子背包。
+
+**狀態：** A8 完成。A4 到 A8 都做完，需要使用者實際遊玩驗證。

@@ -1,0 +1,47 @@
+{
+ "driver": "cocoa",
+ "frames": 320,
+ "mean_fps": 55.2,
+ "player_uses": [
+  [
+   84,
+   "used",
+   true,
+   "pg_slash",
+   ""
+  ],
+  [
+   96,
+   "combo",
+   true,
+   "pg_slash",
+   ""
+  ],
+  [
+   108,
+   "combo",
+   true,
+   "pg_slash",
+   ""
+  ]
+ ],
+ "player_life": [
+  1577.0,
+  1595.0
+ ],
+ "enemies_left": [
+  [
+   "Guard",
+   40
+  ]
+ ],
+ "kills": [
+  "ca824d"
+ ],
+ "player_hits_landed": 1,
+ "hits_taken": 3,
+ "level_ups": [],
+ "bag": 0,
+ "gold": 3504.0,
+ "level": 12
+}

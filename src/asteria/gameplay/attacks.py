@@ -37,7 +37,7 @@ class AttackDefinition:
     display_name: str = ""
     damage: ValueFormula | None = None  # inline formula; ignored when damage_formula_id is set
     damage_formula_id: str = ""  # a shared formula in the gameplay library
-    damage_resource: str = "hp"
+    damage_resource: str = ""  # "" = the target's life resource (CombatantComponent.life_resource)
     tags: tuple[str, ...] = ()  # added to the attacker's tags while the formula runs (e.g. Element.Fire)
     poise_damage: float = 0.0
     hitstun: float = 0.0  # seconds the target cannot act
@@ -65,7 +65,7 @@ class AttackDefinition:
         *,
         damage=None,
         damage_formula_id="",
-        damage_resource="hp",
+        damage_resource="",
         tags=(),
         poise_damage=0.0,
         hitstun=0.0,
@@ -96,8 +96,6 @@ class AttackDefinition:
         if hitstop_scope not in HITSTOP_SCOPES:
             raise ValueError(f"hitstop_scope must be one of {HITSTOP_SCOPES}")
         resource = str(damage_resource).strip()
-        if not resource:
-            raise ValueError("damage_resource is required")
         if int(max_targets) < 0:
             raise ValueError("max_targets must be >= 0")
         set_ = object.__setattr__
