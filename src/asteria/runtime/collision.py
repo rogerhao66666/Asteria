@@ -217,6 +217,45 @@ class CollisionWorld:
         self.shapes = {s.entity_id: s for s in shapes}
         self.cell_size = float(cell_size)
         self._grid = None
+        self._solid = None
+        self.parented = False  # some collider hangs under a parent transform (see move_shapes)
+        self.stale = False  # positions changed in a way move_shapes could not follow: rebuild
+
+    def solid_columns(self):
+        """Non-trigger shapes as ``(shapes, (x0, y0, x1, y1))`` for batched overlap tests (cached)."""
+        if self._solid is None:
+            solid = [s for s in self.shapes.values() if not s.is_trigger]
+            self._solid = (solid, tuple([s.bounds[k] for s in solid] for k in range(4)))
+        return self._solid
+
+    def move_shapes(self, deltas):
+        """Shift the shapes of entities that moved (``{entity_id: (dx, dy)}``) so the snapshot stays current.
+
+        A collider under a moved parent cannot be followed here; the world is then marked ``stale``.
+        """
+        moved = False
+        for entity_id, (dx, dy) in deltas.items():
+            shape = self.shapes.get(entity_id)
+            if shape is not None and (dx or dy):
+                self.shapes[entity_id] = ColliderShape(  # positional: much cheaper than dataclasses.replace
+                    shape.entity_id,
+                    shape.shape,
+                    shape.cx + dx,
+                    shape.cy + dy,
+                    shape.half_w,
+                    shape.half_h,
+                    shape.radius,
+                    shape.layer_bit,
+                    shape.mask,
+                    shape.is_trigger,
+                    shape.one_way,
+                )
+                moved = True
+        if deltas and self.parented:
+            self.stale = True
+        if moved:
+            self._grid = None
+            self._solid = None
 
     @property
     def grid(self):
@@ -241,14 +280,10 @@ class CollisionWorld:
 
     @classmethod
     def from_scene(cls, scene, cell_size=64.0):
-        return cls(
-            (
-                shape_of(e, c)
-                for e, c in scene.query(Collider2DComponent)
-                if c.enabled and e.enabled and e.has(Transform)
-            ),
-            cell_size,
-        )
+        live = [(e, c) for e, c in scene.query(Collider2DComponent) if c.enabled and e.enabled and e.has(Transform)]
+        world = cls((shape_of(e, c) for e, c in live), cell_size)
+        world.parented = any(e.get(Transform).parent_id for e, _ in live)
+        return world
 
     def contacts(self):
         result = []
@@ -276,13 +311,17 @@ class CollisionWorld:
 
     def blocking_query(self, *, mask=ALL_LAYERS, exclude=()):
         """Object with ``collides_world_point`` for CharacterController2D.move."""
-        world = self
+        return _BlockingQuery(self, mask, exclude)
 
-        class _Query:
-            def collides_world_point(self, x, y):
-                return bool(world.query_point(x, y, mask=mask, exclude=exclude))
 
-        return _Query()
+class _BlockingQuery:
+    __slots__ = ("world", "mask", "exclude")
+
+    def __init__(self, world, mask, exclude):
+        self.world, self.mask, self.exclude = world, mask, exclude
+
+    def collides_world_point(self, x, y):
+        return bool(self.world.query_point(x, y, mask=self.mask, exclude=self.exclude))
 
 
 class CombinedQuery:

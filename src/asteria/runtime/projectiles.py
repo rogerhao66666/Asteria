@@ -257,11 +257,24 @@ class ProjectileSystem(System):
             return
         xs, ys = self.store.column("x"), self.store.column("y")
         vxs, vys = self.store.column("vx"), self.store.column("vy")
-        for row, uid in enumerate(uids):
-            shot = self.shots[uid]
-            behaviour = shot.definition.wall
-            if behaviour == "pass" or not self._blocked(world, shot, xs[row], ys[row]):
+        shapes, columns = world.solid_columns()
+        points = (xs, ys, xs, ys)  # each shot's centre as a zero-size box: one batched test against every wall
+        inside = set()
+        for row, j in kernels.active().aabb_cross_pairs(points, columns, self.cell_size, touching=True):
+            if row in inside:
                 continue
+            shot, shape = self.shots[uids[row]], shapes[j]
+            if (
+                shot.definition.wall != "pass"
+                and not shape.one_way
+                and shape.entity_id != shot.owner_id
+                and shot.definition.wall_mask & shape.layer_bit
+                and (shape.shape != "circle" or hypot(xs[row] - shape.cx, ys[row] - shape.cy) <= shape.radius)
+            ):
+                inside.add(row)
+        for row in sorted(inside):
+            shot = self.shots[uids[row]]
+            behaviour = shot.definition.wall
             if behaviour == "destroy":
                 ended[row] = "wall"
             elif behaviour == "stop":

@@ -130,10 +130,15 @@ class FieldAISystem(System):
             state = self.states.get(entity.id)
             if state is None:
                 state = self.states[entity.id] = FieldAIState(spec.behaviour, (transform.x, transform.y))
+            # the blocking query is only needed for entities without a controller (controllers do their own collision)
             self._query = (
                 self.blocking(entity)
-                if callable(self.blocking) and not hasattr(self.blocking, "collides_world_point")
+                if self._controller is None
+                and callable(self.blocking)
+                and not hasattr(self.blocking, "collides_world_point")
                 else self.blocking
+                if self._controller is None
+                else None
             )
             target_id = spec.target_entity_id or self.default_target_id
             target = scene.get_entity(target_id) if target_id else None

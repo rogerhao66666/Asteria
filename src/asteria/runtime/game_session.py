@@ -213,7 +213,7 @@ class GameSessionRuntime:
 
             def frame_world():
                 world = self._frame_collision_world
-                if world is None:
+                if world is None or world.stale:
                     with self.profiler.section("collision"):
                         world = self._frame_collision_world = CollisionWorld.from_scene(scene)
                 return world
@@ -238,7 +238,8 @@ class GameSessionRuntime:
                 "ai": ai,
                 "behavior": behavior,
                 "actions": actions,
-                "controllers": CharacterControllerSystem(paused=combat.paused),
+                # controllers build the frame's world after AI, keep it current as they move, projectiles reuse it
+                "controllers": CharacterControllerSystem(paused=combat.paused, world=frame_world),
                 "hits": hits,
                 "projectiles": projectiles,
                 "combat": combat,
@@ -262,7 +263,6 @@ class GameSessionRuntime:
         with self.profiler.section("collision"):
             systems["controllers"].update(self.scene, float(dt))
             systems["hits"].update(self.scene, float(dt))
-        self._frame_collision_world = None  # walls for projectiles: after this frame's movement
         with self.profiler.section("projectiles"):
             systems["projectiles"].update(self.scene, float(dt))
         with self.profiler.section("combat"):

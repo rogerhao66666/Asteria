@@ -167,6 +167,15 @@ def test_cross_pairs_match_brute_force_in_both_sets(seed):
     for cell in (16.0, 64.0, 500.0):
         assert _python.aabb_cross_pairs(a, b, cell) == brute
         assert np_kernels.aabb_cross_pairs(a, b, cell) == brute
+    touching = sorted(
+        (i, j)
+        for i in range(150)
+        for j in range(220)
+        if a[0][i] <= b[2][j] and b[0][j] <= a[2][i] and a[1][i] <= b[3][j] and b[1][j] <= a[3][i]
+    )
+    assert (3, 5) in touching
+    assert _python.aabb_cross_pairs(a, b, 64.0, touching=True) == touching
+    assert np_kernels.aabb_cross_pairs(a, b, 64.0, touching=True) == touching
     assert np_kernels.aabb_cross_pairs(([], [], [], []), b) == _python.aabb_cross_pairs(([], [], [], []), b) == []
 
 

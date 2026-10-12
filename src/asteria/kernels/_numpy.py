@@ -177,7 +177,7 @@ def _cells(x0, y0, x1, y1, cell_size):
     return row, (cx << 32) ^ (cy & 0xFFFFFFFF)
 
 
-def aabb_cross_pairs(a, b, cell_size=64.0):
+def aabb_cross_pairs(a, b, cell_size=64.0, touching=False):
     """Same pairs as the reference: a grid join (cells of ``a`` matched to sorted cells of ``b``)."""
     if cell_size <= 0:
         raise ValueError("cell_size must be positive")
@@ -196,7 +196,10 @@ def aabb_cross_pairs(a, b, cell_size=64.0):
         return []
     i = np.repeat(a_row, counts)
     j = b_row[np.repeat(lo, counts) + np.arange(total) - np.repeat(np.cumsum(counts) - counts, counts)]
-    hit = (ax0[i] < bx1[j]) & (bx0[j] < ax1[i]) & (ay0[i] < by1[j]) & (by0[j] < ay1[i])
+    if touching:
+        hit = (ax0[i] <= bx1[j]) & (bx0[j] <= ax1[i]) & (ay0[i] <= by1[j]) & (by0[j] <= ay1[i])
+    else:
+        hit = (ax0[i] < bx1[j]) & (bx0[j] < ax1[i]) & (ay0[i] < by1[j]) & (by0[j] < ay1[i])
     code = np.unique(i[hit] * len(bx0) + j[hit])
     return list(zip((code // len(bx0)).tolist(), (code % len(bx0)).tolist(), strict=True))
 

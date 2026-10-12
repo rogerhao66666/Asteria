@@ -25,7 +25,7 @@ Components (serializable, inspectable, script-accessible):
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import exp
+from math import exp, hypot
 
 from asteria import kernels
 from asteria.core import Component, Field, System, Transform, component_schema, world_position
@@ -264,13 +264,77 @@ class PlayerInputSystem(System):
 
 
 class CharacterControllerSystem(System):
-    """Moves every CharacterController2D by its intent, resolving solid and one-way colliders."""
+    """Moves every CharacterController2D by its intent, resolving solid and one-way colliders.
+
+    Top-down controllers are resolved together: every proposed x move in one batched overlap test (asteria.kernels),
+    then every y move; a character is blocked when its box overlaps a solid collider it masks (touching counts).
+    Side-view controllers (gravity, one-way platforms) are resolved one by one. ``world`` may supply the frame's
+    ``CollisionWorld``; it is kept current (``move_shapes``) and left in ``last_world`` for later systems.
+    """
 
     order = 30
 
-    def __init__(self, extra_blocking=None, *, paused=None):
+    def __init__(self, extra_blocking=None, *, paused=None, world=None, cell_size=64.0):
         self.extra_blocking = extra_blocking  # e.g. a tile map query (collides_world_point)
         self.paused = paused  # optional callable(entity_id) -> True while frozen (hitstop)
+        self.world = world  # optional callable() -> CollisionWorld of this frame
+        self.cell_size = float(cell_size)
+        self.last_world = None
+
+    def _shape_blocks(self, shape, controller, x0, y0, x1, y1):
+        """Solid shape ``shape`` blocks a top-down box (inclusive edges)."""
+        if shape.one_way or not (controller.mask & shape.layer_bit):
+            return False
+        if shape.shape == "circle":
+            nx, ny = min(max(shape.cx, x0), x1), min(max(shape.cy, y0), y1)
+            return hypot(nx - shape.cx, ny - shape.cy) <= shape.radius
+        sx0, sy0, sx1, sy1 = shape.bounds
+        return x0 <= sx1 and sx0 <= x1 and y0 <= sy1 and sy0 <= y1
+
+    def _tiles_block(self, x0, y0, x1, y1):
+        tiles = self.extra_blocking
+        return tiles is not None and any(
+            tiles.collides_world_point(px, py) for px, py in ((x0, y0), (x1, y0), (x0, y1), (x1, y1))
+        )
+
+    def _box_blocked(self, world, entity_id, controller, x, y):
+        hw, hh = controller.half_width, controller.half_height
+        x0, y0, x1, y1 = x - hw, y - hh, x + hw, y + hh
+        if self._tiles_block(x0, y0, x1, y1):
+            return True
+        for shape in world.grid.query((x0, y0, x1, y1)):
+            if (
+                shape.entity_id != entity_id
+                and not shape.is_trigger
+                and self._shape_blocks(shape, controller, x0, y0, x1, y1)
+            ):
+                return True
+        return False
+
+    def _batch_blocked(self, world, movers):
+        """Indices of ``movers`` (``(entity_id, controller, x, y)``) whose box at ``(x, y)`` is blocked."""
+        boxes = ([], [], [], [])
+        for _, controller, x, y in movers:
+            hw, hh = controller.half_width, controller.half_height
+            for column, value in zip(boxes, (x - hw, y - hh, x + hw, y + hh), strict=True):
+                column.append(value)
+        shapes, columns = world.solid_columns()
+        blocked = set()
+        if shapes:
+            for i, j in kernels.active().aabb_cross_pairs(boxes, columns, self.cell_size, touching=True):
+                if i in blocked:
+                    continue
+                entity_id, controller, _, _ = movers[i]
+                shape = shapes[j]
+                if shape.entity_id != entity_id and self._shape_blocks(
+                    shape, controller, boxes[0][i], boxes[1][i], boxes[2][i], boxes[3][i]
+                ):
+                    blocked.add(i)
+        if self.extra_blocking is not None:
+            for i in range(len(movers)):
+                if i not in blocked and self._tiles_block(boxes[0][i], boxes[1][i], boxes[2][i], boxes[3][i]):
+                    blocked.add(i)
+        return blocked
 
     def _blocked(self, world, entity_id, controller, x, y, *, falling_from=None):
         hw, hh = controller.half_width, controller.half_height
@@ -302,10 +366,16 @@ class CharacterControllerSystem(System):
     def update(self, scene, dt):
         if dt <= 0:
             return
-        world = CollisionWorld.from_scene(scene)
+        world = self.world() if self.world is not None else None
+        if world is None or world.stale:
+            world = CollisionWorld.from_scene(scene, self.cell_size)
+        self.last_world = world
+        starts = {}
+        tops = []  # [entity, controller, transform, move_x, move_y]
         for entity, controller, transform in scene.query(CharacterController2DComponent, Transform):
             if not controller.enabled or (self.paused is not None and self.paused(entity.id)):
                 continue
+            starts[entity.id] = (transform, transform.x, transform.y)
             controller.hit_wall = controller.hit_ceiling = False
             dx, dy = controller.intent_x, controller.intent_y
             if controller.control_lock > 0.0:
@@ -321,60 +391,97 @@ class CharacterControllerSystem(System):
                 mag = (dx * dx + dy * dy) ** 0.5
                 if mag > 1.0:
                     dx, dy = dx / mag, dy / mag
-                nx = transform.x + (dx * controller.speed + push_x) * dt
-                if self._blocked(world, entity.id, controller, nx, transform.y):
-                    controller.hit_wall = dx != 0 or push_x != 0
-                    controller.push_x = 0.0
-                    transform.x = self._contact(world, entity.id, controller, transform.x, nx, transform.y, True)
-                else:
-                    transform.x = nx
-                ny = transform.y + (dy * controller.speed + push_y) * dt
-                if self._blocked(world, entity.id, controller, transform.x, ny):
-                    controller.hit_wall = controller.hit_wall or dy != 0 or push_y != 0
-                    controller.push_y = 0.0
-                    transform.y = self._contact(world, entity.id, controller, transform.y, ny, transform.x, False)
-                else:
-                    transform.y = ny
                 controller.grounded, controller.ground_id = True, None
-                self._decay_push(controller, dt)
+                tops.append(
+                    [
+                        entity,
+                        controller,
+                        transform,
+                        (dx * controller.speed + push_x) * dt,
+                        (dy * controller.speed + push_y) * dt,
+                        dx,
+                        dy,
+                    ]
+                )
                 continue
-            # side view
-            nx = transform.x + (max(-1.0, min(1.0, dx)) * controller.speed + push_x) * dt
-            if self._blocked(world, entity.id, controller, nx, transform.y):
-                controller.hit_wall = dx != 0 or push_x != 0
-                controller.push_x = 0.0
-            else:
-                transform.x = nx
+            self._side_step(world, entity, controller, transform, dx, push_x, dt)
+        self._top_axis(world, tops, horizontal=True)
+        self._top_axis(world, tops, horizontal=False)
+        for _, controller, *_ in tops:
             self._decay_push(controller, dt)
-            ground = self._ground(world, entity.id, controller, transform.x, transform.y)
-            if ground is not None and controller.velocity_y >= 0:
-                controller.velocity_y = 0.0
-                if controller.jump:
-                    controller.velocity_y = -controller.jump_speed
-            controller.velocity_y = min(controller.max_fall_speed, controller.velocity_y + controller.gravity * dt)
-            step = controller.velocity_y * dt
-            start_y = transform.y
-            ny = start_y + step
-            if self._blocked(world, entity.id, controller, transform.x, ny, falling_from=start_y if step > 0 else None):
-                # move to the contact in small steps so the character rests on the surface
-                direction = 1.0 if step > 0 else -1.0
-                moved = 0.0
-                while abs(moved) < abs(step):
-                    trial = start_y + moved + direction * min(0.25, abs(step) - abs(moved))
-                    if self._blocked(
-                        world, entity.id, controller, transform.x, trial, falling_from=start_y if step > 0 else None
-                    ):
-                        break
-                    moved = trial - start_y
-                transform.y = start_y + moved
-                if step < 0:
-                    controller.hit_ceiling = True
-                controller.velocity_y = 0.0
+        world.move_shapes({eid: (t.x - x, t.y - y) for eid, (t, x, y) in starts.items() if t.x != x or t.y != y})
+
+    def _top_axis(self, world, tops, *, horizontal):
+        """Move every top-down controller along one axis, all blocked tests in one batch."""
+        k = 3 if horizontal else 4
+        moving = [row for row in tops if row[k] != 0.0]
+        if not moving:
+            return
+        movers = [
+            (e.id, c, t.x + row[k], t.y) if horizontal else (e.id, c, t.x, t.y + row[k])
+            for row in moving
+            for e, c, t in [row[:3]]
+        ]
+        blocked = self._batch_blocked(world, movers)
+        for index, row in enumerate(moving):
+            entity, controller, transform, *_ = row
+            intent = row[5] if horizontal else row[6]
+            if index in blocked:
+                if horizontal:
+                    controller.hit_wall = intent != 0 or controller.push_x != 0
+                    controller.push_x = 0.0
+                    transform.x = self._contact(
+                        world, entity.id, controller, transform.x, movers[index][2], transform.y, True
+                    )
+                else:
+                    controller.hit_wall = controller.hit_wall or intent != 0 or controller.push_y != 0
+                    controller.push_y = 0.0
+                    transform.y = self._contact(
+                        world, entity.id, controller, transform.y, movers[index][3], transform.x, False
+                    )
+            elif horizontal:
+                transform.x = movers[index][2]
             else:
-                transform.y = ny
-            controller.ground_id = self._ground(world, entity.id, controller, transform.x, transform.y)
-            controller.grounded = controller.ground_id is not None
-            controller.jump = False
+                transform.y = movers[index][3]
+
+    def _side_step(self, world, entity, controller, transform, dx, push_x, dt):
+        """Side view: horizontal move, then gravity, jump, ground and one-way platforms."""
+        nx = transform.x + (max(-1.0, min(1.0, dx)) * controller.speed + push_x) * dt
+        if self._blocked(world, entity.id, controller, nx, transform.y):
+            controller.hit_wall = dx != 0 or push_x != 0
+            controller.push_x = 0.0
+        else:
+            transform.x = nx
+        self._decay_push(controller, dt)
+        ground = self._ground(world, entity.id, controller, transform.x, transform.y)
+        if ground is not None and controller.velocity_y >= 0:
+            controller.velocity_y = 0.0
+            if controller.jump:
+                controller.velocity_y = -controller.jump_speed
+        controller.velocity_y = min(controller.max_fall_speed, controller.velocity_y + controller.gravity * dt)
+        step = controller.velocity_y * dt
+        start_y = transform.y
+        ny = start_y + step
+        if self._blocked(world, entity.id, controller, transform.x, ny, falling_from=start_y if step > 0 else None):
+            # move to the contact in small steps so the character rests on the surface
+            direction = 1.0 if step > 0 else -1.0
+            moved = 0.0
+            while abs(moved) < abs(step):
+                trial = start_y + moved + direction * min(0.25, abs(step) - abs(moved))
+                if self._blocked(
+                    world, entity.id, controller, transform.x, trial, falling_from=start_y if step > 0 else None
+                ):
+                    break
+                moved = trial - start_y
+            transform.y = start_y + moved
+            if step < 0:
+                controller.hit_ceiling = True
+            controller.velocity_y = 0.0
+        else:
+            transform.y = ny
+        controller.ground_id = self._ground(world, entity.id, controller, transform.x, transform.y)
+        controller.grounded = controller.ground_id is not None
+        controller.jump = False
 
     def _contact(self, world, entity_id, controller, start, end, other, horizontal):
         """Furthest free position from ``start`` toward a blocked ``end`` (fast moves, e.g. knockback, end against
@@ -385,7 +492,7 @@ class CharacterControllerSystem(System):
         for _ in range(8):
             mid = (free + blocked) / 2
             x, y = (mid, other) if horizontal else (other, mid)
-            if self._blocked(world, entity_id, controller, x, y):
+            if self._box_blocked(world, entity_id, controller, x, y):
                 blocked = mid
             else:
                 free = mid

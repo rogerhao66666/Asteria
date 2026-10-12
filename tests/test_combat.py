@@ -476,3 +476,69 @@ def test_attacks_are_authored_in_the_editor_with_undo(runtime):
     assert game.combat.attacks["test_kick"] is kick  # the running session reads the same records
     document.undo()
     assert game.project.gameplay_library.attacks["test_kick"].knockdown is False
+
+
+# -- A2-2: batched top-down movement ---------------------------------------------------------------------------------
+def test_topdown_boxes_cannot_slip_through_walls_thinner_than_the_character():
+    scene = Scene("S")
+    scene.scheduler.add(CharacterControllerSystem())
+    _entity(scene, "Pole", 30, 0, _set(Collider2DComponent(), width=2, height=4))  # thinner than the 16-high hero
+    hero = _entity(scene, "Hero", 0, 0, _set(CharacterController2DComponent(), speed=60.0))
+    hero.get(CharacterController2DComponent).set_intent(1, 0)
+    _run(scene, 1.0)
+    assert hero.get(Transform).x <= 30 - 1 - 6 + 1e-6 and hero.get(CharacterController2DComponent).hit_wall
+
+
+def test_batched_moves_match_one_by_one_checks_and_keep_the_shared_world_current():
+    from asteria.runtime.collision import CollisionWorld
+
+    rng = random.Random(3)
+    scene = Scene("S")
+    for k in range(25):
+        shape = "circle" if k % 4 == 0 else "box"
+        _entity(
+            scene,
+            f"Rock{k}",
+            rng.uniform(-200, 200),
+            rng.uniform(-200, 200),
+            _set(
+                Collider2DComponent(),
+                shape=shape,
+                width=rng.uniform(4, 40),
+                height=rng.uniform(4, 40),
+                radius=rng.uniform(3, 15),
+            ),
+        )
+    walkers = [
+        _entity(
+            scene,
+            f"W{k}",
+            rng.uniform(-200, 200),
+            rng.uniform(-200, 200),
+            _set(CharacterController2DComponent(), speed=rng.uniform(30, 90)),
+            _set(Collider2DComponent(), width=8, height=8, layer=1),
+        )
+        for k in range(60)
+    ]
+    shared = {"world": None}
+    system = CharacterControllerSystem(world=lambda: shared["world"])
+    for frame in range(90):
+        for k, walker in enumerate(walkers):
+            walker.get(CharacterController2DComponent).set_intent(
+                ((k + frame // 20) % 3) - 1, ((k * 7 + frame // 15) % 3) - 1
+            )
+        shared["world"] = CollisionWorld.from_scene(scene)
+        expected = {}
+        for walker in walkers:  # what the one-by-one check says about each first x step
+            c, t = walker.get(CharacterController2DComponent), walker.get(Transform)
+            step = c.intent_x * c.speed * DT
+            if step:
+                expected[walker.id] = system._box_blocked(shared["world"], walker.id, c, t.x + step, t.y)
+        system.update(scene, DT)
+        for walker in walkers:
+            if walker.id in expected:
+                assert walker.get(CharacterController2DComponent).hit_wall >= expected[walker.id]
+        fresh = CollisionWorld.from_scene(scene)
+        assert {k: (round(v.cx, 9), round(v.cy, 9)) for k, v in system.last_world.shapes.items()} == {
+            k: (round(v.cx, 9), round(v.cy, 9)) for k, v in fresh.shapes.items()
+        }

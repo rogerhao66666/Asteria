@@ -136,8 +136,9 @@ def aabb_pairs(x0, y0, x1, y1, cell_size=64.0):
     return sorted(pairs)
 
 
-def aabb_cross_pairs(a, b, cell_size=64.0):
-    """Pairs ``(i, j)`` where box ``a[i]`` overlaps box ``b[j]`` (strictly: touching edges do not count), sorted.
+def aabb_cross_pairs(a, b, cell_size=64.0, touching=False):
+    """Pairs ``(i, j)`` where box ``a[i]`` overlaps box ``b[j]``, sorted. Touching edges count only with
+    ``touching``.
 
     ``a`` and ``b`` are ``(x0, y0, x1, y1)`` column tuples. A uniform grid over ``b`` finds the candidates.
     """
@@ -155,7 +156,11 @@ def aabb_cross_pairs(a, b, cell_size=64.0):
         for cx in range(floor(ax0[i] / cell_size), floor(ax1[i] / cell_size) + 1):
             for cy in range(floor(ay0[i] / cell_size), floor(ay1[i] / cell_size) + 1):
                 for j in cells.get((cx, cy), ()):
-                    if ax0[i] < bx1[j] and bx0[j] < ax1[i] and ay0[i] < by1[j] and by0[j] < ay1[i]:
+                    if touching:
+                        hit = ax0[i] <= bx1[j] and bx0[j] <= ax1[i] and ay0[i] <= by1[j] and by0[j] <= ay1[i]
+                    else:
+                        hit = ax0[i] < bx1[j] and bx0[j] < ax1[i] and ay0[i] < by1[j] and by0[j] < ay1[i]
+                    if hit:
                         pairs.add((i, j))
     return sorted(pairs)
 
