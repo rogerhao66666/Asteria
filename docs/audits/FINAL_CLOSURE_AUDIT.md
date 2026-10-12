@@ -4,19 +4,39 @@
 
 ## 1. 摘要
 
-| | D18（`9b93763`） | D19（現在） |
+| | D19（`06a5577`，逐列重算） | D20（現在） |
 |---|---|---|
-| A 已實作並驗證 | 49 | **72** |
-| B 已實作，缺部分驗證 | 45 | **22** |
+| A 已實作並驗證 | 71（註記寫 72，多算 1 項） | **85** |
+| B 已實作，缺部分驗證 | 22 | **9** |
 | C 部分實作 | 1 | **1**（TPL-01，Eventual） |
 | D 未實作 | 2 | **2**（EDT-17、EDT-18，Eventual） |
 | E 取消 | 2 | 2 |
-| 自動化測試 | 2165 passed | **2180 passed** |
-| 實機檢查（`results.json`） | 29 PASS／3 NE／1 BLOCKED | **49 PASS／3 NOT EXECUTED／1 BLOCKED／0 FAIL** |
+| 自動化測試 | 2180 passed | **1954 passed**（D20-2 退役 35 個模組時移除只測退役程式碼的測試） |
+| 實機檢查（`results.json`） | 49 PASS／3 NE／1 BLOCKED／0 FAIL | **58 PASS／3 NOT EXECUTED／1 BLOCKED／1 FAIL** |
 
-**結論：** 功能面已完成——所有 Core 需求都已實作，剩下的 C／D 全是 SPEC 原文的 Eventually／Potential 項目。自動化驗證已完成到目前能自動化的程度，但還有 13 項 B 可以再自動化（§4）。人工驗證尚未執行。**不宣告 FULL SPEC CLOSURE VERIFIED。**
+**結論：** 功能面已完成，所有 Core 需求都已實作，剩下的 C／D 全是 SPEC 原文的 Eventually／Potential 項目。
 
-## 2. 本期變更（詳見 DECISION_LOG D19）
+**唯一的 FAIL：** weather load（31.8 fps，門檻 55）。執行時 macOS 低耗電模式開著，舊 commit 在相同條件下也只有 34.7 fps，所以不是程式回歸，但在重跑前仍記為 FAIL。
+
+**剩下的 9 項 B：**
+- 7 項需要人或裝置。
+- 2 項待你決定：AST-07 選單要不要顯示物品圖示；VFX-01 要不要新增粒子發射器格式。
+
+**不宣告 FULL SPEC CLOSURE VERIFIED。**
+
+## 2. 本期變更（詳見 DECISION_LOG D20）
+
+- **作者彈性：**
+  - DOT 預設固定，作者可以選擇套用倍率；也可以設定逐回合加重。
+  - 倍率規則任意設定，可以做出八方旅人式的弱點、破盾、Boost、雙武器和副職業。
+  - 背包規則、召喚與夥伴、技能冷卻、行動時序都成為專案選項。
+- **CB15：** 退役 35 個從產品進入點無法觸及的模組（`78dd3fb`，有備份與回滾說明）。
+- **編輯器：**
+  - 表單標籤改在欄位上方，並依寬度排出最多欄數。
+  - Asset 清單新增 Auto-fix Image 和 Pack into Atlas。
+- **B 項實機證據：** 13 項 B→A（實機項目 36–40）。過程中修正 2 個在實機截圖才看得到的缺陷。
+
+### D19 變更（保留）
 
 - **Canonical 戰鬥呈現完整取代 legacy：** 沒有戰鬥美術的專案也能完整呈現；pygame 與 ModernGL 都通過實機驗證。CB15 A9 已退役。
 - **整合問題：**
@@ -39,14 +59,15 @@
 | EDT-17 | D（Eventual） | Gameplay System Builder，SPEC §31「should eventually」 |
 | EDT-18 | D（Eventual） | Plugin runtime，SPEC 未要求當前版本 |
 
-另有一個待決定的語意問題，不算缺陷：BTL-02 的 DOT（狀態持續傷害）是否要套用屬性倍率，SPEC 沒有寫明。
+BTL-02 的 DOT 問題已經依「不限制作者」的決定結案：預設固定，作者可以選擇套用倍率。
 
-## 4. 剩下的驗證缺口（22 項 B）
+## 4. 剩下的驗證缺口（9 項 B）
 
-逐項見 `REMAINING_WORK_PLAN.md` §D19。
-- **需要人或裝置（8 項）：** ENG-14（M1）、ENG-15（M2、M8）、ENG-18（M3、M4）、CAM-01（M5）、VFX-01／02／03（M10）、BTL-04（M1–M3）。
-- **待你決定（1 項）：** BTL-02。
-- **還能自動化（13 項）：** ENG-13 parallax、ENG-20 遷移後實機開啟、ANI-02 狀態機驅動戰鬥動畫、CAM-02 target group、CMP-03（沒有 runtime 消費者）、GP-02 cooldown／cast、RPG-01 容量、RPG-08 召喚／成長／收納、EVT-04 sequence 中的對話與音樂軌、EDT-16、AST-07、AST-08、AST-11。
+逐項見 `REMAINING_WORK_PLAN.md` §D20。
+- **需要人或裝置（7 項）：** ENG-14（M1）、ENG-15（M2、M8）、ENG-18（M3、M4）、CAM-01（M5）、VFX-02／03（M10）、BTL-04（M1–M3）。
+- **待你決定（2 項）：**
+  - AST-07：選單顯示物品圖示後，才能取得 Item／Equipment 的實機證據。
+  - VFX-01：粒子發射器資料格式，另外還要人工目視 M10。
 
 ## 5. 實機與效能（Apple M5，macOS 27.0.1，Python 3.13.15，pygame-ce 2.5.8）
 
@@ -57,7 +78,7 @@
 | 無美術專案的戰鬥 | pygame／ModernGL | 55.5／56.5 | 22.7／24.6 ms | 以真實按鍵打到勝利 |
 | field＋全部效果 5 s | ModernGL／pygame | 56.3／55.7 | 24.0／19.1 ms | ModernGL 每幀 15 個 draw call |
 | 雨 800 粒子 soak 30 s | ModernGL／pygame | 57.5／55.8 | 23.4／19.1 ms | 0 錯誤；RSS 持平 |
-| 雨 2000 粒子＋全部效果 | ModernGL | 59.3 | 21.7 ms | VFX 區段 4.4 ms |
+| 雨 2000 粒子＋全部效果 | ModernGL | 59.3（D19）；31.8（D20，低耗電模式，FAIL） | 21.7 ms；35.9 ms | VFX 區段 4.4 → 8.9 ms；舊 commit 同條件 34.7 fps |
 | 12 場戰鬥 | pygame | — | — | 戰鬥圖片 0 殘留；RSS 約 173 MB 持平 |
 | `Application.run` 8 s | pygame | — | — | fixed step 400／400 |
 
@@ -76,7 +97,7 @@
 
 - **已退役：** A1–A5、A7、A8（D18）與 A9（D19）。
 - **保留：** A6、A10。沒有 BLOCKED 項目。
-- **候選清單：** D19 掃描出 23 個沒有產品程式引用的模組，依「不確定就保留」原則全部保留，待你決定是否另開批次逐項審查（CB15 Part E）。
+- **未被引用模組：** D20 用可達性分析審查後退役 35 個、保留 7 個（CB15 Part F，`git revert 78dd3fb` 可回滾）。
 
 ## 8. 人工驗證清單
 
@@ -101,6 +122,6 @@
 | 狀態 | 是否達成 |
 |---|---|
 | FUNCTIONAL CLOSURE COMPLETE | **達成**：所有 Core 需求都已實作；剩下的 C／D 全為 Eventual |
-| AUTOMATED VALIDATION COMPLETE | **未達成**：還有 13 項 B 可以再自動化 |
+| AUTOMATED VALIDATION COMPLETE | **未達成**：weather load 需要在關閉低耗電模式後重跑；AST-07、VFX-01 需要你先決定功能，才能自動取證 |
 | MANUAL VALIDATION PENDING | **是**：M1–M11 尚未執行（M2、M8 因沒有手把而 BLOCKED） |
 | FULL SPEC CLOSURE VERIFIED | **未達成** |

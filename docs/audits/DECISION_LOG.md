@@ -716,3 +716,59 @@ field 繪製分層角色與 attachment。`validation/jrpg_stress.py` 在參考�
 ### 需要你決定
 1. BTL-02：狀態的持續傷害（DOT）是否要套用屬性倍率（SPEC 沒有寫明）。
 2. CB15：D19 掃描到 23 個沒有產品程式引用的模組，要不要另開批次逐項審查是否退役（見 CB15 Part E）。
+
+## D20 — 作者彈性、模組審查、剩餘 B 項實機證據（2026-10-12）
+
+### D20-1 — 引擎不限制作者（`a864a05`、`776bcb9`、`d40ea2e`、`553a60d`、`6810b5b`）
+使用者決定：「我們的引擎不要有任何限制使用者的行為」。SPEC 沒寫死的規則都改成作者可選的資料，並且可以在編輯器裡設定：
+- **DOT：** 預設是固定傷害。在 Status Effects 填 Interaction Tags，就會經過互動規則套用倍率。D19 的待決事項 1 由此結案。
+- **逐回合加重的 DOT：** PeriodicEffect 的 `growth`、`growth_mode`（add／multiply）、`growth_cap`，例如 10、20、30……。Game Data 新增「Status Definitions」分類可以編輯。
+- **倍率規則：** 任意倍率、克制、屬性、武器類型都可以設定，弱點也可以是「劍」。攻擊在能力上標武器類型（`weapon.sword`），物品只標攜帶的裝備（`equip.sword`）。破盾倍率、Boost 的連擊（repeat）或增幅（power，`boost_mode`）、雙武器、副職業都可以只靠資料組出八方旅人式的系統。
+- **背包規則：** 堆疊上限、唯一物品、種類上限（關鍵物品可豁免）、滿了時的處理（fill／reject）。
+- **召喚與夥伴：** 召喚（敵方小兵、預備隊夥伴、事件 SUMMON）、捕捉後成長、收納。
+- **技能：** 冷卻回合，以及行動時序 `action_timing`（immediate／timeline，預設 immediate，參考專案不受影響）。
+
+### D20-2 — CB15 未被引用模組審查（`78dd3fb`）
+使用者核准：沒用到的就移除。用可達性分析（從產品進入點出發）檢查，退役 35 個模組，保留 7 個（autofix、usability_gate、rpg_maker_mv_weapon、reference_world、presentation_timing、animated_text、text_render_integration）。
+- **備份：** `../Asteria_backup_2026-10-11_cb15_unused_modules.zip`
+- **回滾：** `git revert 78dd3fb`
+- **詳細記錄：** CB15 Part F
+
+autofix 原本沒有產品入口，已在 D20-4 接上編輯器。animated_text 已由 field popup 使用（`a619aeb`）。
+
+### D20-3 — 編輯器排版（`4226917`、`3cc0228`）
+- 表單改成標籤在欄位上方，依寬度排成最多欄數，減少左右捲動。
+- 清單和明細在寬度足夠時並排。
+- 右側加上內距，捲軸前留空隙。
+
+### D20-4 — 剩餘 B 項實機證據（`ecbad0b`、`82bf170`、`a619aeb`、`27521d2`）
+- 補功能：
+  - EVT-04：sequence 會等它的對話軌道把句子讀完。
+  - ANI-02：作者的狀態機驅動戰鬥動畫。
+  - CMP-03：field popup 使用通用 animated text，並新增 SHOW_POPUP 指令。
+  - AST-11：Asset 清單新增 Auto-fix Image（預覽、`.bak.png` 備份、破壞性修正需確認）和 Pack into Atlas。
+- 新的實機檢查：
+  - `editor_characters`、`migrated_project`、`asset_categories`；
+  - `engine_systems` 加 parallax 和 target group；
+  - replay 新增 7 項。
+- 實機截圖檢視時找到並修正 2 個缺陷：
+  - 新放置角色的 sprite sheet 顯示為「Missing」，Scene 也不畫出來；
+  - Inspector 的 combo／checkbox 底下透出值的文字。
+- **矩陣：** 13 項 B→A，逐列重算為 **A85／B9／C1／D2**。D19 註記寫 A72，但逐列重算 D19 表格是 A71，多算了 1 項，本次更正。
+
+### 驗證結果
+- **自動化測試：** 1954 passed。
+- **實機全套重跑（2026-10-12）：** 58 PASS、3 NOT EXECUTED（M1、M3、M4）、1 BLOCKED（M2）、1 FAIL。
+  - FAIL 是 weather load：31.8 fps，門檻 55。執行時 macOS 低耗電模式開著；舊 commit `06a5577` 在相同條件下也只有 34.7 fps，所以不是程式回歸。關閉低耗電模式後要重跑。
+  - `editor_workflows_gui` 在全套中因鍵盤焦點失敗一次，單獨重跑通過；結果檔記錄重跑，並附註說明。
+
+### 剩下的 B（9 項）
+- 需要人或裝置（M1–M5、M8、M10）：ENG-14、ENG-15、ENG-18、CAM-01、VFX-02、VFX-03、BTL-04。
+- 還缺功能：
+  - VFX-01：沒有粒子發射器資料，另外還要人眼確認。
+  - AST-07：Item、Equipment 沒有 runtime 畫面，選單不顯示物品圖示。
+
+### 需要你決定
+1. 關閉 macOS 低耗電模式後重跑 `python scripts/real_machine_validation.py docs/audits/evidence/real_machine --only vfx`。這屬於系統設定，我不會自己改。
+2. AST-07：要不要讓 runtime 選單（商店、背包、裝備）顯示物品圖示？做了就能補上 Item／Equipment 的實機證據。
+3. VFX-01：要不要新增粒子發射器資料格式？目前 VFX 都是序列圖。

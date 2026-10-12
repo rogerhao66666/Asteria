@@ -1,148 +1,148 @@
 {
   "schema": "asteria.runtime_profile",
   "version": 1,
-  "frames": 569,
+  "frames": 595,
   "frame": {
-    "count": 569,
-    "mean_ms": 6.3035,
-    "p50_ms": 5.6988,
-    "p95_ms": 10.4674,
-    "p99_ms": 12.0666,
-    "max_ms": 12.8571,
-    "total_ms": 3586.6816
+    "count": 595,
+    "mean_ms": 8.9628,
+    "p50_ms": 8.1342,
+    "p95_ms": 13.5709,
+    "p99_ms": 17.1958,
+    "max_ms": 34.7226,
+    "total_ms": 5332.8879
   },
   "pacing": {
     "target_fps": 60.0,
-    "measured_fps": 56.815,
-    "interval_mean_ms": 17.6011,
-    "interval_jitter_ms": 0.7256,
-    "interval_p99_ms": 18.8818,
-    "frames_over_budget": 0
+    "measured_fps": 59.381,
+    "interval_mean_ms": 16.8405,
+    "interval_jitter_ms": 1.0956,
+    "interval_p99_ms": 17.9115,
+    "frames_over_budget": 2
   },
   "sections": {
     "ai": {
-      "count": 54,
-      "mean_ms": 0.0147,
-      "p50_ms": 0.0135,
-      "p95_ms": 0.0224,
-      "p99_ms": 0.0404,
-      "max_ms": 0.0414,
-      "total_ms": 0.7935
+      "count": 55,
+      "mean_ms": 0.0178,
+      "p50_ms": 0.0156,
+      "p95_ms": 0.0234,
+      "p99_ms": 0.0302,
+      "max_ms": 0.0564,
+      "total_ms": 0.9789
     },
     "animation": {
-      "count": 569,
-      "mean_ms": 1.1927,
-      "p50_ms": 1.16,
-      "p95_ms": 1.4632,
-      "p99_ms": 1.717,
-      "max_ms": 5.0677,
-      "total_ms": 678.6606
+      "count": 595,
+      "mean_ms": 1.7958,
+      "p50_ms": 1.6857,
+      "p95_ms": 2.3725,
+      "p99_ms": 3.39,
+      "max_ms": 4.6437,
+      "total_ms": 1068.4827
     },
     "asset_loading": {
       "count": 16,
-      "mean_ms": 0.8931,
-      "p50_ms": 0.3885,
-      "p95_ms": 2.6788,
-      "p99_ms": 3.5448,
-      "max_ms": 3.5448,
-      "total_ms": 14.2897
+      "mean_ms": 0.9483,
+      "p50_ms": 0.6878,
+      "p95_ms": 2.2652,
+      "p99_ms": 2.6675,
+      "max_ms": 2.6675,
+      "total_ms": 15.1732
     },
     "collision": {
-      "count": 54,
-      "mean_ms": 0.0405,
-      "p50_ms": 0.0364,
-      "p95_ms": 0.0622,
-      "p99_ms": 0.1142,
-      "max_ms": 0.1172,
-      "total_ms": 2.1851
+      "count": 55,
+      "mean_ms": 0.0803,
+      "p50_ms": 0.0428,
+      "p95_ms": 0.0887,
+      "p99_ms": 0.1693,
+      "max_ms": 1.7161,
+      "total_ms": 4.4172
     },
     "events": {
-      "count": 623,
-      "mean_ms": 0.0104,
-      "p50_ms": 0.0047,
-      "p95_ms": 0.0442,
-      "p99_ms": 0.0937,
-      "max_ms": 0.4704,
-      "total_ms": 6.5057
+      "count": 650,
+      "mean_ms": 0.0127,
+      "p50_ms": 0.0065,
+      "p95_ms": 0.05,
+      "p99_ms": 0.1004,
+      "max_ms": 0.5418,
+      "total_ms": 8.2344
     },
     "gpu_present": {
-      "count": 623,
-      "mean_ms": 1.1496,
-      "p50_ms": 1.0642,
-      "p95_ms": 1.8884,
-      "p99_ms": 2.5588,
-      "max_ms": 3.4803,
-      "total_ms": 716.2064
+      "count": 650,
+      "mean_ms": 1.3687,
+      "p50_ms": 1.1735,
+      "p95_ms": 2.1774,
+      "p99_ms": 4.4638,
+      "max_ms": 23.8358,
+      "total_ms": 889.6738
     },
     "gpu_time": {
-      "count": 623,
-      "mean_ms": 0.4906,
-      "p50_ms": 0.4436,
-      "p95_ms": 0.869,
-      "p99_ms": 1.72,
-      "max_ms": 2.8369,
-      "total_ms": 305.6671
+      "count": 650,
+      "mean_ms": 0.4277,
+      "p50_ms": 0.356,
+      "p95_ms": 0.927,
+      "p99_ms": 2.1009,
+      "max_ms": 3.2631,
+      "total_ms": 277.9867
     },
     "input": {
-      "count": 623,
-      "mean_ms": 0.0377,
-      "p50_ms": 0.0356,
-      "p95_ms": 0.0538,
-      "p99_ms": 0.0818,
-      "max_ms": 0.1449,
-      "total_ms": 23.5097
+      "count": 650,
+      "mean_ms": 0.0502,
+      "p50_ms": 0.047,
+      "p95_ms": 0.0721,
+      "p99_ms": 0.1013,
+      "max_ms": 0.1692,
+      "total_ms": 32.6345
     },
     "present": {
-      "count": 569,
-      "mean_ms": 2.2233,
-      "p50_ms": 1.4035,
-      "p95_ms": 6.3102,
-      "p99_ms": 7.4546,
-      "max_ms": 8.6244,
-      "total_ms": 1265.0388
+      "count": 595,
+      "mean_ms": 2.7753,
+      "p50_ms": 1.6827,
+      "p95_ms": 6.2295,
+      "p99_ms": 8.7618,
+      "max_ms": 26.7951,
+      "total_ms": 1651.3218
     },
     "render": {
-      "count": 623,
-      "mean_ms": 2.5843,
-      "p50_ms": 2.6487,
-      "p95_ms": 3.2782,
-      "p99_ms": 3.5424,
-      "max_ms": 6.396,
-      "total_ms": 1610.0283
+      "count": 650,
+      "mean_ms": 3.8809,
+      "p50_ms": 3.7283,
+      "p95_ms": 5.6628,
+      "p99_ms": 7.1881,
+      "max_ms": 14.9938,
+      "total_ms": 2522.5766
     },
     "spawn": {
-      "count": 54,
-      "mean_ms": 0.0125,
-      "p50_ms": 0.0104,
-      "p95_ms": 0.0208,
-      "p99_ms": 0.0317,
-      "max_ms": 0.0328,
-      "total_ms": 0.6733
+      "count": 55,
+      "mean_ms": 0.0169,
+      "p50_ms": 0.0145,
+      "p95_ms": 0.0237,
+      "p99_ms": 0.0519,
+      "max_ms": 0.0712,
+      "total_ms": 0.9287
     },
     "update": {
-      "count": 623,
-      "mean_ms": 0.083,
-      "p50_ms": 0.0465,
-      "p95_ms": 0.1198,
-      "p99_ms": 0.2727,
-      "max_ms": 17.32,
-      "total_ms": 51.7285
+      "count": 650,
+      "mean_ms": 0.1025,
+      "p50_ms": 0.0641,
+      "p95_ms": 0.1395,
+      "p99_ms": 0.3335,
+      "max_ms": 14.8127,
+      "total_ms": 66.6503
     },
     "vfx": {
-      "count": 231,
-      "mean_ms": 0.0931,
-      "p50_ms": 0.0912,
-      "p95_ms": 0.1214,
-      "p99_ms": 0.1776,
-      "max_ms": 0.2047,
-      "total_ms": 21.5038
+      "count": 242,
+      "mean_ms": 0.14,
+      "p50_ms": 0.1315,
+      "p95_ms": 0.2021,
+      "p99_ms": 0.2509,
+      "max_ms": 0.2858,
+      "total_ms": 33.8808
     }
   },
   "counters": {
     "asset_usage": {
       "last": 16.0,
       "max": 16.0,
-      "mean": 14.3146
+      "mean": 14.3059
     },
     "draw_calls": {
       "last": 1.0,
@@ -155,15 +155,15 @@
       "mean": 2.0
     },
     "particles": {
-      "last": 0.0,
+      "last": 1.0,
       "max": 1.0,
-      "mean": 0.406
+      "mean": 0.4067
     }
   },
   "memory": {
-    "peak_rss_bytes": 295600128,
-    "python_heap_current_bytes": 1587014,
-    "python_heap_peak_bytes": 4689058
+    "peak_rss_bytes": 268992512,
+    "python_heap_current_bytes": 1748799,
+    "python_heap_peak_bytes": 4850843
   },
   "unsupported": {},
   "not_recorded": []

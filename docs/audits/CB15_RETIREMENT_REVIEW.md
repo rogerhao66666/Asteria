@@ -268,4 +268,4 @@ the product.
 | **Regression** | Real machine re-run of battle, battle_features, battle_no_art, gameplay, editor, editor_tools, editor_d17, editor_workflows, b_items_replay and vfx: all PASS. The suite total is unchanged (49 PASS, 0 FAIL). |
 | **Matrix** | ENG-10, CAM-01, VFX-01 and ARPG-01 cited retired modules; they now cite the product modules. No status changed. |
 | **Backup** | `/Users/roger/Documents/Vscode/Asteria_backup_2026-10-11_cb15_unused_modules.zip` (35 modules + 33 test files as they were before the change) |
-| **Rollback** | `git revert <this commit>` (single commit; see DECISION_LOG D19-6) |
+| **Rollback** | `git revert 78dd3fb` (single commit; see DECISION_LOG D20-2) |
