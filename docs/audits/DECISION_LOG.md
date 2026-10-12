@@ -787,5 +787,5 @@ autofix 原本沒有產品入口，已在 D20-4 接上編輯器。animated_text 
 - **驗證：** 自動化測試 1970 passed；實機 63 PASS、3 NOT EXECUTED、1 BLOCKED、1 FAIL（weather load，低耗電模式仍開著）。
 
 ### 需要你決定
-1. 關閉 macOS 低耗電模式後重跑 `python scripts/real_machine_validation.py docs/audits/evidence/real_machine --only vfx`。這屬於系統設定，我不會自己改。
+1. ~~關閉低耗電模式後重跑 weather load~~：**使用者決定（2026-10-12）先不測。** 項目 25 仍記為 FAIL（低耗電模式；程式未回歸），等之後再重跑 `--only vfx`。
 2. ~~AST-07、VFX-01~~：已依使用者決定完成（D20-5）。

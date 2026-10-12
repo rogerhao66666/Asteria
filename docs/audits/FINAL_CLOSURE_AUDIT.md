@@ -118,6 +118,6 @@ BTL-02 的 DOT 問題已經依「不限制作者」的決定結案：預設固�
 | 狀態 | 是否達成 |
 |---|---|
 | FUNCTIONAL CLOSURE COMPLETE | **達成**：所有 Core 需求都已實作；剩下的 C／D 全為 Eventual |
-| AUTOMATED VALIDATION COMPLETE | **未達成**：只差 weather load，要在關閉低耗電模式後重跑；其他可自動化的項目都已有實機證據 |
+| AUTOMATED VALIDATION COMPLETE | **未達成**：只差 weather load（低耗電模式下 FAIL）；使用者決定先不重跑。其他可自動化的項目都已有實機證據 |
 | MANUAL VALIDATION PENDING | **是**：M1–M11 尚未執行（M2、M8 因沒有手把而 BLOCKED） |
 | FULL SPEC CLOSURE VERIFIED | **未達成** |
