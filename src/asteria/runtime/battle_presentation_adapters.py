@@ -801,10 +801,12 @@ class CanonicalBattleAdapter:
             # Commands appear only while a hero is waiting for input.
             if actor is None or self.busy() or self.host._victory or self.host._defeat:
                 skills = ()
-            entries = [
-                BattleActionEntry(ability_id, f"{i + 1}  {meta.get('label', ability_id)}", order=i)
-                for i, (ability_id, meta) in enumerate(skills)
-            ]
+            entries = []
+            for i, (ability_id, meta) in enumerate(skills):
+                wait = game.battle.cooldown_remaining(actor, ability_id)  # GP-02 cooldowns
+                label = f"{i + 1}  {meta.get('label', ability_id)}" + (f"  ({wait})" if wait else "")
+                reason = f"Ready in {wait} turn" + ("" if wait == 1 else "s") if wait else ""
+                entries.append(BattleActionEntry(ability_id, label, order=i, enabled=not wait, disabled_reason=reason))
             capture = game.capture_targets() if skills else ()
             if capture:
                 best = max(chance for _, chance, _ in capture)

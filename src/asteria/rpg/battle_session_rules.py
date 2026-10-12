@@ -13,6 +13,9 @@ def _id(value, label):
     return value
 
 
+ACTION_TIMING_MODES = ("immediate", "timeline")
+
+
 @dataclass(frozen=True, slots=True)
 class BattleSessionRules:
     """Names the project resources and triggers a playable battle relies on.
@@ -29,6 +32,11 @@ class BattleSessionRules:
     boost_resource_id: str = ""
     boost_cost_per_level: float = 1.0
     boost_max_level: int = 0
+    # How authored ActionTimingDefinitions act in play (GP-02): "immediate" resolves every action at once
+    # (timings only shape the presentation); "timeline" delays resolution by startup + cast time and pushes
+    # the actor's next turn back by the cast and its recovery. Left out of the data while "immediate".
+    action_timing: str = "immediate"
+    OPTIONAL_DATA = {"action_timing": "immediate"}
 
     def __init__(
         self,
@@ -39,6 +47,7 @@ class BattleSessionRules:
         boost_resource_id="",
         boost_cost_per_level=1.0,
         boost_max_level=0,
+        action_timing="immediate",
     ):
         cost = float(boost_cost_per_level)
         if not isfinite(cost) or cost <= 0:
@@ -52,6 +61,9 @@ class BattleSessionRules:
         object.__setattr__(self, "boost_resource_id", str(boost_resource_id).strip())
         object.__setattr__(self, "boost_cost_per_level", cost)
         object.__setattr__(self, "boost_max_level", max_level)
+        if action_timing not in ACTION_TIMING_MODES:
+            raise ValueError(f"action_timing must be one of {ACTION_TIMING_MODES}")
+        object.__setattr__(self, "action_timing", action_timing)
 
     @property
     def boost_enabled(self):
@@ -67,6 +79,7 @@ class BattleSessionRules:
             "boost_resource_id": self.boost_resource_id,
             "boost_cost_per_level": self.boost_cost_per_level,
             "boost_max_level": self.boost_max_level,
+            **({"action_timing": self.action_timing} if self.action_timing != "immediate" else {}),
         }
 
     @classmethod
@@ -80,4 +93,5 @@ class BattleSessionRules:
             boost_resource_id=data["boost_resource_id"],
             boost_cost_per_level=data["boost_cost_per_level"],
             boost_max_level=data["boost_max_level"],
+            action_timing=data.get("action_timing", "immediate"),
         )

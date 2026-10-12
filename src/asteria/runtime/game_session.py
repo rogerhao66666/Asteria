@@ -888,6 +888,11 @@ class GameSessionRuntime:
                 if str(actor_id) in battle.members:
                     raise GameSessionError(f"{actor_id} is already in the battle")
                 member = self._actor_member(str(actor_id))
+            registry = battle.ability_runtime.registry
+            for ability_id in member.ability_ids:  # the newcomer's abilities join the battle's registry
+                definition = self.project.gameplay_library.abilities.get(ability_id)
+                if definition is not None and registry.get(ability_id) is None:
+                    registry.register(definition)
             battle.summon(member, owner_id=owner_id, join_current_round=join_current_round)
             added.append(member.member_id)
             self._log("summoned", member_id=member.member_id, data={"owner_id": owner_id})
@@ -1027,6 +1032,9 @@ class GameSessionRuntime:
                 boost_level * rules.boost_cost_per_level,
                 trigger="rpg.session.boost",
             )
+        timing = self.battle.action_timing.definition_for(ability_id)
+        if timing.windup > 0 and rules.action_timing == "timeline":  # GP-02: the cast resolves later
+            return self._begin_cast(actor_id, ability_id, targets, timing)
         results = []
         for _ in range(boost_level + 1):
             if offensive:
@@ -1063,6 +1071,9 @@ class GameSessionRuntime:
             raise GameSessionError("no active battle")
         if not self.active_enemy_ids() or not self.active_hero_ids():
             return None
+        self.resolve_casts()
+        if not self.active_enemy_ids() or not self.active_hero_ids():
+            return None
         actor = self.battle.next_actor()
         if actor is None:
             self.battle.start_next_round()
@@ -1079,7 +1090,8 @@ class GameSessionRuntime:
         if self.mode != "battle":
             raise GameSessionError("no active battle")
         self._logged_turn = None
-        return self.battle.advance_turn()
+        delay, self._turn_delay = getattr(self, "_turn_delay", 0.0), 0.0
+        return self.battle.advance_turn(recovery=delay)
 
     def enemy_act(self, member_id):
         """One enemy action: its bound AI, else its first ability on default targets."""
@@ -1178,7 +1190,41 @@ class GameSessionRuntime:
     def execute(self, actor_id, ability_id, target_ids):
         if self.mode != "battle":
             raise GameSessionError("no active battle")
-        return self.battle.execute(BattleAction(actor_id, ability_id, target_ids))
+        result = self.battle.execute(BattleAction(actor_id, ability_id, target_ids))
+        if self.rules.action_timing == "timeline":
+            recovery = self.battle.action_timing.definition_for(ability_id).recovery
+            self._turn_delay = max(getattr(self, "_turn_delay", 0.0), recovery)  # applied when the turn ends
+        return result
+
+    def _begin_cast(self, actor_id, ability_id, targets, timing):
+        """Start a cast (ActionTimingDefinition startup + cast time): validated now, resolved later by
+        ``resolve_casts``; the caster's next turn moves back by the cast time and recovery."""
+        battle = self.battle
+        action = battle._validate_action(BattleAction(actor_id, ability_id, targets))
+        current = float(getattr(battle.turn_queue, "current_time", 0.0) or 0.0)
+        ready = battle.turn_queue.peek()
+        if ready is not None and ready.member_id == action.actor_id:
+            current = max(current, float(getattr(ready, "ready_time", current)))
+        pending = battle.action_timing.begin(action, current_time=current)
+        self._turn_delay = max(getattr(self, "_turn_delay", 0.0), timing.windup + timing.recovery)
+        self._log(
+            "cast_started",
+            member_id=str(actor_id),
+            ability_id=str(ability_id),
+            target_ids=tuple(action.target_ids),
+            data={"resolve_at": pending.resolve_at, "cast_time": timing.windup},
+        )
+        return ()
+
+    def resolve_casts(self):
+        """Resolve every cast whose time has come (before the next member acts)."""
+        if self.battle is None or not self.battle.action_timing.pending():
+            return ()
+        results = self.battle.resolve_due_actions()
+        for result in results:
+            action = result.action
+            self._log("action", member_id=action.actor_id, ability_id=action.ability_id, target_ids=action.target_ids)
+        return results
 
     def enemy_turn(self, member_id, ai_id):
         if self.mode != "battle":

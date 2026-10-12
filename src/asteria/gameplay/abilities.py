@@ -182,6 +182,9 @@ class AbilityDefinition:
     conditions: GameplayCondition | None = None
     effects: tuple[AbilityEffect, ...] = ()
     tags: tuple[str, ...] = ()
+    # Turns of its user before the ability can be used again (0 = none). Left out of the data while 0.
+    cooldown_turns: int = 0
+    OPTIONAL_DATA = {"cooldown_turns": 0}
 
     def __init__(
         self,
@@ -192,6 +195,7 @@ class AbilityDefinition:
         conditions=None,
         effects=(),
         tags=(),
+        cooldown_turns=0,
     ):
         ability_id = str(ability_id).strip()
         if not ability_id:
@@ -216,6 +220,10 @@ class AbilityDefinition:
         object.__setattr__(self, "conditions", conditions)
         object.__setattr__(self, "effects", effects)
         object.__setattr__(self, "tags", tuple(sorted({normalize_tag(x) for x in tags})))
+        cooldown_turns = int(cooldown_turns)
+        if cooldown_turns < 0:
+            raise ValueError("cooldown_turns must be >= 0")
+        object.__setattr__(self, "cooldown_turns", cooldown_turns)
 
     def to_data(self):
         return {
@@ -227,6 +235,7 @@ class AbilityDefinition:
             "conditions": serialize_condition(self.conditions),
             "effects": [x.to_data() for x in self.effects],
             "tags": list(self.tags),
+            **({"cooldown_turns": self.cooldown_turns} if self.cooldown_turns else {}),
         }
 
     @classmethod
@@ -241,7 +250,7 @@ class AbilityDefinition:
             "effects",
             "tags",
         }
-        if set(data) != expected:
+        if set(data) - {"cooldown_turns"} != expected:
             raise ValueError("invalid ability definition")
         if data["schema"] != "asteria.ability_definition" or data["version"] != 1:
             raise ValueError("unsupported ability definition")
@@ -252,6 +261,7 @@ class AbilityDefinition:
             conditions=deserialize_condition(data["conditions"]),
             effects=[AbilityEffect.from_data(x) for x in data["effects"]],
             tags=data["tags"],
+            cooldown_turns=data.get("cooldown_turns", 0),
         )
 
 

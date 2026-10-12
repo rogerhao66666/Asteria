@@ -339,6 +339,8 @@ class BattleRuntime:
         self._escaped_sides = set()
         self._transform_stacks = {}
         self.ability_runtime = ability_runtime
+        self.cooldowns = {}  # member id -> {ability id: turns left} (AbilityDefinition.cooldown_turns)
+        self._used_this_turn = set()
         self.battle_resources = BattleResourceRuntime(resource_definitions, members, hooks=hooks)
         self.interactions = InteractionResolver(interaction_rules, outcome_checks, hooks=hooks)
         self.battle_states = BattleStateRuntime(state_policies, hooks=hooks)
@@ -525,6 +527,9 @@ class BattleRuntime:
         availability = self.ability_availability(actor.member_id, action.ability_id)
         if not availability.allowed:
             raise ValueError(f"ability blocked by active state: {', '.join(availability.blocking_states)}")
+        left = self.cooldown_remaining(actor.member_id, action.ability_id)
+        if left and (actor.member_id, action.ability_id) not in self._used_this_turn:  # repeats in one turn (boost)
+            raise ValueError(f"ability cooling down: {action.ability_id} ({left} turns)")
         target_resolution = self.resolve_targets(actor.member_id, action.ability_id, action.target_ids, rng=rng)
         if not target_resolution.valid:
             raise ValueError("invalid battle targets: " + ", ".join(target_resolution.errors))
@@ -776,6 +781,8 @@ class BattleRuntime:
             action.ability_id, source, target_values, prepaid_costs=prepaid_costs, value_transform=transform
         )
         wrapped = BattleActionResult(effective_action, result, tuple(record) if result.executed else ())
+        if result.executed:
+            self._start_cooldown(actor.member_id, action.ability_id)
         emit_hook(
             self.hooks,
             "rpg.battle.after_action",
@@ -992,8 +999,32 @@ class BattleRuntime:
             )
             return actor
 
+    def cooldown_remaining(self, member_id, ability_id):
+        """Turns of ``member_id`` before ``ability_id`` can be used again (0 = ready)."""
+        return self.cooldowns.get(str(member_id), {}).get(str(ability_id), 0)
+
+    def _start_cooldown(self, member_id, ability_id):
+        definition = self.ability_runtime.registry.get(ability_id)
+        turns = getattr(definition, "cooldown_turns", 0) if definition is not None else 0
+        if turns and (member_id, ability_id) not in self._used_this_turn:
+            self.cooldowns.setdefault(member_id, {})[ability_id] = int(turns)
+        self._used_this_turn.add((member_id, ability_id))
+
+    def _tick_cooldowns(self, member_id):
+        """End of ``member_id``'s turn: its cooldowns count down, except those started in this turn."""
+        member_id = str(member_id)
+        waiting = self.cooldowns.get(member_id, {})
+        for ability_id in list(waiting):
+            if (member_id, ability_id) not in self._used_this_turn:
+                waiting[ability_id] -= 1
+                if waiting[ability_id] <= 0:
+                    del waiting[ability_id]
+        self._used_this_turn = {x for x in self._used_this_turn if x[0] != member_id}
+
     def advance_turn(self, *, recovery=0.0):
         entry = self.turn_queue.pop()
+        if entry is not None:
+            self._tick_cooldowns(entry.member_id)
         if entry is not None and recovery and self.scheduler is not None:
             self.scheduler.shift_member(entry.member_id, float(recovery))
         if entry is not None:
