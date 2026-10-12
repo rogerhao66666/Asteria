@@ -12,7 +12,8 @@ pygame=["pygame-ce>=2.5"]
 moderngl=["moderngl>=5.8", "pygame-ce>=2.5", "Pillow>=10"]
 editor=["PySide6>=6.8"]
 mv=["Pillow>=10"]
-dev=["pytest>=9", "ruff>=0.16"]
+fast=["numpy>=2"]
+dev=["pytest>=9", "ruff>=0.16", "numpy>=2"]
 
 [tool.ruff]
 target-version="py312"

@@ -55,4 +55,6 @@
 | Event VM | 低 | 高 | `events/vm.py` | — | 可恢復性和序列化難以跨語言 | 不建議 |
 | Battle 規則 | 低 | 高 | `rpg/battle*` | — | 確定性 snapshot 與 Python 擴充性 | 不建議：回合制不是 CPU 熱點 |
 
+**D21 更新：** 粒子更新和碰撞 broad phase 已經抽成 `asteria.kernels`（純 Python 參考實作 + numpy 實作）。之後要加 native 實作時，從這一層加，數據見 DECISION_LOG D21。
+
 **結論：** 目前沒有任何「Measured 且必須用 native 才能解決」的瓶頸。已量到的兩個熱點（PERF-01、PERF-02）都可以在 Python 層解決（快取、GPU 批次）。

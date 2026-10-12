@@ -851,3 +851,38 @@ autofix 原本沒有產品入口，已在 D20-4 接上編輯器。animated_text 
 - 自動化測試：1999 passed（demo 測試 21 項，包含每場新戰鬥都用鍵盤打贏，且每個敵人招式都有用到）。
 - 實機：項目 44 PASS，加上 4 場新戰鬥的截圖；replay 全部 PASS。
 
+### D21 — 計算核心層（kernels）與 numpy
+
+使用者想引入 C++ 提升效能。討論後的決定：
+- 現在**不寫 C++**。原因是目前沒有量到必須用 native 才能解決的瓶頸，回合制也不吃 CPU。
+- 為之後的 ARPG 先把熱點迴圈抽成獨立的計算核心層 `asteria.kernels`，介面只收陣列。以後要加 C++，只需要多寫一套實作。
+- 現在就用 numpy 當第一套加速實作。numpy 是選用相依（`pip install .[fast]`），沒裝時自動退回純 Python。
+
+**內容：**
+- `kernels/_python.py`：參考實作，永遠可用。
+- `kernels/_numpy.py`：同樣的運算、同樣的順序，結果必須完全相同。
+- 由 `ASTERIA_KERNELS`（`auto`／`python`／`numpy`，預設 `auto`）或 `kernels.use()` 選擇。
+- 目前有兩個 kernel：
+  - `ParticleStore`：粒子的更新、位移和繪製資料。`ParticleSystem` 改用它；`ParticleView` 改成 NamedTuple，屬性不變。
+  - `aabb_pairs`：碰撞 broad phase。`CollisionWorld.contacts()` 改用它；`grid` 改成第一次查詢時才建立。配對順序改為固定排序。
+- 尋路、ARPG AI、投射物等還不存在的系統**不先加介面**，等第一版做出來再抽。
+
+**量測（Low Power Mode 開著，`time.perf_counter`，每項 20–200 次平均，單位 ms）：**
+
+| 項目 | python | numpy |
+|---|---|---|
+| 粒子 1933 顆：update | 0.734 | 0.134（約 5.5 倍） |
+| 粒子 1933 顆：views | 1.847 | 0.689（約 2.7 倍） |
+| 粒子 29 顆：update + views | 0.038 | 0.029 |
+| 碰撞 3000 個：配對 | 2.89 | 1.65 |
+| 碰撞 3000 個：建立 + contacts | 11.37 | 9.50 |
+
+**誠實說明：**
+- 碰撞整體只快約 15%，因為大部分時間花在逐個 entity 讀取位置、建立 shape（Python 物件）。要再快，資料本身要以陣列存放，這是 ARPG 設計時要處理的事。
+- 天氣負載（項目 25）的瓶頸是 pygame 逐條畫線，不是更新（2000 顆雨的更新只要 0.375 ms），numpy 幫不上，所以這次沒有改天氣。
+- 一般場景的粒子只有幾十顆，fps 本來就被垂直同步限制在約 60，所以實際遊玩看不出差別。
+
+**驗證：**
+- 自動化測試：新增 `tests/test_kernels.py` 15 項。7 種 preset 逐影格比對兩套實作的結果完全相同；碰撞配對和暴力法逐對比對；碰撞 contacts 相同。
+- 實機（scratchpad，不寫入 evidence）：`icons_and_particles` 分別用 `ASTERIA_KERNELS=numpy` 和 `python` 在 Cocoa 視窗跑，兩者都 PASS（58.9／59.0 fps，p99 23.1／22.7 ms）。
+

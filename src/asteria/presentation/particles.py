@@ -18,6 +18,9 @@ from __future__ import annotations
 import math
 import random
 from dataclasses import asdict, dataclass, fields
+from typing import NamedTuple
+
+from asteria import kernels
 
 PARTICLE_KIND = "particle_effect"
 EMITTER_SHAPES = ("point", "circle", "ring", "rect", "line")
@@ -230,8 +233,7 @@ def preset(name, effect_id):
     return ParticleEffectDefinition(effect_id, **PRESETS[name])
 
 
-@dataclass(frozen=True, slots=True)
-class ParticleView:
+class ParticleView(NamedTuple):
     """One particle as a renderer draws it."""
 
     x: float
@@ -256,18 +258,17 @@ class ParticleSystem:
         self.emit_for = definition.duration if emit_for is None else max(0.0, float(emit_for))
         self._carry = 0.0
         self._burst_done = False
-        self.px, self.py, self.vx, self.vy = [], [], [], []
-        self.life, self.max_life, self.size_k, self.angle, self.spin = [], [], [], [], []
+        self._particles = kernels.active().ParticleStore()
         self.spawned = 0
 
     @property
     def count(self):
-        return len(self.px)
+        return len(self._particles)
 
     @property
     def finished(self):
         """No more emission and no particle left (a one-shot is over)."""
-        return not self._emitting_now() and not self.px
+        return not self._emitting_now() and not len(self._particles)
 
     def _emitting_now(self):
         return self.emitting and (self.emit_for == 0 or self.age < self.emit_for)
@@ -278,9 +279,7 @@ class ParticleSystem:
     def move_to(self, x, y):
         x, y = float(x), float(y)
         if self.definition.local and (x != self.x or y != self.y):
-            dx, dy = x - self.x, y - self.y
-            self.px = [p + dx for p in self.px]
-            self.py = [p + dy for p in self.py]
+            self._particles.shift(x - self.x, y - self.y)
         self.x, self.y = x, y
 
     def _origin(self):
@@ -300,21 +299,27 @@ class ParticleSystem:
 
     def _spawn(self, n):
         d, rng, s = self.definition, self.rng, self.scale
-        room = d.max_particles - len(self.px)
+        room = d.max_particles - len(self._particles)
+        rows = []
         for _ in range(max(0, min(n, room))):
             x, y = self._origin()
             angle = math.radians(d.direction + rng.uniform(-d.spread, d.spread))
             speed = rng.uniform(*d.speed) * s
-            self.px.append(x)
-            self.py.append(y)
-            self.vx.append(math.cos(angle) * speed)
-            self.vy.append(math.sin(angle) * speed)
-            self.life.append(0.0)
-            self.max_life.append(rng.uniform(*d.lifetime))
-            self.size_k.append(1.0 + rng.uniform(-d.size_jitter, d.size_jitter))
-            self.angle.append(rng.uniform(0, 360) if d.spin != (0.0, 0.0) else 0.0)
-            self.spin.append(rng.uniform(*d.spin))
-            self.spawned += 1
+            rows.append(
+                (
+                    x,
+                    y,
+                    math.cos(angle) * speed,
+                    math.sin(angle) * speed,
+                    0.0,
+                    rng.uniform(*d.lifetime),
+                    1.0 + rng.uniform(-d.size_jitter, d.size_jitter),
+                    rng.uniform(0, 360) if d.spin != (0.0, 0.0) else 0.0,
+                    rng.uniform(*d.spin),
+                )
+            )
+        self.spawned += len(rows)
+        self._particles.add(rows)
 
     def update(self, dt):
         dt = max(0.0, float(dt))
@@ -329,31 +334,11 @@ class ParticleSystem:
             self._spawn(n)
         self.age += dt
         gx, gy = d.gravity[0] * self.scale, d.gravity[1] * self.scale
-        keep = max(0.0, 1.0 - d.drag * dt)
-        px, py, vx, vy, life, angle, spin = self.px, self.py, self.vx, self.vy, self.life, self.angle, self.spin
-        for i in range(len(px)):
-            vx[i] = (vx[i] + gx * dt) * keep
-            vy[i] = (vy[i] + gy * dt) * keep
-            px[i] += vx[i] * dt
-            py[i] += vy[i] * dt
-            life[i] += dt
-            angle[i] += spin[i] * dt
-        alive = [i for i in range(len(px)) if life[i] < self.max_life[i]]
-        if len(alive) != len(px):
-            for name in ("px", "py", "vx", "vy", "life", "max_life", "size_k", "angle", "spin"):
-                values = getattr(self, name)
-                setattr(self, name, [values[i] for i in alive])
+        self._particles.step(dt, gx, gy, max(0.0, 1.0 - d.drag * dt))
 
     def views(self):
         d = self.definition
-        (s0, s1), c0, c1 = d.size, d.color_start, d.color_end
-        out = []
-        for i in range(len(self.px)):
-            t = self.life[i] / self.max_life[i]
-            size = (s0 + (s1 - s0) * t) * self.size_k[i] * self.scale
-            color = tuple(int(c0[k] + (c1[k] - c0[k]) * t) for k in range(4))
-            out.append(ParticleView(self.px[i], self.py[i], max(0.0, size), color, self.angle[i]))
-        return out
+        return [ParticleView(*v) for v in self._particles.views(*d.size, d.color_start, d.color_end, self.scale)]
 
 
 def effect_definition(assets, asset_id):

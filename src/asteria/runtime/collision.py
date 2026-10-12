@@ -13,6 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import floor, hypot
 
+from asteria import kernels
 from asteria.core import Component, Field, System, Transform, component_schema, world_position
 from asteria.core.migration import component_migration
 
@@ -211,10 +212,32 @@ class CollisionWorld:
     """Collider snapshot of a scene with broad + narrow phase queries."""
 
     def __init__(self, shapes=(), cell_size=64.0):
+        if cell_size <= 0:
+            raise ValueError("cell_size must be positive")
         self.shapes = {s.entity_id: s for s in shapes}
-        self.grid = SpatialHash(cell_size)
-        for shape in self.shapes.values():
-            self.grid.insert(shape)
+        self.cell_size = float(cell_size)
+        self._grid = None
+
+    @property
+    def grid(self):
+        """Spatial hash for point and area queries (built on first use)."""
+        if self._grid is None:
+            self._grid = SpatialHash(self.cell_size)
+            for shape in self.shapes.values():
+                self._grid.insert(shape)
+        return self._grid
+
+    def candidate_pairs(self):
+        """Pairs of shapes whose bounds overlap or touch (the active kernel's broad phase), ``a.entity_id <
+        b.entity_id`` in each, in a stable order."""
+        shapes = tuple(self.shapes.values())
+        bounds = [s.bounds for s in shapes]
+        columns = [[b[k] for b in bounds] for k in range(4)] if bounds else [[], [], [], []]
+        pairs = []
+        for i, j in kernels.active().aabb_pairs(*columns, self.cell_size):
+            a, b = shapes[i], shapes[j]
+            pairs.append((a, b) if a.entity_id < b.entity_id else (b, a))
+        return tuple(pairs)
 
     @classmethod
     def from_scene(cls, scene, cell_size=64.0):
@@ -229,7 +252,7 @@ class CollisionWorld:
 
     def contacts(self):
         result = []
-        for a, b in self.grid.candidate_pairs():
+        for a, b in self.candidate_pairs():
             if a.interacts_with(b):
                 contact = overlap(a, b)
                 if contact is not None:
