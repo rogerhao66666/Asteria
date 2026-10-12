@@ -2814,6 +2814,25 @@ def check_octopath_demo(out):
     _pump(runtime, 0.6)
     shot("octo_victory.png")
     runtime.close()
+    # the other enemy kinds: each encounter opens with its art, shields and weaknesses
+    for encounter_id in ("slime_pit", "old_crypt", "gazer_nest", "samurai_duel"):
+        fresh = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+        other = PlayableTestRuntime(fresh, fresh.game_start.instantiate(fresh), root, width=960, height=540)
+        other.open()
+        other._ui_mode = "field"
+        other.game.start_encounter(encounter_id)
+        other._battle_presentation.begin()
+        other._advance_to_hero_turn()
+        _pump(other, 2.0)
+        adapter = other._battle_presentation
+        drawn = adapter.visuals_enabled and all(
+            adapter.screen.scene.visual_for(e).sprite_sheet_asset_id.endswith(e.split(":", 1)[0])
+            for e in other.game.active_enemy_ids()
+        )
+        checks[f"encounter_{encounter_id}"] = bool(drawn and other.game.active_enemy_ids())
+        pygame.image.save(other.capture(), str(out / f"octo_{encounter_id}.png"))
+        shots.append(f"octo_{encounter_id}.png")
+        other.close()
     failed = sorted(k for k, v in checks.items() if not v)
     return result(
         "octopath_demo_real_window",
@@ -2960,6 +2979,11 @@ REPLAY = {
         "octopath_demo::test_donate_boost_call_the_pet_and_concoct",
         "octopath_demo::test_poison_worsens_sleep_skips_turns_and_attack_up_raises_damage",
         "octopath_demo::test_the_demo_battle_is_won_with_the_keyboard",
+        "octopath_demo::test_fire_heals_the_gel_slime_and_lightning_breaks_it",
+        "octopath_demo::test_the_mirror_gazer_reflects_spells_and_cannot_be_put_to_sleep",
+        "octopath_demo::test_the_bone_wraith_shrugs_off_poison_and_fears_light",
+        "octopath_demo::test_the_iron_samurai_resists_swords_and_needs_a_spear",
+        "octopath_demo::test_field_enemies_wander_and_touching_one_starts_its_battle",
     ],
     "CMP-03": [
         "field_popups::test_item_gains_and_authored_popups_rise_and_fade_above_characters",

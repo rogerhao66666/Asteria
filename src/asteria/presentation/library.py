@@ -286,7 +286,10 @@ class BattlePresentationLibrary:
         if category == "motion_sequences":
             return self._motion_to_data(value)
         if category == "ui_layout":
-            return asdict(value)
+            data = asdict(value)
+            if data.get("stage_front") == 0.30:  # optional: left out at its default
+                data.pop("stage_front")
+            return data
         return self._plain(value)
 
     def _decode(self, category, data):

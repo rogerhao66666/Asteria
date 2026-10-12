@@ -2872,6 +2872,536 @@
         "version": 1
       },
       {
+        "asset_id": "battle.combatant.gel_slime",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.07,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  4,
+                  0,
+                  4,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.16,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  5
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/gel_slime.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "enemy"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.bone_wraith",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.07,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  4,
+                  0,
+                  4,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.16,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  5
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/bone_wraith.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "enemy"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.pit_viper",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.07,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  4,
+                  0,
+                  4,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.16,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  5
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/pit_viper.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "enemy"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.mirror_gazer",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.07,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  4,
+                  0,
+                  4,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.16,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  5
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/mirror_gazer.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "enemy"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.web_spinner",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.07,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.07,
+                "frames": [
+                  4,
+                  0,
+                  4,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.16,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  5
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              64,
+              64
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/web_spinner.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "enemy"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.iron_samurai",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.07,
+                "frames": [
+                  0,
+                  2,
+                  4,
+                  4,
+                  2,
+                  0
+                ],
+                "loop": false
+              },
+              "hit": {
+                "frame_duration": 0.09,
+                "frames": [
+                  6,
+                  7,
+                  8
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.14,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  9
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              192,
+              96
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/iron_samurai.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "enemy"
+        ],
+        "version": 1
+      },
+      {
         "asset_id": "fx.divine_burst",
         "kind": "particle_effect",
         "metadata": [
@@ -3158,6 +3688,56 @@
             "z_order": 0
           }
         },
+        "bone_wraith": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.bone_wraith",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "bone_wraith",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
         "ember_hound": {
           "assets": {
             "battlefield_asset_id": "battle.combatant.ember_hound",
@@ -3168,6 +3748,56 @@
           "battlefield_visible": true,
           "hud_visible": true,
           "profile_id": "ember_hound",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "gel_slime": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.gel_slime",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "gel_slime",
           "states": [
             {
               "clip_role": "idle",
@@ -3858,6 +4488,56 @@
             "z_order": 0
           }
         },
+        "iron_samurai": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.iron_samurai",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "iron_samurai",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.8,
+            "scale_y": 0.8,
+            "z_order": 0
+          }
+        },
         "mender_wisp": {
           "assets": {
             "battlefield_asset_id": "battle.combatant.mender_wisp",
@@ -3868,6 +4548,156 @@
           "battlefield_visible": true,
           "hud_visible": true,
           "profile_id": "mender_wisp",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "mirror_gazer": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.mirror_gazer",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "mirror_gazer",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "pit_viper": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.pit_viper",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "pit_viper",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.5,
+            "scale_y": 0.5,
+            "z_order": 0
+          }
+        },
+        "web_spinner": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.web_spinner",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "web_spinner",
           "states": [
             {
               "clip_role": "idle",
@@ -4216,46 +5046,6 @@
           "duration": 0.7,
           "recovery_at": null,
           "sequence_id": "amputation"
-        },
-        "armor_break": {
-          "beats": [
-            {
-              "at": 0.0,
-              "beat_id": "raise",
-              "channel": "animation",
-              "cue": "attack",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@source",
-              "payload": [],
-              "target_id": null
-            },
-            {
-              "at": 0.12,
-              "beat_id": "fx",
-              "channel": "vfx",
-              "cue": "fx.restore",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@target",
-              "payload": [],
-              "target_id": null
-            },
-            {
-              "at": 0.12,
-              "beat_id": "sound",
-              "channel": "audio",
-              "cue": "heal",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@target",
-              "payload": [],
-              "target_id": null
-            }
-          ],
-          "duration": 0.8,
-          "recovery_at": null,
-          "sequence_id": "armor_break"
         },
         "armor_corrosive": {
           "beats": [
@@ -5535,6 +6325,77 @@
           "recovery_at": null,
           "sequence_id": "concoct"
         },
+        "constrict": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "constrict"
+        },
         "default_action": {
           "beats": [
             {
@@ -5818,6 +6679,97 @@
           "duration": 0.7,
           "recovery_at": null,
           "sequence_id": "elemental_storm"
+        },
+        "eye_beam": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.2,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.flame",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "flash",
+              "channel": "screen_fx",
+              "cue": "flash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "alpha",
+                  40
+                ],
+                [
+                  "duration",
+                  0.08
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  5
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.9,
+          "recovery_at": null,
+          "sequence_id": "eye_beam"
         },
         "fire_arc": {
           "beats": [
@@ -6112,6 +7064,148 @@
           "recovery_at": null,
           "sequence_id": "flask_storm"
         },
+        "gel_slam": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "gel_slam"
+        },
+        "grave_chill": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "grave_chill"
+        },
         "heal": {
           "beats": [
             {
@@ -6282,6 +7376,148 @@
           "duration": 0.9,
           "recovery_at": null,
           "sequence_id": "holy_light"
+        },
+        "hypno_gaze": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "hypno_gaze"
+        },
+        "iai_slash": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "iai_slash"
         },
         "icewind": {
           "beats": [
@@ -6515,6 +7751,77 @@
           "duration": 0.7,
           "recovery_at": null,
           "sequence_id": "level_slash"
+        },
+        "life_drain": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "life_drain"
         },
         "lightning_bolt": {
           "beats": [
@@ -6931,6 +8238,77 @@
           "recovery_at": null,
           "sequence_id": "salve_heal"
         },
+        "shield_bash": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "shield_bash"
+        },
         "sleep_spores": {
           "beats": [
             {
@@ -7073,11 +8451,11 @@
           "recovery_at": null,
           "sequence_id": "sleepy_waltz"
         },
-        "strike": {
+        "spider_bite": {
           "beats": [
             {
               "at": 0.0,
-              "beat_id": "raise",
+              "beat_id": "swing",
               "channel": "animation",
               "cue": "attack",
               "duration": 0.0,
@@ -7090,7 +8468,7 @@
               "at": 0.12,
               "beat_id": "fx",
               "channel": "vfx",
-              "cue": "fx.restore",
+              "cue": "battle.fx.slash",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@target",
@@ -7098,10 +8476,41 @@
               "target_id": null
             },
             {
-              "at": 0.12,
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
               "beat_id": "sound",
               "channel": "audio",
-              "cue": "heal",
+              "cue": "hit",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@target",
@@ -7109,7 +8518,220 @@
               "target_id": null
             }
           ],
-          "duration": 0.8,
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "spider_bite"
+        },
+        "split": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "split"
+        },
+        "sticky_web": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "sticky_web"
+        },
+        "strike": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
           "recovery_at": null,
           "sequence_id": "strike"
         },
@@ -7468,6 +9090,77 @@
           "recovery_at": null,
           "sequence_id": "venom_bite"
         },
+        "venom_fang": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "venom_fang"
+        },
         "venom_strike": {
           "beats": [
             {
@@ -7538,6 +9231,148 @@
           "duration": 0.7,
           "recovery_at": null,
           "sequence_id": "venom_strike"
+        },
+        "war_cry": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "war_cry"
+        },
+        "whirlwind": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "whirlwind"
         }
       },
       "party_layout": {
@@ -7683,6 +9518,7 @@
           "party_hud": "bottom_row",
           "result_panel_height": 116.0,
           "result_panel_width": 196.0,
+          "stage_front": 0.2,
           "stage_top": 0.44,
           "timeline_y": 7.0,
           "virtual_height": 270,
@@ -8434,70 +10270,6 @@
         "tags": [
           "ability",
           "weapon.axe"
-        ],
-        "targeting": {
-          "allow_self": false,
-          "blocked_tags": [],
-          "maximum_targets": 1,
-          "minimum_targets": 1,
-          "required_tags": []
-        },
-        "version": 1
-      },
-      {
-        "ability_id": "armor_break",
-        "conditions": {
-          "conditions": [],
-          "mode": "all",
-          "type": "group"
-        },
-        "costs": [
-          {
-            "amount": {
-              "maximum": null,
-              "minimum": null,
-              "multipliers": [],
-              "schema": "asteria.value_formula",
-              "terms": [
-                {
-                  "coefficient": 10.0,
-                  "key": "",
-                  "source": "constant"
-                }
-              ],
-              "version": 1
-            },
-            "resource": "technique"
-          }
-        ],
-        "effects": [
-          {
-            "effect": {
-              "blocked_tags": [],
-              "effect_id": "armor_break.effect",
-              "operations": [
-                {
-                  "kind": "resource_delta",
-                  "target": "vitality",
-                  "value": -820.0
-                },
-                {
-                  "kind": "tag_add",
-                  "target": "debuff.armor_down",
-                  "value": null
-                }
-              ],
-              "required_tags": [],
-              "schema": "asteria.effect",
-              "version": 1
-            },
-            "mode": "selected"
-          }
-        ],
-        "schema": "asteria.ability_definition",
-        "tags": [
-          "ability",
-          "physical"
         ],
         "targeting": {
           "allow_self": false,
@@ -9655,6 +11427,81 @@
         "version": 1
       },
       {
+        "ability_id": "constrict",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "defense_down",
+            "to": "targets"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "constrict.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -7.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "power": 1.0,
+            "tags": []
+          },
+          {
+            "power": 1.0,
+            "tags": []
+          }
+        ],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "donate_bp",
         "battle_resource_gains": [
           {
@@ -9883,6 +11730,66 @@
         "version": 1
       },
       {
+        "ability_id": "eye_beam",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "eye_beam.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -16.0,
+                        "key": "magic",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "damage.lightning",
+          "magic"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "fireball",
         "conditions": {
           "conditions": [],
@@ -10099,6 +12006,130 @@
         "version": 1
       },
       {
+        "ability_id": "gel_slam",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "gel_slam.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -11.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "grave_chill",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "silence",
+            "to": "targets"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "grave_chill.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -8.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "damage.ice"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 6,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "heal_wounds",
         "conditions": {
           "conditions": [],
@@ -10239,6 +12270,95 @@
           "boost.power",
           "damage.light",
           "magic"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "hypno_gaze",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "sleep",
+            "to": "targets"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "magic"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 6,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "iai_slash",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "iai_slash.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -24.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "weapon.sword"
         ],
         "targeting": {
           "allow_self": false,
@@ -10464,6 +12584,94 @@
           "allow_self": false,
           "blocked_tags": [],
           "maximum_targets": 6,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "life_drain",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "life_drain.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -14.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          },
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "life_drain.heal",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": null,
+                    "minimum": 1.0,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": 10.0,
+                        "key": "magic",
+                        "source": "source_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "self"
+          }
+        ],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
           "minimum_targets": 1,
           "required_tags": []
         },
@@ -10852,6 +13060,72 @@
         "version": 1
       },
       {
+        "ability_id": "shield_bash",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "defense_down",
+            "to": "targets"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "shield_bash.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -16.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "weapon.axe"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "sleep_spores",
         "apply_states": [
           {
@@ -10965,7 +13239,7 @@
         "version": 1
       },
       {
-        "ability_id": "strike",
+        "ability_id": "spider_bite",
         "conditions": {
           "conditions": [],
           "mode": "all",
@@ -10976,12 +13250,30 @@
           {
             "effect": {
               "blocked_tags": [],
-              "effect_id": "strike.effect",
+              "effect_id": "spider_bite.effect",
               "operations": [
                 {
                   "kind": "resource_delta",
                   "target": "vitality",
-                  "value": -900.0
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -6.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
                 }
               ],
               "required_tags": [],
@@ -10991,15 +13283,88 @@
             "mode": "selected"
           }
         ],
+        "hits": [
+          {
+            "power": 1.0,
+            "tags": []
+          },
+          {
+            "power": 1.0,
+            "tags": []
+          },
+          {
+            "power": 1.0,
+            "tags": []
+          }
+        ],
         "schema": "asteria.ability_definition",
         "tags": [
-          "ability",
-          "physical"
+          "ability"
         ],
         "targeting": {
           "allow_self": false,
           "blocked_tags": [],
           "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "split",
+        "commands": [
+          {
+            "args": {
+              "enemy_id": "gel_slime",
+              "owner_id": "@actor"
+            },
+            "command": "SUMMON"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "sticky_web",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "defense_down",
+            "to": "targets"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 6,
           "minimum_targets": 1,
           "required_tags": []
         },
@@ -11385,6 +13750,71 @@
         "version": 1
       },
       {
+        "ability_id": "venom_fang",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "poison",
+            "to": "targets"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "venom_fang.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -9.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "venom_strike",
         "apply_states": [
           {
@@ -11463,6 +13893,104 @@
           "allow_self": false,
           "blocked_tags": [],
           "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "war_cry",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "attack_up",
+            "to": "self"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "whirlwind",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "whirlwind.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -9.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "power": 1.0,
+            "tags": []
+          },
+          {
+            "power": 1.0,
+            "tags": []
+          }
+        ],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "weapon.sword"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 6,
           "minimum_targets": 1,
           "required_tags": []
         },
@@ -11866,17 +14394,6 @@
         "version": 1
       },
       {
-        "ability_id": "armor_break",
-        "cast_time": 0.0,
-        "interrupt_threshold": 0.0,
-        "interruptible": true,
-        "priority": 0,
-        "recovery": 0.15,
-        "schema": "asteria.rpg.action_timing_definition",
-        "startup": 0.1,
-        "version": 1
-      },
-      {
         "ability_id": "boss_cleave",
         "cast_time": 0.0,
         "interrupt_threshold": 0.0,
@@ -11912,17 +14429,6 @@
       {
         "ability_id": "meteor",
         "cast_time": 0.25,
-        "interrupt_threshold": 0.0,
-        "interruptible": true,
-        "priority": 0,
-        "recovery": 0.15,
-        "schema": "asteria.rpg.action_timing_definition",
-        "startup": 0.1,
-        "version": 1
-      },
-      {
-        "ability_id": "strike",
-        "cast_time": 0.0,
         "interrupt_threshold": 0.0,
         "interruptible": true,
         "priority": 0,
@@ -12561,7 +15067,9 @@
         "blocked_ability_tags": [],
         "duration_multiplier": 1.0,
         "duration_target_stat_terms": {},
-        "immune_target_tags": [],
+        "immune_target_tags": [
+          "immune.poison"
+        ],
         "maximum_chance": 1.0,
         "minimum_chance": 0.0,
         "prevent_action": false,
@@ -12599,7 +15107,9 @@
         "blocked_ability_tags": [],
         "duration_multiplier": 1.0,
         "duration_target_stat_terms": {},
-        "immune_target_tags": [],
+        "immune_target_tags": [
+          "immune.sleep"
+        ],
         "maximum_chance": 1.0,
         "minimum_chance": 0.0,
         "prevent_action": true,
@@ -12667,23 +15177,6 @@
       },
       {
         "ability_id": "amputation",
-        "active_only": true,
-        "adjacent_to_actor": false,
-        "blocked_slot_tags": [],
-        "blocked_subject_tags": [],
-        "maximum_targets": 1,
-        "metric_conditions": [],
-        "minimum_targets": 1,
-        "relation": "opponent",
-        "required_slot_tags": [],
-        "required_subject_tags": [],
-        "schema": "asteria.rpg.battle_targeting_definition",
-        "selection_count": null,
-        "selection_mode": "manual",
-        "version": 1
-      },
-      {
-        "ability_id": "armor_break",
         "active_only": true,
         "adjacent_to_actor": false,
         "blocked_slot_tags": [],
@@ -13006,6 +15499,23 @@
         "version": 1
       },
       {
+        "ability_id": "constrict",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "donate_bp",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -13046,6 +15556,23 @@
         "blocked_slot_tags": [],
         "blocked_subject_tags": [],
         "maximum_targets": 6,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "eye_beam",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
         "metric_conditions": [],
         "minimum_targets": 1,
         "relation": "opponent",
@@ -13108,6 +15635,40 @@
         "version": 1
       },
       {
+        "ability_id": "gel_slam",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "grave_chill",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 6,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "heal_wounds",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -13126,6 +15687,40 @@
       },
       {
         "ability_id": "holy_light",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "hypno_gaze",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 6,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "iai_slash",
         "active_only": true,
         "adjacent_to_actor": false,
         "blocked_slot_tags": [],
@@ -13182,6 +15777,23 @@
         "blocked_slot_tags": [],
         "blocked_subject_tags": [],
         "maximum_targets": 6,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "life_drain",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
         "metric_conditions": [],
         "minimum_targets": 1,
         "relation": "opponent",
@@ -13295,6 +15907,23 @@
         "version": 1
       },
       {
+        "ability_id": "shield_bash",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "sleep_spores",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -13329,12 +15958,46 @@
         "version": 1
       },
       {
-        "ability_id": "strike",
+        "ability_id": "spider_bite",
         "active_only": true,
         "adjacent_to_actor": false,
         "blocked_slot_tags": [],
         "blocked_subject_tags": [],
         "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "split",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "self",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "sticky_web",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 6,
         "metric_conditions": [],
         "minimum_targets": 1,
         "relation": "opponent",
@@ -13431,12 +16094,63 @@
         "version": 1
       },
       {
+        "ability_id": "venom_fang",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "venom_strike",
         "active_only": true,
         "adjacent_to_actor": false,
         "blocked_slot_tags": [],
         "blocked_subject_tags": [],
         "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "war_cry",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "self",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "whirlwind",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 6,
         "metric_conditions": [],
         "minimum_targets": 1,
         "relation": "opponent",
@@ -13822,6 +16536,86 @@
           "multi_phase"
         ],
         "version": 1
+      },
+      {
+        "encounter_id": "gazer_nest",
+        "members": [
+          {
+            "count": 1,
+            "enemy_id": "mirror_gazer",
+            "weight": 1.0
+          },
+          {
+            "count": 2,
+            "enemy_id": "pit_viper",
+            "weight": 1.0
+          }
+        ],
+        "schema": "asteria.rpg.encounter",
+        "tags": [
+          "demo"
+        ],
+        "version": 1
+      },
+      {
+        "encounter_id": "old_crypt",
+        "members": [
+          {
+            "count": 1,
+            "enemy_id": "bone_wraith",
+            "weight": 1.0
+          },
+          {
+            "count": 1,
+            "enemy_id": "iron_guard",
+            "weight": 1.0
+          }
+        ],
+        "schema": "asteria.rpg.encounter",
+        "tags": [
+          "demo"
+        ],
+        "version": 1
+      },
+      {
+        "encounter_id": "samurai_duel",
+        "members": [
+          {
+            "count": 1,
+            "enemy_id": "iron_samurai",
+            "weight": 1.0
+          },
+          {
+            "count": 1,
+            "enemy_id": "bone_wraith",
+            "weight": 1.0
+          }
+        ],
+        "schema": "asteria.rpg.encounter",
+        "tags": [
+          "demo"
+        ],
+        "version": 1
+      },
+      {
+        "encounter_id": "slime_pit",
+        "members": [
+          {
+            "count": 2,
+            "enemy_id": "gel_slime",
+            "weight": 1.0
+          },
+          {
+            "count": 1,
+            "enemy_id": "web_spinner",
+            "weight": 1.0
+          }
+        ],
+        "schema": "asteria.rpg.encounter",
+        "tags": [
+          "demo"
+        ],
+        "version": 1
       }
     ],
     "enemies": [
@@ -13882,6 +16676,49 @@
       },
       {
         "abilities": [
+          "grave_chill",
+          "life_drain"
+        ],
+        "display_name": "Bone Wraith",
+        "enemy_id": "bone_wraith",
+        "resources": {
+          "shield": 4.0,
+          "technique": 999.0,
+          "vitality": 3600.0
+        },
+        "reward": {
+          "currencies": {
+            "gold": 120.0
+          },
+          "experience": {},
+          "loot": [
+            {
+              "chance": 0.7,
+              "item_id": "fire_dust",
+              "maximum": 1,
+              "minimum": 1
+            }
+          ]
+        },
+        "schema": "asteria.rpg.enemy",
+        "stats": {
+          "defense": 40.0,
+          "power": 55.0,
+          "speed": 55.0
+        },
+        "tags": [
+          "enemy",
+          "immune.poison",
+          "resist.dagger",
+          "undead",
+          "weak.axe",
+          "weak.fire",
+          "weak.light"
+        ],
+        "version": 1
+      },
+      {
+        "abilities": [
           "venom_bite",
           "add_bite"
         ],
@@ -13923,14 +16760,56 @@
       },
       {
         "abilities": [
-          "strike",
-          "armor_break"
+          "gel_slam",
+          "split"
         ],
-        "display_name": "Iron Guard",
+        "display_name": "Gel Slime",
+        "enemy_id": "gel_slime",
+        "resources": {
+          "shield": 2.0,
+          "technique": 999.0,
+          "vitality": 2400.0
+        },
+        "reward": {
+          "currencies": {
+            "gold": 120.0
+          },
+          "experience": {},
+          "loot": [
+            {
+              "chance": 0.7,
+              "item_id": "fire_dust",
+              "maximum": 1,
+              "minimum": 1
+            }
+          ]
+        },
+        "schema": "asteria.rpg.enemy",
+        "stats": {
+          "defense": 40.0,
+          "power": 55.0,
+          "speed": 40.0
+        },
+        "tags": [
+          "absorb.fire",
+          "enemy",
+          "resist.sword",
+          "weak.dagger",
+          "weak.lightning",
+          "weak.staff"
+        ],
+        "version": 1
+      },
+      {
+        "abilities": [
+          "shield_bash"
+        ],
+        "display_name": "Skeleton Knight",
         "enemy_id": "iron_guard",
         "resources": {
-          "technique": 25.0,
-          "vitality": 1200.0
+          "shield": 5.0,
+          "technique": 999.0,
+          "vitality": 4200.0
         },
         "reward": {
           "currencies": {
@@ -13954,7 +16833,59 @@
         },
         "tags": [
           "enemy",
-          "weak.fire"
+          "immune.poison",
+          "resist.bow",
+          "resist.dagger",
+          "undead",
+          "weak.axe",
+          "weak.light",
+          "weak.staff"
+        ],
+        "version": 1
+      },
+      {
+        "abilities": [
+          "iai_slash",
+          "war_cry",
+          "whirlwind"
+        ],
+        "display_name": "Iron Samurai",
+        "enemy_id": "iron_samurai",
+        "resources": {
+          "shield": 8.0,
+          "technique": 999.0,
+          "vitality": 14000.0
+        },
+        "reward": {
+          "currencies": {
+            "gold": 120.0
+          },
+          "experience": {},
+          "loot": [
+            {
+              "chance": 0.7,
+              "item_id": "fire_dust",
+              "maximum": 1,
+              "minimum": 1
+            }
+          ]
+        },
+        "schema": "asteria.rpg.enemy",
+        "stats": {
+          "defense": 40.0,
+          "power": 55.0,
+          "speed": 65.0
+        },
+        "tags": [
+          "boss",
+          "enemy",
+          "immune.sleep",
+          "resist.axe",
+          "resist.bow",
+          "resist.sword",
+          "weak.dagger",
+          "weak.lightning",
+          "weak.spear"
         ],
         "version": 1
       },
@@ -13995,6 +16926,128 @@
           "weak.axe",
           "weak.fire",
           "weak.staff"
+        ],
+        "version": 1
+      },
+      {
+        "abilities": [
+          "hypno_gaze",
+          "eye_beam"
+        ],
+        "display_name": "Mirror Gazer",
+        "enemy_id": "mirror_gazer",
+        "resources": {
+          "shield": 3.0,
+          "technique": 999.0,
+          "vitality": 3000.0
+        },
+        "reward": {
+          "currencies": {
+            "gold": 120.0
+          },
+          "experience": {},
+          "loot": [
+            {
+              "chance": 0.7,
+              "item_id": "fire_dust",
+              "maximum": 1,
+              "minimum": 1
+            }
+          ]
+        },
+        "schema": "asteria.rpg.enemy",
+        "stats": {
+          "defense": 40.0,
+          "power": 55.0,
+          "speed": 60.0
+        },
+        "tags": [
+          "enemy",
+          "immune.sleep",
+          "reflect.magic",
+          "weak.bow",
+          "weak.dagger",
+          "weak.spear"
+        ],
+        "version": 1
+      },
+      {
+        "abilities": [
+          "venom_fang",
+          "constrict"
+        ],
+        "display_name": "Pit Viper",
+        "enemy_id": "pit_viper",
+        "resources": {
+          "shield": 3.0,
+          "technique": 999.0,
+          "vitality": 2200.0
+        },
+        "reward": {
+          "currencies": {
+            "gold": 120.0
+          },
+          "experience": {},
+          "loot": [
+            {
+              "chance": 0.7,
+              "item_id": "fire_dust",
+              "maximum": 1,
+              "minimum": 1
+            }
+          ]
+        },
+        "schema": "asteria.rpg.enemy",
+        "stats": {
+          "defense": 40.0,
+          "power": 55.0,
+          "speed": 95.0
+        },
+        "tags": [
+          "enemy",
+          "weak.bow",
+          "weak.ice",
+          "weak.sword"
+        ],
+        "version": 1
+      },
+      {
+        "abilities": [
+          "sticky_web",
+          "spider_bite"
+        ],
+        "display_name": "Web Spinner",
+        "enemy_id": "web_spinner",
+        "resources": {
+          "shield": 3.0,
+          "technique": 999.0,
+          "vitality": 2800.0
+        },
+        "reward": {
+          "currencies": {
+            "gold": 120.0
+          },
+          "experience": {},
+          "loot": [
+            {
+              "chance": 0.7,
+              "item_id": "fire_dust",
+              "maximum": 1,
+              "minimum": 1
+            }
+          ]
+        },
+        "schema": "asteria.rpg.enemy",
+        "stats": {
+          "defense": 40.0,
+          "power": 55.0,
+          "speed": 70.0
+        },
+        "tags": [
+          "enemy",
+          "resist.ice",
+          "weak.axe",
+          "weak.fire"
         ],
         "version": 1
       }
@@ -14140,12 +17193,387 @@
         ],
         "schema": "asteria.rpg.enemy_ai_definition",
         "version": 1
+      },
+      {
+        "actions_per_ready": 1,
+        "ai_id": "bone_wraith_ai",
+        "initial_phase_id": null,
+        "phases": [
+          {
+            "actions_per_ready": null,
+            "conditions": [],
+            "decision_rule_ids": [
+              "grave_chill",
+              "life_drain"
+            ],
+            "enter_hook": null,
+            "exit_hook": null,
+            "phase_id": "main",
+            "priority": 1,
+            "schema": "asteria.rpg.boss_phase_definition",
+            "version": 1
+          }
+        ],
+        "rules": [
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "grave_chill"
+            },
+            "priority": 1,
+            "rule_id": "grave_chill",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "all_opponents",
+            "version": 1,
+            "weight": 1.0
+          },
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "life_drain"
+            },
+            "priority": 1,
+            "rule_id": "life_drain",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "random_opponent",
+            "version": 1,
+            "weight": 1.0
+          }
+        ],
+        "schema": "asteria.rpg.enemy_ai_definition",
+        "version": 1
+      },
+      {
+        "actions_per_ready": 1,
+        "ai_id": "gel_slime_ai",
+        "initial_phase_id": null,
+        "phases": [
+          {
+            "actions_per_ready": null,
+            "conditions": [],
+            "decision_rule_ids": [
+              "gel_slam",
+              "split"
+            ],
+            "enter_hook": null,
+            "exit_hook": null,
+            "phase_id": "main",
+            "priority": 1,
+            "schema": "asteria.rpg.boss_phase_definition",
+            "version": 1
+          }
+        ],
+        "rules": [
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "gel_slam"
+            },
+            "priority": 1,
+            "rule_id": "gel_slam",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "first_opponent",
+            "version": 1,
+            "weight": 1.0
+          },
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "split"
+            },
+            "priority": 1,
+            "rule_id": "split",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "self",
+            "version": 1,
+            "weight": 1.0
+          }
+        ],
+        "schema": "asteria.rpg.enemy_ai_definition",
+        "version": 1
+      },
+      {
+        "actions_per_ready": 1,
+        "ai_id": "iron_samurai_ai",
+        "initial_phase_id": null,
+        "phases": [
+          {
+            "actions_per_ready": null,
+            "conditions": [],
+            "decision_rule_ids": [
+              "iai_slash",
+              "war_cry",
+              "whirlwind"
+            ],
+            "enter_hook": null,
+            "exit_hook": null,
+            "phase_id": "main",
+            "priority": 1,
+            "schema": "asteria.rpg.boss_phase_definition",
+            "version": 1
+          }
+        ],
+        "rules": [
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "iai_slash"
+            },
+            "priority": 1,
+            "rule_id": "iai_slash",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "random_opponent",
+            "version": 1,
+            "weight": 1.0
+          },
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "war_cry"
+            },
+            "priority": 1,
+            "rule_id": "war_cry",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "self",
+            "version": 1,
+            "weight": 1.0
+          },
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "whirlwind"
+            },
+            "priority": 1,
+            "rule_id": "whirlwind",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "all_opponents",
+            "version": 1,
+            "weight": 1.0
+          }
+        ],
+        "schema": "asteria.rpg.enemy_ai_definition",
+        "version": 1
+      },
+      {
+        "actions_per_ready": 1,
+        "ai_id": "mirror_gazer_ai",
+        "initial_phase_id": null,
+        "phases": [
+          {
+            "actions_per_ready": null,
+            "conditions": [],
+            "decision_rule_ids": [
+              "hypno_gaze",
+              "eye_beam"
+            ],
+            "enter_hook": null,
+            "exit_hook": null,
+            "phase_id": "main",
+            "priority": 1,
+            "schema": "asteria.rpg.boss_phase_definition",
+            "version": 1
+          }
+        ],
+        "rules": [
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "hypno_gaze"
+            },
+            "priority": 1,
+            "rule_id": "hypno_gaze",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "all_opponents",
+            "version": 1,
+            "weight": 1.0
+          },
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "eye_beam"
+            },
+            "priority": 1,
+            "rule_id": "eye_beam",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "random_opponent",
+            "version": 1,
+            "weight": 1.0
+          }
+        ],
+        "schema": "asteria.rpg.enemy_ai_definition",
+        "version": 1
+      },
+      {
+        "actions_per_ready": 1,
+        "ai_id": "pit_viper_ai",
+        "initial_phase_id": null,
+        "phases": [
+          {
+            "actions_per_ready": null,
+            "conditions": [],
+            "decision_rule_ids": [
+              "venom_fang",
+              "constrict"
+            ],
+            "enter_hook": null,
+            "exit_hook": null,
+            "phase_id": "main",
+            "priority": 1,
+            "schema": "asteria.rpg.boss_phase_definition",
+            "version": 1
+          }
+        ],
+        "rules": [
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "venom_fang"
+            },
+            "priority": 1,
+            "rule_id": "venom_fang",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "random_opponent",
+            "version": 1,
+            "weight": 1.0
+          },
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "constrict"
+            },
+            "priority": 1,
+            "rule_id": "constrict",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "first_opponent",
+            "version": 1,
+            "weight": 1.0
+          }
+        ],
+        "schema": "asteria.rpg.enemy_ai_definition",
+        "version": 1
+      },
+      {
+        "actions_per_ready": 1,
+        "ai_id": "web_spinner_ai",
+        "initial_phase_id": null,
+        "phases": [
+          {
+            "actions_per_ready": null,
+            "conditions": [],
+            "decision_rule_ids": [
+              "sticky_web",
+              "spider_bite"
+            ],
+            "enter_hook": null,
+            "exit_hook": null,
+            "phase_id": "main",
+            "priority": 1,
+            "schema": "asteria.rpg.boss_phase_definition",
+            "version": 1
+          }
+        ],
+        "rules": [
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "sticky_web"
+            },
+            "priority": 1,
+            "rule_id": "sticky_web",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "all_opponents",
+            "version": 1,
+            "weight": 1.0
+          },
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "spider_bite"
+            },
+            "priority": 1,
+            "rule_id": "spider_bite",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "random_opponent",
+            "version": 1,
+            "weight": 1.0
+          }
+        ],
+        "schema": "asteria.rpg.enemy_ai_definition",
+        "version": 1
       }
     ],
     "enemy_behavior_bindings": [
       {
         "ai_id": "astral_tyrant_ai",
         "enemy_id": "astral_tyrant",
+        "schema": "asteria.rpg.enemy_behavior_binding",
+        "tags": [],
+        "version": 1
+      },
+      {
+        "ai_id": "bone_wraith_ai",
+        "enemy_id": "bone_wraith",
+        "schema": "asteria.rpg.enemy_behavior_binding",
+        "tags": [],
+        "version": 1
+      },
+      {
+        "ai_id": "gel_slime_ai",
+        "enemy_id": "gel_slime",
+        "schema": "asteria.rpg.enemy_behavior_binding",
+        "tags": [],
+        "version": 1
+      },
+      {
+        "ai_id": "iron_samurai_ai",
+        "enemy_id": "iron_samurai",
+        "schema": "asteria.rpg.enemy_behavior_binding",
+        "tags": [],
+        "version": 1
+      },
+      {
+        "ai_id": "mirror_gazer_ai",
+        "enemy_id": "mirror_gazer",
+        "schema": "asteria.rpg.enemy_behavior_binding",
+        "tags": [],
+        "version": 1
+      },
+      {
+        "ai_id": "pit_viper_ai",
+        "enemy_id": "pit_viper",
+        "schema": "asteria.rpg.enemy_behavior_binding",
+        "tags": [],
+        "version": 1
+      },
+      {
+        "ai_id": "web_spinner_ai",
+        "enemy_id": "web_spinner",
         "schema": "asteria.rpg.enemy_behavior_binding",
         "tags": [],
         "version": 1
@@ -14412,6 +17840,28 @@
       {
         "blocked_source_tags": [],
         "blocked_target_tags": [],
+        "disposition": "absorb",
+        "flat_delta": 0.0,
+        "multiplier": 1.0,
+        "outcome_tags": [],
+        "priority": 20,
+        "rule_id": "absorb_fire",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "damage.fire"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "absorb.fire"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
         "multiplier": 2.0,
@@ -14488,6 +17938,248 @@
         "target_stat_terms": {},
         "target_tags_all": [
           "state.broken"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "reflect",
+        "flat_delta": 0.0,
+        "multiplier": 1.0,
+        "outcome_tags": [],
+        "priority": 20,
+        "rule_id": "reflect_magic",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "magic"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "reflect.magic"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.5,
+        "outcome_tags": [],
+        "priority": 0,
+        "rule_id": "resist_axe",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "weapon.axe"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "resist.axe"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.5,
+        "outcome_tags": [],
+        "priority": 0,
+        "rule_id": "resist_bow",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "weapon.bow"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "resist.bow"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.5,
+        "outcome_tags": [],
+        "priority": 0,
+        "rule_id": "resist_dagger",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "weapon.dagger"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "resist.dagger"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.5,
+        "outcome_tags": [],
+        "priority": 0,
+        "rule_id": "resist_fire",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "damage.fire"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "resist.fire"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.5,
+        "outcome_tags": [],
+        "priority": 0,
+        "rule_id": "resist_ice",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "damage.ice"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "resist.ice"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.5,
+        "outcome_tags": [],
+        "priority": 0,
+        "rule_id": "resist_light",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "damage.light"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "resist.light"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.5,
+        "outcome_tags": [],
+        "priority": 0,
+        "rule_id": "resist_lightning",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "damage.lightning"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "resist.lightning"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.5,
+        "outcome_tags": [],
+        "priority": 0,
+        "rule_id": "resist_spear",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "weapon.spear"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "resist.spear"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.5,
+        "outcome_tags": [],
+        "priority": 0,
+        "rule_id": "resist_staff",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "weapon.staff"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "resist.staff"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.5,
+        "outcome_tags": [],
+        "priority": 0,
+        "rule_id": "resist_sword",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "weapon.sword"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "resist.sword"
         ],
         "target_tags_any": [],
         "version": 1
@@ -15174,6 +18866,174 @@
           "enabled": true,
           "id": "d27dbd21-2fd3-4cc0-b50b-6cb1b2f345c6",
           "name": "Grimgarde"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": -110.0,
+                "y": -40.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "encounter_id": "slime_pit",
+                "remove_on_start": true,
+                "touch_radius": 14.0
+              },
+              "type": "asteria.VisibleEncounter",
+              "version": 1
+            },
+            {
+              "fields": {
+                "arrive_distance": 2.0,
+                "behaviour": "wander",
+                "detect_radius": 96.0,
+                "lose_radius": 160.0,
+                "patrol_path": "",
+                "speed": 20.0,
+                "target_entity_id": "",
+                "wander_radius": 24.0
+              },
+              "type": "asteria.FieldAI",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "ab4b703d-7e56-49a5-913a-2ae84f4a23e6",
+          "name": "Gel Slime"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": -110.0,
+                "y": 45.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "encounter_id": "old_crypt",
+                "remove_on_start": true,
+                "touch_radius": 14.0
+              },
+              "type": "asteria.VisibleEncounter",
+              "version": 1
+            },
+            {
+              "fields": {
+                "arrive_distance": 2.0,
+                "behaviour": "wander",
+                "detect_radius": 96.0,
+                "lose_radius": 160.0,
+                "patrol_path": "",
+                "speed": 20.0,
+                "target_entity_id": "",
+                "wander_radius": 24.0
+              },
+              "type": "asteria.FieldAI",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "90bd1bf1-8eed-4897-b3f6-c4b050f5bc40",
+          "name": "Bone Wraith"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 110.0,
+                "y": -50.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "encounter_id": "gazer_nest",
+                "remove_on_start": true,
+                "touch_radius": 14.0
+              },
+              "type": "asteria.VisibleEncounter",
+              "version": 1
+            },
+            {
+              "fields": {
+                "arrive_distance": 2.0,
+                "behaviour": "idle",
+                "detect_radius": 96.0,
+                "lose_radius": 160.0,
+                "patrol_path": "",
+                "speed": 20.0,
+                "target_entity_id": "",
+                "wander_radius": 24.0
+              },
+              "type": "asteria.FieldAI",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "98eb889a-82aa-4042-ab07-80275effc344",
+          "name": "Mirror Gazer"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 120.0,
+                "y": 22.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "encounter_id": "samurai_duel",
+                "remove_on_start": true,
+                "touch_radius": 14.0
+              },
+              "type": "asteria.VisibleEncounter",
+              "version": 1
+            },
+            {
+              "fields": {
+                "arrive_distance": 2.0,
+                "behaviour": "idle",
+                "detect_radius": 96.0,
+                "lose_radius": 160.0,
+                "patrol_path": "",
+                "speed": 20.0,
+                "target_entity_id": "",
+                "wander_radius": 24.0
+              },
+              "type": "asteria.FieldAI",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "b4cba206-18d8-45c0-8ea2-c9d3f1fd10a9",
+          "name": "Iron Samurai"
         }
       ],
       "id": "2175c138-7eed-4ab6-91c7-0b912611c1a0",

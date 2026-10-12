@@ -39,11 +39,13 @@ class BattleUiLayoutProfile:
     # party_hud "column" | "bottom_row" (one compact cell per member along the bottom);
     # overhead_zones: placement zones whose members show a bar over their sprite
     # instead of a HUD panel; action_menu_placement "bottom" | "actor" (beside the
-    # acting member); stage_top: fraction of the height where the ground begins.
+    # acting member); stage_top: fraction of the height where the ground begins;
+    # stage_front: how far in from each edge the front columns stand (fraction of the stage width).
     party_hud: str = "column"
     overhead_zones: tuple = ()
     action_menu_placement: str = "bottom"
     stage_top: float = 0.0
+    stage_front: float = 0.30
 
     def __post_init__(self):
         if self.virtual_width <= 0 or self.virtual_height <= 0:
@@ -55,6 +57,8 @@ class BattleUiLayoutProfile:
             raise ValueError("action_menu_placement must be 'bottom' or 'actor'")
         if not 0.0 <= float(self.stage_top) < 1.0:
             raise ValueError("stage_top must be in [0, 1)")
+        if not 0.0 <= float(self.stage_front) <= 0.5:
+            raise ValueError("stage_front must be in [0, 0.5]")
         for name in ("margin", "hud_panel_width", "hud_row_height", "result_panel_width", "result_panel_height"):
             if _finite(getattr(self, name), name) < 0:
                 raise ValueError(f"{name} must be >= 0")
@@ -554,6 +558,11 @@ class BattleUiComposer:
                 if group
                 else (ax - body / 2 if right_side else ax + body / 2)
             )
+            # never across the stage centre: the other side's combatants stay visible
+            centre = L.virtual_width / 2
+            room = (edge - 6 - (centre + 2)) if right_side else ((centre - 2) - (edge + 6))
+            if room >= self.MIN_MENU_WIDTH:
+                width = min(width, room)
             x = edge - 6 - width if right_side else edge + 6
             x = max(L.margin, min(L.virtual_width - L.margin - width, x))
             limit = L.virtual_height - L.margin - (28.0 if L.party_hud == "bottom_row" else 0.0) - height

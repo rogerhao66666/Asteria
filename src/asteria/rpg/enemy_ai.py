@@ -414,8 +414,12 @@ class EnemyAIRuntime:
             return tuple(custom(battle, actor_id, self, rng))
         actor = battle.member(actor_id)
         present = [m for m in battle.members.values() if battle.combatants.state(m.member_id).present]
-        opponents = sorted(
-            (m for m in present if m.side != actor.side and battle.combatants.is_targetable(m.member_id)),
+        opponents = sorted(  # still standing: a knocked-out opponent is not a target
+            (
+                m
+                for m in present
+                if m.side != actor.side and battle.combatants.is_targetable(m.member_id) and battle.is_active(m)
+            ),
             key=lambda x: x.member_id,
         )
         allies = sorted(

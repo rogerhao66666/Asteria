@@ -49,17 +49,28 @@ class BattleCommands:
         meta = self.labels.get(ability_id) or {}
         return meta.get("label") or ability_id.replace("_", " ").title()
 
+    def _short(self, resource_id):
+        """A resource's short label: the battle HUD's (technique -> SP), else its first letters."""
+        labels = getattr(self, "_labels", None)
+        if labels is None:
+            labels = self._labels = {}
+            library = self.game.project.battle_presentation_library
+            for hud_id in library.ids("hud"):
+                for style in getattr(library.require("hud", hud_id), "resources", ()):
+                    labels.setdefault(style.resource_id, style.label)
+        return labels.get(resource_id) or resource_id.upper()[:3]
+
     def _cost_text(self, definition):
         parts = []
         for cost in definition.costs:
             amount = _constant(cost.amount)
             if amount:
-                parts.append(f"{amount:g} {cost.resource.upper()[:3]}")
+                parts.append(f"{amount:g}{self._short(cost.resource)}")
         for resource_id, amount in definition.battle_costs.items():
-            parts.append(f"{amount:g} {resource_id.upper()[:3]}")
+            parts.append(f"{amount:g}{self._short(resource_id)}")
         if len(definition.hits) > 1:
             parts.append(f"x{len(definition.hits)}")
-        return "  ".join(parts)
+        return " ".join(parts)
 
     def skill_rows(self, actor_id):
         game, rows = self.game, []

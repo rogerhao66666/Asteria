@@ -77,6 +77,10 @@ def ability(ability_id, *, tags=(), effect=None, sp=0, mode="selected", targets=
 
 
 def main():
+    target = HERE / "playable_assets"  # the reference game's CC0 art first; new art is written into it below
+    if target.exists():
+        shutil.rmtree(target)
+    shutil.copytree(REFERENCE / "playable_assets", target)
     registry = EditorDocument().component_registry
     project = Project.load_json(REFERENCE / "project.asteria.json", registry)
     project.name = "Asteria Octopath-style Battle Demo"
@@ -161,6 +165,25 @@ def main():
             outcome_tags=("outcome.weak",),
             priority=10,
         )
+    for kind in (*WEAPONS, *ELEMENTS):  # resistances: half damage, no shield lost
+        source = f"weapon.{kind}" if kind in WEAPONS else f"damage.{kind}"
+        db.interaction_rules[f"resist_{kind}"] = InteractionRule(
+            f"resist_{kind}", source_tags_all=(source,), target_tags_all=(f"resist.{kind}",), multiplier=0.5
+        )
+    db.interaction_rules["absorb_fire"] = InteractionRule(  # fire heals what carries absorb.fire
+        "absorb_fire",
+        source_tags_all=("damage.fire",),
+        target_tags_all=("absorb.fire",),
+        disposition="absorb",
+        priority=20,
+    )
+    db.interaction_rules["reflect_magic"] = InteractionRule(  # spells bounce back to the caster
+        "reflect_magic",
+        source_tags_all=("magic",),
+        target_tags_all=("reflect.magic",),
+        disposition="reflect",
+        priority=20,
+    )
     db.interaction_rules["broken"] = InteractionRule("broken", target_tags_all=("state.broken",), multiplier=2.0)
     for level, factor in ((1, 2.0), (2, 3.0), (3, 4.0)):  # spells: one stronger cast per boost level
         db.interaction_rules[f"boost_power_{level}"] = InteractionRule(
@@ -189,8 +212,14 @@ def main():
         "defense_down", 3, modifiers=(StatModifier("defense_down", "defense", "multiply", 0.5),)
     )
     for policy in (
-        BattleStatePolicy("poison", tick_trigger="rpg.battle.turn_ended"),
-        BattleStatePolicy("sleep", base_chance=0.8, prevent_action=True, tick_trigger="rpg.battle.turn_ready"),
+        BattleStatePolicy("poison", tick_trigger="rpg.battle.turn_ended", immune_target_tags=("immune.poison",)),
+        BattleStatePolicy(
+            "sleep",
+            base_chance=0.8,
+            prevent_action=True,
+            tick_trigger="rpg.battle.turn_ready",
+            immune_target_tags=("immune.sleep",),
+        ),
         BattleStatePolicy(
             "silence", base_chance=0.9, blocked_ability_tags=("magic",), tick_trigger="rpg.battle.turn_ended"
         ),
@@ -598,6 +627,9 @@ def main():
         ),
     )
 
+    # -- more kinds of enemy: each fights differently (all of it data) -------------------------------------------
+    add_monster_types(project, db, add)
+
     # -- drop the reference game's skills nothing here uses (the Database stays readable) ---------------------
     used = {a for job in db.classes.values() for a in job.granted_abilities}
     used |= {a for weapon in db.equipment.values() for a in weapon.granted_abilities}
@@ -650,6 +682,10 @@ def main():
                 if hasattr(base, "sequence_id")
                 else dataclasses.replace(base, beats=beats),
             )
+
+    # both sides stand nearer their edges: the command menu fits on the heroes' side, enemies stay visible
+    layout = sequences.require("ui_layout", "adaptive")
+    sequences.set("ui_layout", "adaptive", dataclasses.replace(layout, stage_front=0.2))
 
     from asteria.runtime.environment2d import ParticleEmitter2DComponent
 
@@ -708,12 +744,13 @@ def main():
     Project.load_json(path, registry)  # it must load back
 
     # -- assets and the playable manifest -------------------------------------------------------------------------
-    target = HERE / "playable_assets"
-    if target.exists():
-        shutil.rmtree(target)
-    shutil.copytree(REFERENCE / "playable_assets", target)
     manifest = json.loads((REFERENCE / "playable_test_manifest.json").read_text(encoding="utf-8"))
     manifest["title"] = "Octopath-style Battle Demo"
+    sprites = manifest["field"]["entity_sprites"]
+    sprites["Grimgarde"] = sprites.pop("Astral Tyrant", {"sprite": "playable_assets/boss_field.png", "size": [96, 96]})
+    for name, (_enemy, _encounter, _xy, _behaviour) in FIELD_FOES.items():
+        wide = MONSTERS[_enemy][1].startswith("Boss/")
+        sprites[name] = {"sprite": f"playable_assets/field_{_enemy}.png", "size": [64, 32] if wide else [48, 48]}
     names = {f"attack_{k}": f"Attack ({v})" for k, v in weapon_names.items()}
     order = [f"attack_{k}" for k in WEAPONS] + [a for job in jobs.values() for a in job]
     labels = {}
@@ -730,6 +767,430 @@ def main():
         f"wrote {path.relative_to(REPO)}: {len(abilities.ids())} abilities, {len(db.classes)} jobs, "
         f"{len(db.enemies)} enemies, {len(db.composition_recipes)} concoctions"
     )
+
+
+# -- more enemy types ---------------------------------------------------------------------------------------------
+NINJA = (
+    REPO
+    / "local_reference"
+    / "free_assets"
+    / "ninja_adventure"
+    / "extracted"
+    / "Ninja Adventure - Asset Pack"
+    / "Actor"
+)
+MONSTERS = {  # enemy id: (name, art, hp, shields, tags, skills, speed)
+    "gel_slime": (
+        "Gel Slime",
+        "Monster/Slime/Slime.png",
+        2400,
+        2,
+        ("weak.lightning", "weak.staff", "weak.dagger", "absorb.fire", "resist.sword"),
+        ("gel_slam", "split"),
+        40,
+    ),
+    "bone_wraith": (
+        "Bone Wraith",
+        "Monster/Skull/SpriteSheet.png",
+        3600,
+        4,
+        ("weak.light", "weak.axe", "weak.fire", "resist.dagger", "immune.poison", "undead"),
+        ("grave_chill", "life_drain"),
+        55,
+    ),
+    "pit_viper": (
+        "Pit Viper",
+        "Monster/Snake/Snake.png",
+        2200,
+        3,
+        ("weak.sword", "weak.bow", "weak.ice"),
+        ("venom_fang", "constrict"),
+        95,
+    ),
+    "mirror_gazer": (
+        "Mirror Gazer",
+        "Monster/Eye/Eye.png",
+        3000,
+        3,
+        ("weak.dagger", "weak.spear", "weak.bow", "reflect.magic", "immune.sleep"),
+        ("hypno_gaze", "eye_beam"),
+        60,
+    ),
+    "web_spinner": (
+        "Web Spinner",
+        "Monster/SpiderRed/SpriteSheet.png",
+        2800,
+        3,
+        ("weak.fire", "weak.axe", "resist.ice"),
+        ("sticky_web", "spider_bite"),
+        70,
+    ),
+    "iron_samurai": (
+        "Iron Samurai",
+        "Boss/GiantBlueSamurai",
+        14000,
+        8,
+        (
+            "weak.spear",
+            "weak.lightning",
+            "weak.dagger",
+            "resist.sword",
+            "resist.axe",
+            "resist.bow",
+            "immune.sleep",
+            "boss",
+        ),
+        ("iai_slash", "war_cry", "whirlwind"),
+        65,
+    ),
+}
+ENCOUNTERS = {  # encounter id: enemy ids
+    "slime_pit": ("gel_slime", "gel_slime", "web_spinner"),
+    "old_crypt": ("bone_wraith", "iron_guard"),
+    "gazer_nest": ("mirror_gazer", "pit_viper", "pit_viper"),
+    "samurai_duel": ("iron_samurai", "bone_wraith"),
+}
+FIELD_FOES = {  # field entity: (enemy art shown, encounter, position, behaviour)
+    "Gel Slime": ("gel_slime", "slime_pit", (-110.0, -40.0), "wander"),
+    "Bone Wraith": ("bone_wraith", "old_crypt", (-110.0, 45.0), "wander"),
+    "Mirror Gazer": ("mirror_gazer", "gazer_nest", (110.0, -50.0), "idle"),
+    "Iron Samurai": ("iron_samurai", "samurai_duel", (120.0, 22.0), "idle"),
+}
+
+
+def _strip(frames, scale):
+    from PIL import Image
+
+    w, h = frames[0].size
+    sheet = Image.new("RGBA", (w * scale * len(frames), h * scale), (0, 0, 0, 0))
+    for i, frame in enumerate(frames):
+        sheet.alpha_composite(frame.resize((w * scale, h * scale), Image.NEAREST), (i * w * scale, 0))
+    return sheet
+
+
+def _flash(frame):
+    from PIL import Image
+
+    white = Image.new("RGBA", frame.size, (255, 255, 255, 255))
+    out = Image.new("RGBA", frame.size, (0, 0, 0, 0))
+    out.paste(white, (0, 0), frame.getchannel("A"))
+    return out
+
+
+def _darken(frame):
+    from PIL import ImageEnhance
+
+    return ImageEnhance.Brightness(frame).enhance(0.35)
+
+
+def monster_sheet(relative):
+    """Battle sheet from a 4 x 4 walk sheet (16 px): idle / attack from the walk, a flash for hit, dark for KO."""
+    from PIL import Image
+
+    sheet = Image.open(NINJA / relative).convert("RGBA")
+    walk = [sheet.crop((48, r * 16, 64, r * 16 + 16)) for r in range(4)]  # the right-facing column
+    frames = walk + [_flash(walk[0]), _darken(walk[0])]
+    clips = {
+        "idle": {"frames": [0, 1, 2, 3], "frame_duration": 0.16, "loop": True},
+        "attack": {"frames": [0, 1, 2, 3, 0], "frame_duration": 0.07, "loop": False, "events": {"2": ["hit"]}},
+        "hit": {"frames": [4, 0, 4, 0], "frame_duration": 0.07, "loop": False},
+        "ko": {"frames": [5], "frame_duration": 0.5, "loop": False},
+    }
+    return _strip(frames, 4), (64, 64), clips, walk[0]
+
+
+def giant_sheet(relative, cell=(96, 48)):
+    """Battle sheet from a boss's Idle / Hit strips (each frame ``cell`` px): idle, attack, hit, a dark KO frame."""
+    from PIL import Image
+
+    base = NINJA / relative
+    w, h = cell
+    idle = Image.open(base / "Idle.png").convert("RGBA")
+    hit = Image.open(base / "Hit.png").convert("RGBA")
+    frames = [idle.crop((c * w, 0, c * w + w, h)) for c in range(idle.width // w)]
+    count = len(frames)
+    frames += [hit.crop((c * w, 0, c * w + w, h)) for c in range(min(3, hit.width // w))]
+    frames.append(_darken(frames[-1]))
+    n = len(frames)
+    clips = {
+        "idle": {"frames": list(range(count)), "frame_duration": 0.14, "loop": True},
+        "attack": {"frames": [0, 2, 4, 4, 2, 0], "frame_duration": 0.07, "loop": False, "events": {"2": ["hit"]}},
+        "hit": {"frames": list(range(count, n - 1)), "frame_duration": 0.09, "loop": False},
+        "ko": {"frames": [n - 1], "frame_duration": 0.5, "loop": False},
+    }
+    return _strip(frames, 2), (w * 2, h * 2), clips, frames[0]
+
+
+def add_monster_types(project, db, add):
+    """Six new kinds of enemy - each a different problem to solve - with art, AI, encounters and field spots."""
+    from asteria.assets.canonical import AssetSource, CanonicalAsset
+    from asteria.core import Entity, Transform
+    from asteria.presentation.battle_combatant_visuals import (
+        BattleCombatantVisualProfile,
+        BattleVisualAssetSet,
+        BattleVisualStateDefinition,
+        BattleVisualTransform,
+    )
+    from asteria.rpg.enemy_ai import EnemyAIDefinition
+    from asteria.rpg.enemy_behavior import EnemyBehaviorBinding
+    from asteria.runtime.field_ai import FieldAIComponent, VisibleEncounterComponent
+
+    weak, multi = damage, ability
+    skills = {
+        # Gel Slime: fire heals it (absorb); it splits into another slime
+        "gel_slam": (multi("gel_slam", effect=op(weak("power", 11))), "enemy", "first_opponent"),
+        "split": (
+            multi("split", commands=[{"command": "SUMMON", "args": {"enemy_id": "gel_slime", "owner_id": "@actor"}}]),
+            "self",
+            "self",
+        ),
+        # Bone Wraith: undead - immune to poison; drains life, chills and silences
+        "grave_chill": (
+            multi(
+                "grave_chill",
+                tags=("damage.ice",),
+                effect=op(weak("power", 8)),
+                targets=6,
+                apply_states=[{"state": "silence"}],
+            ),
+            "enemies",
+            "all_opponents",
+        ),
+        "life_drain": (
+            multi("life_drain", effect=op(weak("power", 14)), battle_resource_gains=[]),
+            "enemy",
+            "random_opponent",
+        ),
+        # Pit Viper: very fast; poison and armour-breaking coils
+        "venom_fang": (
+            multi("venom_fang", effect=op(weak("power", 9)), apply_states=[{"state": "poison"}]),
+            "enemy",
+            "random_opponent",
+        ),
+        "constrict": (
+            multi(
+                "constrict",
+                effect=op(weak("power", 7)),
+                apply_states=[{"state": "defense_down"}],
+                hits=[{"tags": []}, {"tags": []}],
+            ),
+            "enemy",
+            "first_opponent",
+        ),
+        # Mirror Gazer: spells bounce back (reflect); it puts the whole party to sleep
+        "hypno_gaze": (
+            multi("hypno_gaze", tags=("magic",), targets=6, apply_states=[{"state": "sleep"}]),
+            "enemies",
+            "all_opponents",
+        ),
+        "eye_beam": (
+            multi("eye_beam", tags=("magic", "damage.lightning"), effect=op(weak("magic", 16))),
+            "enemy",
+            "random_opponent",
+        ),
+        # Web Spinner: weakens defences, fast bites
+        "sticky_web": (
+            multi("sticky_web", targets=6, apply_states=[{"state": "defense_down"}]),
+            "enemies",
+            "all_opponents",
+        ),
+        "spider_bite": (
+            multi("spider_bite", effect=op(weak("power", 6)), hits=[{"tags": []}] * 3),
+            "enemy",
+            "random_opponent",
+        ),
+        # Iron Samurai: armoured mid-boss with many shields; resists most weapons
+        "iai_slash": (
+            multi("iai_slash", tags=("weapon.sword",), effect=op(weak("power", 24))),
+            "enemy",
+            "random_opponent",
+        ),
+        "war_cry": (multi("war_cry", apply_states=[{"state": "attack_up", "to": "self"}]), "self", "self"),
+        "whirlwind": (
+            multi(
+                "whirlwind",
+                tags=("weapon.sword",),
+                effect=op(weak("power", 9)),
+                targets=6,
+                hits=[{"tags": []}, {"tags": []}],
+            ),
+            "enemies",
+            "all_opponents",
+        ),
+    }
+    life = skills["life_drain"][0]
+    skills["life_drain"] = (
+        AbilityDefinition(
+            "life_drain",
+            targeting=life.targeting,
+            tags=life.tags,
+            effects=(*life.effects, AbilityEffect("self", Effect("life_drain.heal", (op(healing(10)),)))),
+        ),
+        "enemy",
+        "random_opponent",
+    )
+    for ability_id, (definition, targeting, _selector) in skills.items():
+        add(definition, targeting)
+
+    library = project.battle_presentation_library
+    states = tuple(BattleVisualStateDefinition(role, role) for role in ("idle", "attack", "hit", "ko"))
+    out = HERE / "playable_assets" / "battle"
+    out.mkdir(parents=True, exist_ok=True)
+    template_enemy = db.enemies["ember_hound"]
+    for enemy_id, (name, art, hp, shields, tags, moves, speed) in MONSTERS.items():
+        image, frame, clips, field_frame = giant_sheet(art) if art.startswith("Boss/") else monster_sheet(art)
+        image.save(out / f"{enemy_id}.png")
+        side = 48 / max(field_frame.size)
+        field_frame.resize((round(field_frame.width * side), round(field_frame.height * side)), 0).save(
+            HERE / "playable_assets" / f"field_{enemy_id}.png"
+        )
+        asset_id = f"battle.combatant.{enemy_id}"
+        project.assets.register(
+            CanonicalAsset(
+                asset_id,
+                "sprite_sheet",
+                AssetSource(
+                    f"playable_assets/battle/{enemy_id}.png",
+                    "project",
+                    (("license", "CC0 1.0"), ("source", "Ninja Adventure Asset Pack")),
+                ),
+                tags=frozenset({"battle", "combatant", "enemy"}),
+                metadata=(("clips", clips), ("frame_size", list(frame)), ("pivot", [0.5, 1.0])),
+            ),
+            replace=True,
+        )
+        scale = 0.8 if art.startswith("Boss/") else 0.5
+        library.set(
+            "combatant_visuals",
+            enemy_id,
+            BattleCombatantVisualProfile(
+                enemy_id, BattleVisualAssetSet(asset_id), states, BattleVisualTransform(scale_x=scale, scale_y=scale)
+            ),
+        )
+        stats = dict(template_enemy.stats)
+        stats["speed"] = float(speed)
+        db.enemies[enemy_id] = EnemyDefinition(
+            enemy_id,
+            name,
+            stats=stats,
+            resources={HP: hp, SHIELD: shields, SP: 999},
+            tags=("enemy", *tags),
+            abilities=moves,
+            reward=dataclasses.replace(template_enemy.reward, experience={}) if template_enemy.reward else None,
+        )
+        rules = []
+        for move in moves:
+            _definition, _targeting, selector = skills[move]
+            rules.append(
+                {
+                    "schema": "asteria.rpg.ai_decision_rule",
+                    "version": 1,
+                    "rule_id": move,
+                    "action_kind": "ability",
+                    "payload": {"ability_id": move},
+                    "target_selector": selector,
+                    "conditions": [],
+                    "priority": 1,
+                    "weight": 1.0,
+                    "tags": [],
+                }
+            )
+        db.enemy_ai[f"{enemy_id}_ai"] = EnemyAIDefinition.from_data(
+            {
+                "schema": "asteria.rpg.enemy_ai_definition",
+                "version": 1,
+                "ai_id": f"{enemy_id}_ai",
+                "rules": rules,
+                "phases": [
+                    {
+                        "schema": "asteria.rpg.boss_phase_definition",
+                        "version": 1,
+                        "phase_id": "main",
+                        "conditions": [],
+                        "priority": 1,
+                        "decision_rule_ids": list(moves),
+                        "actions_per_ready": None,
+                        "enter_hook": None,
+                        "exit_hook": None,
+                    }
+                ],
+            }
+        )
+        db.enemy_behavior_bindings[enemy_id] = EnemyBehaviorBinding.from_data(
+            {
+                "schema": "asteria.rpg.enemy_behavior_binding",
+                "version": 1,
+                "enemy_id": enemy_id,
+                "ai_id": f"{enemy_id}_ai",
+                "tags": [],
+            }
+        )
+    credits = HERE / "playable_assets" / "CREDITS.md"
+    text = credits.read_text(encoding="utf-8")
+    row = (
+        "| `battle/gel_slime.png`, `bone_wraith.png`, `pit_viper.png`, `mirror_gazer.png`, `web_spinner.png`, "
+        "`iron_samurai.png` and their `field_*.png` (Octopath demo enemies) | "
+        "[Ninja Adventure Asset Pack](https://pixel-boy.itch.io/ninja-adventure-asset-pack) — Monster/Slime, "
+        "Skull, Snake, Eye, SpiderRed, Boss/GiantBlueSamurai; frames cropped and scaled, hit / KO frames flashed / "
+        "darkened (built by `reference_projects/octopath_demo/build_project.py`) | Pixel-boy, AAA | "
+        "[CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |\n"
+    )
+    if "Octopath demo enemies" not in text:
+        i = text.index("\n## Licensing")
+        credits.write_text(text[:i].rstrip("\n") + "\n" + row + text[i:], encoding="utf-8")
+
+    # the Skeleton Knight (the reference project's iron_guard art): armoured, slow, hits hard
+    add(
+        ability(
+            "shield_bash",
+            tags=("weapon.axe",),
+            effect=op(damage("power", 16)),
+            apply_states=[{"state": "defense_down"}],
+        ),
+        "enemy",
+    )
+    guard = db.enemies["iron_guard"]
+    db.enemies["iron_guard"] = EnemyDefinition(
+        "iron_guard",
+        "Skeleton Knight",
+        stats=dict(guard.stats),
+        resources={HP: 4200, SHIELD: 5, SP: 999},
+        tags=(
+            "enemy",
+            "undead",
+            "immune.poison",
+            "weak.light",
+            "weak.staff",
+            "weak.axe",
+            "resist.dagger",
+            "resist.bow",
+        ),
+        abilities=("shield_bash",),
+        reward=dataclasses.replace(guard.reward, experience={}) if guard.reward else None,
+    )
+
+    base = db.encounters["boss_room"]
+    for encounter_id, members in ENCOUNTERS.items():
+        counts = {}
+        for enemy_id in members:
+            counts[enemy_id] = counts.get(enemy_id, 0) + 1
+        db.encounters[encounter_id] = dataclasses.replace(
+            base,
+            encounter_id=encounter_id,
+            tags=("demo",),
+            members=tuple(dataclasses.replace(base.members[0], enemy_id=e, count=n) for e, n in counts.items()),
+        )
+
+    scene = project.scene(project.startup_scene_id)
+    for entity in [e for e in scene.entities() if e.name in FIELD_FOES]:
+        scene.remove_entity(entity.id)
+    for name, (_enemy, encounter_id, (x, y), behaviour) in FIELD_FOES.items():
+        entity = scene.add_entity(Entity(name))
+        entity.add_component(Transform(x, y))
+        touch = entity.add_component(VisibleEncounterComponent())
+        touch.encounter_id, touch.touch_radius = encounter_id, 14.0
+        ai = entity.add_component(FieldAIComponent())
+        ai.behaviour, ai.speed, ai.wander_radius = behaviour, 20.0, 24.0
 
 
 if __name__ == "__main__":

@@ -43,11 +43,26 @@ Rebuild it after changing the script: `python reference_projects/octopath_demo/b
 Controls in battle: Up / Down choose, Tab switches Skills / Items, Left / Right boost, Enter confirms, Esc goes
 back. Keys 1–4 still use the first four skills directly.
 
+## Enemies — each asks for a different answer
+
+Four of them wander the field (touch one to fight); Grimgarde waits by the path.
+
+| Enemy | Where | What makes it different | Weak to |
+|---|---|---|---|
+| Grimgarde (boss) + Sporecap + Venom Hound | the boss by the path | 6 shields; silencing roar, poisoning meteor, summons adds; spores put you to sleep | sword, axe, ice, lightning |
+| Gel Slime ×2 + Web Spinner | **Gel Slime** (slime pit) | fire *heals* the slime (absorb); it splits into another slime; the spider lowers your defence | lightning, staff, dagger |
+| Bone Wraith + Skeleton Knight | **Bone Wraith** (old crypt) | undead: immune to poison; drains life, chills and silences; the knight resists daggers and bows | light, axe, fire / staff |
+| Mirror Gazer + Pit Viper ×2 | **Mirror Gazer** (gazer nest) | spells bounce back to the caster (reflect); immune to sleep, puts the whole party to sleep; the vipers are very fast and poison | dagger, spear, bow |
+| Iron Samurai + Bone Wraith | **Iron Samurai** (duel) | 8 shields; resists swords, axes and bows (half damage, no shield lost); war cry, two-hit whirlwind | spear, lightning, dagger |
+
 ## Where it lives in the data
 
 | Rule | Record |
 |---|---|
-| Weakness multipliers, Break x2, boost power | Database › Damage Interactions |
+| Weakness / resistance multipliers, absorb, reflect, Break x2, boost power | Database › Damage Interactions |
+| Immunities (poison, sleep) | Status Effects › `immune_target_tags` + the enemy's tags |
+| Enemy moves | Enemy AI (one per enemy) + enemy behaviour bindings |
+| Field enemies | entities with Visible Encounter + Field AI (wander) |
 | Shields per enemy | enemy `resources.shield` + Battle Resources › `shield` (`subject_maximum`) |
 | Break | Break Gauges › `break` (`reset_to_maximum`) + Status Definitions › `broken` |
 | Divine cost, hits, states, commands, concoct | each ability's `battle_costs`, `hits`, `apply_states`, `commands`, `concoct_station` |

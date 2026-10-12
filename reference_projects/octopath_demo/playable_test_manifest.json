@@ -19,11 +19,39 @@
       0
     ],
     "entity_sprites": {
-      "Astral Tyrant": {
+      "Grimgarde": {
         "sprite": "playable_assets/boss_field.png",
         "size": [
           96,
           96
+        ]
+      },
+      "Gel Slime": {
+        "sprite": "playable_assets/field_gel_slime.png",
+        "size": [
+          48,
+          48
+        ]
+      },
+      "Bone Wraith": {
+        "sprite": "playable_assets/field_bone_wraith.png",
+        "size": [
+          48,
+          48
+        ]
+      },
+      "Mirror Gazer": {
+        "sprite": "playable_assets/field_mirror_gazer.png",
+        "size": [
+          48,
+          48
+        ]
+      },
+      "Iron Samurai": {
+        "sprite": "playable_assets/field_iron_samurai.png",
+        "size": [
+          64,
+          32
         ]
       }
     },
