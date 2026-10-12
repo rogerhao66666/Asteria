@@ -48,16 +48,23 @@ def available():
     return tuple(names)
 
 
+def _resolve(name):
+    name = (name or "auto").strip().lower() or "auto"
+    return available()[0] if name == "auto" else name
+
+
 def use(name="auto"):
-    """Switch the active kernel set (``auto`` = the fastest available); returns the previous name."""
+    """Switch the active kernel set (``auto`` = the fastest available); returns the previous name (the set that
+    ``ASTERIA_KERNELS`` would have chosen when none was chosen yet)."""
     global _active
-    previous = None if _active is None else _active.NAME
-    _active = _load(available()[0] if name == "auto" else name)
+    previous = _active.NAME if _active is not None else _resolve(os.environ.get("ASTERIA_KERNELS", "auto"))
+    _active = _load(_resolve(name))
     return previous
 
 
 def active():
     """The active kernel set (chosen from ``ASTERIA_KERNELS`` on first use)."""
+    global _active
     if _active is None:
-        use(os.environ.get("ASTERIA_KERNELS", "auto").strip().lower() or "auto")
+        _active = _load(_resolve(os.environ.get("ASTERIA_KERNELS", "auto")))
     return _active

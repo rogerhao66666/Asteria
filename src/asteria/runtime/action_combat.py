@@ -12,7 +12,8 @@ behaviour trees and scripts:
 * ``cooldown_seconds`` and the ability's ``costs`` (formulas over the user's stats, paid from its combatant
   resources) are checked and paid when a chain starts; ``move_while_acting`` scales movement during the action.
 
-Every outcome is an ``ActionCombatEvent`` (used, combo, buffered, denied with a reason, lock_on, lock_lost) so the
+Every outcome is an ``ActionCombatEvent`` (dispatched to ``listeners`` at once; ``events`` keeps those since the
+system's last update) (used, combo, buffered, denied with a reason, lock_on, lock_lost) so the
 game and its presentation can react. Nothing here names a game's buttons, abilities or rules.
 """
 
@@ -112,6 +113,7 @@ class ActionCombatSystem(System):
         self.listeners = []
         self._previous: dict[str, dict] = {}
         self._scene = None
+        self._quiet = False
 
     # -- queries ---------------------------------------------------------------------------------
     def cooldown(self, entity, ability_id):
@@ -125,7 +127,13 @@ class ActionCombatSystem(System):
 
     # -- using abilities -------------------------------------------------------------------------
     def _emit(self, kind, entity, ability_id="", reason="", **data):
-        self.events.append(ActionCombatEvent(kind, entity.id, str(ability_id), reason, data))
+        """Record and dispatch at once (``use`` may be called by behaviour trees or scripts outside ``update``)."""
+        if self._quiet and kind in ("denied", "buffered"):
+            return
+        event = ActionCombatEvent(kind, entity.id, str(ability_id), reason, data)
+        self.events.append(event)
+        for listener in tuple(self.listeners):
+            listener(event)
 
     def use(self, entity, ability_id, *, aim=None, scene=None, buffer=True):
         """Use ``ability_id`` now (or buffer it); returns ``"used"``, ``"combo"``, ``"buffered"`` or a denial
@@ -302,10 +310,13 @@ class ActionCombatSystem(System):
                 self.buffered.pop(entity_id, None)
                 continue
             self.buffered[entity_id] = (ability_id, left, aim)
-            if self.use(entity, ability_id, aim=aim, scene=scene, buffer=False) in ("used", "combo"):
+            self._quiet = True  # a still-busy retry is not news
+            try:
+                result = self.use(entity, ability_id, aim=aim, scene=scene, buffer=False)
+            finally:
+                self._quiet = False
+            if result in ("used", "combo"):
                 self.buffered.pop(entity_id, None)
-            else:
-                self.events.pop()  # a still-busy retry is not news
         for entity_id, run in self.actions.running.items():
             ability = self.abilities.get(run.source) if run.source else None
             if ability is None or run.move_until is not None:
@@ -315,9 +326,6 @@ class ActionCombatSystem(System):
             if controller is not None:
                 scale = ability.move_while_acting
                 controller.set_intent(controller.intent_x * scale, controller.intent_y * scale, jump=controller.jump)
-        for event in self.events:
-            for listener in tuple(self.listeners):
-                listener(event)
 
     def _check_lock(self, entity, spec, scene):
         if not spec.lock_target_id:

@@ -393,3 +393,45 @@ def facing_codes(dx, dy, current, locked):
         np.where(horizontal & (x < -1e-9), 2, np.where(y > 1e-9, 0, np.where(y < -1e-9, 1, code))),
     )
     return np.where(np.asarray(locked, dtype=bool), code, out).tolist()
+
+
+def fieldai_step(f, t, c, slots, behaviour, target_x, target_y, has_target, dt):
+    if not len(slots):
+        return []
+    idx = np.asarray(slots, dtype=np.int64)
+    mode_col = _view(f["mode_code"])
+    m = mode_col[idx].copy()
+    b = np.asarray(behaviour, dtype=np.int64)
+    tx, ty = np.asarray(target_x, dtype=float), np.asarray(target_y, dtype=float)
+    has = np.asarray(has_target, dtype=bool)
+    x, y = _view(t["x"])[idx], _view(t["y"])[idx]
+    detect, lose = _view(f["detect_radius"])[idx], _view(f["lose_radius"])[idx]
+    arrive, speed = _view(f["arrive_distance"])[idx], _view(c["speed"])[idx]
+    hx, hy = _view(f["home_x"])[idx], _view(f["home_y"])[idx]
+    with np.errstate(invalid="ignore"):
+        dxt, dyt = tx - x, ty - y
+        distance = np.sqrt(dxt * dxt + dyt * dyt)
+    reacting = ((b == 3) | (b == 4)) & has
+    busy = (m == 3) | (m == 4)
+    m = np.where(reacting & busy & (distance > lose), 5, m)
+    m = np.where(reacting & ~busy & (distance <= detect), b, m)
+    m = np.where(((m == 3) | (m == 4)) & ~has, 5, m)
+    steer = (m == 3) | (m == 4) | (m == 5)
+    away = m == 4
+    gx, gy = np.where(m == 5, hx, tx), np.where(m == 5, hy, ty)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        dx, dy = gx - x, gy - y
+        dx, dy = np.where(away, -dx, dx), np.where(away, -dy, dy)
+        d = np.sqrt(dx * dx + dy * dy)
+        arrived = d <= np.where(away, 0.0, arrive)
+        scale = np.where(away, 1.0, np.minimum(1.0, d / np.maximum(speed * dt, 1e-9)))
+        move = steer & ~arrived
+        ix = np.where(move, dx / d * scale, 0.0)
+        iy = np.where(move, dy / d * scale, 0.0)
+    m = np.where(steer & arrived & (m == 5), 0, m)
+    wanders = ~steer & ((b == 1) | (b == 2))
+    m = np.where(wanders, b, np.where(steer, m, 0))
+    mode_col[idx] = m
+    _view(c["intent_x"])[idx] = ix
+    _view(c["intent_y"])[idx] = iy
+    return np.flatnonzero(wanders).tolist()

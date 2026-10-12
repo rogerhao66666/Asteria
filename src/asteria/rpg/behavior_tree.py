@@ -7,12 +7,20 @@ composites   ``sequence`` (all children succeed in order; resumes where it was),
              a running lower one), ``parallel`` (all children each tick; ``success_count`` successes needed)
 decorators   ``inverter``, ``succeeder``, ``repeater`` (``count``, 0 = forever), ``cooldown`` (``seconds``)
 conditions   ``player_within`` (``radius``), ``player_beyond`` (``radius``), ``switch`` (``name``),
-             ``chance`` (``probability``), ``home_within`` (``radius``)
+             ``chance`` (``probability``), ``home_within`` (``radius``),
+             real-time combat (ASTERIA_SPEC §20): ``hp_below`` / ``hp_above`` (``fraction`` of ``resource``; boss
+             phases), ``ability_ready`` (``ability``: off cooldown and affordable), ``has_state`` (``state``),
+             ``acting`` (an action timeline is running on it)
 actions      ``chase`` (until within ``arrive``; fails beyond ``lose_radius``), ``flee`` (until beyond
              ``radius``), ``move_to`` (``x``, ``y``), ``return_home``, ``patrol`` (``points`` "x,y; x,y"),
              ``wander`` (``radius``),
              ``wait`` (``seconds``), ``face_player``, ``set_switch`` (``name``, ``value``),
-             ``start_encounter`` (``encounter_id``)
+             ``start_encounter`` (``encounter_id``),
+             real-time combat: ``use_ability`` (``ability``, aimed at the player; ``wait`` until its action ends),
+             ``keep_distance`` (``min``, ``max``), ``strafe`` (circle the player: ``direction`` 1 / -1,
+             ``seconds``), ``side_patrol`` (side view: walk, turn at walls and ledges; ``seconds`` 0 = forever),
+             ``jump`` (side view, when grounded), ``summon`` (``prefab``, ``count``, ``radius``),
+             ``apply_state`` (``state`` on ``to`` self / player)
 
 Ticks return ``success``, ``failure`` or ``running``; running nodes resume next tick.
 The runtime (``asteria.runtime.behavior_tree``) owns per-entity memory and moves the
@@ -25,7 +33,18 @@ from dataclasses import dataclass, field
 
 COMPOSITES = ("sequence", "selector", "parallel")
 DECORATORS = ("inverter", "succeeder", "repeater", "cooldown")
-CONDITIONS = ("player_within", "player_beyond", "switch", "chance", "home_within")
+CONDITIONS = (
+    "player_within",
+    "player_beyond",
+    "switch",
+    "chance",
+    "home_within",
+    "hp_below",
+    "hp_above",
+    "ability_ready",
+    "has_state",
+    "acting",
+)
 ACTIONS = (
     "chase",
     "flee",
@@ -37,6 +56,13 @@ ACTIONS = (
     "face_player",
     "set_switch",
     "start_encounter",
+    "use_ability",
+    "keep_distance",
+    "strafe",
+    "side_patrol",
+    "jump",
+    "summon",
+    "apply_state",
 )
 NODE_KINDS = COMPOSITES + DECORATORS + CONDITIONS + ACTIONS
 

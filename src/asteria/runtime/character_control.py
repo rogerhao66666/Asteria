@@ -233,11 +233,19 @@ def _box_fields():
 @column_storage()
 @component_schema(
     type_name="asteria.Hitbox2D",
-    version=2,
+    version=3,
     fields=(
         *_box_fields(),
         Field("active", bool, False, tooltip="Usually switched on by action timeline hitbox cues."),
         Field("hit_tag", str, "", tooltip="What kind of hit this is (game logic reads it)."),
+        Field(
+            "rehit_interval",
+            float,
+            0.0,
+            minimum=0.0,
+            tooltip="Seconds before the same target can be hit again while it stays active (contact damage, "
+            "beams). 0: once per activation.",
+        ),
         Field("enabled", bool, True),
     ),
 )
@@ -252,6 +260,7 @@ class Hitbox2DComponent(Component):
         self.follow_facing = False
         self.active = False
         self.hit_tag = ""
+        self.rehit_interval = 0.0
         self.enabled = True
 
 
@@ -281,6 +290,11 @@ class Hurtbox2DComponent(Component):
 @component_migration("asteria.Hitbox2D", from_version=1)
 def _hitbox_v1_to_v2(fields):
     return fields  # v2 adds follow_facing (default False keeps v1 boxes)
+
+
+@component_migration("asteria.Hitbox2D", from_version=2)
+def _hitbox_v2_to_v3(fields):
+    return fields  # v3 adds rehit_interval (0 keeps one hit per target per activation)
 
 
 @component_migration("asteria.Hurtbox2D", from_version=1)
@@ -658,8 +672,9 @@ class HitboxSystem(System):
         self.events: list[HitEvent] = []
         self.listeners = []
         self.iframes: dict[str, float] = {}
-        self._hit_this_activation: dict[str, set] = {}
+        self._hit_this_activation: dict[str, dict] = {}  # attacker -> {target: time of its last hit}
         self.frame_hurtboxes = None
+        self._clock = 0.0
 
     def grant_invincibility(self, entity_id, seconds):
         self.iframes[str(entity_id)] = max(self.iframes.get(str(entity_id), 0.0), float(seconds))
@@ -669,6 +684,7 @@ class HitboxSystem(System):
 
     def update(self, scene, dt):
         self.iframes = {k: v - dt for k, v in self.iframes.items() if v - dt > 0}
+        self._clock += dt
         # this frame's hurtboxes (also read by ProjectileSystem, which runs before anything moves again)
         self.frame_hurtboxes = box_rows(scene, Hurtbox2DComponent)
         targets, hurt_components, hurt_columns = self.frame_hurtboxes
@@ -678,7 +694,7 @@ class HitboxSystem(System):
             if attacker_id not in live:
                 self._hit_this_activation.pop(attacker_id)  # the activation ended: the next one can hit again
         for attacker in attackers:
-            self._hit_this_activation.setdefault(attacker.id, set())
+            self._hit_this_activation.setdefault(attacker.id, {})
         events = []
         if attackers and targets:
             # one batched overlap test (asteria.kernels) instead of every hitbox against every hurtbox
@@ -687,13 +703,17 @@ class HitboxSystem(System):
                 attacker, hitbox = attackers[i], hitboxes[i]
                 target, hurtbox = targets[j], hurt_components[j]
                 already = self._hit_this_activation[attacker.id]
-                if target is attacker or target.id in already:
+                if target is attacker:
+                    continue
+                if target.id in already and not (
+                    hitbox.rehit_interval > 0 and self._clock - already[target.id] >= hitbox.rehit_interval - 1e-9
+                ):
                     continue
                 if hitbox.team and hitbox.team == hurtbox.team:
                     continue
                 if self.invincible(target.id, hurtbox):
                     continue
-                already.add(target.id)
+                already[target.id] = self._clock
                 events.append(HitEvent(attacker.id, target.id, hitbox.hit_tag, hitbox.team))
         self.events = events
         for event in events:

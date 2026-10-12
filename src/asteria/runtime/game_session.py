@@ -225,7 +225,15 @@ class GameSessionRuntime:
             )
             actions = EntityActionSystem(hitboxes=hits, paused=combat.paused, armor=combat, projectiles=projectiles)
             combat.actions = actions
+            from asteria.core.prefab import instantiate
             from asteria.runtime.action_combat import ActionCombatSystem
+
+            def summon(prefab_id, x, y):
+                entity = instantiate(self.project.prefabs, prefab_id, build_preview_registry())
+                if not entity.has(Transform):
+                    entity.add_component(Transform())
+                entity.get(Transform).x, entity.get(Transform).y = x, y
+                return scene.add_entity(entity)
 
             # ASTERIA_SPEC §20: abilities used in real time (input bindings, combos, cancels, cooldowns, lock-on)
             action_combat = ActionCombatSystem(
@@ -243,6 +251,11 @@ class GameSessionRuntime:
                 set_switch=self.save.event_context.set_switch,
                 start_encounter=lambda encounter_id: setattr(self, "_pending_tree_encounter", encounter_id),
                 rng=random.Random(f"{scene.id}:bt"),
+                # use abilities, read hp for boss phases, probe ledges, summon (ASTERIA_SPEC §20)
+                action_combat=action_combat,
+                combat=combat,
+                world=frame_world,
+                spawn=summon,
             )
             # ENG-02 / ENG-17 / ANI-05 / RPG-09: behavior trees, entity action timelines, controllers, hits
             spawn, ai = systems

@@ -394,3 +394,52 @@ def facing_codes(dx, dy, current, locked):
         else:
             out.append(code)
     return out
+
+
+# -- field AI on column storage (D22 A4) ---------------------------------------------------------------------------
+# mode / behaviour codes: 0 idle, 1 patrol, 2 wander, 3 chase, 4 flee, 5 return
+def fieldai_step(f, t, c, slots, behaviour, target_x, target_y, has_target, dt):
+    """React (detect / lose the target) and steer chase, flee and return for AI entities with controllers.
+
+    Writes ``f["mode_code"]`` and the controllers' intents; returns the rows (indexes into ``slots``) whose mode is
+    patrol or wander, which the caller steers itself.
+    """
+    mode, hx, hy = f["mode_code"], f["home_x"], f["home_y"]
+    detect, lose, arrive = f["detect_radius"], f["lose_radius"], f["arrive_distance"]
+    x, y = t["x"], t["y"]
+    ix, iy, speed = c["intent_x"], c["intent_y"], c["speed"]
+    rest = []
+    for k, s in enumerate(slots):
+        ix[s] = iy[s] = 0.0
+        b, m = behaviour[k], mode[s]
+        if b in (3, 4) and has_target[k]:
+            dxt, dyt = target_x[k] - x[s], target_y[k] - y[s]
+            distance = math.sqrt(dxt * dxt + dyt * dyt)
+            if m in (3, 4):
+                if distance > lose[s]:
+                    m = 5
+            elif distance <= detect[s]:
+                m = b
+        if m in (3, 4) and not has_target[k]:
+            m = 5  # the target is gone: go home
+        if m in (3, 4, 5):
+            away = m == 4
+            gx, gy = (hx[s], hy[s]) if m == 5 else (target_x[k], target_y[k])
+            dx, dy = gx - x[s], gy - y[s]
+            if away:
+                dx, dy = -dx, -dy
+            d = math.sqrt(dx * dx + dy * dy)
+            if d <= (0.0 if away else arrive[s]):
+                if m == 5:
+                    m = 0
+            else:
+                scale = 1.0 if away else min(1.0, d / max(speed[s] * dt, 1e-9))
+                ix[s] = dx / d * scale
+                iy[s] = dy / d * scale
+        elif b in (1, 2):
+            m = b
+            rest.append(k)
+        else:
+            m = 0
+        mode[s] = m
+    return rest

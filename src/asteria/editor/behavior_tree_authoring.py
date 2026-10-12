@@ -37,6 +37,19 @@ PARAMS = {
     "face_player": (),
     "set_switch": (("name", ""), ("value", True)),
     "start_encounter": (("encounter_id", ""),),
+    # real-time combat (ASTERIA_SPEC §20)
+    "hp_below": (("fraction", 0.5), ("resource", "hp")),
+    "hp_above": (("fraction", 0.5), ("resource", "hp")),
+    "ability_ready": (("ability", ""),),
+    "has_state": (("state", ""),),
+    "acting": (),
+    "use_ability": (("ability", ""), ("wait", False)),
+    "keep_distance": (("min", 48.0), ("max", 96.0), ("speed", 40.0)),
+    "strafe": (("direction", 1), ("seconds", 1.0), ("speed", 40.0)),
+    "side_patrol": (("seconds", 0.0),),
+    "jump": (),
+    "summon": (("prefab", ""), ("count", 1), ("radius", 32.0)),
+    "apply_state": (("state", ""), ("to", "self")),
 }
 KIND_GROUPS = (("Composite", COMPOSITES), ("Decorator", DECORATORS), ("Condition", CONDITIONS), ("Action", ACTIONS))
 

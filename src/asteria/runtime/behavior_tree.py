@@ -40,6 +40,10 @@ class BehaviorTreeSystem(System):
         set_switch=None,
         start_encounter=None,
         rng=None,
+        action_combat=None,
+        combat=None,
+        world=None,
+        spawn=None,
     ):
         self.trees = trees  # mapping tree_id -> BehaviorTree (e.g. project.rpg_database.behavior_trees)
         self.target_id = str(target_id or "")
@@ -47,11 +51,16 @@ class BehaviorTreeSystem(System):
         self.set_switch = set_switch or (lambda _name, _value: None)
         self.start_encounter = start_encounter or (lambda _encounter_id: None)
         self.rng = rng or random.Random(0)
+        # real-time combat services (ASTERIA_SPEC §20), all optional
+        self.action_combat = action_combat  # ActionCombatSystem: use_ability, ability_ready
+        self.combat = combat  # CombatSystem: hp_below / hp_above, has_state, apply_state
+        self.world = world  # callable() -> CollisionWorld: side_patrol's ledge probe
+        self.spawn = spawn  # callable(prefab_id, x, y) -> entity: summon
         self.memory: dict[str, dict] = {}
         self.status: dict[str, str] = {}  # last root status per entity (inspection / debugger)
 
     # -- movement ----------------------------------------------------------------------------------
-    def _move(self, ctx, goal, params, *, away=False):
+    def _move(self, ctx, goal, params, *, away=False, keep_speed=False):
         t = ctx["transform"]
         dx, dy = goal[0] - t.x, goal[1] - t.y
         if away:
@@ -61,7 +70,7 @@ class BehaviorTreeSystem(System):
             return 0.0
         controller = ctx["controller"]
         if controller is not None:
-            scale = 1.0 if away else min(1.0, distance / max(controller.speed * ctx["dt"], 1e-9))
+            scale = 1.0 if away or keep_speed else min(1.0, distance / max(controller.speed * ctx["dt"], 1e-9))
             controller.set_intent(dx / distance * scale, dy / distance * scale)
         else:
             step = (
@@ -72,6 +81,77 @@ class BehaviorTreeSystem(System):
             t.x += dx / distance * step
             t.y += dy / distance * step
         return distance
+
+    # -- real-time combat helpers -------------------------------------------------------------------------------
+    @staticmethod
+    def _is_combatant(entity):
+        from .combat import CombatantComponent
+
+        return entity.has(CombatantComponent)
+
+    def _combat_state(self, ctx):
+        if self.combat is None or not self._is_combatant(ctx["entity"]):
+            return None
+        return self.combat.state(ctx["entity"])
+
+    def _fraction(self, ctx, resource):
+        state = self._combat_state(ctx)
+        if state is None or not state.resources.contains(resource):
+            return None
+        value = state.resources.get(resource)
+        span = value.maximum - value.minimum
+        return 1.0 if span <= 0 else (value.current - value.minimum) / span
+
+    def _use_ability(self, ctx, state, p, target):
+        if self.action_combat is None:
+            return FAILURE
+        entity = ctx["entity"]
+        actions = self.action_combat.actions
+        if state.get("waiting"):
+            if actions.active(entity.id) and actions.source(entity.id) == state["waiting"]:
+                return RUNNING
+            state.pop("waiting", None)
+            return SUCCESS
+        t = ctx["transform"]
+        aim = None if target is None else (target[0] - t.x, target[1] - t.y)
+        if aim is not None and abs(aim[0]) < 1e-9 and abs(aim[1]) < 1e-9:
+            aim = None
+        ability_id = str(p.get("ability", ""))
+        result = self.action_combat.use(entity, ability_id, aim=aim, scene=ctx["scene"], buffer=False)
+        if result not in ("used", "combo"):
+            return FAILURE
+        if p.get("wait"):
+            state["waiting"] = ability_id
+            return RUNNING
+        return SUCCESS
+
+    def _side_patrol(self, ctx, state, p):
+        controller = ctx["controller"]
+        if controller is None:
+            return FAILURE
+        seconds = float(p.get("seconds", 0.0))
+        started = state.setdefault("started", ctx["time"])
+        if seconds and ctx["time"] - started >= seconds - 1e-9:
+            state.pop("started", None)
+            return SUCCESS
+        direction = state.get("direction", 1.0 if controller.facing != "left" else -1.0)
+        if state.get("moved") and controller.hit_wall:
+            direction = -direction  # bumped into a wall last step
+        elif controller.grounded and self.world is not None and not self._ground_ahead(ctx, controller, direction):
+            direction = -direction  # a ledge ahead
+        state["direction"] = direction
+        state["moved"] = True
+        controller.set_intent(direction, 0.0)
+        return RUNNING
+
+    def _ground_ahead(self, ctx, controller, direction):
+        world = self.world()
+        if world is None:
+            return True
+        t = ctx["transform"]
+        x = t.x + direction * (controller.half_width + 2.0)
+        y = t.y + controller.half_height + 2.0
+        return bool(world.query_point(x, y, mask=controller.mask, exclude=(ctx["entity"].id,)))
 
     def _target(self, ctx):
         if ctx["target"] is None:
@@ -163,6 +243,27 @@ class BehaviorTreeSystem(System):
             return SUCCESS if target is None or self._distance_to(ctx, target) > float(p.get("radius", 64)) else FAILURE
         if kind == "home_within":
             return SUCCESS if self._distance_to(ctx, ctx["home"]) <= float(p.get("radius", 4)) else FAILURE
+        if kind in ("hp_below", "hp_above"):
+            fraction = self._fraction(ctx, str(p.get("resource", "hp")))
+            if fraction is None:
+                return FAILURE
+            limit = float(p.get("fraction", 0.5))
+            return SUCCESS if (fraction < limit if kind == "hp_below" else fraction > limit) else FAILURE
+        if kind == "ability_ready":
+            if self.action_combat is None:
+                return FAILURE
+            ability_id = str(p.get("ability", ""))
+            entity = ctx["entity"]
+            ability = self.action_combat.abilities.get(ability_id)
+            ready = ability is not None and self.action_combat.cooldown(entity, ability_id) <= 0
+            return SUCCESS if ready and not isinstance(self.action_combat._prices(entity, ability), str) else FAILURE
+        if kind == "has_state":
+            state = self._combat_state(ctx)
+            found = state is not None and state.states is not None and state.states.get(str(p.get("state", "")))
+            return SUCCESS if found else FAILURE
+        if kind == "acting":
+            actions = getattr(self.action_combat, "actions", None)
+            return SUCCESS if actions is not None and actions.active(ctx["entity"].id) else FAILURE
         if kind == "switch":
             return SUCCESS if self.switches(str(p.get("name", ""))) else FAILURE
         if kind == "chance":
@@ -216,6 +317,54 @@ class BehaviorTreeSystem(System):
         if kind == "face_player":
             ctx["facing"] = target
             return SUCCESS if target is not None else FAILURE
+        if kind == "use_ability":
+            return self._use_ability(ctx, state, p, target)
+        if kind == "keep_distance":
+            if target is None:
+                return FAILURE
+            distance = self._distance_to(ctx, target)
+            if distance < float(p.get("min", 48.0)):
+                self._move(ctx, target, p, away=True)
+                return RUNNING
+            if distance > float(p.get("max", 96.0)):
+                self._move(ctx, target, p)
+                return RUNNING
+            return SUCCESS
+        if kind == "strafe":
+            if target is None:
+                return FAILURE
+            started = state.setdefault("started", ctx["time"])
+            if ctx["time"] - started >= float(p.get("seconds", 1.0)) - 1e-9:
+                state.pop("started", None)
+                return SUCCESS
+            t = ctx["transform"]
+            dx, dy = target[0] - t.x, target[1] - t.y
+            side = 1.0 if float(p.get("direction", 1)) >= 0 else -1.0
+            self._move(ctx, (t.x - dy * side, t.y + dx * side), p, away=False, keep_speed=True)
+            return RUNNING
+        if kind == "side_patrol":
+            return self._side_patrol(ctx, state, p)
+        if kind == "jump":
+            controller = ctx["controller"]
+            if controller is None or controller.mode != "side" or not controller.grounded:
+                return FAILURE
+            controller.jump = True
+            return SUCCESS
+        if kind == "summon":
+            if self.spawn is None or not str(p.get("prefab", "")):
+                return FAILURE
+            t = ctx["transform"]
+            for _ in range(max(1, int(p.get("count", 1)))):
+                angle, reach = self.rng.uniform(0, 2 * pi), self.rng.uniform(0, float(p.get("radius", 32.0)))
+                self.spawn(str(p["prefab"]), t.x + cos(angle) * reach, t.y + sin(angle) * reach)
+            return SUCCESS
+        if kind == "apply_state":
+            if self.combat is None:
+                return FAILURE
+            whom = ctx["target"] if p.get("to") == "player" else ctx["entity"]
+            if whom is None or not self._is_combatant(whom):
+                return FAILURE
+            return SUCCESS if self.combat.apply_state(whom, str(p.get("state", ""))) else FAILURE
         if kind == "set_switch":
             self.set_switch(str(p.get("name", "")), bool(p.get("value", True)))
             return SUCCESS
@@ -241,6 +390,8 @@ class BehaviorTreeSystem(System):
             else:
                 controller = None
             ctx = {
+                "entity": entity,
+                "scene": scene,
                 "transform": transform,
                 "controller": controller,
                 "target": target if target is not None and target.has(Transform) else None,

@@ -1116,3 +1116,38 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - AI 使用技能（行為樹節點）：A4。
 
 **狀態：** A3 完成。
+
+**使用者決定（2026-10-13）：** A4 到 A8 一口氣做完（A4 敵人 AI、A5 橫向手感、A6 掉寶、A7 職業和技能樹、A8 遊戲整合和介面），做完再一起實機驗證戰鬥畫面。
+
+### D22-A4 — 敵人和 Boss AI
+
+**改動的檔案：**
+- `kernels`（python、numpy 兩套結果相同）：`fieldai_step`，一次算出場景 AI 的偵測、放棄追擊、追擊、逃跑和回家。
+- `runtime/field_ai.py`：FieldAI 改用欄位存放（`mode_code`、`home_x/y`、`started`）。有控制器的實體整批跑 kernel；巡邏、遊蕩和沒有控制器的實體照舊逐個處理。`state()` 對外的格式不變。目標不見時改成回家（以前會出錯）。
+- `rpg/behavior_tree.py`、`runtime/behavior_tree.py`、`editor/behavior_tree_authoring.py`：
+  - 新條件節點：`hp_below`、`hp_above`（Boss 分階段）、`ability_ready`、`has_state`、`acting`。
+  - 新動作節點：`use_ability`（和玩家走同一個 `ActionCombatSystem.use`，瞄準玩家，可設定等動作結束）、`keep_distance`、`strafe`、`side_patrol`（橫向，遇到牆或平台邊緣就轉身）、`jump`、`summon`（召喚 prefab）、`apply_state`。
+  - 編輯器的節點清單和參數表單都加上了。
+- `runtime/character_control.py`：Hitbox2D v3 新增 `rehit_interval`，保持啟動時每隔幾秒可以再打中同一目標，用於接觸傷害或光束；0 維持原本「每次啟動只打一次」。
+- `runtime/action_combat.py`：事件改成一發生就派送給 listeners。原本行為樹在 AI 階段呼叫 `use()` 發出的事件會被清掉，測試抓到這個 bug。
+- `kernels/__init__.py`：第一次呼叫 `use()` 時也會回傳原本的 kernel 名稱（以前回傳 `None`）。
+- `runtime/game_session.py`：行為樹接上 action_combat、combat、碰撞世界和召喚。
+- 測試：`tests/test_enemy_ai.py`（新，12 項）。
+
+**整合證據：**
+- Boss 在 HP 50% 以上只用斬擊；HP 降到一半以下後改用帶霸體的重擊（傷害 20）。
+- 弓手保持在 80 到 120 之間的距離，邊退邊射，玩家被射中。
+- 繞圈移動，兩個方向都測過。
+- 橫向巡邏：走到平台邊緣和牆就轉身，不會掉下去，也不會穿牆。
+- 跳躍節點會讓角色離地。
+- 召喚出 3 隻小怪；替自己加上狂暴狀態後，`has_state` 判斷成立。
+- 接觸傷害：在第 0、0.5、1.0 秒各打中一次。
+- 編輯器：新增 `use_ability` 節點並設定參數。
+- 場景 AI 的混合場景用 python 和 numpy 跑完，結果完全相同。
+- `GameSession` 中，行為樹控制的敵人追上玩家後咬到玩家。
+
+**執行的測試：** 完整套件 **2104 passed**。
+
+**量測（300 + 500 壓力場景，numpy）：** 13.8 ms（A3 是 15.7 ms）；ai 3.6 → 1.7 ms。
+
+**狀態：** A4 完成。
