@@ -1,6 +1,11 @@
+from .columns import ColumnTable, column_spec
 from .events import EventBus
 from .ids import new_id, validate_id
 from .system import SystemScheduler
+
+
+def _order_key(entity):
+    return entity._order
 
 
 class Scene:
@@ -15,6 +20,14 @@ class Scene:
         self._pending_add = []
         self._pending_remove = []
         self._entered = False
+        # D22-C1: entity slots, column tables and a per-type index (query without scanning every entity)
+        self._slots = {}  # entity id -> slot
+        self._free_slots = []
+        self._slot_count = 0
+        self._tables = {}  # component type -> ColumnTable
+        self._index = {}  # component type -> {entity: None}
+        self._index_cache = {}  # component type -> tuple of entities in scene order
+        self._order_counter = 0
 
     @property
     def entered(self):
@@ -41,6 +54,61 @@ class Scene:
         entity._scene = self
         self._entities.append(entity)
         self._entity_ids[entity.id] = entity
+        self._order_counter += 1
+        entity._order = self._order_counter
+        if self._free_slots:
+            slot = self._free_slots.pop()
+        else:
+            slot = self._slot_count
+            self._slot_count += 1
+        self._slots[entity.id] = slot
+        for component in entity._components.values():
+            self._component_added(entity, component)
+
+    def _release(self, entity):
+        """Take the entity's components out of the index and columns (values go back onto the components)."""
+        for component in tuple(entity._components.values()):
+            self._component_removed(entity, component)
+        slot = self._slots.pop(entity.id, None)
+        if slot is not None:
+            self._free_slots.append(slot)
+
+    # -- component index and column storage --------------------------------------------------------------
+    def _component_added(self, entity, component):
+        ctype = type(component)
+        self._index.setdefault(ctype, {})[entity] = None
+        self._index_cache.pop(ctype, None)
+        if column_spec(ctype) is not None and component._ctable is None:
+            table = self._tables.get(ctype)
+            if table is None:
+                table = self._tables[ctype] = ColumnTable(ctype)
+            table.attach(component, self._slots[entity.id])
+
+    def _component_removed(self, entity, component):
+        ctype = type(component)
+        members = self._index.get(ctype)
+        if members is not None:
+            members.pop(entity, None)
+        self._index_cache.pop(ctype, None)
+        table = component._ctable
+        if table is not None and table is self._tables.get(ctype):
+            table.detach(component)
+
+    def slot_of(self, entity):
+        """The entity's slot in this scene's column tables (``None`` when it is not attached)."""
+        return self._slots.get(entity.id)
+
+    def columns(self, component_type):
+        """The ``ColumnTable`` of a column-stored component type (``None`` until one is attached here)."""
+        return self._tables.get(component_type)
+
+    def _members(self, component_type):
+        """Entities with ``component_type``, in scene order (cached until membership or order changes)."""
+        cached = self._index_cache.get(component_type)
+        if cached is None:
+            members = self._index.get(component_type, {})
+            cached = self._index_cache[component_type] = tuple(sorted(members, key=_order_key))
+        return cached
 
     def get_entity(self, entity_id):
         return self._entity_ids.get(entity_id)
@@ -50,6 +118,7 @@ class Scene:
             raise RuntimeError("Cannot detach entity during scene update")
         if entity.scene is not self:
             raise ValueError("Entity does not belong to scene")
+        self._release(entity)
         self._entities.remove(entity)
         self._entity_ids.pop(entity.id, None)
         entity._scene = None
@@ -67,6 +136,8 @@ class Scene:
             self._remove_now(entity)
 
     def _remove_now(self, entity):
+        if entity.id in self._slots and entity._scene is self:
+            self._release(entity)
         if entity in self._entities:
             self._entities.remove(entity)
         self._entity_ids.pop(entity.id, None)
@@ -92,6 +163,10 @@ class Scene:
             return old
         self._entities.pop(old)
         self._entities.insert(new_index, entity)
+        for position, e in enumerate(self._entities):  # scene order changed: renumber, drop cached query orders
+            e._order = position
+        self._order_counter = len(self._entities)
+        self._index_cache.clear()
         return old
 
     def entity_index(self, entity):
@@ -103,9 +178,18 @@ class Scene:
         return tuple(e for e in self._entities if not e.destroy_requested)
 
     def query(self, *types):
-        for e in self.entities():
-            if e.enabled and all(e.has(t) for t in types):
-                yield (e, *(e.get(t) for t in types))
+        """Enabled entities that have every one of ``types``, in scene order, with those components."""
+        if not types:
+            for e in self.entities():
+                if e.enabled:
+                    yield (e,)
+            return
+        base = min(types, key=lambda t: len(self._index.get(t, ())))
+        rest = tuple(t for t in types if t is not base)
+        for e in self._members(base):
+            if e.enabled and not e._destroy_requested and all(t in e._components for t in rest):
+                components = e._components
+                yield (e, *(components[t] for t in types))
 
     def fixed_update(self, dt):
         """Run every system's fixed-rate step (no entity add/remove flush)."""

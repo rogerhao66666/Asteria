@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from asteria.kernels._python import FIELDS, PROJECTILE_FIELDS, WEATHER_FIELDS, _turn_cosines
+from asteria.kernels._python import FIELDS, PROJECTILE_FIELDS, WEATHER_FIELDS, _decay_factors, _turn_cosines
 
 NAME = "numpy"
 
@@ -264,3 +264,131 @@ class ProjectileStore:
 
     def expired(self):
         return np.flatnonzero(self._data[5] >= self._data[6]).tolist()
+
+
+_DTYPES = {"d": np.float64, "q": np.int64, "b": np.int8}
+
+
+def _view(column):
+    """Zero-copy (writable) numpy view of an ``array.array`` column."""
+    return np.frombuffer(column, dtype=_DTYPES[column.typecode])
+
+
+def collider_columns(transform, collider, slots, circle):
+    if not len(slots):
+        return [], [], [], []
+    idx = np.asarray(slots, dtype=np.int64)
+    flag = np.asarray(circle, dtype=bool)
+    cx = _view(transform["x"])[idx] + _view(collider["offset_x"])[idx]
+    cy = _view(transform["y"])[idx] + _view(collider["offset_y"])[idx]
+    r = _view(collider["radius"])[idx]
+    hw = np.where(flag, r, _view(collider["width"])[idx] / 2)
+    hh = np.where(flag, r, _view(collider["height"])[idx] / 2)
+    return cx.tolist(), cy.tolist(), hw.tolist(), hh.tolist()
+
+
+def topdown_prepare(c, slots, dt):
+    idx = np.asarray(slots, dtype=np.int64)
+    if not len(idx):
+        return [], [], [], [], []
+    lock = _view(c["control_lock"])
+    dx = _view(c["intent_x"])[idx].copy()
+    dy = _view(c["intent_y"])[idx].copy()
+    held = lock[idx]
+    locked = held > 0.0
+    remaining = held - dt
+    lock[idx] = np.where(locked, np.where(remaining < 1e-9, 0.0, remaining), held)
+    dx[locked] = 0.0
+    dy[locked] = 0.0
+    jump = _view(c["jump"])
+    jump[idx[locked]] = 0
+    mag = np.sqrt(dx * dx + dy * dy)
+    big = mag > 1.0
+    dx[big] /= mag[big]
+    dy[big] /= mag[big]
+    speed = _view(c["speed"])[idx]
+    mx = (dx * speed + _view(c["push_x"])[idx]) * dt
+    my = (dy * speed + _view(c["push_y"])[idx]) * dt
+    return dx.tolist(), dy.tolist(), mx.tolist(), my.tolist(), locked.tolist()
+
+
+def moved_boxes(c, t, slots, move_x, move_y):
+    idx = np.asarray(slots, dtype=np.int64)
+    x = _view(t["x"])[idx] + np.asarray(move_x, dtype=float)
+    y = _view(t["y"])[idx] + np.asarray(move_y, dtype=float)
+    hw, hh = _view(c["half_width"])[idx], _view(c["half_height"])[idx]
+    return (x - hw, y - hh, x + hw, y + hh)
+
+
+def add_to_column(column, slots, values):
+    if len(slots):
+        view = _view(column)
+        idx = np.asarray(slots, dtype=np.int64)
+        view[idx] = view[idx] + np.asarray(values, dtype=float)
+
+
+def decay_push(c, slots, dt, epsilon):
+    idx = np.asarray(slots, dtype=np.int64)
+    if not len(idx):
+        return
+    px, py, decay = _view(c["push_x"]), _view(c["push_y"]), _view(c["knockback_decay"])
+    x, y = px[idx], py[idx]
+    moving = (x != 0.0) | (y != 0.0)
+    if not moving.any():
+        return
+    idx, x, y = idx[moving], x[moving], y[moving]
+    d = decay[idx]
+    factors = _decay_factors(d.tolist(), dt)
+    keep = np.empty_like(d)
+    for value, factor in factors.items():
+        keep[d == value] = factor
+    x, y = x * keep, y * keep
+    px[idx] = np.where(np.abs(x) < epsilon, 0.0, x)
+    py[idx] = np.where(np.abs(y) < epsilon, 0.0, y)
+
+
+def box_columns(t, b, slots, codes):
+    if not len(slots):
+        return [], [], [], []
+    idx = np.asarray(slots, dtype=np.int64)
+    code = np.asarray(codes, dtype=np.int64)
+    ox, oy = _view(b["offset_x"])[idx], _view(b["offset_y"])[idx]
+    w, h = _view(b["width"])[idx], _view(b["height"])[idx]
+    follow = _view(b["follow_facing"])[idx] != 0
+    left, down, up = follow & (code == 2), follow & (code == 0), follow & (code == 1)
+    turned = down | up
+    nox = np.where(left, -ox, np.where(down, -oy, np.where(up, oy, ox)))
+    noy = np.where(down, ox, np.where(up, -ox, oy))
+    nw, nh = np.where(turned, h, w), np.where(turned, w, h)
+    cx, cy = _view(t["x"])[idx] + nox, _view(t["y"])[idx] + noy
+    return (cx - nw / 2).tolist(), (cy - nh / 2).tolist(), (cx + nw / 2).tolist(), (cy + nh / 2).tolist()
+
+
+def blocked_rows(boxes, walls, pairs, mover_mask, mover_row, wall_bit, wall_one_way, wall_circle):
+    if not len(pairs):
+        return []
+    p = np.asarray(pairs, dtype=np.int64)
+    i, j = p[:, 0], p[:, 1]
+    x0, y0, x1, y1 = (np.asarray(c, dtype=float) for c in boxes)
+    cx, cy, radius = (np.asarray(c, dtype=float) for c in walls)
+    ok = (j != np.asarray(mover_row, dtype=np.int64)[i]) & ~np.asarray(wall_one_way, dtype=bool)[j]
+    ok &= (np.asarray(mover_mask, dtype=np.int64)[i] & np.asarray(wall_bit, dtype=np.int64)[j]) != 0
+    circle = np.asarray(wall_circle, dtype=bool)[j]
+    if circle.any():
+        nx = np.minimum(np.maximum(cx[j], x0[i]), x1[i])
+        ny = np.minimum(np.maximum(cy[j], y0[i]), y1[i])
+        far = np.sqrt((nx - cx[j]) * (nx - cx[j]) + (ny - cy[j]) * (ny - cy[j])) > radius[j]
+        ok &= ~(circle & far)
+    return np.unique(i[ok]).tolist()
+
+
+def facing_codes(dx, dy, current, locked):
+    x, y = np.asarray(dx, dtype=float), np.asarray(dy, dtype=float)
+    code = np.asarray(current, dtype=np.int64)
+    horizontal = np.abs(x) >= np.abs(y)
+    out = np.where(
+        horizontal & (x > 1e-9),
+        3,
+        np.where(horizontal & (x < -1e-9), 2, np.where(y > 1e-9, 0, np.where(y < -1e-9, 1, code))),
+    )
+    return np.where(np.asarray(locked, dtype=bool), code, out).tolist()

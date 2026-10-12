@@ -17,15 +17,14 @@ from dataclasses import dataclass, field
 from math import cos, hypot, radians, sin
 
 from asteria import kernels
-from asteria.core import System, Transform, world_position
+from asteria.core import System, world_position
 
 from .character_control import (
     CharacterController2DComponent,
     Hitbox2DComponent,
     HitEvent,
     Hurtbox2DComponent,
-    _columns,
-    facing_box,
+    box_rows,
 )
 
 
@@ -182,9 +181,10 @@ class ProjectileSystem(System):
         if not len(self.store) or (self.paused is not None and self.paused("")):
             self._emit()
             return
-        targets = [
-            (e, h) for e, h in scene.query(Hurtbox2DComponent) if h.enabled and e.has(Transform)
-        ]  # one list for homing and hits
+        frame = None if self.hits is None else self.hits.frame_hurtboxes
+        if frame is not None:
+            self.hits.frame_hurtboxes = None  # taken: fresh from this frame's HitboxSystem, nothing moved since
+        targets = frame if frame is not None else box_rows(scene, Hurtbox2DComponent)  # homing and hits
         uids = [int(u) for u in self.store.column("uid")]
         target_x = target_y = None
         if any(self.shots[u].definition.homing_turn > 0 for u in uids):
@@ -193,7 +193,7 @@ class ProjectileSystem(System):
         ended = {}  # row -> reason
         if self.world is not None:
             self._walls(uids, dt, ended)
-        if targets:
+        if targets[0]:
             self._hits(scene, uids, targets, ended)
         for row in self.store.expired():
             ended.setdefault(row, "lifetime")
@@ -224,10 +224,11 @@ class ProjectileSystem(System):
 
     def _homing_targets(self, uids, targets):
         xs, ys = self.store.column("x"), self.store.column("y")
-        centres = []
-        for entity, hurtbox in targets:
-            x0, y0, x1, y1 = facing_box(entity, hurtbox)
-            centres.append((entity.id, hurtbox.team, (x0 + x1) / 2, (y0 + y1) / 2))
+        entities, hurtboxes, (bx0, by0, bx1, by1) = targets
+        centres = [
+            (entity.id, hurtbox.team, (bx0[j] + bx1[j]) / 2, (by0[j] + by1[j]) / 2)
+            for j, (entity, hurtbox) in enumerate(zip(entities, hurtboxes, strict=True))
+        ]
         nan = float("nan")
         target_x, target_y = [nan] * len(uids), [nan] * len(uids)
         for row, uid in enumerate(uids):
@@ -294,9 +295,8 @@ class ProjectileSystem(System):
                     ended[row] = "wall"
 
     def _hits(self, scene, uids, targets, ended):
-        pairs = kernels.active().aabb_cross_pairs(
-            self.store.boxes(), _columns(facing_box(e, h) for e, h in targets), self.cell_size
-        )
+        entities, hurtboxes, columns = targets
+        pairs = kernels.active().aabb_cross_pairs(self.store.boxes(), columns, self.cell_size)
         if not pairs:
             return
         xs, ys = self.store.column("x"), self.store.column("y")
@@ -305,7 +305,7 @@ class ProjectileSystem(System):
             if row in ended:
                 continue
             shot = self.shots[uids[row]]
-            target, hurtbox = targets[j]
+            target, hurtbox = entities[j], hurtboxes[j]
             if target.id == shot.owner_id or target.id in shot.hit_ids:
                 continue
             if shot.team and hurtbox.team == shot.team:

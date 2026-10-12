@@ -1030,3 +1030,49 @@ autofix 原本沒有產品入口，已在 D20-4 接上編輯器。animated_text 
 - 要再大幅降低，需要改 ECS 核心的存放方式（熱門元件改成欄位陣列），這是大的架構變更，**需要你決定**。
 
 **狀態：** A2-2 完成。
+
+**使用者決定（2026-10-13）：** 照建議，先繼續 A3 之後的批次；ECS 核心改成欄位陣列存放的決定延到 A11，到時用 demo 的真實場景數字決定。期間不需要大改的優化可以順手做。
+
+**使用者改變決定（2026-10-13）：** 核心存放方式先改，避免之後的系統要重做。A3 暫停，先做 C1、C2。
+
+### D22-C1 — 核心改成欄位陣列存放
+
+**改動的檔案：**
+- `core/columns.py`（新）：`@column_storage`、欄位 descriptor、`ColumnTable`（以 slot 為索引的 `array.array` 欄位，記錄成員的 slots，成員變動時版本號遞增）。
+- `core/component.py`：元件不在場景時，數值存在元件自己的 `_clocal`。
+- `core/entity.py`：在場景中新增或移除元件時通知場景。
+- `core/scene.py`：entity slot（移除後重複使用）、欄位表、各元件型別的索引（`query` 不再掃描所有 entity，順序仍是場景順序；`move_entity` 重排後重新編號）、`columns()`、`slot_of()`。
+- 改用欄位存放的元件：Transform、Collider2D、CharacterController2D（含執行期欄位 intent、push、control_lock、facing_code 等）、Hitbox2D、Hurtbox2D。`facing` 對外仍是文字，存成 `facing_code`。
+
+**相容性：** 專案檔、存檔、元件的屬性 API、Inspector、復原、prefab、跨場景攜帶的 entity 都不變，原有 2070 個測試未修改就全部通過。有一處行為更嚴格：數字欄位被設成文字時，會在設定當下就報錯；以前要到存檔時才報錯。
+
+### D22-C2 — 系統直接讀寫欄位
+
+**改動的檔案：**
+- `kernels`（python、numpy 兩套，結果相同）：`collider_columns`、`box_columns`（判定框隨朝向轉）、`topdown_prepare`、`moved_boxes`、`add_to_column`、`decay_push`、`facing_codes`、`blocked_rows`（把候選配對向量化過濾：自己、單向平台、圖層、圓形）。
+- `runtime/collision.py`：`CollisionWorld` 改成用欄位存放形狀，`ColliderShape` 物件要用時才產生；`from_scene` 直接從欄位建立；`move_shapes` 只更新數字。
+- `runtime/character_control.py`：俯視控制器整段在欄位上跑，Python 只處理被擋住的少數角色；`box_rows()` 從欄位一次算出判定框；`HitboxSystem` 改用它，並把這一幀的受擊框留給投射物使用。
+- `runtime/projectiles.py`：沿用 `HitboxSystem` 這一幀的受擊框。
+- 圓形碰撞的判定在批次和逐個兩條路徑都改用 `sqrt`，兩邊完全一致。
+- `validation/arpg_stress.py`：報告加入 `state_digest`（所有敵人和投射物的最終狀態）。
+- 測試：`tests/test_column_storage.py`（新，11 項）涵蓋欄位讀寫、移出再加入、跨場景、序列化、slot 重複使用、查詢順序、更新中新增和移除、碰撞世界和逐個建立的結果相同、每個新 kernel python 等於 numpy，以及**整個壓力場景用 python 和 numpy 跑完，狀態完全相同**。
+
+**執行的測試：** 完整套件 **2081 passed**。
+
+**量測**（同一台機器，低耗電模式關閉，headless，120 幀，單位 ms）：
+
+| 場景 | kernel | A2 前 | A2-2 | C2 | 
+|---|---|---|---|---|
+| 300 敵 + 500 投射物 | numpy | 42.8 | 18.2 | **15.0** |
+| 300 敵 + 500 投射物 | python | 45.2 | 27.0 | 25.1 |
+| 200 敵 + 300 投射物 | numpy | — | 12.2 | **10.0** |
+| 100 敵 + 150 投射物 | numpy | — | 5.9 | **5.5** |
+
+C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯視控制器 4.1、投射物 3.1、戰鬥結算 1.6、碰撞世界 1.3、判定框 1.2、行為樹 0.8。
+
+**誠實說明：**
+- 300 + 500 仍然沒有達到 6 ms。剩下的時間主要是：每個 numpy 呼叫都有固定的開銷（每次約 5–20 µs，一幀幾十次），加上還沒改的系統，最大的是場景 AI 的逐個 entity 判斷，約 5 ms。
+- 場景 AI 在 A4 重寫敵人 AI 時，會直接用欄位方式做。
+- 如果之後還要再大幅降低，下一步是把整個系統合成一次呼叫（C++ 或同等做法），這要等 A11 用量測決定。
+
+**狀態：** C1、C2 完成。接著繼續 A3。

@@ -1,9 +1,11 @@
 from math import cos, radians, sin
 
+from .columns import column_storage
 from .component import Component
 from .metadata import Field, component_schema
 
 
+@column_storage()
 @component_schema(
     type_name="asteria.Transform",
     version=1,

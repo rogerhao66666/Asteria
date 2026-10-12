@@ -45,6 +45,15 @@
 4. **先量測，再決定要不要寫 native。** 壓力場景放在第 2 批就做，之後每一批都量一次。C++ 只在量到瓶頸、而且 numpy 解決不了時才提。
 5. **不新增「雙模式」切換。** ARPG 是場景層級的選項 `combat_mode`：`encounter` 是現在的碰到就進回合制，`action` 是即時戰鬥。同一個專案可以有兩種場景，但**不做**隊伍在兩種戰鬥之間轉換這種 Dual-Mode 功能。
 
+### 3.1 核心存放方式：欄位陣列（D22-C1、C2，2026-10-13 使用者決定先做）
+
+- 每個 entity 在它所在的場景有一個 slot。標上 `@column_storage` 的元件，數字欄位（float、int、bool，加上它列出的執行期欄位）存在場景的欄位陣列裡（`array.array`，以 slot 為索引）。
+- 遊戲程式、腳本、Inspector、存檔照舊用屬性讀寫（`transform.x = 3`），屬性會直接讀寫欄位。系統則可以一次讀寫整個欄位：python kernel 直接用陣列，numpy 用 `frombuffer` 共用同一塊記憶體，不複製。
+- 元件不在場景裡時（建立中、復原用的暫時移除、等待加入），數值留在元件自己身上；加入場景時搬進欄位，移出時搬回來。專案檔格式不變，numpy 仍然是選用。
+- 文字欄位和 `enabled` 維持一般屬性；`facing` 對外仍是文字，實際存成整數欄位 `facing_code`。
+- 場景有各元件型別的索引：`query` 不再掃描所有 entity，順序仍然是場景順序。
+- 現在用欄位存放的元件：Transform、Collider2D、CharacterController2D、Hitbox2D、Hurtbox2D。之後的新系統（例如 A4 的敵人 AI）也照這個方式做。
+
 ## 4. 戰鬥流程
 
 ```

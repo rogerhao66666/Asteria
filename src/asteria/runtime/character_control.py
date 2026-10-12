@@ -25,10 +25,11 @@ Components (serializable, inspectable, script-accessible):
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import exp, hypot
+from math import exp, sqrt
 
 from asteria import kernels
 from asteria.core import Component, Field, System, Transform, component_schema, world_position
+from asteria.core.columns import column_storage
 from asteria.core.migration import component_migration
 
 from .collision import Collider2DComponent, CollisionWorld
@@ -38,6 +39,19 @@ FACINGS = ("down", "up", "left", "right")
 PUSH_EPSILON = 0.5  # pushes slower than this (world units / s) stop
 
 
+@column_storage(
+    ("intent_x", float, 0.0),
+    ("intent_y", float, 0.0),
+    ("jump", bool, False),
+    ("velocity_y", float, 0.0),
+    ("grounded", bool, False),
+    ("hit_wall", bool, False),
+    ("hit_ceiling", bool, False),
+    ("push_x", float, 0.0),
+    ("push_y", float, 0.0),
+    ("control_lock", float, 0.0),
+    ("facing_code", int, 0),  # index into FACINGS; ``facing`` reads and writes it
+)
 @component_schema(
     type_name="asteria.CharacterController2D",
     version=2,
@@ -87,6 +101,16 @@ class CharacterController2DComponent(Component):
         self.push_x = 0.0
         self.push_y = 0.0
         self.control_lock = 0.0
+
+    @property
+    def facing(self):
+        return FACINGS[self.facing_code]
+
+    @facing.setter
+    def facing(self, value):
+        if value not in FACINGS:
+            raise ValueError(f"facing must be one of {FACINGS}")
+        self.facing_code = FACINGS.index(value)
 
     def set_intent(self, x=0.0, y=0.0, *, jump=False):
         self.intent_x, self.intent_y, self.jump = float(x), float(y), bool(jump)
@@ -186,6 +210,7 @@ def _box_fields():
     )
 
 
+@column_storage()
 @component_schema(
     type_name="asteria.Hitbox2D",
     version=2,
@@ -210,6 +235,7 @@ class Hitbox2DComponent(Component):
         self.enabled = True
 
 
+@column_storage()
 @component_schema(
     type_name="asteria.Hurtbox2D",
     version=2,
@@ -287,7 +313,7 @@ class CharacterControllerSystem(System):
             return False
         if shape.shape == "circle":
             nx, ny = min(max(shape.cx, x0), x1), min(max(shape.cy, y0), y1)
-            return hypot(nx - shape.cx, ny - shape.cy) <= shape.radius
+            return sqrt((nx - shape.cx) * (nx - shape.cx) + (ny - shape.cy) * (ny - shape.cy)) <= shape.radius
         sx0, sy0, sx1, sy1 = shape.bounds
         return x0 <= sx1 and sx0 <= x1 and y0 <= sy1 and sy0 <= y1
 
@@ -311,27 +337,20 @@ class CharacterControllerSystem(System):
                 return True
         return False
 
-    def _batch_blocked(self, world, movers):
-        """Indices of ``movers`` (``(entity_id, controller, x, y)``) whose box at ``(x, y)`` is blocked."""
-        boxes = ([], [], [], [])
-        for _, controller, x, y in movers:
-            hw, hh = controller.half_width, controller.half_height
-            for column, value in zip(boxes, (x - hw, y - hh, x + hw, y + hh), strict=True):
-                column.append(value)
+    def _batch_blocked(self, world, ids, masks, boxes):
+        """Rows whose box (``boxes`` columns; row ``i`` is entity ``ids[i]`` with layer mask ``masks[i]``) is blocked:
+        one overlap test, one vectorised filter (own shape, one-way platforms, layer masks, circles)."""
         shapes, columns = world.solid_columns()
         blocked = set()
-        if shapes:
-            for i, j in kernels.active().aabb_cross_pairs(boxes, columns, self.cell_size, touching=True):
-                if i in blocked:
-                    continue
-                entity_id, controller, _, _ = movers[i]
-                shape = shapes[j]
-                if shape.entity_id != entity_id and self._shape_blocks(
-                    shape, controller, boxes[0][i], boxes[1][i], boxes[2][i], boxes[3][i]
-                ):
-                    blocked.add(i)
+        k = kernels.active()
+        if len(shapes):
+            pairs = k.aabb_cross_pairs(boxes, columns, self.cell_size, touching=True)
+            if pairs:
+                cx, cy, radius, bit, one_way, circle, index_of = world.solid_extras()
+                own = [index_of.get(entity_id, -1) for entity_id in ids]
+                blocked.update(k.blocked_rows(boxes, (cx, cy, radius), pairs, masks, own, bit, one_way, circle))
         if self.extra_blocking is not None:
-            for i in range(len(movers)):
+            for i in range(len(ids)):
                 if i not in blocked and self._tiles_block(boxes[0][i], boxes[1][i], boxes[2][i], boxes[3][i]):
                     blocked.add(i)
         return blocked
@@ -370,79 +389,90 @@ class CharacterControllerSystem(System):
         if world is None or world.stale:
             world = CollisionWorld.from_scene(scene, self.cell_size)
         self.last_world = world
-        starts = {}
-        tops = []  # [entity, controller, transform, move_x, move_y]
-        for entity, controller, transform in scene.query(CharacterController2DComponent, Transform):
-            if not controller.enabled or (self.paused is not None and self.paused(entity.id)):
+        controllers, transforms = scene.columns(CharacterController2DComponent), scene.columns(Transform)
+        if controllers is None or transforms is None:
+            return
+        placed = transforms.components
+        tops, sides = [], []
+        for slot in controllers.slots():
+            controller = controllers.components[slot]
+            entity = controller._entity
+            if not controller.enabled or not entity.enabled or entity._destroy_requested:
                 continue
-            starts[entity.id] = (transform, transform.x, transform.y)
-            controller.hit_wall = controller.hit_ceiling = False
-            dx, dy = controller.intent_x, controller.intent_y
+            if slot >= len(placed) or placed[slot] is None:
+                continue
+            if self.paused is not None and self.paused(entity.id):
+                continue
+            (tops if controller.mode == "topdown" else sides).append(slot)
+        c, t = controllers.data, transforms.data
+        tx, ty = t["x"], t["y"]
+        moved = tops + sides
+        starts = [(tx[slot], ty[slot]) for slot in moved]
+        hit_wall, hit_ceiling = c["hit_wall"], c["hit_ceiling"]
+        for slot in moved:
+            hit_wall[slot] = hit_ceiling[slot] = 0
+        for slot in sides:
+            controller, transform = controllers.components[slot], placed[slot]
+            dx = controller.intent_x
             if controller.control_lock > 0.0:
                 controller.control_lock -= dt
                 if controller.control_lock < 1e-9:  # float steps (30 x 1/60 is not exactly 0.5)
                     controller.control_lock = 0.0
-                dx = dy = 0.0
+                dx = 0.0
                 controller.jump = False
             else:
-                controller.facing = facing_from(dx, dy, controller.mode, controller.facing)
-            push_x, push_y = controller.push_x, controller.push_y
-            if controller.mode == "topdown":
-                mag = (dx * dx + dy * dy) ** 0.5
-                if mag > 1.0:
-                    dx, dy = dx / mag, dy / mag
-                controller.grounded, controller.ground_id = True, None
-                tops.append(
-                    [
-                        entity,
-                        controller,
-                        transform,
-                        (dx * controller.speed + push_x) * dt,
-                        (dy * controller.speed + push_y) * dt,
-                        dx,
-                        dy,
-                    ]
-                )
-                continue
-            self._side_step(world, entity, controller, transform, dx, push_x, dt)
-        self._top_axis(world, tops, horizontal=True)
-        self._top_axis(world, tops, horizontal=False)
-        for _, controller, *_ in tops:
-            self._decay_push(controller, dt)
-        world.move_shapes({eid: (t.x - x, t.y - y) for eid, (t, x, y) in starts.items() if t.x != x or t.y != y})
+                controller.facing = facing_from(dx, controller.intent_y, "side", controller.facing)
+            self._side_step(world, controller._entity, controller, transform, dx, controller.push_x, dt)
+        if tops:
+            self._top_down(world, controllers, transforms, tops, dt)
+        deltas = {}
+        for slot, (x, y) in zip(moved, starts, strict=True):
+            if tx[slot] != x or ty[slot] != y:
+                deltas[controllers.components[slot]._entity.id] = (tx[slot] - x, ty[slot] - y)
+        world.move_shapes(deltas)
 
-    def _top_axis(self, world, tops, *, horizontal):
-        """Move every top-down controller along one axis, all blocked tests in one batch."""
-        k = 3 if horizontal else 4
-        moving = [row for row in tops if row[k] != 0.0]
-        if not moving:
-            return
-        movers = [
-            (e.id, c, t.x + row[k], t.y) if horizontal else (e.id, c, t.x, t.y + row[k])
-            for row in moving
-            for e, c, t in [row[:3]]
-        ]
-        blocked = self._batch_blocked(world, movers)
-        for index, row in enumerate(moving):
-            entity, controller, transform, *_ = row
-            intent = row[5] if horizontal else row[6]
-            if index in blocked:
+    def _top_down(self, world, controllers, transforms, slots, dt):
+        """Every top-down controller at once on column storage: prepare, x moves, y moves, push decay."""
+        k = kernels.active()
+        c, t = controllers.data, transforms.data
+        owners = controllers.components
+        dx, dy, move_x, move_y, locked = k.topdown_prepare(c, slots, dt)
+        grounded, codes, masks = c["grounded"], c["facing_code"], c["mask"]
+        facing = k.facing_codes(dx, dy, [codes[slot] for slot in slots], locked)
+        for slot, code in zip(slots, facing, strict=True):
+            grounded[slot] = 1
+            codes[slot] = code
+            controller = owners[slot]
+            if controller.ground_id is not None:
+                controller.ground_id = None
+        for horizontal in (True, False):
+            moves = move_x if horizontal else move_y
+            rows = [i for i, m in enumerate(moves) if m != 0.0]
+            if not rows:
+                continue
+            sel = [slots[i] for i in rows]
+            step = [moves[i] for i in rows]
+            zero = [0.0] * len(rows)
+            boxes = k.moved_boxes(c, t, sel, step, zero) if horizontal else k.moved_boxes(c, t, sel, zero, step)
+            blocked = self._batch_blocked(world, [owners[s]._entity.id for s in sel], [masks[s] for s in sel], boxes)
+            free = [r for r in range(len(rows)) if r not in blocked]
+            k.add_to_column(t["x"] if horizontal else t["y"], [sel[r] for r in free], [step[r] for r in free])
+            for r in sorted(blocked):
+                slot, controller = sel[r], owners[sel[r]]
+                transform = transforms.components[slot]
+                entity_id = controller._entity.id
+                intent = dx[rows[r]] if horizontal else dy[rows[r]]
                 if horizontal:
                     controller.hit_wall = intent != 0 or controller.push_x != 0
                     controller.push_x = 0.0
-                    transform.x = self._contact(
-                        world, entity.id, controller, transform.x, movers[index][2], transform.y, True
-                    )
+                    end = transform.x + step[r]
+                    transform.x = self._contact(world, entity_id, controller, transform.x, end, transform.y, True)
                 else:
                     controller.hit_wall = controller.hit_wall or intent != 0 or controller.push_y != 0
                     controller.push_y = 0.0
-                    transform.y = self._contact(
-                        world, entity.id, controller, transform.y, movers[index][3], transform.x, False
-                    )
-            elif horizontal:
-                transform.x = movers[index][2]
-            else:
-                transform.y = movers[index][3]
+                    end = transform.y + step[r]
+                    transform.y = self._contact(world, entity_id, controller, transform.y, end, transform.x, False)
+        k.decay_push(c, slots, dt, PUSH_EPSILON)
 
     def _side_step(self, world, entity, controller, transform, dx, push_x, dt):
         """Side view: horizontal move, then gravity, jump, ground and one-way platforms."""
@@ -542,6 +572,44 @@ def facing_box(entity, spec):
 _box = facing_box
 
 
+RIGHT = FACINGS.index("right")
+
+
+def box_rows(scene, box_type, *, keep=None):
+    """Enabled boxes of ``box_type`` in scene order: ``(entities, components, (x0, y0, x1, y1))``.
+
+    Boxes come from column storage in one kernel call (turned with each owner's controller facing where
+    ``follow_facing`` is set); ``keep(component)`` filters further (e.g. active hitboxes only).
+    """
+    boxes, transforms = scene.columns(box_type), scene.columns(Transform)
+    if boxes is None or transforms is None:
+        return [], [], ([], [], [], [])
+    placed = transforms.components
+    rows = []
+    for slot in boxes.slots():
+        component = boxes.components[slot]
+        entity = component._entity
+        if not component.enabled or not entity.enabled or entity._destroy_requested:
+            continue
+        if slot >= len(placed) or placed[slot] is None or (keep is not None and not keep(component)):
+            continue
+        rows.append((entity._order, slot, entity, component))
+    rows.sort(key=lambda row: row[0])
+    slots = [row[1] for row in rows]
+    controllers = scene.columns(CharacterController2DComponent)
+    if controllers is None:
+        codes = [RIGHT] * len(slots)
+    else:
+        owners, code_column = controllers.components, controllers.data["facing_code"]
+        codes = [code_column[s] if s < len(owners) and owners[s] is not None else RIGHT for s in slots]
+    columns = kernels.active().box_columns(transforms.data, boxes.data, slots, codes)
+    for k, (_, slot, entity, component) in enumerate(rows):
+        if placed[slot].parent_id:  # under a parent: the full transform chain
+            for column, value in zip(columns, facing_box(entity, component), strict=True):
+                column[k] = value
+    return [row[2] for row in rows], [row[3] for row in rows], columns
+
+
 def _columns(boxes):
     """``(x0, y0, x1, y1)`` boxes -> four columns for the kernels."""
     columns = ([], [], [], [])
@@ -570,6 +638,7 @@ class HitboxSystem(System):
         self.listeners = []
         self.iframes: dict[str, float] = {}
         self._hit_this_activation: dict[str, set] = {}
+        self.frame_hurtboxes = None
 
     def grant_invincibility(self, entity_id, seconds):
         self.iframes[str(entity_id)] = max(self.iframes.get(str(entity_id), 0.0), float(seconds))
@@ -579,25 +648,23 @@ class HitboxSystem(System):
 
     def update(self, scene, dt):
         self.iframes = {k: v - dt for k, v in self.iframes.items() if v - dt > 0}
-        hurtboxes = [(e, h) for e, h in scene.query(Hurtbox2DComponent) if h.enabled and e.has(Transform)]
-        attackers = []
-        for attacker, hitbox in scene.query(Hitbox2DComponent):
-            if not (hitbox.enabled and hitbox.active and attacker.has(Transform)):
-                self._hit_this_activation.pop(attacker.id, None)  # next activation can hit again
-                continue
+        # this frame's hurtboxes (also read by ProjectileSystem, which runs before anything moves again)
+        self.frame_hurtboxes = box_rows(scene, Hurtbox2DComponent)
+        targets, hurt_components, hurt_columns = self.frame_hurtboxes
+        attackers, hitboxes, hit_columns = box_rows(scene, Hitbox2DComponent, keep=lambda h: h.active)
+        live = {e.id for e in attackers}
+        for attacker_id in tuple(self._hit_this_activation):
+            if attacker_id not in live:
+                self._hit_this_activation.pop(attacker_id)  # the activation ended: the next one can hit again
+        for attacker in attackers:
             self._hit_this_activation.setdefault(attacker.id, set())
-            attackers.append((attacker, hitbox))
         events = []
-        if attackers and hurtboxes:
+        if attackers and targets:
             # one batched overlap test (asteria.kernels) instead of every hitbox against every hurtbox
-            pairs = kernels.active().aabb_cross_pairs(
-                _columns(facing_box(e, h) for e, h in attackers),
-                _columns(facing_box(e, h) for e, h in hurtboxes),
-                self.cell_size,
-            )
+            pairs = kernels.active().aabb_cross_pairs(hit_columns, hurt_columns, self.cell_size)
             for i, j in pairs:  # sorted: attacker order, then hurtbox order
-                attacker, hitbox = attackers[i]
-                target, hurtbox = hurtboxes[j]
+                attacker, hitbox = attackers[i], hitboxes[i]
+                target, hurtbox = targets[j], hurt_components[j]
                 already = self._hit_this_activation[attacker.id]
                 if target is attacker or target.id in already:
                     continue

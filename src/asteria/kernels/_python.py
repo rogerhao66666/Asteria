@@ -243,3 +243,153 @@ class ProjectileStore:
 
     def expired(self):
         return [i for i in range(len(self.x)) if self.age[i] >= self.life[i]]
+
+
+def collider_columns(transform, collider, slots, circle):
+    """World boxes of colliders from column storage: ``(cx, cy, half_w, half_h)`` lists for ``slots``.
+
+    ``transform`` / ``collider`` map column names to slot-indexed arrays; ``circle[k]`` marks circle colliders.
+    """
+    tx, ty = transform["x"], transform["y"]
+    ox, oy, w, h, r = (
+        collider["offset_x"],
+        collider["offset_y"],
+        collider["width"],
+        collider["height"],
+        collider["radius"],
+    )
+    cx = [tx[s] + ox[s] for s in slots]
+    cy = [ty[s] + oy[s] for s in slots]
+    hw = [r[s] if c else w[s] / 2 for s, c in zip(slots, circle, strict=True)]
+    hh = [r[s] if c else h[s] / 2 for s, c in zip(slots, circle, strict=True)]
+    return cx, cy, hw, hh
+
+
+# -- top-down character controllers on column storage (D22-C2) ------------------------------------------------------
+def topdown_prepare(c, slots, dt):
+    """Lock countdown, intent normalising and this step's move for top-down controllers.
+
+    ``c`` maps controller column names to slot-indexed arrays. Locked controllers ignore intent (and jump). Returns
+    ``(dx, dy, move_x, move_y, locked)`` lists: the normalised intent and ``(intent * speed + push) * dt``.
+    """
+    ix, iy, lock, jump = c["intent_x"], c["intent_y"], c["control_lock"], c["jump"]
+    speed, px, py = c["speed"], c["push_x"], c["push_y"]
+    out_dx, out_dy, out_mx, out_my, out_locked = [], [], [], [], []
+    for s in slots:
+        dx, dy = ix[s], iy[s]
+        locked = lock[s] > 0.0
+        if locked:
+            remaining = lock[s] - dt
+            lock[s] = 0.0 if remaining < 1e-9 else remaining  # float steps (30 x 1/60 is not exactly 0.5)
+            dx = dy = 0.0
+            jump[s] = 0
+        mag = math.sqrt(dx * dx + dy * dy)
+        if mag > 1.0:
+            dx, dy = dx / mag, dy / mag
+        out_dx.append(dx)
+        out_dy.append(dy)
+        out_mx.append((dx * speed[s] + px[s]) * dt)
+        out_my.append((dy * speed[s] + py[s]) * dt)
+        out_locked.append(locked)
+    return out_dx, out_dy, out_mx, out_my, out_locked
+
+
+def moved_boxes(c, t, slots, move_x, move_y):
+    """Boxes ``(x0, y0, x1, y1)`` of controllers at their position plus ``(move_x, move_y)``."""
+    tx, ty, hw, hh = t["x"], t["y"], c["half_width"], c["half_height"]
+    x = [tx[s] + mx for s, mx in zip(slots, move_x, strict=True)]
+    y = [ty[s] + my for s, my in zip(slots, move_y, strict=True)]
+    return (
+        [v - hw[s] for v, s in zip(x, slots, strict=True)],
+        [v - hh[s] for v, s in zip(y, slots, strict=True)],
+        [v + hw[s] for v, s in zip(x, slots, strict=True)],
+        [v + hh[s] for v, s in zip(y, slots, strict=True)],
+    )
+
+
+def add_to_column(column, slots, values):
+    """``column[slot] += value`` for each pair."""
+    for s, v in zip(slots, values, strict=True):
+        column[s] += v
+
+
+def _decay_factors(decays, dt):
+    return {d: math.exp(-d * dt) for d in set(decays)}
+
+
+def decay_push(c, slots, dt, epsilon):
+    """Outside pushes fade by ``knockback_decay`` per second; slower than ``epsilon`` they stop."""
+    px, py, decay = c["push_x"], c["push_y"], c["knockback_decay"]
+    factors = _decay_factors([decay[s] for s in slots if px[s] or py[s]], dt)
+    for s in slots:
+        if not (px[s] or py[s]):
+            continue
+        keep = factors[decay[s]]
+        x, y = px[s] * keep, py[s] * keep
+        px[s] = 0.0 if abs(x) < epsilon else x
+        py[s] = 0.0 if abs(y) < epsilon else y
+
+
+def box_columns(t, b, slots, codes):
+    """Hit / hurt boxes ``(x0, y0, x1, y1)`` from column storage, turned with the facing ``codes`` (0 down, 1 up,
+    2 left, 3 right) where ``follow_facing`` is set: authored for facing right, mirrored left, a quarter turn
+    down / up."""
+    tx, ty = t["x"], t["y"]
+    bx, by, bw, bh, follow = b["offset_x"], b["offset_y"], b["width"], b["height"], b["follow_facing"]
+    x0, y0, x1, y1 = [], [], [], []
+    for s, code in zip(slots, codes, strict=True):
+        ox, oy, w, h = bx[s], by[s], bw[s], bh[s]
+        if follow[s]:
+            if code == 2:
+                ox = -ox
+            elif code == 0:
+                ox, oy, w, h = -oy, ox, h, w
+            elif code == 1:
+                ox, oy, w, h = oy, -ox, h, w
+        cx, cy = tx[s] + ox, ty[s] + oy
+        x0.append(cx - w / 2)
+        y0.append(cy - h / 2)
+        x1.append(cx + w / 2)
+        y1.append(cy + h / 2)
+    return x0, y0, x1, y1
+
+
+def blocked_rows(boxes, walls, pairs, mover_mask, mover_row, wall_bit, wall_one_way, wall_circle):
+    """Movers (rows of ``boxes``) blocked by a wall among candidate ``pairs`` ``(mover, wall)``.
+
+    A wall blocks unless it is the mover's own shape (``mover_row``), a one-way platform, outside the mover's layer
+    mask, or a circle the box does not reach. ``walls`` = ``(cx, cy, radius)`` columns. Returns sorted mover rows.
+    """
+    x0, y0, x1, y1 = boxes
+    cx, cy, radius = walls
+    blocked = set()
+    for i, j in pairs:
+        if i in blocked or j == mover_row[i] or wall_one_way[j] or not (mover_mask[i] & wall_bit[j]):
+            continue
+        if wall_circle[j]:
+            nx = min(max(cx[j], x0[i]), x1[i])
+            ny = min(max(cy[j], y0[i]), y1[i])
+            if math.sqrt((nx - cx[j]) * (nx - cx[j]) + (ny - cy[j]) * (ny - cy[j])) > radius[j]:
+                continue
+        blocked.add(i)
+    return sorted(blocked)
+
+
+def facing_codes(dx, dy, current, locked):
+    """Top-down facing codes (0 down, 1 up, 2 left, 3 right) after moving by ``(dx, dy)``; standing still or
+    locked keeps ``current``."""
+    out = []
+    for x, y, code, held in zip(dx, dy, current, locked, strict=True):
+        if held:
+            out.append(code)
+        elif abs(x) >= abs(y) and x > 1e-9:
+            out.append(3)
+        elif abs(x) >= abs(y) and x < -1e-9:
+            out.append(2)
+        elif y > 1e-9:
+            out.append(0)
+        elif y < -1e-9:
+            out.append(1)
+        else:
+            out.append(code)
+    return out

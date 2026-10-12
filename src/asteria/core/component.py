@@ -1,5 +1,9 @@
 class Component:
+    _ctable = None  # column storage (core.columns): the scene table holding this component's column fields
+    _cslot = -1
+
     def __init__(self, *, enabled: bool = True):
+        self._clocal = {}  # column field values while not in a scene
         self._entity = None
         self._enabled = bool(enabled)
         self._created = False

@@ -24,6 +24,8 @@ class Entity:
             raise ValueError(f"{ctype.__name__} already exists on entity")
         self._components[ctype] = component
         component._attach(self)
+        if self._scene is not None:
+            self._scene._component_added(self, component)
         return component
 
     def get(self, component_type):
@@ -39,11 +41,15 @@ class Entity:
         return tuple(self._components.values())
 
     def detach_component(self, component_type):
+        if self._scene is not None and component_type in self._components:
+            self._scene._component_removed(self, self._components[component_type])
         c = self._components.pop(component_type)
         c._detach()
         return c
 
     def remove_component(self, component_type):
+        if self._scene is not None and component_type in self._components:
+            self._scene._component_removed(self, self._components[component_type])
         c = self._components.pop(component_type)
         c._destroy()
         return c

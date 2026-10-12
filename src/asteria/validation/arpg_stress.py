@@ -9,6 +9,7 @@ ARPG presentation. Numbers belong to this machine; compare runs on the same mach
 
 from __future__ import annotations
 
+import hashlib
 import os
 import random
 from math import cos, pi, sin
@@ -128,6 +129,11 @@ def run_arpg_stress(repo, *, enemies=300, projectiles=500, frames=300, kernel=No
             profiler.count("projectiles", len(shots))
         report = profiler.report()
         profiler.close()
+        from asteria.core import Transform
+
+        state = sorted(
+            (e.name, t.x, t.y) for e, t in game.scene.query(Transform) if e.name.startswith("Stress Enemy")
+        ) + sorted((v.x, v.y, v.vx, v.vy) for v in shots.views())
         report["arpg"] = {
             "kernel": kernels.active().NAME,
             "enemies": enemies,
@@ -135,6 +141,7 @@ def run_arpg_stress(repo, *, enemies=300, projectiles=500, frames=300, kernel=No
             "frames": frames,
             "hits": hits,
             "damage_events": landed,
+            "state_digest": hashlib.sha256(repr(state).encode()).hexdigest(),  # every enemy and shot, exactly
         }
         return report
     finally:

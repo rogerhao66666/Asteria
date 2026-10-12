@@ -15,11 +15,13 @@ from math import floor, hypot
 
 from asteria import kernels
 from asteria.core import Component, Field, System, Transform, component_schema, world_position
+from asteria.core.columns import column_storage
 from asteria.core.migration import component_migration
 
 ALL_LAYERS = 0xFFFFFFFF
 
 
+@column_storage()
 @component_schema(
     type_name="asteria.Collider2D",
     version=2,
@@ -209,24 +211,115 @@ class SpatialHash:
 
 
 class CollisionWorld:
-    """Collider snapshot of a scene with broad + narrow phase queries."""
+    """Collider snapshot of a scene with broad + narrow phase queries.
+
+    Shapes are kept as columns (one list per field); ``ColliderShape`` objects are only made when something asks
+    for them (``shapes``, point queries), so batched users (controllers, projectiles) never pay for them.
+    """
+
+    _FIELDS = ("ids", "kind", "cx", "cy", "hw", "hh", "radius", "bit", "mask", "trigger", "one_way")
 
     def __init__(self, shapes=(), cell_size=64.0):
         if cell_size <= 0:
             raise ValueError("cell_size must be positive")
-        self.shapes = {s.entity_id: s for s in shapes}
         self.cell_size = float(cell_size)
+        for name in self._FIELDS:
+            setattr(self, "_" + name, [])
+        self._row = {}
+        self._shapes = None
         self._grid = None
         self._solid = None
         self.parented = False  # some collider hangs under a parent transform (see move_shapes)
         self.stale = False  # positions changed in a way move_shapes could not follow: rebuild
+        for shape in shapes:
+            self._add(
+                shape.entity_id,
+                shape.shape,
+                shape.cx,
+                shape.cy,
+                shape.half_w,
+                shape.half_h,
+                shape.radius,
+                shape.layer_bit,
+                shape.mask,
+                shape.is_trigger,
+                shape.one_way,
+            )
+
+    def _add(self, entity_id, kind, cx, cy, hw, hh, radius, bit, mask, trigger, one_way):
+        if entity_id in self._row:  # same entity again: the later shape wins (dict semantics)
+            i = self._row[entity_id]
+            for name, value in zip(
+                self._FIELDS, (entity_id, kind, cx, cy, hw, hh, radius, bit, mask, trigger, one_way), strict=True
+            ):
+                getattr(self, "_" + name)[i] = value
+            return
+        self._row[entity_id] = len(self._ids)
+        self._ids.append(entity_id)
+        self._kind.append(kind)
+        self._cx.append(cx)
+        self._cy.append(cy)
+        self._hw.append(hw)
+        self._hh.append(hh)
+        self._radius.append(radius)
+        self._bit.append(bit)
+        self._mask.append(mask)
+        self._trigger.append(trigger)
+        self._one_way.append(one_way)
+
+    def _shape(self, i):
+        return ColliderShape(
+            self._ids[i],
+            self._kind[i],
+            self._cx[i],
+            self._cy[i],
+            self._hw[i],
+            self._hh[i],
+            self._radius[i],
+            self._bit[i],
+            self._mask[i],
+            self._trigger[i],
+            self._one_way[i],
+        )
+
+    @property
+    def shapes(self):
+        """``{entity_id: ColliderShape}`` (made on first use)."""
+        if self._shapes is None:
+            self._shapes = {self._ids[i]: self._shape(i) for i in range(len(self._ids))}
+        return self._shapes
 
     def solid_columns(self):
-        """Non-trigger shapes as ``(shapes, (x0, y0, x1, y1))`` for batched overlap tests (cached)."""
+        """Non-trigger shapes as ``(shapes, (x0, y0, x1, y1))`` for batched overlap tests (cached); ``shapes[j]``
+        makes the ``ColliderShape`` of row ``j`` on demand."""
         if self._solid is None:
-            solid = [s for s in self.shapes.values() if not s.is_trigger]
-            self._solid = (solid, tuple([s.bounds[k] for s in solid] for k in range(4)))
+            rows = [i for i, trigger in enumerate(self._trigger) if not trigger]
+            cx, cy, hw, hh = self._cx, self._cy, self._hw, self._hh
+            columns = (
+                [cx[i] - hw[i] for i in rows],
+                [cy[i] - hh[i] for i in rows],
+                [cx[i] + hw[i] for i in rows],
+                [cy[i] + hh[i] for i in rows],
+            )
+            self._solid = (_ShapeRows(self, rows), columns)
         return self._solid
+
+    def solid_extras(self):
+        """Per solid row (same order as ``solid_columns``): ``cx, cy, radius, layer bit, one_way, circle`` lists and
+        ``{entity_id: solid row}`` — what the batched blocking test needs."""
+        shapes, _ = self.solid_columns()
+        if getattr(shapes, "extras", None) is None:
+            rows = shapes.rows
+            shapes.extras = (
+                [self._cx[i] for i in rows],
+                [self._cy[i] for i in rows],
+                [self._radius[i] for i in rows],
+                [self._bit[i] for i in rows],
+                [self._one_way[i] for i in rows],
+                [self._kind[i] == "circle" for i in rows],
+                {self._ids[i]: j for j, i in enumerate(rows)},
+            )
+        return shapes.extras
 
     def move_shapes(self, deltas):
         """Shift the shapes of entities that moved (``{entity_id: (dx, dy)}``) so the snapshot stays current.
@@ -234,28 +327,19 @@ class CollisionWorld:
         A collider under a moved parent cannot be followed here; the world is then marked ``stale``.
         """
         moved = False
+        row, cx, cy = self._row, self._cx, self._cy
         for entity_id, (dx, dy) in deltas.items():
-            shape = self.shapes.get(entity_id)
-            if shape is not None and (dx or dy):
-                self.shapes[entity_id] = ColliderShape(  # positional: much cheaper than dataclasses.replace
-                    shape.entity_id,
-                    shape.shape,
-                    shape.cx + dx,
-                    shape.cy + dy,
-                    shape.half_w,
-                    shape.half_h,
-                    shape.radius,
-                    shape.layer_bit,
-                    shape.mask,
-                    shape.is_trigger,
-                    shape.one_way,
-                )
+            i = row.get(entity_id)
+            if i is not None and (dx or dy):
+                cx[i] += dx
+                cy[i] += dy
                 moved = True
         if deltas and self.parented:
             self.stale = True
         if moved:
             self._grid = None
             self._solid = None
+            self._shapes = None
 
     @property
     def grid(self):
@@ -280,9 +364,62 @@ class CollisionWorld:
 
     @classmethod
     def from_scene(cls, scene, cell_size=64.0):
-        live = [(e, c) for e, c in scene.query(Collider2DComponent) if c.enabled and e.enabled and e.has(Transform)]
-        world = cls((shape_of(e, c) for e, c in live), cell_size)
-        world.parented = any(e.get(Transform).parent_id for e, _ in live)
+        """Snapshot of the scene's enabled colliders, in scene order, read straight from column storage."""
+        colliders, transforms = scene.columns(Collider2DComponent), scene.columns(Transform)
+        world = cls((), cell_size)
+        if colliders is None or transforms is None:
+            return world
+        owners = colliders.components
+        placed = transforms.components
+        live = []
+        for slot in colliders.slots():
+            collider = owners[slot]
+            entity = collider._entity
+            transform = placed[slot] if slot < len(placed) else None
+            if transform is None or not collider.enabled or not entity.enabled or entity._destroy_requested:
+                continue
+            live.append((entity._order, slot, entity, collider, transform))
+        live.sort(key=lambda row: row[0])
+        slots = [row[1] for row in live]
+        kinds = [row[3].shape for row in live]
+        cx, cy, hw, hh = kernels.active().collider_columns(
+            transforms.data, colliders.data, slots, [kind == "circle" for kind in kinds]
+        )
+        data = colliders.data
+        radius, layer, mask = data["radius"], data["layer"], data["mask"]
+        trigger, one_way = data["is_trigger"], data["one_way"]
+        add = world._add
+        for k, (_, slot, entity, collider, transform) in enumerate(live):
+            if transform.parent_id:  # under a parent: the full transform chain
+                world.parented = True
+                shape = shape_of(entity, collider)
+                add(
+                    shape.entity_id,
+                    shape.shape,
+                    shape.cx,
+                    shape.cy,
+                    shape.half_w,
+                    shape.half_h,
+                    shape.radius,
+                    shape.layer_bit,
+                    shape.mask,
+                    shape.is_trigger,
+                    shape.one_way,
+                )
+                continue
+            add(
+                entity.id,
+                kinds[k],
+                cx[k],
+                cy[k],
+                hw[k],
+                hh[k],
+                radius[slot],
+                1 << int(layer[slot]),
+                int(mask[slot]),
+                bool(trigger[slot]),
+                bool(one_way[slot]),
+            )
         return world
 
     def contacts(self):
@@ -312,6 +449,24 @@ class CollisionWorld:
     def blocking_query(self, *, mask=ALL_LAYERS, exclude=()):
         """Object with ``collides_world_point`` for CharacterController2D.move."""
         return _BlockingQuery(self, mask, exclude)
+
+
+class _ShapeRows:
+    """Sequence view of selected world rows; each ``ColliderShape`` is made when first indexed."""
+
+    __slots__ = ("world", "rows", "_made", "extras")
+
+    def __init__(self, world, rows):
+        self.world, self.rows, self._made, self.extras = world, rows, {}, None
+
+    def __len__(self):
+        return len(self.rows)
+
+    def __getitem__(self, j):
+        shape = self._made.get(j)
+        if shape is None:
+            shape = self._made[j] = self.world._shape(self.rows[j])
+        return shape
 
 
 class _BlockingQuery:
