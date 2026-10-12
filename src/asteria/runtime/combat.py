@@ -105,6 +105,7 @@ def parse_tags(text):
             "loot_level", int, 1, minimum=0, tooltip="Item level of the equipment it drops (which affixes can roll)."
         ),
         Field("loot_luck", float, 0.0, minimum=0.0, tooltip="Makes rarer drops more likely (elites, bosses)."),
+        Field("experience", float, 0.0, minimum=0.0, tooltip="Experience the one who defeats it gains."),
         Field("death_event", str, "", tooltip="Gameplay event reported when it dies."),
         Field("enabled", bool, True),
     ),
@@ -136,6 +137,7 @@ class CombatantComponent(Component):
         self.currency_drop = ""
         self.loot_level = 1
         self.loot_luck = 0.0
+        self.experience = 0.0
         self.death_event = ""
         self.enabled = True
         # runtime (not serialized)
@@ -484,7 +486,7 @@ class CombatSystem(System):
 
     def _die(self, scene, target, combatant, state, removed, common):
         state.dead = True
-        self._emit("death", target, data={"event": combatant.death_event}, **common)
+        self._emit("death", target, data={"event": combatant.death_event, "experience": combatant.experience}, **common)
         table = self.drop_tables.get(combatant.drop_table_id) if combatant.drop_table_id else None
         items = {}
         if table is not None:

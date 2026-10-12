@@ -131,6 +131,9 @@ class GameSessionRuntime:
 
         self.profiler = NullProfiler()
         self.field_input = None  # InputSnapshot for real-time control this frame (set_field_input)
+        # real-time play with RPG actors (D22 A7): experience from defeated foes, level-ups this field update
+        self.action_progression = {"level_threshold": 1000.0, "ap_per_level": 2.0, "ability_points_per_level": 1.0}
+        self.progression_events = []
         self._build_scene_events()
         # WLD-02: saved NPC state (visibility, position, flags...) and the "npc" condition source
         runtime_save.event_context.providers["npc"] = self._npc_value
@@ -210,7 +213,9 @@ class GameSessionRuntime:
                 counters=self.world.counters,  # drop table pity is saved with the world state
                 switches=self.save.event_context.get_switch,
                 states=library.states,  # poison, burn, buffs tick in real time
+                stats_provider=self._actor_combat_state,  # an ActorLink entity fights with its RPG actor's build
             )
+            combat.listeners.append(self._award_experience)
             from asteria.runtime.projectiles import ProjectileSystem
 
             def frame_world():
@@ -243,6 +248,7 @@ class GameSessionRuntime:
                 combat=combat,
                 formulas=library.formulas,
                 snapshot_provider=lambda: self.field_input,
+                known_abilities=self._known_abilities,
             )
             behavior = BehaviorTreeSystem(
                 self.project.rpg_database.behavior_trees,  # RPG-09
@@ -301,6 +307,7 @@ class GameSessionRuntime:
         if self.mode != "field" or self.event_busy:
             return None
         systems = self._field_systems()
+        self.progression_events = []
         with self.profiler.section("spawn"):
             systems["spawn"].update(self.scene, float(dt))
         self._frame_collision_world = None
@@ -343,6 +350,136 @@ class GameSessionRuntime:
         entity = self._sequence_entity(entity_key)
         self.entity_actions.play(entity.id, timeline)
         return entity.id
+
+    # -- real-time play with RPG actors (ASTERIA_SPEC §20, §21; D22 A7) ---------------------------------
+    def _actor_of(self, entity):
+        from asteria.runtime.actor_link import ActorLinkComponent
+
+        link = entity.try_get(ActorLinkComponent)
+        if link is None or link.actor_id not in self.project.rpg_database.actors:
+            return None
+        return link.actor_id
+
+    def _actor_combat_state(self, entity, combatant):
+        """Combat stats, resources and tags of an ActorLink entity: its actor's resolved build (classes, level,
+        skill tree, equipment and rolled affixes)."""
+        from asteria.gameplay import ResourcePool, StatBlock, TagSet
+        from asteria.runtime.combat import CombatantState
+
+        actor_id = self._actor_of(entity)
+        if actor_id is None:
+            return None
+        build = self.resolve_actor_build(actor_id)
+        return CombatantState(
+            StatBlock.from_data(build.stats.to_data()),
+            ResourcePool.from_data(build.resources.to_data()),
+            TagSet(build.tags.values()),
+        )
+
+    def _known_abilities(self, entity):
+        actor_id = self._actor_of(entity)
+        return None if actor_id is None else set(self.resolve_actor_build(actor_id).abilities)
+
+    def refresh_combatant(self, entity):
+        """Rebuild an entity's combat stats (after a level-up, a new class, a skill point, an equipment change);
+        current resource values (hp...) and running states are kept."""
+        from asteria.runtime.combat import CombatantComponent
+
+        combatant = entity.try_get(CombatantComponent)
+        if combatant is None or combatant.state is None:
+            return None
+        old = combatant.state
+        combatant.reset_state()
+        new = self.combat.state(entity)
+        for name in old.resources.names():
+            if new.resources.contains(name):
+                new.resources.set_current(name, min(old.resources.current(name), new.resources.maximum(name)))
+        new.poise, new.dead = old.poise, old.dead
+        if old.states is not None:
+            old.states.stats, old.states.resources, old.states.tags = new.stats, new.resources, new.tags
+            new.states = old.states
+        return new
+
+    def refresh_actor_combatants(self, actor_id):
+        from asteria.runtime.actor_link import ActorLinkComponent
+
+        for entity, link in self.scene.query(ActorLinkComponent):
+            if link.actor_id == str(actor_id):
+                self.refresh_combatant(entity)
+
+    def _award_experience(self, event):
+        if event.kind != "death" or not event.data.get("experience") or not event.attacker_id:
+            return
+        attacker = self.scene.get_entity(event.attacker_id)
+        actor_id = None if attacker is None else self._actor_of(attacker)
+        if actor_id is None:
+            return
+        result = self.grant_actor_experience(actor_id, event.data["experience"], **self.action_progression)
+        self.progression_events.append({"actor_id": actor_id, **result})
+        if result["levels_gained"]:
+            self.refresh_actor_combatants(actor_id)
+
+    def equip_from_bag(self, actor_id, index, slot_id=None):
+        """Equip a rolled item from the equipment bag (its requirements checked against the actor's
+        capabilities); whatever was in the slot goes back to the bag."""
+        actor_id = str(actor_id)
+        bag = self.save.rpg_state.equipment_bag
+        item = bag[int(index)]
+        slot_id = str(slot_id or item.equipment.slot)
+        loadout = self.save.rpg_state.loadouts[actor_id]
+        capabilities = self.resolve_actor_build(actor_id).capabilities
+        displaced = list(loadout.equipped(slot_id))
+        for _ in displaced:
+            loadout.unequip(slot_id, 0)
+        try:
+            loadout.equip(slot_id, item, capabilities=capabilities)
+        except Exception:
+            for previous in displaced:
+                loadout.equip(slot_id, previous, validate_requirements=False)
+            raise
+        bag.pop(int(index))
+        bag.extend(displaced)
+        self.refresh_actor_combatants(actor_id)
+        return item
+
+    def unequip_to_bag(self, actor_id, slot_id):
+        loadout = self.save.rpg_state.loadouts[str(actor_id)]
+        items = list(loadout.equipped(str(slot_id)))
+        if not items:
+            return None
+        loadout.unequip(str(slot_id), 0)
+        self.save.rpg_state.equipment_bag.append(items[0])
+        self.refresh_actor_combatants(actor_id)
+        return items[0]
+
+    def reset_progression(self, actor_id, graph_id=None, *, cost=None):
+        """Refund every allocated skill-tree point of ``actor_id`` (one graph or all) for ``cost`` currencies."""
+        actor_id = str(actor_id)
+        allocation = self.save.rpg_state.progression_allocations.get(actor_id)
+        if allocation is None:
+            raise GameSessionError(f"{actor_id} has no skill tree")
+        currencies = self.save.rpg_state.currencies
+        for currency, amount in dict(cost or {}).items():
+            if currencies.get(currency, 0) < amount:
+                raise GameSessionError(f"not enough {currency}")
+        graphs = [str(graph_id)] if graph_id is not None else list(allocation.allocations)
+        refunded = {}
+        changed = True
+        while changed:  # refund leaves first: a node whose dependants are gone can go next
+            changed = False
+            for gid in graphs:
+                for node_id, rank in list(allocation.allocations[gid].items()):
+                    try:
+                        refund = allocation.refund(gid, node_id, rank)
+                    except ValueError:
+                        continue
+                    for currency, amount in refund.items():
+                        refunded[currency] = refunded.get(currency, 0.0) + amount
+                    changed = True
+        for currency, amount in dict(cost or {}).items():
+            currencies[currency] = currencies.get(currency, 0) - amount
+        self.refresh_actor_combatants(actor_id)
+        return refunded
 
     @property
     def loot(self):
@@ -720,6 +857,7 @@ class GameSessionRuntime:
             unlocked_class_ids=state.unlocked_class_ids,
             active_class_ids=values,
         )
+        self.refresh_actor_combatants(actor_id)  # a field combatant linked to the actor changes class now
         return values
 
     def set_active_party(self, actor_ids, placements=None):
@@ -773,7 +911,9 @@ class GameSessionRuntime:
 
     def allocate_progression(self, actor_id, graph_id, node_id, count=1):
         allocation = self.save.rpg_state.progression_allocations[str(actor_id)]
-        return allocation.allocate(str(graph_id), str(node_id), int(count))
+        result = allocation.allocate(str(graph_id), str(node_id), int(count))
+        self.refresh_actor_combatants(actor_id)  # a field combatant linked to the actor fights with the new ranks
+        return result
 
     def grant_actor_points(self, actor_id, **point_amounts):
         actor_id = str(actor_id)

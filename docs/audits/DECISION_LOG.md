@@ -1207,3 +1207,34 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **還沒做：** 格子背包（物品佔格子）。目前背包是清單，A8 的背包畫面也先用清單。
 
 **狀態：** A6 完成。
+
+### D22-A7 — 職業、等級和技能樹接上即時戰鬥
+
+**做法：** 職業、等級、技能樹、裝備原本就有，而且回合制已經在用。A7 不另做一套，而是把它們接上即時戰鬥。
+
+**改動的檔案：**
+- `runtime/game_session.py`：
+  - 掛有 ActorLink 的 entity，戰鬥數值、資源、標籤直接取自角色的 `resolve_actor_build`（職業、等級、技能樹、裝備、隨機詞綴都算在內）。
+  - `refresh_combatant` 在重新計算數值時，保留目前的 HP 等資源和進行中的狀態；配點、換職業、裝備或卸下裝備、重置技能點、升級後都會自動重算。
+  - 擊敗敵人時，由攻擊者對應的角色獲得經驗（`grant_actor_experience`，門檻和每級點數可在 `action_progression` 設定），升級紀錄在 `progression_events`。
+  - `equip_from_bag` 從裝備袋裝上（會檢查裝備需求；被換下的放回袋子）、`unequip_to_bag`。
+  - `reset_progression`：可以指定費用，退回全部或某棵技能樹的點數；按照依賴順序從末端開始退。
+- `runtime/combat.py`：Combatant 新增 `experience`；死亡事件帶上經驗值。
+- `runtime/action_combat.py`：`require_known`，只能使用角色已經學會的技能（`not_known` 會被拒絕）；冷卻可以用公式計算。
+- `gameplay/abilities.py`：`cooldown_formula`（選填，依使用者的數值計算冷卻，例如技能等級越高冷卻越短）。
+- `runtime/projectiles.py`：`projectile` cue 新增 `count_stat`，用某個數值增加投射物數量（例如技能等級）。
+- **技能等級不另外做系統**：技能樹節點本來就能給數值（例如 `bolt_rank` +1），傷害、冷卻、消耗、數量的公式直接讀這個數值。作者可以自由決定每個技能怎麼隨等級成長。
+- 測試：`tests/test_action_progression.py`（新，5 項，都在 `GameSession` 中，用參考專案的 hero_01 和 vanguard_tree）。
+
+**整合證據：**
+- 玩家的戰鬥數值等於角色的 build；配一點技能樹後，數值增加的量正好等於節點獎勵，且目前 HP 保持不變；重置後點數退回、數值回落；付不起費用時被拒絕。
+- 擊敗 3 個敵人，經驗剛好在第三個跨過門檻而升一級、拿到 3 點技能點、數值重算；沒有連結角色的攻擊者不會給經驗。
+- 從袋子裝上帶「power +25」詞綴的劍，戰鬥數值 +25；卸下後恢復，劍回到袋子。
+- 技能等級 2：射出 1 + 2 = 3 發，每發傷害 10 × 2 = 20，冷卻 2 − 0.5 × 2 = 1 秒。
+- 開啟 `require_known` 後，沒學過的技能被拒絕；關閉後就能用。
+
+**執行的測試：** 完整套件 **2127 passed**。
+
+**還沒做：** 開場選職業、技能樹、背包、技能列這些畫面在 A8。目前可以透過 `set_active_classes` 和 `allocate_progression` 這些 API 操作。
+
+**狀態：** A7 完成。

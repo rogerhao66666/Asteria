@@ -69,6 +69,12 @@ def parse_bindings(text):
             tooltip="Where actions aim: the lock target, else the stick direction, else the facing.",
         ),
         Field("face_target", bool, True, tooltip="Turn toward the aim when an ability starts."),
+        Field(
+            "require_known",
+            bool,
+            False,
+            tooltip="Only abilities the linked RPG actor knows (class, skill tree, equipment) can be used.",
+        ),
         Field("enabled", bool, True),
     ),
 )
@@ -83,6 +89,7 @@ class ActionCombatComponent(Component):
         self.lock_switch_action = "lock_switch"
         self.aim = "target_input_facing"
         self.face_target = True
+        self.require_known = False
         self.enabled = True
         # runtime
         self.lock_target_id = ""
@@ -100,13 +107,24 @@ class ActionCombatEvent:
 class ActionCombatSystem(System):
     order = 22  # after input (10) and AI (20) set intents, before action timelines (25) and controllers (30)
 
-    def __init__(self, abilities, timelines, *, actions, combat=None, formulas=None, snapshot_provider=None):
+    def __init__(
+        self,
+        abilities,
+        timelines,
+        *,
+        actions,
+        combat=None,
+        formulas=None,
+        snapshot_provider=None,
+        known_abilities=None,
+    ):
         self.abilities = abilities  # AbilityRegistry (GameplayLibrary.abilities)
         self.timelines = timelines  # {timeline_id: ActionTimeline}
         self.actions = actions  # EntityActionSystem
         self.combat = combat  # CombatSystem: costs are paid from combatant resources
         self.formulas = formulas if formulas is not None else {}
         self.snapshot_provider = snapshot_provider  # callable() -> InputSnapshot | None (player input)
+        self.known_abilities = known_abilities  # callable(entity) -> set of ability ids, or None (no limit)
         self.cooldowns: dict[tuple, float] = {}
         self.buffered: dict[str, tuple] = {}  # entity id -> (ability id, seconds left, aim)
         self.events: list[ActionCombatEvent] = []
@@ -147,6 +165,12 @@ class ActionCombatSystem(System):
         if timeline is None:
             self._emit("denied", entity, ability_id, "no_timeline")
             return "no_timeline"
+        spec = entity.try_get(ActionCombatComponent)
+        if spec is not None and spec.require_known and self.known_abilities is not None:
+            known = self.known_abilities(entity)
+            if known is not None and ability.ability_id not in known:
+                self._emit("denied", entity, ability_id, "not_known")
+                return "not_known"
         if aim is None:
             aim = self.aim_of(entity, scene)
         running = self.actions.active(entity.id)
@@ -180,8 +204,9 @@ class ActionCombatSystem(System):
             resources = self.combat.state(entity).resources
             for resource, amount in prices:
                 resources.change(resource, -amount)
-        if ability.cooldown_seconds > 0:
-            self.cooldowns[(entity.id, ability.ability_id)] = ability.cooldown_seconds
+        seconds = self._cooldown_seconds(entity, ability)
+        if seconds > 0:
+            self.cooldowns[(entity.id, ability.ability_id)] = seconds
         if running:
             self.actions.cancel(entity.id, scene, force=True)
         self._face(entity, aim)
@@ -189,6 +214,19 @@ class ActionCombatSystem(System):
         self.buffered.pop(entity.id, None)
         self._emit("used", entity, ability_id, spent=dict(prices or ()))
         return "used"
+
+    def _cooldown_seconds(self, entity, ability):
+        """``cooldown_formula`` over the user's stats (skill ranks, cooldown reduction...) or ``cooldown_seconds``."""
+        if ability.cooldown_formula is None:
+            return ability.cooldown_seconds
+        from .combat import CombatantComponent
+
+        if self.combat is None or not entity.has(CombatantComponent):
+            return ability.cooldown_seconds
+        state = self.combat.state(entity)
+        stats = self.combat.effective_stats(state)
+        context = FormulaContext(stats, state.resources, state.tags, stats, state.resources, state.tags)
+        return max(0.0, ability.cooldown_formula.evaluate(context))
 
     def _prices(self, entity, ability):
         """``[(resource, amount)]`` the ability costs now, or ``"cost:<resource>"`` when it cannot be paid."""

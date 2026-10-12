@@ -144,6 +144,13 @@ class ProjectileSystem(System):
             direction = turn_with_facing(cos(angle), sin(angle), facing)
         ox, oy = turn_with_facing(float(payload.get("offset_x", 0.0)), float(payload.get("offset_y", 0.0)), facing)
         x, y = world_position(entity)
+        count = int(payload.get("count", 1))
+        if payload.get("count_stat") and self.combat is not None:  # e.g. a skill rank adding shots
+            from .combat import CombatantComponent
+
+            if entity.has(CombatantComponent):
+                stats = self.combat.effective_stats(self.combat.state(entity))
+                count += int(stats.get(str(payload["count_stat"])))
         return self.fire(
             payload["projectile_id"],
             x + ox,
@@ -151,7 +158,7 @@ class ProjectileSystem(System):
             direction,
             owner_id=entity.id,
             team=str(payload.get("team") or _team_of(entity)),
-            count=int(payload.get("count", 1)),
+            count=count,
             spread=float(payload.get("spread", 0.0)),
         )
 

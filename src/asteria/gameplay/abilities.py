@@ -209,6 +209,7 @@ class AbilityDefinition:
     cooldown_seconds: float = 0.0
     move_while_acting: float = 0.0
     interrupts_actions: bool = False
+    cooldown_formula: object = None  # ValueFormula over the user's stats; replaces cooldown_seconds when set
     OPTIONAL_DATA = {
         "cooldown_turns": 0,
         "battle_costs": {},
@@ -221,6 +222,7 @@ class AbilityDefinition:
         "cooldown_seconds": 0.0,
         "move_while_acting": 0.0,
         "interrupts_actions": False,
+        "cooldown_formula": None,
     }
 
     def __init__(
@@ -243,6 +245,7 @@ class AbilityDefinition:
         cooldown_seconds=0.0,
         move_while_acting=0.0,
         interrupts_actions=False,
+        cooldown_formula=None,
     ):
         ability_id = str(ability_id).strip()
         if not ability_id:
@@ -335,6 +338,9 @@ class AbilityDefinition:
             raise ValueError("move_while_acting must be finite and >= 0")
         object.__setattr__(self, "move_while_acting", move_while_acting)
         object.__setattr__(self, "interrupts_actions", bool(interrupts_actions))
+        if cooldown_formula is not None and not isinstance(cooldown_formula, ValueFormula):
+            raise TypeError("cooldown_formula must be ValueFormula")
+        object.__setattr__(self, "cooldown_formula", cooldown_formula)
 
     def to_data(self):
         return {
@@ -361,6 +367,7 @@ class AbilityDefinition:
             **({"cooldown_seconds": self.cooldown_seconds} if self.cooldown_seconds else {}),
             **({"move_while_acting": self.move_while_acting} if self.move_while_acting else {}),
             **({"interrupts_actions": True} if self.interrupts_actions else {}),
+            **({"cooldown_formula": self.cooldown_formula.to_data()} if self.cooldown_formula is not None else {}),
         }
 
     @classmethod
@@ -397,6 +404,9 @@ class AbilityDefinition:
             cooldown_seconds=data.get("cooldown_seconds", 0.0),
             move_while_acting=data.get("move_while_acting", 0.0),
             interrupts_actions=data.get("interrupts_actions", False),
+            cooldown_formula=(
+                ValueFormula.from_data(data["cooldown_formula"]) if data.get("cooldown_formula") is not None else None
+            ),
         )
 
 
