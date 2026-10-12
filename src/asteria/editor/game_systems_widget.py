@@ -381,6 +381,8 @@ class GameSystemsEditorWidget(QWidget):
         self.browser.currentRowChanged.connect(self._selected)
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QScrollArea.NoFrame)
+        self.scroll.setViewportMargins(0, 0, 10, 0)  # fields never touch the scroll bar
         self.form = None
         self.status = QLabel("")
         self.status.setWordWrap(True)

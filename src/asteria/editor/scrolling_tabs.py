@@ -20,6 +20,7 @@ def scrollable(page, parent=None):
     area.setObjectName(f"{page.objectName() or page.metaObject().className()}Scroll")
     area.setWidgetResizable(True)
     area.setFrameShape(QFrame.NoFrame)
+    area.setViewportMargins(0, 0, 6, 0)  # a gap between the page and its scroll bar
     area.setWidget(page)
     return area
 

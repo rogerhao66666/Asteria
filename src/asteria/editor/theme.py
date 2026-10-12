@@ -161,7 +161,7 @@ QDockWidget::float-button { subcontrol-position: top left; left: 29px; }
 QDockWidget::close-button:hover, QDockWidget::float-button:hover { background: $hover; }
 
 /* -- tabs ---------------------------------------------------------------------------------------- */
-QTabWidget::pane { border: 1px solid $border; border-radius: 8px; top: -1px; background: $panel; }
+QTabWidget::pane { border: 1px solid $border; border-radius: 8px; top: -1px; background: $panel; padding: 10px 12px; }
 QTabBar { background: transparent; }
 QTabBar::tab {
     background: $panel; color: $text_dim;
@@ -215,6 +215,11 @@ QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {
 }
 QLineEdit:hover, QComboBox:hover, QSpinBox:hover, QDoubleSpinBox:hover { border-color: $text_muted; }
 QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus { border: 1px solid $focus; }
+QComboBox::drop-down {
+    border: 0; background: transparent; width: 22px;
+    subcontrol-origin: padding; subcontrol-position: center right;
+}
+QComboBox { padding-right: 24px; }
 QComboBox QAbstractItemView {
     background: $raised; color: $text; border: 1px solid $border_strong;
     selection-background-color: $selection; selection-color: $selection_text; outline: 0;
@@ -378,7 +383,11 @@ def _branch_rules(palette):
     folder = Path(tempfile.gettempdir()) / "asteria-editor-theme"
     folder.mkdir(exist_ok=True)
     paths = {}
-    for kind, points in (("closed", ((6, 4), (10, 8), (6, 12))), ("open", ((4, 6), (8, 10), (12, 6)))):
+    for kind, points in (
+        ("closed", ((6, 4), (10, 8), (6, 12))),
+        ("open", ((4, 6), (8, 10), (12, 6))),
+        ("combo", ((4, 6), (8, 10), (12, 6))),
+    ):
         path = folder / f"branch-{kind}-{palette.text_dim.lstrip('#')}.png"
         if not path.exists():
             pm = QPixmap(32, 32)
@@ -393,8 +402,9 @@ def _branch_rules(palette):
             painter.end()
             pm.save(str(path))
         paths[kind] = path.as_posix()
-    closed, opened = paths["closed"], paths["open"]
+    closed, opened, combo = paths["closed"], paths["open"], paths["combo"]
     return (
+        f"QComboBox::down-arrow {{ image: url({combo}); width: 12px; height: 12px; }}\n"
         f"QTreeView::branch:has-children:closed {{ image: url({closed}); }}\n"
         f"QTreeView::branch:has-children:open {{ image: url({opened}); }}\n"
         "QTreeView::branch { background: transparent; }\n"
