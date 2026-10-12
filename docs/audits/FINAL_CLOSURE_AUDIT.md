@@ -11,12 +11,12 @@
 | C 部分實作 | 1 | **1**（TPL-01，Eventual） |
 | D 未實作 | 2 | **2**（EDT-17、EDT-18，Eventual） |
 | E 取消 | 2 | 2 |
-| 自動化測試 | 2180 passed | **2014 passed**（D20-2 退役 35 個模組時移除只測退役程式碼的測試；D21 新增 kernel 測試 15 項） |
-| 實機檢查（`results.json`） | 49 PASS／3 NE／1 BLOCKED／0 FAIL | **65 PASS／3 NOT EXECUTED／1 BLOCKED／1 FAIL** |
+| 自動化測試 | 2180 passed | **2026 passed**（D20-2 退役 35 個模組時移除只測退役程式碼的測試；D21 新增 kernel 測試 27 項） |
+| 實機檢查（`results.json`） | 49 PASS／3 NE／1 BLOCKED／0 FAIL | **66 PASS／3 NOT EXECUTED／1 BLOCKED／0 FAIL** |
 
 **結論：** 功能面已完成，所有 Core 需求都已實作，剩下的 C／D 全是 SPEC 原文的 Eventually／Potential 項目。
 
-**唯一的 FAIL：** weather load（最新一次 35.5 fps，門檻 55）。執行時 macOS 低耗電模式開著，舊 commit 在相同條件下也只有 34.7 fps，所以不是程式回歸，但在重跑前仍記為 FAIL。
+**weather load 已轉為 PASS（D21-2）：** 關閉低耗電模式後重跑，59.2 fps（門檻 55），天氣區段平均 1.56 ms。之前的 FAIL 是低耗電模式造成的。
 
 **剩下的 8 項 B：** 全部需要人或裝置。AST-07（物品圖示）和 VFX-01 的粒子功能已依你的決定完成（D20-5）；VFX-01 只剩人工目視。
 
@@ -119,6 +119,6 @@ BTL-02 的 DOT 問題已經依「不限制作者」的決定結案：預設固�
 | 狀態 | 是否達成 |
 |---|---|
 | FUNCTIONAL CLOSURE COMPLETE | **達成**：所有 Core 需求都已實作；剩下的 C／D 全為 Eventual |
-| AUTOMATED VALIDATION COMPLETE | **未達成**：只差 weather load（低耗電模式下 FAIL）；使用者決定先不重跑。其他可自動化的項目都已有實機證據 |
+| AUTOMATED VALIDATION COMPLETE | **達成**：可自動化的項目都已有實機證據，0 FAIL（weather load 在 D21-2 關閉低耗電模式後 PASS） |
 | MANUAL VALIDATION PENDING | **是**：M1–M11 尚未執行（M2、M8 因沒有手把而 BLOCKED） |
 | FULL SPEC CLOSURE VERIFIED | **未達成** |

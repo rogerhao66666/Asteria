@@ -106,3 +106,36 @@ def test_collision_contacts_are_the_same_with_either_kernel(restore_kernels):
         kernels.use(kernel)
         results[kernel] = CollisionWorld.from_scene(scene).contacts()
     assert results["numpy"] == results["python"] and len(results["python"]) > 20
+
+
+@pytest.mark.parametrize("kind", ["rain", "snow", "leaves", "dust"])
+@pytest.mark.parametrize("wind", [0.0, 60.0, -900.0])
+def test_numpy_weather_moves_and_draws_exactly_like_the_reference(kind, wind, restore_kernels):
+    import os
+
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import numpy as np
+    import pygame
+
+    from asteria.runtime.weather import WeatherSystem
+
+    pygame.init()
+    systems = {}
+    for kernel in ("python", "numpy"):
+        kernels.use(kernel)
+        systems[kernel] = WeatherSystem(320, 180, seed="w")
+    for frame in range(90):
+        camera = (frame * 0.7, -frame * 0.3)
+        for system in systems.values():
+            system.update(1 / 60 if frame % 5 else 1 / 20, kind, 0.9, 400, wind, camera=camera, scale=2.0)
+        ref, fast = systems["python"], systems["numpy"]
+        assert (fast.x, fast.y, fast.size, fast.phase) == (ref.x, ref.y, ref.size, ref.phase), frame
+        if frame % 15 == 0:
+            frames = []
+            for system in (ref, fast):
+                screen = pygame.Surface((320, 180))
+                screen.fill((20, 40, 60))
+                assert system.draw(pygame, screen, wind) == system.count
+                frames.append(pygame.surfarray.array3d(screen))
+            assert np.array_equal(*frames), f"{kind} pixels differ at frame {frame}"
+            assert (frames[0] != (20, 40, 60)).any()

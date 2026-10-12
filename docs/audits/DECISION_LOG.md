@@ -886,3 +886,31 @@ autofix 原本沒有產品入口，已在 D20-4 接上編輯器。animated_text 
 - 自動化測試：新增 `tests/test_kernels.py` 15 項。7 種 preset 逐影格比對兩套實作的結果完全相同；碰撞配對和暴力法逐對比對；碰撞 contacts 相同。
 - 實機（scratchpad，不寫入 evidence）：`icons_and_particles` 分別用 `ASTERIA_KERNELS=numpy` 和 `python` 在 Cocoa 視窗跑，兩者都 PASS（58.9／59.0 fps，p99 23.1／22.7 ms）。
 
+### D21-2 — 天氣也改用計算核心層
+
+使用者要求天氣也一起改。天氣的儲存、移動和繪製改成 kernel 的 `WeatherStore`：
+- `python`：原本的迴圈和 pygame 逐顆繪製。
+- `numpy`：移動以陣列計算。繪製方面，pygame 會把座標截斷成整數，所以每顆粒子的形狀（雨線、葉片橢圓、雪點）只取決於幾個整數。每種形狀先讓 pygame 畫一次記下來，再一次貼到所有同形狀的粒子上。
+- **畫出來的像素和 pygame 逐像素相同**。測試涵蓋 4 種天氣 × 3 種風速（含畫面邊緣、強逆風），共 12 項。
+
+**量測（單獨跑，1280×720，單位 ms）：**
+
+| 項目 | python | numpy |
+|---|---|---|
+| 雨 2000 顆：更新 | 0.17 | 0.02 |
+| 雨 2000 顆：繪製（不透明畫面） | 0.93 | 0.84 |
+| 雪 2000 顆：繪製（不透明畫面） | 0.87 | 0.69 |
+
+繪製大部分時間花在整張畫面的清除和貼圖（約 0.5 ms），兩套實作都要付，所以繪製只快一點。
+
+**實機（Cocoa，低耗電模式已關閉）：** 同一個天氣負載檢查（2000 顆雨 + 完整 GPU 效果）：
+
+| kernel | fps | 天氣區段平均 |
+|---|---|---|
+| python | 59.5 | 3.05 ms |
+| numpy（預設） | 59.2 | 1.56 ms |
+
+- 項目 25 由 FAIL 轉為 **PASS**。原因是低耗電模式關閉了，**不是** numpy；numpy 讓天氣的耗時減半，多出餘裕給 ARPG。
+- `--only vfx` 已寫回正式 evidence：70 項中 66 PASS、3 NOT EXECUTED、1 BLOCKED、**0 FAIL**。AUTOMATED VALIDATION COMPLETE 改為達成。
+- 自動化測試：2026 passed。
+

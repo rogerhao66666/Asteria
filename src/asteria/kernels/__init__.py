@@ -4,6 +4,8 @@ A kernel set is a module with the same names in every implementation:
 
 - ``ParticleStore`` - particle columns (position, velocity, life, size, angle, spin) with ``add``, ``step``,
   ``shift`` and ``views``.
+- ``WeatherStore`` - screen-space weather particles with ``step`` (fall, wind, sway, camera shift) and ``draw``
+  (pixels identical to the reference).
 - ``aabb_pairs(x0, y0, x1, y1, cell_size)`` - every pair ``(i, j)``, ``i < j``, whose boxes overlap or touch,
   sorted.
 

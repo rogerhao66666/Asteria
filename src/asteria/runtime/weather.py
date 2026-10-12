@@ -3,14 +3,16 @@
 The simulation is backend-neutral and deterministic (seeded per scene); it runs on both the
 pygame and the GPU presenter paths (it is drawn into the world layer before lighting and
 post-processing). Particles live in screen space and are shifted by the camera's movement,
-so they stay put in the world while the camera pans. Storage is a fixed set of flat lists
-reused every frame (no per-frame allocation once warmed up); ``max_particles`` caps the cost.
+so they stay put in the world while the camera pans. Storage, motion and drawing are the active compute
+kernel's ``WeatherStore`` (D21); ``max_particles`` caps the cost.
 """
 
 from __future__ import annotations
 
 import math
 import random
+
+from asteria import kernels
 
 _KINDS = {
     #          speed (px/s)   size     colour             count share
@@ -26,47 +28,47 @@ class WeatherSystem:
         self.width, self.height = int(width), int(height)
         self.rng = random.Random(seed)
         self.kind = "none"
-        self.x, self.y, self.vy, self.size, self.phase = [], [], [], [], []
+        self._particles = kernels.active().WeatherStore()
         self._last_camera = None
         self.time = 0.0
 
     @property
     def count(self):
-        return len(self.x)
+        return len(self._particles)
 
-    def _spawn(self, index=None, *, top=False):
+    x = property(lambda self: self._particles.column("x"))
+    y = property(lambda self: self._particles.column("y"))
+    vy = property(lambda self: self._particles.column("vy"))
+    size = property(lambda self: self._particles.column("size"))
+    phase = property(lambda self: self._particles.column("phase"))
+
+    def _new_particle(self, *, top=False):
         lo, hi = _KINDS[self.kind][0]
         smin, smax = _KINDS[self.kind][1]
-        values = (
+        return (
             self.rng.uniform(-40, self.width + 40),
             self.rng.uniform(-60, -4) if top else self.rng.uniform(-20, self.height),
             self.rng.uniform(lo, hi),
             self.rng.uniform(smin, smax),
             self.rng.uniform(0, math.tau),
         )
-        if index is None:
-            for store, value in zip((self.x, self.y, self.vy, self.size, self.phase), values, strict=True):
-                store.append(value)
-        else:
-            self.x[index], self.y[index], self.vy[index], self.size[index], self.phase[index] = values
 
     def update(self, dt, kind, intensity, max_particles, wind=0.0, camera=None, scale=1.0):
         """Advance ``dt`` seconds. ``camera`` = current view centre in world units (pans the particles)."""
         dt = max(0.0, float(dt))
         self.time += dt
+        particles = self._particles
         if kind not in _KINDS:
             self.kind = "none"
-            for store in (self.x, self.y, self.vy, self.size, self.phase):
-                store.clear()
+            particles.truncate(0)
             return
         if kind != self.kind:
             self.kind = kind
-            for store in (self.x, self.y, self.vy, self.size, self.phase):
-                store.clear()
+            particles.truncate(0)
         target = int(max(0, max_particles) * max(0.0, min(1.0, intensity)) * _KINDS[kind][3])
-        while len(self.x) < target:
-            self._spawn()
-        del self.x[target:], self.y[target:], self.vy[target:], self.size[target:], self.phase[target:]
+        if len(particles) < target:
+            particles.add([self._new_particle() for _ in range(target - len(particles))])
+        particles.truncate(target)
         shift_x = shift_y = 0.0
         if camera is not None:
             if self._last_camera is not None:
@@ -74,31 +76,15 @@ class WeatherSystem:
                 shift_y = (self._last_camera[1] - camera[1]) * scale
             self._last_camera = camera
         sway = kind in ("snow", "leaves", "dust")
-        for i in range(len(self.x)):
-            drift = math.sin(self.time * 1.7 + self.phase[i]) * 18.0 if sway else 0.0
-            self.x[i] += (wind + drift) * dt + shift_x
-            self.y[i] += self.vy[i] * dt + shift_y
-            if self.y[i] > self.height + 20 or self.x[i] < -60 or self.x[i] > self.width + 60:
-                self._spawn(i, top=self.y[i] > self.height + 20)
+        for index, fell_out in particles.step(dt, wind, self.time, sway, shift_x, shift_y, self.width, self.height):
+            particles.set_row(index, self._new_particle(top=fell_out))
 
     def draw(self, pg, surface, wind=0.0):
-        if self.kind == "none" or not self.x:
+        if self.kind == "none" or not len(self._particles):
             return 0
-        color = _KINDS[self.kind][2]
         layer = getattr(self, "_layer", None)
         if layer is None or layer.get_size() != surface.get_size():
             layer = self._layer = pg.Surface(surface.get_size(), pg.SRCALPHA)
-        layer.fill((0, 0, 0, 0))
-        if self.kind == "rain":
-            slant = wind / 700.0
-            for x, y, length in zip(self.x, self.y, self.size, strict=True):
-                pg.draw.line(layer, color, (x, y), (x - slant * length * 3, y - length * 2), 1)
-        elif self.kind == "leaves":
-            for x, y, s, ph in zip(self.x, self.y, self.size, self.phase, strict=True):
-                w = s * (0.5 + 0.5 * abs(math.sin(self.time * 3 + ph)))
-                pg.draw.ellipse(layer, color, (x, y, max(1, w * 2), s))
-        else:
-            for x, y, s in zip(self.x, self.y, self.size, strict=True):
-                pg.draw.circle(layer, color, (int(x), int(y)), int(s))
+        self._particles.draw(pg, layer, self.kind, _KINDS[self.kind][2], wind, self.time)
         surface.blit(layer, (0, 0))
-        return len(self.x)
+        return len(self._particles)

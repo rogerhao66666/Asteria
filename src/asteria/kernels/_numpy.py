@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from asteria.kernels._python import FIELDS
+from asteria.kernels._python import FIELDS, WEATHER_FIELDS
 
 NAME = "numpy"
 
@@ -47,6 +47,94 @@ class ParticleStore:
         c1 = np.asarray(color_to, dtype=float)
         colors = map(tuple, (c0 + (c1 - c0) * t[:, None]).astype(np.int64).tolist())
         return list(zip(px.tolist(), py.tolist(), size.tolist(), colors, angle.tolist(), strict=True))
+
+
+class WeatherStore:
+    """Weather particles as arrays. Drawing stamps each particle's shape: pygame truncates coordinates to whole
+    pixels, so a line, ellipse or dot depends only on whole-pixel sizes - each distinct shape is drawn once by
+    pygame itself and then copied to every particle that has it, giving the reference's pixels."""
+
+    def __init__(self):
+        self._data = np.empty((len(WEATHER_FIELDS), 0))
+        self._stamps = {}
+
+    def __len__(self):
+        return self._data.shape[1]
+
+    def column(self, name):
+        return self._data[WEATHER_FIELDS.index(name)].tolist()
+
+    def add(self, rows):
+        rows = list(rows)
+        if rows:
+            self._data = np.concatenate((self._data, np.array(rows, dtype=float).T), axis=1)
+
+    def set_row(self, index, row):
+        self._data[:, index] = row
+
+    def truncate(self, count):
+        self._data = self._data[:, :count]
+
+    def step(self, dt, wind, time, sway, shift_x, shift_y, width, height):
+        x, y, vy, _size, phase = self._data
+        drift = np.sin(time * 1.7 + phase) * 18.0 if sway else 0.0
+        x += (wind + drift) * dt + shift_x
+        y += vy * dt + shift_y
+        fell = y > height + 20
+        left = np.flatnonzero(fell | (x < -60) | (x > width + 60))
+        return list(zip(left.tolist(), fell[left].tolist(), strict=True))
+
+    def _stamp(self, pg, kind, key):
+        stamp = self._stamps.get((kind, key))
+        if stamp is None:
+            pad = max(abs(key[0]), abs(key[1])) + 4
+            surface = pg.Surface((pad * 2 + 1, pad * 2 + 1), pg.SRCALPHA)
+            surface.fill((0, 0, 0, 0))
+            white = (255, 255, 255, 255)
+            if kind == "rain":
+                pg.draw.line(surface, white, (pad, pad), (pad + key[0], pad + key[1]), 1)
+            elif kind == "leaves":
+                pg.draw.ellipse(surface, white, (pad, pad, key[0], key[1]))
+            else:
+                pg.draw.circle(surface, white, (pad, pad), key[0])
+            dx, dy = np.nonzero(pg.surfarray.array_alpha(surface))
+            stamp = self._stamps[(kind, key)] = (dx - pad, dy - pad)
+        return stamp
+
+    def draw(self, pg, layer, kind, color, wind, time):
+        x, y, _vy, size, phase = self._data
+        layer.fill((*color[:3], 0))
+        if not len(self):
+            return
+        ax, ay = np.trunc(x).astype(np.int64), np.trunc(y).astype(np.int64)
+        if kind == "rain":
+            slant = wind / 700.0
+            k0 = np.trunc(x - slant * size * 3).astype(np.int64) - ax
+            k1 = np.trunc(y - size * 2).astype(np.int64) - ay
+        elif kind == "leaves":
+            w = size * (0.5 + 0.5 * np.abs(np.sin(time * 3 + phase)))
+            k0 = np.trunc(np.maximum(1, w * 2)).astype(np.int64)
+            k1 = np.trunc(size).astype(np.int64)
+        else:
+            k0 = np.trunc(size).astype(np.int64)
+            k1 = np.zeros_like(k0)
+        # group particles by shape: one sort of a packed (k0, k1) key
+        packed = (k0 + (1 << 20)) * (1 << 21) + (k1 + (1 << 20))
+        order = np.argsort(packed)
+        ranked = packed[order]
+        starts = np.flatnonzero(np.diff(ranked)) + 1
+        xs, ys = [], []
+        for members in np.split(order, starts):
+            first = members[0]
+            dx, dy = self._stamp(pg, kind, (int(k0[first]), int(k1[first])))
+            xs.append((ax[members][:, None] + dx[None, :]).ravel())
+            ys.append((ay[members][:, None] + dy[None, :]).ravel())
+        px, py = np.concatenate(xs), np.concatenate(ys)
+        width, height = layer.get_size()
+        inside = (px >= 0) & (px < width) & (py >= 0) & (py < height)
+        alpha = pg.surfarray.pixels_alpha(layer)
+        alpha[px[inside], py[inside]] = color[3]
+        del alpha  # unlock the surface
 
 
 def aabb_pairs(x0, y0, x1, y1, cell_size=64.0):

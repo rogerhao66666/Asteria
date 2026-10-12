@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import math
 from math import floor
 
 NAME = "python"
 
 # column order of a particle row
 FIELDS = ("px", "py", "vx", "vy", "life", "max_life", "size_k", "angle", "spin")
+# column order of a weather particle row
+WEATHER_FIELDS = ("x", "y", "vy", "size", "phase")
 
 
 class ParticleStore:
@@ -55,6 +58,62 @@ class ParticleStore:
             color = tuple(int(c0[k] + (c1[k] - c0[k]) * t) for k in range(4))
             out.append((self.px[i], self.py[i], max(0.0, size), color, self.angle[i]))
         return out
+
+
+class WeatherStore:
+    """Screen-space weather particles (rain, snow, leaves, dust)."""
+
+    def __init__(self):
+        self.x, self.y, self.vy, self.size, self.phase = [], [], [], [], []
+
+    def __len__(self):
+        return len(self.x)
+
+    def column(self, name):
+        return list(getattr(self, name))
+
+    def add(self, rows):
+        columns = [getattr(self, name) for name in WEATHER_FIELDS]
+        for row in rows:
+            for column, value in zip(columns, row, strict=True):
+                column.append(value)
+
+    def set_row(self, index, row):
+        for name, value in zip(WEATHER_FIELDS, row, strict=True):
+            getattr(self, name)[index] = value
+
+    def truncate(self, count):
+        for name in WEATHER_FIELDS:
+            del getattr(self, name)[count:]
+
+    def step(self, dt, wind, time, sway, shift_x, shift_y, width, height):
+        """Fall, wind, sway (``sway``: sideways sine drift) and camera shift. Returns ``(index, fell_out)`` for
+        each particle that left the screen, in index order (``fell_out``: below the bottom edge)."""
+        x, y, vy, phase = self.x, self.y, self.vy, self.phase
+        left = []
+        for i in range(len(x)):
+            drift = math.sin(time * 1.7 + phase[i]) * 18.0 if sway else 0.0
+            x[i] += (wind + drift) * dt + shift_x
+            y[i] += vy[i] * dt + shift_y
+            if y[i] > height + 20 or x[i] < -60 or x[i] > width + 60:
+                left.append((i, y[i] > height + 20))
+        return left
+
+    def draw(self, pg, layer, kind, color, wind, time):
+        """Draw every particle on ``layer`` (cleared first): rain as slanted lines, leaves as flapping
+        ellipses, snow and dust as dots."""
+        layer.fill((0, 0, 0, 0))
+        if kind == "rain":
+            slant = wind / 700.0
+            for x, y, length in zip(self.x, self.y, self.size, strict=True):
+                pg.draw.line(layer, color, (x, y), (x - slant * length * 3, y - length * 2), 1)
+        elif kind == "leaves":
+            for x, y, s, ph in zip(self.x, self.y, self.size, self.phase, strict=True):
+                w = s * (0.5 + 0.5 * abs(math.sin(time * 3 + ph)))
+                pg.draw.ellipse(layer, color, (x, y, max(1, w * 2), s))
+        else:
+            for x, y, s in zip(self.x, self.y, self.size, strict=True):
+                pg.draw.circle(layer, color, (int(x), int(y)), int(s))
 
 
 def aabb_pairs(x0, y0, x1, y1, cell_size=64.0):

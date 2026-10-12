@@ -2,7 +2,7 @@
   "meta": {
     "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
     "python": "3.13.15",
-    "time": "2026-10-12 19:08:21 +0800"
+    "time": "2026-10-13 00:09:40 +0800"
   },
   "results": [
     {
@@ -265,61 +265,6 @@
         "vfx": 0.1056
       },
       "note": "Same workload as frame_pacing (pygame) for comparison; see gpu_battle_profile.json."
-    },
-    {
-      "check": "vfx_moderngl_field",
-      "status": "PASS",
-      "evidence": "moderngl (cocoa): field with lighting (ambient + player light + shadow-casting lamp), water, rain (320 particles), bloom, grading, vignette for 5 s: 56.584 fps, p99 interval 18.8532 ms, frame interval mean 17.6649 ms, draw calls/frame 15.0; shader errors []; GPU-only effects reported unsupported []",
-      "screenshots": [
-        "vfx_moderngl_field.png"
-      ],
-      "sections": {
-        "ai": 0.0223,
-        "asset_loading": 2.4982,
-        "collision": 0.0522,
-        "events": 0.0351,
-        "gpu_present": 4.3205,
-        "gpu_time": 0.8445,
-        "input": 0.0355,
-        "render": 5.2075,
-        "spawn": 0.0136,
-        "update": 0.174,
-        "vfx": 1.5745
-      }
-    },
-    {
-      "check": "vfx_pygame_field",
-      "status": "PASS",
-      "evidence": "pygame (cocoa): field with lighting (ambient + player light + shadow-casting lamp), water, rain (320 particles), bloom, grading, vignette for 5 s: 56.299 fps, p99 interval 19.1492 ms, frame interval mean 17.7571 ms, draw calls/frame None; shader errors []; GPU-only effects reported unsupported ['bloom', 'grade', 'vignette', 'shadows']",
-      "screenshots": [
-        "vfx_pygame_field.png"
-      ],
-      "sections": {
-        "ai": 0.0197,
-        "asset_loading": 2.3828,
-        "collision": 0.0477,
-        "events": 0.0296,
-        "input": 0.0295,
-        "render": 6.1179,
-        "spawn": 0.0119,
-        "update": 0.1233,
-        "vfx": 2.2876
-      }
-    },
-    {
-      "check": "vfx_gpu_battle_afterimage",
-      "status": "PASS",
-      "evidence": "Canonical battle on the GPU with bloom, grading and vignette; a skill's motion_fx beat produced up to 4 afterimage copies of the acting member",
-      "screenshots": [
-        "vfx_gpu_battle_afterimage.png"
-      ],
-      "note": "Whether the effects look good is manual item M10."
-    },
-    {
-      "check": "vfx_weather_load",
-      "status": "FAIL",
-      "evidence": "Rain at 2000 particles plus the full GPU chain for 4 s: 35.539 fps, p99 interval 32.1236 ms, vfx section mean 8.512 ms",
-      "note": "macOS Low Power Mode was on during this run (pmset lowpowermode 1). The same check at commit 06a5577, which measured 59.5 fps in D19, measured 34.7 fps under the same conditions, so the drop is the machine, not the code. Stays FAIL until rerun with Low Power Mode off."
     },
     {
       "check": "mv_import_gpu_night",
@@ -725,6 +670,60 @@
         "replay/test_the_iron_samurai_resists_swords_and_needs_a_spear.png",
         "replay/test_field_enemies_wander_and_touching_one_starts_its_battle.png"
       ]
+    },
+    {
+      "check": "vfx_moderngl_field",
+      "status": "PASS",
+      "evidence": "moderngl (cocoa): field with lighting (ambient + player light + shadow-casting lamp), water, rain (320 particles), bloom, grading, vignette for 5 s: 56.584 fps, p99 interval 25.5438 ms, frame interval mean 17.6668 ms, draw calls/frame 15.0; shader errors []; GPU-only effects reported unsupported []",
+      "screenshots": [
+        "vfx_moderngl_field.png"
+      ],
+      "sections": {
+        "ai": 0.0149,
+        "asset_loading": 3.3448,
+        "collision": 0.0354,
+        "events": 0.0263,
+        "gpu_present": 3.1667,
+        "gpu_time": 0.8396,
+        "input": 0.0265,
+        "render": 3.1871,
+        "spawn": 0.0096,
+        "update": 0.1208,
+        "vfx": 1.2449
+      }
+    },
+    {
+      "check": "vfx_pygame_field",
+      "status": "PASS",
+      "evidence": "pygame (cocoa): field with lighting (ambient + player light + shadow-casting lamp), water, rain (320 particles), bloom, grading, vignette for 5 s: 58.675 fps, p99 interval 18.1622 ms, frame interval mean 17.0382 ms, draw calls/frame None; shader errors []; GPU-only effects reported unsupported ['bloom', 'grade', 'vignette', 'shadows']",
+      "screenshots": [
+        "vfx_pygame_field.png"
+      ],
+      "sections": {
+        "ai": 0.0159,
+        "asset_loading": 1.5887,
+        "collision": 0.0373,
+        "events": 0.0272,
+        "input": 0.0293,
+        "render": 3.5774,
+        "spawn": 0.0099,
+        "update": 0.0993,
+        "vfx": 1.8131
+      }
+    },
+    {
+      "check": "vfx_gpu_battle_afterimage",
+      "status": "PASS",
+      "evidence": "Canonical battle on the GPU with bloom, grading and vignette; a skill's motion_fx beat produced up to 4 afterimage copies of the acting member",
+      "screenshots": [
+        "vfx_gpu_battle_afterimage.png"
+      ],
+      "note": "Whether the effects look good is manual item M10."
+    },
+    {
+      "check": "vfx_weather_load",
+      "status": "PASS",
+      "evidence": "Rain at 2000 particles plus the full GPU chain for 4 s: 59.203 fps, p99 interval 24.5431 ms, vfx section mean 1.5572 ms"
     }
   ]
 }
