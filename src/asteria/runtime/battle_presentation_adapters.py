@@ -26,6 +26,7 @@ from asteria.presentation import (
 )
 from asteria.presentation.battle_action_menu import BattleActionEntry
 from asteria.presentation.character_composition import CharacterComposition
+from asteria.presentation.particles import ParticleSystem, effect_definition
 from asteria.rpg import BattleOutcome
 from asteria.runtime.battle_visuals import (
     BattleVisualError,
@@ -214,6 +215,7 @@ class CanonicalBattleAdapter:
         self._schedule = []
         self._order = 0
         self._view_camera = None
+        self._cue_particles = {}  # (sequence, cue id, member) -> [cue, ParticleSystem, age drawn] (VFX-01)
 
     # -- construction -----------------------------------------------------
     def _profile(self, category):
@@ -611,7 +613,12 @@ class CanonicalBattleAdapter:
                 payload["role"] = beat.cue
             elif kind == ActionCueKind.VFX:
                 payload["asset_id"] = beat.cue
-                payload.setdefault("duration", max(0.05, self.resolver.clip_duration(beat.cue, "play")))
+                particles = effect_definition(self.host.game.project.assets, beat.cue)
+                if particles is not None:  # VFX-01: emission plus the longest life, so every particle finishes
+                    emit = 1.0 if particles.looping else particles.duration
+                    payload.setdefault("duration", emit + particles.lifetime[1])
+                else:
+                    payload.setdefault("duration", max(0.05, self.resolver.clip_duration(beat.cue, "play")))
             elif kind == ActionCueKind.AUDIO:
                 payload["asset_id"] = beat.cue
             else:
@@ -899,6 +906,10 @@ class CanonicalBattleAdapter:
         asset_id = payload.get("asset_id")
         if not asset_id or self._view_camera is None:
             return
+        definition = effect_definition(self.host.game.project.assets, asset_id)
+        if definition is not None:  # a particle effect (VFX-01): a burst on the member
+            self._draw_particle_cue(effect, definition, payload)
+            return
         try:
             visual = self.screen.scene.visual_for(effect.member_id)
             sheet = self.resolver.sprite_sheet(asset_id)
@@ -922,6 +933,46 @@ class CanonicalBattleAdapter:
             tall,
             opacity=placement["opacity"],
             blend=placement["blend"],
+        )
+
+    def _draw_particle_cue(self, effect, definition, payload):
+        systems = self._cue_particles
+        # a cue is replaced every frame as it ages: key it by what stays the same
+        key = (getattr(effect, "sequence", 0), getattr(effect, "cue_id", ""), effect.member_id)
+        entry = systems.get(key)
+        try:
+            visual = self.screen.scene.visual_for(effect.member_id)
+            body = self.resolver.sprite_sheet(visual.sprite_sheet_asset_id).frames[0]
+            height = body.height / visual.source_pixels_per_logical_pixel
+        except (KeyError, BattleVisualError, AttributeError, IndexError):
+            return
+        placement = vfx_placement({}, payload)
+        x, y, _, _ = vfx_rect(placement, visual.anchor.x, visual.anchor.y, height, 0.0, 0.0)
+        if entry is None or effect.age < entry[2]:  # new, or the same cue started again
+            emit_for = float(payload.get("emit_for", 1.0 if definition.looping else definition.duration))
+            seed = f"{key[0]}:{key[1]}:{key[2]}"
+            system = ParticleSystem(definition, x=x, y=y, seed=seed, scale=placement["scale"], emit_for=emit_for)
+            if len(systems) > 64:  # cues end with their beat; forget old ones
+                systems.clear()
+            entry = systems[key] = [effect, system, 0.0]
+        entry[0] = effect
+        _, system, seen_age = entry
+        system.move_to(x, y)
+        system.update(max(0.0, effect.age - seen_age))
+        entry[2] = effect.age
+        scale = self.textures.scale
+        view = self._view_camera
+
+        def to_screen(wx, wy):
+            sx, sy = view.world_to_screen(wx, wy)
+            return sx * scale, sy * scale
+
+        self.host.particle_drawer.draw(
+            self.host.screen,
+            (system,),
+            to_screen,
+            view.zoom * scale,
+            image=getattr(self.host, "particle_image", None),
         )
 
 

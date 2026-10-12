@@ -144,6 +144,22 @@ def _field(project, found):
                         "error", "Field / Events", f"{scene.name}/{entity.name}: interaction program missing", target
                     )
                 )
+        from asteria.presentation.particles import effect_definition
+        from asteria.runtime.environment2d import ParticleEmitter2DComponent
+
+        for entity in scene.entities():
+            emitter = entity.try_get(ParticleEmitter2DComponent)
+            if emitter is None or not emitter.enabled:
+                continue
+            if not emitter.effect_id or effect_definition(project.assets, emitter.effect_id) is None:
+                found.append(
+                    Problem(
+                        "warning",
+                        "Particle Effects",
+                        f"{scene.name}/{entity.name}: particle effect '{emitter.effect_id}' not found (nothing shows)",
+                        ("entity", scene.id, entity.id),
+                    )
+                )
 
 
 def _sprites(document, found, resource_root):

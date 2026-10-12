@@ -295,6 +295,33 @@ def resolve_environment(scene, *, defaults=None, to_screen=None, scale=1.0, read
     return env
 
 
+@component_schema(
+    type_name="asteria.ParticleEmitter2D",
+    version=1,
+    fields=(
+        Field(
+            "effect_id",
+            str,
+            "",
+            label="Particle Effect",
+            tooltip="A particle_effect asset (VFX tool > Particle Effects).",
+        ),
+        Field("playing", bool, True, label="Playing", tooltip="Off: stop emitting (live particles finish)."),
+        Field("offset_x", float, 0.0, label="Offset X"),
+        Field("offset_y", float, 0.0, label="Offset Y"),
+        Field("scale", float, 1.0, minimum=0.01, label="Scale", tooltip="Multiplies sizes, speeds and the shape."),
+        Field("enabled", bool, True),
+    ),
+)
+class ParticleEmitter2DComponent(Component):
+    """A particle effect (VFX-01) emitting at this entity, following it."""
+
+    def __init__(self):
+        super().__init__()
+        for f in get_component_schema(type(self)).fields.values():
+            setattr(self, f.name, f.default)
+
+
 def register_environment_components(registry):
     for component in (
         Environment2DComponent,
@@ -302,5 +329,6 @@ def register_environment_components(registry):
         ShadowCaster2DComponent,
         WaterRegion2DComponent,
         MotionTrail2DComponent,
+        ParticleEmitter2DComponent,
     ):
         registry.register(component)

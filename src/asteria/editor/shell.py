@@ -196,6 +196,11 @@ class AsteriaEditorWindow(QMainWindow):
         self.vfx_editor.openTimeline.connect(self._open_action_timeline)
         self.vfx_editor.openAnimation.connect(self._open_animation_sheet)
         self.ui_workspace.addTab(self.vfx_editor, "Battle Effects")
+        from .particle_effect_widget import ParticleEffectWidget
+
+        self.particle_editor = ParticleEffectWidget(self.document, self)
+        self.particle_editor.changed.connect(self.refresh_all)
+        self.ui_workspace.addTab(self.particle_editor, "Particle Effects")
         from .input_map_widget import InputMapWidget
 
         self.input_map_editor = InputMapWidget(self.document, self)

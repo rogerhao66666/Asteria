@@ -119,6 +119,7 @@ def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
         "Character Composition",
         "Ability Timelines",
         "Battle Effects",
+        "Particle Effects",
         "Controls",
     ]
     assert [window.rpg_workspace.tabText(i) for i in range(window.rpg_workspace.count())] == [

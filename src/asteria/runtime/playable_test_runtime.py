@@ -174,6 +174,29 @@ class PlayableTestRuntime:
         cache[key] = icon
         return icon
 
+    @property
+    def particle_drawer(self):
+        from .particle_draw import ParticleDrawer
+
+        drawer = getattr(self, "_particle_drawer", None)
+        if drawer is None:
+            drawer = self._particle_drawer = ParticleDrawer(self.pg)
+        return drawer
+
+    def particle_image(self, image_id):
+        """The image of image particles (VFX-01): any id ``menu_icons`` resolves (icon cell, image, path)."""
+        from .menu_icons import icon_source
+
+        source = icon_source(self.project, image_id)
+        if source is None:
+            return None
+        uri, region = source
+        try:
+            image = self.load_image(uri)
+            return image.subsurface(self.pg.Rect(region).clip(image.get_rect())) if region else image
+        except (OSError, ValueError, self.pg.error):
+            return None
+
     def _draw_icon(self, icon_id, x, y, size=22):
         """Draw the icon centred in a ``size`` box at (x, y); True when one was drawn."""
         icon = self.icon_image(icon_id, size) if icon_id else None
@@ -499,6 +522,12 @@ class PlayableTestRuntime:
                 image.set_alpha(int(effect.placement["opacity"] * 255))
             flags = self.pg.BLEND_RGB_ADD if effect.placement["blend"] == "add" else 0
             self.screen.blit(image, (round(sx - size[0] / 2), round(sy - size[1] / 2)), special_flags=flags)
+        systems = [p.system for p in self.field_effects.all_particles()]
+        if systems:
+            with self.profiler.section("vfx"):
+                self.particles_drawn = self.particle_drawer.draw(
+                    self.screen, systems, camera.world_to_screen, scale * camera.zoom, image=self.particle_image
+                )
         self.world_done("field")
         alpha = self.field_effects.fade_alpha
         if alpha > 0:
@@ -1981,6 +2010,7 @@ class PlayableTestRuntime:
             velocity = ((pt.x - last[0]) / dt, (pt.y - last[1]) / dt) if last is not None and dt > 0 else None
             self._last_player_xy = (pt.x, pt.y)
             self.field_camera.update(dt, (pt.x, pt.y), velocity)
+            self.field_effects.sync_emitters(self.game.scene, self.game.project.assets)  # VFX-01 emitters
             self.field_effects.update(dt)
             if self.game.mode == "battle":
                 self._turn_actor = None

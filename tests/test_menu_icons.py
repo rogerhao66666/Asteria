@@ -147,3 +147,15 @@ def test_the_asset_list_thumbnail_of_an_icon_is_its_cell():
     sword = canonical_asset_thumbnail(document, project.assets.resolve("icon.weapon_01"), cache)
     assert leaf is not None and sword is not None
     assert leaf.pixmap(18, 18).toImage() != sword.pixmap(18, 18).toImage()  # each shows its own cell
+
+
+def test_equipment_carried_in_the_bag_shows_its_name_and_icon_in_the_items_tab(runtime):
+    game = runtime.game
+    game.save.rpg_state.inventory.add("weapon_03", 1)
+    runtime.open_status_menu(back="field")
+    menu = runtime.status_menu
+    menu.tab = "items"
+    rows = dict(
+        zip([r[1] for r in menu.rows()], zip([r[2] for r in menu.rows()], menu.row_icons(), strict=True), strict=True)
+    )
+    assert rows["weapon_03"] == ("Weapon 03", "icon.weapon_03")

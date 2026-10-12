@@ -105,8 +105,14 @@ class StatusMenu:
         if view is None:
             return []
         if self.tab == "items":
+            equipment = self.game.project.rpg_database.equipment
             return [
-                ("item", i.item_id, i.label, f"x{i.count}" + ("  (use)" if i.usable else ""))
+                (
+                    "item",
+                    i.item_id,
+                    equipment[i.item_id].display_name if i.label == i.item_id and i.item_id in equipment else i.label,
+                    f"x{i.count}" + ("  (use)" if i.usable else ""),
+                )
                 for i in view.items
                 if i.count > 0
             ]

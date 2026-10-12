@@ -41,8 +41,8 @@ def icon_source(project, icon_id):
 def record_icon_id(project, kind, key):
     """The icon id of a menu row: ``item``, ``equipment`` / ``candidate``, or ``""``."""
     db = project.rpg_database
-    if kind == "item":
-        record = db.items.get(key)
+    if kind == "item":  # the bag can hold equipment too
+        record = db.items.get(key) or db.equipment.get(key)
     elif kind in ("equipment", "candidate"):
         record = db.equipment.get(key)
     else:

@@ -2391,6 +2391,279 @@ def check_editor_characters(out):
     )
 
 
+def check_icons_and_particles(out):
+    """AST-07 menu icons (shop, Items, Equipment by real key events) and VFX-01 particles in real windows: a
+    field emitter on an entity plus a PLAY_VFX one-shot (pygame and ModernGL, fps measured) and a battle
+    timeline beat that bursts particles on the target. Effects are added in memory; nothing is saved."""
+    import dataclasses
+
+    import pygame
+
+    from asteria.events import EventInstruction, EventProgram
+    from asteria.presentation.particles import particle_effect_asset, preset
+    from asteria.rpg import ShopDefinition, ShopEntry
+    from asteria.runtime.environment2d import ParticleEmitter2DComponent
+    from asteria.runtime.profiler import RuntimeProfiler
+
+    results = []
+    # -- AST-07: icons in the shop and the status menu ----------------------------------------------------
+    runtime = _runtime()
+    game = runtime.game
+    game.project.rpg_database.add_shop(
+        ShopDefinition(
+            "rm_icons",
+            "RM Icons",
+            [ShopEntry(i, buy_prices={"gold": 10}) for i in ("ether_leaf", "healing_herb", "iron_ore")],
+        )
+    )
+    drawn = {}
+    original = runtime._draw_icon
+
+    def counted(icon_id, x, y, size=22):
+        shown = original(icon_id, x, y, size)
+        if shown:
+            drawn.setdefault(
+                runtime._ui_mode + ("/" + runtime.status_menu.tab if runtime._ui_mode == "status" else ""), set()
+            ).add(icon_id)
+        return shown
+
+    runtime._draw_icon = counted
+
+    def press(key, wait=0.12):
+        _key(key)
+        _pump(runtime, 0.05)
+        _key(key, up=True)
+        _pump(runtime, wait)
+
+    runtime.open()
+    driver = pygame.display.get_driver()
+    runtime._ui_mode = "field"
+    _pump(runtime, 0.2)
+    game.open_shop("rm_icons")
+    _pump(runtime, 0.3)
+    pygame.image.save(runtime.capture(), str(out / "icons_shop.png"))
+    press(pygame.K_ESCAPE)
+    for item in ("ether_leaf", "iron_ore", "weapon_03", "accessory_02"):
+        game.save.rpg_state.inventory.add(item, 1)
+    runtime.open_status_menu()
+    menu = runtime.status_menu
+    while menu.tab != "items":
+        press(pygame.K_TAB, wait=0.05)
+    _pump(runtime, 0.2)
+    pygame.image.save(runtime.capture(), str(out / "icons_items.png"))
+    while menu.tab != "equipment":
+        press(pygame.K_TAB, wait=0.05)
+    _pump(runtime, 0.2)
+    pygame.image.save(runtime.capture(), str(out / "icons_equipment.png"))
+    runtime.close()
+    screens = {k: sorted(v) for k, v in drawn.items()}
+    ok = all(screens.get(k) for k in ("shop", "status/items", "status/equipment")) and driver == "cocoa"
+    results.append(
+        result(
+            "menu_icons_real_window",
+            "PASS" if ok else "FAIL",
+            f"Real {driver} window, real key events (Esc, Tab): icons drawn per screen {screens}",
+            screenshots=["icons_shop.png", "icons_items.png", "icons_equipment.png"],
+        )
+    )
+
+    # -- VFX-01: field emitter + PLAY_VFX one-shot, both backends ------------------------------------------
+    def field_run(backend, shot_name):
+        runtime = _runtime(backend=backend)
+        project = runtime.game.project
+        project.assets.register(particle_effect_asset(preset("fire", "rm.fire")))
+        project.assets.register(particle_effect_asset(preset("sparkle", "rm.sparkle")))
+        project.assets.register(particle_effect_asset(preset("heal", "rm.heal")))
+        game = runtime.game
+        boss = next(e for e in game.scene.entities() if e.name == "Astral Tyrant")
+        fire = boss.add_component(ParticleEmitter2DComponent())
+        fire.effect_id, fire.offset_y = "rm.fire", -10.0
+        sparkle = game.player.add_component(ParticleEmitter2DComponent())
+        sparkle.effect_id = "rm.sparkle"
+        project.event_programs.register(
+            "rm_heal_fx",
+            EventProgram(
+                (
+                    EventInstruction(
+                        "WORLD", {"command": "PLAY_VFX", "args": {"asset_id": "rm.heal", "entity": "player"}}
+                    ),
+                )
+            ),
+        )
+        runtime.open()
+        driver = pygame.display.get_driver()
+        runtime._ui_mode = "field"
+        profiler = runtime.enable_profiling(RuntimeProfiler(target_fps=60))
+        counts = {"max": 0, "one_shot": 0}
+
+        def after(frame):
+            profiler.end_frame()
+            profiler.begin_frame()
+            counts["max"] = max(counts["max"], getattr(runtime, "particles_drawn", 0))
+            counts["one_shot"] = max(counts["one_shot"], sum(p.system.count for p in runtime.field_effects.particles))
+            if frame == 30:
+                game.events.start("rm_heal_fx")
+            if frame == 60:
+                pygame.image.save(runtime.capture(), str(out / shot_name))
+
+        profiler.begin_frame()
+        _pump(runtime, 3.0, after=after)
+        pacing = profiler.report()["pacing"]
+        emitters = len(runtime.field_effects.emitters)
+        runtime.close()
+        return driver, pacing, counts, emitters
+
+    for backend, name in ((None, "pygame"), ("moderngl", "moderngl")):
+        driver, pacing, counts, emitters = field_run(backend, f"particles_field_{name}.png")
+        ok = counts["max"] > 20 and counts["one_shot"] > 0 and emitters == 2 and pacing["measured_fps"] >= 50
+        results.append(
+            result(
+                f"particles_field_{name}",
+                "PASS" if ok else "FAIL",
+                f"{name} ({driver}): two entity emitters (fire on the boss, sparkle following the player) and a "
+                f"PLAY_VFX heal one-shot for 3 s: up to {counts['max']} particles drawn per frame, one-shot peak "
+                f"{counts['one_shot']}, {pacing['measured_fps']} fps, p99 interval {pacing['interval_p99_ms']} ms",
+                screenshots=[f"particles_field_{name}.png"],
+                note="Whether the particles look good is manual item M10.",
+            )
+        )
+
+    # -- VFX-01: battle beat ------------------------------------------------------------------------------
+    runtime = _runtime()
+    project = runtime.game.project
+    project.assets.register(particle_effect_asset(preset("explosion", "rm.burst")))
+    library = project.battle_presentation_library
+    for sequence_id in library.ids("motion_sequences"):  # every skill's VFX beat bursts particles
+        sequence = library.require("motion_sequences", sequence_id)
+        beats = tuple(dataclasses.replace(b, cue="rm.burst") if b.channel == "vfx" else b for b in sequence.beats)
+        library.set("motion_sequences", sequence_id, dataclasses.replace(sequence, beats=beats))
+    runtime.open()
+    driver = pygame.display.get_driver()
+    game = runtime.game
+    runtime._ui_mode = "field"
+    game.start_encounter("boss_room")
+    peak = {"n": 0, "shot": False}
+    draw = runtime.particle_drawer.draw
+
+    def counting_draw(*args, **kwargs):
+        n = draw(*args, **kwargs)
+        peak["n"] = max(peak["n"], n)
+        if n >= 30 and args[1] and args[1][0].age >= 0.2:
+            peak["due"] = True  # saved after this frame is presented, once the burst has spread
+        return n
+
+    runtime.particle_drawer.draw = counting_draw
+
+    def save_when_due(_frame):
+        if peak.get("due") and not peak["shot"]:
+            pygame.image.save(runtime.capture(), str(out / "particles_battle.png"))
+            peak["shot"] = True
+
+    adapter = runtime._battle_presentation
+    adapter.begin()
+    runtime._advance_to_hero_turn()
+    used = 0
+    for _ in range(60):  # a skill by a real key press whenever the hero may act
+        if not adapter.busy() and runtime.game.mode == "battle" and runtime._battle_actor() is not None:
+            _key(pygame.K_1)
+            _pump(runtime, 0.05)
+            _key(pygame.K_1, up=True)
+            used += 1
+        _pump(runtime, 0.1, after=save_when_due)
+        if peak["shot"]:
+            break
+    _pump(runtime, 0.5)
+    targets = sorted({entry[0].member_id for entry in adapter._cue_particles.values()})
+    runtime.close()
+    results.append(
+        result(
+            "particles_battle_beat",
+            "PASS" if peak["n"] >= 30 and peak["shot"] and targets else "FAIL",
+            f"Canonical battle in a real {driver} window: every action timeline's VFX beat cues a particle effect; "
+            f"bursts drawn on {targets} (whichever side acted first; {used} hero skill key presses), up to "
+            f"{peak['n']} particles in one frame",
+            screenshots=["particles_battle.png"] if peak["shot"] else [],
+        )
+    )
+    return results
+
+
+def check_editor_particles(out):
+    """VFX-01 in a shown Cocoa editor: Particle Effects tab - new effect from a preset, values changed in the
+    form, the live preview running on its own timer, Apply / Undo, an emitter's Inspector choice, usage."""
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor import EditorDocument
+    from asteria.editor.shell import AsteriaEditorWindow
+    from asteria.editor.workspace import WorkspaceMode
+    from asteria.presentation.particles import effect_definition
+    from asteria.project import Project
+    from asteria.runtime.environment2d import ParticleEmitter2DComponent
+
+    app = QApplication.instance() or QApplication([])
+    original = PROJECT_FILE.read_bytes()
+    project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
+    window = AsteriaEditorWindow(project)
+    window.document.file_path = PROJECT_FILE
+    window._resolve_project_resources()
+    window.resize(1500, 950)
+    window.show()
+    window.raise_()
+    checks, shots = {}, []
+
+    def settle(seconds=0.3):
+        deadline = time.perf_counter() + seconds
+        while time.perf_counter() < deadline:
+            app.processEvents()
+            time.sleep(0.02)
+
+    window.workspace.set_mode(WorkspaceMode.UI)
+    editor = window.particle_editor
+    window.ui_workspace.setCurrentWidget(editor)
+    settle(0.4)
+    checks["new_from_preset"] = editor.new_effect("rm.campfire", "fire") == "rm.campfire"
+    editor.inputs["rate"].setValue(90.0)
+    editor.inputs["spread"].setValue(40.0)
+    editor.inputs["color_end"].set_rgba((60, 120, 255, 0))
+    settle(1.2)  # the preview runs on its own QTimer
+    live = editor.preview.system
+    checks["preview_runs"] = live is not None and live.count > 40 and live.definition.rate == 90.0
+    editor.grab().save(str(out / "editor_particles.png"))
+    shots.append("editor_particles.png")
+    checks["apply"] = editor.apply() and effect_definition(project.assets, "rm.campfire").rate == 90.0
+    window.document.undo()
+    checks["undo"] = effect_definition(project.assets, "rm.campfire").rate == 40.0
+    window.document.redo()
+    scene = project.scene(project.startup_scene_id)
+    boss = next(e for e in scene.entities() if e.name == "Astral Tyrant")
+    emitter = boss.add_component(ParticleEmitter2DComponent())
+    emitter.effect_id = "rm.campfire"
+    window.workspace.set_mode(WorkspaceMode.SCENE)
+    window.document.select_component(emitter)
+    window.refresh_inspector()
+    settle(0.3)
+    table = window.inspector.table
+    combos = [table.cellWidget(r, 1) for r in range(table.rowCount())]
+    combos = [c for c in combos if hasattr(c, "findData")]
+    checks["inspector_choice"] = any(c.findData("rm.campfire") >= 0 for c in combos)
+    window.grab().save(str(out / "editor_particles_inspector.png"))
+    shots.append("editor_particles_inspector.png")
+    checks["usage"] = any("Astral Tyrant" in u for u in editor.api.usages("rm.campfire"))
+    window.document.mark_saved()
+    window.close()
+    checks["project_file_untouched"] = PROJECT_FILE.read_bytes() == original
+    failed = sorted(k for k, v in checks.items() if not v)
+    return result(
+        "editor_particles_gui",
+        "PASS" if not failed else "FAIL",
+        f"Qt platform '{app.platformName()}', shown editor: "
+        + ", ".join(f"{k}={'ok' if v else 'FAILED'}" for k, v in checks.items())
+        + f"; preview had {live.count if live else 0} live particles",
+        screenshots=shots,
+        note="Hands-on use by a person is manual item M7; judging the look is M10.",
+    )
+
+
 def _rss_mb():
     value = subprocess.run(["ps", "-o", "rss=", "-p", str(os.getpid())], capture_output=True, text=True).stdout
     return int(value.strip()) / 1024.0
@@ -2605,6 +2878,8 @@ CHECKS = {
     "migrated_project": check_migrated_project_plays,
     "asset_categories": check_asset_categories,
     "editor_characters": check_editor_characters,
+    "icons_and_particles": check_icons_and_particles,
+    "editor_particles": check_editor_particles,
 }
 
 
