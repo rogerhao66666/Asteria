@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from math import cos, radians, sin
 
-from PySide6.QtCore import QRectF, Signal
+from PySide6.QtCore import QRectF, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QPen, QPixmap, QTransform
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -64,7 +64,7 @@ class CharacterCompositionWidget(QWidget):
         self.clip = QComboBox()
         self.clip.currentTextChanged.connect(lambda _t: self._draw_preview())
         self.preview = QGraphicsView(QGraphicsScene(self))
-        self.preview.setMinimumSize(220, 220)
+        self.preview.setMinimumSize(200, 160)
 
         # sockets
         self.sockets = QListWidget()
@@ -160,15 +160,19 @@ class CharacterCompositionWidget(QWidget):
         mv = QVBoxLayout(middle)
         mv.addLayout(self._row(QLabel("Frame"), self.frame, QLabel("Clip"), self.clip))
         mv.addWidget(self.preview, 1)
-        right = QWidget()
-        rv = QVBoxLayout(right)
-        rv.addWidget(sockets_box)
-        rv.addWidget(attachments_box)
-        rv.addWidget(layers_box)
-        splitter = QSplitter()
-        for pane in (left, middle, right):
-            splitter.addWidget(pane)
-        splitter.setSizes([180, 420, 380])
+        # sheets and preview on top; sockets, attachments and layers side by side below (as many columns as fit)
+        top = QSplitter()
+        for pane in (left, middle):
+            top.addWidget(pane)
+        top.setSizes([180, 520])
+        from .responsive_form import ResponsiveColumns
+
+        boxes = ResponsiveColumns((sockets_box, attachments_box, layers_box), column_width=250)
+        splitter = QSplitter(Qt.Vertical)
+        splitter.addWidget(top)
+        splitter.addWidget(boxes)
+        splitter.setStretchFactor(0, 2)
+        splitter.setStretchFactor(1, 3)
         layout = QVBoxLayout(self)
         layout.addWidget(splitter, 1)
         layout.addWidget(self.status)
@@ -332,6 +336,9 @@ class CharacterCompositionWidget(QWidget):
             scene.addLine(cx, cy, cx + 14 * cos(a), cy + 14 * sin(a), marker)
             scene.addSimpleText(socket_id).setPos(cx + 6, cy - 16)
         scene.addEllipse(QRectF(px * s - 3, py * s - 3, 6, 6), QPen(QColor("#d9534f")))
+        # the whole body, parts and socket labels fit in the preview, whatever its size
+        self.preview.setSceneRect(scene.itemsBoundingRect().adjusted(-8, -8, 8, 8))
+        self.preview.fitInView(self.preview.sceneRect(), Qt.KeepAspectRatio)
 
     # -- edits ---------------------------------------------------------------------------------------
     def _try(self, action, message):

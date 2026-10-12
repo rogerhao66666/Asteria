@@ -6,6 +6,8 @@ sub-tab, take a screenshot of each and list visible defects a person would see:
 * ``overflow`` - a visible widget that sticks out of its parent's rectangle (outside scroll areas)
 * ``tiny``     - an interactive control squeezed under 12 px
 * ``scrolled`` - (informational) a tab outside its bar's visible part, reached with the scroll buttons
+* ``page_scroll_x`` / ``page_scroll_y`` - a workspace page larger than its area (the user must scroll it)
+* ``columns_scroll_x`` - table / tree columns wider than the table (the user must scroll sideways)
 
 Usage: python scripts/editor_ui_audit.py OUTPUT_DIR [--size 1600x1000] [--tag before] [--theme twilight]
                                          [--surfaces scene rpg_database ...]
@@ -146,6 +148,20 @@ def defects_in(window):
                     widget,
                     {"rect": [r.x(), r.y(), r.width(), r.height()], "parent": [p.width(), p.height()]},
                 )
+    # needs scrolling: a page wider / taller than its area, or table columns wider than the table
+    from PySide6.QtWidgets import QAbstractItemView, QScrollArea
+
+    for widget in window.findChildren(QAbstractScrollArea):
+        if not widget.isVisible() or widget.width() < 40:
+            continue
+        bar = widget.horizontalScrollBar()
+        if bar.isVisible() and bar.maximum() > 8:
+            kind = "page_scroll_x" if isinstance(widget, QScrollArea) else "columns_scroll_x"
+            if isinstance(widget, QAbstractItemView) or isinstance(widget, QScrollArea):
+                add(kind, widget, {"overflow_px": bar.maximum(), "width": widget.viewport().width()})
+        vbar = widget.verticalScrollBar()
+        if isinstance(widget, QScrollArea) and vbar.isVisible() and vbar.maximum() > 8:
+            add("page_scroll_y", widget, {"overflow_px": vbar.maximum(), "height": widget.viewport().height()})
     unique = {}
     for item in found:
         unique.setdefault((item["kind"], item["where"], item.get("text", ""), item["widget"]), item)
@@ -169,6 +185,21 @@ def surfaces(window):
                 out.append((name, lambda m=mode, p=page, i=i: (window.workspace.set_mode(m), p.setCurrentIndex(i))))
         else:
             out.append((mode.value, lambda m=mode: window.workspace.set_mode(m)))
+    # every Game Systems kind and every database category (forms and tables differ per kind)
+    from asteria.editor.workspace import WorkspaceMode as WM
+
+    systems = window.game_systems_editor
+    for kind in systems.controller.kinds:
+        out.append(
+            (
+                f"rpg_game_systems_{kind.kind_id}",
+                lambda k=kind.kind_id: (
+                    window.workspace.set_mode(WM.RPG),
+                    window.rpg_workspace.setCurrentWidget(systems),
+                    systems.set_kind(k),
+                ),
+            )
+        )
     return out
 
 
@@ -195,6 +226,9 @@ def main(argv=None):
     apply_asteria_theme(app, args.theme)
     project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
     window = AsteriaEditorWindow(project)
+    window.document.file_path = PROJECT_FILE  # as File > Open does: asset paths resolve next to the project
+    window.document.mark_saved()
+    window.refresh_all()
     window.resize(width, height)
     window.show()
 
@@ -213,12 +247,15 @@ def main(argv=None):
         settle()
         window.grab().save(str(out / f"{args.tag}_{name}.png"))
         report["surfaces"][name] = defects_in(window)
-    total = sum(1 for v in report["surfaces"].values() for item in v if item["kind"] != "scrolled")
+    layout_kinds = ("scrolled", "page_scroll_x", "page_scroll_y", "columns_scroll_x")
+    total = sum(1 for v in report["surfaces"].values() for item in v if item["kind"] not in layout_kinds)
+    report["scrolling"] = sum(1 for v in report["surfaces"].values() for item in v if item["kind"] in layout_kinds[1:])
     report["total"] = total
     (out / f"{args.tag}_report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     for name, items in report["surfaces"].items():
-        print(f"{name}: {sum(1 for item in items if item['kind'] != 'scrolled')}")
-    print("total", total, "dpr", report["dpr"])
+        kinds = [i["kind"] for i in items if i["kind"] != "scrolled"]
+        print(f"{name}: {len(kinds)} {sorted(set(kinds))}")
+    print("total", total, "scrolling", report["scrolling"], "dpr", report["dpr"])
     window.document.mark_saved()
     window.close()
     return 0

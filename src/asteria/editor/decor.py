@@ -166,6 +166,10 @@ def compact_widget(widget):
             widget.setMinimumContentsLength(COMBO_CHARS)
         if widget.minimumWidth() == 0:
             widget.setMinimumWidth(COMBO_MIN_WIDTH)  # explicit: the styled size hint ignores the policy
+        if widget.property("full_text_tip") is None:  # a narrow combo box still tells its whole value
+            widget.setProperty("full_text_tip", True)
+            widget.currentTextChanged.connect(widget.setToolTip)
+            widget.setToolTip(widget.currentText())
     elif isinstance(widget, QAbstractSpinBox):
         if widget.minimumWidth() == 0:
             widget.setMinimumWidth(SPIN_MIN_WIDTH)

@@ -15,7 +15,6 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
-    QFormLayout,
     QGroupBox,
     QHBoxLayout,
     QInputDialog,
@@ -35,6 +34,7 @@ from PySide6.QtWidgets import (
 )
 
 from .game_systems_authoring import FORMS, KINDS, GameSystemsAuthoringError, new_row
+from .responsive_form import ResponsiveForm, ResponsiveSplit
 
 _BIG = 1_000_000_000
 
@@ -48,6 +48,7 @@ class _KeyValueTable(QWidget):
         self.table.setHorizontalHeaderLabels(list(headers))
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setMinimumHeight(90)
+        self.table.setMaximumHeight(150)  # a few rows; more scroll inside the table, not the whole page
         add, remove = QPushButton("Add"), QPushButton("Remove")
         add.clicked.connect(lambda: self.add_row("", ""))
         remove.clicked.connect(self.remove_row)
@@ -120,9 +121,9 @@ class _TableField(QGroupBox):
         self.rows = []
         self._current = -1
         self.list = QListWidget()
-        self.list.setMaximumHeight(110)
+        self.list.setMinimumHeight(90)
         self.list.currentRowChanged.connect(self._select)
-        self.detail = RecordForm(fields, references)
+        self.detail = RecordForm(fields, references, column_width=200)  # nested rows: narrower columns
         self.detail.setEnabled(False)
         add, remove = QPushButton("Add"), QPushButton("Remove")
         add.clicked.connect(self.add_row)
@@ -131,10 +132,15 @@ class _TableField(QGroupBox):
         buttons.addWidget(add)
         buttons.addWidget(remove)
         buttons.addStretch(1)
+        rows = QWidget()
+        column = QVBoxLayout(rows)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.addWidget(self.list, 1)
+        column.addLayout(buttons)
         layout = QVBoxLayout(self)
-        layout.addWidget(self.list)
-        layout.addLayout(buttons)
-        layout.addWidget(self.detail)
+        # the row list sits beside the selected row's form when there is room
+        self.split = ResponsiveSplit(rows, self.detail, side_by_side_at=520)
+        layout.addWidget(self.split)
 
     def _label(self, row):
         first = self.fields[0].key
@@ -197,21 +203,25 @@ class RecordForm(QWidget):
 
     changed = Signal()
 
-    def __init__(self, fields, references, parent=None):
+    def __init__(self, fields, references, parent=None, *, column_width=250):
         super().__init__(parent)
+        self.column_width = column_width
         self.fields = tuple(fields)
         self.references = references
         self.widgets = {}
         self._original = {}
-        form = QFormLayout(self)
-        form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        # fields flow into as many columns as the width allows; groups and tables span the full width
+        self.grid = ResponsiveForm(self, column_width=self.column_width)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.addWidget(self.grid)
         for f in self.fields:
             widget = self._build(f)
             self.widgets[f.key] = widget
             if f.kind in ("group", "table"):
-                form.addRow(widget)
+                self.grid.add_wide(widget)
             else:
-                form.addRow(f.label, widget)
+                self.grid.add_row(f.label, widget, span=f.kind in ("amounts", "pairs", "ref_list", "multiline"))
 
     def _build(self, f):
         if f.kind == "id":

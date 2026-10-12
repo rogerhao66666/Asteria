@@ -132,10 +132,11 @@ class EventFlowWidget(QWidget):
         top.addWidget(QLabel("Programs are edited in the Event Program tab (entity events) or by script."))
         top.addStretch(1)
         top.addWidget(new_program)
+        from .responsive_form import ResponsiveColumns
+
         layout = QVBoxLayout(self)
         layout.addLayout(top)
-        layout.addWidget(common_box, 1)
-        layout.addWidget(battle_box, 1)
+        layout.addWidget(ResponsiveColumns((common_box, battle_box), column_width=360), 1)  # side by side if wide
         layout.addWidget(self.status)
         self._condition_values = []
         self.refresh()

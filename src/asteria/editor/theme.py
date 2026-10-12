@@ -274,6 +274,7 @@ QToolButton#LayerControlButton:pressed { background: $panel; }
 QLabel { color: $text; }
 QLabel#SectionLabel { color: $text_dim; font-size: 11px; font-weight: 800; padding: 3px 1px; }
 QLabel#MutedLabel { color: $text_muted; padding: 2px 1px; }
+QLabel#FieldLabel { color: $text_dim; font-size: 11px; font-weight: 600; padding: 0 1px; }
 QLabel#EmptyStateTitle { color: $text_dim; font-size: 14px; font-weight: 700; }
 QLabel#EmptyStateHint { color: $text_muted; }
 QLabel#ErrorLabel { color: $error; }
