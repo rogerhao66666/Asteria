@@ -40,6 +40,7 @@ STANDARD_WORLD_COMMANDS = (
     "SET_NPC",
     "MOVE_NPC",
     "SUMMON",
+    "SHOW_POPUP",
 )
 
 PRESENTATION_COMMANDS = (
@@ -83,6 +84,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "CAMERA_RELEASE": ("blend", "ease"),
     "CAMERA_SHAKE": ("intensity", "duration"),
     "SUMMON": ("enemy_id", "actor_id", "count", "owner_id"),
+    "SHOW_POPUP": ("text", "entity", "duration_ms", "kind"),
 }
 
 
@@ -123,9 +125,25 @@ def register_standard_world_commands(router, session):
         item_id = str(_required(command, "item_id"))
         if item_id not in session.project.rpg_database.items:
             raise WorldCommandError(f"unknown item: {item_id}")
-        session.save.rpg_state.inventory.add(item_id, int(_amount(command, "quantity", 1)))
+        inventory = session.save.rpg_state.inventory
+        before, lost = inventory.count(item_id), len(inventory.overflow)
+        inventory.add(item_id, int(_amount(command, "quantity", 1)))
+        name = session.project.rpg_database.items[item_id].display_name
+        if inventory.count(item_id) > before:
+            session.notify(f"+{inventory.count(item_id) - before} {name}", kind="item")
+        if len(inventory.overflow) > lost:
+            session.notify(f"No room for {name}", kind="warning")
         session.refresh_quests()
-        return session.save.rpg_state.inventory.count(item_id)
+        return inventory.count(item_id)
+
+    def show_popup(command):
+        session.notify(
+            str(_required(command, "text")),
+            entity=command.args.get("entity") or None,
+            duration_ms=float(command.args.get("duration_ms") or 1100.0),
+            kind=str(command.args.get("kind") or "info"),
+        )
+        return True
 
     def take_item(command):
         item_id = str(_required(command, "item_id"))
@@ -183,6 +201,7 @@ def register_standard_world_commands(router, session):
             raise WorldCommandError(str(exc)) from exc
 
     router.register("SUMMON", summon)
+    router.register("SHOW_POPUP", show_popup)
     router.register("START_ENCOUNTER", start_encounter)
     router.register("TRANSFER", transfer)
     router.register("GIVE_ITEM", give_item)

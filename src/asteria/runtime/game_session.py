@@ -70,6 +70,7 @@ class GameSessionRuntime:
         self.project = project
         self.save = runtime_save
         self._configure_inventory()
+        self.notices = []  # short messages for the field (CMP-03 popups): {"text", "entity", "duration_ms"}
         self.scene = project.scene(runtime_save.scene_id)
         self.player = self.scene.get_entity(runtime_save.player_entity_id)
         if self.player is None and runtime_save.player_entity_id:
@@ -953,6 +954,14 @@ class GameSessionRuntime:
         self._logged_turn = None
         self._log("battle_started", data={"encounter_id": self.encounter_id})
         return self.battle
+
+    def notify(self, text, *, entity=None, duration_ms=1100.0, kind="info"):
+        """Queue a short field message the host shows as animated text above ``entity`` (default the player)."""
+        self.notices.append({"text": str(text), "entity": entity, "duration_ms": float(duration_ms), "kind": str(kind)})
+
+    def drain_notices(self):
+        values, self.notices = tuple(self.notices), []
+        return values
 
     def _configure_inventory(self):
         """The project's inventory rules (RPG-01; the first by id) apply to every way items arrive."""

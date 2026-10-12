@@ -673,6 +673,7 @@ class PlayableTestRuntime:
             col = walking_pattern_index(self._field_step) if moving else 1
             self._blit_normal(sheet_path, (col * fw, row * fh, fw, fh), (render_w, render_h), position)
         self._draw_field_effects()
+        self._draw_popups()
         if self.game.cutscene_active:
             self._draw_dialogue()
             return
@@ -698,6 +699,74 @@ class PlayableTestRuntime:
         if self.message and self.pg.time.get_ticks() < self.message_until:
             self.text(self.message, self.width / 2, 92, size=22, color=(175, 235, 255), center=True)
         self._draw_dialogue()
+
+    # -- popups (CMP-03: generic animated text above field characters) -----------------------------
+    POPUP_COLORS = {"item": (170, 240, 170), "warning": (255, 170, 150), "info": (230, 232, 240)}
+
+    def _update_popups(self, dt):
+        from asteria.presentation.animated_text import AnimatedTextRuntime, AnimatedTextSpec, TextKey, TextTransform
+
+        if getattr(self, "popups", None) is None:
+            self.popups, self._popup_serial = AnimatedTextRuntime(), 0
+        for notice in self.game.drain_notices():
+            self._popup_serial += 1
+            rise = TextTransform(y=-34.0, opacity=0.0, scale=1.0)
+            spec = AnimatedTextSpec(
+                notice["text"],
+                duration_ms=notice["duration_ms"],
+                space="world",
+                anchor_id=notice["entity"] or "player",
+                keys=(
+                    TextKey(0.0, TextTransform(y=0.0, opacity=0.0, scale=0.8)),
+                    TextKey(0.15, TextTransform(y=-8.0, opacity=1.0, scale=1.0)),
+                    TextKey(0.7, TextTransform(y=-22.0, opacity=1.0)),
+                    TextKey(1.0, rise),
+                ),
+                metadata={"kind": notice["kind"]},
+            )
+            self.popups.spawn(f"popup.{self._popup_serial}", spec)
+        self.popup_frame = self.popups.update(dt * 1000.0)
+
+    def _popup_anchor(self, anchor_id):
+        if anchor_id == "player":
+            entity = self.game.player
+        else:
+            entity = next((e for e in self.game.scene.entities() if e.name == anchor_id or e.id == anchor_id), None)
+        transform = entity.get(Transform) if entity is not None else None
+        if transform is None:
+            return None
+        x, y = self._field_screen_xy(transform.x, transform.y)
+        return x, y - 48 * self.field_camera.zoom  # above the head
+
+    def _draw_popups(self):
+        from asteria.presentation.text_render_integration import AnimatedTextRenderComposer
+
+        resolved = getattr(self, "popup_frame", ())
+        if not resolved:
+            return
+        composer = AnimatedTextRenderComposer(anchor_resolver=self._popup_anchor)
+        packets = []
+        for item in resolved:
+            try:
+                packets.extend(composer.compose((item,)))
+            except ValueError:
+                continue  # the anchor left the scene
+        font = self.pg.font.Font(None, 30)
+        for packet in packets:
+            color = self.POPUP_COLORS.get(packet.metadata.get("kind"), self.POPUP_COLORS["info"])
+            image = font.render(packet.text, True, color)
+            if packet.scale != 1.0:
+                size = (
+                    max(1, round(image.get_width() * packet.scale)),
+                    max(1, round(image.get_height() * packet.scale)),
+                )
+                image = self.pg.transform.smoothscale(image, size)
+            shadow = font.render(packet.text, True, (10, 12, 20))
+            shadow.set_alpha(round(160 * packet.opacity))
+            image.set_alpha(round(255 * packet.opacity))
+            at = (round(packet.x - image.get_width() / 2), round(packet.y - image.get_height() / 2))
+            self.screen.blit(shadow, (at[0] + 2, at[1] + 2))
+            self.screen.blit(image, at)
 
     def _draw_dialogue(self):
         request = self.game.pending_dialogue
@@ -1759,6 +1828,7 @@ class PlayableTestRuntime:
         self._frame_dt = float(dt)
         self._clock_seconds += float(dt)
         self._update_resource_scope()
+        self._update_popups(float(dt))
         if self.debug_server is not None:
             self.debug_server.poll()
         with self.profiler.section("input"):
