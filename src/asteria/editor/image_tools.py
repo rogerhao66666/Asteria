@@ -153,3 +153,29 @@ class ImageFixDialog(QDialog):
             return None
         self.accept()
         return self.applied
+
+
+def icon_choices(document):
+    """The project's icon assets as ``((asset id, QIcon or None), ...)`` for an ``icon_id`` field (AST-07)."""
+    from PySide6.QtGui import QIcon
+
+    from asteria.runtime.menu_icons import icon_source
+
+    project = getattr(document, "project", None)
+    if project is None:
+        return ()
+    root = project_root(document)
+    sheets = {}
+    choices = []
+    for asset in sorted(project.assets.query(kind="icon"), key=lambda a: a.asset_id):
+        uri, region = icon_source(project, asset.asset_id)
+        path = Path(uri) if Path(uri).is_absolute() else root / uri
+        if path not in sheets:
+            sheets[path] = QPixmap(str(path)) if path.is_file() else QPixmap()
+        sheet = sheets[path]
+        icon = None
+        if not sheet.isNull():
+            cell = sheet.copy(*region) if region else sheet
+            icon = QIcon(cell.scaled(32, 32, Qt.KeepAspectRatio, Qt.FastTransformation))
+        choices.append((asset.asset_id, icon))
+    return tuple(choices)

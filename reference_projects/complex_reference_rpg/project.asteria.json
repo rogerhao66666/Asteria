@@ -1646,6 +1646,1230 @@
           "vfx"
         ],
         "version": 1
+      },
+      {
+        "asset_id": "icon.accessory_01",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              72,
+              54,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.accessory_02",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              90,
+              54,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.accessory_03",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              108,
+              54,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.accessory_04",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              126,
+              54,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.accessory_05",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              0,
+              72,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.accessory_06",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              18,
+              72,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.accessory_07",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              36,
+              72,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.accessory_08",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              54,
+              72,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.alchemy_salt",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              0,
+              0,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.ancient_thread",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              18,
+              0,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.boss_emblem",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              36,
+              0,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.ether_leaf",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              54,
+              0,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.fire_dust",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              72,
+              0,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.focus_stone",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              90,
+              0,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.guardian_scale",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              108,
+              0,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.healing_herb",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              126,
+              0,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.ice_crystal",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              0,
+              18,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.iron_ore",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              18,
+              18,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.moon_shard",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              36,
+              18,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.phoenix_seed",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              54,
+              18,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.silver_ore",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              72,
+              18,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.storm_core",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              90,
+              18,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.venom_sac",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              108,
+              18,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.weapon_01",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              0,
+              36,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.weapon_02",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              18,
+              36,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.weapon_03",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              36,
+              36,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.weapon_04",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              54,
+              36,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.weapon_05",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              72,
+              36,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.weapon_06",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              90,
+              36,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.weapon_07",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              108,
+              36,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.weapon_08",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              126,
+              36,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.weapon_09",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              0,
+              54,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.weapon_10",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              18,
+              54,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.weapon_11",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              36,
+              54,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.weapon_12",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              54,
+              54,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "icon.wisp_essence",
+        "kind": "icon",
+        "metadata": [
+          [
+            "region",
+            [
+              126,
+              18,
+              18,
+              18
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/item_icons.png"
+        },
+        "tags": [
+          "icon",
+          "menu"
+        ],
+        "version": 1
       }
     ],
     "schema": "asteria.assets",
@@ -8131,6 +9355,7 @@
           "heal"
         ],
         "growth_id": null,
+        "icon_id": "icon.accessory_01",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8150,6 +9375,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "icon.accessory_02",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8171,6 +9397,7 @@
           "double_cut"
         ],
         "growth_id": null,
+        "icon_id": "icon.accessory_03",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8190,6 +9417,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "icon.accessory_04",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8211,6 +9439,7 @@
           "poison_edge"
         ],
         "growth_id": null,
+        "icon_id": "icon.accessory_05",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8230,6 +9459,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "icon.accessory_06",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8251,6 +9481,7 @@
           "heal"
         ],
         "growth_id": null,
+        "icon_id": "icon.accessory_07",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8270,6 +9501,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "icon.accessory_08",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8291,6 +9523,7 @@
           "fire_arc"
         ],
         "growth_id": "weapon_growth",
+        "icon_id": "icon.weapon_01",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8320,6 +9553,7 @@
           "ice_lance"
         ],
         "growth_id": "weapon_growth",
+        "icon_id": "icon.weapon_02",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8349,6 +9583,7 @@
           "storm_chain"
         ],
         "growth_id": "weapon_growth",
+        "icon_id": "icon.weapon_03",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8378,6 +9613,7 @@
           "heal"
         ],
         "growth_id": "weapon_growth",
+        "icon_id": "icon.weapon_04",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8407,6 +9643,7 @@
           "revive"
         ],
         "growth_id": "weapon_growth",
+        "icon_id": "icon.weapon_05",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8436,6 +9673,7 @@
           "double_cut"
         ],
         "growth_id": "weapon_growth",
+        "icon_id": "icon.weapon_06",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8465,6 +9703,7 @@
           "armor_break"
         ],
         "growth_id": "weapon_growth",
+        "icon_id": "icon.weapon_07",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8494,6 +9733,7 @@
           "poison_edge"
         ],
         "growth_id": "weapon_growth",
+        "icon_id": "icon.weapon_08",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8523,6 +9763,7 @@
           "haste_song"
         ],
         "growth_id": "weapon_growth",
+        "icon_id": "icon.weapon_09",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8552,6 +9793,7 @@
           "slow_hex"
         ],
         "growth_id": "weapon_growth",
+        "icon_id": "icon.weapon_10",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8581,6 +9823,7 @@
           "fire_arc"
         ],
         "growth_id": "weapon_growth",
+        "icon_id": "icon.weapon_11",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8610,6 +9853,7 @@
           "ice_lance"
         ],
         "growth_id": "weapon_growth",
+        "icon_id": "icon.weapon_12",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -8934,6 +10178,7 @@
     "items": [
       {
         "display_name": "Alchemy Salt",
+        "icon_id": "icon.alchemy_salt",
         "item_id": "alchemy_salt",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -8945,6 +10190,7 @@
       },
       {
         "display_name": "Ancient Thread",
+        "icon_id": "icon.ancient_thread",
         "item_id": "ancient_thread",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -8956,6 +10202,7 @@
       },
       {
         "display_name": "Boss Emblem",
+        "icon_id": "icon.boss_emblem",
         "item_id": "boss_emblem",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -8967,6 +10214,7 @@
       },
       {
         "display_name": "Ether Leaf",
+        "icon_id": "icon.ether_leaf",
         "item_id": "ether_leaf",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -8978,6 +10226,7 @@
       },
       {
         "display_name": "Fire Dust",
+        "icon_id": "icon.fire_dust",
         "item_id": "fire_dust",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -8989,6 +10238,7 @@
       },
       {
         "display_name": "Focus Stone",
+        "icon_id": "icon.focus_stone",
         "item_id": "focus_stone",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -9000,6 +10250,7 @@
       },
       {
         "display_name": "Guardian Scale",
+        "icon_id": "icon.guardian_scale",
         "item_id": "guardian_scale",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -9011,6 +10262,7 @@
       },
       {
         "display_name": "Healing Herb",
+        "icon_id": "icon.healing_herb",
         "item_id": "healing_herb",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -9022,6 +10274,7 @@
       },
       {
         "display_name": "Ice Crystal",
+        "icon_id": "icon.ice_crystal",
         "item_id": "ice_crystal",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -9033,6 +10286,7 @@
       },
       {
         "display_name": "Iron Ore",
+        "icon_id": "icon.iron_ore",
         "item_id": "iron_ore",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -9044,6 +10298,7 @@
       },
       {
         "display_name": "Moon Shard",
+        "icon_id": "icon.moon_shard",
         "item_id": "moon_shard",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -9055,6 +10310,7 @@
       },
       {
         "display_name": "Phoenix Seed",
+        "icon_id": "icon.phoenix_seed",
         "item_id": "phoenix_seed",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -9066,6 +10322,7 @@
       },
       {
         "display_name": "Silver Ore",
+        "icon_id": "icon.silver_ore",
         "item_id": "silver_ore",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -9077,6 +10334,7 @@
       },
       {
         "display_name": "Storm Core",
+        "icon_id": "icon.storm_core",
         "item_id": "storm_core",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -9088,6 +10346,7 @@
       },
       {
         "display_name": "Venom Sac",
+        "icon_id": "icon.venom_sac",
         "item_id": "venom_sac",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -9099,6 +10358,7 @@
       },
       {
         "display_name": "Wisp Essence",
+        "icon_id": "icon.wisp_essence",
         "item_id": "wisp_essence",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,

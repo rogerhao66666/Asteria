@@ -232,6 +232,9 @@ class StructuredRecordEditor(QTreeWidget):
         self.setHeaderLabels(["Field", "Value"])
         self.setAlternatingRowColors(True)
         self._data = None
+        # field name -> callable returning ((value, QIcon or None), ...): those leaves get an editable
+        # drop-down of suggestions (any typed value is still accepted)
+        self.field_choices = {}
         self.itemChanged.connect(lambda *_: self.changed.emit())
 
     def set_record(self, data, title=None):
@@ -280,7 +283,28 @@ class StructuredRecordEditor(QTreeWidget):
             item.setText(1, _scalar_text(value))
             item.setData(1, Qt.UserRole, deepcopy(value))
             item.setFlags(item.flags() | Qt.ItemIsEditable)
+            key = path[-1] if path else None
+            if isinstance(key, str) and key in self.field_choices and isinstance(value, str):
+                self._choice_widget(item, value, self.field_choices[key]())
         return item
+
+    def _choice_widget(self, item, value, choices):
+        from PySide6.QtGui import QBrush
+
+        combo = QComboBox()
+        combo.setEditable(True)
+        combo.addItem("", "")
+        for choice, icon in choices:
+            if icon is not None:
+                combo.addItem(icon, choice, choice)
+            else:
+                combo.addItem(choice, choice)
+        combo.setCurrentText(value)
+        combo.setToolTip("Pick one, or type any id or path; empty for none")
+        combo.currentTextChanged.connect(lambda text, it=item: it.setText(1, text))
+        item.setForeground(1, QBrush(Qt.transparent))  # the combo shows the value; the text stays for record()
+        self.setItemWidget(item, 1, combo)
+        return combo
 
     def record(self):
         if self._data is None:
@@ -547,6 +571,10 @@ class AdapterFamilyWidget(QWidget):
         browser_layout.addLayout(filter_row)
         browser_layout.addWidget(self.browser, 1)
         self.editor = StructuredRecordEditor()
+        if document is not None:
+            from .image_tools import icon_choices
+
+            self.editor.field_choices["icon_id"] = lambda: icon_choices(document)
         self.graph_view = SkillTreeGraphView()
         self.detail_stack = QStackedWidget()
         self.detail_stack.addWidget(self.editor)

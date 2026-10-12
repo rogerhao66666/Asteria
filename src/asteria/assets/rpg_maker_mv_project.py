@@ -10,6 +10,7 @@ from asteria.gameplay import AbilityDefinition
 from asteria.project import Project
 from asteria.rpg import ActorDefinition, ClassDefinition, EquipmentDefinition, ItemDefinition
 
+from .canonical import AssetSource, CanonicalAsset
 from .local_reference import RPGMakerMVProjectLayout
 from .rpg_maker_mv_catalog import RPGMakerMVCatalog
 from .rpg_maker_mv_database import MVReferenceIssue, RPGMakerMVDatabase
@@ -53,6 +54,26 @@ class RPGMakerMVProjectImporter:
 
         for asset in catalog.assets:
             project.assets.register(asset)
+
+        def menu_icon(icon):
+            """An ``mv.icon.<index>`` icon asset (one IconSet cell) for menus; "" for none (MV index 0)."""
+            if icon is None or icon.index <= 0:
+                return ""
+            asset_id = f"mv.icon.{icon.index}"
+            if all(a.asset_id != asset_id for a in project.assets.query(kind="icon")):
+                x0, y0, x1, y1 = icon.box
+                project.assets.register(
+                    CanonicalAsset(
+                        asset_id,
+                        "icon",
+                        AssetSource(
+                            str(icon.source), provider="rpg_maker_mv", provenance=(("development_fixture", True),)
+                        ),
+                        tags=frozenset({"source:rpg-maker-mv", "mv:icon"}),
+                        metadata=(("region", (x0, y0, x1 - x0, y1 - y0)),),
+                    )
+                )
+            return asset_id
 
         for record in database.skills:
             target_id = f"mv.skill.{record.id}"
@@ -116,9 +137,11 @@ class RPGMakerMVProjectImporter:
 
         for record in database.items:
             target_id = f"mv.item.{record.id}"
-            project.rpg_database.add_item(ItemDefinition(target_id, record.name, tags=("source.mv",)))
-            source_ids["items"][record.id] = target_id
             icon = catalog.icon(record.icon_index)
+            project.rpg_database.add_item(
+                ItemDefinition(target_id, record.name, tags=("source.mv",), icon_id=menu_icon(icon))
+            )
+            source_ids["items"][record.id] = target_id
             source_metadata["items"][record.id] = {
                 "icon_index": record.icon_index,
                 "icon_box": None if icon is None else icon.box,
@@ -135,16 +158,17 @@ class RPGMakerMVProjectImporter:
             tags = ("source.mv", record.equipment_kind)
             if weapon_type:
                 tags += (f"mv-weapon-type:{weapon_type.lower()}",)
+            icon = catalog.icon(record.icon_index)
             project.rpg_database.add_equipment(
                 EquipmentDefinition(
                     target_id,
                     record.name,
                     slot=record.equipment_kind,
                     tags=tags,
+                    icon_id=menu_icon(icon),
                 )
             )
             source_ids["equipment"][record.id if record.equipment_kind == "weapon" else 100000 + record.id] = target_id
-            icon = catalog.icon(record.icon_index)
             source_metadata["equipment"][record.id if record.equipment_kind == "weapon" else 100000 + record.id] = {
                 "kind": record.equipment_kind,
                 "icon_index": record.icon_index,

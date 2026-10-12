@@ -62,7 +62,8 @@ def resource_root(tmp_path):
         Image.new("RGBA", (512, 512), (90, 120, 200, 255)).save(path)
     # Canonical battle presentation sheets (CC0) are real project assets; copy them as-is.
     shutil.copytree(REFERENCE_PROJECT / "playable_assets" / "battle", tmp_path / "playable_assets" / "battle")
-    shutil.copy(REFERENCE_PROJECT / "playable_assets" / "fx_heal.png", tmp_path / "playable_assets" / "fx_heal.png")
+    for name in ("fx_heal.png", "item_icons.png"):  # the item / equipment menu icons (AST-07) too
+        shutil.copy(REFERENCE_PROJECT / "playable_assets" / name, tmp_path / "playable_assets" / name)
     return tmp_path
 
 

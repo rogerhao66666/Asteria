@@ -109,6 +109,7 @@ class PlayableTestRuntime:
         self._victory = False
         self._defeat = False
         self._loaded = {}
+        self._icon_cache = {}  # (icon id, size) -> scaled menu icon
         # Resource lifetime (ENG-10): images first loaded during a battle belong to
         # the "battle" scope and are released when play returns to the field.
         self._image_scope = {}
@@ -147,8 +148,44 @@ class PlayableTestRuntime:
             self._image_scope[rel] = "battle" if in_battle else "field"
         return self._loaded[rel]
 
+    def icon_image(self, icon_id, size=24):
+        """The menu icon ``icon_id`` (see ``menu_icons``) scaled to fit ``size`` pixels, or None."""
+        from .menu_icons import icon_source
+
+        cache = self._icon_cache
+        key = (str(icon_id or ""), int(size))
+        if key in cache:
+            return cache[key]
+        icon = None
+        source = icon_source(self.project, icon_id)
+        if source is not None:
+            uri, region = source
+            try:
+                image = self.load_image(uri)
+                if region is not None:
+                    image = image.subsurface(self.pg.Rect(region).clip(image.get_rect()))
+                w, h = image.get_size()
+                scale = min(size / max(1, w), size / max(1, h))
+                target = (max(1, round(w * scale)), max(1, round(h * scale)))
+                pixel_art = scale >= 1 and float(scale).is_integer()
+                icon = (self.pg.transform.scale if pixel_art else self.pg.transform.smoothscale)(image, target)
+            except (OSError, ValueError, self.pg.error):
+                icon = None  # a missing or broken icon shows the name only
+        cache[key] = icon
+        return icon
+
+    def _draw_icon(self, icon_id, x, y, size=22):
+        """Draw the icon centred in a ``size`` box at (x, y); True when one was drawn."""
+        icon = self.icon_image(icon_id, size) if icon_id else None
+        if icon is None:
+            return False
+        w, h = icon.get_size()
+        self.screen.blit(icon, (x + (size - w) // 2, y + (size - h) // 2))
+        return True
+
     def release_resource_scope(self, scope):
         """Drop every cached image owned by ``scope``; returns how many were released."""
+        self._icon_cache.clear()  # icons are cut from cached images: rebuild them on demand
         names = [rel for rel, owner in self._image_scope.items() if owner == scope]
         for rel in names:
             self._loaded.pop(rel, None)
@@ -1298,13 +1335,16 @@ class PlayableTestRuntime:
         name = getattr(self.project.rpg_database.actors.get(actor), "display_name", actor)
         self.text(f"Q / E  {name}", self.width - 330, 40, size=20, color=(170, 220, 255))
         rows = menu.rows()
+        icons = menu.row_icons() if menu.tab in ("items", "equipment") else [""] * len(rows)
+        label_x = 56 + (30 if any(icons) else 0)
         start = max(0, menu.row - 13)
         for i, (_kind, _key, label, detail) in enumerate(rows[start : start + 14]):
             y = 92 + i * 28
             selected = start + i == menu.row
             if selected:
                 self.pg.draw.rect(self.screen, (40, 52, 78), (40, y - 4, self.width - 80, 26), border_radius=4)
-            self.text(label, 56, y, size=20, color=(255, 255, 255) if selected else (210, 215, 225))
+            self._draw_icon(icons[start + i], 56, y - 3)
+            self.text(label, label_x, y, size=20, color=(255, 255, 255) if selected else (210, 215, 225))
             self.text(detail, self.width - 420, y, size=20, color=(170, 210, 240))
         if not rows:
             self.text("Nothing here yet.", 56, 92, size=20, color=(150, 160, 180))
@@ -1719,12 +1759,19 @@ class PlayableTestRuntime:
         self.text("Price", 420, 104, size=19, color=(170, 210, 240))
         self.text("Stock", 640, 104, size=19, color=(170, 210, 240))
         self.text("Owned", 740, 104, size=19, color=(170, 210, 240))
-        for i, row in enumerate(screen.rows()):
+        from .menu_icons import record_icon_id
+
+        rows = screen.rows()
+        icons = [record_icon_id(self.project, "item", r.item_id) for r in rows]
+        name_x = 90 + (30 if any(icons) else 0)
+        for i, row in enumerate(rows):
             y = 134 + i * 30
             if y > self.height - 130:
                 break
             color = (255, 226, 129) if i == screen.index else (235, 238, 245) if row.available else (120, 125, 140)
-            self.text(("> " if i == screen.index else "   ") + row.name, 90, y, size=22, color=color)
+            self.text("> " if i == screen.index else "", 72, y, size=22, color=color)
+            self._draw_icon(icons[i], 90, y - 2)
+            self.text(row.name, name_x, y, size=22, color=color)
             self.text(row.price, 420, y, size=22, color=color)
             self.text(row.stock, 640, y, size=22, color=color)
             self.text(str(row.owned), 740, y, size=22, color=color)

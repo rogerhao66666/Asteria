@@ -150,6 +150,8 @@ class EquipmentDefinition:
     any_capabilities: tuple[str, ...] = ()
     forbidden_capabilities: tuple[str, ...] = ()
     growth_id: str | None = None
+    icon_id: str = ""  # a project icon asset shown in menus; written only when set
+    OPTIONAL_DATA = {"icon_id": ""}
 
     def __init__(
         self,
@@ -166,6 +168,7 @@ class EquipmentDefinition:
         any_capabilities=(),
         forbidden_capabilities=(),
         growth_id=None,
+        icon_id="",
     ):
         equipment_id = _id(equipment_id, "equipment_id")
         modifiers = tuple(modifiers)
@@ -195,6 +198,7 @@ class EquipmentDefinition:
         object.__setattr__(self, "any_capabilities", _tags(any_capabilities))
         object.__setattr__(self, "forbidden_capabilities", _tags(forbidden_capabilities))
         object.__setattr__(self, "growth_id", None if growth_id is None else _id(growth_id, "growth_id"))
+        object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def to_data(self):
         return {
@@ -212,6 +216,7 @@ class EquipmentDefinition:
             "any_capabilities": list(self.any_capabilities),
             "forbidden_capabilities": list(self.forbidden_capabilities),
             "growth_id": self.growth_id,
+            **({"icon_id": self.icon_id} if self.icon_id else {}),
         }
 
     def eligibility(self, capabilities=()):
@@ -246,6 +251,7 @@ class EquipmentDefinition:
             any_capabilities=data.get("any_capabilities", ()) if version >= 2 else (),
             forbidden_capabilities=data.get("forbidden_capabilities", ()) if version >= 2 else (),
             growth_id=data.get("growth_id") if version >= 3 else None,
+            icon_id=data.get("icon_id", ""),
         )
 
 
@@ -256,8 +262,10 @@ class ItemDefinition:
     tags: tuple[str, ...] = ()
     stack_limit: int = 99
     use_effects: tuple[Effect, ...] = ()
+    icon_id: str = ""  # a project icon asset shown in menus; written only when set
+    OPTIONAL_DATA = {"icon_id": ""}
 
-    def __init__(self, item_id, display_name=None, *, tags=(), stack_limit=99, use_effects=()):
+    def __init__(self, item_id, display_name=None, *, tags=(), stack_limit=99, use_effects=(), icon_id=""):
         item_id = _id(item_id, "item_id")
         stack_limit = int(stack_limit)
         use_effects = tuple(use_effects)
@@ -270,6 +278,7 @@ class ItemDefinition:
         object.__setattr__(self, "tags", _tags(tags))
         object.__setattr__(self, "stack_limit", stack_limit)
         object.__setattr__(self, "use_effects", use_effects)
+        object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def to_data(self):
         return {
@@ -280,6 +289,7 @@ class ItemDefinition:
             "tags": list(self.tags),
             "stack_limit": self.stack_limit,
             "use_effects": [x.to_data() for x in self.use_effects],
+            **({"icon_id": self.icon_id} if self.icon_id else {}),
         }
 
     @classmethod
@@ -295,6 +305,7 @@ class ItemDefinition:
             tags=data["tags"],
             stack_limit=data["stack_limit"],
             use_effects=[] if data["version"] == 1 else [Effect.from_data(x) for x in data["use_effects"]],
+            icon_id=data.get("icon_id", ""),
         )
 
 

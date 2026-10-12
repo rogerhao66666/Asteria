@@ -100,7 +100,10 @@ def canonical_asset_thumbnail(document, asset, cache):
         image = cache.get(path)
         if image is None:
             return None
-        frame_size = dict(asset.metadata).get("frame_size")
+        meta = dict(asset.metadata)
+        frame_size = meta.get("frame_size")
+        if meta.get("region"):  # one cell of a sheet (menu icons, AST-07)
+            return _icon(image, meta["region"])
         if asset.kind == "character.walking" and frame_size:
             width, height = (int(frame_size[0]), int(frame_size[1]))
             return _icon(image, (width, 0, width, height))  # down-facing standing frame

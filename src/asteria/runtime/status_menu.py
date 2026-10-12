@@ -129,6 +129,22 @@ class StatusMenu:
         return rows
 
     # -- actions ---------------------------------------------------------------------------------
+    def row_icons(self):
+        """The icon id of each row of ``rows()`` (``""`` for none): items, equipment, and a slot's first item."""
+        from .menu_icons import record_icon_id
+
+        project = self.game.project
+        if self.tab == "equipment":
+            view = self.view()
+            firsts = {s.slot_id: (s.items[0].equipment_id if s.items else "") for s in view.slots} if view else {}
+        icons = []
+        for kind, key, _label, _detail in self.rows():
+            if kind == "slot":
+                icons.append(record_icon_id(project, "equipment", firsts.get(key, "")))
+            else:
+                icons.append(record_icon_id(project, kind, key))
+        return icons
+
     def activate(self):
         """Enter on the selected row: use an item, equip a candidate, unequip a slot."""
         rows = self.rows()
