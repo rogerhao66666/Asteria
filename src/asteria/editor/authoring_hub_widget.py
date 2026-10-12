@@ -86,10 +86,19 @@ except ImportError:
 def with_optional_fields(data, value):
     """Show optional fields a definition leaves out of its data when they are empty (``OPTIONAL_DATA``), so an
     author can find and fill them; empty values are still left out when saved."""
-    optional = getattr(type(value), "OPTIONAL_DATA", None)
-    if not isinstance(data, dict) or not optional:
+    if not isinstance(data, dict):
         return data
-    return {**data, **{k: deepcopy(v) for k, v in optional.items() if k not in data}}
+    optional = getattr(type(value), "OPTIONAL_DATA", None) or {}
+    data = {**data, **{k: deepcopy(v) for k, v in optional.items() if k not in data}}
+    for key, kind in (getattr(type(value), "NESTED_OPTIONAL", None) or {}).items():
+        entries = data.get(key)
+        defaults = getattr(kind, "OPTIONAL_DATA", None) or {}
+        if isinstance(entries, list) and defaults:
+            data[key] = [
+                {**x, **{k: deepcopy(v) for k, v in defaults.items() if k not in x}} if isinstance(x, dict) else x
+                for x in entries
+            ]
+    return data
 
 
 def _count_heading(label, category_label, count):

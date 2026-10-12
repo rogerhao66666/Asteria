@@ -14,6 +14,7 @@ def _id(value, label):
 
 
 ACTION_TIMING_MODES = ("immediate", "timeline")
+BOOST_MODES = ("repeat", "power")
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,7 +37,12 @@ class BattleSessionRules:
     # (timings only shape the presentation); "timeline" delays resolution by startup + cast time and pushes
     # the actor's next turn back by the cast and its recovery. Left out of the data while "immediate".
     action_timing: str = "immediate"
-    OPTIONAL_DATA = {"action_timing": "immediate"}
+    # Boost (GP-02 / BTL-03): "repeat" repeats the action once per level; "power" uses it once and leaves
+    # the effect to interaction rules. Either way the actor carries the tags "boost" and "boost.<level>"
+    # during the action, so rules can scale anything; an ability tagged "boost.repeat" or "boost.power"
+    # overrides the project default (e.g. attacks repeat, spells grow stronger).
+    boost_mode: str = "repeat"
+    OPTIONAL_DATA = {"action_timing": "immediate", "boost_mode": "repeat"}
 
     def __init__(
         self,
@@ -48,6 +54,7 @@ class BattleSessionRules:
         boost_cost_per_level=1.0,
         boost_max_level=0,
         action_timing="immediate",
+        boost_mode="repeat",
     ):
         cost = float(boost_cost_per_level)
         if not isfinite(cost) or cost <= 0:
@@ -64,6 +71,9 @@ class BattleSessionRules:
         if action_timing not in ACTION_TIMING_MODES:
             raise ValueError(f"action_timing must be one of {ACTION_TIMING_MODES}")
         object.__setattr__(self, "action_timing", action_timing)
+        if boost_mode not in BOOST_MODES:
+            raise ValueError(f"boost_mode must be one of {BOOST_MODES}")
+        object.__setattr__(self, "boost_mode", boost_mode)
 
     @property
     def boost_enabled(self):
@@ -80,6 +90,7 @@ class BattleSessionRules:
             "boost_cost_per_level": self.boost_cost_per_level,
             "boost_max_level": self.boost_max_level,
             **({"action_timing": self.action_timing} if self.action_timing != "immediate" else {}),
+            **({"boost_mode": self.boost_mode} if self.boost_mode != "repeat" else {}),
         }
 
     @classmethod
@@ -94,4 +105,5 @@ class BattleSessionRules:
             boost_cost_per_level=data["boost_cost_per_level"],
             boost_max_level=data["boost_max_level"],
             action_timing=data.get("action_timing", "immediate"),
+            boost_mode=data.get("boost_mode", "repeat"),
         )

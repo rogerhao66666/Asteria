@@ -1035,8 +1035,26 @@ class GameSessionRuntime:
         timing = self.battle.action_timing.definition_for(ability_id)
         if timing.windup > 0 and rules.action_timing == "timeline":  # GP-02: the cast resolves later
             return self._begin_cast(actor_id, ability_id, targets, timing)
+        definition = self.battle.ability_runtime.registry.get(ability_id)
+        ability_tags = set(getattr(definition, "tags", ()) or ())
+        repeats = boost_level + 1
+        if "boost.power" in ability_tags or (rules.boost_mode == "power" and "boost.repeat" not in ability_tags):
+            repeats = 1  # one stronger action: interaction rules read the boost tags
+        boost_tags = ("boost", f"boost.{boost_level}") if boost_level else ()
+        actor_tags = self.battle.member(actor_id).subject.tags
+        added = [t for t in boost_tags if not actor_tags.contains(t)]
+        for tag in added:
+            actor_tags.add(tag)
+        try:
+            return self._repeat_action(actor_id, ability_id, targets, offensive, repeats)
+        finally:
+            for tag in added:
+                actor_tags.remove(tag)
+
+    def _repeat_action(self, actor_id, ability_id, targets, offensive, repeats):
+        rules = self.rules
         results = []
-        for _ in range(boost_level + 1):
+        for _ in range(repeats):
             if offensive:
                 targets = tuple(t for t in targets if self.battle.is_active(self.battle.member(t)))
                 if not targets:

@@ -25,26 +25,90 @@ class StackingPolicy(str, Enum):
 
 @dataclass(frozen=True, slots=True)
 class PeriodicEffect:
+    """An effect applied every ``interval`` while the state is active.
+
+    Escalation (all optional): tick n (1, 2, 3...) applies the effect's values times a factor -
+    ``growth_mode="add"``: 1 + growth x (n - 1) (growth 1: x1, x2, x3 - a poison that worsens);
+    ``growth_mode="multiply"``: growth ^ (n - 1) (growth 2: x1, x2, x4); ``growth_cap`` caps the factor.
+    """
+
     interval: float
     effect: Effect
+    growth: float = 0.0
+    growth_mode: str = "add"
+    growth_cap: float | None = None
+    OPTIONAL_DATA = {"growth": 0.0, "growth_mode": "add", "growth_cap": None}  # shown in the editor
 
-    def __init__(self, interval, effect):
+    def __init__(self, interval, effect, *, growth=0.0, growth_mode="add", growth_cap=None):
         interval = float(interval)
         if not isfinite(interval) or interval <= 0.0:
             raise ValueError("periodic interval must be finite and > 0")
         if not isinstance(effect, Effect):
             raise TypeError("effect must be Effect")
+        growth = float(growth)
+        if not isfinite(growth) or growth < 0.0:
+            raise ValueError("periodic growth must be finite and >= 0")
+        if growth_mode not in ("add", "multiply"):
+            raise ValueError("growth_mode must be 'add' or 'multiply'")
+        if growth_cap is not None:
+            growth_cap = float(growth_cap)
+            if not isfinite(growth_cap) or growth_cap <= 0.0:
+                raise ValueError("growth_cap must be finite and > 0")
         object.__setattr__(self, "interval", interval)
         object.__setattr__(self, "effect", effect)
+        object.__setattr__(self, "growth", growth)
+        object.__setattr__(self, "growth_mode", growth_mode)
+        object.__setattr__(self, "growth_cap", growth_cap)
+
+    def factor(self, tick):
+        """Value factor of the ``tick``-th application (1-based)."""
+        if not self.growth or tick <= 1:
+            return 1.0
+        if self.growth_mode == "multiply":
+            value = self.growth ** (tick - 1)
+        else:
+            value = 1.0 + self.growth * (tick - 1)
+        return min(value, self.growth_cap) if self.growth_cap is not None else value
 
     def to_data(self):
-        return {"interval": self.interval, "effect": self.effect.to_data()}
+        data = {"interval": self.interval, "effect": self.effect.to_data()}
+        if self.growth:  # escalation keys only when used: old data stays byte-identical
+            data.update(growth=self.growth, growth_mode=self.growth_mode)
+            if self.growth_cap is not None:
+                data["growth_cap"] = self.growth_cap
+        return data
 
     @classmethod
     def from_data(cls, data):
-        if set(data) != {"interval", "effect"}:
+        if not {"interval", "effect"} <= set(data) <= {"interval", "effect", "growth", "growth_mode", "growth_cap"}:
             raise ValueError("invalid periodic effect")
-        return cls(data["interval"], Effect.from_data(data["effect"]))
+        return cls(
+            data["interval"],
+            Effect.from_data(data["effect"]),
+            growth=data.get("growth", 0.0),
+            growth_mode=data.get("growth_mode", "add"),
+            growth_cap=data.get("growth_cap"),
+        )
+
+
+def _count_tick(active, index):
+    ticks = active.periodic_ticks
+    while len(ticks) <= index:
+        ticks.append(0)
+    ticks[index] += 1
+    return ticks[index]
+
+
+def _scaled(factor, inner):
+    """A value_transform that multiplies numeric effect values by ``factor`` before ``inner``."""
+    if factor == 1.0:
+        return inner
+
+    def transform(operation, value):
+        value = value * factor if isinstance(value, (int, float)) else value
+        return inner(operation, value) if inner is not None else value
+
+    return transform
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,6 +123,7 @@ class StateDefinition:
     on_remove: tuple[Effect, ...] = ()
     on_expire: tuple[Effect, ...] = ()
     contributed_tags: tuple[str, ...] = ()
+    NESTED_OPTIONAL = {"periodic": PeriodicEffect}  # list fields whose entries have OPTIONAL_DATA
 
     def __init__(
         self,
@@ -200,6 +265,7 @@ class ActiveState:
     stacks: int = 1
     periodic_elapsed: list[float] | None = None
     source_id: str | None = None
+    periodic_ticks: list[int] | None = None  # applications so far, per periodic effect (escalation)
 
     def __post_init__(self):
         self.state_id = str(self.state_id)
@@ -213,6 +279,7 @@ class ActiveState:
             self.periodic_elapsed = [float(x) for x in self.periodic_elapsed]
         if self.source_id is not None:
             self.source_id = str(self.source_id)
+        self.periodic_ticks = [int(x) for x in (self.periodic_ticks or [])]
 
     def to_data(self):
         return {
@@ -221,13 +288,14 @@ class ActiveState:
             "stacks": self.stacks,
             "periodic_elapsed": list(self.periodic_elapsed),
             "source_id": self.source_id,
+            **({"periodic_ticks": list(self.periodic_ticks)} if any(self.periodic_ticks) else {}),
         }
 
     @classmethod
     def from_data(cls, data):
         expected_v1 = {"state_id", "remaining", "stacks", "periodic_elapsed"}
         expected_v2 = expected_v1 | {"source_id"}
-        if set(data) != expected_v1 and set(data) != expected_v2:
+        if set(data) - {"periodic_ticks"} not in (expected_v1, expected_v2):
             raise ValueError("invalid active state")
         return cls(
             data["state_id"],
@@ -235,6 +303,7 @@ class ActiveState:
             data["stacks"],
             data["periodic_elapsed"],
             data.get("source_id"),
+            data.get("periodic_ticks"),
         )
 
 
@@ -290,6 +359,7 @@ class StateRuntime:
             active.remaining = applied_duration
             active.source_id = source_id
             active.periodic_elapsed = [0.0] * len(definition.periodic)
+            active.periodic_ticks = []  # a fresh application: escalation starts over (STACK keeps it)
         else:
             active.stacks = min(definition.max_stacks, active.stacks + 1)
             active.remaining = applied_duration
@@ -354,11 +424,10 @@ class StateRuntime:
             active.periodic_elapsed[index] += active_dt
             while active.periodic_elapsed[index] >= periodic.interval:
                 active.periodic_elapsed[index] -= periodic.interval
+                transform = _scaled(periodic.factor(_count_tick(active, index)), value_transform)
                 repeat = active.stacks if definition.stacking == StackingPolicy.STACK else 1
                 for _ in range(repeat):
-                    apply_effect(
-                        periodic.effect, self.stats, self.resources, self.tags, value_transform=value_transform
-                    )
+                    apply_effect(periodic.effect, self.stats, self.resources, self.tags, value_transform=transform)
         if active.remaining <= 0.0:
             self.expire(state_id)
             return True
@@ -382,9 +451,10 @@ class StateRuntime:
                 active.periodic_elapsed[index] += active_dt
                 while active.periodic_elapsed[index] >= periodic.interval:
                     active.periodic_elapsed[index] -= periodic.interval
+                    transform = _scaled(periodic.factor(_count_tick(active, index)), None)
                     repeat = active.stacks if definition.stacking == StackingPolicy.STACK else 1
                     for _ in range(repeat):
-                        apply_effect(periodic.effect, self.stats, self.resources, self.tags)
+                        apply_effect(periodic.effect, self.stats, self.resources, self.tags, value_transform=transform)
 
             if active.remaining <= 0.0:
                 expired.append(state_id)

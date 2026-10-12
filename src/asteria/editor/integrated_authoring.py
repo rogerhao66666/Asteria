@@ -177,6 +177,7 @@ class IntegratedAuthoringControllers:
                 fd(AbilityDefinition),
                 None,
             ),
+            self._states_adapter(),
             AuthoringCategoryAdapter(
                 "passives",
                 "Passives",
@@ -384,9 +385,28 @@ class IntegratedAuthoringControllers:
             elif adapter.category_id in mappings:
                 create = self._mapping_create(mappings[adapter.category_id], adapter.label)
             else:
-                create = None
+                create = adapter.create  # an adapter that brings its own (status definitions)
             result.append(replace(adapter, create=create))
         return tuple(result)
+
+    def _states_adapter(self):
+        """Status definitions (gameplay states: duration, stacking, stat changes, periodic effects such as an
+        escalating poison). Battle-side rules for them live under Battle > Status Effects."""
+        from asteria.gameplay.states import StateDefinition
+
+        states = self.project.gameplay_library.states._definitions
+        return AuthoringCategoryAdapter(
+            "states",
+            "Status Definitions",
+            lambda: tuple(sorted(states)),
+            lambda k: states[k],
+            lambda key, value: self._mapping_edit(states, "Status Definition")(key, value),
+            lambda key: self._mapping_delete(states, "Status Definition")(key),
+            lambda v: v.to_data(),
+            StateDefinition.from_data,
+            None,
+            lambda key, value: self._mapping_create(states, "Status Definition")(key, value),
+        )
 
     def _mapping_edit(self, mapping, label):
         def edit(key, value):
