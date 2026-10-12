@@ -11,7 +11,7 @@
 | C 部分實作 | 1 | **1**（TPL-01，Eventual） |
 | D 未實作 | 2 | **2**（EDT-17、EDT-18，Eventual） |
 | E 取消 | 2 | 2 |
-| 自動化測試 | 2180 passed | **1999 passed**（D20-2 退役 35 個模組時移除只測退役程式碼的測試） |
+| 自動化測試 | 2180 passed | **2014 passed**（D20-2 退役 35 個模組時移除只測退役程式碼的測試；D21 新增 kernel 測試 15 項） |
 | 實機檢查（`results.json`） | 49 PASS／3 NE／1 BLOCKED／0 FAIL | **65 PASS／3 NOT EXECUTED／1 BLOCKED／1 FAIL** |
 
 **結論：** 功能面已完成，所有 Core 需求都已實作，剩下的 C／D 全是 SPEC 原文的 Eventually／Potential 項目。
