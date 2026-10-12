@@ -15,4 +15,5 @@
 | [REMAINING_WORK_PLAN.md](REMAINING_WORK_PLAN.md) | CB0–CB15 closure batches |
 | [CLOSURE_EXIT_CRITERIA.md](CLOSURE_EXIT_CRITERIA.md) | 可量測的 gate |
 | [CB15_RETIREMENT_REVIEW.md](CB15_RETIREMENT_REVIEW.md) | CB15 逐項退役審核（**提案，尚未批准，未刪除任何東西**） |
+| [ARPG_DESIGN.md](ARPG_DESIGN.md) | D22 ARPG 設計與 A1–A9 分批計畫（**等待核准**） |
 | [proposed/P0-3_mv_semantics_to_asset_boundary.patch](proposed/P0-3_mv_semantics_to_asset_boundary.patch) | CB0 提案 patch（**未套用**） |

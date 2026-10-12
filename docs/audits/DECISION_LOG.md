@@ -914,3 +914,18 @@ autofix 原本沒有產品入口，已在 D20-4 接上編輯器。animated_text 
 - `--only vfx` 已寫回正式 evidence：70 項中 66 PASS、3 NOT EXECUTED、1 BLOCKED、**0 FAIL**。AUTOMATED VALIDATION COMPLETE 改為達成。
 - 自動化測試：2026 passed。
 
+
+## D22 — 開始 ARPG（2026-10-13）
+
+**決定（使用者）：**
+- 解除 ARPG 的延後（SCOPE_DECISIONS／Closure Policy）。原因是 D21-2 時功能 closure 和自動化驗證都已完成，只剩手動和實機項目。
+- 俯視和橫向兩種視角都支援，由作者在每個場景選擇。戰鬥核心只寫一次，兩種視角共用。
+- 形式：通用功能放進引擎，另外做一個 demo 專案 `reference_projects/arpg_demo`，專案裡有俯視野外和橫向地城兩種區域。
+- 第一階段做完整核心：判定、無敵幀、擊退、投射物、敵人 AI、受傷和死亡，加上壓力場景（300 隻敵人 + 500 顆投射物），先量測效能。
+- 先寫設計文件，核准後再實作。
+
+**設計：** [ARPG_DESIGN.md](ARPG_DESIGN.md)：現有系統盤點、架構原則、戰鬥流程、新資料、A1–A9 分批計畫、效能目標、不在範圍內的項目。
+
+**狀態：** 等待核准。還沒有任何實作程式。
+
+**需要你決定：** 橫向素材的來源（建議下載 CC0 的 Kenney Pixel Platformer）；核准計畫後從 A1 開始。
