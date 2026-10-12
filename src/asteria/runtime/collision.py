@@ -19,14 +19,21 @@ from asteria.core.columns import column_storage
 from asteria.core.migration import component_migration
 
 ALL_LAYERS = 0xFFFFFFFF
+SHAPES = ("box", "circle", "slope_right", "slope_left")
 
 
 @column_storage()
 @component_schema(
     type_name="asteria.Collider2D",
-    version=2,
+    version=3,
     fields=(
-        Field("shape", str, "box", choices=("box", "circle")),
+        Field(
+            "shape",
+            str,
+            "box",
+            choices=SHAPES,
+            tooltip="slope_right: solid below a line rising to the right across the box; slope_left: rising left.",
+        ),
         Field("width", float, 16.0, minimum=0.0),
         Field("height", float, 16.0, minimum=0.0),
         Field("radius", float, 8.0, minimum=0.0),
@@ -36,6 +43,7 @@ ALL_LAYERS = 0xFFFFFFFF
         Field("mask", int, ALL_LAYERS, minimum=0, maximum=ALL_LAYERS, tooltip="Bitmask of layers it collides with."),
         Field("is_trigger", bool, False, label="Trigger"),
         Field("one_way", bool, False, label="One-way platform", tooltip="Side view: blocks only from above."),
+        Field("ladder", bool, False, tooltip="A climbable area (side view); it never blocks movement."),
         Field("enabled", bool, True),
     ),
 )
@@ -52,12 +60,18 @@ class Collider2DComponent(Component):
         self.mask = ALL_LAYERS
         self.is_trigger = False
         self.one_way = False
+        self.ladder = False
         self.enabled = True
 
 
 @component_migration("asteria.Collider2D", from_version=1)
 def _collider2d_v1_to_v2(fields):
     return fields  # v2 adds one_way (default False keeps v1 behaviour)
+
+
+@component_migration("asteria.Collider2D", from_version=2)
+def _collider2d_v2_to_v3(fields):
+    return fields  # v3 adds slope shapes and ladder (default False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,10 +87,33 @@ class ColliderShape:
     mask: int
     is_trigger: bool
     one_way: bool = False
+    ladder: bool = False
 
     @property
     def bounds(self):
         return (self.cx - self.half_w, self.cy - self.half_h, self.cx + self.half_w, self.cy + self.half_h)
+
+    @property
+    def slope(self):
+        return self.shape in ("slope_right", "slope_left")
+
+    def surface_y(self, x):
+        """Top of the solid at ``x`` (slopes: the line across the box; other shapes: the top edge)."""
+        x0, y0, x1, y1 = self.bounds
+        if not self.slope or x1 <= x0:
+            return y0
+        t = min(1.0, max(0.0, (x - x0) / (x1 - x0)))
+        if self.shape == "slope_left":
+            t = 1.0 - t
+        return y1 - t * (y1 - y0)
+
+    def contains_point(self, x, y):
+        x0, y0, x1, y1 = self.bounds
+        if self.shape == "circle":
+            return hypot(x - self.cx, y - self.cy) <= self.radius
+        if not (x0 <= x <= x1 and y0 <= y <= y1):
+            return False
+        return not self.slope or y >= self.surface_y(x) - 1e-9
 
     def interacts_with(self, other):
         return bool(self.mask & other.layer_bit) and bool(other.mask & self.layer_bit)
@@ -107,8 +144,9 @@ def shape_of(entity, collider):
         collider.radius,
         1 << int(collider.layer),
         int(collider.mask),
-        bool(collider.is_trigger),
+        bool(collider.is_trigger) or bool(collider.ladder),  # ladders never block
         bool(getattr(collider, "one_way", False)),
+        bool(collider.ladder),
     )
 
 
@@ -217,7 +255,7 @@ class CollisionWorld:
     for them (``shapes``, point queries), so batched users (controllers, projectiles) never pay for them.
     """
 
-    _FIELDS = ("ids", "kind", "cx", "cy", "hw", "hh", "radius", "bit", "mask", "trigger", "one_way")
+    _FIELDS = ("ids", "kind", "cx", "cy", "hw", "hh", "radius", "bit", "mask", "trigger", "one_way", "ladder")
 
     def __init__(self, shapes=(), cell_size=64.0):
         if cell_size <= 0:
@@ -244,13 +282,16 @@ class CollisionWorld:
                 shape.mask,
                 shape.is_trigger,
                 shape.one_way,
+                shape.ladder,
             )
 
-    def _add(self, entity_id, kind, cx, cy, hw, hh, radius, bit, mask, trigger, one_way):
+    def _add(self, entity_id, kind, cx, cy, hw, hh, radius, bit, mask, trigger, one_way, ladder=False):
         if entity_id in self._row:  # same entity again: the later shape wins (dict semantics)
             i = self._row[entity_id]
             for name, value in zip(
-                self._FIELDS, (entity_id, kind, cx, cy, hw, hh, radius, bit, mask, trigger, one_way), strict=True
+                self._FIELDS,
+                (entity_id, kind, cx, cy, hw, hh, radius, bit, mask, trigger, one_way, ladder),
+                strict=True,
             ):
                 getattr(self, "_" + name)[i] = value
             return
@@ -266,6 +307,7 @@ class CollisionWorld:
         self._mask.append(mask)
         self._trigger.append(trigger)
         self._one_way.append(one_way)
+        self._ladder.append(ladder)
 
     def _shape(self, i):
         return ColliderShape(
@@ -280,6 +322,7 @@ class CollisionWorld:
             self._mask[i],
             self._trigger[i],
             self._one_way[i],
+            self._ladder[i],
         )
 
     @property
@@ -387,7 +430,7 @@ class CollisionWorld:
         )
         data = colliders.data
         radius, layer, mask = data["radius"], data["layer"], data["mask"]
-        trigger, one_way = data["is_trigger"], data["one_way"]
+        trigger, one_way, ladder = data["is_trigger"], data["one_way"], data["ladder"]
         add = world._add
         for k, (_, slot, entity, collider, transform) in enumerate(live):
             if transform.parent_id:  # under a parent: the full transform chain
@@ -405,6 +448,7 @@ class CollisionWorld:
                     shape.mask,
                     shape.is_trigger,
                     shape.one_way,
+                    shape.ladder,
                 )
                 continue
             add(
@@ -417,8 +461,9 @@ class CollisionWorld:
                 radius[slot],
                 1 << int(layer[slot]),
                 int(mask[slot]),
-                bool(trigger[slot]),
+                bool(trigger[slot]) or bool(ladder[slot]),  # ladders never block
                 bool(one_way[slot]),
+                bool(ladder[slot]),
             )
         return world
 
@@ -437,14 +482,18 @@ class CollisionWorld:
         for shape in self.grid.query(probe.bounds):
             if shape.entity_id in exclude or (solid_only and shape.is_trigger) or not (mask & shape.layer_bit):
                 continue
-            x0, y0, x1, y1 = shape.bounds
-            if shape.shape == "circle":
-                inside = hypot(x - shape.cx, y - shape.cy) <= shape.radius
-            else:
-                inside = x0 <= x <= x1 and y0 <= y <= y1
-            if inside:
+            if shape.contains_point(x, y):
                 hits.append(shape.entity_id)
         return tuple(hits)
+
+    def ladder_at(self, x0, y0, x1, y1, *, exclude=()):
+        """A ladder shape overlapping the box, or ``None``."""
+        for shape in self.grid.query((x0, y0, x1, y1)):
+            if shape.ladder and shape.entity_id not in exclude:
+                sx0, sy0, sx1, sy1 = shape.bounds
+                if x0 <= sx1 and sx0 <= x1 and y0 <= sy1 and sy0 <= y1:
+                    return shape
+        return None
 
     def blocking_query(self, *, mask=ALL_LAYERS, exclude=()):
         """Object with ``collides_world_point`` for CharacterController2D.move."""

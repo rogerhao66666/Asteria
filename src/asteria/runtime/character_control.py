@@ -52,10 +52,16 @@ PUSH_EPSILON = 0.5  # pushes slower than this (world units / s) stop
     ("control_lock", float, 0.0),
     ("facing_code", int, 0),  # index into FACINGS; ``facing`` reads and writes it
     ("speed_override", float, 0.0),  # > 0: replaces ``speed`` (an action's dash); set by action timelines
+    ("jump_held", bool, False),  # the jump input is held (variable jump height)
+    ("air_time", float, 0.0),  # seconds since it last stood on ground (coyote time)
+    ("buffer_left", float, 0.0),  # a jump pressed in the air waits this long for the ground
+    ("cut_armed", bool, False),  # the rising jump can still be cut short by releasing
+    ("climbing", bool, False),
+    ("drop_left", float, 0.0),  # falling through one-way platforms for this long
 )
 @component_schema(
     type_name="asteria.CharacterController2D",
-    version=2,
+    version=3,
     fields=(
         Field("mode", str, "topdown", choices=("topdown", "side")),
         Field("speed", float, 60.0, minimum=0.0),
@@ -73,6 +79,26 @@ PUSH_EPSILON = 0.5  # pushes slower than this (world units / s) stop
             minimum=0.0,
             tooltip="How fast an outside push (knockback) fades, per second. 0 keeps it until a wall stops it.",
         ),
+        Field(
+            "coyote_time", float, 0.0, minimum=0.0, tooltip="Side view: a jump still works this long after walking off."
+        ),
+        Field(
+            "jump_buffer",
+            float,
+            0.0,
+            minimum=0.0,
+            tooltip="Side view: a jump pressed just before landing still happens.",
+        ),
+        Field(
+            "jump_cut",
+            float,
+            1.0,
+            minimum=0.0,
+            maximum=1.0,
+            tooltip="Side view: releasing jump while rising keeps this share of the upward speed (1 = no short hops).",
+        ),
+        Field("drop_through", bool, False, tooltip="Side view: down + jump drops through a one-way platform."),
+        Field("climb_speed", float, 60.0, minimum=0.0, tooltip="Side view: speed on ladders."),
         Field("enabled", bool, True),
     ),
 )
@@ -89,6 +115,11 @@ class CharacterController2DComponent(Component):
         self.mask = 0xFFFFFFFF
         self.facing = "down"
         self.knockback_decay = 10.0
+        self.coyote_time = 0.0
+        self.jump_buffer = 0.0
+        self.jump_cut = 1.0
+        self.drop_through = False
+        self.climb_speed = 60.0
         self.enabled = True
         # runtime (not serialized)
         self.intent_x = 0.0
@@ -141,6 +172,11 @@ class CharacterController2DComponent(Component):
 @component_migration("asteria.CharacterController2D", from_version=1)
 def _controller_v1_to_v2(fields):
     return fields  # v2 adds facing and knockback_decay; defaults keep v1 behaviour
+
+
+@component_migration("asteria.CharacterController2D", from_version=2)
+def _controller_v2_to_v3(fields):
+    return fields  # v3 adds coyote time, jump buffer, jump cut, drop-through and ladders; defaults keep v2
 
 
 def facing_from(dx, dy, mode="topdown", current="down"):
@@ -321,6 +357,7 @@ class PlayerInputSystem(System):
             dx, dy = snapshot.movement_vector()
             jump = float(getattr(snapshot, "actions", {}).get(player.jump_action, 0.0)) > 0.5
             controller.set_intent(dx, dy, jump=jump)
+            controller.jump_held = jump
 
 
 class CharacterControllerSystem(System):
@@ -389,7 +426,7 @@ class CharacterControllerSystem(System):
                     blocked.add(i)
         return blocked
 
-    def _blocked(self, world, entity_id, controller, x, y, *, falling_from=None):
+    def _blocked(self, world, entity_id, controller, x, y, *, falling_from=None, ignore_one_way=False):
         hw, hh = controller.half_width, controller.half_height
         corners = ((x - hw, y - hh), (x + hw, y - hh), (x - hw, y + hh), (x + hw, y + hh))
         for px, py in corners:
@@ -399,6 +436,8 @@ class CharacterControllerSystem(System):
                 shape = world.shapes[hit]
                 if not shape.one_way:
                     return True
+                if ignore_one_way:
+                    continue
                 # one-way platform: blocks only feet that were above its top before this move
                 if falling_from is not None and py >= y + hh - 1e-6 and falling_from + hh <= shape.bounds[1] + 1e-6:
                     return True
@@ -509,32 +548,79 @@ class CharacterControllerSystem(System):
         k.decay_push(c, slots, dt, PUSH_EPSILON)
 
     def _side_step(self, world, entity, controller, transform, dx, push_x, dt):
-        """Side view: horizontal move, then gravity, jump, ground and one-way platforms."""
+        """Side view: ladders, horizontal move (stepping up slopes), jump (coyote time, buffer, short hops,
+        drop-through), gravity, landing, ground and one-way platforms."""
+        eid = entity.id
+        hw, hh = controller.half_width, controller.half_height
+        dy = 0.0 if controller.control_lock > 0.0 else controller.intent_y
+        wants_jump = controller.jump
+        stood = controller.grounded  # at the end of the previous step (slopes: keep following the surface)
+        controller.drop_left = max(0.0, controller.drop_left - dt)
+        ladder = world.ladder_at(transform.x - hw, transform.y - hh, transform.x + hw, transform.y + hh, exclude=(eid,))
+        if controller.climbing and (ladder is None or wants_jump):
+            controller.climbing = False
+        elif not controller.climbing and ladder is not None and abs(dy) > 0.5:
+            controller.climbing = True
         speed = controller.speed_override if controller.speed_override > 0.0 else controller.speed
-        nx = transform.x + (max(-1.0, min(1.0, dx)) * speed + push_x) * dt
-        if self._blocked(world, entity.id, controller, nx, transform.y):
-            controller.hit_wall = dx != 0 or push_x != 0
-            controller.push_x = 0.0
+        move = (max(-1.0, min(1.0, dx)) * speed + push_x) * dt
+        nx = transform.x + move
+        if self._blocked(world, eid, controller, nx, transform.y):
+            lifted = self._step_up(world, eid, controller, nx, transform.y, abs(move) + 0.5)
+            if lifted is None:
+                controller.hit_wall = dx != 0 or push_x != 0
+                controller.push_x = 0.0
+            else:
+                transform.x, transform.y = nx, lifted
         else:
             transform.x = nx
         self._decay_push(controller, dt)
-        ground = self._ground(world, entity.id, controller, transform.x, transform.y)
+        if controller.climbing:
+            controller.velocity_y = 0.0
+            ny = transform.y + max(-1.0, min(1.0, dy)) * controller.climb_speed * dt
+            if not self._blocked(world, eid, controller, transform.x, ny, ignore_one_way=True):
+                transform.y = ny
+            controller.ground_id = self._ground(world, eid, controller, transform.x, transform.y)
+            controller.grounded = controller.ground_id is not None
+            controller.air_time = 0.0
+            controller.jump = False
+            return
+        ground = self._ground(world, eid, controller, transform.x, transform.y)
+        controller.air_time = 0.0 if ground is not None else controller.air_time + dt
+        if wants_jump and controller.drop_through and dy > 0.5 and ground is not None and ground != "__tiles__":
+            if world.shapes[ground].one_way:  # down + jump on a one-way platform: fall through it
+                controller.drop_left = 0.25
+                wants_jump = False
+                ground = None
         if ground is not None and controller.velocity_y >= 0:
             controller.velocity_y = 0.0
-            if controller.jump:
-                controller.velocity_y = -controller.jump_speed
+        if wants_jump and ground is None and controller.jump_buffer > 0:
+            controller.buffer_left = controller.jump_buffer
+        can_jump = controller.velocity_y >= 0 and (ground is not None or controller.air_time <= controller.coyote_time)
+        if (wants_jump or controller.buffer_left > 0) and can_jump:
+            controller.velocity_y = -controller.jump_speed
+            controller.buffer_left = 0.0
+            controller.air_time = controller.coyote_time + 1.0  # no second coyote jump
+            controller.cut_armed = controller.jump_held
+        controller.buffer_left = max(0.0, controller.buffer_left - dt)
+        if controller.cut_armed and controller.velocity_y < 0 and not controller.jump_held:
+            controller.velocity_y *= controller.jump_cut  # released early: a short hop
+            controller.cut_armed = False
+        if controller.velocity_y >= 0:
+            controller.cut_armed = False
         controller.velocity_y = min(controller.max_fall_speed, controller.velocity_y + controller.gravity * dt)
         step = controller.velocity_y * dt
         start_y = transform.y
         ny = start_y + step
-        if self._blocked(world, entity.id, controller, transform.x, ny, falling_from=start_y if step > 0 else None):
+        dropping = controller.drop_left > 0.0
+        falling_from = start_y if step > 0 else None
+        if self._blocked(world, eid, controller, transform.x, ny, falling_from=falling_from, ignore_one_way=dropping):
             # move to the contact in small steps so the character rests on the surface
             direction = 1.0 if step > 0 else -1.0
             moved = 0.0
             while abs(moved) < abs(step):
                 trial = start_y + moved + direction * min(0.25, abs(step) - abs(moved))
                 if self._blocked(
-                    world, entity.id, controller, transform.x, trial, falling_from=start_y if step > 0 else None
+                    world, eid, controller, transform.x, trial, falling_from=falling_from, ignore_one_way=dropping
                 ):
                     break
                 moved = trial - start_y
@@ -544,9 +630,40 @@ class CharacterControllerSystem(System):
             controller.velocity_y = 0.0
         else:
             transform.y = ny
-        controller.ground_id = self._ground(world, entity.id, controller, transform.x, transform.y)
+            if stood and step >= 0 and not dropping:
+                if self._snap_down(world, eid, controller, transform, abs(move) + 1.0):  # follow a slope down
+                    controller.velocity_y = 0.0
+        controller.ground_id = None if dropping else self._ground(world, eid, controller, transform.x, transform.y)
         controller.grounded = controller.ground_id is not None
         controller.jump = False
+
+    def _step_up(self, world, entity_id, controller, x, y, limit):
+        """Walking into a slope: the smallest lift (up to ``limit``) that frees the move, or ``None``.
+        Only slopes are climbed this way; walls stay walls."""
+        hw, hh = controller.half_width, controller.half_height
+        for px, py in ((x - hw, y + hh), (x + hw, y + hh), (x - hw, y - hh), (x + hw, y - hh)):
+            for hit in world.query_point(px, py, mask=controller.mask, exclude=(entity_id,)):
+                shape = world.shapes[hit]
+                if not shape.slope and not shape.one_way:
+                    return None
+        lift = 0.25
+        while lift <= limit + 1e-9:
+            if not self._blocked(world, entity_id, controller, x, y - lift):
+                return y - lift
+            lift += 0.25
+        return None
+
+    def _snap_down(self, world, entity_id, controller, transform, limit):
+        """Walking down a slope: drop onto the surface below (within ``limit``); True when it did."""
+        if self._ground(world, entity_id, controller, transform.x, transform.y) is not None:
+            return True
+        drop = 0.25
+        while drop <= limit + 1e-9:
+            if self._blocked(world, entity_id, controller, transform.x, transform.y + drop, falling_from=transform.y):
+                transform.y += drop - 0.25
+                return True
+            drop += 0.25
+        return False
 
     def _contact(self, world, entity_id, controller, start, end, other, horizontal):
         """Furthest free position from ``start`` toward a blocked ``end`` (fast moves, e.g. knockback, end against
