@@ -37,6 +37,9 @@ def default_component_registry():
     ):
         registry.register(component)
     register_character_components(registry)
+    from .combat import register_combat_components
+
+    register_combat_components(registry)  # ASTERIA_SPEC §20 combatants
     for component in (NpcIdentity2DComponent, FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent):
         registry.register(component)
     from .environment2d import register_environment_components

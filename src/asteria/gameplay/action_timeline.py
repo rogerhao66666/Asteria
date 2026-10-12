@@ -22,6 +22,7 @@ class ActionCueKind(str, Enum):
     CANCEL_WINDOW = "cancel_window"  # payload: duration
     COMBO_WINDOW = "combo_window"  # payload: duration, next (optional follow-up timeline id)
     GAMEPLAY_EVENT = "gameplay_event"  # payload: name, ...
+    ARMOR = "armor"  # payload: duration, level (default 1) — super armor while the action runs
 
 
 @dataclass(frozen=True, slots=True)

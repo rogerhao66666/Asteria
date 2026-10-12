@@ -378,6 +378,23 @@ class IntegratedAuthoringControllers:
             )
         )
         mappings["action_timelines"] = timelines
+        from asteria.gameplay.attacks import AttackDefinition
+
+        attacks = self.project.gameplay_library.attacks  # ASTERIA_SPEC §20: what a landed hit does
+        categories.append(
+            AuthoringCategoryAdapter(
+                "attacks",
+                "Attacks (Real-Time Combat)",
+                lambda: tuple(sorted(attacks)),
+                lambda k: attacks[k],
+                lambda key, value: self._mapping_edit(attacks, "Attack")(key, value),
+                lambda key: self._mapping_delete(attacks, "Attack")(key),
+                td,
+                fd(AttackDefinition),
+                None,
+            )
+        )
+        mappings["attacks"] = attacks
         result = []
         for adapter in categories:
             if adapter.category_id == "abilities":

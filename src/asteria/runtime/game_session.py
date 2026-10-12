@@ -194,9 +194,23 @@ class GameSessionRuntime:
             )
             from asteria.runtime.behavior_tree import BehaviorTreeSystem
             from asteria.runtime.character_control import CharacterControllerSystem, HitboxSystem
+            from asteria.runtime.combat import CombatSystem
             from asteria.runtime.entity_actions import EntityActionSystem
 
             hits = HitboxSystem()
+            library = self.project.gameplay_library
+            # ASTERIA_SPEC §20: landed hits -> damage, poise, super armor, knockdown, knockback, hitstop, death, drops
+            combat = CombatSystem(
+                library.attacks,
+                hits=hits,
+                formulas=library.formulas,
+                drop_tables=self.project.rpg_database.drop_tables,
+                rng=random.Random(f"{scene.id}:combat"),
+                counters=self.world.counters,  # drop table pity is saved with the world state
+                switches=self.save.event_context.get_switch,
+            )
+            actions = EntityActionSystem(hitboxes=hits, paused=combat.paused, armor=combat)
+            combat.actions = actions
             behavior = BehaviorTreeSystem(
                 self.project.rpg_database.behavior_trees,  # RPG-09
                 target_id=self.player.id,
@@ -211,9 +225,10 @@ class GameSessionRuntime:
                 "spawn": spawn,
                 "ai": ai,
                 "behavior": behavior,
-                "actions": EntityActionSystem(hitboxes=hits),
-                "controllers": CharacterControllerSystem(),
+                "actions": actions,
+                "controllers": CharacterControllerSystem(paused=combat.paused),
                 "hits": hits,
+                "combat": combat,
             }
             self._field_simulation[scene.id] = systems
         return systems
@@ -234,6 +249,8 @@ class GameSessionRuntime:
         with self.profiler.section("collision"):
             systems["controllers"].update(self.scene, float(dt))
             systems["hits"].update(self.scene, float(dt))
+        with self.profiler.section("combat"):
+            systems["combat"].update(self.scene, float(dt))
         pending = getattr(self, "_pending_tree_encounter", None)
         if pending:
             self._pending_tree_encounter = None
@@ -259,6 +276,11 @@ class GameSessionRuntime:
         entity = self._sequence_entity(entity_key)
         self.entity_actions.play(entity.id, timeline)
         return entity.id
+
+    @property
+    def combat(self):
+        """Real-time combat resolution (ASTERIA_SPEC §20) for the current scene; ``combat.events`` per update."""
+        return self._field_systems()["combat"]
 
     @property
     def hits(self):

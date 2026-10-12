@@ -8,6 +8,8 @@ an entity; each update applies the cues it crosses:
 * ``movement``       → the ``CharacterController2D`` intent (``x``, ``y``) for ``duration``
 * ``hitbox``         → the entity's ``Hitbox2D`` is active for ``duration`` (``hit_tag`` optional)
 * ``iframe``         → invincibility for ``duration`` (``HitboxSystem.grant_invincibility``)
+* ``armor``          → super armor ``level`` for ``duration`` (``armor.grant_armor``, e.g. ``CombatSystem``); it
+  ends with the action
 * ``cancel_window`` / ``combo_window`` → open for ``duration``; ``cancel()`` / ``window_open()``
 * ``gameplay_event``, ``gameplay_ability`` and presentation cues (vfx, audio, camera, light,
   screen_fx) → reported in ``events`` / to ``listeners`` for the game and presentation layers
@@ -37,6 +39,7 @@ class _Running:
     hitbox_until: float | None = None
     move_until: float | None = None
     move_intent: tuple = (0.0, 0.0)
+    armored: bool = False
     windows: dict = field(default_factory=dict)  # kind -> (start, end, payload)
     end: float = 0.0
 
@@ -53,8 +56,10 @@ class ActionEvent:
 class EntityActionSystem(System):
     order = 25  # after input (10) and AI (20), before CharacterControllerSystem (30) so cues move this frame
 
-    def __init__(self, hitboxes=None):
+    def __init__(self, hitboxes=None, *, paused=None, armor=None):
         self.hitboxes = hitboxes
+        self.armor = armor  # grant_armor(entity_id, level, seconds) / end_armor(entity_id), e.g. CombatSystem
+        self.paused = paused  # optional callable(entity_id) -> True while frozen (hitstop)
         self.running: dict[str, _Running] = {}
         self.events: list[ActionEvent] = []
         self.listeners = []
@@ -95,7 +100,9 @@ class EntityActionSystem(System):
         return True
 
     def _finish(self, entity_id, scene):
-        self.running.pop(entity_id, None)
+        run = self.running.pop(entity_id, None)
+        if run is not None and run.armored and self.armor is not None:
+            self.armor.end_armor(entity_id)
         if scene is not None:
             entity = scene.get_entity(entity_id)
             if entity is not None:
@@ -128,6 +135,10 @@ class EntityActionSystem(System):
         elif kind == ActionCueKind.IFRAME:
             if self.hitboxes is not None:
                 self.hitboxes.grant_invincibility(entity.id, float(payload.get("duration", 0.0)))
+        elif kind == ActionCueKind.ARMOR:
+            if self.armor is not None:
+                self.armor.grant_armor(entity.id, int(payload.get("level", 1)), float(payload.get("duration", 0.0)))
+                run.armored = True
         elif kind in WINDOW_KINDS:
             duration = float(payload.get("duration", 0.0))
             run.windows[WINDOW_KINDS[kind]] = (cue.time, cue.time + duration, payload)
@@ -144,6 +155,8 @@ class EntityActionSystem(System):
             entity = scene.get_entity(entity_id)
             if entity is None:
                 self.running.pop(entity_id, None)
+                continue
+            if self.paused is not None and self.paused(entity_id):
                 continue
             run.time += dt
             cues = run.timeline.cues

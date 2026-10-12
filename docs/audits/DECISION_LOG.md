@@ -931,3 +931,36 @@ autofix 原本沒有產品入口，已在 D20-4 接上編輯器。animated_text 
 **需要你決定：** 橫向素材的來源（建議下載 CC0 的 Kenney Pixel Platformer）；核准計畫後從 A1 開始。
 
 **核准（2026-10-13）：** 使用者核准計畫並同意下載 Kenney Pixel Platformer 1.2（CC0，kenney.nl，`kenney_pixel-platformer.zip`，260 KB，存到 git-ignored 的 `local_reference/free_assets/kenney_pixel-platformer/`，已下載，授權檔確認是 CC0）。Demo 改成暗黑破壞神式：打怪掉寶、職業、技能樹也一起做進引擎。計畫改成 A1–A11（新增 A6 掉寶、A7 職業和技能樹），見 [ARPG_DESIGN.md](ARPG_DESIGN.md)。
+
+**使用者追加（2026-10-13）：**
+- 系統一律做成通用的。暗黑式玩法只是 demo，引擎不能只支援暗黑；不限制作者的程式、想法、美術和玩法。已寫進 ARPG_DESIGN §3 原則 0。
+- A1 也要做霸體和倒地。
+
+### D22-A1 — 戰鬥核心
+
+**改動的檔案：**
+- `gameplay/attacks.py`（新）：`AttackDefinition` 欄位包括傷害公式（內嵌或引用共用公式）、扣哪個資源（負數就是回復）、標籤、韌性傷害、硬直、擊退（方向模式 away／attacker_facing／fixed、角度、橫向上挑）、打擊停頓（雙方／全畫面）、命中後無敵、最多打中幾個目標、爆擊、命中事件、`armor_break`、倒地。
+- `gameplay/library.py`：gameplay library v2 新增 `attacks`，v1 檔案照樣能讀。
+- `gameplay/action_timeline.py`、`runtime/entity_actions.py`：新 cue `armor`（霸體等級 + 秒數），動作結束時霸體也跟著結束；`paused` 讓打擊停頓時時間軸暫停。
+- `runtime/character_control.py`：控制器 v2 新增 `facing`（跟著移動方向，橫向只分左右）、外力推動 `apply_impulse`（依 `knockback_decay` 衰減，撞牆就停）、`lock_control`（硬直、倒地時不吃輸入）、`paused`。俯視的快速移動（例如擊退）會停在牆邊，不再差一整步。Hitbox2D／Hurtbox2D v2 新增 `follow_facing`：判定框照「面向右」編輯，面向左時鏡像，面向上下時轉 90 度。三個元件都有 v1→v2 migration。
+- `runtime/combat.py`（新）：`CombatantComponent` 欄位包括陣營、資源、生命資源、數值、標籤、韌性、韌性回復、硬直時間、破韌結果（硬直或倒地）、霸體等級、霸體時的受傷倍率、倒地和起身時間、倒地無敵、起身無敵、擊退抗性、受傷後無敵、死亡行為（移除、停用、保留）、掉落表、死亡事件。`CombatSystem` 把 `HitEvent` 結算成上面這些效果，並發出 `CombatEvent`：damage、staggered、knocked_down、got_up、death、drop、hit_event。數值可以內嵌，也可以由 `stats_provider` 提供（A7 會接上職業和裝備）。
+- `runtime/game_session.py`：場景系統加入 `combat`，接上時間軸、控制器和判定；掉落表的保底次數存在 world counters；profiler 有 `combat` 區段。
+- `runtime/component_registry.py`：註冊 Combatant。
+- `editor/integrated_authoring.py`：新增「Attacks (Real-Time Combat)」紀錄分類，可以新增、編輯、復原、貼上。Combatant 元件由 schema 自動出現在 Inspector。
+- `tests/test_combat.py`（新，17 項）。
+
+**需求涵蓋（SPEC §20）：** Hitbox/hurtbox（隨朝向）、Knockback、Stagger/poise、Hitstop、I-frames、霸體、倒地。
+
+**執行的測試：** `tests/test_combat.py` 17 passed；完整套件 **2043 passed**。
+
+**整合證據：** 在 PlayableTestRuntime 的參考專案上跑真的 `GameSession.field_update`：玩家播放動作時間軸，打中場景裡的敵人，依序觸發扣血、擊退、倒地、起身，第二擊打死，實體被移除，掉落表擲出物品。編輯器裡改攻擊紀錄後，執行中的場景讀到同一份資料，復原也有效。
+
+**修掉的問題（測試抓到的）：** 擊退原本丟掉了垂直分量，俯視角色只會被往左右推。
+
+**還沒做：**
+- 實機視窗驗證：A1 沒有畫面上的變化，畫面上的表現在 A8 介面那批一起做實機驗證。
+- 編輯器 Cocoa 截圖：專用工作區和判定框預覽在 A9。
+- 持續性的狀態效果（中毒、燃燒）在即時戰鬥中的計時：還沒接，A3 技能那批一起處理。
+- 接觸傷害（碰到敵人就受傷）在 A4。
+
+**狀態：** A1 完成，接著做 A2。
