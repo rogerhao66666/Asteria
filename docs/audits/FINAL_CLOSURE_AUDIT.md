@@ -6,21 +6,19 @@
 
 | | D19（`06a5577`，逐列重算） | D20（現在） |
 |---|---|---|
-| A 已實作並驗證 | 71（註記寫 72，多算 1 項） | **85** |
-| B 已實作，缺部分驗證 | 22 | **9** |
+| A 已實作並驗證 | 71（註記寫 72，多算 1 項） | **86** |
+| B 已實作，缺部分驗證 | 22 | **8** |
 | C 部分實作 | 1 | **1**（TPL-01，Eventual） |
 | D 未實作 | 2 | **2**（EDT-17、EDT-18，Eventual） |
 | E 取消 | 2 | 2 |
-| 自動化測試 | 2180 passed | **1954 passed**（D20-2 退役 35 個模組時移除只測退役程式碼的測試） |
-| 實機檢查（`results.json`） | 49 PASS／3 NE／1 BLOCKED／0 FAIL | **58 PASS／3 NOT EXECUTED／1 BLOCKED／1 FAIL** |
+| 自動化測試 | 2180 passed | **1970 passed**（D20-2 退役 35 個模組時移除只測退役程式碼的測試） |
+| 實機檢查（`results.json`） | 49 PASS／3 NE／1 BLOCKED／0 FAIL | **63 PASS／3 NOT EXECUTED／1 BLOCKED／1 FAIL** |
 
 **結論：** 功能面已完成，所有 Core 需求都已實作，剩下的 C／D 全是 SPEC 原文的 Eventually／Potential 項目。
 
-**唯一的 FAIL：** weather load（31.8 fps，門檻 55）。執行時 macOS 低耗電模式開著，舊 commit 在相同條件下也只有 34.7 fps，所以不是程式回歸，但在重跑前仍記為 FAIL。
+**唯一的 FAIL：** weather load（最新一次 35.5 fps，門檻 55）。執行時 macOS 低耗電模式開著，舊 commit 在相同條件下也只有 34.7 fps，所以不是程式回歸，但在重跑前仍記為 FAIL。
 
-**剩下的 9 項 B：**
-- 7 項需要人或裝置。
-- 2 項待你決定：AST-07 選單要不要顯示物品圖示；VFX-01 要不要新增粒子發射器格式。
+**剩下的 8 項 B：** 全部需要人或裝置。AST-07（物品圖示）和 VFX-01 的粒子功能已依你的決定完成（D20-5）；VFX-01 只剩人工目視。
 
 **不宣告 FULL SPEC CLOSURE VERIFIED。**
 
@@ -35,6 +33,7 @@
   - 表單標籤改在欄位上方，並依寬度排出最多欄數。
   - Asset 清單新增 Auto-fix Image 和 Pack into Atlas。
 - **B 項實機證據：** 13 項 B→A（實機項目 36–40）。過程中修正 2 個在實機截圖才看得到的缺陷。
+- **物品／裝備圖示（AST-07，B→A）與粒子特效（VFX-01）：** 實機項目 41–43；戰鬥粒子每幀重啟的缺陷由實機截圖發現並修正。
 
 ### D19 變更（保留）
 
@@ -61,13 +60,10 @@
 
 BTL-02 的 DOT 問題已經依「不限制作者」的決定結案：預設固定，作者可以選擇套用倍率。
 
-## 4. 剩下的驗證缺口（9 項 B）
+## 4. 剩下的驗證缺口（8 項 B）
 
 逐項見 `REMAINING_WORK_PLAN.md` §D20。
-- **需要人或裝置（7 項）：** ENG-14（M1）、ENG-15（M2、M8）、ENG-18（M3、M4）、CAM-01（M5）、VFX-02／03（M10）、BTL-04（M1–M3）。
-- **待你決定（2 項）：**
-  - AST-07：選單顯示物品圖示後，才能取得 Item／Equipment 的實機證據。
-  - VFX-01：粒子發射器資料格式，另外還要人工目視 M10。
+- **需要人或裝置（8 項）：** ENG-14（M1）、ENG-15（M2、M8）、ENG-18（M3、M4）、CAM-01（M5）、VFX-01／02／03（M10）、BTL-04（M1–M3）。
 
 ## 5. 實機與效能（Apple M5，macOS 27.0.1，Python 3.13.15，pygame-ce 2.5.8）
 
@@ -122,6 +118,6 @@ BTL-02 的 DOT 問題已經依「不限制作者」的決定結案：預設固�
 | 狀態 | 是否達成 |
 |---|---|
 | FUNCTIONAL CLOSURE COMPLETE | **達成**：所有 Core 需求都已實作；剩下的 C／D 全為 Eventual |
-| AUTOMATED VALIDATION COMPLETE | **未達成**：weather load 需要在關閉低耗電模式後重跑；AST-07、VFX-01 需要你先決定功能，才能自動取證 |
+| AUTOMATED VALIDATION COMPLETE | **未達成**：只差 weather load，要在關閉低耗電模式後重跑；其他可自動化的項目都已有實機證據 |
 | MANUAL VALIDATION PENDING | **是**：M1–M11 尚未執行（M2、M8 因沒有手把而 BLOCKED） |
 | FULL SPEC CLOSURE VERIFIED | **未達成** |

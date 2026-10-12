@@ -768,7 +768,24 @@ autofix 原本沒有產品入口，已在 D20-4 接上編輯器。animated_text 
   - VFX-01：沒有粒子發射器資料，另外還要人眼確認。
   - AST-07：Item、Equipment 沒有 runtime 畫面，選單不顯示物品圖示。
 
+### D20-5 — 使用者決定：AST-07、VFX-01 兩個都做（`15157ac`、`5fcfa57`）
+- **AST-07 物品／裝備圖示：**
+  - 選填的 `icon_id`，沒設定時不寫入，舊資料不變。
+  - 可指向任何 icon 資產（用 region 取 atlas 的一格）、舊式資產或 PNG 路徑。
+  - 商店、Items、Equipment 畫面會繪出圖示。
+  - 編輯器提供附縮圖的下拉選單，也可以直接輸入 id 或路徑。
+  - MV 匯入會保留 IconSet 圖示。
+  - 參考專案的 36 個 CC0 圖示打包成一張 atlas。
+  - golden 的 rpg_database hash 有更新：已確認除了 `icon_id` 之外完全相同。
+- **VFX-01 粒子特效：**
+  - 所有參數都由作者決定：發射量、burst、持續時間（或循環）、生命、速度、方向、散布、重力、阻力、發射形狀、大小與顏色隨時間變化、粒子形狀（圓、方、火花、圖片）、混合模式、旋轉、局部座標。
+  - 三種用法：場景實體上的 `ParticleEmitter2D`、事件的 `PLAY_VFX`、戰鬥時間軸的 VFX beat。
+  - 編輯器的 Particle Effects 頁有即時預覽、7 個預設，Apply 是一次復原步驟。
+  - Problems 會警告發射器指到不存在的特效。
+- **實機檢查時找到並修正的缺陷：** 戰鬥 VFX cue 每一幀都會被替換，導致粒子每幀重新開始、看起來只有一個點。已改用穩定的 key，並加上回歸測試。
+- **矩陣：** AST-07 B→A。VFX-01 的功能缺口已補上，剩人工目視 M10，維持 B。→ **A86／B8／C1／D2**。
+- **驗證：** 自動化測試 1970 passed；實機 63 PASS、3 NOT EXECUTED、1 BLOCKED、1 FAIL（weather load，低耗電模式仍開著）。
+
 ### 需要你決定
 1. 關閉 macOS 低耗電模式後重跑 `python scripts/real_machine_validation.py docs/audits/evidence/real_machine --only vfx`。這屬於系統設定，我不會自己改。
-2. AST-07：要不要讓 runtime 選單（商店、背包、裝備）顯示物品圖示？做了就能補上 Item／Equipment 的實機證據。
-3. VFX-01：要不要新增粒子發射器資料格式？目前 VFX 都是序列圖。
+2. ~~AST-07、VFX-01~~：已依使用者決定完成（D20-5）。

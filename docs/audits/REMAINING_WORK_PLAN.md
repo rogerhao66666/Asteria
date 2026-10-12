@@ -333,7 +333,7 @@ D19 以實機證據把 23 項由 B 升為 A（見 DECISION_LOG D19）。剩下�
 
 ## D20 — 剩餘項目（2026-10-12，依矩陣重算）
 
-D20 以實機證據把 13 項由 B 升為 A（見 DECISION_LOG D20）。逐列重算結果為 **A85／B9／C1／D2**。剩下的 C／D 不變，全為 Eventual（EDT-17、EDT-18、TPL-01）。
+D20 以實機證據把 14 項由 B 升為 A（見 DECISION_LOG D20、D20-5）。逐列重算結果為 **A86／B8／C1／D2**。剩下的 C／D 不變，全為 Eventual（EDT-17、EDT-18、TPL-01）。
 
 ### Validation（B）
 | 需求 | 優先級 | 缺少的證據 | 下一步 |
@@ -342,13 +342,12 @@ D20 以實機證據把 13 項由 B 升為 A（見 DECISION_LOG D20）。逐列�
 | ENG-15 | Core | gamepad 重綁 BLOCKED（無手把） | 需要裝置（M2、M8） |
 | ENG-18 | Core | 可聽確認與延遲 NOT EXECUTED；沒有 spatial audio | 需要人（M3、M4） |
 | CAM-01 | Core | 缺人眼確認 | 需要人（M5） |
-| VFX-01 | Core | 沒有粒子發射器資料（VFX 為序列圖）；缺人眼確認 | 待你決定是否新增發射器格式；M10 |
+| VFX-01 | Core | 粒子功能與實機證據已完成（D20-5）；外觀需要人眼確認 | 需要人（M10） |
 | VFX-02 | Core | normal map 與 screen shader 只有 GL 測試；人工目視 | 需要人（M10） |
 | VFX-03 | Core | field trail 與 fog 只有 HI／GL 測試；人工目視 | 需要人（M10） |
 | BTL-04 | Core | 可聽音訊、實體按鍵、手把未驗證 | 需要人或裝置（M1–M3） |
-| AST-07 | Core | Item、Equipment 沒有 runtime 畫面（選單不顯示物品圖示） | 待你決定是否讓選單顯示物品圖示 |
 
-共 9 項：7 項需要人或裝置，2 項待你決定。
+共 8 項，全部需要人或裝置（AST-07 已在 D20-5 升為 A）。→ **A86／B8／C1／D2**。
 
 ### 實機重跑
 - weather load（項目 25）在低耗電模式下 FAIL。關閉低耗電模式後重跑 `--only vfx`。

@@ -28,24 +28,24 @@
   },
   "soak_30s": {
     "moderngl": {
-      "frames": 1738,
-      "fps": 57.863,
-      "p99_ms": 27.255,
-      "max_ms": 48.689,
-      "over_budget": 29,
+      "frames": 1792,
+      "fps": 59.675,
+      "p99_ms": 23.001,
+      "max_ms": 46.216,
+      "over_budget": 11,
       "errors": 0,
-      "rss_growth_mb": 6.8,
-      "rss_growth_after_warmup_mb": -7.7
+      "rss_growth_mb": -4.1,
+      "rss_growth_after_warmup_mb": -1.8
     },
     "pygame": {
-      "frames": 1822,
-      "fps": 60.666,
-      "p99_ms": 18.1492,
-      "max_ms": 40.6486,
-      "over_budget": 2,
+      "frames": 1809,
+      "fps": 60.228,
+      "p99_ms": 21.3353,
+      "max_ms": 37.6506,
+      "over_budget": 3,
       "errors": 0,
-      "rss_growth_mb": -12.7,
-      "rss_growth_after_warmup_mb": -7.5
+      "rss_growth_mb": -39.2,
+      "rss_growth_after_warmup_mb": -17.5
     }
   }
 }

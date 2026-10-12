@@ -1562,9 +1562,14 @@ def check_editor_workflows(out):
     family.search.setText("leaf")
     checks["record_search"] = bool(family._ids) and len(family._ids) < len(everything)
     family.search.clear()
-    family.browser.setFocus()
-    settle()
-    if window._focused_record_family() is family:
+    deadline = time.perf_counter() + 2.0  # another window (a previous check's) may still hold the focus
+    while window._focused_record_family() is not family and time.perf_counter() < deadline:
+        window.raise_()
+        window.activateWindow()
+        family.browser.setFocus()
+        settle(0.2)
+    checks["editor_had_focus"] = window._focused_record_family() is family
+    if checks["editor_had_focus"]:
         family.select_ids([family._ids[0]])
         window.copy_action.trigger()
         window.paste_action.trigger()

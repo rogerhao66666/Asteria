@@ -66,7 +66,7 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | ANI-05 | S§11 | Core | Action timeline（動畫、移動、hitbox、i-frame、cancel、VFX、SFX、camera、事件） | `gameplay/action_timeline.py`（movement、hitbox、iframe、cancel／combo window、gameplay_event cue）、`runtime/entity_actions.py`、PLAY_ACTION | UT + HI | RM（D19 `engine_systems_real_window` 的 movement／hitbox／vfx cue；`replay_ANI-05`） | **A** | —（ARPG 戰鬥本身依 SPEC §20 維持 Deferred） | D17-6、D19 |
 | CAM-01 | S§12 | Core | Follow、smooth、dead zone、zoom、shake | `runtime/camera.py` `CameraFollow2D`、`presentation/battle_camera_feedback.py` | UT | HI + RM（canonical 戰鬥 camera shake 依 motion beat；D15） | **B** | 缺人眼確認（M5） | CB2 |
 | CAM-02 | S§12 | Core | Look-ahead、bounds、target groups、boss／cutscene camera、transitions | `runtime/camera.py`（look-ahead、bounds、`CameraTargetGroup`、`CameraDirector`、shake）、`systems.py` `CameraFollowSystem`、`field_camera.py`（manifest `field.camera.follow` 跟隨鏡頭）、WORLD `CAMERA_FOCUS／RELEASE／SHAKE`；戰鬥 boss 開場鏡頭（encounter tag `boss`） | UT + HI | RM（跟隨、boss 開場、事件 focus；D20 `engine_systems_real_window` look-ahead 48–58 px、target group 中心誤差 0.5 px） | **A** | — | CB10、D17-3（`ca6cff1`）、D20 |
-| VFX-01 | S§12 | Core | 粒子、hit flash、damage numbers、screen effects | `runtime/battle_presentation_adapters.py` VFX sprite sheet 播放、hit flash（screen_fx）、damage numbers（`presentation/battle_feedback.py`）；天氣粒子（`runtime/weather.py`） | UT | HI + RM（實機視窗 VFX 截圖；D15） | **B** | 沒有粒子發射器資料（VFX 為序列圖）；缺人眼確認 | CB2 |
+| VFX-01 | S§12 | Core | 粒子、hit flash、damage numbers、screen effects | `runtime/battle_presentation_adapters.py` VFX sprite sheet 播放、hit flash（screen_fx）、damage numbers（`presentation/battle_feedback.py`）；天氣粒子（`runtime/weather.py`）；粒子特效 `presentation/particles.py`（`particle_effect` 資產、`ParticleEmitter2D` 元件、PLAY_VFX、戰鬥時間軸 beat）、`runtime/particle_draw.py`、編輯器 Particle Effects（即時預覽） | UT | HI + RM（實機視窗 VFX 截圖；D15）＋D20 `particles_field_pygame`／`particles_field_moderngl`（約 59 fps）、`particles_battle_beat`、`editor_particles_gui` | **B** | 粒子功能已完成並有實機證據；外觀需要人眼確認（M10） | CB2 |
 | VFX-02 | S§12、AD§12 | Core | 2D lights、normal maps、shadows、bloom、color grading、screen shaders | `render/lighting.py`、`render/postprocess.py`（headless 指令模型）；ModernGL 後端已復原 | UT | RM（`vfx_moderngl_field`、`vfx_pygame_field`、`vfx_gpu_battle_afterimage`、`mv_import_gpu_night`） | **B** | 光照、陰影、bloom、grading、vignette 已 RM；normal map 與 screen shader（內建／專案）只有 GL 測試；人工目視 M10 | CB9 |
 | VFX-03 | S§12 | Core | Trails、afterimages、fog/weather/water | 部分（`render/environment.py`） | UT | RM（battle afterimage、雨 2000 粒子、水面） | **B** | afterimage、weather、water 已 RM；field trail 與 fog 只有 HI／GL 測試；人工目視 M10 | CB9 |
 | CMP-01 | S§44 | Core | Baked/Layered/Attached/Procedural/Hybrid 並存 | `presentation/canonical.py`、`composition.py`、`actor_visual_layers.py`；`presentation/character_composition.py`（body sheet metadata 的 layer／attachment 解析成繪製部件）；`BattlePresentationRuntime` 在 body 前後繪製 | UT + HI（真實 canonical 戰鬥：layer 在後、attachment 在前、隨朝向鏡像） | RM（戰鬥；D19 replay `replay_CMP-01`：field 玩家的 layer／attachment 與戰鬥分層在實機 playable 視窗繪製） | **A** | — | CB2、D17-3（`c499639`）、D19 |
@@ -151,7 +151,7 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | AST-04 | AP§46 #10、§48 | Core | 動畫事件會觸發 | 見 ANI-03 | UT | RM（同 ANI-03：D19 `engine_systems_real_window` frame events） | **A** | — | CB8、D19 |
 | AST-05 | AP§46 #13、§48 | Core | Runtime 播放整合 | field 行走（`playable_test_runtime`）；canonical 戰鬥 sprite 動畫（`runtime/battle_visuals.py`、`battle_presentation_adapters.py`） | UT + HI | RM（field 行走；戰鬥 animation_smoothness 量測 88–89 格／10 s） | **A** | — | — |
 | AST-06 | AP§48 | Core | 專案 build 可以打包 | `project_tools.export_game`（資源、CREDITS／LICENSE、`engine/asteria`、`run_game.py`）；`build_pyz`（單檔，解壓到使用者 cache、存檔在使用者資料夾）；`build_macos_app`；`package_game`；`asteria-export --pyz --app`；editor File → Export Game… | UT + HI（`python -I` 在 repo 外啟動 folder／.pyz／.app，確認載入的是內附引擎） | RM（`packaged_app_real_window`、editor `export_game`） | **A** | Finder 雙擊（Gatekeeper）屬人工 M6，不是本需求的驗收條件；不產生免直譯器執行檔 | CB12、D17-3（`9ea2d01`） |
-| AST-07 | AS§35 Phase A | Core | 類別：Character、NPC、Monster、Tileset、Prop、Portrait、Icon、VFX、Skill、Item、Equipment、Animation、Scene | `assets/*`（character_bundle、monster、tileset、prop、portrait、icon、vfx） | UT | 部分 RM | **B** | D20 `asset_categories_real_window` 已實機顯示 character、NPC、monster、tileset、prop、icon、VFX、skill、scene（動畫類別播放 clip）；立繪已 RM。缺 Item、Equipment：runtime 選單不顯示物品圖示，沒有實機畫面 | CB13、D20 |
+| AST-07 | AS§35 Phase A | Core | 類別：Character、NPC、Monster、Tileset、Prop、Portrait、Icon、VFX、Skill、Item、Equipment、Animation、Scene | `assets/*`（character_bundle、monster、tileset、prop、portrait、icon、vfx）；Item／Equipment 的 `icon_id`（`runtime/menu_icons.py`，商店與狀態選單繪製；編輯器下拉選圖示；MV 匯入保留 IconSet 圖示） | UT | RM（`asset_categories_real_window` 11 類；D20 `menu_icons_real_window`：商店、Items、Equipment 以真實按鍵開啟並繪出物品／裝備圖示）；立繪已 RM | **A** | — | CB13、D20 |
 | AST-08 | AS§35 Phase A | Core | 類別：Projectile、UI asset、Prefab、Audio（播放） | Prefab：`core/prefab.py`；Audio：`runtime/audio_mixer.py`；Projectile、UI asset：`assets/sprite_kinds.py`（golden 涵蓋） | UT | RM（D20 `asset_categories_real_window`：projectile、UI；`editor_workflows_gui` prefab；`audio_playback_device` 實機播放，可聽性為人工 M3） | **A** | — | CB13、D20 |
 | AST-09 | AS§34 | Core | Golden 測試套件（11 類） | `validation/golden.py`（8 項檢查）、`tests/golden/`（11 個 golden asset、baseline、README 的更新規則）、`scripts/update_golden_baselines.py` | UT + HI | 每次 commit 都執行（測試基礎設施） | **A** | — | — |
 | AST-10 | AS§33、AD | Core（內容） | 正式 Starter Pack 美術 | — | — | — | **D（Deferred content）** | 依 SCOPE_DECISIONS，改用授權明確的免費素材；屬於 JRPG Demo 階段 | Deferred |
@@ -186,11 +186,13 @@ Class、介面、stub、mock 不算實作證據。只有單元測試不算整合
 | RPG／Battle（BTL、RPG） | 13 | 1 | 0 | 0 | 0 | 0 | 14 | 93% | 100% |
 | 世界／事件／UI（EVT、WLD、UI） | 8 | 0 | 0 | 0 | 0 | 0 | 8 | 100% | 100% |
 | Editor（EDT） | 17 | 0 | 0 | 2 | 0 | 0 | 19 | 89% | 89% |
-| Asset Pipeline（AST） | 10 | 1 | 0 | 0 | 1 | 1 | 11 | 91% | 100% |
+| Asset Pipeline（AST） | 11 | 0 | 0 | 0 | 1 | 1 | 11 | 100% | 100% |
 | 壓力測試／範本／Generator | 1 | 0 | 1 | 0 | 1 | 2 | 2 | 50% | 50% |
-| **合計** | **85** | **9** | **1** | **2** | **2** | **3** | **97** | **88%** | **97%** |
+| **合計** | **86** | **8** | **1** | **2** | **2** | **3** | **97** | **89%** | **97%** |
 
 （D20 由腳本從本表逐列重算（第 8 節的 6 欄表格一併計入）；上方表格取代先前各期的統計。以下各期註記保留原文作為歷史。）
+
+**2026-10-12 D20（續）：** AST-07 由 B 升為 A（物品／裝備圖示，`menu_icons_real_window`）。VFX-01 的功能缺口（粒子發射器資料）已補上並有實機證據（`particles_field_*`、`particles_battle_beat`、`editor_particles_gui`），剩下人工目視 M10，維持 B。→ **A86／B8／C1／D2**。
 
 **2026-10-12 D20：** 13 項由 B 升為 A，依據是新的實機證據（`REAL_MACHINE_VALIDATION.md` 項目 36–40）：
 - `b_items_replay` 新增 7 項：EVT-04、RPG-01、RPG-08、GP-02、BTL-02、ANI-02、CMP-03（CMP-03 另有新的 runtime 使用者：field popup）。
