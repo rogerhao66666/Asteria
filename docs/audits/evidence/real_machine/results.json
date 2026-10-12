@@ -387,7 +387,7 @@
     {
       "check": "replay_RPG-02",
       "status": "PASS",
-      "evidence": "RPG-02: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_equipment_set_bonuses_apply_by_piece_count_and_survive_save_load: passed, 3 frames",
+      "evidence": "RPG-02: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_equipment_set_bonuses_apply_by_piece_count_and_survive_save_load: passed, 5 frames",
       "screenshots": [
         "replay/test_equipment_set_bonuses_apply_by_piece_count_and_survive_save_load.png"
       ]
@@ -395,7 +395,7 @@
     {
       "check": "replay_RPG-04",
       "status": "PASS",
-      "evidence": "RPG-04: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_victory_rolls_the_enemy_drop_table_and_pity_survives_save_and_load: passed, 4 frames",
+      "evidence": "RPG-04: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_victory_rolls_the_enemy_drop_table_and_pity_survives_save_and_load: passed, 8 frames",
       "screenshots": [
         "replay/test_victory_rolls_the_enemy_drop_table_and_pity_survives_save_and_load.png"
       ]
@@ -403,7 +403,7 @@
     {
       "check": "replay_RPG-05",
       "status": "PASS",
-      "evidence": "RPG-05: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_shop_buys_sells_and_tracks_limited_stock: passed, 3 frames; test_runtime_opens_shop_from_an_event_and_buys: passed, 7 frames",
+      "evidence": "RPG-05: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_shop_buys_sells_and_tracks_limited_stock: passed, 8 frames; test_runtime_opens_shop_from_an_event_and_buys: passed, 7 frames",
       "screenshots": [
         "replay/test_shop_buys_sells_and_tracks_limited_stock.png",
         "replay/test_runtime_opens_shop_from_an_event_and_buys.png"
@@ -412,7 +412,7 @@
     {
       "check": "replay_RPG-06",
       "status": "PASS",
-      "evidence": "RPG-06: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_crafting_screen_opened_by_event_crafts_in_the_runtime: passed, 8 frames; test_recipe_discovery_by_event_and_by_experiment: passed, 7 frames",
+      "evidence": "RPG-06: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_crafting_screen_opened_by_event_crafts_in_the_runtime: passed, 18 frames; test_recipe_discovery_by_event_and_by_experiment: passed, 9 frames",
       "screenshots": [
         "replay/test_crafting_screen_opened_by_event_crafts_in_the_runtime.png",
         "replay/test_recipe_discovery_by_event_and_by_experiment.png"
@@ -421,7 +421,7 @@
     {
       "check": "replay_RPG-07",
       "status": "PASS",
-      "evidence": "RPG-07: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_refusals_cost_success_rewards_and_one_time_use: passed, 3 frames; test_party_capability_and_cost_are_checked: passed, 3 frames; test_stat_checks_are_deterministic_and_failures_run_their_branch: passed, 3 frames; test_an_event_runs_an_interaction_and_branches_on_its_outcome: passed, 2 frames",
+      "evidence": "RPG-07: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_refusals_cost_success_rewards_and_one_time_use: passed, 6 frames; test_party_capability_and_cost_are_checked: passed, 3 frames; test_stat_checks_are_deterministic_and_failures_run_their_branch: passed, 3 frames; test_an_event_runs_an_interaction_and_branches_on_its_outcome: passed, 2 frames",
       "screenshots": [
         "replay/test_refusals_cost_success_rewards_and_one_time_use.png",
         "replay/test_party_capability_and_cost_are_checked.png",
@@ -440,7 +440,7 @@
     {
       "check": "replay_CMP-01",
       "status": "PASS",
-      "evidence": "CMP-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_the_playable_field_draws_the_players_layers_and_attachments: passed, 2 frames; test_battle_draws_layers_behind_and_attachments_in_front_of_the_body: passed, 4 frames",
+      "evidence": "CMP-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_the_playable_field_draws_the_players_layers_and_attachments: passed, 2 frames; test_battle_draws_layers_behind_and_attachments_in_front_of_the_body: passed, 12 frames",
       "screenshots": [
         "replay/test_the_playable_field_draws_the_players_layers_and_attachments.png",
         "replay/test_battle_draws_layers_behind_and_attachments_in_front_of_the_body.png"
@@ -449,7 +449,7 @@
     {
       "check": "replay_ANI-05",
       "status": "PASS",
-      "evidence": "ANI-05: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_controllers_actions_and_hits_run_in_the_game_session_field_update: passed, 6 frames; test_project_action_timelines_are_authored_as_records_and_played_from_events: passed, 3 frames",
+      "evidence": "ANI-05: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_controllers_actions_and_hits_run_in_the_game_session_field_update: passed, 92 frames; test_project_action_timelines_are_authored_as_records_and_played_from_events: passed, 32 frames",
       "screenshots": [
         "replay/test_controllers_actions_and_hits_run_in_the_game_session_field_update.png",
         "replay/test_project_action_timelines_are_authored_as_records_and_played_from_events.png"
@@ -468,7 +468,7 @@
     {
       "check": "replay_WLD-01",
       "status": "PASS",
-      "evidence": "WLD-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_victory_advances_defeat_objectives_and_events_drive_quests: passed, 6 frames; test_quest_rows_and_menu_cursor: passed, 2 frames",
+      "evidence": "WLD-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_victory_advances_defeat_objectives_and_events_drive_quests: passed, 52 frames; test_quest_rows_and_menu_cursor: passed, 2 frames",
       "screenshots": [
         "replay/test_victory_advances_defeat_objectives_and_events_drive_quests.png",
         "replay/test_quest_rows_and_menu_cursor.png"
@@ -477,7 +477,7 @@
     {
       "check": "replay_WLD-02",
       "status": "PASS",
-      "evidence": "WLD-02: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_events_drive_reputation_counters_and_unlock_achievements: passed, 4 frames; test_achievement_and_bestiary_screens_from_the_pause_menu: passed, 22 frames",
+      "evidence": "WLD-02: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_events_drive_reputation_counters_and_unlock_achievements: passed, 5 frames; test_achievement_and_bestiary_screens_from_the_pause_menu: passed, 22 frames",
       "screenshots": [
         "replay/test_events_drive_reputation_counters_and_unlock_achievements.png",
         "replay/test_achievement_and_bestiary_screens_from_the_pause_menu.png"
@@ -486,7 +486,7 @@
     {
       "check": "replay_EVT-01",
       "status": "PASS",
-      "evidence": "EVT-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_authored_dialogue_choice_branch_and_encounter_run_in_order: passed, 4 frames; test_failed_world_command_stops_the_event_and_is_reported: passed, 3 frames; test_event_waiting_on_dialogue_survives_save_and_reload: passed, 3 frames; test_autorun_binding_runs_once_until_its_condition_turns_off: passed, 3 frames",
+      "evidence": "EVT-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_authored_dialogue_choice_branch_and_encounter_run_in_order: passed, 7 frames; test_failed_world_command_stops_the_event_and_is_reported: passed, 3 frames; test_event_waiting_on_dialogue_survives_save_and_reload: passed, 4 frames; test_autorun_binding_runs_once_until_its_condition_turns_off: passed, 4 frames",
       "screenshots": [
         "replay/test_authored_dialogue_choice_branch_and_encounter_run_in_order.png",
         "replay/test_failed_world_command_stops_the_event_and_is_reported.png",
@@ -507,7 +507,7 @@
     {
       "check": "replay_EVT-03",
       "status": "PASS",
-      "evidence": "EVT-03: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_common_events_autorun_and_parallel_follow_their_switches: passed, 8 frames; test_battle_event_fires_on_its_condition_once_and_holds_battle_input: passed, 6 frames",
+      "evidence": "EVT-03: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_common_events_autorun_and_parallel_follow_their_switches: passed, 9 frames; test_battle_event_fires_on_its_condition_once_and_holds_battle_input: passed, 7 frames",
       "screenshots": [
         "replay/test_common_events_autorun_and_parallel_follow_their_switches.png",
         "replay/test_battle_event_fires_on_its_condition_once_and_holds_battle_input.png"
@@ -524,7 +524,7 @@
     {
       "check": "replay_RPG-01",
       "status": "PASS",
-      "evidence": "RPG-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_the_game_session_applies_the_project_rules_to_events_and_shops: passed, 4 frames",
+      "evidence": "RPG-01: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_the_game_session_applies_the_project_rules_to_events_and_shops: passed, 6 frames",
       "screenshots": [
         "replay/test_the_game_session_applies_the_project_rules_to_events_and_shops.png"
       ]
@@ -532,7 +532,7 @@
     {
       "check": "replay_RPG-08",
       "status": "PASS",
-      "evidence": "RPG-08: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_a_boss_summons_minions_it_owns_and_they_take_turns: passed, 3 frames; test_a_companion_in_reserve_is_called_into_the_battle_and_events_can_summon: passed, 2 frames; test_a_captured_companion_grows_and_is_kept_in_reserve_across_save_and_load: passed, 3 frames; test_summoned_combatants_appear_on_the_battle_screen: passed, 5 frames",
+      "evidence": "RPG-08: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_a_boss_summons_minions_it_owns_and_they_take_turns: passed, 6 frames; test_a_companion_in_reserve_is_called_into_the_battle_and_events_can_summon: passed, 7 frames; test_a_captured_companion_grows_and_is_kept_in_reserve_across_save_and_load: passed, 28 frames; test_summoned_combatants_appear_on_the_battle_screen: passed, 5 frames",
       "screenshots": [
         "replay/test_a_boss_summons_minions_it_owns_and_they_take_turns.png",
         "replay/test_a_companion_in_reserve_is_called_into_the_battle_and_events_can_summon.png",
@@ -543,7 +543,7 @@
     {
       "check": "replay_GP-02",
       "status": "PASS",
-      "evidence": "GP-02: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_cost_is_paid_and_targets_follow_the_ability_targeting_data: passed, 4 frames; test_cooldown_blocks_the_ability_for_its_users_next_turns: passed, 5 frames; test_timeline_mode_casts_resolve_later_and_recovery_delays_the_next_turn: passed, 4 frames",
+      "evidence": "GP-02: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_cost_is_paid_and_targets_follow_the_ability_targeting_data: passed, 6 frames; test_cooldown_blocks_the_ability_for_its_users_next_turns: passed, 34 frames; test_timeline_mode_casts_resolve_later_and_recovery_delays_the_next_turn: passed, 13 frames",
       "screenshots": [
         "replay/test_cost_is_paid_and_targets_follow_the_ability_targeting_data.png",
         "replay/test_cooldown_blocks_the_ability_for_its_users_next_turns.png",
@@ -553,7 +553,7 @@
     {
       "check": "replay_BTL-02",
       "status": "PASS",
-      "evidence": "BTL-02: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_damage_over_time_is_fixed_unless_the_author_gives_it_interaction_tags: passed, 11 frames; test_two_weapons_weapon_weakness_and_resistance: passed, 6 frames; test_weakness_hits_break_the_shield_and_the_break_doubles_damage: passed, 6 frames; test_boost_repeats_attacks_and_powers_spells: passed, 6 frames; test_secondary_job_and_a_poison_that_worsens_every_turn: passed, 5 frames",
+      "evidence": "BTL-02: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_damage_over_time_is_fixed_unless_the_author_gives_it_interaction_tags: passed, 15 frames; test_two_weapons_weapon_weakness_and_resistance: passed, 9 frames; test_weakness_hits_break_the_shield_and_the_break_doubles_damage: passed, 12 frames; test_boost_repeats_attacks_and_powers_spells: passed, 11 frames; test_secondary_job_and_a_poison_that_worsens_every_turn: passed, 8 frames",
       "screenshots": [
         "replay/test_damage_over_time_is_fixed_unless_the_author_gives_it_interaction_tags.png",
         "replay/test_two_weapons_weapon_weakness_and_resistance.png",
@@ -582,7 +582,7 @@
     {
       "check": "b_items_replay_run",
       "status": "PASS",
-      "evidence": "pytest exit 0; 131 tests in 21 files, 2392 frames presented in total; 131 passed in 48.07s"
+      "evidence": "pytest exit 0; 143 tests in 21 files, 19203 frames presented in total; 143 passed in 195.91s (0:03:15)"
     },
     {
       "check": "engine_systems_real_window",
@@ -692,21 +692,25 @@
     {
       "check": "octopath_demo_real_window",
       "status": "PASS",
-      "evidence": "Octopath-style demo in a real cocoa window, real key events: command_menu=ok, boost_set_by_key=ok, target_menu=ok, boosted_attack_two_hits=ok, divine_spends_three_bp=ok, divine_particle_burst=ok, concoct_by_keys=ok, battle_won_by_keys=ok; divine skill last_stand, up to 120 particles in a frame",
+      "evidence": "Octopath-style demo in a real cocoa window, real key events: command_menu=ok, boost_set_by_key=ok, target_menu=ok, boosted_attack_two_hits=ok, divine_spends_three_bp=ok, divine_particle_burst=ok, concoct_by_keys=ok, battle_won_by_keys=ok, encounter_slime_pit=ok, encounter_old_crypt=ok, encounter_gazer_nest=ok, encounter_samurai_duel=ok; divine skill last_stand, up to 120 particles in a frame",
       "screenshots": [
         "octo_field.png",
         "octo_menu.png",
         "octo_target.png",
         "octo_divine.png",
         "octo_concoct.png",
-        "octo_victory.png"
+        "octo_victory.png",
+        "octo_slime_pit.png",
+        "octo_old_crypt.png",
+        "octo_gazer_nest.png",
+        "octo_samurai_duel.png"
       ],
       "note": "Whether it plays well is for a person (M5 / M10)."
     },
     {
       "check": "replay_BTL-03",
       "status": "PASS",
-      "evidence": "BTL-03: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_boosted_sword_attack_hits_three_times_breaks_shields_and_reveals_the_weakness: passed, 5 frames; test_break_skips_the_enemy_turn_and_doubles_damage: passed, 5 frames; test_divine_skill_needs_three_boost_points_and_spends_them: passed, 5 frames; test_one_spell_of_three_elements_reveals_three_weaknesses: passed, 5 frames; test_donate_boost_call_the_pet_and_concoct: passed, 6 frames; test_poison_worsens_sleep_skips_turns_and_attack_up_raises_damage: passed, 5 frames; test_the_demo_battle_is_won_with_the_keyboard: passed, 70 frames",
+      "evidence": "BTL-03: session-level integration tests replayed in the real playable cocoa window (same assertions; frames presented after each session call): test_boosted_sword_attack_hits_three_times_breaks_shields_and_reveals_the_weakness: passed, 53 frames; test_break_skips_the_enemy_turn_and_doubles_damage: passed, 96 frames; test_divine_skill_needs_three_boost_points_and_spends_them: passed, 192 frames; test_one_spell_of_three_elements_reveals_three_weaknesses: passed, 84 frames; test_donate_boost_call_the_pet_and_concoct: passed, 212 frames; test_poison_worsens_sleep_skips_turns_and_attack_up_raises_damage: passed, 140 frames; test_the_demo_battle_is_won_with_the_keyboard: passed, 174 frames; test_fire_heals_the_gel_slime_and_lightning_breaks_it: passed, 117 frames; test_the_mirror_gazer_reflects_spells_and_cannot_be_put_to_sleep: passed, 106 frames; test_the_bone_wraith_shrugs_off_poison_and_fears_light: passed, 104 frames; test_the_iron_samurai_resists_swords_and_needs_a_spear: passed, 61 frames; test_field_enemies_wander_and_touching_one_starts_its_battle: passed, 43 frames",
       "screenshots": [
         "replay/test_boosted_sword_attack_hits_three_times_breaks_shields_and_reveals_the_weakness.png",
         "replay/test_break_skips_the_enemy_turn_and_doubles_damage.png",
@@ -714,7 +718,12 @@
         "replay/test_one_spell_of_three_elements_reveals_three_weaknesses.png",
         "replay/test_donate_boost_call_the_pet_and_concoct.png",
         "replay/test_poison_worsens_sleep_skips_turns_and_attack_up_raises_damage.png",
-        "replay/test_the_demo_battle_is_won_with_the_keyboard.png"
+        "replay/test_the_demo_battle_is_won_with_the_keyboard.png",
+        "replay/test_fire_heals_the_gel_slime_and_lightning_breaks_it.png",
+        "replay/test_the_mirror_gazer_reflects_spells_and_cannot_be_put_to_sleep.png",
+        "replay/test_the_bone_wraith_shrugs_off_poison_and_fears_light.png",
+        "replay/test_the_iron_samurai_resists_swords_and_needs_a_spear.png",
+        "replay/test_field_enemies_wander_and_touching_one_starts_its_battle.png"
       ]
     }
   ]
