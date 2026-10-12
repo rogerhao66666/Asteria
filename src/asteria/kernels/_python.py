@@ -273,7 +273,7 @@ def topdown_prepare(c, slots, dt):
     ``(dx, dy, move_x, move_y, locked)`` lists: the normalised intent and ``(intent * speed + push) * dt``.
     """
     ix, iy, lock, jump = c["intent_x"], c["intent_y"], c["control_lock"], c["jump"]
-    speed, px, py = c["speed"], c["push_x"], c["push_y"]
+    speed, override, px, py = c["speed"], c["speed_override"], c["push_x"], c["push_y"]
     out_dx, out_dy, out_mx, out_my, out_locked = [], [], [], [], []
     for s in slots:
         dx, dy = ix[s], iy[s]
@@ -288,8 +288,9 @@ def topdown_prepare(c, slots, dt):
             dx, dy = dx / mag, dy / mag
         out_dx.append(dx)
         out_dy.append(dy)
-        out_mx.append((dx * speed[s] + px[s]) * dt)
-        out_my.append((dy * speed[s] + py[s]) * dt)
+        v = override[s] if override[s] > 0.0 else speed[s]
+        out_mx.append((dx * v + px[s]) * dt)
+        out_my.append((dy * v + py[s]) * dt)
         out_locked.append(locked)
     return out_dx, out_dy, out_mx, out_my, out_locked
 

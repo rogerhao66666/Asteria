@@ -5,11 +5,13 @@ i-frames, cancel and combo windows, VFX/SFX/camera cues and gameplay events on a
 an entity; each update applies the cues it crosses:
 
 * ``animation``      → the entity's ``Animator2D`` clip (``payload.clip`` / ``payload.role``)
-* ``movement``       → the ``CharacterController2D`` intent (``x``, ``y``) for ``duration``
+* ``movement``       → the ``CharacterController2D`` intent (``x``, ``y``) for ``duration``; ``relative``:
+  ``world`` (default), ``facing`` (authored for facing right) or ``aim`` (along the action's aim); ``speed``
+  replaces the controller's speed meanwhile (dashes, lunges)
 * ``hitbox``         → the entity's ``Hitbox2D`` is active for ``duration`` (``hit_tag`` optional)
 * ``iframe``         → invincibility for ``duration`` (``HitboxSystem.grant_invincibility``)
 * ``projectile``     → fires ``projectile_id`` from the entity (``projectiles.fire_from``: count, spread,
-  angle, offset turned with the facing)
+  angle, offset turned with the facing); ``aim: true`` shoots along the action's aim
 * ``armor``          → super armor ``level`` for ``duration`` (``armor.grant_armor``, e.g. ``CombatSystem``); it
   ends with the action
 * ``cancel_window`` / ``combo_window`` → open for ``duration``; ``cancel()`` / ``window_open()``
@@ -27,7 +29,7 @@ from dataclasses import dataclass, field
 from asteria.core import System
 from asteria.gameplay.action_timeline import ActionCueKind, ActionTimeline
 
-from .character_control import CharacterController2DComponent, Hitbox2DComponent
+from .character_control import CharacterController2DComponent, Hitbox2DComponent, turn_with_aim, turn_with_facing
 from .components2d import Animator2DComponent
 
 WINDOW_KINDS = {ActionCueKind.CANCEL_WINDOW: "cancel", ActionCueKind.COMBO_WINDOW: "combo"}
@@ -41,6 +43,9 @@ class _Running:
     hitbox_until: float | None = None
     move_until: float | None = None
     move_intent: tuple = (0.0, 0.0)
+    move_speed: float = 0.0
+    aim: tuple | None = None  # world direction the action was aimed (lock-on target, stick)
+    source: str = ""  # who started it (e.g. the ability id), for the caller's bookkeeping
     armored: bool = False
     windows: dict = field(default_factory=dict)  # kind -> (start, end, payload)
     end: float = 0.0
@@ -68,10 +73,15 @@ class EntityActionSystem(System):
         self.listeners = []
 
     # -- control ---------------------------------------------------------------------------------
-    def play(self, entity_id, timeline):
+    def play(self, entity_id, timeline, *, aim=None, source=""):
         if not isinstance(timeline, ActionTimeline):
             raise TypeError("timeline must be ActionTimeline")
-        self.running[str(entity_id)] = _Running(timeline, end=timeline.duration)
+        aim = None if aim is None or not (aim[0] or aim[1]) else (float(aim[0]), float(aim[1]))
+        self.running[str(entity_id)] = _Running(timeline, end=timeline.duration, aim=aim, source=str(source))
+
+    def source(self, entity_id):
+        run = self.running.get(str(entity_id))
+        return None if run is None else run.source
 
     def active(self, entity_id):
         return str(entity_id) in self.running
@@ -115,6 +125,7 @@ class EntityActionSystem(System):
                 controller = entity.try_get(CharacterController2DComponent)
                 if controller is not None:
                     controller.set_intent(0.0, 0.0)
+                    controller.speed_override = 0.0
 
     # -- update ----------------------------------------------------------------------------------
     def _apply(self, entity, run, cue):
@@ -125,7 +136,15 @@ class EntityActionSystem(System):
             if animator is not None:
                 animator.default_clip = str(payload.get("clip") or payload.get("role") or animator.default_clip)
         elif kind == ActionCueKind.MOVEMENT:
-            run.move_intent = (float(payload.get("x", 0.0)), float(payload.get("y", 0.0)))
+            x, y = float(payload.get("x", 0.0)), float(payload.get("y", 0.0))
+            relative = payload.get("relative", "world")
+            controller = entity.try_get(CharacterController2DComponent)
+            if relative == "aim" and run.aim is not None:
+                x, y = turn_with_aim(x, y, run.aim)
+            elif relative in ("facing", "aim") and controller is not None:
+                x, y = turn_with_facing(x, y, controller.facing)
+            run.move_intent = (x, y)
+            run.move_speed = float(payload.get("speed", 0.0))
             run.move_until = cue.time + float(payload.get("duration", 0.0))
         elif kind == ActionCueKind.HITBOX:
             hitbox = entity.try_get(Hitbox2DComponent)
@@ -141,6 +160,8 @@ class EntityActionSystem(System):
         elif kind == ActionCueKind.PROJECTILE:
             if self.projectiles is None:
                 raise ValueError(f"{entity.name} fired a projectile cue but no projectile system is running")
+            if payload.get("aim") and run.aim is not None:
+                payload["direction"] = run.aim
             self.projectiles.fire_from(entity, payload)
         elif kind == ActionCueKind.ARMOR:
             if self.armor is not None:
@@ -174,10 +195,12 @@ class EntityActionSystem(System):
             if run.move_until is not None:
                 if run.time - dt < run.move_until - 1e-9 and controller is not None:
                     controller.set_intent(*run.move_intent)  # this frame starts inside the movement window
+                    controller.speed_override = run.move_speed
                 elif run.time - dt >= run.move_until - 1e-9:
                     run.move_until = None
                     if controller is not None:
                         controller.set_intent(0.0, 0.0)
+                        controller.speed_override = 0.0
             if run.hitbox_until is not None and run.time >= run.hitbox_until:
                 hitbox = entity.try_get(Hitbox2DComponent)
                 if hitbox is not None:

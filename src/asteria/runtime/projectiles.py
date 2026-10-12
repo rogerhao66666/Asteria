@@ -25,6 +25,7 @@ from .character_control import (
     HitEvent,
     Hurtbox2DComponent,
     box_rows,
+    turn_with_facing,
 )
 
 
@@ -56,17 +57,6 @@ class ProjectileView:
     y: float
     vx: float
     vy: float
-
-
-def turn_with_facing(x, y, facing):
-    """A vector authored for facing right, turned for ``facing`` (mirrored left, a quarter turn down / up)."""
-    if facing == "left":
-        return -x, y
-    if facing == "down":
-        return -y, x
-    if facing == "up":
-        return y, -x
-    return x, y
 
 
 def _team_of(entity):
@@ -141,12 +131,17 @@ class ProjectileSystem(System):
 
     def fire_from(self, entity, payload):
         """Fire from an entity (action timeline ``projectile`` cue): ``projectile_id``, ``count``, ``spread`` and
-        ``angle`` (degrees, authored for facing right), ``offset_x`` / ``offset_y`` (turned with the facing)."""
+        ``angle`` (degrees, authored for facing right), ``offset_x`` / ``offset_y`` (turned with the facing);
+        ``direction`` (a world vector) aims the shot instead of the facing."""
         payload = dict(payload)
         controller = entity.try_get(CharacterController2DComponent)
         facing = controller.facing if controller is not None else "right"
         angle = radians(float(payload.get("angle", 0.0)))
-        direction = turn_with_facing(cos(angle), sin(angle), facing)
+        if payload.get("direction") is not None:  # an aimed shot (lock-on target, stick direction)
+            ax, ay = payload["direction"]
+            direction = (ax * cos(angle) - ay * sin(angle), ax * sin(angle) + ay * cos(angle))
+        else:
+            direction = turn_with_facing(cos(angle), sin(angle), facing)
         ox, oy = turn_with_facing(float(payload.get("offset_x", 0.0)), float(payload.get("offset_y", 0.0)), facing)
         x, y = world_position(entity)
         return self.fire(

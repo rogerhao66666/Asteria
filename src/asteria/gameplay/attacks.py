@@ -56,6 +56,7 @@ class AttackDefinition:
     armor_break: int = 0  # super armor holds while the target's armor level is above this
     knockdown: bool = False
     knockdown_time: float = 0.0  # 0 = the target's own knockdown_time
+    apply_states: tuple = ()  # ({"state": id, "chance": 0..1, "duration": seconds or omitted}, ...)
 
     def __init__(
         self,
@@ -83,6 +84,7 @@ class AttackDefinition:
         armor_break=0,
         knockdown=False,
         knockdown_time=0.0,
+        apply_states=(),
     ):
         attack_id = str(attack_id).strip()
         if not attack_id:
@@ -124,6 +126,20 @@ class AttackDefinition:
         set_(self, "armor_break", int(armor_break))
         set_(self, "knockdown", bool(knockdown))
         set_(self, "knockdown_time", _number(knockdown_time, "knockdown_time", minimum=0.0))
+        states = []
+        for entry in apply_states:
+            entry = dict(entry)
+            unknown = set(entry) - {"state", "chance", "duration"}
+            if unknown or not str(entry.get("state", "")).strip():
+                raise ValueError("apply_states entries are {state, chance, duration}")
+            clean = {
+                "state": str(entry["state"]).strip(),
+                "chance": _number(entry.get("chance", 1.0), "chance", minimum=0.0, maximum=1.0),
+            }
+            if entry.get("duration") is not None:
+                clean["duration"] = _number(entry["duration"], "duration", minimum=0.0)
+            states.append(clean)
+        set_(self, "apply_states", tuple(states))
 
     def to_data(self):
         return {
@@ -152,6 +168,7 @@ class AttackDefinition:
             "armor_break": self.armor_break,
             "knockdown": self.knockdown,
             "knockdown_time": self.knockdown_time,
+            "apply_states": [dict(x) for x in self.apply_states],
         }
 
     @classmethod

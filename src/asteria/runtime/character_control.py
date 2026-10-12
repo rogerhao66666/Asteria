@@ -51,6 +51,7 @@ PUSH_EPSILON = 0.5  # pushes slower than this (world units / s) stop
     ("push_y", float, 0.0),
     ("control_lock", float, 0.0),
     ("facing_code", int, 0),  # index into FACINGS; ``facing`` reads and writes it
+    ("speed_override", float, 0.0),  # > 0: replaces ``speed`` (an action's dash); set by action timelines
 )
 @component_schema(
     type_name="asteria.CharacterController2D",
@@ -156,6 +157,25 @@ def facing_from(dx, dy, mode="topdown", current="down"):
     if dy < -1e-9:
         return "up"
     return current
+
+
+def turn_with_facing(x, y, facing):
+    """A vector authored for facing right, turned for ``facing`` (mirrored left, a quarter turn down / up)."""
+    if facing == "left":
+        return -x, y
+    if facing == "down":
+        return -y, x
+    if facing == "up":
+        return y, -x
+    return x, y
+
+
+def turn_with_aim(x, y, aim):
+    """A vector authored for facing right (x forward, y to the right-hand side), turned to point along ``aim``."""
+    ax, ay = aim
+    length = (ax * ax + ay * ay) ** 0.5 or 1.0
+    ax, ay = ax / length, ay / length
+    return x * ax - y * ay, x * ay + y * ax
 
 
 def facing_vector(facing):
@@ -476,7 +496,8 @@ class CharacterControllerSystem(System):
 
     def _side_step(self, world, entity, controller, transform, dx, push_x, dt):
         """Side view: horizontal move, then gravity, jump, ground and one-way platforms."""
-        nx = transform.x + (max(-1.0, min(1.0, dx)) * controller.speed + push_x) * dt
+        speed = controller.speed_override if controller.speed_override > 0.0 else controller.speed
+        nx = transform.x + (max(-1.0, min(1.0, dx)) * speed + push_x) * dt
         if self._blocked(world, entity.id, controller, nx, transform.y):
             controller.hit_wall = dx != 0 or push_x != 0
             controller.push_x = 0.0
@@ -704,6 +725,8 @@ __all__ = [
     "facing_box",
     "facing_from",
     "facing_vector",
+    "turn_with_aim",
+    "turn_with_facing",
     "Hurtbox2DComponent",
     "PlayerInput2DComponent",
     "PlayerInputSystem",

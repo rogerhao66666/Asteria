@@ -329,6 +329,11 @@ class StateRuntime:
     def active_states(self):
         return tuple(self._active[key] for key in sorted(self._active))
 
+    @property
+    def has_active(self):
+        """True while any state is active (cheap; for per-frame checks)."""
+        return bool(self._active)
+
     def get(self, state_id):
         return self._active.get(str(state_id))
 

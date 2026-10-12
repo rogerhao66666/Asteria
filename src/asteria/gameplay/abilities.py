@@ -200,6 +200,15 @@ class AbilityDefinition:
     commands: tuple = ()
     concoct_station: str = ""
     apply_states: tuple = ()
+    # real-time use (ASTERIA_SPEC §20; runtime.action_combat):
+    # timeline_id            action timeline played when the ability is used in real time
+    # cooldown_seconds       seconds before it can be used again (turn-based battles use cooldown_turns)
+    # move_while_acting      movement speed kept while its action runs: 0 rooted, 1 free, between = slowed
+    # interrupts_actions     it may cut the user's running action at any moment (dodges), not only in cancel windows
+    timeline_id: str = ""
+    cooldown_seconds: float = 0.0
+    move_while_acting: float = 0.0
+    interrupts_actions: bool = False
     OPTIONAL_DATA = {
         "cooldown_turns": 0,
         "battle_costs": {},
@@ -208,6 +217,10 @@ class AbilityDefinition:
         "commands": [],
         "concoct_station": "",
         "apply_states": [],
+        "timeline_id": "",
+        "cooldown_seconds": 0.0,
+        "move_while_acting": 0.0,
+        "interrupts_actions": False,
     }
 
     def __init__(
@@ -226,6 +239,10 @@ class AbilityDefinition:
         commands=(),
         concoct_station="",
         apply_states=(),
+        timeline_id="",
+        cooldown_seconds=0.0,
+        move_while_acting=0.0,
+        interrupts_actions=False,
     ):
         ability_id = str(ability_id).strip()
         if not ability_id:
@@ -308,6 +325,16 @@ class AbilityDefinition:
                 }
             )
         object.__setattr__(self, "apply_states", tuple(states))
+        object.__setattr__(self, "timeline_id", str(timeline_id or "").strip())
+        cooldown_seconds = float(cooldown_seconds)
+        if not cooldown_seconds >= 0.0 or cooldown_seconds == float("inf"):
+            raise ValueError("cooldown_seconds must be finite and >= 0")
+        object.__setattr__(self, "cooldown_seconds", cooldown_seconds)
+        move_while_acting = float(move_while_acting)
+        if not move_while_acting >= 0.0 or move_while_acting == float("inf"):
+            raise ValueError("move_while_acting must be finite and >= 0")
+        object.__setattr__(self, "move_while_acting", move_while_acting)
+        object.__setattr__(self, "interrupts_actions", bool(interrupts_actions))
 
     def to_data(self):
         return {
@@ -330,6 +357,10 @@ class AbilityDefinition:
             **({"commands": [dict(c) for c in self.commands]} if self.commands else {}),
             **({"concoct_station": self.concoct_station} if self.concoct_station else {}),
             **({"apply_states": [dict(x) for x in self.apply_states]} if self.apply_states else {}),
+            **({"timeline_id": self.timeline_id} if self.timeline_id else {}),
+            **({"cooldown_seconds": self.cooldown_seconds} if self.cooldown_seconds else {}),
+            **({"move_while_acting": self.move_while_acting} if self.move_while_acting else {}),
+            **({"interrupts_actions": True} if self.interrupts_actions else {}),
         }
 
     @classmethod
@@ -362,6 +393,10 @@ class AbilityDefinition:
             commands=data.get("commands", ()),
             concoct_station=data.get("concoct_station", ""),
             apply_states=data.get("apply_states", ()),
+            timeline_id=data.get("timeline_id", ""),
+            cooldown_seconds=data.get("cooldown_seconds", 0.0),
+            move_while_acting=data.get("move_while_acting", 0.0),
+            interrupts_actions=data.get("interrupts_actions", False),
         )
 
 

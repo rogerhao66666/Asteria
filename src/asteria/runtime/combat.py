@@ -71,6 +71,7 @@ def parse_tags(text):
         Field("resources", str, "hp=100", tooltip="Resources and their maximum, e.g. 'hp=120; mp=40; shield=30'."),
         Field("life_resource", str, "hp", tooltip="The resource whose emptying means death. Empty: never dies."),
         Field("stats", str, "", tooltip="Stats the formulas read, e.g. 'attack=12; defense=4'."),
+        Field("regen", str, "", tooltip="Resources regained per second, e.g. 'mp=2; stamina=15' (negative drains)."),
         Field("tags", str, "", tooltip="Gameplay tags, e.g. 'Creature.Undead Element.Ice'."),
         Field("poise", float, 0.0, minimum=0.0, tooltip="Poise damage it takes before being staggered. 0: no poise."),
         Field("poise_recovery", float, 0.0, minimum=0.0, tooltip="Poise regained per second."),
@@ -110,6 +111,7 @@ class CombatantComponent(Component):
         self.resources = "hp=100"
         self.life_resource = "hp"
         self.stats = ""
+        self.regen = ""
         self.tags = ""
         self.poise = 0.0
         self.poise_recovery = 0.0
@@ -147,6 +149,8 @@ class CombatantState:
     armor_left: float = 0.0
     down_phase: str = ""  # "", "down", "getting_up"
     down_left: float = 0.0
+    states: object = None  # gameplay StateRuntime (poison, burn, buffs...) ticking in real time
+    regen: dict | None = None  # parsed CombatantComponent.regen
 
 
 def _inline_state(combatant):
@@ -158,7 +162,7 @@ def _inline_state(combatant):
 
 @dataclass(frozen=True, slots=True)
 class CombatEvent:
-    kind: str  # damage, staggered, knocked_down, got_up, death, drop, hit_event
+    kind: str  # damage, staggered, knocked_down, got_up, death, drop, hit_event, state_applied, state_ended
     target_id: str
     attacker_id: str = ""
     attack_id: str = ""
@@ -186,7 +190,9 @@ class CombatSystem(System):
         stats_provider=None,
         counters=None,
         switches=None,
+        states=None,
     ):
+        self.state_registry = states  # gameplay StateRegistry (GameplayLibrary.states) for real-time states
         self.attacks = attacks  # mapping attack_id -> AttackDefinition (e.g. GameplayLibrary.attacks)
         self.hits = hits
         self.formulas = formulas if formulas is not None else {}
@@ -210,9 +216,34 @@ class CombatSystem(System):
         combatant = entity.get(CombatantComponent)
         if combatant.state is None:
             provided = self.stats_provider(entity, combatant) if self.stats_provider is not None else None
-            combatant.state = provided if provided is not None else _inline_state(combatant)
-            combatant.state.poise = combatant.poise
+            state = combatant.state = provided if provided is not None else _inline_state(combatant)
+            state.poise = combatant.poise
+            state.regen = parse_values(combatant.regen)
+            if self.state_registry is not None:
+                from asteria.gameplay.states import StateRuntime
+
+                state.states = StateRuntime(self.state_registry, state.stats, state.resources, state.tags)
         return combatant.state
+
+    def apply_state(self, entity, state_id, *, duration=None, source_id=None):
+        """Put a gameplay state (poison, haste...) on a combatant; it ticks in real time. False if it cannot."""
+        state = self.state(entity)
+        if state.states is None or state.dead or self.state_registry.get(state_id) is None:
+            return False
+        state.states.apply(state_id, duration=duration, source_id=source_id)
+        self._emit("state_applied", entity, data={"state": str(state_id)})
+        return True
+
+    @staticmethod
+    def effective_stats(state):
+        """Stats with the active states' modifiers applied (what formulas read)."""
+        runtime = state.states
+        modifiers = runtime.modifiers() if runtime is not None and runtime.has_active else None
+        if not modifiers or not modifiers.modifiers():
+            return state.stats
+        return StatBlock(
+            {name: modifiers.evaluate(name, state.stats.get(name), tags=state.tags) for name in state.stats.names()}
+        )
 
     def armor_level(self, entity):
         combatant = entity.get(CombatantComponent)
@@ -250,10 +281,21 @@ class CombatSystem(System):
                 state = self.state(entity)
                 state.armor_level, state.armor_left = level, seconds
         self._armor_requests = {}
+        removed = []
         for entity, combatant in scene.query(CombatantComponent):
             state = combatant.state
             if state is None or state.dead:
                 continue
+            if state.regen:
+                for resource, rate in state.regen.items():
+                    if state.resources.contains(resource):
+                        state.resources.change(resource, rate * dt)
+            if state.states is not None and state.states.has_active:
+                for state_id in state.states.update(dt):
+                    self._emit("state_ended", entity, data={"state": state_id})
+                self._check_death(scene, entity, combatant, state, removed, {})
+                if state.dead:
+                    continue
             if combatant.poise_recovery:
                 state.poise = min(combatant.poise, state.poise + combatant.poise_recovery * dt)
             state.armor_left = max(0.0, state.armor_left - dt)
@@ -269,7 +311,6 @@ class CombatSystem(System):
         hits = list(self.hits.events) if self.hits is not None else []
         hits += self.pending
         self.pending = []
-        removed = []
         for hit in hits:
             self._resolve(scene, hit, removed)
         for entity in removed:
@@ -311,10 +352,10 @@ class CombatSystem(System):
         critical = False
         if formula is not None:
             context = FormulaContext(
-                source.stats if source is not None else StatBlock(),
+                self.effective_stats(source) if source is not None else StatBlock(),
                 source.resources if source is not None else ResourcePool(),
                 source_tags,
-                state.stats,
+                self.effective_stats(state),
                 state.resources,
                 state.tags,
             )
@@ -394,10 +435,18 @@ class CombatSystem(System):
         if attack.on_hit_event:
             self._emit("hit_event", target, data={"event": attack.on_hit_event}, **common)
 
+        for entry in attack.apply_states:
+            if entry["chance"] >= 1.0 or self.rng.random() < entry["chance"]:
+                if self.apply_state(target, entry["state"], duration=entry.get("duration"), source_id=hit.attacker_id):
+                    continue
+                self._emit("state_unknown", target, data={"state": entry["state"]}, **common)
+        self._check_death(scene, target, combatant, state, removed, common)
+
+    def _check_death(self, scene, entity, combatant, state, removed, common):
         life = combatant.life_resource
         resources = state.resources
         if life and resources.contains(life) and resources.current(life) <= resources.get(life).minimum:
-            self._die(scene, target, combatant, state, removed, common)
+            self._die(scene, entity, combatant, state, removed, common)
 
     @staticmethod
     def _knock_direction(attack, attacker, target, hit=None):

@@ -306,7 +306,8 @@ def topdown_prepare(c, slots, dt):
     big = mag > 1.0
     dx[big] /= mag[big]
     dy[big] /= mag[big]
-    speed = _view(c["speed"])[idx]
+    override = _view(c["speed_override"])[idx]
+    speed = np.where(override > 0.0, override, _view(c["speed"])[idx])
     mx = (dx * speed + _view(c["push_x"])[idx]) * dt
     my = (dy * speed + _view(c["push_y"])[idx]) * dt
     return dx.tolist(), dy.tolist(), mx.tolist(), my.tolist(), locked.tolist()

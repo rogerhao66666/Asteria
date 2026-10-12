@@ -130,6 +130,7 @@ class GameSessionRuntime:
         from asteria.runtime.profiler import NullProfiler
 
         self.profiler = NullProfiler()
+        self.field_input = None  # InputSnapshot for real-time control this frame (set_field_input)
         self._build_scene_events()
         # WLD-02: saved NPC state (visibility, position, flags...) and the "npc" condition source
         runtime_save.event_context.providers["npc"] = self._npc_value
@@ -208,6 +209,7 @@ class GameSessionRuntime:
                 rng=random.Random(f"{scene.id}:combat"),
                 counters=self.world.counters,  # drop table pity is saved with the world state
                 switches=self.save.event_context.get_switch,
+                states=library.states,  # poison, burn, buffs tick in real time
             )
             from asteria.runtime.projectiles import ProjectileSystem
 
@@ -223,6 +225,17 @@ class GameSessionRuntime:
             )
             actions = EntityActionSystem(hitboxes=hits, paused=combat.paused, armor=combat, projectiles=projectiles)
             combat.actions = actions
+            from asteria.runtime.action_combat import ActionCombatSystem
+
+            # ASTERIA_SPEC §20: abilities used in real time (input bindings, combos, cancels, cooldowns, lock-on)
+            action_combat = ActionCombatSystem(
+                library.abilities,
+                library.timelines,
+                actions=actions,
+                combat=combat,
+                formulas=library.formulas,
+                snapshot_provider=lambda: self.field_input,
+            )
             behavior = BehaviorTreeSystem(
                 self.project.rpg_database.behavior_trees,  # RPG-09
                 target_id=self.player.id,
@@ -237,6 +250,7 @@ class GameSessionRuntime:
                 "spawn": spawn,
                 "ai": ai,
                 "behavior": behavior,
+                "action_combat": action_combat,
                 "actions": actions,
                 # controllers build the frame's world after AI, keep it current as they move, projectiles reuse it
                 "controllers": CharacterControllerSystem(paused=combat.paused, world=frame_world),
@@ -259,6 +273,7 @@ class GameSessionRuntime:
             systems["ai"].update(self.scene, float(dt))
             systems["behavior"].update(self.scene, float(dt))
         self._frame_collision_world = None
+        systems["action_combat"].update(self.scene, float(dt))
         systems["actions"].update(self.scene, float(dt))
         with self.profiler.section("collision"):
             systems["controllers"].update(self.scene, float(dt))
@@ -292,6 +307,17 @@ class GameSessionRuntime:
         entity = self._sequence_entity(entity_key)
         self.entity_actions.play(entity.id, timeline)
         return entity.id
+
+    def set_field_input(self, actions=None):
+        """This frame's input actions for real-time control (``ActionCombat`` bindings, lock-on); ``None`` = none."""
+        from asteria.runtime.input import InputSnapshot
+
+        self.field_input = None if actions is None else InputSnapshot(dict(actions))
+
+    @property
+    def action_combat(self):
+        """Real-time ability use (ASTERIA_SPEC §20) for the current scene: ``use``, cooldowns, lock-on."""
+        return self._field_systems()["action_combat"]
 
     @property
     def combat(self):

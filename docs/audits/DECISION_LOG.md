@@ -1076,3 +1076,43 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - 如果之後還要再大幅降低，下一步是把整個系統合成一次呼叫（C++ 或同等做法），這要等 A11 用量測決定。
 
 **狀態：** C1、C2 完成。接著繼續 A3。
+
+### D22-A3 — 玩家動作：技能、連段、閃避、冷卻和消耗、鎖定、即時狀態
+
+**改動的檔案：**
+- `gameplay/abilities.py`：`AbilityDefinition` 新增選填欄位 `timeline_id`、`cooldown_seconds`、`move_while_acting`（0 原地不動、1 照常移動、中間值放慢）、`interrupts_actions`（例如閃避，隨時可以打斷自己的動作）。回合制原本的欄位不變，舊資料照樣能讀。
+- `gameplay/attacks.py`：`apply_states`（狀態、機率、持續秒數）。
+- `gameplay/states.py`：`StateRuntime.has_active`（每幀檢查用，成本低）。
+- `runtime/action_combat.py`（新）：
+  - `ActionCombatComponent` 欄位：輸入綁定（`"attack=slash; dodge=roll"`）、輸入緩衝秒數、鎖定模式（off／manual／nearest）、鎖定範圍、鎖定和切換目標的輸入動作、瞄準方式（目標 → 搖桿 → 朝向）、開始時是否轉向。
+  - `ActionCombatSystem.use()` 是玩家、行為樹、腳本共用的入口：在連段窗口內按同一個技能，接時間軸指定的下一段；在取消窗口內，或技能有 `interrupts_actions`，可以打斷目前的動作；其他時候先緩衝。冷卻以秒計算；消耗用公式算，從戰鬥資源扣；動作中的移動依 `move_while_acting` 縮放。每個結果都會發出事件（used、combo、buffered、denied 加原因、lock_on、lock_lost）。
+- `runtime/entity_actions.py`：`play(..., aim, source)`；`movement` cue 新增 `relative`（world／facing／aim）和 `speed`（衝刺）；`projectile` cue 加上 `aim: true` 會沿瞄準方向射出。
+- `runtime/character_control.py`：控制器新增欄位 `speed_override`（動作中的衝刺速度），python 和 numpy 兩套 kernel 都支援；`turn_with_facing`、`turn_with_aim`。
+- `runtime/projectiles.py`：`fire_from` 接受世界方向 `direction`。
+- `runtime/combat.py`：Combatant 新增 `regen`（每秒恢復，負值就是持續消耗）；狀態會即時計時（`StateRuntime`，週期效果可以致死）；攻擊命中時套用狀態；公式讀取的是套用狀態修正後的數值；新事件 state_applied、state_ended、state_unknown。
+- `runtime/game_session.py`：場景系統加入 `action_combat`；新增 `set_field_input()`（A8 會把實際按鍵接上）；combat 改用專案的狀態表。
+- `runtime/component_registry.py`：註冊 ActionCombat。
+- 測試：`tests/test_action_combat.py`（新，11 項）。
+
+**需求涵蓋（SPEC §20）：** Dash/dodge、I-frames、Combo chains、Cancel windows、Cooldowns/resources、Targeting/lock-on、Action timelines；加上即時狀態效果。
+
+**執行的測試：** 完整套件 **2092 passed**。
+
+**整合證據：**
+- 測試場景和 `GameSession` 用的是同一組系統。
+- 三連擊：第三下太早按，會被緩衝，等窗口打開才出。
+- 閃避：往搖桿方向衝刺約 60 單位，期間站在敵人的判定框裡也不受傷；無敵結束後被打中；冷卻中再按會被拒絕。
+- 消耗：MP 不夠時被拒絕，恢復後又能用。
+- 取消窗口內可以換技能；原地不動的技能真的不會移動，可移動的技能會照常走。
+- 鎖定背後的敵人後，箭會轉向射中它；切換到下一個目標；目標死亡時自動解除；再按一次就放開。
+- 毒：每 0.5 秒扣血，最後致死；狂暴讓公式讀到加倍的攻擊力。
+- `GameSession` 中，`set_field_input({"attack": 1})` 讓玩家用技能打中敵人。
+
+**量測（numpy，300 + 500 壓力場景）：** 15.7 ms（C2 是 15.0 ms；兩次執行之間會有約 ±0.5 ms 的差異）。狀態檢查改成 `has_active` 之後，combat 回到 1.8 ms。
+
+**還沒做：**
+- 實際按鍵接上 PlayableTestRuntime、技能列和冷卻圖示：A8。
+- 編輯器的技能和動作專用介面：A9。ActionCombat 元件已經會出現在 Inspector；技能的新欄位走技能紀錄原本的選填欄位機制。
+- AI 使用技能（行為樹節點）：A4。
+
+**狀態：** A3 完成。
