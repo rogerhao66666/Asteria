@@ -840,6 +840,30 @@
         },
         "name": "Dungeon Map",
         "source_path": "playable_assets/dungeon_map.json"
+      },
+      {
+        "id": "4f32dc99-2f6e-5c75-9163-d57aaa2d857a",
+        "import_settings": {},
+        "importer": "arpg_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/arpg_demo/build_project.py"
+        },
+        "name": "Mine Far",
+        "source_path": "playable_assets/mine_far.png"
+      },
+      {
+        "id": "ff58e4a2-f466-53c8-9bf5-443d4bb0c502",
+        "import_settings": {},
+        "importer": "arpg_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/arpg_demo/build_project.py"
+        },
+        "name": "Mine Near",
+        "source_path": "playable_assets/mine_near.png"
       }
     ],
     "canonical_assets": [],
@@ -1553,6 +1577,7 @@
           "mode": "all",
           "type": "group"
         },
+        "cooldown_seconds": 0.35,
         "costs": [
           {
             "amount": {
@@ -1562,7 +1587,7 @@
               "schema": "asteria.value_formula",
               "terms": [
                 {
-                  "coefficient": 2.0,
+                  "coefficient": 1.0,
                   "key": "",
                   "source": "constant"
                 }
@@ -4242,7 +4267,7 @@
     "triggers": [],
     "version": 3
   },
-  "id": "32503a2b-f87a-46c6-999c-222bfcd0aeaa",
+  "id": "cb3153a1-e0ef-48d6-90e4-d7b58890f0c2",
   "input_map": {
     "actions": {
       "cancel": [
@@ -6261,6 +6286,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/chain_mail.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -6299,6 +6325,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/cloth_robe.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -6337,6 +6364,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/copper_ring.png",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -6356,6 +6384,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/cyclops_eye.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -6403,6 +6432,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/gelatin_aegis.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -6441,6 +6471,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/golem_heart.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -6479,6 +6510,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/hunting_bow.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -6508,6 +6540,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/iron_helm.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -6536,6 +6569,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/leather_vest.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -6565,6 +6599,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/oak_staff.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -6594,6 +6629,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/short_sword.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -6623,6 +6659,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/wanderer_band.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -6661,6 +6698,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/wanderer_coat.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -6699,6 +6737,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/wanderer_hood.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -6737,6 +6776,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/icons/war_axe.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -6835,6 +6875,7 @@
     "items": [
       {
         "display_name": "Bone Shard",
+        "icon_id": "playable_assets/icons/bone_shard.png",
         "item_id": "bone_shard",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -6844,6 +6885,7 @@
       },
       {
         "display_name": "Eye Lens",
+        "icon_id": "playable_assets/icons/eye_lens.png",
         "item_id": "eye_lens",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -6853,6 +6895,7 @@
       },
       {
         "display_name": "Gear Scrap",
+        "icon_id": "playable_assets/icons/gear_scrap.png",
         "item_id": "gear_scrap",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -6862,6 +6905,7 @@
       },
       {
         "display_name": "Healing Potion",
+        "icon_id": "playable_assets/icons/potion.png",
         "item_id": "potion",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -6871,6 +6915,7 @@
       },
       {
         "display_name": "Slime Gel",
+        "icon_id": "playable_assets/icons/slime_gel.png",
         "item_id": "slime_gel",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -9228,7 +9273,7 @@
             {
               "fields": {
                 "background_color": "",
-                "camera_look_ahead": 0.0,
+                "camera_look_ahead": 36.0,
                 "combat_mode": "action",
                 "draw_colliders": false,
                 "on_player_death": "respawn",
@@ -9322,6 +9367,13 @@
             },
             {
               "fields": {
+                "looks": "warrior=618d1f60-1f03-5c1b-bfdc-2791141c1b71|52d54082-1248-55e9-8df4-7fad5919bb05; ranger=d224418e-7989-57de-acee-fe5edd292941|4d439532-223c-5c6a-80ab-ea59d11f6d0d; mage=628ada4f-ece3-5753-a572-09bd5bbbe996|83b5c24a-9571-532e-9ac4-351b047d97a1"
+              },
+              "type": "asteria.ClassAppearance",
+              "version": 1
+            },
+            {
+              "fields": {
                 "armor": 0,
                 "armor_damage_multiplier": 1.0,
                 "currency_drop": "",
@@ -9343,7 +9395,7 @@
                 "loot_luck": 0.0,
                 "poise": 25.0,
                 "poise_recovery": 12.0,
-                "regen": "mp=3",
+                "regen": "mp=4",
                 "resources": "hp=100",
                 "stagger_result": "staggered",
                 "stagger_time": 0.6,
@@ -10201,7 +10253,7 @@
             {
               "fields": {
                 "background_color": "",
-                "camera_look_ahead": 0.0,
+                "camera_look_ahead": 36.0,
                 "combat_mode": "action",
                 "draw_colliders": false,
                 "on_player_death": "respawn",
@@ -13138,7 +13190,7 @@
             {
               "fields": {
                 "background_color": "#1c2230",
-                "camera_look_ahead": 0.0,
+                "camera_look_ahead": 48.0,
                 "combat_mode": "action",
                 "draw_colliders": false,
                 "on_player_death": "respawn",
@@ -13154,6 +13206,74 @@
           "enabled": true,
           "id": "ec052c11-e474-516b-b084-60c324bda8b8",
           "name": "Combat Scene"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": -40.0,
+                "y": 88.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "anchor": "bottom",
+                "factor_x": 0.12,
+                "factor_y": 0.0,
+                "offset_y": -40.0,
+                "opacity": 1.0,
+                "repeat_x": true,
+                "scale": 3.0,
+                "texture_asset_id": "4f32dc99-2f6e-5c75-9163-d57aaa2d857a",
+                "visible": true
+              },
+              "type": "asteria.ParallaxBackground2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "f6c12776-c735-54ea-91e1-7dd1c18b1586",
+          "name": "Far Hills"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": -40.0,
+                "y": 120.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "anchor": "bottom",
+                "factor_x": 0.3,
+                "factor_y": 0.0,
+                "offset_y": -0.0,
+                "opacity": 1.0,
+                "repeat_x": true,
+                "scale": 3.0,
+                "texture_asset_id": "ff58e4a2-f466-53c8-9bf5-443d4bb0c502",
+                "visible": true
+              },
+              "type": "asteria.ParallaxBackground2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "0737fcb8-8c8c-5e72-8fea-9dd918939dd9",
+          "name": "Near Hills"
         },
         {
           "components": [

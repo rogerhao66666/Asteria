@@ -1148,7 +1148,9 @@ class PlayableTestRuntime:
         if self.input.just_pressed("pickup"):
             self.game.loot.pick_up_nearest(self.game.scene, self.game.player)
         if self.input.just_pressed("bag"):
-            self._bag_index = 0
+            from asteria.runtime.bag_screen import BagScreen
+
+            self._bag_screen = BagScreen(self)
             self._ui_mode = "bag"
         if self.input.just_pressed("menu"):  # the skill tree (D22 A10)
             from asteria.runtime.skill_tree_screen import SkillTreeScreen
@@ -1171,93 +1173,6 @@ class PlayableTestRuntime:
         if moving:
             self._field_step += 1
         return moving
-
-    def _bag_actor(self):
-        actor = self.game._actor_of(self.game.player)
-        return actor or (self._menu_actor_ids() or [None])[0]
-
-    def _bag_input(self, events):
-        bag = self.game.save.rpg_state.equipment_bag
-        index = getattr(self, "_bag_index", 0)
-        if self.input.just_pressed("move_down"):
-            index += 1
-        if self.input.just_pressed("move_up"):
-            index -= 1
-        self._bag_index = max(0, min(index, len(bag) - 1)) if bag else 0
-        if (self.input.just_pressed("confirm") or self.input.just_pressed("interact")) and bag:
-            try:
-                item = self.game.equip_from_bag(self._bag_actor(), self._bag_index)
-                self.message = f"Equipped {item.equipment.display_name}"
-            except Exception as exc:  # requirements not met: say why
-                self.message = f"Cannot equip: {exc}"
-            self.message_until = self.pg.time.get_ticks() + 2000
-        if self.input.just_pressed("cancel") or self.input.just_pressed("bag"):
-            self._ui_mode = "field"
-
-    def _draw_bag(self):
-        from asteria.rpg.loot import item_display_name
-
-        self.screen.fill((10, 12, 20))
-        db = self.game.project.rpg_database
-        rarities = db.loot_rarities()
-        self.text("Equipment Bag", 40, 28, size=32, color=(255, 220, 124))
-        self.text(
-            "Up / Down: choose   Enter: equip   B / Esc: back",
-            40,
-            64,
-            size=18,
-            color=(170, 180, 200),
-        )
-        bag = self.game.save.rpg_state.equipment_bag
-        for row, item in enumerate(bag[:14]):
-            rarity = rarities.get(item.rarity)
-            color = rarity.rgb() if rarity is not None else (230, 230, 230)
-            prefix = "> " if row == getattr(self, "_bag_index", 0) else "  "
-            name = item_display_name(item, db.affixes, brief=True)
-            self.text(
-                f"{prefix}{name}  (ilvl {item.item_level})",
-                40,
-                100 + row * 26,
-                size=22,
-                color=color,
-            )
-        selected = bag[getattr(self, "_bag_index", 0)] if bag else None
-        x = self.width / 2 + 40
-        self.text("Equipped", x, 100, size=24, color=(255, 220, 124))
-        actor = self._bag_actor()
-        loadout = self.game.save.rpg_state.loadouts.get(actor) if actor else None
-        row = 0
-        if loadout is not None:
-            for item in loadout.equipped():
-                rarity = rarities.get(item.rarity)
-                color = rarity.rgb() if rarity is not None else (230, 230, 230)
-                self.text(
-                    item_display_name(item, db.affixes, brief=True),
-                    x,
-                    132 + row * 24,
-                    size=20,
-                    color=color,
-                )
-                row += 1
-        if selected is not None:
-            self.text("Selected", x, 160 + row * 24, size=24, color=(255, 220, 124))
-            for k, modifier in enumerate(selected.modifiers()):
-                sign = "x" if modifier.operation.value == "multiply" else "+"
-                self.text(
-                    f"{modifier.stat} {sign}{modifier.value:.1f}",
-                    x,
-                    192 + row * 24 + k * 22,
-                    size=19,
-                )
-        if self.message and self.pg.time.get_ticks() < self.message_until:
-            self.text(
-                self.message,
-                self.width / 2,
-                self.height - 30,
-                size=20,
-                color=(175, 235, 255),
-                center=True,
-            )
 
     def _draw_title(self):
         bg = self.load_image(self.manifest["field"]["background"])
@@ -2628,8 +2543,11 @@ class PlayableTestRuntime:
             self._settings_input()
             self._draw_settings()
         elif self._ui_mode == "bag":
-            self._bag_input(events)
-            self._draw_bag()
+            self._bag_screen.handle(dt)
+            if self._bag_screen.closed:
+                self._ui_mode = "field"
+            else:
+                self._bag_screen.draw()
         elif self._ui_mode == "skills":
             self._skill_tree.handle(dt)
             if self._skill_tree.closed:

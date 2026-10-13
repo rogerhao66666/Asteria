@@ -24,7 +24,12 @@ from math import floor
 from asteria.core import Transform
 
 from .camera import Camera2D
-from .components2d import Animator2DComponent, Camera2DComponent, SpriteRenderer2D
+from .components2d import (
+    Animator2DComponent,
+    Camera2DComponent,
+    ParallaxBackground2DComponent,
+    SpriteRenderer2D,
+)
 from .tilemap_field import AssetResources, tilemap_binding
 from .tilequery import TileMapQuery
 
@@ -62,8 +67,9 @@ class MapBlocking:
 class _Animated:
     """Directional idle / walk / attack clips of one entity, driven by its movement and facing."""
 
-    def __init__(self, clips):
+    def __init__(self, clips, clip_set_id=""):
         self.clips = clips
+        self.clip_set_id = clip_set_id
         self.clip = None
         self.time = 0.0
         self.last = None
@@ -176,6 +182,7 @@ class TileSceneView:
                 zoom = spec.zoom
         self.camera = Camera2D(width=self.width, height=self.height, zoom=zoom)
         self._animated = {}
+        self._ahead = (0.0, 0.0)  # the camera's look-ahead offset (CombatScene.camera_look_ahead)
         self.follow(0.0)
 
     # -- camera ----------------------------------------------------------------------------------
@@ -183,7 +190,8 @@ class TileSceneView:
         t = self.session.player.get(Transform)
         view_w, view_h = self.width / self.camera.zoom, self.height / self.camera.zoom
         x0, y0, x1, y1 = self.bounds
-        want_x, want_y = t.x - view_w / 2, t.y - view_h / 2
+        want_x = t.x + self._ahead[0] - view_w / 2
+        want_y = t.y + self._ahead[1] - view_h / 2
         if x1 - x0 > view_w:
             want_x = min(max(want_x, x0), x1 - view_w)
         else:
@@ -210,11 +218,15 @@ class TileSceneView:
         running = actions.running if actions is not None else {}
         from .character_control import CharacterController2DComponent
 
+        self._apply_class_looks()
+        self._look_ahead(dt)
         for entity in self.session.scene.entities():
             animator = entity.try_get(Animator2DComponent)
             if animator is None or not animator.clip_set_id or not entity.has(Transform):
                 continue
             state = self._animated.get(entity.id)
+            if state and state.clip_set_id != animator.clip_set_id:
+                state = None  # its animation set changed (a new class): load the new one
             if state is None:
                 try:
                     clips = self.resources.get(animator.clip_set_id, "animation")
@@ -223,7 +235,9 @@ class TileSceneView:
                     continue
                 needed = [f"{kind}_{d}" for kind in ("idle", "walk") for d in DIRECTIONS]
                 ok = all(n in clips.clips for n in needed)
-                state = self._animated[entity.id] = _Animated(clips) if ok else False
+                state = self._animated[entity.id] = (
+                    _Animated(clips, animator.clip_set_id) if ok else False
+                )
             if not state:
                 continue
             controller = entity.try_get(CharacterController2DComponent)
@@ -233,6 +247,46 @@ class TileSceneView:
             t = entity.get(Transform)
             state.update(dt, (t.x, t.y), facing, entity.id in running)
         self.follow(dt)
+
+    def _look_ahead(self, dt):
+        """Ease the camera toward the way the player faces by ``camera_look_ahead`` world units
+        (a CombatScene setting; 0 = centred on the player)."""
+        from .character_control import CharacterController2DComponent
+
+        settings = getattr(self.session, "combat_scene", None)
+        amount = float(getattr(settings, "camera_look_ahead", 0.0) or 0.0)
+        controller = self.session.player.try_get(CharacterController2DComponent)
+        direction = {"down": (0, 1), "up": (0, -1), "left": (-1, 0), "right": (1, 0)}.get(
+            controller.facing if controller is not None else "", (0, 0)
+        )
+        if controller is not None and controller.mode == "side":
+            direction = (direction[0], 0)  # a platformer looks ahead sideways only
+        goal = (direction[0] * amount, direction[1] * amount)
+        k = min(1.0, dt * 3.0)
+        self._ahead = (
+            self._ahead[0] + (goal[0] - self._ahead[0]) * k,
+            self._ahead[1] + (goal[1] - self._ahead[1]) * k,
+        )
+
+    def _apply_class_looks(self):
+        """Entities with ``ClassAppearance`` show the look of their actor's active class."""
+        from .actor_link import ClassAppearanceComponent
+
+        session = self.session
+        for entity, spec in session.scene.query(ClassAppearanceComponent):
+            actor_id = session._actor_of(entity)
+            sprite = entity.try_get(SpriteRenderer2D)
+            if actor_id is None or sprite is None:
+                continue
+            looks = spec.parsed()
+            classes = session.ensure_actor_progression(actor_id).active_class_ids
+            chosen = next((looks[c] for c in reversed(classes) if c in looks), None)
+            if chosen is None:
+                continue
+            sprite.sprite_sheet_asset_id = chosen[0]
+            animator = entity.try_get(Animator2DComponent)
+            if animator is not None and chosen[1]:
+                animator.clip_set_id = chosen[1]
 
     def _sprite(self, sheet_id, frame_index, scale):
         key = (sheet_id, frame_index, scale)
@@ -248,6 +302,50 @@ class TileSceneView:
             self._frames[key] = (image, frame.pivot_x, frame.pivot_y)
             image = self._frames[key]
         return image
+
+    def _parallax(self, screen):
+        """Scrolling backdrops (``ParallaxBackground2D``), far to near, below the tile layers."""
+        cam = self.camera
+        rows = [
+            spec
+            for _, spec in self.session.scene.query(ParallaxBackground2DComponent)
+            if spec.visible and spec.texture_asset_id
+        ]
+        for spec in sorted(rows, key=lambda r: r.factor_x):
+            key = (spec.texture_asset_id, spec.scale, cam.zoom)
+            image = self._frames.get(key)
+            if image is None:
+                try:
+                    source = self._texture(spec.texture_asset_id)
+                except Exception:  # noqa: BLE001 - a missing backdrop is skipped
+                    self._frames[key] = False
+                    continue
+                size = (
+                    max(1, round(source.get_width() * spec.scale * cam.zoom)),
+                    max(1, round(source.get_height() * spec.scale * cam.zoom)),
+                )
+                image = self._frames[key] = self.pg.transform.scale(source, size)
+            if image is False:
+                continue
+            w, h = image.get_size()
+            if spec.anchor == "top":
+                y = 0
+            elif spec.anchor == "center":
+                y = (self.height - h) // 2
+            else:
+                y = self.height - h
+            y = round(y + spec.offset_y * cam.zoom - cam.y * spec.factor_y * cam.zoom)
+            shift = -cam.x * spec.factor_x * cam.zoom
+            if spec.opacity < 1.0:
+                image = image.copy()
+                image.set_alpha(int(spec.opacity * 255))
+            if spec.repeat_x:
+                x = shift % w - w
+                while x < self.width:
+                    screen.blit(image, (round(x), y))
+                    x += w
+            else:
+                screen.blit(image, (round(shift), y))
 
     def projectile_image(self, definition, vx, vy):
         """A projectile's sprite (its ``sprite`` names a sprite sheet: frame 0) at this zoom,
@@ -337,6 +435,7 @@ class TileSceneView:
         settings = getattr(self.session, "combat_scene", None)
         color = getattr(settings, "background_color", "") or "#0c0e14"
         screen.fill(tuple(int(color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)))
+        self._parallax(screen)
         self._layer(screen, "below")
         sprites = []
         for entity in self.session.scene.entities():

@@ -9,13 +9,14 @@ def default_component_registry():
     from asteria.core.prefab import PrefabInstanceComponent
     from asteria.gameplay import GameplayAttributesComponent
 
-    from .actor_link import ActorLinkComponent
+    from .actor_link import ActorLinkComponent, ClassAppearanceComponent
     from .character_control import register_character_components
     from .collision import Collider2DComponent
     from .components2d import (
         Animator2DComponent,
         Camera2DComponent,
         Interaction2DComponent,
+        ParallaxBackground2DComponent,
         SpriteRenderer2D,
         TileMap2DComponent,
     )
@@ -30,8 +31,10 @@ def default_component_registry():
         Interaction2DComponent,
         Animator2DComponent,
         TileMap2DComponent,
+        ParallaxBackground2DComponent,
         GameplayAttributesComponent,
         ActorLinkComponent,
+        ClassAppearanceComponent,
         PersistentComponent,
         PrefabInstanceComponent,
         Collider2DComponent,

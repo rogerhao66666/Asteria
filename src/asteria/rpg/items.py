@@ -853,6 +853,10 @@ class EquipmentLoadout:
         )
         return item
 
+    def slot_ids(self):
+        """The loadout's slot ids, in a stable (sorted) order."""
+        return tuple(sorted(self._slots))
+
     def equipped(self, slot_id=None):
         if slot_id is not None:
             return tuple(self._equipped[str(slot_id)])

@@ -220,6 +220,70 @@ def title_image(root, layout, atlas, size=(960, 540), zoom=3):
     return path
 
 
+def mine_backdrops(assets):
+    """Two cave-silhouette strips from Kenney's background tiles, tinted dark: ``(far, near)``
+    texture asset ids for ``ParallaxBackground2D``."""
+    source = load(KENNEY / "Tilemap" / "tilemap-backgrounds_packed.png")
+
+    def strip(key, tint, columns=8):
+        # the hill row and the fill below it (the flat sky row is left out: the scene has its own)
+        tiles = [source.subsurface((c * 24, r * 24, 24, 24)) for c in (4, 5) for r in (1, 2)]
+        image = pygame.Surface((24 * columns, 48), pygame.SRCALPHA)
+        for i in range(columns):
+            col = i % 2
+            for r in range(2):
+                image.blit(tiles[col * 2 + r], (i * 24, r * 24))
+        shade = pygame.Surface(image.get_size(), pygame.SRCALPHA)
+        shade.fill((*tint, 255))
+        image.blit(shade, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+        return assets.texture(key, image, key.replace("_", " ").title())
+
+    return strip("mine_far", (70, 60, 100)), strip("mine_near", (40, 34, 60))
+
+
+# -- item icons -----------------------------------------------------------------------------------
+TINY = FREE / "kenney_tiny-dungeon" / "extracted" / "Tilemap" / "tilemap_packed.png"
+ICON_SOURCES = {  # equipment / item id -> ("tiny", col, row) | ("ninja", relative path)
+    "short_sword": ("tiny", 8, 8),
+    "war_axe": ("tiny", 10, 9),
+    "hunting_bow": ("ninja", "Items/Weapons/Bow/Sprite.png"),
+    "oak_staff": ("tiny", 10, 10),
+    "leather_vest": ("tiny", 5, 8),
+    "chain_mail": ("tiny", 6, 8),
+    "cloth_robe": ("ninja", "Items/Scroll/ScrollIce.png"),
+    "iron_helm": ("tiny", 0, 8),
+    "copper_ring": ("ninja", "Items/Resource/GemYellow.png"),
+    "wanderer_hood": ("tiny", 3, 8),
+    "wanderer_coat": ("ninja", "Items/Scroll/ScrollPlant.png"),
+    "wanderer_band": ("ninja", "Items/Resource/GemGreen.png"),
+    "cyclops_eye": ("ninja", "Items/Resource/GemPurple.png"),
+    "gelatin_aegis": ("ninja", "Items/Scroll/ScrollRock.png"),
+    "golem_heart": ("ninja", "Items/Resource/GemRed.png"),
+    "potion": ("tiny", 7, 9),
+    "slime_gel": ("ninja", "Items/Resource/Water.png"),
+    "bone_shard": ("ninja", "Items/Resource/Rock.png"),
+    "eye_lens": ("ninja", "Items/Resource/GemGreen.png"),
+    "gear_scrap": ("ninja", "Items/Resource/BarIron.png"),
+}
+
+
+def write_item_icons(root=HERE):
+    """One 16 px PNG per item under ``playable_assets/icons`` (cut from CC0 sheets); returns
+    ``{item id: relative path}`` for ``icon_id``."""
+    folder = Path(root) / OUT / "icons"
+    folder.mkdir(parents=True, exist_ok=True)
+    tiny = load(TINY)
+    paths = {}
+    for item_id, source in ICON_SOURCES.items():
+        if source[0] == "tiny":
+            image = tiny.subsurface((source[1] * 16, source[2] * 16, 16, 16)).copy()
+        else:
+            image = load(NINJA / source[1]).copy()
+        pygame.image.save(image, str(folder / f"{item_id}.png"))
+        paths[item_id] = f"{OUT}/icons/{item_id}.png"
+    return paths
+
+
 # -- tiles ----------------------------------------------------------------------------------------
 TILESETS = NINJA / "Backgrounds" / "Tilesets"
 
@@ -352,6 +416,8 @@ def write_credits(root=HERE):
   item icons. https://pixel-boy.itch.io/ninja-adventure-asset-pack
 * **Pixel Platformer** by Kenney (www.kenney.nl) - side-view tiles and dungeon enemies.
   https://kenney.nl/assets/pixel-platformer
+* **Tiny Dungeon** by Kenney (www.kenney.nl) - weapon, shield and potion icons.
+  https://kenney.nl/assets/tiny-dungeon
 
 The images in this folder are cut from those packs by `build_project.py` (cropped, recoloured
 only by flipping, combined into sheets). No AI-generated art.
@@ -367,10 +433,12 @@ __all__ = [
     "dungeon_atlas",
     "item_icon",
     "kenney_character",
+    "mine_backdrops",
     "ninja_boss",
     "ninja_character",
     "ninja_monster",
     "overworld_atlas",
     "title_image",
+    "write_item_icons",
     "write_credits",
 ]

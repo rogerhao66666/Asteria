@@ -399,3 +399,126 @@ def test_a_huge_map_costs_only_what_the_camera_sees(monkeypatch, tmp_path):
     assert view.blocking.collides_world_point(-5, 100)  # the map's edge still blocks
     assert not view.blocking.collides_world_point(5000, 5000)
     rt.close()
+
+
+def test_the_bag_grid_compares_stats_equips_unequips_and_shows_the_set(demo):
+    import random
+
+    from asteria.rpg.loot import roll_equipment
+    from asteria.runtime.bag_screen import BagScreen, compare
+
+    game = demo.game
+    db = game.project.rpg_database
+    rng = random.Random(2)
+    for item_id, rarity in (
+        ("short_sword", "magic"),
+        ("war_axe", "rare"),
+        ("wanderer_hood", None),
+        ("wanderer_coat", None),
+    ):
+        game.save.rpg_state.equipment_bag.append(
+            roll_equipment(
+                db.equipment[item_id],
+                rng,
+                item_level=6,
+                rarity_id=rarity,
+                rarities=db.loot_rarities(),
+                affixes=db.affixes,
+                instance_id=f"t:{item_id}",
+            )
+        )
+    _key(demo, demo.pg.K_b)
+    assert demo._ui_mode == "bag" and isinstance(demo._bag_screen, BagScreen)
+    screen = demo._bag_screen
+    assert screen.selected()[0].equipment.equipment_id == "short_sword"
+    _key(demo, demo.pg.K_RETURN)  # wear the sword
+    assert [i.equipment.equipment_id for i in game.save.rpg_state.loadouts["hero"].equipped()] == [
+        "short_sword"
+    ]
+    # the axe (now first in the bag) is compared with the sword in the same slot
+    axe = screen.selected()[0]
+    assert axe.equipment.equipment_id == "war_axe"
+    lines = compare(axe, screen.worn_in("weapon"))
+    deltas = {stat: delta for stat, _value, delta, _op in lines}
+    assert deltas["power"] is not None
+    _frames(demo, 2)  # the tooltip draws
+    # set pieces: the tooltip knows the set and how many are worn
+    assert screen.set_info(axe)[0] is None  # the axe belongs to no set
+    _key(demo, demo.pg.K_RIGHT)  # the hood
+    definition, have, bonuses = screen.set_info(screen.selected()[0])
+    assert definition.set_id == "wanderer" and have == 0 and [p for p, _ in bonuses] == [2, 3]
+    _key(demo, demo.pg.K_RETURN)  # wear the hood
+    assert screen.set_info(screen.selected()[0])[1] == 1
+    # up into the worn strip, Enter takes the sword off again
+    _key(demo, demo.pg.K_UP)
+    assert screen.in_worn
+    worn_before = len(game.save.rpg_state.loadouts["hero"].equipped())
+    _key(demo, demo.pg.K_RETURN)
+    assert len(game.save.rpg_state.loadouts["hero"].equipped()) == worn_before - 1
+    _key(demo, demo.pg.K_b)
+    assert demo._ui_mode == "field"
+
+
+def test_class_looks_swap_with_the_class_and_the_camera_looks_ahead(demo):
+    from asteria.runtime.actor_link import ClassAppearanceComponent
+    from asteria.runtime.character_control import CharacterController2DComponent
+    from asteria.runtime.components2d import Animator2DComponent, SpriteRenderer2D
+
+    game = demo.game
+    player = game.player
+    looks = player.get(ClassAppearanceComponent).parsed()
+    assert set(looks) == {"warrior", "ranger", "mage"}
+    sprite, animator = player.get(SpriteRenderer2D), player.get(Animator2DComponent)
+    for class_id in ("warrior", "mage", "ranger"):
+        game.set_classes("", [class_id])
+        _frames(demo, 3)
+        assert (sprite.sprite_sheet_asset_id, animator.clip_set_id) == looks[class_id]
+        assert demo.tile_view._animated[player.id].clip_set_id == looks[class_id][1]
+    # look-ahead: facing right pushes the camera to the right of the player, left to the left
+    controller = player.get(CharacterController2DComponent)
+    view = demo.tile_view
+    centre = lambda: view.camera.x + view.width / view.camera.zoom / 2 - _xy(player)[0]  # noqa: E731
+    controller.facing = "right"
+    _frames(demo, 120)
+    ahead_right = centre()
+    controller.facing = "left"
+    _frames(demo, 120)
+    ahead_left = centre()
+    assert ahead_right > 20 > -20 > ahead_left
+
+
+def test_parallax_layers_scroll_slower_than_the_camera(demo):
+    from asteria.runtime.components2d import ParallaxBackground2DComponent
+
+    game = demo.game
+    mine = _scene(game.project, "Rustdeep")
+    game.transfer_player(mine.id, 6 * 18, 10 * 18, facing="right")
+    _frames(demo, 5)
+    view = demo.tile_view
+    layers = [c for _, c in game.scene.query(ParallaxBackground2DComponent)]
+    assert sorted(c.factor_x for c in layers) == [0.12, 0.3]
+    pg = demo.pg
+    zoom = view.camera.zoom
+
+    def render(camera_x):
+        view.camera.x = camera_x
+        surface = pg.Surface((view.width, view.height))
+        surface.fill((0, 0, 0))
+        view._parallax(surface)
+        return surface
+
+    def mismatches(a, b, shift):
+        """Sample points where ``b`` does not show what ``a`` showed ``shift`` px to the right."""
+        return sum(
+            a.get_at((x, y)) != b.get_at((x - shift, y))
+            for y in range(0, view.height, 3)
+            for x in range(shift + 4, view.width - 4, 5)
+        )
+
+    for layer in layers:
+        for other in layers:
+            other.visible = other is layer  # one layer at a time
+        a, b = render(100.0), render(200.0)
+        expected = round(100.0 * layer.factor_x * zoom)
+        best = min(range(0, 130), key=lambda shift: (mismatches(a, b, shift), shift))
+        assert best == expected, (layer.factor_x, best, expected)

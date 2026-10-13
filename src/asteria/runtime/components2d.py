@@ -171,3 +171,36 @@ class Interaction2DComponent(Component):
         self.require_facing = True
         self.local_scope_id = ""
         self.trigger = "action"
+
+
+@component_schema(
+    type_name="asteria.ParallaxBackground2D",
+    version=1,
+    fields=(
+        Field("texture_asset_id", str, "", label="Texture"),
+        Field("factor_x", float, 0.3, minimum=0.0, label="Scroll Factor X"),
+        Field("factor_y", float, 0.0, minimum=0.0, label="Scroll Factor Y"),
+        Field("scale", float, 1.0, minimum=0.01),
+        Field("anchor", str, "bottom", choices=("top", "center", "bottom"), label="Anchor"),
+        Field("offset_y", float, 0.0, label="Offset Y"),
+        Field("repeat_x", bool, True, label="Repeat Horizontally"),
+        Field("opacity", float, 1.0, minimum=0.0, maximum=1.0),
+        Field("visible", bool, True),
+    ),
+)
+class ParallaxBackground2DComponent(Component):
+    """A scrolling backdrop behind the map: it moves at ``factor`` times the camera, so far
+    layers (small factors) slide slowly and give depth. Drawn in entity order, below the tile
+    layers."""
+
+    def __init__(self):
+        super().__init__()
+        self.texture_asset_id = ""
+        self.factor_x = 0.3
+        self.factor_y = 0.0
+        self.scale = 1.0
+        self.anchor = "bottom"
+        self.offset_y = 0.0
+        self.repeat_x = True
+        self.opacity = 1.0
+        self.visible = True

@@ -77,7 +77,10 @@ from asteria.rpg.economy import ShopDefinition, ShopEntry  # noqa: E402
 from asteria.rpg.loot import AffixDefinition, AffixModifier, RarityDefinition  # noqa: E402
 from asteria.runtime.action_combat import ActionCombatComponent  # noqa: E402
 from asteria.runtime.action_play import CombatSceneComponent  # noqa: E402
-from asteria.runtime.actor_link import ActorLinkComponent  # noqa: E402
+from asteria.runtime.actor_link import (  # noqa: E402
+    ActorLinkComponent,
+    ClassAppearanceComponent,
+)
 from asteria.runtime.character_control import (  # noqa: E402
     AIController2DComponent,
     CharacterController2DComponent,
@@ -91,6 +94,7 @@ from asteria.runtime.components2d import (  # noqa: E402
     Animator2DComponent,
     Camera2DComponent,
     Interaction2DComponent,
+    ParallaxBackground2DComponent,
     SpriteRenderer2D,
     TileMap2DComponent,
 )
@@ -557,7 +561,7 @@ def combat_content(project, looks):
             costs=mp(5),
             interrupts_actions=True,
         ),
-        AbilityDefinition("m_bolt", timeline_id="m_bolt", costs=mp(2)),
+        AbilityDefinition("m_bolt", timeline_id="m_bolt", cooldown_seconds=0.35, costs=mp(1)),
         AbilityDefinition("m_nova", timeline_id="m_nova", cooldown_seconds=2.5, costs=mp(12)),
         AbilityDefinition("m_meteor", timeline_id="m_meteor", cooldown_seconds=4.0, costs=mp(20)),
         AbilityDefinition(
@@ -843,13 +847,14 @@ GEAR = {  # id: (name, slot, tags, modifiers)
 }
 
 
-def loot_content(db):
+def loot_content(db, icons):
     for item_id, (name, slot, tags, stats) in GEAR.items():
         db.add_equipment(
             EquipmentDefinition(
                 item_id,
                 name,
                 slot=slot,
+                icon_id=icons.get(item_id, ""),
                 tags=tags,
                 modifiers=[StatModifier(f"{item_id}.{s}", s, "add", v) for s, v in stats.items()],
             )
@@ -965,7 +970,7 @@ def loot_content(db):
         ("eye_lens", "Eye Lens"),
         ("gear_scrap", "Gear Scrap"),
     ):
-        db.add_item(ItemDefinition(item_id, name, stack_limit=99))
+        db.add_item(ItemDefinition(item_id, name, stack_limit=99, icon_id=icons.get(item_id, "")))
     common = [
         DropEntry(g, weight=1)
         for g in (
@@ -1201,6 +1206,7 @@ class SceneBuilder:
                 view=view,
                 on_player_death="respawn",
                 respawn_delay=2.5,
+                camera_look_ahead=36.0 if view == "topdown" else 48.0,
                 background_color=background,  # behind the map (the cave's darkness)
             )
         )
@@ -1314,7 +1320,7 @@ def enemy(
     return entity
 
 
-def player(builder, xy, look):
+def player(builder, xy, look, looks):
     hero = builder.entity("Player", *xy)
     builder.look(hero, *look)
     hero.add_component(
@@ -1333,11 +1339,21 @@ def player(builder, xy, look):
     )
     hero.add_component(PlayerInput2DComponent())
     hero.add_component(_set(ActorLinkComponent(), actor_id=HERO))
+    # each class has its own look (the engine swaps it when the class changes)
+    hero.add_component(
+        _set(
+            ClassAppearanceComponent(),
+            looks="; ".join(
+                f"{class_id}={looks[f'trainer_{class_id}'][0]}|{looks[f'trainer_{class_id}'][1]}"
+                for class_id in CLASSES
+            ),
+        )
+    )
     hero.add_component(
         _set(
             CombatantComponent(),
             team="hero",
-            regen="mp=3",
+            regen="mp=4",
             hitstun_rule="unless_poise",
             poise=25,
             poise_recovery=12,
@@ -1366,7 +1382,7 @@ def player(builder, xy, look):
     return hero
 
 
-def build_scenes(project, looks, tilemaps, layouts):
+def build_scenes(project, looks, tilemaps, layouts, backdrops):
     town_l, field_l, dungeon_l = layouts["town"], layouts["field"], layouts["dungeon"]
     town = SceneBuilder(project, "town", "Hollowbrook")
     field = SceneBuilder(project, "field", "Greenvale Fields")
@@ -1374,7 +1390,7 @@ def build_scenes(project, looks, tilemaps, layouts):
 
     # -- town --------------------------------------------------------------------------------
     town.setup(tilemaps["town"], view="topdown")
-    hero = player(town, town_l["start"], looks["hero"])
+    hero = player(town, town_l["start"], looks["hero"], looks)
     merchant = npc(town, "Mira the Merchant", town_l["merchant"], looks["merchant"])
     town.program(
         merchant,
@@ -1546,6 +1562,22 @@ def build_scenes(project, looks, tilemaps, layouts):
 
     # -- dungeon (side view) -----------------------------------------------------------------
     dungeon.setup(tilemaps["dungeon"], view="side", background="#1c2230")
+    # two scrolling cave silhouettes behind the tiles (the far one moves less than the near one)
+    for name, texture, factor, scale, lift in (
+        ("Far Hills", backdrops[0], 0.12, 3.0, 40.0),
+        ("Near Hills", backdrops[1], 0.3, 3.0, 0.0),
+    ):
+        back = dungeon.entity(name, -40, 88 if lift else 120)
+        back.add_component(
+            _set(
+                ParallaxBackground2DComponent(),
+                texture_asset_id=texture,
+                factor_x=factor,
+                scale=scale,
+                anchor="bottom",
+                offset_y=-lift,
+            )
+        )
     door(
         dungeon,
         "Mine Exit",
@@ -1744,9 +1776,9 @@ def main():
     db = project.rpg_database
     combat_content(project, looks)
     classes_and_trees(db)
-    loot_content(db)
+    loot_content(db, art.write_item_icons())
     behaviour(db)
-    town, hero = build_scenes(project, looks, tilemaps, layouts)
+    town, hero = build_scenes(project, looks, tilemaps, layouts, art.mine_backdrops(assets))
     new_game(project, town, hero)
     art.title_image(HERE, layouts["field"], overworld)
     project.validate()

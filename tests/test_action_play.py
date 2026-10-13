@@ -80,9 +80,9 @@ def test_loot_pickup_bag_and_respawn_through_the_runtime(runtime):
     assert len(game.save.rpg_state.equipment_bag) == bag + 1
     _press(rt, rt.pg.K_b)
     assert rt._ui_mode == "bag"
-    rt._bag_index = len(game.save.rpg_state.equipment_bag) - 1
+    rt._bag_screen.index = len(game.save.rpg_state.equipment_bag) - 1
     _press(rt, rt.pg.K_RETURN)
-    assert "Equipped" in rt.message or "Cannot equip" in rt.message
+    assert "Equipped" in rt._bag_screen.message or "Cannot equip" in rt._bag_screen.message
     _press(rt, rt.pg.K_b)
     assert rt._ui_mode == "field"
     state = game.combat.state(player)

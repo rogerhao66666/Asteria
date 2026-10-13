@@ -1515,3 +1515,18 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **4. 試過但沒有效果、已還原：** 把 `CollisionWorld.from_scene` 的逐個 `_add` 改成整批建列。壓力場景（300 敵 + 500 投射物，native）12.4 ms，和之前相同。剖析顯示時間在逐個 collider 的場景走訪（檢查啟用狀態、排序），不在 `append`。要真的改善，需要場景層級的快取和失效機制，這會碰到「entity 啟用狀態改變不通知場景」的既有設計，風險大於收益，沒有做。
 
 **執行的測試：** 完整套件 **2171 passed**。
+
+### D23-6 — demo 缺口：格子背包、職業外觀、鏡頭前瞻、視差背景、法師平衡（「全部處理」第二批）
+
+**1. 格子背包（`runtime/bag_screen.py`，新）：** 取代 A8 的清單。上方是穿戴格（依裝備欄位），下方 8 欄的格子；稀有度顏色的外框和底色、裝備圖示（`icon_id`）。方向鍵移動、Enter 穿上或脫下、B／Esc 關閉；從背包第一列往上進穿戴格。右側提示框：名稱（稀有度顏色）、稀有度、物品等級、欄位；每項數值，和**同欄位目前穿的那件比較**（括號內為差值，綠色較好、紅色較差）；詞綴名稱；所屬套裝、已穿件數和各件數的加成（達到的用綠色）。需求不符時說明原因。新增 `EquipmentLoadout.slot_ids()`。測試：`test_the_bag_grid_compares_stats_equips_unequips_and_shows_the_set`。截圖 `d23_bag_grid.png`。
+- 圖示是 Kenney Tiny Dungeon（CC0）和 Ninja Adventure 的物品圖，切成 16 px 存在 `playable_assets/icons/`，`CREDITS.md` 已補上。
+
+**2. 職業外觀：** 通用元件 `asteria.ClassAppearance`（`looks`：`class_id=sprite_sheet|animation_set; ...`）。連結的角色顯示目前職業的外觀（最後一個有設定的職業勝出），換職業時立刻換。TileSceneView 在動畫狀態上也跟著換動畫組。demo 的三個職業各有自己的角色圖。測試：`test_class_looks_swap_with_the_class_and_the_camera_looks_ahead`。
+
+**3. 鏡頭前瞻：** `CombatScene.camera_look_ahead`（世界單位）現在接到 tile 場景的鏡頭：鏡頭緩緩偏向玩家面對的方向，橫向場景只往左右。demo 俯視 36、橫向 48。測試同上（面向右時鏡頭中心在玩家右側 20 以上，面向左則在左側）。
+
+**4. 視差背景：** 通用元件 `asteria.ParallaxBackground2D`（貼圖、`factor_x`／`factor_y`、縮放、錨點、可重複、透明度）。在 tile 圖層之下，依 factor 由遠到近畫。礦坑有兩層洞穴剪影（0.12 和 0.3）。測試真的量位移：每一層單獨畫兩次，內容左移的像素數正好是 `factor × 鏡頭移動 × 縮放`（36 和 90 px）。截圖 `d23_mine_parallax_mage.png`。
+
+**5. 法師平衡：** 火球消耗 2 → 1 並加 0.35 秒冷卻，英雄 MP 回復 3 → 4／秒。原本連續施放約 30 秒就耗盡 110 MP（實機量到 MP 1/110）。
+
+**執行的測試：** 見下一批的完整套件。
