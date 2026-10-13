@@ -1428,3 +1428,17 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **執行的測試：** 完整套件 **2148 passed、1 skipped**（略過的和 A10 相同）。
 
 **狀態：** A11 完成，D22 的 A1–A11 全部完成。需要使用者實際遊玩 demo，確認手感和平衡。
+
+### D23-1 — 原生（C++）kernel：架構和第一個切片（使用者指示：核心用 C++ 一次做完）
+
+**架構：**
+- `kernels/native/asteria_kernels.cpp`：純 C 介面，吃原始欄位緩衝區；`kernels/_native.py` 用 `ctypes` 載入，不需要 pybind11 或 cmake。`native` 這組 kernel 以 numpy 組為底，只覆蓋已移植的函式，所以介面永遠完整，可以逐個移植。
+- `python -m asteria.kernels.build_native` 用系統的 clang++／g++ 編譯；旗標 `-ffp-contract=off -fno-fast-math`，與 python 參考版逐位元一致。沒編譯或載入失敗時，`kernels.available()` 自動略過，引擎維持用 numpy。`ASTERIA_KERNELS=native` 可指定。
+- 輸出大小不定的函式用「呼叫端提供緩衝區、回傳需要的數量、不夠就重試」。
+
+**第一個切片：`aabb_cross_pairs`。** 400 組隨機箱子（含邊緣相接、零寬度、負座標、全部互相重疊）與 python 參考版 **0 個不一致**；500 × 2000 個箱子 0.62 ms（numpy）→ 0.28 ms（native）。測試：`tests/test_native_kernels.py`。
+
+**量到的問題：這個切片對壓力場景沒有任何效果**（300 敵 + 500 投射物：numpy 15.3 ms，native 15.4 ms）。cProfile（120 幀，numpy）：
+- 時間花在 Python 物件迴圈，不在 kernel：`list.append` 85.9 萬次 0.83 s、`CollisionWorld.from_scene` 與 `_add` 合計約 1.3 s、`field_ai.update` 約 1.2 s、`Scene.query` 7.3 萬次。
+- `aabb_cross_pairs` 整體只有 0.26 s（約 5%）。
+- 結論：把現有 kernel 一個一個換成 C++ 的上限很低。要有效益，C++ 必須接手「每幀逐個 entity 的迴圈」：由欄位直接建出碰撞世界、AI 步進、命中收集，而不是只加速被呼叫的陣列函式。

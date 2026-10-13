@@ -8,3 +8,8 @@ __pycache__/
 VSCODE_QUICK_GUIDE.md
 /local_reference/rpg_maker_mv/
 /local_reference/free_assets/
+
+# native kernel library (built by python -m asteria.kernels.build_native)
+*.dylib
+*.so
+*.dll

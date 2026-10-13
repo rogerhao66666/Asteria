@@ -22,12 +22,12 @@ A kernel set is a module with the same names in every implementation:
   ``expired``, ``keep``.
 
 ``python`` is the reference and is always available. ``numpy`` runs the same arithmetic on arrays
-when numpy is
-installed; a native module can be added the same way later. Implementations must give the same
-results as
+when numpy is installed. ``native`` is the numpy set with the hot loops in C++ (build it with
+``python -m asteria.kernels.build_native``; it is skipped when not built). Implementations must
+give the same results as
 ``python`` (tests compare them). ``ASTERIA_KERNELS`` = ``auto`` (default: the fastest installed),
-``python`` or
-``numpy`` picks the set; ``use()`` switches it in code.
+``python``,
+``numpy`` or ``native`` picks the set; ``use()`` switches it in code.
 """
 
 from __future__ import annotations
@@ -35,8 +35,12 @@ from __future__ import annotations
 import importlib
 import os
 
-_MODULES = {"python": "asteria.kernels._python", "numpy": "asteria.kernels._numpy"}
-_PREFERENCE = ("numpy", "python")
+_MODULES = {
+    "python": "asteria.kernels._python",
+    "numpy": "asteria.kernels._numpy",
+    "native": "asteria.kernels._native",
+}
+_PREFERENCE = ("native", "numpy", "python")
 _active = None
 
 
