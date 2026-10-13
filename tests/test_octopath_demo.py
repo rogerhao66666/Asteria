@@ -857,7 +857,13 @@ def test_no_information_covers_other_information_on_the_battle_screen(encounter,
             for b in names[i + 1 :]:
                 assert not _overlaps(panels[a], panels[b]), (encounter_id, step, a, b)
         for member_id, rect in members.items():
+            idle_ally = (
+                runtime._battle_presentation.screen.composer._stands_right(member_id)
+                and member_id != hero
+            )
             for name, panel in panels.items():
+                if idle_ally and name == "action_menu":  # the menu may cover other party members
+                    continue
                 if name == "timeline" or name.startswith("hud:") or name == "action_menu":
                     assert not _overlaps(rect, panel), (encounter_id, step, member_id, name)
         for member_id, block in blocks.items():

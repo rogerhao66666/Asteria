@@ -716,11 +716,15 @@ class BattleUiComposer:
             L.virtual_height - L.margin - P.interaction_bottom_gap - height,
         )
         if L.party_hud == "side_list" and self._camera is not None:
-            boxes = []  # every combatant: name and bar above, sprite, shield row under the feet
+            # Kept clear: the acting member and every enemy (name and bar above, sprite, shield
+            # row under the feet). Other party members may sit behind the menu.
+            boxes = []
             boxed = []
             for visual in self.scene.combatants:
                 pos = self._anchor_screen(self._camera, visual.member_id)
                 if pos is None:
+                    continue
+                if self._stands_right(visual.member_id) and visual.member_id != self._focus:
                     continue
                 body = float(self._member_heights.get(visual.member_id, 32.0))
                 half = max(body / 2, 24.0)

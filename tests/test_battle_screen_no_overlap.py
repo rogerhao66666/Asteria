@@ -79,7 +79,8 @@ def _problems(runtime, rec):
     for member in runtime.game.battle.members.values():
         if runtime.game.battle.is_active(member):
             box = adapter.member_screen_box(member.member_id)
-            if box:
+            ally = adapter.screen.composer._stands_right(member.member_id)
+            if box and (not ally or member.member_id == runtime._turn_actor):
                 sprites[member.member_id] = (box[0] - 18, box[1], 36, box[2] - box[1])
     blocks = {b.member_id: b.rect() for b in runtime.battle_extras_blocks if b.rect()}
     found = set()
