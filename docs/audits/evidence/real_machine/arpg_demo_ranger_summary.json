@@ -1,0 +1,32 @@
+{
+ "driver": "cocoa",
+ "class": [
+  "ranger"
+ ],
+ "frames": 1486,
+ "mean_fps": 55.5,
+ "p95_frame_ms": 18.0,
+ "abilities_used": {
+  "r_shot": 69,
+  "r_pierce": 1,
+  "roll": 1,
+  "potion": 1,
+  "r_volley": 1
+ },
+ "known": [
+  "potion",
+  "r_pierce",
+  "r_shot",
+  "r_volley",
+  "roll"
+ ],
+ "player_life": [
+  134,
+  160.0
+ ],
+ "kills": 3,
+ "level": 4,
+ "gold": 44.0,
+ "bag": 2,
+ "scene": "Rustdeep Mine"
+}

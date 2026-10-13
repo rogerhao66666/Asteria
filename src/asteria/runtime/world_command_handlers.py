@@ -41,6 +41,7 @@ STANDARD_WORLD_COMMANDS = (
     "MOVE_NPC",
     "SUMMON",
     "SHOW_POPUP",
+    "SET_CLASSES",
 )
 
 PRESENTATION_COMMANDS = (
@@ -85,6 +86,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "CAMERA_SHAKE": ("intensity", "duration"),
     "SUMMON": ("enemy_id", "actor_id", "count", "owner_id"),
     "SHOW_POPUP": ("text", "entity", "duration_ms", "kind"),
+    "SET_CLASSES": ("actor_id", "class_ids", "unlock"),
 }
 
 
@@ -272,6 +274,18 @@ def register_standard_world_commands(router, session):
             str(_required(c, "entity")), str(_required(c, "timeline_id"))
         ),
     )
+
+    def set_classes(command):
+        raw = _required(command, "class_ids")
+        values = raw.replace(";", ",").split(",") if isinstance(raw, str) else list(raw)
+        unlock = command.args.get("unlock", True)
+        if isinstance(unlock, str):
+            unlock = unlock.strip().lower() not in ("0", "false", "no", "")
+        return session.set_classes(
+            str(command.args.get("actor_id") or ""), values, unlock=bool(unlock)
+        )
+
+    router.register("SET_CLASSES", set_classes)
     router.register("LEARN_RECIPE", learn_recipe)
     router.register("OPEN_CRAFTING", open_crafting)
     router.register(

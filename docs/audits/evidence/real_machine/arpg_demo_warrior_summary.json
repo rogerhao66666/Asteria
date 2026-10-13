@@ -1,0 +1,32 @@
+{
+ "driver": "cocoa",
+ "class": [
+  "warrior"
+ ],
+ "frames": 1478,
+ "mean_fps": 55.5,
+ "p95_frame_ms": 18.0,
+ "abilities_used": {
+  "w_slash": 85,
+  "w_leap": 1,
+  "roll": 1,
+  "potion": 1,
+  "w_whirl": 1
+ },
+ "known": [
+  "potion",
+  "roll",
+  "w_leap",
+  "w_slash",
+  "w_whirl"
+ ],
+ "player_life": [
+  149,
+  200.0
+ ],
+ "kills": 3,
+ "level": 4,
+ "gold": 53.0,
+ "bag": 1,
+ "scene": "Rustdeep Mine"
+}

@@ -1,0 +1,31 @@
+{
+ "driver": "cocoa",
+ "class": [
+  "mage"
+ ],
+ "frames": 1478,
+ "mean_fps": 55.5,
+ "p95_frame_ms": 18.0,
+ "abilities_used": {
+  "m_bolt": 46,
+  "m_meteor": 1,
+  "roll": 1,
+  "potion": 1
+ },
+ "known": [
+  "m_bolt",
+  "m_meteor",
+  "m_nova",
+  "potion",
+  "roll"
+ ],
+ "player_life": [
+  85,
+  140.0
+ ],
+ "kills": 6,
+ "level": 4,
+ "gold": 45.0,
+ "bag": 1,
+ "scene": "Rustdeep Mine"
+}

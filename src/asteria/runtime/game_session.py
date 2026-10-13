@@ -37,6 +37,16 @@ from asteria.runtime.world_command_handlers import (
 )
 
 
+class _EitherBlocks:
+    """Two ``collides_world_point`` queries: a point is blocked when either blocks it."""
+
+    def __init__(self, first, second):
+        self.first, self.second = first, second
+
+    def collides_world_point(self, x, y):
+        return self.first.collides_world_point(x, y) or self.second.collides_world_point(x, y)
+
+
 class GameSessionError(RuntimeError):
     pass
 
@@ -134,6 +144,7 @@ class GameSessionRuntime:
         self.open_shop_id = None
         self.open_crafting_station = None
         self._field_simulation = {}
+        self._tile_blocking = {}  # scene id -> tile map walls (set_tile_blocking)
         self._frame_collision_world = None
         from asteria.runtime.profiler import NullProfiler
 
@@ -202,7 +213,9 @@ class GameSessionRuntime:
                 if world is None:
                     with self.profiler.section("collision"):
                         world = self._frame_collision_world = CollisionWorld.from_scene(scene)
-                return world.blocking_query(exclude={entity.id, self.player.id})
+                query = world.blocking_query(exclude={entity.id, self.player.id})
+                tiles = self._tile_blocking.get(scene.id)
+                return query if tiles is None else _EitherBlocks(query, tiles)
 
             systems = (
                 SpawnSystem(
@@ -285,6 +298,8 @@ class GameSessionRuntime:
                 formulas=library.formulas,
                 snapshot_provider=lambda: self.field_input,
                 known_abilities=self._known_abilities,
+                # the party's bag pays "item:<id>" costs of party members (potions, arrows)
+                inventory=lambda e: self.save.rpg_state.inventory if self._actor_of(e) else None,
             )
             behavior = BehaviorTreeSystem(
                 self.project.rpg_database.behavior_trees,  # RPG-09
@@ -345,7 +360,26 @@ class GameSessionRuntime:
                 "loot": loot,
             }
             self._field_simulation[scene.id] = systems
+            self._apply_tile_blocking(scene.id)
         return systems
+
+    def set_tile_blocking(self, query, scene_id=None):
+        """Walls of a tile map for a scene (the current one by default): any
+        ``collides_world_point`` query. Controllers, field AI and projectiles respect it."""
+        scene_id = self.scene.id if scene_id is None else str(scene_id)
+        if query is None:
+            self._tile_blocking.pop(scene_id, None)
+        else:
+            self._tile_blocking[scene_id] = query
+        self._apply_tile_blocking(scene_id)
+
+    def _apply_tile_blocking(self, scene_id):
+        systems = self._field_simulation.get(scene_id)
+        if systems is None:
+            return
+        tiles = self._tile_blocking.get(scene_id)
+        systems["controllers"].extra_blocking = tiles
+        systems["projectiles"].tiles = tiles
 
     def field_update(self, dt):
         """Advance field enemies and spawn zones, then start any touched visible encounter."""
@@ -1071,6 +1105,28 @@ class GameSessionRuntime:
             actor_id
         )  # a field combatant linked to the actor changes class now
         return values
+
+    def set_classes(self, actor_id, class_ids, *, unlock=True):
+        """Make ``class_ids`` the actor's active classes (a class shrine, a job board, a story
+        event); with ``unlock`` they are unlocked first. ``actor_id`` "" = the player's actor."""
+        actor_id = str(actor_id or "") or self._actor_of(self.player) or ""
+        if not actor_id:
+            actor_id = (self.save.rpg_state.party_actor_ids or ("",))[0]
+        values = tuple(dict.fromkeys(str(x).strip() for x in class_ids if str(x).strip()))
+        unknown = [x for x in values if x not in self.project.rpg_database.classes]
+        if unknown:
+            raise GameSessionError("unknown classes: " + ", ".join(unknown))
+        state = self.ensure_actor_progression(actor_id)
+        if unlock:
+            unlocked = tuple(dict.fromkeys(state.unlocked_class_ids + values))
+            self.save.rpg_state.actor_progression[actor_id] = ActorProgressionState(
+                state.level,
+                state.experience,
+                points=state.points,
+                unlocked_class_ids=unlocked,
+                active_class_ids=state.active_class_ids,
+            )
+        return self.set_active_classes(actor_id, values)
 
     def set_active_party(self, actor_ids, placements=None):
         actor_ids = tuple(dict.fromkeys(str(x) for x in actor_ids))

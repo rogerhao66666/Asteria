@@ -612,7 +612,28 @@ class PlayableTestRuntime:
                     color=(190, 200, 215),
                 )
 
+    @property
+    def tile_view(self):
+        """The tile-map scene view (D22 A10) when the current scene is bound to a TileMap2D,
+        else None."""
+        from asteria.runtime.tile_scene_view import TileSceneView
+
+        scene = self.game.scene
+        if not TileSceneView.available(scene):
+            return None
+        view = getattr(self, "_tile_view", None)
+        if view is None:
+            view = self._tile_view = TileSceneView(
+                self.game, self.resource_root, self.width, self.height, self.pg
+            )
+        elif view.scene_id != scene.id:
+            view.load()
+        return view
+
     def _field_screen_xy(self, world_x, world_y):
+        view = self.tile_view
+        if view is not None:
+            return view.world_to_screen(world_x, world_y)
         return self.field_camera.world_to_screen(world_x, world_y)
 
     def _player_frame(self, facing, moving):
@@ -775,6 +796,12 @@ class PlayableTestRuntime:
         self._prune_field_echoes()
         zoom = self.field_camera.zoom
         settings = self.game.combat_scene
+        tiles = self.tile_view
+        if tiles is not None:
+            hud = self.action_hud if self.game.action_scene else None
+            tiles.draw(self.screen, flash=hud.flash if hud is not None else ())
+            self._draw_field_overlays()
+            return
         if (
             settings is not None and settings.background_color
         ):  # a block-out level: a flat colour, no field image
@@ -851,6 +878,10 @@ class PlayableTestRuntime:
             self._blit_normal(
                 sheet_path, (col * fw, row * fh, fw, fh), (render_w, render_h), position
             )
+        self._draw_field_overlays()
+
+    def _draw_field_overlays(self):
+        """Everything drawn over the field's world: HUD, effects, popups, dialogue, help."""
         if self.game.action_scene:
             self.action_hud.draw_world(self)
         self._draw_field_effects()
@@ -1102,8 +1133,11 @@ class PlayableTestRuntime:
         if self.input.just_pressed("bag"):
             self._bag_index = 0
             self._ui_mode = "bag"
-        if self.input.just_pressed("menu"):
-            self._ui_mode = "build"
+        if self.input.just_pressed("menu"):  # the skill tree (D22 A10)
+            from asteria.runtime.skill_tree_screen import SkillTreeScreen
+
+            self._skill_tree = SkillTreeScreen(self)
+            self._ui_mode = "skills"
         if self.input.just_pressed("cancel"):
             self._pause_menu.index = 0
             self._ui_mode = "pause"
@@ -1162,7 +1196,7 @@ class PlayableTestRuntime:
             rarity = rarities.get(item.rarity)
             color = rarity.rgb() if rarity is not None else (230, 230, 230)
             prefix = "> " if row == getattr(self, "_bag_index", 0) else "  "
-            name = item_display_name(item, db.affixes)
+            name = item_display_name(item, db.affixes, brief=True)
             self.text(
                 f"{prefix}{name}  (ilvl {item.item_level})",
                 40,
@@ -1181,7 +1215,11 @@ class PlayableTestRuntime:
                 rarity = rarities.get(item.rarity)
                 color = rarity.rgb() if rarity is not None else (230, 230, 230)
                 self.text(
-                    item_display_name(item, db.affixes), x, 132 + row * 24, size=20, color=color
+                    item_display_name(item, db.affixes, brief=True),
+                    x,
+                    132 + row * 24,
+                    size=20,
+                    color=color,
                 )
                 row += 1
         if selected is not None:
@@ -1211,7 +1249,9 @@ class PlayableTestRuntime:
         shade.fill((5, 8, 16, 150))
         self.screen.blit(shade, (0, 0))
         self.text("ASTERIA", self.width / 2, 120, size=64, color=(255, 220, 120), center=True)
-        self.text("Complex Reference RPG", self.width / 2, 180, size=36, center=True)
+        # the game's own name (manifest "subtitle"); the reference project keeps its old text
+        subtitle = self.manifest.get("subtitle") or "Complex Reference RPG"
+        self.text(subtitle, self.width / 2, 180, size=36, center=True)
         self.panel((280, 250, 400, 150))
         self.text("N   New Game", 330, 282, size=28)
         self.text("L   Load Game", 330, 330, size=28)
@@ -2551,6 +2591,12 @@ class PlayableTestRuntime:
         elif self._ui_mode == "bag":
             self._bag_input(events)
             self._draw_bag()
+        elif self._ui_mode == "skills":
+            self._skill_tree.handle(dt)
+            if self._skill_tree.closed:
+                self._ui_mode = "field"
+            else:
+                self._skill_tree.draw()
         elif self._ui_mode == "game_over":
             self._game_over_input()
             self._draw_overlay_menu("Game Over", self._game_over_menu, base="battle")
@@ -2600,6 +2646,9 @@ class PlayableTestRuntime:
             )
             self._last_player_xy = (pt.x, pt.y)
             self.field_camera.update(dt, (pt.x, pt.y), velocity)
+            tiles = self.tile_view
+            if tiles is not None:
+                tiles.update(dt)
             self.field_effects.sync_emitters(
                 self.game.scene, self.game.project.assets
             )  # VFX-01 emitters

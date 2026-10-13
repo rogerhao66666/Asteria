@@ -289,10 +289,13 @@ def roll_equipment(
     instance_id,
 ):
     """A new ``EquippedItem`` of ``equipment``: rarity (given, or rolled by weight), item level and
-    random affixes."""
+    random affixes. Equipment tagged ``rarity:<id>`` always has that rarity (a unique, a set piece,
+    a quest reward): its own modifiers make it special, the rarity sets colour and affix count."""
     from .items import EquippedItem
 
     rarities = dict(rarities or {r.rarity_id: r for r in DEFAULT_RARITIES})
+    if rarity_id is None:
+        rarity_id = fixed_rarity(equipment)
     if rarity_id is None:
         rarity_id = roll_rarity(rarities, rng, luck=luck)
     rarity = rarities.get(rarity_id) or RarityDefinition(str(rarity_id))
@@ -306,8 +309,17 @@ def roll_equipment(
     )
 
 
-def item_display_name(item, affixes):
-    """``"<prefixes> <base> <suffixes>"`` from the rolled affixes' display names."""
+def fixed_rarity(equipment):
+    """The rarity an equipment's ``rarity:<id>`` tag fixes, else None."""
+    for tag in getattr(equipment, "tags", ()):
+        if str(tag).lower().startswith("rarity:") and str(tag)[7:].strip():
+            return str(tag)[7:].strip()
+    return None
+
+
+def item_display_name(item, affixes, *, brief=False):
+    """``"<prefixes> <base> <suffixes>"`` from the rolled affixes' display names; ``brief`` keeps
+    the first prefix and the first suffix (labels on the ground, lists - details show the rest)."""
     prefixes = [
         affixes[a.affix_id].display_name
         for a in item.rolled_affixes
@@ -318,6 +330,8 @@ def item_display_name(item, affixes):
         for a in item.rolled_affixes
         if affixes.get(a.affix_id) and affixes[a.affix_id].position != "prefix"
     ]
+    if brief:
+        prefixes, suffixes = prefixes[:1], suffixes[:1]
     return " ".join([*prefixes, item.equipment.display_name, *suffixes])
 
 
@@ -327,6 +341,7 @@ __all__ = [
     "AffixModifier",
     "RarityDefinition",
     "RolledAffix",
+    "fixed_rarity",
     "item_display_name",
     "roll_affixes",
     "roll_equipment",

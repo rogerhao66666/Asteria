@@ -158,7 +158,7 @@ class LootSystem(System):
                     instance_id=f"loot:{new_id()}",
                 )
                 loot.rarity = rolled.rarity
-                loot.label = item_display_name(rolled, db.affixes)
+                loot.label = item_display_name(rolled, db.affixes, brief=True)
                 loot.instance = json.dumps(rolled.to_data(), sort_keys=True)
             elif kind == "item" and db is not None and item_id in getattr(db, "items", {}):
                 loot.rarity = getattr(db.items[item_id], "rarity", "") or ""

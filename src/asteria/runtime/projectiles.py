@@ -88,6 +88,8 @@ class ProjectileSystem(System):
         self.hits = hits  # HitboxSystem: i-frames are respected
         self.combat = combat  # CombatSystem: hits are queued on combat.pending
         self.world = world  # callable() -> CollisionWorld for walls (None: no walls)
+        # a tile map's walls (any ``collides_world_point`` query); None: no tile walls
+        self.tiles = None
         self.cell_size = float(cell_size)
         # callable(entity_id); paused("") is True while a hitstop freezes the whole scene
         self.paused = paused
@@ -226,7 +228,7 @@ class ProjectileSystem(System):
             target_x, target_y = self._homing_targets(uids, targets)
         self.store.step(dt, target_x, target_y)
         ended = {}  # row -> reason
-        if self.world is not None:
+        if self.world is not None or self.tiles is not None:
             self._walls(uids, dt, ended)
         if targets[0]:
             self._hits(scene, uids, targets, ended)
@@ -286,6 +288,10 @@ class ProjectileSystem(System):
         return target_x, target_y
 
     def _blocked(self, world, shot, x, y):
+        if self.tiles is not None and self.tiles.collides_world_point(x, y):
+            return True
+        if world is None:
+            return False
         for entity_id in world.query_point(
             x, y, mask=shot.definition.wall_mask, exclude=(shot.owner_id,)
         ):
@@ -294,22 +300,28 @@ class ProjectileSystem(System):
         return False
 
     def _walls(self, uids, dt, ended):
-        world = self.world()
-        if world is None or not world.shapes:
+        world = self.world() if self.world is not None else None
+        if (world is None or not world.shapes) and self.tiles is None:
             return
+        world = world if world is not None and world.shapes else None
         xs, ys = self.store.column("x"), self.store.column("y")
         vxs, vys = self.store.column("vx"), self.store.column("vy")
-        shapes, columns = world.solid_columns()
-        points = (
-            xs,
-            ys,
-            xs,
-            ys,
-        )  # each shot's centre as a zero-size box: one batched test against every wall
+        shapes, columns = world.solid_columns() if world is not None else ((), None)
+        # each shot's centre as a zero-size box: one batched test against every wall
+        points = (xs, ys, xs, ys)
         inside = set()
-        for row, j in kernels.active().aabb_cross_pairs(
-            points, columns, self.cell_size, touching=True
-        ):
+        if self.tiles is not None:
+            for row, uid in enumerate(uids):
+                if self.shots[uid].definition.wall != "pass" and self.tiles.collides_world_point(
+                    xs[row], ys[row]
+                ):
+                    inside.add(row)
+        pairs = (
+            kernels.active().aabb_cross_pairs(points, columns, self.cell_size, touching=True)
+            if world is not None
+            else ()
+        )
+        for row, j in pairs:
             if row in inside:
                 continue
             shot, shape = self.shots[uids[row]], shapes[j]

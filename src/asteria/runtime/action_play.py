@@ -210,6 +210,7 @@ class ActionHud:
         return abs(x1 - x0) or 1.0
 
     def draw_world(self, rt):
+        tiles = getattr(rt, "tile_view", None)
         game, pg, screen = rt.game, rt.pg, rt.screen
         zoom = self._unit(rt)
         settings = combat_scene(game.scene)
@@ -237,12 +238,14 @@ class ActionHud:
                 continue
             sx, sy = rt._field_screen_xy(*world_position(entity))
             sprites = rt.manifest["field"].get("entity_sprites", {})
-            if entity.name not in sprites:
+            # a tile scene draws (and flashes) entities that have their own sprite
+            drawn = tiles is not None and _has_sprite(entity)
+            if entity.name not in sprites and not drawn:
                 color = TEAM_COLORS.get(combatant.team, (200, 200, 120))
                 radius = max(4, int(6 * zoom))
                 pg.draw.circle(screen, color, (int(sx), int(sy)), radius)
                 pg.draw.circle(screen, (20, 20, 28), (int(sx), int(sy)), radius, 2)
-            if entity.id in self.flash:
+            if entity.id in self.flash and not drawn:
                 pg.draw.circle(
                     screen, (255, 255, 255), (int(sx), int(sy)), max(4, int(6 * zoom)), 0
                 )
@@ -262,8 +265,20 @@ class ActionHud:
                         value.maximum,
                         (220, 70, 70),
                     )
+        definitions = game.project.gameplay_library.projectiles
         for view in game.projectiles.views():
             sx, sy = rt._field_screen_xy(view.x, view.y)
+            definition = definitions.get(view.projectile_id)
+            image = (
+                tiles.projectile_image(definition, view.vx, view.vy)
+                if tiles is not None and definition is not None and definition.sprite
+                else None
+            )
+            if image is not None:  # the projectile's own sprite, turned to where it flies
+                screen.blit(
+                    image, (int(sx - image.get_width() / 2), int(sy - image.get_height() / 2))
+                )
+                continue
             pg.draw.circle(screen, (255, 230, 140), (int(sx), int(sy)), max(3, int(1.5 * zoom)))
             speed = (view.vx * view.vx + view.vy * view.vy) ** 0.5 or 1.0
             tail = (int(sx - view.vx / speed * 4 * zoom), int(sy - view.vy / speed * 4 * zoom))
@@ -349,7 +364,8 @@ class ActionHud:
         from .combat import CombatantComponent
 
         combatant = game.player.try_get(CombatantComponent)
-        state = combatant.state if combatant is not None else None
+        # built on demand: the bars show before the first hit
+        state = game.combat.state(game.player) if combatant is not None else None
         rt.panel((14, rt.height - 104, 380, 92))
         if state is not None:
             names = list(state.resources.names())
@@ -361,7 +377,8 @@ class ActionHud:
             for row, name in enumerate(names[:3]):
                 value = state.resources.get(name)
                 y = rt.height - 96 + row * 22
-                rt.text(name.capitalize(), 26, y, size=18, color=(220, 225, 235))
+                label = name.upper() if len(name) <= 3 else name.capitalize()  # HP, MP, Rage
+                rt.text(label, 26, y, size=18, color=(220, 225, 235))
                 self._bar(rt, 120, y + 4, 170, 12, value.current, value.maximum, colors[row % 3])
                 rt.text(f"{value.current:.0f}/{value.maximum:.0f}", 300, y, size=18)
         actor_id = game._actor_of(game.player)
@@ -374,11 +391,19 @@ class ActionHud:
         spec = game.player.try_get(ActionCombatComponent)
         if spec is not None:
             bindings = list(parse_bindings(spec.bindings).items())
-            x0 = rt.width / 2 - len(bindings) * 64 / 2
-            for index, (action, ability_id) in enumerate(bindings):
+            # centred, but never under the bars panel on the left
+            x0 = max(rt.width / 2 - len(bindings) * 64 / 2, 14 + 380 + 16)
+            labels = rt.manifest.get("battle", {}).get("skills", {})
+            for index, (action, value) in enumerate(bindings):
                 x = x0 + index * 64
                 y = rt.height - 74
                 rt.panel((int(x), y, 60, 46), fill=(16, 20, 32, 230))
+                ability_id = game.action_combat.bound_ability(game.player, value)
+                key = {"attack": "J", "dodge": "K"}.get(action, action.replace("skill_", ""))
+                rt.text(key, x + 30, y + 34, size=15, color=(255, 220, 124), center=True)
+                if not ability_id:  # nothing learned for this slot yet
+                    rt.text("—", x + 30, y + 14, size=17, color=(110, 118, 135), center=True)
+                    continue
                 ability = game.project.gameplay_library.abilities.get(ability_id)
                 left = game.action_combat.cooldown(game.player, ability_id)
                 total = getattr(ability, "cooldown_seconds", 0.0) or left
@@ -386,13 +411,17 @@ class ActionHud:
                     shade = rt.pg.Surface((60, int(46 * min(1.0, left / total))), rt.pg.SRCALPHA)
                     shade.fill((0, 0, 0, 170))
                     rt.screen.blit(shade, (int(x), y))
-                name = ability_id.split("_", 1)[-1] if ability_id.count("_") else ability_id
+                name = labels.get(ability_id, {}).get("label") or (
+                    ability_id.split("_", 1)[-1] if ability_id.count("_") else ability_id
+                )
                 rt.text(name[:8], x + 30, y + 14, size=17, center=True)
-                key = {"attack": "J", "dodge": "K"}.get(action, action.replace("skill_", ""))
-                rt.text(key, x + 30, y + 34, size=15, color=(255, 220, 124), center=True)
+                for cost in getattr(ability, "costs", ()):  # items it spends: how many are left
+                    if cost.resource.startswith("item:"):
+                        have = game.save.rpg_state.inventory.count(cost.resource[5:])
+                        rt.text(f"x{have}", x + 42, y + 2, size=15, color=(170, 235, 190))
         rt.text(
             "Move: WASD  J: Attack  K: Dodge  1-4: Skills  L: Lock  F: Pick up  B: Bag  C: "
-            "Build  Esc: Pause",
+            "Skills  Esc: Pause",
             rt.width / 2,
             rt.height - 14,
             size=16,
@@ -415,6 +444,13 @@ class ActionHud:
                 color=(255, 200, 200),
                 center=True,
             )
+
+
+def _has_sprite(entity):
+    from .components2d import SpriteRenderer2D
+
+    sprite = entity.try_get(SpriteRenderer2D)
+    return sprite is not None and bool(sprite.sprite_sheet_asset_id)
 
 
 def _combatant_type():

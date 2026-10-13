@@ -1326,3 +1326,67 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - `ruff check src tests scripts`：全部規則都通過。
 - 完整套件 **2136 passed**，黃金基準沒有改變。
 - `demos/` 和 `reference_projects/` 原本就有其他規則的問題（例如 lambda 指派、import 位置），在這次之前就存在、以前也不在 lint 範圍內；這次沒有處理，數量從 115 個降到 47 個。
+
+### D22-A10 — ARPG demo 專案（暗黑式範例，系統全部通用）
+
+**Demo 專案 `reference_projects/arpg_demo/`**（`build_project.py` 產生，可重跑；`art.py` 切素材、`maps.py` 用程式排地圖；README 說明每條規則在資料的哪裡）：
+- **城鎮 Hollowbrook**（俯視）：商人（收購怪物素材、賣藥水）、鐵匠（用素材合成藥水）、戰士／遊俠／法師三位導師（對話後用 `SET_CLASSES` 換職業）、長老（給藥水）、村民；往東的道路傳送到野外。
+- **野外 Greenvale Fields**（俯視）：史萊姆（近戰）、會射擊的眼怪、骷髏精英小隊（霸體、倒地、掉寶加成）、獨眼巨人 Boss（HP 一半以下改用霸體重擊、會丟石頭）。
+- **礦坑 Rustdeep Mine**（橫向，Kenney Pixel Platformer）：起伏地形、單向平台、木橋、梯子通往高處走道、爬行怪、蝙蝠（無重力）、無人機（遠程）、岩石魔像 Boss。
+- **職業與技能樹**：初始是「冒險者」（只會揮拳）；戰士、遊俠、法師各有一棵技能樹（7 個節點，含技能和數值），另有共用的「屬性」樹；每升一級得 2 點。
+- **同一套按鍵適用所有職業**：`attack=w_slash|r_shot|m_bolt|punch`，用第一個已學會的技能。
+- **掉寶**：Common／Magic／Rare／Legendary 隨機詞綴（前後綴數量依稀有度限制）、三件套「Wanderer's Path」、三件傳奇（Unique）、金幣、合成素材。
+- **藥水**是背包道具，由技能消耗（`item:potion`）。
+- 美術全部 CC0（Ninja Adventure、Kenney），`playable_assets/CREDITS.md`；沒有 AI 生成的圖。
+
+**為了 demo 加入的通用引擎功能（任何遊戲都能用）：**
+- `runtime/tile_scene_view.py`（新）：PlayableTestRuntime 可以直接玩 TileMap 場景。
+  - 角色下方和上方的圖層各預先畫一次，每幀只縮放畫面看得到的部分（最近鄰縮放）。
+  - 有 SpriteRenderer2D 的 entity 依深度排序、畫在自己的位置；有 Animator2D 而且動畫組有四方向 `idle_*`／`walk_*` 的，依移動和朝向播放，執行動作時間軸時播 `attack_*`。
+  - 鏡頭跟隨玩家，不超出地圖邊界；投射物有 sprite 時依飛行方向旋轉畫出。
+- `GameSession.set_tile_blocking()`：地圖的碰撞圖層和地圖邊界會擋住角色控制器、場上 AI、投射物（`ProjectileSystem.tiles`）。
+- 按鍵綁定的替代寫法 `a|b|c`：`ActionCombatSystem.bound_ability()` 選第一個已學會的；HUD 技能列和 Problems 檢查都支援。
+- 世界指令 `SET_CLASSES`（`actor_id`、`class_ids`、`unlock`）和 `GameSession.set_classes()`。
+- `runtime/skill_tree_screen.py`（新）：即時戰鬥場景按 C 開啟技能樹畫面。顯示目前職業的樹（標記 `class:<id>` 或名稱為 `<id>_tree`）和共用樹（`shared`）；方向鍵選節點、Enter 學習、O 切換樹；右側顯示等級、下一級的花費和獎勵、已得到的獎勵、前置條件；不能學時說明原因。
+- 技能消耗 `item:<道具id>`：由隊伍背包支付（藥水、箭矢、炸彈），技能列顯示剩餘數量。
+- hitbox cue 可以帶 `width`／`height`／`offset_x`／`offset_y`，在 cue 期間改變攻擊範圍（旋風斬、新星），結束、取消或被換掉時還原。
+- gameplay_event cue 可以帶 `apply_state`（和 `duration`），把狀態加在使用者身上（戰吼、喝藥水回血）。
+- 裝備標記 `rarity:<id>` 會固定稀有度（傳奇、套裝、任務獎勵）。
+- `item_display_name(..., brief=True)`：地上和清單只顯示第一個前綴和第一個後綴，詳細數值在背包右側。
+- HUD：玩家的生命條從一開始就顯示；技能列不再蓋到左側的生命面板；三個字以內的資源名稱顯示成大寫（HP、MP）；在 tile 場景中，有自己 sprite 的 entity 不再畫圓點替代。
+- `CombatScene.background_color` 也套用在 tile 場景（礦坑的黑暗）。
+- 標題畫面的副標題改用 manifest 的 `subtitle`（沒有設定時維持原本的文字）。
+- `scripts/editor_ui_audit.py`：和「開啟專案」一樣先載入素材，tile map 才會畫在場景檢視裡（原本的稽核漏了這一步）。
+- `scripts/arpg_demo_live_check.py`（新）：真實視窗的腳本化遊玩（導師→技能樹→野外→Boss→礦坑→背包）。
+- 測試：`tests/test_arpg_demo.py`（新，12 項）。
+
+**實機驗證（Cocoa 真實視窗，1280×720）：** 證據在 `docs/audits/evidence/real_machine/arpg_demo_*`。
+| 職業 | 幀數 | 平均 fps | p95 | 使用的技能 | 擊殺 | 等級 | 撿到裝備 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 戰士 | 1478 | 55.5 | 18.0 ms | 連擊 85、旋風斬、跳斬、翻滾、藥水 | 3 | 4 | 1 |
+| 遊俠 | 1486 | 55.5 | 18.0 ms | 射擊 69、齊射、穿透箭、翻滾、藥水 | 3 | 4 | 2 |
+| 法師 | 1478 | 55.5 | 18.0 ms | 火球 46、隕石、翻滾、藥水 | 6 | 4 | 1 |
+
+腳本會直接把玩家移到導師、Boss、地上的裝備旁邊（不是走過去），並直接給經驗值來測技能樹；這些只是測試捷徑，不是遊戲內容。
+
+**編輯器（Cocoa，1600×1000，dpr 2）：** 用 demo 專案跑 `editor_ui_audit` 的全部畫面：只有 1 個問題，Enemy AI 的「Add Rule…」按鈕被裁切 7 px，用參考專案也會出現，不是這次造成的；其餘都是頁面內捲動的提示。場景檢視會畫出城鎮的 tile map 和碰撞格（`docs/audits/evidence/ui_audit/a10_editor_*.png`）。
+
+**實機測試時發現並修正的問題：**
+1. 一開始 HUD 沒有生命條（狀態要等第一次被打才建立）→ HUD 會先建立狀態。
+2. Kenney 地形選錯格：「單獨方塊」和「左邊緣」被當成中間格，地面出現接縫 → 改用左／中／右三欄，填充改用沒有外框的格子。
+3. 傳奇裝備的名稱串了五個後綴 → 稀有度限制前後綴數量，名稱只顯示一個前綴和一個後綴。
+4. 技能樹先顯示共用的「屬性」樹 → 職業的樹排在前面；不能學的原因改用節點名稱，不顯示 id。
+5. HUD 的圓點畫在有 sprite 的敵人身上 → tile 場景中不再畫。
+6. 編輯器的 Map、Camera、Combat Scene 三個 entity 都在原點，標籤疊在一起 → 放在地圖外分開。
+
+**執行的測試：** 完整套件 **2147 passed、1 skipped**。被略過的是 `test_record_operations_gui.py:76`，在視窗沒有鍵盤焦點時會略過（當時有 Cocoa 視窗開著），和 A10 無關。ruff E501 和全部規則都是 0 個問題。
+
+**還沒做：**
+- 背包仍是 A8 的清單畫面，不是暗黑式的格子背包；也還沒有裝備比較的提示框。
+- 玩家的外觀不會隨職業改變（ClassDefinition 沒有外觀欄位），三種職業共用同一張角色圖。
+- `camera_look_ahead` 還沒接到 tile 場景的鏡頭。
+- 礦坑的背景只有單色，沒有視差背景圖層。
+- 數值平衡只做了大概：例如法師的 MP 消耗得很快。
+- 真實視窗約 55.5 fps（`clock.tick(60)` 加上垂直同步）；A11 會量測並決定下一步。
+
+**狀態：** A10 完成，需要使用者實際遊玩驗證手感和平衡。

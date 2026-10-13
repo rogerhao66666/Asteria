@@ -285,7 +285,13 @@ def _combat(project, found):
                 except ValueError as exc:
                     add("error", f"{scene.name}/{entity.name}: input bindings: {exc}", target)
                     bindings = {}
-                for action, ability_id in bindings.items():
+                for action, ability_id in (
+                    (action, option)
+                    for action, value in bindings.items()
+                    for option in value.split("|")
+                    if option.strip()
+                ):
+                    ability_id = ability_id.strip()
                     if library.abilities.get(ability_id) is None:
                         add(
                             "error",

@@ -21,7 +21,8 @@ class ActionCueKind(str, Enum):
     IFRAME = "iframe"  # payload: duration
     CANCEL_WINDOW = "cancel_window"  # payload: duration
     COMBO_WINDOW = "combo_window"  # payload: duration, next (optional follow-up timeline id)
-    GAMEPLAY_EVENT = "gameplay_event"  # payload: name, ...
+    # payload: name, ...; apply_state (+ duration) puts a state on the user (a self buff)
+    GAMEPLAY_EVENT = "gameplay_event"
     ARMOR = "armor"  # payload: duration, level (default 1) — super armor while the action runs
     # payload: projectile_id, count, spread (deg), angle (deg), offset_x, offset_y
     PROJECTILE = "projectile"

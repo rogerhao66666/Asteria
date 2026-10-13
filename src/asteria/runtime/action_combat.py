@@ -42,13 +42,16 @@ from .character_control import (
     facing_vector,
 )
 
+ITEM_COST = "item:"  # an ability cost resource "item:<id>" spends inventory items
 AIM_MODES = ("target_input_facing", "input_facing", "facing")
 LOCK_MODES = ("off", "manual", "nearest")
 
 
 def parse_bindings(text):
     """``"attack=slash; dodge=roll"`` -> ``{"attack": "slash", "dodge": "roll"}`` (input action ->
-    ability id)."""
+    ability id). A binding may list alternatives, ``"attack=slash|shoot|bolt"``: the first one the
+    entity knows is used (``ActionCombatSystem.bound_ability``), so one control scheme serves every
+    class or build."""
     bindings = {}
     for chunk in str(text or "").replace(",", ";").split(";"):
         if chunk.strip():
@@ -156,6 +159,7 @@ class ActionCombatSystem(System):
         formulas=None,
         snapshot_provider=None,
         known_abilities=None,
+        inventory=None,
     ):
         self.abilities = abilities  # AbilityRegistry (GameplayLibrary.abilities)
         self.timelines = timelines  # {timeline_id: ActionTimeline}
@@ -168,6 +172,9 @@ class ActionCombatSystem(System):
         self.known_abilities = (
             known_abilities  # callable(entity) -> set of ability ids, or None (no limit)
         )
+        # callable(entity) -> Inventory or None: ``item:<id>`` costs are paid from it (potions,
+        # arrows, bombs)
+        self.inventory = inventory
         self.cooldowns: dict[tuple, float] = {}
         self.buffered: dict[str, tuple] = {}  # entity id -> (ability id, seconds left, aim)
         self.events: list[ActionCombatEvent] = []
@@ -248,9 +255,11 @@ class ActionCombatSystem(System):
             self._emit("denied", entity, ability_id, prices)
             return prices
         if prices:
-            resources = self.combat.state(entity).resources
             for resource, amount in prices:
-                resources.change(resource, -amount)
+                if resource.startswith(ITEM_COST):
+                    self.inventory(entity).remove(resource[len(ITEM_COST) :], int(amount))
+                else:
+                    self.combat.state(entity).resources.change(resource, -amount)
         seconds = self._cooldown_seconds(entity, ability)
         if seconds > 0:
             self.cooldowns[(entity.id, ability.ability_id)] = seconds
@@ -295,6 +304,13 @@ class ActionCombatSystem(System):
         prices = []
         for cost in ability.costs:
             amount = cost.amount.evaluate(context)
+            if cost.resource.startswith(ITEM_COST):
+                bag = self.inventory(entity) if self.inventory is not None else None
+                item_id = cost.resource[len(ITEM_COST) :]
+                if bag is None or bag.count(item_id) < int(amount):
+                    return f"cost:{cost.resource}"
+                prices.append((cost.resource, int(amount)))
+                continue
             if (
                 not state.resources.contains(cost.resource)
                 or state.resources.current(cost.resource) < amount
@@ -460,9 +476,23 @@ class ActionCombatSystem(System):
                 self._lock(entity, spec, scene)
             if pressed(spec.lock_switch_action):
                 self._lock(entity, spec, scene, switch=True)
-        for action, ability_id in parse_bindings(spec.bindings).items():
+        for action, value in parse_bindings(spec.bindings).items():
             if pressed(action):
-                self.use(entity, ability_id, aim=self.aim_of(entity, scene, snapshot), scene=scene)
+                ability_id = self.bound_ability(entity, value)
+                if ability_id:
+                    aim = self.aim_of(entity, scene, snapshot)
+                    self.use(entity, ability_id, aim=aim, scene=scene)
+
+    def bound_ability(self, entity, value):
+        """The ability a binding value means for ``entity``: ``"a|b|c"`` -> the first alternative
+        it knows (the first one when what it knows is not tracked); ``""`` when it knows none."""
+        options = [x.strip() for x in str(value or "").split("|") if x.strip()]
+        if len(options) <= 1:
+            return options[0] if options else ""
+        known = self.known_abilities(entity) if self.known_abilities is not None else None
+        if known is None:
+            return options[0]
+        return next((x for x in options if x in known), "")
 
 
 def _player_input_type():
@@ -478,6 +508,7 @@ def register_action_combat_components(registry):
 
 __all__ = [
     "AIM_MODES",
+    "ITEM_COST",
     "LOCK_MODES",
     "ActionCombatComponent",
     "ActionCombatEvent",

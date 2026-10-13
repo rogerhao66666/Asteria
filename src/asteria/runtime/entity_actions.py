@@ -59,6 +59,9 @@ class _Running:
     armored: bool = False
     windows: dict = field(default_factory=dict)  # kind -> (start, end, payload)
     end: float = 0.0
+    # the Hitbox2D shape a hitbox cue replaced (width, height, offset_x, offset_y), restored after
+    hitbox_shape: tuple | None = None
+    reshaped: object = None  # that Hitbox2D component
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,6 +71,17 @@ class ActionEvent:
     cue_id: str
     kind: str
     payload: dict
+
+
+# hitbox cue payload keys that reshape the entity's Hitbox2D while the cue lasts
+HITBOX_SHAPE = ("width", "height", "offset_x", "offset_y")
+
+
+def _restore_shape(hitbox, run):
+    if run is not None and run.hitbox_shape is not None:
+        for k, v in zip(HITBOX_SHAPE, run.hitbox_shape, strict=True):
+            setattr(run.reshaped or hitbox, k, v)
+        run.hitbox_shape = run.reshaped = None
 
 
 class EntityActionSystem(System):
@@ -89,6 +103,7 @@ class EntityActionSystem(System):
         if not isinstance(timeline, ActionTimeline):
             raise TypeError("timeline must be ActionTimeline")
         aim = None if aim is None or not (aim[0] or aim[1]) else (float(aim[0]), float(aim[1]))
+        _restore_shape(None, self.running.get(str(entity_id)))  # a replaced action's reshape ends
         self.running[str(entity_id)] = _Running(
             timeline, end=timeline.duration, aim=aim, source=str(source)
         )
@@ -137,6 +152,7 @@ class EntityActionSystem(System):
                 hitbox = entity.try_get(Hitbox2DComponent)
                 if hitbox is not None:
                     hitbox.active = False
+                    _restore_shape(hitbox, run)
                 controller = entity.try_get(CharacterController2DComponent)
                 if controller is not None:
                     controller.set_intent(0.0, 0.0)
@@ -170,6 +186,13 @@ class EntityActionSystem(System):
             hitbox.active = True
             if payload.get("hit_tag"):
                 hitbox.hit_tag = str(payload["hit_tag"])
+            if any(k in payload for k in HITBOX_SHAPE):  # a wider swing, a ring around the user
+                if run.hitbox_shape is None:
+                    run.hitbox_shape = tuple(getattr(hitbox, k) for k in HITBOX_SHAPE)
+                    run.reshaped = hitbox
+                for k in HITBOX_SHAPE:
+                    if k in payload:
+                        setattr(hitbox, k, float(payload[k]))
             run.hitbox_until = cue.time + float(payload.get("duration", 0.0))
         elif kind == ActionCueKind.IFRAME:
             if self.hitboxes is not None:
@@ -188,6 +211,17 @@ class EntityActionSystem(System):
                     entity.id, int(payload.get("level", 1)), float(payload.get("duration", 0.0))
                 )
                 run.armored = True
+        elif kind == ActionCueKind.GAMEPLAY_EVENT and payload.get("apply_state"):
+            # a self buff / stance (war cry, frenzy): the state lands on the user
+            apply = getattr(self.armor, "apply_state", None)
+            if apply is not None:
+                duration = payload.get("duration")
+                apply(
+                    entity,
+                    str(payload["apply_state"]),
+                    duration=None if duration in (None, "") else float(duration),
+                    source_id=entity.id,
+                )
         elif kind in WINDOW_KINDS:
             duration = float(payload.get("duration", 0.0))
             run.windows[WINDOW_KINDS[kind]] = (cue.time, cue.time + duration, payload)
@@ -228,6 +262,7 @@ class EntityActionSystem(System):
                 hitbox = entity.try_get(Hitbox2DComponent)
                 if hitbox is not None:
                     hitbox.active = False
+                    _restore_shape(hitbox, run)
                 run.hitbox_until = None
             if run.next_cue >= len(cues) and run.time >= run.end:
                 self._finish(entity_id, scene)

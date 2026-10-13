@@ -314,6 +314,7 @@ def main(argv=None):
         project_file  # as File > Open does: asset paths resolve next to the project
     )
     window.document.mark_saved()
+    window._resolve_project_resources()  # as File > Open does: tile maps and sprites load
     window.refresh_all()
     window.resize(width, height)
     window.show()
