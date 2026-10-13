@@ -656,7 +656,6 @@ def main():
 
     # -- pets: species here, owned pets in the save; capturing the hound gives one -----------
     from asteria.rpg.capture import CaptureRule
-
     from asteria.rpg.pets import PetSpeciesDefinition
 
     db.pet_species["frost_lynx"] = PetSpeciesDefinition(

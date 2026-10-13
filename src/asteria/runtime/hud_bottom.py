@@ -557,8 +557,61 @@ def draw_status_pips(rt, x, y, entries, size=12, limit=6):
         pg.draw.rect(screen, frame, rect, 1, border_radius=3)
 
 
+def draw_target_frame(rt, game, entity):
+    """The locked-on enemy at the top centre: its name, a life bar, and each boon / harm on it
+    with its name and the seconds left (the small squares over its head say only which kind)."""
+    from .combat import CombatantComponent
+
+    pg, screen = rt.pg, rt.screen
+    combatant = entity.try_get(CombatantComponent)
+    state = combatant.state if combatant is not None else None
+    if state is None or not combatant.life_resource:
+        return
+    entries = active_statuses(game, state)
+    width = 320
+    rows = max(1, min(4, len(entries)))
+    height = 54 + (rows * 20 + 4 if entries else 0)
+    x, y = rt.width // 2 - width // 2, 44
+    rt.panel((x, y, width, height), fill=(12, 14, 24, 225), border=(150, 110, 100))
+    rt.text(entity.name, x + 12, y + 8, size=22, color=(255, 226, 190))
+    pool = state.resources.get(combatant.life_resource)
+    fraction = pool.current / pool.maximum if pool.maximum else 0.0
+    bar = pg.Rect(x + 12, y + 34, width - 24, 10)
+    pg.draw.rect(screen, (20, 22, 30), bar.inflate(2, 2), border_radius=4)
+    pg.draw.rect(screen, (60, 30, 30), bar, border_radius=4)
+    pg.draw.rect(
+        screen,
+        (226, 70, 64),
+        (bar.x, bar.y, int(bar.w * max(0.0, min(1.0, fraction))), bar.h),
+        0,
+        4,
+    )
+    for k, entry in enumerate(entries[:4]):
+        row_y = y + 54 + k * 20
+        good = entry["kind"] == "buff"
+        frame = (96, 214, 130) if good else (226, 92, 84)
+        chip = pg.Rect(x + 12, row_y, 16, 16)
+        pg.draw.rect(screen, (20, 52, 32) if good else (62, 22, 24), chip, border_radius=3)
+        icon = entry.get("icon", "")
+        if not (icon and rt._draw_icon(icon, chip.x + 1, chip.y + 1, 14)):
+            pg.draw.circle(screen, frame, chip.center, 4)
+        pg.draw.rect(screen, frame, chip, 1, border_radius=3)
+        stacks = f" x{entry['stacks']}" if entry["stacks"] > 1 else ""
+        rt.text(entry["name"] + stacks, x + 36, row_y + 1, size=17, color=(225, 230, 240))
+        seconds = entry["remaining"]
+        rt.text(
+            f"{seconds:.0f}s" if seconds >= 1 else f"{seconds:.1f}s",
+            x + width - 12,
+            row_y + 1,
+            size=17,
+            color=(170, 210, 240),
+            anchor="topright",
+        )
+
+
 __all__ = [
     "BottomHud",
+    "draw_target_frame",
     "active_statuses",
     "draw_status_pips",
     "key_label",

@@ -26,7 +26,9 @@ python scripts/arpg_demo_live_check.py warrior OUT_DIR            # scripted rea
 | Crafting parts and gold | drop tables `slime`, `eye`, `skull`, ...; shop `merchant`; recipes `brew_*` at station `smith` |
 
 States and abilities carry a `display_name` and an `icon_id`: the action bar and the status row
-show pictures, and enemies show their boons and harms as small squares over the health bar.
+show pictures, and enemies show their boons and harms as small squares over the health bar. Lock
+on (L) shows a target frame at the top with the enemy's name, life and each status with its name
+and seconds left. The five status glyphs are drawn in `art.py` (no sheet had them).
 
 Controls: WASD move, J attack, K dodge, 1-4 skills (4 = potion), Space jump (side view), E talk,
 F pick up, B bag (a grid with a tooltip that compares stats with what you wear and shows set

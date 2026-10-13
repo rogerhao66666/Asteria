@@ -1,0 +1,583 @@
+{
+  "sprite_sheet_asset_id": "af230c00-e855-5992-b645-fa0c18e1ebcf",
+  "tile_height": 16,
+  "tile_width": 16,
+  "tiles": {
+    "0": {
+      "collision": "none",
+      "frame_index": 0,
+      "tags": [],
+      "terrain": null
+    },
+    "1": {
+      "collision": "none",
+      "frame_index": 1,
+      "tags": [],
+      "terrain": null
+    },
+    "10": {
+      "collision": "none",
+      "frame_index": 10,
+      "tags": [],
+      "terrain": null
+    },
+    "11": {
+      "collision": "none",
+      "frame_index": 11,
+      "tags": [],
+      "terrain": null
+    },
+    "12": {
+      "collision": "none",
+      "frame_index": 12,
+      "tags": [],
+      "terrain": null
+    },
+    "13": {
+      "collision": "none",
+      "frame_index": 13,
+      "tags": [],
+      "terrain": null
+    },
+    "14": {
+      "collision": "none",
+      "frame_index": 14,
+      "tags": [],
+      "terrain": null
+    },
+    "15": {
+      "collision": "none",
+      "frame_index": 15,
+      "tags": [],
+      "terrain": null
+    },
+    "16": {
+      "collision": "none",
+      "frame_index": 16,
+      "tags": [],
+      "terrain": null
+    },
+    "17": {
+      "collision": "none",
+      "frame_index": 17,
+      "tags": [],
+      "terrain": null
+    },
+    "18": {
+      "collision": "none",
+      "frame_index": 18,
+      "tags": [],
+      "terrain": null
+    },
+    "19": {
+      "collision": "none",
+      "frame_index": 19,
+      "tags": [],
+      "terrain": null
+    },
+    "2": {
+      "collision": "none",
+      "frame_index": 2,
+      "tags": [],
+      "terrain": null
+    },
+    "20": {
+      "collision": "none",
+      "frame_index": 20,
+      "tags": [],
+      "terrain": null
+    },
+    "21": {
+      "collision": "none",
+      "frame_index": 21,
+      "tags": [],
+      "terrain": null
+    },
+    "22": {
+      "collision": "none",
+      "frame_index": 22,
+      "tags": [],
+      "terrain": null
+    },
+    "23": {
+      "collision": "none",
+      "frame_index": 23,
+      "tags": [],
+      "terrain": null
+    },
+    "24": {
+      "collision": "none",
+      "frame_index": 24,
+      "tags": [],
+      "terrain": null
+    },
+    "25": {
+      "collision": "none",
+      "frame_index": 25,
+      "tags": [],
+      "terrain": null
+    },
+    "26": {
+      "collision": "none",
+      "frame_index": 26,
+      "tags": [],
+      "terrain": null
+    },
+    "27": {
+      "collision": "none",
+      "frame_index": 27,
+      "tags": [],
+      "terrain": null
+    },
+    "28": {
+      "collision": "none",
+      "frame_index": 28,
+      "tags": [],
+      "terrain": null
+    },
+    "29": {
+      "collision": "none",
+      "frame_index": 29,
+      "tags": [],
+      "terrain": null
+    },
+    "3": {
+      "collision": "none",
+      "frame_index": 3,
+      "tags": [],
+      "terrain": null
+    },
+    "30": {
+      "collision": "none",
+      "frame_index": 30,
+      "tags": [],
+      "terrain": null
+    },
+    "31": {
+      "collision": "none",
+      "frame_index": 31,
+      "tags": [],
+      "terrain": null
+    },
+    "32": {
+      "collision": "none",
+      "frame_index": 32,
+      "tags": [],
+      "terrain": null
+    },
+    "33": {
+      "collision": "none",
+      "frame_index": 33,
+      "tags": [],
+      "terrain": null
+    },
+    "34": {
+      "collision": "none",
+      "frame_index": 34,
+      "tags": [],
+      "terrain": null
+    },
+    "35": {
+      "collision": "none",
+      "frame_index": 35,
+      "tags": [],
+      "terrain": null
+    },
+    "36": {
+      "collision": "none",
+      "frame_index": 36,
+      "tags": [],
+      "terrain": null
+    },
+    "37": {
+      "collision": "none",
+      "frame_index": 37,
+      "tags": [],
+      "terrain": null
+    },
+    "38": {
+      "collision": "none",
+      "frame_index": 38,
+      "tags": [],
+      "terrain": null
+    },
+    "39": {
+      "collision": "none",
+      "frame_index": 39,
+      "tags": [],
+      "terrain": null
+    },
+    "4": {
+      "collision": "none",
+      "frame_index": 4,
+      "tags": [],
+      "terrain": null
+    },
+    "40": {
+      "collision": "none",
+      "frame_index": 40,
+      "tags": [],
+      "terrain": null
+    },
+    "41": {
+      "collision": "none",
+      "frame_index": 41,
+      "tags": [],
+      "terrain": null
+    },
+    "42": {
+      "collision": "none",
+      "frame_index": 42,
+      "tags": [],
+      "terrain": null
+    },
+    "43": {
+      "collision": "none",
+      "frame_index": 43,
+      "tags": [],
+      "terrain": null
+    },
+    "44": {
+      "collision": "none",
+      "frame_index": 44,
+      "tags": [],
+      "terrain": null
+    },
+    "45": {
+      "collision": "none",
+      "frame_index": 45,
+      "tags": [],
+      "terrain": null
+    },
+    "46": {
+      "collision": "none",
+      "frame_index": 46,
+      "tags": [],
+      "terrain": null
+    },
+    "47": {
+      "collision": "none",
+      "frame_index": 47,
+      "tags": [],
+      "terrain": null
+    },
+    "48": {
+      "collision": "none",
+      "frame_index": 48,
+      "tags": [],
+      "terrain": null
+    },
+    "49": {
+      "collision": "none",
+      "frame_index": 49,
+      "tags": [],
+      "terrain": null
+    },
+    "5": {
+      "collision": "none",
+      "frame_index": 5,
+      "tags": [],
+      "terrain": null
+    },
+    "50": {
+      "collision": "none",
+      "frame_index": 50,
+      "tags": [],
+      "terrain": null
+    },
+    "51": {
+      "collision": "none",
+      "frame_index": 51,
+      "tags": [],
+      "terrain": null
+    },
+    "52": {
+      "collision": "none",
+      "frame_index": 52,
+      "tags": [],
+      "terrain": null
+    },
+    "53": {
+      "collision": "none",
+      "frame_index": 53,
+      "tags": [],
+      "terrain": null
+    },
+    "54": {
+      "collision": "none",
+      "frame_index": 54,
+      "tags": [],
+      "terrain": null
+    },
+    "55": {
+      "collision": "none",
+      "frame_index": 55,
+      "tags": [],
+      "terrain": null
+    },
+    "56": {
+      "collision": "none",
+      "frame_index": 56,
+      "tags": [],
+      "terrain": null
+    },
+    "57": {
+      "collision": "none",
+      "frame_index": 57,
+      "tags": [],
+      "terrain": null
+    },
+    "58": {
+      "collision": "none",
+      "frame_index": 58,
+      "tags": [],
+      "terrain": null
+    },
+    "59": {
+      "collision": "none",
+      "frame_index": 59,
+      "tags": [],
+      "terrain": null
+    },
+    "6": {
+      "collision": "none",
+      "frame_index": 6,
+      "tags": [],
+      "terrain": null
+    },
+    "60": {
+      "collision": "none",
+      "frame_index": 60,
+      "tags": [],
+      "terrain": null
+    },
+    "61": {
+      "collision": "none",
+      "frame_index": 61,
+      "tags": [],
+      "terrain": null
+    },
+    "62": {
+      "collision": "none",
+      "frame_index": 62,
+      "tags": [],
+      "terrain": null
+    },
+    "63": {
+      "collision": "none",
+      "frame_index": 63,
+      "tags": [],
+      "terrain": null
+    },
+    "64": {
+      "collision": "none",
+      "frame_index": 64,
+      "tags": [],
+      "terrain": null
+    },
+    "65": {
+      "collision": "none",
+      "frame_index": 65,
+      "tags": [],
+      "terrain": null
+    },
+    "66": {
+      "collision": "none",
+      "frame_index": 66,
+      "tags": [],
+      "terrain": null
+    },
+    "67": {
+      "collision": "none",
+      "frame_index": 67,
+      "tags": [],
+      "terrain": null
+    },
+    "68": {
+      "collision": "none",
+      "frame_index": 68,
+      "tags": [],
+      "terrain": null
+    },
+    "69": {
+      "collision": "none",
+      "frame_index": 69,
+      "tags": [],
+      "terrain": null
+    },
+    "7": {
+      "collision": "none",
+      "frame_index": 7,
+      "tags": [],
+      "terrain": null
+    },
+    "70": {
+      "collision": "none",
+      "frame_index": 70,
+      "tags": [],
+      "terrain": null
+    },
+    "71": {
+      "collision": "none",
+      "frame_index": 71,
+      "tags": [],
+      "terrain": null
+    },
+    "72": {
+      "collision": "none",
+      "frame_index": 72,
+      "tags": [],
+      "terrain": null
+    },
+    "73": {
+      "collision": "none",
+      "frame_index": 73,
+      "tags": [],
+      "terrain": null
+    },
+    "74": {
+      "collision": "none",
+      "frame_index": 74,
+      "tags": [],
+      "terrain": null
+    },
+    "75": {
+      "collision": "none",
+      "frame_index": 75,
+      "tags": [],
+      "terrain": null
+    },
+    "76": {
+      "collision": "none",
+      "frame_index": 76,
+      "tags": [],
+      "terrain": null
+    },
+    "77": {
+      "collision": "none",
+      "frame_index": 77,
+      "tags": [],
+      "terrain": null
+    },
+    "78": {
+      "collision": "none",
+      "frame_index": 78,
+      "tags": [],
+      "terrain": null
+    },
+    "79": {
+      "collision": "none",
+      "frame_index": 79,
+      "tags": [],
+      "terrain": null
+    },
+    "8": {
+      "collision": "none",
+      "frame_index": 8,
+      "tags": [],
+      "terrain": null
+    },
+    "80": {
+      "collision": "none",
+      "frame_index": 80,
+      "tags": [],
+      "terrain": null
+    },
+    "81": {
+      "collision": "none",
+      "frame_index": 81,
+      "tags": [],
+      "terrain": null
+    },
+    "82": {
+      "collision": "none",
+      "frame_index": 82,
+      "tags": [],
+      "terrain": null
+    },
+    "83": {
+      "collision": "none",
+      "frame_index": 83,
+      "tags": [],
+      "terrain": null
+    },
+    "84": {
+      "collision": "none",
+      "frame_index": 84,
+      "tags": [],
+      "terrain": null
+    },
+    "85": {
+      "collision": "none",
+      "frame_index": 85,
+      "tags": [],
+      "terrain": null
+    },
+    "86": {
+      "collision": "none",
+      "frame_index": 86,
+      "tags": [],
+      "terrain": null
+    },
+    "87": {
+      "collision": "none",
+      "frame_index": 87,
+      "tags": [],
+      "terrain": null
+    },
+    "88": {
+      "collision": "none",
+      "frame_index": 88,
+      "tags": [],
+      "terrain": null
+    },
+    "89": {
+      "collision": "none",
+      "frame_index": 89,
+      "tags": [],
+      "terrain": null
+    },
+    "9": {
+      "collision": "none",
+      "frame_index": 9,
+      "tags": [],
+      "terrain": null
+    },
+    "90": {
+      "collision": "none",
+      "frame_index": 90,
+      "tags": [],
+      "terrain": null
+    },
+    "91": {
+      "collision": "none",
+      "frame_index": 91,
+      "tags": [],
+      "terrain": null
+    },
+    "92": {
+      "collision": "none",
+      "frame_index": 92,
+      "tags": [],
+      "terrain": null
+    },
+    "93": {
+      "collision": "none",
+      "frame_index": 93,
+      "tags": [],
+      "terrain": null
+    },
+    "94": {
+      "collision": "none",
+      "frame_index": 94,
+      "tags": [],
+      "terrain": null
+    },
+    "95": {
+      "collision": "solid",
+      "frame_index": 95,
+      "tags": [],
+      "terrain": null
+    }
+  }
+}

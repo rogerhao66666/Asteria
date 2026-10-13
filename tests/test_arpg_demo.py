@@ -722,3 +722,41 @@ def test_a_cooldown_goes_dark_and_a_wedge_turns_clockwise_to_bright_with_a_ready
     hud._flash["x"] = hud.FLASH_SECONDS
     hud.tick(hud.FLASH_SECONDS + 0.01)
     assert "x" not in hud._flash
+
+
+def test_the_locked_target_frame_shows_status_names_and_time(demo):
+    from asteria.runtime import hud_bottom
+    from asteria.runtime.action_combat import ActionCombatComponent
+    from asteria.runtime.combat import CombatantComponent
+
+    game = demo.game
+    game.set_classes("", ["warrior"])
+    field = _scene(game.project, "Greenvale")
+    game.transfer_player(field.id, 36 * 16, 28 * 16, facing="right")
+    _frames(demo, 3)
+    from asteria.core import world_position
+
+    px, py = world_position(game.player)
+    enemy = min(
+        (
+            e
+            for e, c in game.scene.query(CombatantComponent)
+            if e is not game.player and c.team != "player"
+        ),
+        key=lambda e: (world_position(e)[0] - px) ** 2 + (world_position(e)[1] - py) ** 2,
+    )
+    assert game.combat.apply_state(enemy, "burning")
+    assert game.combat.apply_state(enemy, "chilled")
+    game.player.get(ActionCombatComponent).lock_target_id = enemy.id
+    texts = []
+    original = demo.text
+
+    def spy(text, *a, **k):
+        texts.append(str(text))
+        return original(text, *a, **k)
+
+    demo.text = spy
+    _frames(demo, 2)
+    del demo.text
+    assert enemy.name in texts and "Burning" in texts and "Chilled" in texts
+    assert hud_bottom.draw_target_frame is not None

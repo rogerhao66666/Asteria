@@ -7,11 +7,11 @@
  "mean_fps": 60.0,
  "p95_frame_ms": 16.7,
  "abilities_used": {
-  "w_slash": 76,
-  "w_whirl": 2,
+  "w_slash": 77,
   "w_leap": 1,
   "roll": 1,
-  "potion": 1
+  "potion": 1,
+  "w_whirl": 1
  },
  "known": [
   "potion",
@@ -21,12 +21,12 @@
   "w_whirl"
  ],
  "player_life": [
-  149,
+  160,
   200.0
  ],
  "kills": 3,
  "level": 4,
- "gold": 51.0,
+ "gold": 48.0,
  "bag": 1,
  "scene": "Rustdeep Mine"
 }

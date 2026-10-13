@@ -381,6 +381,11 @@ class ActionHud:
     def draw_overlay(self, rt):
         game = rt.game
         self.bottom.draw(rt, game)  # orbs, action bar, statuses (runtime/hud_bottom.py)
+        target = game.scene.get_entity(self._lock_id(game)) if self._lock_id(game) else None
+        if target is not None:  # the locked-on enemy: name, life, statuses with names and time
+            from .hud_bottom import draw_target_frame
+
+            draw_target_frame(rt, game, target)
         text, left = self.banner
         if left > 0:
             rt.text(text, rt.width / 2, 70, size=40, color=(255, 220, 124), center=True)

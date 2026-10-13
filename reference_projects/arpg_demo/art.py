@@ -279,12 +279,63 @@ ICON_SOURCES = {  # equipment / item id -> ("tiny", col, row) | ("ninja", relati
     "m_meteor": ("ninja", "Items/Scroll/ScrollFire.png"),
     "m_blink": ("ninja", "Items/Scroll/ScrollThunder.png"),
     "roll": ("ninja", "Items/Action/Interact.png"),
-    "state_healing": ("ninja", "Items/Potion/Heart.png"),
-    "state_war_cry": ("ninja", "Items/Weapons/Katana/Sprite.png"),
-    "state_burning": ("ninja", "Items/Scroll/ScrollFire.png"),
-    "state_bleeding": ("ninja", "Items/Resource/GemRed.png"),
-    "state_chilled": ("ninja", "Items/Scroll/ScrollIce.png"),
+    "state_healing": ("draw", "healing"),  # status glyphs drawn here (no sheet has them)
+    "state_war_cry": ("draw", "war_cry"),
+    "state_burning": ("draw", "burning"),
+    "state_bleeding": ("draw", "bleeding"),
+    "state_chilled": ("draw", "chilled"),
 }
+
+
+def _outlined(shape):
+    """``shape`` (a 16x16 SRCALPHA surface) with a 1 px dark outline around its pixels."""
+    out = pygame.Surface((16, 16), pygame.SRCALPHA)
+    ring = pygame.Surface((16, 16), pygame.SRCALPHA)
+    for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+        ring.blit(shape, (dx, dy))
+    dark = pygame.mask.from_surface(ring).to_surface(
+        setcolor=(24, 16, 28, 255), unsetcolor=(0, 0, 0, 0)
+    )
+    out.blit(dark, (0, 0))
+    out.blit(shape, (0, 0))
+    return out
+
+
+def status_glyph(kind):
+    """A 16 px glyph for a status (drawn with shapes, no sheet needed)."""
+    g = pygame.Surface((16, 16), pygame.SRCALPHA)
+    draw = pygame.draw
+    if kind == "burning":  # a flame
+        draw.polygon(
+            g, (232, 74, 36), [(8, 1), (12, 7), (13, 11), (10, 14), (6, 14), (3, 11), (5, 6)]
+        )
+        draw.polygon(g, (255, 168, 52), [(8, 5), (11, 10), (10, 13), (6, 13), (5, 10)])
+        draw.polygon(g, (255, 236, 150), [(8, 9), (9, 12), (7, 12)])
+    elif kind == "chilled":  # a snowflake
+        color = (150, 220, 255)
+        for dx, dy in ((0, 6), (6, 0), (4, 4), (4, -4)):
+            draw.line(g, color, (8 - dx, 8 - dy), (8 + dx, 8 + dy), 2)
+        draw.circle(g, (230, 248, 255), (8, 8), 2)
+    elif kind == "bleeding":  # a drop
+        draw.polygon(
+            g, (200, 28, 44), [(8, 1), (12, 8), (12, 11), (10, 14), (6, 14), (4, 11), (4, 8)]
+        )
+        draw.polygon(g, (255, 110, 120), [(6, 9), (7, 9), (7, 12), (6, 11)])
+    elif kind == "healing":  # a green cross
+        draw.rect(g, (70, 205, 110), (6, 2, 4, 12))
+        draw.rect(g, (70, 205, 110), (2, 6, 12, 4))
+        draw.rect(g, (180, 255, 200), (7, 3, 2, 10))
+        draw.rect(g, (180, 255, 200), (3, 7, 10, 2))
+    elif kind == "war_cry":  # rising chevrons
+        for k, top in enumerate((2, 6, 10)):
+            draw.lines(
+                g,
+                (255, 170, 50) if k < 2 else (255, 220, 110),
+                False,
+                [(3, top + 4), (8, top), (13, top + 4)],
+                2,
+            )
+    return _outlined(g)
 
 
 def write_item_icons(root=HERE):
@@ -297,6 +348,8 @@ def write_item_icons(root=HERE):
     for item_id, source in ICON_SOURCES.items():
         if source[0] == "tiny":
             image = tiny.subsurface((source[1] * 16, source[2] * 16, 16, 16)).copy()
+        elif source[0] == "draw":
+            image = status_glyph(source[1])
         else:
             image = load(NINJA / source[1]).copy()
         pygame.image.save(image, str(folder / f"{item_id}.png"))

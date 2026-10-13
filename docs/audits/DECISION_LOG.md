@@ -1664,3 +1664,42 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 來源、判定結果印到終端機，方便對照裝置實際送了什麼。測試補了「有像素位移但沒有階段的滑鼠也縮放」。
 **限制：** 仍然沒有實體滑鼠驗證；Magic Mouse 因為有階段，會被當成觸控板（行為是平移）。
 
+### D25-1 — 寶可夢式寵物、目標框、狀態圖示、範本隨套件發布與導覽（使用者指示：下一步 1–8 一起做，5 不做）
+
+**使用者要求：** 滾輪實測、完整實機驗證、範本打包、範本導覽、敵人狀態名稱、專屬狀態圖示、寵物養成（類似寶可夢）；
+第三個範本先不做。
+
+**寵物（取代 D24-3 的「寵物道具」做法，道具機制 `requires_items` 保留）：**
+- `rpg/pets.py`：`PetSpeciesDefinition`（基礎數值、每級成長、最高等級、`exp_base` × 等級＝升級所需經驗、
+  `exp_per_battle`、圖示、標籤）和 `PetRecord`（持有的寵物：物種、暱稱、等級、經驗；`gain` 回傳升了幾級）。
+- 資料庫 `pet_species`（有才寫入）；存檔 RPG 狀態的 `pets`、`active_pet_id`（有才寫入，不改版本，舊存檔照常讀）。
+- `AbilityDefinition.requires_pet`（`any` 或物種 id）；沒有對應的寵物時 `ability_unavailable` 回「Needs <物種名>」。
+  施放前把出戰寵物的數值寫成使用者的 `pet_<stat>`、`pet_level`，公式直接讀；派出的寵物在戰鬥勝利後獲得經驗並升級。
+- `CaptureRule.pet_species_id`、`pet_level`：捕獲成功得到持有的寵物，不加入隊伍。
+- 遊戲 API：`pets()`、`active_pet()`、`add_pet()`、`rename_pet()`、`set_active_pet()`、`pet_stats()`。
+- 畫面：暫停選單 > **Pets**（`runtime/pets_screen.py`）：清單、等級、經驗條、數值、ACTIVE 標記；Enter 選出戰、
+  R 改名（打字、Enter 確認、Esc 取消）。截圖 `docs/audits/evidence/real_machine/d25_pets_screen.png`。
+- 編輯器：Game Systems > Pet Species；Capture Rules 有「Becomes Owned Pet」和「Pet Starts At Level」。
+- demo：Sera 起始有 Frosty（Frost Lynx Lv3）；`send_frost_lynx` 讀 `pet_power`（30 + 5 × 等級-1）；捕獲 Ember Hound
+  得到 Lv2 寵物並解鎖 `send_ember_hound`。
+
+**其他：**
+- **目標框**（`hud_bottom.draw_target_frame`）：鎖定時畫面上方顯示名稱、血條、最多 4 個狀態的名稱、疊層、剩餘秒數。
+- **專屬狀態圖示**：暗黑 demo 的 healing／war_cry／burning／bleeding／chilled 用程式畫（綠十字、橘色上箭頭、火焰、
+  血滴、雪花，1 px 深色外框）；`art.py` 的 `status_glyph`，不是 AI 生成。
+- **範本隨套件發布**：`scripts/sync_templates.py` 把兩個參考專案複製到 `src/asteria/templates/`（`pyproject`
+  的 package-data 包含），`--check` 或測試會在兩邊不一致時失敗；範本內含 `START_HERE.md`（來源
+  `docs/templates/`）列出每個規則在編輯器哪裡改，建立專案時顯示在 Console。
+- **測試穩定性**：找到並修正先前偶發失敗的測試 `test_every_secondary_job_skill_works_in_battle`（睡眠命中率 80%）。
+
+**限制：** 寵物不是戰鬥單位（沒有自己的血量與回合）；沒有進化與學技能；起始寵物要改 game start 資料（沒有表單）；
+八方旅人的寵物沒有圖示；第三個範本依使用者指示沒有做。
+
+**D25-1 驗證（真實 Cocoa 視窗）：**
+| 項目 | 結果 |
+| --- | --- |
+| 完整測試套件 | 2209 passed；ruff（含 E501）全過 |
+| `real_machine_validation.py` 全部檢查 | 64 PASS 第一輪；2 項 FAIL 已查明：`replay_BTL-03` 是因為我把一個測試改名而 replay 清單還指著舊名（已更新清單並加入新測試，重跑 PASS）；`vfx_moderngl_field` 54.6 fps 低於門檻，單獨重跑 55.1 fps PASS（接近門檻，其他程式同時在跑時會掉）。4 項需要真人或手把仍未執行 |
+| 暗黑 demo 三個職業 | 皆 60.0 fps；戰士 3 擊殺、遊俠 3、法師 7 |
+| 編輯器稽核 1600×1000／1280×800／1100×700（兩個專案） | 0 缺陷 |
+

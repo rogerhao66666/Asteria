@@ -3,7 +3,9 @@
 A template is a finished project folder (data, art, manifest). It is copied as it is, so every
 setting in it - the battle rules, the combat numbers, the HUD and menus, the maps - is there to
 edit instead of being built from nothing. The two templates are the reference projects that
-test the engine; nothing in the engine knows them.
+test the engine (synced into ``asteria/templates`` by ``scripts/sync_templates.py`` so they ship
+with the package); nothing in the engine knows them. Each carries a START_HERE.md that says where
+every rule lives in the editor.
 """
 
 from __future__ import annotations
@@ -12,7 +14,8 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[3]
+PACKAGE = Path(__file__).resolve().parents[1] / "templates"  # shipped with the package
+REPO = Path(__file__).resolve().parents[3]  # a source checkout: the reference projects
 SKIP = {"__pycache__", ".DS_Store", "build_project.py", "art.py", "maps.py"}
 
 
@@ -21,10 +24,13 @@ class ProjectTemplate:
     template_id: str
     title: str
     description: str
-    folder: str  # under reference_projects/
+    folder: str  # the reference project it is built from (under reference_projects/)
 
     @property
     def source(self):
+        packaged = PACKAGE / self.template_id  # same data, plus START_HERE.md
+        if (packaged / "project.asteria.json").is_file():
+            return packaged
         return REPO / "reference_projects" / self.folder
 
     def available(self):

@@ -63,3 +63,21 @@ def test_the_editor_opens_a_new_project_from_a_template(tmp_path):
         window.document.mark_saved()
         window.close()
         app.processEvents()
+
+
+def test_the_packaged_templates_match_the_reference_projects_and_carry_a_guide(tmp_path):
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location(
+        "sync_templates", Path(__file__).resolve().parents[1] / "scripts" / "sync_templates.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.stale() == []  # run scripts/sync_templates.py after rebuilding a demo
+    path = create_from_template("action_rpg", "Guided", tmp_path / "guided")
+    guide = path.parent / "START_HERE.md"
+    assert guide.is_file() and "Where each rule lives" in guide.read_text()
+    from asteria.editor.project_templates import PACKAGE
+
+    assert (PACKAGE / "party_rpg" / "START_HERE.md").is_file()

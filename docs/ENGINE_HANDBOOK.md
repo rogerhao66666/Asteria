@@ -1,6 +1,6 @@
 # Asteria 引擎手冊（功能、範本、demo、規則、下一步）
 
-**更新：** 2026-10-13（D24）。這份是「目前到底有什麼」的單一入口；細節和決策理由在
+**更新：** 2026-10-13（D25）。這份是「目前到底有什麼」的單一入口；細節和決策理由在
 [`docs/audits/DECISION_LOG.md`](audits/DECISION_LOG.md)（D1 ～ D24），規格在
 [`ASTERIA_SPEC.md`](../ASTERIA_SPEC.md)。舊的 `README.md`、`START_HERE_MAC.md`、各 BATCH 文件是歷史紀錄，
 不代表現狀。
@@ -88,13 +88,17 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
   回合制擴充：`cooldown_turns`、`battle_costs`（加速點）、`hits`（多段，每段自帶武器／屬性標籤和倍率）、
   `battle_resource_gains`、`commands`（世界指令，例如召喚）、`concoct_station`（調合）、`apply_states`；
   即時：`timeline_id`、`cooldown_seconds`、`move_while_acting`、`interrupts_actions`；顯示：`display_name`、
-  `icon_id`；**`requires_items`**（需要持有的道具，不消耗；例如寵物）。
+  `icon_id`；**`requires_items`**（需要持有的道具，不消耗）、**`requires_pet`**（需要持有並派出寵物，
+  公式讀 `pet_<stat>`、`pet_level`）。
 - 動作時間軸（cue：動畫、位移、判定框、無敵、取消窗口、連段、VFX、音效、鏡頭、`apply_state`）。
 
 ### 3.3 RPG 系統（`rpg`）
 
 職業與副職、技能樹（等級上限、花費、前置、互斥）、裝備（欄位、鑲嵌、套裝、成長、隨機詞綴、可自訂稀有度）、
-掉落表、任務、商店、聲望、成就、**捕獲**（`CaptureRule`：加入隊伍和／或變成寵物道具）、**調合**（配方＋站點）、
+掉落表、任務、商店、聲望、成就、**寵物**（`rpg/pets.py`：物種＝基礎數值與每級成長、經驗曲線；持有的寵物＝
+物種、暱稱、等級、經驗，存在存檔；派出參戰後贏得戰鬥會得到經驗並升級；暫停選單的 Pets 畫面可選擇出戰
+寵物與改名）、**捕獲**（`CaptureRule`：加入隊伍、變成寵物道具，或成為持有的寵物並指定起始等級）、**調合**
+（配方＋站點）、
 回合制戰鬥核心（排程、弱點與護盾與破防、加速點、狀態政策、反射與吸收、多階段 Boss、召喚）。
 
 ### 3.4 即時戰鬥（`runtime/action_*`）
@@ -113,7 +117,8 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
   （鍵帽從專案輸入表讀、技能圖示、**冷卻時鐘：變暗後亮扇形順時針轉一圈，轉滿閃一下**、魔力不足變暗、
   道具數量方塊徽章在右下、資源消耗在左下用資源色小圓珠加數字）、狀態列（圖示或縮寫、增益綠框／減益紅框、
   剩餘時間遮罩與秒數、疊層徽章）、經驗條、淡出的操作提示。
-- 敵人頭上：血條（受傷或被鎖定才顯示）上方一排狀態小方格。
+- 敵人頭上：血條（受傷或被鎖定才顯示）上方一排狀態小方格；鎖定（L）時畫面上方有目標框：名稱、血條、
+  每個狀態的名稱與剩餘秒數。
 - 背包畫面（格子、裝備比較提示、套裝加成）、技能樹畫面。
 
 ### 3.6 編輯器（`asteria-editor`）
@@ -122,7 +127,9 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
 - **File > New from Template…（Ctrl+N）**：Party RPG（八方旅人式）、Action RPG（暗黑式）兩個範本，
-  複製整個專案資料夾（含美術與授權文件）後改名開啟。
+  複製整個專案資料夾（含美術與授權文件）後改名開啟，Console 會顯示專案裡的 `START_HERE.md`（每個規則
+  在編輯器哪裡改）。範本隨套件發布（`src/asteria/templates/`）；改了 demo 之後執行
+  `scripts/sync_templates.py`，測試會檢查兩邊一致。
 - Real-Time Combat 工作區（攻擊、投射物、稀有度、詞綴，即時預覽與判定框疊圖）；Enemy AI；技能與狀態
   可編輯 `display_name`、`icon_id`（圖示挑選）；Capture Rules 可設 `Joins As Actor`、`Becomes Pet Item`。
 - 窄視窗：最小視窗 1000×640；預覽在窄頁自動收起；表格欄寬與下拉選單依內容。
@@ -149,7 +156,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | 多武器 | 裝備的每把武器各給一個普通攻擊（拿下劍就沒有 Attack (Sword)）；Twin Fang 要同時裝備劍和矛 |
 | 多段技能 | `hits`：每段各自帶武器或屬性；Brand of Valor（劍矛劍矛雷）、Arrowstorm（五箭＋冰）、Grand Inferno（一發火球打三下）、Elemental Barrage（火冰雷）、Thousand Spears（四下矛）、Amputation（兩下斧） |
 | 主副職業 | 每人兩個職業，副職技能戰鬥中可用 |
-| **寵物（道具，不是單位）** | `send_frost_lynx`／`send_ember_hound` 的 `requires_items` 需要背包裡有寵物道具，否則灰掉並顯示「Needs Frost Lynx」；捕獲 Ember Hound 得到 `pet_ember_hound`；寵物不消耗、不佔隊伍 |
+| **寵物（寶可夢式，不是單位）** | Sera 一開始有 Frosty（Frost Lynx，Lv3）；`send_frost_lynx` 的 `requires_pet` 需要對應的寵物，傷害讀 `pet_power`（等級越高越痛），沒有就灰掉並顯示「Needs Frost Lynx」；參戰後贏得戰鬥得經驗升級；捕獲 Ember Hound 得到持有的 Lv2 寵物並解鎖 `send_ember_hound`；暫停選單 Pets 畫面可選出戰寵物與改名 |
 | 調合 | Bram 的 Concoct：從背包選底材和觸媒，四種配方（Fire Bomb／Frost Bomb 打全體、Healing Salve 補一人、Storm Flask 打一人並降防禦），產物立即生效 |
 | 給予加速點 | Garrick 的 Donate BP |
 | 狀態 | 毒（每回合更痛）、睡眠（跳過回合）、沉默（封魔法）、攻擊提升、防禦下降；Cleanse 解除 |
@@ -179,7 +186,9 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | --- | --- |
 | `StateDefinition.display_name`、`icon_id` | `gameplay/states.py` |
 | `AbilityDefinition.display_name`、`icon_id`、`requires_items` | `gameplay/abilities.py` |
-| `CaptureRule.actor_id` 可為空，新增 `pet_item_id`（至少要有其中一個） | `rpg/capture.py` |
+| `CaptureRule.actor_id` 可為空，新增 `pet_item_id`、`pet_species_id`、`pet_level`（至少要有 actor、寵物道具或寵物物種其中一個） | `rpg/capture.py` |
+| `AbilityDefinition.requires_pet` | `gameplay/abilities.py` |
+| 資料庫新增 `pet_species`；存檔的 RPG 狀態新增選填的 `pets`、`active_pet_id`（沒有寵物就不寫入，不改版本） | `rpg/pets.py`、`rpg/actors.py`、`rpg/save_state.py` |
 | `ActionCombat` 綁定替代、`item:<id>` 消耗；`CombatantComponent.defeat_switch`；`ClassAppearance`；`ParallaxBackground2D` | `runtime/` |
 
 另有一個修正：**道具的 `battle_ability` 現在也會套用狀態、資源增益和世界指令**（原本被忽略，Storm Flask 的
@@ -206,22 +215,21 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
 | 項目 | 狀態 |
 | --- | --- |
-| 範本來源是 `reference_projects/` | 打包安裝版沒帶這個資料夾時，New from Template 會顯示「沒有安裝範本」 |
-| 圖示 | demo 的技能和狀態圖示取自 CC0 資源包的相近圖，不是專屬設計；沒有 AI 美術 |
+| 圖示 | 暗黑 demo 的五個狀態圖示是程式畫的（`art.py` 的 `status_glyph`），技能圖示取自 CC0 資源包的相近圖；八方旅人的寵物沒有圖示（用縮寫）；沒有 AI 美術 |
 | 原生 kernel 要每台機器編譯一次 | `python -m asteria.kernels.build_native`；沒編譯會退回 numpy |
 | `CollisionWorld.from_scene` 沒有快取 | 要做場景層級的失效機制；目前不是瓶頸 |
 | Enemy AI 的七欄規則表 | 窗口很窄時可橫向捲動（表格的正常行為） |
 | 手把與實體鍵盤、音訊聽感與延遲 | 需要真人；沒有自動化 |
 | 手感與平衡 | 數值是 demo 用的，需要有人實際玩過調整 |
-| 寵物只是「需要道具的技能」 | 沒有寵物自己的血量、成長或回合；若要這些，應該另外設計（目前刻意不做成單位） |
+| 寵物不是戰鬥單位 | 沒有自己的血量與回合，只提供數值給技能；寵物沒有進化、技能學習、親密度 |
+| 寵物的存檔與選單 | Pets 畫面只在專案有寵物物種時出現在暫停選單；起始寵物要改專案的 game start 資料（目前沒有表單） |
 
 ### 下一步的候選（沒有排序，要使用者決定）
 
-1. 敵人狀態的名稱提示（目前只有圖示格）。
-2. 專屬設計的技能／狀態圖示。
-3. 寵物養成（成長、命名）如果真的需要。
-4. 把範本資料夾打包進安裝版。
-5. 更多範本（橫向平台動作、彈幕射擊等），證明系統的通用性。
+1. 第三個範本（橫向平台動作、彈幕射擊），證明系統的通用性。
+2. 專屬設計的技能圖示（不用 AI 生成）和八方旅人的寵物圖示。
+3. 寵物進化、學技能、親密度（如果要更像寶可夢）。
+4. Game start 資料（起始隊伍、背包、寵物）的編輯表單。
 
 ---
 

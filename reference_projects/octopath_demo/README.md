@@ -32,10 +32,13 @@ Rebuild it after changing the script: `python reference_projects/octopath_demo/b
 - **Twin Fang** (Garrick) needs a sword *and* a spear equipped.
 - **Several hits, several damage types**: *Brand of Valor* (sword, spear, sword, spear, lightning),
   *Elemental Barrage* (fire, ice, lightning), *Thousand Spears* (4 spear hits), *Amputation* (2 axe hits).
-- **Pets are bag items, not units**: Sera's *Send Frost Lynx* (three ice hits) can be used only while
-  a `pet_frost_lynx` is in the bag (`requires_items`); without it the row is greyed out with
-  "Needs Frost Lynx". Capturing the Ember Hound in the boss fight gives `pet_ember_hound` and
-  unlocks *Send Ember Hound* (two fire hits). The pet is never spent.
+- **Pets (Pokemon-style, not units)**: Sera starts with a Frost Lynx called "Frosty" (level 3). A pet has
+  a species (stats and growth per level), a level, experience and a nickname. *Send Frost Lynx* (three
+  ice hits) needs the matching pet (`requires_pet`) and hits for the pet's `pet_power`, so a higher
+  level hits harder; without a pet the row is greyed out ("Needs Frost Lynx"). A pet sent out in a
+  won battle gains experience and levels up. Capturing the Ember Hound in the boss fight gives an
+  owned Ember Hound (level 2) and unlocks *Send Ember Hound*. Pause menu > **Pets**: choose the
+  active pet (Enter), rename it (R).
 - **Weapons**: each equipped weapon gives its own attack (take the sword off and *Attack (Sword)*
   is gone); skills strike with several weapons or several elements in one action - *Brand of
   Valor* (sword, spear, sword, spear, lightning), *Arrowstorm* (five arrows and an ice finisher),

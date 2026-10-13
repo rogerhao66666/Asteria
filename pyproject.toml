@@ -15,6 +15,9 @@ mv=["Pillow>=10"]
 fast=["numpy>=2"]
 dev=["pytest>=9", "ruff>=0.16", "numpy>=2"]
 
+[tool.setuptools.package-data]
+asteria=["templates/**/*"]
+
 [tool.ruff]
 target-version="py312"
 line-length=99  # every line < 100 characters (project rule, see .claude/skills/line-length)

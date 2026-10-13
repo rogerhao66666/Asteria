@@ -2132,6 +2132,9 @@ class AsteriaEditorWindow(QMainWindow):
         self._load_playtest_profiles()
         self.refresh_all()
         QTimer.singleShot(0, self.viewport.frame_game_camera)
+        guide = Path(path).parent / "START_HERE.md"
+        if guide.is_file():  # where every rule lives in this project
+            self.console.setText(f"New project from a template.\n\n{guide.read_text()}")
         return path
 
     def new_from_template_dialog(self):
