@@ -744,7 +744,23 @@ class BattleUiComposer:
                 None if self._focus is None else self._anchor_screen(self._camera, self._focus)
             )
             found = None
+            if lefts and actor_at is not None:
+                # fixed spot: right beside the acting member, narrower rather than moved
+                top_y = L.timeline_y + 28.0
+                low_y = L.virtual_height - 3.0 - height
+                mid_y = min(low_y, max(top_y, actor_at[1] - height / 2 - 14.0))
+                for w in dict.fromkeys((width, 120.0, 104.0, 92.0, 84.0)):
+                    w = min(w, width)
+                    cx = min(lefts) - 4.0 - w
+                    for cy in dict.fromkeys((mid_y, low_y, top_y)):
+                        if cx >= L.margin and clear(cx, cy, w):
+                            found = (cx, cy, w)
+                            break
+                    if found:
+                        break
             for w in dict.fromkeys((width, min(width, 120.0), min(width, 104.0))):
+                if found:
+                    break
                 xs = []
                 ys = [y, L.timeline_y + 28.0]
                 if lefts and actor_at is not None:
