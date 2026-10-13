@@ -1841,6 +1841,12 @@ class GameSessionRuntime:
             have = battle.battle_resources.current(actor_id, resource_id)
             if have < amount:
                 return f"Needs {amount:g} {resource_id.replace('_', ' ')} (has {have:g})"
+        items = self.save.rpg_state.inventory
+        for item_id, count in (getattr(definition, "requires_items", None) or {}).items():
+            if items.count(item_id) < count:
+                record = self.project.rpg_database.items.get(item_id)
+                name = record.display_name if record is not None else item_id
+                return f"Needs {name}" + (f" x{count}" if count > 1 else "")
         resources = member.subject.resources
         for cost in definition.costs:
             terms = cost.amount.terms
@@ -1938,6 +1944,9 @@ class GameSessionRuntime:
                 results = self._repeat_action(actor_id, item.battle_ability, targets, offensive, 1)
             finally:
                 battle.granted_abilities = set()
+            if any(getattr(r, "success", True) for r in results):  # its states, gains, commands
+                definition = battle.ability_runtime.registry.get(item.battle_ability)
+                self._after_ability(actor_id, definition, targets)
             self._log("item_used", member_id=str(actor_id), data={"item": item.item_id})
             return results
         targets = tuple(target_ids) if target_ids else (actor_id,)
@@ -2554,9 +2563,12 @@ class GameSessionRuntime:
         self.battle.remove_combatant(target_id, state_id="captured", reason="captured")
         self._captured.add(target_id)
         self.world.note_enemy(enemy_id, "captured")
-        if rule.actor_id not in state.party_actor_ids:
+        if rule.pet_item_id:  # a pet: kept in the bag, sent out by an ability that needs it
+            state.inventory.add(rule.pet_item_id, 1)
+        if rule.actor_id and rule.actor_id not in state.party_actor_ids:
             state.party_actor_ids = state.party_actor_ids + (rule.actor_id,)
-        self.ensure_actor_progression(rule.actor_id)
+        if rule.actor_id:
+            self.ensure_actor_progression(rule.actor_id)
         self.refresh_achievements()
         return True
 

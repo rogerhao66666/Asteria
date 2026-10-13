@@ -1306,9 +1306,13 @@ class RpgDatabase:
         for rule in self.capture_rules.values():
             if rule.enemy_id not in self.enemies:
                 errors.append(f"capture rule references unknown enemy {rule.enemy_id}")
-            if rule.actor_id not in self.actors:
+            if rule.actor_id and rule.actor_id not in self.actors:
                 errors.append(
                     f"capture rule {rule.enemy_id} references unknown actor {rule.actor_id}"
+                )
+            if rule.pet_item_id and rule.pet_item_id not in self.items:
+                errors.append(
+                    f"capture rule {rule.enemy_id} references unknown pet item {rule.pet_item_id}"
                 )
             if rule.item_id and rule.item_id not in self.items:
                 errors.append(

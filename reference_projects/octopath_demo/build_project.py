@@ -403,17 +403,26 @@ def main():
                 "enemy",
             ),
             add(
-                ability(
-                    "call_frost_lynx",
-                    sp=10,
-                    commands=[
-                        {
-                            "command": "SUMMON",
-                            "args": {"actor_id": "hero_07", "owner_id": "@actor"},
-                        }
-                    ],
+                ability(  # the pet is a bag item, not a unit: no pet, no attack
+                    "send_frost_lynx",
+                    tags=("pet", "damage.ice"),
+                    effect=op(damage("power", 16)),
+                    sp=6,
+                    requires_items={"pet_frost_lynx": 1},
+                    hits=[{"tags": ["damage.ice"]}] * 3,
                 ),
-                "self",
+                "enemy",
+            ),
+            add(
+                ability(
+                    "send_ember_hound",
+                    tags=("pet", "damage.fire"),
+                    effect=op(damage("power", 20)),
+                    sp=8,
+                    requires_items={"pet_ember_hound": 1},
+                    hits=[{"tags": ["damage.fire"]}] * 2,
+                ),
+                "enemy",
             ),
             add(
                 ability(
@@ -554,6 +563,16 @@ def main():
             ),
             add(
                 ability(
+                    "grand_inferno",
+                    tags=("magic", "damage.fire", "boost.power"),
+                    effect=op(damage("magic", 14)),
+                    sp=20,
+                    hits=[{"tags": ["damage.fire"]}] * 3,
+                ),
+                "enemy",
+            ),
+            add(
+                ability(
                     "elemental_storm",
                     tags=("magic", "divine"),
                     effect=op(damage("magic", 15)),
@@ -581,16 +600,6 @@ def main():
             ),
             add(
                 ability("sleepy_waltz", tags=("magic",), sp=9, apply_states=[{"state": "sleep"}]),
-                "enemy",
-            ),
-        ],
-        "beast": [
-            add(
-                ability(
-                    "lynx_pounce",
-                    tags=("weapon.dagger", "damage.ice"),
-                    effect=op(damage("power", 20)),
-                ),
                 "enemy",
             ),
         ],
@@ -645,13 +654,20 @@ def main():
             outputs=(CompositionOutput(recipe_id),),
         )
 
-    # -- the travellers (main / secondary job, two weapon kinds) and the pet ----------------------
+    # -- pets are bag items; capturing the hound gives one (sent out by an ability that needs it) -
+    from asteria.rpg.capture import CaptureRule
+
+    db.items["pet_frost_lynx"] = ItemDefinition("pet_frost_lynx", "Frost Lynx", tags=("pet",))
+    db.items["pet_ember_hound"] = ItemDefinition("pet_ember_hound", "Ember Hound", tags=("pet",))
+    db.capture_rules.clear()
+    db.add_capture_rule(CaptureRule("ember_hound", pet_item_id="pet_ember_hound", base_chance=0.6))
+
+    # -- the travellers (main / secondary job, two weapon kinds) ----------------------------
     travellers = {
         "hero_01": ("Garrick", "warrior", "merchant", ("sword", "spear")),
         "hero_02": ("Sera", "hunter", "thief", ("bow", "dagger")),
         "hero_03": ("Bram", "apothecary", "cleric", ("axe", "staff")),
         "hero_04": ("Ione", "scholar", "dancer", ("staff", "dagger")),
-        "hero_07": ("Frost Lynx", "beast", "beast", ()),
     }
     for actor_id, (name, main_job, sub_job, _weapons) in travellers.items():
         actor = db.actors[actor_id]
@@ -687,7 +703,7 @@ def main():
     actives = ("hero_01", "hero_02", "hero_03", "hero_04")
     db.party_setups["main_party"] = dataclasses.replace(
         party,
-        roster_actor_ids=(*actives, "hero_07"),
+        roster_actor_ids=actives,
         active_actor_ids=actives,
         placements=tuple(p for p in party.placements if p.actor_id in actives),
     )
@@ -892,7 +908,7 @@ def main():
     data = project.game_start.to_data()
     rpg = data["rpg_state"]
     rpg["party_active_actor_ids"] = list(actives)
-    rpg["party_actor_ids"] = [*actives, "hero_07"]
+    rpg["party_actor_ids"] = list(actives)
     placements = rpg.get("party_placements", {})
     rpg["party_placements"] = (
         {k: v for k, v in placements.items() if k in actives}
@@ -935,6 +951,7 @@ def main():
         "fire_dust": 4,
         "ice_crystal": 4,
         "ether_leaf": 3,
+        "pet_frost_lynx": 1,  # Sera's tamed pet; the hound has to be captured
     }
     project.game_start = GameStartDefinition.from_data(data)
     path = HERE / "project.asteria.json"

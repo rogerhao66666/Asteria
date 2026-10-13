@@ -6041,77 +6041,6 @@
           "recovery_at": null,
           "sequence_id": "brand_of_valor"
         },
-        "call_frost_lynx": {
-          "beats": [
-            {
-              "at": 0.0,
-              "beat_id": "swing",
-              "channel": "animation",
-              "cue": "attack",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@source",
-              "payload": [],
-              "target_id": null
-            },
-            {
-              "at": 0.12,
-              "beat_id": "fx",
-              "channel": "vfx",
-              "cue": "battle.fx.slash",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@target",
-              "payload": [],
-              "target_id": null
-            },
-            {
-              "at": 0.24,
-              "beat_id": "impact",
-              "channel": "animation",
-              "cue": "hit",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@target",
-              "payload": [],
-              "target_id": null
-            },
-            {
-              "at": 0.24,
-              "beat_id": "shake",
-              "channel": "camera",
-              "cue": "shake",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@target",
-              "payload": [
-                [
-                  "amplitude",
-                  4
-                ],
-                [
-                  "duration",
-                  0.18
-                ]
-              ],
-              "target_id": null
-            },
-            {
-              "at": 0.24,
-              "beat_id": "sound",
-              "channel": "audio",
-              "cue": "hit",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@target",
-              "payload": [],
-              "target_id": null
-            }
-          ],
-          "duration": 0.7,
-          "recovery_at": null,
-          "sequence_id": "call_frost_lynx"
-        },
         "cleanse": {
           "beats": [
             {
@@ -7135,6 +7064,97 @@
           "recovery_at": null,
           "sequence_id": "gel_slam"
         },
+        "grand_inferno": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.2,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.flame",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "flash",
+              "channel": "screen_fx",
+              "cue": "flash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "alpha",
+                  40
+                ],
+                [
+                  "duration",
+                  0.08
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  5
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.9,
+          "recovery_at": null,
+          "sequence_id": "grand_inferno"
+        },
         "grave_chill": {
           "beats": [
             {
@@ -7914,77 +7934,6 @@
           "recovery_at": null,
           "sequence_id": "lightning_bolt"
         },
-        "lynx_pounce": {
-          "beats": [
-            {
-              "at": 0.0,
-              "beat_id": "swing",
-              "channel": "animation",
-              "cue": "attack",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@source",
-              "payload": [],
-              "target_id": null
-            },
-            {
-              "at": 0.12,
-              "beat_id": "fx",
-              "channel": "vfx",
-              "cue": "battle.fx.slash",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@target",
-              "payload": [],
-              "target_id": null
-            },
-            {
-              "at": 0.24,
-              "beat_id": "impact",
-              "channel": "animation",
-              "cue": "hit",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@target",
-              "payload": [],
-              "target_id": null
-            },
-            {
-              "at": 0.24,
-              "beat_id": "shake",
-              "channel": "camera",
-              "cue": "shake",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@target",
-              "payload": [
-                [
-                  "amplitude",
-                  4
-                ],
-                [
-                  "duration",
-                  0.18
-                ]
-              ],
-              "target_id": null
-            },
-            {
-              "at": 0.24,
-              "beat_id": "sound",
-              "channel": "audio",
-              "cue": "hit",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@target",
-              "payload": [],
-              "target_id": null
-            }
-          ],
-          "duration": 0.7,
-          "recovery_at": null,
-          "sequence_id": "lynx_pounce"
-        },
         "meteor": {
           "beats": [
             {
@@ -8237,6 +8186,148 @@
           "duration": 0.8,
           "recovery_at": null,
           "sequence_id": "salve_heal"
+        },
+        "send_ember_hound": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "send_ember_hound"
+        },
+        "send_frost_lynx": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "send_frost_lynx"
         },
         "shield_bash": {
           "beats": [
@@ -9842,7 +9933,8 @@
           "ether_leaf": 3,
           "fire_dust": 4,
           "healing_herb": 6,
-          "ice_crystal": 4
+          "ice_crystal": 4,
+          "pet_frost_lynx": 1
         },
         "schema": "asteria.rpg.inventory",
         "version": 1
@@ -10007,8 +10099,7 @@
         "hero_01",
         "hero_02",
         "hero_03",
-        "hero_04",
-        "hero_07"
+        "hero_04"
       ],
       "party_placements": {
         "hero_01": "slot_1",
@@ -11220,55 +11311,6 @@
         "version": 1
       },
       {
-        "ability_id": "call_frost_lynx",
-        "commands": [
-          {
-            "args": {
-              "actor_id": "hero_07",
-              "owner_id": "@actor"
-            },
-            "command": "SUMMON"
-          }
-        ],
-        "conditions": {
-          "conditions": [],
-          "mode": "all",
-          "type": "group"
-        },
-        "costs": [
-          {
-            "amount": {
-              "maximum": null,
-              "minimum": null,
-              "multipliers": [],
-              "schema": "asteria.value_formula",
-              "terms": [
-                {
-                  "coefficient": 10.0,
-                  "key": "",
-                  "source": "constant"
-                }
-              ],
-              "version": 1
-            },
-            "resource": "technique"
-          }
-        ],
-        "effects": [],
-        "schema": "asteria.ability_definition",
-        "tags": [
-          "ability"
-        ],
-        "targeting": {
-          "allow_self": false,
-          "blocked_tags": [],
-          "maximum_targets": 1,
-          "minimum_targets": 1,
-          "required_tags": []
-        },
-        "version": 1
-      },
-      {
         "ability_id": "cleanse",
         "apply_states": [
           {
@@ -12064,6 +12106,105 @@
         "version": 1
       },
       {
+        "ability_id": "grand_inferno",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 20.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "grand_inferno.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -14.0,
+                        "key": "magic",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "power": 1.0,
+            "tags": [
+              "damage.fire"
+            ]
+          },
+          {
+            "power": 1.0,
+            "tags": [
+              "damage.fire"
+            ]
+          },
+          {
+            "power": 1.0,
+            "tags": [
+              "damage.fire"
+            ]
+          }
+        ],
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "boost.power",
+          "damage.fire",
+          "magic"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "grave_chill",
         "apply_states": [
           {
@@ -12757,66 +12898,6 @@
         "version": 1
       },
       {
-        "ability_id": "lynx_pounce",
-        "conditions": {
-          "conditions": [],
-          "mode": "all",
-          "type": "group"
-        },
-        "costs": [],
-        "effects": [
-          {
-            "effect": {
-              "blocked_tags": [],
-              "effect_id": "lynx_pounce.effect",
-              "operations": [
-                {
-                  "kind": "resource_delta",
-                  "target": "vitality",
-                  "value": {
-                    "maximum": -1.0,
-                    "minimum": null,
-                    "multipliers": [],
-                    "schema": "asteria.value_formula",
-                    "terms": [
-                      {
-                        "coefficient": -20.0,
-                        "key": "power",
-                        "source": "source_stat"
-                      },
-                      {
-                        "coefficient": 6.0,
-                        "key": "defense",
-                        "source": "target_stat"
-                      }
-                    ],
-                    "version": 1
-                  }
-                }
-              ],
-              "required_tags": [],
-              "schema": "asteria.effect",
-              "version": 1
-            },
-            "mode": "selected"
-          }
-        ],
-        "schema": "asteria.ability_definition",
-        "tags": [
-          "ability",
-          "damage.ice",
-          "weapon.dagger"
-        ],
-        "targeting": {
-          "allow_self": false,
-          "blocked_tags": [],
-          "maximum_targets": 1,
-          "minimum_targets": 1,
-          "required_tags": []
-        },
-        "version": 1
-      },
-      {
         "ability_id": "meteor",
         "apply_states": [
           {
@@ -13052,6 +13133,202 @@
         ],
         "targeting": {
           "allow_self": true,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "send_ember_hound",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 8.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "send_ember_hound.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -20.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "power": 1.0,
+            "tags": [
+              "damage.fire"
+            ]
+          },
+          {
+            "power": 1.0,
+            "tags": [
+              "damage.fire"
+            ]
+          }
+        ],
+        "requires_items": {
+          "pet_ember_hound": 1
+        },
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "damage.fire",
+          "pet"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "send_frost_lynx",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 6.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "send_frost_lynx.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -16.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "power": 1.0,
+            "tags": [
+              "damage.ice"
+            ]
+          },
+          {
+            "power": 1.0,
+            "tags": [
+              "damage.ice"
+            ]
+          },
+          {
+            "power": 1.0,
+            "tags": [
+              "damage.ice"
+            ]
+          }
+        ],
+        "requires_items": {
+          "pet_frost_lynx": 1
+        },
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "damage.ice",
+          "pet"
+        ],
+        "targeting": {
+          "allow_self": false,
           "blocked_tags": [],
           "maximum_targets": 1,
           "minimum_targets": 1,
@@ -13997,7 +14274,9 @@
         "version": 1
       }
     ],
+    "attacks": [],
     "formulas": {},
+    "projectiles": [],
     "schema": "asteria.gameplay_library",
     "states": [
       {
@@ -14144,7 +14423,7 @@
     ],
     "timelines": [],
     "triggers": [],
-    "version": 1
+    "version": 3
   },
   "id": "b8dcf8ef-98b6-441a-b1e7-5f7533801cca",
   "input_map": {
@@ -14851,66 +15130,9 @@
           "roster.04"
         ],
         "version": 2
-      },
-      {
-        "abilities": [],
-        "actor_id": "hero_07",
-        "base_resources": {
-          "focus": {
-            "current": 3.0,
-            "maximum": 3.0,
-            "minimum": 0.0
-          },
-          "technique": {
-            "current": 164.0,
-            "maximum": 164.0,
-            "minimum": 0.0
-          },
-          "vitality": {
-            "current": 1980.0,
-            "maximum": 1980.0,
-            "minimum": 0.0
-          }
-        },
-        "base_stats": {
-          "defense": 46.0,
-          "magic": 40.0,
-          "power": 58.0,
-          "speed": 30.0
-        },
-        "class_assignments": [
-          {
-            "assignment_id": "hero_07.main",
-            "class_id": "beast",
-            "enabled": true,
-            "priority": 10,
-            "progression_track_ids": [],
-            "role": "main",
-            "schema": "asteria.rpg.class_assignment",
-            "tags": [],
-            "version": 1
-          },
-          {
-            "assignment_id": "hero_07.sub",
-            "class_id": "beast",
-            "enabled": true,
-            "priority": 5,
-            "progression_track_ids": [],
-            "role": "secondary",
-            "schema": "asteria.rpg.class_assignment",
-            "tags": [],
-            "version": 1
-          }
-        ],
-        "display_name": "Frost Lynx",
-        "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.07"
-        ],
-        "version": 2
       }
     ],
+    "affixes": [],
     "attachments": [],
     "battle_objectives": [
       {
@@ -15431,23 +15653,6 @@
         "version": 1
       },
       {
-        "ability_id": "call_frost_lynx",
-        "active_only": true,
-        "adjacent_to_actor": false,
-        "blocked_slot_tags": [],
-        "blocked_subject_tags": [],
-        "maximum_targets": 1,
-        "metric_conditions": [],
-        "minimum_targets": 1,
-        "relation": "self",
-        "required_slot_tags": [],
-        "required_subject_tags": [],
-        "schema": "asteria.rpg.battle_targeting_definition",
-        "selection_count": null,
-        "selection_mode": "manual",
-        "version": 1
-      },
-      {
         "ability_id": "cleanse",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -15652,6 +15857,23 @@
         "version": 1
       },
       {
+        "ability_id": "grand_inferno",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "grave_chill",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -15822,23 +16044,6 @@
         "version": 1
       },
       {
-        "ability_id": "lynx_pounce",
-        "active_only": true,
-        "adjacent_to_actor": false,
-        "blocked_slot_tags": [],
-        "blocked_subject_tags": [],
-        "maximum_targets": 1,
-        "metric_conditions": [],
-        "minimum_targets": 1,
-        "relation": "opponent",
-        "required_slot_tags": [],
-        "required_subject_tags": [],
-        "schema": "asteria.rpg.battle_targeting_definition",
-        "selection_count": null,
-        "selection_mode": "manual",
-        "version": 1
-      },
-      {
         "ability_id": "meteor",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -15899,6 +16104,40 @@
         "metric_conditions": [],
         "minimum_targets": 1,
         "relation": "ally",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "send_ember_hound",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "send_frost_lynx",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
         "required_slot_tags": [],
         "required_subject_tags": [],
         "schema": "asteria.rpg.battle_targeting_definition",
@@ -16163,7 +16402,18 @@
       }
     ],
     "behavior_trees": [],
-    "capture_rules": [],
+    "capture_rules": [
+      {
+        "actor_id": "",
+        "base_chance": 0.6,
+        "enemy_id": "ember_hound",
+        "item_id": "",
+        "low_health_bonus": 0.5,
+        "pet_item_id": "pet_ember_hound",
+        "schema": "asteria.rpg.capture_rule",
+        "version": 1
+      }
+    ],
     "classes": [
       {
         "class_id": "apothecary",
@@ -16176,27 +16426,6 @@
         ],
         "granted_tags": [
           "job.apothecary"
-        ],
-        "resource_bonuses": {
-          "technique": 21.0,
-          "vitality": 55.0
-        },
-        "schema": "asteria.rpg.class",
-        "stat_bonuses": {
-          "defense": 8.0,
-          "power": 14.0,
-          "speed": 10.0
-        },
-        "version": 1
-      },
-      {
-        "class_id": "beast",
-        "display_name": "Beast",
-        "granted_abilities": [
-          "lynx_pounce"
-        ],
-        "granted_tags": [
-          "job.beast"
         ],
         "resource_bonuses": {
           "technique": 21.0,
@@ -16261,7 +16490,8 @@
         "granted_abilities": [
           "rain_of_arrows",
           "true_strike",
-          "call_frost_lynx",
+          "send_frost_lynx",
+          "send_ember_hound",
           "arrowstorm"
         ],
         "granted_tags": [
@@ -16309,6 +16539,7 @@
           "icewind",
           "lightning_bolt",
           "elemental_barrage",
+          "grand_inferno",
           "elemental_storm"
         ],
         "granted_tags": [
@@ -18596,6 +18827,28 @@
         "version": 2
       },
       {
+        "display_name": "Ember Hound",
+        "item_id": "pet_ember_hound",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 99,
+        "tags": [
+          "pet"
+        ],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "display_name": "Frost Lynx",
+        "item_id": "pet_frost_lynx",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 99,
+        "tags": [
+          "pet"
+        ],
+        "use_effects": [],
+        "version": 2
+      },
+      {
         "display_name": "Phoenix Seed",
         "icon_id": "icon.phoenix_seed",
         "item_id": "phoenix_seed",
@@ -18746,8 +18999,7 @@
           "hero_01",
           "hero_02",
           "hero_03",
-          "hero_04",
-          "hero_07"
+          "hero_04"
         ],
         "schema": "asteria.rpg.party_setup",
         "tags": [
@@ -18760,6 +19012,7 @@
     "progression_graphs": [],
     "progression_tracks": [],
     "quests": [],
+    "rarities": [],
     "reactions": [
       {
         "ability_id": "strike",
@@ -18782,7 +19035,7 @@
     ],
     "schema": "asteria.rpg.database",
     "shops": [],
-    "version": 29,
+    "version": 30,
     "world_interactions": []
   },
   "scene_event_bindings": {
@@ -18906,7 +19159,7 @@
             }
           ],
           "enabled": true,
-          "id": "ab4b703d-7e56-49a5-913a-2ae84f4a23e6",
+          "id": "b5adbf63-404b-4fc6-b3c3-4adebbc8dfde",
           "name": "Gel Slime"
         },
         {
@@ -18948,7 +19201,7 @@
             }
           ],
           "enabled": true,
-          "id": "90bd1bf1-8eed-4897-b3f6-c4b050f5bc40",
+          "id": "dd10ed79-2538-461a-abf7-5bc5a634b74a",
           "name": "Bone Wraith"
         },
         {
@@ -18990,7 +19243,7 @@
             }
           ],
           "enabled": true,
-          "id": "98eb889a-82aa-4042-ab07-80275effc344",
+          "id": "683a2681-12d9-4c88-bec4-5929b266d8d0",
           "name": "Mirror Gazer"
         },
         {
@@ -19032,7 +19285,7 @@
             }
           ],
           "enabled": true,
-          "id": "b4cba206-18d8-45c0-8ea2-c9d3f1fd10a9",
+          "id": "736df5ff-76ed-42a2-9044-07e094e6a9e2",
           "name": "Iron Samurai"
         }
       ],

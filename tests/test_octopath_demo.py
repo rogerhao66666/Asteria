@@ -88,7 +88,7 @@ def test_travellers_have_two_jobs_two_weapons_and_their_skills(demo):
         "brand_of_valor",
         "donate_bp",
     } <= known
-    assert {"attack_bow", "attack_dagger", "call_frost_lynx", "venom_strike"} <= set(
+    assert {"attack_bow", "attack_dagger", "send_frost_lynx", "venom_strike"} <= set(
         game.battle.member("hero_02").ability_ids
     )
     assert (
@@ -181,14 +181,12 @@ def test_one_spell_of_three_elements_reveals_three_weaknesses(demo):
     )
 
 
-def test_donate_boost_call_the_pet_and_concoct(demo):
+def test_donate_boost_then_concoct(demo):
     _runtime, game, commands = demo
     _bp(game, "hero_02", 0)
     _choose(commands, "hero_01", "donate_bp")
     _target(commands, "hero_01", "hero_02")
     assert _bp(game, "hero_02") == 1
-    assert _choose(commands, "hero_02", "call_frost_lynx")  # self-targeted: acts at once
-    assert "hero_07" in game.active_hero_ids()
     inventory = game.save.rpg_state.inventory
     herbs, dust = inventory.count("healing_herb"), inventory.count("fire_dust")
     hp = {e: game.battle.member(e).subject.resources.current(HP) for e in game.active_enemy_ids()}
@@ -320,7 +318,7 @@ def test_fire_heals_the_gel_slime_and_lightning_breaks_it(encounter):
     slime = "gel_slime:1"
     _hp(game, slime, 1000)
     _choose(commands, "hero_04", "fireball")  # every enemy: no target to pick
-    assert _hp(game, slime) > 1000  # absorbed
+    assert _hp_of(game, slime) > 1000  # absorbed
     shields = game.battle.battle_resources.current(slime, SHIELD)
     _choose(commands, "hero_04", "lightning_bolt")
     _target(commands, "hero_04", slime)
@@ -342,16 +340,18 @@ def test_the_mirror_gazer_reflects_spells_and_cannot_be_put_to_sleep(encounter):
     _runtime, game, commands = encounter("gazer_nest")
     gazer, caster = "mirror_gazer:1", "hero_04"
     _hp(game, caster, 1500)
-    gazer_hp = _hp(game, gazer)
+    gazer_hp = _hp_of(game, gazer)
     _choose(commands, caster, "lightning_bolt")
     _target(commands, caster, gazer)
-    assert _hp(game, gazer) == gazer_hp and _hp(game, caster) < 1500  # it came back to the caster
+    assert (
+        _hp_of(game, gazer) == gazer_hp and _hp_of(game, caster) < 1500
+    )  # it came back to the caster
     game.battle.apply_state("sleep", caster, gazer)
     assert game.turn_prevented(gazer) == ()  # immune.sleep
-    spear = _hp(game, gazer)
+    spear = _hp_of(game, gazer)
     _choose(commands, "hero_01", "attack_spear")  # weapons get through
     _target(commands, "hero_01", gazer)
-    assert _hp(game, gazer) < spear
+    assert _hp_of(game, gazer) < spear
 
 
 def test_the_bone_wraith_shrugs_off_poison_and_fears_light(encounter):
@@ -373,11 +373,11 @@ def test_the_iron_samurai_resists_swords_and_needs_a_spear(encounter):
     _hp(game, samurai, 14000)
     _choose(commands, "hero_01", "attack_sword")
     _target(commands, "hero_01", samurai)
-    sword = 14000 - _hp(game, samurai)
+    sword = 14000 - _hp_of(game, samurai)
     _hp(game, samurai, 14000)
     _choose(commands, "hero_01", "attack_spear")
     _target(commands, "hero_01", samurai)
-    spear = 14000 - _hp(game, samurai)
+    spear = 14000 - _hp_of(game, samurai)
     assert spear == pytest.approx(sword / 0.5 * 1.3)  # resisted x0.5 against weak x1.3
     assert (
         game.battle.battle_resources.current(samurai, SHIELD) == shields - 1
@@ -427,7 +427,7 @@ def test_each_new_battle_is_won_with_the_keyboard_and_every_enemy_move_works(
             break
         if step > 600:  # let the enemies act for a while first, then finish
             for enemy in game.active_enemy_ids():
-                _hp(game, enemy, min(_hp(game, enemy), 300))
+                _hp(game, enemy, min(_hp_of(game, enemy), 300))
         for (
             hero
         ) in game.active_hero_ids():  # keep the party standing so every enemy move gets used
@@ -452,3 +452,247 @@ def test_enemy_ai_never_targets_a_knocked_out_hero(encounter):
         decision = battle.enemy_ai.decide(battle, "iron_samurai_ai", "iron_samurai:1")
         if decision.payload["ability_id"] != "war_cry":
             assert set(decision.target_ids) == {standing}
+
+
+# -- pets, weapons, multi-hit skills ------------------------------------------------------------
+HIT_TAGS = (
+    "weapon.sword",
+    "weapon.spear",
+    "weapon.bow",
+    "weapon.axe",
+    "weapon.dagger",
+    "damage.fire",
+    "damage.ice",
+    "damage.lightning",
+)
+
+
+@pytest.fixture
+def hit_log(demo):
+    """Every single hit of every action as ``(ability id, the hit's weapon / damage tags)``."""
+    _runtime, game, _commands = demo
+    hits = []
+    original = game._one_hit
+
+    def spy(actor_id, ability_id, targets, offensive, results):
+        tags = game.battle.member(actor_id).subject.tags
+        hits.append((ability_id, tuple(t for t in HIT_TAGS if tags.contains(t))))
+        return original(actor_id, ability_id, targets, offensive, results)
+
+    game._one_hit = spy
+    return hits
+
+
+def test_the_pet_attack_works_only_while_a_pet_is_in_the_bag_and_the_pet_is_no_unit(demo, hit_log):
+    _runtime, game, commands = demo
+    hero = "hero_02"  # Sera, the hunter
+    bag = game.save.rpg_state.inventory
+    assert bag.count("pet_frost_lynx") == 1
+    units = set(game.active_hero_ids())
+    row = next(r for r in commands.entries(hero) if r.action_id == "send_frost_lynx")
+    assert row.enabled
+    bag.remove("pet_frost_lynx", 1)  # no pet: the skill cannot be used
+    row = next(r for r in commands.entries(hero) if r.action_id == "send_frost_lynx")
+    assert not row.enabled and row.disabled_reason == "Needs Frost Lynx"
+    assert not _choose(commands, hero, "send_frost_lynx")
+    assert commands.message == "Needs Frost Lynx"
+    bag.add("pet_frost_lynx", 1)
+    shields = game.battle.battle_resources.current(BOSS, SHIELD)
+    _choose(commands, hero, "send_frost_lynx")
+    assert _target(commands, hero, BOSS)
+    assert [t for a, t in hit_log if a == "send_frost_lynx"] == [("damage.ice",)] * 3
+    assert game.battle.battle_resources.current(BOSS, SHIELD) < shields  # ice is its weakness
+    assert bag.count("pet_frost_lynx") == 1  # sent, not spent
+    assert set(game.active_hero_ids()) == units  # the pet never became a unit
+
+
+def test_capturing_an_enemy_can_give_a_pet_that_unlocks_its_attack(demo):
+    _runtime, game, _commands = demo
+    hero = "hero_02"
+    hound = next(e for e in game.active_enemy_ids() if e.startswith("ember_hound"))
+    bag = game.save.rpg_state.inventory
+    assert game.ability_unavailable(hero, "send_ember_hound") == "Needs Ember Hound"
+
+    class Always:
+        def random(self):
+            return 0.0
+
+    assert game.attempt_capture(hero, hound, rng=Always())
+    assert bag.count("pet_ember_hound") == 1
+    assert game.ability_unavailable(hero, "send_ember_hound") == ""
+    assert hound not in game.active_enemy_ids()
+    # the hound became a bag item, not a party member
+    assert set(game.save.rpg_state.party_actor_ids) == {"hero_01", "hero_02", "hero_03", "hero_04"}
+
+
+def test_each_weapon_has_its_own_attack_and_each_attack_finds_its_own_weakness(demo, hit_log):
+    _runtime, game, commands = demo
+    # the boss is weak to swords and axes, not to spears or bows
+    assert {"attack_sword", "attack_spear"} <= set(game.battle.member("hero_01").ability_ids)
+    _choose(commands, "hero_01", "attack_spear")
+    _target(commands, "hero_01", BOSS)
+    assert ("spear", True) not in game.weaknesses(BOSS)
+    assert game.battle.battle_resources.current(BOSS, SHIELD) == 6
+    _choose(commands, "hero_03", "attack_axe")
+    _target(commands, "hero_03", BOSS)
+    assert ("axe", True) in game.weaknesses(BOSS)
+    assert game.battle.battle_resources.current(BOSS, SHIELD) == 5
+    assert [a for a, _tags in hit_log] == ["attack_spear", "attack_axe"]
+
+
+def test_changing_the_equipped_weapon_changes_the_attacks_it_gives(demo):
+    _runtime, game, _commands = demo
+    hero = "hero_01"
+    assert {"attack_sword", "attack_spear"} <= set(game.resolve_actor_build(hero).abilities)
+    taken = game.unequip_to_bag(hero, "weapon")  # the sword leaves the hand
+    assert taken.equipment.equipment_id == "w_sword"
+    build = set(game.resolve_actor_build(hero).abilities)
+    assert "attack_sword" not in build and "attack_spear" in build
+    bag = game.save.rpg_state.equipment_bag
+    game.equip_from_bag(hero, bag.index(taken))  # and comes back
+    assert "attack_sword" in set(game.resolve_actor_build(hero).abilities)
+
+
+def test_a_skill_can_strike_once_with_every_weapon_or_five_times_or_three_with_one_spell(
+    demo, hit_log
+):
+    _runtime, game, commands = demo
+    # one hit with each weapon, then lightning: sword, spear, sword, spear, lightning
+    _bp(game, "hero_01", 3)
+    _choose(commands, "hero_01", "brand_of_valor")
+    _target(commands, "hero_01", BOSS)
+    assert [t for a, t in hit_log if a == "brand_of_valor"] == [
+        ("weapon.sword",),
+        ("weapon.spear",),
+        ("weapon.sword",),
+        ("weapon.spear",),
+        ("damage.lightning",),
+    ]
+    # five arrows and an ice finisher
+    hit_log.clear()
+    _bp(game, "hero_02", 3)
+    _choose(commands, "hero_02", "arrowstorm")
+    _target(commands, "hero_02", BOSS)
+    assert [t for a, t in hit_log if a == "arrowstorm"] == [("weapon.bow",)] * 5 + [
+        ("damage.ice",)
+    ]
+    # one big fire spell lands three times
+    hit_log.clear()
+    _choose(commands, "hero_04", "grand_inferno")
+    _target(commands, "hero_04", BOSS)
+    assert [t for a, t in hit_log if a == "grand_inferno"] == [("damage.fire",)] * 3
+
+
+def _concoct(commands, hero, base, catalyst, target=None):
+    assert not _choose(commands, hero, "concoct") and commands.mode == "ingredients"
+    for pick in (base, catalyst):
+        ids = [r.action_id for r in commands.entries(hero)]
+        commands.cursor = ids.index(pick)
+        commands.press("confirm", hero)
+    if target is not None:
+        assert commands.mode == "target"
+        _target(commands, hero, target)
+
+
+def _hp_of(game, member):
+    return game.battle.member(member).subject.resources.current(HP)
+
+
+@pytest.mark.parametrize(
+    "base,catalyst,product",
+    [
+        ("healing_herb", "fire_dust", "fire_bomb"),
+        ("healing_herb", "ice_crystal", "frost_bomb"),
+        ("fire_dust", "ice_crystal", "storm_flask"),
+        ("healing_herb", "healing_herb", "healing_salve"),
+    ],
+)
+def test_every_concoction_recipe_works_in_battle(demo, base, catalyst, product):
+    _runtime, game, commands = demo
+    bag = game.save.rpg_state.inventory
+    bag.add(base, 2)  # enough for the salve (two of the same)
+    before_base, before_catalyst = bag.count(base), bag.count(catalyst)
+    enemies = [e for e in game.active_enemy_ids()]
+    hurt = {e: _hp_of(game, e) for e in enemies}
+    game.battle.member("hero_01").subject.resources.set_current(HP, 100)
+    if product == "healing_salve":
+        _concoct(commands, "hero_03", base, catalyst, target="hero_01")
+        assert _hp_of(game, "hero_01") > 100
+    elif product == "storm_flask":
+        _concoct(commands, "hero_03", base, catalyst, target="ember_hound:3")
+        assert game.battle.member("ember_hound:3").subject.states.get("defense_down") is not None
+        assert _hp_of(game, "ember_hound:3") < hurt["ember_hound:3"]
+    else:  # a bomb on every enemy: no target to pick
+        _concoct(commands, "hero_03", base, catalyst)
+        assert all(_hp_of(game, e) < hurt[e] for e in enemies)
+    spent = 2 if base == catalyst else 1
+    assert bag.count(base) == before_base - spent
+    if base != catalyst:
+        assert bag.count(catalyst) == before_catalyst - 1
+    assert bag.count(product) == 0  # made and used at once
+
+
+def test_every_secondary_job_skill_works_in_battle(demo):
+    _runtime, game, commands = demo
+    battle = game.battle
+    hound = "ember_hound:3"
+    # Sera, thief: a dagger strike that poisons and one that lowers defence
+    _choose(commands, "hero_02", "venom_strike")
+    _target(commands, "hero_02", hound)
+    assert battle.member(hound).subject.states.get("poison") is not None
+    _choose(commands, "hero_02", "armor_corrosive")
+    _target(commands, "hero_02", hound)
+    assert battle.member(hound).subject.states.get("defense_down") is not None
+    # Garrick, merchant: gives a boost point away (tested above)
+    # Bram, cleric: heals, hurts, cleanses
+    battle.member("hero_01").subject.resources.set_current(HP, 50)
+    _choose(commands, "hero_03", "heal_wounds")
+    assert _hp_of(game, "hero_01") > 50
+    before = _hp_of(game, hound)
+    _choose(commands, "hero_03", "holy_light")
+    _target(commands, "hero_03", hound)
+    assert _hp_of(game, hound) < before
+    battle.apply_state("poison", hound, "hero_02")
+    battle.apply_state("poison", "hero_01", hound)
+    _choose(commands, "hero_03", "cleanse")
+    _target(commands, "hero_03", "hero_01")
+    assert battle.member("hero_01").subject.states.get("poison") is None
+    # Ione, dancer: attack up for everyone, and a lullaby that puts one enemy to sleep
+    _choose(commands, "hero_04", "peacock_strut")
+    assert all(
+        battle.member(h).subject.states.get("attack_up") is not None
+        for h in game.active_hero_ids()
+    )
+    _choose(commands, "hero_04", "sleepy_waltz")
+    _target(commands, "hero_04", hound)
+    assert battle.member(hound).subject.states.get("sleep") is not None
+
+
+@pytest.mark.parametrize(
+    "hero,ability,hits",
+    [
+        ("hero_01", "brand_of_valor", 5),
+        ("hero_02", "arrowstorm", 6),
+        ("hero_03", "last_stand", 1),
+        ("hero_04", "elemental_storm", 3),
+    ],
+)
+def test_all_four_divine_skills_wait_for_three_boost_points_then_spend_them(
+    demo, hero, ability, hits
+):
+    _runtime, game, commands = demo
+    _bp(game, hero, 2)
+    row = next(r for r in commands.entries(hero) if r.action_id == ability)
+    assert not row.enabled and row.disabled_reason == "Needs 3 bp (has 2)"
+    _bp(game, hero, 3)
+    _choose(commands, hero, ability)
+    if commands.mode == "target":  # single target, or an all-targets row that asks nobody
+        _target(commands, hero, BOSS)
+    assert _bp(game, hero) == 0
+    log = [e for e in game.battle_log if e.kind == "action" and e.ability_id == ability]
+    assert len(log) >= hits  # an all-targets skill logs once per hit
+    if ability == "last_stand":
+        assert all(
+            game.battle.member(h).subject.states.get("attack_up") is not None
+            for h in game.active_hero_ids()
+        )

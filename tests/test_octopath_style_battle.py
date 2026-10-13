@@ -416,3 +416,19 @@ def test_ailments_sleep_and_silence_come_from_authored_policies():
             break
         game.end_turn()
     assert any(e.kind == "turn_skipped" and e.member_id == ally for e in game.battle_log)
+
+
+def test_an_ability_can_require_items_and_a_capture_can_give_a_pet_item():
+    from asteria.gameplay.abilities import AbilityDefinition
+    from asteria.rpg.capture import CaptureRule
+
+    ability = AbilityDefinition("send_pet", requires_items={"pet_x": 1})
+    assert AbilityDefinition.from_data(ability.to_data()).requires_items == {"pet_x": 1}
+    assert "requires_items" not in AbilityDefinition("plain").to_data()
+    with pytest.raises(ValueError):
+        AbilityDefinition("bad", requires_items={"pet_x": 0})
+    rule = CaptureRule("wolf", pet_item_id="pet_wolf")
+    again = CaptureRule.from_data(rule.to_data())
+    assert (again.actor_id, again.pet_item_id) == ("", "pet_wolf")
+    with pytest.raises(ValueError):  # a capture must give the roster an actor or the bag a pet
+        CaptureRule("wolf")

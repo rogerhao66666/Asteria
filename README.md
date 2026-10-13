@@ -7,11 +7,11 @@
 [`ASTERIA_PROGRESS.md`](ASTERIA_PROGRESS.md). `docs/CANONICAL_SPEC.md` and the batch
 documents are historical.
 
-**Current state (2026-10-09):** SPEC-to-code gap audit and closure plan in
-[`docs/audits/`](docs/audits/README.md) — start with
-[`AUDIT_EXECUTIVE_SUMMARY.md`](docs/audits/AUDIT_EXECUTIVE_SUMMARY.md). The Character
-Generator is cancelled and no art assets are bundled; ARPG and demo work are deferred
-until the original SPEC is closed.
+**Current state (2026-10-13):** the engine, the editor and the two demo projects are described in
+[`docs/ENGINE_HANDBOOK.md`](docs/ENGINE_HANDBOOK.md) (start there); decisions and evidence are in
+[`docs/audits/DECISION_LOG.md`](docs/audits/DECISION_LOG.md). The ARPG framework, native (C++)
+kernels, the Octopath-style and Diablo-style demos and the editor's *New from Template* are done.
+The sections below are historical.
 
 ```bash
 python -m pip install -e ".[pygame,editor,mv,dev]"

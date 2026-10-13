@@ -286,7 +286,8 @@ FORMS = {
     ),
     "capture_rules": (
         F("enemy_id", "Enemy", "id", source="enemies"),
-        F("actor_id", "Joins As Actor", "ref", source="actors"),
+        F("actor_id", "Joins As Actor", "optional_ref", source="actors", default=""),
+        F("pet_item_id", "Becomes Pet Item", "optional_ref", source="items", default=""),
         F("base_chance", "Base Chance (0–1)", "float", default=0.25),
         F("low_health_bonus", "Low-Health Bonus", "float", default=0.5),
         F("item_id", "Consumed Item", "optional_ref", source="items", default=""),

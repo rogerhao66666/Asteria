@@ -224,7 +224,11 @@ class AbilityDefinition:
     # shown on action bars and menus; written to the data only when set
     display_name: str = ""
     icon_id: str = ""
+    # items the user must own (not spent) for the ability to be usable, {item id: count} - a
+    # captured pet an action sends out, a key that opens a technique. Written only when set.
+    requires_items: dict = None
     OPTIONAL_DATA = {
+        "requires_items": {},
         "display_name": "",
         "icon_id": "",
         "cooldown_turns": 0,
@@ -264,6 +268,7 @@ class AbilityDefinition:
         cooldown_formula=None,
         display_name="",
         icon_id="",
+        requires_items=None,
     ):
         ability_id = str(ability_id).strip()
         if not ability_id:
@@ -367,6 +372,10 @@ class AbilityDefinition:
         object.__setattr__(self, "cooldown_formula", cooldown_formula)
         object.__setattr__(self, "display_name", str(display_name or "").strip())
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
+        needs = {str(k).strip(): int(v) for k, v in dict(requires_items or {}).items()}
+        if any(not k or v < 1 for k, v in needs.items()):
+            raise ValueError("requires_items needs item ids and counts >= 1")
+        object.__setattr__(self, "requires_items", needs)
 
     def to_data(self):
         return {
@@ -402,6 +411,7 @@ class AbilityDefinition:
             ),
             **({"display_name": self.display_name} if self.display_name else {}),
             **({"icon_id": self.icon_id} if self.icon_id else {}),
+            **({"requires_items": dict(self.requires_items)} if self.requires_items else {}),
         }
 
     @classmethod
@@ -445,6 +455,7 @@ class AbilityDefinition:
             ),
             display_name=data.get("display_name", ""),
             icon_id=data.get("icon_id", ""),
+            requires_items=data.get("requires_items"),
         )
 
 

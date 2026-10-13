@@ -1617,3 +1617,33 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **確認：** 完整套件 2185 passed；兩個專案在 1280×800 與 1100×700 稽核 0 缺陷（含新規則）；法師真實視窗重跑 60 fps；截圖 `arpg_demo_mage_field_skills.png` 可見技能 2、4 的冷卻扇形與秒數。
 測試：`test_a_cooldown_goes_dark_and_a_wedge_turns_clockwise_to_bright_with_a_ready_flash`、`tests/test_project_templates.py`（複製、改名、載入驗證、原檔不變、拒絕非空資料夾、編輯器開啟）。
 
+### D24-3 — 寵物技能、多武器與多段攻擊的測試補齊、手冊（使用者指示）
+
+**使用者要求：** 八方旅人 demo 補寵物（派出抓到的寵物攻擊，沒有寵物就不能用，寵物本身不用是單位）、
+多武器（切換武器、技能用不同武器各打一下、多段如打五下、特大火魔法三下）、調合、每個職業的副職技能、
+四個奧義都要有測試；處理 lint；寫一份 md 把引擎和 demo 的功能全部記錄下來；然後 commit、push。
+
+**引擎（通用）：**
+- `AbilityDefinition.requires_items`：技能需要持有某些道具（不消耗）。沒有時 `ability_unavailable` 回
+  「Needs <道具名稱>」，選單灰掉、直接施放會被拒絕。資料只在有設定時才寫入。
+- `CaptureRule.pet_item_id`：捕獲成功時把道具放進背包；`actor_id` 可以留空（至少要有其中一個），所以寵物
+  不必是隊伍成員。編輯器的 Capture Rules 多了「Becomes Pet Item」，「Joins As Actor」變成可留空。
+- **修正一個真的錯誤**：道具的 `battle_ability` 以前不會套用 `apply_states`、資源增益和世界指令
+  （`use_battle_item` 沒呼叫 `_after_ability`），所以 Storm Flask 的降防禦從來沒生效。現在會。
+
+**demo：** 拿掉 hero_07 和「召喚寵物」技能；Sera 的 `send_frost_lynx`（需要背包有 `pet_frost_lynx`，三下冰）
+和 `send_ember_hound`（捕獲 Ember Hound 後解鎖，兩下火）；新增 `grand_inferno`（一發火球打三下）。
+
+**新增／改寫的測試（`test_octopath_demo.py` 26 → 35，加兩個單元測試）：**
+| 項目 | 測試 |
+| --- | --- |
+| 寵物 | 有寵物可用、沒有時灰掉並說明、直接選會被拒、派出後寵物還在、出戰名單沒有多一個單位；捕獲得到寵物道具並解鎖技能、隊伍沒變 |
+| 武器 | 兩種武器各自的攻擊找到各自的弱點；拿下武器後攻擊消失、裝回來恢復 |
+| 多段 | 逐段記錄武器／屬性標籤：Brand of Valor（劍矛劍矛雷）、Arrowstorm（五箭＋冰）、Grand Inferno（火×3） |
+| 調合 | 四種配方各做一次（材料消耗、全體傷害／補血／降防禦、產物立即用掉） |
+| 副職技能 | Sera（毒擊、破甲）、Bram（治療、聖光、淨化）、Ione（孔雀舞、催眠華爾茲）各打一次並驗證狀態或傷害 |
+| 奧義 | 四個奧義：不足 3 點時被拒絕並說明、足夠時花光；Last Stand 全隊攻擊提升 |
+
+**文件：** 新增 `docs/ENGINE_HANDBOOK.md`（引擎功能、編輯器、兩個 demo、資料格式變更、測試與驗證方式、
+限制與下一步、工作方式）；`README.md` 開頭改指向手冊；octopath README 更新寵物與武器說明。
+

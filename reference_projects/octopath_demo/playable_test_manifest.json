@@ -118,8 +118,11 @@
       "true_strike": {
         "label": "True Strike"
       },
-      "call_frost_lynx": {
-        "label": "Call Frost Lynx"
+      "send_frost_lynx": {
+        "label": "Send Frost Lynx"
+      },
+      "send_ember_hound": {
+        "label": "Send Ember Hound"
       },
       "arrowstorm": {
         "label": "Arrowstorm (Divine)"
@@ -163,6 +166,9 @@
       "elemental_barrage": {
         "label": "Elemental Barrage"
       },
+      "grand_inferno": {
+        "label": "Grand Inferno"
+      },
       "elemental_storm": {
         "label": "Elemental Storm (Divine)"
       },
@@ -171,9 +177,6 @@
       },
       "sleepy_waltz": {
         "label": "Sleepy Waltz"
-      },
-      "lynx_pounce": {
-        "label": "Lynx Pounce"
       }
     },
     "enemy_layouts": {

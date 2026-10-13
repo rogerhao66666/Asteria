@@ -19,6 +19,11 @@ class CaptureRule:
 
     chance = ``base_chance`` + ``low_health_bonus`` x (1 - knockout resource ratio),
     clamped to [0, 1]. ``item_id`` (optional) is consumed by every attempt.
+
+    A capture gives the actor a place in the roster (``actor_id``) and / or a **pet**:
+    ``pet_item_id`` is an item added to the bag, not a unit; abilities that list it in
+    ``requires_items`` can then be used (a hunter sending the pet to attack). At least one of
+    the two is required.
     """
 
     enemy_id: str
@@ -26,8 +31,18 @@ class CaptureRule:
     base_chance: float = 0.25
     low_health_bonus: float = 0.5
     item_id: str = ""
+    pet_item_id: str = ""
 
-    def __init__(self, enemy_id, actor_id, *, base_chance=0.25, low_health_bonus=0.5, item_id=""):
+    def __init__(
+        self,
+        enemy_id,
+        actor_id="",
+        *,
+        base_chance=0.25,
+        low_health_bonus=0.5,
+        item_id="",
+        pet_item_id="",
+    ):
         base_chance, low_health_bonus = float(base_chance), float(low_health_bonus)
         if (
             not (isfinite(base_chance) and isfinite(low_health_bonus))
@@ -35,7 +50,11 @@ class CaptureRule:
         ):
             raise ValueError("capture chances are invalid")
         object.__setattr__(self, "enemy_id", _id(enemy_id, "enemy_id"))
-        object.__setattr__(self, "actor_id", _id(actor_id, "actor_id"))
+        actor_id, pet_item_id = str(actor_id or "").strip(), str(pet_item_id or "").strip()
+        if not actor_id and not pet_item_id:
+            raise ValueError("a capture rule needs an actor_id or a pet_item_id")
+        object.__setattr__(self, "actor_id", actor_id)
+        object.__setattr__(self, "pet_item_id", pet_item_id)
         object.__setattr__(self, "base_chance", base_chance)
         object.__setattr__(self, "low_health_bonus", low_health_bonus)
         object.__setattr__(self, "item_id", str(item_id).strip())
@@ -53,6 +72,7 @@ class CaptureRule:
             "base_chance": self.base_chance,
             "low_health_bonus": self.low_health_bonus,
             "item_id": self.item_id,
+            **({"pet_item_id": self.pet_item_id} if self.pet_item_id else {}),
         }
 
     @classmethod
@@ -65,4 +85,5 @@ class CaptureRule:
             base_chance=data["base_chance"],
             low_health_bonus=data["low_health_bonus"],
             item_id=data["item_id"],
+            pet_item_id=data.get("pet_item_id", ""),
         )
