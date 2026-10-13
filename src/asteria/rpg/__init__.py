@@ -2,6 +2,7 @@ from .enemy_behavior import EnemyBehaviorBinding
 from .battle_session_rules import BattleSessionRules
 from .equipment_sets import EquipmentSetBonus, EquipmentSetDefinition
 from .capture import CaptureRule
+from .pets import PetRecord, PetSpeciesDefinition
 from .world_record import AchievementDefinition, FactionDefinition, WorldRecord
 from .economy import ShopDefinition, ShopEntry, ShopError, ShopRuntime, ShopTransaction
 from .quests import QuestDefinition, QuestError, QuestLog, QuestObjective, QuestProgress
@@ -206,6 +207,8 @@ __all__ = [
     "EquipmentSetBonus",
     "EquipmentSetDefinition",
     "CaptureRule",
+    "PetRecord",
+    "PetSpeciesDefinition",
     "AchievementDefinition",
     "FactionDefinition",
     "WorldRecord",

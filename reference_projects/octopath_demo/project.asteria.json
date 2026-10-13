@@ -9849,6 +9849,7 @@
       0.0
     ],
     "rpg_state": {
+      "active_pet_id": "frost_lynx#1",
       "actor_progression": {
         "hero_01": {
           "active_class_ids": [
@@ -9933,8 +9934,7 @@
           "ether_leaf": 3,
           "fire_dust": 4,
           "healing_herb": 6,
-          "ice_crystal": 4,
-          "pet_frost_lynx": 1
+          "ice_crystal": 4
         },
         "schema": "asteria.rpg.inventory",
         "version": 1
@@ -10107,6 +10107,15 @@
         "hero_03": "slot_3",
         "hero_04": "slot_4"
       },
+      "pets": [
+        {
+          "experience": 0.0,
+          "instance_id": "frost_lynx#1",
+          "level": 3,
+          "nickname": "Frosty",
+          "species_id": "frost_lynx"
+        }
+      ],
       "progression": {
         "schema": "asteria.rpg.progression_runtime",
         "totals": {},
@@ -13182,8 +13191,8 @@
                     "schema": "asteria.value_formula",
                     "terms": [
                       {
-                        "coefficient": -20.0,
-                        "key": "power",
+                        "coefficient": -24.0,
+                        "key": "pet_power",
                         "source": "source_stat"
                       },
                       {
@@ -13217,9 +13226,7 @@
             ]
           }
         ],
-        "requires_items": {
-          "pet_ember_hound": 1
-        },
+        "requires_pet": "ember_hound",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -13277,8 +13284,8 @@
                     "schema": "asteria.value_formula",
                     "terms": [
                       {
-                        "coefficient": -16.0,
-                        "key": "power",
+                        "coefficient": -20.0,
+                        "key": "pet_power",
                         "source": "source_stat"
                       },
                       {
@@ -13318,9 +13325,7 @@
             ]
           }
         ],
-        "requires_items": {
-          "pet_frost_lynx": 1
-        },
+        "requires_pet": "frost_lynx",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -16409,7 +16414,8 @@
         "enemy_id": "ember_hound",
         "item_id": "",
         "low_health_bonus": 0.5,
-        "pet_item_id": "pet_ember_hound",
+        "pet_level": 2,
+        "pet_species_id": "ember_hound",
         "schema": "asteria.rpg.capture_rule",
         "version": 1
       }
@@ -18827,28 +18833,6 @@
         "version": 2
       },
       {
-        "display_name": "Ember Hound",
-        "item_id": "pet_ember_hound",
-        "schema": "asteria.rpg.item",
-        "stack_limit": 99,
-        "tags": [
-          "pet"
-        ],
-        "use_effects": [],
-        "version": 2
-      },
-      {
-        "display_name": "Frost Lynx",
-        "item_id": "pet_frost_lynx",
-        "schema": "asteria.rpg.item",
-        "stack_limit": 99,
-        "tags": [
-          "pet"
-        ],
-        "use_effects": [],
-        "version": 2
-      },
-      {
         "display_name": "Phoenix Seed",
         "icon_id": "icon.phoenix_seed",
         "item_id": "phoenix_seed",
@@ -19009,6 +18993,44 @@
       }
     ],
     "passives": [],
+    "pet_species": [
+      {
+        "display_name": "Ember Hound",
+        "exp_base": 40.0,
+        "exp_per_battle": 40.0,
+        "growth": {
+          "power": 6.0
+        },
+        "max_level": 50,
+        "schema": "asteria.rpg.pet_species",
+        "species_id": "ember_hound",
+        "stats": {
+          "power": 34.0
+        },
+        "tags": [
+          "fire"
+        ],
+        "version": 1
+      },
+      {
+        "display_name": "Frost Lynx",
+        "exp_base": 40.0,
+        "exp_per_battle": 40.0,
+        "growth": {
+          "power": 5.0
+        },
+        "max_level": 50,
+        "schema": "asteria.rpg.pet_species",
+        "species_id": "frost_lynx",
+        "stats": {
+          "power": 30.0
+        },
+        "tags": [
+          "ice"
+        ],
+        "version": 1
+      }
+    ],
     "progression_graphs": [],
     "progression_tracks": [],
     "quests": [],
@@ -19159,7 +19181,7 @@
             }
           ],
           "enabled": true,
-          "id": "b5adbf63-404b-4fc6-b3c3-4adebbc8dfde",
+          "id": "cd9c89c5-984d-407a-ab9d-73122b2d7bfd",
           "name": "Gel Slime"
         },
         {
@@ -19201,7 +19223,7 @@
             }
           ],
           "enabled": true,
-          "id": "dd10ed79-2538-461a-abf7-5bc5a634b74a",
+          "id": "f58f83fb-22a2-40cc-ae97-f9341204fef7",
           "name": "Bone Wraith"
         },
         {
@@ -19243,7 +19265,7 @@
             }
           ],
           "enabled": true,
-          "id": "683a2681-12d9-4c88-bec4-5929b266d8d0",
+          "id": "503f1041-1b37-44da-92de-a7bc80efd83a",
           "name": "Mirror Gazer"
         },
         {
@@ -19285,7 +19307,7 @@
             }
           ],
           "enabled": true,
-          "id": "736df5ff-76ed-42a2-9044-07e094e6a9e2",
+          "id": "75082786-b1de-4e3d-803e-d3887dfbc85f",
           "name": "Iron Samurai"
         }
       ],

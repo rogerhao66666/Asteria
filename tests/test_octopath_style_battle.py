@@ -432,3 +432,41 @@ def test_an_ability_can_require_items_and_a_capture_can_give_a_pet_item():
     assert (again.actor_id, again.pet_item_id) == ("", "pet_wolf")
     with pytest.raises(ValueError):  # a capture must give the roster an actor or the bag a pet
         CaptureRule("wolf")
+
+
+def test_pet_species_are_authored_in_the_editor_with_undo_and_levelled_by_data():
+    from asteria.editor import EditorDocument
+    from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
+    from asteria.rpg.pets import PetRecord
+
+    document = EditorDocument()
+    document.set_project(_project())
+    api = GameSystemsAuthoringController(document)
+    api.create_new("pet_species", "wolf")
+    data = api.form_data("pet_species", "wolf")
+    data.update(stats={"power": 12}, growth={"power": 3}, max_level=3, exp_base=10.0)
+    species = api.edit("pet_species", "wolf", api.decode("pet_species", data))
+    assert species.stats_at(3) == {"power": 18.0}
+    assert species.stats_at(99) == {"power": 18.0}  # stops at the highest level
+    pet = PetRecord("wolf#1", "wolf")
+    assert pet.gain(species, 10) == 1 and (pet.level, pet.experience) == (2, 0.0)
+    assert pet.gain(species, 1000) == 1 and pet.level == 3 and pet.experience == 0.0
+    document.undo()
+    assert api.get("pet_species", "wolf").stats_at(3) == {"power": 14.0}
+    document.undo()
+    assert "wolf" not in api.ids("pet_species")
+    rule = api.decode(
+        "capture_rules",
+        {
+            "schema": "asteria.rpg.capture_rule",
+            "version": 1,
+            "enemy_id": "x",
+            "actor_id": "",
+            "base_chance": 0.3,
+            "low_health_bonus": 0.5,
+            "item_id": "",
+            "pet_species_id": "wolf",
+            "pet_level": 4,
+        },
+    )
+    assert (rule.pet_species_id, rule.pet_level, rule.actor_id) == ("wolf", 4, "")

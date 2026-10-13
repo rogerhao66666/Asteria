@@ -133,7 +133,11 @@ class PlayableTestRuntime:
         self.profiler = NullProfiler()
         self._drawing = False
         self._wrap_draw_methods()
-        self._pause_menu = MenuCursor(PAUSE_OPTIONS)
+        options = list(PAUSE_OPTIONS)
+        if getattr(self.project.rpg_database, "pet_species", None):  # a game with pets
+            options.insert(2, ("pets", "Pets"))
+        self._pause_menu = MenuCursor(options)
+        self._pets_screen = None
         self._game_over_menu = MenuCursor(GAME_OVER_OPTIONS)
         self._shop_screen = None
         self._quest_return = "field"
@@ -1846,6 +1850,11 @@ class PlayableTestRuntime:
             self._ui_mode = "field"
         elif choice == "status":
             self.open_status_menu(back="pause")
+        elif choice == "pets":
+            from asteria.runtime.pets_screen import PetsScreen
+
+            self._pets_screen = PetsScreen(self)
+            self._ui_mode = "pets"
         elif choice == "quests":
             self._quest_return = "pause"
             self._ui_mode = "quests"
@@ -2557,6 +2566,12 @@ class PlayableTestRuntime:
                 self._ui_mode = "field"
             else:
                 self._bag_screen.draw()
+        elif self._ui_mode == "pets":
+            self._pets_screen.handle(dt, events)
+            if self._pets_screen.closed:
+                self._ui_mode = "pause"
+            else:
+                self._pets_screen.draw()
         elif self._ui_mode == "skills":
             self._skill_tree.handle(dt)
             if self._skill_tree.closed:

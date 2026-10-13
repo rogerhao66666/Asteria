@@ -120,6 +120,8 @@ class RpgRuntimeState:
     quests: dict
     world: object
     equipment_bag: list
+    pets: list
+    active_pet_id: str
 
     SCHEMA = "asteria.rpg.runtime_state"
     VERSION = 8
@@ -141,10 +143,17 @@ class RpgRuntimeState:
         quests=None,
         world=None,
         equipment_bag=None,
+        pets=None,
+        active_pet_id="",
     ):
+        from .pets import PetRecord
         from .quests import QuestProgress
         from .world_record import WorldRecord
 
+        self.pets = list(pets or [])  # owned creatures (rpg.pets.PetRecord)
+        if any(not isinstance(p, PetRecord) for p in self.pets):
+            raise TypeError("pets must contain PetRecord values")
+        self.active_pet_id = str(active_pet_id or "")
         self.world = world if world is not None else WorldRecord()
         self.equipment_bag = list(
             equipment_bag or []
@@ -223,6 +232,9 @@ class RpgRuntimeState:
         for item_id in self.inventory._counts:
             if item_id not in database.items:
                 raise ValueError(f"inventory references unknown item {item_id}")
+        for pet in self.pets:
+            if pet.species_id not in database.pet_species:
+                raise ValueError(f"pet {pet.instance_id} has unknown species {pet.species_id}")
         for actor_id in self.party_actor_ids:
             if actor_id not in database.actors:
                 raise ValueError(f"party references unknown actor {actor_id}")
@@ -331,10 +343,13 @@ class RpgRuntimeState:
             "quests": {k: self.quests[k].to_data() for k in sorted(self.quests)},
             "world": self.world.to_data(),
             "equipment_bag": [item.to_data() for item in self.equipment_bag],
+            **({"pets": [p.to_data() for p in self.pets]} if self.pets else {}),
+            **({"active_pet_id": self.active_pet_id} if self.active_pet_id else {}),
         }
 
     @classmethod
     def from_data(cls, data, database, *, hooks=None):
+        from .pets import PetRecord
         from .quests import QuestProgress
         from .world_record import WorldRecord
 
@@ -374,7 +389,7 @@ class RpgRuntimeState:
             if version == 2
             else expected_v1
         )
-        if set(data) != expected:
+        if set(data) - {"pets", "active_pet_id"} != expected:
             raise ValueError("invalid RPG runtime state")
         result = cls(
             inventory=Inventory.from_data(data["inventory"]),
@@ -425,6 +440,8 @@ class RpgRuntimeState:
                 )
                 for raw in data.get("equipment_bag", ())
             ],
+            pets=[PetRecord.from_data(raw) for raw in data.get("pets", ())],
+            active_pet_id=data.get("active_pet_id", ""),
         )
         result.bind_database(database)
         result.validate(database)

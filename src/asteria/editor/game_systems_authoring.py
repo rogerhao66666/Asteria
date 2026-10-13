@@ -18,6 +18,7 @@ from asteria.rpg import (
     AchievementDefinition,
     CaptureRule,
     EquipmentSetDefinition,
+    PetSpeciesDefinition,
     FactionDefinition,
     QuestDefinition,
     QuestObjective,
@@ -128,6 +129,22 @@ _DROP = (
 )
 
 FORMS = {
+    "pet_species": (
+        F("species_id", "Species ID", "id"),
+        F("display_name", "Name", "text", default=""),
+        F("icon_id", "Icon", "text", default=""),
+        F("stats", "Stats At Level 1 (read in formulas as pet_<stat>)", "amounts", default={}),
+        F("growth", "Stat Growth Per Level", "amounts", default={}),
+        F("max_level", "Highest Level", "int", default=50),
+        F("exp_base", "Experience To Level Up = this x level", "float", default=40.0),
+        F(
+            "exp_per_battle",
+            "Experience After A Won Battle It Was Sent Out In",
+            "float",
+            default=30.0,
+        ),
+        F("tags", "Tags", "string_list", default=()),
+    ),
     "inventory_rules": (
         F("rules_id", "Rules ID", "id"),
         F("display_name", "Name", "text", default=""),
@@ -288,6 +305,14 @@ FORMS = {
         F("enemy_id", "Enemy", "id", source="enemies"),
         F("actor_id", "Joins As Actor", "optional_ref", source="actors", default=""),
         F("pet_item_id", "Becomes Pet Item", "optional_ref", source="items", default=""),
+        F(
+            "pet_species_id",
+            "Becomes Owned Pet (species)",
+            "optional_ref",
+            source="pet_species",
+            default="",
+        ),
+        F("pet_level", "Pet Starts At Level", "int", default=1),
         F("base_chance", "Base Chance (0–1)", "float", default=0.25),
         F("low_health_bonus", "Low-Health Bonus", "float", default=0.5),
         F("item_id", "Consumed Item", "optional_ref", source="items", default=""),
@@ -317,6 +342,9 @@ def _templates():
         "capture_rules": lambda key, c: CaptureRule(
             key, next(iter(sorted(c.database.actors)), "actor")
         ),
+        "pet_species": lambda key, c: PetSpeciesDefinition(
+            key, key, stats={"power": 10}, growth={"power": 2}
+        ),
         "world_interactions": lambda key, c: WorldInteraction(key, key),
         "drop_tables": lambda key, c: DropTable(key, key),
         "inventory_rules": lambda key, c: InventoryRules(key, key),
@@ -330,6 +358,7 @@ KINDS = (
     _Kind("achievements", "Achievements", "achievements", "achievement_id", AchievementDefinition),
     _Kind("equipment_sets", "Equipment Sets", "equipment_sets", "set_id", EquipmentSetDefinition),
     _Kind("capture_rules", "Capture Rules", "capture_rules", "enemy_id", CaptureRule),
+    _Kind("pet_species", "Pet Species", "pet_species", "species_id", PetSpeciesDefinition),
     _Kind(
         "world_interactions",
         "World Interactions",
@@ -439,6 +468,7 @@ class GameSystemsAuthoringController:
             "quests": db.quests,
             "factions": db.factions,
             "progression_tracks": db.progression_tracks,
+            "pet_species": db.pet_species,
         }
         return tuple(sorted(stores.get(source, {})))
 

@@ -113,6 +113,7 @@ class GameSessionRuntime:
         self.encounter_id = None
         self._enemy_ids = ()
         self._captured = set()
+        self._pets_sent = set()
         self.battle_log = []
         self._log_sequence = 0
         self._logged_turn = None
@@ -1587,6 +1588,7 @@ class GameSessionRuntime:
         self.encounter_id = str(encounter_id)
         self._enemy_ids = tuple(enemy_definition_ids)
         self._captured = set()
+        self._pets_sent = set()
         for enemy_id in sorted(set(enemy_definition_ids)):
             self.world.note_enemy(enemy_id, "seen")
         self.mode = "battle"
@@ -1841,6 +1843,12 @@ class GameSessionRuntime:
             have = battle.battle_resources.current(actor_id, resource_id)
             if have < amount:
                 return f"Needs {amount:g} {resource_id.replace('_', ' ')} (has {have:g})"
+        wanted = getattr(definition, "requires_pet", "")
+        if wanted:
+            pet = self.active_pet()
+            if pet is None or wanted not in ("any", pet.species_id):
+                species = self.project.rpg_database.pet_species.get(wanted)
+                return "Needs " + (species.display_name if species else "a pet")
         items = self.save.rpg_state.inventory
         for item_id, count in (getattr(definition, "requires_items", None) or {}).items():
             if items.count(item_id) < count:
@@ -1958,8 +1966,94 @@ class GameSessionRuntime:
         self._log("item_used", member_id=str(actor_id), data={"item": item.item_id})
         return ()
 
+    # -- pets ---------------------------------------------------------------------------------
+    def pets(self):
+        """The owned pets (``rpg.pets.PetRecord``)."""
+        return tuple(self.save.rpg_state.pets)
+
+    def pet_species(self, pet):
+        return self.project.rpg_database.pet_species.get(pet.species_id)
+
+    def active_pet(self):
+        """The pet that abilities send out: the chosen one, else the first owned."""
+        state = self.save.rpg_state
+        for pet in state.pets:
+            if pet.instance_id == state.active_pet_id:
+                return pet
+        return state.pets[0] if state.pets else None
+
+    def add_pet(self, species_id, *, level=1, nickname=""):
+        from asteria.rpg.pets import PetRecord
+
+        if species_id not in self.project.rpg_database.pet_species:
+            raise GameSessionError(f"unknown pet species {species_id}")
+        state = self.save.rpg_state
+        taken = {p.instance_id for p in state.pets}
+        serial = 1
+        while f"{species_id}#{serial}" in taken:
+            serial += 1
+        pet = PetRecord(f"{species_id}#{serial}", species_id, nickname, level)
+        state.pets.append(pet)
+        if not state.active_pet_id:
+            state.active_pet_id = pet.instance_id
+        return pet
+
+    def _pet(self, instance_id):
+        for pet in self.save.rpg_state.pets:
+            if pet.instance_id == str(instance_id):
+                return pet
+        raise GameSessionError(f"unknown pet {instance_id}")
+
+    def rename_pet(self, instance_id, nickname):
+        pet = self._pet(instance_id)
+        pet.nickname = str(nickname or "").strip()[:24]
+        return pet
+
+    def set_active_pet(self, instance_id):
+        pet = self._pet(instance_id)
+        self.save.rpg_state.active_pet_id = pet.instance_id
+        return pet
+
+    def pet_stats(self, pet=None):
+        """``{"pet_<stat>": value, "pet_level": n}`` of a pet (default: the active one)."""
+        pet = pet or self.active_pet()
+        species = self.pet_species(pet) if pet is not None else None
+        if species is None:
+            return {}
+        values = {f"pet_{k}": v for k, v in species.stats_at(pet.level).items()}
+        values["pet_level"] = float(pet.level)
+        return values
+
+    def _send_out_pet(self, actor_id, definition):
+        """Before an ability that needs a pet: its stats become the user's ``pet_*`` stats, and
+        the pet will share the win's experience."""
+        if not getattr(definition, "requires_pet", ""):
+            return
+        pet = self.active_pet()
+        if pet is None:
+            return
+        stats = self.battle.member(actor_id).subject.stats
+        for name, value in self.pet_stats(pet).items():
+            stats.set(name, value)
+        self._pets_sent.add(pet.instance_id)
+
+    def _pets_gain_experience(self):
+        for instance_id in sorted(self._pets_sent):
+            pet = next((p for p in self.save.rpg_state.pets if p.instance_id == instance_id), None)
+            species = self.pet_species(pet) if pet is not None else None
+            if species is None:
+                continue
+            gained = pet.gain(species, species.exp_per_battle)
+            self._log(
+                "pet_experience",
+                member_id=pet.instance_id,
+                data={"gained": gained, "level": pet.level, "species": pet.species_id},
+            )
+        self._pets_sent = set()
+
     def _repeat_action(self, actor_id, ability_id, targets, offensive, repeats):
         definition = self.battle.ability_runtime.registry.get(ability_id)
+        self._send_out_pet(actor_id, definition)
         hits = tuple(getattr(definition, "hits", ()) or ()) or ({"tags": [], "power": 1.0},)
         results = []
         actor_tags = self.battle.member(actor_id).subject.tags
@@ -2563,8 +2657,10 @@ class GameSessionRuntime:
         self.battle.remove_combatant(target_id, state_id="captured", reason="captured")
         self._captured.add(target_id)
         self.world.note_enemy(enemy_id, "captured")
-        if rule.pet_item_id:  # a pet: kept in the bag, sent out by an ability that needs it
+        if rule.pet_item_id:  # a pet item: kept in the bag, sent out by an ability that needs it
             state.inventory.add(rule.pet_item_id, 1)
+        if rule.pet_species_id:  # an owned creature with its own level and nickname
+            self.add_pet(rule.pet_species_id, level=rule.pet_level)
         if rule.actor_id and rule.actor_id not in state.party_actor_ids:
             state.party_actor_ids = state.party_actor_ids + (rule.actor_id,)
         if rule.actor_id:
@@ -2647,6 +2743,7 @@ class GameSessionRuntime:
             self.world.note_enemy(enemy_id, "defeated")
         self._quest_switches()
         self.refresh_achievements()
+        self._pets_gain_experience()
         self.mode = "field"
         self.battle = None
         self.encounter_id = None

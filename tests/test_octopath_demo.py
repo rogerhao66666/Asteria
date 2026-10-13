@@ -483,34 +483,70 @@ def hit_log(demo):
     return hits
 
 
-def test_the_pet_attack_works_only_while_a_pet_is_in_the_bag_and_the_pet_is_no_unit(demo, hit_log):
+def test_the_pet_attack_needs_an_owned_pet_and_hits_harder_when_the_pet_is_stronger(demo, hit_log):
     _runtime, game, commands = demo
     hero = "hero_02"  # Sera, the hunter
-    bag = game.save.rpg_state.inventory
-    assert bag.count("pet_frost_lynx") == 1
+    pet = game.active_pet()
+    assert (pet.species_id, pet.nickname, pet.level) == ("frost_lynx", "Frosty", 3)
     units = set(game.active_hero_ids())
     row = next(r for r in commands.entries(hero) if r.action_id == "send_frost_lynx")
     assert row.enabled
-    bag.remove("pet_frost_lynx", 1)  # no pet: the skill cannot be used
+    state = game.save.rpg_state
+    owned = list(state.pets)
+    state.pets.clear()  # no pet: the skill cannot be used
     row = next(r for r in commands.entries(hero) if r.action_id == "send_frost_lynx")
     assert not row.enabled and row.disabled_reason == "Needs Frost Lynx"
     assert not _choose(commands, hero, "send_frost_lynx")
     assert commands.message == "Needs Frost Lynx"
-    bag.add("pet_frost_lynx", 1)
+    state.pets.extend(owned)
+    boss = game.battle.member(BOSS).subject.resources
+    boss.set_current(HP, 26000)
     shields = game.battle.battle_resources.current(BOSS, SHIELD)
+    before = boss.current(HP)
     _choose(commands, hero, "send_frost_lynx")
     assert _target(commands, hero, BOSS)
     assert [t for a, t in hit_log if a == "send_frost_lynx"] == [("damage.ice",)] * 3
     assert game.battle.battle_resources.current(BOSS, SHIELD) < shields  # ice is its weakness
-    assert bag.count("pet_frost_lynx") == 1  # sent, not spent
+    level3 = before - boss.current(HP)
+    assert game.battle.member(hero).subject.stats.get("pet_power") == 40  # 30 + 5 x (3 - 1)
+    # the same attack with the pet at level 10 hits harder
+    pet.level = 10
+    boss.set_current(HP, 26000)
+    game.battle.battle_resources.change(BOSS, SHIELD, 6)
+    _choose(commands, hero, "send_frost_lynx")
+    _target(commands, hero, BOSS)
+    assert 26000 - boss.current(HP) > level3
+    assert game.battle.member(hero).subject.stats.get("pet_power") == 75
     assert set(game.active_hero_ids()) == units  # the pet never became a unit
 
 
-def test_capturing_an_enemy_can_give_a_pet_that_unlocks_its_attack(demo):
+def test_a_sent_pet_gains_experience_levels_up_can_be_renamed_and_chosen(demo):
+    _runtime, game, commands = demo
+    pet = game.active_pet()
+    pet.experience = 115.0  # level 3 needs 40 x 3 = 120
+    _choose(commands, "hero_02", "send_frost_lynx")
+    _target(commands, "hero_02", BOSS)
+    for enemy in list(game.active_enemy_ids()):  # win the fight
+        member = game.battle.member(enemy)
+        game.battle.remove_combatant(enemy, state_id="defeated", reason="test")
+        assert member is not None
+    game.finish_victory()
+    assert pet.level == 4 and pet.experience == pytest.approx(115 + 40 - 120)
+    game.rename_pet(pet.instance_id, "Snowball")
+    assert pet.name(game.pet_species(pet)) == "Snowball"
+    other = game.add_pet("ember_hound", level=2)
+    assert game.active_pet() is pet  # the first pet stays chosen until another is picked
+    game.set_active_pet(other.instance_id)
+    assert game.active_pet() is other
+    assert game.pet_stats()["pet_power"] == 34 + 6  # level 2
+
+
+def test_capturing_an_enemy_gives_an_owned_pet_with_its_level_and_unlocks_its_attack(demo):
     _runtime, game, _commands = demo
     hero = "hero_02"
     hound = next(e for e in game.active_enemy_ids() if e.startswith("ember_hound"))
-    bag = game.save.rpg_state.inventory
+    assert game.ability_unavailable(hero, "send_ember_hound") == "Needs Ember Hound"
+    game.set_active_pet(game.pets()[0].instance_id)
     assert game.ability_unavailable(hero, "send_ember_hound") == "Needs Ember Hound"
 
     class Always:
@@ -518,11 +554,27 @@ def test_capturing_an_enemy_can_give_a_pet_that_unlocks_its_attack(demo):
             return 0.0
 
     assert game.attempt_capture(hero, hound, rng=Always())
-    assert bag.count("pet_ember_hound") == 1
-    assert game.ability_unavailable(hero, "send_ember_hound") == ""
+    caught = [p for p in game.pets() if p.species_id == "ember_hound"]
+    assert len(caught) == 1 and caught[0].level == 2
     assert hound not in game.active_enemy_ids()
-    # the hound became a bag item, not a party member
+    game.set_active_pet(caught[0].instance_id)
+    assert game.ability_unavailable(hero, "send_ember_hound") == ""
+    # the hound became a pet, not a party member
     assert set(game.save.rpg_state.party_actor_ids) == {"hero_01", "hero_02", "hero_03", "hero_04"}
+
+
+def test_pets_are_saved_and_loaded(demo):
+    from asteria.rpg.save_state import RpgRuntimeState
+
+    _runtime, game, _commands = demo
+    game.add_pet("ember_hound", level=5, nickname="Cinder")
+    state = game.save.rpg_state
+    again = RpgRuntimeState.from_data(state.to_data(), game.project.rpg_database)
+    assert [(p.species_id, p.nickname, p.level) for p in again.pets] == [
+        ("frost_lynx", "Frosty", 3),
+        ("ember_hound", "Cinder", 5),
+    ]
+    assert again.active_pet_id == state.active_pet_id
 
 
 def test_each_weapon_has_its_own_attack_and_each_attack_finds_its_own_weakness(demo, hit_log):
@@ -663,6 +715,10 @@ def test_every_secondary_job_skill_works_in_battle(demo):
         battle.member(h).subject.states.get("attack_up") is not None
         for h in game.active_hero_ids()
     )
+    import dataclasses
+
+    policies = battle.battle_states.policies  # sleep lands 80 % of the time: make it certain
+    policies["sleep"] = dataclasses.replace(policies["sleep"], base_chance=1.0)
     _choose(commands, "hero_04", "sleepy_waltz")
     _target(commands, "hero_04", hound)
     assert battle.member(hound).subject.states.get("sleep") is not None
@@ -696,3 +752,36 @@ def test_all_four_divine_skills_wait_for_three_boost_points_then_spend_them(
             game.battle.member(h).subject.states.get("attack_up") is not None
             for h in game.active_hero_ids()
         )
+
+
+def test_the_pets_screen_lists_pets_chooses_the_active_one_and_renames(demo):
+    from asteria.runtime.pets_screen import PetsScreen
+
+    runtime, game, _commands = demo
+    game.add_pet("ember_hound", level=4)
+    screen = PetsScreen(runtime)
+    pressed = set()
+    runtime.input.just_pressed = lambda action: action in pressed
+    pg = runtime.pg
+    pressed.add("move_down")
+    screen.handle(0.0, [])
+    pressed.clear()
+    assert screen.selected().species_id == "ember_hound"
+    pressed.add("confirm")
+    screen.handle(0.0, [])
+    pressed.clear()
+    assert game.active_pet().species_id == "ember_hound"
+    typed = [pg.event.Event(pg.KEYDOWN, key=pg.K_r, unicode="r", mod=0)]
+    screen.handle(0.0, typed)  # R starts renaming
+    assert screen.renaming == ""
+    letters = [pg.event.Event(pg.KEYDOWN, key=ord(c), unicode=c, mod=0) for c in "Ash"]
+    screen.handle(0.0, letters)
+    screen.draw()  # the half-typed name is on screen
+    screen.handle(0.0, [pg.event.Event(pg.KEYDOWN, key=pg.K_RETURN, unicode="\r", mod=0)])
+    assert screen.renaming is None
+    assert game.active_pet().nickname == "Ash"
+    pressed.add("cancel")
+    screen.handle(0.0, [])
+    assert screen.closed
+    # a game with pets has the entry in its pause menu, a game without does not
+    assert any(key == "pets" for key, _label in runtime._pause_menu.options)

@@ -720,6 +720,7 @@ class RpgDatabase:
         self.factions = {}
         self.achievements = {}
         self.capture_rules = {}
+        self.pet_species = {}  # rpg.pets PetSpeciesDefinition
         self.world_interactions = {}
         self.drop_tables = {}
         self.rarities = {}  # rpg.loot RarityDefinition; empty = loot.DEFAULT_RARITIES
@@ -1086,6 +1087,13 @@ class RpgDatabase:
             self.world_interactions, value, WorldInteraction, "interaction_id", "world interaction"
         )
 
+    def add_pet_species(self, value):
+        from .pets import PetSpeciesDefinition
+
+        return self._add_keyed(
+            self.pet_species, value, PetSpeciesDefinition, "species_id", "pet species"
+        )
+
     def add_capture_rule(self, value):
         from .capture import CaptureRule
 
@@ -1310,6 +1318,11 @@ class RpgDatabase:
                 errors.append(
                     f"capture rule {rule.enemy_id} references unknown actor {rule.actor_id}"
                 )
+            if rule.pet_species_id and rule.pet_species_id not in self.pet_species:
+                errors.append(
+                    f"capture rule {rule.enemy_id} references unknown pet species "
+                    f"{rule.pet_species_id}"
+                )
             if rule.pet_item_id and rule.pet_item_id not in self.items:
                 errors.append(
                     f"capture rule {rule.enemy_id} references unknown pet item {rule.pet_item_id}"
@@ -1475,6 +1488,11 @@ class RpgDatabase:
             "factions": [self.factions[k].to_data() for k in sorted(self.factions)],
             "achievements": [self.achievements[k].to_data() for k in sorted(self.achievements)],
             "capture_rules": [self.capture_rules[k].to_data() for k in sorted(self.capture_rules)],
+            **(
+                {"pet_species": [self.pet_species[k].to_data() for k in sorted(self.pet_species)]}
+                if self.pet_species
+                else {}
+            ),
             "quests": [self.quests[k].to_data() for k in sorted(self.quests)],
             "world_interactions": [
                 self.world_interactions[k].to_data() for k in sorted(self.world_interactions)
@@ -1706,4 +1724,8 @@ class RpgDatabase:
                 result.add_achievement(AchievementDefinition.from_data(x))
             for x in data.get("capture_rules", ()):
                 result.add_capture_rule(CaptureRule.from_data(x))
+            from .pets import PetSpeciesDefinition
+
+            for x in data.get("pet_species", ()):
+                result.add_pet_species(PetSpeciesDefinition.from_data(x))
         return result

@@ -227,7 +227,11 @@ class AbilityDefinition:
     # items the user must own (not spent) for the ability to be usable, {item id: count} - a
     # captured pet an action sends out, a key that opens a technique. Written only when set.
     requires_items: dict = None
+    # a pet the user must own and send out: "any" (the active pet, whatever its species) or a
+    # species id. The pet's stats are read in formulas as pet_<stat> and pet_level.
+    requires_pet: str = ""
     OPTIONAL_DATA = {
+        "requires_pet": "",
         "requires_items": {},
         "display_name": "",
         "icon_id": "",
@@ -269,6 +273,7 @@ class AbilityDefinition:
         display_name="",
         icon_id="",
         requires_items=None,
+        requires_pet="",
     ):
         ability_id = str(ability_id).strip()
         if not ability_id:
@@ -376,6 +381,7 @@ class AbilityDefinition:
         if any(not k or v < 1 for k, v in needs.items()):
             raise ValueError("requires_items needs item ids and counts >= 1")
         object.__setattr__(self, "requires_items", needs)
+        object.__setattr__(self, "requires_pet", str(requires_pet or "").strip())
 
     def to_data(self):
         return {
@@ -412,6 +418,7 @@ class AbilityDefinition:
             **({"display_name": self.display_name} if self.display_name else {}),
             **({"icon_id": self.icon_id} if self.icon_id else {}),
             **({"requires_items": dict(self.requires_items)} if self.requires_items else {}),
+            **({"requires_pet": self.requires_pet} if self.requires_pet else {}),
         }
 
     @classmethod
@@ -456,6 +463,7 @@ class AbilityDefinition:
             display_name=data.get("display_name", ""),
             icon_id=data.get("icon_id", ""),
             requires_items=data.get("requires_items"),
+            requires_pet=data.get("requires_pet", ""),
         )
 
 

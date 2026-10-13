@@ -406,9 +406,9 @@ def main():
                 ability(  # the pet is a bag item, not a unit: no pet, no attack
                     "send_frost_lynx",
                     tags=("pet", "damage.ice"),
-                    effect=op(damage("power", 16)),
+                    effect=op(damage("pet_power", 20)),
                     sp=6,
-                    requires_items={"pet_frost_lynx": 1},
+                    requires_pet="frost_lynx",
                     hits=[{"tags": ["damage.ice"]}] * 3,
                 ),
                 "enemy",
@@ -417,9 +417,9 @@ def main():
                 ability(
                     "send_ember_hound",
                     tags=("pet", "damage.fire"),
-                    effect=op(damage("power", 20)),
+                    effect=op(damage("pet_power", 24)),
                     sp=8,
-                    requires_items={"pet_ember_hound": 1},
+                    requires_pet="ember_hound",
                     hits=[{"tags": ["damage.fire"]}] * 2,
                 ),
                 "enemy",
@@ -654,13 +654,31 @@ def main():
             outputs=(CompositionOutput(recipe_id),),
         )
 
-    # -- pets are bag items; capturing the hound gives one (sent out by an ability that needs it) -
+    # -- pets: species here, owned pets in the save; capturing the hound gives one -----------
     from asteria.rpg.capture import CaptureRule
 
-    db.items["pet_frost_lynx"] = ItemDefinition("pet_frost_lynx", "Frost Lynx", tags=("pet",))
-    db.items["pet_ember_hound"] = ItemDefinition("pet_ember_hound", "Ember Hound", tags=("pet",))
+    from asteria.rpg.pets import PetSpeciesDefinition
+
+    db.pet_species["frost_lynx"] = PetSpeciesDefinition(
+        "frost_lynx",
+        "Frost Lynx",
+        stats={"power": 30},
+        growth={"power": 5},
+        exp_per_battle=40,
+        tags=("ice",),
+    )
+    db.pet_species["ember_hound"] = PetSpeciesDefinition(
+        "ember_hound",
+        "Ember Hound",
+        stats={"power": 34},
+        growth={"power": 6},
+        exp_per_battle=40,
+        tags=("fire",),
+    )
     db.capture_rules.clear()
-    db.add_capture_rule(CaptureRule("ember_hound", pet_item_id="pet_ember_hound", base_chance=0.6))
+    db.add_capture_rule(
+        CaptureRule("ember_hound", pet_species_id="ember_hound", pet_level=2, base_chance=0.6)
+    )
 
     # -- the travellers (main / secondary job, two weapon kinds) ----------------------------
     travellers = {
@@ -951,8 +969,17 @@ def main():
         "fire_dust": 4,
         "ice_crystal": 4,
         "ether_leaf": 3,
-        "pet_frost_lynx": 1,  # Sera's tamed pet; the hound has to be captured
     }
+    rpg["pets"] = [  # Sera's tamed pet; the hound has to be captured
+        {
+            "instance_id": "frost_lynx#1",
+            "species_id": "frost_lynx",
+            "nickname": "Frosty",
+            "level": 3,
+            "experience": 0.0,
+        }
+    ]
+    rpg["active_pet_id"] = "frost_lynx#1"
     project.game_start = GameStartDefinition.from_data(data)
     path = HERE / "project.asteria.json"
     project.save_json(path)

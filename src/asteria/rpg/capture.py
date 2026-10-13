@@ -32,6 +32,8 @@ class CaptureRule:
     low_health_bonus: float = 0.5
     item_id: str = ""
     pet_item_id: str = ""
+    pet_species_id: str = ""
+    pet_level: int = 1
 
     def __init__(
         self,
@@ -42,6 +44,8 @@ class CaptureRule:
         low_health_bonus=0.5,
         item_id="",
         pet_item_id="",
+        pet_species_id="",
+        pet_level=1,
     ):
         base_chance, low_health_bonus = float(base_chance), float(low_health_bonus)
         if (
@@ -51,8 +55,11 @@ class CaptureRule:
             raise ValueError("capture chances are invalid")
         object.__setattr__(self, "enemy_id", _id(enemy_id, "enemy_id"))
         actor_id, pet_item_id = str(actor_id or "").strip(), str(pet_item_id or "").strip()
-        if not actor_id and not pet_item_id:
-            raise ValueError("a capture rule needs an actor_id or a pet_item_id")
+        pet_species_id = str(pet_species_id or "").strip()
+        if not (actor_id or pet_item_id or pet_species_id):
+            raise ValueError("a capture rule needs an actor_id, a pet_item_id or a pet_species_id")
+        object.__setattr__(self, "pet_species_id", pet_species_id)
+        object.__setattr__(self, "pet_level", max(1, int(pet_level)))
         object.__setattr__(self, "actor_id", actor_id)
         object.__setattr__(self, "pet_item_id", pet_item_id)
         object.__setattr__(self, "base_chance", base_chance)
@@ -73,6 +80,8 @@ class CaptureRule:
             "low_health_bonus": self.low_health_bonus,
             "item_id": self.item_id,
             **({"pet_item_id": self.pet_item_id} if self.pet_item_id else {}),
+            **({"pet_species_id": self.pet_species_id} if self.pet_species_id else {}),
+            **({"pet_level": self.pet_level} if self.pet_level != 1 else {}),
         }
 
     @classmethod
@@ -86,4 +95,6 @@ class CaptureRule:
             low_health_bonus=data["low_health_bonus"],
             item_id=data["item_id"],
             pet_item_id=data.get("pet_item_id", ""),
+            pet_species_id=data.get("pet_species_id", ""),
+            pet_level=data.get("pet_level", 1),
         )
