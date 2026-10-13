@@ -6,6 +6,8 @@ here, so
 tests drive it directly. It produces ``BattleActionEntry`` rows for the canonical battle screen's
 menu:
 
+* **root** (``style="root"``, the Octopath-style menu) - a short vertical list: *Attack* (the
+  weapons' attacks), *Skills*, *Items*; Enter opens one, Esc comes back to it.
 * **command** - categories *Skills* and *Items* (Tab switches); Up / Down choose; Left / Right set
   the boost
   level; a row that cannot be used now is shown disabled with the reason (``ability_unavailable``).
@@ -25,6 +27,7 @@ from asteria.presentation.battle_action_menu import BattleActionEntry
 from asteria.rpg.targeting import TargetRelation
 
 CATEGORIES = ("Skills", "Items")
+ROOT_CATEGORIES = ("Attack", "Skills", "Items")
 
 
 def _constant(formula):
@@ -36,14 +39,19 @@ def _constant(formula):
 
 
 class BattleCommands:
-    def __init__(self, game, *, labels=None):
+    def __init__(self, game, *, labels=None, style="categories"):
         self.game = game
         self.labels = dict(labels or {})  # ability id -> {"label": ...} (manifest skills)
+        self.style = "root" if style == "root" else "categories"
         self.reset()
 
+    @property
+    def categories(self):
+        return ROOT_CATEGORIES if self.style == "root" else CATEGORIES
+
     def reset(self):
-        self.mode = "command"
-        self.category = CATEGORIES[0]
+        self.mode = "root" if self.style == "root" else "command"
+        self.category = self.categories[0] if self.style == "root" else CATEGORIES[0]
         self.cursor = 0
         self.boost = 0
         self.pending = None  # ("ability" | "item" | "concoct", id)
@@ -78,10 +86,76 @@ class BattleCommands:
             parts.append(f"x{len(definition.hits)}")
         return " ".join(parts)
 
+    def weapon_ability_ids(self, actor_id):
+        """The abilities the actor's equipped weapons give (the root menu's *Attack*)."""
+        game = self.game
+        loadout = game.save.rpg_state.loadouts.get(str(actor_id))
+        if loadout is None:
+            return ()
+        known = set(game.battle.member(actor_id).ability_ids)
+        found = []
+        for item in loadout.equipped():
+            for ability_id in item.equipment.granted_abilities:
+                if ability_id in known and ability_id not in found:
+                    found.append(ability_id)
+        return tuple(found)
+
+    def _ability_rows(self, actor_id, ability_ids, category):
+        game, rows = self.game, []
+        registry = game.battle.ability_runtime.registry
+        for ability_id in ability_ids:
+            definition = registry.get(ability_id)
+            if definition is None:
+                continue
+            reason = game.ability_unavailable(actor_id, ability_id)
+            rows.append(
+                BattleActionEntry(
+                    ability_id,
+                    self._name(ability_id),
+                    category=category,
+                    cost_text=self._cost_text(definition),
+                    enabled=not reason,
+                    disabled_reason=reason,
+                    order=len(rows),
+                )
+            )
+        return rows
+
+    def attack_rows(self, actor_id):
+        """One row per weapon attack (root style's *Attack* category)."""
+        return self._ability_rows(actor_id, self.weapon_ability_ids(actor_id), "Attack")
+
+    def root_rows(self, actor_id):
+        weapons = self.attack_rows(actor_id)
+        skills = [r for r in self.skill_rows(actor_id) if r.action_id not in ("boost",)]
+        items = self.item_rows()
+        rows = []
+        for category, count, hint in (
+            ("Attack", len(weapons), "Choose a weapon"),
+            ("Skills", len(skills), "Abilities, concoct, capture"),
+            ("Items", len(items), "Use an item from the bag"),
+        ):
+            rows.append(
+                BattleActionEntry(
+                    f"root:{category}",
+                    category,
+                    category="Command",
+                    cost_text=str(count) if count else "",
+                    enabled=count > 0,
+                    disabled_reason="Nothing to use" if not count else "",
+                    detail=hint,
+                    order=len(rows),
+                )
+            )
+        return rows
+
     def skill_rows(self, actor_id):
         game, rows = self.game, []
         registry = game.battle.ability_runtime.registry
         known = game.battle.member(actor_id).ability_ids
+        if self.style == "root":  # the weapons' attacks have their own category
+            weapons = set(self.weapon_ability_ids(actor_id))
+            known = tuple(a for a in known if a not in weapons)
         ordered = [a for a in self.labels if a in known] + [
             a for a in known if a not in self.labels
         ]
@@ -212,6 +286,10 @@ class BattleCommands:
             return self.target_rows(actor_id)
         if self.mode == "ingredients":
             return self.ingredient_rows()
+        if self.mode == "root":
+            return self.root_rows(actor_id)
+        if self.category == "Attack":
+            return self.attack_rows(actor_id)
         return self.skill_rows(actor_id) if self.category == "Skills" else self.item_rows()
 
     def entries(self, actor_id):
@@ -283,10 +361,15 @@ class BattleCommands:
                 self.cursor = (self.cursor + (-1 if key == "up" else 1)) % len(rows)
             return False
         if key == "category" and self.mode == "command":
-            self.category = CATEGORIES[(CATEGORIES.index(self.category) + 1) % len(CATEGORIES)]
+            cats = self.categories
+            self.category = cats[(cats.index(self.category) + 1) % len(cats)]
             self.cursor = 0
             return False
-        if key in ("left", "right") and self.mode == "command":
+        if key in ("boost_down", "boost_up") and self.mode in ("command", "root"):
+            top = self.game.max_boost_level(actor_id) if self.game.rules.boost_enabled else 0
+            self.boost = max(0, min(top, self.boost + (1 if key == "boost_up" else -1)))
+            return False
+        if key in ("left", "right") and self.mode in ("command", "root"):
             top = self.game.max_boost_level(actor_id) if self.game.rules.boost_enabled else 0
             self.boost = max(0, min(top, self.boost + (1 if key == "right" else -1)))
             return False
@@ -296,6 +379,11 @@ class BattleCommands:
                 self.mode = "ingredients"
             elif self.mode == "ingredients" and self.ingredients:
                 self.ingredients.popitem()
+            elif self.mode == "command" and self.style == "root":
+                self.mode, self.cursor = "root", self.categories.index(self.category)
+                return False
+            elif self.mode == "root":
+                return False
             else:
                 self.mode, self.pending, self.ingredients = "command", None, {}
             self.cursor = 0
@@ -303,6 +391,16 @@ class BattleCommands:
         if key != "confirm" or not rows:
             return False
         row = rows[self.cursor]
+        if self.mode == "root":
+            if not row.enabled:
+                self.message = row.disabled_reason
+                return False
+            self.mode, self.category, self.cursor = (
+                "command",
+                row.action_id.split(":", 1)[1],
+                0,
+            )
+            return False
         if self.mode == "command" and row.action_id == "capture" and self.category == "Skills":
             self.message = "capture"  # the host opens its capture prompt
             return False
@@ -364,7 +462,7 @@ class BattleCommands:
                 game.use_ability(actor_id, key, targets, boost_level=self.boost)
         except Exception as exc:  # shown in the menu footer; the turn is not used
             self.message = str(exc)
-            self.mode, self.cursor = "command", 0
+            self.mode, self.cursor = ("root" if self.style == "root" else "command"), 0
             self.pending, self.ingredients = None, {}
             return False
         self.reset()

@@ -259,7 +259,17 @@ class BattleVisualResolver:
         height = float(getattr(layout, "virtual_height", 180))
         margin = float(getattr(layout, "margin", 8.0))
         panel = float(getattr(layout, "hud_panel_width", 112.0))
-        if getattr(layout, "party_hud", "column") == "bottom_row":
+        hud_mode = getattr(layout, "party_hud", "column")
+        if hud_mode == "side_list":
+            # The party's list takes the right edge; the stage is everything left of it, down to
+            # the bottom margin (the command menu sits in the lower part of that stage).
+            left_edge, right_edge = margin, width - 2 * margin - panel
+            top = max(
+                float(getattr(layout, "timeline_y", 7.0)) + 30.0,
+                height * float(getattr(layout, "stage_top", 0.0)),
+            )
+            bottom = height - margin - 6.0
+        elif hud_mode == "bottom_row":
             # Side-view staging: the whole width is stage; feet stand on the
             # ground band between ``stage_top`` and the bottom HUD row.
             left_edge, right_edge = margin, width - margin
@@ -321,6 +331,11 @@ class BattleVisualResolver:
                     transform = profile.transform
                     if len(column) == 1 and member_id in large:
                         y = (top + bottom) / 2 + sizes[member_id][1] / 3
+                    elif hud_mode == "side_list":
+                        # one slot per member of the column: name, sprite and the shield row
+                        # (under the feet) all fit in it, so a column of three never overlaps
+                        slot = (bottom - top) / max(1, len(column))
+                        y = top + slot * (row_index + 1) - 6.0 - slot * 0.3 * (column_index % 2)
                     else:
                         y = top + (bottom - top) * (
                             (row_index + 0.5 + 0.5 * column_index) / max(3, len(column) + 0.5)

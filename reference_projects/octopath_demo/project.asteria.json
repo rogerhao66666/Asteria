@@ -4782,11 +4782,39 @@
               "show_label": true,
               "show_value": true,
               "visible": true
+            },
+            {
+              "compact": false,
+              "group": "primary",
+              "icon_asset_id": null,
+              "label": "BP",
+              "order": 9,
+              "presentation": "pips",
+              "priority": 0,
+              "resource_id": "bp",
+              "segments": 5,
+              "show_label": true,
+              "show_value": false,
+              "visible": true
+            },
+            {
+              "compact": false,
+              "group": "primary",
+              "icon_asset_id": null,
+              "label": "SH",
+              "order": 10,
+              "presentation": "bar",
+              "priority": 0,
+              "resource_id": "shield",
+              "segments": 0,
+              "show_label": true,
+              "show_value": true,
+              "visible": false
             }
           ],
           "schema": "asteria.battle_hud_profile",
           "show_unmapped_resources": true,
-          "show_unmapped_statuses": false,
+          "show_unmapped_statuses": true,
           "statuses": [],
           "version": 1
         }
@@ -9600,17 +9628,17 @@
       "ui_layout": {
         "adaptive": {
           "action_menu_placement": "actor",
-          "hud_panel_width": 112.0,
+          "hud_panel_width": 108.0,
           "hud_row_height": 10.0,
           "margin": 8.0,
           "overhead_zones": [
             "left"
           ],
-          "party_hud": "bottom_row",
+          "party_hud": "side_list",
           "result_panel_height": 116.0,
           "result_panel_width": 196.0,
-          "stage_front": 0.2,
-          "stage_top": 0.44,
+          "stage_front": 0.16,
+          "stage_top": 0.14,
           "timeline_y": 7.0,
           "virtual_height": 270,
           "virtual_width": 480
@@ -19181,7 +19209,7 @@
             }
           ],
           "enabled": true,
-          "id": "cd9c89c5-984d-407a-ab9d-73122b2d7bfd",
+          "id": "aa73bfc9-512e-4008-a01a-fcdefe35d864",
           "name": "Gel Slime"
         },
         {
@@ -19223,7 +19251,7 @@
             }
           ],
           "enabled": true,
-          "id": "f58f83fb-22a2-40cc-ae97-f9341204fef7",
+          "id": "8499b1d0-37d0-43f9-a702-170594ba2f94",
           "name": "Bone Wraith"
         },
         {
@@ -19265,7 +19293,7 @@
             }
           ],
           "enabled": true,
-          "id": "503f1041-1b37-44da-92de-a7bc80efd83a",
+          "id": "6234d97c-bd3e-4fdc-bb77-c6bcc80e6e6e",
           "name": "Mirror Gazer"
         },
         {
@@ -19307,7 +19335,7 @@
             }
           ],
           "enabled": true,
-          "id": "75082786-b1de-4e3d-803e-d3887dfbc85f",
+          "id": "7aa9b165-d2de-4a0b-93e1-0de5bd2d3926",
           "name": "Iron Samurai"
         }
       ],

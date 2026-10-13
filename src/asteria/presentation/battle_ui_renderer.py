@@ -82,6 +82,11 @@ class BattleUiTheme:
             return self.result_fill, self.result_border
         if role.startswith("interaction:"):
             return self.interaction_fill, self.interaction_border
+        if role.startswith("timeline_tile:"):  # one tile per turn, tinted by side
+            return {
+                "ally": ((28, 48, 88, 235), (112, 160, 230, 255)),
+                "enemy": ((82, 28, 32, 235), (222, 112, 100, 255)),
+            }.get(role.split(":", 1)[1], ((72, 60, 22, 245), (255, 210, 96, 255)))
         if role.endswith(":focus"):
             return self.panel_focus_fill, self.panel_focus_border
         return self.panel_fill, self.panel_border
@@ -110,6 +115,8 @@ class BattleUiTheme:
             "workflow_option_disabled",
         }:
             return self.text_disabled
+        if role == "status_chip":
+            return (255, 200, 120, 255)
         if role in {
             "gauge_label",
             "gauge_value",

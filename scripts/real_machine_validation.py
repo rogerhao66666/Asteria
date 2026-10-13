@@ -3132,10 +3132,22 @@ def check_octopath_demo(out):
 
     def select(actor, ability_id):
         commands = runtime.battle_commands
+        if commands.mode == "root":  # Attack / Skills / Items: open the list that has it
+            weapons = commands.weapon_ability_ids(actor)
+            want = "Attack" if ability_id in weapons else "Skills"
+            ids = [r.action_id for r in commands.entries(actor)]
+            for _ in range(ids.index(f"root:{want}") - commands.cursor):
+                press(pygame.K_DOWN, 0.04)
+            press(pygame.K_RETURN)
         ids = [r.action_id for r in commands.entries(actor)]
         for _ in range(ids.index(ability_id) - commands.cursor):
             press(pygame.K_DOWN, 0.04)
         press(pygame.K_RETURN)
+
+    def take_a_turn():
+        """Enter, Enter, Enter: open Attack, pick the first weapon, pick the first target."""
+        for _ in range(3):
+            press(pygame.K_RETURN)
 
     executed = []  # what landed (the battle screen drains the battle log every frame)
     execute = game.execute
@@ -3181,8 +3193,7 @@ def check_octopath_demo(out):
         )
         if divine is not None:
             break
-        press(pygame.K_RETURN)
-        press(pygame.K_RETURN)
+        take_a_turn()
     peak = {"n": 0, "shot": False}
     draw = runtime.particle_drawer.draw
 
@@ -3232,8 +3243,7 @@ def check_octopath_demo(out):
                 and "bomb_fire" in executed
             )
             break
-        press(pygame.K_RETURN)
-        press(pygame.K_RETURN)
+        take_a_turn()
     checks["concoct_by_keys"] = concocted
     # win: wear the enemies down and keep pressing Enter
     for _ in range(400):

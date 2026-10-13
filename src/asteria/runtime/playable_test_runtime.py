@@ -1477,7 +1477,10 @@ class PlayableTestRuntime:
         commands = getattr(self, "_battle_commands", None)
         if commands is None or commands.game is not self.game:
             labels = self.manifest.get("battle", {}).get("skills", {})
-            commands = self._battle_commands = BattleCommands(self.game, labels=labels)
+            style = self.manifest.get("battle", {}).get("command_style", "categories")
+            commands = self._battle_commands = BattleCommands(
+                self.game, labels=labels, style=style
+            )
         return commands
 
     @property
@@ -1544,49 +1547,37 @@ class PlayableTestRuntime:
         self._flush_victory_audio()
 
     def _draw_battle_extras(self):
-        """Shields and weaknesses under each enemy, boost points under each hero, the chosen boost
-        level."""
+        """Shield and weaknesses under each enemy, boost points under each hero (unless the
+        party panel has them), the chosen boost level (runtime/battle_extras.py)."""
+        from .battle_extras import draw_blocks, extras_layout
+
         game, adapter = self.game, self._battle_presentation
         box = getattr(adapter, "member_screen_box", None)
         if game.battle is None or box is None or self._victory or self._defeat:
             return
         pg, battle = self.pg, game.battle
-        shield = game.shield_resource()
+        scale = getattr(getattr(adapter, "textures", None), "scale", 3.0)
+        blocks = extras_layout(game, box, scale, self.width)
+        draw_blocks(self, blocks, scale)
+        self.battle_extras_blocks = blocks  # what was drawn (tests check it for overlaps)
         bp = game.rules.boost_resource_id if game.rules.boost_enabled else ""
+        layout = getattr(getattr(adapter, "screen", None), "composer", None)
+        panel_has_bp = (
+            layout is not None and getattr(layout.layout, "party_hud", "") == "side_list"
+        )
         for member in battle.members.values():
-            if not battle.is_active(member):
+            if member.side != "heroes" or not battle.is_active(member):
                 continue
             where = box(member.member_id)
             if where is None:
                 continue
-            x, top, feet = where
+            x, _top, feet = where
             y = feet + 6
-            if member.side != "heroes":
-                y = top + 4  # just under its name and bar: rows of stacked enemies never overlap
-                cells = []
-                held = game.turn_prevented(member.member_id)
-                if held:  # broken, asleep...: the state that holds it
-                    cells.append((held[0].replace("_", " ").upper()[:7], (220, 70, 70)))
-                elif shield and battle.battle_resources.get(member.member_id, shield) is not None:
-                    value = battle.battle_resources.current(member.member_id, shield)
-                    cells.append((f"{value:g}", (120, 150, 210)))
-                for label, revealed in game.weaknesses(member.member_id):
-                    cells.append(
-                        (
-                            label[:5] if revealed else "?",
-                            (70, 80, 100) if not revealed else (200, 170, 70),
-                        )
-                    )
-                widths = [max(16, len(text) * 7 + 6) for text, _ in cells]
-                cx = x - (sum(widths) + 2 * (len(cells) - 1)) / 2
-                for (text, color), width in zip(cells, widths, strict=True):
-                    pg.draw.rect(
-                        self.screen, (16, 18, 28), (cx - 1, y - 1, width + 2, 16), border_radius=3
-                    )
-                    pg.draw.rect(self.screen, color, (cx, y, width, 14), border_radius=3)
-                    self.text(text, cx + width / 2, y, size=15, color=(250, 250, 255), center=True)
-                    cx += width + 2
-            elif bp and battle.battle_resources.get(member.member_id, bp) is not None:
+            if (
+                bp
+                and not panel_has_bp
+                and battle.battle_resources.get(member.member_id, bp) is not None
+            ):
                 value = battle.battle_resources.current(member.member_id, bp)
                 top = battle.battle_resources.get(member.member_id, bp).maximum
                 for i in range(int(top)):
@@ -1601,7 +1592,7 @@ class PlayableTestRuntime:
                 definition = states.registry.get(active.state_id)
                 shown = getattr(definition, "display_name", "") or active.state_id
                 names.append(shown.replace("_", " "))
-            if names:  # poison, silence, attack up...
+            if names and not panel_has_bp:  # the side panel shows them as chips
                 label = " ".join(names)[:28]
                 self.text(label, x, y + 20, size=15, color=(220, 180, 255), center=True)
         actor = self._battle_actor()
@@ -1694,6 +1685,8 @@ class PlayableTestRuntime:
             pg.K_ESCAPE: "cancel",
             pg.K_BACKSPACE: "cancel",
             pg.K_TAB: "category",
+            pg.K_q: "boost_down",
+            pg.K_r: "boost_up",
         }
 
     def _battle_input(self, events):

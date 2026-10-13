@@ -1703,3 +1703,12 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 | 暗黑 demo 三個職業 | 皆 60.0 fps；戰士 3 擊殺、遊俠 3、法師 7 |
 | 編輯器稽核 1600×1000／1280×800／1100×700（兩個專案） | 0 缺陷 |
 
+### D25-2 — 八方旅人式戰鬥畫面：右側隊伍狀態、行動順序兩邊、指令選單、Break 顯示（使用者指示）
+
+- **隊伍狀態在右邊**（`BattleUiLayoutProfile.party_hud="side_list"`）：每人一格，名稱、狀態縮寫、`HP 5,430 / 5,722`、`SP`、BP 圓點，帶細條；列高依人數自動縮減，不超出畫面。
+- **行動順序**：上方每個回合一格，敵我用不同底色（友方藍、敵方紅、目前行動者金色）。
+- **指令選單**（`BattleCommands(style="root")`，manifest `battle.command_style`）：Attack／Skills／Items；Attack 列出裝備武器給的攻擊，Esc 回上層，Q／R 調 Boost。
+- **Break 顯示**（`runtime/battle_extras.py`）：敵人腳下盾牌數字（還要打幾下）、弱點圖示（命中後顯示，未發現是 ?）、Break 時紅色 BREAK 與「Damage up - loses a turn」。
+- **不重疊**：舞台排版給每個敵人一個空間（名稱、精靈、盾牌列），選單放在雙方之間；`test_no_information_covers_other_information_on_the_battle_screen` 對四種遭遇檢查面板、選單、精靈與盾牌列互不重疊。
+- 測試：`test_octopath_demo.py` 42 個通過。限制：Boost 與武器切換用列表選擇，不是在同一列左右切換。
+

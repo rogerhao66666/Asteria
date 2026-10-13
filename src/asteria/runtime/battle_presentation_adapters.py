@@ -996,8 +996,12 @@ class CanonicalBattleAdapter:
             feedback.target_ids, feedback.primary_target_id = (), None
             return
         rows = commands.entries(actor)
-        if commands.mode == "command":
+        if commands.mode == "root":
+            menu.show(rows, "Command", commands.cursor)
+        elif commands.mode == "command":
             everything = commands.skill_rows(actor) + commands.item_rows()
+            if commands.style == "root":
+                everything = commands.attack_rows(actor) + everything
             menu.show(everything, commands.category, commands.cursor)
         else:
             menu.show(rows, rows[0].category if rows else "Target", commands.cursor)

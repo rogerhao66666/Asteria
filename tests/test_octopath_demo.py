@@ -49,11 +49,26 @@ def demo(monkeypatch):
     runtime.close()
 
 
+def _rows(commands, actor):
+    """The menu rows now; at the root, every row of Attack, Skills and Items together."""
+    if commands.mode == "root":
+        return commands.attack_rows(actor) + commands.skill_rows(actor) + commands.item_rows()
+    return commands.entries(actor)
+
+
 def _choose(commands, actor, ability_id, *, category="Skills"):
-    """Move the menu cursor onto ``ability_id`` (switching category if needed) and press Enter."""
-    while commands.category != category:
-        commands.press("category", actor)
-    ids = [row.action_id for row in commands.entries(actor)]
+    """Open the list that has ``ability_id`` (Attack / Skills / Items), move the cursor onto it and
+    press Enter."""
+    if commands.mode == "root":
+        weapons = commands.weapon_ability_ids(actor)
+        want = "Attack" if ability_id in weapons else category
+        ids = [row.action_id for row in commands.entries(actor)]
+        commands.cursor = ids.index(f"root:{want}")
+        commands.press("confirm", actor)
+    elif commands.category != category and commands.style != "root":
+        while commands.category != category:
+            commands.press("category", actor)
+    ids = [row.action_id for row in _rows(commands, actor)]
     commands.cursor = 0
     for _ in range(ids.index(ability_id)):
         commands.press("down", actor)
@@ -61,7 +76,7 @@ def _choose(commands, actor, ability_id, *, category="Skills"):
 
 
 def _target(commands, actor, member_id):
-    ids = [row.action_id for row in commands.entries(actor)]
+    ids = [row.action_id for row in _rows(commands, actor)]
     assert commands.mode == "target", commands.mode
     for _ in range(ids.index(member_id)):
         commands.press("down", actor)
@@ -138,7 +153,7 @@ def test_divine_skill_needs_three_boost_points_and_spends_them(demo):
     _runtime, game, commands = demo
     hero = "hero_01"
     _bp(game, hero, 2)
-    row = next(r for r in commands.entries(hero) if r.action_id == "brand_of_valor")
+    row = next(r for r in _rows(commands, hero) if r.action_id == "brand_of_valor")
     assert (
         not row.enabled and row.disabled_reason == "Needs 3 bp (has 2)" and "3BP" in row.cost_text
     )
@@ -158,7 +173,7 @@ def test_twin_fang_needs_a_sword_and_a_spear_equipped(demo):
     hero = "hero_01"
     assert game.ability_unavailable(hero, "twin_fang") == ""
     game.battle.member(hero).subject.tags.remove("equip.spear")
-    row = next(r for r in commands.entries(hero) if r.action_id == "twin_fang")
+    row = next(r for r in _rows(commands, hero) if r.action_id == "twin_fang")
     assert not row.enabled and row.disabled_reason == "Needs sword + spear"
 
 
@@ -191,11 +206,11 @@ def test_donate_boost_then_concoct(demo):
     herbs, dust = inventory.count("healing_herb"), inventory.count("fire_dust")
     hp = {e: game.battle.member(e).subject.resources.current(HP) for e in game.active_enemy_ids()}
     assert not _choose(commands, "hero_03", "concoct") and commands.mode == "ingredients"
-    base = [r.action_id for r in commands.entries("hero_03")]
+    base = [r.action_id for r in _rows(commands, "hero_03")]
     assert base == ["fire_dust", "healing_herb"]  # what a base can be, from the bag
     commands.cursor = base.index("healing_herb")
     commands.press("confirm", "hero_03")
-    catalyst = [r.action_id for r in commands.entries("hero_03")]
+    catalyst = [r.action_id for r in _rows(commands, "hero_03")]
     commands.cursor = catalyst.index("fire_dust")
     assert commands.press("confirm", "hero_03")  # a fire bomb on every enemy: no target to pick
     assert (inventory.count("healing_herb"), inventory.count("fire_dust")) == (herbs - 1, dust - 1)
@@ -237,7 +252,8 @@ def test_poison_worsens_sleep_skips_turns_and_attack_up_raises_damage(demo):
 
 def test_the_demo_battle_is_won_with_the_keyboard(demo):
     runtime, game, _commands = demo
-    keys = (pygame.K_DOWN, pygame.K_RETURN, pygame.K_RETURN)
+    # the menu is Attack / Skills / Items: open Attack, pick the first weapon, pick the target
+    keys = (pygame.K_RETURN, pygame.K_RETURN, pygame.K_RETURN)
     for step in range(6000):
         if runtime._victory or runtime._defeat:
             break
@@ -421,7 +437,7 @@ def test_each_new_battle_is_won_with_the_keyboard_and_every_enemy_move_works(
         return hero, log
 
     game.run_enemy_turns = watched
-    keys = (pygame.K_RETURN, pygame.K_RETURN, pygame.K_DOWN)
+    keys = (pygame.K_RETURN, pygame.K_RETURN, pygame.K_RETURN)
     for step in range(6000):
         if runtime._victory or runtime._defeat:
             break
@@ -489,12 +505,12 @@ def test_the_pet_attack_needs_an_owned_pet_and_hits_harder_when_the_pet_is_stron
     pet = game.active_pet()
     assert (pet.species_id, pet.nickname, pet.level) == ("frost_lynx", "Frosty", 3)
     units = set(game.active_hero_ids())
-    row = next(r for r in commands.entries(hero) if r.action_id == "send_frost_lynx")
+    row = next(r for r in _rows(commands, hero) if r.action_id == "send_frost_lynx")
     assert row.enabled
     state = game.save.rpg_state
     owned = list(state.pets)
     state.pets.clear()  # no pet: the skill cannot be used
-    row = next(r for r in commands.entries(hero) if r.action_id == "send_frost_lynx")
+    row = next(r for r in _rows(commands, hero) if r.action_id == "send_frost_lynx")
     assert not row.enabled and row.disabled_reason == "Needs Frost Lynx"
     assert not _choose(commands, hero, "send_frost_lynx")
     assert commands.message == "Needs Frost Lynx"
@@ -638,7 +654,7 @@ def test_a_skill_can_strike_once_with_every_weapon_or_five_times_or_three_with_o
 def _concoct(commands, hero, base, catalyst, target=None):
     assert not _choose(commands, hero, "concoct") and commands.mode == "ingredients"
     for pick in (base, catalyst):
-        ids = [r.action_id for r in commands.entries(hero)]
+        ids = [r.action_id for r in _rows(commands, hero)]
         commands.cursor = ids.index(pick)
         commands.press("confirm", hero)
     if target is not None:
@@ -738,7 +754,7 @@ def test_all_four_divine_skills_wait_for_three_boost_points_then_spend_them(
 ):
     _runtime, game, commands = demo
     _bp(game, hero, 2)
-    row = next(r for r in commands.entries(hero) if r.action_id == ability)
+    row = next(r for r in _rows(commands, hero) if r.action_id == ability)
     assert not row.enabled and row.disabled_reason == "Needs 3 bp (has 2)"
     _bp(game, hero, 3)
     _choose(commands, hero, ability)
@@ -785,3 +801,77 @@ def test_the_pets_screen_lists_pets_chooses_the_active_one_and_renames(demo):
     assert screen.closed
     # a game with pets has the entry in its pause menu, a game without does not
     assert any(key == "pets" for key, _label in runtime._pause_menu.options)
+
+
+# -- the battle screen's layout: dense information must not overlap -----------------------------
+def _overlaps(a, b):
+    return a[0] < b[0] + b[2] and b[0] < a[0] + a[2] and a[1] < b[1] + b[3] and b[1] < a[1] + a[3]
+
+
+def _screen_rects(runtime):
+    """Pixel rects of the party panels, the turn bar, the command menu, every combatant (sprite
+    with its name and life bar above) and the shield / weakness blocks under the enemies."""
+    adapter = runtime._battle_presentation
+    result = adapter.draw()
+    frame = result.frame
+    runtime._draw_battle_extras()
+    scale = runtime.width / adapter.screen.composer.layout.virtual_width
+    panels = {}
+    for panel in frame.panels:
+        if panel.panel_id.startswith("turn:"):
+            continue  # tiles inside the turn bar
+        panels[panel.panel_id] = (
+            panel.x * scale,
+            panel.y * scale,
+            panel.width * scale,
+            panel.height * scale,
+        )
+    members = {}
+    for member in runtime.game.battle.members.values():
+        if not runtime.game.battle.is_active(member):
+            continue
+        where = adapter.member_screen_box(member.member_id)
+        if where is None:
+            continue
+        x, top, feet = where
+        members[member.member_id] = (x - 22, top - 34, 44, feet - top + 34)
+    blocks = {b.member_id: b.rect() for b in runtime.battle_extras_blocks if b.rect()}
+    return panels, members, blocks
+
+
+@pytest.mark.parametrize("encounter_id", ["boss_room", "slime_pit", "old_crypt", "gazer_nest"])
+def test_no_information_covers_other_information_on_the_battle_screen(encounter, encounter_id):
+    runtime, game, commands = encounter(encounter_id)
+    hero = runtime._turn_actor
+    for _ in range(240):  # the boss intro camera settles
+        runtime._frame([], 1 / 60)
+    for step in ("", "confirm", "cancel", "down", "confirm"):  # root, Attack, root, Skills
+        if step:
+            commands.press(step, hero)
+        for _ in range(10):
+            runtime._frame([], 1 / 60)
+        panels, members, blocks = _screen_rects(runtime)
+        assert any(k.startswith("hud:") for k in panels) and "timeline" in panels
+        names = list(panels)
+        for i, a in enumerate(names):  # the party list, the turn bar and the menu are apart
+            for b in names[i + 1 :]:
+                assert not _overlaps(panels[a], panels[b]), (encounter_id, step, a, b)
+        for member_id, rect in members.items():
+            for name, panel in panels.items():
+                if name == "timeline" or name.startswith("hud:") or name == "action_menu":
+                    assert not _overlaps(rect, panel), (encounter_id, step, member_id, name)
+        for member_id, block in blocks.items():
+            for other_id, rect in members.items():
+                if other_id != member_id:  # a block under its own sprite is where it belongs
+                    assert not _overlaps(block, rect), (encounter_id, step, member_id, other_id)
+            for name, panel in panels.items():
+                assert not _overlaps(block, panel), (encounter_id, step, member_id, name)
+            for other_id, other in blocks.items():
+                if other_id != member_id:
+                    assert not _overlaps(block, other), (encounter_id, step, member_id, other_id)
+        assert (
+            0 <= panels["action_menu"][0]
+            and panels["action_menu"][0] + panels["action_menu"][2] <= runtime.width
+            if "action_menu" in panels
+            else True
+        )

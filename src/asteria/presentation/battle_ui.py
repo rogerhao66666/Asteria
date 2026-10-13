@@ -36,7 +36,9 @@ class BattleUiLayoutProfile:
     result_panel_width: float = 196.0
     result_panel_height: float = 116.0
     # Side-view staging options (defaults keep the original column HUD):
-    # party_hud "column" | "bottom_row" (one compact cell per member along the bottom);
+    # party_hud "column" | "bottom_row" (one compact cell per member along the bottom) |
+    # "side_list" (a panel per member down the party's edge: name, status chips, one
+    # "label  current / maximum" line with a bar per resource - the Octopath Traveler look);
     # overhead_zones: placement zones whose members show a bar over their sprite
     # instead of a HUD panel; action_menu_placement "bottom" | "actor" (beside the
     # acting member); stage_top: fraction of the height where the ground begins;
@@ -51,8 +53,8 @@ class BattleUiLayoutProfile:
         if self.virtual_width <= 0 or self.virtual_height <= 0:
             raise ValueError("virtual battle UI size must be positive")
         object.__setattr__(self, "overhead_zones", tuple(str(x) for x in self.overhead_zones))
-        if self.party_hud not in {"column", "bottom_row"}:
-            raise ValueError("party_hud must be 'column' or 'bottom_row'")
+        if self.party_hud not in {"column", "bottom_row", "side_list"}:
+            raise ValueError("party_hud must be 'column', 'bottom_row' or 'side_list'")
         if self.action_menu_placement not in {"bottom", "actor"}:
             raise ValueError("action_menu_placement must be 'bottom' or 'actor'")
         if not 0.0 <= float(self.stage_top) < 1.0:
@@ -238,6 +240,12 @@ class BattleUiComposer:
             panels.extend(b_panels)
             texts.extend(b_texts)
             gauges.extend(b_gauges)
+            return panels, texts, gauges, icons
+        if L.party_hud == "side_list":
+            s_panels, s_texts, s_gauges = self._side_list_commands(members, focus_member_id)
+            panels.extend(s_panels)
+            texts.extend(s_texts)
+            gauges.extend(s_gauges)
             return panels, texts, gauges, icons
 
         available_height = max(1.0, L.virtual_height - L.timeline_y - 42.0 - L.margin)
@@ -517,6 +525,95 @@ class BattleUiComposer:
                 )
         return panels, texts, gauges
 
+    @staticmethod
+    def _chip(label):
+        """A short status label: initials of a multi-word name, else the first three letters."""
+        words = str(label).replace(".", " ").replace("_", " ").split()
+        if len(words) > 1:
+            return "".join(w[0] for w in words[:3]).upper()
+        return (words[0] if words else "?")[:3].upper()
+
+    def _side_list_commands(self, members, focus_member_id):
+        """One panel per member down the party's edge, under the turn bar: name and status chips
+        on top, then a ``label  current / maximum`` line with a thin bar per resource (pips
+        resources, like boost points, draw as dots). Panels shrink their row count, never
+        overlap, and never leave the screen."""
+        panels, texts, gauges = [], [], []
+        L = self.layout
+        if not members:
+            return panels, texts, gauges
+        width = float(L.hud_panel_width)
+        x = L.virtual_width - L.margin - width
+        top = L.timeline_y + 24.0
+        available = L.virtual_height - L.margin - top
+        gap, header, row, pad = 2.0, 9.0, 10.0, 3.0
+        ranked = {m.member_id: self._ranked_gauges(m, 4) for m in members}
+        rows = 4
+        while (
+            rows > 1
+            and sum(pad + header + row * min(rows, len(ranked[m.member_id])) for m in members)
+            + gap * (len(members) - 1)
+            > available
+        ):
+            rows -= 1
+        y = top
+        for member in members:
+            shown = ranked[member.member_id][:rows]
+            height = pad + header + row * len(shown)
+            focused = focus_member_id is not None and member.member_id == str(focus_member_id)
+            panels.append(
+                BattleUiPanel(
+                    f"hud:{member.member_id}",
+                    x,
+                    y,
+                    width,
+                    height,
+                    "hud:side:focus" if focused else "hud:side",
+                    member.member_id,
+                )
+            )
+            chips = " ".join(self._chip(s.label or s.state_id) for s in member.statuses[:4])
+            name_room = max(6, int((width - 8 - 4 * len(chips)) // 4.4))
+            texts.append(
+                BattleUiText(
+                    self._fit(self._name(member.member_id), name_room),
+                    x + 3,
+                    y + 2,
+                    "member_name:side:focus" if focused else "member_name:side",
+                    "left",
+                    member.member_id,
+                )
+            )
+            if chips:
+                texts.append(
+                    BattleUiText(
+                        chips, x + width - 3, y + 2, "status_chip", "right", member.member_id
+                    )
+                )
+            gy = y + pad + header
+            for gauge in shown:
+                label = self._fit(gauge.label, 3)
+                texts.append(
+                    BattleUiText(label, x + 3, gy, "gauge_label", "left", member.member_id)
+                )
+                if str(gauge.presentation) in {"pips", "segmented_bar", "icon_stack"}:
+                    gauges.append(
+                        self._bar(member.member_id, gauge, x + 22, gy + 1.5, width - 28, 4.0)
+                    )
+                else:
+                    value = f"{gauge.current:,.0f} / {gauge.maximum:,.0f}"
+                    texts.append(
+                        BattleUiText(
+                            value, x + width - 3, gy, "side_value", "right", member.member_id
+                        )
+                    )
+                    gauges.append(
+                        self._bar(member.member_id, gauge, x + 3, gy + row - 3.0, width - 6, 1.6)
+                    )
+                gy += row
+            y += height + gap
+        return panels, texts, gauges
+
     def _bottom_row_commands(self, members, focus_member_id):
         """Compact party cells in one row along the bottom (name + up to two bars)."""
         panels, texts, gauges = [], [], []
@@ -582,6 +679,23 @@ class BattleUiComposer:
         if hud_gap >= self.MIN_MENU_WIDTH:
             width = min(width, max(hud_gap, wanted))
         x = (L.virtual_width - width) / 2
+        if L.party_hud == "side_list":
+            # between the far side's combatants and the party's, left of the party's list
+            width = min(width, wanted)
+            left = L.margin
+            right = L.virtual_width - L.margin - L.hud_panel_width - L.margin
+            centre = L.virtual_width / 2
+            for visual in self.scene.combatants:
+                half = float(self._member_heights.get(visual.member_id, 32.0)) / 2 + 6.0
+                if visual.anchor.x <= centre:
+                    left = max(left, visual.anchor.x + half)
+                elif visual.anchor.x < right:
+                    right = min(right, visual.anchor.x - half)
+            if right - left >= self.MIN_MENU_WIDTH:
+                width = min(width, right - left)
+                x = (left + right - width) / 2
+            else:  # no gap: the lower-left corner, under the far side
+                x = L.margin
         header_rows = (1 if menu.categories else 0) + (1 if menu.query else 0)
         body_rows = max(1, len(menu.entries))
         height = (
@@ -597,6 +711,7 @@ class BattleUiComposer:
         anchor = None
         if (
             L.action_menu_placement == "actor"
+            and L.party_hud != "side_list"
             and self._focus is not None
             and self._camera is not None
         ):
@@ -803,6 +918,15 @@ class BattleUiComposer:
             oy += P.interaction_row_height
         return panels, texts, icons
 
+    def _stands_right(self, member_id):
+        """True for a member standing on the right half of the stage (the party's side by the
+        usual staging); the turn bar only uses it to tint the tiles."""
+        try:
+            visual = self.scene.visual_for(member_id)
+        except KeyError:
+            return True
+        return visual.anchor.x > self.layout.virtual_width / 2
+
     def _timeline_commands(self, timeline):
         panels, texts = [], []
         if timeline is None:
@@ -820,6 +944,20 @@ class BattleUiComposer:
         x = (L.virtual_width - width) / 2 + padding + slot / 2
         max_chars = max(3, int(slot // self.TIMELINE_CHAR_WIDTH))
         for entry in turns:
+            # a tile per turn, tinted by the side of the field the member stands on
+            ally = self._stands_right(entry.member_id)
+            kind = "current" if entry.is_current else ("ally" if ally else "enemy")
+            panels.append(
+                BattleUiPanel(
+                    f"turn:{entry.member_id}",
+                    x - slot / 2 + 1.0,
+                    L.timeline_y + 1.0,
+                    slot - 2.0,
+                    18.0,
+                    f"timeline_tile:{kind}",
+                    entry.member_id,
+                )
+            )
             role = "timeline_current" if entry.is_current else "timeline_entry"
             texts.append(
                 BattleUiText(

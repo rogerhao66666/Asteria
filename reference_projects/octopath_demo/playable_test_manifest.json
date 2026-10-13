@@ -199,7 +199,8 @@
     "victory_jingle": "victory",
     "presentation": {
       "adapter": "canonical"
-    }
+    },
+    "command_style": "root"
   },
   "controls": {
     "title": "N New Game / L Load Player Save",

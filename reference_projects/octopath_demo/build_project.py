@@ -906,8 +906,39 @@ def main():
 
     # both sides stand nearer their edges: the command menu fits on the heroes' side, enemies stay
     # visible
+    # the party's status list stands down the right edge (name, status chips, "HP  cur / max" with
+    # a bar, boost points as pips); the heroes stand just inside it
     layout = sequences.require("ui_layout", "adaptive")
-    sequences.set("ui_layout", "adaptive", dataclasses.replace(layout, stage_front=0.2))
+    sequences.set(
+        "ui_layout",
+        "adaptive",
+        dataclasses.replace(
+            layout,
+            party_hud="side_list",
+            hud_panel_width=108.0,
+            stage_top=0.14,
+            stage_front=0.16,
+        ),
+    )
+    from asteria.presentation.battle_hud import BattleHudResourceStyle
+
+    hud = sequences.require("hud", "adaptive")
+    sequences.set(
+        "hud",
+        "adaptive",
+        dataclasses.replace(
+            hud,
+            resources=(
+                *hud.resources,
+                BattleHudResourceStyle(
+                    "bp", "BP", order=9, presentation="pips", segments=5, show_value=False
+                ),
+                # shields show under each enemy, not in the party list
+                BattleHudResourceStyle("shield", "SH", order=10, visible=False),
+            ),
+            show_unmapped_statuses=True,
+        ),
+    )
 
     from asteria.runtime.environment2d import ParticleEmitter2DComponent
 
@@ -1008,6 +1039,7 @@ def main():
             name += " (Divine)"
         labels[ability_id] = {"label": name}
     manifest["battle"]["skills"] = labels
+    manifest["battle"]["command_style"] = "root"  # Attack / Skills / Items, like Octopath
     (HERE / "playable_test_manifest.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
