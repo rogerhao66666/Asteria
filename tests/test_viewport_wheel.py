@@ -52,6 +52,16 @@ def test_a_mouse_wheel_zooms_around_the_cursor_and_does_not_pan(view):
     assert camera.zoom == pytest.approx(zoom / view.WHEEL_ZOOM_STEP)
 
 
+def test_a_smooth_scrolling_mouse_with_pixel_deltas_but_no_phase_also_zooms(view):
+    zoom = view.camera.zoom
+    pan = (view.camera.pan_x, view.camera.pan_y)
+    view.wheelEvent(_wheel(view, pixel=(0, 12), angle=(0, 12)))
+    assert view.camera.zoom > zoom
+    view.wheelEvent(_wheel(view, pixel=(0, 40), angle=(0, 120)))
+    assert (view.camera.pan_x, view.camera.pan_y) != pan  # the zoom moved the origin, not a pan
+    assert view.camera.zoom > zoom * view.WHEEL_ZOOM_STEP
+
+
 def test_a_trackpad_scroll_still_pans(view):
     from PySide6.QtCore import Qt
 

@@ -1,3 +1,4 @@
+import os
 from math import floor
 
 from asteria.core import Transform
@@ -630,15 +631,30 @@ class SceneViewportWidget(QWidget):
 
     @staticmethod
     def is_mouse_wheel(event):
-        """True for a physical mouse wheel (whole notches, no scroll phase); a trackpad sends
-        pixel deltas and / or scroll phases."""
-        return event.pixelDelta().isNull() and event.phase() == Qt.NoScrollPhase
+        """True for a mouse wheel, false for a trackpad. A trackpad (and a Magic Mouse) always
+        reports a scroll phase - begin, update, end, momentum; a wheel reports none, even when it
+        is a smooth-scrolling mouse that also sends pixel deltas."""
+        return event.phase() == Qt.NoScrollPhase
 
     def wheelEvent(self, event):
         angle = event.angleDelta()
+        if os.environ.get("ASTERIA_DEBUG_WHEEL"):  # what a device really sends
+            print(
+                "wheel",
+                f"pixel={event.pixelDelta().x()},{event.pixelDelta().y()}",
+                f"angle={angle.x()},{angle.y()}",
+                f"phase={event.phase()}",
+                f"source={event.source()}",
+                f"inverted={event.inverted()}",
+                f"-> {'zoom' if self.is_mouse_wheel(event) else 'pan'}",
+                flush=True,
+            )
         if self.is_mouse_wheel(event):
-            # a mouse wheel zooms around the cursor; the arrow keys pan, the trackpad scrolls
+            # a mouse wheel zooms around the cursor (forward = zoom in, whatever the system's
+            # natural-scrolling setting); the arrow keys pan, the trackpad scrolls
             notches = float(angle.y()) / 120.0
+            if event.inverted():
+                notches = -notches
             if notches == 0:
                 event.accept()
                 return
