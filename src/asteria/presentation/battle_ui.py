@@ -686,11 +686,18 @@ class BattleUiComposer:
             right = L.virtual_width - L.margin - L.hud_panel_width - L.margin
             centre = L.virtual_width / 2
             for visual in self.scene.combatants:
-                half = float(self._member_heights.get(visual.member_id, 32.0)) / 2 + 6.0
-                if visual.anchor.x <= centre:
-                    left = max(left, visual.anchor.x + half)
-                elif visual.anchor.x < right:
-                    right = min(right, visual.anchor.x - half)
+                # a combatant also owns its overhead name/bar (>= 44 wide) and shield row
+                half = max(float(self._member_heights.get(visual.member_id, 32.0)) / 2, 24.0) + 6.0
+                pos = (
+                    None
+                    if self._camera is None
+                    else self._anchor_screen(self._camera, visual.member_id)
+                )
+                px = visual.anchor.x if pos is None else pos[0]
+                if px <= centre:
+                    left = max(left, px + half)
+                elif px < right:
+                    right = min(right, px - half)
             if right - left >= self.MIN_MENU_WIDTH:
                 width = min(width, right - left)
                 x = (left + right - width) / 2
@@ -938,7 +945,7 @@ class BattleUiComposer:
         width = 2 * padding + slot * len(turns)
         panels.append(
             BattleUiPanel(
-                "timeline", (L.virtual_width - width) / 2, L.timeline_y, width, 20.0, "timeline"
+                "timeline", (L.virtual_width - width) / 2, L.timeline_y, width, 24.0, "timeline"
             )
         )
         x = (L.virtual_width - width) / 2 + padding + slot / 2
@@ -953,7 +960,7 @@ class BattleUiComposer:
                     x - slot / 2 + 1.0,
                     L.timeline_y + 1.0,
                     slot - 2.0,
-                    18.0,
+                    22.0,
                     f"timeline_tile:{kind}",
                     entry.member_id,
                 )
@@ -963,7 +970,7 @@ class BattleUiComposer:
                 BattleUiText(
                     self._fit(self._name(entry.member_id), max_chars),
                     x,
-                    L.timeline_y + 6,
+                    L.timeline_y + 7,
                     role,
                     "center",
                     entry.member_id,
@@ -974,7 +981,7 @@ class BattleUiComposer:
                     BattleUiText(
                         f"{entry.ready_time:.1f}",
                         x,
-                        L.timeline_y + 13,
+                        L.timeline_y + 16,
                         "timeline_time",
                         "center",
                         entry.member_id,

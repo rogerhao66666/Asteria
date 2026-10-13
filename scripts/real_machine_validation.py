@@ -3168,13 +3168,9 @@ def check_octopath_demo(out):
     shot("octo_menu.png")
     # boost x2 and a chosen target
     game.battle.battle_resources.change(actor, "bp", 3)
-    press(pygame.K_RIGHT)
+    press(pygame.K_r)
     checks["boost_set_by_key"] = runtime.battle_commands.boost == 1
-    attack = next(
-        r.action_id
-        for r in runtime.battle_commands.entries(actor)
-        if r.action_id.startswith("attack_")
-    )
+    attack = next(iter(runtime.battle_commands.weapon_ability_ids(actor)))
     select(actor, attack)
     checks["target_menu"] = runtime.battle_commands.mode == "target"
     shot("octo_target.png")

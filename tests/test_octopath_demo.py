@@ -875,3 +875,25 @@ def test_no_information_covers_other_information_on_the_battle_screen(encounter,
             if "action_menu" in panels
             else True
         )
+
+
+def test_the_menu_stays_clear_of_every_enemy_name_and_bar_while_the_camera_moves(encounter):
+    runtime, game, commands = encounter("boss_room")
+    hero = runtime._turn_actor
+    for frame in range(150):
+        runtime._frame([], 1 / 60)
+        if frame == 20:
+            commands.press("confirm", hero)
+        adapter = runtime._battle_presentation
+        frame_view = adapter.draw().frame
+        scale = runtime.width / adapter.screen.composer.layout.virtual_width
+        menu = [p for p in frame_view.panels if p.panel_id == "action_menu"]
+        if not menu:
+            continue
+        m = (menu[0].x * scale, menu[0].y * scale, menu[0].width * scale, menu[0].height * scale)
+        for text in frame_view.texts:
+            if text.role == "overhead_name":
+                half = 3.0 * len(text.text) * scale / 2 + 4
+                rect = (text.x * scale - half, text.y * scale, 2 * half, 8 * scale)
+                assert not _overlaps(m, rect), (frame, text.text)
+    assert menu
