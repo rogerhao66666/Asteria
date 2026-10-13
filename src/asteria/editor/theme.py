@@ -285,6 +285,22 @@ QLabel#EmptyStateHint { color: $text_muted; }
 QLabel#ErrorLabel { color: $error; }
 QListWidget#TilePaletteList::item { min-height: 26px; padding: 3px 6px; }
 
+/* -- cards (designer workspaces: sections of one record) ---------------------------------------- */
+QFrame#Card { background: $raised; border: 1px solid $border; border-radius: 10px; }
+QLabel#CardTitle { color: $text; font-size: 13px; font-weight: 800; padding: 0; background: transparent; }
+QLabel#CardHint { color: $text_muted; font-size: 11px; padding: 0 0 2px 0; background: transparent; }
+QFrame#Card QLabel { background: transparent; }
+QLabel#RecordHeading { color: $text; font-size: 17px; font-weight: 800; }
+QLabel#RecordId { color: $text_muted; font-size: 11px; }
+QToolButton#KindButton {
+    background: $panel; border: 1px solid $border; border-radius: 8px;
+    padding: 7px 10px; color: $text_dim; text-align: left; font-weight: 700;
+}
+QToolButton#KindButton:hover { background: $hover; color: $text; }
+QToolButton#KindButton:checked { background: $selection; border-color: $primary; color: $selection_text; }
+QFrame#PreviewFrame { background: $input; border: 1px solid $border; border-radius: 10px; }
+QLabel#ChipLabel { background: $hover; color: $text_dim; border-radius: 9px; padding: 2px 8px; font-size: 11px; }
+
 /* -- toolbar and status bar ---------------------------------------------------------------------- */
 QToolBar {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 $toolbar_top, stop:1 $toolbar_bottom);

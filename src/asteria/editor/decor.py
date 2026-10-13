@@ -76,6 +76,7 @@ LABEL_RULES = (
     (r"overview|flow", "flow"),
     (r"^code\b|script", "code"),
     # database categories
+    (r"real-time combat|^attacks|projectile", "battle"),
     (r"damage numbers", "ui"),
     (r"target", "target"),
     (r"combatant|sprite|portrait", "presentation"),

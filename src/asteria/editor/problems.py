@@ -9,6 +9,8 @@ first one), and gives each a ``target`` the shell can navigate to:
     ("scene", scene_id) / ("entity", scene_id, entity_id)
     ("sprite", asset_id) / ("sequence", sequence_id)
     ("script", path, line)
+    ("combat", kind_id, record_id)               Real-Time Combat workspace (attacks, projectiles, rarities, affixes)
+    ("behavior_tree", tree_id)
     ()                                           no single location
 """
 
@@ -33,7 +35,9 @@ class Problem:
             return f"{self.target[-2]} / {self.target[-1]}"
         if kind == "script":
             return f"{Path(self.target[1]).name}:{self.target[2]}"
-        if kind in ("scene", "sprite", "sequence"):
+        if kind == "combat":
+            return f"{self.target[1]} / {self.target[2]}"
+        if kind in ("scene", "sprite", "sequence", "behavior_tree"):
             return self.target[1]
         if kind == "entity":
             return f"{self.target[1]} / {self.target[2]}"
@@ -162,6 +166,120 @@ def _field(project, found):
                 )
 
 
+def _combat(project, found):
+    """Real-time combat references (D22): attacks, projectiles, timelines, abilities, behaviour
+    trees and scene entities."""
+    library, db = project.gameplay_library, project.rpg_database
+    states = set(library.states.ids())
+    attacks, projectiles, timelines = library.attacks, library.projectiles, library.timelines
+
+    def add(severity, message, target):
+        found.append(Problem(severity, "Real-Time Combat", message, target))
+
+    for attack in attacks.values():
+        target = ("combat", "attacks", attack.attack_id)
+        if attack.damage_formula_id and attack.damage_formula_id not in library.formulas:
+            add("error", f"attack {attack.attack_id}: shared formula {attack.damage_formula_id} not found", target)
+        for entry in attack.apply_states:
+            if entry["state"] not in states:
+                add("error", f"attack {attack.attack_id}: state {entry['state']} not found", target)
+    for projectile in projectiles.values():
+        if projectile.attack_id and projectile.attack_id not in attacks:
+            add(
+                "error",
+                f"projectile {projectile.projectile_id}: attack {projectile.attack_id} not found",
+                ("combat", "projectiles", projectile.projectile_id),
+            )
+    for timeline in timelines.values():
+        target = ("record", "rpg", "action_timelines", timeline.timeline_id)
+        for cue in timeline.cues:
+            kind, payload = cue.kind.value, cue.payload
+            if kind == "projectile" and payload.get("projectile_id") not in projectiles:
+                add(
+                    "error",
+                    f"timeline {timeline.timeline_id}: projectile {payload.get('projectile_id')} not found",
+                    target,
+                )
+            if kind == "combo_window" and payload.get("next") and payload["next"] not in timelines:
+                add(
+                    "error",
+                    f"timeline {timeline.timeline_id}: combo goes to unknown timeline {payload['next']}",
+                    target,
+                )
+            if kind == "hitbox" and payload.get("hit_tag") and payload["hit_tag"] not in attacks:
+                add(
+                    "warning",
+                    f"timeline {timeline.timeline_id}: hit tag {payload['hit_tag']} is not an attack (no damage)",
+                    target,
+                )
+    for ability_id in library.abilities.ids():
+        ability = library.abilities.require(ability_id)
+        if ability.timeline_id and ability.timeline_id not in timelines:
+            add(
+                "error",
+                f"ability {ability_id}: timeline {ability.timeline_id} not found",
+                ("record", "rpg", "abilities", ability_id),
+            )
+    for tree in db.behavior_trees.values():
+        for _path, node in tree.root.walk():
+            p = node.params
+            missing = None
+            if (
+                node.kind in ("use_ability", "ability_ready")
+                and library.abilities.get(str(p.get("ability", ""))) is None
+            ):
+                missing = f"ability {p.get('ability')}"
+            elif node.kind in ("apply_state", "has_state") and p.get("state") not in states:
+                missing = f"state {p.get('state')}"
+            elif node.kind == "summon" and project.prefabs.get(str(p.get("prefab", ""))) is None:
+                missing = f"prefab {p.get('prefab')}"
+            if missing:
+                add(
+                    "error",
+                    f"behavior tree {tree.tree_id}: {node.kind} uses unknown {missing}",
+                    ("behavior_tree", tree.tree_id),
+                )
+    from asteria.runtime.action_combat import ActionCombatComponent, parse_bindings
+    from asteria.runtime.combat import CombatantComponent, parse_values
+
+    for scene in project.scenes():
+        for entity in scene.entities():
+            target = ("entity", scene.id, entity.id)
+            spec = entity.try_get(ActionCombatComponent)
+            if spec is not None:
+                try:
+                    bindings = parse_bindings(spec.bindings)
+                except ValueError as exc:
+                    add("error", f"{scene.name}/{entity.name}: input bindings: {exc}", target)
+                    bindings = {}
+                for action, ability_id in bindings.items():
+                    if library.abilities.get(ability_id) is None:
+                        add("error", f"{scene.name}/{entity.name}: {action} uses unknown ability {ability_id}", target)
+            combatant = entity.try_get(CombatantComponent)
+            if combatant is not None:
+                if combatant.drop_table_id and combatant.drop_table_id not in db.drop_tables:
+                    add("error", f"{scene.name}/{entity.name}: drop table {combatant.drop_table_id} not found", target)
+                try:
+                    resources = parse_values(combatant.resources)
+                except ValueError as exc:
+                    add("error", f"{scene.name}/{entity.name}: resources: {exc}", target)
+                    continue
+                if combatant.life_resource and combatant.life_resource not in resources and not _linked(entity):
+                    add(
+                        "warning",
+                        f"{scene.name}/{entity.name}: life resource {combatant.life_resource}"
+                        " is not among its resources (it can never die)",
+                        target,
+                    )
+
+
+def _linked(entity):
+    from asteria.runtime.actor_link import ActorLinkComponent
+
+    link = entity.try_get(ActorLinkComponent)
+    return link is not None and bool(link.actor_id)
+
+
 def _sprites(document, found, resource_root):
     from .animation_authoring import AnimationAuthoringController
 
@@ -213,6 +331,7 @@ def collect_problems(document, *, resource_root=None):
         ("Project", lambda: _structure(project, found)),
         ("RPG Database", lambda: _references(project, found)),
         ("Field / Events", lambda: _field(project, found)),
+        ("Real-Time Combat", lambda: _combat(project, found)),
         ("Sprites", lambda: _sprites(document, found, resource_root)),
         ("Action Timeline", lambda: _timelines(document, found)),
         ("Scripts", lambda: _scripts(document, found)),

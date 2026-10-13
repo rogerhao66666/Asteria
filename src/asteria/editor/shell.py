@@ -160,6 +160,11 @@ class AsteriaEditorWindow(QMainWindow):
         self.behavior_tree_editor = BehaviorTreeEditorWidget(self.document, self)
         self.behavior_tree_editor.changed.connect(self.refresh_all)
         self.rpg_workspace.addTab(self.behavior_tree_editor, "Behavior Trees")
+        from .combat_workspace import CombatWorkspace
+
+        # D22 A9: attacks, projectiles, loot rarities and affixes with live previews
+        self.combat_editor = CombatWorkspace(self.document, self)
+        self.rpg_workspace.addTab(self.combat_editor, "Real-Time Combat")
         self.battle_authoring = FamilyHostWidget("Battle Rules", self.authoring_controllers.battle_categories, self)
         self.presentation_authoring = FamilyHostWidget(
             "Battle Presentation", self.authoring_controllers.presentation_categories, self
@@ -1708,6 +1713,16 @@ class AsteriaEditorWindow(QMainWindow):
             self.ui_workspace.setCurrentWidget(self.action_timeline_editor)
             self.action_timeline_editor.refresh(select=target[1])
             return self.action_timeline_editor.sequence_id == target[1]
+        if kind == "combat":
+            self.workspace.set_mode(WorkspaceMode.RPG)
+            self.rpg_workspace.setCurrentWidget(self.combat_editor)
+            self.combat_editor.show_kind(target[1])
+            self.combat_editor.select_id(target[2])
+            return self.combat_editor.record_id == target[2]
+        if kind == "behavior_tree":
+            self.workspace.set_mode(WorkspaceMode.RPG)
+            self.rpg_workspace.setCurrentWidget(self.behavior_tree_editor)
+            return True
         if kind == "script":
             self.workspace.set_mode(WorkspaceMode.CODE)
             self.code_workspace.open_script(Path(target[1]).name)

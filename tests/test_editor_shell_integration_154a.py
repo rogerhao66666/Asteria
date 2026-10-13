@@ -127,6 +127,7 @@ def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
         "Game Systems",
         "Enemy AI",
         "Behavior Trees",
+        "Real-Time Combat",
     ]
     assert [window.events_workspace.tabText(i) for i in range(window.events_workspace.count())] == [
         "Entity Events",

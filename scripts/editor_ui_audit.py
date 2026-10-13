@@ -200,6 +200,20 @@ def surfaces(window):
                 ),
             )
         )
+    combat = window.combat_editor  # D22 A9: each Real-Time Combat kind has its own cards and preview
+    from asteria.editor.combat_authoring import KINDS
+
+    for spec in KINDS:
+        out.append(
+            (
+                f"rpg_combat_{spec.kind_id}",
+                lambda k=spec.kind_id: (
+                    window.workspace.set_mode(WM.RPG),
+                    window.rpg_workspace.setCurrentWidget(combat),
+                    combat.show_kind(k),
+                ),
+            )
+        )
     return out
 
 
@@ -210,6 +224,7 @@ def main(argv=None):
     parser.add_argument("--tag", default="audit")
     parser.add_argument("--theme", default=None, help="palette: graphite, twilight or daylight")
     parser.add_argument("--surfaces", nargs="*", help="only these surface names")
+    parser.add_argument("--project", default=None, help="a project file instead of the reference project")
     args = parser.parse_args(argv)
     out = Path(args.output)
     out.mkdir(parents=True, exist_ok=True)
@@ -224,9 +239,10 @@ def main(argv=None):
 
     app = QApplication.instance() or QApplication([])
     apply_asteria_theme(app, args.theme)
-    project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
+    project_file = Path(args.project) if args.project else PROJECT_FILE
+    project = Project.load_json(project_file, EditorDocument().component_registry)
     window = AsteriaEditorWindow(project)
-    window.document.file_path = PROJECT_FILE  # as File > Open does: asset paths resolve next to the project
+    window.document.file_path = project_file  # as File > Open does: asset paths resolve next to the project
     window.document.mark_saved()
     window.refresh_all()
     window.resize(width, height)

@@ -3,7 +3,7 @@ from math import floor
 from asteria.core import Transform
 from asteria.runtime import Camera2DComponent, SpriteRenderer2D
 
-from .collision_overlay import build_collision_cells
+from .collision_overlay import build_collision_cells, build_combat_boxes
 from .commands import CommandTransaction
 from .editing import build_set_component_field_command
 from .entity_render import (
@@ -32,7 +32,7 @@ from .viewport import ViewportCamera, pick_entity, scene_markers, selected_scene
 
 try:
     from PySide6.QtCore import QEvent, QPointF, Qt, Signal
-    from PySide6.QtGui import QBrush, QColor, QPainter, QPen
+    from PySide6.QtGui import QBrush, QColor, QPainter, QPen, QPolygonF
     from PySide6.QtWidgets import QWidget
 except ImportError:
     QWidget = object
@@ -324,6 +324,23 @@ class SceneViewportWidget(QWidget):
             lambda aid: resolve_texture_source(self.document, aid),
             self.texture_cache,
         )
+
+        # D22 A9: what blocks (colliders, slopes, ladders), what can be hit and what hits
+        styles = {
+            "solid": (QColor(150, 162, 196, 200), QColor(150, 162, 196, 40), Qt.SolidLine),
+            "one_way": (QColor(212, 176, 110, 220), QColor(212, 176, 110, 40), Qt.DashLine),
+            "slope_right": (QColor(150, 162, 196, 200), QColor(150, 162, 196, 60), Qt.SolidLine),
+            "slope_left": (QColor(150, 162, 196, 200), QColor(150, 162, 196, 60), Qt.SolidLine),
+            "ladder": (QColor(200, 150, 90, 220), QColor(200, 150, 90, 30), Qt.DotLine),
+            "trigger": (QColor(120, 200, 220, 160), QColor(120, 200, 220, 20), Qt.DotLine),
+            "hurtbox": (QColor(92, 181, 122, 210), QColor(92, 181, 122, 30), Qt.SolidLine),
+            "hitbox": (QColor(222, 91, 91, 230), QColor(222, 91, 91, 45), Qt.DashLine),
+        }
+        for box in build_combat_boxes(self.current_scene(), self.camera):
+            line, fill, style = styles[box.kind]
+            painter.setPen(QPen(line, 1.5, style))
+            painter.setBrush(QBrush(fill))
+            painter.drawPolygon(QPolygonF([QPointF(x, y) for x, y in box.points]))
 
         for frame in build_camera_frames(self.current_scene(), self.camera):
             color = QColor(92, 181, 122, 210) if frame.active else QColor(120, 132, 160, 160)
