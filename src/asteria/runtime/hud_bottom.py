@@ -18,7 +18,7 @@ Everything is read from engine state and the project; nothing is game-specific.
 
 from __future__ import annotations
 
-from math import sqrt
+from math import cos, pi, sin, sqrt
 
 KEY_NAMES = {
     "left shift": "SHIFT",
@@ -140,13 +140,51 @@ class BottomHud:
     """Drawn each frame by ``ActionHud.draw_overlay``; remembers only the hint timer."""
 
     HINT_SECONDS = 12.0
+    FLASH_SECONDS = 0.3
 
     def __init__(self):
         self.hint_left = self.HINT_SECONDS
         self._orb_cache = {}
+        self._cooling = {}  # ability id -> seconds left at the last frame (for the ready flash)
+        self._flash = {}
 
     def tick(self, dt):
         self.hint_left = max(0.0, self.hint_left - dt)
+        for key in list(self._flash):
+            self._flash[key] -= dt
+            if self._flash[key] <= 0:
+                del self._flash[key]
+
+    def _sweep(self, rt, rect, done):
+        """The cooldown clock: the slot goes dark, and a bright wedge opens clockwise from the top
+        until the whole slot is bright again. ``done`` is the part of the cooldown that passed."""
+        pg = rt.pg
+        w, h = rect.width - 4, rect.height - 4
+        shade = pg.Surface((w, h), pg.SRCALPHA)
+        shade.fill((0, 0, 0, 185))
+        cx, cy = w / 2, h / 2
+        reach = (w + h) * 0.75
+        angle = 2 * pi * max(0.0, min(1.0, done))
+        points = [(cx, cy), (cx, cy - reach)]
+        steps = max(2, int(done * 24) + 1)
+        for k in range(1, steps + 1):  # along the circle, so the wedge is exact past 90 degrees
+            a = angle * k / steps
+            points.append((cx + sin(a) * reach, cy - cos(a) * reach))
+        if done > 0:
+            pg.draw.polygon(shade, (0, 0, 0, 0), points)
+        rt.screen.blit(shade, (rect.x + 2, rect.y + 2))
+        if 0 < done < 1:  # the sweeping edge
+            end = (cx + sin(angle) * reach, cy - cos(angle) * reach)
+            clip = rt.screen.get_clip()
+            rt.screen.set_clip(rect.inflate(-4, -4))
+            pg.draw.line(
+                rt.screen,
+                (235, 240, 255),
+                (rect.x + 2 + cx, rect.y + 2 + cy),
+                (rect.x + 2 + end[0], rect.y + 2 + end[1]),
+                2,
+            )
+            rt.screen.set_clip(clip)
 
     # -- pieces ----------------------------------------------------------------------------------
     def _orb(self, rt, cx, cy, radius, fraction, colors, title, value_text):
@@ -244,12 +282,12 @@ class BottomHud:
                 )
             left = game.action_combat.cooldown(game.player, ability_id)
             total = getattr(ability, "cooldown_seconds", 0.0) or left
+            seen = self._cooling.get(ability_id, 0.0)
+            if seen > 0 and left <= 0:  # ready again: a short flash
+                self._flash[ability_id] = self.FLASH_SECONDS
+            self._cooling[ability_id] = left
             if left > 0 and total > 0:
-                shade = pg.Surface(
-                    (size - 4, int((size - 4) * min(1.0, left / total))), pg.SRCALPHA
-                )
-                shade.fill((0, 0, 0, 175))
-                screen.blit(shade, (rect.x + 2, rect.y + 2))
+                self._sweep(rt, rect, 1.0 - min(1.0, left / total))
                 rt.text(
                     f"{left:.1f}" if left < 10 else f"{left:.0f}",
                     rect.centerx,
@@ -258,6 +296,10 @@ class BottomHud:
                     color=(255, 255, 255),
                     anchor="center",
                 )
+            elif self._flash.get(ability_id, 0.0) > 0:
+                glow = pg.Surface((size - 4, size - 4), pg.SRCALPHA)
+                glow.fill((255, 255, 255, int(150 * self._flash[ability_id] / self.FLASH_SECONDS)))
+                screen.blit(glow, (rect.x + 2, rect.y + 2))
             elif not usable:
                 tint = pg.Surface((size - 4, size - 4), pg.SRCALPHA)
                 tint.fill((20, 30, 80, 120))

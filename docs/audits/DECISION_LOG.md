@@ -1604,3 +1604,16 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 **仍然存在：** 圖示是從資源包挑的相近圖，不是專屬設計；暗黑 demo 的實機輸入沒有實體鍵盤／手把驗證（需要真人）；`CollisionWorld.from_scene` 仍未快取。
 
+### D24-2 — 冷卻轉圈動畫、從範本新增專案、編輯器左側分頁擠在一起（使用者回報）
+
+**使用者回報：** 技能進入冷卻要有「變暗、轉一圈變亮」的動畫，當成預設；八方旅人與暗黑的設定可以當成預設範本讓使用者修改；GUI 有文字擠在一起，例如 Scene 下面的 Project 跟 Tile。
+
+**做法：**
+- **冷卻時鐘**（`hud_bottom.BottomHud._sweep`）：技能用出後整格變暗，一個明亮的扇形從 12 點鐘方向順時針展開，邊緣有一條亮線，轉滿一圈整格恢復明亮並閃一下（0.3 秒）；中間仍顯示剩餘秒數。取代原本由上往下的遮罩。對所有專案的動作戰鬥 HUD 預設生效，不需設定。
+- **File > New from Template…（Ctrl+N）**（`editor/project_templates.py`）：兩個範本 —— *Party RPG (Octopath-style)*（弱點與護盾、加速點、職業、寵物、調合、狀態、四種敵人）和 *Action RPG (Diablo-style)*（職業與技能樹、稀有度與詞綴、套裝、藥水、格子背包、有冷卻的快捷列、城鎮／野外／礦坑）。範本是完整的專案資料夾（含美術與授權文件），複製後改名、載入，所有設定（戰鬥規則、數值、HUD、地圖）都能直接改；建置腳本不複製。原範本不會被動到。範本來源是 `reference_projects/`，打包安裝版若沒有這個資料夾，選單會顯示「沒有安裝範本」。
+- **左側分頁**：原本「Project / Scene、Tile Palette、Layers」三個分頁在窄的左欄擠不下，第三個被捲動箭頭吃掉。改名為 Project／Tiles／Layers，dock 分頁的左右內距 12 → 8 px，左欄最小寬度 264 px；視窗最小尺寸 1000×640（再小面板會擠字）。
+- **稽核腳本**：`editor_ui_audit.py` 新增 `dock_tab_hidden`，停靠面板的分頁掉到分頁列外面就算缺陷（之前被當成可捲動的資訊項而漏掉）。
+
+**確認：** 完整套件 2185 passed；兩個專案在 1280×800 與 1100×700 稽核 0 缺陷（含新規則）；法師真實視窗重跑 60 fps；截圖 `arpg_demo_mage_field_skills.png` 可見技能 2、4 的冷卻扇形與秒數。
+測試：`test_a_cooldown_goes_dark_and_a_wedge_turns_clockwise_to_bright_with_a_ready_flash`、`tests/test_project_templates.py`（複製、改名、載入驗證、原檔不變、拒絕非空資料夾、編輯器開啟）。
+

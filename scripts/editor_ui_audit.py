@@ -36,6 +36,12 @@ def _text_width(widget, text):
     return widget.fontMetrics().horizontalAdvance(text.replace("&&", "&").replace("&", ""))
 
 
+def _is_dock_tab_bar(widget):
+    from PySide6.QtWidgets import QMainWindow
+
+    return isinstance(widget.parentWidget(), QMainWindow)
+
+
 def _single_line(text):
     return text and "\n" not in text and "<" not in text
 
@@ -144,9 +150,10 @@ def defects_in(window):
                 if need > rect.width() + 1:
                     add("clipped", widget, {"text": text, "need": need, "have": rect.width()})
                 elif rect.right() > widget.width() + 1 or rect.left() < 0:
-                    add(
-                        "scrolled", widget, {"text": text}
-                    )  # reachable with the bar's scroll buttons
+                    # a docked panel's tab off the end of its bar is a defect (the panel looks
+                    # missing); in a page's own tab bar the scroll buttons reach it
+                    kind = "dock_tab_hidden" if _is_dock_tab_bar(widget) else "scrolled"
+                    add(kind, widget, {"text": text})
         elif isinstance(widget, QHeaderView):
             model = widget.model()
             if model is None:

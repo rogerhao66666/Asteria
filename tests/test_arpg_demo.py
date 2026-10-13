@@ -689,3 +689,36 @@ def test_the_editor_edits_a_status_name_and_icon_and_undoes_it():
         document.undo()
         restored = adapter.get(key)
         assert (restored.display_name, restored.icon_id) == before
+
+
+def test_a_cooldown_goes_dark_and_a_wedge_turns_clockwise_to_bright_with_a_ready_flash(demo):
+    from asteria.runtime.hud_bottom import BottomHud
+
+    pg, screen = demo.pg, demo.screen
+    hud = BottomHud()
+    rect = pg.Rect(100, 100, 60, 60)
+
+    def brightness(x, y):
+        return sum(screen.get_at((x, y))[:3])
+
+    def painted(done):
+        screen.fill((200, 200, 200))
+        hud._sweep(demo, rect, done)
+        return {
+            "top_right": brightness(rect.centerx + 18, rect.centery - 18),
+            "bottom_right": brightness(rect.centerx + 18, rect.centery + 18),
+            "bottom_left": brightness(rect.centerx - 18, rect.centery + 18),
+            "top_left": brightness(rect.centerx - 18, rect.centery - 18),
+        }
+
+    start = painted(0.0)
+    assert max(start.values()) < 300  # everything dark
+    quarter = painted(0.3)  # past the first quarter: the top right quadrant is bright
+    assert quarter["top_right"] > 500 and quarter["bottom_right"] < 300
+    half = painted(0.6)
+    assert half["bottom_right"] > 500 and half["bottom_left"] < 300
+    assert painted(0.99)["top_left"] > 500  # the last wedge reaches the top left
+    # the ready flash: cooling > 0 then 0 starts it, and tick() fades it out
+    hud._flash["x"] = hud.FLASH_SECONDS
+    hud.tick(hud.FLASH_SECONDS + 0.01)
+    assert "x" not in hud._flash

@@ -178,7 +178,7 @@ QTabBar::tab {
     border-bottom: 2px solid transparent;
     min-width: 0; padding: 6px 11px; margin: 0;
 }
-QMainWindow > QTabBar::tab { min-width: 0; padding: 6px 12px; background: $base; }
+QMainWindow > QTabBar::tab { min-width: 0; padding: 6px 8px; background: $base; }
 QTabBar::tab:selected { background: $raised; color: $text; border-bottom: 2px solid $primary; }
 QTabBar::tab:hover:!selected { background: $hover; color: $text; }
 

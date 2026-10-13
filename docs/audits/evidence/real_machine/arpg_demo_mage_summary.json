@@ -7,11 +7,11 @@
  "mean_fps": 60.0,
  "p95_frame_ms": 16.7,
  "abilities_used": {
-  "m_bolt": 55,
-  "m_nova": 2,
+  "m_bolt": 53,
   "m_meteor": 1,
   "roll": 1,
-  "potion": 1
+  "potion": 1,
+  "m_nova": 1
  },
  "known": [
   "m_bolt",
@@ -21,7 +21,7 @@
   "roll"
  ],
  "player_life": [
-  81,
+  87,
   140.0
  ],
  "kills": 7,

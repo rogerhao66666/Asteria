@@ -129,6 +129,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.runtime_monitor.start()
         self.setWindowTitle("Asteria Editor")
         self.resize(1280, 800)
+        self.setMinimumSize(1000, 640)  # below this the panels squeeze text (audited sizes)
 
         self.viewport = SceneViewportWidget(self.document)
         self.code_workspace = CodeWorkspaceWidget(self.document, self)
@@ -244,13 +245,14 @@ class AsteriaEditorWindow(QMainWindow):
         self.setCentralWidget(self.workspace)
 
         self.project_tree = ProjectTreeWidget(self.document)
-        left = QDockWidget("Project / Scene", self)
+        left = QDockWidget("Project", self)
         left.setObjectName("ProjectSceneDock")
         left.setWidget(self.project_tree)
+        left.setMinimumWidth(264)  # the three tabs (Project, Tiles, Layers) show whole
         self.addDockWidget(Qt.LeftDockWidgetArea, left)
 
         self.tile_palette = TilePaletteWidget(self)
-        palette_dock = QDockWidget("Tile Palette", self)
+        palette_dock = QDockWidget("Tiles", self)
         palette_dock.setObjectName("TilePaletteDock")
         palette_dock.setWidget(scrollable(self.tile_palette))
         self.addDockWidget(Qt.LeftDockWidgetArea, palette_dock)
@@ -708,6 +710,10 @@ class AsteriaEditorWindow(QMainWindow):
         self.save_as_action = QAction("Save As…", self)
         self.save_as_action.setShortcut("Ctrl+Shift+S")
         self.save_as_action.triggered.connect(self.save_project_as)
+        self.new_template_action = QAction("New from Template…", self)
+        self.new_template_action.setShortcut("Ctrl+N")
+        self.new_template_action.triggered.connect(self.new_from_template_dialog)
+        file_menu.addAction(self.new_template_action)
         file_menu.addActions([self.open_action, self.save_action, self.save_as_action])
         file_menu.addSeparator()
         self.import_mv_action = QAction("Import RPG Maker MV Project…", self)
@@ -2114,6 +2120,60 @@ class AsteriaEditorWindow(QMainWindow):
         self.refresh_all()
         QTimer.singleShot(0, self.viewport.frame_game_camera)
         return True
+
+    def new_from_template(self, template_id, name, folder):
+        """Copy a project template into ``folder`` and open it."""
+        from .project_templates import create_from_template
+
+        path = create_from_template(template_id, name, folder)
+        load_document(self.document, path)
+        self._resolve_project_resources()
+        self.play_session = None
+        self._load_playtest_profiles()
+        self.refresh_all()
+        QTimer.singleShot(0, self.viewport.frame_game_camera)
+        return path
+
+    def new_from_template_dialog(self):
+        from PySide6.QtWidgets import QInputDialog
+
+        from .project_templates import available_templates
+
+        templates = available_templates()
+        if not templates:
+            QMessageBox.information(
+                self, "New from Template", "No project templates are installed."
+            )
+            return None
+        if self.document.dirty:
+            answer = QMessageBox.question(
+                self,
+                "Unsaved Changes",
+                "This project has unsaved changes. Start a new project anyway?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No,
+            )
+            if answer != QMessageBox.Yes:
+                return None
+        titles = [f"{t.title} - {t.description}" for t in templates]
+        choice, ok = QInputDialog.getItem(self, "New from Template", "Template:", titles, 0, False)
+        if not ok:
+            return None
+        template = templates[titles.index(choice)]
+        name, ok = QInputDialog.getText(
+            self, "New from Template", "Project name:", text=template.title.split(" (")[0]
+        )
+        if not ok or not name.strip():
+            return None
+        parent = QFileDialog.getExistingDirectory(self, "Folder to create the project in")
+        if not parent:
+            return None
+        folder = Path(parent) / name.strip().replace(" ", "_").lower()
+        try:
+            return self.new_from_template(template.template_id, name, folder)
+        except (OSError, ValueError, EditorStorageError, EditorResourceError) as exc:
+            QMessageBox.critical(self, "New from Template", str(exc))
+            return None
 
     def import_mv_project(self, source, output):
         """Import an RPG Maker MV project into a new Asteria project folder and open it (W-18)."""
