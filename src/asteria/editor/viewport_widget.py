@@ -626,12 +626,33 @@ class SceneViewportWidget(QWidget):
             return
         super().mouseReleaseEvent(event)
 
+    WHEEL_ZOOM_STEP = 1.15  # zoom factor of one notch of a mouse wheel
+
+    @staticmethod
+    def is_mouse_wheel(event):
+        """True for a physical mouse wheel (whole notches, no scroll phase); a trackpad sends
+        pixel deltas and / or scroll phases."""
+        return event.pixelDelta().isNull() and event.phase() == Qt.NoScrollPhase
+
     def wheelEvent(self, event):
+        angle = event.angleDelta()
+        if self.is_mouse_wheel(event):
+            # a mouse wheel zooms around the cursor; the arrow keys pan, the trackpad scrolls
+            notches = float(angle.y()) / 120.0
+            if notches == 0:
+                event.accept()
+                return
+            position = event.position()
+            self.camera.zoom_by(
+                self.WHEEL_ZOOM_STEP**notches, (float(position.x()), float(position.y()))
+            )
+            self.update()
+            event.accept()
+            return
         delta = event.pixelDelta()
         dx = float(delta.x())
         dy = float(delta.y())
         if dx == 0 and dy == 0:
-            angle = event.angleDelta()
             dx = float(angle.x()) / 120.0 * 48.0
             dy = float(angle.y()) / 120.0 * 48.0
         if dx == 0 and dy == 0:
