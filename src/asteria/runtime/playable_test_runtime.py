@@ -500,7 +500,10 @@ class PlayableTestRuntime:
         if self.pg.get_init():
             self.pg.quit()
 
-    def text(self, value, x, y, *, size=20, color=(245, 245, 250), center=False):
+    def text(self, value, x, y, *, size=20, color=(245, 245, 250), center=False, anchor=None):
+        """Draw text at ``(x, y)``: top-left by default, ``center=True`` centres it, ``anchor`` is
+        any pygame rect attribute (``"midleft"``, ``"midright"``, ``"bottomright"``...) placed at
+        the point - so a label can sit on the same horizontal line as a bar."""
         f = self._fonts.get(int(size))
         if f is None:
             f = self._fonts[int(size)] = self.pg.font.Font(None, int(size))
@@ -517,7 +520,9 @@ class PlayableTestRuntime:
                 renderable_text(self.pg, f, value, self._glyphs), True, color
             )
         rect = surf.get_rect()
-        if center:
+        if anchor:
+            setattr(rect, anchor, (int(x), int(y)))
+        elif center:
             rect.center = (int(x), int(y))
         else:
             rect.topleft = (int(x), int(y))

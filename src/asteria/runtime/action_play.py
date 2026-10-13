@@ -145,6 +145,9 @@ class ActionHud:
     """Draws the real-time combat layer for a ``PlayableTestRuntime`` (pygame)."""
 
     def __init__(self):
+        from .hud_bottom import BottomHud
+
+        self.bottom = BottomHud()
         self.floats: list[_Float] = []
         self.flash: dict[str, float] = {}
         self.banner = ("", 0.0)
@@ -152,6 +155,7 @@ class ActionHud:
     # -- events -----------------------------------------------------------------------------------
     def observe(self, game, dt):
         """Read this frame's combat, loot and progression events (call after ``field_update``)."""
+        self.bottom.tick(dt)
         for f in self.floats:
             f.age += dt
         self.floats = [f for f in self.floats if f.age < f.life]
@@ -370,74 +374,7 @@ class ActionHud:
 
     def draw_overlay(self, rt):
         game = rt.game
-        from .action_combat import ActionCombatComponent, parse_bindings
-        from .combat import CombatantComponent
-
-        combatant = game.player.try_get(CombatantComponent)
-        # built on demand: the bars show before the first hit
-        state = game.combat.state(game.player) if combatant is not None else None
-        rt.panel((14, rt.height - 104, 380, 92))
-        if state is not None:
-            names = list(state.resources.names())
-            life = combatant.life_resource
-            if life in names:  # the life resource first
-                names.remove(life)
-                names.insert(0, life)
-            colors = [(220, 70, 70), (80, 140, 255), (240, 200, 80)]
-            for row, name in enumerate(names[:3]):
-                value = state.resources.get(name)
-                y = rt.height - 96 + row * 22
-                label = name.upper() if len(name) <= 3 else name.capitalize()  # HP, MP, Rage
-                rt.text(label, 26, y, size=18, color=(220, 225, 235))
-                self._bar(rt, 120, y + 4, 170, 12, value.current, value.maximum, colors[row % 3])
-                rt.text(f"{value.current:.0f}/{value.maximum:.0f}", 300, y, size=18)
-        actor_id = game._actor_of(game.player)
-        if actor_id is not None:
-            progress = game.ensure_actor_progression(actor_id)
-            threshold = float(game.action_progression.get("level_threshold", 1000.0))
-            into = progress.experience - (progress.level - 1) * threshold
-            rt.text(f"Lv {progress.level}", 26, rt.height - 30, size=18, color=(255, 220, 124))
-            self._bar(rt, 120, rt.height - 25, 170, 6, into, threshold, (240, 200, 80))
-        spec = game.player.try_get(ActionCombatComponent)
-        if spec is not None:
-            bindings = list(parse_bindings(spec.bindings).items())
-            # centred, but never under the bars panel on the left
-            x0 = max(rt.width / 2 - len(bindings) * 64 / 2, 14 + 380 + 16)
-            labels = rt.manifest.get("battle", {}).get("skills", {})
-            for index, (action, value) in enumerate(bindings):
-                x = x0 + index * 64
-                y = rt.height - 74
-                rt.panel((int(x), y, 60, 46), fill=(16, 20, 32, 230))
-                ability_id = game.action_combat.bound_ability(game.player, value)
-                key = {"attack": "J", "dodge": "K"}.get(action, action.replace("skill_", ""))
-                rt.text(key, x + 30, y + 34, size=15, color=(255, 220, 124), center=True)
-                if not ability_id:  # nothing learned for this slot yet
-                    rt.text("—", x + 30, y + 14, size=17, color=(110, 118, 135), center=True)
-                    continue
-                ability = game.project.gameplay_library.abilities.get(ability_id)
-                left = game.action_combat.cooldown(game.player, ability_id)
-                total = getattr(ability, "cooldown_seconds", 0.0) or left
-                if left > 0 and total > 0:
-                    shade = rt.pg.Surface((60, int(46 * min(1.0, left / total))), rt.pg.SRCALPHA)
-                    shade.fill((0, 0, 0, 170))
-                    rt.screen.blit(shade, (int(x), y))
-                name = labels.get(ability_id, {}).get("label") or (
-                    ability_id.split("_", 1)[-1] if ability_id.count("_") else ability_id
-                )
-                rt.text(name[:8], x + 30, y + 14, size=17, center=True)
-                for cost in getattr(ability, "costs", ()):  # items it spends: how many are left
-                    if cost.resource.startswith("item:"):
-                        have = game.save.rpg_state.inventory.count(cost.resource[5:])
-                        rt.text(f"x{have}", x + 42, y + 2, size=15, color=(170, 235, 190))
-        rt.text(
-            "Move: WASD  J: Attack  K: Dodge  1-4: Skills  L: Lock  F: Pick up  B: Bag  C: "
-            "Skills  Esc: Pause",
-            rt.width / 2,
-            rt.height - 14,
-            size=16,
-            color=(170, 180, 200),
-            center=True,
-        )
+        self.bottom.draw(rt, game)  # orbs, action bar, statuses (runtime/hud_bottom.py)
         text, left = self.banner
         if left > 0:
             rt.text(text, rt.width / 2, 70, size=40, color=(255, 220, 124), center=True)

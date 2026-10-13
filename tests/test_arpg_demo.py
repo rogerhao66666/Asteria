@@ -578,3 +578,36 @@ def test_the_demo_map_can_be_edited_undone_saved_and_the_walls_change_in_play(
     assert wall.collides_world_point((x + 0.5) * 16, (y + 0.5) * 16)  # the painted wall blocks
     assert not wall.collides_world_point((x + 2.5) * 16, (y + 0.5) * 16)  # its neighbour does not
     rt.close()
+
+
+def test_the_hud_shows_keycaps_orbs_statuses_and_item_counts(demo):
+    from asteria.runtime.hud_bottom import active_statuses, key_label, state_kind
+
+    game = demo.game
+    # keys come from the project's input map, not from the HUD
+    assert key_label(demo, "attack") == "J"
+    assert key_label(demo, "dodge") in ("K", "SHIFT")
+    assert key_label(demo, "skill_2") == "2"
+    game.set_classes("", ["warrior"])
+    state = game.combat.state(game.player)
+    for state_id in ("healing", "war_cry", "burning", "chilled"):
+        assert game.combat.apply_state(game.player, state_id)
+    kinds = {s["id"]: s["kind"] for s in active_statuses(game, state)}
+    assert kinds == {
+        "healing": "buff",
+        "war_cry": "buff",
+        "burning": "debuff",
+        "chilled": "debuff",
+    }
+    library = game.project.gameplay_library.states
+    assert state_kind(library.get("burning")) == "debuff"
+    entry = next(s for s in active_statuses(game, state) if s["id"] == "war_cry")
+    assert entry["abbr"] == "WC" and 0 < entry["remaining"] <= entry["total"]
+    state.resources.set_current("hp", 70)
+    badges = []
+    hud = demo.action_hud.bottom
+    original = hud._badge
+    hud._badge = lambda rt, x, y, text, *a: (badges.append(text), original(rt, x, y, text, *a))
+    _frames(demo, 3)
+    assert "3" in badges  # the potion's item count sits in a corner badge
+    assert hud.hint_left < hud.HINT_SECONDS  # the control hint is counting down
