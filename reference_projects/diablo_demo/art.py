@@ -45,10 +45,10 @@ class Assets:
             kind,
             f"{OUT}/{relative}",
             name,
-            "arpg_demo",
+            "diablo_demo",
             1,
             {},
-            {"source": "reference_projects/arpg_demo/build_project.py"},
+            {"source": "reference_projects/diablo_demo/build_project.py"},
         )
         self.project.assets.add(record)
         self.ids[(key, kind)] = record.id

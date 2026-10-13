@@ -920,7 +920,7 @@ autofix 原本沒有產品入口，已在 D20-4 接上編輯器。animated_text 
 **決定（使用者）：**
 - 解除 ARPG 的延後（SCOPE_DECISIONS／Closure Policy）。原因是 D21-2 時功能 closure 和自動化驗證都已完成，只剩手動和實機項目。
 - 俯視和橫向兩種視角都支援，由作者在每個場景選擇。戰鬥核心只寫一次，兩種視角共用。
-- 形式：通用功能放進引擎，另外做一個 demo 專案 `reference_projects/arpg_demo`，專案裡有俯視野外和橫向地城兩種區域。
+- 形式：通用功能放進引擎，另外做一個 demo 專案 `reference_projects/diablo_demo`，專案裡有俯視野外和橫向地城兩種區域。
 - 第一階段做完整核心：判定、無敵幀、擊退、投射物、敵人 AI、受傷和死亡，加上壓力場景（300 隻敵人 + 500 顆投射物），先量測效能。
 - 先寫設計文件，核准後再實作。
 
@@ -1329,7 +1329,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 ### D22-A10 — ARPG demo 專案（暗黑式範例，系統全部通用）
 
-**Demo 專案 `reference_projects/arpg_demo/`**（`build_project.py` 產生，可重跑；`art.py` 切素材、`maps.py` 用程式排地圖；README 說明每條規則在資料的哪裡）：
+**Demo 專案 `reference_projects/diablo_demo/`**（`build_project.py` 產生，可重跑；`art.py` 切素材、`maps.py` 用程式排地圖；README 說明每條規則在資料的哪裡）：
 - **城鎮 Hollowbrook**（俯視）：商人（收購怪物素材、賣藥水）、鐵匠（用素材合成藥水）、戰士／遊俠／法師三位導師（對話後用 `SET_CLASSES` 換職業）、長老（給藥水）、村民；往東的道路傳送到野外。
 - **野外 Greenvale Fields**（俯視）：史萊姆（近戰）、會射擊的眼怪、骷髏精英小隊（霸體、倒地、掉寶加成）、獨眼巨人 Boss（HP 一半以下改用霸體重擊、會丟石頭）。
 - **礦坑 Rustdeep Mine**（橫向，Kenney Pixel Platformer）：起伏地形、單向平台、木橋、梯子通往高處走道、爬行怪、蝙蝠（無重力）、無人機（遠程）、岩石魔像 Boss。

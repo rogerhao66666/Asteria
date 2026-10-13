@@ -11,8 +11,8 @@
 Everything is ordinary project data: the engine has no idea this is "Diablo-like". The same
 systems build a soulslike, a twin-stick shooter, a platformer brawler or anything else.
 
-Run: ``python reference_projects/arpg_demo/build_project.py`` (writes this folder; idempotent).
-Play: ``python -m asteria.runtime.preview reference_projects/arpg_demo/project.asteria.json``.
+Run: ``python reference_projects/diablo_demo/build_project.py`` (writes this folder; idempotent).
+Play: ``python -m asteria.runtime.preview reference_projects/diablo_demo/project.asteria.json``.
 """
 
 from __future__ import annotations

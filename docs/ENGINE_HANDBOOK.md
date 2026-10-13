@@ -44,7 +44,7 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 
 ```bash
 .venv/bin/python reference_projects/octopath_demo/build_project.py
-.venv/bin/python reference_projects/arpg_demo/build_project.py
+.venv/bin/python reference_projects/diablo_demo/build_project.py
 ```
 
 ---
@@ -64,7 +64,7 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 | `src/asteria/assets` | 素材管線：匯入、圖集、自動修正、品質門檻、RPG Maker MV 匯入 |
 | `src/asteria/editor` | PySide6 編輯器（約 100 個模組） |
 | `src/asteria/validation` | 壓力測試與實驗場景 |
-| `reference_projects/` | `octopath_demo`、`arpg_demo` 以及其他參考專案 |
+| `reference_projects/` | `octopath_demo`、`diablo_demo` 以及其他參考專案 |
 | `tests/` | 全部測試 |
 | `scripts/` | 實機驗證、編輯器稽核、量測腳本 |
 | `docs/audits/` | 決策紀錄、稽核、實機證據（`evidence/`） |
@@ -163,7 +163,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | 五種遭遇 | Grimgarde 首領（召喚、沉默吼、毒隕石）、Gel Slime（火會治療它、會分裂）、Bone Wraith（不死、免疫毒）、Mirror Gazer（反射法術、免疫睡眠）、Iron Samurai（抗劍斧弓、8 護盾） |
 | 野外 | 敵人在地圖上遊蕩，碰到就開戰 |
 
-### 4.2 Diablo 式即時動作（`reference_projects/arpg_demo`）
+### 4.2 Diablo 式即時動作（`reference_projects/diablo_demo`）
 
 | 區域 | 內容 |
 | --- | --- |

@@ -50,7 +50,7 @@ TEMPLATES = (
         "Action RPG (Diablo-style)",
         "Real-time combat with classes and skill trees, loot with rarities and affixes, a set, "
         "potions, a grid bag, an action bar with cooldowns; a town, a field and a side-view mine.",
-        "arpg_demo",
+        "diablo_demo",
     ),
 )
 

@@ -1,12 +1,12 @@
-# Asteria ARPG Demo (D22 A10)
+# Asteria Diablo Demo (D22 A10)
 
 A small Diablo-like action RPG built **only from project data**. The engine knows nothing about
 Diablo: the same systems build a soulslike, a twin-stick shooter or a platformer brawler. Diablo
 is the example because it is the best-known ARPG.
 
 ```bash
-python reference_projects/arpg_demo/build_project.py              # rebuild (idempotent)
-python -m asteria.runtime.preview reference_projects/arpg_demo/project.asteria.json
+python reference_projects/diablo_demo/build_project.py              # rebuild (idempotent)
+python -m asteria.runtime.preview reference_projects/diablo_demo/project.asteria.json
 python scripts/arpg_demo_live_check.py warrior OUT_DIR            # scripted real-window check
 ```
 

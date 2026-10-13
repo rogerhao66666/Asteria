@@ -24,7 +24,7 @@ from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 cls = sys.argv[1]
 out = Path(sys.argv[2])
 out.mkdir(parents=True, exist_ok=True)
-root = REPO / "reference_projects" / "arpg_demo"
+root = REPO / "reference_projects" / "diablo_demo"
 project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
 rt = PlayableTestRuntime(
     project, project.game_start.instantiate(project), root, width=1280, height=720
