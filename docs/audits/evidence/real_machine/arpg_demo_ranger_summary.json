@@ -4,14 +4,14 @@
   "ranger"
  ],
  "frames": 1486,
- "mean_fps": 55.5,
- "p95_frame_ms": 18.0,
+ "mean_fps": 60.0,
+ "p95_frame_ms": 16.7,
  "abilities_used": {
-  "r_shot": 69,
+  "r_shot": 62,
+  "r_volley": 2,
   "r_pierce": 1,
   "roll": 1,
-  "potion": 1,
-  "r_volley": 1
+  "potion": 1
  },
  "known": [
   "potion",

@@ -33,7 +33,12 @@ REFERENCE = REPO / "reference_projects" / "complex_reference_rpg"
 sys.path.insert(0, str(REPO / "src"))
 
 from asteria.editor import EditorDocument  # noqa: E402
-from asteria.gameplay import AbilityDefinition, Effect, EffectOperation, EffectOperationKind  # noqa: E402
+from asteria.gameplay import (  # noqa: E402
+    AbilityDefinition,
+    Effect,
+    EffectOperation,
+    EffectOperationKind,
+)
 from asteria.gameplay.abilities import AbilityCost, AbilityEffect, TargetingRule  # noqa: E402
 from asteria.gameplay.conditions import ConditionGroup, TagCondition  # noqa: E402
 from asteria.gameplay.formulas import FormulaTerm, ValueFormula  # noqa: E402
@@ -43,11 +48,11 @@ from asteria.presentation.particles import particle_effect_asset, preset  # noqa
 from asteria.project import Project  # noqa: E402
 from asteria.rpg import BattleStatePolicy, EnemyDefinition  # noqa: E402
 from asteria.rpg.battle_resources import BattleResourceDefinition  # noqa: E402
-from asteria.rpg.composition import (
+from asteria.rpg.composition import (  # noqa: E402
     CompositionOutput,
     CompositionRecipeDefinition,
     CompositionSelection,
-)  # noqa: E402
+)
 from asteria.rpg.gauge_composition import (  # noqa: E402
     GaugeCompositionDefinition,
     GaugeImpactRule,
@@ -1257,7 +1262,7 @@ def add_monster_types(project, db, add):
         "enemy",
         "random_opponent",
     )
-    for ability_id, (definition, targeting, _selector) in skills.items():
+    for _ability_id, (definition, targeting, _selector) in skills.items():
         add(definition, targeting)
 
     library = project.battle_presentation_library

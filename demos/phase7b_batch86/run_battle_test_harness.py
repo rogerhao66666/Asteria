@@ -41,9 +41,9 @@ from asteria.gameplay import (
 from asteria.rpg import (
     BattleAction,
     BattleEscapeRule,
+    BattleFormationRuntime,
     BattleObjectiveCondition,
     BattleObjectiveDefinition,
-    BattleFormationRuntime,
     BattlePlacement,
     BattleRuntime,
     BattleSchedulerDefinition,
@@ -163,7 +163,10 @@ def make_battle():
             BattlePlacement("Core", "back.b"),
         ],
     )
-    active = lambda m: m.subject.resources.current("hp") > 0
+
+    def active(m):
+        return m.subject.resources.current("hp") > 0
+
     targeting = [
         BattleTargetingDefinition("strike", relation="opponent", selection_mode="manual"),
         BattleTargetingDefinition(

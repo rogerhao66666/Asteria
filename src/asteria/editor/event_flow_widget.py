@@ -115,14 +115,18 @@ class EventFlowWidget(QWidget):
         add_cond, remove_cond = QPushButton("+ Condition"), QPushButton("− Condition")
         add_cond.clicked.connect(self.add_condition)
         remove_cond.clicked.connect(lambda: self.conditions.takeItem(self.conditions.currentRow()))
-        cond_row.addWidget(add_cond)
-        cond_row.addWidget(remove_cond)
+        cond_buttons = QHBoxLayout()  # on their own line: the fields above keep their width
+        for button in (add_cond, remove_cond):
+            button.setMinimumWidth(button.fontMetrics().horizontalAdvance(button.text()) + 34)
+            cond_buttons.addWidget(button)
+        cond_buttons.addStretch(1)
         battle_box = QGroupBox("Battle events — run a program when the battle reaches a moment")
         bform = QFormLayout()
         bform.addRow("When", self.battle_hook)
         bform.addRow("Program", self.battle_program)
         bform.addRow("Only if (all)", self.conditions)
         bform.addRow("", cond_row)
+        bform.addRow("", cond_buttons)
         bform.addRow("", self.battle_once)
         bbuttons = QHBoxLayout()
         for label, slot in (

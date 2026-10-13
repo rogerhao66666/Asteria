@@ -287,6 +287,13 @@ def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("output")
     parser.add_argument("--size", default="1600x1000")
+    parser.add_argument(
+        "--also",
+        nargs="*",
+        default=(),
+        help="more window sizes to audit after --size (e.g. 1100x700); a narrow window finds "
+        "labels that clip and pages that scroll sideways",
+    )
     parser.add_argument("--tag", default="audit")
     parser.add_argument("--theme", default=None, help="palette: graphite, twilight or daylight")
     parser.add_argument("--surfaces", nargs="*", help="only these surface names")
@@ -326,29 +333,43 @@ def main(argv=None):
             time.sleep(0.02)
 
     settle(1.0)
-    report = {"size": [width, height], "dpr": window.devicePixelRatioF(), "surfaces": {}}
-    for name, activate in surfaces(window):
-        if args.surfaces and name not in args.surfaces:
-            continue
-        activate()
-        settle()
-        window.grab().save(str(out / f"{args.tag}_{name}.png"))
-        report["surfaces"][name] = defects_in(window)
-    layout_kinds = ("scrolled", "page_scroll_x", "page_scroll_y", "columns_scroll_x")
-    total = sum(
-        1 for v in report["surfaces"].values() for item in v if item["kind"] not in layout_kinds
-    )
-    report["scrolling"] = sum(
-        1 for v in report["surfaces"].values() for item in v if item["kind"] in layout_kinds[1:]
-    )
-    report["total"] = total
-    (out / f"{args.tag}_report.json").write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n"
-    )
-    for name, items in report["surfaces"].items():
-        kinds = [i["kind"] for i in items if i["kind"] != "scrolled"]
-        print(f"{name}: {len(kinds)} {sorted(set(kinds))}")
-    print("total", total, "scrolling", report["scrolling"], "dpr", report["dpr"])
+    total_all = 0
+    for size in (args.size, *args.also):
+        width, height = (int(v) for v in size.split("x"))
+        window.resize(width, height)
+        settle(0.6)
+        tag = args.tag if size == args.size else f"{args.tag}_{size}"
+        report = {"size": [width, height], "dpr": window.devicePixelRatioF(), "surfaces": {}}
+        for name, activate in surfaces(window):
+            if args.surfaces and name not in args.surfaces:
+                continue
+            activate()
+            settle()
+            window.grab().save(str(out / f"{tag}_{name}.png"))
+            report["surfaces"][name] = defects_in(window)
+        layout_kinds = ("scrolled", "page_scroll_x", "page_scroll_y", "columns_scroll_x")
+        total = sum(
+            1
+            for v in report["surfaces"].values()
+            for item in v
+            if item["kind"] not in layout_kinds
+        )
+        report["scrolling"] = sum(
+            1
+            for v in report["surfaces"].values()
+            for item in v
+            if item["kind"] in layout_kinds[1:]
+        )
+        report["total"] = total
+        total_all += total
+        (out / f"{tag}_report.json").write_text(
+            json.dumps(report, indent=2, ensure_ascii=False) + "\n"
+        )
+        print(f"== {size}")
+        for name, items in report["surfaces"].items():
+            kinds = [i["kind"] for i in items if i["kind"] != "scrolled"]
+            print(f"{name}: {len(kinds)} {sorted(set(kinds))}")
+        print("total", total, "scrolling", report["scrolling"], "dpr", report["dpr"])
     window.document.mark_saved()
     window.close()
     return 0

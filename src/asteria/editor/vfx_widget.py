@@ -33,7 +33,7 @@ class VFXStage(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMinimumSize(320, 260)
+        self.setMinimumSize(220, 260)
         self.pixmap = None
         self.source = None
         self.rect = None

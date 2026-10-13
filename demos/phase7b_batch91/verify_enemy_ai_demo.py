@@ -1,4 +1,3 @@
-import random
 from asteria.rpg import (
     AICondition,
     AIDecisionRule,

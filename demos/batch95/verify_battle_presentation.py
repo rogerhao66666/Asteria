@@ -1,7 +1,7 @@
 """Headless Batch 95 battle-presentation reference verification."""
 
-from pathlib import Path
 import json
+from pathlib import Path
 
 from asteria.gameplay import ActionCue, PresentationCue
 from asteria.presentation import (

@@ -17,7 +17,7 @@ and `ruff format` wraps code to the same width.
 ```bash
 .venv/bin/ruff format .
 .venv/bin/ruff check --select E501 .
-.venv/bin/ruff check src tests scripts
+.venv/bin/ruff check src tests scripts demos reference_projects
 ```
 
 All three must report nothing to fix (`All checks passed!`).

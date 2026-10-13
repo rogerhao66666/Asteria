@@ -99,7 +99,7 @@ class _Table(QWidget):
         self.table.setHorizontalHeaderLabels([c[0] for c in columns])
         self.table.verticalHeader().setVisible(False)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.table.horizontalHeader().setMinimumSectionSize(56)
+        self.table.horizontalHeader().setMinimumSectionSize(46)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self._fit()
@@ -343,7 +343,7 @@ class _Preview(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.record = None
-        self.setMinimumSize(300, 260)
+        self.setMinimumSize(190, 260)
 
     def show_record(self, record):
         self.record = record
@@ -833,14 +833,27 @@ class CombatWorkspace(QWidget):
         empty_layout.addSpacing(8)
         empty_layout.addLayout(row)
         empty_layout.addStretch(2)
+        # the live preview folds away in a narrow window (the form needs the room); the button
+        # shows or hides it by hand, and a hand-set choice is kept
+        self.preview_toggle = QToolButton()
+        self.preview_toggle.setText("Preview")
+        self.preview_toggle.setCheckable(True)
+        self.preview_toggle.setChecked(True)
+        self.preview_toggle.setToolTip("Show or hide the live preview")
+        self.preview_toggle.clicked.connect(self._preview_toggled)
+        self._preview_by_hand = False
+        head = QHBoxLayout()
+        head.addWidget(self.heading, 1)
+        head.addWidget(self.preview_toggle)
         middle = QVBoxLayout()
-        middle.addWidget(self.heading)
+        middle.addLayout(head)
         middle.addWidget(self.record_label)
         middle.addWidget(scroll, 1)
         middle.addWidget(self.empty, 1)
         middle.addLayout(bar)
         middle_panel = QWidget()
         middle_panel.setLayout(middle)
+        middle_panel.setMinimumWidth(340)
 
         # right: preview
         self.preview_frame = QFrame()
@@ -858,7 +871,8 @@ class CombatWorkspace(QWidget):
         right.addWidget(self.usage)
         right_panel = QWidget()
         right_panel.setLayout(right)
-        right_panel.setMinimumWidth(320)
+        right_panel.setMinimumWidth(210)
+        self.right_panel = right_panel
         self.preview = None
 
         splitter = QSplitter()
@@ -874,8 +888,31 @@ class CombatWorkspace(QWidget):
         layout.addWidget(splitter)
         self.show_kind(self.kind_id)
 
-    def minimumSizeHint(self):  # noqa: N802 - Qt API: the cards scroll inside; the page itself never needs to
-        return QSize(940, 520)
+    def minimumSizeHint(self):  # noqa: N802 - Qt API
+        """The three panels' real minimum (the cards scroll inside, so the page itself needs
+        no more width than that), at least 520 high."""
+        base = super().minimumSizeHint()
+        return QSize(base.width(), max(base.height(), 520))
+
+    PREVIEW_MIN_PAGE_WIDTH = 1000  # narrower than this the preview is folded away
+
+    def _preview_toggled(self, checked):
+        self._preview_by_hand = True
+        self._sync_preview()
+
+    def _sync_preview(self):
+        wanted = (
+            self.preview_toggle.isChecked()
+            if self._preview_by_hand
+            else self.width() >= self.PREVIEW_MIN_PAGE_WIDTH
+        )
+        self.right_panel.setVisible(wanted)
+        if not self._preview_by_hand:
+            self.preview_toggle.setChecked(wanted)
+
+    def resizeEvent(self, event):  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        self._sync_preview()
 
     def showEvent(self, event):  # noqa: N802 - Qt API: pick up edits made elsewhere (undo, other tools)
         super().showEvent(event)

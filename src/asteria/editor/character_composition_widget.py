@@ -39,6 +39,7 @@ from .character_composition_authoring import (
     CharacterCompositionAuthoring,
     CompositionAuthoringError,
 )
+from .ui_fit import fit_combo_boxes
 
 PREVIEW_SCALE = 3.0
 
@@ -238,6 +239,7 @@ class CharacterCompositionWidget(QWidget):
         if ids:
             self.sheet_list.setCurrentRow(ids.index(current) if current in ids else 0)
         self._load()
+        fit_combo_boxes(self)
 
     def _load(self):
         if self.sheet is None:

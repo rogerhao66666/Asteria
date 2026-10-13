@@ -4,10 +4,11 @@
   "mage"
  ],
  "frames": 1478,
- "mean_fps": 55.5,
- "p95_frame_ms": 18.0,
+ "mean_fps": 60.0,
+ "p95_frame_ms": 16.7,
  "abilities_used": {
-  "m_bolt": 46,
+  "m_bolt": 55,
+  "m_nova": 2,
   "m_meteor": 1,
   "roll": 1,
   "potion": 1
@@ -20,10 +21,10 @@
   "roll"
  ],
  "player_life": [
-  85,
+  86,
   140.0
  ],
- "kills": 6,
+ "kills": 7,
  "level": 4,
  "gold": 45.0,
  "bag": 1,

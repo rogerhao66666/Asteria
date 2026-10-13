@@ -8,8 +8,8 @@ normal reference world. This script verifies the RPG data embedded in that
 playable project and its companion runtime save.
 """
 
-from pathlib import Path
 import json
+from pathlib import Path
 
 from asteria.editor.model import EditorDocument
 from asteria.editor.storage import load_document

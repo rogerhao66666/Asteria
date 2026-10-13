@@ -13,6 +13,7 @@ This is a developer sandbox, not final battle presentation.
 from __future__ import annotations
 
 import random
+
 import pygame
 
 from asteria.gameplay import (
@@ -20,10 +21,10 @@ from asteria.gameplay import (
     AbilityRuntime,
     GameplaySubject,
     ResourcePool,
+    StatBlock,
     StateDefinition,
     StateRegistry,
     StateRuntime,
-    StatBlock,
     TagSet,
 )
 from asteria.rpg import (

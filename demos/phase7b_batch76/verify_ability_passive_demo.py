@@ -1,7 +1,7 @@
 """Verify Batch 76 using the same canonical playable project/save delivered to users."""
 
-from pathlib import Path
 import json
+from pathlib import Path
 
 from asteria.editor.model import EditorDocument
 from asteria.editor.storage import load_document

@@ -1,14 +1,17 @@
 from __future__ import annotations
-import json, random
+
+import json
+import random
 from pathlib import Path
+
 from asteria.gameplay import (
     GameplaySubject,
     ResourcePool,
     StatBlock,
+    StateDefinition,
     StateRegistry,
     StateRuntime,
     TagSet,
-    StateDefinition,
 )
 from asteria.rpg import BattleStateRuntime, PartyMember, RpgDatabase
 

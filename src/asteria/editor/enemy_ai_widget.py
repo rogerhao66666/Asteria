@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
     QFormLayout,
+    QFrame,
     QGroupBox,
     QHBoxLayout,
     QInputDialog,
@@ -18,6 +19,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QPushButton,
+    QScrollArea,
     QSpinBox,
     QSplitter,
     QTableWidget,
@@ -36,6 +38,8 @@ from asteria.rpg.enemy_ai import (
 )
 
 from .enemy_ai_authoring import AIScenario, EnemyAIEditor, EnemyAIEditorError
+from .responsive_form import ResponsiveColumns
+from .ui_fit import fit_combo_boxes
 
 SUBJECT_PARAM = {
     "resource": "resource_id",
@@ -147,6 +151,20 @@ class ConditionList(QGroupBox):
             self.removeRequested.emit(self.list.currentRow())
 
 
+def _fit_columns(table, cap=140):
+    """Columns as wide as their content but never wider than ``cap`` (long text is elided; the
+    cell's tooltip has all of it) - a dense table does not push the page sideways."""
+    table.setTextElideMode(Qt.ElideRight)
+    table.resizeColumnsToContents()
+    for column in range(table.columnCount()):
+        table.setColumnWidth(column, min(table.columnWidth(column), cap))
+    for row in range(table.rowCount()):
+        for column in range(table.columnCount()):
+            item = table.item(row, column)
+            if item is not None and not item.toolTip():
+                item.setToolTip(item.text())
+
+
 class EnemyAIEditorWidget(QWidget):
     changed = Signal()
 
@@ -203,6 +221,8 @@ class EnemyAIEditorWidget(QWidget):
         self.rules.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.rules.verticalHeader().hide()
         self.rules.horizontalHeader().setStretchLastSection(True)
+        self.rules.horizontalHeader().setDefaultSectionSize(78)  # narrow windows: no side scroll
+        self.rules.horizontalHeader().setMinimumSectionSize(48)
         self.rules.itemSelectionChanged.connect(self._rule_selected)
         self.action_kind = QComboBox()
         self.action_kind.addItems(list(ACTION_KINDS))
@@ -234,6 +254,7 @@ class EnemyAIEditorWidget(QWidget):
             ("Remove", self.remove_rule),
         ):
             b = QPushButton(label)
+            b.setMinimumWidth(b.fontMetrics().horizontalAdvance(label) + 34)  # never clip
             b.clicked.connect(slot)
             rule_buttons.addWidget(b)
         rule_form.addRow(rule_buttons)
@@ -348,14 +369,16 @@ class EnemyAIEditorWidget(QWidget):
     def _table_over_detail(table, box, conditions):
         """Table above its inspector in a splitter; the table always shows several rows."""
         table.setMinimumHeight(150)
-        detail = QWidget()
-        row = QHBoxLayout(detail)
-        row.setContentsMargins(0, 0, 0, 0)
-        row.addWidget(box, 1)
-        row.addWidget(conditions, 1)
+        # side by side when there is room, stacked when the window is narrow
+        detail = ResponsiveColumns([box, conditions], column_width=300, max_columns=2)
+        scroll = QScrollArea()  # stacked, the panels need more height: scroll, never squeeze
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setWidget(detail)
+        scroll.setMinimumHeight(160)
         split = QSplitter(Qt.Vertical)
         split.addWidget(table)
-        split.addWidget(detail)
+        split.addWidget(scroll)
         split.setStretchFactor(0, 1)
         split.setChildrenCollapsible(False)
         return split
@@ -395,6 +418,7 @@ class EnemyAIEditorWidget(QWidget):
         if ids:
             self.ai_list.setCurrentRow(ids.index(current) if current in ids else 0)
         self._load()
+        fit_combo_boxes(self)
 
     def select_ai(self, ai_id):
         self.refresh(select=ai_id)
@@ -452,7 +476,7 @@ class EnemyAIEditorWidget(QWidget):
             for col, text in enumerate(values):
                 self.rules.setItem(row, col, QTableWidgetItem(text))
         self.rules.blockSignals(False)
-        self.rules.resizeColumnsToContents()
+        _fit_columns(self.rules)
         self.phases.blockSignals(True)
         self.phases.setRowCount(0)
         for p in ai.phases:
@@ -472,7 +496,7 @@ class EnemyAIEditorWidget(QWidget):
                     item.setToolTip("Starting phase")
                 self.phases.setItem(row, col, item)
         self.phases.blockSignals(False)
-        self.phases.resizeColumnsToContents()
+        _fit_columns(self.phases)
         if not (rule and self._select_row(self.rules, rule)) and self.rules.rowCount():
             self.rules.selectRow(0)
         if not (phase and self._select_row(self.phases, phase)) and self.phases.rowCount():

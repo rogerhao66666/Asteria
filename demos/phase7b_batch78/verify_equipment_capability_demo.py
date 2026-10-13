@@ -1,7 +1,7 @@
 """Verify Batch 78 using the delivered canonical project and RPG save."""
 
-from pathlib import Path
 import json
+from pathlib import Path
 
 from asteria.editor.model import EditorDocument
 from asteria.editor.storage import load_document

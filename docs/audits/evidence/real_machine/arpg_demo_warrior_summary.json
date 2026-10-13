@@ -4,14 +4,14 @@
   "warrior"
  ],
  "frames": 1478,
- "mean_fps": 55.5,
- "p95_frame_ms": 18.0,
+ "mean_fps": 60.0,
+ "p95_frame_ms": 16.7,
  "abilities_used": {
-  "w_slash": 85,
+  "w_slash": 75,
+  "w_whirl": 2,
   "w_leap": 1,
   "roll": 1,
-  "potion": 1,
-  "w_whirl": 1
+  "potion": 1
  },
  "known": [
   "potion",
@@ -26,7 +26,7 @@
  ],
  "kills": 3,
  "level": 4,
- "gold": 53.0,
+ "gold": 48.0,
  "bag": 1,
  "scene": "Rustdeep Mine"
 }

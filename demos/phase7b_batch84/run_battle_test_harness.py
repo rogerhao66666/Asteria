@@ -154,7 +154,10 @@ def make_battle():
             BattlePlacement("Core", "back.b"),
         ],
     )
-    active = lambda m: m.subject.resources.current("hp") > 0
+
+    def active(m):
+        return m.subject.resources.current("hp") > 0
+
     targeting = [
         BattleTargetingDefinition("strike", relation="opponent", selection_mode="manual"),
         BattleTargetingDefinition(

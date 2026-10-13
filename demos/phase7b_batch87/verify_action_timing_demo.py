@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 from asteria.rpg import (
-    ActionTimingDefinition,
     BattleAction,
     BattleActionTimingRuntime,
     RpgDatabase,

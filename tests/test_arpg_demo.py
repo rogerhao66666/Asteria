@@ -522,3 +522,59 @@ def test_parallax_layers_scroll_slower_than_the_camera(demo):
         expected = round(100.0 * layer.factor_x * zoom)
         best = min(range(0, 130), key=lambda shift: (mismatches(a, b, shift), shift))
         assert best == expected, (layer.factor_x, best, expected)
+
+
+def test_the_demo_map_can_be_edited_undone_saved_and_the_walls_change_in_play(
+    tmp_path, monkeypatch
+):
+    """The editor's tile commands work on the demo's maps: paint a wall into the collision layer,
+    undo and redo, save, reopen - and the playable runtime then collides with the new wall."""
+    import shutil
+
+    from asteria.editor import EditorDocument
+    from asteria.editor.resource_resolver import resolve_project_resources
+    from asteria.editor.storage import load_document, save_document
+    from asteria.editor.tile_edit import build_paint_command, tile_at
+    from asteria.runtime.tilemap_field import tilemap_binding
+
+    root = tmp_path / "game"
+    shutil.copytree(ROOT, root)
+    project_path = root / "project.asteria.json"
+    document = EditorDocument()
+    load_document(document, project_path)
+    resolve_project_resources(document)
+    town = next(s for s in document.project.scenes() if s.name == "Hollowbrook")
+    tilemap_id = tilemap_binding(town).tilemap_asset_id
+    tilemap = document.asset_views.tilemap(tilemap_id)
+    collision = next(layer for layer in tilemap.layers if layer.collision_enabled)
+    blocker = max(
+        t for layer in tilemap.layers for chunk in layer.chunks.values() for t in chunk.tiles
+    )
+    x, y = 19, 12  # the plaza, next to where the player starts
+    assert tile_at(tilemap, collision, x, y) == -1
+    command = build_paint_command(tilemap, collision, ((x, y),), blocker)
+    document.execute(command)
+    assert tile_at(tilemap, collision, x, y) == blocker
+    document.undo()
+    assert tile_at(tilemap, collision, x, y) == -1
+    document.redo()
+    assert tile_at(tilemap, collision, x, y) == blocker
+    save_document(document)
+
+    pytest.importorskip("pygame")
+    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+    monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
+    from asteria.project import Project
+    from asteria.runtime.playable_test_runtime import PlayableTestRuntime
+
+    project = Project.load_json(project_path, EditorDocument().component_registry)
+    rt = PlayableTestRuntime(
+        project, project.game_start.instantiate(project), root, width=960, height=540
+    )
+    rt.open()
+    rt._ui_mode = "field"
+    _frames(rt, 3)
+    wall = rt.tile_view.blocking
+    assert wall.collides_world_point((x + 0.5) * 16, (y + 0.5) * 16)  # the painted wall blocks
+    assert not wall.collides_world_point((x + 2.5) * 16, (y + 0.5) * 16)  # its neighbour does not
+    rt.close()

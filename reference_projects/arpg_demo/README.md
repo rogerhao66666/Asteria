@@ -26,7 +26,10 @@ python scripts/arpg_demo_live_check.py warrior OUT_DIR            # scripted rea
 | Crafting parts and gold | drop tables `slime`, `eye`, `skull`, ...; shop `merchant`; recipes `brew_*` at station `smith` |
 
 Controls: WASD move, J attack, K dodge, 1-4 skills (4 = potion), Space jump (side view), E talk,
-F pick up, B bag, C skill tree, Esc pause.
+F pick up, B bag (a grid with a tooltip that compares stats with what you wear and shows set
+bonuses), C skill tree, Esc pause. Beaten bosses stay dead after save and load
+(`defeat_switch`); each class has its own look (`ClassAppearance`); the mine has parallax
+backdrops (`ParallaxBackground2D`); the camera looks ahead (`camera_look_ahead`).
 
 ## Engine features this demo needed (all generic)
 
@@ -36,8 +39,10 @@ F pick up, B bag, C skill tree, Esc pause.
 - Binding alternatives (`a|b|c`), the `SET_CLASSES` world command, the skill tree screen,
   `item:<id>` ability costs, hitbox cues that reshape the hitbox (AoE swings), `apply_state` on
   gameplay-event cues (self buffs), fixed rarities by tag, short loot names.
+- The grid bag screen, `ClassAppearance`, `ParallaxBackground2D`, `defeat_switch`, chunked tile
+  rendering (a map of any size costs only what the camera sees).
 
 ## Art
 
-All CC0: Ninja Adventure (characters, monsters, top-down tiles) and Kenney Pixel Platformer
-(side-view tiles and mine enemies). See `playable_assets/CREDITS.md`. No AI-generated art.
+All CC0: Ninja Adventure (characters, monsters, top-down tiles), Kenney Pixel Platformer
+(side-view tiles and mine enemies) and Kenney Tiny Dungeon (weapon and potion icons). See `playable_assets/CREDITS.md`. No AI-generated art.
