@@ -222,7 +222,7 @@ class ActionHud:
         for _entity, label_x, label_y, text, color in game.loot.labels(game.scene):
             sx, sy = rt._field_screen_xy(label_x, label_y)
             pg.draw.circle(screen, color, (int(sx), int(sy)), max(3, int(2 * zoom)))
-            image = rt.pg.font.Font(None, 20).render(text, True, color)
+            image = self._label(rt, text, 20, color)
             box = pg.Rect(0, 0, image.get_width() + 8, image.get_height() + 4)
             box.midbottom = (int(sx), int(sy - 4 * zoom))
             while any(
@@ -287,14 +287,24 @@ class ActionHud:
         if target is not None:
             sx, sy = rt._field_screen_xy(*world_position(target))
             pg.draw.circle(screen, (255, 220, 90), (int(sx), int(sy)), max(8, int(10 * zoom)), 2)
-        font = pg.font.Font(None, 26)
         for f in self.floats:
             sx, sy = rt._field_screen_xy(f.x, f.y)
-            image = font.render(f.text, True, f.color)
+            image = self._label(rt, f.text, 26, f.color)
             image.set_alpha(int(255 * max(0.0, 1.0 - f.age / f.life)))
             screen.blit(
                 image, (int(sx - image.get_width() / 2), int(sy - 30 * f.age - image.get_height()))
             )
+
+    def _label(self, rt, text, size, color):
+        """A rendered label (cached: loot names and damage numbers repeat every frame)."""
+        cache = self.__dict__.setdefault("_labels", {})
+        key = (text, size, tuple(color))
+        image = cache.get(key)
+        if image is None:
+            if len(cache) > 1024:
+                cache.clear()
+            image = cache[key] = rt.pg.font.Font(None, size).render(text, True, color)
+        return image
 
     @staticmethod
     def _lock_id(game):

@@ -506,7 +506,16 @@ class PlayableTestRuntime:
             f = self._fonts[int(size)] = self.pg.font.Font(None, int(size))
         from asteria.platform.pygame_battle_ui import renderable_text
 
-        surf = f.render(renderable_text(self.pg, f, value, self._glyphs), True, color)
+        # rendered text is cached: HUD labels and damage numbers repeat every frame
+        key = (str(value), int(size), tuple(color))
+        cache = self.__dict__.setdefault("_text_cache", {})
+        surf = cache.get(key)
+        if surf is None:
+            if len(cache) > 2048:
+                cache.clear()
+            surf = cache[key] = f.render(
+                renderable_text(self.pg, f, value, self._glyphs), True, color
+            )
         rect = surf.get_rect()
         if center:
             rect.center = (int(x), int(y))
@@ -552,7 +561,11 @@ class PlayableTestRuntime:
 
     def _draw_field_effects(self):
         scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0))
-        camera = self.field_camera
+        tiles = self.tile_view
+        # screen pixels per world unit, and the world -> screen mapping of the scene being shown
+        # (a tile scene has its own camera)
+        pixels = tiles.camera.zoom if tiles is not None else scale * self.field_camera.zoom
+        to_screen = self._field_screen_xy
         for effect in self.field_effects.vfx:
             asset = self.game.project.assets.resolve(effect.asset_id)
             meta = asset.meta()
@@ -572,8 +585,8 @@ class PlayableTestRuntime:
             x, y, w, h = vfx_rect(
                 effect.placement, ax, ay, FIELD_BODY_HEIGHT, fw / scale, fh / scale
             )
-            sx, sy = camera.world_to_screen(x, y)
-            size = (max(1, round(w * scale * camera.zoom)), max(1, round(h * scale * camera.zoom)))
+            sx, sy = to_screen(x, y)
+            size = (max(1, round(w * pixels)), max(1, round(h * pixels)))
             image = self.pg.transform.scale(
                 sheet.subsurface(((index % columns) * fw, (index // columns) * fh, fw, fh)), size
             )
@@ -589,8 +602,8 @@ class PlayableTestRuntime:
                 self.particles_drawn = self.particle_drawer.draw(
                     self.screen,
                     systems,
-                    camera.world_to_screen,
-                    scale * camera.zoom,
+                    to_screen,
+                    pixels,
                     image=self.particle_image,
                 )
         self.world_done("field")
@@ -619,7 +632,11 @@ class PlayableTestRuntime:
         from asteria.runtime.tile_scene_view import TileSceneView
 
         scene = self.game.scene
-        if not TileSceneView.available(scene):
+        # whether a scene is a tile scene is looked up once per scene, not per entity per frame
+        known = self.__dict__.get("_tile_scene")
+        if known is None or known[0] is not scene:
+            known = self._tile_scene = (scene, TileSceneView.available(scene))
+        if not known[1]:
             return None
         view = getattr(self, "_tile_view", None)
         if view is None:

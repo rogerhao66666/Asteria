@@ -318,3 +318,32 @@ def test_the_side_view_mine_lets_the_player_stand_jump_and_climb(demo):
     ladder = _entity(mine, "Ladder")
     lx, ly = _xy(ladder)
     assert ly < ground_y  # the ladder leads up to the high walkway
+
+
+def test_particle_effects_and_text_use_the_tile_scenes_camera_and_are_cached(demo):
+    from asteria.presentation.particles import ParticleSystem, preset
+
+    game = demo.game
+    field = _scene(game.project, "Greenvale")
+    game.transfer_player(field.id, 36 * 16, 28 * 16, facing="right")
+    _frames(demo, 3)
+    px, py = _xy(game.player)
+    definition = preset("fire", "t")
+    demo.field_effects._play_particles(definition, {"x": px, "y": py}, game.scene, game.player)
+    drawn = []
+    original = demo.particle_drawer.draw
+
+    def spy(surface, systems, to_screen, pixels_per_unit, **kw):
+        drawn.append((to_screen(px, py), pixels_per_unit))
+        return original(surface, systems, to_screen, pixels_per_unit, **kw)
+
+    demo.particle_drawer.draw = spy
+    _frames(demo, 2)
+    (sx, sy), ppu = drawn[-1]
+    assert abs(sx - demo.width / 2) < 40 and abs(sy - demo.height / 2) < 40  # on the player
+    assert ppu == demo.tile_view.camera.zoom  # the tile camera's scale, not 3 x that
+    before = len(demo._text_cache)
+    _frames(demo, 5)
+    assert len(demo._text_cache) == before  # the HUD text of a still frame is not re-rendered
+    assert demo.tile_view is demo.tile_view
+    assert ParticleSystem is not None
