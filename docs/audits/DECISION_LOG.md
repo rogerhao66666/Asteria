@@ -1442,3 +1442,28 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - 時間花在 Python 物件迴圈，不在 kernel：`list.append` 85.9 萬次 0.83 s、`CollisionWorld.from_scene` 與 `_add` 合計約 1.3 s、`field_ai.update` 約 1.2 s、`Scene.query` 7.3 萬次。
 - `aabb_cross_pairs` 整體只有 0.26 s（約 5%）。
 - 結論：把現有 kernel 一個一個換成 C++ 的上限很低。要有效益，C++ 必須接手「每幀逐個 entity 的迴圈」：由欄位直接建出碰撞世界、AI 步進、命中收集，而不是只加速被呼叫的陣列函式。
+
+### D23-2 — 所有現有 kernel 移到 C++（使用者決定：kernel 用 C++，其餘維持 Python，使用者照樣用程式碼寫玩法）
+
+**做法：** `kernels/native/asteria_kernels.cpp` 包含全部 kernel；`kernels/_native.py` 用 `ctypes` 載入。已移植：`aabb_pairs`、`aabb_cross_pairs`、`ParticleStore.step`、`WeatherStore.step`、`ProjectileStore.step`、`collider_columns`、`topdown_prepare`、`moved_boxes`、`add_to_column`、`decay_push`、`box_columns`、`blocked_rows`、`facing_codes`、`fieldai_step`。天氣的 `draw`、粒子的 `views`、`ProjectileStore` 的存取方法仍是 numpy／Python（不是熱迴圈，或依賴 pygame）。
+- 欄位是 `array.array`，C++ 直接讀寫同一塊記憶體（和 numpy 版一樣零拷貝）；每個函式先檢查欄位型別，不符就退回 numpy 版。
+- 運算順序和 python 參考版完全相同，編譯旗標 `-ffp-contract=off -fno-fast-math`。轉向用的 cos／sin 仍由 Python 先算好傳入。
+- `auto` 的順序變成 native → numpy → python；沒編譯就略過 native。`ASTERIA_KERNELS=native|numpy|python` 可指定。
+- 編譯：`python -m asteria.kernels.build_native`（只需要系統的 clang++／g++）。編譯出的 `.dylib/.so/.dll` 不進版控。
+
+**驗證：**
+- `tests/test_native_kernels.py`（9 項）：每個函式用隨機資料和 python 參考版比對，包含原地被改寫的欄位（鎖定倒數、跳躍旗標、推力衰減、AI 模式和意圖、NaN 目標、被取消的追蹤等），要求完全相等。
+- 完整套件在 native 下 **2164 passed、1 skipped**（黃金基準沒有改變）。
+- 三組 kernel 在壓力場景的命中數完全一致。
+- 寫的時候抓到兩個 bug：暫存陣列在 C 呼叫前就被回收（指標懸空）、兩個函式的 `argtypes` 少算一個指標。兩者都靠新測試發現並修正。
+
+**量測（無畫面壓力場景，每幀平均）：**
+| 場景 | python | numpy | native | native 對 numpy |
+| --- | --- | --- | --- | --- |
+| 100 敵 + 150 投射物 | 7.6 ms | 5.1 ms | 4.0 ms | −23% |
+| 300 敵 + 500 投射物 | 25.7 ms | 14.5 ms | 11.6 ms | −20% |
+| 1000 敵 + 800 投射物 | 87.2 ms | 56.7 ms | 46.6 ms | −18% |
+
+**這是預期內的結果，不是 C++ 的上限：** 剩下的時間在 Python 逐物件的迴圈（碰撞世界每幀重建、AI 的 Python 部分、戰鬥結算）。碰撞在 1000 敵時 numpy 38.1 → native 28.1 ms，其中 `CollisionWorld.from_scene` 仍是 Python。再要提升，下一步是把這個迴圈接到欄位，這會碰到系統層，不屬於這次「只換 kernel」的範圍。
+
+**狀態：** D23 完成。

@@ -79,10 +79,11 @@ def test_touching_and_identical_boxes_count_as_pairs():
 
 
 def test_kernel_selection(monkeypatch, restore_kernels):
-    assert kernels.available()[0] == "numpy" and "python" in kernels.available()
+    fastest = kernels.available()[0]  # native when it is built, else numpy
+    assert fastest in ("native", "numpy") and "python" in kernels.available()
     assert kernels.use("python") is not None and kernels.active().NAME == "python"
     kernels.use("auto")
-    assert kernels.active().NAME == "numpy"
+    assert kernels.active().NAME == fastest
     with pytest.raises(ValueError):
         kernels.use("cobol")
     monkeypatch.setattr(kernels, "_active", None)
