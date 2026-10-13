@@ -1592,9 +1592,13 @@ class PlayableTestRuntime:
                         self.screen, (255, 196, 70) if filled else (60, 66, 84), centre, 4
                     )
             states = member.subject.states
-            names = [a.state_id for a in states.active_states()] if states is not None else []
+            names = []
+            for active in states.active_states() if states is not None else ():
+                definition = states.registry.get(active.state_id)
+                shown = getattr(definition, "display_name", "") or active.state_id
+                names.append(shown.replace("_", " "))
             if names:  # poison, silence, attack up...
-                label = " ".join(n.replace("_", " ") for n in names)[:28]
+                label = " ".join(names)[:28]
                 self.text(label, x, y + 20, size=15, color=(220, 180, 255), center=True)
         actor = self._battle_actor()
         commands = getattr(self, "_battle_commands", None)

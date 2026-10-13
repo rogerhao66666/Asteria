@@ -264,6 +264,26 @@ ICON_SOURCES = {  # equipment / item id -> ("tiny", col, row) | ("ninja", relati
     "bone_shard": ("ninja", "Items/Resource/Rock.png"),
     "eye_lens": ("ninja", "Items/Resource/GemGreen.png"),
     "gear_scrap": ("ninja", "Items/Resource/BarIron.png"),
+    # abilities (action bar) and states (status row)
+    "punch": ("ninja", "Items/Weapons/Club/Sprite.png"),
+    "w_slash": ("tiny", 8, 8),
+    "w_whirl": ("ninja", "Items/Weapons/Axe/Sprite.png"),
+    "w_leap": ("ninja", "Items/Weapons/Lance/Sprite.png"),
+    "w_shout": ("ninja", "Items/Scroll/ScrollRock.png"),
+    "r_shot": ("ninja", "Items/Weapons/Bow/Sprite.png"),
+    "r_volley": ("ninja", "Items/Weapons/Bow2/Sprite.png"),
+    "r_pierce": ("ninja", "Items/Weapons/Rapier/Sprite.png"),
+    "r_tumble": ("ninja", "Items/Resource/feather.png"),
+    "m_bolt": ("ninja", "Items/Weapons/MagicWand/Sprite.png"),
+    "m_nova": ("ninja", "Items/Scroll/ScrollIce.png"),
+    "m_meteor": ("ninja", "Items/Scroll/ScrollFire.png"),
+    "m_blink": ("ninja", "Items/Scroll/ScrollThunder.png"),
+    "roll": ("ninja", "Items/Action/Interact.png"),
+    "state_healing": ("ninja", "Items/Potion/Heart.png"),
+    "state_war_cry": ("ninja", "Items/Weapons/Katana/Sprite.png"),
+    "state_burning": ("ninja", "Items/Scroll/ScrollFire.png"),
+    "state_bleeding": ("ninja", "Items/Resource/GemRed.png"),
+    "state_chilled": ("ninja", "Items/Scroll/ScrollIce.png"),
 }
 
 

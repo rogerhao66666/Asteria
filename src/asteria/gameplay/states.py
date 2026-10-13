@@ -132,6 +132,9 @@ class StateDefinition:
     on_remove: tuple[Effect, ...] = ()
     on_expire: tuple[Effect, ...] = ()
     contributed_tags: tuple[str, ...] = ()
+    # shown in HUDs and menus; written to the data only when set
+    display_name: str = ""
+    icon_id: str = ""
     NESTED_OPTIONAL = {"periodic": PeriodicEffect}  # list fields whose entries have OPTIONAL_DATA
 
     def __init__(
@@ -147,6 +150,8 @@ class StateDefinition:
         on_remove=(),
         on_expire=(),
         contributed_tags=(),
+        display_name="",
+        icon_id="",
     ):
         state_id = str(state_id).strip()
         if not state_id:
@@ -182,6 +187,8 @@ class StateDefinition:
         object.__setattr__(self, "on_remove", on_remove)
         object.__setattr__(self, "on_expire", on_expire)
         object.__setattr__(self, "contributed_tags", contributed_tags)
+        object.__setattr__(self, "display_name", str(display_name or "").strip())
+        object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def to_data(self):
         return {
@@ -197,6 +204,8 @@ class StateDefinition:
             "on_remove": [x.to_data() for x in self.on_remove],
             "on_expire": [x.to_data() for x in self.on_expire],
             "contributed_tags": list(self.contributed_tags),
+            **({"display_name": self.display_name} if self.display_name else {}),
+            **({"icon_id": self.icon_id} if self.icon_id else {}),
         }
 
     @classmethod
@@ -222,7 +231,7 @@ class StateDefinition:
             expected = base | {"contributed_tags", "on_expire"}
         else:
             expected = set()
-        if set(data) != expected:
+        if set(data) - {"display_name", "icon_id"} != expected:
             raise ValueError("invalid state definition")
         if data["schema"] != "asteria.state_definition" or version not in {1, 2, 3}:
             raise ValueError("unsupported state definition")
@@ -237,6 +246,8 @@ class StateDefinition:
             on_remove=[Effect.from_data(x) for x in data["on_remove"]],
             on_expire=[Effect.from_data(x) for x in data.get("on_expire", ())],
             contributed_tags=data.get("contributed_tags", ()),
+            display_name=data.get("display_name", ""),
+            icon_id=data.get("icon_id", ""),
         )
 
 

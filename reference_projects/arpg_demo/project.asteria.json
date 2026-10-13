@@ -1556,7 +1556,9 @@
             "resource": "mp"
           }
         ],
+        "display_name": "Blink",
         "effects": [],
+        "icon_id": "playable_assets/icons/m_blink.png",
         "interrupts_actions": true,
         "schema": "asteria.ability_definition",
         "tags": [],
@@ -1597,7 +1599,9 @@
             "resource": "mp"
           }
         ],
+        "display_name": "Firebolt",
         "effects": [],
+        "icon_id": "playable_assets/icons/m_bolt.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1637,7 +1641,9 @@
             "resource": "mp"
           }
         ],
+        "display_name": "Meteor",
         "effects": [],
+        "icon_id": "playable_assets/icons/m_meteor.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1677,7 +1683,9 @@
             "resource": "mp"
           }
         ],
+        "display_name": "Nova",
         "effects": [],
+        "icon_id": "playable_assets/icons/m_nova.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1717,7 +1725,9 @@
             "resource": "item:potion"
           }
         ],
+        "display_name": "Potion",
         "effects": [],
+        "icon_id": "playable_assets/icons/potion.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1738,7 +1748,9 @@
           "type": "group"
         },
         "costs": [],
+        "display_name": "Punch",
         "effects": [],
+        "icon_id": "playable_assets/icons/punch.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1778,7 +1790,9 @@
             "resource": "mp"
           }
         ],
+        "display_name": "Pierce",
         "effects": [],
+        "icon_id": "playable_assets/icons/r_pierce.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1799,7 +1813,9 @@
           "type": "group"
         },
         "costs": [],
+        "display_name": "Shoot",
         "effects": [],
+        "icon_id": "playable_assets/icons/r_shot.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1839,7 +1855,9 @@
             "resource": "mp"
           }
         ],
+        "display_name": "Tumble",
         "effects": [],
+        "icon_id": "playable_assets/icons/r_tumble.png",
         "interrupts_actions": true,
         "schema": "asteria.ability_definition",
         "tags": [],
@@ -1880,7 +1898,9 @@
             "resource": "mp"
           }
         ],
+        "display_name": "Volley",
         "effects": [],
+        "icon_id": "playable_assets/icons/r_volley.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1902,7 +1922,9 @@
         },
         "cooldown_seconds": 0.6,
         "costs": [],
+        "display_name": "Roll",
         "effects": [],
+        "icon_id": "playable_assets/icons/roll.png",
         "interrupts_actions": true,
         "schema": "asteria.ability_definition",
         "tags": [],
@@ -1987,7 +2009,9 @@
             "resource": "mp"
           }
         ],
+        "display_name": "Leap",
         "effects": [],
+        "icon_id": "playable_assets/icons/w_leap.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -2027,7 +2051,9 @@
             "resource": "mp"
           }
         ],
+        "display_name": "War Cry",
         "effects": [],
+        "icon_id": "playable_assets/icons/w_shout.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -2048,7 +2074,9 @@
           "type": "group"
         },
         "costs": [],
+        "display_name": "Slash",
         "effects": [],
+        "icon_id": "playable_assets/icons/w_slash.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -2088,7 +2116,9 @@
             "resource": "mp"
           }
         ],
+        "display_name": "Whirl",
         "effects": [],
+        "icon_id": "playable_assets/icons/w_whirl.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -3153,7 +3183,9 @@
         "contributed_tags": [
           "status.bleeding"
         ],
+        "display_name": "Bleeding",
         "duration": 4.0,
+        "icon_id": "playable_assets/icons/state_bleeding.png",
         "max_stacks": 1,
         "modifiers": [],
         "on_apply": [],
@@ -3187,7 +3219,9 @@
         "contributed_tags": [
           "status.burning"
         ],
+        "display_name": "Burning",
         "duration": 3.0,
+        "icon_id": "playable_assets/icons/state_burning.png",
         "max_stacks": 1,
         "modifiers": [],
         "on_apply": [],
@@ -3221,7 +3255,9 @@
         "contributed_tags": [
           "status.chilled"
         ],
+        "display_name": "Chilled",
         "duration": 3.0,
+        "icon_id": "playable_assets/icons/state_chilled.png",
         "max_stacks": 1,
         "modifiers": [
           {
@@ -3247,7 +3283,9 @@
         "contributed_tags": [
           "status.healing"
         ],
+        "display_name": "Healing",
         "duration": 3.0,
+        "icon_id": "playable_assets/icons/state_healing.png",
         "max_stacks": 1,
         "modifiers": [],
         "on_apply": [],
@@ -3281,7 +3319,9 @@
         "contributed_tags": [
           "status.war_cry"
         ],
+        "display_name": "War Cry",
         "duration": 8.0,
+        "icon_id": "playable_assets/icons/state_war_cry.png",
         "max_stacks": 1,
         "modifiers": [
           {
@@ -4267,7 +4307,7 @@
     "triggers": [],
     "version": 3
   },
-  "id": "cb3153a1-e0ef-48d6-90e4-d7b58890f0c2",
+  "id": "f0c44174-1eb1-4d7e-8fe9-dfef359baa4e",
   "input_map": {
     "actions": {
       "cancel": [

@@ -147,7 +147,7 @@ def anim(at, clip="attack"):
 
 
 # -- combat content -------------------------------------------------------------------------------
-def combat_content(project, looks):
+def combat_content(project, looks, icons):
     library = project.gameplay_library
     states = (
         StateDefinition(
@@ -159,6 +159,8 @@ def combat_content(project, looks):
                 ),
             ),
             contributed_tags=("status.healing",),
+            display_name="Healing",
+            icon_id=icons["state_healing"],
         ),
         StateDefinition(
             "war_cry",
@@ -168,6 +170,8 @@ def combat_content(project, looks):
                 StatModifier("war_cry.defense", "defense", "add", 6),
             ),
             contributed_tags=("status.war_cry",),
+            display_name="War Cry",
+            icon_id=icons["state_war_cry"],
         ),
         StateDefinition(
             "burning",
@@ -178,6 +182,8 @@ def combat_content(project, looks):
                 ),
             ),
             contributed_tags=("status.burning",),
+            display_name="Burning",
+            icon_id=icons["state_burning"],
         ),
         StateDefinition(
             "bleeding",
@@ -188,12 +194,16 @@ def combat_content(project, looks):
                 ),
             ),
             contributed_tags=("status.bleeding",),
+            display_name="Bleeding",
+            icon_id=icons["state_bleeding"],
         ),
         StateDefinition(
             "chilled",
             3.0,
             modifiers=(StatModifier("chilled.power", "power", "multiply", 0.6),),
             contributed_tags=("status.chilled",),
+            display_name="Chilled",
+            icon_id=icons["state_chilled"],
         ),
     )
     for state in states:
@@ -591,7 +601,12 @@ def combat_content(project, looks):
         AbilityDefinition("golem_volley", timeline_id="golem_volley", cooldown_seconds=3.5),
     )
     for ability in abilities:
-        library.add_ability(ability)
+        data = ability.to_data()
+        if ability.ability_id in LABELS:  # a name and a picture for the action bar
+            data["display_name"] = LABELS[ability.ability_id]
+            if ability.ability_id in icons:
+                data["icon_id"] = icons[ability.ability_id]
+        library.add_ability(AbilityDefinition.from_data(data))
 
 
 LABELS = {
@@ -1774,9 +1789,10 @@ def main():
             key, layout["grid"].data(tileset, layout["size"]), key.capitalize()
         )
     db = project.rpg_database
-    combat_content(project, looks)
+    icons = art.write_item_icons()
+    combat_content(project, looks, icons)
     classes_and_trees(db)
-    loot_content(db, art.write_item_icons())
+    loot_content(db, icons)
     behaviour(db)
     town, hero = build_scenes(project, looks, tilemaps, layouts, art.mine_backdrops(assets))
     new_game(project, town, hero)

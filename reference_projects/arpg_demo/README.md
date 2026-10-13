@@ -25,6 +25,9 @@ python scripts/arpg_demo_live_check.py warrior OUT_DIR            # scripted rea
 | Potions are items an ability spends | ability `potion` costs `item:potion`; the smith brews them, the merchant sells them |
 | Crafting parts and gold | drop tables `slime`, `eye`, `skull`, ...; shop `merchant`; recipes `brew_*` at station `smith` |
 
+States and abilities carry a `display_name` and an `icon_id`: the action bar and the status row
+show pictures, and enemies show their boons and harms as small squares over the health bar.
+
 Controls: WASD move, J attack, K dodge, 1-4 skills (4 = potion), Space jump (side view), E talk,
 F pick up, B bag (a grid with a tooltip that compares stats with what you wear and shows set
 bonuses), C skill tree, Esc pause. Beaten bosses stay dead after save and load

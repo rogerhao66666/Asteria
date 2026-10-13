@@ -7,11 +7,11 @@
  "mean_fps": 60.0,
  "p95_frame_ms": 16.7,
  "abilities_used": {
-  "r_shot": 62,
-  "r_volley": 2,
+  "r_shot": 64,
   "r_pierce": 1,
   "roll": 1,
-  "potion": 1
+  "potion": 1,
+  "r_volley": 1
  },
  "known": [
   "potion",

@@ -1575,3 +1575,32 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - 測試：`test_the_hud_shows_keycaps_orbs_statuses_and_item_counts`（鍵名來自輸入表、狀態分類、縮寫、剩餘時間、道具徽章、提示倒數）。截圖 `d23_hud_orbs_actionbar_statuses.png`（1280×720 和 960×540 都檢查過）。
 
 **限制：** 狀態沒有顯示名稱或圖示欄位，所以用 id 轉出來的縮寫和顏色表示增益／減益；敵人頭上的狀態仍是文字。
+
+### D24-1 — 狀態與技能的名稱、圖示欄位；敵人頭上的狀態圖示；法力消耗顯示（使用者回報）
+
+**使用者要求：** 補上 D23-8 列出的三個限制（狀態沒有名稱／圖示、敵人狀態仍是文字、技能格是文字不是圖示），再整體確認引擎、八方旅人 demo 與暗黑 demo。之後回報「法杖旁邊的 1 是什麼」。
+
+**資料格式（向下相容，沒有值就不寫入資料）：**
+- `StateDefinition` 新增 `display_name`、`icon_id`；`AbilityDefinition` 新增 `display_name`、`icon_id`（走 `OPTIONAL_DATA`）。舊資料照常載入，沒設定的不會被寫回。
+- 編輯器的狀態與技能表單本來就以資料欄位為準，`icon_id` 會自動出現圖示挑選（測試：改名稱和圖示、復原）。
+- 八方旅人戰鬥畫面的狀態文字也改讀 `display_name`（沒有就用 id）。
+
+**畫面：**
+- 快捷列格子：技能有 `icon_id` 就畫圖示（不再寫名稱），沒有才退回名稱文字；狀態列：有圖示畫圖示，沒有才用縮寫；名稱用 `display_name`。
+- 敵人頭上：血條上方有一排小方格（`draw_status_pips`，最多 6 個，綠框增益紅框減益，剩餘時間由上往下遮罩），置中於敵人。
+- 法力／資源消耗：左下角深色小膠囊，左邊一顆該資源顏色的小圓珠、右邊數字（原本只有一個孤立的數字，看不出是什麼）。
+- demo：技能與狀態圖示取自既有的 CC0 資源（Ninja Adventure），寫入 `playable_assets/icons`。
+
+**確認（全部實機，無跳過計入通過）：**
+| 項目 | 結果 |
+| --- | --- |
+| 完整測試套件 | 2178 passed（之後再加：全部 demo 測試 22 passed） |
+| 真實視窗實機驗證 `real_machine_validation.py` 全部檢查 | 66 項 PASS；4 項需要真人或手把（實體鍵盤、手把、可聽音訊、音訊延遲）未執行，原樣標示 |
+| 八方旅人 demo（Cocoa、真按鍵） | 指令選單、加速點、目標選單、加速攻擊兩段傷害、神技花 3 點、粒子、調合、勝利、四種遭遇全部 ok |
+| 暗黑 demo 三個職業真實視窗 | 皆 60.0 fps；戰士 3 擊殺、遊俠 3、法師 7；走完城鎮、轉職、技能樹、野外、Boss、礦坑、背包 |
+| 編輯器稽核 1600×1000／1280×800／1100×700（暗黑與八方旅人兩個專案） | 0 裁切、0 溢出、0 過小；僅有頁面需捲動（資訊性） |
+
+測試：`test_states_and_abilities_carry_a_name_and_an_icon`、`test_enemies_show_their_statuses_as_pips_over_the_bar`、`test_the_editor_edits_a_status_name_and_icon_and_undoes_it`。截圖 `docs/audits/evidence/real_machine/d24_hud_icons.png`。
+
+**仍然存在：** 圖示是從資源包挑的相近圖，不是專屬設計；暗黑 demo 的實機輸入沒有實體鍵盤／手把驗證（需要真人）；`CollisionWorld.from_scene` 仍未快取。
+

@@ -221,6 +221,7 @@ class ActionHud:
         if settings is not None and settings.draw_colliders:
             self._draw_colliders(rt, zoom)
         from .combat import CombatantComponent
+        from .hud_bottom import active_statuses, draw_status_pips
 
         placed = []
         for _entity, label_x, label_y, text, color in game.loot.labels(game.scene):
@@ -269,6 +270,11 @@ class ActionHud:
                         value.maximum,
                         (220, 70, 70),
                     )
+            pips = active_statuses(game, state)  # boons and harms on it, as small squares
+            if pips:
+                size = 15
+                row_w = min(len(pips), 6) * (size + 2) - 2
+                draw_status_pips(rt, sx - row_w / 2, sy - 11 * zoom - size - 4, pips, size=size)
         definitions = game.project.gameplay_library.projectiles
         for view in game.projectiles.views():
             sx, sy = rt._field_screen_xy(view.x, view.y)

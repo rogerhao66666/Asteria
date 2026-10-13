@@ -611,3 +611,81 @@ def test_the_hud_shows_keycaps_orbs_statuses_and_item_counts(demo):
     _frames(demo, 3)
     assert "3" in badges  # the potion's item count sits in a corner badge
     assert hud.hint_left < hud.HINT_SECONDS  # the control hint is counting down
+
+
+def test_states_and_abilities_carry_a_name_and_an_icon(demo):
+    from asteria.gameplay.abilities import AbilityDefinition
+    from asteria.gameplay.states import StateDefinition
+    from asteria.runtime.hud_bottom import active_statuses
+
+    library = demo.game.project.gameplay_library
+    burning = library.states.get("burning")
+    assert burning.display_name == "Burning" and burning.icon_id
+    slash = library.abilities.get("w_slash")
+    assert slash.display_name == "Slash" and slash.icon_id
+    for definition in (burning, slash):  # data round trip keeps both
+        again = type(definition).from_data(definition.to_data())
+        assert (again.display_name, again.icon_id) == (definition.display_name, definition.icon_id)
+    # data written before the fields existed still loads, and does not write them back
+    plain = StateDefinition("plain", 2.0)
+    assert "icon_id" not in plain.to_data() and "display_name" not in plain.to_data()
+    assert StateDefinition.from_data(plain.to_data()).icon_id == ""
+    assert "icon_id" not in AbilityDefinition("plain").to_data()
+    game = demo.game
+    game.set_classes("", ["warrior"])
+    assert game.combat.apply_state(game.player, "burning")
+    entry = active_statuses(game, game.combat.state(game.player))[0]
+    assert entry["name"] == "Burning" and entry["icon"] == burning.icon_id
+
+
+def test_enemies_show_their_statuses_as_pips_over_the_bar(demo):
+    from asteria.runtime import hud_bottom
+    from asteria.runtime.combat import CombatantComponent
+
+    game = demo.game
+    game.set_classes("", ["warrior"])
+    field = _scene(game.project, "Greenvale")
+    game.transfer_player(field.id, 36 * 16, 28 * 16, facing="right")
+    _frames(demo, 3)
+    enemy = next(
+        e
+        for e, c in game.scene.query(CombatantComponent)
+        if e is not game.player and c.team != "player" and c.state is not None
+    )
+    assert game.combat.apply_state(enemy, "burning")
+    rows = []
+    real = hud_bottom.draw_status_pips
+
+    def spy(rt, x, y, entries, **kw):
+        rows.append([e["id"] for e in entries])
+        return real(rt, x, y, entries, **kw)
+
+    hud_bottom.draw_status_pips = spy
+    try:
+        _frames(demo, 3)
+    finally:
+        hud_bottom.draw_status_pips = real
+    assert ["burning"] in rows
+
+
+def test_the_editor_edits_a_status_name_and_icon_and_undoes_it():
+    from asteria.editor import EditorDocument
+    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+
+    project = _project()
+    document = EditorDocument()
+    document.set_project(project)
+    categories = {
+        a.category_id: a for a in IntegratedAuthoringControllers(document).rpg_categories()
+    }
+    for category, key in (("states", "burning"), ("abilities", "w_slash")):
+        adapter = categories[category]
+        data = adapter.encode(adapter.get(key))
+        before = (data.get("display_name"), data.get("icon_id"))
+        data["display_name"], data["icon_id"] = "Renamed", "icons/potion.png"
+        adapter.edit(key, adapter.decode(data))
+        changed = adapter.get(key)
+        assert (changed.display_name, changed.icon_id) == ("Renamed", "icons/potion.png")
+        document.undo()
+        restored = adapter.get(key)
+        assert (restored.display_name, restored.icon_id) == before

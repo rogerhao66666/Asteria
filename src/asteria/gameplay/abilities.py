@@ -221,7 +221,12 @@ class AbilityDefinition:
     cooldown_formula: object = (
         None  # ValueFormula over the user's stats; replaces cooldown_seconds when set
     )
+    # shown on action bars and menus; written to the data only when set
+    display_name: str = ""
+    icon_id: str = ""
     OPTIONAL_DATA = {
+        "display_name": "",
+        "icon_id": "",
         "cooldown_turns": 0,
         "battle_costs": {},
         "hits": [],
@@ -257,6 +262,8 @@ class AbilityDefinition:
         move_while_acting=0.0,
         interrupts_actions=False,
         cooldown_formula=None,
+        display_name="",
+        icon_id="",
     ):
         ability_id = str(ability_id).strip()
         if not ability_id:
@@ -358,6 +365,8 @@ class AbilityDefinition:
         if cooldown_formula is not None and not isinstance(cooldown_formula, ValueFormula):
             raise TypeError("cooldown_formula must be ValueFormula")
         object.__setattr__(self, "cooldown_formula", cooldown_formula)
+        object.__setattr__(self, "display_name", str(display_name or "").strip())
+        object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def to_data(self):
         return {
@@ -391,6 +400,8 @@ class AbilityDefinition:
                 if self.cooldown_formula is not None
                 else {}
             ),
+            **({"display_name": self.display_name} if self.display_name else {}),
+            **({"icon_id": self.icon_id} if self.icon_id else {}),
         }
 
     @classmethod
@@ -432,6 +443,8 @@ class AbilityDefinition:
                 if data.get("cooldown_formula") is not None
                 else None
             ),
+            display_name=data.get("display_name", ""),
+            icon_id=data.get("icon_id", ""),
         )
 
 

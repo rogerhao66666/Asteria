@@ -115,13 +115,16 @@ def active_statuses(game, state):
         if definition is None:
             continue
         words = active.state_id.replace(".", " ").replace("_", " ").split()
+        label = definition.display_name or " ".join(w.capitalize() for w in words)
+        initials = label.split() if definition.display_name else words
         out.append(
             {
                 "id": active.state_id,
-                "name": " ".join(w.capitalize() for w in words),
+                "name": label,
+                "icon": definition.icon_id,
                 # two words: their initials; one word: its first two letters
                 "abbr": (
-                    "".join(w[0] for w in words[:2]) if len(words) > 1 else active.state_id[:2]
+                    "".join(w[0] for w in initials[:2]) if len(initials) > 1 else label[:2]
                 ).upper()
                 or "?",
                 "kind": state_kind(definition),
@@ -217,12 +220,19 @@ class BottomHud:
             ability = game.project.gameplay_library.abilities.get(ability_id)
             prices = game.action_combat._prices(game.player, ability) if ability else []
             usable = not isinstance(prices, str)
-            name = labels.get(ability_id, {}).get("label") or ability_id.split("_", 1)[-1]
+            name = (
+                getattr(ability, "display_name", "")
+                or labels.get(ability_id, {}).get("label")
+                or ability_id.split("_", 1)[-1]
+            )
+            icon_id = getattr(ability, "icon_id", "")
             pg.draw.rect(
                 screen, (70, 78, 108) if usable else (46, 50, 72), rect, 2, border_radius=6
             )
             words = name.split()
             lines = [name] if len(name) <= 8 or len(words) < 2 else [words[0], " ".join(words[1:])]
+            if icon_id and rt._draw_icon(icon_id, rect.x + 5, rect.y + 5, size - 10):
+                lines = []  # the picture says what the skill is
             for k, line in enumerate(lines[:2]):
                 rt.text(
                     line[:9],
@@ -269,14 +279,7 @@ class BottomHud:
                 if isinstance(prices, list) and prices:
                     resource, amount = prices[0]
                     colors = resource_color(resource)
-                    rt.text(
-                        f"{amount:g}",
-                        rect.x + 5,
-                        rect.bottom - 4,
-                        size=15,
-                        color=colors[1],
-                        anchor="bottomleft",
-                    )
+                    self._cost(rt, rect.x + 3, rect.bottom - 3, f"{amount:g}", colors)
         # the keycap, half outside the slot's top-left corner
         cap_w = max(18, len(key) * 8 + 10)
         cap = pg.Rect(rect.x - 4, rect.y - 7, cap_w, 17)
@@ -284,6 +287,21 @@ class BottomHud:
         pg.draw.rect(screen, (90, 96, 112), cap, 1, border_radius=4)
         rt.text(key, cap.centerx, cap.centery, size=14, color=(30, 34, 46), anchor="center")
         return rect
+
+    def _cost(self, rt, x, y, text, colors):
+        """A resource cost: a small orb of the resource's colour and the amount, on a dark pill
+        in the lower left corner of a slot (``x``, ``y`` is the pill's bottom-left)."""
+        pg, screen = rt.pg, rt.screen
+        w = 20 + len(text) * 8
+        pill = pg.Rect(0, 0, w, 17)
+        pill.bottomleft = (x, y)
+        pg.draw.rect(screen, (10, 12, 22), pill, border_radius=8)
+        pg.draw.rect(screen, colors[0], pill, 1, border_radius=8)
+        cx, cy = pill.x + 9, pill.centery
+        pg.draw.circle(screen, colors[0], (cx, cy), 5)
+        pg.draw.circle(screen, colors[1], (cx, cy + 1), 4)
+        pg.draw.circle(screen, (255, 255, 255), (cx - 1, cy - 1), 1)
+        rt.text(text, pill.x + 16, pill.centery, size=15, color=colors[1], anchor="midleft")
 
     def _badge(self, rt, x, y, text, anchor, fill, color):
         """A small rounded square with a number (counts), anchored to a corner of a slot."""
@@ -302,9 +320,16 @@ class BottomHud:
         fill = (20, 52, 32) if good else (62, 22, 24)
         rect = pg.Rect(x, y, size, size)
         pg.draw.rect(screen, fill, rect, border_radius=5)
-        rt.text(
-            entry["abbr"], rect.centerx, rect.centery - 2, size=20, color=frame, anchor="center"
-        )
+        icon = entry.get("icon", "")
+        if not (icon and rt._draw_icon(icon, rect.x + 4, rect.y + 4, size - 8)):
+            rt.text(
+                entry["abbr"],
+                rect.centerx,
+                rect.centery - 2,
+                size=20,
+                color=frame,
+                anchor="center",
+            )
         fraction = max(0.0, min(1.0, entry["remaining"] / entry["total"]))
         if fraction < 1.0:  # time left drains from the top
             shade = pg.Surface((size - 4, int((size - 4) * (1.0 - fraction))), pg.SRCALPHA)
@@ -470,4 +495,31 @@ class BottomHud:
             rt.text(text, width / 2, 8 + (h + 10) / 2, size=17, color=colour, anchor="center")
 
 
-__all__ = ["BottomHud", "active_statuses", "key_label", "resource_color", "state_kind"]
+def draw_status_pips(rt, x, y, entries, size=12, limit=6):
+    """A compact row of status squares (frame colour = boon or harm, drain = time left), for the
+    entities of the world (enemy overhead bars). ``x`` is the row's left edge."""
+    pg, screen = rt.pg, rt.screen
+    for k, entry in enumerate(entries[:limit]):
+        good = entry["kind"] == "buff"
+        frame = (96, 214, 130) if good else (226, 92, 84)
+        rect = pg.Rect(int(x + k * (size + 2)), int(y), size, size)
+        pg.draw.rect(screen, (20, 52, 32) if good else (62, 22, 24), rect, border_radius=3)
+        icon = entry.get("icon", "")
+        if not (icon and rt._draw_icon(icon, rect.x + 1, rect.y + 1, size - 2)):
+            pg.draw.circle(screen, frame, rect.center, max(2, size // 4))
+        fraction = max(0.0, min(1.0, entry["remaining"] / entry["total"]))
+        if fraction < 1.0:
+            shade = pg.Surface((size - 2, max(0, int((size - 2) * (1.0 - fraction)))), pg.SRCALPHA)
+            shade.fill((0, 0, 0, 150))
+            screen.blit(shade, (rect.x + 1, rect.y + 1))
+        pg.draw.rect(screen, frame, rect, 1, border_radius=3)
+
+
+__all__ = [
+    "BottomHud",
+    "active_statuses",
+    "draw_status_pips",
+    "key_label",
+    "resource_color",
+    "state_kind",
+]
