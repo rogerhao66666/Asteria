@@ -715,6 +715,53 @@ class BattleUiComposer:
             L.timeline_y + 28.0,
             L.virtual_height - L.margin - P.interaction_bottom_gap - height,
         )
+        if L.party_hud == "side_list" and self._camera is not None:
+            boxes = []  # every combatant: name and bar above, sprite, shield row under the feet
+            boxed = []
+            for visual in self.scene.combatants:
+                pos = self._anchor_screen(self._camera, visual.member_id)
+                if pos is None:
+                    continue
+                body = float(self._member_heights.get(visual.member_id, 32.0))
+                half = max(body / 2, 24.0)
+                boxes.append((pos[0] - half, pos[1] - body - 22.0, 2 * half, body + 22.0 + 30.0))
+                boxed.append(visual)
+
+            def clear(cx, cy, w):
+                return all(
+                    cx + w <= bx - 2 or bx + bw <= cx - 2 or cy + height <= by or by + bh <= cy
+                    for bx, by, bw, bh in boxes
+                )
+
+            hero_left = L.virtual_width - 2 * L.margin - L.hud_panel_width
+            # first choice: beside the acting member, on the side facing the enemies
+            lefts = [box[0] for box, v in zip(boxes, boxed) if self._stands_right(v.member_id)]
+            actor_at = (
+                None if self._focus is None else self._anchor_screen(self._camera, self._focus)
+            )
+            found = None
+            for w in dict.fromkeys((width, min(width, 120.0), min(width, 104.0))):
+                xs = []
+                ys = [y, L.timeline_y + 28.0]
+                if lefts and actor_at is not None:
+                    xs.append(min(lefts) - 4.0 - w)
+                    ys.insert(0, max(L.timeline_y + 28.0, actor_at[1] - height / 2 - 14.0))
+                xs += [x, L.margin]
+                xs += [bx + bw + 4.0 for bx, _, bw, _ in boxes]
+                ys += [by + bh + 2.0 for _, by, _, bh in boxes]
+                for cy in dict.fromkeys(ys):
+                    if cy + height > L.virtual_height - 3.0 or cy < L.timeline_y + 24.0:
+                        continue
+                    for cx in dict.fromkeys(xs):
+                        if L.margin <= cx and cx + w <= hero_left and clear(cx, cy, w):
+                            found = (cx, cy, w)
+                            break
+                    if found:
+                        break
+                if found:
+                    break
+            if found:
+                x, y, width = found
         anchor = None
         if (
             L.action_menu_placement == "actor"
@@ -757,7 +804,8 @@ class BattleUiComposer:
                 - height
             )
             y = max(L.timeline_y + 28.0, min(limit, ay - body / 2 - height / 2))
-        panels.append(BattleUiPanel("action_menu", x, y, width, height, "interaction:action_menu"))
+        role = "interaction:float" if L.party_hud == "side_list" else "interaction:action_menu"
+        panels.append(BattleUiPanel("action_menu", x, y, width, height, role))
 
         ty = y + P.interaction_padding
         if menu.categories:
@@ -822,6 +870,10 @@ class BattleUiComposer:
                     footer = selected.disabled_reason
                     footer_role = "action_disabled_reason"
                 if footer:
+                    room = width - 2 * P.interaction_padding - (14.0 if menu.page_count > 1 else 0)
+                    fit = max(4, int(room // 4.4))
+                    if len(footer) > fit:  # never wider than the menu
+                        footer = footer[: fit - 2].rstrip() + ".."
                     texts.append(
                         BattleUiText(
                             footer,

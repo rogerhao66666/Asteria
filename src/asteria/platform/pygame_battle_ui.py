@@ -95,15 +95,19 @@ class PygameBattleUiBackend:
 
     def draw_panel(self, panel, *, fill, border, radius, border_width):
         rect = self._rect(panel.x, panel.y, panel.width, panel.height)
-        self.pg.draw.rect(self.screen, self._rgb(fill), rect, border_radius=self._s(radius))
+        layer = self.pg.Surface(rect.size, self.pg.SRCALPHA)
+        local = layer.get_rect()
+        alpha = lambda c: (*self._rgb(c), int(c[3]) if len(c) > 3 else 255)  # noqa: E731
+        self.pg.draw.rect(layer, alpha(fill), local, border_radius=self._s(radius))
         if border_width:
             self.pg.draw.rect(
-                self.screen,
-                self._rgb(border),
-                rect,
+                layer,
+                alpha(border),
+                local,
                 width=max(1, self._s(border_width)),
                 border_radius=self._s(radius),
             )
+        self.screen.blit(layer, rect.topleft)
 
     def draw_gauge(self, gauge, *, track, fill):
         mode = str(getattr(gauge, "presentation", "bar"))

@@ -80,6 +80,12 @@ class BattleUiTheme:
         role = str(role)
         if role == "result":
             return self.result_fill, self.result_border
+        if role == "interaction:float":  # see-through list beside the acting member
+            return (10, 14, 26, 150), (130, 140, 170, 210)
+        if role == "hud:side":
+            return (12, 16, 28, 120), (96, 108, 140, 160)
+        if role == "hud:side:focus":
+            return (28, 30, 44, 140), (255, 210, 96, 230)
         if role.startswith("interaction:"):
             return self.interaction_fill, self.interaction_border
         if role.startswith("timeline_tile:"):  # one tile per turn, tinted by side
