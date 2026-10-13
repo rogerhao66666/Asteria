@@ -4,7 +4,13 @@ import random
 import time
 
 from asteria.core import Entity, Scene, Transform
-from asteria.runtime import CharacterController2D, Collider2DComponent, CollisionSystem, CollisionWorld, CombinedQuery
+from asteria.runtime import (
+    CharacterController2D,
+    Collider2DComponent,
+    CollisionSystem,
+    CollisionWorld,
+    CombinedQuery,
+)
 from asteria.runtime.collision import SpatialHash, overlap, shape_of
 
 
@@ -19,7 +25,9 @@ def _body(scene, name, x, y, *, shape="box", size=16.0, layer=0, mask=0xFFFFFFFF
 
 def test_narrow_phase_box_circle_and_mixed_shapes():
     scene = Scene("S")
-    a = shape_of(_body(scene, "A", 0, 0), scene.get_entity(scene.entities()[0].id).get(Collider2DComponent))
+    a = shape_of(
+        _body(scene, "A", 0, 0), scene.get_entity(scene.entities()[0].id).get(Collider2DComponent)
+    )
     b_entity = _body(scene, "B", 12, 0)
     b = shape_of(b_entity, b_entity.get(Collider2DComponent))
     contact = overlap(a, b)
@@ -37,7 +45,10 @@ def test_layers_and_masks_filter_pairs_both_ways():
     _body(scene, "Wall", 5, 0, layer=2, mask=0b010)  # collides with layer 1 only
     _body(scene, "Ghost", 5, 0, layer=3, mask=0xFFFFFFFF)  # player ignores layer 3
     names = {e.id: e.name for e in scene.entities()}
-    pairs = {tuple(sorted((names[c.a], names[c.b]))) for c in CollisionWorld.from_scene(scene).contacts()}
+    pairs = {
+        tuple(sorted((names[c.a], names[c.b])))
+        for c in CollisionWorld.from_scene(scene).contacts()
+    }
     assert ("Player", "Wall") in pairs and ("Ghost", "Player") not in pairs
 
 
@@ -99,7 +110,10 @@ def test_broad_phase_scales_to_a_thousand_colliders():
     assert candidates < 1000 * 999 // 2 // 50  # far fewer than all n^2 pairs
     assert all(isinstance(c.depth, float) for c in contacts)
     assert elapsed < 1.0, f"collision build+contacts took {elapsed:.3f}s"
-    print(f"\n1000 colliders: {candidates} candidate pairs, {len(contacts)} contacts, {elapsed * 1000:.1f} ms")
+    print(
+        f"\n1000 colliders: {candidates} candidate pairs, {len(contacts)} contacts, "
+        f"{elapsed * 1000:.1f} ms"
+    )
 
 
 def test_spatial_hash_rejects_bad_cell_size():
@@ -133,7 +147,9 @@ def test_playable_field_movement_stops_at_a_solid_collider(monkeypatch, tmp_path
         player = runtime.game.player.get(Transform)
         start = player.x
         _body(runtime.game.scene, "Fence", start + 20, player.y, size=8)  # left face at start + 16
-        monkeypatch.setattr(runtime.input_source, "raw_state", lambda: RawInputState(keys={"right"}))
+        monkeypatch.setattr(
+            runtime.input_source, "raw_state", lambda: RawInputState(keys={"right"})
+        )
         for _ in range(40):
             runtime._frame([], 0.05)
         assert start < player.x < start + 16

@@ -80,9 +80,13 @@ def test_battle_arena_executes_ability_unlocked_before_entry():
     project = AsteriaRpgValidationProject()
     project.character.allocate_node("hero_mastery", "double_strike_node")
     arena = project.build_battle_arena()
-    before = arena.scenario.battle.member(arena.scenario.enemy_member_id).subject.resources.current("vitality")
+    before = arena.scenario.battle.member(
+        arena.scenario.enemy_member_id
+    ).subject.resources.current("vitality")
     arena.player_action("double_strike")
-    after = arena.scenario.battle.member(arena.scenario.enemy_member_id).subject.resources.current("vitality")
+    after = arena.scenario.battle.member(arena.scenario.enemy_member_id).subject.resources.current(
+        "vitality"
+    )
     assert after < before
 
 

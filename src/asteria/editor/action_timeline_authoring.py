@@ -54,7 +54,9 @@ class _LibraryCommand:
 
 
 def _beat(beat_id, at, channel, cue, member_id, payload):
-    return BattleMotionBeat(beat_id, at, channel, cue, member_id=member_id, payload=payload or None)
+    return BattleMotionBeat(
+        beat_id, at, channel, cue, member_id=member_id, payload=payload or None
+    )
 
 
 class ActionTimelineController:
@@ -81,7 +83,11 @@ class ActionTimelineController:
     # -- validation ------------------------------------------------------------------
     def known_vfx(self):
         return tuple(
-            sorted(a.asset_id for a in self.document.project.assets.query(kind="sprite_sheet") if "vfx" in a.tags)
+            sorted(
+                a.asset_id
+                for a in self.document.project.assets.query(kind="sprite_sheet")
+                if "vfx" in a.tags
+            )
         )
 
     def problems(self, sequence):
@@ -108,7 +114,11 @@ class ActionTimelineController:
             problems = self.problems(after)
             if problems:
                 raise ActionTimelineError("; ".join(problems))
-        before = self.library.get(CATEGORY, sequence_id) if sequence_id in self.library.ids(CATEGORY) else None
+        before = (
+            self.library.get(CATEGORY, sequence_id)
+            if sequence_id in self.library.ids(CATEGORY)
+            else None
+        )
         self.document.execute(_LibraryCommand(self.library, sequence_id, before, after, label))
         return after
 
@@ -130,14 +140,18 @@ class ActionTimelineController:
             raise ActionTimelineError(f"sequence id {sequence_id!r} is empty or taken")
         beats = (_beat("swing", 0.0, "animation", "attack", "@source", None),)
         return self._commit(
-            sequence_id, BattleMotionSequence(sequence_id, float(duration), beats), f"New timeline {sequence_id}"
+            sequence_id,
+            BattleMotionSequence(sequence_id, float(duration), beats),
+            f"New timeline {sequence_id}",
         )
 
     def duplicate(self, sequence_id, new_id):
         source = self.get(sequence_id)
         if new_id in self.library.ids(CATEGORY):
             raise ActionTimelineError(f"sequence id {new_id} is taken")
-        copy = BattleMotionSequence(new_id, source.duration, source.beats, recovery_at=source.recovery_at)
+        copy = BattleMotionSequence(
+            new_id, source.duration, source.beats, recovery_at=source.recovery_at
+        )
         return self._commit(new_id, copy, f"Duplicate timeline {sequence_id}")
 
     def delete(self, sequence_id):
@@ -146,14 +160,22 @@ class ActionTimelineController:
 
     def set_duration(self, sequence_id, duration):
         sequence = self.get(sequence_id)
-        return self._commit(sequence_id, self._rebuild(sequence, duration=duration), f"Timeline length {sequence_id}")
+        return self._commit(
+            sequence_id,
+            self._rebuild(sequence, duration=duration),
+            f"Timeline length {sequence_id}",
+        )
 
     def add_beat(self, sequence_id, beat_id, at, channel, cue, member="@target", **payload):
         sequence = self.get(sequence_id)
         if any(b.beat_id == beat_id for b in sequence.beats):
             raise ActionTimelineError(f"beat id {beat_id} is taken")
         beat = _beat(beat_id, float(at), channel, cue, member, payload)
-        return self._commit(sequence_id, self._rebuild(sequence, beats=sequence.beats + (beat,)), f"Add beat {beat_id}")
+        return self._commit(
+            sequence_id,
+            self._rebuild(sequence, beats=sequence.beats + (beat,)),
+            f"Add beat {beat_id}",
+        )
 
     def edit_beat(self, sequence_id, beat_id, **changes):
         sequence = self.get(sequence_id)
@@ -175,7 +197,9 @@ class ActionTimelineController:
             beats.append(beat)
         if not found:
             raise ActionTimelineError(f"unknown beat {beat_id}")
-        return self._commit(sequence_id, self._rebuild(sequence, beats=beats), f"Edit beat {beat_id}")
+        return self._commit(
+            sequence_id, self._rebuild(sequence, beats=beats), f"Edit beat {beat_id}"
+        )
 
     def move_beat(self, sequence_id, beat_id, at):
         at = max(0.0, min(float(at), self.get(sequence_id).duration))
@@ -186,7 +210,9 @@ class ActionTimelineController:
         beats = tuple(b for b in sequence.beats if b.beat_id != beat_id)
         if len(beats) == len(sequence.beats):
             raise ActionTimelineError(f"unknown beat {beat_id}")
-        return self._commit(sequence_id, self._rebuild(sequence, beats=beats), f"Remove beat {beat_id}")
+        return self._commit(
+            sequence_id, self._rebuild(sequence, beats=beats), f"Remove beat {beat_id}"
+        )
 
     # -- preview ---------------------------------------------------------------------
     def preview(self, sequence_id, time):

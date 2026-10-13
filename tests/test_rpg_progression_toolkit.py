@@ -50,7 +50,9 @@ def test_progression_is_not_hardcoded_to_character_level():
 
 
 def test_runtime_snapshot_roundtrip():
-    track = ProgressionTrackDefinition("x", milestones=[ProgressionMilestone(1, 0), ProgressionMilestone(2, 5)])
+    track = ProgressionTrackDefinition(
+        "x", milestones=[ProgressionMilestone(1, 0), ProgressionMilestone(2, 5)]
+    )
     runtime = ProgressionRuntime([track])
     runtime.add("x", 7)
     restored = ProgressionRuntime.from_data(runtime.to_data(), [track])

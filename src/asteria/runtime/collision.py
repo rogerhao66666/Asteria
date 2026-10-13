@@ -32,18 +32,39 @@ SHAPES = ("box", "circle", "slope_right", "slope_left")
             str,
             "box",
             choices=SHAPES,
-            tooltip="slope_right: solid below a line rising to the right across the box; slope_left: rising left.",
+            tooltip="slope_right: solid below a line rising to the right across the box; "
+            "slope_left: rising left.",
         ),
         Field("width", float, 16.0, minimum=0.0),
         Field("height", float, 16.0, minimum=0.0),
         Field("radius", float, 8.0, minimum=0.0),
         Field("offset_x", float, 0.0),
         Field("offset_y", float, 0.0),
-        Field("layer", int, 0, minimum=0, maximum=31, tooltip="Bit index of this collider's layer."),
-        Field("mask", int, ALL_LAYERS, minimum=0, maximum=ALL_LAYERS, tooltip="Bitmask of layers it collides with."),
+        Field(
+            "layer", int, 0, minimum=0, maximum=31, tooltip="Bit index of this collider's layer."
+        ),
+        Field(
+            "mask",
+            int,
+            ALL_LAYERS,
+            minimum=0,
+            maximum=ALL_LAYERS,
+            tooltip="Bitmask of layers it collides with.",
+        ),
         Field("is_trigger", bool, False, label="Trigger"),
-        Field("one_way", bool, False, label="One-way platform", tooltip="Side view: blocks only from above."),
-        Field("ladder", bool, False, tooltip="A climbable area (side view); it never blocks movement."),
+        Field(
+            "one_way",
+            bool,
+            False,
+            label="One-way platform",
+            tooltip="Side view: blocks only from above.",
+        ),
+        Field(
+            "ladder",
+            bool,
+            False,
+            tooltip="A climbable area (side view); it never blocks movement.",
+        ),
         Field("enabled", bool, True),
     ),
 )
@@ -91,14 +112,20 @@ class ColliderShape:
 
     @property
     def bounds(self):
-        return (self.cx - self.half_w, self.cy - self.half_h, self.cx + self.half_w, self.cy + self.half_h)
+        return (
+            self.cx - self.half_w,
+            self.cy - self.half_h,
+            self.cx + self.half_w,
+            self.cy + self.half_h,
+        )
 
     @property
     def slope(self):
         return self.shape in ("slope_right", "slope_left")
 
     def surface_y(self, x):
-        """Top of the solid at ``x`` (slopes: the line across the box; other shapes: the top edge)."""
+        """Top of the solid at ``x`` (slopes: the line across the box; other shapes: the top
+        edge)."""
         x0, y0, x1, y1 = self.bounds
         if not self.slope or x1 <= x0:
             return y0
@@ -242,7 +269,11 @@ class SpatialHash:
         for shapes in self._cells.values():
             for i, a in enumerate(shapes):
                 for b in shapes[i + 1 :]:
-                    key = (a.entity_id, b.entity_id) if a.entity_id < b.entity_id else (b.entity_id, a.entity_id)
+                    key = (
+                        (a.entity_id, b.entity_id)
+                        if a.entity_id < b.entity_id
+                        else (b.entity_id, a.entity_id)
+                    )
                     if key not in pairs:
                         pairs[key] = (a, b) if key[0] == a.entity_id else (b, a)
         return tuple(pairs.values())
@@ -251,11 +282,26 @@ class SpatialHash:
 class CollisionWorld:
     """Collider snapshot of a scene with broad + narrow phase queries.
 
-    Shapes are kept as columns (one list per field); ``ColliderShape`` objects are only made when something asks
-    for them (``shapes``, point queries), so batched users (controllers, projectiles) never pay for them.
+    Shapes are kept as columns (one list per field); ``ColliderShape`` objects are only made when
+    something asks
+    for them (``shapes``, point queries), so batched users (controllers, projectiles) never pay
+    for them.
     """
 
-    _FIELDS = ("ids", "kind", "cx", "cy", "hw", "hh", "radius", "bit", "mask", "trigger", "one_way", "ladder")
+    _FIELDS = (
+        "ids",
+        "kind",
+        "cx",
+        "cy",
+        "hw",
+        "hh",
+        "radius",
+        "bit",
+        "mask",
+        "trigger",
+        "one_way",
+        "ladder",
+    )
 
     def __init__(self, shapes=(), cell_size=64.0):
         if cell_size <= 0:
@@ -285,7 +331,9 @@ class CollisionWorld:
                 shape.ladder,
             )
 
-    def _add(self, entity_id, kind, cx, cy, hw, hh, radius, bit, mask, trigger, one_way, ladder=False):
+    def _add(
+        self, entity_id, kind, cx, cy, hw, hh, radius, bit, mask, trigger, one_way, ladder=False
+    ):
         if entity_id in self._row:  # same entity again: the later shape wins (dict semantics)
             i = self._row[entity_id]
             for name, value in zip(
@@ -333,7 +381,8 @@ class CollisionWorld:
         return self._shapes
 
     def solid_columns(self):
-        """Non-trigger shapes as ``(shapes, (x0, y0, x1, y1))`` for batched overlap tests (cached); ``shapes[j]``
+        """Non-trigger shapes as ``(shapes, (x0, y0, x1, y1))`` for batched overlap tests
+        (cached); ``shapes[j]``
         makes the ``ColliderShape`` of row ``j`` on demand."""
         if self._solid is None:
             rows = [i for i, trigger in enumerate(self._trigger) if not trigger]
@@ -348,7 +397,8 @@ class CollisionWorld:
         return self._solid
 
     def solid_extras(self):
-        """Per solid row (same order as ``solid_columns``): ``cx, cy, radius, layer bit, one_way, circle`` lists and
+        """Per solid row (same order as ``solid_columns``): ``cx, cy, radius, layer bit, one_way,
+        circle`` lists and
         ``{entity_id: solid row}`` — what the batched blocking test needs."""
         shapes, _ = self.solid_columns()
         if getattr(shapes, "extras", None) is None:
@@ -365,9 +415,11 @@ class CollisionWorld:
         return shapes.extras
 
     def move_shapes(self, deltas):
-        """Shift the shapes of entities that moved (``{entity_id: (dx, dy)}``) so the snapshot stays current.
+        """Shift the shapes of entities that moved (``{entity_id: (dx, dy)}``) so the snapshot
+        stays current.
 
-        A collider under a moved parent cannot be followed here; the world is then marked ``stale``.
+        A collider under a moved parent cannot be followed here; the world is then marked
+        ``stale``.
         """
         moved = False
         row, cx, cy = self._row, self._cx, self._cy
@@ -394,7 +446,8 @@ class CollisionWorld:
         return self._grid
 
     def candidate_pairs(self):
-        """Pairs of shapes whose bounds overlap or touch (the active kernel's broad phase), ``a.entity_id <
+        """Pairs of shapes whose bounds overlap or touch (the active kernel's broad phase),
+        ``a.entity_id <
         b.entity_id`` in each, in a stable order."""
         shapes = tuple(self.shapes.values())
         bounds = [s.bounds for s in shapes]
@@ -407,7 +460,8 @@ class CollisionWorld:
 
     @classmethod
     def from_scene(cls, scene, cell_size=64.0):
-        """Snapshot of the scene's enabled colliders, in scene order, read straight from column storage."""
+        """Snapshot of the scene's enabled colliders, in scene order, read straight from column
+        storage."""
         colliders, transforms = scene.columns(Collider2DComponent), scene.columns(Transform)
         world = cls((), cell_size)
         if colliders is None or transforms is None:
@@ -419,7 +473,12 @@ class CollisionWorld:
             collider = owners[slot]
             entity = collider._entity
             transform = placed[slot] if slot < len(placed) else None
-            if transform is None or not collider.enabled or not entity.enabled or entity._destroy_requested:
+            if (
+                transform is None
+                or not collider.enabled
+                or not entity.enabled
+                or entity._destroy_requested
+            ):
                 continue
             live.append((entity._order, slot, entity, collider, transform))
         live.sort(key=lambda row: row[0])
@@ -480,7 +539,11 @@ class CollisionWorld:
         probe = ColliderShape("__probe__", "box", x, y, 0.0, 0.0, 0.0, ALL_LAYERS, mask, False)
         hits = []
         for shape in self.grid.query(probe.bounds):
-            if shape.entity_id in exclude or (solid_only and shape.is_trigger) or not (mask & shape.layer_bit):
+            if (
+                shape.entity_id in exclude
+                or (solid_only and shape.is_trigger)
+                or not (mask & shape.layer_bit)
+            ):
                 continue
             if shape.contains_point(x, y):
                 hits.append(shape.entity_id)

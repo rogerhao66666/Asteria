@@ -91,14 +91,18 @@ def inspector_choices(document, component, field):
     if field.name == "actor_id":
         return build_actor_link_choices(document.project, field.value)
     if field.name == "sprite_sheet_asset_id":
-        return build_asset_id_choices(document.asset_views.sprite_sheet_ids(), field.value, label="sprite sheet")
+        return build_asset_id_choices(
+            document.asset_views.sprite_sheet_ids(), field.value, label="sprite sheet"
+        )
     if field.name == "effect_id" and document.project is not None:  # ParticleEmitter2D (VFX-01)
         from asteria.presentation.particles import PARTICLE_KIND
 
         ids = sorted(a.asset_id for a in document.project.assets.query(kind=PARTICLE_KIND))
         return build_asset_id_choices(ids, field.value, label="particle effect")
     if field.name == "clip_set_id":
-        return build_asset_id_choices(document.asset_views.clip_set_ids(), field.value, label="clip set")
+        return build_asset_id_choices(
+            document.asset_views.clip_set_ids(), field.value, label="clip set"
+        )
     if field.choices:
         return tuple((str(choice), choice) for choice in field.choices)
     return None
@@ -115,5 +119,7 @@ def build_parent_choices(component):
     choices = [("— None —", "")]
     scene = owner.scene
     if scene is not None:
-        choices.extend((e.name, e.id) for e in scene.entities() if e is not owner and can_parent(owner, e))
+        choices.extend(
+            (e.name, e.id) for e in scene.entities() if e is not owner and can_parent(owner, e)
+        )
     return _with_missing(choices, getattr(component, "parent_id", ""), "entity")

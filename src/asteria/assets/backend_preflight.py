@@ -43,12 +43,17 @@ class BackendPreflightReport:
         return sum(x.severity == "error" for x in self.issues)
 
 
-FallbackSelector = Callable[[ResolvedSceneAsset, Any, BackendCapabilities, tuple[CapabilityIssue, ...]], Any]
+FallbackSelector = Callable[
+    [ResolvedSceneAsset, Any, BackendCapabilities, tuple[CapabilityIssue, ...]], Any
+]
 
 
 class BackendPreflight:
     def __init__(
-        self, adapters: RuntimeAdapterRegistry, validators: CapabilityValidatorRegistry, caps: BackendCapabilities
+        self,
+        adapters: RuntimeAdapterRegistry,
+        validators: CapabilityValidatorRegistry,
+        caps: BackendCapabilities,
     ):
         self.adapters = adapters
         self.validators = validators
@@ -63,7 +68,11 @@ class BackendPreflight:
             try:
                 request = self.adapters.adapt(resolved.canonical)
             except Exception as e:
-                issues.append(PreflightIssue(b.object_id, aid, b.component_type, "backend.adapter.failed", str(e)))
+                issues.append(
+                    PreflightIssue(
+                        b.object_id, aid, b.component_type, "backend.adapter.failed", str(e)
+                    )
+                )
                 continue
             fallback = None
             if fallback_selector is not None:
@@ -74,7 +83,11 @@ class BackendPreflight:
             try:
                 result = self.validators.validate(request, self.caps, fallback=fallback)
             except Exception as e:
-                issues.append(PreflightIssue(b.object_id, aid, b.component_type, "backend.preflight.failed", str(e)))
+                issues.append(
+                    PreflightIssue(
+                        b.object_id, aid, b.component_type, "backend.preflight.failed", str(e)
+                    )
+                )
                 continue
             entries.append(PreflightEntry(resolved, result.request, result.fallback_applied))
             for x in result.issues:

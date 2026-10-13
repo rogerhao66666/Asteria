@@ -54,7 +54,9 @@ class EventEditorWidget(QWidget):
 
         self.trigger_combo = QComboBox()
         self.trigger_combo.addItems(["Action", "Autorun", "Parallel"])
-        self.trigger_combo.currentTextChanged.connect(lambda value: self._emit_binding_change("trigger", value.lower()))
+        self.trigger_combo.currentTextChanged.connect(
+            lambda value: self._emit_binding_change("trigger", value.lower())
+        )
 
         self.program_combo = QComboBox()
         self.program_combo.currentIndexChanged.connect(self._program_changed)
@@ -156,7 +158,9 @@ class EventEditorWidget(QWidget):
         if binding.program_id in self._program_ids:
             self.program_combo.setCurrentIndex(self._program_ids.index(binding.program_id))
         self.conditions.setText(
-            f"Conditions: {len(binding.conditions)}" if binding.conditions else "Conditions: Always"
+            f"Conditions: {len(binding.conditions)}"
+            if binding.conditions
+            else "Conditions: Always"
         )
         self.commands.clear()
         program = registry.get(binding.program_id)

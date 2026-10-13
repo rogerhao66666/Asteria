@@ -45,19 +45,27 @@ class AssetPackageInstaller:
         except ValueError as e:
             return InstallReport(issues=(InstallIssue("install.unsafe_path", str(e)),))
         if len(set(rels)) != len(rels):
-            return InstallReport(issues=(InstallIssue("install.duplicate_path", "duplicate package path"),))
+            return InstallReport(
+                issues=(InstallIssue("install.duplicate_path", "duplicate package path"),)
+            )
         if collision not in ("error", "replace"):
             return InstallReport(issues=(InstallIssue("install.bad_collision_policy", collision),))
         missing = [str(x) for x in rels if not (source / x).is_file()]
         if missing:
             return InstallReport(
-                issues=tuple(InstallIssue("install.source_missing", "source file missing", x) for x in missing)
+                issues=tuple(
+                    InstallIssue("install.source_missing", "source file missing", x)
+                    for x in missing
+                )
             )
         target_root = self.assets_root / dest
         collisions = [x for x in rels if (target_root / x).exists()]
         if collisions and collision == "error":
             return InstallReport(
-                issues=tuple(InstallIssue("install.collision", "destination exists", str(dest / x)) for x in collisions)
+                issues=tuple(
+                    InstallIssue("install.collision", "destination exists", str(dest / x))
+                    for x in collisions
+                )
             )
         self.assets_root.mkdir(parents=True, exist_ok=True)
         stage = Path(tempfile.mkdtemp(prefix=".asteria-install-", dir=self.assets_root))
@@ -80,7 +88,9 @@ class AssetPackageInstaller:
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 os.replace(stage / rel, dst)
                 written.append(rel)
-            return InstallReport(tuple(str(dest / x) for x in rels), (), tuple(str(dest / x) for x in replaced))
+            return InstallReport(
+                tuple(str(dest / x) for x in rels), (), tuple(str(dest / x) for x in replaced)
+            )
         except Exception as e:
             for rel in reversed(written):
                 dst = target_root / rel

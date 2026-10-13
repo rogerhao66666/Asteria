@@ -53,8 +53,12 @@ def test_actor_complete_fields_and_multiclass_assignments():
         "hero",
         "Hero",
         class_assignments=(
-            ClassAssignment("warrior", assignment_id="main", role="primary", priority=0, tags=("lead",)),
-            ClassAssignment("mage", assignment_id="sub", role="secondary", priority=10, enabled=False),
+            ClassAssignment(
+                "warrior", assignment_id="main", role="primary", priority=0, tags=("lead",)
+            ),
+            ClassAssignment(
+                "mage", assignment_id="sub", role="secondary", priority=10, enabled=False
+            ),
         ),
         base_stats={"hp": 100, "power": 12},
         base_resources={"mp": {"minimum": 0, "maximum": 30, "current": 20}},
@@ -71,9 +75,17 @@ def test_assignment_all_fields_are_editable():
     c.create_class("a")
     c.create_class("b")
     c.create_actor("hero", class_assignments=(ClassAssignment("a", assignment_id="slot"),))
-    c.edit_assignment("hero", "slot", class_id="b", role="support", enabled=False, priority=20, tags=("magic",))
+    c.edit_assignment(
+        "hero", "slot", class_id="b", role="support", enabled=False, priority=20, tags=("magic",)
+    )
     a = p.rpg_database.actors["hero"].class_assignments[0]
-    assert (a.class_id, a.role, a.enabled, a.priority, a.tags) == ("b", "support", False, 20, ("magic",))
+    assert (a.class_id, a.role, a.enabled, a.priority, a.tags) == (
+        "b",
+        "support",
+        False,
+        20,
+        ("magic",),
+    )
 
 
 def test_assignment_progression_track_reference_is_validated():

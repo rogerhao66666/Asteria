@@ -1,4 +1,5 @@
-"""W-18: an RPG Maker MV project imports into canonical Asteria assets and plays as a native project.
+"""W-18: an RPG Maker MV project imports into canonical Asteria assets and plays as a native
+project.
 
 Uses the local (git-ignored) MV reference: the parallax DLC sample project has real tile maps,
 an NPC with dialogue and a player-touch door that transfers to the next map.
@@ -21,7 +22,11 @@ SAMPLE = "parallax_Resource_Pack/sample_project"
 def _layout():
     from asteria.assets.local_reference import discover_mv_projects, resolve_rpg_maker_mv_root
 
-    return next(l for l in discover_mv_projects(resolve_rpg_maker_mv_root(REPO)) if l.relative_path.endswith(SAMPLE))
+    return next(
+        l
+        for l in discover_mv_projects(resolve_rpg_maker_mv_root(REPO))
+        if l.relative_path.endswith(SAMPLE)
+    )
 
 
 @pytest.fixture(scope="module")
@@ -39,7 +44,9 @@ def _field(root):
     from asteria.runtime.game_session import GameSessionRuntime
     from asteria.runtime.tilemap_field import TileMapField
 
-    project = load_project(root / "project.asteria.json")  # reloaded from disk: no in-memory MV data
+    project = load_project(
+        root / "project.asteria.json"
+    )  # reloaded from disk: no in-memory MV data
     return TileMapField(GameSessionRuntime(project, project.game_start.instantiate(project)), root)
 
 
@@ -63,8 +70,12 @@ def test_maps_become_canonical_assets_that_survive_save_and_reload(imported):
     resources = AssetResources(project, root)
     assert len(project.scenes()) == 2
     for scene in project.scenes():
-        binding = next(e.get(TileMap2DComponent) for e in scene.entities() if e.has(TileMap2DComponent))
-        tilemap = resources.get(binding.tilemap_asset_id, "tilemap")  # resolves; no dangling mv.tileset.N id
+        binding = next(
+            e.get(TileMap2DComponent) for e in scene.entities() if e.has(TileMap2DComponent)
+        )
+        tilemap = resources.get(
+            binding.tilemap_asset_id, "tilemap"
+        )  # resolves; no dangling mv.tileset.N id
         tileset = resources.get(tilemap.tileset.asset_id, "tileset")
         sheet = resources.get(tileset.sprite_sheet.asset_id, "sprite_sheet")
         tileset.validate(len(sheet.frames))
@@ -93,7 +104,9 @@ draws = field.draw_commands()
 print("DRAWS", len(draws), len({{d.texture_asset_id for d in draws}}))
 print("MV", sorted(m for m in sys.modules if "rpg_maker" in m))
 """
-    out = subprocess.run([sys.executable, "-c", script], cwd=tmp_path, capture_output=True, text=True, timeout=120)
+    out = subprocess.run(
+        [sys.executable, "-c", script], cwd=tmp_path, capture_output=True, text=True, timeout=120
+    )
     assert out.returncode == 0, out.stderr[-1500:]
     draws = int(out.stdout.split("DRAWS ")[1].split()[0])
     assert draws > 100 and "MV []" in out.stdout
@@ -115,7 +128,9 @@ def test_player_walks_collides_talks_and_transfers_through_the_door(imported):
     assert stop < cx and not _blocked(field, stop, cy) and _blocked(field, stop - 1, cy)
     _walk(field, "move_right", (cx - stop) * 48 / 180 + 0.05)  # back to the start column
     # talk: walk up to the NPC two cells above the door path and press interact
-    _walk(field, "move_up", 3.0)  # blocked by the NPC (solid: "same as characters") one cell below it
+    _walk(
+        field, "move_up", 3.0
+    )  # blocked by the NPC (solid: "same as characters") one cell below it
     t = session.player.get(Transform)
     assert (int(t.x // 48), int(t.y // 48)) == (8, 9)
     field.step({}, 1 / 60)
@@ -126,7 +141,9 @@ def test_player_walks_collides_talks_and_transfers_through_the_door(imported):
     field.step({}, 1 / 60)
     assert session.pending_dialogue is None
     npc = next(e for e in session.scene.entities() if e.name == "謎の存在")
-    assert not npc.enabled  # page 2 (self switch A) is empty in MV: the NPC is gone, its state saved
+    assert (
+        not npc.enabled
+    )  # page 2 (self switch A) is empty in MV: the NPC is gone, its state saved
     assert session.world.npc("mv.map001.event002")["visible"] is False
     # the door (player touch) on the path above transfers to map 2 at (8, 23) facing up
     for _ in range(600):
@@ -171,7 +188,14 @@ def test_preview_runs_the_imported_project_in_its_own_process(imported, tmp_path
     root, _ = imported
     env = dict(os.environ, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy")
     out = subprocess.run(
-        [sys.executable, "-m", "asteria.runtime.preview", str(root / "project.asteria.json"), "--frames", "20"],
+        [
+            sys.executable,
+            "-m",
+            "asteria.runtime.preview",
+            str(root / "project.asteria.json"),
+            "--frames",
+            "20",
+        ],
         cwd=tmp_path,
         env=env,
         capture_output=True,
@@ -205,7 +229,9 @@ def test_cli_and_editor_import_open_a_playable_project(tmp_path):
     window = AsteriaEditorWindow(None)
     assert window.import_mv_action.text() == "Import RPG Maker MV Project…"
     path, result = window.import_mv_project(source, tmp_path / "editor")
-    assert window.document.file_path == path and len(window.document.project.scenes()) == len(result.project.scenes())
+    assert window.document.file_path == path and len(window.document.project.scenes()) == len(
+        result.project.scenes()
+    )
     assert can_play(window.document.project, path.parent)
     window.close()
     app.processEvents()

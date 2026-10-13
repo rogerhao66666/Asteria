@@ -54,16 +54,18 @@ class NonOctopathGeneralityHarness:
 
     def _run(self, spec):
         roster = tuple(f"{spec['prefix']}.member.{i}" for i in range(spec["roster"]))
-        density = BattleRosterDensityPolicy(primary_limit=spec["primary"], compact_limit=spec["compact"]).resolve(
-            roster, focus_member_id=roster[-1] if spec["focus_last"] else roster[0]
-        )
+        density = BattleRosterDensityPolicy(
+            primary_limit=spec["primary"], compact_limit=spec["compact"]
+        ).resolve(roster, focus_member_id=roster[-1] if spec["focus_last"] else roster[0])
 
         layers = tuple(
             BattleInteractionLayer(layer_id, label=label, role=role, order=i)
             for i, (layer_id, label, role) in enumerate(spec["layers"])
         )
         interaction = BattleInteractionRuntime(
-            BattleInteractionProfile(layers, page_size=spec["page_size"], max_primary_layers=spec["max_layers"])
+            BattleInteractionProfile(
+                layers, page_size=spec["page_size"], max_primary_layers=spec["max_layers"]
+            )
         )
         entries = tuple(
             BattleActionEntry(
@@ -198,7 +200,11 @@ class NonOctopathGeneralityHarness:
                 center=190,
                 layout_cap=None,
                 split=1,
-                notes=("single controllable actor", "reaction-heavy command grammar", "no job/break assumptions"),
+                notes=(
+                    "single controllable actor",
+                    "reaction-heavy command grammar",
+                    "no job/break assumptions",
+                ),
             ),
             dict(
                 id="atb_squad",

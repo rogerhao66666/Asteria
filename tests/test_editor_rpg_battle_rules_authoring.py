@@ -42,8 +42,12 @@ def make():
 
 def sample_definitions():
     return {
-        "resources": BattleResourceDefinition("stagger", minimum=0, maximum=100, start_mode="maximum"),
-        "states": BattleStatePolicy("broken", blocked_ability_tags=("ability.magic",), tick_trigger="round.end"),
+        "resources": BattleResourceDefinition(
+            "stagger", minimum=0, maximum=100, start_mode="maximum"
+        ),
+        "states": BattleStatePolicy(
+            "broken", blocked_ability_tags=("ability.magic",), tick_trigger="round.end"
+        ),
         "interactions": InteractionRule(
             "weak_fire",
             source_tags_all=("damage.fire",),
@@ -59,17 +63,26 @@ def sample_definitions():
             failure_tags=("outcome.normal",),
         ),
         "targeting": BattleTargetingDefinition(
-            "hit", relation="opponent", selection_mode="manual", minimum_targets=1, maximum_targets=2
+            "hit",
+            relation="opponent",
+            selection_mode="manual",
+            minimum_targets=1,
+            maximum_targets=2,
         ),
         "schedulers": BattleSchedulerDefinition("ct", mode="continuous", timeline_scale=100),
         "timing": ActionTimingDefinition("meteor", startup=1, cast_time=3, recovery=2, priority=7),
         "sequences": ActionSequenceDefinition(
-            "triple", (ActionSequenceStep("hit", repeat=3),), min_participants=1, max_participants=1
+            "triple",
+            (ActionSequenceStep("hit", repeat=3),),
+            min_participants=1,
+            max_participants=1,
         ),
         "gauges": GaugeCompositionDefinition(
             "stagger_break",
             impacts=(GaugeImpactRule("pressure", "stagger", "battle.hit", delta=-20),),
-            thresholds=(GaugeThresholdRule("broken", "stagger", "at_or_below", 0, state_id="broken"),),
+            thresholds=(
+                GaugeThresholdRule("broken", "stagger", "at_or_below", 0, state_id="broken"),
+            ),
         ),
         "reactions": ReactionDefinition(
             "counter",
@@ -81,12 +94,18 @@ def sample_definitions():
         ),
         "objectives": BattleObjectiveDefinition(
             "win",
-            success_conditions=(BattleObjectiveCondition("side_active_count", "enemies", "==", 0),),
+            success_conditions=(
+                BattleObjectiveCondition("side_active_count", "enemies", "==", 0),
+            ),
             winning_sides=("heroes",),
             defeated_sides=("enemies",),
         ),
-        "escape": BattleEscapeRule("run", "heroes", base_chance=0.5, source_stat="speed", source_scale=0.01),
-        "transactions": ActionTransactionPolicy("meteor", cost_commit="start", interrupt_cost="refund"),
+        "escape": BattleEscapeRule(
+            "run", "heroes", base_chance=0.5, source_stat="speed", source_scale=0.01
+        ),
+        "transactions": ActionTransactionPolicy(
+            "meteor", cost_commit="start", interrupt_cost="refund"
+        ),
         "session": BattleSessionRules(
             "default", knockout_resource_id="hp", boost_resource_id="stagger", boost_max_level=2
         ),
@@ -128,7 +147,9 @@ def test_edit_replaces_canonical_definition_atomically():
     c.edit(
         "resources",
         "rage",
-        BattleResourceDefinition("rage", minimum=0, maximum=100, start_mode="fixed", start_value=20),
+        BattleResourceDefinition(
+            "rage", minimum=0, maximum=100, start_mode="fixed", start_value=20
+        ),
     )
     assert p.rpg_database.battle_resources["rage"].maximum == 100
     assert doc.undo()
@@ -144,7 +165,9 @@ def test_ability_linked_rules_reject_unknown_abilities():
     with pytest.raises(RpgBattleRulesAuthoringError):
         c.create("transactions", ActionTransactionPolicy("missing"))
     with pytest.raises(RpgBattleRulesAuthoringError):
-        c.create("reactions", ReactionDefinition("bad", "x", "event_targets", ability_id="missing"))
+        c.create(
+            "reactions", ReactionDefinition("bad", "x", "event_targets", ability_id="missing")
+        )
     with pytest.raises(RpgBattleRulesAuthoringError):
         c.create("sequences", ActionSequenceDefinition("bad", (ActionSequenceStep("missing"),)))
 
@@ -174,7 +197,9 @@ def test_resource_and_state_delete_protect_gauge_references():
 
 def test_serialized_data_can_be_used_for_authoring():
     _, _, c = make()
-    raw = BattleResourceDefinition("heat", minimum=0, maximum=100, start_mode="fixed", start_value=0).to_data()
+    raw = BattleResourceDefinition(
+        "heat", minimum=0, maximum=100, start_mode="fixed", start_value=0
+    ).to_data()
     value = c.create("resources", raw)
     assert isinstance(value, BattleResourceDefinition)
     assert value.resource_id == "heat"
@@ -186,7 +211,13 @@ def test_information_architecture_groups_complexity_in_two_levels():
     assert ia.primary_navigation == "rule_group_sidebar"
     assert ia.secondary_navigation == "rule_kind_tabs"
     assert len(ia.groups) == 5
-    assert ia.group("combat_model").kind_ids == ("resources", "states", "interactions", "outcome_checks", "targeting")
+    assert ia.group("combat_model").kind_ids == (
+        "resources",
+        "states",
+        "interactions",
+        "outcome_checks",
+        "targeting",
+    )
     assert ia.progressive_disclosure
     assert not ia.show_all_rule_kinds_simultaneously
     assert not ia.show_all_details_simultaneously
@@ -268,7 +299,11 @@ def test_unknown_rule_kind_is_rejected():
 def test_session_rules_boost_resource_must_be_a_battle_resource():
     _, _, c = make()
     with pytest.raises(RpgBattleRulesAuthoringError):
-        c.create("session", BattleSessionRules("r", boost_resource_id="missing", boost_max_level=1))
+        c.create(
+            "session", BattleSessionRules("r", boost_resource_id="missing", boost_max_level=1)
+        )
     c.create("resources", BattleResourceDefinition("bp"))
-    created = c.create("session", BattleSessionRules("r", boost_resource_id="bp", boost_max_level=1))
+    created = c.create(
+        "session", BattleSessionRules("r", boost_resource_id="bp", boost_max_level=1)
+    )
     assert c.definitions("session") == (created,)

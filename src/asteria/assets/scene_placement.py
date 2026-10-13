@@ -60,7 +60,11 @@ class PlacementHandlerRegistry:
 def generic_asset_handler(q, t):
     ref = SceneAssetRef(q.payload.asset_id, q.payload.kind)
     oid = t.create_object(
-        parent_id=q.parent_id, position=q.position, component_type="asset", asset_ref=ref, properties=q.properties
+        parent_id=q.parent_id,
+        position=q.position,
+        component_type="asset",
+        asset_ref=ref,
+        properties=q.properties,
     )
     return PlacementResult(oid, ref)
 

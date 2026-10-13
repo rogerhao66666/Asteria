@@ -79,7 +79,14 @@ def test_presentation_and_runtime_ui_adapters_are_separate_families():
 
 
 def test_shell_declares_complete_top_level_information_architecture():
-    assert tuple(x.value for x in WorkspaceMode) == ("scene", "rpg", "battle", "ui", "event", "code")
+    assert tuple(x.value for x in WorkspaceMode) == (
+        "scene",
+        "rpg",
+        "battle",
+        "ui",
+        "event",
+        "code",
+    )
 
 
 def test_shell_does_not_expose_player_save_workflow_methods():
@@ -106,7 +113,9 @@ def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
     window = AsteriaEditorWindow(project())
     assert window.workspace.page(WorkspaceMode.RPG) is window.rpg_workspace
     assert window.rpg_workspace.widget(0) is window.rpg_authoring
-    assert window.rpg_workspace.widget(1) is window.game_systems_editor  # Character Creator retired (CB15)
+    assert (
+        window.rpg_workspace.widget(1) is window.game_systems_editor
+    )  # Character Creator retired (CB15)
     assert window.workspace.page(WorkspaceMode.BATTLE) is window.battle_authoring
     assert window.workspace.page(WorkspaceMode.UI) is window.ui_workspace
     assert window.workspace.page(WorkspaceMode.EVENT) is window.events_workspace
@@ -129,7 +138,9 @@ def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
         "Behavior Trees",
         "Real-Time Combat",
     ]
-    assert [window.events_workspace.tabText(i) for i in range(window.events_workspace.count())] == [
+    assert [
+        window.events_workspace.tabText(i) for i in range(window.events_workspace.count())
+    ] == [
         "Entity Events",
         "Interaction Overview",
         "Common && Battle Events",

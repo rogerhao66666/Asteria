@@ -124,7 +124,9 @@ class AsteriaRpgValidationProject:
 
     def snapshot(self):
         build = self.resolve_build()
-        assignments = tuple((x.role, x.class_id) for x in self.shared_scenario.actor.class_assignments)
+        assignments = tuple(
+            (x.role, x.class_id) for x in self.shared_scenario.actor.class_assignments
+        )
         equipped = tuple(x.instance_id for x in self.shared_scenario.loadout.equipped())
         return RpgValidationProjectSnapshot(
             build.actor_id,

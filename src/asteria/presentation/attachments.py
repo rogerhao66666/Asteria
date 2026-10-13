@@ -191,7 +191,11 @@ class SocketRig:
         rig = cls()
         for raw in data.get("sockets", []):
             keys = tuple(
-                SocketKey(int(k["frame"]), Transform2D(**k.get("transform", {})), bool(k.get("interpolate", True)))
+                SocketKey(
+                    int(k["frame"]),
+                    Transform2D(**k.get("transform", {})),
+                    bool(k.get("interpolate", True)),
+                )
                 for k in raw.get("keys", [])
             )
             rig.add(
@@ -209,7 +213,9 @@ class SocketRig:
         return rig
 
 
-def validate_attachments(rig: SocketRig, attachments: Iterable[Attachment]) -> tuple[Attachment, ...]:
+def validate_attachments(
+    rig: SocketRig, attachments: Iterable[Attachment]
+) -> tuple[Attachment, ...]:
     result = tuple(attachments)
     seen = set()
     for a in result:

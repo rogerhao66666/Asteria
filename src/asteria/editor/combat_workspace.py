@@ -1,8 +1,12 @@
-"""Real-Time Combat workspace (D22 A9): attacks, projectiles, loot rarities and affixes, designed side by side.
+"""Real-Time Combat workspace (D22 A9): attacks, projectiles, loot rarities and affixes, designed
+side by side.
 
-Layout: a kind switcher and a searchable record list on the left; the selected record in titled cards (dense,
-multi-column) in the middle; a live preview on the right that redraws as values change — the knockback and timing of
-an attack, the flight of a projectile (simulated with the engine's projectile kernel), a rarity's name colour and
+Layout: a kind switcher and a searchable record list on the left; the selected record in titled
+cards (dense,
+multi-column) in the middle; a live preview on the right that redraws as values change — the
+knockback and timing of
+an attack, the flight of a projectile (simulated with the engine's projectile kernel), a rarity's
+name colour and
 affix count, an affix's value range across item levels. Apply records the edit as one undo step.
 """
 
@@ -98,7 +102,10 @@ class _Table(QWidget):
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self._fit()
-        add, remove = _small_button("+", "Add a line"), _small_button("−", "Remove the selected line")
+        add, remove = (
+            _small_button("+", "Add a line"),
+            _small_button("−", "Remove the selected line"),
+        )
         add.clicked.connect(lambda: (self.add_row(), self.changed.emit()))
         remove.clicked.connect(self._remove)
         buttons = QVBoxLayout()
@@ -141,7 +148,9 @@ class _Table(QWidget):
                 widget.currentIndexChanged.connect(self._emit)
                 widget.editTextChanged.connect(self._emit)
             elif kind == "float":
-                widget = _double(value or options.get("default", 0.0), step=options.get("step", 1.0))
+                widget = _double(
+                    value or options.get("default", 0.0), step=options.get("step", 1.0)
+                )
                 widget.valueChanged.connect(self._emit)
             elif kind == "bool":
                 widget = QCheckBox()
@@ -224,7 +233,9 @@ class FormulaEditor(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.terms)
         multipliers = QLabel("Tag multipliers")
-        multipliers.setToolTip("Weaknesses and resistances: × when the attacker and the target carry tags")
+        multipliers.setToolTip(
+            "Weaknesses and resistances: × when the attacker and the target carry tags"
+        )
         multipliers.setObjectName("FieldLabel")
         layout.addWidget(multipliers)
         layout.addWidget(self.multipliers)
@@ -287,7 +298,11 @@ class FormulaEditor(QWidget):
         parts = []
         for source, key, coefficient in self.terms.rows():
             label = dict(SOURCES).get(source, source)
-            parts.append(f"{coefficient:g}" if source == "constant" else f"{coefficient:g} × {label.lower()} {key}")
+            parts.append(
+                f"{coefficient:g}"
+                if source == "constant"
+                else f"{coefficient:g} × {label.lower()} {key}"
+            )
         text = " + ".join(parts) or "no damage"
         if self.use_min.isChecked():
             text = f"at least {self.minimum.value():g} of " + text
@@ -305,9 +320,15 @@ class _ColorButton(QPushButton):
     def set_color(self, value):
         self.color = value
         c = QColor(value)
-        text = "#111111" if (c.red() * 299 + c.green() * 587 + c.blue() * 114) / 1000 > 140 else "#ffffff"
+        text = (
+            "#111111"
+            if (c.red() * 299 + c.green() * 587 + c.blue() * 114) / 1000 > 140
+            else "#ffffff"
+        )
         self.setText(value)
-        self.setStyleSheet(f"background: {value}; color: {text}; border-radius: 6px; font-weight: 700;")
+        self.setStyleSheet(
+            f"background: {value}; color: {text}; border-radius: 6px; font-weight: 700;"
+        )
 
     def _pick(self):
         chosen = QColorDialog.getColor(QColor(self.color), self, "Rarity colour")
@@ -316,7 +337,7 @@ class _ColorButton(QPushButton):
             self.changed.emit()
 
 
-# -- previews -----------------------------------------------------------------------------------------------------
+# -- previews -------------------------------------------------------------------------------------
 class _Preview(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -344,7 +365,8 @@ class _Preview(QWidget):
 
 
 class AttackPreview(_Preview):
-    """Attacker, target and the knockback push; a time line of hit-stop, hitstun, down time and i-frames."""
+    """Attacker, target and the knockback push; a time line of hit-stop, hitstun, down time and
+    i-frames."""
 
     def paintEvent(self, _event):  # noqa: N802 - Qt API
         painter = self._start()
@@ -364,9 +386,14 @@ class AttackPreview(_Preview):
         painter.drawEllipse(QPointF(tx, ground), 16, 16)
         self._caption(painter, ax - 26, ground + 40, "attacker")
         self._caption(painter, tx - 16, ground + 40, "target")
-        angle = math.radians(a.knockback_angle)  # "fixed": a world angle; "away" / "facing": turned from the right
+        angle = math.radians(
+            a.knockback_angle
+        )  # "fixed": a world angle; "away" / "facing": turned from the right
         length = min(w * 0.3, 18 + abs(a.knockback) * 0.25)
-        dx, dy = math.cos(angle) * length, math.sin(angle) * length - min(60, a.knockback_lift * 0.2)
+        dx, dy = (
+            math.cos(angle) * length,
+            math.sin(angle) * length - min(60, a.knockback_lift * 0.2),
+        )
         if a.knockback or a.knockback_lift:
             pen = QPen(QColor(255, 196, 90), 3)
             painter.setPen(pen)
@@ -375,9 +402,14 @@ class AttackPreview(_Preview):
             head = math.atan2(dy, dx)
             for side in (-0.5, 0.5):
                 painter.drawLine(
-                    end, QPointF(end.x() - 10 * math.cos(head + side), end.y() - 10 * math.sin(head + side))
+                    end,
+                    QPointF(
+                        end.x() - 10 * math.cos(head + side), end.y() - 10 * math.sin(head + side)
+                    ),
                 )
-            self._caption(painter, end.x() - 20, end.y() - 10, f"{a.knockback:g}/s", QColor(255, 196, 90))
+            self._caption(
+                painter, end.x() - 20, end.y() - 10, f"{a.knockback:g}/s", QColor(255, 196, 90)
+            )
         chips = []
         if a.knockdown:
             chips.append(("knocks down", QColor(255, 140, 90)))
@@ -398,7 +430,12 @@ class AttackPreview(_Preview):
         # time line
         top = h * 0.66
         scale = (w - 120) / max(
-            1.2, a.hitstop + a.hitstun + (a.knockdown_time or (1.0 if a.knockdown else 0.0)) + a.target_iframes + 0.2
+            1.2,
+            a.hitstop
+            + a.hitstun
+            + (a.knockdown_time or (1.0 if a.knockdown else 0.0))
+            + a.target_iframes
+            + 0.2,
         )
         rows = (
             ("hit-stop", a.hitstop, QColor(255, 220, 120)),
@@ -420,7 +457,8 @@ class AttackPreview(_Preview):
 
 
 class ProjectilePreview(_Preview):
-    """A shot fired to the right (and one with a target above, for homing), simulated by the projectile kernel."""
+    """A shot fired to the right (and one with a target above, for homing), simulated by the
+    projectile kernel."""
 
     def paintEvent(self, _event):  # noqa: N802 - Qt API
         painter = self._start()
@@ -458,8 +496,12 @@ class ProjectilePreview(_Preview):
         for _ in range(90):
             if target is not None:
                 tx, ty = target[0] / zoom, target[1] / zoom
-                in_range = math.hypot(tx - store.x[0], ty - store.y[0]) <= p.homing_range  # world units
-                store.step(dt, [tx if in_range else float("nan")], [ty if in_range else float("nan")])
+                in_range = (
+                    math.hypot(tx - store.x[0], ty - store.y[0]) <= p.homing_range
+                )  # world units
+                store.step(
+                    dt, [tx if in_range else float("nan")], [ty if in_range else float("nan")]
+                )
             else:
                 store.step(dt)
             points.append(QPointF(origin.x() + store.x[0] * zoom, origin.y() + store.y[0] * zoom))
@@ -506,7 +548,9 @@ class RarityPreview(_Preview):
             return
         w = self.width()
         color = QColor(r.color)
-        for index, (bg, label) in enumerate(((QColor(20, 22, 30), "dark"), (QColor(236, 238, 244), "light"))):
+        for index, (bg, label) in enumerate(
+            ((QColor(20, 22, 30), "dark"), (QColor(236, 238, 244), "light"))
+        ):
             y = 18 + index * 52
             painter.setPen(Qt.NoPen)
             painter.setBrush(bg)
@@ -522,7 +566,15 @@ class RarityPreview(_Preview):
                         size=13,
                         bold=True,
                     )
-            self._caption(painter, 28, y + 26, f"{r.display_name} Blade of the Bear", color, size=13, bold=True)
+            self._caption(
+                painter,
+                28,
+                y + 26,
+                f"{r.display_name} Blade of the Bear",
+                color,
+                size=13,
+                bold=True,
+            )
             self._caption(painter, w - 60, y + 26, label, QColor(130, 136, 150))
         y = 140
         self._caption(painter, 16, y, "Random affixes", QColor(200, 206, 220), bold=True)
@@ -531,17 +583,25 @@ class RarityPreview(_Preview):
             maybe = r.min_affixes <= i < r.max_affixes
             painter.setPen(QPen(color, 1.5))
             painter.setBrush(
-                color if filled else QColor(color.red(), color.green(), color.blue(), 70) if maybe else Qt.NoBrush
+                color
+                if filled
+                else QColor(color.red(), color.green(), color.blue(), 70)
+                if maybe
+                else Qt.NoBrush
             )
             painter.drawEllipse(QPointF(28 + i * 22, y + 18), 7, 7)
-        self._caption(painter, 16, y + 46, f"{r.min_affixes}–{r.max_affixes} affixes", QColor(150, 158, 176))
+        self._caption(
+            painter, 16, y + 46, f"{r.min_affixes}–{r.max_affixes} affixes", QColor(150, 158, 176)
+        )
         total = sum(x.weight for x in self.all.values()) or 1.0
         share = r.weight / total
         self._caption(
             painter,
             16,
             y + 74,
-            f"Rolled {share * 100:.1f}% of the time" if r.weight else "Never rolled — given by drop tables",
+            f"Rolled {share * 100:.1f}% of the time"
+            if r.weight
+            else "Never rolled — given by drop tables",
             QColor(200, 206, 220),
             bold=True,
         )
@@ -552,7 +612,12 @@ class RarityPreview(_Preview):
             painter.setBrush(
                 QColor(other.color)
                 if other.rarity_id == r.rarity_id
-                else QColor(QColor(other.color).red(), QColor(other.color).green(), QColor(other.color).blue(), 90)
+                else QColor(
+                    QColor(other.color).red(),
+                    QColor(other.color).green(),
+                    QColor(other.color).blue(),
+                    90,
+                )
             )
             painter.drawRect(QRectF(x, y + 84, max(0.0, width), 14))
             x += width
@@ -581,15 +646,22 @@ class AffixPreview(_Preview):
         top = 78
         for index, m in enumerate(a.modifiers):
             y = top + index * 54
-            lo1, hi1 = m.minimum + m.per_level * (levels[0] - 1), m.maximum + m.per_level * (levels[0] - 1)
-            lo2, hi2 = m.minimum + m.per_level * (levels[1] - 1), m.maximum + m.per_level * (levels[1] - 1)
+            lo1, hi1 = (
+                m.minimum + m.per_level * (levels[0] - 1),
+                m.maximum + m.per_level * (levels[0] - 1),
+            )
+            lo2, hi2 = (
+                m.minimum + m.per_level * (levels[1] - 1),
+                m.maximum + m.per_level * (levels[1] - 1),
+            )
             top_value = max(abs(hi2), abs(hi1), 1e-9)
             sign = "×" if m.operation == "multiply" else "+" if m.operation == "add" else "="
             self._caption(
                 painter,
                 16,
                 y + 12,
-                f"{m.stat}  {sign}{lo1:g}–{hi1:g}" + (f"  →  {lo2:g}–{hi2:g} at lv {levels[1]}" if m.per_level else ""),
+                f"{m.stat}  {sign}{lo1:g}–{hi1:g}"
+                + (f"  →  {lo2:g}–{hi2:g} at lv {levels[1]}" if m.per_level else ""),
                 QColor(220, 224, 236),
             )
             for row, (lo, hi, color) in enumerate(
@@ -607,19 +679,27 @@ class AffixPreview(_Preview):
                 painter.drawRoundedRect(QRectF(x0, bar_y, max(4.0, x1 - x0), 8), 4, 4)
         if not a.modifiers:
             self._caption(
-                painter, 16, top + 12, "No modifiers yet — add a line in Rolled values.", QColor(150, 158, 176)
+                painter,
+                16,
+                top + 12,
+                "No modifiers yet — add a line in Rolled values.",
+                QColor(150, 158, 176),
             )
         painter.end()
 
 
 EMPTY_HINTS = {
-    "attacks": "An attack is what one landed hit does: damage, poise, knockback, hit-stop, super armor and "
+    "attacks": "An attack is what one landed hit does: damage, poise, knockback, hit-stop, "
+    "super armor and "
     "knockdown. Hitboxes name it in their hit tag.",
-    "projectiles": "A projectile flies, homes, bounces or pierces, and applies an attack to what it hits. "
+    "projectiles": "A projectile flies, homes, bounces or pierces, and applies an attack to "
+    "what it hits. "
     "Action timelines fire it.",
-    "rarities": "Rarities name how rare loot is, its label colour and how many random affixes it rolls. "
+    "rarities": "Rarities name how rare loot is, its label colour and how many random affixes "
+    "it rolls. "
     "Without any, the five defaults are used.",
-    "affixes": "Affixes are the random prefixes and suffixes rolled on dropped equipment — each adds stats "
+    "affixes": "Affixes are the random prefixes and suffixes rolled on dropped equipment — each "
+    "adds stats "
     "within a range.",
 }
 
@@ -631,7 +711,7 @@ PREVIEWS = {
 }
 
 
-# -- the workspace ------------------------------------------------------------------------------------------------
+# -- the workspace --------------------------------------------------------------------------------
 class CombatWorkspace(QWidget):
     changed = Signal()
 
@@ -795,7 +875,9 @@ class CombatWorkspace(QWidget):
     # -- kinds and records ------------------------------------------------------------------------
     def refresh(self):
         for spec in KINDS:
-            self.kind_buttons[spec.kind_id].setText(f"{spec.label}   {len(self.api.ids(spec.kind_id))}")
+            self.kind_buttons[spec.kind_id].setText(
+                f"{spec.label}   {len(self.api.ids(spec.kind_id))}"
+            )
         self._fill_list()
 
     def show_kind(self, kind_id):
@@ -849,7 +931,12 @@ class CombatWorkspace(QWidget):
         self.record_id = record_id
         data = self.api.data(self.kind_id, record_id) if record_id else None
         enabled = data is not None
-        for widget in (self.apply_button, self.revert_button, self.duplicate_button, self.delete_button):
+        for widget in (
+            self.apply_button,
+            self.revert_button,
+            self.duplicate_button,
+            self.delete_button,
+        ):
             widget.setEnabled(enabled)
         self.form_area.setVisible(enabled)
         self.empty.setVisible(not enabled)
@@ -859,8 +946,12 @@ class CombatWorkspace(QWidget):
             spec = self.api.kind(self.kind_id)
             self.empty_icon.setPixmap(icon(spec.icon, spec.accent).pixmap(56, 56))
             none = not self.api.ids(self.kind_id)
-            self.empty_title.setText(f"No {spec.label.lower()} yet" if none else f"Pick a {spec.noun.lower()}")
-            self.empty_hint.setText(EMPTY_HINTS[self.kind_id] if none else "Choose one from the list on the left.")
+            self.empty_title.setText(
+                f"No {spec.label.lower()} yet" if none else f"Pick a {spec.noun.lower()}"
+            )
+            self.empty_hint.setText(
+                EMPTY_HINTS[self.kind_id] if none else "Choose one from the list on the left."
+            )
             self.empty_button.setText(f"New {spec.noun}…")
             self.empty_button.setIcon(icon("plus", "#ffffff"))
             self.status.setText("")
@@ -950,7 +1041,11 @@ class CombatWorkspace(QWidget):
         elif kind == "states":
             widget = _Table(
                 (
-                    ("State", "choice", {"items": [(s, s) for s in self.api.choices("states")], "editable": True}),
+                    (
+                        "State",
+                        "choice",
+                        {"items": [(s, s) for s in self.api.choices("states")], "editable": True},
+                    ),
                     ("Chance", "float", {"default": 1.0, "step": 0.05}),
                     ("Seconds", "float", {"step": 0.5}),
                 )
@@ -998,11 +1093,20 @@ class CombatWorkspace(QWidget):
         elif kind == "formula":
             widget.set_value(value)
         elif kind == "states":
-            widget.set_rows([[s["state"], s.get("chance", 1.0), s.get("duration") or 0.0] for s in value or ()])
+            widget.set_rows(
+                [[s["state"], s.get("chance", 1.0), s.get("duration") or 0.0] for s in value or ()]
+            )
         elif kind == "modifiers":
             widget.set_rows(
                 [
-                    [m["stat"], m["operation"], m["minimum"], m["maximum"], m["integer"], m["per_level"]]
+                    [
+                        m["stat"],
+                        m["operation"],
+                        m["minimum"],
+                        m["maximum"],
+                        m["integer"],
+                        m["per_level"],
+                    ]
                     for m in value or ()
                 ]
             )
@@ -1078,7 +1182,11 @@ class CombatWorkspace(QWidget):
         self.status.style().unpolish(self.status)
         self.status.style().polish(self.status)
         if isinstance(self.preview, RarityPreview):
-            rarities = dict(self.document.project.rpg_database.loot_rarities()) if self.document.project else {}
+            rarities = (
+                dict(self.document.project.rpg_database.loot_rarities())
+                if self.document.project
+                else {}
+            )
             rarities[record.rarity_id] = record
             self.preview.all = rarities
         self.heading.setText(getattr(record, "display_name", self.record_id))
@@ -1138,7 +1246,9 @@ class CombatWorkspace(QWidget):
             return
         used = self.api.usage(self.kind_id, self.record_id)
         if confirm:
-            text = f"Delete {self.record_id}?" + (f"\nStill used by: {', '.join(used)}" if used else "")
+            text = f"Delete {self.record_id}?" + (
+                f"\nStill used by: {', '.join(used)}" if used else ""
+            )
             if QMessageBox.question(self, "Delete", text) != QMessageBox.Yes:
                 return
         self.api.delete(self.kind_id, self.record_id)
@@ -1151,4 +1261,11 @@ class CombatWorkspace(QWidget):
         self.changed.emit()
 
 
-__all__ = ["AffixPreview", "AttackPreview", "CombatWorkspace", "FormulaEditor", "ProjectilePreview", "RarityPreview"]
+__all__ = [
+    "AffixPreview",
+    "AttackPreview",
+    "CombatWorkspace",
+    "FormulaEditor",
+    "ProjectilePreview",
+    "RarityPreview",
+]

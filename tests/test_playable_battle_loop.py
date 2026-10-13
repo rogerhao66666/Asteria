@@ -96,7 +96,9 @@ def _boss_runtime(resource_root):
     save = GameRuntimeSave.load_json(ROOT / "saves" / "boss_stress.asteria-save.json", project)
     import real_window
 
-    if real_window.enabled():  # real-window replay (tests/real_window.py): no dummy driver for this window
+    if (
+        real_window.enabled()
+    ):  # real-window replay (tests/real_window.py): no dummy driver for this window
         import os
 
         os.environ.pop("SDL_VIDEODRIVER", None)
@@ -166,7 +168,9 @@ def test_canonical_adapter_understands_every_battle_fact_in_order(resource_root,
         assert not canonical.busy()
     finally:
         runtime.close()
-    assert canonical.trace == [entry_semantics(e) for e in log]  # the parity contract the legacy screen met
+    assert canonical.trace == [
+        entry_semantics(e) for e in log
+    ]  # the parity contract the legacy screen met
     assert canonical.trace[-1] == ("battle_finished", ("heroes",))
     assert sum(1 for t in canonical.trace if t[0] == "action") >= 5
 
@@ -190,7 +194,9 @@ def test_canonical_adapter_drives_hud_menu_feedback_and_renders(resource_root, m
         actor = runtime._battle_actor()
         ids = [e.action_id for e in screen.action_menu._source]  # every page of the command menu
         skills = [a for a, _ in runtime._skills_for_actor(actor)]
-        assert ids[: len(skills)] == skills  # the authored skills first (keys 1-4), then every other one
+        assert (
+            ids[: len(skills)] == skills
+        )  # the authored skills first (keys 1-4), then every other one
         if runtime.game.max_boost_level(actor) > 0:
             assert "boost" in ids
 
@@ -304,10 +310,17 @@ def _canonical_frame(resource_root, monkeypatch):
 
 
 def _overlaps(a, b):
-    return a.x < b.x + b.width and b.x < a.x + a.width and a.y < b.y + b.height and b.y < a.y + a.height
+    return (
+        a.x < b.x + b.width
+        and b.x < a.x + a.width
+        and a.y < b.y + b.height
+        and b.y < a.y + a.height
+    )
 
 
-def test_canonical_hud_panels_do_not_overlap_and_menu_sits_between_columns(resource_root, monkeypatch):
+def test_canonical_hud_panels_do_not_overlap_and_menu_sits_between_columns(
+    resource_root, monkeypatch
+):
     runtime, layout, frame = _canonical_frame(resource_root, monkeypatch)
     try:
         # Reference staging (D15): party HUD as one bottom row, enemies show overhead bars.
@@ -361,7 +374,9 @@ def test_victory_panel_keeps_rendering_after_the_battle_ends(resource_root, monk
         runtime._ui_mode = "field"
         runtime._frame([key(pygame.K_e)], 0.016)
         runtime._frame([key(pygame.K_RETURN)], 0.016)
-        for _ in range(3000):  # one command whenever the canonical screen is idle and waiting for a hero
+        for _ in range(
+            3000
+        ):  # one command whenever the canonical screen is idle and waiting for a hero
             if runtime._victory:
                 break
             waiting = not runtime._battle_presentation.busy()

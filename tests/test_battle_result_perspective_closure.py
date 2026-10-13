@@ -13,7 +13,9 @@ def test_result_headline_is_relative_to_supplied_perspective():
     runtime = BattleResultPresentationRuntime()
     assert runtime.present(outcome, perspective_side_ids=("red",)).headline == "Victory"
     assert runtime.present(outcome, perspective_side_ids=("blue",)).headline == "Defeat"
-    assert runtime.present(outcome, perspective_side_ids=("spectator",)).headline == "Battle Complete"
+    assert (
+        runtime.present(outcome, perspective_side_ids=("spectator",)).headline == "Battle Complete"
+    )
 
 
 def test_controller_can_supply_explicit_presentation_disposition():

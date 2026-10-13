@@ -57,10 +57,14 @@ class ProgressionScreenProfile:
 
     def __init__(self, *, graph_labels=None, node_labels=None, visible_limits=None):
         object.__setattr__(
-            self, "graph_labels", tuple(sorted((str(k), str(v)) for k, v in dict(graph_labels or {}).items()))
+            self,
+            "graph_labels",
+            tuple(sorted((str(k), str(v)) for k, v in dict(graph_labels or {}).items())),
         )
         object.__setattr__(
-            self, "node_labels", tuple(sorted((str(k), str(v)) for k, v in dict(node_labels or {}).items()))
+            self,
+            "node_labels",
+            tuple(sorted((str(k), str(v)) for k, v in dict(node_labels or {}).items())),
         )
         limits = []
         for k, v in dict(visible_limits or {}).items():
@@ -122,7 +126,9 @@ class ProgressionScreenRuntime:
     def project(self, allocation_runtime, graphs=None):
         if not isinstance(allocation_runtime, ProgressionAllocationRuntime):
             raise TypeError("allocation_runtime must be ProgressionAllocationRuntime")
-        graph_defs = tuple(allocation_runtime.definitions.values()) if graphs is None else tuple(graphs)
+        graph_defs = (
+            tuple(allocation_runtime.definitions.values()) if graphs is None else tuple(graphs)
+        )
         if any(not isinstance(x, ProgressionGraphDefinition) for x in graph_defs):
             raise TypeError("graphs must contain ProgressionGraphDefinition values")
 
@@ -151,7 +157,9 @@ class ProgressionScreenRuntime:
                     preview = allocation_runtime.preview_allocate(graph.graph_id, node.node_id, 1)
                     allocatable = preview.allowed
                     reasons = tuple(preview.reasons)
-                    next_costs = tuple(sorted((str(k), float(v)) for k, v in preview.costs.items()))
+                    next_costs = tuple(
+                        sorted((str(k), float(v)) for k, v in preview.costs.items())
+                    )
                 if limit is None or visible_count < limit:
                     node_ids.append(node.node_id)
                     visible_count += 1
@@ -164,27 +172,37 @@ class ProgressionScreenRuntime:
                         max_rank=node.max_rank,
                         tags=tuple(node.tags),
                         prerequisites=tuple(
-                            ProgressionRequirementView(x.node_id, x.minimum_rank) for x in node.prerequisites
+                            ProgressionRequirementView(x.node_id, x.minimum_rank)
+                            for x in node.prerequisites
                         ),
                         any_prerequisites=tuple(
-                            ProgressionRequirementView(x.node_id, x.minimum_rank) for x in node.any_prerequisites
+                            ProgressionRequirementView(x.node_id, x.minimum_rank)
+                            for x in node.any_prerequisites
                         ),
                         exclusive_group=node.exclusive_group,
                         next_costs=next_costs,
                         allocatable=allocatable,
                         reasons=reasons,
-                        selected=(node.node_id == self.selected_node_id and graph.graph_id == self.selected_graph_id),
+                        selected=(
+                            node.node_id == self.selected_node_id
+                            and graph.graph_id == self.selected_graph_id
+                        ),
                     )
                 )
             graph_views.append(
                 ProgressionGraphView(
-                    graph.graph_id, self.profile.graph_label(graph.graph_id), tuple(graph.tags), tuple(node_ids)
+                    graph.graph_id,
+                    self.profile.graph_label(graph.graph_id),
+                    tuple(graph.tags),
+                    tuple(node_ids),
                 )
             )
 
         valid_nodes = {x.node_id for x in node_views if x.graph_id == self.selected_graph_id}
         if self.selected_node_id not in valid_nodes:
-            self.selected_node_id = next((x.node_id for x in node_views if x.graph_id == self.selected_graph_id), None)
+            self.selected_node_id = next(
+                (x.node_id for x in node_views if x.graph_id == self.selected_graph_id), None
+            )
 
         self.revision += 1
         self._view = ProgressionScreenView(
@@ -212,7 +230,9 @@ class ProgressionScreenRuntime:
         if self._view is None:
             raise RuntimeError("progression screen has not been projected")
         node_id = str(node_id)
-        if node_id not in {x.node_id for x in self._view.nodes if x.graph_id == self.selected_graph_id}:
+        if node_id not in {
+            x.node_id for x in self._view.nodes if x.graph_id == self.selected_graph_id
+        }:
             raise KeyError(f"unknown progression node: {node_id}")
         self.selected_node_id = node_id
         return node_id

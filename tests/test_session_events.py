@@ -90,7 +90,9 @@ def test_authored_dialogue_choice_branch_and_encounter_run_in_order():
                     "label": "refuse",
                 },
             ),
-            EventInstruction("WORLD", {"command": "START_ENCOUNTER", "args": {"encounter_id": "boss_room"}}),
+            EventInstruction(
+                "WORLD", {"command": "START_ENCOUNTER", "args": {"encounter_id": "boss_room"}}
+            ),
             EventInstruction("END"),
             EventInstruction("LABEL", {"name": "refuse"}),
             EventInstruction("DIALOGUE", {"text": "Coward."}),
@@ -136,7 +138,9 @@ def test_refusing_takes_the_other_branch_and_starts_no_battle():
                     "label": "refuse",
                 },
             ),
-            EventInstruction("WORLD", {"command": "START_ENCOUNTER", "args": {"encounter_id": "boss_room"}}),
+            EventInstruction(
+                "WORLD", {"command": "START_ENCOUNTER", "args": {"encounter_id": "boss_room"}}
+            ),
             EventInstruction("LABEL", {"name": "refuse"}),
             EventInstruction("END"),
         ],
@@ -155,8 +159,13 @@ def test_item_currency_and_presentation_commands_change_session_state():
         project,
         BOSS_PROGRAM,
         [
-            EventInstruction("WORLD", {"command": "GIVE_ITEM", "args": {"item_id": item_id, "quantity": 2}}),
-            EventInstruction("WORLD", {"command": "CHANGE_CURRENCY", "args": {"currency_id": "gold", "amount": 50}}),
+            EventInstruction(
+                "WORLD", {"command": "GIVE_ITEM", "args": {"item_id": item_id, "quantity": 2}}
+            ),
+            EventInstruction(
+                "WORLD",
+                {"command": "CHANGE_CURRENCY", "args": {"currency_id": "gold", "amount": 50}},
+            ),
             EventInstruction("WORLD", {"command": "PLAY_BGM", "args": {"asset_id": "music.boss"}}),
             EventInstruction("END"),
         ],
@@ -166,7 +175,9 @@ def test_item_currency_and_presentation_commands_change_session_state():
     assert game.save.rpg_state.currencies["gold"] == pytest.approx(gold + 50)
     assert [c.name for c in game.presentation_requests] == ["PLAY_BGM"]
     with pytest.raises(WorldCommandError):
-        game.world_commands.dispatch(WorldCommand("TAKE_ITEM", {"item_id": item_id, "quantity": 999}))
+        game.world_commands.dispatch(
+            WorldCommand("TAKE_ITEM", {"item_id": item_id, "quantity": 999})
+        )
 
 
 def test_failed_world_command_stops_the_event_and_is_reported():
@@ -175,7 +186,9 @@ def test_failed_world_command_stops_the_event_and_is_reported():
         project,
         BOSS_PROGRAM,
         [
-            EventInstruction("WORLD", {"command": "GIVE_ITEM", "args": {"item_id": "no_such_item"}}),
+            EventInstruction(
+                "WORLD", {"command": "GIVE_ITEM", "args": {"item_id": "no_such_item"}}
+            ),
             EventInstruction("SET_SWITCH", {"name": "after_failure"}),
         ],
     )
@@ -192,7 +205,11 @@ def test_transfer_moves_the_player_to_another_scene_and_its_events():
         BOSS_PROGRAM,
         [
             EventInstruction(
-                "WORLD", {"command": "TRANSFER", "args": {"scene_id": town.id, "x": 5, "y": 7, "facing": "up"}}
+                "WORLD",
+                {
+                    "command": "TRANSFER",
+                    "args": {"scene_id": town.id, "x": 5, "y": 7, "facing": "up"},
+                },
             ),
         ],
     )
@@ -246,7 +263,9 @@ def test_autorun_binding_runs_once_until_its_condition_turns_off():
             host.id,
             "intro",
             trigger=EventTriggerKind.AUTORUN,
-            conditions=(EventTriggerCondition(EventCondition("switch", "intro_done", "==", False)),),
+            conditions=(
+                EventTriggerCondition(EventCondition("switch", "intro_done", "==", False)),
+            ),
         )
     )
     _, game = _session(project)
@@ -281,5 +300,7 @@ def test_editor_world_argument_text_parses_to_typed_args():
     assert parse_world_args("  ") == {}
     with pytest.raises(ValueError):
         parse_world_args("no_equals_sign")
-    instruction = EventInstruction("WORLD", {"command": "START_ENCOUNTER", "args": {"encounter_id": "boss_room"}})
+    instruction = EventInstruction(
+        "WORLD", {"command": "START_ENCOUNTER", "args": {"encounter_id": "boss_room"}}
+    )
     assert describe_instruction(instruction) == "World  START_ENCOUNTER  (encounter_id=boss_room)"

@@ -47,7 +47,13 @@ def _fixture_layout(tmp_path, *, invalid=None, missing=()):
         "Weapons.json": [None, {"id": 1, "name": "Sword", "iconIndex": 4}],
         "Armors.json": [None, {"id": 1, "name": "Coat", "iconIndex": 5}],
         "Tilesets.json": [None, {"id": 1, "name": "Outside"}],
-        "System.json": {"gameTitle": "Fixture", "startMapId": 1, "startX": 2, "startY": 3, "partyMembers": [1]},
+        "System.json": {
+            "gameTitle": "Fixture",
+            "startMapId": 1,
+            "startX": 2,
+            "startY": 3,
+            "partyMembers": [1],
+        },
     }
     for name, value in records.items():
         if name not in missing:
@@ -63,7 +69,15 @@ def test_real_new_data_record_counts_and_ids():
 
     assert tuple(
         map(
-            len, (database.actors, database.classes, database.skills, database.items, database.weapons, database.armors)
+            len,
+            (
+                database.actors,
+                database.classes,
+                database.skills,
+                database.items,
+                database.weapons,
+                database.armors,
+            ),
         )
     ) == (4, 4, 10, 4, 4, 4)
     assert database.actors[0].id == 1
@@ -81,7 +95,11 @@ def test_real_actor_skill_item_and_system_fields_are_typed():
     assert actor.battler_name == "Actor1_1"
     assert database.skills[0].icon_index == 76
     assert database.items[0].icon_index == 176
-    assert (database.system.start_map_id, database.system.start_x, database.system.start_y) == (1, 8, 6)
+    assert (database.system.start_map_id, database.system.start_x, database.system.start_y) == (
+        1,
+        8,
+        6,
+    )
     assert database.tilesets[0].id == 1
 
 
@@ -98,7 +116,9 @@ def test_missing_database_file_is_reported_without_losing_other_records(tmp_path
 
     assert database.items[0].name == "Potion"
     assert database.armors == ()
-    assert any(issue.source == "Armors.json" and issue.code == "missing_file" for issue in database.issues)
+    assert any(
+        issue.source == "Armors.json" and issue.code == "missing_file" for issue in database.issues
+    )
 
 
 def test_invalid_json_names_the_source_file(tmp_path):

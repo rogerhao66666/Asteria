@@ -1,4 +1,5 @@
-"""Character Composition tab (CMP-01, CMP-02, CMP-04): sockets, attachments and layers with a frame preview.
+"""Character Composition tab (CMP-01, CMP-02, CMP-04): sockets, attachments and layers with a
+frame preview.
 
 The preview places parts with the same ``CompositionPart`` data and rules the
 battle screen uses (attachments from the body pivot, layers from the frame's
@@ -34,7 +35,10 @@ from asteria.presentation.attachment_runtime import AttachmentRuntime
 from asteria.presentation.attachments import Transform2D
 
 from .animation_authoring import AnimationAuthoringError
-from .character_composition_authoring import CharacterCompositionAuthoring, CompositionAuthoringError
+from .character_composition_authoring import (
+    CharacterCompositionAuthoring,
+    CompositionAuthoringError,
+)
 
 PREVIEW_SCALE = 3.0
 
@@ -81,7 +85,10 @@ class CharacterCompositionWidget(QWidget):
         add_socket.clicked.connect(self.add_socket_from_form)
         key_socket.clicked.connect(self.key_socket_from_form)
         remove_socket.clicked.connect(
-            lambda: self._try(lambda: self.api.remove_socket(self.sheet, self._current(self.sockets)), "Socket removed")
+            lambda: self._try(
+                lambda: self.api.remove_socket(self.sheet, self._current(self.sockets)),
+                "Socket removed",
+            )
         )
         sockets_box = QGroupBox("Sockets (body pixels from the pivot; key per frame)")
         form = QFormLayout()
@@ -110,7 +117,8 @@ class CharacterCompositionWidget(QWidget):
         attach.clicked.connect(self.attach_from_form)
         detach.clicked.connect(
             lambda: self._try(
-                lambda: self.api.detach(self.sheet, self._current(self.attachments).split()[0]), "Detached"
+                lambda: self.api.detach(self.sheet, self._current(self.attachments).split()[0]),
+                "Detached",
             )
         )
         attachments_box = QGroupBox("Attachments (worn on a socket)")
@@ -137,7 +145,10 @@ class CharacterCompositionWidget(QWidget):
         add_layer, remove_layer = QPushButton("Add Layer"), QPushButton("Remove Layer")
         add_layer.clicked.connect(self.add_layer_from_form)
         remove_layer.clicked.connect(
-            lambda: self._try(lambda: self.api.remove_layer(self.sheet, self.layers.currentRow()), "Layer removed")
+            lambda: self._try(
+                lambda: self.api.remove_layer(self.sheet, self.layers.currentRow()),
+                "Layer removed",
+            )
         )
         layers_box = QGroupBox("Layers (same frame of another sheet; z < 0 draws behind)")
         form = QFormLayout()
@@ -150,7 +161,9 @@ class CharacterCompositionWidget(QWidget):
         column.addLayout(form)
         column.addLayout(self._row(add_layer, remove_layer))
 
-        self.status = QLabel("Sockets, attachments and layers are saved on the body sheet and drawn in battle.")
+        self.status = QLabel(
+            "Sockets, attachments and layers are saved on the body sheet and drawn in battle."
+        )
         self.status.setWordWrap(True)
         left = QWidget()
         lv = QVBoxLayout(left)
@@ -160,7 +173,8 @@ class CharacterCompositionWidget(QWidget):
         mv = QVBoxLayout(middle)
         mv.addLayout(self._row(QLabel("Frame"), self.frame, QLabel("Clip"), self.clip))
         mv.addWidget(self.preview, 1)
-        # sheets and preview on top; sockets, attachments and layers side by side below (as many columns as fit)
+        # sheets and preview on top; sockets, attachments and layers side by side below (as many
+        # columns as fit)
         top = QSplitter()
         for pane in (left, middle):
             top.addWidget(pane)
@@ -204,7 +218,7 @@ class CharacterCompositionWidget(QWidget):
         item = self.sheet_list.currentItem()
         return None if item is None else item.text()
 
-    # -- loading -------------------------------------------------------------------------------------
+    # -- loading ----------------------------------------------------------------------------------
     def refresh(self, select=None):
         if self.api.document.project is None:
             return
@@ -248,11 +262,15 @@ class CharacterCompositionWidget(QWidget):
         self.attachments.clear()
         for a in attachments:
             side = "front" if a.local.z_offset >= 0 else "back"
-            self.attachments.addItem(f"{a.id}  {a.asset_id}[{a.metadata.get('frame', 0)}] on {a.socket_id} ({side})")
+            self.attachments.addItem(
+                f"{a.id}  {a.asset_id}[{a.metadata.get('frame', 0)}] on {a.socket_id} ({side})"
+            )
         self.layers.clear()
         for layer in layers.layers:
             clips = ", ".join(layer.clips) or "all clips"
-            self.layers.addItem(f"{layer.component_id}  {layer.asset_id}  z {layer.z:g}  ({clips})")
+            self.layers.addItem(
+                f"{layer.component_id}  {layer.asset_id}  z {layer.z:g}  ({clips})"
+            )
         clip = self.clip.currentText()
         self.clip.blockSignals(True)
         self.clip.clear()
@@ -273,7 +291,7 @@ class CharacterCompositionWidget(QWidget):
             self.socket_y.setValue(sample.y)
             self.socket_rotation.setValue(sample.rotation_deg)
 
-    # -- preview -------------------------------------------------------------------------------------
+    # -- preview ----------------------------------------------------------------------------------
     def _frame_pixmap(self, asset_id, index):
         if asset_id not in self._pixmaps:
             self._pixmaps[asset_id] = QPixmap(str(self.api.animation.image_path(asset_id)))
@@ -300,7 +318,10 @@ class CharacterCompositionWidget(QWidget):
             scene.addSimpleText("sheet image missing")
             return
         pivot_x, pivot_y = self.api.animation.data(self.sheet)["pivot"]
-        px, py = body.width() * pivot_x, body.height() * pivot_y  # pivot in body pixels from the frame top-left
+        px, py = (
+            body.width() * pivot_x,
+            body.height() * pivot_y,
+        )  # pivot in body pixels from the frame top-left
         s = PREVIEW_SCALE
         scene.addRect(QRectF(0, 0, body.width() * s, body.height() * s), QPen(QColor("#3a4152")))
 
@@ -331,7 +352,9 @@ class CharacterCompositionWidget(QWidget):
         for socket_id in rig.sockets:
             t = runtime.socket_world_transform(socket_id, self.frame.value())
             cx, cy = (px + t.x) * s, (py + t.y) * s
-            scene.addEllipse(QRectF(cx - 4, cy - 4, 8, 8), marker, QBrush(QColor(240, 198, 116, 120)))
+            scene.addEllipse(
+                QRectF(cx - 4, cy - 4, 8, 8), marker, QBrush(QColor(240, 198, 116, 120))
+            )
             a = radians(t.rotation_deg)
             scene.addLine(cx, cy, cx + 14 * cos(a), cy + 14 * sin(a), marker)
             scene.addSimpleText(socket_id).setPos(cx + 6, cy - 16)
@@ -340,11 +363,18 @@ class CharacterCompositionWidget(QWidget):
         self.preview.setSceneRect(scene.itemsBoundingRect().adjusted(-8, -8, 8, 8))
         self.preview.fitInView(self.preview.sceneRect(), Qt.KeepAspectRatio)
 
-    # -- edits ---------------------------------------------------------------------------------------
+    # -- edits ------------------------------------------------------------------------------------
     def _try(self, action, message):
         try:
             result = action()
-        except (CompositionAuthoringError, AnimationAuthoringError, ValueError, KeyError, TypeError, IndexError) as exc:
+        except (
+            CompositionAuthoringError,
+            AnimationAuthoringError,
+            ValueError,
+            KeyError,
+            TypeError,
+            IndexError,
+        ) as exc:
             self.last_error = str(exc)
             self.status.setStyleSheet("color: #d9534f;")
             self.status.setText(str(exc))
@@ -374,7 +404,12 @@ class CharacterCompositionWidget(QWidget):
         frame = self.frame.value()
         return self._try(
             lambda: self.api.set_socket_key(
-                self.sheet, socket_id, frame, self.socket_x.value(), self.socket_y.value(), self.socket_rotation.value()
+                self.sheet,
+                socket_id,
+                frame,
+                self.socket_x.value(),
+                self.socket_y.value(),
+                self.socket_rotation.value(),
             ),
             f"{socket_id} keyed at frame {frame}",
         )

@@ -54,7 +54,9 @@ def run_preview(
     registry = build_preview_registry()
     project = Project.load_json(project_path, registry)
     root = (
-        Path(resource_root).expanduser().resolve() if resource_root is not None else Path(project_path).resolve().parent
+        Path(resource_root).expanduser().resolve()
+        if resource_root is not None
+        else Path(project_path).resolve().parent
     )
     runtime_save = GameRuntimeSave.load_json(save_path, project) if save_path else None
     if runtime_save is None and playtest_profile:
@@ -63,9 +65,17 @@ def run_preview(
         runtime_save = PlaytestProfileLibrary(root).instantiate(playtest_profile, project)
     if runtime_save is None:
         runtime_save = project.game_start.instantiate(project)
-    effective_scene_id = runtime_save.scene_id if runtime_save is not None else (scene_id or project.startup_scene_id)
+    effective_scene_id = (
+        runtime_save.scene_id
+        if runtime_save is not None
+        else (scene_id or project.startup_scene_id)
+    )
     scene = project.scene(effective_scene_id)
-    if runtime_save is not None and runtime_save.player_entity_id and runtime_save.player_position is not None:
+    if (
+        runtime_save is not None
+        and runtime_save.player_entity_id
+        and runtime_save.player_position is not None
+    ):
         player = scene.get_entity(runtime_save.player_entity_id) if scene is not None else None
         if player is not None:
             transform = player.try_get(Transform)
@@ -78,7 +88,8 @@ def run_preview(
         (
             entity.try_get(Camera2DComponent)
             for entity in scene.entities()
-            if entity.try_get(Camera2DComponent) is not None and entity.try_get(Camera2DComponent).active
+            if entity.try_get(Camera2DComponent) is not None
+            and entity.try_get(Camera2DComponent).active
         ),
         None,
     )
@@ -117,21 +128,28 @@ def run_preview(
         from asteria.runtime.tilemap_field import can_play
 
         if can_play(project, root) and hasattr(backend, "load_texture"):
-            # Canonical tile map scenes (imported RPG Maker MV projects, authored tile maps): the normal
+            # Canonical tile map scenes (imported RPG Maker MV projects, authored tile maps): the
+            # normal
             # game session (events, transfers, saves) drawn from registry-resolved tile assets.
             from asteria.runtime.game_session import GameSessionRuntime
             from asteria.runtime.tilemap_field import TileMapField, run_tilemap_field
 
             field = TileMapField(GameSessionRuntime(project, runtime_save), root)
             run_tilemap_field(field, backend, width, height, target_fps, max_frames=max_frames)
-        elif reference_sidecar.exists() and hasattr(backend, "load_texture") and hasattr(backend, "draw_texture"):
+        elif (
+            reference_sidecar.exists()
+            and hasattr(backend, "load_texture")
+            and hasattr(backend, "draw_texture")
+        ):
             from asteria.runtime.reference_runtime import (
                 ReferenceRuntime,
                 run_reference_runtime,
             )
 
             runtime = ReferenceRuntime.load(project, scene, root)
-            run_reference_runtime(runtime, backend, width, height, target_fps, max_frames=max_frames)
+            run_reference_runtime(
+                runtime, backend, width, height, target_fps, max_frames=max_frames
+            )
         else:
             frames = 0
             while not backend.should_close():
@@ -175,9 +193,13 @@ def main(argv=None):
         choices=("canonical",),
         help="battle screen to use (default: the project manifest's choice)",
     )
-    parser.add_argument("--debug-port", type=int, help="open the editor debug channel on this loopback port")
+    parser.add_argument(
+        "--debug-port", type=int, help="open the editor debug channel on this loopback port"
+    )
     parser.add_argument("--debug-token", help="token the editor debugger must present")
-    parser.add_argument("--spawn", type=float, nargs=2, metavar=("X", "Y"), help="start the player here")
+    parser.add_argument(
+        "--spawn", type=float, nargs=2, metavar=("X", "Y"), help="start the player here"
+    )
     args = parser.parse_args(argv)
     return run_preview(
         args.project,

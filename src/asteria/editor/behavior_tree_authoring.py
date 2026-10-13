@@ -1,4 +1,5 @@
-"""Behavior tree editor API (RPG-09): create trees, add / edit / remove / move nodes — each one undo step.
+"""Behavior tree editor API (RPG-09): create trees, add / edit / remove / move nodes — each one
+undo step.
 
 The GUI (``behavior_tree_widget``) and scripts share these calls; records are the
 canonical ``BehaviorTree`` in ``project.rpg_database.behavior_trees``.
@@ -9,7 +10,14 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from asteria.rpg.behavior_tree import ACTIONS, COMPOSITES, CONDITIONS, DECORATORS, BehaviorNode, BehaviorTree
+from asteria.rpg.behavior_tree import (
+    ACTIONS,
+    COMPOSITES,
+    CONDITIONS,
+    DECORATORS,
+    BehaviorNode,
+    BehaviorTree,
+)
 
 from .rpg_actor_class_authoring import _DefinitionCommand
 
@@ -51,7 +59,12 @@ PARAMS = {
     "summon": (("prefab", ""), ("count", 1), ("radius", 32.0)),
     "apply_state": (("state", ""), ("to", "self")),
 }
-KIND_GROUPS = (("Composite", COMPOSITES), ("Decorator", DECORATORS), ("Condition", CONDITIONS), ("Action", ACTIONS))
+KIND_GROUPS = (
+    ("Composite", COMPOSITES),
+    ("Decorator", DECORATORS),
+    ("Condition", CONDITIONS),
+    ("Action", ACTIONS),
+)
 
 
 class BehaviorTreeAuthoringError(ValueError):
@@ -102,7 +115,9 @@ class BehaviorTreeAuthoring:
 
     def _store(self, tree, old, label):
         try:
-            tree = BehaviorTree(tree.tree_id, BehaviorNode.from_data(tree.root.to_data()), tree.display_name)
+            tree = BehaviorTree(
+                tree.tree_id, BehaviorNode.from_data(tree.root.to_data()), tree.display_name
+            )
         except (TypeError, ValueError, KeyError) as exc:
             raise BehaviorTreeAuthoringError(str(exc)) from exc
         self.document.execute(_DefinitionCommand(self.trees, tree.tree_id, tree, old, label))
@@ -113,13 +128,17 @@ class BehaviorTreeAuthoring:
         if not tree_id or tree_id in self.trees:
             raise BehaviorTreeAuthoringError(f"tree id {tree_id!r} is empty or taken")
         return self._store(
-            BehaviorTree(tree_id, default_node(root_kind), tree_id), None, f"Add Behavior Tree {tree_id}"
+            BehaviorTree(tree_id, default_node(root_kind), tree_id),
+            None,
+            f"Add Behavior Tree {tree_id}",
         )
 
     def delete(self, tree_id):
         old = self.get(tree_id)
         self.document.execute(
-            _DefinitionCommand(self.trees, old.tree_id, None, old, f"Delete Behavior Tree {old.tree_id}")
+            _DefinitionCommand(
+                self.trees, old.tree_id, None, old, f"Delete Behavior Tree {old.tree_id}"
+            )
         )
 
     def _edit(self, tree_id, path, change, label):
@@ -140,7 +159,9 @@ class BehaviorTreeAuthoring:
             if node.kind not in COMPOSITES + DECORATORS:
                 raise BehaviorTreeAuthoringError(f"{node.kind} cannot have children")
             if node.kind in DECORATORS:
-                return replace(node, children=(default_node(kind),))  # a decorator wraps exactly one child
+                return replace(
+                    node, children=(default_node(kind),)
+                )  # a decorator wraps exactly one child
             return replace(node, children=(*node.children, default_node(kind)))
 
         return self._edit(tree_id, path, change, f"Add {kind}")
@@ -150,7 +171,9 @@ class BehaviorTreeAuthoring:
             known = dict(PARAMS.get(node.kind, ()))
             unknown = set(params) - set(known)
             if unknown:
-                raise BehaviorTreeAuthoringError(f"{node.kind} has no parameters {sorted(unknown)}")
+                raise BehaviorTreeAuthoringError(
+                    f"{node.kind} has no parameters {sorted(unknown)}"
+                )
             values = dict(node.params)
             for key, value in params.items():
                 default = known[key]

@@ -69,7 +69,9 @@ class CapabilityValidatorRegistry:
 
 
 def _texture(size, caps, field="size"):
-    if caps.max_texture_size and (size[0] > caps.max_texture_size[0] or size[1] > caps.max_texture_size[1]):
+    if caps.max_texture_size and (
+        size[0] > caps.max_texture_size[0] or size[1] > caps.max_texture_size[1]
+    ):
         return [
             CapabilityIssue(
                 "backend.texture.too_large",
@@ -136,7 +138,11 @@ def material_validator(q, caps):
 
 def audio_validator(q, caps):
     out = []
-    if caps.max_audio_channels is not None and q.channels is not None and q.channels > caps.max_audio_channels:
+    if (
+        caps.max_audio_channels is not None
+        and q.channels is not None
+        and q.channels > caps.max_audio_channels
+    ):
         out.append(
             CapabilityIssue(
                 "backend.audio.channels_unsupported",
@@ -164,7 +170,13 @@ def audio_validator(q, caps):
 
 
 def install_builtin_capability_validators(r):
-    from .runtime_adapters import AudioRequest, ClipRequest, ImageRequest, MaterialRequest, VFXRequest
+    from .runtime_adapters import (
+        AudioRequest,
+        ClipRequest,
+        ImageRequest,
+        MaterialRequest,
+        VFXRequest,
+    )
 
     for t, fn in (
         (ImageRequest, image_validator),

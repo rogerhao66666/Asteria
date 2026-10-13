@@ -34,7 +34,9 @@ def test_ref():
 
 def test_parent_props():
     s = RecordingScene()
-    x = PlaceAssetCommand(PlacementRequest(P(), parent_id="root", properties=(("x", 1),)), s, R()).execute()
+    x = PlaceAssetCommand(
+        PlacementRequest(P(), parent_id="root", properties=(("x", 1),)), s, R()
+    ).execute()
     assert s.objects[x.object_id]["parent_id"] == "root"
 
 
@@ -67,16 +69,23 @@ def test_undo_first():
 
 def test_specific():
     def h(q, t):
-        return PlacementResult("custom", SceneAssetRef(q.payload.asset_id, q.payload.kind), "sprite")
+        return PlacementResult(
+            "custom", SceneAssetRef(q.payload.asset_id, q.payload.kind), "sprite"
+        )
 
     r = R()
     r.register("icon", h)
-    assert PlaceAssetCommand(PlacementRequest(P()), RecordingScene(), r).execute().component_type == "sprite"
+    assert (
+        PlaceAssetCommand(PlacementRequest(P()), RecordingScene(), r).execute().component_type
+        == "sprite"
+    )
 
 
 def test_custom():
     assert (
-        PlaceAssetCommand(PlacementRequest(P("project.magic", "m/a")), RecordingScene(), R()).execute().asset_ref.kind
+        PlaceAssetCommand(PlacementRequest(P("project.magic", "m/a")), RecordingScene(), R())
+        .execute()
+        .asset_ref.kind
         == "project.magic"
     )
 
@@ -85,7 +94,10 @@ def test_no_handler():
     import pytest
 
     pytest.raises(
-        KeyError, PlaceAssetCommand(PlacementRequest(P()), RecordingScene(), PlacementHandlerRegistry()).execute
+        KeyError,
+        PlaceAssetCommand(
+            PlacementRequest(P()), RecordingScene(), PlacementHandlerRegistry()
+        ).execute,
     )
 
 

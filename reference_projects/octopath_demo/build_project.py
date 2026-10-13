@@ -1,13 +1,18 @@
-"""Build the Octopath-style battle demo from the Complex Reference RPG (its CC0 art, map and field).
+"""Build the Octopath-style battle demo from the Complex Reference RPG (its CC0 art, map and
+field).
 
 Everything here is ordinary project data - no engine code knows about this game:
 
 * four travellers, each with a main and a secondary job, two weapon kinds each (dual wielding);
-* weapon and element weaknesses (sword, spear, dagger, axe, bow, staff; fire, ice, lightning, light),
+* weapon and element weaknesses (sword, spear, dagger, axe, bow, staff; fire, ice, lightning,
+  light),
   shields per enemy, Break (no turn, double damage), Boost (attacks repeat, spells grow stronger);
-* divine skills that spend several boost points; a skill that needs two weapon kinds equipped; skills of
-  several hits and several damage types; a pet called into battle; concocting ingredients in battle;
-  giving boost points to an ally; poison that worsens every turn, sleep, silence, attack up, defence down;
+* divine skills that spend several boost points; a skill that needs two weapon kinds equipped;
+  skills of
+  several hits and several damage types; a pet called into battle; concocting ingredients in
+  battle;
+  giving boost points to an ally; poison that worsens every turn, sleep, silence, attack up,
+  defence down;
 * particle bursts on divine skills and an aura on the boss in the field.
 
 Run: ``python reference_projects/octopath_demo/build_project.py`` (writes this folder; idempotent).
@@ -38,7 +43,11 @@ from asteria.presentation.particles import particle_effect_asset, preset  # noqa
 from asteria.project import Project  # noqa: E402
 from asteria.rpg import BattleStatePolicy, EnemyDefinition  # noqa: E402
 from asteria.rpg.battle_resources import BattleResourceDefinition  # noqa: E402
-from asteria.rpg.composition import CompositionOutput, CompositionRecipeDefinition, CompositionSelection  # noqa: E402
+from asteria.rpg.composition import (
+    CompositionOutput,
+    CompositionRecipeDefinition,
+    CompositionSelection,
+)  # noqa: E402
 from asteria.rpg.gauge_composition import (  # noqa: E402
     GaugeCompositionDefinition,
     GaugeImpactRule,
@@ -52,11 +61,15 @@ WEAPONS = ("sword", "spear", "dagger", "axe", "bow", "staff")
 ELEMENTS = ("fire", "ice", "lightning", "light")
 
 
-# -- small builders -----------------------------------------------------------------------------------------
+# -- small builders -------------------------------------------------------------------------------
 def damage(stat, coefficient, defense=6.0):
-    """Damage: ``coefficient`` x the user's ``stat`` minus ``defense`` x the target's defence (at least 1)."""
+    """Damage: ``coefficient`` x the user's ``stat`` minus ``defense`` x the target's defence (at
+    least 1)."""
     return ValueFormula(
-        (FormulaTerm("source_stat", stat, -coefficient), FormulaTerm("target_stat", "defense", defense)),
+        (
+            FormulaTerm("source_stat", stat, -coefficient),
+            FormulaTerm("target_stat", "defense", defense),
+        ),
         maximum=-1.0,
     )
 
@@ -69,15 +82,23 @@ def op(value):
     return EffectOperation(EffectOperationKind.RESOURCE_DELTA, HP, value)
 
 
-def ability(ability_id, *, tags=(), effect=None, sp=0, mode="selected", targets=1, allies=False, **extra):
-    effects = () if effect is None else (AbilityEffect(mode, Effect(f"{ability_id}.effect", (effect,))),)
+def ability(
+    ability_id, *, tags=(), effect=None, sp=0, mode="selected", targets=1, allies=False, **extra
+):
+    effects = (
+        () if effect is None else (AbilityEffect(mode, Effect(f"{ability_id}.effect", (effect,))),)
+    )
     costs = (AbilityCost(SP, sp),) if sp else ()
     rule = TargetingRule(minimum_targets=1, maximum_targets=targets, allow_self=allies)
-    return AbilityDefinition(ability_id, targeting=rule, costs=costs, effects=effects, tags=("ability", *tags), **extra)
+    return AbilityDefinition(
+        ability_id, targeting=rule, costs=costs, effects=effects, tags=("ability", *tags), **extra
+    )
 
 
 def main():
-    target = HERE / "playable_assets"  # the reference game's CC0 art first; new art is written into it below
+    target = (
+        HERE / "playable_assets"
+    )  # the reference game's CC0 art first; new art is written into it below
     if target.exists():
         shutil.rmtree(target)
     shutil.copytree(REFERENCE / "playable_assets", target)
@@ -86,10 +107,14 @@ def main():
     project.name = "Asteria Octopath-style Battle Demo"
     db, library = project.rpg_database, project.gameplay_library
     abilities = library.abilities
-    template = {k: db.battle_targeting[k] for k in ("strike", "boss_roar", "heal", "party_barrier", "guard")}
+    template = {
+        k: db.battle_targeting[k]
+        for k in ("strike", "boss_roar", "heal", "party_barrier", "guard")
+    }
 
     def add(definition, targeting):
-        """Register an ability with its battle targeting: one / all opponents, one / all allies, or self."""
+        """Register an ability with its battle targeting: one / all opponents, one / all allies, or
+        self."""
         abilities._definitions[definition.ability_id] = definition
         base = {
             "enemy": "strike",
@@ -103,7 +128,7 @@ def main():
         )
         return definition.ability_id
 
-    # -- boost points, shields, Break ---------------------------------------------------------------------
+    # -- boost points, shields, Break -------------------------------------------------------------
     db.battle_resources[BP] = dataclasses.replace(db.battle_resources["momentum"], resource_id=BP)
     db.battle_resources[SHIELD] = BattleResourceDefinition(
         SHIELD, minimum=0, maximum=1, start_mode="maximum", subject_maximum=True
@@ -139,13 +164,17 @@ def main():
     rules = next(iter(db.battle_session_rules.values()))
     db.battle_session_rules.clear()
     db.battle_session_rules["octopath"] = dataclasses.replace(
-        rules, rules_id="octopath", boost_resource_id=BP, boost_max_level=3, shield_resource_id=SHIELD
+        rules,
+        rules_id="octopath",
+        boost_resource_id=BP,
+        boost_max_level=3,
+        shield_resource_id=SHIELD,
     )
     library.states._definitions["broken"] = dataclasses.replace(
         library.states.get("broken"), contributed_tags=("state.broken",)
     )
 
-    # -- weaknesses and multipliers (any number; nothing is fixed by the engine) ---------------------------
+    # -- weaknesses and multipliers (any number; nothing is fixed by the engine) ------------------
     db.interaction_rules.clear()
     for kind in WEAPONS:
         db.interaction_rules[f"weak_{kind}"] = InteractionRule(
@@ -168,7 +197,10 @@ def main():
     for kind in (*WEAPONS, *ELEMENTS):  # resistances: half damage, no shield lost
         source = f"weapon.{kind}" if kind in WEAPONS else f"damage.{kind}"
         db.interaction_rules[f"resist_{kind}"] = InteractionRule(
-            f"resist_{kind}", source_tags_all=(source,), target_tags_all=(f"resist.{kind}",), multiplier=0.5
+            f"resist_{kind}",
+            source_tags_all=(source,),
+            target_tags_all=(f"resist.{kind}",),
+            multiplier=0.5,
         )
     db.interaction_rules["absorb_fire"] = InteractionRule(  # fire heals what carries absorb.fire
         "absorb_fire",
@@ -184,18 +216,28 @@ def main():
         disposition="reflect",
         priority=20,
     )
-    db.interaction_rules["broken"] = InteractionRule("broken", target_tags_all=("state.broken",), multiplier=2.0)
-    for level, factor in ((1, 2.0), (2, 3.0), (3, 4.0)):  # spells: one stronger cast per boost level
+    db.interaction_rules["broken"] = InteractionRule(
+        "broken", target_tags_all=("state.broken",), multiplier=2.0
+    )
+    for level, factor in (
+        (1, 2.0),
+        (2, 3.0),
+        (3, 4.0),
+    ):  # spells: one stronger cast per boost level
         db.interaction_rules[f"boost_power_{level}"] = InteractionRule(
-            f"boost_power_{level}", source_tags_all=(f"boost.{level}", "boost.power"), multiplier=factor
+            f"boost_power_{level}",
+            source_tags_all=(f"boost.{level}", "boost.power"),
+            multiplier=factor,
         )
 
-    # -- statuses ----------------------------------------------------------------------------------------------
+    # -- statuses ---------------------------------------------------------------------------------
     states = library.states._definitions
     states["poison"] = StateDefinition(
         "poison",
         4,
-        periodic=(PeriodicEffect(1, Effect("poison.tick", (op(-180),)), growth=1.0),),  # 180, 360, 540...
+        periodic=(
+            PeriodicEffect(1, Effect("poison.tick", (op(-180),)), growth=1.0),
+        ),  # 180, 360, 540...
         contributed_tags=("status.poison",),
     )
     states["sleep"] = StateDefinition("sleep", 2, contributed_tags=("status.sleep",))
@@ -212,7 +254,9 @@ def main():
         "defense_down", 3, modifiers=(StatModifier("defense_down", "defense", "multiply", 0.5),)
     )
     for policy in (
-        BattleStatePolicy("poison", tick_trigger="rpg.battle.turn_ended", immune_target_tags=("immune.poison",)),
+        BattleStatePolicy(
+            "poison", tick_trigger="rpg.battle.turn_ended", immune_target_tags=("immune.poison",)
+        ),
         BattleStatePolicy(
             "sleep",
             base_chance=0.8,
@@ -221,14 +265,17 @@ def main():
             immune_target_tags=("immune.sleep",),
         ),
         BattleStatePolicy(
-            "silence", base_chance=0.9, blocked_ability_tags=("magic",), tick_trigger="rpg.battle.turn_ended"
+            "silence",
+            base_chance=0.9,
+            blocked_ability_tags=("magic",),
+            tick_trigger="rpg.battle.turn_ended",
         ),
         BattleStatePolicy("attack_up", tick_trigger="rpg.battle.turn_ended"),
         BattleStatePolicy("defense_down", tick_trigger="rpg.battle.turn_ended"),
     ):
         db.battle_state_policies[policy.state_id] = policy
 
-    # -- weapons: what is carried (equip.*) and its basic attack (weapon.*) ------------------------------------
+    # -- weapons: what is carried (equip.*) and its basic attack (weapon.*) -----------------------
     weapon_names = {
         "sword": "Iron Sword",
         "spear": "Steel Spear",
@@ -240,7 +287,12 @@ def main():
     base_weapon = db.equipment["weapon_01"]
     for kind, name in weapon_names.items():
         attack = add(
-            ability(f"attack_{kind}", tags=(f"weapon.{kind}", "boost.repeat"), effect=op(damage("power", 18))), "enemy"
+            ability(
+                f"attack_{kind}",
+                tags=(f"weapon.{kind}", "boost.repeat"),
+                effect=op(damage("power", 18)),
+            ),
+            "enemy",
         )
         db.equipment[f"w_{kind}"] = dataclasses.replace(
             base_weapon,
@@ -253,8 +305,10 @@ def main():
             icon_id=base_weapon.icon_id,
         )
 
-    # -- jobs and their skills ----------------------------------------------------------------------------------
-    two_weapons = ConditionGroup((TagCondition("source", "equip.sword"), TagCondition("source", "equip.spear")))
+    # -- jobs and their skills --------------------------------------------------------------------
+    two_weapons = ConditionGroup(
+        (TagCondition("source", "equip.sword"), TagCondition("source", "equip.spear"))
+    )
     jobs = {
         "warrior": [
             add(
@@ -278,7 +332,12 @@ def main():
                 ),
                 "enemy",
             ),
-            add(ability("abide", effect=None, sp=5, apply_states=[{"state": "attack_up", "to": "self"}]), "self"),
+            add(
+                ability(
+                    "abide", effect=None, sp=5, apply_states=[{"state": "attack_up", "to": "self"}]
+                ),
+                "self",
+            ),
             add(
                 ability(
                     "twin_fang",
@@ -316,19 +375,38 @@ def main():
                 ),
                 "ally",
             ),
-            add(ability("collect", tags=("weapon.spear",), effect=op(damage("power", 15)), sp=3), "enemy"),
+            add(
+                ability("collect", tags=("weapon.spear",), effect=op(damage("power", 15)), sp=3),
+                "enemy",
+            ),
         ],
         "hunter": [
             add(
-                ability("rain_of_arrows", tags=("weapon.bow",), effect=op(damage("power", 11)), sp=8, targets=6),
+                ability(
+                    "rain_of_arrows",
+                    tags=("weapon.bow",),
+                    effect=op(damage("power", 11)),
+                    sp=8,
+                    targets=6,
+                ),
                 "enemies",
             ),
-            add(ability("true_strike", tags=("weapon.bow",), effect=op(damage("power", 28)), sp=10), "enemy"),
+            add(
+                ability(
+                    "true_strike", tags=("weapon.bow",), effect=op(damage("power", 28)), sp=10
+                ),
+                "enemy",
+            ),
             add(
                 ability(
                     "call_frost_lynx",
                     sp=10,
-                    commands=[{"command": "SUMMON", "args": {"actor_id": "hero_07", "owner_id": "@actor"}}],
+                    commands=[
+                        {
+                            "command": "SUMMON",
+                            "args": {"actor_id": "hero_07", "owner_id": "@actor"},
+                        }
+                    ],
                 ),
                 "self",
             ),
@@ -393,11 +471,22 @@ def main():
         ],
         "cleric": [
             add(
-                ability("heal_wounds", tags=("magic",), effect=op(healing(18)), sp=10, targets=6, allies=True), "allies"
+                ability(
+                    "heal_wounds",
+                    tags=("magic",),
+                    effect=op(healing(18)),
+                    sp=10,
+                    targets=6,
+                    allies=True,
+                ),
+                "allies",
             ),
             add(
                 ability(
-                    "holy_light", tags=("magic", "damage.light", "boost.power"), effect=op(damage("magic", 24)), sp=8
+                    "holy_light",
+                    tags=("magic", "damage.light", "boost.power"),
+                    effect=op(damage("magic", 24)),
+                    sp=8,
                 ),
                 "enemy",
             ),
@@ -407,7 +496,9 @@ def main():
                     tags=("magic",),
                     sp=6,
                     allies=True,
-                    apply_states=[{"state": s, "remove": True} for s in ("poison", "sleep", "silence")],
+                    apply_states=[
+                        {"state": s, "remove": True} for s in ("poison", "sleep", "silence")
+                    ],
                 ),
                 "ally",
             ),
@@ -448,7 +539,11 @@ def main():
                     tags=("magic", "boost.power"),
                     effect=op(damage("magic", 13)),
                     sp=16,
-                    hits=[{"tags": ["damage.fire"]}, {"tags": ["damage.ice"]}, {"tags": ["damage.lightning"]}],
+                    hits=[
+                        {"tags": ["damage.fire"]},
+                        {"tags": ["damage.ice"]},
+                        {"tags": ["damage.lightning"]},
+                    ],
                 ),
                 "enemy",
             ),
@@ -459,7 +554,11 @@ def main():
                     effect=op(damage("magic", 15)),
                     battle_costs={BP: 3},
                     targets=6,
-                    hits=[{"tags": ["damage.fire"]}, {"tags": ["damage.ice"]}, {"tags": ["damage.lightning"]}],
+                    hits=[
+                        {"tags": ["damage.fire"]},
+                        {"tags": ["damage.ice"]},
+                        {"tags": ["damage.lightning"]},
+                    ],
                 ),
                 "enemies",
             ),
@@ -467,14 +566,28 @@ def main():
         "dancer": [
             add(
                 ability(
-                    "peacock_strut", sp=8, targets=6, allies=True, apply_states=[{"state": "attack_up", "to": "allies"}]
+                    "peacock_strut",
+                    sp=8,
+                    targets=6,
+                    allies=True,
+                    apply_states=[{"state": "attack_up", "to": "allies"}],
                 ),
                 "allies",
             ),
-            add(ability("sleepy_waltz", tags=("magic",), sp=9, apply_states=[{"state": "sleep"}]), "enemy"),
+            add(
+                ability("sleepy_waltz", tags=("magic",), sp=9, apply_states=[{"state": "sleep"}]),
+                "enemy",
+            ),
         ],
         "beast": [
-            add(ability("lynx_pounce", tags=("weapon.dagger", "damage.ice"), effect=op(damage("power", 20))), "enemy"),
+            add(
+                ability(
+                    "lynx_pounce",
+                    tags=("weapon.dagger", "damage.ice"),
+                    effect=op(damage("power", 20)),
+                ),
+                "enemy",
+            ),
         ],
     }
     base_class = db.classes["warden"]
@@ -488,7 +601,7 @@ def main():
             granted_abilities=tuple(granted),
         )
 
-    # -- concoct: ingredients picked in battle make an item that acts at once ----------------------------------
+    # -- concoct: ingredients picked in battle make an item that acts at once ---------------------
     db.composition_recipes.clear()
     concoctions = {
         "healing_salve": ("Healing Salve", ("healing_herb", "healing_herb"), "salve_heal", "ally"),
@@ -498,8 +611,12 @@ def main():
     }
     product_abilities = {
         "salve_heal": ability("salve_heal", effect=op(healing(45)), allies=True),
-        "bomb_fire": ability("bomb_fire", tags=("damage.fire",), effect=op(damage("magic", 12)), targets=6),
-        "bomb_ice": ability("bomb_ice", tags=("damage.ice",), effect=op(damage("magic", 12)), targets=6),
+        "bomb_fire": ability(
+            "bomb_fire", tags=("damage.fire",), effect=op(damage("magic", 12)), targets=6
+        ),
+        "bomb_ice": ability(
+            "bomb_ice", tags=("damage.ice",), effect=op(damage("magic", 12)), targets=6
+        ),
         "flask_storm": ability(
             "flask_storm",
             tags=("damage.lightning",),
@@ -509,16 +626,21 @@ def main():
     }
     for recipe_id, (name, (base, catalyst), ability_id, targeting) in concoctions.items():
         add(product_abilities[ability_id], targeting)
-        db.items[recipe_id] = ItemDefinition(recipe_id, name, tags=("concoction",), battle_ability=ability_id)
+        db.items[recipe_id] = ItemDefinition(
+            recipe_id, name, tags=("concoction",), battle_ability=ability_id
+        )
         db.composition_recipes[recipe_id] = CompositionRecipeDefinition(
             recipe_id,
             name,
             station="concoct",
-            selections=(CompositionSelection("base", (base,)), CompositionSelection("catalyst", (catalyst,))),
+            selections=(
+                CompositionSelection("base", (base,)),
+                CompositionSelection("catalyst", (catalyst,)),
+            ),
             outputs=(CompositionOutput(recipe_id),),
         )
 
-    # -- the travellers (main / secondary job, two weapon kinds) and the pet -----------------------------------
+    # -- the travellers (main / secondary job, two weapon kinds) and the pet ----------------------
     travellers = {
         "hero_01": ("Garrick", "warrior", "merchant", ("sword", "spear")),
         "hero_02": ("Sera", "hunter", "thief", ("bow", "dagger")),
@@ -529,12 +651,19 @@ def main():
     for actor_id, (name, main_job, sub_job, _weapons) in travellers.items():
         actor = db.actors[actor_id]
         assignments = list(actor.class_assignments)
-        assignments[0] = dataclasses.replace(assignments[0], class_id=main_job, progression_track_ids=())
+        assignments[0] = dataclasses.replace(
+            assignments[0], class_id=main_job, progression_track_ids=()
+        )
         if len(assignments) > 1:
-            assignments[1] = dataclasses.replace(assignments[1], class_id=sub_job, progression_track_ids=())
-        db.actors[actor_id] = dataclasses.replace(actor, display_name=name, class_assignments=tuple(assignments))
+            assignments[1] = dataclasses.replace(
+                assignments[1], class_id=sub_job, progression_track_ids=()
+            )
+        db.actors[actor_id] = dataclasses.replace(
+            actor, display_name=name, class_assignments=tuple(assignments)
+        )
 
-    # only the demo's skills: no skill trees, passives or evolutions of the reference game, no old equipment
+    # only the demo's skills: no skill trees, passives or evolutions of the reference game, no old
+    # equipment
     db.progression_graphs.clear()
     db.progression_tracks.clear()  # the reference game's level-up skills
     db.passives.clear()
@@ -558,35 +687,57 @@ def main():
         placements=tuple(p for p in party.placements if p.actor_id in actives),
     )
 
-    # -- enemies: shields and weaknesses per enemy, and what they do ------------------------------------------
+    # -- enemies: shields and weaknesses per enemy, and what they do ------------------------------
     enemy_abilities = {
-        "boss_cleave": add(ability("boss_cleave", tags=("weapon.axe",), effect=op(damage("power", 15))), "enemy"),
+        "boss_cleave": add(
+            ability("boss_cleave", tags=("weapon.axe",), effect=op(damage("power", 15))), "enemy"
+        ),
         "boss_roar": add(
-            ability("boss_roar", effect=op(damage("power", 6)), targets=6, apply_states=[{"state": "silence"}]),
+            ability(
+                "boss_roar",
+                effect=op(damage("power", 6)),
+                targets=6,
+                apply_states=[{"state": "silence"}],
+            ),
             "enemies",
         ),
         "boss_nova": add(
-            ability("boss_nova", tags=("damage.fire",), effect=op(damage("power", 12)), targets=6), "enemies"
+            ability("boss_nova", tags=("damage.fire",), effect=op(damage("power", 12)), targets=6),
+            "enemies",
         ),
         "meteor": add(
             ability(
-                "meteor", tags=("damage.fire",), effect=op(damage("power", 20)), apply_states=[{"state": "poison"}]
+                "meteor",
+                tags=("damage.fire",),
+                effect=op(damage("power", 20)),
+                apply_states=[{"state": "poison"}],
             ),
             "enemy",
         ),
         "summon_wisp": add(
             ability(
                 "summon_wisp",
-                commands=[{"command": "SUMMON", "args": {"enemy_id": "mender_wisp", "owner_id": "@actor"}}],
+                commands=[
+                    {
+                        "command": "SUMMON",
+                        "args": {"enemy_id": "mender_wisp", "owner_id": "@actor"},
+                    }
+                ],
             ),
             "self",
         ),
         "sleep_spores": add(
-            ability("sleep_spores", effect=op(damage("power", 3)), apply_states=[{"state": "sleep"}]), "enemy"
+            ability(
+                "sleep_spores", effect=op(damage("power", 3)), apply_states=[{"state": "sleep"}]
+            ),
+            "enemy",
         ),
         "add_mend": add(ability("add_mend", effect=op(healing(25)), allies=True), "ally"),
         "venom_bite": add(
-            ability("venom_bite", effect=op(damage("power", 9)), apply_states=[{"state": "poison"}]), "enemy"
+            ability(
+                "venom_bite", effect=op(damage("power", 9)), apply_states=[{"state": "poison"}]
+            ),
+            "enemy",
         ),
         "add_bite": add(ability("add_bite", effect=op(damage("power", 12))), "enemy"),
     }
@@ -598,14 +749,28 @@ def main():
             ("sword", "axe", "ice", "lightning"),
             ("boss_cleave", "boss_roar", "boss_nova", "summon_wisp", "meteor"),
         ),
-        "mender_wisp": ("Sporecap", 3800, 3, ("axe", "staff", "fire"), ("sleep_spores", "add_mend")),
-        "ember_hound": ("Venom Hound", 4600, 4, ("spear", "bow", "ice", "light"), ("venom_bite", "add_bite")),
+        "mender_wisp": (
+            "Sporecap",
+            3800,
+            3,
+            ("axe", "staff", "fire"),
+            ("sleep_spores", "add_mend"),
+        ),
+        "ember_hound": (
+            "Venom Hound",
+            4600,
+            4,
+            ("spear", "bow", "ice", "light"),
+            ("venom_bite", "add_bite"),
+        ),
     }
     for enemy_id, (name, hp, shields, weak, skills) in foes.items():
         enemy = db.enemies[enemy_id]
         resources = dict(enemy.resources)
         resources.update({HP: hp, SHIELD: shields})
-        tags = tuple(t for t in enemy.tags if not t.startswith("weak.")) + tuple(f"weak.{w}" for w in weak)
+        tags = tuple(t for t in enemy.tags if not t.startswith("weak.")) + tuple(
+            f"weak.{w}" for w in weak
+        )
         db.enemies[enemy_id] = EnemyDefinition(
             enemy_id,
             name,
@@ -613,24 +778,34 @@ def main():
             resources=resources,
             tags=tags,
             abilities=tuple(enemy_abilities[s] for s in skills),
-            reward=dataclasses.replace(enemy.reward, experience={}) if enemy.reward is not None else None,
+            reward=dataclasses.replace(enemy.reward, experience={})
+            if enemy.reward is not None
+            else None,
         )
     for enemy_id, enemy in list(db.enemies.items()):
         if enemy_id not in foes and enemy.reward is not None:
-            db.enemies[enemy_id] = dataclasses.replace(enemy, reward=dataclasses.replace(enemy.reward, experience={}))
+            db.enemies[enemy_id] = dataclasses.replace(
+                enemy, reward=dataclasses.replace(enemy.reward, experience={})
+            )
     db.encounters["boss_room"] = dataclasses.replace(
         db.encounters["boss_room"],
         members=(
-            dataclasses.replace(db.encounters["boss_room"].members[0], enemy_id="astral_tyrant", count=1),
-            dataclasses.replace(db.encounters["boss_room"].members[0], enemy_id="mender_wisp", count=1),
-            dataclasses.replace(db.encounters["boss_room"].members[0], enemy_id="ember_hound", count=1),
+            dataclasses.replace(
+                db.encounters["boss_room"].members[0], enemy_id="astral_tyrant", count=1
+            ),
+            dataclasses.replace(
+                db.encounters["boss_room"].members[0], enemy_id="mender_wisp", count=1
+            ),
+            dataclasses.replace(
+                db.encounters["boss_room"].members[0], enemy_id="ember_hound", count=1
+            ),
         ),
     )
 
-    # -- more kinds of enemy: each fights differently (all of it data) -------------------------------------------
+    # -- more kinds of enemy: each fights differently (all of it data) ----------------------------
     add_monster_types(project, db, add)
 
-    # -- drop the reference game's skills nothing here uses (the Database stays readable) ---------------------
+    # -- drop the reference game's skills nothing here uses (the Database stays readable) ---------
     used = {a for job in db.classes.values() for a in job.granted_abilities}
     used |= {a for weapon in db.equipment.values() for a in weapon.granted_abilities}
     used |= {a for enemy in db.enemies.values() for a in enemy.abilities}
@@ -643,13 +818,15 @@ def main():
             db.battle_targeting.pop(ability_id, None)
             db.action_timings.pop(ability_id, None)
 
-    # -- what the battle shows: sequences for the new skills, particle bursts for divine skills ----------------
+    # -- what the battle shows: sequences for the new skills, particle bursts for divine skills ---
     sequences = project.battle_presentation_library
     burst = particle_effect_asset(
         preset("explosion", "fx.divine_burst").replace(burst=120, color_start=(255, 245, 190, 255))
     )
     sparkle = particle_effect_asset(preset("heal", "fx.restore"))
-    aura = particle_effect_asset(preset("sparkle", "fx.boss_aura").replace(color_start=(255, 120, 200, 255), rate=24))
+    aura = particle_effect_asset(
+        preset("sparkle", "fx.boss_aura").replace(color_start=(255, 120, 200, 255), rate=24)
+    )
     for asset in (burst, sparkle, aura):
         project.assets.register(asset, replace=True)
     looks = {"strike": [], "fire_arc": [], "heal": [], "meteor": []}
@@ -672,9 +849,15 @@ def main():
         for ability_id in ability_ids:
             beats = base.beats
             if source == "meteor":
-                beats = tuple(dataclasses.replace(b, cue="fx.divine_burst") if b.channel == "vfx" else b for b in beats)
+                beats = tuple(
+                    dataclasses.replace(b, cue="fx.divine_burst") if b.channel == "vfx" else b
+                    for b in beats
+                )
             if source == "heal":
-                beats = tuple(dataclasses.replace(b, cue="fx.restore") if b.channel == "vfx" else b for b in beats)
+                beats = tuple(
+                    dataclasses.replace(b, cue="fx.restore") if b.channel == "vfx" else b
+                    for b in beats
+                )
             sequences.set(
                 "motion_sequences",
                 ability_id,
@@ -683,7 +866,8 @@ def main():
                 else dataclasses.replace(base, beats=beats),
             )
 
-    # both sides stand nearer their edges: the command menu fits on the heroes' side, enemies stay visible
+    # both sides stand nearer their edges: the command menu fits on the heroes' side, enemies stay
+    # visible
     layout = sequences.require("ui_layout", "adaptive")
     sequences.set("ui_layout", "adaptive", dataclasses.replace(layout, stage_front=0.2))
 
@@ -692,10 +876,12 @@ def main():
     scene = project.scene(project.startup_scene_id)
     boss = next(e for e in scene.entities() if e.name == "Astral Tyrant")
     boss.name = "Grimgarde"
-    emitter = boss.try_get(ParticleEmitter2DComponent) or boss.add_component(ParticleEmitter2DComponent())
+    emitter = boss.try_get(ParticleEmitter2DComponent) or boss.add_component(
+        ParticleEmitter2DComponent()
+    )
     emitter.effect_id, emitter.offset_y = "fx.boss_aura", -30.0
 
-    # -- the starting party, jobs, two weapons each and the bag (in the game start), then write the project ----
+    # -- the starting party, jobs, two weapons each and the bag (in the game start), then write the
     from asteria.runtime.game_start import GameStartDefinition
 
     data = project.game_start.to_data()
@@ -717,7 +903,9 @@ def main():
     for actor_id, (_name, main_job, sub_job, weapons) in travellers.items():
         progress = rpg["actor_progression"].get(actor_id)
         if progress is not None:
-            progress["active_class_ids"] = [main_job] if main_job == sub_job else [main_job, sub_job]
+            progress["active_class_ids"] = (
+                [main_job] if main_job == sub_job else [main_job, sub_job]
+            )
             progress["unlocked_class_ids"] = list(dict.fromkeys(progress["active_class_ids"]))
         loadout = rpg["loadouts"].get(actor_id)
         if loadout is None:
@@ -737,24 +925,36 @@ def main():
             for kind in weapons
         ]
         loadout["equipped"]["accessory"] = []
-    rpg["inventory"]["counts"] = {"healing_herb": 6, "fire_dust": 4, "ice_crystal": 4, "ether_leaf": 3}
+    rpg["inventory"]["counts"] = {
+        "healing_herb": 6,
+        "fire_dust": 4,
+        "ice_crystal": 4,
+        "ether_leaf": 3,
+    }
     project.game_start = GameStartDefinition.from_data(data)
     path = HERE / "project.asteria.json"
     project.save_json(path)
     Project.load_json(path, registry)  # it must load back
 
-    # -- assets and the playable manifest -------------------------------------------------------------------------
+    # -- assets and the playable manifest ---------------------------------------------------------
     manifest = json.loads((REFERENCE / "playable_test_manifest.json").read_text(encoding="utf-8"))
     manifest["title"] = "Octopath-style Battle Demo"
     sprites = manifest["field"]["entity_sprites"]
-    sprites["Grimgarde"] = sprites.pop("Astral Tyrant", {"sprite": "playable_assets/boss_field.png", "size": [96, 96]})
+    sprites["Grimgarde"] = sprites.pop(
+        "Astral Tyrant", {"sprite": "playable_assets/boss_field.png", "size": [96, 96]}
+    )
     for name, (_enemy, _encounter, _xy, _behaviour) in FIELD_FOES.items():
         wide = MONSTERS[_enemy][1].startswith("Boss/")
-        sprites[name] = {"sprite": f"playable_assets/field_{_enemy}.png", "size": [64, 32] if wide else [48, 48]}
+        sprites[name] = {
+            "sprite": f"playable_assets/field_{_enemy}.png",
+            "size": [64, 32] if wide else [48, 48],
+        }
     names = {f"attack_{k}": f"Attack ({v})" for k, v in weapon_names.items()}
     order = [f"attack_{k}" for k in WEAPONS] + [a for job in jobs.values() for a in job]
     labels = {}
-    for ability_id in order:  # basic attacks first (keys 1-2), then the job skills; divine skills marked
+    for (
+        ability_id
+    ) in order:  # basic attacks first (keys 1-2), then the job skills; divine skills marked
         name = names.get(ability_id) or ability_id.replace("_", " ").title()
         if "divine" in abilities.get(ability_id).tags:
             name += " (Divine)"
@@ -764,12 +964,13 @@ def main():
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
     print(
-        f"wrote {path.relative_to(REPO)}: {len(abilities.ids())} abilities, {len(db.classes)} jobs, "
+        f"wrote {path.relative_to(REPO)}: {len(abilities.ids())} abilities, {len(db.classes)} "
+        f"jobs, "
         f"{len(db.enemies)} enemies, {len(db.composition_recipes)} concoctions"
     )
 
 
-# -- more enemy types ---------------------------------------------------------------------------------------------
+# -- more enemy types -----------------------------------------------------------------------------
 NINJA = (
     REPO
     / "local_reference"
@@ -864,7 +1065,9 @@ def _strip(frames, scale):
     w, h = frames[0].size
     sheet = Image.new("RGBA", (w * scale * len(frames), h * scale), (0, 0, 0, 0))
     for i, frame in enumerate(frames):
-        sheet.alpha_composite(frame.resize((w * scale, h * scale), Image.NEAREST), (i * w * scale, 0))
+        sheet.alpha_composite(
+            frame.resize((w * scale, h * scale), Image.NEAREST), (i * w * scale, 0)
+        )
     return sheet
 
 
@@ -884,7 +1087,8 @@ def _darken(frame):
 
 
 def monster_sheet(relative):
-    """Battle sheet from a 4 x 4 walk sheet (16 px): idle / attack from the walk, a flash for hit, dark for KO."""
+    """Battle sheet from a 4 x 4 walk sheet (16 px): idle / attack from the walk, a flash for hit,
+    dark for KO."""
     from PIL import Image
 
     sheet = Image.open(NINJA / relative).convert("RGBA")
@@ -892,7 +1096,12 @@ def monster_sheet(relative):
     frames = walk + [_flash(walk[0]), _darken(walk[0])]
     clips = {
         "idle": {"frames": [0, 1, 2, 3], "frame_duration": 0.16, "loop": True},
-        "attack": {"frames": [0, 1, 2, 3, 0], "frame_duration": 0.07, "loop": False, "events": {"2": ["hit"]}},
+        "attack": {
+            "frames": [0, 1, 2, 3, 0],
+            "frame_duration": 0.07,
+            "loop": False,
+            "events": {"2": ["hit"]},
+        },
         "hit": {"frames": [4, 0, 4, 0], "frame_duration": 0.07, "loop": False},
         "ko": {"frames": [5], "frame_duration": 0.5, "loop": False},
     }
@@ -900,7 +1109,8 @@ def monster_sheet(relative):
 
 
 def giant_sheet(relative, cell=(96, 48)):
-    """Battle sheet from a boss's Idle / Hit strips (each frame ``cell`` px): idle, attack, hit, a dark KO frame."""
+    """Battle sheet from a boss's Idle / Hit strips (each frame ``cell`` px): idle, attack, hit, a
+    dark KO frame."""
     from PIL import Image
 
     base = NINJA / relative
@@ -914,7 +1124,12 @@ def giant_sheet(relative, cell=(96, 48)):
     n = len(frames)
     clips = {
         "idle": {"frames": list(range(count)), "frame_duration": 0.14, "loop": True},
-        "attack": {"frames": [0, 2, 4, 4, 2, 0], "frame_duration": 0.07, "loop": False, "events": {"2": ["hit"]}},
+        "attack": {
+            "frames": [0, 2, 4, 4, 2, 0],
+            "frame_duration": 0.07,
+            "loop": False,
+            "events": {"2": ["hit"]},
+        },
         "hit": {"frames": list(range(count, n - 1)), "frame_duration": 0.09, "loop": False},
         "ko": {"frames": [n - 1], "frame_duration": 0.5, "loop": False},
     }
@@ -922,7 +1137,8 @@ def giant_sheet(relative, cell=(96, 48)):
 
 
 def add_monster_types(project, db, add):
-    """Six new kinds of enemy - each a different problem to solve - with art, AI, encounters and field spots."""
+    """Six new kinds of enemy - each a different problem to solve - with art, AI, encounters and
+    field spots."""
     from asteria.assets.canonical import AssetSource, CanonicalAsset
     from asteria.core import Entity, Transform
     from asteria.presentation.battle_combatant_visuals import (
@@ -940,7 +1156,12 @@ def add_monster_types(project, db, add):
         # Gel Slime: fire heals it (absorb); it splits into another slime
         "gel_slam": (multi("gel_slam", effect=op(weak("power", 11))), "enemy", "first_opponent"),
         "split": (
-            multi("split", commands=[{"command": "SUMMON", "args": {"enemy_id": "gel_slime", "owner_id": "@actor"}}]),
+            multi(
+                "split",
+                commands=[
+                    {"command": "SUMMON", "args": {"enemy_id": "gel_slime", "owner_id": "@actor"}}
+                ],
+            ),
             "self",
             "self",
         ),
@@ -1005,7 +1226,11 @@ def add_monster_types(project, db, add):
             "enemy",
             "random_opponent",
         ),
-        "war_cry": (multi("war_cry", apply_states=[{"state": "attack_up", "to": "self"}]), "self", "self"),
+        "war_cry": (
+            multi("war_cry", apply_states=[{"state": "attack_up", "to": "self"}]),
+            "self",
+            "self",
+        ),
         "whirlwind": (
             multi(
                 "whirlwind",
@@ -1024,7 +1249,10 @@ def add_monster_types(project, db, add):
             "life_drain",
             targeting=life.targeting,
             tags=life.tags,
-            effects=(*life.effects, AbilityEffect("self", Effect("life_drain.heal", (op(healing(10)),)))),
+            effects=(
+                *life.effects,
+                AbilityEffect("self", Effect("life_drain.heal", (op(healing(10)),))),
+            ),
         ),
         "enemy",
         "random_opponent",
@@ -1033,17 +1261,21 @@ def add_monster_types(project, db, add):
         add(definition, targeting)
 
     library = project.battle_presentation_library
-    states = tuple(BattleVisualStateDefinition(role, role) for role in ("idle", "attack", "hit", "ko"))
+    states = tuple(
+        BattleVisualStateDefinition(role, role) for role in ("idle", "attack", "hit", "ko")
+    )
     out = HERE / "playable_assets" / "battle"
     out.mkdir(parents=True, exist_ok=True)
     template_enemy = db.enemies["ember_hound"]
     for enemy_id, (name, art, hp, shields, tags, moves, speed) in MONSTERS.items():
-        image, frame, clips, field_frame = giant_sheet(art) if art.startswith("Boss/") else monster_sheet(art)
+        image, frame, clips, field_frame = (
+            giant_sheet(art) if art.startswith("Boss/") else monster_sheet(art)
+        )
         image.save(out / f"{enemy_id}.png")
         side = 48 / max(field_frame.size)
-        field_frame.resize((round(field_frame.width * side), round(field_frame.height * side)), 0).save(
-            HERE / "playable_assets" / f"field_{enemy_id}.png"
-        )
+        field_frame.resize(
+            (round(field_frame.width * side), round(field_frame.height * side)), 0
+        ).save(HERE / "playable_assets" / f"field_{enemy_id}.png")
         asset_id = f"battle.combatant.{enemy_id}"
         project.assets.register(
             CanonicalAsset(
@@ -1064,7 +1296,10 @@ def add_monster_types(project, db, add):
             "combatant_visuals",
             enemy_id,
             BattleCombatantVisualProfile(
-                enemy_id, BattleVisualAssetSet(asset_id), states, BattleVisualTransform(scale_x=scale, scale_y=scale)
+                enemy_id,
+                BattleVisualAssetSet(asset_id),
+                states,
+                BattleVisualTransform(scale_x=scale, scale_y=scale),
             ),
         )
         stats = dict(template_enemy.stats)
@@ -1076,7 +1311,9 @@ def add_monster_types(project, db, add):
             resources={HP: hp, SHIELD: shields, SP: 999},
             tags=("enemy", *tags),
             abilities=moves,
-            reward=dataclasses.replace(template_enemy.reward, experience={}) if template_enemy.reward else None,
+            reward=dataclasses.replace(template_enemy.reward, experience={})
+            if template_enemy.reward
+            else None,
         )
         rules = []
         for move in moves:
@@ -1128,11 +1365,15 @@ def add_monster_types(project, db, add):
     credits = HERE / "playable_assets" / "CREDITS.md"
     text = credits.read_text(encoding="utf-8")
     row = (
-        "| `battle/gel_slime.png`, `bone_wraith.png`, `pit_viper.png`, `mirror_gazer.png`, `web_spinner.png`, "
+        "| `battle/gel_slime.png`, `bone_wraith.png`, `pit_viper.png`, `mirror_gazer.png`, "
+        "`web_spinner.png`, "
         "`iron_samurai.png` and their `field_*.png` (Octopath demo enemies) | "
-        "[Ninja Adventure Asset Pack](https://pixel-boy.itch.io/ninja-adventure-asset-pack) — Monster/Slime, "
-        "Skull, Snake, Eye, SpiderRed, Boss/GiantBlueSamurai; frames cropped and scaled, hit / KO frames flashed / "
-        "darkened (built by `reference_projects/octopath_demo/build_project.py`) | Pixel-boy, AAA | "
+        "[Ninja Adventure Asset Pack](https://pixel-boy.itch.io/ninja-adventure-asset-pack) — "
+        "Monster/Slime, "
+        "Skull, Snake, Eye, SpiderRed, Boss/GiantBlueSamurai; frames cropped and scaled, hit / "
+        "KO frames flashed / "
+        "darkened (built by `reference_projects/octopath_demo/build_project.py`) | Pixel-boy, "
+        "AAA | "
         "[CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |\n"
     )
     if "Octopath demo enemies" not in text:
@@ -1178,7 +1419,10 @@ def add_monster_types(project, db, add):
             base,
             encounter_id=encounter_id,
             tags=("demo",),
-            members=tuple(dataclasses.replace(base.members[0], enemy_id=e, count=n) for e, n in counts.items()),
+            members=tuple(
+                dataclasses.replace(base.members[0], enemy_id=e, count=n)
+                for e, n in counts.items()
+            ),
         )
 
     scene = project.scene(project.startup_scene_id)

@@ -1,9 +1,18 @@
-"""ENG-02 / ENG-16 / ENG-17 / ANI-05: character controller, input/AI controllers, ground and one-way
-platforms, hitbox/hurtbox, and entity action timelines (hitbox, i-frame, cancel, combo, movement windows)."""
+"""ENG-02 / ENG-16 / ENG-17 / ANI-05: character controller, input/AI controllers, ground and
+one-way
+platforms, hitbox/hurtbox, and entity action timelines (hitbox, i-frame, cancel, combo, movement
+windows)."""
 
 import pytest
 
-from asteria.core import ComponentRegistry, Entity, Scene, Transform, deserialize_component, serialize_component
+from asteria.core import (
+    ComponentRegistry,
+    Entity,
+    Scene,
+    Transform,
+    deserialize_component,
+    serialize_component,
+)
 from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
 from asteria.runtime.character_control import (
     AIController2DComponent,
@@ -69,7 +78,9 @@ def test_side_view_gravity_ground_detection_jump_and_ceiling():
     c = hero.get(CharacterController2DComponent)
     _run(scene, 1.0)
     t = hero.get(Transform)
-    assert c.grounded and c.ground_id == floor.id and t.y == pytest.approx(90 - 8, abs=0.3)  # resting on the floor top
+    assert (
+        c.grounded and c.ground_id == floor.id and t.y == pytest.approx(90 - 8, abs=0.3)
+    )  # resting on the floor top
     c.set_intent(0, 0, jump=True)
     scene.update(1 / 60)
     assert not c.grounded and c.velocity_y < 0
@@ -111,9 +122,13 @@ def test_player_input_and_ai_controllers_drive_the_same_controller():
     slime = _entity(scene, "Slime", 100, 0, _controller(speed=40), ai, AIController2DComponent())
     _run(scene, 1.0)
     assert hero.get(Transform).x == pytest.approx(30, abs=0.6)  # input → controller
-    assert slime.get(Transform).x >= 60 + 5 + 6 - 1e-6  # the chaser is blocked by the wall like the player
+    assert (
+        slime.get(Transform).x >= 60 + 5 + 6 - 1e-6
+    )  # the chaser is blocked by the wall like the player
     slime.get(AIController2DComponent).driver = "none"
-    slime.get(CharacterController2DComponent).set_intent(0, 0)  # whoever owns the entity now sets its intent
+    slime.get(CharacterController2DComponent).set_intent(
+        0, 0
+    )  # whoever owns the entity now sets its intent
     x = slime.get(Transform).x
     _run(scene, 0.5)
     assert slime.get(Transform).x == x  # driver none: field AI no longer moves it
@@ -135,7 +150,9 @@ def test_hitbox_hits_other_teams_once_per_activation_and_respects_invincibility(
     seen = []
     hits.listeners.append(seen.append)
     scene.update(0.016)
-    assert [(e.attacker_id, e.target_id, e.hit_tag) for e in hits.events] == [(hero.id, foe.id, "slash")]
+    assert [(e.attacker_id, e.target_id, e.hit_tag) for e in hits.events] == [
+        (hero.id, foe.id, "slash")
+    ]
     scene.update(0.016)
     assert hits.events == [] and len(seen) == 1  # once per activation
     sword.active = False
@@ -161,7 +178,16 @@ def test_action_timeline_drives_movement_hitbox_iframes_and_cancel_combo_windows
         scene.scheduler.add(system)
     sword = Hitbox2DComponent()
     sword.team, sword.width = "hero", 20
-    hero = _entity(scene, "Hero", 0, 0, _controller(speed=60), sword, Animator2DComponent(), Hurtbox2DComponent())
+    hero = _entity(
+        scene,
+        "Hero",
+        0,
+        0,
+        _controller(speed=60),
+        sword,
+        Animator2DComponent(),
+        Hurtbox2DComponent(),
+    )
     target = Hurtbox2DComponent()
     target.team = "enemy"
     foe = _entity(scene, "Foe", 30, 0, target)
@@ -187,8 +213,12 @@ def test_action_timeline_drives_movement_hitbox_iframes_and_cancel_combo_windows
         seen += hits.events
         cues += actions.events
     assert sword.active and [e.hit_tag for e in seen] == ["lunge"] and seen[0].target_id == foe.id
-    assert hero.get(Transform).x == pytest.approx(60 * 0.3, abs=1.0)  # moved only during the movement window
-    assert [(e.cue_id, e.payload["asset_id"]) for e in cues if e.kind == "vfx"] == [("spark", "battle.fx.slash")]
+    assert hero.get(Transform).x == pytest.approx(
+        60 * 0.3, abs=1.0
+    )  # moved only during the movement window
+    assert [(e.cue_id, e.payload["asset_id"]) for e in cues if e.kind == "vfx"] == [
+        ("spark", "battle.fx.slash")
+    ]
     assert actions.window_open(hero.id, "combo") and actions.combo_next(hero.id) == "lunge_2"
     scene.update(0.06)
     assert not sword.active and actions.window_open(hero.id, "cancel")
@@ -217,11 +247,15 @@ def test_controllers_actions_and_hits_run_in_the_game_session_field_update(runti
     ai.behaviour, ai.detect_radius = "chase", 500.0
     claw = Hitbox2DComponent()
     claw.team, claw.width = "enemy", 24.0
-    imp = _entity(game.scene, "Imp", 60.0, 0.0, _controller(speed=40.0), ai, AIController2DComponent(), claw)
+    imp = _entity(
+        game.scene, "Imp", 60.0, 0.0, _controller(speed=40.0), ai, AIController2DComponent(), claw
+    )
     for _ in range(60):
         game.field_update(1 / 60)
     assert 10.0 < imp.get(Transform).x < 60.0  # chased through its controller
-    game.entity_actions.play(imp.id, ActionTimeline("bite", [ActionCue("bite", 0.0, "hitbox", {"duration": 0.2})]))
+    game.entity_actions.play(
+        imp.id, ActionTimeline("bite", [ActionCue("bite", 0.0, "hitbox", {"duration": 0.2})])
+    )
     found = []
     for _ in range(30):
         game.field_update(1 / 60)
@@ -238,8 +272,12 @@ def test_project_action_timelines_are_authored_as_records_and_played_from_events
     game = runtime.game
     document = EditorDocument()
     document.set_project(game.project)
-    adapter = {a.category_id: a for a in IntegratedAuthoringControllers(document).rpg_categories()}["action_timelines"]
-    lunge = ActionTimeline("lunge", [ActionCue("step", 0.0, "movement", {"x": 1, "y": 0, "duration": 0.5})])
+    adapter = {
+        a.category_id: a for a in IntegratedAuthoringControllers(document).rpg_categories()
+    }["action_timelines"]
+    lunge = ActionTimeline(
+        "lunge", [ActionCue("step", 0.0, "movement", {"x": 1, "y": 0, "duration": 0.5})]
+    )
     adapter.create("lunge", lunge)
     data = adapter.encode(adapter.get("lunge"))
     data["cues"][0]["payload"]["duration"] = 0.25
@@ -249,7 +287,12 @@ def test_project_action_timelines_are_authored_as_records_and_played_from_events
     game.project.event_programs.register(
         "imp_lunge",
         EventProgram(
-            (EventInstruction("WORLD", {"command": "PLAY_ACTION", "args": {"entity": "Imp", "timeline_id": "lunge"}}),)
+            (
+                EventInstruction(
+                    "WORLD",
+                    {"command": "PLAY_ACTION", "args": {"entity": "Imp", "timeline_id": "lunge"}},
+                ),
+            )
         ),
     )
     game.events.start("imp_lunge")

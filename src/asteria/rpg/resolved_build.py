@@ -120,24 +120,42 @@ def resolve_actor_build(
     # Intrinsic/class state was already composed into the mutable runtime at
     # construction.  Record definition-level origins separately for inspection.
     for stat, value in actor_runtime.definition.base_stats.items():
-        contributions.append(BuildContribution("stat", stat, "intrinsic", actor_runtime.definition.actor_id, value))
+        contributions.append(
+            BuildContribution("stat", stat, "intrinsic", actor_runtime.definition.actor_id, value)
+        )
     for resource_id, raw in actor_runtime.definition.base_resources.items():
         contributions.append(
-            BuildContribution("resource", resource_id, "intrinsic", actor_runtime.definition.actor_id, raw["maximum"])
+            BuildContribution(
+                "resource",
+                resource_id,
+                "intrinsic",
+                actor_runtime.definition.actor_id,
+                raw["maximum"],
+            )
         )
     for tag in actor_runtime.definition.tags:
-        contributions.append(BuildContribution("tag", tag, "intrinsic", actor_runtime.definition.actor_id))
+        contributions.append(
+            BuildContribution("tag", tag, "intrinsic", actor_runtime.definition.actor_id)
+        )
 
     for assignment in actor_runtime.class_assignments:
         definition = actor_runtime.class_definitions[assignment.class_id]
         for stat, value in definition.stat_bonuses.items():
-            contributions.append(BuildContribution("stat", stat, "class", assignment.assignment_id, value))
+            contributions.append(
+                BuildContribution("stat", stat, "class", assignment.assignment_id, value)
+            )
         for resource_id, value in definition.resource_bonuses.items():
-            contributions.append(BuildContribution("resource", resource_id, "class", assignment.assignment_id, value))
+            contributions.append(
+                BuildContribution(
+                    "resource", resource_id, "class", assignment.assignment_id, value
+                )
+            )
         for tag in definition.granted_tags:
             contributions.append(BuildContribution("tag", tag, "class", assignment.assignment_id))
         for tag in assignment.tags:
-            contributions.append(BuildContribution("tag", tag, "class_assignment", assignment.assignment_id))
+            contributions.append(
+                BuildContribution("tag", tag, "class_assignment", assignment.assignment_id)
+            )
 
     progression_stats, progression_tags, _ = actor_runtime._progression_contributions(progression)
     for stat, value in progression_stats.items():
@@ -148,13 +166,19 @@ def resolve_actor_build(
     allocation_contribution = None if allocations is None else allocations.contribution()
     if allocation_contribution is not None:
         for stat, value in allocation_contribution.stat_bonuses.items():
-            contributions.append(BuildContribution("stat", stat, "allocation", "allocation", value))
+            contributions.append(
+                BuildContribution("stat", stat, "allocation", "allocation", value)
+            )
         for resource_id, value in allocation_contribution.resource_bonuses.items():
-            contributions.append(BuildContribution("resource", resource_id, "allocation", "allocation", value))
+            contributions.append(
+                BuildContribution("resource", resource_id, "allocation", "allocation", value)
+            )
         for tag in allocation_contribution.granted_tags:
             contributions.append(BuildContribution("tag", tag, "allocation", "allocation"))
         for capability in allocation_contribution.granted_capabilities:
-            contributions.append(BuildContribution("capability", capability, "allocation", "allocation"))
+            contributions.append(
+                BuildContribution("capability", capability, "allocation", "allocation")
+            )
 
     if loadout is not None:
         for item in loadout.equipped():
@@ -163,28 +187,44 @@ def resolve_actor_build(
             growth = item.growth_contribution()
             if growth is not None:
                 for tag in growth.granted_tags:
-                    contributions.append(BuildContribution("tag", tag, "equipment_growth", item.instance_id))
+                    contributions.append(
+                        BuildContribution("tag", tag, "equipment_growth", item.instance_id)
+                    )
                 for capability in growth.granted_capabilities:
                     contributions.append(
-                        BuildContribution("capability", capability, "equipment_growth", item.instance_id)
+                        BuildContribution(
+                            "capability", capability, "equipment_growth", item.instance_id
+                        )
                     )
                 for modifier in growth.modifiers:
                     contributions.append(
                         BuildContribution(
-                            "stat_modifier", modifier.stat, "equipment_growth", item.instance_id, modifier.modifier_id
+                            "stat_modifier",
+                            modifier.stat,
+                            "equipment_growth",
+                            item.instance_id,
+                            modifier.modifier_id,
                         )
                     )
             for modifier in item.equipment.modifiers:
                 contributions.append(
                     BuildContribution(
-                        "stat_modifier", modifier.stat, "equipment", item.instance_id, modifier.modifier_id
+                        "stat_modifier",
+                        modifier.stat,
+                        "equipment",
+                        item.instance_id,
+                        modifier.modifier_id,
                     )
                 )
             for affix in item.rolled_affixes:  # rpg.loot: random affixes rolled on this instance
                 for modifier in affix.modifiers(item.instance_id):
                     contributions.append(
                         BuildContribution(
-                            "stat_modifier", modifier.stat, "affix", item.instance_id, modifier.modifier_id
+                            "stat_modifier",
+                            modifier.stat,
+                            "affix",
+                            item.instance_id,
+                            modifier.modifier_id,
                         )
                     )
             for socket_id in sorted(item.attachments):
@@ -194,7 +234,13 @@ def resolve_actor_build(
                     contributions.append(BuildContribution("tag", tag, "attachment", source_id))
                 for modifier in attachment.modifiers:
                     contributions.append(
-                        BuildContribution("stat_modifier", modifier.stat, "attachment", source_id, modifier.modifier_id)
+                        BuildContribution(
+                            "stat_modifier",
+                            modifier.stat,
+                            "attachment",
+                            source_id,
+                            modifier.modifier_id,
+                        )
                     )
 
     for passive_id in actor_runtime.ability_state.active_passives:
@@ -205,7 +251,9 @@ def resolve_actor_build(
             contributions.append(BuildContribution("tag", tag, "passive", passive_id))
         for modifier in passive.modifiers:
             contributions.append(
-                BuildContribution("stat_modifier", modifier.stat, "passive", passive_id, modifier.modifier_id)
+                BuildContribution(
+                    "stat_modifier", modifier.stat, "passive", passive_id, modifier.modifier_id
+                )
             )
 
     stats = actor_runtime.effective_stats(
@@ -235,7 +283,9 @@ def resolve_actor_build(
         evolution_rules=evolution_rules,
     )
     for grant in ability_resolution.grants:
-        contributions.append(BuildContribution("ability", grant.ability_id, grant.source_kind, grant.source_id))
+        contributions.append(
+            BuildContribution("ability", grant.ability_id, grant.source_kind, grant.source_id)
+        )
 
     triggers = []
     if loadout is not None:
@@ -255,7 +305,9 @@ def resolve_actor_build(
         ability_grants=ability_resolution.grants,
         active_passives=tuple(actor_runtime.ability_state.active_passives),
         class_assignment_ids=tuple(x.assignment_id for x in actor_runtime.class_assignments),
-        equipment_instance_ids=() if loadout is None else tuple(x.instance_id for x in loadout.equipped()),
+        equipment_instance_ids=()
+        if loadout is None
+        else tuple(x.instance_id for x in loadout.equipped()),
         triggers=tuple(triggers),
         contributions=tuple(contributions),
     )

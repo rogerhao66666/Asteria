@@ -1,18 +1,23 @@
-"""Entity action timelines (ANI-05, ASTERIA_SPEC §11): one timeline drives animation, movement, hitboxes,
+"""Entity action timelines (ANI-05, ASTERIA_SPEC §11): one timeline drives animation, movement,
+hitboxes,
 i-frames, cancel and combo windows, VFX/SFX/camera cues and gameplay events on a field entity.
 
 ``EntityActionSystem.play(entity_id, timeline)`` starts an ``ActionTimeline`` on
 an entity; each update applies the cues it crosses:
 
 * ``animation``      → the entity's ``Animator2D`` clip (``payload.clip`` / ``payload.role``)
-* ``movement``       → the ``CharacterController2D`` intent (``x``, ``y``) for ``duration``; ``relative``:
-  ``world`` (default), ``facing`` (authored for facing right) or ``aim`` (along the action's aim); ``speed``
+* ``movement``       → the ``CharacterController2D`` intent (``x``, ``y``) for ``duration``;
+  ``relative``:
+  ``world`` (default), ``facing`` (authored for facing right) or ``aim`` (along the action's aim);
+  ``speed``
   replaces the controller's speed meanwhile (dashes, lunges)
 * ``hitbox``         → the entity's ``Hitbox2D`` is active for ``duration`` (``hit_tag`` optional)
 * ``iframe``         → invincibility for ``duration`` (``HitboxSystem.grant_invincibility``)
-* ``projectile``     → fires ``projectile_id`` from the entity (``projectiles.fire_from``: count, spread,
+* ``projectile``     → fires ``projectile_id`` from the entity (``projectiles.fire_from``: count,
+  spread,
   angle, offset turned with the facing); ``aim: true`` shoots along the action's aim
-* ``armor``          → super armor ``level`` for ``duration`` (``armor.grant_armor``, e.g. ``CombatSystem``); it
+* ``armor``          → super armor ``level`` for ``duration`` (``armor.grant_armor``, e.g.
+  ``CombatSystem``); it
   ends with the action
 * ``cancel_window`` / ``combo_window`` → open for ``duration``; ``cancel()`` / ``window_open()``
 * ``gameplay_event``, ``gameplay_ability`` and presentation cues (vfx, audio, camera, light,
@@ -29,7 +34,12 @@ from dataclasses import dataclass, field
 from asteria.core import System
 from asteria.gameplay.action_timeline import ActionCueKind, ActionTimeline
 
-from .character_control import CharacterController2DComponent, Hitbox2DComponent, turn_with_aim, turn_with_facing
+from .character_control import (
+    CharacterController2DComponent,
+    Hitbox2DComponent,
+    turn_with_aim,
+    turn_with_facing,
+)
 from .components2d import Animator2DComponent
 
 WINDOW_KINDS = {ActionCueKind.CANCEL_WINDOW: "cancel", ActionCueKind.COMBO_WINDOW: "combo"}
@@ -61,12 +71,14 @@ class ActionEvent:
 
 
 class EntityActionSystem(System):
-    order = 25  # after input (10) and AI (20), before CharacterControllerSystem (30) so cues move this frame
+    # after input (10) and AI (20), before CharacterControllerSystem (30) so cues move this frame
+    order = 25
 
     def __init__(self, hitboxes=None, *, paused=None, armor=None, projectiles=None):
         self.hitboxes = hitboxes
         self.projectiles = projectiles  # fire_from(entity, payload), e.g. ProjectileSystem
-        self.armor = armor  # grant_armor(entity_id, level, seconds) / end_armor(entity_id), e.g. CombatSystem
+        # grant_armor(entity_id, level, seconds) / end_armor(entity_id), e.g. CombatSystem
+        self.armor = armor
         self.paused = paused  # optional callable(entity_id) -> True while frozen (hitstop)
         self.running: dict[str, _Running] = {}
         self.events: list[ActionEvent] = []
@@ -77,7 +89,9 @@ class EntityActionSystem(System):
         if not isinstance(timeline, ActionTimeline):
             raise TypeError("timeline must be ActionTimeline")
         aim = None if aim is None or not (aim[0] or aim[1]) else (float(aim[0]), float(aim[1]))
-        self.running[str(entity_id)] = _Running(timeline, end=timeline.duration, aim=aim, source=str(source))
+        self.running[str(entity_id)] = _Running(
+            timeline, end=timeline.duration, aim=aim, source=str(source)
+        )
 
     def source(self, entity_id):
         run = self.running.get(str(entity_id))
@@ -105,7 +119,8 @@ class EntityActionSystem(System):
         return run.windows["combo"][2].get("next")
 
     def cancel(self, entity_id, scene=None, *, force=False):
-        """Stop the action if its cancel window is open (or ``force``); hitbox and movement end with it."""
+        """Stop the action if its cancel window is open (or ``force``); hitbox and movement end
+        with it."""
         entity_id = str(entity_id)
         if entity_id not in self.running or not (force or self.window_open(entity_id, "cancel")):
             return False
@@ -134,7 +149,9 @@ class EntityActionSystem(System):
         if kind == ActionCueKind.ANIMATION:
             animator = entity.try_get(Animator2DComponent)
             if animator is not None:
-                animator.default_clip = str(payload.get("clip") or payload.get("role") or animator.default_clip)
+                animator.default_clip = str(
+                    payload.get("clip") or payload.get("role") or animator.default_clip
+                )
         elif kind == ActionCueKind.MOVEMENT:
             x, y = float(payload.get("x", 0.0)), float(payload.get("y", 0.0))
             relative = payload.get("relative", "world")
@@ -159,13 +176,17 @@ class EntityActionSystem(System):
                 self.hitboxes.grant_invincibility(entity.id, float(payload.get("duration", 0.0)))
         elif kind == ActionCueKind.PROJECTILE:
             if self.projectiles is None:
-                raise ValueError(f"{entity.name} fired a projectile cue but no projectile system is running")
+                raise ValueError(
+                    f"{entity.name} fired a projectile cue but no projectile system is running"
+                )
             if payload.get("aim") and run.aim is not None:
                 payload["direction"] = run.aim
             self.projectiles.fire_from(entity, payload)
         elif kind == ActionCueKind.ARMOR:
             if self.armor is not None:
-                self.armor.grant_armor(entity.id, int(payload.get("level", 1)), float(payload.get("duration", 0.0)))
+                self.armor.grant_armor(
+                    entity.id, int(payload.get("level", 1)), float(payload.get("duration", 0.0))
+                )
                 run.armored = True
         elif kind in WINDOW_KINDS:
             duration = float(payload.get("duration", 0.0))
@@ -194,7 +215,9 @@ class EntityActionSystem(System):
             controller = entity.try_get(CharacterController2DComponent)
             if run.move_until is not None:
                 if run.time - dt < run.move_until - 1e-9 and controller is not None:
-                    controller.set_intent(*run.move_intent)  # this frame starts inside the movement window
+                    controller.set_intent(
+                        *run.move_intent
+                    )  # this frame starts inside the movement window
                     controller.speed_override = run.move_speed
                 elif run.time - dt >= run.move_until - 1e-9:
                     run.move_until = None

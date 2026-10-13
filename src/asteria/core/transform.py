@@ -16,7 +16,11 @@ from .metadata import Field, component_schema
         Field("scale_x", float, 1.0),
         Field("scale_y", float, 1.0),
         Field(
-            "parent_id", str, "", label="Parent", tooltip="Entity whose transform this one is relative to (same scene)."
+            "parent_id",
+            str,
+            "",
+            label="Parent",
+            tooltip="Entity whose transform this one is relative to (same scene).",
         ),
     ),
 )
@@ -116,7 +120,9 @@ def can_parent(child, parent):
 def set_parent(child, parent, *, keep_world=True):
     """Parent ``child`` to ``parent`` (or None), keeping its scene position by default."""
     if not can_parent(child, parent):
-        raise TransformHierarchyError(f"cannot parent {child.name} to {getattr(parent, 'name', None)}")
+        raise TransformHierarchyError(
+            f"cannot parent {child.name} to {getattr(parent, 'name', None)}"
+        )
     transform = child.get(Transform)
     wx, wy = world_position(child)
     transform.parent_id = "" if parent is None else parent.id

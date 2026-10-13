@@ -50,7 +50,13 @@ class BattlePresentationInformationArchitecture:
             "visuals",
             "Combatants & Layout",
             ("combatant_visuals", "sideview_templates", "portrait_templates", "party_layout"),
-            ("Preview", "Selected Combatant", "Visual States", "Anchors & Transform", "Adaptive Layout"),
+            (
+                "Preview",
+                "Selected Combatant",
+                "Visual States",
+                "Anchors & Transform",
+                "Adaptive Layout",
+            ),
         ),
         BattlePresentationSection(
             "motion",
@@ -114,11 +120,18 @@ class BattlePresentationAuthoringController:
         category = str(category)
         profile_id = str(profile_id)
         if self.library.get(category, profile_id) is not None:
-            raise BattlePresentationAuthoringError(f"duplicate presentation profile: {category}/{profile_id}")
+            raise BattlePresentationAuthoringError(
+                f"duplicate presentation profile: {category}/{profile_id}"
+            )
         self.library._validate_type(category, value)
         self._execute(
             _ProfileCommand(
-                self.library, category, profile_id, value, None, f"Add Battle Presentation {category}/{profile_id}"
+                self.library,
+                category,
+                profile_id,
+                value,
+                None,
+                f"Add Battle Presentation {category}/{profile_id}",
             )
         )
         return value
@@ -128,11 +141,18 @@ class BattlePresentationAuthoringController:
         profile_id = str(profile_id)
         old = self.library.get(category, profile_id)
         if old is None:
-            raise BattlePresentationAuthoringError(f"unknown presentation profile: {category}/{profile_id}")
+            raise BattlePresentationAuthoringError(
+                f"unknown presentation profile: {category}/{profile_id}"
+            )
         self.library._validate_type(category, value)
         self._execute(
             _ProfileCommand(
-                self.library, category, profile_id, value, old, f"Edit Battle Presentation {category}/{profile_id}"
+                self.library,
+                category,
+                profile_id,
+                value,
+                old,
+                f"Edit Battle Presentation {category}/{profile_id}",
             )
         )
         return value
@@ -142,10 +162,17 @@ class BattlePresentationAuthoringController:
         profile_id = str(profile_id)
         old = self.library.get(category, profile_id)
         if old is None:
-            raise BattlePresentationAuthoringError(f"unknown presentation profile: {category}/{profile_id}")
+            raise BattlePresentationAuthoringError(
+                f"unknown presentation profile: {category}/{profile_id}"
+            )
         self._execute(
             _ProfileCommand(
-                self.library, category, profile_id, None, old, f"Delete Battle Presentation {category}/{profile_id}"
+                self.library,
+                category,
+                profile_id,
+                None,
+                old,
+                f"Delete Battle Presentation {category}/{profile_id}",
             )
         )
 

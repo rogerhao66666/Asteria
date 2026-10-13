@@ -122,7 +122,9 @@ class CharacterProgressionLab:
         return self.scenario.allocations.allocate(graph_id, node_id, count)
 
     def refund_node(self, graph_id, node_id, count=1, *, refund_ratio=1.0):
-        return self.scenario.allocations.refund(graph_id, node_id, count, refund_ratio=refund_ratio)
+        return self.scenario.allocations.refund(
+            graph_id, node_id, count, refund_ratio=refund_ratio
+        )
 
     def equip_passive(self, passive_id, *, capacity=2):
         passive_id = str(passive_id)
@@ -169,7 +171,9 @@ class CharacterProgressionLab:
         for graph_id in sorted(self.scenario.allocations.allocations):
             for node_id, rank in sorted(self.scenario.allocations.allocations[graph_id].items()):
                 allocations.append((graph_id, node_id, int(rank)))
-        assignments = tuple((x.assignment_id, x.role, x.class_id) for x in self.scenario.actor.class_assignments)
+        assignments = tuple(
+            (x.assignment_id, x.role, x.class_id) for x in self.scenario.actor.class_assignments
+        )
         build = self.resolve()
         return CharacterProgressionLabSnapshot(
             self.level,

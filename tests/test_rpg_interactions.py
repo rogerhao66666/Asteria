@@ -39,7 +39,12 @@ def test_weakness_is_tag_driven_not_element_enum():
 def test_resistance_and_stat_mitigation_compose_deterministically():
     resolver = InteractionResolver(
         [
-            InteractionRule("armor", target_tags_all=("armored",), target_stat_terms={"defense": -0.5}, priority=20),
+            InteractionRule(
+                "armor",
+                target_tags_all=("armored",),
+                target_stat_terms={"defense": -0.5},
+                priority=20,
+            ),
             InteractionRule(
                 "fire_resist",
                 source_tags_all=("damage.fire",),
@@ -50,7 +55,10 @@ def test_resistance_and_stat_mitigation_compose_deterministically():
         ]
     )
     result = resolver.resolve_value(
-        100, subject(), subject(stats={"defense": 40}, tags=("armored", "resist.fire")), action_tags=("damage.fire",)
+        100,
+        subject(),
+        subject(stats={"defense": 40}, tags=("armored", "resist.fire")),
+        action_tags=("damage.fire",),
     )
     assert result.resolved_value == 40
     assert result.matched_rules == ("armor", "fire_resist")
@@ -88,7 +96,9 @@ def test_absorb_and_reflect_are_routing_outcomes_not_negative_damage(disposition
             )
         ]
     )
-    result = resolver.resolve_value(30, subject(), subject(tags=(f"{disposition}.arcane",)), action_tags=("arcane",))
+    result = resolver.resolve_value(
+        30, subject(), subject(tags=(f"{disposition}.arcane",)), action_tags=("arcane",)
+    )
     assert result.disposition.value == disposition
     assert result.resolved_value == 30
 
@@ -97,7 +107,10 @@ def test_arbitrary_species_and_weapon_interaction():
     resolver = InteractionResolver(
         [
             InteractionRule(
-                "spear_airborne", source_tags_all=("weapon.spear",), target_tags_all=("trait.airborne",), multiplier=2
+                "spear_airborne",
+                source_tags_all=("weapon.spear",),
+                target_tags_all=("trait.airborne",),
+                multiplier=2,
             )
         ]
     )
@@ -110,7 +123,9 @@ def test_arbitrary_species_and_weapon_interaction():
 
 
 def test_rule_serialization_roundtrip():
-    rule = InteractionRule("x", source_tags_any=("a", "b"), target_stat_terms={"guard": -0.25}, priority=4)
+    rule = InteractionRule(
+        "x", source_tags_any=("a", "b"), target_stat_terms={"guard": -0.25}, priority=4
+    )
     assert InteractionRule.from_data(rule.to_data()) == rule
 
 
@@ -125,7 +140,10 @@ def test_generic_hit_check_uses_project_stats_and_seeded_rng():
     )
     resolver = InteractionResolver(checks=[check])
     result = resolver.check(
-        "hit", subject(stats={"accuracy": 10}), subject(stats={"evasion": 20}), rng=random.Random(1)
+        "hit",
+        subject(stats={"accuracy": 10}),
+        subject(stats={"evasion": 20}),
+        rng=random.Random(1),
     )
     assert result.chance == pytest.approx(0.6)
     assert result.success is True
@@ -133,7 +151,10 @@ def test_generic_hit_check_uses_project_stats_and_seeded_rng():
 
 
 def test_check_can_be_used_for_crit_block_parry_or_custom_names():
-    checks = [OutcomeCheckDefinition(name, chance) for name, chance in [("crit", 1), ("block", 0), ("lucky_break", 1)]]
+    checks = [
+        OutcomeCheckDefinition(name, chance)
+        for name, chance in [("crit", 1), ("block", 0), ("lucky_break", 1)]
+    ]
     resolver = InteractionResolver(checks=checks)
     src, dst = subject(), subject()
     assert resolver.check("crit", src, dst, rng=random.Random(3)).success
@@ -142,7 +163,9 @@ def test_check_can_be_used_for_crit_block_parry_or_custom_names():
 
 
 def test_check_tag_requirements_can_make_check_not_applicable():
-    resolver = InteractionResolver(checks=[OutcomeCheckDefinition("parry", 1, required_target_tags=("stance.parry",))])
+    resolver = InteractionResolver(
+        checks=[OutcomeCheckDefinition("parry", 1, required_target_tags=("stance.parry",))]
+    )
     result = resolver.check("parry", subject(), subject(), rng=random.Random(1))
     assert result.applicable is False and result.success is None
 
@@ -169,11 +192,16 @@ def test_duplicate_ids_rejected():
     with pytest.raises(ValueError):
         InteractionResolver([InteractionRule("x"), InteractionRule("x")])
     with pytest.raises(ValueError):
-        InteractionResolver(checks=[OutcomeCheckDefinition("x", 1), OutcomeCheckDefinition("x", 1)])
+        InteractionResolver(
+            checks=[OutcomeCheckDefinition("x", 1), OutcomeCheckDefinition("x", 1)]
+        )
 
 
 def test_256_rules_have_no_engine_cap():
-    rules = [InteractionRule(f"r{i}", source_tags_all=(f"tag.{i}",), multiplier=1.01) for i in range(256)]
+    rules = [
+        InteractionRule(f"r{i}", source_tags_all=(f"tag.{i}",), multiplier=1.01)
+        for i in range(256)
+    ]
     resolver = InteractionResolver(rules)
     result = resolver.resolve_value(100, subject(), subject(), action_tags=("tag.255",))
     assert result.matched_rules == ("r255",)
@@ -183,15 +211,24 @@ def test_256_rules_have_no_engine_cap():
 def test_checks_feed_outcome_tags_back_into_value_rules():
     resolver = InteractionResolver(
         [
-            InteractionRule("miss_nullifies", source_tags_all=("outcome.evade",), disposition="nullify", priority=100),
-            InteractionRule("crit_bonus", source_tags_all=("outcome.critical",), multiplier=2, priority=50),
+            InteractionRule(
+                "miss_nullifies",
+                source_tags_all=("outcome.evade",),
+                disposition="nullify",
+                priority=100,
+            ),
+            InteractionRule(
+                "crit_bonus", source_tags_all=("outcome.critical",), multiplier=2, priority=50
+            ),
         ],
         [
             OutcomeCheckDefinition("hit", 0, failure_tags=("outcome.evade",)),
             OutcomeCheckDefinition("crit", 1, success_tags=("outcome.critical",)),
         ],
     )
-    result = resolver.resolve(20, subject(), subject(), check_ids=("hit", "crit"), rng=random.Random(1))
+    result = resolver.resolve(
+        20, subject(), subject(), check_ids=("hit", "crit"), rng=random.Random(1)
+    )
     assert result.value.disposition is InteractionDisposition.NULLIFY
     assert result.value.resolved_value == 0
     assert result.outcome_tags == ("outcome.critical", "outcome.evade")
@@ -211,7 +248,12 @@ def test_battle_runtime_exposes_interaction_resolution_seam():
         ],
         AbilityRuntime(AbilityRegistry([ability])),
         interaction_rules=[
-            InteractionRule("weak", source_tags_all=("damage.fire",), target_tags_all=("weak.fire",), multiplier=1.5)
+            InteractionRule(
+                "weak",
+                source_tags_all=("damage.fire",),
+                target_tags_all=("weak.fire",),
+                multiplier=1.5,
+            )
         ],
     )
     result = battle.resolve_interaction(BattleAction("hero", "fire", ("beetle",)), "beetle", 40)

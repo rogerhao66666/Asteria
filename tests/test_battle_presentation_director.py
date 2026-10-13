@@ -141,8 +141,12 @@ def test_director_snapshot_roundtrip_preserves_pending_choreography():
 def test_profile_roundtrip_is_project_owned_policy():
     profile = BattlePresentationDirectorProfile(
         (
-            BattlePresentationDirectorRule("*", "animation", {"beat": "anticipation", "delay": 0.04}),
-            BattlePresentationDirectorRule("*", "vfx", {"beat": "impact", "delay": 0.09, "hold": 0.03}),
+            BattlePresentationDirectorRule(
+                "*", "animation", {"beat": "anticipation", "delay": 0.04}
+            ),
+            BattlePresentationDirectorRule(
+                "*", "vfx", {"beat": "impact", "delay": 0.09, "hold": 0.03}
+            ),
         )
     )
     assert BattlePresentationDirectorProfile.from_data(profile.to_data()) == profile

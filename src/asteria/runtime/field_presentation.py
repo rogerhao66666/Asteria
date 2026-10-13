@@ -3,13 +3,16 @@
 Presentation world commands handled by the playable field:
 
 * ``SCREEN_FADE`` ``to`` (0 = clear .. 1 = full colour), ``duration`` seconds, ``color`` [r, g, b]
-* ``PLAY_VFX``    ``asset_id`` (a battle VFX sprite sheet), ``entity`` (name / id / player) or ``x``/``y``,
+* ``PLAY_VFX``    ``asset_id`` (a battle VFX sprite sheet), ``entity`` (name / id / player) or
+  ``x``/``y``,
   optional ``duration`` and the VFX placement overrides (``scale``, ``anchor``, ``offset``,
-  ``opacity``, ``blend``) — placed with the same ``vfx_placement`` / ``vfx_rect`` / ``vfx_keyframe``
+  ``opacity``, ``blend``) — placed with the same ``vfx_placement`` / ``vfx_rect`` /
+  ``vfx_keyframe``
   rules as the battle. ``asset_id`` may also name a particle effect (VFX-01): it plays once there
   (a looping effect emits for ``duration`` seconds, default 1) and follows the entity.
 
-``ParticleEmitter2D`` components on field entities emit continuously (``sync_emitters`` each frame).
+``ParticleEmitter2D`` components on field entities emit continuously (``sync_emitters`` each
+frame).
 
 State is deterministic (advanced by ``update(dt)``) so tests measure exactly what is drawn.
 """
@@ -46,7 +49,8 @@ class FieldVfx:
 
 @dataclass(slots=True)
 class FieldParticles:
-    """A particle system in the field: a ``PLAY_VFX`` one-shot or an entity's ``ParticleEmitter2D``."""
+    """A particle system in the field: a ``PLAY_VFX`` one-shot or an entity's
+    ``ParticleEmitter2D``."""
 
     system: ParticleSystem
     entity_id: str | None
@@ -70,17 +74,27 @@ class FieldEffects:
         return [*self.emitters.values(), *self.particles]
 
     def sync_emitters(self, scene, assets):
-        """Start, follow, pause or drop the emitters of the scene's ``ParticleEmitter2D`` components (their
+        """Start, follow, pause or drop the emitters of the scene's ``ParticleEmitter2D``
+        components (their
         effects from the project ``assets``), and move one-shots that follow an entity."""
         from asteria.runtime.environment2d import ParticleEmitter2DComponent
 
         seen = set()
         for entity in scene.entities() if scene is not None else ():
             component = entity.try_get(ParticleEmitter2DComponent)
-            if component is None or not component.enabled or not entity.enabled or not entity.has(Transform):
+            if (
+                component is None
+                or not component.enabled
+                or not entity.enabled
+                or not entity.has(Transform)
+            ):
                 continue
             current = self.emitters.get(entity.id)
-            if current is None or current.effect_id != component.effect_id or current.system.scale != component.scale:
+            if (
+                current is None
+                or current.effect_id != component.effect_id
+                or current.system.scale != component.scale
+            ):
                 definition = effect_definition(assets, component.effect_id)
                 if definition is None:
                     continue  # no such effect (yet): nothing to show
@@ -101,7 +115,11 @@ class FieldEffects:
             if entity_id not in seen:
                 del self.emitters[entity_id]
         for one_shot in self.particles:
-            entity = scene.get_entity(one_shot.entity_id) if one_shot.entity_id and scene is not None else None
+            entity = (
+                scene.get_entity(one_shot.entity_id)
+                if one_shot.entity_id and scene is not None
+                else None
+            )
             if entity is not None and entity.has(Transform):
                 x, y = world_position(entity)
                 one_shot.system.move_to(x + one_shot.offset[0], y + one_shot.offset[1])
@@ -137,13 +155,20 @@ class FieldEffects:
                 entity = (
                     player
                     if key in ("player", "@player")
-                    else scene.get_entity(key) or next((e for e in scene.entities() if e.name == key), None)
+                    else scene.get_entity(key)
+                    or next((e for e in scene.entities() if e.name == key), None)
                 )
                 if entity is None or not entity.has(Transform):
                     raise FieldEffectError(f"PLAY_VFX: no entity {key}")
                 entity_id = entity.id
-            duration = float(args.get("duration", max(0.05, len(clip["frames"]) * float(clip["frame_duration"]))))
-            self.vfx.append(FieldVfx(asset_id, entity_id, x, y, duration, vfx_placement(meta, args)))
+            duration = float(
+                args.get(
+                    "duration", max(0.05, len(clip["frames"]) * float(clip["frame_duration"]))
+                )
+            )
+            self.vfx.append(
+                FieldVfx(asset_id, entity_id, x, y, duration, vfx_placement(meta, args))
+            )
         else:
             raise FieldEffectError(f"not a field effect command: {command.name}")
 
@@ -154,7 +179,8 @@ class FieldEffects:
             entity = (
                 player
                 if key in ("player", "@player")
-                else scene.get_entity(key) or next((e for e in scene.entities() if e.name == key), None)
+                else scene.get_entity(key)
+                or next((e for e in scene.entities() if e.name == key), None)
             )
             if entity is None or not entity.has(Transform):
                 raise FieldEffectError(f"PLAY_VFX: no entity {key}")
@@ -163,7 +189,11 @@ class FieldEffects:
         offset = args.get("offset", (0.0, 0.0))
         offset = (float(offset[0]), float(offset[1]))
         duration = args.get("duration")
-        emit_for = float(duration) if duration is not None else (1.0 if definition.looping else definition.duration)
+        emit_for = (
+            float(duration)
+            if duration is not None
+            else (1.0 if definition.looping else definition.duration)
+        )
         system = ParticleSystem(
             definition,
             x=x + offset[0],

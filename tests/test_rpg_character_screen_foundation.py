@@ -10,7 +10,11 @@ from asteria.rpg.items import (
     EquipmentSlotDefinition,
     EquippedItem,
 )
-from asteria.rpg.progression import ProgressionMilestone, ProgressionRuntime, ProgressionTrackDefinition
+from asteria.rpg.progression import (
+    ProgressionMilestone,
+    ProgressionRuntime,
+    ProgressionTrackDefinition,
+)
 from asteria.rpg.resolved_build import ResolvedActorBuild
 
 
@@ -46,8 +50,12 @@ def _loadout():
     )
     blade = EquipmentDefinition("bronze_blade", "Bronze Blade", slot="main_hand")
     charm = EquipmentDefinition("swift_charm", "Swift Charm", slot="accessory")
-    loadout.equip("main_hand", EquippedItem(blade, instance_id="blade:01"), validate_requirements=False)
-    loadout.equip("accessory", EquippedItem(charm, instance_id="charm:01"), validate_requirements=False)
+    loadout.equip(
+        "main_hand", EquippedItem(blade, instance_id="blade:01"), validate_requirements=False
+    )
+    loadout.equip(
+        "accessory", EquippedItem(charm, instance_id="charm:01"), validate_requirements=False
+    )
     return loadout
 
 

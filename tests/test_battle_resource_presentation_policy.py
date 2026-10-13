@@ -45,12 +45,22 @@ def _profile():
     return BattleHudProfile(
         (
             BattleHudResourceStyle("hp", "HP", presentation="bar", order=0),
-            BattleHudResourceStyle("bp", "BP", presentation="pips", segments=5, order=10, compact=True),
+            BattleHudResourceStyle(
+                "bp", "BP", presentation="pips", segments=5, order=10, compact=True
+            ),
             BattleHudResourceStyle("sp", "SP", presentation="number", order=20),
-            BattleHudResourceStyle("atb", "ACT", presentation="action_gauge", order=30, show_value=False),
-            BattleHudResourceStyle("guard", "Guard", presentation="segmented_bar", segments=6, order=40),
-            BattleHudResourceStyle("limit", "Limit", presentation="ring", order=50, group="secondary"),
-            BattleHudResourceStyle("heat", "Heat", presentation="heat_orbit", order=60, priority=7),
+            BattleHudResourceStyle(
+                "atb", "ACT", presentation="action_gauge", order=30, show_value=False
+            ),
+            BattleHudResourceStyle(
+                "guard", "Guard", presentation="segmented_bar", segments=6, order=40
+            ),
+            BattleHudResourceStyle(
+                "limit", "Limit", presentation="ring", order=50, group="secondary"
+            ),
+            BattleHudResourceStyle(
+                "heat", "Heat", presentation="heat_orbit", order=60, priority=7
+            ),
             BattleHudResourceStyle("secret", "Secret", presentation="hidden", order=70),
         )
     )
@@ -83,7 +93,7 @@ def test_hud_runtime_preserves_generic_presentation_metadata_without_resource_mu
     assert by_id["heat"].priority == 7
 
 
-def test_ui_composer_projects_number_pips_action_ring_and_custom_roles_without_semantic_inference():
+def test_ui_composer_projects_pips_action_ring_and_custom_roles_without_semantic_inference():
     runtime = BattleHudRuntime(_profile())
     member = runtime.sync_member("hero", _resources(), SimpleNamespace(states=None))
     scene = BattlePresentationScene("generic.resources", "bg", ())

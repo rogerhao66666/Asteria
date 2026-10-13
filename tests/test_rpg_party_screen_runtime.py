@@ -11,8 +11,12 @@ def _formation():
     definition = FormationDefinition(
         "field",
         (
-            FormationSlotDefinition("vanguard", x=0, y=0, tags=("front",), adjacent_to=("center",)),
-            FormationSlotDefinition("center", x=1, y=0, tags=("middle",), adjacent_to=("vanguard", "rear")),
+            FormationSlotDefinition(
+                "vanguard", x=0, y=0, tags=("front",), adjacent_to=("center",)
+            ),
+            FormationSlotDefinition(
+                "center", x=1, y=0, tags=("middle",), adjacent_to=("vanguard", "rear")
+            ),
             FormationSlotDefinition("rear", x=2, y=0, tags=("back",), adjacent_to=("center",)),
         ),
     )
@@ -39,7 +43,9 @@ def test_party_screen_projects_active_reserve_without_mutating_membership():
 
 
 def test_formation_projection_preserves_project_slot_semantics_as_tags_only():
-    runtime = PartyScreenRuntime(PartyScreenProfile(slot_labels={"vanguard": "Lead", "rear": "Rear"}))
+    runtime = PartyScreenRuntime(
+        PartyScreenProfile(slot_labels={"vanguard": "Lead", "rear": "Rear"})
+    )
     view = runtime.project(
         ("a", "b", "c"),
         active_member_ids=("a", "b", "c"),
@@ -49,7 +55,10 @@ def test_formation_projection_preserves_project_slot_semantics_as_tags_only():
     assert slots["vanguard"].label == "Lead"
     assert slots["vanguard"].tags == ("front",)
     assert slots["vanguard"].member_id == "a"
-    assert slots["center"].adjacent_to == ("rear", "vanguard") or slots["center"].adjacent_to == ("vanguard", "rear")
+    assert slots["center"].adjacent_to == ("rear", "vanguard") or slots["center"].adjacent_to == (
+        "vanguard",
+        "rear",
+    )
 
 
 def test_custom_groups_are_opaque_presentation_groups():

@@ -1,4 +1,5 @@
-"""Form-based Qt editors for shops, quests, factions, achievements, equipment sets and capture rules (CB10h).
+"""Form-based Qt editors for shops, quests, factions, achievements, equipment sets and capture
+rules (CB10h).
 
 Forms are generated from :data:`asteria.editor.game_systems_authoring.FORMS`
 and edit canonical record data; every Apply goes through
@@ -48,7 +49,9 @@ class _KeyValueTable(QWidget):
         self.table.setHorizontalHeaderLabels(list(headers))
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setMinimumHeight(90)
-        self.table.setMaximumHeight(150)  # a few rows; more scroll inside the table, not the whole page
+        self.table.setMaximumHeight(
+            150
+        )  # a few rows; more scroll inside the table, not the whole page
         add, remove = QPushButton("Add"), QPushButton("Remove")
         add.clicked.connect(lambda: self.add_row("", ""))
         remove.clicked.connect(self.remove_row)
@@ -102,7 +105,11 @@ class _RefList(QListWidget):
             self.addItem(item)
 
     def values(self):
-        return [self.item(i).text() for i in range(self.count()) if self.item(i).checkState() == Qt.Checked]
+        return [
+            self.item(i).text()
+            for i in range(self.count())
+            if self.item(i).checkState() == Qt.Checked
+        ]
 
     def set_checked(self, value, checked=True):
         for i in range(self.count()):
@@ -123,7 +130,9 @@ class _TableField(QGroupBox):
         self.list = QListWidget()
         self.list.setMinimumHeight(90)
         self.list.currentRowChanged.connect(self._select)
-        self.detail = RecordForm(fields, references, column_width=200)  # nested rows: narrower columns
+        self.detail = RecordForm(
+            fields, references, column_width=200
+        )  # nested rows: narrower columns
         self.detail.setEnabled(False)
         add, remove = QPushButton("Add"), QPushButton("Remove")
         add.clicked.connect(self.add_row)
@@ -210,7 +219,8 @@ class RecordForm(QWidget):
         self.references = references
         self.widgets = {}
         self._original = {}
-        # fields flow into as many columns as the width allows; groups and tables span the full width
+        # fields flow into as many columns as the width allows; groups and tables span the full
+        # width
         self.grid = ResponsiveForm(self, column_width=self.column_width)
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
@@ -221,7 +231,9 @@ class RecordForm(QWidget):
             if f.kind in ("group", "table"):
                 self.grid.add_wide(widget)
             else:
-                self.grid.add_row(f.label, widget, span=f.kind in ("amounts", "pairs", "ref_list", "multiline"))
+                self.grid.add_row(
+                    f.label, widget, span=f.kind in ("amounts", "pairs", "ref_list", "multiline")
+                )
 
     def _build(self, f):
         if f.kind == "id":
@@ -473,18 +485,28 @@ class GameSystemsEditorWidget(QWidget):
         key = self.selected_id
         if key is None:
             return False
-        return self._attempt(lambda: self.controller.edit(self.kind_id, key, self.form.data()), f"Applied {key}", key)
+        return self._attempt(
+            lambda: self.controller.edit(self.kind_id, key, self.form.data()),
+            f"Applied {key}",
+            key,
+        )
 
     def new_record(self, key):
         key = str(key).strip()
-        return self._attempt(lambda: self.controller.create_new(self.kind_id, key), f"Created {key}", key)
+        return self._attempt(
+            lambda: self.controller.create_new(self.kind_id, key), f"Created {key}", key
+        )
 
     def duplicate_as(self, key):
         source = self.selected_id
         if source is None:
             return False
         key = str(key).strip()
-        return self._attempt(lambda: self.controller.duplicate(self.kind_id, source, key), f"Duplicated as {key}", key)
+        return self._attempt(
+            lambda: self.controller.duplicate(self.kind_id, source, key),
+            f"Duplicated as {key}",
+            key,
+        )
 
     def delete_selected(self):
         key = self.selected_id
@@ -495,7 +517,11 @@ class GameSystemsEditorWidget(QWidget):
     def _new_clicked(self):
         kind = self.kind_id
         if kind == "capture_rules":
-            choices = [x for x in self.controller.references("enemies") if x not in self.controller.ids(kind)]
+            choices = [
+                x
+                for x in self.controller.references("enemies")
+                if x not in self.controller.ids(kind)
+            ]
             key, ok = QInputDialog.getItem(self, "New Capture Rule", "Enemy:", choices, 0, False)
         else:
             key, ok = QInputDialog.getText(self, "New", "ID:")

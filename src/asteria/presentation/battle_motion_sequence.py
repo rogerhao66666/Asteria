@@ -31,14 +31,28 @@ class BattleMotionBeat:
     payload: tuple[tuple[str, object], ...] = ()
 
     def __init__(
-        self, beat_id, at, channel, cue, *, member_id=None, target_id=None, duration=0.0, easing="linear", payload=None
+        self,
+        beat_id,
+        at,
+        channel,
+        cue,
+        *,
+        member_id=None,
+        target_id=None,
+        duration=0.0,
+        easing="linear",
+        payload=None,
     ):
         object.__setattr__(self, "beat_id", _id(beat_id, "beat_id"))
         object.__setattr__(self, "at", _nonnegative(at, "at"))
         object.__setattr__(self, "channel", _id(channel, "channel"))
         object.__setattr__(self, "cue", _id(cue, "cue"))
-        object.__setattr__(self, "member_id", None if member_id is None else _id(member_id, "member_id"))
-        object.__setattr__(self, "target_id", None if target_id is None else _id(target_id, "target_id"))
+        object.__setattr__(
+            self, "member_id", None if member_id is None else _id(member_id, "member_id")
+        )
+        object.__setattr__(
+            self, "target_id", None if target_id is None else _id(target_id, "target_id")
+        )
         object.__setattr__(self, "duration", _nonnegative(duration, "duration"))
         object.__setattr__(self, "easing", str(easing).strip() or "linear")
         object.__setattr__(self, "payload", tuple(sorted(dict(payload or {}).items())))
@@ -194,8 +208,14 @@ class BattleMotionRuntime:
                     break
 
             beats = self.sequence.beats
-            next_at = beats[self._next_index].at if self._next_index < len(beats) else self.sequence.duration
-            advance = max(0.0, min(remaining, next_at - self.time, self.sequence.duration - self.time))
+            next_at = (
+                beats[self._next_index].at
+                if self._next_index < len(beats)
+                else self.sequence.duration
+            )
+            advance = max(
+                0.0, min(remaining, next_at - self.time, self.sequence.duration - self.time)
+            )
             if advance > 0:
                 self.time += advance
                 remaining -= advance
@@ -217,8 +237,24 @@ def make_reference_smooth_attack_sequence(*, multi_hits=3):
     """Reference choreography proving premium-JRPG temporal capability."""
     multi_hits = max(1, int(multi_hits))
     beats = [
-        BattleMotionBeat("startup", 0.00, "animation", "startup", member_id="actor", duration=0.12, easing="ease_out"),
-        BattleMotionBeat("cast", 0.08, "animation", "cast", member_id="actor", duration=0.18, easing="ease_in_out"),
+        BattleMotionBeat(
+            "startup",
+            0.00,
+            "animation",
+            "startup",
+            member_id="actor",
+            duration=0.12,
+            easing="ease_out",
+        ),
+        BattleMotionBeat(
+            "cast",
+            0.08,
+            "animation",
+            "cast",
+            member_id="actor",
+            duration=0.18,
+            easing="ease_in_out",
+        ),
         BattleMotionBeat(
             "projectile",
             0.18,
@@ -230,7 +266,13 @@ def make_reference_smooth_attack_sequence(*, multi_hits=3):
             easing="ease_in",
         ),
         BattleMotionBeat(
-            "camera.pre_hit", 0.32, "camera", "push", target_id="target", duration=0.08, easing="ease_out"
+            "camera.pre_hit",
+            0.32,
+            "camera",
+            "push",
+            target_id="target",
+            duration=0.08,
+            easing="ease_out",
         ),
     ]
     base = 0.36
@@ -239,24 +281,53 @@ def make_reference_smooth_attack_sequence(*, multi_hits=3):
         t = base + i * spacing
         beats.extend(
             (
-                BattleMotionBeat(f"impact.{i}", t, "vfx", "impact", target_id="target", duration=0.08),
-                BattleMotionBeat(f"camera.hit.{i}", t, "camera", "impulse", target_id="target", duration=0.07),
+                BattleMotionBeat(
+                    f"impact.{i}", t, "vfx", "impact", target_id="target", duration=0.08
+                ),
+                BattleMotionBeat(
+                    f"camera.hit.{i}", t, "camera", "impulse", target_id="target", duration=0.07
+                ),
                 BattleMotionBeat(f"audio.hit.{i}", t, "audio", "hit", target_id="target"),
-                BattleMotionBeat(f"value.{i}", t + 0.010, "ui", "floating_value", target_id="target", duration=0.45),
+                BattleMotionBeat(
+                    f"value.{i}",
+                    t + 0.010,
+                    "ui",
+                    "floating_value",
+                    target_id="target",
+                    duration=0.45,
+                ),
             )
         )
     last = base + (multi_hits - 1) * spacing
     beats.extend(
         (
-            BattleMotionBeat("hit_stop", last, "timing", "hit_stop", duration=0.045, payload={"duration": 0.045}),
             BattleMotionBeat(
-                "resource", last + 0.018, "ui", "resource_motion", target_id="target", duration=0.16, easing="ease_out"
+                "hit_stop", last, "timing", "hit_stop", duration=0.045, payload={"duration": 0.045}
             ),
-            BattleMotionBeat("status", last + 0.035, "vfx", "status", target_id="target", duration=0.40),
             BattleMotionBeat(
-                "recovery", last + 0.14, "animation", "recovery", member_id="actor", duration=0.18, easing="ease_in_out"
+                "resource",
+                last + 0.018,
+                "ui",
+                "resource_motion",
+                target_id="target",
+                duration=0.16,
+                easing="ease_out",
+            ),
+            BattleMotionBeat(
+                "status", last + 0.035, "vfx", "status", target_id="target", duration=0.40
+            ),
+            BattleMotionBeat(
+                "recovery",
+                last + 0.14,
+                "animation",
+                "recovery",
+                member_id="actor",
+                duration=0.18,
+                easing="ease_in_out",
             ),
         )
     )
     duration = last + 0.34
-    return BattleMotionSequence("reference.smooth_attack", duration, beats, recovery_at=last + 0.14)
+    return BattleMotionSequence(
+        "reference.smooth_attack", duration, beats, recovery_at=last + 0.14
+    )

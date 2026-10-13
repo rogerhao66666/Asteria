@@ -8,7 +8,8 @@ custom verb, with the parts the SPEC lists:
 * target type — ``target_type`` (informational; an entity's event chooses which interaction to run)
 * requirements — ``requirements``: switches / variables (``[{source, name, operator, value}]``)
 * cost — ``cost_items`` and ``cost_currencies``, paid when the attempt is made
-* check — ``check_stat`` against ``difficulty`` (chance = ``base_chance`` + (best party stat - difficulty) x
+* check — ``check_stat`` against ``difficulty`` (chance = ``base_chance`` + (best party stat -
+  difficulty) x
   ``chance_per_point``, clamped to 0..1); no stat means it always succeeds
 * success / failure — rewards (items, currencies), switches set, follow-up event programs
 * consequence — reputation changes; ``repeatable`` false makes it a one-time interaction
@@ -98,11 +99,16 @@ class WorldInteraction:
             raise ValueError(f"verb must be one of {VERBS}")
         for name in ("cost_items", "cost_currencies", "success_items", "success_currencies"):
             object.__setattr__(self, name, _amounts(getattr(self, name), name))
-        object.__setattr__(self, "reputation", {str(k): float(v) for k, v in dict(self.reputation or {}).items()})
+        object.__setattr__(
+            self, "reputation", {str(k): float(v) for k, v in dict(self.reputation or {}).items()}
+        )
         reqs = []
         for item in self.requirements or ():
             item = dict(item)
-            if item.get("source") not in ("switch", "variable") or not str(item.get("name", "")).strip():
+            if (
+                item.get("source") not in ("switch", "variable")
+                or not str(item.get("name", "")).strip()
+            ):
                 raise ValueError("requirements need a switch / variable source and a name")
             if item.get("operator", "==") not in OPERATORS:
                 raise ValueError(f"requirement operator must be one of {OPERATORS}")

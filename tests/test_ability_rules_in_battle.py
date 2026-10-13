@@ -1,4 +1,5 @@
-"""GP-02 in the game session: ability cost, cooldown, targeting data, cast / recovery timing, tags."""
+"""GP-02 in the game session: ability cost, cooldown, targeting data, cast / recovery timing,
+tags."""
 
 import dataclasses
 
@@ -19,7 +20,9 @@ def _battle(*, timing="immediate", cooldown=None):
     if cooldown:
         library = project.gameplay_library.abilities
         ability_id, turns = cooldown
-        library._definitions[ability_id] = dataclasses.replace(library.get(ability_id), cooldown_turns=turns)
+        library._definitions[ability_id] = dataclasses.replace(
+            library.get(ability_id), cooldown_turns=turns
+        )
     project, game = _session(project)
     game.start_encounter("boss_room")
     return game
@@ -36,7 +39,8 @@ def test_cost_is_paid_and_targets_follow_the_ability_targeting_data():
     ability = next(
         a
         for a in game.resolve_actor_build(hero).abilities
-        if game.battle.ability_runtime.registry.get(a) and game.battle.ability_runtime.registry.get(a).costs
+        if game.battle.ability_runtime.registry.get(a)
+        and game.battle.ability_runtime.registry.get(a).costs
     )
     cost = game.battle.ability_runtime.registry.get(ability).costs[0]
     pool = game.battle.member(hero).subject.resources

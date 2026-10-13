@@ -1,11 +1,18 @@
-"""Loot on the ground (ASTERIA_SPEC §35 ARPG loot): drops become entities the player walks over or picks up.
+"""Loot on the ground (ASTERIA_SPEC §35 ARPG loot): drops become entities the player walks over or
+picks up.
 
-``LootSystem.drop(scene, x, y, items=..., currencies=..., level=...)`` scatters one ``Loot`` entity per stack: plain
-items, currencies, and equipment — each piece of equipment is rolled on the spot (``rpg.loot.roll_equipment``:
-rarity, item level, random affixes) and carried on the entity until picked up. A ``Looter`` (usually the player)
-collects loot inside its ``pickup_radius``: automatically by its ``auto_pickup`` rule, or on request
-(``pick_up_nearest``, e.g. bound to an input). ``collect`` hands each picked stack to the game (``GameSession`` puts
-it into the save: inventory, equipment bag, currencies). ``events`` / ``listeners`` report dropped and picked loot;
+``LootSystem.drop(scene, x, y, items=..., currencies=..., level=...)`` scatters one ``Loot``
+entity per stack: plain
+items, currencies, and equipment — each piece of equipment is rolled on the spot
+(``rpg.loot.roll_equipment``:
+rarity, item level, random affixes) and carried on the entity until picked up. A ``Looter``
+(usually the player)
+collects loot inside its ``pickup_radius``: automatically by its ``auto_pickup`` rule, or on
+request
+(``pick_up_nearest``, e.g. bound to an input). ``collect`` hands each picked stack to the game
+(``GameSession`` puts
+it into the save: inventory, equipment bag, currencies). ``events`` / ``listeners`` report dropped
+and picked loot;
 ``labels()`` gives what to draw (name and rarity colour).
 """
 
@@ -16,7 +23,15 @@ import random
 from dataclasses import dataclass, field
 from math import cos, hypot, pi, sin
 
-from asteria.core import Component, Entity, Field, System, Transform, component_schema, world_position
+from asteria.core import (
+    Component,
+    Entity,
+    Field,
+    System,
+    Transform,
+    component_schema,
+    world_position,
+)
 from asteria.core.ids import new_id
 
 LOOT_KINDS = ("item", "equipment", "currency")
@@ -32,7 +47,9 @@ AUTO_PICKUP = ("none", "currency", "items", "all", "rarity_at_least")
         Field("amount", int, 1, minimum=1),
         Field("rarity", str, ""),
         Field("label", str, "", tooltip="Name shown over it (equipment: with its affixes)."),
-        Field("instance", str, "", tooltip="Equipment only: the rolled instance (saved data, JSON)."),
+        Field(
+            "instance", str, "", tooltip="Equipment only: the rolled instance (saved data, JSON)."
+        ),
         Field("enabled", bool, True),
     ),
 )
@@ -58,10 +75,14 @@ class LootComponent(Component):
             str,
             "currency",
             choices=AUTO_PICKUP,
-            tooltip="What is collected just by walking over it; the rest waits for a pick-up press.",
+            tooltip="What is collected just by walking over it; the rest waits for a pick-up "
+            "press.",
         ),
         Field(
-            "auto_min_rarity", str, "", tooltip="rarity_at_least: this rarity or rarer is collected by walking over."
+            "auto_min_rarity",
+            str,
+            "",
+            tooltip="rarity_at_least: this rarity or rarer is collected by walking over.",
         ),
         Field("enabled", bool, True),
     ),
@@ -107,7 +128,8 @@ class LootSystem(System):
 
     # -- dropping --------------------------------------------------------------------------------
     def drop(self, scene, x, y, *, items=None, currencies=None, level=1, luck=0.0):
-        """Scatter loot entities around ``(x, y)``; equipment is rolled now. Returns the new entities."""
+        """Scatter loot entities around ``(x, y)``; equipment is rolled now. Returns the new
+        entities."""
         db = self.database
         created = []
         stacks = []
@@ -146,7 +168,9 @@ class LootSystem(System):
             entity.add_component(loot)
             scene.add_entity(entity)
             created.append(entity)
-            self._emit(LootEvent("dropped", entity.id, kind, item_id, amount, loot.rarity, loot.label))
+            self._emit(
+                LootEvent("dropped", entity.id, kind, item_id, amount, loot.rarity, loot.label)
+            )
         return created
 
     def _name(self, kind, item_id):
@@ -174,7 +198,9 @@ class LootSystem(System):
         if rule == "items":
             return loot.kind in ("currency", "item")
         if rule == "rarity_at_least":
-            return loot.kind == "currency" or self._order(loot.rarity) >= self._order(looter.auto_min_rarity)
+            return loot.kind == "currency" or self._order(loot.rarity) >= self._order(
+                looter.auto_min_rarity
+            )
         return False
 
     def _in_reach(self, scene, entity, looter):

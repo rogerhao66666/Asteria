@@ -42,7 +42,10 @@ class TextureImporter(AssetImporter):
     EXT: ClassVar[set[str]] = {".png", ".jpg", ".jpeg", ".webp"}
 
     def supports(self, kind, path):
-        return kind in {"texture", "sprite_sheet", "tileset"} and PurePosixPath(path).suffix.lower() in self.EXT
+        return (
+            kind in {"texture", "sprite_sheet", "tileset"}
+            and PurePosixPath(path).suffix.lower() in self.EXT
+        )
 
     def inspect(self, request):
         return {"extension": PurePosixPath(request.source_path).suffix.lower()}

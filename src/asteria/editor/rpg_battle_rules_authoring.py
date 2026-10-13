@@ -93,7 +93,13 @@ class BattleRulesInformationArchitecture:
                 "interaction_rules",
                 InteractionRule,
                 "rule_id",
-                ("Source Conditions", "Target Conditions", "Value Resolution", "Outcome Tags", "Priority"),
+                (
+                    "Source Conditions",
+                    "Target Conditions",
+                    "Value Resolution",
+                    "Outcome Tags",
+                    "Priority",
+                ),
             ),
             BattleRuleKind(
                 "outcome_checks",
@@ -186,7 +192,9 @@ class BattleRulesInformationArchitecture:
         )
         self.groups = (
             BattleRuleGroup(
-                "combat_model", "Combat Model", ("resources", "states", "interactions", "outcome_checks", "targeting")
+                "combat_model",
+                "Combat Model",
+                ("resources", "states", "interactions", "outcome_checks", "targeting"),
             ),
             BattleRuleGroup("turn_flow", "Turn Flow", ("schedulers", "timing")),
             BattleRuleGroup("action_logic", "Action Logic", ("sequences", "gauges", "reactions")),
@@ -256,23 +264,39 @@ class RpgBattleRulesAuthoringController:
             if value.ability_id is not None and value.ability_id not in abilities:
                 missing.append(value.ability_id)
         if missing:
-            raise RpgBattleRulesAuthoringError("unknown abilities: " + ", ".join(sorted(set(missing))))
+            raise RpgBattleRulesAuthoringError(
+                "unknown abilities: " + ", ".join(sorted(set(missing)))
+            )
         if kind.kind_id == "session" and value.boost_resource_id:
             if value.boost_resource_id not in self.database.battle_resources:
-                raise RpgBattleRulesAuthoringError(f"unknown battle resources: {value.boost_resource_id}")
+                raise RpgBattleRulesAuthoringError(
+                    f"unknown battle resources: {value.boost_resource_id}"
+                )
         if kind.kind_id == "gauges":
             resources = set(self.database.battle_resources)
             states = set(self.database.battle_state_policies)
             missing_resources = sorted(
-                {x.resource_id for x in (*value.impacts, *value.thresholds) if x.resource_id not in resources}
+                {
+                    x.resource_id
+                    for x in (*value.impacts, *value.thresholds)
+                    if x.resource_id not in resources
+                }
             )
             if missing_resources:
-                raise RpgBattleRulesAuthoringError("unknown battle resources: " + ", ".join(missing_resources))
+                raise RpgBattleRulesAuthoringError(
+                    "unknown battle resources: " + ", ".join(missing_resources)
+                )
             missing_states = sorted(
-                {x.state_id for x in value.thresholds if x.state_id is not None and x.state_id not in states}
+                {
+                    x.state_id
+                    for x in value.thresholds
+                    if x.state_id is not None and x.state_id not in states
+                }
             )
             if missing_states:
-                raise RpgBattleRulesAuthoringError("unknown battle states: " + ", ".join(missing_states))
+                raise RpgBattleRulesAuthoringError(
+                    "unknown battle states: " + ", ".join(missing_states)
+                )
 
     def create(self, kind_id, value):
         kind = self._kind(kind_id)
@@ -309,7 +333,9 @@ class RpgBattleRulesAuthoringController:
             raise RpgBattleRulesAuthoringError(f"unknown {kind.label}: {key}")
         refs = self._delete_references(kind.kind_id, key)
         if refs:
-            raise RpgBattleRulesAuthoringError(f"{kind.label} {key} is referenced by " + ", ".join(sorted(refs)))
+            raise RpgBattleRulesAuthoringError(
+                f"{kind.label} {key} is referenced by " + ", ".join(sorted(refs))
+            )
         self._execute(_MapCommand(mapping, key, None, old, f"Delete {kind.label} {key}"))
 
     def _delete_references(self, kind_id, key):

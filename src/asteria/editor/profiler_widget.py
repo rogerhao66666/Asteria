@@ -25,7 +25,8 @@ from asteria.runtime.debug_server import DebugClientError
 
 class ProfilerWidget(QWidget):
     def __init__(self, client_provider, parent=None):
-        """``client_provider()`` returns the attached ``DebugClient`` (shared with the Debugger dock) or None."""
+        """``client_provider()`` returns the attached ``DebugClient`` (shared with the Debugger
+        dock) or None."""
         super().__init__(parent)
         self.client_provider = client_provider
         self.report = None
@@ -42,7 +43,9 @@ class ProfilerWidget(QWidget):
         top.addWidget(refresh)
         top.addWidget(reset)
         self.sections = QTableWidget(0, 5)
-        self.sections.setHorizontalHeaderLabels(["Section", "Mean ms", "p95 ms", "Max ms", "Share of frame"])
+        self.sections.setHorizontalHeaderLabels(
+            ["Section", "Mean ms", "p95 ms", "Max ms", "Share of frame"]
+        )
         self.sections.verticalHeader().hide()
         self.counters = QTableWidget(0, 3)
         self.counters.setHorizontalHeaderLabels(["Counter", "Last", "Max"])
@@ -87,11 +90,19 @@ class ProfilerWidget(QWidget):
             + (f" · memory {rss / 1e6:.0f} MB" if rss else "")
         )
         frame_mean = float(frame.get("mean_ms") or 0.0)
-        sections = sorted((report.get("sections") or {}).items(), key=lambda kv: -kv[1].get("mean_ms", 0))
+        sections = sorted(
+            (report.get("sections") or {}).items(), key=lambda kv: -kv[1].get("mean_ms", 0)
+        )
         self.sections.setRowCount(len(sections))
         for row, (name, values) in enumerate(sections):
             share = (values.get("mean_ms", 0) / frame_mean * 100) if frame_mean else 0.0
-            cells = (name, values.get("mean_ms", 0), values.get("p95_ms", 0), values.get("max_ms", 0), f"{share:.0f}%")
+            cells = (
+                name,
+                values.get("mean_ms", 0),
+                values.get("p95_ms", 0),
+                values.get("max_ms", 0),
+                f"{share:.0f}%",
+            )
             for col, value in enumerate(cells):
                 self.sections.setItem(row, col, QTableWidgetItem(str(value)))
         counters = sorted((report.get("counters") or {}).items())
@@ -100,7 +111,9 @@ class ProfilerWidget(QWidget):
             for col, value in enumerate((name, values.get("last"), values.get("max"))):
                 self.counters.setItem(row, col, QTableWidgetItem(str(value)))
         self.unsupported.clear()
-        self.unsupported.addItems([f"{k}: {v}" for k, v in (report.get("unsupported") or {}).items()])
+        self.unsupported.addItems(
+            [f"{k}: {v}" for k, v in (report.get("unsupported") or {}).items()]
+        )
         return report
 
     def reset(self):

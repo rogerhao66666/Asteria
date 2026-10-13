@@ -176,12 +176,15 @@ class ProgressionNodeDefinition:
         if len(rewards) != max_rank:
             raise ValueError("rewards must contain one entry per rank")
         rewards = tuple(
-            x if isinstance(x, ProgressionNodeReward) else ProgressionNodeReward.from_data(x) for x in rewards
+            x if isinstance(x, ProgressionNodeReward) else ProgressionNodeReward.from_data(x)
+            for x in rewards
         )
 
         def reqs(values):
             return tuple(
-                x if isinstance(x, ProgressionNodeRequirement) else ProgressionNodeRequirement.from_data(x)
+                x
+                if isinstance(x, ProgressionNodeRequirement)
+                else ProgressionNodeRequirement.from_data(x)
                 for x in values
             )
 
@@ -238,7 +241,11 @@ class ProgressionNodeDefinition:
             "exclusive_group",
             "tags",
         }
-        if set(data) != expected or data.get("schema") != "asteria.rpg.progression_node" or data.get("version") != 1:
+        if (
+            set(data) != expected
+            or data.get("schema") != "asteria.rpg.progression_node"
+            or data.get("version") != 1
+        ):
             raise ValueError("unsupported progression node")
         return cls(
             data["node_id"],
@@ -247,7 +254,9 @@ class ProgressionNodeDefinition:
             rank_costs=data["rank_costs"],
             rewards=[ProgressionNodeReward.from_data(x) for x in data["rewards"]],
             prerequisites=[ProgressionNodeRequirement.from_data(x) for x in data["prerequisites"]],
-            any_prerequisites=[ProgressionNodeRequirement.from_data(x) for x in data["any_prerequisites"]],
+            any_prerequisites=[
+                ProgressionNodeRequirement.from_data(x) for x in data["any_prerequisites"]
+            ],
             exclusive_group=data["exclusive_group"],
             tags=data["tags"],
         )
@@ -262,7 +271,16 @@ class ProgressionGraphDefinition:
     editor_view: str = "list"
     node_positions: dict[str, tuple[float, float]] = None
 
-    def __init__(self, graph_id, display_name=None, *, nodes, tags=(), editor_view="list", node_positions=None):
+    def __init__(
+        self,
+        graph_id,
+        display_name=None,
+        *,
+        nodes,
+        tags=(),
+        editor_view="list",
+        node_positions=None,
+    ):
         graph_id = _id(graph_id, "graph_id")
         nodes = tuple(nodes)
         if not nodes:
@@ -276,13 +294,19 @@ class ProgressionGraphDefinition:
         for node in nodes:
             for req in node.prerequisites + node.any_prerequisites:
                 if req.node_id not in mapping:
-                    raise ValueError(f"node {node.node_id} references unknown prerequisite {req.node_id}")
+                    raise ValueError(
+                        f"node {node.node_id} references unknown prerequisite {req.node_id}"
+                    )
                 if req.minimum_rank > mapping[req.node_id].max_rank:
-                    raise ValueError(f"node {node.node_id} prerequisite rank exceeds {req.node_id} max rank")
+                    raise ValueError(
+                        f"node {node.node_id} prerequisite rank exceeds {req.node_id} max rank"
+                    )
         # Reject direct/static prerequisite cycles. Any-prerequisite edges are
         # included conservatively because a closed cycle is never a useful
         # allocation start state.
-        edges = {x.node_id: {r.node_id for r in x.prerequisites + x.any_prerequisites} for x in nodes}
+        edges = {
+            x.node_id: {r.node_id for r in x.prerequisites + x.any_prerequisites} for x in nodes
+        }
         visiting, visited = set(), set()
 
         def visit(node_id):
@@ -419,7 +443,10 @@ class ProgressionAllocationRuntime:
             raise ValueError("allocation grant must be >= 0")
         self.balances[currency_id] = self.balance(currency_id) + amount
         emit_hook(
-            self.hooks, "rpg.progression_allocation.currency_granted", source=currency_id, data={"amount": amount}
+            self.hooks,
+            "rpg.progression_allocation.currency_granted",
+            source=currency_id,
+            data={"amount": amount},
         )
         return self.balances[currency_id]
 
@@ -440,7 +467,9 @@ class ProgressionAllocationRuntime:
         if node.any_prerequisites and not any(
             ranks.get(req.node_id, 0) >= req.minimum_rank for req in node.any_prerequisites
         ):
-            choices = " or ".join(f"{x.node_id} rank {x.minimum_rank}" for x in node.any_prerequisites)
+            choices = " or ".join(
+                f"{x.node_id} rank {x.minimum_rank}" for x in node.any_prerequisites
+            )
             missing.append(f"requires one of: {choices}")
         if node.exclusive_group is not None and ranks.get(node.node_id, 0) == 0:
             graph = self.definitions[graph_id]
@@ -473,7 +502,8 @@ class ProgressionAllocationRuntime:
             for currency_id, amount in costs.items():
                 if self.balance(currency_id) < amount:
                     reasons.append(
-                        f"insufficient {currency_id}: requires {amount:g}, current {self.balance(currency_id):g}"
+                        f"insufficient {currency_id}: requires {amount:g}, current "
+                        f"{self.balance(currency_id):g}"
                     )
         return ProgressionAllocationPreview(
             graph_id,
@@ -488,7 +518,10 @@ class ProgressionAllocationRuntime:
     def allocate(self, graph_id, node_id, count=1):
         preview = self.preview_allocate(graph_id, node_id, count)
         emit_hook(
-            self.hooks, "rpg.progression_allocation.before_allocate", source=preview.node_id, data={"preview": preview}
+            self.hooks,
+            "rpg.progression_allocation.before_allocate",
+            source=preview.node_id,
+            data={"preview": preview},
         )
         if not preview.allowed:
             raise ValueError("allocation rejected: " + "; ".join(preview.reasons))
@@ -496,7 +529,10 @@ class ProgressionAllocationRuntime:
             self.balances[currency_id] = self.balance(currency_id) - amount
         self.allocations[preview.graph_id][preview.node_id] = preview.new_rank
         emit_hook(
-            self.hooks, "rpg.progression_allocation.after_allocate", source=preview.node_id, data={"preview": preview}
+            self.hooks,
+            "rpg.progression_allocation.after_allocate",
+            source=preview.node_id,
+            data={"preview": preview},
         )
         return preview
 
@@ -509,7 +545,9 @@ class ProgressionAllocationRuntime:
                     continue
                 reasons = self._requirements_met(graph_id, node, allocations=allocations)
                 if reasons:
-                    raise ValueError(f"invalid allocated node {graph_id}:{node.node_id}: " + "; ".join(reasons))
+                    raise ValueError(
+                        f"invalid allocated node {graph_id}:{node.node_id}: " + "; ".join(reasons)
+                    )
         return True
 
     def refund(self, graph_id, node_id, count=1, *, refund_ratio=1.0):
@@ -579,7 +617,9 @@ class ProgressionAllocationRuntime:
                     for ability_id in reward.granted_abilities:
                         if ability_id not in abilities:
                             abilities.append(ability_id)
-                        ability_grants.append((ability_id, f"{graph_id}:{node.node_id}:rank{rank}"))
+                        ability_grants.append(
+                            (ability_id, f"{graph_id}:{node.node_id}:rank{rank}")
+                        )
                     for passive_id in reward.unlocked_passives:
                         if passive_id not in passives:
                             passives.append(passive_id)
@@ -599,7 +639,9 @@ class ProgressionAllocationRuntime:
             "version": self.VERSION,
             "balances": {k: self.balances[k] for k in sorted(self.balances)},
             "allocations": {
-                graph_id: {k: self.allocations[graph_id][k] for k in sorted(self.allocations[graph_id])}
+                graph_id: {
+                    k: self.allocations[graph_id][k] for k in sorted(self.allocations[graph_id])
+                }
                 for graph_id in sorted(self.allocations)
             },
         }
@@ -607,9 +649,15 @@ class ProgressionAllocationRuntime:
     @classmethod
     def from_data(cls, data, definitions, *, hooks=None):
         expected = {"schema", "version", "balances", "allocations"}
-        if set(data) != expected or data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
+        if (
+            set(data) != expected
+            or data.get("schema") != cls.SCHEMA
+            or data.get("version") != cls.VERSION
+        ):
             raise ValueError("unsupported progression allocation runtime")
-        return cls(definitions, balances=data["balances"], allocations=data["allocations"], hooks=hooks)
+        return cls(
+            definitions, balances=data["balances"], allocations=data["allocations"], hooks=hooks
+        )
 
     def validate(self):
         self._validate_allocations()

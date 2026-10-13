@@ -51,7 +51,9 @@ def load_animation_set(path):
         clips[name] = SpriteClip(
             name,
             [
-                SpriteKeyframe(int(k["frame_index"]), float(k["duration"]), tuple(k.get("events", ())))
+                SpriteKeyframe(
+                    int(k["frame_index"]), float(k["duration"]), tuple(k.get("events", ()))
+                )
                 for k in cd["keyframes"]
             ],
             bool(cd["loop"]),

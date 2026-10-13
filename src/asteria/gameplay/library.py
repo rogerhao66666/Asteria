@@ -107,7 +107,11 @@ class GameplayLibrary:
             "triggers",
             "timelines",
         }
-        if data.get("schema") != "asteria.gameplay_library" or data.get("version") not in {1, 2, 3}:
+        if data.get("schema") != "asteria.gameplay_library" or data.get("version") not in {
+            1,
+            2,
+            3,
+        }:
             raise ValueError("unsupported gameplay library")
         if data["version"] >= 2:
             expected = expected | {"attacks"}  # v2 adds attacks

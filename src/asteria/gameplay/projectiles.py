@@ -1,9 +1,13 @@
 """Projectile definitions (ASTERIA_SPEC §20 projectiles; §16 ``Ability.Projectile``).
 
-A ``ProjectileDefinition`` is authored data: how a shot moves (speed, gravity, homing), how long it lives, its hit box,
-what it does on a wall, how many targets it passes through, and which ``AttackDefinition`` it applies on a hit. Firing
-(count, spread, offset) is chosen where it is fired from — an action timeline ``projectile`` cue or a script — so one
-definition serves arrows, fan shots, lobbed bombs and homing orbs alike. ``runtime.projectiles`` runs them.
+A ``ProjectileDefinition`` is authored data: how a shot moves (speed, gravity, homing), how long
+it lives, its hit box,
+what it does on a wall, how many targets it passes through, and which ``AttackDefinition`` it
+applies on a hit. Firing
+(count, spread, offset) is chosen where it is fired from — an action timeline ``projectile`` cue
+or a script — so one
+definition serves arrows, fan shots, lobbed bombs and homing orbs alike. ``runtime.projectiles``
+runs them.
 """
 
 from __future__ import annotations
@@ -17,7 +21,9 @@ WALL_BEHAVIOURS = ("destroy", "bounce", "stop", "pass")
 def _number(value, name, *, minimum=None):
     value = float(value)
     if not isfinite(value) or (minimum is not None and value < minimum):
-        raise ValueError(f"{name} must be a finite number" + ("" if minimum is None else f" >= {minimum}"))
+        raise ValueError(
+            f"{name} must be a finite number" + ("" if minimum is None else f" >= {minimum}")
+        )
     return value
 
 
@@ -25,7 +31,9 @@ def _number(value, name, *, minimum=None):
 class ProjectileDefinition:
     projectile_id: str
     display_name: str = ""
-    attack_id: str = ""  # the AttackDefinition applied to each target hit ("" = it only reports hits)
+    attack_id: str = (
+        ""  # the AttackDefinition applied to each target hit ("" = it only reports hits)
+    )
     speed: float = 240.0
     lifetime: float = 1.5
     gravity: float = 0.0  # downward acceleration (side-view arcs, lobbed throws)

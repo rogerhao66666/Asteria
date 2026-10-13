@@ -74,11 +74,21 @@ class VFXAuthoringController:
         return self.document.project
 
     def vfx_ids(self):
-        return tuple(sorted(a.asset_id for a in self.project.assets.query(kind=SHEET_KIND) if VFX_TAG in a.tags))
+        return tuple(
+            sorted(
+                a.asset_id for a in self.project.assets.query(kind=SHEET_KIND) if VFX_TAG in a.tags
+            )
+        )
 
     def other_sheets(self):
         """Sprite sheets not marked as VFX (candidates for 'Use as VFX')."""
-        return tuple(sorted(a.asset_id for a in self.project.assets.query(kind=SHEET_KIND) if VFX_TAG not in a.tags))
+        return tuple(
+            sorted(
+                a.asset_id
+                for a in self.project.assets.query(kind=SHEET_KIND)
+                if VFX_TAG not in a.tags
+            )
+        )
 
     def asset(self, asset_id):
         return self.animation.asset(asset_id)
@@ -116,7 +126,10 @@ class VFXAuthoringController:
         if "opacity" in changes and not 0.0 <= float(changes["opacity"]) <= 1.0:
             raise VFXAuthoringError("opacity must be between 0 and 1")
         if "offset" in changes:
-            changes["offset"] = [round(float(changes["offset"][0]), 2), round(float(changes["offset"][1]), 2)]
+            changes["offset"] = [
+                round(float(changes["offset"][0]), 2),
+                round(float(changes["offset"][1]), 2),
+            ]
         before = self.asset(asset_id)
         meta = before.meta()
         placement = {**dict(meta.get("vfx", {})), **changes}
@@ -131,11 +144,18 @@ class VFXAuthoringController:
         if enabled and PLAY_CLIP not in meta.get("clips", {}):
             raise VFXAuthoringError(f"{asset_id} needs a '{PLAY_CLIP}' clip to be used as a VFX")
         if not enabled and self.usages(asset_id):
-            raise VFXAuthoringError(f"{asset_id} is cued by action timelines: {self._usage_text(asset_id)}")
-        return self._replace(before, f"{'Use' if enabled else 'Stop using'} {asset_id} as VFX", tags=tags)
+            raise VFXAuthoringError(
+                f"{asset_id} is cued by action timelines: {self._usage_text(asset_id)}"
+            )
+        return self._replace(
+            before, f"{'Use' if enabled else 'Stop using'} {asset_id} as VFX", tags=tags
+        )
 
-    def import_sheet(self, asset_id, image_path, frame_width, frame_height, *, frame_duration=0.06):
-        """Copy ``image_path`` into the project's ``assets/vfx`` folder and add it as a VFX playing every frame once."""
+    def import_sheet(
+        self, asset_id, image_path, frame_width, frame_height, *, frame_duration=0.06
+    ):
+        """Copy ``image_path`` into the project's ``assets/vfx`` folder and add it as a VFX playing
+        every frame once."""
         asset_id = str(asset_id).strip()
         if not asset_id:
             raise VFXAuthoringError("asset id is required")
@@ -156,10 +176,14 @@ class VFXAuthoringController:
         with Image.open(source) as image:
             width, height = image.size
         if width % fw or height % fh:
-            raise VFXAuthoringError(f"image {width}x{height} is not a whole grid of {fw}x{fh} frames")
+            raise VFXAuthoringError(
+                f"image {width}x{height} is not a whole grid of {fw}x{fh} frames"
+            )
         root = self.animation.resource_root
         if source.resolve().is_relative_to(root.resolve()):
-            uri = source.resolve().relative_to(root.resolve()).as_posix()  # already inside the project
+            uri = (
+                source.resolve().relative_to(root.resolve()).as_posix()
+            )  # already inside the project
         else:
             target = root / "assets" / "vfx" / source.name
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -172,7 +196,11 @@ class VFXAuthoringController:
             "frame_size": [fw, fh],
             "pivot": [0.5, 0.5],
             "clips": {
-                PLAY_CLIP: {"frames": list(range(count)), "frame_duration": float(frame_duration), "loop": False}
+                PLAY_CLIP: {
+                    "frames": list(range(count)),
+                    "frame_duration": float(frame_duration),
+                    "loop": False,
+                }
             },
             "vfx": dict(VFX_DEFAULTS),
         }
@@ -183,7 +211,9 @@ class VFXAuthoringController:
             tags=frozenset({"battle", VFX_TAG}),
             metadata=tuple(sorted(meta.items())),
         )
-        self.document.execute(_AddAssetCommand(self.project.assets, asset, f"Import VFX {asset_id}"))
+        self.document.execute(
+            _AddAssetCommand(self.project.assets, asset, f"Import VFX {asset_id}")
+        )
         return asset
 
     # -- usage, checks, preview ------------------------------------------------------
@@ -212,7 +242,8 @@ class VFXAuthoringController:
         return found
 
     def preview(self, asset_id, age, *, duration=None):
-        """What the battle draws ``age`` seconds into the effect, relative to a member's feet at (0, 0)."""
+        """What the battle draws ``age`` seconds into the effect, relative to a member's feet at
+        (0, 0)."""
         data = self.animation.data(asset_id)
         clip = data["clips"].get(PLAY_CLIP)
         if not clip or not clip["frames"]:

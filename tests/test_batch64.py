@@ -17,7 +17,11 @@ def test_install_tree(tmp_path):
     s = make(tmp_path, {"hero.asset.json": "{}", "textures/hero.png": "png"})
     a = tmp_path / "project/Assets"
     q = AssetPackageInstaller(a).install_tree(s)
-    assert q.ok and (a / "hero.asset.json").read_text() == "{}" and (a / "textures/hero.png").read_text() == "png"
+    assert (
+        q.ok
+        and (a / "hero.asset.json").read_text() == "{}"
+        and (a / "textures/hero.png").read_text() == "png"
+    )
 
 
 def test_destination(tmp_path):
@@ -56,7 +60,12 @@ def test_replace(tmp_path):
     a.mkdir()
     (a / "a").write_text("old")
     q = AssetPackageInstaller(a).install_tree(s, collision="replace")
-    assert q.ok and (a / "a").read_text() == "new" and (a / "b").read_text() == "b" and q.replaced == ("a",)
+    assert (
+        q.ok
+        and (a / "a").read_text() == "new"
+        and (a / "b").read_text() == "b"
+        and q.replaced == ("a",)
+    )
 
 
 def test_manifest_preserved_exact(tmp_path):

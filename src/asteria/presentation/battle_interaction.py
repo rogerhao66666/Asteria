@@ -28,7 +28,9 @@ class BattleInteractionLayer:
     visible: bool = True
     order: int = 0
 
-    def __init__(self, layer_id, label=None, *, role="action", contextual=False, visible=True, order=0):
+    def __init__(
+        self, layer_id, label=None, *, role="action", contextual=False, visible=True, order=0
+    ):
         object.__setattr__(self, "layer_id", _id(layer_id, "layer_id"))
         object.__setattr__(self, "label", _id(label if label is not None else layer_id, "label"))
         object.__setattr__(self, "role", _id(role, "role"))
@@ -44,7 +46,10 @@ class BattleInteractionProfile:
     max_primary_layers: int = 6
 
     def __init__(self, layers=(), *, page_size=8, max_primary_layers=6):
-        layers = tuple(x if isinstance(x, BattleInteractionLayer) else BattleInteractionLayer(**x) for x in layers)
+        layers = tuple(
+            x if isinstance(x, BattleInteractionLayer) else BattleInteractionLayer(**x)
+            for x in layers
+        )
         if len({x.layer_id for x in layers}) != len(layers):
             raise ValueError("duplicate interaction layer_id")
         if int(page_size) < 1:
@@ -95,7 +100,9 @@ class BattleInteractionRuntime:
         self.profile = profile or BattleInteractionProfile()
         if not isinstance(self.profile, BattleInteractionProfile):
             raise TypeError("profile must be BattleInteractionProfile")
-        self.menu = BattleActionMenuRuntime(BattleActionMenuPolicy(page_size=self.profile.page_size))
+        self.menu = BattleActionMenuRuntime(
+            BattleActionMenuPolicy(page_size=self.profile.page_size)
+        )
         self.workflow = BattleActionWorkflowRuntime()
         self._entries = ()
         self._contextual = ()
@@ -117,7 +124,8 @@ class BattleInteractionRuntime:
 
     def set_actions(self, entries):
         self._entries = tuple(
-            x if isinstance(x, BattleActionEntry) else BattleActionEntry.from_data(x) for x in entries
+            x if isinstance(x, BattleActionEntry) else BattleActionEntry.from_data(x)
+            for x in entries
         )
         self.menu.set_entries(self._entries)
         self.revision += 1
@@ -157,7 +165,8 @@ class BattleInteractionRuntime:
 
     def set_contextual_entries(self, entries):
         self._contextual = tuple(
-            x if isinstance(x, BattleActionEntry) else BattleActionEntry.from_data(x) for x in entries
+            x if isinstance(x, BattleActionEntry) else BattleActionEntry.from_data(x)
+            for x in entries
         )
         self.revision += 1
         return self.view
@@ -246,7 +255,9 @@ class BattleInteractionRuntime:
             self.context.action_id,
             self.context.target_ids,
             self.context.modifier_ids,
-            self.stage == "confirm" and self.context.action_id is not None and bool(self.context.target_ids),
+            self.stage == "confirm"
+            and self.context.action_id is not None
+            and bool(self.context.target_ids),
             self.revision,
         )
 

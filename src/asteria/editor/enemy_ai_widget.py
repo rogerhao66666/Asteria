@@ -1,4 +1,5 @@
-"""Enemy AI editor (EDT-07): decision rules, conditions, boss phases, enemy binding, live decision preview."""
+"""Enemy AI editor (EDT-07): decision rules, conditions, boss phases, enemy binding, live decision
+preview."""
 
 from __future__ import annotations
 
@@ -26,11 +27,22 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from asteria.rpg.enemy_ai import ACTION_KINDS, COMPARISONS, CONDITION_KINDS, CONDITION_PARAMS, TARGET_SELECTORS
+from asteria.rpg.enemy_ai import (
+    ACTION_KINDS,
+    COMPARISONS,
+    CONDITION_KINDS,
+    CONDITION_PARAMS,
+    TARGET_SELECTORS,
+)
 
 from .enemy_ai_authoring import AIScenario, EnemyAIEditor, EnemyAIEditorError
 
-SUBJECT_PARAM = {"resource": "resource_id", "resource_ratio": "resource_id", "stat": "stat_id", "memory": "key"}
+SUBJECT_PARAM = {
+    "resource": "resource_id",
+    "resource_ratio": "resource_id",
+    "stat": "stat_id",
+    "memory": "key",
+}
 
 
 def describe_condition(value):
@@ -73,7 +85,11 @@ class ConditionList(QGroupBox):
         for w in (self.kind, self.subject, self.op, self.value, self.negate):
             row.addWidget(w)
         buttons = QHBoxLayout()
-        for label, slot in (("Add", self._add), ("Replace", self._replace), ("Remove", self._remove)):
+        for label, slot in (
+            ("Add", self._add),
+            ("Replace", self._replace),
+            ("Remove", self._remove),
+        ):
             b = QPushButton(label)
             b.clicked.connect(slot)
             buttons.addWidget(b)
@@ -225,7 +241,9 @@ class EnemyAIEditorWidget(QWidget):
         self._wire_conditions(self.rule_conditions, "rule")
         rules_tab = QWidget()
         rules_layout = QVBoxLayout(rules_tab)
-        rules_layout.addWidget(self._table_over_detail(self.rules, rule_box, self.rule_conditions), 1)
+        rules_layout.addWidget(
+            self._table_over_detail(self.rules, rule_box, self.rule_conditions), 1
+        )
 
         # -- phases tab ------------------------------------------------------------------
         self.phases = QTableWidget(0, len(self.PHASE_COLUMNS))
@@ -266,7 +284,9 @@ class EnemyAIEditorWidget(QWidget):
         self._wire_conditions(self.phase_conditions, "phase")
         phases_tab = QWidget()
         phases_layout = QVBoxLayout(phases_tab)
-        phases_layout.addWidget(self._table_over_detail(self.phases, phase_box, self.phase_conditions), 1)
+        phases_layout.addWidget(
+            self._table_over_detail(self.phases, phase_box, self.phase_conditions), 1
+        )
 
         self.tabs = QTabWidget()
         self.tabs.addTab(rules_tab, "Decision Rules")
@@ -408,7 +428,9 @@ class EnemyAIEditorWidget(QWidget):
         self.initial_phase.addItem("(none)", None)
         for p in ai.phases:
             self.initial_phase.addItem(p.phase_id, p.phase_id)
-        self.initial_phase.setCurrentIndex(max(0, self.initial_phase.findData(ai.initial_phase_id)))
+        self.initial_phase.setCurrentIndex(
+            max(0, self.initial_phase.findData(ai.initial_phase_id))
+        )
         used = self.api.bound_enemies(ai_id)
         self.used_by.setText(", ".join(used) if used else "No enemy uses this AI yet")
         self.rules.blockSignals(True)
@@ -418,7 +440,15 @@ class EnemyAIEditorWidget(QWidget):
             self.rules.insertRow(row)
             what = r.payload.get("ability_id") or r.payload.get("hook") or ""
             when = " and ".join(describe_condition(c) for c in r.conditions) or "always"
-            values = (r.rule_id, r.action_kind, what, r.target_selector, str(r.priority), f"{r.weight:g}", when)
+            values = (
+                r.rule_id,
+                r.action_kind,
+                what,
+                r.target_selector,
+                str(r.priority),
+                f"{r.weight:g}",
+                when,
+            )
             for col, text in enumerate(values):
                 self.rules.setItem(row, col, QTableWidgetItem(text))
         self.rules.blockSignals(False)
@@ -508,8 +538,14 @@ class EnemyAIEditorWidget(QWidget):
         return result if result is not None else True
 
     def _apply_actions(self):
-        if self.ai_id and self.actions_per_ready.value() != self.api.get(self.ai_id).actions_per_ready:
-            self._try(lambda: self.api.set_actions_per_ready(self.ai_id, self.actions_per_ready.value()), "Saved")
+        if (
+            self.ai_id
+            and self.actions_per_ready.value() != self.api.get(self.ai_id).actions_per_ready
+        ):
+            self._try(
+                lambda: self.api.set_actions_per_ready(self.ai_id, self.actions_per_ready.value()),
+                "Saved",
+            )
 
     def _apply_initial(self):
         if self.ai_id:
@@ -520,7 +556,9 @@ class EnemyAIEditorWidget(QWidget):
         ai_id = self.ai_id
 
         def bind():
-            with self.api.document.group(f"Use {ai_id} for {enemy_id}"):  # one undo step, rolled back on failure
+            with self.api.document.group(
+                f"Use {ai_id} for {enemy_id}"
+            ):  # one undo step, rolled back on failure
                 if self.api.database.enemy_behavior_bindings.get(enemy_id) is not None:
                     self.api.unbind(enemy_id)
                 return self.api.bind(enemy_id, ai_id)
@@ -542,17 +580,25 @@ class EnemyAIEditorWidget(QWidget):
             changes["ability_id"] = self.ability.currentText().strip()
         elif kind == "hook":
             changes["hook"] = self.hook.text().strip()
-        return self._try(lambda: self.api.edit_rule(ai_id, rule_id, **changes), f"Rule {rule_id} saved", rule=rule_id)
+        return self._try(
+            lambda: self.api.edit_rule(ai_id, rule_id, **changes),
+            f"Rule {rule_id} saved",
+            rule=rule_id,
+        )
 
     def add_rule(self, rule_id):
         ability = self.ability.currentText().strip() or None
         return self._try(
-            lambda: self.api.add_rule(self.ai_id, rule_id, ability_id=ability), f"Rule {rule_id} added", rule=rule_id
+            lambda: self.api.add_rule(self.ai_id, rule_id, ability_id=ability),
+            f"Rule {rule_id} added",
+            rule=rule_id,
         )
 
     def remove_rule(self):
         rule_id = self.rule_id
-        return rule_id and self._try(lambda: self.api.remove_rule(self.ai_id, rule_id), f"Rule {rule_id} removed")
+        return rule_id and self._try(
+            lambda: self.api.remove_rule(self.ai_id, rule_id), f"Rule {rule_id} removed"
+        )
 
     def apply_phase(self):
         ai_id, phase_id = self.ai_id, self.phase_id
@@ -571,15 +617,23 @@ class EnemyAIEditorWidget(QWidget):
             "exit_hook": self.exit_hook.text().strip(),
         }
         return self._try(
-            lambda: self.api.edit_phase(ai_id, phase_id, **changes), f"Phase {phase_id} saved", phase=phase_id
+            lambda: self.api.edit_phase(ai_id, phase_id, **changes),
+            f"Phase {phase_id} saved",
+            phase=phase_id,
         )
 
     def add_phase(self, phase_id):
-        return self._try(lambda: self.api.add_phase(self.ai_id, phase_id), f"Phase {phase_id} added", phase=phase_id)
+        return self._try(
+            lambda: self.api.add_phase(self.ai_id, phase_id),
+            f"Phase {phase_id} added",
+            phase=phase_id,
+        )
 
     def remove_phase(self):
         phase_id = self.phase_id
-        return phase_id and self._try(lambda: self.api.remove_phase(self.ai_id, phase_id), f"Phase {phase_id} removed")
+        return phase_id and self._try(
+            lambda: self.api.remove_phase(self.ai_id, phase_id), f"Phase {phase_id} removed"
+        )
 
     def _wire_conditions(self, widget, kind):
         def owner():
@@ -597,14 +651,18 @@ class EnemyAIEditorWidget(QWidget):
         )
         widget.replaceRequested.connect(
             lambda i, k, neg, params: self._try(
-                lambda: self.api.replace_condition(self.ai_id, owner(), i, k, negate=neg, **params),
+                lambda: self.api.replace_condition(
+                    self.ai_id, owner(), i, k, negate=neg, **params
+                ),
                 "Condition replaced",
                 **keep(),
             )
         )
         widget.removeRequested.connect(
             lambda i: self._try(
-                lambda: self.api.remove_condition(self.ai_id, owner(), i), "Condition removed", **keep()
+                lambda: self.api.remove_condition(self.ai_id, owner(), i),
+                "Condition removed",
+                **keep(),
             )
         )
 
@@ -674,7 +732,9 @@ class EnemyAIEditorWidget(QWidget):
         try:
             result = self.api.preview(self.ai_id, scenario)
             vitality = (
-                "vitality" if "vitality" in self.resource_inputs else next(iter(self.resource_inputs), "vitality")
+                "vitality"
+                if "vitality" in self.resource_inputs
+                else next(iter(self.resource_inputs), "vitality")
             )
             curve = (
                 self.api.phase_by_ratio(self.ai_id, vitality, steps=10, scenario=scenario)
@@ -694,5 +754,7 @@ class EnemyAIEditorWidget(QWidget):
         for ratio, phase in curve:
             if not segments or segments[-1][1] != phase:
                 segments.append((ratio, phase))
-        self.curve.setText("  →  ".join(f"{phase} ≤{ratio * 100:.0f}%" for ratio, phase in segments))
+        self.curve.setText(
+            "  →  ".join(f"{phase} ≤{ratio * 100:.0f}%" for ratio, phase in segments)
+        )
         return result

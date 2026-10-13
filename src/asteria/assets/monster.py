@@ -45,7 +45,9 @@ class MonsterValidator:
     def validate(self, a: MonsterAsset):
         issues = []
         if not a.animations:
-            issues.append(ValidationIssue("monster.animation.missing", "monster has no animation", "warning"))
+            issues.append(
+                ValidationIssue("monster.animation.missing", "monster has no animation", "warning")
+            )
         for x in a.animations:
             if not x.clip.frames:
                 issues.append(ValidationIssue("monster.frames.missing", f"{x.name} has no frames"))
@@ -55,4 +57,6 @@ class MonsterValidator:
 
 
 def monster_asset(asset_id, source_uri, animations, **kw):
-    return MonsterAsset(CanonicalAsset(asset_id, "monster", AssetSource(source_uri)), tuple(animations), **kw)
+    return MonsterAsset(
+        CanonicalAsset(asset_id, "monster", AssetSource(source_uri)), tuple(animations), **kw
+    )

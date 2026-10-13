@@ -103,7 +103,12 @@ class BattleUiTheme:
             return self.heal_text
         if role.startswith("value:damage"):
             return self.damage_text
-        if role in {"action_disabled", "action_cost_disabled", "action_disabled_reason", "workflow_option_disabled"}:
+        if role in {
+            "action_disabled",
+            "action_cost_disabled",
+            "action_disabled_reason",
+            "workflow_option_disabled",
+        }:
             return self.text_disabled
         if role in {
             "gauge_label",
@@ -194,7 +199,9 @@ class BattleUiRenderer:
 
         for panel in frame.panels:
             fill, border = t.panel_style(panel.role)
-            b.draw_panel(panel, fill=fill, border=border, radius=t.panel_radius, border_width=t.border_width)
+            b.draw_panel(
+                panel, fill=fill, border=border, radius=t.panel_radius, border_width=t.border_width
+            )
 
         for gauge in frame.gauges:
             fill = t.gauge_full if gauge.normalized >= 1.0 else t.gauge_fill
@@ -231,7 +238,9 @@ class HeadlessBattleUiBackend:
         self.ops.append(("panel", panel.panel_id, panel.role, dict(style)))
 
     def draw_gauge(self, gauge, **style):
-        self.ops.append(("gauge", gauge.member_id, gauge.resource_id, gauge.normalized, dict(style)))
+        self.ops.append(
+            ("gauge", gauge.member_id, gauge.resource_id, gauge.normalized, dict(style))
+        )
 
     def draw_icon(self, icon):
         self.ops.append(("icon", icon.asset_id, icon.member_id, icon.role))

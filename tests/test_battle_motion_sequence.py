@@ -46,7 +46,9 @@ def test_hit_stop_pauses_presentation_time_only():
         0.2,
         (
             BattleMotionBeat("impact", 0.05, "vfx", "impact"),
-            BattleMotionBeat("stop", 0.05, "timing", "hit_stop", duration=0.04, payload={"duration": 0.04}),
+            BattleMotionBeat(
+                "stop", 0.05, "timing", "hit_stop", duration=0.04, payload={"duration": 0.04}
+            ),
             BattleMotionBeat("after", 0.08, "animation", "recovery"),
         ),
     )
@@ -88,9 +90,15 @@ def test_transform_summon_and_boss_phase_are_generic_channels_not_gameplay_syste
         "special",
         1.0,
         (
-            BattleMotionBeat("transform", 0.0, "animation", "transform", member_id="hero", duration=0.3),
-            BattleMotionBeat("summon.enter", 0.2, "vfx", "summon_enter", member_id="summon", duration=0.4),
-            BattleMotionBeat("boss.phase", 0.5, "screen_fx", "phase_transition", member_id="boss", duration=0.5),
+            BattleMotionBeat(
+                "transform", 0.0, "animation", "transform", member_id="hero", duration=0.3
+            ),
+            BattleMotionBeat(
+                "summon.enter", 0.2, "vfx", "summon_enter", member_id="summon", duration=0.4
+            ),
+            BattleMotionBeat(
+                "boss.phase", 0.5, "screen_fx", "phase_transition", member_id="boss", duration=0.5
+            ),
         ),
     )
     assert tuple(x.cue for x in seq.beats) == ("transform", "summon_enter", "phase_transition")
@@ -101,8 +109,12 @@ def test_persistent_status_vfx_can_overlap_recovery():
         "status",
         1.0,
         (
-            BattleMotionBeat("status", 0.2, "vfx", "status_loop", target_id="target", duration=0.7),
-            BattleMotionBeat("recovery", 0.5, "animation", "recovery", member_id="actor", duration=0.2),
+            BattleMotionBeat(
+                "status", 0.2, "vfx", "status_loop", target_id="target", duration=0.7
+            ),
+            BattleMotionBeat(
+                "recovery", 0.5, "animation", "recovery", member_id="actor", duration=0.2
+            ),
         ),
     )
     r = BattleMotionRuntime(quantum=0.01)
@@ -131,7 +143,9 @@ def test_sequence_completes_deterministically():
 
 
 def test_dense_motion_sequence_cost_tracks_released_beats_not_quantum_scan():
-    beats = tuple(BattleMotionBeat(f"b{i}", i * 0.0002, "vfx", "spark", duration=0.001) for i in range(5000))
+    beats = tuple(
+        BattleMotionBeat(f"b{i}", i * 0.0002, "vfx", "spark", duration=0.001) for i in range(5000)
+    )
     seq = BattleMotionSequence("dense", 1.1, beats)
     r = BattleMotionRuntime(quantum=1 / 100000)
     r.start(seq)
@@ -159,5 +173,9 @@ def test_quantum_is_policy_hint_not_choreography_correctness_requirement():
     coarse.start(seq)
     a = fine.update(0.02)
     b = coarse.update(0.02)
-    assert tuple(x.beat_id for x in a.released) == tuple(x.beat_id for x in b.released) == ("a", "b", "c")
+    assert (
+        tuple(x.beat_id for x in a.released)
+        == tuple(x.beat_id for x in b.released)
+        == ("a", "b", "c")
+    )
     assert fine.time == coarse.time == 0.02

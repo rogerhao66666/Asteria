@@ -40,7 +40,10 @@ class AnimatedTextSpec:
     material_asset_id: str | None = None
     style_id: str | None = None
     z_order: int = 0
-    keys: tuple[TextKey, ...] = (TextKey(0.0, TextTransform()), TextKey(1.0, TextTransform(y=-24.0, opacity=0.0)))
+    keys: tuple[TextKey, ...] = (
+        TextKey(0.0, TextTransform()),
+        TextKey(1.0, TextTransform(y=-24.0, opacity=0.0)),
+    )
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):

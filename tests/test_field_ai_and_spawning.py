@@ -40,7 +40,14 @@ def test_chase_gives_up_and_returns_home():
     scene.scheduler.add(system)
     player = _entity(scene, "Player", 60, 0)
     wolf = _entity(scene, "Wolf")
-    _ai(wolf, "chase", speed=40.0, detect_radius=80.0, lose_radius=120.0, target_entity_id=player.id)
+    _ai(
+        wolf,
+        "chase",
+        speed=40.0,
+        detect_radius=80.0,
+        lose_radius=120.0,
+        target_entity_id=player.id,
+    )
     scene.update(0.5)
     assert system.state(wolf.id).mode == "chase" and _distance(wolf, player) < 60
     player.get(Transform).x = 400  # out of lose radius
@@ -78,7 +85,11 @@ def test_flee_patrol_wander_and_blocking():
 def _spawning(waves="", **values):
     registry = EditorDocument().component_registry
     prefabs = PrefabLibrary()
-    prefabs.add(PrefabDefinition("slime", "Slime", ({"type": "asteria.Transform", "version": 1, "fields": {}},)))
+    prefabs.add(
+        PrefabDefinition(
+            "slime", "Slime", ({"type": "asteria.Transform", "version": 1, "fields": {}},)
+        )
+    )
     prefabs.add(PrefabDefinition("gold_slime", "Gold Slime", (), base_prefab_id="slime"))
     scene = Scene("S")
     switches = set()
@@ -99,7 +110,9 @@ def _kill_all(scene, system):
 
 
 def test_spawn_zone_respawns_after_cooldown_inside_radius():
-    scene, system, _ = _spawning(max_alive=2, respawn_seconds=1.0, rare_prefab_id="gold_slime", rare_chance=1.0)
+    scene, system, _ = _spawning(
+        max_alive=2, respawn_seconds=1.0, rare_prefab_id="gold_slime", rare_chance=1.0
+    )
     scene.update(0.1)
     alive = system.state(system.zone_id).alive
     assert len(alive) == 2 and {x[2] for x in system.spawned} == {"gold_slime"}

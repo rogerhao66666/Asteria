@@ -51,7 +51,11 @@ PUSH_EPSILON = 0.5  # pushes slower than this (world units / s) stop
     ("push_y", float, 0.0),
     ("control_lock", float, 0.0),
     ("facing_code", int, 0),  # index into FACINGS; ``facing`` reads and writes it
-    ("speed_override", float, 0.0),  # > 0: replaces ``speed`` (an action's dash); set by action timelines
+    (
+        "speed_override",
+        float,
+        0.0,
+    ),  # > 0: replaces ``speed`` (an action's dash); set by action timelines
     ("jump_held", bool, False),  # the jump input is held (variable jump height)
     ("air_time", float, 0.0),  # seconds since it last stood on ground (coyote time)
     ("buffer_left", float, 0.0),  # a jump pressed in the air waits this long for the ground
@@ -68,19 +72,39 @@ PUSH_EPSILON = 0.5  # pushes slower than this (world units / s) stop
         Field("half_width", float, 6.0, minimum=0.0),
         Field("half_height", float, 8.0, minimum=0.0),
         Field("gravity", float, 600.0, minimum=0.0, tooltip="Side view: downward acceleration."),
-        Field("jump_speed", float, 220.0, minimum=0.0, tooltip="Side view: upward speed of a jump."),
+        Field(
+            "jump_speed", float, 220.0, minimum=0.0, tooltip="Side view: upward speed of a jump."
+        ),
         Field("max_fall_speed", float, 400.0, minimum=0.0),
-        Field("mask", int, 0xFFFFFFFF, minimum=0, maximum=0xFFFFFFFF, tooltip="Collider layers that block it."),
-        Field("facing", str, "down", choices=FACINGS, tooltip="Starting facing; it then follows movement."),
+        Field(
+            "mask",
+            int,
+            0xFFFFFFFF,
+            minimum=0,
+            maximum=0xFFFFFFFF,
+            tooltip="Collider layers that block it.",
+        ),
+        Field(
+            "facing",
+            str,
+            "down",
+            choices=FACINGS,
+            tooltip="Starting facing; it then follows movement.",
+        ),
         Field(
             "knockback_decay",
             float,
             10.0,
             minimum=0.0,
-            tooltip="How fast an outside push (knockback) fades, per second. 0 keeps it until a wall stops it.",
+            tooltip="How fast an outside push (knockback) fades, per second. 0 keeps it until a "
+            "wall stops it.",
         ),
         Field(
-            "coyote_time", float, 0.0, minimum=0.0, tooltip="Side view: a jump still works this long after walking off."
+            "coyote_time",
+            float,
+            0.0,
+            minimum=0.0,
+            tooltip="Side view: a jump still works this long after walking off.",
         ),
         Field(
             "jump_buffer",
@@ -95,9 +119,15 @@ PUSH_EPSILON = 0.5  # pushes slower than this (world units / s) stop
             1.0,
             minimum=0.0,
             maximum=1.0,
-            tooltip="Side view: releasing jump while rising keeps this share of the upward speed (1 = no short hops).",
+            tooltip="Side view: releasing jump while rising keeps this share of the upward "
+            "speed (1 = no short hops).",
         ),
-        Field("drop_through", bool, False, tooltip="Side view: down + jump drops through a one-way platform."),
+        Field(
+            "drop_through",
+            bool,
+            False,
+            tooltip="Side view: down + jump drops through a one-way platform.",
+        ),
         Field("climb_speed", float, 60.0, minimum=0.0, tooltip="Side view: speed on ladders."),
         Field("enabled", bool, True),
     ),
@@ -150,7 +180,8 @@ class CharacterController2DComponent(Component):
     def apply_impulse(self, x=0.0, y=0.0):
         """Push from outside (knockback, wind, explosions), in world units per second.
 
-        Top-down: both axes are pushes that fade by ``knockback_decay``. Side view: ``x`` is a fading push and a
+        Top-down: both axes are pushes that fade by ``knockback_decay``. Side view: ``x`` is a
+        fading push and a
         non-zero ``y`` replaces the vertical speed (negative launches upward).
         """
         self.push_x += float(x)
@@ -176,11 +207,13 @@ def _controller_v1_to_v2(fields):
 
 @component_migration("asteria.CharacterController2D", from_version=2)
 def _controller_v2_to_v3(fields):
-    return fields  # v3 adds coyote time, jump buffer, jump cut, drop-through and ladders; defaults keep v2
+    # v3 adds coyote time, jump buffer, jump cut, drop-through and ladders; defaults keep v2
+    return fields
 
 
 def facing_from(dx, dy, mode="topdown", current="down"):
-    """Facing for a movement direction (``current`` when standing still). Side view only turns left/right."""
+    """Facing for a movement direction (``current`` when standing still). Side view only turns
+    left/right."""
     if mode == "side" or abs(dx) >= abs(dy):
         if dx > 1e-9:
             return "right"
@@ -196,7 +229,8 @@ def facing_from(dx, dy, mode="topdown", current="down"):
 
 
 def turn_with_facing(x, y, facing):
-    """A vector authored for facing right, turned for ``facing`` (mirrored left, a quarter turn down / up)."""
+    """A vector authored for facing right, turned for ``facing`` (mirrored left, a quarter turn
+    down / up)."""
     if facing == "left":
         return -x, y
     if facing == "down":
@@ -207,7 +241,8 @@ def turn_with_facing(x, y, facing):
 
 
 def turn_with_aim(x, y, aim):
-    """A vector authored for facing right (x forward, y to the right-hand side), turned to point along ``aim``."""
+    """A vector authored for facing right (x forward, y to the right-hand side), turned to point
+    along ``aim``."""
     ax, ay = aim
     length = (ax * ax + ay * ay) ** 0.5 or 1.0
     ax, ay = ax / length, ay / length
@@ -215,7 +250,9 @@ def turn_with_aim(x, y, aim):
 
 
 def facing_vector(facing):
-    return {"down": (0.0, 1.0), "up": (0.0, -1.0), "left": (-1.0, 0.0), "right": (1.0, 0.0)}.get(facing, (0.0, 1.0))
+    return {"down": (0.0, 1.0), "up": (0.0, -1.0), "left": (-1.0, 0.0), "right": (1.0, 0.0)}.get(
+        facing, (0.0, 1.0)
+    )
 
 
 @component_schema(
@@ -261,7 +298,8 @@ def _box_fields():
             "follow_facing",
             bool,
             False,
-            tooltip="Offset and size are authored for facing right; they mirror for left and turn for up / down.",
+            tooltip="Offset and size are authored for facing right; they mirror for left and "
+            "turn for up / down.",
         ),
     )
 
@@ -272,14 +310,17 @@ def _box_fields():
     version=3,
     fields=(
         *_box_fields(),
-        Field("active", bool, False, tooltip="Usually switched on by action timeline hitbox cues."),
+        Field(
+            "active", bool, False, tooltip="Usually switched on by action timeline hitbox cues."
+        ),
         Field("hit_tag", str, "", tooltip="What kind of hit this is (game logic reads it)."),
         Field(
             "rehit_interval",
             float,
             0.0,
             minimum=0.0,
-            tooltip="Seconds before the same target can be hit again while it stays active (contact damage, "
+            tooltip="Seconds before the same target can be hit again while it stays active "
+            "(contact damage, "
             "beams). 0: once per activation.",
         ),
         Field("enabled", bool, True),
@@ -340,7 +381,8 @@ def _hurtbox_v1_to_v2(fields):
 
 # -- systems ------------------------------------------------------------------------------------
 class PlayerInputSystem(System):
-    """Copies the current input snapshot into every enabled PlayerInput2D entity's controller intent."""
+    """Copies the current input snapshot into every enabled PlayerInput2D entity's controller
+    intent."""
 
     order = 10
 
@@ -351,7 +393,9 @@ class PlayerInputSystem(System):
         snapshot = self.snapshot_provider()
         if snapshot is None:
             return
-        for _entity, player, controller in scene.query(PlayerInput2DComponent, CharacterController2DComponent):
+        for _entity, player, controller in scene.query(
+            PlayerInput2DComponent, CharacterController2DComponent
+        ):
             if not player.enabled:
                 continue
             dx, dy = snapshot.movement_vector()
@@ -363,10 +407,14 @@ class PlayerInputSystem(System):
 class CharacterControllerSystem(System):
     """Moves every CharacterController2D by its intent, resolving solid and one-way colliders.
 
-    Top-down controllers are resolved together: every proposed x move in one batched overlap test (asteria.kernels),
-    then every y move; a character is blocked when its box overlaps a solid collider it masks (touching counts).
-    Side-view controllers (gravity, one-way platforms) are resolved one by one. ``world`` may supply the frame's
-    ``CollisionWorld``; it is kept current (``move_shapes``) and left in ``last_world`` for later systems.
+    Top-down controllers are resolved together: every proposed x move in one batched overlap test
+    (asteria.kernels),
+    then every y move; a character is blocked when its box overlaps a solid collider it masks
+    (touching counts).
+    Side-view controllers (gravity, one-way platforms) are resolved one by one. ``world`` may
+    supply the frame's
+    ``CollisionWorld``; it is kept current (``move_shapes``) and left in ``last_world`` for later
+    systems.
     """
 
     order = 30
@@ -384,14 +432,18 @@ class CharacterControllerSystem(System):
             return False
         if shape.shape == "circle":
             nx, ny = min(max(shape.cx, x0), x1), min(max(shape.cy, y0), y1)
-            return sqrt((nx - shape.cx) * (nx - shape.cx) + (ny - shape.cy) * (ny - shape.cy)) <= shape.radius
+            return (
+                sqrt((nx - shape.cx) * (nx - shape.cx) + (ny - shape.cy) * (ny - shape.cy))
+                <= shape.radius
+            )
         sx0, sy0, sx1, sy1 = shape.bounds
         return x0 <= sx1 and sx0 <= x1 and y0 <= sy1 and sy0 <= y1
 
     def _tiles_block(self, x0, y0, x1, y1):
         tiles = self.extra_blocking
         return tiles is not None and any(
-            tiles.collides_world_point(px, py) for px, py in ((x0, y0), (x1, y0), (x0, y1), (x1, y1))
+            tiles.collides_world_point(px, py)
+            for px, py in ((x0, y0), (x1, y0), (x0, y1), (x1, y1))
         )
 
     def _box_blocked(self, world, entity_id, controller, x, y):
@@ -409,8 +461,10 @@ class CharacterControllerSystem(System):
         return False
 
     def _batch_blocked(self, world, ids, masks, boxes):
-        """Rows whose box (``boxes`` columns; row ``i`` is entity ``ids[i]`` with layer mask ``masks[i]``) is blocked:
-        one overlap test, one vectorised filter (own shape, one-way platforms, layer masks, circles)."""
+        """Rows whose box (``boxes`` columns; row ``i`` is entity ``ids[i]`` with layer mask
+        ``masks[i]``) is blocked:
+        one overlap test, one vectorised filter (own shape, one-way platforms, layer masks,
+        circles)."""
         shapes, columns = world.solid_columns()
         blocked = set()
         k = kernels.active()
@@ -419,18 +473,28 @@ class CharacterControllerSystem(System):
             if pairs:
                 cx, cy, radius, bit, one_way, circle, index_of = world.solid_extras()
                 own = [index_of.get(entity_id, -1) for entity_id in ids]
-                blocked.update(k.blocked_rows(boxes, (cx, cy, radius), pairs, masks, own, bit, one_way, circle))
+                blocked.update(
+                    k.blocked_rows(
+                        boxes, (cx, cy, radius), pairs, masks, own, bit, one_way, circle
+                    )
+                )
         if self.extra_blocking is not None:
             for i in range(len(ids)):
-                if i not in blocked and self._tiles_block(boxes[0][i], boxes[1][i], boxes[2][i], boxes[3][i]):
+                if i not in blocked and self._tiles_block(
+                    boxes[0][i], boxes[1][i], boxes[2][i], boxes[3][i]
+                ):
                     blocked.add(i)
         return blocked
 
-    def _blocked(self, world, entity_id, controller, x, y, *, falling_from=None, ignore_one_way=False):
+    def _blocked(
+        self, world, entity_id, controller, x, y, *, falling_from=None, ignore_one_way=False
+    ):
         hw, hh = controller.half_width, controller.half_height
         corners = ((x - hw, y - hh), (x + hw, y - hh), (x - hw, y + hh), (x + hw, y + hh))
         for px, py in corners:
-            if self.extra_blocking is not None and self.extra_blocking.collides_world_point(px, py):
+            if self.extra_blocking is not None and self.extra_blocking.collides_world_point(
+                px, py
+            ):
                 return True
             for hit in world.query_point(px, py, mask=controller.mask, exclude=(entity_id,)):
                 shape = world.shapes[hit]
@@ -439,7 +503,11 @@ class CharacterControllerSystem(System):
                 if ignore_one_way:
                     continue
                 # one-way platform: blocks only feet that were above its top before this move
-                if falling_from is not None and py >= y + hh - 1e-6 and falling_from + hh <= shape.bounds[1] + 1e-6:
+                if (
+                    falling_from is not None
+                    and py >= y + hh - 1e-6
+                    and falling_from + hh <= shape.bounds[1] + 1e-6
+                ):
                     return True
         return False
 
@@ -447,7 +515,9 @@ class CharacterControllerSystem(System):
         hw, hh = controller.half_width, controller.half_height
         for px in (x - hw, x, x + hw):
             py = y + hh + GROUND_PROBE
-            if self.extra_blocking is not None and self.extra_blocking.collides_world_point(px, py):
+            if self.extra_blocking is not None and self.extra_blocking.collides_world_point(
+                px, py
+            ):
                 return "__tiles__"
             for hit in world.query_point(px, py, mask=controller.mask, exclude=(entity_id,)):
                 shape = world.shapes[hit]
@@ -462,7 +532,10 @@ class CharacterControllerSystem(System):
         if world is None or world.stale:
             world = CollisionWorld.from_scene(scene, self.cell_size)
         self.last_world = world
-        controllers, transforms = scene.columns(CharacterController2DComponent), scene.columns(Transform)
+        controllers, transforms = (
+            scene.columns(CharacterController2DComponent),
+            scene.columns(Transform),
+        )
         if controllers is None or transforms is None:
             return
         placed = transforms.components
@@ -495,7 +568,9 @@ class CharacterControllerSystem(System):
                 controller.jump = False
             else:
                 controller.facing = facing_from(dx, controller.intent_y, "side", controller.facing)
-            self._side_step(world, controller._entity, controller, transform, dx, controller.push_x, dt)
+            self._side_step(
+                world, controller._entity, controller, transform, dx, controller.push_x, dt
+            )
         if tops:
             self._top_down(world, controllers, transforms, tops, dt)
         deltas = {}
@@ -505,7 +580,8 @@ class CharacterControllerSystem(System):
         world.move_shapes(deltas)
 
     def _top_down(self, world, controllers, transforms, slots, dt):
-        """Every top-down controller at once on column storage: prepare, x moves, y moves, push decay."""
+        """Every top-down controller at once on column storage: prepare, x moves, y moves, push
+        decay."""
         k = kernels.active()
         c, t = controllers.data, transforms.data
         owners = controllers.components
@@ -526,10 +602,18 @@ class CharacterControllerSystem(System):
             sel = [slots[i] for i in rows]
             step = [moves[i] for i in rows]
             zero = [0.0] * len(rows)
-            boxes = k.moved_boxes(c, t, sel, step, zero) if horizontal else k.moved_boxes(c, t, sel, zero, step)
-            blocked = self._batch_blocked(world, [owners[s]._entity.id for s in sel], [masks[s] for s in sel], boxes)
+            boxes = (
+                k.moved_boxes(c, t, sel, step, zero)
+                if horizontal
+                else k.moved_boxes(c, t, sel, zero, step)
+            )
+            blocked = self._batch_blocked(
+                world, [owners[s]._entity.id for s in sel], [masks[s] for s in sel], boxes
+            )
             free = [r for r in range(len(rows)) if r not in blocked]
-            k.add_to_column(t["x"] if horizontal else t["y"], [sel[r] for r in free], [step[r] for r in free])
+            k.add_to_column(
+                t["x"] if horizontal else t["y"], [sel[r] for r in free], [step[r] for r in free]
+            )
             for r in sorted(blocked):
                 slot, controller = sel[r], owners[sel[r]]
                 transform = transforms.components[slot]
@@ -539,24 +623,35 @@ class CharacterControllerSystem(System):
                     controller.hit_wall = intent != 0 or controller.push_x != 0
                     controller.push_x = 0.0
                     end = transform.x + step[r]
-                    transform.x = self._contact(world, entity_id, controller, transform.x, end, transform.y, True)
+                    transform.x = self._contact(
+                        world, entity_id, controller, transform.x, end, transform.y, True
+                    )
                 else:
-                    controller.hit_wall = controller.hit_wall or intent != 0 or controller.push_y != 0
+                    controller.hit_wall = (
+                        controller.hit_wall or intent != 0 or controller.push_y != 0
+                    )
                     controller.push_y = 0.0
                     end = transform.y + step[r]
-                    transform.y = self._contact(world, entity_id, controller, transform.y, end, transform.x, False)
+                    transform.y = self._contact(
+                        world, entity_id, controller, transform.y, end, transform.x, False
+                    )
         k.decay_push(c, slots, dt, PUSH_EPSILON)
 
     def _side_step(self, world, entity, controller, transform, dx, push_x, dt):
-        """Side view: ladders, horizontal move (stepping up slopes), jump (coyote time, buffer, short hops,
+        """Side view: ladders, horizontal move (stepping up slopes), jump (coyote time, buffer,
+        short hops,
         drop-through), gravity, landing, ground and one-way platforms."""
         eid = entity.id
         hw, hh = controller.half_width, controller.half_height
         dy = 0.0 if controller.control_lock > 0.0 else controller.intent_y
         wants_jump = controller.jump
-        stood = controller.grounded  # at the end of the previous step (slopes: keep following the surface)
+        stood = (
+            controller.grounded
+        )  # at the end of the previous step (slopes: keep following the surface)
         controller.drop_left = max(0.0, controller.drop_left - dt)
-        ladder = world.ladder_at(transform.x - hw, transform.y - hh, transform.x + hw, transform.y + hh, exclude=(eid,))
+        ladder = world.ladder_at(
+            transform.x - hw, transform.y - hh, transform.x + hw, transform.y + hh, exclude=(eid,)
+        )
         if controller.climbing and (ladder is None or wants_jump):
             controller.climbing = False
         elif not controller.climbing and ladder is not None and abs(dy) > 0.5:
@@ -586,7 +681,13 @@ class CharacterControllerSystem(System):
             return
         ground = self._ground(world, eid, controller, transform.x, transform.y)
         controller.air_time = 0.0 if ground is not None else controller.air_time + dt
-        if wants_jump and controller.drop_through and dy > 0.5 and ground is not None and ground != "__tiles__":
+        if (
+            wants_jump
+            and controller.drop_through
+            and dy > 0.5
+            and ground is not None
+            and ground != "__tiles__"
+        ):
             if world.shapes[ground].one_way:  # down + jump on a one-way platform: fall through it
                 controller.drop_left = 0.25
                 wants_jump = False
@@ -595,7 +696,9 @@ class CharacterControllerSystem(System):
             controller.velocity_y = 0.0
         if wants_jump and ground is None and controller.jump_buffer > 0:
             controller.buffer_left = controller.jump_buffer
-        can_jump = controller.velocity_y >= 0 and (ground is not None or controller.air_time <= controller.coyote_time)
+        can_jump = controller.velocity_y >= 0 and (
+            ground is not None or controller.air_time <= controller.coyote_time
+        )
         if (wants_jump or controller.buffer_left > 0) and can_jump:
             controller.velocity_y = -controller.jump_speed
             controller.buffer_left = 0.0
@@ -607,20 +710,36 @@ class CharacterControllerSystem(System):
             controller.cut_armed = False
         if controller.velocity_y >= 0:
             controller.cut_armed = False
-        controller.velocity_y = min(controller.max_fall_speed, controller.velocity_y + controller.gravity * dt)
+        controller.velocity_y = min(
+            controller.max_fall_speed, controller.velocity_y + controller.gravity * dt
+        )
         step = controller.velocity_y * dt
         start_y = transform.y
         ny = start_y + step
         dropping = controller.drop_left > 0.0
         falling_from = start_y if step > 0 else None
-        if self._blocked(world, eid, controller, transform.x, ny, falling_from=falling_from, ignore_one_way=dropping):
+        if self._blocked(
+            world,
+            eid,
+            controller,
+            transform.x,
+            ny,
+            falling_from=falling_from,
+            ignore_one_way=dropping,
+        ):
             # move to the contact in small steps so the character rests on the surface
             direction = 1.0 if step > 0 else -1.0
             moved = 0.0
             while abs(moved) < abs(step):
                 trial = start_y + moved + direction * min(0.25, abs(step) - abs(moved))
                 if self._blocked(
-                    world, eid, controller, transform.x, trial, falling_from=falling_from, ignore_one_way=dropping
+                    world,
+                    eid,
+                    controller,
+                    transform.x,
+                    trial,
+                    falling_from=falling_from,
+                    ignore_one_way=dropping,
                 ):
                     break
                 moved = trial - start_y
@@ -631,14 +750,19 @@ class CharacterControllerSystem(System):
         else:
             transform.y = ny
             if stood and step >= 0 and not dropping:
-                if self._snap_down(world, eid, controller, transform, abs(move) + 1.0):  # follow a slope down
+                if self._snap_down(
+                    world, eid, controller, transform, abs(move) + 1.0
+                ):  # follow a slope down
                     controller.velocity_y = 0.0
-        controller.ground_id = None if dropping else self._ground(world, eid, controller, transform.x, transform.y)
+        controller.ground_id = (
+            None if dropping else self._ground(world, eid, controller, transform.x, transform.y)
+        )
         controller.grounded = controller.ground_id is not None
         controller.jump = False
 
     def _step_up(self, world, entity_id, controller, x, y, limit):
-        """Walking into a slope: the smallest lift (up to ``limit``) that frees the move, or ``None``.
+        """Walking into a slope: the smallest lift (up to ``limit``) that frees the move, or
+        ``None``.
         Only slopes are climbed this way; walls stay walls."""
         hw, hh = controller.half_width, controller.half_height
         for px, py in ((x - hw, y + hh), (x + hw, y + hh), (x - hw, y - hh), (x + hw, y - hh)):
@@ -654,20 +778,30 @@ class CharacterControllerSystem(System):
         return None
 
     def _snap_down(self, world, entity_id, controller, transform, limit):
-        """Walking down a slope: drop onto the surface below (within ``limit``); True when it did."""
+        """Walking down a slope: drop onto the surface below (within ``limit``); True when it
+        did."""
         if self._ground(world, entity_id, controller, transform.x, transform.y) is not None:
             return True
         drop = 0.25
         while drop <= limit + 1e-9:
-            if self._blocked(world, entity_id, controller, transform.x, transform.y + drop, falling_from=transform.y):
+            if self._blocked(
+                world,
+                entity_id,
+                controller,
+                transform.x,
+                transform.y + drop,
+                falling_from=transform.y,
+            ):
                 transform.y += drop - 0.25
                 return True
             drop += 0.25
         return False
 
     def _contact(self, world, entity_id, controller, start, end, other, horizontal):
-        """Furthest free position from ``start`` toward a blocked ``end`` (fast moves, e.g. knockback, end against
-        the wall instead of stopping a whole step short). Steps of 1 unit or less keep the old behaviour."""
+        """Furthest free position from ``start`` toward a blocked ``end`` (fast moves, e.g.
+        knockback, end against
+        the wall instead of stopping a whole step short). Steps of 1 unit or less keep the old
+        behaviour."""
         if abs(end - start) <= 1.0:
             return start
         free, blocked = start, end
@@ -699,12 +833,15 @@ class HitEvent:
     target_id: str
     hit_tag: str
     team: str
-    origin: tuple | None = None  # where the hit came from when it is not the attacker (a projectile)
+    origin: tuple | None = (
+        None  # where the hit came from when it is not the attacker (a projectile)
+    )
     direction: tuple | None = None  # the hit's travel direction (a projectile's velocity)
 
 
 def facing_box(entity, spec):
-    """World AABB of a hit/hurt box; with ``follow_facing`` the authored (facing right) box turns with the
+    """World AABB of a hit/hurt box; with ``follow_facing`` the authored (facing right) box turns
+    with the
     entity's controller facing: mirrored for left, rotated a quarter turn for down / up."""
     x, y = world_position(entity)
     ox, oy, w, h = spec.offset_x, spec.offset_y, spec.width, spec.height
@@ -730,7 +867,8 @@ RIGHT = FACINGS.index("right")
 def box_rows(scene, box_type, *, keep=None):
     """Enabled boxes of ``box_type`` in scene order: ``(entities, components, (x0, y0, x1, y1))``.
 
-    Boxes come from column storage in one kernel call (turned with each owner's controller facing where
+    Boxes come from column storage in one kernel call (turned with each owner's controller facing
+    where
     ``follow_facing`` is set); ``keep(component)`` filters further (e.g. active hitboxes only).
     """
     boxes, transforms = scene.columns(box_type), scene.columns(Transform)
@@ -743,7 +881,11 @@ def box_rows(scene, box_type, *, keep=None):
         entity = component._entity
         if not component.enabled or not entity.enabled or entity._destroy_requested:
             continue
-        if slot >= len(placed) or placed[slot] is None or (keep is not None and not keep(component)):
+        if (
+            slot >= len(placed)
+            or placed[slot] is None
+            or (keep is not None and not keep(component))
+        ):
             continue
         rows.append((entity._order, slot, entity, component))
     rows.sort(key=lambda row: row[0])
@@ -753,7 +895,9 @@ def box_rows(scene, box_type, *, keep=None):
         codes = [RIGHT] * len(slots)
     else:
         owners, code_column = controllers.components, controllers.data["facing_code"]
-        codes = [code_column[s] if s < len(owners) and owners[s] is not None else RIGHT for s in slots]
+        codes = [
+            code_column[s] if s < len(owners) and owners[s] is not None else RIGHT for s in slots
+        ]
     columns = kernels.active().box_columns(transforms.data, boxes.data, slots, codes)
     for k, (_, slot, entity, component) in enumerate(rows):
         if placed[slot].parent_id:  # under a parent: the full transform chain
@@ -776,7 +920,8 @@ def _overlaps(a, b):
 
 
 class HitboxSystem(System):
-    """Reports hits of active hitboxes on hurtboxes of other teams (once per target per activation).
+    """Reports hits of active hitboxes on hurtboxes of other teams (once per target per
+    activation).
 
     ``events`` holds this update's ``HitEvent``s; ``listeners`` are called with each.
     ``grant_invincibility(entity_id, seconds)`` gives i-frames (also used by IFRAME timeline cues).
@@ -789,7 +934,9 @@ class HitboxSystem(System):
         self.events: list[HitEvent] = []
         self.listeners = []
         self.iframes: dict[str, float] = {}
-        self._hit_this_activation: dict[str, dict] = {}  # attacker -> {target: time of its last hit}
+        self._hit_this_activation: dict[
+            str, dict
+        ] = {}  # attacker -> {target: time of its last hit}
         self.frame_hurtboxes = None
         self._clock = 0.0
 
@@ -797,24 +944,32 @@ class HitboxSystem(System):
         self.iframes[str(entity_id)] = max(self.iframes.get(str(entity_id), 0.0), float(seconds))
 
     def invincible(self, entity_id, hurtbox=None):
-        return (hurtbox is not None and hurtbox.invincible) or self.iframes.get(str(entity_id), 0.0) > 0.0
+        return (hurtbox is not None and hurtbox.invincible) or self.iframes.get(
+            str(entity_id), 0.0
+        ) > 0.0
 
     def update(self, scene, dt):
         self.iframes = {k: v - dt for k, v in self.iframes.items() if v - dt > 0}
         self._clock += dt
-        # this frame's hurtboxes (also read by ProjectileSystem, which runs before anything moves again)
+        # this frame's hurtboxes (also read by ProjectileSystem, which runs before anything moves
+        # again)
         self.frame_hurtboxes = box_rows(scene, Hurtbox2DComponent)
         targets, hurt_components, hurt_columns = self.frame_hurtboxes
-        attackers, hitboxes, hit_columns = box_rows(scene, Hitbox2DComponent, keep=lambda h: h.active)
+        attackers, hitboxes, hit_columns = box_rows(
+            scene, Hitbox2DComponent, keep=lambda h: h.active
+        )
         live = {e.id for e in attackers}
         for attacker_id in tuple(self._hit_this_activation):
             if attacker_id not in live:
-                self._hit_this_activation.pop(attacker_id)  # the activation ended: the next one can hit again
+                self._hit_this_activation.pop(
+                    attacker_id
+                )  # the activation ended: the next one can hit again
         for attacker in attackers:
             self._hit_this_activation.setdefault(attacker.id, {})
         events = []
         if attackers and targets:
-            # one batched overlap test (asteria.kernels) instead of every hitbox against every hurtbox
+            # one batched overlap test (asteria.kernels) instead of every hitbox against every
+            # hurtbox
             pairs = kernels.active().aabb_cross_pairs(hit_columns, hurt_columns, self.cell_size)
             for i, j in pairs:  # sorted: attacker order, then hurtbox order
                 attacker, hitbox = attackers[i], hitboxes[i]
@@ -823,7 +978,8 @@ class HitboxSystem(System):
                 if target is attacker:
                     continue
                 if target.id in already and not (
-                    hitbox.rehit_interval > 0 and self._clock - already[target.id] >= hitbox.rehit_interval - 1e-9
+                    hitbox.rehit_interval > 0
+                    and self._clock - already[target.id] >= hitbox.rehit_interval - 1e-9
                 ):
                     continue
                 if hitbox.team and hitbox.team == hurtbox.team:

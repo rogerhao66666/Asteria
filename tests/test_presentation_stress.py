@@ -66,7 +66,10 @@ def test_culler_accepts_generator_without_materializing_input_contract():
 
 def test_batcher_accepts_generator_without_materializing_input_contract():
     harness = BattlePresentationStressHarness(vfx_draws=2, offscreen_draws=0)
-    draws = (BattleRenderDraw(str(i), "asset", 0, float(i), 10, 10, 5, 5, atlas_id="atlas.shared") for i in range(50))
+    draws = (
+        BattleRenderDraw(str(i), "asset", 0, float(i), 10, 10, 5, 5, atlas_id="atlas.shared")
+        for i in range(50)
+    )
     batches = harness.batcher.build(draws)
     assert len(batches) == 1
     assert len(batches[0].draws) == 50

@@ -22,7 +22,9 @@ def main():
 
     hero = subject({"accuracy": 20, "critical": 10})
     beetle = subject({"defense": 40, "evasion": 5}, ("weak.fire", "trait.armored"))
-    fire = resolver.resolve(100, hero, beetle, action_tags=("damage.fire",), check_ids=("hit",), rng=random.Random(7))
+    fire = resolver.resolve(
+        100, hero, beetle, action_tags=("damage.fire",), check_ids=("hit",), rng=random.Random(7)
+    )
     assert fire.checks[0].success is True
     assert fire.value.resolved_value == 120.0  # (100 - 20 DEF mitigation) * 1.5 weakness
     assert "outcome.weak" in fire.outcome_tags

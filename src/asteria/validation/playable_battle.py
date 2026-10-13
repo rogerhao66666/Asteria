@@ -177,12 +177,17 @@ class PlayableBattleValidationHarness:
         self.scenario = scenario or build_reference_battle_scenario()
 
     def _vitalities(self, target_ids):
-        return tuple(self.scenario.battle.member(x).subject.resources.current("vitality") for x in target_ids)
+        return tuple(
+            self.scenario.battle.member(x).subject.resources.current("vitality")
+            for x in target_ids
+        )
 
     def player_action(self, ability_id, target_ids=None):
         target_ids = tuple(target_ids or (self.scenario.enemy_member_id,))
         before = self._vitalities(target_ids)
-        result = self.scenario.battle.execute(BattleAction(self.scenario.player_member_id, ability_id, target_ids))
+        result = self.scenario.battle.execute(
+            BattleAction(self.scenario.player_member_id, ability_id, target_ids)
+        )
         after = self._vitalities(target_ids)
         self.scenario.trace.append(
             BattleTraceEntry(

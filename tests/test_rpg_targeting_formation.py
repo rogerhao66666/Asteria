@@ -78,10 +78,18 @@ def formation():
     return FormationDefinition(
         "party.grid",
         [
-            FormationSlotDefinition("front.a", x=0, y=0, tags=("row.front",), adjacent_to=("front.b", "back.a")),
-            FormationSlotDefinition("front.b", x=1, y=0, tags=("row.front",), adjacent_to=("front.a", "back.b")),
-            FormationSlotDefinition("back.a", x=0, y=1, tags=("row.back",), adjacent_to=("front.a", "back.b")),
-            FormationSlotDefinition("back.b", x=1, y=1, tags=("row.back",), adjacent_to=("front.b", "back.a")),
+            FormationSlotDefinition(
+                "front.a", x=0, y=0, tags=("row.front",), adjacent_to=("front.b", "back.a")
+            ),
+            FormationSlotDefinition(
+                "front.b", x=1, y=0, tags=("row.front",), adjacent_to=("front.a", "back.b")
+            ),
+            FormationSlotDefinition(
+                "back.a", x=0, y=1, tags=("row.back",), adjacent_to=("front.a", "back.b")
+            ),
+            FormationSlotDefinition(
+                "back.b", x=1, y=1, tags=("row.back",), adjacent_to=("front.b", "back.a")
+            ),
         ],
     )
 
@@ -92,7 +100,11 @@ def test_formation_definition_roundtrip_and_adjacency():
     assert restored == definition
     runtime = BattleFormationRuntime(
         definition,
-        [BattlePlacement("a", "front.a"), BattlePlacement("b", "front.b"), BattlePlacement("c", "back.a")],
+        [
+            BattlePlacement("a", "front.a"),
+            BattlePlacement("b", "front.b"),
+            BattlePlacement("c", "back.a"),
+        ],
     )
     assert runtime.adjacent_member_ids("a") == ("b", "c")
 

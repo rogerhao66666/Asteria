@@ -62,7 +62,9 @@ def test_break_like_gauge_uses_generic_resource_outcome_and_state_mechanisms():
     assert h.status_snapshot("reference_enemy")[0][0] == "staggered"
     assert (
         not h.battle.can_act("reference_enemy")
-        or not h.battle.battle_states.ability_availability(h.battle.member("reference_enemy").subject, ()).allowed
+        or not h.battle.battle_states.ability_availability(
+            h.battle.member("reference_enemy").subject, ()
+        ).allowed
     )
 
 
@@ -73,7 +75,9 @@ def test_multihit_sequence_uses_same_canonical_ability_twice():
     after = h.battle.member("reference_enemy").subject.resources.current("vitality")
     assert len(results) == 2
     assert failures == ()
-    assert before - after == 60  # 2 hits x 20 x 1.5 flame_fragility (F-3: interaction multipliers reach damage)
+    assert (
+        before - after == 60
+    )  # 2 hits x 20 x 1.5 flame_fragility (F-3: interaction multipliers reach damage)
 
 
 def test_heal_and_revive_use_generic_resource_and_lifecycle_paths():

@@ -40,7 +40,9 @@ class SceneEventRuntime:
 
     def action_binding_for_entity(self, entity_id: str):
         active = [
-            b for b in self.bindings.active_for_entity(entity_id, self.context) if b.trigger == EventTriggerKind.ACTION
+            b
+            for b in self.bindings.active_for_entity(entity_id, self.context)
+            if b.trigger == EventTriggerKind.ACTION
         ]
         if not active:
             return None

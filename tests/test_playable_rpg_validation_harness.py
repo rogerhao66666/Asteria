@@ -37,7 +37,9 @@ def test_action_menu_projection_uses_resolved_build_not_special_case_commands():
     report = PlayableRpgValidationHarness().report()
     ability_entries = [x for x in report.action_entries if x.kind == "ability"]
     assert tuple(x.action_id for x in ability_entries) == report.abilities
-    assert any(x.action_id == "field_concoction" and x.kind == "workflow" for x in report.action_entries)
+    assert any(
+        x.action_id == "field_concoction" and x.kind == "workflow" for x in report.action_entries
+    )
 
 
 def test_alchemy_workflow_is_generic_multistep_and_inventory_backed():

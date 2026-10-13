@@ -25,7 +25,9 @@ def test_real_mv_records_convert_to_asteria_project():
     assert len(project.gameplay_library.abilities.ids()) == 10
     assert len(project.rpg_database.items) == 4
     assert len(project.rpg_database.equipment) == 8
-    assert len([a for a in project.assets.snapshot() if a.kind != "icon"]) == 498  # images; plus menu icons (AST-07)
+    assert (
+        len([a for a in project.assets.snapshot() if a.kind != "icon"]) == 498
+    )  # images; plus menu icons (AST-07)
     assert len(project.scenes()) == 1
     assert result.source_ids["actors"][1] == "mv.actor.1"
     assert result.source_ids["skills"][1] == "mv.skill.1"

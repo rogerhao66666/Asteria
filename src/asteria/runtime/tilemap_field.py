@@ -1,10 +1,12 @@
-"""Field play on canonical TileMap scenes (W-18): imported RPG Maker MV maps and authored tile maps.
+"""Field play on canonical TileMap scenes (W-18): imported RPG Maker MV maps and authored tile
+maps.
 
 ``TileMapField`` drives the normal ``GameSessionRuntime`` (events, action and
 touch interactions, transfers between scenes, saves) and draws the current
 scene from canonical project assets resolved through the asset registry:
 
-* the scene's ``TileMap2D`` binding -> ``tilemap`` -> ``tileset`` -> ``sprite_sheet`` -> ``texture``
+* the scene's ``TileMap2D`` binding -> ``tilemap`` -> ``tileset`` -> ``sprite_sheet`` ->
+  ``texture``
 * every entity with a ``SpriteRenderer2D`` whose sheet resolves (the player animates
   with its ``Animator2D`` clip set's ``idle_*`` / ``walk_*`` clips)
 
@@ -20,13 +22,23 @@ from pathlib import Path
 
 from asteria.core import Transform
 from asteria.graphics import DirectionalClips
-from asteria.reference_data import load_animation_set, load_sprite_sheet, load_tilemap, load_tileset
+from asteria.reference_data import (
+    load_animation_set,
+    load_sprite_sheet,
+    load_tilemap,
+    load_tileset,
+)
 
 from .animation import AnimatorState
 from .camera_factory import build_runtime_camera
 from .character import CharacterController2D
 from .character_animation import CharacterAnimationController
-from .components2d import Animator2DComponent, Camera2DComponent, SpriteRenderer2D, TileMap2DComponent
+from .components2d import (
+    Animator2DComponent,
+    Camera2DComponent,
+    SpriteRenderer2D,
+    TileMap2DComponent,
+)
 from .draw import TextureDraw, sprite_draw
 from .input import InputSnapshot
 from .tile_draw import build_tile_draws
@@ -46,7 +58,8 @@ class TileMapFieldError(RuntimeError):
 
 
 class AssetResources:
-    """Canonical project asset records -> loaded resources (cached), with clear errors for broken references."""
+    """Canonical project asset records -> loaded resources (cached), with clear errors for broken
+    references."""
 
     def __init__(self, project, root):
         self.project = project
@@ -61,7 +74,9 @@ class AssetResources:
             raise TileMapFieldError(f"asset {asset_id} is a {record.kind}, not a {kind}")
         path = self.root / record.source_path
         if not path.is_file():
-            raise TileMapFieldError(f"{kind} asset {asset_id} file is missing: {record.source_path}")
+            raise TileMapFieldError(
+                f"{kind} asset {asset_id} file is missing: {record.source_path}"
+            )
         return path
 
     def get(self, asset_id, kind):
@@ -87,7 +102,11 @@ def can_play(project, root):
     """True when the project's start scene is a canonical tile map with a player entity."""
     start = project.game_start
     scene = project.scene(start.scene_id or project.startup_scene_id)
-    if scene is None or not start.player_entity_id or scene.get_entity(start.player_entity_id) is None:
+    if (
+        scene is None
+        or not start.player_entity_id
+        or scene.get_entity(start.player_entity_id) is None
+    ):
         return False
     binding = tilemap_binding(scene)
     if binding is None:
@@ -129,7 +148,9 @@ class TileMapField:
         spec = player.try_get(CharacterController2DComponent)
         if spec is not None:
             speed, half_w, half_h = spec.speed, spec.half_width, spec.half_height
-        self.controller = CharacterController2D(t.x, t.y, speed=speed, half_width=half_w, half_height=half_h)
+        self.controller = CharacterController2D(
+            t.x, t.y, speed=speed, half_width=half_w, half_height=half_h
+        )
         self.animation = None
         animator = player.try_get(Animator2DComponent)
         sprite = player.try_get(SpriteRenderer2D)
@@ -142,7 +163,10 @@ class TileMapField:
                     walk={d: clips.get(f"walk_{d}") for d in directions},
                 )
                 self.animation = CharacterAnimationController(
-                    directional, AnimatorState(directional.idle.get(self.session.facing, directional.idle["down"]))
+                    directional,
+                    AnimatorState(
+                        directional.idle.get(self.session.facing, directional.idle["down"])
+                    ),
                 )
                 self.animation.facing = self.session.facing
         camera_entity = next(
@@ -159,7 +183,10 @@ class TileMapField:
         else:
             from .camera import Camera2D
 
-            self.camera, self.follow = Camera2D(width=self.viewport[0], height=self.viewport[1]), None
+            self.camera, self.follow = (
+                Camera2D(width=self.viewport[0], height=self.viewport[1]),
+                None,
+            )
         self._scene_id = scene.id
         self._bounds = None
         self.prepare_viewport(*self.viewport)
@@ -174,7 +201,9 @@ class TileMapField:
         self.camera.zoom = zoom * scale
         bounds = self.world_bounds()
         if self.follow is not None:
-            self.follow.world_bounds = (self.camera_spec.bounds if self.camera_spec else None) or bounds
+            self.follow.world_bounds = (
+                self.camera_spec.bounds if self.camera_spec else None
+            ) or bounds
         self._follow_player(0.0)
 
     def world_bounds(self):
@@ -186,10 +215,14 @@ class TileMapField:
 
     def _compute_bounds(self):
         width = max(
-            (c.chunk_x + 1) * self.tilemap.chunk_width for layer in self.tilemap.layers for c in layer.chunks.values()
+            (c.chunk_x + 1) * self.tilemap.chunk_width
+            for layer in self.tilemap.layers
+            for c in layer.chunks.values()
         )
         height = max(
-            (c.chunk_y + 1) * self.tilemap.chunk_height for layer in self.tilemap.layers for c in layer.chunks.values()
+            (c.chunk_y + 1) * self.tilemap.chunk_height
+            for layer in self.tilemap.layers
+            for c in layer.chunks.values()
         )
         cells = [
             (c.chunk_x * self.tilemap.chunk_width + x, c.chunk_y * self.tilemap.chunk_height + y)
@@ -202,7 +235,12 @@ class TileMapField:
         if cells:
             width = max(x for x, _ in cells) + 1
             height = max(y for _, y in cells) + 1
-        return (0.0, 0.0, float(width * self.tilemap.tile_width), float(height * self.tilemap.tile_height))
+        return (
+            0.0,
+            0.0,
+            float(width * self.tilemap.tile_width),
+            float(height * self.tilemap.tile_height),
+        )
 
     def _follow_player(self, dt, velocity=None):
         t = self.session.player.get(Transform)
@@ -222,7 +260,8 @@ class TileMapField:
         return f"{line.speaker}: {line.text}" if line.speaker else line.text
 
     def step(self, actions, dt):
-        """One frame: dialogue / movement / interactions / events. Returns the player's (dx, dy)."""
+        """One frame: dialogue / movement / interactions / events. Returns the player's (dx,
+        dy)."""
         session = self.session
         self._last_dt = float(dt)
         actions = dict(actions)
@@ -233,22 +272,32 @@ class TileMapField:
         if session.pending_dialogue is not None:
             if pressed and getattr(session.pending_dialogue, "line", None) is not None:
                 session.acknowledge_dialogue()
-                session.interaction._was_down = True  # the same press must not talk to the NPC again
+                session.interaction._was_down = (
+                    True  # the same press must not talk to the NPC again
+                )
         elif session.mode == "field" and not session.event_busy:
             dx, dy = InputSnapshot(actions).movement_vector()
             t = session.player.get(Transform)
-            hh = self.controller.half_height  # the collision box stands on the feet (bottom edge = feet)
+            hh = (
+                self.controller.half_height
+            )  # the collision box stands on the feet (bottom edge = feet)
             self.controller.x, self.controller.y = t.x, t.y - hh
             from .collision import CollisionWorld, CombinedQuery
 
-            solids = CollisionWorld.from_scene(session.scene).blocking_query(exclude={session.player.id})
-            moved = self.controller.move(dx, dy, dt, CombinedQuery(self.query, solids))  # tiles + solid entities
+            solids = CollisionWorld.from_scene(session.scene).blocking_query(
+                exclude={session.player.id}
+            )
+            moved = self.controller.move(
+                dx, dy, dt, CombinedQuery(self.query, solids)
+            )  # tiles + solid entities
             x0, y0, x1, y1 = self.world_bounds()  # the map edge blocks like a wall
             self.controller.x = min(
-                max(self.controller.x, x0 + self.controller.half_width), x1 - self.controller.half_width
+                max(self.controller.x, x0 + self.controller.half_width),
+                x1 - self.controller.half_width,
             )
             self.controller.y = min(
-                max(self.controller.y, y0 + self.controller.half_height), y1 - self.controller.half_height
+                max(self.controller.y, y0 + self.controller.half_height),
+                y1 - self.controller.half_height,
             )
             moved = (self.controller.x - t.x, self.controller.y + hh - t.y)
             session.set_player_position(self.controller.x, self.controller.y + hh)
@@ -277,7 +326,12 @@ class TileMapField:
                 continue
             sprite = entity.try_get(SpriteRenderer2D)
             t = entity.try_get(Transform)
-            if sprite is None or t is None or not sprite.sprite_sheet_asset_id or not getattr(sprite, "visible", True):
+            if (
+                sprite is None
+                or t is None
+                or not sprite.sprite_sheet_asset_id
+                or not getattr(sprite, "visible", True)
+            ):
                 continue
             try:
                 sheet = self.resources.get(sprite.sprite_sheet_asset_id, "sprite_sheet")
@@ -316,12 +370,23 @@ class TileMapField:
     def draw_commands(self):
         width, height = self.viewport
         tiles = build_tile_draws(
-            self.tilemap, self.tileset, self.tile_sheet, self.camera, viewport_width=width, viewport_height=height
+            self.tilemap,
+            self.tileset,
+            self.tile_sheet,
+            self.camera,
+            viewport_width=width,
+            viewport_height=height,
         )
-        return tuple(sorted((*tiles, *self._sprite_draws()), key=lambda d: (d.layer, d.depth, d.screen_y, d.screen_x)))
+        return tuple(
+            sorted(
+                (*tiles, *self._sprite_draws()),
+                key=lambda d: (d.layer, d.depth, d.screen_y, d.screen_x),
+            )
+        )
 
     def environment(self, time=0.0):
-        """The current scene's Environment2D / lights / water projected through the field camera."""
+        """The current scene's Environment2D / lights / water projected through the field
+        camera."""
         from .environment2d import resolve_environment
 
         def read_shader(asset_id):
@@ -331,14 +396,19 @@ class TileMapField:
                 return None
 
         env = resolve_environment(
-            self.session.scene, to_screen=self.camera.world_to_screen, scale=self.camera.zoom, read_shader=read_shader
+            self.session.scene,
+            to_screen=self.camera.world_to_screen,
+            scale=self.camera.zoom,
+            read_shader=read_shader,
         )
         if env.weather != "none":
             from .weather import WeatherSystem
 
             weather = self.__dict__.get("_weather")
             if weather is None or (weather.width, weather.height) != tuple(self.viewport):
-                weather = self._weather = WeatherSystem(*self.viewport, seed=f"{self.session.scene.id}:weather")
+                weather = self._weather = WeatherSystem(
+                    *self.viewport, seed=f"{self.session.scene.id}:weather"
+                )
             center = (self.camera.x + self.camera.width / (2 * self.camera.zoom), self.camera.y)
             weather.update(
                 self._last_dt,
@@ -359,8 +429,13 @@ class TileMapField:
 
         color = _KINDS[weather.kind][2]
         if weather.kind == "rain":
-            return [(x, y, 1, s * 2, color) for x, y, s in zip(weather.x, weather.y, weather.size, strict=True)]
-        return [(x, y, s, s, color) for x, y, s in zip(weather.x, weather.y, weather.size, strict=True)]
+            return [
+                (x, y, 1, s * 2, color)
+                for x, y, s in zip(weather.x, weather.y, weather.size, strict=True)
+            ]
+        return [
+            (x, y, s, s, color) for x, y, s in zip(weather.x, weather.y, weather.size, strict=True)
+        ]
 
     def texture_sources(self):
         ids = {self.tile_sheet.texture.asset_id}
@@ -368,13 +443,19 @@ class TileMapField:
             sprite = entity.try_get(SpriteRenderer2D)
             if sprite is not None and sprite.sprite_sheet_asset_id:
                 try:
-                    ids.add(self.resources.get(sprite.sprite_sheet_asset_id, "sprite_sheet").texture.asset_id)
+                    ids.add(
+                        self.resources.get(
+                            sprite.sprite_sheet_asset_id, "sprite_sheet"
+                        ).texture.asset_id
+                    )
                 except TileMapFieldError:
                     pass
         return {asset_id: self.resources.texture_path(asset_id) for asset_id in ids}
 
 
-def run_tilemap_field(field, backend, width, height, target_fps=60, max_frames=None, on_frame=None):
+def run_tilemap_field(
+    field, backend, width, height, target_fps=60, max_frames=None, on_frame=None
+):
     """Window loop: input -> step -> draw (textures reloaded when a transfer changes the scene)."""
     from asteria.assets import TextureResourceCache
 

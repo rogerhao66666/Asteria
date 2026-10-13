@@ -92,7 +92,9 @@ class CodeWorkspaceWidget(QWidget):
         self.selection_label.setObjectName("MutedLabel")
         self.path_label = QLabel("scripts/main.py")
         for label in (self.context_label, self.selection_label, self.path_label):
-            label.setWordWrap(True)  # long paths and contexts wrap instead of widening the editor window
+            label.setWordWrap(
+                True
+            )  # long paths and contexts wrap instead of widening the editor window
 
         self.editor = QPlainTextEdit()
         self.editor.setPlainText(self.buffer.text)
@@ -138,7 +140,9 @@ class CodeWorkspaceWidget(QWidget):
         self.new_button = QPushButton("New Script…")
         self.new_button.clicked.connect(self._new_script_clicked)
         self.reload_button = QPushButton("Reload")
-        self.reload_button.setToolTip("Reload the script from disk (picks up edits made outside the editor)")
+        self.reload_button.setToolTip(
+            "Reload the script from disk (picks up edits made outside the editor)"
+        )
         self.reload_button.clicked.connect(self.reload_script)
         self.output = QPlainTextEdit()
         self.output.setReadOnly(True)
@@ -194,7 +198,11 @@ class CodeWorkspaceWidget(QWidget):
 
     def script_names(self):
         folder = self.scripts_dir()
-        names = sorted(p.name for p in folder.glob("*.py")) if folder is not None and folder.is_dir() else []
+        names = (
+            sorted(p.name for p in folder.glob("*.py"))
+            if folder is not None and folder.is_dir()
+            else []
+        )
         return names or ["main.py"]
 
     def default_script_path(self):
@@ -219,7 +227,9 @@ class CodeWorkspaceWidget(QWidget):
         else:
             name = getattr(sel.value, "name", type(sel.value).__name__)
             text = f"{sel.kind}: {name}"
-        self.selection_label.setText(f"Selection: {text}  ·  scripts can use project, selected, scene, entity")
+        self.selection_label.setText(
+            f"Selection: {text}  ·  scripts can use project, selected, scene, entity"
+        )
         self.save_button.setEnabled(self.document.file_path is not None)
         self.run_button.setEnabled(project is not None)
         target = self.default_script_path()
@@ -318,9 +328,8 @@ class CodeWorkspaceWidget(QWidget):
     def reload_script(self):
         """Re-read the current script from disk."""
         self.load_default_script()
-        self.output.setPlainText(
-            f"Reloaded {self.default_script_path().name if self.default_script_path() else 'script'}"
-        )
+        path = self.default_script_path()
+        self.output.setPlainText(f"Reloaded {path.name if path else 'script'}")
 
     # -- completion ---------------------------------------------------------------
     def completion_namespace(self):
@@ -355,7 +364,11 @@ class CodeWorkspaceWidget(QWidget):
 
     def insert_completion(self, name):
         cursor = self.editor.textCursor()
-        cursor.insertText(name[len(self._completion_prefix) :] if name.startswith(self._completion_prefix) else name)
+        cursor.insertText(
+            name[len(self._completion_prefix) :]
+            if name.startswith(self._completion_prefix)
+            else name
+        )
         self.editor.setTextCursor(cursor)
 
     # -- results ------------------------------------------------------------------

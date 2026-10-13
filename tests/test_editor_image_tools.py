@@ -1,5 +1,7 @@
-"""AST-11: the asset pipeline's safe auto-fixes and atlas packing are reachable from the editor's Asset list -
-preview before / after, a backup of the original, confirmation for fixes that lose pixels, and an atlas PNG
+"""AST-11: the asset pipeline's safe auto-fixes and atlas packing are reachable from the editor's
+Asset list -
+preview before / after, a backup of the original, confirmation for fixes that lose pixels, and an
+atlas PNG
 with a JSON of named regions."""
 
 import json

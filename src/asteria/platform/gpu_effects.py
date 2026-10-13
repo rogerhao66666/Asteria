@@ -1,4 +1,5 @@
-"""GPU effect chain for the playable game (VFX-02 / VFX-03, proposal R3–R6) on the ModernGL presenter.
+"""GPU effect chain for the playable game (VFX-02 / VFX-03, proposal R3–R6) on the ModernGL
+presenter.
 
 Per frame: the runtime's world layer (and optional normal layer) and its UI layer arrive as
 textures. Passes (each only when the scene environment asks for it):
@@ -85,14 +86,16 @@ uniform int u_water_count;
 uniform vec4 u_water_rect[8];   // x0, y0, x1, y1 (screen px)
 uniform vec4 u_water_wave[8];   // amplitude px, wavelength px, speed, tint strength
 uniform vec3 u_water_tint[8];
-uniform int u_world_flip;   // 1 when the world was rendered into a framebuffer (v = 0 at the bottom)
+// 1 when the world was rendered into a framebuffer (v = 0 at the bottom)
+uniform int u_world_flip;
 in vec2 v_px;
 out vec4 f_color;
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float noise(vec2 p) {
     vec2 i = floor(p), f = fract(p);
     vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
+    return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1,
+    1)), u.x), u.y);
 }
 void main() {
     vec2 uv = v_px / u_screen;
@@ -263,7 +266,8 @@ BUILTIN_MODES = {"grayscale": 1, "sepia": 2, "invert": 3, "wave": 4, "crt": 5, "
 
 
 class EffectChain:
-    """Runs the environment's passes; ``render(world, target, ...)`` returns the number of draw calls."""
+    """Runs the environment's passes; ``render(world, target, ...)`` returns the number of draw
+    calls."""
 
     def __init__(self, ctx, size):
         import moderngl
@@ -305,7 +309,9 @@ class EffectChain:
     def _program(self, name, fragment):
         program = self._programs.get(name)
         if program is None:
-            program = self._programs[name] = self.ctx.program(vertex_shader=VERTEX, fragment_shader=fragment)
+            program = self._programs[name] = self.ctx.program(
+                vertex_shader=VERTEX, fragment_shader=fragment
+            )
         return program
 
     def _quad(self, program, points, size):
@@ -364,7 +370,9 @@ class EffectChain:
         for model, height, flicker in env.lights:
             scale = 1.0
             if flicker:
-                scale = 1.0 - flicker * 0.5 * (1 + math.sin(self.time * 13.0 + hash(model.light_id) % 97))
+                scale = 1.0 - flicker * 0.5 * (
+                    1 + math.sin(self.time * 13.0 + hash(model.light_id) % 97)
+                )
             r = model.radius * sx
             cx, cy = model.x * sx, model.y * sy
             color = tuple(c * model.intensity * scale for c in model.color)
@@ -384,7 +392,11 @@ class EffectChain:
                 u_color=color,
                 u_normals=normals,
             )
-            self._quad(light, ((cx - r, cy - r), (cx + r, cy - r), (cx + r, cy + r), (cx - r, cy + r)), self.half)
+            self._quad(
+                light,
+                ((cx - r, cy - r), (cx + r, cy - r), (cx + r, cy + r), (cx - r, cy + r)),
+                self.half,
+            )
             calls += 1
             if target is self.shadow_fbo:
                 self.ctx.blend_func = self.gl.ZERO, self.gl.ZERO  # occluded: light becomes zero
@@ -402,7 +414,9 @@ class EffectChain:
                         self._quad(solid, (a, b, away(b), away(a)), self.half)
                         calls += 1
                 self.ctx.blend_func = self.gl.ONE, self.gl.ONE
-                calls += self._fullscreen(copy, self.light_fbo, self.half, u_src=self.shadow_tex, u_screen=self.half)
+                calls += self._fullscreen(
+                    copy, self.light_fbo, self.half, u_src=self.shadow_tex, u_screen=self.half
+                )
             self.ctx.disable(self.gl.BLEND)
         return calls
 
@@ -421,8 +435,12 @@ class EffectChain:
             pad = [(0.0, 0.0, 0.0, 0.0)] * (8 - len(waters))
             if "u_water_rect" in scene_program:
                 scene_program["u_water_rect"] = [tuple(w[:4]) for w in waters] + pad
-                scene_program["u_water_wave"] = [(w[4], max(w[5], 1.0), w[6], w[8]) for w in waters] + pad
-                scene_program["u_water_tint"] = [tuple(w[7]) for w in waters] + [(0.0, 0.0, 0.0)] * (8 - len(waters))
+                scene_program["u_water_wave"] = [
+                    (w[4], max(w[5], 1.0), w[6], w[8]) for w in waters
+                ] + pad
+                scene_program["u_water_tint"] = [tuple(w[7]) for w in waters] + [
+                    (0.0, 0.0, 0.0)
+                ] * (8 - len(waters))
         calls += self._fullscreen(
             scene_program,
             self.scene_fbo,
@@ -452,15 +470,27 @@ class EffectChain:
             blur = self._program("blur", BLUR_FRAGMENT)
             for _ in range(2):
                 calls += self._fullscreen(
-                    blur, self.blur_fbo, self.half, u_src=self.bright_tex, u_screen=self.half, u_dir=(1.0, 0.0)
+                    blur,
+                    self.blur_fbo,
+                    self.half,
+                    u_src=self.bright_tex,
+                    u_screen=self.half,
+                    u_dir=(1.0, 0.0),
                 )
                 calls += self._fullscreen(
-                    blur, self.bright_fbo, self.half, u_src=self.blur_tex, u_screen=self.half, u_dir=(0.0, 1.0)
+                    blur,
+                    self.bright_fbo,
+                    self.half,
+                    u_src=self.blur_tex,
+                    u_screen=self.half,
+                    u_dir=(0.0, 1.0),
                 )
             bloom_tex, bloom_intensity = self.bright_tex, p.get("intensity", 0.8)
         grade = dict(env.post_effect("grade").parameters) if env.post_effect("grade") else {}
         vignette = (
-            dict(env.post_effect("vignette").parameters).get("amount", 0.0) if env.post_effect("vignette") else 0.0
+            dict(env.post_effect("vignette").parameters).get("amount", 0.0)
+            if env.post_effect("vignette")
+            else 0.0
         )
         calls += self._fullscreen(
             self._program("grade", GRADE_FRAGMENT),
@@ -514,7 +544,9 @@ class EffectChain:
             try:
                 self._project_shaders[key] = self.ctx.program(
                     vertex_shader=VERTEX,
-                    fragment_shader=PROJECT_SHADER_HEADER + env.shader_source + PROJECT_SHADER_FOOTER,
+                    fragment_shader=PROJECT_SHADER_HEADER
+                    + env.shader_source
+                    + PROJECT_SHADER_FOOTER,
                 )
             except Exception as exc:  # noqa: BLE001 - GLSL compile/link errors: report, keep playing
                 self.errors.append(f"{key}: {exc}")

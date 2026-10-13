@@ -53,11 +53,21 @@ class InputBinding:
         return 1.0 if amount > 0 else 0.0
 
     def to_data(self):
-        return {"device": self.device, "code": self.code, "direction": self.direction, "threshold": self.threshold}
+        return {
+            "device": self.device,
+            "code": self.code,
+            "direction": self.direction,
+            "threshold": self.threshold,
+        }
 
     @classmethod
     def from_data(cls, data):
-        return cls(data["device"], data["code"], int(data.get("direction", 1)), float(data.get("threshold", 0.5)))
+        return cls(
+            data["device"],
+            data["code"],
+            int(data.get("direction", 1)),
+            float(data.get("threshold", 0.5)),
+        )
 
 
 @dataclass(slots=True)
@@ -132,7 +142,9 @@ class InputActionMap:
     def from_data(cls, data):
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported input action map")
-        return cls({a: [InputBinding.from_data(b) for b in bs] for a, bs in data["actions"].items()})
+        return cls(
+            {a: [InputBinding.from_data(b) for b in bs] for a, bs in data["actions"].items()}
+        )
 
     @classmethod
     def default(cls):

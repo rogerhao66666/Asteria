@@ -48,7 +48,9 @@ def test_keyed_socket_is_sampled_at_runtime():
 
 def test_generic_assets_not_equipment_specific():
     rt = AttachmentRuntime(rig())
-    rt.attach_many([Attachment("hat", "sprite.hat", "root"), Attachment("aura", "vfx.aura", "root")])
+    rt.attach_many(
+        [Attachment("hat", "sprite.hat", "root"), Attachment("aura", "vfx.aura", "root")]
+    )
     assert {x.asset_id for x in rt.resolve_all(0)} == {"sprite.hat", "vfx.aura"}
 
 
@@ -147,7 +149,9 @@ def test_snapshot_restore_runtime_visibility_and_data():
     rt2 = AttachmentRuntime(rig())
     rt2.attach(Attachment("x", "a", "root"))
     rt2.restore_runtime_state(snap)
-    assert rt2.instances["x"].state == AttachmentState.HIDDEN and rt2.instances["x"].runtime_data == {"phase": 3}
+    assert rt2.instances["x"].state == AttachmentState.HIDDEN and rt2.instances[
+        "x"
+    ].runtime_data == {"phase": 3}
 
 
 def test_pivot_is_applied():

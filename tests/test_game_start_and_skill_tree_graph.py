@@ -1,6 +1,10 @@
 from asteria.core import ComponentRegistry, Entity, Scene
 from asteria.project import Project
-from asteria.rpg import ProgressionGraphDefinition, ProgressionNodeDefinition, ProgressionNodeRequirement
+from asteria.rpg import (
+    ProgressionGraphDefinition,
+    ProgressionNodeDefinition,
+    ProgressionNodeRequirement,
+)
 from asteria.runtime.game_start import GameStartDefinition
 
 
@@ -23,7 +27,9 @@ def test_project_v8_owns_canonical_game_start_and_fresh_run_state():
 
 def test_skill_tree_graph_v2_persists_designer_view_and_positions():
     root = ProgressionNodeDefinition("root", "Root")
-    branch = ProgressionNodeDefinition("branch", "Branch", prerequisites=[ProgressionNodeRequirement("root")])
+    branch = ProgressionNodeDefinition(
+        "branch", "Branch", prerequisites=[ProgressionNodeRequirement("root")]
+    )
     g = ProgressionGraphDefinition(
         "tree",
         "Tree",

@@ -1,4 +1,5 @@
-"""ENG-21: save slots — summaries, overwrite / delete confirmation, in-game save and load screens."""
+"""ENG-21: save slots — summaries, overwrite / delete confirmation, in-game save and load
+screens."""
 
 import pygame
 
@@ -15,7 +16,9 @@ def test_slots_summarise_save_and_report_damaged_files(runtime, tmp_path):
     assert [s.exists for s in map(slots.info, slots.slots())] == [False, False, False, False]
     slots.save("2", runtime.game)
     info = slots.info("2")
-    assert info.exists and info.scene == runtime.game.scene.name and info.level >= 1 and info.leader
+    assert (
+        info.exists and info.scene == runtime.game.scene.name and info.level >= 1 and info.leader
+    )
     assert "Lv" in info.summary
     slots.path("3").write_text("{not json")
     assert slots.info("3").error and "damaged" in slots.info("3").summary

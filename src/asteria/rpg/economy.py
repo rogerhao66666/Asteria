@@ -62,7 +62,12 @@ class ShopEntry:
 
     @classmethod
     def from_data(cls, data):
-        return cls(data["item_id"], buy_prices=data["buy_prices"], sell_prices=data["sell_prices"], stock=data["stock"])
+        return cls(
+            data["item_id"],
+            buy_prices=data["buy_prices"],
+            sell_prices=data["sell_prices"],
+            stock=data["stock"],
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,7 +106,11 @@ class ShopDefinition:
     def from_data(cls, data):
         if data.get("schema") != "asteria.rpg.shop" or data.get("version") != 1:
             raise ValueError("unsupported shop")
-        return cls(data["shop_id"], data["display_name"], [ShopEntry.from_data(x) for x in data["entries"]])
+        return cls(
+            data["shop_id"],
+            data["display_name"],
+            [ShopEntry.from_data(x) for x in data["entries"]],
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,8 +168,12 @@ class ShopRuntime:
             raise ShopError(f"{shop.shop_id} has only {remaining} {entry.item_id}")
         if not self.can_afford(entry.buy_prices, quantity):
             raise ShopError(f"cannot afford {quantity} {entry.item_id}")
-        room = self.inventory.room_for(entry.item_id) if hasattr(self.inventory, "room_for") else None
-        if room is not None and room < quantity:  # never charge for items the bag cannot hold (RPG-01 rules)
+        room = (
+            self.inventory.room_for(entry.item_id) if hasattr(self.inventory, "room_for") else None
+        )
+        if (
+            room is not None and room < quantity
+        ):  # never charge for items the bag cannot hold (RPG-01 rules)
             raise ShopError(f"no room for {quantity} {entry.item_id} (room for {room})")
         change = {k: -v * quantity for k, v in entry.buy_prices.items()}
         for key, delta in change.items():

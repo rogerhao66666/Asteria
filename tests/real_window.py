@@ -1,12 +1,17 @@
-"""Real-window replay of session-level integration tests (D19, ``scripts/real_machine_validation.py``
+"""Real-window replay of session-level integration tests (D19,
+``scripts/real_machine_validation.py``
 check ``b_items_replay``).
 
-With ``ASTERIA_REAL_WINDOW=1`` the ``runtime`` fixture and ``test_session_events._session`` open the
-playable runtime in a real window (no dummy SDL driver), and every public ``GameSessionRuntime`` call
-presents one real frame of that game afterwards. The tests and their assertions are unchanged: the same
+With ``ASTERIA_REAL_WINDOW=1`` the ``runtime`` fixture and ``test_session_events._session`` open
+the
+playable runtime in a real window (no dummy SDL driver), and every public ``GameSessionRuntime``
+call
+presents one real frame of that game afterwards. The tests and their assertions are unchanged: the
+same
 scenarios run against the real playable window and renderer instead of a headless one.
 
-The run is summarised in ``$ASTERIA_REAL_WINDOW_REPORT`` (JSON): video driver, frames presented and the
+The run is summarised in ``$ASTERIA_REAL_WINDOW_REPORT`` (JSON): video driver, frames presented
+and the
 frames per test, so the evidence shows that each test really drove a presented window.
 """
 
@@ -36,7 +41,8 @@ def enabled():
 
 
 def set_stage(runtime):
-    """Make ``runtime`` (an opened PlayableTestRuntime in a real window) the window that presents frames."""
+    """Make ``runtime`` (an opened PlayableTestRuntime in a real window) the window that presents
+    frames."""
     STATE["stage"] = runtime
     try:
         import pygame
@@ -51,7 +57,11 @@ def _alive(stage):
     try:
         import pygame
 
-        return stage is not None and pygame.display.get_init() and getattr(stage, "screen", None) is not None
+        return (
+            stage is not None
+            and pygame.display.get_init()
+            and getattr(stage, "screen", None) is not None
+        )
     except Exception:
         return False
 
@@ -70,11 +80,14 @@ def present(force=False):
 
     STATE["in_frame"] = True
     try:
-        # Window events only (no input): a presented frame must not answer a dialogue or press a key.
+        # Window events only (no input): a presented frame must not answer a dialogue or press a
+        # key.
         pygame.event.pump()
         _draw(stage)
         stage.present()
-    except Exception:  # a frame must never change the test's outcome; the frame is just not counted
+    except (
+        Exception
+    ):  # a frame must never change the test's outcome; the frame is just not counted
         return
     finally:
         STATE["in_frame"] = False
@@ -85,8 +98,10 @@ def present(force=False):
 
 
 def _draw(stage):
-    """Draw the game as it is now, without advancing it (no input, no time, no event programs) and without
-    loading images the game has not loaded itself (image scopes stay exactly as the test left them)."""
+    """Draw the game as it is now, without advancing it (no input, no time, no event programs) and
+    without
+    loading images the game has not loaded itself (image scopes stay exactly as the test left
+    them)."""
     game = stage.game
     adapter = stage._battle_presentation
     in_battle = game.mode == "battle" or stage._victory or stage._defeat
@@ -103,7 +118,9 @@ def _draw(stage):
     battle = game.battle
     hp = game.rules.knockout_resource_id
     for side, label in (("heroes", "Hero"), ("enemies", "Enemy")):
-        party = battle.parties.get(side) if battle is not None and hasattr(battle, "parties") else None
+        party = (
+            battle.parties.get(side) if battle is not None and hasattr(battle, "parties") else None
+        )
         for member_id in party.ids() if party is not None else ():
             pool = battle.member(member_id).subject.resources
             try:
@@ -130,7 +147,8 @@ def save_screenshot(name):
 
 
 def session_runtime(project, save, root):
-    """An opened real-window PlayableTestRuntime around ``save``; its ``game`` is the test's session."""
+    """An opened real-window PlayableTestRuntime around ``save``; its ``game`` is the test's
+    session."""
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     for key in ("SDL_VIDEODRIVER", "SDL_AUDIODRIVER"):
@@ -151,7 +169,11 @@ def install():
     if getattr(GameSessionRuntime, "_real_window_wrapped", False):
         return
     for name, value in list(vars(GameSessionRuntime).items()):
-        if name.startswith("_") or not callable(value) or isinstance(value, (staticmethod, classmethod, property)):
+        if (
+            name.startswith("_")
+            or not callable(value)
+            or isinstance(value, (staticmethod, classmethod, property))
+        ):
             continue
 
         def wrap(method):
@@ -177,7 +199,9 @@ def install():
     frame = PlayableTestRuntime._frame
 
     @functools.wraps(frame)
-    def guarded_frame(self, *args, **kwargs):  # the test's own frames: no extra presents inside them
+    def guarded_frame(
+        self, *args, **kwargs
+    ):  # the test's own frames: no extra presents inside them
         outer = STATE["in_frame"]
         STATE["in_frame"] = True
         try:
@@ -192,7 +216,9 @@ def install():
     close = PlayableTestRuntime.close
 
     @functools.wraps(close)
-    def close_with_shot(self, *args, **kwargs):  # a test that closes its own runtime: keep its last frame
+    def close_with_shot(
+        self, *args, **kwargs
+    ):  # a test that closes its own runtime: keep its last frame
         test = STATE["test"]
         if STATE["stage"] is self and test and not STATE["in_frame"]:
             save_screenshot(test.split("::")[-1])

@@ -1,6 +1,11 @@
 import pytest
 
-from asteria.presentation.animated_text import AnimatedTextRuntime, AnimatedTextSpec, TextKey, TextTransform
+from asteria.presentation.animated_text import (
+    AnimatedTextRuntime,
+    AnimatedTextSpec,
+    TextKey,
+    TextTransform,
+)
 
 
 def test_anchor():
@@ -20,7 +25,9 @@ def test_interp():
     r.spawn(
         "x",
         AnimatedTextSpec(
-            "x", duration_ms=1000, keys=(TextKey(0, TextTransform()), TextKey(1, TextTransform(10, -20, 2, 90, 0)))
+            "x",
+            duration_ms=1000,
+            keys=(TextKey(0, TextTransform()), TextKey(1, TextTransform(10, -20, 2, 90, 0))),
         ),
     )
     t = r.update(500)[0].transform
@@ -31,7 +38,13 @@ def test_resources():
     r = AnimatedTextRuntime()
     r.spawn(
         "x",
-        AnimatedTextSpec("x", font_asset_id="f", material_asset_id="m", style_id="project.emphasis", metadata={"k": 1}),
+        AnimatedTextSpec(
+            "x",
+            font_asset_id="f",
+            material_asset_id="m",
+            style_id="project.emphasis",
+            metadata={"k": 1},
+        ),
     )
     x = r.resolve_all()[0]
     assert x.metadata["k"] == 1

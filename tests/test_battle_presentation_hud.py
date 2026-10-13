@@ -29,7 +29,9 @@ def _runtime():
         [
             BattleResourceDefinition("hp"),
             BattleResourceDefinition("mp"),
-            BattleResourceDefinition("limit", minimum=0, maximum=100, start_mode="fixed", start_value=35),
+            BattleResourceDefinition(
+                "limit", minimum=0, maximum=100, start_mode="fixed", start_value=35
+            ),
         ],
         [hero],
     )
@@ -79,7 +81,11 @@ def test_status_icons_mirror_active_state_stacks_remaining_and_source():
     view = hud.sync_member("hero", resources, hero.subject)
     assert len(view.statuses) == 1
     status = view.statuses[0]
-    assert (status.state_id, status.label, status.icon_asset_id) == ("poison", "Poison", "status.poison")
+    assert (status.state_id, status.label, status.icon_asset_id) == (
+        "poison",
+        "Poison",
+        "status.poison",
+    )
     assert status.stacks == 1 and status.remaining == 2.5 and status.source_id == "mimic"
 
 

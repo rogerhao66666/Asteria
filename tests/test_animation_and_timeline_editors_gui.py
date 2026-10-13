@@ -44,7 +44,12 @@ def test_animation_editor_builds_a_clip_by_clicking_frames_and_previews_it(windo
     editor.events.setText("1:cheer")
     assert editor.apply_clip(), editor.status.text()
     clip = editor.api.data(sheet)["clips"]["victory"]
-    assert clip == {"frames": [0, 2, 0, 2], "frame_duration": 0.25, "loop": True, "events": {"1": ["cheer"]}}
+    assert clip == {
+        "frames": [0, 2, 0, 2],
+        "frame_duration": 0.25,
+        "loop": True,
+        "events": {"1": ["cheer"]},
+    }
     editor.clip_list.setCurrentRow(sorted(editor.api.data(sheet)["clips"]).index("victory"))
     shown = set()
     for _ in range(40):
@@ -55,7 +60,9 @@ def test_animation_editor_builds_a_clip_by_clicking_frames_and_previews_it(windo
     assert editor.apply_sheet()
     assert editor.api.data(sheet)["pivot"] == [0.4, 1.0]
     editor.frames.setText("0, 99")
-    assert not editor.apply_clip() and "outside" in editor.status.text()  # validation surfaces in the UI
+    assert (
+        not editor.apply_clip() and "outside" in editor.status.text()
+    )  # validation surfaces in the UI
     window.document.undo()  # pivot
     window.document.undo()  # events
     window.document.undo()  # clip edit
@@ -73,7 +80,10 @@ def test_action_timeline_moves_beats_by_drag_and_previews(window):
     editor.at.setValue(0.55)
     assert editor.apply_beat()
     editor.set_playhead(0.5)
-    assert "animation:hit@0.45" in editor.released.text() and "vfx:battle.fx.slash" not in editor.released.text()
+    assert (
+        "animation:hit@0.45" in editor.released.text()
+        and "vfx:battle.fx.slash" not in editor.released.text()
+    )
     editor.cue.setCurrentText("battle.fx.unknown")
     assert not editor.apply_beat() and "unknown VFX" in editor.status.text()
     window.document.undo()

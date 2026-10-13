@@ -20,7 +20,8 @@ class Scene:
         self._pending_add = []
         self._pending_remove = []
         self._entered = False
-        # D22-C1: entity slots, column tables and a per-type index (query without scanning every entity)
+        # D22-C1: entity slots, column tables and a per-type index (query without scanning every
+        # entity)
         self._slots = {}  # entity id -> slot
         self._free_slots = []
         self._slot_count = 0
@@ -66,14 +67,15 @@ class Scene:
             self._component_added(entity, component)
 
     def _release(self, entity):
-        """Take the entity's components out of the index and columns (values go back onto the components)."""
+        """Take the entity's components out of the index and columns (values go back onto the
+        components)."""
         for component in tuple(entity._components.values()):
             self._component_removed(entity, component)
         slot = self._slots.pop(entity.id, None)
         if slot is not None:
             self._free_slots.append(slot)
 
-    # -- component index and column storage --------------------------------------------------------------
+    # -- component index and column storage -------------------------------------------------------
     def _component_added(self, entity, component):
         ctype = type(component)
         self._index.setdefault(ctype, {})[entity] = None
@@ -99,11 +101,13 @@ class Scene:
         return self._slots.get(entity.id)
 
     def columns(self, component_type):
-        """The ``ColumnTable`` of a column-stored component type (``None`` until one is attached here)."""
+        """The ``ColumnTable`` of a column-stored component type (``None`` until one is attached
+        here)."""
         return self._tables.get(component_type)
 
     def _members(self, component_type):
-        """Entities with ``component_type``, in scene order (cached until membership or order changes)."""
+        """Entities with ``component_type``, in scene order (cached until membership or order
+        changes)."""
         cached = self._index_cache.get(component_type)
         if cached is None:
             members = self._index.get(component_type, {})
@@ -163,7 +167,9 @@ class Scene:
             return old
         self._entities.pop(old)
         self._entities.insert(new_index, entity)
-        for position, e in enumerate(self._entities):  # scene order changed: renumber, drop cached query orders
+        for position, e in enumerate(
+            self._entities
+        ):  # scene order changed: renumber, drop cached query orders
             e._order = position
         self._order_counter = len(self._entities)
         self._index_cache.clear()
@@ -178,7 +184,8 @@ class Scene:
         return tuple(e for e in self._entities if not e.destroy_requested)
 
     def query(self, *types):
-        """Enabled entities that have every one of ``types``, in scene order, with those components."""
+        """Enabled entities that have every one of ``types``, in scene order, with those
+        components."""
         if not types:
             for e in self.entities():
                 if e.enabled:

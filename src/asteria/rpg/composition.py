@@ -54,7 +54,8 @@ class CompositionOutput:
 
 @dataclass(frozen=True, slots=True)
 class CompositionQualityTier:
-    """Outputs that replace a recipe's normal outputs when the quality roll reaches ``threshold``."""
+    """Outputs that replace a recipe's normal outputs when the quality roll reaches
+    ``threshold``."""
 
     quality: str
     threshold: float
@@ -64,7 +65,10 @@ class CompositionQualityTier:
         threshold = float(threshold)
         if not 0.0 <= threshold <= 1.0:
             raise ValueError("quality threshold must be between 0 and 1")
-        outputs = tuple(x if isinstance(x, CompositionOutput) else CompositionOutput.from_data(x) for x in outputs)
+        outputs = tuple(
+            x if isinstance(x, CompositionOutput) else CompositionOutput.from_data(x)
+            for x in outputs
+        )
         if not outputs:
             raise ValueError("quality tier requires outputs")
         object.__setattr__(self, "quality", _id(quality, "quality"))
@@ -72,11 +76,19 @@ class CompositionQualityTier:
         object.__setattr__(self, "outputs", outputs)
 
     def to_data(self):
-        return {"quality": self.quality, "threshold": self.threshold, "outputs": [x.to_data() for x in self.outputs]}
+        return {
+            "quality": self.quality,
+            "threshold": self.threshold,
+            "outputs": [x.to_data() for x in self.outputs],
+        }
 
     @classmethod
     def from_data(cls, data):
-        return cls(data["quality"], data["threshold"], [CompositionOutput.from_data(x) for x in data["outputs"]])
+        return cls(
+            data["quality"],
+            data["threshold"],
+            [CompositionOutput.from_data(x) for x in data["outputs"]],
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,16 +132,23 @@ class CompositionRecipeDefinition:
         requires_discovery=False,
     ):
         selections = tuple(
-            x if isinstance(x, CompositionSelection) else CompositionSelection.from_data(x) for x in selections
+            x if isinstance(x, CompositionSelection) else CompositionSelection.from_data(x)
+            for x in selections
         )
-        outputs = tuple(x if isinstance(x, CompositionOutput) else CompositionOutput.from_data(x) for x in outputs)
+        outputs = tuple(
+            x if isinstance(x, CompositionOutput) else CompositionOutput.from_data(x)
+            for x in outputs
+        )
         failure_outputs = tuple(
-            x if isinstance(x, CompositionOutput) else CompositionOutput.from_data(x) for x in failure_outputs
+            x if isinstance(x, CompositionOutput) else CompositionOutput.from_data(x)
+            for x in failure_outputs
         )
         quality_tiers = tuple(
             sorted(
                 (
-                    x if isinstance(x, CompositionQualityTier) else CompositionQualityTier.from_data(x)
+                    x
+                    if isinstance(x, CompositionQualityTier)
+                    else CompositionQualityTier.from_data(x)
                     for x in quality_tiers
                 ),
                 key=lambda x: x.threshold,
@@ -147,7 +166,9 @@ class CompositionRecipeDefinition:
             raise ValueError("success_chance must be between 0 and 1")
         if len({x.quality for x in quality_tiers}) != len(quality_tiers):
             raise ValueError("quality names must be unique")
-        experience = {_id(k, "progression track"): float(v) for k, v in dict(experience or {}).items()}
+        experience = {
+            _id(k, "progression track"): float(v) for k, v in dict(experience or {}).items()
+        }
         if any(v < 0 for v in experience.values()):
             raise ValueError("experience must be >= 0")
         object.__setattr__(self, "recipe_id", _id(recipe_id, "recipe_id"))
@@ -208,7 +229,10 @@ class CompositionRecipeDefinition:
 
     @classmethod
     def from_data(cls, data):
-        if data.get("schema") != "asteria.rpg.composition_recipe" or data.get("version") not in {1, 2}:
+        if data.get("schema") != "asteria.rpg.composition_recipe" or data.get("version") not in {
+            1,
+            2,
+        }:
             raise ValueError("unsupported composition recipe")
         return cls(
             data["recipe_id"],
@@ -218,8 +242,12 @@ class CompositionRecipeDefinition:
             tags=data["tags"],
             station=data.get("station", ""),
             success_chance=data.get("success_chance", 1.0),
-            failure_outputs=[CompositionOutput.from_data(x) for x in data.get("failure_outputs", ())],
-            quality_tiers=[CompositionQualityTier.from_data(x) for x in data.get("quality_tiers", ())],
+            failure_outputs=[
+                CompositionOutput.from_data(x) for x in data.get("failure_outputs", ())
+            ],
+            quality_tiers=[
+                CompositionQualityTier.from_data(x) for x in data.get("quality_tiers", ())
+            ],
             experience=data.get("experience"),
             requires_discovery=data.get("requires_discovery", False),
         )
@@ -244,7 +272,9 @@ class CompositionRuntime:
     def resolve(self, payload):
         return next((x for x in self.recipes.values() if x.matches(payload)), None)
 
-    def craft(self, inventory, payload, *, station="", rng=None, quality_bonus=0.0, progression=None):
+    def craft(
+        self, inventory, payload, *, station="", rng=None, quality_bonus=0.0, progression=None
+    ):
         """Consume materials and produce outputs; ``rng`` drives success and quality rolls."""
         recipe = self.resolve(payload)
         if recipe is None:
@@ -256,10 +286,13 @@ class CompositionRuntime:
             for item_id in values:
                 item_id = str(item_id)
                 needed[item_id] = needed.get(item_id, 0) + 1
-        missing = [(k, n, inventory.count(k)) for k, n in sorted(needed.items()) if inventory.count(k) < n]
+        missing = [
+            (k, n, inventory.count(k)) for k, n in sorted(needed.items()) if inventory.count(k) < n
+        ]
         if missing:
             raise ValueError(
-                "insufficient materials: " + ", ".join(f"{k} requires {n}, owned {o}" for k, n, o in missing)
+                "insufficient materials: "
+                + ", ".join(f"{k} requires {n}, owned {o}" for k, n, o in missing)
             )
         rng = rng or random.Random()
         success = recipe.success_chance >= 1.0 or rng.random() < recipe.success_chance

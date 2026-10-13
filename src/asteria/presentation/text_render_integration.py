@@ -47,7 +47,11 @@ class AnimatedTextRenderComposer:
     def compose_one(self, r: ResolvedText) -> TextRenderPacket:
         if r.font_asset_id and self.font_exists and not self.font_exists(r.font_asset_id):
             raise ValueError("unknown font asset")
-        if r.material_asset_id and self.material_exists and not self.material_exists(r.material_asset_id):
+        if (
+            r.material_asset_id
+            and self.material_exists
+            and not self.material_exists(r.material_asset_id)
+        ):
             raise ValueError("unknown material asset")
         x, y = r.transform.x, r.transform.y
         if r.space == "world" and r.anchor_id:

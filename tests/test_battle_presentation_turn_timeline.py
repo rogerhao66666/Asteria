@@ -32,16 +32,22 @@ def test_speed_ordered_timeline_mirrors_scheduler_without_mutation():
 
 def test_continuous_timeline_exposes_canonical_ready_times():
     members = [member("hero", "heroes", 100), member("mimic", "enemies", 25)]
-    scheduler = BattleScheduler(members, BattleSchedulerDefinition("ct", mode="continuous", timeline_scale=100))
+    scheduler = BattleScheduler(
+        members, BattleSchedulerDefinition("ct", mode="continuous", timeline_scale=100)
+    )
     view = BattleTurnTimelineRuntime().sync(scheduler)
     assert [(x.member_id, x.ready_time) for x in view.turns] == [("hero", 1.0), ("mimic", 4.0)]
 
 
 def test_cast_view_mirrors_pending_action_progress_without_resolving_it():
     members = [member("hero", "heroes", 100)]
-    scheduler = BattleScheduler(members, BattleSchedulerDefinition("ct", mode="continuous", timeline_scale=100))
+    scheduler = BattleScheduler(
+        members, BattleSchedulerDefinition("ct", mode="continuous", timeline_scale=100)
+    )
     scheduler.advance_time(2)
-    timing = BattleActionTimingRuntime([ActionTimingDefinition("meteor", startup=1, cast_time=3, priority=7)])
+    timing = BattleActionTimingRuntime(
+        [ActionTimingDefinition("meteor", startup=1, cast_time=3, priority=7)]
+    )
     timing.begin(BattleAction("hero", "meteor", ("mimic",)), current_time=2)
     before = deepcopy(timing.to_data())
     scheduler.advance_time(4)

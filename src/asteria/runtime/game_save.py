@@ -39,7 +39,9 @@ class GameRuntimeSave:
         self.player_entity_id = str(player_entity_id)
         self.player_facing = str(player_facing)
         self.player_position = (
-            None if player_position is None else (float(player_position[0]), float(player_position[1]))
+            None
+            if player_position is None
+            else (float(player_position[0]), float(player_position[1]))
         )
         self.rpg_state = rpg_state
         self.event_context = event_context or EventContext()
@@ -51,8 +53,11 @@ class GameRuntimeSave:
             raise ValueError("save belongs to another project")
         if project.scene(self.scene_id) is None:
             raise ValueError("save references unknown scene")
-        # The player may have been transferred: it is saved in another scene than the project file places it.
-        if self.player_entity_id and not any(s.get_entity(self.player_entity_id) for s in project.scenes()):
+        # The player may have been transferred: it is saved in another scene than the project file
+        # places it.
+        if self.player_entity_id and not any(
+            s.get_entity(self.player_entity_id) for s in project.scenes()
+        ):
             raise ValueError("save references unknown player entity")
         self.rpg_state.validate(project.rpg_database)
         return True
@@ -65,7 +70,9 @@ class GameRuntimeSave:
             "scene_id": self.scene_id,
             "player_entity_id": self.player_entity_id,
             "player_facing": self.player_facing,
-            "player_position": None if self.player_position is None else list(self.player_position),
+            "player_position": None
+            if self.player_position is None
+            else list(self.player_position),
             "rpg_state": self.rpg_state.to_data(),
             "event_context": self.event_context.to_data(),
             "active_event": self.active_event,
@@ -89,7 +96,9 @@ class GameRuntimeSave:
         return value
 
     def save_json(self, path):
-        Path(path).write_text(json.dumps(self.to_data(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        Path(path).write_text(
+            json.dumps(self.to_data(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
     @classmethod
     def load_json(cls, path, project):

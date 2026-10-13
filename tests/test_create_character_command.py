@@ -1,6 +1,8 @@
-"""CreateCharacterCommand: one reversible unit (files, assets, actor, entity) for a CharacterVisualSet.
+"""CreateCharacterCommand: one reversible unit (files, assets, actor, entity) for a
+CharacterVisualSet.
 
-Ported from the retired Character Generator bundle tests (CB15): the generic guarantees stay covered.
+Ported from the retired Character Generator bundle tests (CB15): the generic guarantees stay
+covered.
 """
 
 from dataclasses import replace
@@ -29,7 +31,11 @@ def _bundle(tmp_path):
     metadata = output / "character.json"
     metadata.write_text('{"schema":"example.character"}', encoding="utf-8")
     assets = tuple(
-        CanonicalAsset(f"characters/hero-one/{name}", f"character.{name}", AssetSource(str(paths[name]), "sheet"))
+        CanonicalAsset(
+            f"characters/hero-one/{name}",
+            f"character.{name}",
+            AssetSource(str(paths[name]), "sheet"),
+        )
         for name in ("walking", "face", "side_view")
     )
     owned = (paths["walking"], paths["face"], paths["side_view"], metadata)
@@ -71,13 +77,15 @@ def test_execute_creates_actor_assets_clips_and_cell_aligned_entity(tmp_path):
         "walk_up",
     )
     for row, direction in enumerate(("down", "left", "right", "up")):
-        assert [frame.frame_index for frame in created.clip_set.get(f"walk_{direction}").keyframes] == [
-            row * 3 + pattern for pattern in (1, 2, 1, 0)
-        ]
+        assert [
+            frame.frame_index for frame in created.clip_set.get(f"walk_{direction}").keyframes
+        ] == [row * 3 + pattern for pattern in (1, 2, 1, 0)]
     assert scene.get_entity(created.entity_id) is created.entity
     transform = created.entity.get(Transform)
     assert (transform.x, transform.y) == (120.0, 192.0)
-    assert created.entity.get(SpriteRenderer2D).sprite_sheet_asset_id == "characters/hero-one/walking"
+    assert (
+        created.entity.get(SpriteRenderer2D).sprite_sheet_asset_id == "characters/hero-one/walking"
+    )
     animator = created.entity.get(Animator2DComponent)
     assert animator.clip_set_id == created.clip_set_id
     assert animator.default_clip == "idle_down"
@@ -109,9 +117,13 @@ def test_undo_removes_an_extra_owned_sheet_and_redo_restores_it(tmp_path):
     project, scene, bundle = _world(tmp_path)
     damaged = bundle.owned_paths[0].parent / "damaged.png"
     Image.new("RGBA", (144, 48), (0, 0, 0, 0)).save(damaged)
-    asset = CanonicalAsset("characters/hero-one/damaged", "character.damaged", AssetSource(str(damaged), "sheet"))
+    asset = CanonicalAsset(
+        "characters/hero-one/damaged", "character.damaged", AssetSource(str(damaged), "sheet")
+    )
     bundle = replace(
-        bundle, canonical_assets=bundle.canonical_assets + (asset,), owned_paths=_owned(bundle) + (damaged,)
+        bundle,
+        canonical_assets=bundle.canonical_assets + (asset,),
+        owned_paths=_owned(bundle) + (damaged,),
     )
     command = CreateCharacterCommand(bundle, project, scene, (0, 0))
 
@@ -123,7 +135,9 @@ def test_undo_removes_an_extra_owned_sheet_and_redo_restores_it(tmp_path):
 
 
 @pytest.mark.parametrize("boundary", ["files", "assets", "actor", "entity"])
-def test_failure_at_each_boundary_rolls_back_without_touching_preexisting_state(tmp_path, boundary):
+def test_failure_at_each_boundary_rolls_back_without_touching_preexisting_state(
+    tmp_path, boundary
+):
     project, scene, bundle = _world(tmp_path)
     existing_asset = CanonicalAsset("existing/asset", "icon", AssetSource("existing.png"))
     project.assets.register(existing_asset)

@@ -1,4 +1,5 @@
-"""ENG-15: rebinding — player overrides (in-game Controls screen) over the project's input map (editor)."""
+"""ENG-15: rebinding — player overrides (in-game Controls screen) over the project's input map
+(editor)."""
 
 import pygame
 import pytest
@@ -16,8 +17,14 @@ def test_capture_rebinds_exclusively_and_reset_restores_defaults():
     menu.capture(InputBinding("key", "space"))
     current = menu.input_map
     assert InputBinding("key", "space") in current.bindings("interact")
-    assert all(InputBinding("key", "space") not in current.bindings(a) for a in current.actions() if a != "interact")
-    assert "interact" in menu.overrides and base.bindings("interact") != current.bindings("interact")
+    assert all(
+        InputBinding("key", "space") not in current.bindings(a)
+        for a in current.actions()
+        if a != "interact"
+    )
+    assert "interact" in menu.overrides and base.bindings("interact") != current.bindings(
+        "interact"
+    )
     menu.reset("interact")
     assert menu.input_map.bindings("interact") == base.bindings("interact")
     menu.row = len(menu.rows()) - 1
@@ -33,7 +40,9 @@ def test_settings_store_overrides_and_old_settings_still_load(tmp_path):
     old["version"] = 1
     old.pop("input_overrides")
     assert GameSettings.from_data(old).input_overrides == {}
-    snapshot = effective_input_map(InputActionMap.default(), loaded.input_overrides).evaluate(RawInputState(keys={"x"}))
+    snapshot = effective_input_map(InputActionMap.default(), loaded.input_overrides).evaluate(
+        RawInputState(keys={"x"})
+    )
     assert snapshot.actions["interact"] == 1.0
 
 
@@ -51,7 +60,9 @@ def test_in_game_controls_screen_rebinds_and_the_new_key_works(runtime):
     key(pygame.K_RETURN)
     assert menu.capturing == "interact"
     key(pygame.K_x)
-    assert menu.capturing is None and runtime.settings.input_overrides["interact"][0]["code"] == "x"
+    assert (
+        menu.capturing is None and runtime.settings.input_overrides["interact"][0]["code"] == "x"
+    )
     key(pygame.K_ESCAPE)
     assert runtime._ui_mode == "settings"
     saved = GameSettings.load(runtime._settings_path())
@@ -74,7 +85,9 @@ def test_editor_input_map_tab_edits_project_defaults_with_undo():
     from asteria.project import Project
 
     QApplication.instance() or QApplication([])
-    ref = Path(__file__).parents[1] / "reference_projects/complex_reference_rpg/project.asteria.json"
+    ref = (
+        Path(__file__).parents[1] / "reference_projects/complex_reference_rpg/project.asteria.json"
+    )
     document = EditorDocument()
     document.set_project(Project.load_json(ref, document.component_registry), file_path=ref)
     widget = InputMapWidget(document)

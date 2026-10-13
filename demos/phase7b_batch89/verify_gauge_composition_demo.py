@@ -1,24 +1,37 @@
 from asteria.rpg import (
-    GaugeCompositionDefinition, GaugeImpactRule, GaugeThresholdRule,
+    GaugeCompositionDefinition,
+    GaugeImpactRule,
+    GaugeThresholdRule,
 )
 
 composition = GaugeCompositionDefinition(
     "stagger_break",
     impacts=(
         GaugeImpactRule(
-            "weakness_pressure", "stagger", "battle.hit",
-            delta=-25, required_outcome_tags_all=("outcome.weak",),
+            "weakness_pressure",
+            "stagger",
+            "battle.hit",
+            delta=-25,
+            required_outcome_tags_all=("outcome.weak",),
         ),
         GaugeImpactRule(
-            "heavy_pressure", "stagger", "battle.hit",
-            delta=-10, required_outcome_tags_all=("attack.heavy",),
+            "heavy_pressure",
+            "stagger",
+            "battle.hit",
+            delta=-10,
+            required_outcome_tags_all=("attack.heavy",),
         ),
     ),
     thresholds=(
         GaugeThresholdRule(
-            "broken", "stagger", "at_or_below", 0,
-            state_id="broken", timeline_shift=20,
-            reset_to=100, emit_trigger="battle.break.triggered",
+            "broken",
+            "stagger",
+            "at_or_below",
+            0,
+            state_id="broken",
+            timeline_shift=20,
+            reset_to=100,
+            emit_trigger="battle.break.triggered",
         ),
     ),
 )

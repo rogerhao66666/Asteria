@@ -72,7 +72,10 @@ def entry_semantics(entry):
             entry.member_id,
             entry.ability_id,
             tuple(entry.target_ids),
-            tuple((t, _value(o), tuple(sorted(getattr(o, "outcome_tags", ())))) for t, o in entry.outcomes),
+            tuple(
+                (t, _value(o), tuple(sorted(getattr(o, "outcome_tags", ()))))
+                for t, o in entry.outcomes
+            ),
         )
     if entry.kind == "turn":
         return ("turn", entry.member_id)
@@ -115,7 +118,18 @@ class PygameTextureDrawer:
         return self.host.load_image(self.resolver.source_uri(asset_id))
 
     def blit_region(
-        self, asset_id, source, x, y, width, height, *, flip_x=False, opacity=1.0, blend="normal", rotation_deg=0.0
+        self,
+        asset_id,
+        source,
+        x,
+        y,
+        width,
+        height,
+        *,
+        flip_x=False,
+        opacity=1.0,
+        blend="normal",
+        rotation_deg=0.0,
     ):
         pg = self.host.pg
         image = self.surface(asset_id).subsurface(pg.Rect(*source))
@@ -129,7 +143,10 @@ class PygameTextureDrawer:
             # pygame rotates counter-clockwise and grows the surface: keep the quad centre fixed
             centre = (x * self.scale + size[0] / 2, y * self.scale + size[1] / 2)
             image = pg.transform.rotate(image, -rotation_deg)
-            position = (round(centre[0] - image.get_width() / 2), round(centre[1] - image.get_height() / 2))
+            position = (
+                round(centre[0] - image.get_width() / 2),
+                round(centre[1] - image.get_height() / 2),
+            )
         if opacity < 1.0 and blend == "add":
             # additive blits ignore surface alpha: fade by darkening the colour instead
             level = max(0, min(255, int(opacity * 255)))
@@ -158,7 +175,8 @@ class PygameTextureDrawer:
 
 
 class _WorldThenUi:
-    """Texture pass of the battle screen; afterwards the host switches drawing to its UI layer (VFX-02)."""
+    """Texture pass of the battle screen; afterwards the host switches drawing to its UI layer
+    (VFX-02)."""
 
     def __init__(self, adapter, textures):
         self.adapter, self.textures, self.done = adapter, textures, False
@@ -215,7 +233,8 @@ class CanonicalBattleAdapter:
         self._schedule = []
         self._order = 0
         self._view_camera = None
-        self._cue_particles = {}  # (sequence, cue id, member) -> [cue, ParticleSystem, age drawn] (VFX-01)
+        # (sequence, cue id, member) -> [cue, ParticleSystem, age drawn] (VFX-01)
+        self._cue_particles = {}
 
     # -- construction -----------------------------------------------------
     def _profile(self, category):
@@ -237,17 +256,29 @@ class CanonicalBattleAdapter:
         self.trace.clear()
         game = self.host.game
         self._battle = game.battle
-        kwargs = {name: self._profile(category) for name, category in PRESENTATION_PROFILE_CATEGORIES.items()}
+        kwargs = {
+            name: self._profile(category)
+            for name, category in PRESENTATION_PROFILE_CATEGORIES.items()
+        }
         kwargs = {name: value for name, value in kwargs.items() if value is not None}
         from asteria.presentation.battle_ui import BattleUiLayoutProfile
 
         layout = self._layout = kwargs.get("layout") or BattleUiLayoutProfile()
-        self.resolver = BattleVisualResolver(game.project, lambda uri: self.host.load_image(uri).get_size())
-        sides = {side: [m.member_id for m in party.members] for side, party in game.battle.parties.items()}
+        self.resolver = BattleVisualResolver(
+            game.project, lambda uri: self.host.load_image(uri).get_size()
+        )
+        sides = {
+            side: [m.member_id for m in party.members]
+            for side, party in game.battle.parties.items()
+        }
         combatants = ()
         self._register_fallback_visuals(sides, layout)
-        missing = self.resolver.missing_profiles([m for members in sides.values() for m in members])
-        self.fallback_reason = f"no combatant visual profile for {', '.join(missing)}" if missing else ""
+        missing = self.resolver.missing_profiles(
+            [m for members in sides.values() for m in members]
+        )
+        self.fallback_reason = (
+            f"no combatant visual profile for {', '.join(missing)}" if missing else ""
+        )
         if not missing:
             try:
                 combatants = self.resolver.combatant_visuals(sides, self.placement_by_side, layout)
@@ -279,7 +310,9 @@ class CanonicalBattleAdapter:
         }
         self.screen.coordinator.attach(game.battle.hooks)
         layout = self.screen.composer.layout
-        scale = min(self.host.width / layout.virtual_width, self.host.height / layout.virtual_height)
+        scale = min(
+            self.host.width / layout.virtual_width, self.host.height / layout.virtual_height
+        )
         self._ui_backend = PygameBattleUiBackend(self.host.screen, scale=scale)
         self._ui_backend.vfx_drawer = self._draw_vfx
         self.renderer = BattleUiRenderer(self._ui_backend, self._theme())
@@ -290,11 +323,12 @@ class CanonicalBattleAdapter:
         self._shown_down = {}
         self._start_boss_intro(game, layout)
 
-    # -- boss intro camera (CAM-02) -------------------------------------------------------------------
+    # -- boss intro camera (CAM-02) ---------------------------------------------------------------
     BOSS_INTRO = {"zoom": 1.35, "blend": 0.5, "hold": 0.9}
 
     def _start_boss_intro(self, game, layout):
-        """Encounters tagged "boss" open with the camera on the boss, then ease back to the whole field."""
+        """Encounters tagged "boss" open with the camera on the boss, then ease back to the whole
+        field."""
         from asteria.runtime.camera import CameraDirector, CameraShot
 
         self.camera_director = CameraDirector()
@@ -321,7 +355,9 @@ class CanonicalBattleAdapter:
             if isinstance(settings.get("boss_intro"), dict)
             else self.BOSS_INTRO
         )
-        shot = CameraShot(visual.anchor.x, visual.anchor.y - height * 0.5, zoom=float(intro["zoom"]))
+        shot = CameraShot(
+            visual.anchor.x, visual.anchor.y - height * 0.5, zoom=float(intro["zoom"])
+        )
         self.camera_director.update(0.0, (*self._camera_center, 1.0))
         self.camera_director.focus(shot, blend=float(intro["blend"]))
         release_at = float(intro["blend"]) + float(intro["hold"])
@@ -330,14 +366,17 @@ class CanonicalBattleAdapter:
         self._at(release_at, lambda: self.camera_director.release(blend=float(intro["blend"])))
 
     def _clamped_view(self, director, view):
-        """Keep a zoomed battle camera inside the battlefield so the background always covers the screen."""
+        """Keep a zoomed battle camera inside the battlefield so the background always covers the
+        screen."""
         from asteria.runtime.camera import clamp_center_to_bounds
 
         layout = self.screen.composer.layout
         width, height = layout.virtual_width, layout.virtual_height
         x, y, zoom = view
         sx, sy = director.shake_offset
-        x, y = clamp_center_to_bounds(x - sx, y - sy, width / zoom, height / zoom, (0.0, 0.0, width, height))
+        x, y = clamp_center_to_bounds(
+            x - sx, y - sy, width / zoom, height / zoom, (0.0, 0.0, width, height)
+        )
         return (x + sx, y + sy, zoom)
 
     @staticmethod
@@ -394,11 +433,12 @@ class CanonicalBattleAdapter:
     def particle_count(self):
         return 0 if self.screen is None else len(self.screen.feedback.vfx)
 
-    # -- projects without battle art: generated combatant and effect sheets --------------------------
+    # -- projects without battle art: generated combatant and effect sheets -----------------------
     FRAME_HEIGHT = 96
 
     def _source_image(self, member_id, side, index):
-        """The manifest image a project without battle art shows for a combatant (None: draw a silhouette)."""
+        """The manifest image a project without battle art shows for a combatant (None: draw a
+        silhouette)."""
         battle = self.host.manifest.get("battle", {})
         try:
             if side == "heroes" and battle.get("heroes"):
@@ -406,7 +446,9 @@ class CanonicalBattleAdapter:
             enemy = str(member_id).split(":", 1)[0]
             rel = battle.get("enemy_sprites", {}).get(enemy)
             if rel:
-                return self.host.load_image(rel), True  # legacy screens drew enemies facing left: flip
+                return self.host.load_image(
+                    rel
+                ), True  # legacy screens drew enemies facing left: flip
         except Exception as exc:  # pygame.error for an unreadable image: fall back to a silhouette
             if type(exc).__name__ not in ("error", "FileNotFoundError"):
                 raise
@@ -462,11 +504,15 @@ class CanonicalBattleAdapter:
         return sheet, (fw, fh), clips
 
     def _show_new_combatants(self, game):
-        """Members that joined after the battle began (SUMMON, reinforcements) get a visual and appear."""
+        """Members that joined after the battle began (SUMMON, reinforcements) get a visual and
+        appear."""
         if not self.visuals_enabled:
             return
         shown = {v.member_id for v in self.screen.scene.combatants}
-        sides = {side: [m.member_id for m in party.members] for side, party in game.battle.parties.items()}
+        sides = {
+            side: [m.member_id for m in party.members]
+            for side, party in game.battle.parties.items()
+        }
         new = {side: [m for m in members if m not in shown] for side, members in sides.items()}
         if not any(new.values()):
             return
@@ -483,8 +529,11 @@ class CanonicalBattleAdapter:
         self.screen.animation.compositions.update(self._compositions(added))
 
     def _register_fallback_visuals(self, sides, layout):
-        """Every combatant without a combatant_visuals profile gets a generated one (no legacy fallback)."""
-        target = float(getattr(layout, "virtual_height", 180)) * 0.16  # logical height of a regular combatant
+        """Every combatant without a combatant_visuals profile gets a generated one (no legacy
+        fallback)."""
+        target = (
+            float(getattr(layout, "virtual_height", 180)) * 0.16
+        )  # logical height of a regular combatant
         done = set()
         for side, members in sides.items():
             for index, member_id in enumerate(members):
@@ -497,13 +546,20 @@ class CanonicalBattleAdapter:
                     image if image is not None else self._silhouette(key, side), flip=flip
                 )
                 asset_id = f"generated.combatant.{key}"
-                self.resolver.register_generated(asset_id, sheet, sheet.get_size(), frame_size=frame_size, clips=clips)
-                size = (self.host._enemy_layout(member_id) or {}).get("size") if side != "heroes" else None
+                self.resolver.register_generated(
+                    asset_id, sheet, sheet.get_size(), frame_size=frame_size, clips=clips
+                )
+                size = (
+                    (self.host._enemy_layout(member_id) or {}).get("size")
+                    if side != "heroes"
+                    else None
+                )
                 logical = target * (float(size[1]) / 120.0 if size else 1.0)
                 self.resolver.register_generated_profile(key, asset_id, logical / frame_size[1])
 
     def _manifest_skill_fx(self, ability_id):
-        """Generated VFX sheet for a manifest skill ``fx`` image (4 columns, ``frames`` cells), or None."""
+        """Generated VFX sheet for a manifest skill ``fx`` image (4 columns, ``frames`` cells), or
+        None."""
         meta = self.host.manifest.get("battle", {}).get("skills", {}).get(ability_id) or {}
         if not meta.get("fx"):
             return None
@@ -511,7 +567,9 @@ class CanonicalBattleAdapter:
         if not self.resolver.is_generated(asset_id):
             try:
                 image = self.host.load_image(meta["fx"])
-            except Exception as exc:  # pygame.error / missing file: no effect, the action still plays
+            except (
+                Exception
+            ) as exc:  # pygame.error / missing file: no effect, the action still plays
                 if type(exc).__name__ not in ("error", "FileNotFoundError"):
                     raise
                 return None
@@ -524,7 +582,13 @@ class CanonicalBattleAdapter:
                 image,
                 image.get_size(),
                 frame_size=frame,
-                clips={"play": {"frames": list(range(count)), "frame_duration": 0.42 / max(1, count), "loop": False}},
+                clips={
+                    "play": {
+                        "frames": list(range(count)),
+                        "frame_duration": 0.42 / max(1, count),
+                        "loop": False,
+                    }
+                },
                 pivot=(0.5, 0.5),
                 vfx={"anchor": "center", "scale": 1.0},
             )
@@ -549,17 +613,25 @@ class CanonicalBattleAdapter:
             if entry.kind == "battle_started":
                 coordinator.start()
             elif entry.kind == "turn":
-                self._at(at, lambda e=entry: coordinator.push_custom("battle.turn", source_id=e.member_id))
+                self._at(
+                    at,
+                    lambda e=entry: coordinator.push_custom("battle.turn", source_id=e.member_id),
+                )
             elif entry.kind == "action":
                 self._push_action(entry, at)
             elif entry.kind == "gauge":
                 self._at(self._last_impact, lambda e=entry: coordinator.push_gauge_result(e.data))
             elif entry.kind == "battle_finished":
                 data = entry.data
-                outcome = BattleOutcome(True, tuple(data["winning_sides"]), tuple(data["defeated_sides"]))
+                outcome = BattleOutcome(
+                    True, tuple(data["winning_sides"]), tuple(data["defeated_sides"])
+                )
                 self._at(at, lambda o=outcome, d=data: self._finish(o, d))
         for event in hook_events:
-            self._at(self._last_impact if self.visuals_enabled else self._clock, lambda e=event: coordinator.reemit(e))
+            self._at(
+                self._last_impact if self.visuals_enabled else self._clock,
+                lambda e=event: coordinator.reemit(e),
+            )
         self._sync_lifecycle()
         self._release_due()
 
@@ -582,7 +654,8 @@ class CanonicalBattleAdapter:
             if not active and not shown_down:
                 self._shown_down[visual.member_id] = True
                 self._at(
-                    self._last_impact, lambda m=visual.member_id: self.screen.animation.combatant(m).mark_defeated()
+                    self._last_impact,
+                    lambda m=visual.member_id: self.screen.animation.combatant(m).mark_defeated(),
                 )
             elif active and shown_down:
                 self._shown_down[visual.member_id] = False
@@ -614,18 +687,23 @@ class CanonicalBattleAdapter:
             elif kind == ActionCueKind.VFX:
                 payload["asset_id"] = beat.cue
                 particles = effect_definition(self.host.game.project.assets, beat.cue)
-                if particles is not None:  # VFX-01: emission plus the longest life, so every particle finishes
+                if (
+                    particles is not None
+                ):  # VFX-01: emission plus the longest life, so every particle finishes
                     emit = 1.0 if particles.looping else particles.duration
                     payload.setdefault("duration", emit + particles.lifetime[1])
                 else:
-                    payload.setdefault("duration", max(0.05, self.resolver.clip_duration(beat.cue, "play")))
+                    payload.setdefault(
+                        "duration", max(0.05, self.resolver.clip_duration(beat.cue, "play"))
+                    )
             elif kind == ActionCueKind.AUDIO:
                 payload["asset_id"] = beat.cue
             else:
                 payload["effect"] = beat.cue
             cues.append(
                 PresentationCue(
-                    f"action.{entry.ability_id}", ActionCue(f"{member_id}.{beat.beat_id}", beat.at, kind, payload)
+                    f"action.{entry.ability_id}",
+                    ActionCue(f"{member_id}.{beat.beat_id}", beat.at, kind, payload),
                 )
             )
         return cues
@@ -633,7 +711,9 @@ class CanonicalBattleAdapter:
     def _push_action(self, entry, start):
         coordinator = self.screen.coordinator
         targets = tuple(entry.target_ids)
-        sequence = self.resolver.motion_sequence(entry.ability_id) if self.visuals_enabled else None
+        sequence = (
+            self.resolver.motion_sequence(entry.ability_id) if self.visuals_enabled else None
+        )
 
         def announce():
             coordinator.push_custom(
@@ -642,11 +722,15 @@ class CanonicalBattleAdapter:
                 payload={"ability_id": entry.ability_id, "target_ids": list(targets)},
             )
             if targets:
-                coordinator.push_target_selection(targets, primary_target_id=targets[0], source_id=entry.member_id)
+                coordinator.push_target_selection(
+                    targets, primary_target_id=targets[0], source_id=entry.member_id
+                )
 
         def values():
             for target, outcome in entry.outcomes:
-                coordinator.push_resolved_value(outcome, target_id=target, source_id=entry.member_id)
+                coordinator.push_resolved_value(
+                    outcome, target_id=target, source_id=entry.member_id
+                )
 
         self._at(start, announce)
         if sequence is None:
@@ -676,7 +760,10 @@ class CanonicalBattleAdapter:
                     for target, _ in entry.outcomes
                 )
                 # Effects configured per skill in the manifest (projects without motion sequences).
-                skill = self.host.manifest.get("battle", {}).get("skills", {}).get(entry.ability_id) or {}
+                skill = (
+                    self.host.manifest.get("battle", {}).get("skills", {}).get(entry.ability_id)
+                    or {}
+                )
                 fx = self._manifest_skill_fx(entry.ability_id)
                 for target in [t for t, _ in entry.outcomes][:1] if fx else ():
                     cues.append(
@@ -709,19 +796,25 @@ class CanonicalBattleAdapter:
             self._last_impact = start
             return
         for beat in sequence.beats:
-            if beat.channel == "motion_fx":  # afterimage / trail echoes of the source or targets (VFX-03)
+            if (
+                beat.channel == "motion_fx"
+            ):  # afterimage / trail echoes of the source or targets (VFX-03)
                 payload = dict(beat.payload_dict())
                 hold = float(payload.pop("duration", beat.duration) or 0.3)
                 members = (
                     (entry.member_id,)
                     if beat.member_id in (None, "@source")
-                    else (tuple(entry.target_ids) if beat.member_id == "@target" else (beat.member_id,))
+                    else (
+                        tuple(entry.target_ids)
+                        if beat.member_id == "@target"
+                        else (beat.member_id,)
+                    )
                 )
                 for member in members:
                     self._at(
                         start + beat.at,
-                        lambda m=member, c=beat.cue, d=hold, p=payload: self.screen.animation.start_motion_fx(
-                            m, c, d, **p
+                        lambda m=member, c=beat.cue, d=hold, p=payload: (
+                            self.screen.animation.start_motion_fx(m, c, d, **p)
                         ),
                     )
                 continue
@@ -729,8 +822,13 @@ class CanonicalBattleAdapter:
                 hold = float(beat.payload_dict().get("duration", beat.duration) or 0.0)
                 self._at(start + beat.at, lambda d=hold: self._start_hit_stop(d))
                 continue
-            self._at(start + beat.at, lambda b=beat: coordinator.consume_timeline_cues(self._beat_cues(entry, b)))
-        impact = next((b.at for b in sequence.beats if b.channel == "animation" and b.cue == "hit"), 0.0)
+            self._at(
+                start + beat.at,
+                lambda b=beat: coordinator.consume_timeline_cues(self._beat_cues(entry, b)),
+            )
+        impact = next(
+            (b.at for b in sequence.beats if b.channel == "animation" and b.cue == "hit"), 0.0
+        )
         self._at(start + impact, values)
         self._last_impact = start + impact
         self._cursor = start + sequence.duration
@@ -750,14 +848,29 @@ class CanonicalBattleAdapter:
             kind, payload = event.kind, event.payload
             if kind == BattlePresentationEventKind.SCENE_STARTED:
                 result.append(("battle_started",))
-            elif kind == BattlePresentationEventKind.CUSTOM and payload.get("event_id") == "battle.turn":
+            elif (
+                kind == BattlePresentationEventKind.CUSTOM
+                and payload.get("event_id") == "battle.turn"
+            ):
                 result.append(("turn", event.source_id))
-            elif kind == BattlePresentationEventKind.CUSTOM and payload.get("event_id") == "battle.action":
-                pending = [event.source_id, payload["ability_id"], tuple(payload["target_ids"]), []]
+            elif (
+                kind == BattlePresentationEventKind.CUSTOM
+                and payload.get("event_id") == "battle.action"
+            ):
+                pending = [
+                    event.source_id,
+                    payload["ability_id"],
+                    tuple(payload["target_ids"]),
+                    [],
+                ]
                 result.append(pending)
             elif kind == BattlePresentationEventKind.RESOLVED_VALUE and pending is not None:
                 pending[3].append(
-                    (payload["target_id"], round(float(payload["value"]), 6), tuple(sorted(payload["outcome_tags"])))
+                    (
+                        payload["target_id"],
+                        round(float(payload["value"]), 6),
+                        tuple(sorted(payload["outcome_tags"])),
+                    )
                 )
             elif kind == BattlePresentationEventKind.GAUGE_THRESHOLD:
                 key = ("gauge", event.source_id, payload["composition_id"])
@@ -770,7 +883,10 @@ class CanonicalBattleAdapter:
         # Keep the newest action open (its values may still arrive); report the rest.
         self._semantic_action = result.pop() if result and isinstance(result[-1], list) else None
         return [
-            ("action", item[0], item[1], item[2], tuple(item[3])) if isinstance(item, list) else item for item in result
+            ("action", item[0], item[1], item[2], tuple(item[3]))
+            if isinstance(item, list)
+            else item
+            for item in result
         ]
 
     def finalize_trace(self):
@@ -799,7 +915,9 @@ class CanonicalBattleAdapter:
         self._release_due()
         director = getattr(self, "camera_director", None)
         if director is not None:
-            self._camera_view = self._clamped_view(director, director.update(dt, (*self._camera_center, 1.0)))
+            self._camera_view = self._clamped_view(
+                director, director.update(dt, (*self._camera_center, 1.0))
+            )
         if game.battle is not None:
             self._show_new_combatants(game)
             self.screen.sync_battle(game.battle, current_member_id=self.host._battle_actor())
@@ -816,25 +934,40 @@ class CanonicalBattleAdapter:
             entries = []
             for i, (ability_id, meta) in enumerate(skills):
                 wait = game.battle.cooldown_remaining(actor, ability_id)  # GP-02 cooldowns
-                label = f"{i + 1}  {meta.get('label', ability_id)}" + (f"  ({wait})" if wait else "")
+                label = f"{i + 1}  {meta.get('label', ability_id)}" + (
+                    f"  ({wait})" if wait else ""
+                )
                 reason = f"Ready in {wait} turn" + ("" if wait == 1 else "s") if wait else ""
-                entries.append(BattleActionEntry(ability_id, label, order=i, enabled=not wait, disabled_reason=reason))
+                entries.append(
+                    BattleActionEntry(
+                        ability_id, label, order=i, enabled=not wait, disabled_reason=reason
+                    )
+                )
             capture = game.capture_targets() if skills else ()
             if capture:
                 best = max(chance for _, chance, _ in capture)
-                entries.append(BattleActionEntry("capture", f"X  Capture ({best * 100:.0f}%)", order=len(entries)))
+                entries.append(
+                    BattleActionEntry(
+                        "capture", f"X  Capture ({best * 100:.0f}%)", order=len(entries)
+                    )
+                )
             if skills and game.rules.boost_enabled and game.max_boost_level(actor) > 0:
                 amount = game.battle.battle_resources.current(actor, game.rules.boost_resource_id)
                 label = game.rules.boost_resource_id.replace("_", " ").title()
                 level = getattr(self.host, "_boost_level", 0)
                 entries.append(
-                    BattleActionEntry("boost", f"B  Boost x{level + 1} ({label} {int(amount)})", order=len(entries))
+                    BattleActionEntry(
+                        "boost",
+                        f"B  Boost x{level + 1} ({label} {int(amount)})",
+                        order=len(entries),
+                    )
                 )
             self.screen.set_action_entries(entries)
         self.screen.update(dt)
 
     def member_screen_box(self, member_id):
-        """``(centre_x, top_y, feet_y)`` of a combatant on the window in pixels, or None when not shown."""
+        """``(centre_x, top_y, feet_y)`` of a combatant on the window in pixels, or None when not
+        shown."""
         view = self._view_camera
         if view is None or self.screen is None:
             return None
@@ -869,7 +1002,9 @@ class CanonicalBattleAdapter:
         else:
             menu.show(rows, rows[0].category if rows else "Target", commands.cursor)
         target = commands.selected_target(actor)
-        feedback.target_ids, feedback.primary_target_id = ((target,), target) if target else ((), None)
+        feedback.target_ids, feedback.primary_target_id = (
+            ((target,), target) if target else ((), None)
+        )
 
     def _background(self):
         """The battle background image, or a plain backdrop when the project has none."""
@@ -886,7 +1021,10 @@ class CanonicalBattleAdapter:
             for y in range(self.host.height):  # sky-to-ground gradient
                 t = y / max(1, self.host.height - 1)
                 pg.draw.line(
-                    image, (int(28 + 30 * t), int(34 + 50 * t), int(52 + 10 * t)), (0, y), (self.host.width, y)
+                    image,
+                    (int(28 + 30 * t), int(34 + 50 * t), int(52 + 10 * t)),
+                    (0, y),
+                    (self.host.width, y),
                 )
         self._background_image = image
         return image
@@ -895,7 +1033,11 @@ class CanonicalBattleAdapter:
         if not self._ensure():
             return None
         layout = self.screen.composer.layout
-        cx, cy, zoom = getattr(self, "_camera_view", None) or (layout.virtual_width / 2, layout.virtual_height / 2, 1.0)
+        cx, cy, zoom = getattr(self, "_camera_view", None) or (
+            layout.virtual_width / 2,
+            layout.virtual_height / 2,
+            1.0,
+        )
         base = Camera2D(
             cx - layout.virtual_width / (2 * zoom),
             cy - layout.virtual_height / (2 * zoom),
@@ -909,13 +1051,16 @@ class CanonicalBattleAdapter:
         scale = self.host.width / layout.virtual_width
         size = (round(self.host.width * zoom), round(self.host.height * zoom))
         self.host.screen.blit(
-            self.host.pg.transform.smoothscale(background, size), (round(bx * scale), round(by * scale))
+            self.host.pg.transform.smoothscale(background, size),
+            (round(bx * scale), round(by * scale)),
         )
         textures = self.textures if self.screen.scene.combatants else None
         self._view_camera = self.screen.camera_feedback.camera_view(base)
         self._ui_backend.screen = self.host.screen  # the world layer, until the textures are drawn
         world_then_ui = _WorldThenUi(self, textures)
-        result = self.screen.render(base, ui_renderer=self.renderer, texture_renderer=world_then_ui)
+        result = self.screen.render(
+            base, ui_renderer=self.renderer, texture_renderer=world_then_ui
+        )
         if not world_then_ui.done:
             world_then_ui.finish()
         self.audio_cues.extend(result.audio_cues)
@@ -926,7 +1071,9 @@ class CanonicalBattleAdapter:
         out = {}
         for visual in combatants:
             try:
-                composition = CharacterComposition.from_meta(self.resolver.sheet_meta(visual.sprite_sheet_asset_id))
+                composition = CharacterComposition.from_meta(
+                    self.resolver.sheet_meta(visual.sprite_sheet_asset_id)
+                )
             except (KeyError, TypeError, ValueError) as exc:
                 self.composition_errors.append(f"{visual.sprite_sheet_asset_id}: {exc}")
                 continue
@@ -935,7 +1082,8 @@ class CanonicalBattleAdapter:
         return out
 
     def _draw_vfx(self, effect):
-        """Play a VFX sprite sheet cue centred on its member (camera shake applied), in the world layer."""
+        """Play a VFX sprite sheet cue centred on its member (camera shake applied), in the world
+        layer."""
         drawing_world = getattr(self.host, "drawing_world", None)
         with self.host.profiler.section("vfx"):
             if drawing_world is None:
@@ -961,11 +1109,17 @@ class CanonicalBattleAdapter:
             return
         if clip is None:
             return
-        frame = sheet.frames[clip.keyframes[vfx_keyframe(effect.age, effect.duration, len(clip.keyframes))].frame_index]
+        frame = sheet.frames[
+            clip.keyframes[
+                vfx_keyframe(effect.age, effect.duration, len(clip.keyframes))
+            ].frame_index
+        ]
         body = self.resolver.sprite_sheet(visual.sprite_sheet_asset_id).frames[0]
         height = body.height / visual.source_pixels_per_logical_pixel
         placement = vfx_placement(self.resolver.sheet_meta(asset_id), payload)
-        x, y, width, tall = vfx_rect(placement, visual.anchor.x, visual.anchor.y, height, frame.width, frame.height)
+        x, y, width, tall = vfx_rect(
+            placement, visual.anchor.x, visual.anchor.y, height, frame.width, frame.height
+        )
         cx, cy = self._view_camera.world_to_screen(x, y)
         self.textures.blit_region(
             asset_id,
@@ -992,9 +1146,13 @@ class CanonicalBattleAdapter:
         placement = vfx_placement({}, payload)
         x, y, _, _ = vfx_rect(placement, visual.anchor.x, visual.anchor.y, height, 0.0, 0.0)
         if entry is None or effect.age < entry[2]:  # new, or the same cue started again
-            emit_for = float(payload.get("emit_for", 1.0 if definition.looping else definition.duration))
+            emit_for = float(
+                payload.get("emit_for", 1.0 if definition.looping else definition.duration)
+            )
             seed = f"{key[0]}:{key[1]}:{key[2]}"
-            system = ParticleSystem(definition, x=x, y=y, seed=seed, scale=placement["scale"], emit_for=emit_for)
+            system = ParticleSystem(
+                definition, x=x, y=y, seed=seed, scale=placement["scale"], emit_for=emit_for
+            )
             if len(systems) > 64:  # cues end with their beat; forget old ones
                 systems.clear()
             entry = systems[key] = [effect, system, 0.0]
@@ -1022,7 +1180,8 @@ class CanonicalBattleAdapter:
 def create_battle_presentation_adapter(host):
     """The battle presentation for the manifest (``battle.presentation``): the canonical screen.
 
-    The legacy pygame screen was retired (CB15 A9, D19); a manifest that still names ``legacy`` gets
+    The legacy pygame screen was retired (CB15 A9, D19); a manifest that still names ``legacy``
+    gets
     the canonical screen, which draws generated combatants from the manifest images when a project
     has no battle art. ``legacy_requested`` records that for the Problems panel / logs.
     """

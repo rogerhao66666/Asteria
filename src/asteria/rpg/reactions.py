@@ -63,7 +63,9 @@ class ReactionDefinition:
         object.__setattr__(self, "trigger", _id(trigger, "trigger"))
         object.__setattr__(self, "reactor_selector", _id(reactor_selector, "reactor_selector"))
         object.__setattr__(self, "target_selector", _id(target_selector, "target_selector"))
-        object.__setattr__(self, "ability_id", None if ability_id is None else _id(ability_id, "ability_id"))
+        object.__setattr__(
+            self, "ability_id", None if ability_id is None else _id(ability_id, "ability_id")
+        )
         object.__setattr__(self, "priority", int(priority))
         object.__setattr__(self, "required_tags", _tags(required_tags))
         object.__setattr__(self, "blocked_tags", _tags(blocked_tags))
@@ -73,13 +75,17 @@ class ReactionDefinition:
         if count < 1:
             raise ValueError("max_per_chain must be >= 1")
         object.__setattr__(self, "max_per_chain", count)
-        object.__setattr__(self, "action_target_policy", _id(action_target_policy, "action_target_policy"))
+        object.__setattr__(
+            self, "action_target_policy", _id(action_target_policy, "action_target_policy")
+        )
 
     def matches(self, trigger, tags):
         if self.trigger != str(trigger):
             return False
         values = set(_tags(tags))
-        return set(self.required_tags).issubset(values) and not set(self.blocked_tags).intersection(values)
+        return set(self.required_tags).issubset(values) and not set(
+            self.blocked_tags
+        ).intersection(values)
 
     def to_data(self):
         return {
@@ -150,7 +156,15 @@ class ReactionChainResult:
 class ReactionRuntime:
     """Deterministic reaction queue with bounded recursion/chain execution."""
 
-    def __init__(self, definitions=(), *, hooks=None, max_depth=16, max_reactions=256, selector_resolvers=None):
+    def __init__(
+        self,
+        definitions=(),
+        *,
+        hooks=None,
+        max_depth=16,
+        max_reactions=256,
+        selector_resolvers=None,
+    ):
         self.definitions = {}
         for definition in definitions:
             if not isinstance(definition, ReactionDefinition):
@@ -176,7 +190,9 @@ class ReactionRuntime:
         if selector == "event_targets":
             return tuple(x.member_id for x in targets)
         if selector == "allies_of_source":
-            return tuple(sorted(x.member_id for x in battle.members.values() if x.side == source.side))
+            return tuple(
+                sorted(x.member_id for x in battle.members.values() if x.side == source.side)
+            )
         if selector == "allies_of_source_except_source":
             return tuple(
                 sorted(
@@ -186,7 +202,9 @@ class ReactionRuntime:
                 )
             )
         if selector == "opponents_of_source":
-            return tuple(sorted(x.member_id for x in battle.members.values() if x.side != source.side))
+            return tuple(
+                sorted(x.member_id for x in battle.members.values() if x.side != source.side)
+            )
         if selector == "allies_of_targets":
             sides = {x.side for x in targets}
             return tuple(sorted(x.member_id for x in battle.members.values() if x.side in sides))
@@ -195,12 +213,18 @@ class ReactionRuntime:
             target_ids = {x.member_id for x in targets}
             return tuple(
                 sorted(
-                    x.member_id for x in battle.members.values() if x.side in sides and x.member_id not in target_ids
+                    x.member_id
+                    for x in battle.members.values()
+                    if x.side in sides and x.member_id not in target_ids
                 )
             )
         if selector == "all_present":
             return tuple(
-                sorted(x.member_id for x in battle.members.values() if battle.combatants.state(x.member_id).present)
+                sorted(
+                    x.member_id
+                    for x in battle.members.values()
+                    if battle.combatants.state(x.member_id).present
+                )
             )
         raise KeyError(f"unknown reactor selector: {selector}")
 
@@ -222,7 +246,11 @@ class ReactionRuntime:
         from .battle import BattleAction
 
         event = ReactionEvent(
-            _id(trigger, "trigger"), _id(source_id, "source_id"), tuple(str(x) for x in target_ids), _tags(tags), 0
+            _id(trigger, "trigger"),
+            _id(source_id, "source_id"),
+            tuple(str(x) for x in target_ids),
+            _tags(tags),
+            0,
         )
         queue = []
         sequence = 0
@@ -237,7 +265,9 @@ class ReactionRuntime:
             if ev.depth > self.max_depth:
                 suppressed.append("max_depth")
                 return
-            for definition in sorted(self.definitions.values(), key=lambda x: (-x.priority, x.reaction_id)):
+            for definition in sorted(
+                self.definitions.values(), key=lambda x: (-x.priority, x.reaction_id)
+            ):
                 if not definition.matches(ev.trigger, ev.tags):
                     continue
                 for reactor_id in self._reactors(battle, definition.reactor_selector, ev):
@@ -250,7 +280,9 @@ class ReactionRuntime:
                     key = (definition.reaction_id, reactor_id)
                     if counts.get(key, 0) >= definition.max_per_chain:
                         continue
-                    target_values = self._targets(battle, definition.target_selector, ev, reactor_id)
+                    target_values = self._targets(
+                        battle, definition.target_selector, ev, reactor_id
+                    )
                     request = ReactionRequest(
                         definition.reaction_id,
                         reactor_id,
@@ -260,7 +292,16 @@ class ReactionRuntime:
                         ev.depth,
                         definition.action_target_policy,
                     )
-                    heappush(queue, (-definition.priority, sequence, definition.reaction_id, reactor_id, request))
+                    heappush(
+                        queue,
+                        (
+                            -definition.priority,
+                            sequence,
+                            definition.reaction_id,
+                            reactor_id,
+                            request,
+                        ),
+                    )
                     sequence += 1
 
         enqueue(event)
@@ -275,7 +316,12 @@ class ReactionRuntime:
                 continue
             counts[key] = counts.get(key, 0) + 1
             executed.append(request)
-            emit_hook(self.hooks, "rpg.battle.reaction_started", source=request.reactor_id, data={"request": request})
+            emit_hook(
+                self.hooks,
+                "rpg.battle.reaction_started",
+                source=request.reactor_id,
+                data={"request": request},
+            )
             if request.action_target_policy == "replace_event_targets_with_reactor":
                 final_target_ids = (request.reactor_id,)
             elif request.action_target_policy != "preserve":
@@ -286,7 +332,8 @@ class ReactionRuntime:
             action_result = None
             if request.ability_id is not None:
                 action_result = battle.execute(
-                    BattleAction(request.reactor_id, request.ability_id, request.target_ids), rng=rng
+                    BattleAction(request.reactor_id, request.ability_id, request.target_ids),
+                    rng=rng,
                 )
                 results.append(action_result)
                 nested = ReactionEvent(
@@ -305,6 +352,13 @@ class ReactionRuntime:
             )
         if queue:
             suppressed.append("max_reactions")
-        chain = ReactionChainResult(tuple(executed), tuple(results), tuple(suppressed), tuple(final_target_ids))
-        emit_hook(self.hooks, "rpg.battle.reaction_chain_finished", source=source_id, data={"result": chain})
+        chain = ReactionChainResult(
+            tuple(executed), tuple(results), tuple(suppressed), tuple(final_target_ids)
+        )
+        emit_hook(
+            self.hooks,
+            "rpg.battle.reaction_chain_finished",
+            source=source_id,
+            data={"result": chain},
+        )
         return chain

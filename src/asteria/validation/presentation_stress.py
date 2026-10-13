@@ -74,7 +74,14 @@ class BattlePresentationStressHarness:
                 )
             )
         # Boss + four adds + one summon.
-        combatants = (("boss", 2.8), ("add.0", 1), ("add.1", 1), ("add.2", 1), ("add.3", 1), ("summon", 1))
+        combatants = (
+            ("boss", 2.8),
+            ("add.0", 1),
+            ("add.1", 1),
+            ("add.2", 1),
+            ("add.3", 1),
+            ("summon", 1),
+        )
         for i, (name, scale) in enumerate(combatants):
             draws.append(
                 BattleRenderDraw(
@@ -173,7 +180,9 @@ class BattlePresentationStressHarness:
         draws = self.build_draws()
 
         # All hot assets are known before frame processing.
-        required = tuple(sorted({d.asset_id for d in draws} | {d.atlas_id for d in draws if d.atlas_id}))
+        required = tuple(
+            sorted({d.asset_id for d in draws} | {d.atlas_id for d in draws if d.atlas_id})
+        )
         self.preload.require(*required)
         self.preload.mark_loaded(*required)
 

@@ -23,7 +23,8 @@ class ActionCueKind(str, Enum):
     COMBO_WINDOW = "combo_window"  # payload: duration, next (optional follow-up timeline id)
     GAMEPLAY_EVENT = "gameplay_event"  # payload: name, ...
     ARMOR = "armor"  # payload: duration, level (default 1) — super armor while the action runs
-    PROJECTILE = "projectile"  # payload: projectile_id, count, spread (deg), angle (deg), offset_x, offset_y
+    # payload: projectile_id, count, spread (deg), angle (deg), offset_x, offset_y
+    PROJECTILE = "projectile"
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,11 +159,15 @@ class ActionTimelinePlayer:
                 ability_id = str(cue.payload.get("ability_id", "")).strip()
                 if not ability_id:
                     raise ValueError("gameplay ability cue requires ability_id")
-                gameplay.append(self.ability_runtime.execute(ability_id, self.source, self.targets))
+                gameplay.append(
+                    self.ability_runtime.execute(ability_id, self.source, self.targets)
+                )
             else:
                 presentation.append(PresentationCue(self.timeline.timeline_id, cue))
         self.time = end
-        self.completed = self._next >= len(self.timeline.cues) and self.time >= self.timeline.duration
+        self.completed = (
+            self._next >= len(self.timeline.cues) and self.time >= self.timeline.duration
+        )
         return TimelineAdvanceResult(tuple(gameplay), tuple(presentation), self.completed)
 
     def snapshot(self):

@@ -30,18 +30,35 @@ WEATHER_KINDS = ("none", "rain", "snow", "leaves", "dust")
     type_name="asteria.Environment2D",
     version=1,
     fields=(
-        Field("lighting_enabled", bool, False, label="Lighting", tooltip="Darken the world to the ambient light."),
+        Field(
+            "lighting_enabled",
+            bool,
+            False,
+            label="Lighting",
+            tooltip="Darken the world to the ambient light.",
+        ),
         Field("ambient_r", float, 1.0, minimum=0.0, maximum=4.0, label="Ambient R"),
         Field("ambient_g", float, 1.0, minimum=0.0, maximum=4.0, label="Ambient G"),
         Field("ambient_b", float, 1.0, minimum=0.0, maximum=4.0, label="Ambient B"),
-        Field("ambient_intensity", float, 0.35, minimum=0.0, maximum=4.0, label="Ambient Intensity"),
+        Field(
+            "ambient_intensity", float, 0.35, minimum=0.0, maximum=4.0, label="Ambient Intensity"
+        ),
         Field("fog_density", float, 0.0, minimum=0.0, maximum=1.0, label="Fog Density"),
         Field("fog_r", float, 0.7, minimum=0.0, maximum=1.0, label="Fog R"),
         Field("fog_g", float, 0.75, minimum=0.0, maximum=1.0, label="Fog G"),
         Field("fog_b", float, 0.8, minimum=0.0, maximum=1.0, label="Fog B"),
-        Field("fog_drift", float, 12.0, minimum=0.0, label="Fog Drift", tooltip="Pixels per second the fog moves."),
+        Field(
+            "fog_drift",
+            float,
+            12.0,
+            minimum=0.0,
+            label="Fog Drift",
+            tooltip="Pixels per second the fog moves.",
+        ),
         Field("weather", str, "none", choices=WEATHER_KINDS, label="Weather"),
-        Field("weather_intensity", float, 0.5, minimum=0.0, maximum=1.0, label="Weather Intensity"),
+        Field(
+            "weather_intensity", float, 0.5, minimum=0.0, maximum=1.0, label="Weather Intensity"
+        ),
         Field("weather_wind", float, 0.0, minimum=-400.0, maximum=400.0, label="Wind"),
         Field("weather_max_particles", int, 400, minimum=0, maximum=5000, label="Max Particles"),
         Field("bloom_enabled", bool, False, label="Bloom"),
@@ -55,8 +72,16 @@ WEATHER_KINDS = ("none", "rain", "snow", "leaves", "dust")
         Field("tint_b", float, 1.0, minimum=0.0, maximum=2.0, label="Tint B"),
         Field("vignette", float, 0.0, minimum=0.0, maximum=1.0, label="Vignette"),
         Field("screen_shader", str, "", choices=BUILTIN_SCREEN_SHADERS, label="Screen Shader"),
-        Field("screen_shader_asset_id", str, "", label="Project Shader", tooltip="A 'shader' asset (GLSL fragment)."),
-        Field("screen_shader_strength", float, 1.0, minimum=0.0, maximum=1.0, label="Shader Strength"),
+        Field(
+            "screen_shader_asset_id",
+            str,
+            "",
+            label="Project Shader",
+            tooltip="A 'shader' asset (GLSL fragment).",
+        ),
+        Field(
+            "screen_shader_strength", float, 1.0, minimum=0.0, maximum=1.0, label="Shader Strength"
+        ),
         Field("enabled", bool, True),
     ),
 )
@@ -76,7 +101,14 @@ class Environment2DComponent(Component):
         Field("color_r", float, 1.0, minimum=0.0, maximum=1.0, label="Color R"),
         Field("color_g", float, 0.9, minimum=0.0, maximum=1.0, label="Color G"),
         Field("color_b", float, 0.7, minimum=0.0, maximum=1.0, label="Color B"),
-        Field("height", float, 48.0, minimum=0.0, label="Height", tooltip="Height above the ground (normal maps)."),
+        Field(
+            "height",
+            float,
+            48.0,
+            minimum=0.0,
+            label="Height",
+            tooltip="Height above the ground (normal maps).",
+        ),
         Field("offset_x", float, 0.0),
         Field("offset_y", float, 0.0),
         Field("casts_shadow", bool, False, label="Casts Shadows"),
@@ -117,8 +149,17 @@ class ShadowCaster2DComponent(Component):
         Field("height", float, 64.0, minimum=1.0),
         Field("offset_x", float, 0.0),
         Field("offset_y", float, 0.0),
-        Field("amplitude", float, 2.0, minimum=0.0, maximum=32.0, tooltip="Ripple size in world units."),
-        Field("wavelength", float, 24.0, minimum=1.0, tooltip="World units between ripple crests."),
+        Field(
+            "amplitude",
+            float,
+            2.0,
+            minimum=0.0,
+            maximum=32.0,
+            tooltip="Ripple size in world units.",
+        ),
+        Field(
+            "wavelength", float, 24.0, minimum=1.0, tooltip="World units between ripple crests."
+        ),
         Field("speed", float, 2.0, minimum=0.0, maximum=20.0),
         Field("tint_r", float, 0.35, minimum=0.0, maximum=1.0),
         Field("tint_g", float, 0.55, minimum=0.0, maximum=1.0),
@@ -128,7 +169,8 @@ class ShadowCaster2DComponent(Component):
     ),
 )
 class WaterRegion2DComponent(Component):
-    """A rectangle of water: ripples (UV distortion on the GPU, row shifts on pygame) and a tint. Visual only."""
+    """A rectangle of water: ripples (UV distortion on the GPU, row shifts on pygame) and a tint.
+    Visual only."""
 
     def __init__(self):
         super().__init__()
@@ -160,7 +202,8 @@ class MotionTrail2DComponent(Component):
 
 @dataclass
 class SceneEnvironment:
-    """Everything a renderer needs this frame, in screen pixels (lights and casters already projected)."""
+    """Everything a renderer needs this frame, in screen pixels (lights and casters already
+    projected)."""
 
     lighting: bool = False
     ambient: AmbientLight2D = field(default_factory=lambda: AmbientLight2D((1.0, 1.0, 1.0), 1.0))
@@ -175,7 +218,8 @@ class SceneEnvironment:
     post: list = field(default_factory=list)  # PostEffect2D, in order
     shader_source: str | None = None  # project shader GLSL (resolved from the asset registry)
     shader_id: str = ""
-    # (x0, y0, x1, y1, amplitude_px, wavelength_px, speed, (r, g, b), tint_strength) in screen pixels
+    # (x0, y0, x1, y1, amplitude_px, wavelength_px, speed, (r, g, b), tint_strength) in screen
+    # pixels
     water: list = field(default_factory=list)
 
     @property
@@ -214,7 +258,9 @@ def resolve_environment(scene, *, defaults=None, to_screen=None, scale=1.0, read
     if not v["enabled"]:
         return env
     env.lighting = bool(v["lighting_enabled"])
-    env.ambient = AmbientLight2D((v["ambient_r"], v["ambient_g"], v["ambient_b"]), v["ambient_intensity"])
+    env.ambient = AmbientLight2D(
+        (v["ambient_r"], v["ambient_g"], v["ambient_b"]), v["ambient_intensity"]
+    )
     if v["fog_density"] > 0:
         env.fog = Fog2D(v["fog_density"], (v["fog_r"], v["fog_g"], v["fog_b"]))
         env.fog_drift = float(v["fog_drift"])
@@ -224,7 +270,11 @@ def resolve_environment(scene, *, defaults=None, to_screen=None, scale=1.0, read
     env.weather_max_particles = int(v["weather_max_particles"])
     if v["bloom_enabled"]:
         env.post.append(
-            PostEffect2D("bloom", True, (("threshold", v["bloom_threshold"]), ("intensity", v["bloom_intensity"])))
+            PostEffect2D(
+                "bloom",
+                True,
+                (("threshold", v["bloom_threshold"]), ("intensity", v["bloom_intensity"])),
+            )
         )
     grade = {k: v[k] for k in ("exposure", "contrast", "saturation", "tint_r", "tint_g", "tint_b")}
     if any(abs(value - 1.0) > 1e-6 for value in grade.values()):
@@ -238,7 +288,9 @@ def resolve_environment(scene, *, defaults=None, to_screen=None, scale=1.0, read
     elif v["screen_shader"]:
         env.shader_id = v["screen_shader"]
     if env.shader_id:
-        env.post.append(PostEffect2D("screen_shader", True, (("strength", v["screen_shader_strength"]),)))
+        env.post.append(
+            PostEffect2D("screen_shader", True, (("strength", v["screen_shader_strength"]),))
+        )
     for effect in env.post:
         effect.validate()
     if scene is not None and to_screen is not None:
@@ -246,8 +298,12 @@ def resolve_environment(scene, *, defaults=None, to_screen=None, scale=1.0, read
             water = entity.try_get(WaterRegion2DComponent) if entity.enabled else None
             if water is not None and water.enabled and entity.has(Transform):
                 wx, wy = world_position(entity)
-                x0, y0 = to_screen(wx + water.offset_x - water.width / 2, wy + water.offset_y - water.height / 2)
-                x1, y1 = to_screen(wx + water.offset_x + water.width / 2, wy + water.offset_y + water.height / 2)
+                x0, y0 = to_screen(
+                    wx + water.offset_x - water.width / 2, wy + water.offset_y - water.height / 2
+                )
+                x1, y1 = to_screen(
+                    wx + water.offset_x + water.width / 2, wy + water.offset_y + water.height / 2
+                )
                 env.water.append(
                     (
                         x0,
@@ -290,7 +346,10 @@ def resolve_environment(scene, *, defaults=None, to_screen=None, scale=1.0, read
                 wx, wy = world_position(entity)
                 cx, cy = wx + caster.offset_x, wy + caster.offset_y
                 hw, hh = caster.width / 2, caster.height / 2
-                corners = [to_screen(cx + dx, cy + dy) for dx, dy in ((-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh))]
+                corners = [
+                    to_screen(cx + dx, cy + dy)
+                    for dx, dy in ((-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh))
+                ]
                 env.casters.append(ShadowCaster2D(entity.id, tuple(corners)))
     return env
 
@@ -306,10 +365,23 @@ def resolve_environment(scene, *, defaults=None, to_screen=None, scale=1.0, read
             label="Particle Effect",
             tooltip="A particle_effect asset (VFX tool > Particle Effects).",
         ),
-        Field("playing", bool, True, label="Playing", tooltip="Off: stop emitting (live particles finish)."),
+        Field(
+            "playing",
+            bool,
+            True,
+            label="Playing",
+            tooltip="Off: stop emitting (live particles finish).",
+        ),
         Field("offset_x", float, 0.0, label="Offset X"),
         Field("offset_y", float, 0.0, label="Offset Y"),
-        Field("scale", float, 1.0, minimum=0.01, label="Scale", tooltip="Multiplies sizes, speeds and the shape."),
+        Field(
+            "scale",
+            float,
+            1.0,
+            minimum=0.01,
+            label="Scale",
+            tooltip="Multiplies sizes, speeds and the shape.",
+        ),
         Field("enabled", bool, True),
     ),
 )

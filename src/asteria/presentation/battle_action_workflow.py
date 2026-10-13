@@ -41,11 +41,17 @@ class BattleWorkflowOption:
         object.__setattr__(self, "disabled_reason", str(disabled_reason))
         object.__setattr__(self, "detail", str(detail))
         object.__setattr__(
-            self, "icon_asset_id", None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id")
+            self,
+            "icon_asset_id",
+            None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id"),
         )
-        object.__setattr__(self, "tags", tuple(dict.fromkeys(str(x).strip() for x in tags if str(x).strip())))
+        object.__setattr__(
+            self, "tags", tuple(dict.fromkeys(str(x).strip() for x in tags if str(x).strip()))
+        )
         payload = dict(payload or {})
-        object.__setattr__(self, "payload", tuple(sorted(payload.items(), key=lambda x: str(x[0]))))
+        object.__setattr__(
+            self, "payload", tuple(sorted(payload.items(), key=lambda x: str(x[0])))
+        )
 
     def to_data(self):
         return {
@@ -115,7 +121,10 @@ class BattleActionWorkflowDefinition:
     def __init__(self, workflow_id, label=None, steps=(), *, confirmation_label="Confirm"):
         workflow_id = _id(workflow_id, "workflow_id")
         label = workflow_id if label is None else _id(label, "label")
-        steps = tuple(x if isinstance(x, BattleWorkflowStep) else BattleWorkflowStep.from_data(x) for x in steps)
+        steps = tuple(
+            x if isinstance(x, BattleWorkflowStep) else BattleWorkflowStep.from_data(x)
+            for x in steps
+        )
         if not steps:
             raise ValueError("workflow requires at least one step")
         if len({x.step_id for x in steps}) != len(steps):
@@ -123,7 +132,9 @@ class BattleActionWorkflowDefinition:
         object.__setattr__(self, "workflow_id", workflow_id)
         object.__setattr__(self, "label", label)
         object.__setattr__(self, "steps", steps)
-        object.__setattr__(self, "confirmation_label", _id(confirmation_label, "confirmation_label"))
+        object.__setattr__(
+            self, "confirmation_label", _id(confirmation_label, "confirmation_label")
+        )
 
     def to_data(self):
         return {
@@ -202,7 +213,9 @@ class BattleActionWorkflowRuntime:
             if s.step_id in self._selections
         )
         can_advance = complete or self._step_complete(step)
-        can_back = self.step_index > 0 and (complete or self.definition.steps[self.step_index].allow_back)
+        can_back = self.step_index > 0 and (
+            complete or self.definition.steps[self.step_index].allow_back
+        )
         return BattleActionWorkflowView(
             self.definition.workflow_id,
             self.definition.label,
@@ -237,7 +250,10 @@ class BattleActionWorkflowRuntime:
     def set_options(self, options):
         if self.definition is None:
             raise RuntimeError("no active workflow")
-        values = tuple(x if isinstance(x, BattleWorkflowOption) else BattleWorkflowOption.from_data(x) for x in options)
+        values = tuple(
+            x if isinstance(x, BattleWorkflowOption) else BattleWorkflowOption.from_data(x)
+            for x in options
+        )
         if len({x.option_id for x in values}) != len(values):
             raise ValueError("duplicate workflow option_id")
         self._options = values
@@ -292,7 +308,10 @@ class BattleActionWorkflowRuntime:
     def back(self, options=()):
         if self.definition is None or self.step_index <= 0:
             return self.view
-        if self.step_index < len(self.definition.steps) and not self.definition.steps[self.step_index].allow_back:
+        if (
+            self.step_index < len(self.definition.steps)
+            and not self.definition.steps[self.step_index].allow_back
+        ):
             return self.view
         self.step_index -= 1
         self._options = ()
@@ -305,7 +324,8 @@ class BattleActionWorkflowRuntime:
         return {
             "workflow_id": self.definition.workflow_id,
             "selections": {
-                step.step_id: list(self._selections.get(step.step_id, ())) for step in self.definition.steps
+                step.step_id: list(self._selections.get(step.step_id, ()))
+                for step in self.definition.steps
             },
         }
 
@@ -327,6 +347,8 @@ class BattleActionWorkflowRuntime:
         self.definition = None if raw is None else BattleActionWorkflowDefinition.from_data(raw)
         self.step_index = int(data.get("step_index", 0))
         self._options = tuple(BattleWorkflowOption.from_data(x) for x in data.get("options", ()))
-        self._selections = {str(k): tuple(str(x) for x in v) for k, v in dict(data.get("selections", {})).items()}
+        self._selections = {
+            str(k): tuple(str(x) for x in v) for k, v in dict(data.get("selections", {})).items()
+        }
         self.revision = int(data.get("revision", 0))
         return self

@@ -73,12 +73,16 @@ class Application:
             return False
         t.elapsed += max(0.0, float(dt))
         if t.phase == "out":
-            self.transition_cover = 1.0 if t.spec.fade_out == 0 else min(1.0, t.elapsed / t.spec.fade_out)
+            self.transition_cover = (
+                1.0 if t.spec.fade_out == 0 else min(1.0, t.elapsed / t.spec.fade_out)
+            )
             if t.elapsed >= t.spec.fade_out:
                 self._swap_scene(t.target)
                 t.phase, t.elapsed = "in", 0.0
         if t.phase == "in":
-            self.transition_cover = 0.0 if t.spec.fade_in == 0 else max(0.0, 1.0 - t.elapsed / t.spec.fade_in)
+            self.transition_cover = (
+                0.0 if t.spec.fade_in == 0 else max(0.0, 1.0 - t.elapsed / t.spec.fade_in)
+            )
             if t.elapsed >= t.spec.fade_in:
                 self._transition = None
                 self.transition_cover = 0.0

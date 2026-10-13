@@ -1,5 +1,7 @@
-"""D19 / CB15 A9: the canonical battle screen fully replaces the retired legacy screen, including projects
-that have no battle art (no combatant visuals, no motion sequences - only manifest images and skill fx / sfx)."""
+"""D19 / CB15 A9: the canonical battle screen fully replaces the retired legacy screen, including
+projects
+that have no battle art (no combatant visuals, no motion sequences - only manifest images and
+skill fx / sfx)."""
 
 import pytest
 
@@ -17,8 +19,12 @@ def bare(resource_root, monkeypatch):
 
     from asteria.runtime.audio_mixer import RecordingAudioDevice
 
-    reference = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
-    shutil.copytree(reference / "playable_assets" / "audio", resource_root / "playable_assets" / "audio")
+    reference = (
+        Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
+    )
+    shutil.copytree(
+        reference / "playable_assets" / "audio", resource_root / "playable_assets" / "audio"
+    )
     runtime = _boss_runtime(resource_root)
     library = runtime.game.project.battle_presentation_library
     for category in ("combatant_visuals", "motion_sequences"):
@@ -44,7 +50,9 @@ def test_a_project_without_battle_art_plays_a_full_battle_on_the_canonical_scree
     runtime._frame([], 0.016)
     # every combatant is a generated canonical visual (manifest picture, or a silhouette)
     ids = {v.member_id: v.sprite_sheet_asset_id for v in adapter.screen.scene.combatants}
-    assert adapter.visuals_enabled and set(ids) == {m for p in game.battle.parties.values() for m in p.ids()}
+    assert adapter.visuals_enabled and set(ids) == {
+        m for p in game.battle.parties.values() for m in p.ids()
+    }
     assert all(sheet.startswith("generated.combatant.") for sheet in ids.values())
     for _ in range(400):  # the opening enemy turns play before the hero's commands appear
         if not adapter.busy():
@@ -52,7 +60,9 @@ def test_a_project_without_battle_art_plays_a_full_battle_on_the_canonical_scree
         runtime._frame([], 0.05)
     runtime._frame([], 0.016)
     entries = [e.action_id for e in adapter.screen.action_menu._source]  # every page of the menu
-    assert "boost" in entries  # the legacy HUD's boost readout lives in the action menu now (and as pips)
+    assert (
+        "boost" in entries
+    )  # the legacy HUD's boost readout lives in the action menu now (and as pips)
     vfx_seen = sounds_before = 0
     sounds_before = sum(1 for call in device.calls if call[0] == "play_sound")
     for _ in range(4000):
@@ -63,7 +73,9 @@ def test_a_project_without_battle_art_plays_a_full_battle_on_the_canonical_scree
         vfx_seen = max(vfx_seen, adapter.particle_count())
     assert runtime._victory and game.battle is None
     assert vfx_seen >= 1  # manifest skill fx played as canonical VFX
-    assert sum(1 for call in device.calls if call[0] == "play_sound") > sounds_before  # manifest sfx
+    assert (
+        sum(1 for call in device.calls if call[0] == "play_sound") > sounds_before
+    )  # manifest sfx
     for _ in range(400):
         if not adapter.busy():
             break
@@ -76,7 +88,10 @@ def test_a_project_without_battle_art_plays_a_full_battle_on_the_canonical_scree
     from asteria.runtime.game_save import GameRuntimeSave
 
     again = GameRuntimeSave.load_json(out, game.project)
-    assert again.scene_id == game.save.scene_id and again.rpg_state.to_data() == game.save.rpg_state.to_data()
+    assert (
+        again.scene_id == game.save.scene_id
+        and again.rpg_state.to_data() == game.save.rpg_state.to_data()
+    )
 
 
 def test_generated_combatants_animate_get_hit_and_fall(bare):
@@ -113,4 +128,8 @@ def test_projects_without_any_images_get_silhouettes_and_a_plain_backdrop(bare):
     runtime._advance_to_hero_turn()
     runtime._present_battle(0.016)
     assert adapter.visuals_enabled and adapter.screen.scene.combatants
-    assert runtime.screen.get_at((runtime.width // 2, 4))[:3] != (0, 0, 0)  # generated backdrop drawn
+    assert runtime.screen.get_at((runtime.width // 2, 4))[:3] != (
+        0,
+        0,
+        0,
+    )  # generated backdrop drawn

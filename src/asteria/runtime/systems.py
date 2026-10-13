@@ -96,7 +96,8 @@ class AnimationSystem(System):
 
 
 class CameraFollowSystem(System):
-    """Drives each active Camera2D: follow (dead zone, smoothing, look-ahead, bounds) or a target group,
+    """Drives each active Camera2D: follow (dead zone, smoothing, look-ahead, bounds) or a target
+    group,
     then authored shots and shake from its ``CameraDirector`` (cutscene / boss focus, CAM-02).
 
     ``camera(entity_id)`` is the view to render; the camera entity's Transform tracks its top-left.
@@ -129,7 +130,11 @@ class CameraFollowSystem(System):
             follow = self._follows.get(entity.id)
             if follow is None:
                 follow = self._follows[entity.id] = CameraFollow2D(base)
-            follow.deadzone_x, follow.deadzone_y, follow.smoothing = spec.deadzone_x, spec.deadzone_y, spec.smoothing
+            follow.deadzone_x, follow.deadzone_y, follow.smoothing = (
+                spec.deadzone_x,
+                spec.deadzone_y,
+                spec.smoothing,
+            )
             follow.world_bounds = spec.bounds or self.world_bounds
             follow.look_ahead_x, follow.look_ahead_y = spec.look_ahead_x, spec.look_ahead_y
             group = [scene.get_entity(x) for x in spec.group_ids]
@@ -137,18 +142,26 @@ class CameraFollowSystem(System):
             target = scene.get_entity(spec.follow_entity_id) if spec.follow_entity_id else None
             if group:
                 frame = CameraTargetGroup(spec.group_padding, spec.min_zoom, spec.max_zoom)
-                cx, cy, base.zoom = frame.frame([(g.x, g.y) for g in group], spec.width, spec.height)
+                cx, cy, base.zoom = frame.frame(
+                    [(g.x, g.y) for g in group], spec.width, spec.height
+                )
                 follow.update(cx, cy, dt)
             elif target is not None and target.has(Transform):
                 tt = target.get(Transform)
                 last = self._last_target.get(entity.id)
-                velocity = ((tt.x - last[0]) / dt, (tt.y - last[1]) / dt) if last is not None and dt > 0 else None
+                velocity = (
+                    ((tt.x - last[0]) / dt, (tt.y - last[1]) / dt)
+                    if last is not None and dt > 0
+                    else None
+                )
                 self._last_target[entity.id] = (tt.x, tt.y)
                 follow.update(tt.x, tt.y, dt, velocity=velocity)
             else:
                 base.x, base.y = transform.x, transform.y
             view_w, view_h = base.width / base.zoom, base.height / base.zoom
-            cx, cy, zoom = self.director(entity.id).update(dt, (base.x + view_w / 2, base.y + view_h / 2, base.zoom))
+            cx, cy, zoom = self.director(entity.id).update(
+                dt, (base.x + view_w / 2, base.y + view_h / 2, base.zoom)
+            )
             camera = self.cameras.setdefault(entity.id, Camera2D())
             camera.width, camera.height, camera.zoom = base.width, base.height, zoom
             camera.x, camera.y = cx - base.width / zoom / 2, cy - base.height / zoom / 2

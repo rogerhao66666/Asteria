@@ -1,7 +1,10 @@
-"""Real-Time Combat authoring (D22 A9): attacks, projectiles, loot rarities and affixes in one workspace.
+"""Real-Time Combat authoring (D22 A9): attacks, projectiles, loot rarities and affixes in one
+workspace.
 
-Qt-free controller behind ``combat_workspace``. Every record is plain project data; an edit replaces the record as one
-undoable command. ``KINDS`` describes, per kind, the sections and fields the workspace shows (label, widget kind,
+Qt-free controller behind ``combat_workspace``. Every record is plain project data; an edit
+replaces the record as one
+undoable command. ``KINDS`` describes, per kind, the sections and fields the workspace shows
+(label, widget kind,
 choices), so the form, the previews and the tests share one description.
 """
 
@@ -60,15 +63,36 @@ KINDS = (
         (
             (
                 "Damage",
-                "What one landed hit takes away. Formulas read the attacker's and the target's stats.",
+                "What one landed hit takes away. Formulas read the attacker's and the target's "
+                "stats.",
                 (
                     _f("display_name", "Name", "text"),
                     _f("damage", "Damage formula", "formula"),
-                    _f("damage_formula_id", "…or shared formula", "text", hint="Uses a formula from Formulas instead"),
-                    _f("damage_resource", "Lowers resource", "text", hint="Empty: the target's life resource"),
-                    _f("tags", "Tags", "tags", hint="e.g. Element.Fire — formulas can multiply on them"),
+                    _f(
+                        "damage_formula_id",
+                        "…or shared formula",
+                        "text",
+                        hint="Uses a formula from Formulas instead",
+                    ),
+                    _f(
+                        "damage_resource",
+                        "Lowers resource",
+                        "text",
+                        hint="Empty: the target's life resource",
+                    ),
+                    _f(
+                        "tags",
+                        "Tags",
+                        "tags",
+                        hint="e.g. Element.Fire — formulas can multiply on them",
+                    ),
                     _f("critical_chance", "Critical chance", maximum=1.0, step=0.05),
-                    _f("critical_chance_stat", "+ chance from stat", "text", hint="stat / 100 is added"),
+                    _f(
+                        "critical_chance_stat",
+                        "+ chance from stat",
+                        "text",
+                        hint="stat / 100 is added",
+                    ),
                     _f("critical_multiplier", "Critical ×", step=0.1),
                 ),
             ),
@@ -79,8 +103,19 @@ KINDS = (
                     _f("poise_damage", "Poise damage"),
                     _f("hitstun", "Hitstun (s)", step=0.05),
                     _f("knockback", "Knockback speed", minimum=-1_000_000.0, step=10.0),
-                    _f("knockback_direction", "Knockback direction", "choice", choices=KNOCKBACK_DIRECTIONS),
-                    _f("knockback_angle", "Knockback angle (°)", minimum=-360.0, maximum=360.0, step=15.0),
+                    _f(
+                        "knockback_direction",
+                        "Knockback direction",
+                        "choice",
+                        choices=KNOCKBACK_DIRECTIONS,
+                    ),
+                    _f(
+                        "knockback_angle",
+                        "Knockback angle (°)",
+                        minimum=-360.0,
+                        maximum=360.0,
+                        step=15.0,
+                    ),
                     _f("knockback_lift", "Side view lift", minimum=-1_000_000.0, step=10.0),
                     _f("hitstop", "Hit-stop (s)", step=0.01),
                     _f("hitstop_scope", "Hit-stop freezes", "choice", choices=HITSTOP_SCOPES),
@@ -256,7 +291,8 @@ class CombatAuthoringController:
         return None if record is None else record.to_data()
 
     def choices(self, name):
-        """Values offered for reference fields (attacks for projectiles, states for applied states...)."""
+        """Values offered for reference fields (attacks for projectiles, states for applied
+        states...)."""
         project = self.document.project
         if project is None:
             return ()
@@ -276,7 +312,8 @@ class CombatAuthoringController:
         self.document.execute(_DefinitionCommand(table, key, new, old, label))
 
     def build(self, kind_id, data):
-        """A record from form data (raises CombatAuthoringError with the reason when the values are invalid)."""
+        """A record from form data (raises CombatAuthoringError with the reason when the values are
+        invalid)."""
         spec = self.kind(kind_id)
         try:
             return spec.record.from_data(data)
@@ -290,7 +327,13 @@ class CombatAuthoringController:
         record = self.build(kind_id, data)
         if getattr(record, self.kind(kind_id).id_field) != record_id:
             raise CombatAuthoringError("the id cannot change here (duplicate it instead)")
-        self._execute(table, record_id, record, table[record_id], f"Edit {self.kind(kind_id).noun} {record_id}")
+        self._execute(
+            table,
+            record_id,
+            record,
+            table[record_id],
+            f"Edit {self.kind(kind_id).noun} {record_id}",
+        )
         return record
 
     def create(self, kind_id, record_id, *, source=None):
@@ -316,7 +359,13 @@ class CombatAuthoringController:
         table = self._table(kind_id)
         if record_id not in table:
             raise CombatAuthoringError(f"unknown {record_id}")
-        self._execute(table, record_id, None, table[record_id], f"Delete {self.kind(kind_id).noun} {record_id}")
+        self._execute(
+            table,
+            record_id,
+            None,
+            table[record_id],
+            f"Delete {self.kind(kind_id).noun} {record_id}",
+        )
 
     def usage(self, kind_id, record_id):
         """Where a record is used (so deleting or renaming it is not a surprise)."""
@@ -326,14 +375,22 @@ class CombatAuthoringController:
         library = project.gameplay_library
         found = []
         if kind_id == "attacks":
-            found += [f"projectile {p.projectile_id}" for p in library.projectiles.values() if p.attack_id == record_id]
+            found += [
+                f"projectile {p.projectile_id}"
+                for p in library.projectiles.values()
+                if p.attack_id == record_id
+            ]
             for timeline in library.timelines.values():
-                if any(c.kind.value == "hitbox" and c.payload.get("hit_tag") == record_id for c in timeline.cues):
+                if any(
+                    c.kind.value == "hitbox" and c.payload.get("hit_tag") == record_id
+                    for c in timeline.cues
+                ):
                     found.append(f"timeline {timeline.timeline_id}")
         elif kind_id == "projectiles":
             for timeline in library.timelines.values():
                 if any(
-                    c.kind.value == "projectile" and c.payload.get("projectile_id") == record_id for c in timeline.cues
+                    c.kind.value == "projectile" and c.payload.get("projectile_id") == record_id
+                    for c in timeline.cues
                 ):
                     found.append(f"timeline {timeline.timeline_id}")
         elif kind_id == "affixes":
@@ -343,4 +400,11 @@ class CombatAuthoringController:
         return tuple(found)
 
 
-__all__ = ["KINDS", "KIND_BY_ID", "CombatAuthoringController", "CombatAuthoringError", "FieldSpec", "KindSpec"]
+__all__ = [
+    "KINDS",
+    "KIND_BY_ID",
+    "CombatAuthoringController",
+    "CombatAuthoringError",
+    "FieldSpec",
+    "KindSpec",
+]

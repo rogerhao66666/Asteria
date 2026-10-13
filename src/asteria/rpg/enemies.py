@@ -41,7 +41,9 @@ class LootEntry:
     required_switch: str = ""
     luck_bonus: float = 0.0
 
-    def __init__(self, item_id, *, chance=1.0, minimum=1, maximum=1, required_switch="", luck_bonus=0.0):
+    def __init__(
+        self, item_id, *, chance=1.0, minimum=1, maximum=1, required_switch="", luck_bonus=0.0
+    ):
         chance = _finite(chance, "chance")
         minimum = int(minimum)
         maximum = int(maximum)
@@ -83,7 +85,9 @@ class RewardDefinition:
     currencies: dict[str, float] = field(default_factory=dict)
     experience: dict[str, float] = field(default_factory=dict)
     loot: tuple[LootEntry, ...] = ()
-    drop_table_id: str = ""  # RPG-04: a weighted / guaranteed / pity DropTable rolled with this reward
+    drop_table_id: str = (
+        ""  # RPG-04: a weighted / guaranteed / pity DropTable rolled with this reward
+    )
 
     def __init__(self, *, currencies=None, experience=None, loot=(), drop_table_id=""):
         def vals(raw, label):
@@ -294,7 +298,9 @@ def roll_reward(reward, rng=None, *, luck=0.0, switches=None):
     rng = rng or random.Random()
     items = {}
     for entry in reward.loot:
-        if entry.required_switch and not (switches is not None and switches(entry.required_switch)):
+        if entry.required_switch and not (
+            switches is not None and switches(entry.required_switch)
+        ):
             continue
         if rng.random() <= entry.effective_chance(luck):
             amount = rng.randint(entry.minimum, entry.maximum)

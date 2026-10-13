@@ -57,12 +57,15 @@ def copy_records(clipboard, adapter, ids):
 
 
 def paste_records(document, clipboard, adapter):
-    """Create every clipboard record in ``adapter``'s category under a fresh id; returns the new ids."""
+    """Create every clipboard record in ``adapter``'s category under a fresh id; returns the new
+    ids."""
     payload = clipboard.record_payload
     if payload is None:
         raise RecordOperationError("the clipboard has no records")
     if payload.category_id != adapter.category_id:
-        raise RecordOperationError(f"the clipboard holds {payload.category_id} records, not {adapter.category_id}")
+        raise RecordOperationError(
+            f"the clipboard holds {payload.category_id} records, not {adapter.category_id}"
+        )
     if adapter.create is None:
         raise RecordOperationError(f"{adapter.label} records cannot be pasted")
     created = []
@@ -89,7 +92,8 @@ def delete_records(document, adapter, ids):
 
 
 def cut_records(document, clipboard, adapter, ids):
-    """Copy then delete as one undo step. If any delete is refused (still referenced) nothing is removed."""
+    """Copy then delete as one undo step. If any delete is refused (still referenced) nothing is
+    removed."""
     payload = copy_records(clipboard, adapter, ids)
     delete_records(document, adapter, ids)
     return payload
@@ -140,7 +144,8 @@ def _leaves(value, prefix=""):
 
 
 def common_fields(adapter, ids):
-    """``{path: value}`` for fields every record has (``MIXED`` where they differ); ids and format markers excluded."""
+    """``{path: value}`` for fields every record has (``MIXED`` where they differ); ids and format
+    markers excluded."""
     result = None
     for key in ids:
         data = adapter.encode(adapter.get(key))

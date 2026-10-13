@@ -60,7 +60,9 @@ class PartyFormationLab:
         definition = FormationDefinition("party_lab_formation", slots)
         self.formation = BattleFormationRuntime(
             definition,
-            tuple(BattlePlacement(member_id, f"slot_{i}") for i, member_id in enumerate(self._active)),
+            tuple(
+                BattlePlacement(member_id, f"slot_{i}") for i, member_id in enumerate(self._active)
+            ),
         )
 
     def roster_ids(self):

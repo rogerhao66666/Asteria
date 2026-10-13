@@ -85,7 +85,8 @@ class ChoreographyTimeline:
         active = tuple(
             e
             for e in self.events
-            if e.duration_ms > 0 and e.time_ms <= self.presentation_time_ms < e.time_ms + e.duration_ms
+            if e.duration_ms > 0
+            and e.time_ms <= self.presentation_time_ms < e.time_ms + e.duration_ms
         )
         return ChoreographyFrame(self.real_time_ms, self.presentation_time_ms, tuple(due), active)
 

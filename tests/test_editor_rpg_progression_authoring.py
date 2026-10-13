@@ -84,7 +84,11 @@ def test_progression_track_complete_milestones():
         milestones=(
             ProgressionMilestone(1, 0, stat_bonuses={"hp": 10}, granted_abilities=("slash",)),
             ProgressionMilestone(
-                2, 100, stat_bonuses={"hp": 20}, granted_abilities=("fire",), granted_tags=("veteran",)
+                2,
+                100,
+                stat_bonuses={"hp": 20},
+                granted_abilities=("fire",),
+                granted_tags=("veteran",),
             ),
         ),
     )
@@ -132,14 +136,22 @@ def test_skill_tree_nodes_cover_costs_prereqs_rewards_exclusive_and_tags():
 
 def test_graph_node_edit_and_delete_protect_dependencies():
     p, doc, c = make()
-    root = ProgressionNodeDefinition("root", nodes=None) if False else ProgressionNodeDefinition("root")
-    branch = ProgressionNodeDefinition("branch", prerequisites=(ProgressionNodeRequirement("root"),))
+    root = (
+        ProgressionNodeDefinition("root", nodes=None)
+        if False
+        else ProgressionNodeDefinition("root")
+    )
+    branch = ProgressionNodeDefinition(
+        "branch", prerequisites=(ProgressionNodeRequirement("root"),)
+    )
     c.create_graph("tree", nodes=(root, branch))
     edited = ProgressionNodeDefinition(
         "branch", "Branch+", prerequisites=(ProgressionNodeRequirement("root"),), tags=("x",)
     )
     c.edit_graph_node("tree", "branch", edited)
-    assert p.rpg_database.progression_graphs["tree"].require_node("branch").display_name == "Branch+"
+    assert (
+        p.rpg_database.progression_graphs["tree"].require_node("branch").display_name == "Branch+"
+    )
     with pytest.raises(RpgProgressionAuthoringError):
         c.delete_graph_node("tree", "root")
     c.delete_graph_node("tree", "branch")
@@ -156,10 +168,14 @@ def test_graph_rejects_cycles_through_canonical_definition():
 
 def test_reward_references_are_validated():
     _, _, c = make()
-    bad = ProgressionNodeDefinition("n", rewards=ProgressionNodeReward(granted_abilities=("missing",)))
+    bad = ProgressionNodeDefinition(
+        "n", rewards=ProgressionNodeReward(granted_abilities=("missing",))
+    )
     with pytest.raises(RpgProgressionAuthoringError):
         c.create_graph("tree", nodes=(bad,))
-    bad2 = ProgressionNodeDefinition("n", rewards=ProgressionNodeReward(unlocked_passives=("missing",)))
+    bad2 = ProgressionNodeDefinition(
+        "n", rewards=ProgressionNodeReward(unlocked_passives=("missing",))
+    )
     with pytest.raises(RpgProgressionAuthoringError):
         c.create_graph("tree2", nodes=(bad2,))
 
@@ -191,7 +207,9 @@ def test_delete_track_protects_actor_assignment_and_evolution_refs():
 
     p.rpg_database.add_class(ClassDefinition("mage"))
     p.rpg_database.add_actor(
-        ActorDefinition("hero", class_assignments=(ClassAssignment("mage", progression_track_ids=("job",)),))
+        ActorDefinition(
+            "hero", class_assignments=(ClassAssignment("mage", progression_track_ids=("job",)),)
+        )
     )
     with pytest.raises(RpgProgressionAuthoringError):
         c.delete_track("job")
@@ -199,7 +217,9 @@ def test_delete_track_protects_actor_assignment_and_evolution_refs():
 
 def test_delete_ability_protects_progression_reference():
     _, _, c = make()
-    node = ProgressionNodeDefinition("n", rewards=ProgressionNodeReward(granted_abilities=("slash",)))
+    node = ProgressionNodeDefinition(
+        "n", rewards=ProgressionNodeReward(granted_abilities=("slash",))
+    )
     c.create_graph("tree", nodes=(node,))
     with pytest.raises(RpgProgressionAuthoringError):
         c.delete_ability("slash")

@@ -100,8 +100,12 @@ class InteractionRule:
         object.__setattr__(self, "blocked_target_tags", _tags(blocked_target_tags))
         object.__setattr__(self, "flat_delta", _number(flat_delta, "flat_delta"))
         object.__setattr__(self, "multiplier", multiplier)
-        object.__setattr__(self, "source_stat_terms", _coefficients(source_stat_terms, "source stat"))
-        object.__setattr__(self, "target_stat_terms", _coefficients(target_stat_terms, "target stat"))
+        object.__setattr__(
+            self, "source_stat_terms", _coefficients(source_stat_terms, "source stat")
+        )
+        object.__setattr__(
+            self, "target_stat_terms", _coefficients(target_stat_terms, "target stat")
+        )
         object.__setattr__(self, "disposition", InteractionDisposition(disposition))
         object.__setattr__(self, "outcome_tags", _tags(outcome_tags))
         object.__setattr__(self, "priority", int(priority))
@@ -203,8 +207,12 @@ class OutcomeCheckDefinition:
             raise ValueError("chance bounds must satisfy 0 <= min <= max <= 1")
         object.__setattr__(self, "check_id", _id(check_id, "check_id"))
         object.__setattr__(self, "base_chance", _number(base_chance, "base_chance"))
-        object.__setattr__(self, "source_stat_terms", _coefficients(source_stat_terms, "source stat"))
-        object.__setattr__(self, "target_stat_terms", _coefficients(target_stat_terms, "target stat"))
+        object.__setattr__(
+            self, "source_stat_terms", _coefficients(source_stat_terms, "source stat")
+        )
+        object.__setattr__(
+            self, "target_stat_terms", _coefficients(target_stat_terms, "target stat")
+        )
         object.__setattr__(self, "minimum_chance", minimum_chance)
         object.__setattr__(self, "maximum_chance", maximum_chance)
         object.__setattr__(self, "required_source_tags", _tags(required_source_tags))
@@ -306,7 +314,9 @@ class InteractionResolver:
         except KeyError:
             return 0.0
 
-    def resolve_value(self, base_value, source: GameplaySubject, target: GameplaySubject, *, action_tags=()):
+    def resolve_value(
+        self, base_value, source: GameplaySubject, target: GameplaySubject, *, action_tags=()
+    ):
         if not isinstance(source, GameplaySubject) or not isinstance(target, GameplaySubject):
             raise TypeError("source and target must be GameplaySubject")
         base_value = _number(base_value, "base_value")
@@ -345,7 +355,14 @@ class InteractionResolver:
         return result
 
     def resolve(
-        self, base_value, source: GameplaySubject, target: GameplaySubject, *, action_tags=(), check_ids=(), rng=None
+        self,
+        base_value,
+        source: GameplaySubject,
+        target: GameplaySubject,
+        *,
+        action_tags=(),
+        check_ids=(),
+        rng=None,
     ):
         """Resolve probability outcomes first, then feed their tags into value rules.
 
@@ -355,7 +372,10 @@ class InteractionResolver:
         that tag can NULLIFY the value.
         """
         rng = rng or random.Random()
-        checks = tuple(self.check(check_id, source, target, action_tags=action_tags, rng=rng) for check_id in check_ids)
+        checks = tuple(
+            self.check(check_id, source, target, action_tags=action_tags, rng=rng)
+            for check_id in check_ids
+        )
         combined = set(_tags(action_tags))
         for check in checks:
             combined.update(check.outcome_tags)
@@ -364,7 +384,15 @@ class InteractionResolver:
         emit_hook(self.hooks, "rpg.battle.outcome_resolved", data={"result": result})
         return result
 
-    def check(self, check_id, source: GameplaySubject, target: GameplaySubject, *, action_tags=(), rng=None):
+    def check(
+        self,
+        check_id,
+        source: GameplaySubject,
+        target: GameplaySubject,
+        *,
+        action_tags=(),
+        rng=None,
+    ):
         definition = self.checks[_id(check_id, "check_id")]
         source_tags = set(source.tags.values()) | set(_tags(action_tags))
         target_tags = set(target.tags.values())

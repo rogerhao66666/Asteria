@@ -19,7 +19,9 @@ def _freeze(value: Any) -> Any:
 
 
 def _metadata(record: Mapping[str, Any], known: set[str]) -> tuple[tuple[str, Any], ...]:
-    return tuple((key, _freeze(value)) for key, value in sorted(record.items()) if key not in known)
+    return tuple(
+        (key, _freeze(value)) for key, value in sorted(record.items()) if key not in known
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -201,4 +203,6 @@ class RPGMakerMVDatabase:
                         f"actor {actor.id} references class {actor.class_id}",
                     )
                 )
-        return cls(actors, classes, skills, items, weapons, armors, tilesets, system, tuple(issues))
+        return cls(
+            actors, classes, skills, items, weapons, armors, tilesets, system, tuple(issues)
+        )

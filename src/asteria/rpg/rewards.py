@@ -45,7 +45,9 @@ class RewardRuntime:
                 raise ValueError("invalid currency reward")
         if reward.experience:
             if self.progression is None:
-                raise ValueError("reward contains progression values but no ProgressionRuntime was supplied")
+                raise ValueError(
+                    "reward contains progression values but no ProgressionRuntime was supplied"
+                )
             for track_id, amount in reward.experience.items():
                 if str(track_id) not in self.progression.definitions:
                     raise KeyError(f"unknown progression track: {track_id}")
@@ -86,6 +88,8 @@ class RewardRuntime:
             emit_hook(self.hooks, "rpg.reward.apply_failed", data={"reward": reward})
             raise
 
-        result = RewardApplicationResult(dict(reward.currencies), tuple(progression_results), dict(reward.items))
+        result = RewardApplicationResult(
+            dict(reward.currencies), tuple(progression_results), dict(reward.items)
+        )
         emit_hook(self.hooks, "rpg.reward.after_apply", data={"result": result})
         return result

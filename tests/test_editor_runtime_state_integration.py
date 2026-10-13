@@ -27,7 +27,9 @@ def make(tmp_path):
 
 def test_new_save_captures_world_and_rpg_boundaries(tmp_path):
     p, s, player, d, c = make(tmp_path)
-    save = c.new_save(scene_id=s.id, player_entity_id=player.id, player_facing="right", player_position=(10, 20))
+    save = c.new_save(
+        scene_id=s.id, player_entity_id=player.id, player_facing="right", player_position=(10, 20)
+    )
     assert save.project_id == p.id
     assert save.scene_id == s.id
     assert save.player_entity_id == player.id

@@ -124,12 +124,16 @@ def test_atb_style_can_present_action_gauge_and_timeline():
         placement_by_member={"runner": "left"},
         focus_member_id="runner",
     )
-    assert any(g.resource_id == "initiative_meter" and g.presentation == "action_gauge" for g in ui.gauges)
+    assert any(
+        g.resource_id == "initiative_meter" and g.presentation == "action_gauge" for g in ui.gauges
+    )
     assert any(t.role == "timeline_current" and t.text == "runner" for t in ui.texts)
 
 
 def test_large_party_validation_has_no_gameplay_party_cap():
-    members = tuple(_member(f"unit{i}", (_gauge("life", "L", 100 - i, 100, "bar", 100),)) for i in range(12))
+    members = tuple(
+        _member(f"unit{i}", (_gauge("life", "L", 100 - i, 100, "bar", 100),)) for i in range(12)
+    )
     ui = BattleUiComposer(_scene()).compose(
         Camera2D(),
         _frame(),
@@ -150,7 +154,11 @@ def test_custom_composition_flow_is_not_hardcoded_as_alchemy():
         (
             BattleWorkflowStep("tone", "Choose Tone"),
             BattleWorkflowStep(
-                "sigils", "Choose Sigils", selection_mode="multiple", minimum_selections=2, maximum_selections=3
+                "sigils",
+                "Choose Sigils",
+                selection_mode="multiple",
+                minimum_selections=2,
+                maximum_selections=3,
             ),
         ),
         confirmation_label="Weave",

@@ -28,7 +28,8 @@ class EventContext:
     switches: dict[str, bool] = field(default_factory=dict)
     variables: dict[str, Any] = field(default_factory=dict)
     locals: dict[str, dict[str, Any]] = field(default_factory=dict)
-    # Read-only values the host exposes to conditions (e.g. "battle": round, HP ratios). Never saved.
+    # Read-only values the host exposes to conditions (e.g. "battle": round, HP ratios). Never
+    # saved.
     providers: dict[str, Any] = field(default_factory=dict, compare=False, repr=False)
 
     def get_switch(self, name: str, default: bool = False) -> bool:

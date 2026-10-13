@@ -1308,3 +1308,21 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **執行的測試：** 完整套件 **2136 passed**。
 
 **狀態：** A9 完成。
+
+### D22-L1 — Lint 規則：每行少於 100 字元（使用者指示）
+
+**規則：** repo 裡所有 Python 檔案（src、tests、scripts、reference_projects、demos；第三方的 local_reference 除外），每行最多 99 個字元。寫在 `.claude/skills/line-length/SKILL.md`，內容包括規則、提交前的三個檢查指令、各種寫法的處理方式，以及不在範圍內的部分（Markdown 文件和 JSON 資料不會被 ruff 檢查）。
+
+**做法：**
+- `pyproject.toml`：`line-length` 從 120 改成 99。
+- `ruff format` 重新排版程式碼（540 個檔案）。
+- 剩下 formatter 不會處理的 992 行，用一次性的 token 層級腳本改寫：註解換行（行尾註解移到上一行）；字串字面值拆成相鄰的字面值，值完全不變（f-string 只在 `{…}` 外面拆）；多行字串和 docstring 在空白處換行；太長的單行 docstring 拆成兩行文字。
+- 最後 4 行手動改：拆成區域變數、改用 `any()`、測試函式名稱縮短。
+- 改寫後有 9 個測試失敗：GLSL shader 字串中一行 `//` 註解被拆開，後半段變成程式碼，GPU 效果因此編譯失敗。已改成註解獨立一行，並在 skill 中寫明「是程式碼或資料的字串不能在中間換行」。
+- 這次只有格式變動，沒有改任何行為。
+
+**結果：**
+- `ruff check --select E501 .`：整個 repo **0 個問題**。
+- `ruff check src tests scripts`：全部規則都通過。
+- 完整套件 **2136 passed**，黃金基準沒有改變。
+- `demos/` 和 `reference_projects/` 原本就有其他規則的問題（例如 lambda 指派、import 位置），在這次之前就存在、以前也不在 lint 範圍內；這次沒有處理，數量從 115 個降到 47 個。

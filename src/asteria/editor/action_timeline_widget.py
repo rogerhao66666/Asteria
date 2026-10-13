@@ -1,4 +1,5 @@
-"""Action timeline editor (EDT-06): channel lanes, draggable beats, beat inspector, scrub preview."""
+"""Action timeline editor (EDT-06): channel lanes, draggable beats, beat inspector, scrub
+preview."""
 
 from __future__ import annotations
 
@@ -21,7 +22,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .action_timeline_authoring import CHANNELS, ROLES, TARGETS, ActionTimelineController, ActionTimelineError
+from .action_timeline_authoring import (
+    CHANNELS,
+    ROLES,
+    TARGETS,
+    ActionTimelineController,
+    ActionTimelineError,
+)
 
 LANE_HEIGHT = 28
 LEFT = 84
@@ -102,7 +109,9 @@ class TimelineView(QWidget):
                 painter.drawText(int(x) - 10, 12, f"{t:.1f}")
         for lane, channel in enumerate(CHANNELS):
             y = 20 + lane * LANE_HEIGHT
-            painter.fillRect(LEFT, y + 1, self.width() - LEFT - 12, LANE_HEIGHT - 2, QColor("#1e232b"))
+            painter.fillRect(
+                LEFT, y + 1, self.width() - LEFT - 12, LANE_HEIGHT - 2, QColor("#1e232b")
+            )
             painter.setPen(QColor("#c8d0dc"))
             painter.drawText(6, y + LANE_HEIGHT // 2 + 5, channel)
         for beat in self.sequence.beats:
@@ -124,7 +133,11 @@ class ActionTimelineWidget(QWidget):
         self.api = ActionTimelineController(document)
         self.sequence_list = QListWidget()
         self.sequence_list.currentTextChanged.connect(lambda _: self._load())
-        new_button, dup_button, del_button = QPushButton("New…"), QPushButton("Duplicate…"), QPushButton("Delete")
+        new_button, dup_button, del_button = (
+            QPushButton("New…"),
+            QPushButton("Duplicate…"),
+            QPushButton("Delete"),
+        )
         new_button.clicked.connect(self._new_clicked)
         dup_button.clicked.connect(self._duplicate_clicked)
         del_button.clicked.connect(self.delete_sequence)
@@ -317,8 +330,12 @@ class ActionTimelineWidget(QWidget):
 
     def add_beat(self, beat_id, at=0.0, channel="vfx", cue=None):
         sid = self.sequence_id
-        cue = cue or (self.api.known_vfx()[0] if channel == "vfx" and self.api.known_vfx() else "attack")
-        return self._try(lambda: self.api.add_beat(sid, beat_id, at, channel, cue), f"Added {beat_id}", beat_id)
+        cue = cue or (
+            self.api.known_vfx()[0] if channel == "vfx" and self.api.known_vfx() else "attack"
+        )
+        return self._try(
+            lambda: self.api.add_beat(sid, beat_id, at, channel, cue), f"Added {beat_id}", beat_id
+        )
 
     def remove_beat(self):
         sid, beat = self.sequence_id, self.beat_id.text()
@@ -328,18 +345,26 @@ class ActionTimelineWidget(QWidget):
 
     def move_beat(self, beat_id, at):
         sid = self.sequence_id
-        return self._try(lambda: self.api.move_beat(sid, beat_id, at), f"Moved {beat_id} to {at:.3f}s", beat_id)
+        return self._try(
+            lambda: self.api.move_beat(sid, beat_id, at), f"Moved {beat_id} to {at:.3f}s", beat_id
+        )
 
     def apply_duration(self):
         sid = self.sequence_id
-        return self._try(lambda: self.api.set_duration(sid, self.duration.value()), "Length updated")
+        return self._try(
+            lambda: self.api.set_duration(sid, self.duration.value()), "Length updated"
+        )
 
     def new_sequence(self, sequence_id):
-        return self._try(lambda: self.api.create(sequence_id), f"Created {sequence_id}", select=sequence_id)
+        return self._try(
+            lambda: self.api.create(sequence_id), f"Created {sequence_id}", select=sequence_id
+        )
 
     def duplicate_sequence(self, new_id):
         sid = self.sequence_id
-        return self._try(lambda: self.api.duplicate(sid, new_id), f"Duplicated as {new_id}", select=new_id)
+        return self._try(
+            lambda: self.api.duplicate(sid, new_id), f"Duplicated as {new_id}", select=new_id
+        )
 
     def delete_sequence(self):
         sid = self.sequence_id
@@ -360,13 +385,20 @@ class ActionTimelineWidget(QWidget):
     def _add_clicked(self):
         name, ok = QInputDialog.getText(self, "Add Beat", "Beat id:")
         if ok and name.strip():
-            self.add_beat(name.strip(), self.view.playhead, self.channel.currentText(), self.cue.currentText())
+            self.add_beat(
+                name.strip(),
+                self.view.playhead,
+                self.channel.currentText(),
+                self.cue.currentText(),
+            )
 
     # -- preview --------------------------------------------------------------------
     def toggle_play(self):
         self.playing = not self.playing
         self.play_button.setText("Pause" if self.playing else "Play")
-        if self.playing and self.view.playhead >= (self.view.sequence.duration if self.view.sequence else 0):
+        if self.playing and self.view.playhead >= (
+            self.view.sequence.duration if self.view.sequence else 0
+        ):
             self.view.playhead = 0.0
         self.timer.start() if self.playing else self.timer.stop()
 

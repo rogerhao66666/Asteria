@@ -111,9 +111,13 @@ class RpgActorClassAuthoringController:
             seen.add(a.assignment_id)
             if a.class_id not in self.database.classes:
                 raise RpgActorClassAuthoringError(f"unknown class: {a.class_id}")
-            missing = [x for x in a.progression_track_ids if x not in self.database.progression_tracks]
+            missing = [
+                x for x in a.progression_track_ids if x not in self.database.progression_tracks
+            ]
             if missing:
-                raise RpgActorClassAuthoringError("unknown progression tracks: " + ", ".join(sorted(missing)))
+                raise RpgActorClassAuthoringError(
+                    "unknown progression tracks: " + ", ".join(sorted(missing))
+                )
             result.append(a)
         return tuple(result)
 
@@ -144,7 +148,9 @@ class RpgActorClassAuthoringController:
             granted_tags=granted_tags,
             granted_abilities=self._check_abilities(granted_abilities),
         )
-        self._execute(_DefinitionCommand(self.database.classes, cid, value, None, f"Add Class {cid}"))
+        self._execute(
+            _DefinitionCommand(self.database.classes, cid, value, None, f"Add Class {cid}")
+        )
         return value
 
     def edit_class(
@@ -164,13 +170,21 @@ class RpgActorClassAuthoringController:
             old.class_id,
             old.display_name if display_name is None else display_name,
             stat_bonuses=old.stat_bonuses if stat_bonuses is None else stat_bonuses,
-            resource_bonuses=(old.resource_bonuses if resource_bonuses is None else resource_bonuses),
+            resource_bonuses=(
+                old.resource_bonuses if resource_bonuses is None else resource_bonuses
+            ),
             granted_tags=old.granted_tags if granted_tags is None else granted_tags,
             granted_abilities=(
-                old.granted_abilities if granted_abilities is None else self._check_abilities(granted_abilities)
+                old.granted_abilities
+                if granted_abilities is None
+                else self._check_abilities(granted_abilities)
             ),
         )
-        self._execute(_DefinitionCommand(self.database.classes, old.class_id, value, old, f"Edit Class {old.class_id}"))
+        self._execute(
+            _DefinitionCommand(
+                self.database.classes, old.class_id, value, old, f"Edit Class {old.class_id}"
+            )
+        )
         return value
 
     def delete_class(self, class_id):
@@ -179,11 +193,17 @@ class RpgActorClassAuthoringController:
         if old is None:
             raise RpgActorClassAuthoringError(f"unknown class: {cid}")
         users = [
-            a.actor_id for a in self.database.actors.values() if any(x.class_id == cid for x in a.class_assignments)
+            a.actor_id
+            for a in self.database.actors.values()
+            if any(x.class_id == cid for x in a.class_assignments)
         ]
         if users:
-            raise RpgActorClassAuthoringError(f"class {cid} is referenced by actors: " + ", ".join(sorted(users)))
-        return self._execute(_DefinitionCommand(self.database.classes, cid, None, old, f"Delete Class {cid}"))
+            raise RpgActorClassAuthoringError(
+                f"class {cid} is referenced by actors: " + ", ".join(sorted(users))
+            )
+        return self._execute(
+            _DefinitionCommand(self.database.classes, cid, None, old, f"Delete Class {cid}")
+        )
 
     def duplicate_class(self, class_id, new_class_id, display_name=None):
         source = self.database.classes.get(str(class_id))
@@ -222,7 +242,9 @@ class RpgActorClassAuthoringController:
             tags=tags,
             abilities=self._check_abilities(abilities),
         )
-        self._execute(_DefinitionCommand(self.database.actors, aid, value, None, f"Add Actor {aid}"))
+        self._execute(
+            _DefinitionCommand(self.database.actors, aid, value, None, f"Add Actor {aid}")
+        )
         return value
 
     def edit_actor(
@@ -240,7 +262,9 @@ class RpgActorClassAuthoringController:
         if old is None:
             raise RpgActorClassAuthoringError(f"unknown actor: {actor_id}")
         assignments = (
-            old.class_assignments if class_assignments is None else self._check_assignment_refs(class_assignments)
+            old.class_assignments
+            if class_assignments is None
+            else self._check_assignment_refs(class_assignments)
         )
         value = ActorDefinition(
             old.actor_id,
@@ -251,7 +275,11 @@ class RpgActorClassAuthoringController:
             tags=old.tags if tags is None else tags,
             abilities=(old.abilities if abilities is None else self._check_abilities(abilities)),
         )
-        self._execute(_DefinitionCommand(self.database.actors, old.actor_id, value, old, f"Edit Actor {old.actor_id}"))
+        self._execute(
+            _DefinitionCommand(
+                self.database.actors, old.actor_id, value, old, f"Edit Actor {old.actor_id}"
+            )
+        )
         return value
 
     def delete_actor(self, actor_id):
@@ -259,7 +287,9 @@ class RpgActorClassAuthoringController:
         old = self.database.actors.get(aid)
         if old is None:
             raise RpgActorClassAuthoringError(f"unknown actor: {aid}")
-        return self._execute(_DefinitionCommand(self.database.actors, aid, None, old, f"Delete Actor {aid}"))
+        return self._execute(
+            _DefinitionCommand(self.database.actors, aid, None, old, f"Delete Actor {aid}")
+        )
 
     def duplicate_actor(self, actor_id, new_actor_id, display_name=None):
         source = self.database.actors.get(str(actor_id))
@@ -310,7 +340,9 @@ class RpgActorClassAuthoringController:
         allowed = {"class_id", "role", "enabled", "priority", "progression_track_ids", "tags"}
         unknown = set(changes) - allowed
         if unknown:
-            raise RpgActorClassAuthoringError("unsupported assignment fields: " + ", ".join(sorted(unknown)))
+            raise RpgActorClassAuthoringError(
+                "unsupported assignment fields: " + ", ".join(sorted(unknown))
+            )
         for a in old.class_assignments:
             if a.assignment_id != str(assignment_id):
                 values.append(a)
@@ -323,7 +355,9 @@ class RpgActorClassAuthoringController:
                     role=changes.get("role", a.role),
                     enabled=changes.get("enabled", a.enabled),
                     priority=changes.get("priority", a.priority),
-                    progression_track_ids=changes.get("progression_track_ids", a.progression_track_ids),
+                    progression_track_ids=changes.get(
+                        "progression_track_ids", a.progression_track_ids
+                    ),
                     tags=changes.get("tags", a.tags),
                 )
             )

@@ -53,7 +53,9 @@ def binding_from_dict(data: Mapping[str, Any]) -> SceneAssetBinding:
         raise ValueError("component_type")
     if not isinstance(props, Mapping):
         raise ValueError("properties")
-    return SceneAssetBinding(oid, ctype, asset_ref_from_dict(data.get("asset_ref", {})), tuple(props.items()))
+    return SceneAssetBinding(
+        oid, ctype, asset_ref_from_dict(data.get("asset_ref", {})), tuple(props.items())
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,7 +71,9 @@ class SceneAssetResolver:
     def resolve(self, binding: SceneAssetBinding) -> ResolvedSceneAsset:
         asset = self.registry.resolve(binding.asset_ref.asset_id)
         if asset.kind != binding.asset_ref.kind:
-            raise ValueError(f"asset kind mismatch: scene={binding.asset_ref.kind}, registry={asset.kind}")
+            raise ValueError(
+                f"asset kind mismatch: scene={binding.asset_ref.kind}, registry={asset.kind}"
+            )
         return ResolvedSceneAsset(binding, asset)
 
     def resolve_many(self, bindings):

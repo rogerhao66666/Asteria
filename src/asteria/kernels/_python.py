@@ -1,4 +1,5 @@
-"""Reference kernels in plain Python - always available; every other kernel set must match these."""
+"""Reference kernels in plain Python - always available; every other kernel set must match
+these."""
 
 from __future__ import annotations
 
@@ -31,8 +32,17 @@ class ParticleStore:
                 column.append(value)
 
     def step(self, dt, gx, gy, keep):
-        """Gravity, drag (``keep`` = velocity kept), motion, ageing and spin; drops expired particles."""
-        px, py, vx, vy, life, angle, spin = self.px, self.py, self.vx, self.vy, self.life, self.angle, self.spin
+        """Gravity, drag (``keep`` = velocity kept), motion, ageing and spin; drops expired
+        particles."""
+        px, py, vx, vy, life, angle, spin = (
+            self.px,
+            self.py,
+            self.vx,
+            self.vy,
+            self.life,
+            self.angle,
+            self.spin,
+        )
         for i in range(len(px)):
             vx[i] = (vx[i] + gx * dt) * keep
             vy[i] = (vy[i] + gy * dt) * keep
@@ -51,7 +61,8 @@ class ParticleStore:
         self.py = [p + dy for p in self.py]
 
     def views(self, size_from, size_to, color_from, color_to, scale):
-        """``(x, y, size, (r, g, b, a), angle)`` per particle, interpolated over each particle's life."""
+        """``(x, y, size, (r, g, b, a), angle)`` per particle, interpolated over each particle's
+        life."""
         s0, s1, c0, c1 = size_from, size_to, color_from, color_to
         out = []
         for i in range(len(self.px)):
@@ -89,8 +100,10 @@ class WeatherStore:
             del getattr(self, name)[count:]
 
     def step(self, dt, wind, time, sway, shift_x, shift_y, width, height):
-        """Fall, wind, sway (``sway``: sideways sine drift) and camera shift. Returns ``(index, fell_out)`` for
-        each particle that left the screen, in index order (``fell_out``: below the bottom edge)."""
+        """Fall, wind, sway (``sway``: sideways sine drift) and camera shift. Returns ``(index,
+        fell_out)`` for
+        each particle that left the screen, in index order (``fell_out``: below the bottom
+        edge)."""
         x, y, vy, phase = self.x, self.y, self.vy, self.phase
         left = []
         for i in range(len(x)):
@@ -102,7 +115,8 @@ class WeatherStore:
         return left
 
     def draw(self, pg, layer, kind, color, wind, time):
-        """Draw every particle on ``layer`` (cleared first): rain as slanted lines, leaves as flapping
+        """Draw every particle on ``layer`` (cleared first): rain as slanted lines, leaves as
+        flapping
         ellipses, snow and dust as dots."""
         layer.fill((0, 0, 0, 0))
         if kind == "rain":
@@ -119,7 +133,8 @@ class WeatherStore:
 
 
 def aabb_pairs(x0, y0, x1, y1, cell_size=64.0):
-    """Pairs ``(i, j)``, ``i < j``, whose boxes overlap or touch, sorted; a uniform grid finds the candidates."""
+    """Pairs ``(i, j)``, ``i < j``, whose boxes overlap or touch, sorted; a uniform grid finds the
+    candidates."""
     if cell_size <= 0:
         raise ValueError("cell_size must be positive")
     cells = {}
@@ -137,10 +152,12 @@ def aabb_pairs(x0, y0, x1, y1, cell_size=64.0):
 
 
 def aabb_cross_pairs(a, b, cell_size=64.0, touching=False):
-    """Pairs ``(i, j)`` where box ``a[i]`` overlaps box ``b[j]``, sorted. Touching edges count only with
+    """Pairs ``(i, j)`` where box ``a[i]`` overlaps box ``b[j]``, sorted. Touching edges count
+    only with
     ``touching``.
 
-    ``a`` and ``b`` are ``(x0, y0, x1, y1)`` column tuples. A uniform grid over ``b`` finds the candidates.
+    ``a`` and ``b`` are ``(x0, y0, x1, y1)`` column tuples. A uniform grid over ``b`` finds the
+    candidates.
     """
     if cell_size <= 0:
         raise ValueError("cell_size must be positive")
@@ -157,16 +174,27 @@ def aabb_cross_pairs(a, b, cell_size=64.0, touching=False):
             for cy in range(floor(ay0[i] / cell_size), floor(ay1[i] / cell_size) + 1):
                 for j in cells.get((cx, cy), ()):
                     if touching:
-                        hit = ax0[i] <= bx1[j] and bx0[j] <= ax1[i] and ay0[i] <= by1[j] and by0[j] <= ay1[i]
+                        hit = (
+                            ax0[i] <= bx1[j]
+                            and bx0[j] <= ax1[i]
+                            and ay0[i] <= by1[j]
+                            and by0[j] <= ay1[i]
+                        )
                     else:
-                        hit = ax0[i] < bx1[j] and bx0[j] < ax1[i] and ay0[i] < by1[j] and by0[j] < ay1[i]
+                        hit = (
+                            ax0[i] < bx1[j]
+                            and bx0[j] < ax1[i]
+                            and ay0[i] < by1[j]
+                            and by0[j] < ay1[i]
+                        )
                     if hit:
                         pairs.add((i, j))
     return sorted(pairs)
 
 
 def _turn_cosines(turns, dt):
-    """cos / sin of each distinct per-step turn angle, computed once with ``math`` (shared by every kernel set)."""
+    """cos / sin of each distinct per-step turn angle, computed once with ``math`` (shared by every
+    kernel set)."""
     return {t: (math.cos(t * dt), math.sin(t * dt)) for t in set(turns) if t > 0}
 
 
@@ -205,7 +233,8 @@ class ProjectileStore:
             setattr(self, name, [values[i] for i in indices])
 
     def step(self, dt, target_x=None, target_y=None):
-        """Homing toward ``target_x/y`` (``nan`` = no target; at most ``turn * dt`` per step, no trig on rows),
+        """Homing toward ``target_x/y`` (``nan`` = no target; at most ``turn * dt`` per step, no
+        trig on rows),
         then gravity, motion and ageing."""
         x, y, vx, vy = self.x, self.y, self.vx, self.vy
         if target_x is not None:
@@ -221,7 +250,10 @@ class ProjectileStore:
                     continue
                 c, s = rot[turn]
                 if (vx[i] * dx + vy[i] * dy) / (speed * dist) >= c:
-                    vx[i], vy[i] = dx / dist * speed, dy / dist * speed  # within this step's turn: aim straight
+                    vx[i], vy[i] = (
+                        dx / dist * speed,
+                        dy / dist * speed,
+                    )  # within this step's turn: aim straight
                 else:
                     s = s if vx[i] * dy - vy[i] * dx > 0 else -s
                     vx[i], vy[i] = vx[i] * c - vy[i] * s, vx[i] * s + vy[i] * c
@@ -246,9 +278,11 @@ class ProjectileStore:
 
 
 def collider_columns(transform, collider, slots, circle):
-    """World boxes of colliders from column storage: ``(cx, cy, half_w, half_h)`` lists for ``slots``.
+    """World boxes of colliders from column storage: ``(cx, cy, half_w, half_h)`` lists for
+    ``slots``.
 
-    ``transform`` / ``collider`` map column names to slot-indexed arrays; ``circle[k]`` marks circle colliders.
+    ``transform`` / ``collider`` map column names to slot-indexed arrays; ``circle[k]`` marks
+    circle colliders.
     """
     tx, ty = transform["x"], transform["y"]
     ox, oy, w, h, r = (
@@ -265,12 +299,14 @@ def collider_columns(transform, collider, slots, circle):
     return cx, cy, hw, hh
 
 
-# -- top-down character controllers on column storage (D22-C2) ------------------------------------------------------
+# -- top-down character controllers on column storage (D22-C2) ------------------------------------
 def topdown_prepare(c, slots, dt):
     """Lock countdown, intent normalising and this step's move for top-down controllers.
 
-    ``c`` maps controller column names to slot-indexed arrays. Locked controllers ignore intent (and jump). Returns
-    ``(dx, dy, move_x, move_y, locked)`` lists: the normalised intent and ``(intent * speed + push) * dt``.
+    ``c`` maps controller column names to slot-indexed arrays. Locked controllers ignore intent
+    (and jump). Returns
+    ``(dx, dy, move_x, move_y, locked)`` lists: the normalised intent and ``(intent * speed +
+    push) * dt``.
     """
     ix, iy, lock, jump = c["intent_x"], c["intent_y"], c["control_lock"], c["jump"]
     speed, override, px, py = c["speed"], c["speed_override"], c["push_x"], c["push_y"]
@@ -280,7 +316,9 @@ def topdown_prepare(c, slots, dt):
         locked = lock[s] > 0.0
         if locked:
             remaining = lock[s] - dt
-            lock[s] = 0.0 if remaining < 1e-9 else remaining  # float steps (30 x 1/60 is not exactly 0.5)
+            lock[s] = (
+                0.0 if remaining < 1e-9 else remaining
+            )  # float steps (30 x 1/60 is not exactly 0.5)
             dx = dy = 0.0
             jump[s] = 0
         mag = math.sqrt(dx * dx + dy * dy)
@@ -332,11 +370,19 @@ def decay_push(c, slots, dt, epsilon):
 
 
 def box_columns(t, b, slots, codes):
-    """Hit / hurt boxes ``(x0, y0, x1, y1)`` from column storage, turned with the facing ``codes`` (0 down, 1 up,
-    2 left, 3 right) where ``follow_facing`` is set: authored for facing right, mirrored left, a quarter turn
+    """Hit / hurt boxes ``(x0, y0, x1, y1)`` from column storage, turned with the facing ``codes``
+    (0 down, 1 up,
+    2 left, 3 right) where ``follow_facing`` is set: authored for facing right, mirrored left, a
+    quarter turn
     down / up."""
     tx, ty = t["x"], t["y"]
-    bx, by, bw, bh, follow = b["offset_x"], b["offset_y"], b["width"], b["height"], b["follow_facing"]
+    bx, by, bw, bh, follow = (
+        b["offset_x"],
+        b["offset_y"],
+        b["width"],
+        b["height"],
+        b["follow_facing"],
+    )
     x0, y0, x1, y1 = [], [], [], []
     for s, code in zip(slots, codes, strict=True):
         ox, oy, w, h = bx[s], by[s], bw[s], bh[s]
@@ -358,14 +404,21 @@ def box_columns(t, b, slots, codes):
 def blocked_rows(boxes, walls, pairs, mover_mask, mover_row, wall_bit, wall_one_way, wall_circle):
     """Movers (rows of ``boxes``) blocked by a wall among candidate ``pairs`` ``(mover, wall)``.
 
-    A wall blocks unless it is the mover's own shape (``mover_row``), a one-way platform, outside the mover's layer
-    mask, or a circle the box does not reach. ``walls`` = ``(cx, cy, radius)`` columns. Returns sorted mover rows.
+    A wall blocks unless it is the mover's own shape (``mover_row``), a one-way platform, outside
+    the mover's layer
+    mask, or a circle the box does not reach. ``walls`` = ``(cx, cy, radius)`` columns. Returns
+    sorted mover rows.
     """
     x0, y0, x1, y1 = boxes
     cx, cy, radius = walls
     blocked = set()
     for i, j in pairs:
-        if i in blocked or j == mover_row[i] or wall_one_way[j] or not (mover_mask[i] & wall_bit[j]):
+        if (
+            i in blocked
+            or j == mover_row[i]
+            or wall_one_way[j]
+            or not (mover_mask[i] & wall_bit[j])
+        ):
             continue
         if wall_circle[j]:
             nx = min(max(cx[j], x0[i]), x1[i])
@@ -377,7 +430,8 @@ def blocked_rows(boxes, walls, pairs, mover_mask, mover_row, wall_bit, wall_one_
 
 
 def facing_codes(dx, dy, current, locked):
-    """Top-down facing codes (0 down, 1 up, 2 left, 3 right) after moving by ``(dx, dy)``; standing still or
+    """Top-down facing codes (0 down, 1 up, 2 left, 3 right) after moving by ``(dx, dy)``;
+    standing still or
     locked keeps ``current``."""
     out = []
     for x, y, code, held in zip(dx, dy, current, locked, strict=True):
@@ -396,12 +450,14 @@ def facing_codes(dx, dy, current, locked):
     return out
 
 
-# -- field AI on column storage (D22 A4) ---------------------------------------------------------------------------
+# -- field AI on column storage (D22 A4) ----------------------------------------------------------
 # mode / behaviour codes: 0 idle, 1 patrol, 2 wander, 3 chase, 4 flee, 5 return
 def fieldai_step(f, t, c, slots, behaviour, target_x, target_y, has_target, dt):
-    """React (detect / lose the target) and steer chase, flee and return for AI entities with controllers.
+    """React (detect / lose the target) and steer chase, flee and return for AI entities with
+    controllers.
 
-    Writes ``f["mode_code"]`` and the controllers' intents; returns the rows (indexes into ``slots``) whose mode is
+    Writes ``f["mode_code"]`` and the controllers' intents; returns the rows (indexes into
+    ``slots``) whose mode is
     patrol or wander, which the caller steers itself.
     """
     mode, hx, hy = f["mode_code"], f["home_x"], f["home_y"]

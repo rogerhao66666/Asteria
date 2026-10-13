@@ -52,7 +52,9 @@ class PygameEnvironmentRenderer:
         if env.lighting:
             if self._light is None or self._light.get_size() != size:
                 self._light = pg.Surface(size)
-            ambient = tuple(min(255, int(255 * c * env.ambient.intensity)) for c in env.ambient.color)
+            ambient = tuple(
+                min(255, int(255 * c * env.ambient.intensity)) for c in env.ambient.color
+            )
             self._light.fill(ambient)
             for model, _height, _flicker in env.lights:
                 color = tuple(c * model.intensity for c in model.color)
@@ -68,11 +70,17 @@ class PygameEnvironmentRenderer:
         if env.fog is not None and env.fog.density > 0:
             if self._fog is None or self._fog.get_size() != size:
                 self._fog = pg.Surface(size, pg.SRCALPHA)
-            self._fog.fill((*(int(c * 255) for c in env.fog.color), int(255 * min(1.0, env.fog.density * 0.8))))
+            self._fog.fill(
+                (
+                    *(int(c * 255) for c in env.fog.color),
+                    int(255 * min(1.0, env.fog.density * 0.8)),
+                )
+            )
             world.blit(self._fog, (0, 0))
 
     def _water(self, world, rect, amplitude, wavelength, speed, tint, strength):
-        """Ripple by shifting 2-pixel rows sideways, then tint (cheap CPU approximation of the GPU pass)."""
+        """Ripple by shifting 2-pixel rows sideways, then tint (cheap CPU approximation of the GPU
+        pass)."""
         import math
 
         pg = self.pg
@@ -82,7 +90,10 @@ class PygameEnvironmentRenderer:
             return
         source = world.subsurface(area).copy()
         for row in range(0, area.height, 2):
-            shift = int(math.sin((area.y + row) / max(1.0, wavelength) * math.tau + self.time * speed) * amplitude)
+            shift = int(
+                math.sin((area.y + row) / max(1.0, wavelength) * math.tau + self.time * speed)
+                * amplitude
+            )
             world.blit(source, (area.x + shift, area.y + row), (0, row, area.width, 2))
         if strength > 0:
             veil = pg.Surface(area.size, pg.SRCALPHA)

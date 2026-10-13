@@ -43,7 +43,8 @@ class GpuPresenterError(RuntimeError):
 
 
 def _swizzle_for(surface):
-    """Texture swizzle that turns the surface's raw 32-bit bytes into RGBA, or None if unsupported."""
+    """Texture swizzle that turns the surface's raw 32-bit bytes into RGBA, or None if
+    unsupported."""
     if surface.get_bitsize() != 32 or surface.get_pitch() != surface.get_width() * 4:
         return None
     shifts = surface.get_shifts()[:3]
@@ -75,7 +76,9 @@ class GpuPresenter:
         self._vbo = ctx.buffer(quad.tobytes())
         self.copy_program = ctx.program(vertex_shader=QUAD_VERTEX, fragment_shader=COPY_FRAGMENT)
         self.copy_program["u_texture"] = 0
-        self._copy_vao = ctx.vertex_array(self.copy_program, [(self._vbo, "2f 2f", "in_pos", "in_uv")])
+        self._copy_vao = ctx.vertex_array(
+            self.copy_program, [(self._vbo, "2f 2f", "in_pos", "in_uv")]
+        )
         self.post = None  # set by the post-process stack (R3)
         self.uploads = 0
         self.last_upload_ms = 0.0
@@ -90,15 +93,20 @@ class GpuPresenter:
     # -- window ---------------------------------------------------------------------------------
     @classmethod
     def open_window(cls, pg, size, title, *, vsync=False):
-        """Open a GL 3.3 core window (pygame owns it, as in ModernglRuntimeBackend) and a presenter for it.
+        """Open a GL 3.3 core window (pygame owns it, as in ModernglRuntimeBackend) and a
+        presenter for it.
 
-        ``vsync`` is off by default: frames are paced by the runtime clock (as on the pygame path), and on
-        macOS SDL's Cocoa swap with vsync can block indefinitely while the window is not being displayed.
+        ``vsync`` is off by default: frames are paced by the runtime clock (as on the pygame
+        path), and on
+        macOS SDL's Cocoa swap with vsync can block indefinitely while the window is not being
+        displayed.
         """
         try:
             import moderngl
         except ImportError as exc:
-            raise GpuPresenterError("moderngl is not installed (pip install 'asteria[moderngl]')") from exc
+            raise GpuPresenterError(
+                "moderngl is not installed (pip install 'asteria[moderngl]')"
+            ) from exc
         pg.display.gl_set_attribute(pg.GL_CONTEXT_MAJOR_VERSION, 3)
         pg.display.gl_set_attribute(pg.GL_CONTEXT_MINOR_VERSION, 3)
         pg.display.gl_set_attribute(pg.GL_CONTEXT_PROFILE_MASK, pg.GL_CONTEXT_PROFILE_CORE)
@@ -121,7 +129,9 @@ class GpuPresenter:
     def upload(self, surface, pg):
         start = time.perf_counter()
         if surface.get_size() != self.size:
-            raise GpuPresenterError(f"surface {surface.get_size()} does not match presenter {self.size}")
+            raise GpuPresenterError(
+                f"surface {surface.get_size()} does not match presenter {self.size}"
+            )
         swizzle = _swizzle_for(surface)
         if swizzle is not None:
             if swizzle != self._swizzle:
@@ -137,7 +147,8 @@ class GpuPresenter:
         self.last_upload_ms = (time.perf_counter() - start) * 1000.0
 
     def _layer_texture(self, name, surface, pg, *, alpha):
-        """Upload an extra layer (UI with alpha, normals) into a cached texture of the presenter's size."""
+        """Upload an extra layer (UI with alpha, normals) into a cached texture of the presenter's
+        size."""
         textures = self.__dict__.setdefault("_layers", {})
         texture = textures.get(name)
         if texture is None:
@@ -147,7 +158,9 @@ class GpuPresenter:
             texture.filter = (moderngl.NEAREST, moderngl.NEAREST)
         swizzle = _swizzle_for(surface)
         if swizzle is not None and alpha:  # keep the real alpha byte (UI layers are SRCALPHA)
-            swizzle = swizzle[:3] + ("RGBA"[surface.get_shifts()[3] // 8] if surface.get_masks()[3] else "1")
+            swizzle = swizzle[:3] + (
+                "RGBA"[surface.get_shifts()[3] // 8] if surface.get_masks()[3] else "1"
+            )
         if swizzle is not None:
             texture.swizzle = swizzle
             texture.write(surface.get_buffer())
@@ -169,7 +182,9 @@ class GpuPresenter:
         self.post.environment = environment
         self.post.time = float(time)
         self.post.ui = None if ui is None else self._layer_texture("ui", ui, pg, alpha=True)
-        self.post.normals = None if normals is None else self._layer_texture("normals", normals, pg, alpha=False)
+        self.post.normals = (
+            None if normals is None else self._layer_texture("normals", normals, pg, alpha=False)
+        )
         return self.present(world, pg)
 
     def _draw(self):
@@ -184,7 +199,8 @@ class GpuPresenter:
             self.last_draw_calls = 1
 
     def present(self, surface, pg):
-        """Upload ``surface`` and draw it (through the post chain) into the window or ``target``."""
+        """Upload ``surface`` and draw it (through the post chain) into the window or
+        ``target``."""
         self.upload(surface, pg)
         if self._gpu_query is not None:
             with self._gpu_query:

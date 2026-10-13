@@ -16,13 +16,16 @@ def member(mid, speed):
 
 
 def test_round_mode_is_project_order_not_speed():
-    s = BattleScheduler([member("b", 99), member("a", 1)], BattleSchedulerDefinition("round", mode="round"))
+    s = BattleScheduler(
+        [member("b", 99), member("a", 1)], BattleSchedulerDefinition("round", mode="round")
+    )
     assert [x.member_id for x in s.pending()] == ["a", "b"]
 
 
 def test_speed_ordered_one_action_each_per_round():
     s = BattleScheduler(
-        [member("slow", 2), member("fast", 10)], BattleSchedulerDefinition("speed", mode="speed_ordered")
+        [member("slow", 2), member("fast", 10)],
+        BattleSchedulerDefinition("speed", mode="speed_ordered"),
     )
     assert [s.pop().member_id, s.pop().member_id] == ["fast", "slow"]
     assert s.exhausted()
@@ -40,12 +43,17 @@ def test_continuous_fast_actor_can_act_multiple_times_before_slow_actor():
 
 
 def test_continuous_ties_are_deterministic_by_member_id():
-    s = BattleScheduler([member("b", 10), member("a", 10)], BattleSchedulerDefinition("ct", mode="continuous"))
+    s = BattleScheduler(
+        [member("b", 10), member("a", 10)], BattleSchedulerDefinition("ct", mode="continuous")
+    )
     assert [s.pop().member_id, s.pop().member_id] == ["a", "b"]
 
 
 def test_continuous_round_advances_after_every_current_member_has_acted():
-    s = BattleScheduler([member("fast", 100), member("slow", 25)], BattleSchedulerDefinition("ct", mode="continuous"))
+    s = BattleScheduler(
+        [member("fast", 100), member("slow", 25)],
+        BattleSchedulerDefinition("ct", mode="continuous"),
+    )
     assert s.round_index == 1
     for _ in range(5):
         s.pop()
@@ -75,7 +83,9 @@ def test_continuous_summon_schedules_from_current_time():
 
 
 def test_definition_roundtrip():
-    d = BattleSchedulerDefinition("custom", mode=BattleSchedulerMode.CONTINUOUS, timeline_scale=250, minimum_speed=0.5)
+    d = BattleSchedulerDefinition(
+        "custom", mode=BattleSchedulerMode.CONTINUOUS, timeline_scale=250, minimum_speed=0.5
+    )
     assert BattleSchedulerDefinition.from_data(d.to_data()) == d
 
 

@@ -72,7 +72,8 @@ class EventScheduler:
     @property
     def autorun_busy(self):
         return any(
-            inst.spec.mode == EventScheduleMode.AUTORUN and inst.runner.busy for inst in self._instances.values()
+            inst.spec.mode == EventScheduleMode.AUTORUN and inst.runner.busy
+            for inst in self._instances.values()
         )
 
     def can_start_foreground(self):
@@ -81,7 +82,9 @@ class EventScheduler:
     def _ensure_instance(self, spec: ScheduledEventSpec):
         inst = self._instances.get(spec.event_id)
         if inst is None:
-            runner = EventRunner(self.registry, context=self.context, world_commands=self.world_commands)
+            runner = EventRunner(
+                self.registry, context=self.context, world_commands=self.world_commands
+            )
             runner.sequence_host = self.sequence_host
             runner.start(
                 spec.program_id,
@@ -113,7 +116,8 @@ class EventScheduler:
                 continue
             inst = self._ensure_instance(spec)
             outputs[event_id] = inst.runner.update(dt)
-            # finished only when nothing is still showing (a last dialogue line) or running (sequence tracks)
+            # finished only when nothing is still showing (a last dialogue line) or running
+            # (sequence tracks)
             if (
                 inst.runner.vm is not None
                 and inst.runner.vm.completed
@@ -166,7 +170,9 @@ class EventScheduler:
             spec = self._specs.get(event_id)
             if spec is None:
                 raise KeyError(f"snapshot references unknown scheduled event: {event_id}")
-            runner = EventRunner(self.registry, context=self.context, world_commands=self.world_commands)
+            runner = EventRunner(
+                self.registry, context=self.context, world_commands=self.world_commands
+            )
             runner.sequence_host = self.sequence_host
             runner.restore(runner_data)
             self._instances[event_id] = ScheduledEventInstance(spec, runner)

@@ -139,15 +139,20 @@ class AsteriaEditorWindow(QMainWindow):
         self.project_workspace_controller = ProjectWorkspaceController(self.document)
         self.playtest_profile_library = None
 
-        self.rpg_authoring = FamilyHostWidget("Game Data", self.authoring_controllers.rpg_categories, self)
-        # Generic placement: "Place Character from Sprite Sheet…" waits for one map-cell click (CB14).
+        self.rpg_authoring = FamilyHostWidget(
+            "Game Data", self.authoring_controllers.rpg_categories, self
+        )
+        # Generic placement: "Place Character from Sprite Sheet…" waits for one map-cell click
+        # (CB14).
         self.viewport.characterCellClicked.connect(self._place_character_at)
         self.rpg_workspace = ScrollingTabWidget(self)
         self.rpg_workspace.addTab(self.rpg_authoring, "Game Data")
         from .game_systems_authoring import GameSystemsAuthoringController
         from .game_systems_widget import GameSystemsEditorWidget
 
-        self.game_systems_editor = GameSystemsEditorWidget(GameSystemsAuthoringController(self.document), self)
+        self.game_systems_editor = GameSystemsEditorWidget(
+            GameSystemsAuthoringController(self.document), self
+        )
         self.game_systems_editor.changed.connect(self.refresh_all)
         self.rpg_workspace.addTab(self.game_systems_editor, "Game Systems")
         from .enemy_ai_widget import EnemyAIEditorWidget
@@ -165,7 +170,9 @@ class AsteriaEditorWindow(QMainWindow):
         # D22 A9: attacks, projectiles, loot rarities and affixes with live previews
         self.combat_editor = CombatWorkspace(self.document, self)
         self.rpg_workspace.addTab(self.combat_editor, "Real-Time Combat")
-        self.battle_authoring = FamilyHostWidget("Battle Rules", self.authoring_controllers.battle_categories, self)
+        self.battle_authoring = FamilyHostWidget(
+            "Battle Rules", self.authoring_controllers.battle_categories, self
+        )
         self.presentation_authoring = FamilyHostWidget(
             "Battle Presentation", self.authoring_controllers.presentation_categories, self
         )
@@ -334,7 +341,8 @@ class AsteriaEditorWindow(QMainWindow):
         self.addDockWidget(Qt.BottomDockWidgetArea, self.problems_dock)
         self.tabifyDockWidget(bottom, self.problems_dock)
         console.raise_()
-        # Default dock sizes: wide enough that panel tables (Inspector Property / Value / Type) and the
+        # Default dock sizes: wide enough that panel tables (Inspector Property / Value / Type) and
+        # the
         # project tree read without clipping; the central workspace keeps the rest.
         right.setMinimumWidth(260)
         self._default_dock_sizes = ([left, right], [240, 300], [bottom], [200])
@@ -384,7 +392,9 @@ class AsteriaEditorWindow(QMainWindow):
         bars = [bar for bar in self.findChildren(QTabBar) if bar.parent() is self]
         icons = {dock.windowTitle(): dock.windowIcon() for dock in self.findChildren(QDockWidget)}
         for bar in bars:
-            bar.setUsesScrollButtons(True)  # a dock's tab titles never set the dock's minimum width
+            bar.setUsesScrollButtons(
+                True
+            )  # a dock's tab titles never set the dock's minimum width
             bar.setElideMode(Qt.ElideNone)
             for index in range(bar.count()):
                 if bar.tabText(index) in icons:
@@ -400,7 +410,9 @@ class AsteriaEditorWindow(QMainWindow):
         project = self.document.project
         scene = self.viewport.current_scene()
         if project is None or scene is None:
-            status_widget.status.setText("Open a project and select a scene before creating a character")
+            status_widget.status.setText(
+                "Open a project and select a scene before creating a character"
+            )
             return None
         self._pending_character_visual = bundle
         self._placement_status_widget = status_widget
@@ -412,7 +424,9 @@ class AsteriaEditorWindow(QMainWindow):
     def _status_sink(self):
         """Object with ``.status.setText`` that reports to the window status bar."""
         bar = self.statusBar()
-        return SimpleNamespace(status=SimpleNamespace(setText=lambda text: bar.showMessage(text, 6000)))
+        return SimpleNamespace(
+            status=SimpleNamespace(setText=lambda text: bar.showMessage(text, 6000))
+        )
 
     def place_character_from_sheet(self, path=None, name=None):
         """Place a playable character from any 3x4 walking sheet (rows down/left/right/up).
@@ -424,7 +438,9 @@ class AsteriaEditorWindow(QMainWindow):
         if project is None:
             return None
         if path is None:
-            path, _ = QFileDialog.getOpenFileName(self, "Walking Sprite Sheet", "", "Images (*.png)")
+            path, _ = QFileDialog.getOpenFileName(
+                self, "Walking Sprite Sheet", "", "Images (*.png)"
+            )
             if not path:
                 return None
         if name is None:
@@ -535,7 +551,9 @@ class AsteriaEditorWindow(QMainWindow):
         if x is None or y is None:
             cx, cy = self.viewport.width() / 2, self.viewport.height() / 2
             x, y = self.viewport.camera.screen_to_world(cx, cy)
-        command = InstantiatePrefabCommand(project, self.document.component_registry, scene, prefab_id, x, y)
+        command = InstantiatePrefabCommand(
+            project, self.document.component_registry, scene, prefab_id, x, y
+        )
         result = self._run_prefab_command(command, f"Placed {prefab_id}")
         if result is not None:
             self.document.select_entity(command.entity)
@@ -551,8 +569,12 @@ class AsteriaEditorWindow(QMainWindow):
         if entity is None or not entity.has(PrefabInstanceComponent):
             self.statusBar().showMessage("Select a prefab instance", 6000)
             return None
-        command = apply_instance_to_prefab_command(self.document.project, self.document.component_registry, entity)
-        return self._run_prefab_command(command, "Prefab updated; other instances kept their overrides")
+        command = apply_instance_to_prefab_command(
+            self.document.project, self.document.component_registry, entity
+        )
+        return self._run_prefab_command(
+            command, "Prefab updated; other instances kept their overrides"
+        )
 
     def revert_instance_to_prefab(self):
         from asteria.core.prefab import PrefabInstanceComponent
@@ -563,7 +585,9 @@ class AsteriaEditorWindow(QMainWindow):
         if entity is None or not entity.has(PrefabInstanceComponent):
             self.statusBar().showMessage("Select a prefab instance", 6000)
             return None
-        command = RevertInstanceCommand(self.document.project, self.document.component_registry, entity)
+        command = RevertInstanceCommand(
+            self.document.project, self.document.component_registry, entity
+        )
         return self._run_prefab_command(command, f"{entity.name} matches its prefab again")
 
     def _place_character_at(self, cell):
@@ -583,7 +607,11 @@ class AsteriaEditorWindow(QMainWindow):
         cell = (int(cell[0]), int(cell[1]))
         try:
             command = CreateCharacterCommand(
-                visual, project, scene, cell, display_name=getattr(self, "_pending_character_name", None)
+                visual,
+                project,
+                scene,
+                cell,
+                display_name=getattr(self, "_pending_character_name", None),
             )
             self.document.execute(command)
         except Exception as exc:
@@ -593,8 +621,11 @@ class AsteriaEditorWindow(QMainWindow):
         self._placement_status_widget = None
         self.viewport.end_character_placement()
         self.document.select_entity(command.created.entity)
-        status_widget.status.setText(f"Created {command.created.actor.display_name} at map cell {cell[0]}, {cell[1]}")
-        self._resolve_project_resources()  # the new sheet joins the sprite sheet choices and draws in Scene
+        status_widget.status.setText(
+            f"Created {command.created.actor.display_name} at map cell {cell[0]}, {cell[1]}"
+        )
+        # the new sheet joins the sprite sheet choices and draws in Scene
+        self._resolve_project_resources()
         self.refresh_all()
         return command.created
 
@@ -659,7 +690,9 @@ class AsteriaEditorWindow(QMainWindow):
 
         if tx.commands:
             self.document.commands.record_applied(tx)
-        self.console.setText(result.stdout.rstrip() if result.stdout else "Script completed successfully")
+        self.console.setText(
+            result.stdout.rstrip() if result.stdout else "Script completed successfully"
+        )
         self.statusBar().showMessage("Script finished", 3000)
         self.refresh_all()
 
@@ -712,7 +745,9 @@ class AsteriaEditorWindow(QMainWindow):
         self.add_entity_action = QAction("Add Entity…", self)
         self.add_entity_action.triggered.connect(self.add_entity)
         self.place_sheet_character_action = QAction("Place Character from Sprite Sheet…", self)
-        self.place_sheet_character_action.triggered.connect(lambda: self.place_character_from_sheet())
+        self.place_sheet_character_action.triggered.connect(
+            lambda: self.place_character_from_sheet()
+        )
         self.actor_appearance_action = QAction("Set Actor Appearance…", self)
         self.actor_appearance_action.triggered.connect(lambda: self.set_actor_appearance())
         self.delete_action = QAction("Delete Selected", self)
@@ -868,7 +903,8 @@ class AsteriaEditorWindow(QMainWindow):
             action.setShortcut(f"Ctrl+{number}")
             action.setToolTip(f"{action.text()} workspace (Ctrl+{number})")
             workspace_menu.addAction(action)
-        # The toolbar switches workspaces; the workspace's own tab strip repeated the same six buttons
+        # The toolbar switches workspaces; the workspace's own tab strip repeated the same six
+        # buttons
         # and took the central area's width, so it stays hidden.
         self.workspace.tabs.hide()
         toolbar.addSeparator()
@@ -922,27 +958,51 @@ class AsteriaEditorWindow(QMainWindow):
         self.undo_action.setEnabled(self.document.commands.can_undo)
         self.redo_action.setEnabled(self.document.commands.can_redo)
         self.undo_action.setText(
-            "Undo" + (f" {self.document.commands.undo_label}" if self.document.commands.undo_label else "")
+            "Undo"
+            + (
+                f" {self.document.commands.undo_label}"
+                if self.document.commands.undo_label
+                else ""
+            )
         )
         self.redo_action.setText(
-            "Redo" + (f" {self.document.commands.redo_label}" if self.document.commands.redo_label else "")
+            "Redo"
+            + (
+                f" {self.document.commands.redo_label}"
+                if self.document.commands.redo_label
+                else ""
+            )
         )
 
         project = self.document.project
         sel = self.document.selection
         self.save_action.setEnabled(project is not None)
         self.save_as_action.setEnabled(project is not None)
-        self.rename_action.setEnabled(sel.kind in {"project", "scene", "entity"} and not sel.multiple)
+        self.rename_action.setEnabled(
+            sel.kind in {"project", "scene", "entity"} and not sel.multiple
+        )
         self.add_scene_action.setEnabled(project is not None)
-        self.set_startup_scene_action.setEnabled(sel.kind == "scene" and not sel.multiple and sel.value is not None)
-        self.move_up_action.setEnabled(sel.kind in {"scene", "entity"} and not sel.multiple and sel.value is not None)
-        self.move_down_action.setEnabled(sel.kind in {"scene", "entity"} and not sel.multiple and sel.value is not None)
+        self.set_startup_scene_action.setEnabled(
+            sel.kind == "scene" and not sel.multiple and sel.value is not None
+        )
+        self.move_up_action.setEnabled(
+            sel.kind in {"scene", "entity"} and not sel.multiple and sel.value is not None
+        )
+        self.move_down_action.setEnabled(
+            sel.kind in {"scene", "entity"} and not sel.multiple and sel.value is not None
+        )
         self.delete_scene_action.setEnabled(
-            sel.kind == "scene" and not sel.multiple and project is not None and len(project.scenes()) > 1
+            sel.kind == "scene"
+            and not sel.multiple
+            and project is not None
+            and len(project.scenes()) > 1
         )
         self.add_entity_action.setEnabled(sel.kind in {"scene", "entity"} and not sel.multiple)
         self.delete_action.setEnabled(
-            sel.kind == "component" and not sel.multiple or sel.kind == "entity" and bool(sel.values)
+            sel.kind == "component"
+            and not sel.multiple
+            or sel.kind == "entity"
+            and bool(sel.values)
         )
         self.add_component_action.setEnabled(sel.kind == "entity" and not sel.multiple)
         self.copy_action.setEnabled(sel.kind == "entity" and not sel.multiple)
@@ -952,10 +1012,19 @@ class AsteriaEditorWindow(QMainWindow):
         )
         self.cut_action.setEnabled(sel.kind == "entity" and not sel.multiple)
         self.paste_action.setEnabled(
-            self.document.clipboard.has_entity() and sel.kind in {"scene", "entity"} and not sel.multiple
+            self.document.clipboard.has_entity()
+            and sel.kind in {"scene", "entity"}
+            and not sel.multiple
         )
-        if self._focused_record_family() is not None:  # the shortcuts act on the focused record list
-            for action in (self.cut_action, self.copy_action, self.paste_action, self.delete_action):
+        if (
+            self._focused_record_family() is not None
+        ):  # the shortcuts act on the focused record list
+            for action in (
+                self.cut_action,
+                self.copy_action,
+                self.paste_action,
+                self.delete_action,
+            ):
                 action.setEnabled(True)
         active = self.play_session is not None and self.play_session.active
         self.play_action.setEnabled(project is not None and not active)
@@ -980,7 +1049,9 @@ class AsteriaEditorWindow(QMainWindow):
         if clip_set is None:
             self.animation_widget.set_clips(())
             self.animation_widget.set_status(
-                "No animation selected" if current is None else f"Missing animation asset for {current}"
+                "No animation selected"
+                if current is None
+                else f"Missing animation asset for {current}"
             )
             return
         names = tuple(clip_set.clips)
@@ -1077,11 +1148,15 @@ class AsteriaEditorWindow(QMainWindow):
         bindings, binding = self._current_event_binding()
         if binding is None:
             return
-        name, ok = QInputDialog.getText(self, "Event Condition", "Switch name:", text="quest_started")
+        name, ok = QInputDialog.getText(
+            self, "Event Condition", "Switch name:", text="quest_started"
+        )
         if not ok or not name.strip():
             return
         cond = EventTriggerCondition(EventCondition("switch", name.strip(), "==", True))
-        replacement = replace_binding_fields(binding, conditions=tuple(binding.conditions) + (cond,))
+        replacement = replace_binding_fields(
+            binding, conditions=tuple(binding.conditions) + (cond,)
+        )
         self.document.execute(ReplaceEventBindingCommand(bindings, replacement, binding))
         self.refresh_all()
 
@@ -1101,12 +1176,17 @@ class AsteriaEditorWindow(QMainWindow):
         if project is None or binding is None:
             return False
         program = project.event_programs.require(binding.program_id)
-        if not 0 <= index < len(program.instructions) or program.instructions[index].opcode != "SEQUENCE":
+        if (
+            not 0 <= index < len(program.instructions)
+            or program.instructions[index].opcode != "SEQUENCE"
+        ):
             return False
         args = self._sequence_dialog(program.instructions[index].args)
         if args is None:
             return False
-        EventFlowAuthoring(self.document).replace_sequence(binding.program_id, index, **_sequence_kwargs(args))
+        EventFlowAuthoring(self.document).replace_sequence(
+            binding.program_id, index, **_sequence_kwargs(args)
+        )
         self.refresh_all()
         return True
 
@@ -1164,7 +1244,9 @@ class AsteriaEditorWindow(QMainWindow):
                 self,
                 "World Command",
                 "Arguments (key=value, ...):",
-                text=", ".join(f"{name}=" for name in WORLD_COMMAND_ARGUMENTS.get(command.strip().upper(), ())),
+                text=", ".join(
+                    f"{name}=" for name in WORLD_COMMAND_ARGUMENTS.get(command.strip().upper(), ())
+                ),
             )
             if not ok:
                 return None
@@ -1191,7 +1273,9 @@ class AsteriaEditorWindow(QMainWindow):
         index = len(program.instructions) if row < 0 else row + 1
         new_program = program_with_insert(program, index, instruction)
         self.document.execute(
-            ReplaceEventProgramCommand(project.event_programs, binding.program_id, new_program, program)
+            ReplaceEventProgramCommand(
+                project.event_programs, binding.program_id, new_program, program
+            )
         )
         self.refresh_all()
 
@@ -1205,7 +1289,9 @@ class AsteriaEditorWindow(QMainWindow):
             return
         new_program = program_with_remove(program, index)
         self.document.execute(
-            ReplaceEventProgramCommand(project.event_programs, binding.program_id, new_program, program)
+            ReplaceEventProgramCommand(
+                project.event_programs, binding.program_id, new_program, program
+            )
         )
         self.refresh_all()
 
@@ -1217,7 +1303,9 @@ class AsteriaEditorWindow(QMainWindow):
         program = project.event_programs.require(binding.program_id)
         new_program = program_with_move(program, old_index, new_index)
         self.document.execute(
-            ReplaceEventProgramCommand(project.event_programs, binding.program_id, new_program, program)
+            ReplaceEventProgramCommand(
+                project.event_programs, binding.program_id, new_program, program
+            )
         )
         self.refresh_all()
 
@@ -1354,13 +1442,17 @@ class AsteriaEditorWindow(QMainWindow):
             item = QListWidgetItem(f"{record.kind}: {record.source_path}")
             item.setData(Qt.UserRole, str(record.source_path))
             icon = asset_thumbnail(self.document, record, cache)
-            item.setIcon(icon if icon is not None else workspace_icon(asset_icon_name(record.source_path)))
+            item.setIcon(
+                icon if icon is not None else workspace_icon(asset_icon_name(record.source_path))
+            )
             self.asset_list.addItem(item)
         for asset in self.document.project.assets.snapshot():
             item = QListWidgetItem(f"{asset.kind}: {asset.source.uri}")
             item.setData(Qt.UserRole, str(asset.source.uri))
             icon = canonical_asset_thumbnail(self.document, asset, cache)
-            item.setIcon(icon if icon is not None else workspace_icon(asset_icon_name(asset.source.uri)))
+            item.setIcon(
+                icon if icon is not None else workspace_icon(asset_icon_name(asset.source.uri))
+            )
             self.asset_list.addItem(item)
 
     def selected_asset_images(self):
@@ -1391,7 +1483,8 @@ class AsteriaEditorWindow(QMainWindow):
         menu.exec(self.asset_list.viewport().mapToGlobal(position))
 
     def auto_fix_selected_image(self, *, dialog_hook=None):
-        """AST-11: preview a safe fix on the selected image and apply it (original kept as .bak)."""
+        """AST-11: preview a safe fix on the selected image and apply it (original kept as
+        .bak)."""
         from .image_tools import ImageFixDialog
 
         images = self.selected_asset_images()
@@ -1405,7 +1498,9 @@ class AsteriaEditorWindow(QMainWindow):
             dialog.exec()
         if dialog.applied is not None:
             self.refresh_asset_list()
-            self.statusBar().showMessage(f"Fixed {images[0].name}; original kept as {images[0].stem}.bak.png")
+            self.statusBar().showMessage(
+                f"Fixed {images[0].name}; original kept as {images[0].stem}.bak.png"
+            )
         return dialog.applied
 
     def pack_selected_images(self, output=None):
@@ -1418,7 +1513,10 @@ class AsteriaEditorWindow(QMainWindow):
             return None
         if output is None:
             output, _ = QFileDialog.getSaveFileName(
-                self, "Pack into Atlas", str(project_root(self.document) / "atlas.png"), "PNG (*.png)"
+                self,
+                "Pack into Atlas",
+                str(project_root(self.document) / "atlas.png"),
+                "PNG (*.png)",
             )
             if not output:
                 return None
@@ -1428,14 +1526,18 @@ class AsteriaEditorWindow(QMainWindow):
             QMessageBox.warning(self, "Pack into Atlas", str(error))
             return None
         size = report.after_size
-        self.statusBar().showMessage(f"Packed {len(images)} images into {image.name} ({size[0]}x{size[1]})")
+        self.statusBar().showMessage(
+            f"Packed {len(images)} images into {image.name} ({size[0]}x{size[1]})"
+        )
         return image, meta
 
     def refresh_inspector(self):
         sel = self.document.selection
         if sel.kind == "none" or sel.value is None:
             if sel.multiple:
-                self.inspector.show_properties(f"{len(sel.values)} selected", (("Count", len(sel.values), "int"),))
+                self.inspector.show_properties(
+                    f"{len(sel.values)} selected", (("Count", len(sel.values), "int"),)
+                )
             else:
                 self.inspector.show_message("Nothing selected")
             return
@@ -1528,7 +1630,12 @@ class AsteriaEditorWindow(QMainWindow):
 
     def delete_scene(self):
         sel = self.document.selection
-        if sel.kind != "scene" or sel.value is None or sel.multiple or self.document.project is None:
+        if (
+            sel.kind != "scene"
+            or sel.value is None
+            or sel.multiple
+            or self.document.project is None
+        ):
             return False
         try:
             command = build_remove_scene_command(self.document.project, sel.value)
@@ -1608,7 +1715,11 @@ class AsteriaEditorWindow(QMainWindow):
     def add_entity(self):
         sel = self.document.selection
         scene = (
-            sel.value if sel.kind == "scene" else getattr(sel.value, "scene", None) if sel.kind == "entity" else None
+            sel.value
+            if sel.kind == "scene"
+            else getattr(sel.value, "scene", None)
+            if sel.kind == "entity"
+            else None
         )
         if scene is None or sel.multiple:
             return False
@@ -1627,7 +1738,11 @@ class AsteriaEditorWindow(QMainWindow):
         sel = self.document.selection
         if sel.kind != "entity" or sel.value is None or sel.multiple:
             return False
-        choices = [c for c in build_component_choices(self.document.component_registry, sel.value) if c.addable]
+        choices = [
+            c
+            for c in build_component_choices(self.document.component_registry, sel.value)
+            if c.addable
+        ]
         if not choices:
             QMessageBox.information(self, "Add Component", "No addable registered components.")
             return False
@@ -1730,7 +1845,8 @@ class AsteriaEditorWindow(QMainWindow):
         return False
 
     def _focused_record_family(self):
-        """The authoring record list that has keyboard focus, if any (record copy/cut/paste/delete)."""
+        """The authoring record list that has keyboard focus, if any (record
+        copy/cut/paste/delete)."""
         from .authoring_hub_widget import AdapterFamilyWidget
 
         widget = QApplication.focusWidget()
@@ -1763,13 +1879,18 @@ class AsteriaEditorWindow(QMainWindow):
         sel = self.document.selection
         if sel.kind != "entity" or not sel.values:
             return False
-        commands = [build_duplicate_entity_command(value, self.document.component_registry) for value in sel.values]
+        commands = [
+            build_duplicate_entity_command(value, self.document.component_registry)
+            for value in sel.values
+        ]
         if len(commands) == 1:
             self._execute_structure(commands[0], "entity", commands[0].duplicate_entity)
         else:
             tx = CommandTransaction(f"Duplicate {len(commands)} Entities", commands)
             self.document.execute(tx)
-            self.document.selection.set_many("entity", tuple(command.duplicate_entity for command in commands))
+            self.document.selection.set_many(
+                "entity", tuple(command.duplicate_entity for command in commands)
+            )
             self.refresh_all()
         return True
 
@@ -1779,12 +1900,18 @@ class AsteriaEditorWindow(QMainWindow):
             return bool(family.paste())
         sel = self.document.selection
         scene = (
-            sel.value if sel.kind == "scene" else getattr(sel.value, "scene", None) if sel.kind == "entity" else None
+            sel.value
+            if sel.kind == "scene"
+            else getattr(sel.value, "scene", None)
+            if sel.kind == "entity"
+            else None
         )
         if scene is None or sel.multiple:
             return False
         try:
-            command = build_paste_entity_command(scene, self.document.clipboard, self.document.component_registry)
+            command = build_paste_entity_command(
+                scene, self.document.clipboard, self.document.component_registry
+            )
         except ValueError as exc:
             QMessageBox.warning(self, "Paste", str(exc))
             return False
@@ -1804,7 +1931,9 @@ class AsteriaEditorWindow(QMainWindow):
                 if len(commands) == 1:
                     self.document.execute(commands[0])
                 else:
-                    self.document.execute(CommandTransaction(f"Delete {len(commands)} Entities", commands))
+                    self.document.execute(
+                        CommandTransaction(f"Delete {len(commands)} Entities", commands)
+                    )
                 if len(scenes) == 1:
                     self.document.selection.set_single("scene", next(iter(scenes.values())))
                 else:
@@ -1813,7 +1942,9 @@ class AsteriaEditorWindow(QMainWindow):
                 return True
             if sel.kind == "component" and sel.value is not None and not sel.multiple:
                 entity = sel.value.entity
-                self._execute_structure(build_remove_component_command(sel.value), "entity", entity)
+                self._execute_structure(
+                    build_remove_component_command(sel.value), "entity", entity
+                )
                 return True
         except StructureEditError as exc:
             QMessageBox.warning(self, "Delete", str(exc))
@@ -1838,14 +1969,18 @@ class AsteriaEditorWindow(QMainWindow):
     def undo(self):
         if not self.document.undo():
             return False
-        self.document.selection.set_single("project" if self.document.project else "none", self.document.project)
+        self.document.selection.set_single(
+            "project" if self.document.project else "none", self.document.project
+        )
         self.refresh_all()
         return True
 
     def redo(self):
         if not self.document.redo():
             return False
-        self.document.selection.set_single("project" if self.document.project else "none", self.document.project)
+        self.document.selection.set_single(
+            "project" if self.document.project else "none", self.document.project
+        )
         self.refresh_all()
         return True
 
@@ -1884,7 +2019,8 @@ class AsteriaEditorWindow(QMainWindow):
         return True
 
     def export_game(self, output, *, name=None, pyz=True, app=False):
-        """Save, then package the project (AST-06): game folder, single-file .pyz, optional macOS .app."""
+        """Save, then package the project (AST-06): game folder, single-file .pyz, optional macOS
+        .app."""
         from asteria.project_tools import package_game
 
         if self.document.project is None or not self.document.file_path:
@@ -1896,7 +2032,14 @@ class AsteriaEditorWindow(QMainWindow):
         return result
 
     def export_game_dialog(self):
-        from PySide6.QtWidgets import QCheckBox, QDialog, QDialogButtonBox, QFormLayout, QLabel, QLineEdit
+        from PySide6.QtWidgets import (
+            QCheckBox,
+            QDialog,
+            QDialogButtonBox,
+            QFormLayout,
+            QLabel,
+            QLineEdit,
+        )
 
         if self.document.project is None:
             return None
@@ -1914,7 +2057,12 @@ class AsteriaEditorWindow(QMainWindow):
         form.addRow("Game name", name)
         form.addRow("", pyz)
         form.addRow("", app)
-        form.addRow(QLabel("The game folder always carries the engine; players need Python 3.12+ with pygame-ce."))
+        form.addRow(
+            QLabel(
+                "The game folder always carries the engine; players need Python 3.12+ with "
+                "pygame-ce."
+            )
+        )
         form.addRow(buttons)
         if dialog.exec() != QDialog.Accepted:
             return None
@@ -1978,7 +2126,10 @@ class AsteriaEditorWindow(QMainWindow):
         self._load_playtest_profiles()
         self.refresh_all()
         lines = [f"{issue.code}: {issue.message}" for issue in result.issues]
-        self.console.setText(f"Imported {len(result.project.scenes())} maps from {source}\n" + "\n".join(lines[:200]))
+        self.console.setText(
+            f"Imported {len(result.project.scenes())} maps from {source}\n"
+            + "\n".join(lines[:200])
+        )
         return project_path, result
 
     def import_mv_project_dialog(self):
@@ -1992,7 +2143,9 @@ class AsteriaEditorWindow(QMainWindow):
             )
             if answer != QMessageBox.Yes:
                 return None
-        source = QFileDialog.getExistingDirectory(self, "RPG Maker MV Project Folder (contains data/)")
+        source = QFileDialog.getExistingDirectory(
+            self, "RPG Maker MV Project Folder (contains data/)"
+        )
         if not source:
             return None
         output = QFileDialog.getExistingDirectory(self, "New Asteria Project Folder")
@@ -2007,7 +2160,8 @@ class AsteriaEditorWindow(QMainWindow):
             self,
             "Import RPG Maker MV Project",
             f"Imported {len(result.project.scenes())} maps into {project_path}.\n"
-            f"{len(result.issues)} notes (content kept out or simplified) are listed in the Console.",
+            f"{len(result.issues)} notes (content kept out or simplified) are listed in the "
+            f"Console.",
         )
         return project_path
 
@@ -2042,7 +2196,9 @@ class AsteriaEditorWindow(QMainWindow):
         """Launch the play-test with the debug channel and log capture (EDT-10, EDT-11)."""
         try:
             self.play_session = create_play_session(self.document, from_start=from_start)
-            self.runtime_process = launch_play_session(self.play_session, debug=True, capture_log=True, spawn=spawn)
+            self.runtime_process = launch_play_session(
+                self.play_session, debug=True, capture_log=True, spawn=spawn
+            )
         except (PlayModeError, RuntimeLaunchError) as exc:
             if self.play_session is not None:
                 self.play_session.stop()
@@ -2053,11 +2209,14 @@ class AsteriaEditorWindow(QMainWindow):
         self._last_play = {"from_start": from_start, "spawn": spawn, "title": title}
         self._shown_log = ""
         if self.runtime_process.debug_port is not None:
-            self.debugger_widget.attach(self.runtime_process.debug_port, self.runtime_process.debug_token)
+            self.debugger_widget.attach(
+                self.runtime_process.debug_port, self.runtime_process.debug_token
+            )
         where = "" if spawn is None else f" from ({spawn[0]:g}, {spawn[1]:g})"
         self.console.setText(f"Playing: {self.play_session.runtime_scene.name}{where}")
         console_dock = self.findChild(QDockWidget, "ConsoleDock")
-        console_dock.show()  # the play log, even in a workspace that keeps its bottom panels closed
+        # the play log, even in a workspace that keeps its bottom panels closed
+        console_dock.show()
         console_dock.raise_()
         self.statusBar().showMessage(f"Playing — {self.play_session.runtime_scene.name}{where}")
         self._refresh_actions()
@@ -2075,7 +2234,9 @@ class AsteriaEditorWindow(QMainWindow):
 
         entity = self._selected_entity()
         if entity is None or not entity.has(Transform):
-            QMessageBox.information(self, "Play from Selection", "Select an entity in the scene first.")
+            QMessageBox.information(
+                self, "Play from Selection", "Select an entity in the scene first."
+            )
             return False
         t = entity.get(Transform)
         return self._start_play(from_start=False, spawn=(t.x, t.y), title="Play from Selection")
@@ -2155,7 +2316,9 @@ class AsteriaEditorWindow(QMainWindow):
             self.save_layout()
         event.accept()
 
-    layout_settings = None  # a QSettings; set by launch_editor so tests never touch the user's layout
+    layout_settings = (
+        None  # a QSettings; set by launch_editor so tests never touch the user's layout
+    )
     LAYOUT_VERSION = 1
 
     def save_layout(self):
@@ -2203,7 +2366,9 @@ class AsteriaEditorWindow(QMainWindow):
         super().showEvent(event)
         if not getattr(self, "_shown_once", False):
             self._shown_once = True
-            if not self._layout_restored:  # dock sizes only apply once the window has its real size
+            if (
+                not self._layout_restored
+            ):  # dock sizes only apply once the window has its real size
                 QTimer.singleShot(0, self._apply_default_dock_sizes)
 
     def set_theme(self, name):

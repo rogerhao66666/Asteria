@@ -1,26 +1,39 @@
 """Real-time combat resolution (ASTERIA_SPEC §20): what a landed hit does.
 
-``HitboxSystem`` only reports overlaps (``HitEvent``). ``CombatSystem`` turns every hit whose ``hit_tag`` names an
+``HitboxSystem`` only reports overlaps (``HitEvent``). ``CombatSystem`` turns every hit whose
+``hit_tag`` names an
 ``AttackDefinition`` into results on the target's ``CombatantComponent``:
 
-* damage — the attack's ``ValueFormula`` over the attacker's and target's stats, resources and tags (the attack's own
-  tags join the attacker's, so ``Element.Fire`` multipliers work), optional critical hits, lowering the resource the
+* damage — the attack's ``ValueFormula`` over the attacker's and target's stats, resources and
+  tags (the attack's own
+  tags join the attacker's, so ``Element.Fire`` multipliers work), optional critical hits,
+  lowering the resource the
   attack names (a negative amount restores it)
-* poise and stagger — poise damage; at zero the target is staggered (control locked, its action cancelled) and the
+* poise and stagger — poise damage; at zero the target is staggered (control locked, its action
+  cancelled) and the
   poise refills
-* hitstun, knockback (direction mode, angle, side-view lift, the target's resistance), hitstop (attacker and target, or
+* hitstun, knockback (direction mode, angle, side-view lift, the target's resistance), hitstop
+  (attacker and target, or
   the whole scene), i-frames after the hit
-* super armor — an armor level (always on the combatant, or for a while from an action timeline ``armor`` cue);
-  while it is above the attack's ``armor_break`` the hit only does damage (times ``armor_damage_multiplier``): no
+* super armor — an armor level (always on the combatant, or for a while from an action timeline
+  ``armor`` cue);
+  while it is above the attack's ``armor_break`` the hit only does damage (times
+  ``armor_damage_multiplier``): no
   hitstun, knockback, stagger or knockdown
-* knockdown — from the attack, or from a poise break when ``stagger_result`` is ``knocked_down``: down for a while
-  (optionally invincible), then getting up (optional i-frames); ``knocked_down`` and ``got_up`` events
-* death — when the combatant's life resource is empty: an event, the drop table rolled, then the authored death
+* knockdown — from the attack, or from a poise break when ``stagger_result`` is ``knocked_down``:
+  down for a while
+  (optionally invincible), then getting up (optional i-frames); ``knocked_down`` and ``got_up``
+  events
+* death — when the combatant's life resource is empty: an event, the drop table rolled, then the
+  authored death
   behaviour (remove, disable, keep)
 
-Everything is reported as ``CombatEvent``s (``events`` for this update, ``listeners``) so presentation (numbers,
-flashes, sounds), game rules and event programs can react. Nothing here knows any particular game: stats, resources
-and tags are whatever the project defines, inline on the component or from ``stats_provider`` (for example an RPG
+Everything is reported as ``CombatEvent``s (``events`` for this update, ``listeners``) so
+presentation (numbers,
+flashes, sounds), game rules and event programs can react. Nothing here knows any particular game:
+stats, resources
+and tags are whatever the project defines, inline on the component or from ``stats_provider`` (for
+example an RPG
 actor build).
 """
 
@@ -48,7 +61,8 @@ STAGGER_RESULTS = ("staggered", "knocked_down")
 
 
 def parse_values(text):
-    """``"hp=100; attack=12"`` (``;`` or ``,`` between pairs) -> ``{"hp": 100.0, "attack": 12.0}``."""
+    """``"hp=100; attack=12"`` (``;`` or ``,`` between pairs) -> ``{"hp": 100.0, "attack":
+    12.0}``."""
     values = {}
     for chunk in str(text or "").replace(",", ";").split(";"):
         if chunk.strip():
@@ -67,16 +81,45 @@ def parse_tags(text):
     type_name="asteria.Combatant",
     version=1,
     fields=(
-        Field("team", str, "", tooltip="Free text; hitboxes already skip hurtboxes of the same team."),
-        Field("resources", str, "hp=100", tooltip="Resources and their maximum, e.g. 'hp=120; mp=40; shield=30'."),
-        Field("life_resource", str, "hp", tooltip="The resource whose emptying means death. Empty: never dies."),
+        Field(
+            "team", str, "", tooltip="Free text; hitboxes already skip hurtboxes of the same team."
+        ),
+        Field(
+            "resources",
+            str,
+            "hp=100",
+            tooltip="Resources and their maximum, e.g. 'hp=120; mp=40; shield=30'.",
+        ),
+        Field(
+            "life_resource",
+            str,
+            "hp",
+            tooltip="The resource whose emptying means death. Empty: never dies.",
+        ),
         Field("stats", str, "", tooltip="Stats the formulas read, e.g. 'attack=12; defense=4'."),
-        Field("regen", str, "", tooltip="Resources regained per second, e.g. 'mp=2; stamina=15' (negative drains)."),
+        Field(
+            "regen",
+            str,
+            "",
+            tooltip="Resources regained per second, e.g. 'mp=2; stamina=15' (negative drains).",
+        ),
         Field("tags", str, "", tooltip="Gameplay tags, e.g. 'Creature.Undead Element.Ice'."),
-        Field("poise", float, 0.0, minimum=0.0, tooltip="Poise damage it takes before being staggered. 0: no poise."),
+        Field(
+            "poise",
+            float,
+            0.0,
+            minimum=0.0,
+            tooltip="Poise damage it takes before being staggered. 0: no poise.",
+        ),
         Field("poise_recovery", float, 0.0, minimum=0.0, tooltip="Poise regained per second."),
         Field("stagger_time", float, 0.6, minimum=0.0),
-        Field("stagger_result", str, "staggered", choices=STAGGER_RESULTS, tooltip="What a poise break causes."),
+        Field(
+            "stagger_result",
+            str,
+            "staggered",
+            choices=STAGGER_RESULTS,
+            tooltip="What a poise break causes.",
+        ),
         Field("armor", int, 0, minimum=0, tooltip="Permanent super armor level. 0: none."),
         Field(
             "armor_damage_multiplier",
@@ -85,27 +128,82 @@ def parse_tags(text):
             minimum=0.0,
             tooltip="Damage taken while super armor holds (1 = full damage).",
         ),
-        Field("knockdown_time", float, 1.0, minimum=0.0, tooltip="Seconds on the ground after a knockdown."),
-        Field("getup_time", float, 0.5, minimum=0.0, tooltip="Seconds spent getting up (cannot act)."),
+        Field(
+            "knockdown_time",
+            float,
+            1.0,
+            minimum=0.0,
+            tooltip="Seconds on the ground after a knockdown.",
+        ),
+        Field(
+            "getup_time", float, 0.5, minimum=0.0, tooltip="Seconds spent getting up (cannot act)."
+        ),
         Field("down_invincible", bool, True, tooltip="Hits pass over it while it is down."),
-        Field("getup_iframes", float, 0.3, minimum=0.0, tooltip="Invincible seconds from the start of getting up."),
+        Field(
+            "getup_iframes",
+            float,
+            0.3,
+            minimum=0.0,
+            tooltip="Invincible seconds from the start of getting up.",
+        ),
         Field(
             "hitstun_rule",
             str,
             "unless_poise",
             choices=HITSTUN_RULES,
-            tooltip="When an attack's hitstun interrupts it: unless it still has poise, always, or never.",
+            tooltip="When an attack's hitstun interrupts it: unless it still has poise, always, "
+            "or never.",
         ),
-        Field("knockback_resistance", float, 0.0, minimum=0.0, maximum=1.0, tooltip="1 ignores knockback."),
-        Field("hurt_iframes", float, 0.0, minimum=0.0, tooltip="Invincible seconds after every hit it takes."),
-        Field("death", str, "remove", choices=DEATH_BEHAVIOURS, tooltip="What happens to the entity when it dies."),
-        Field("drop_table_id", str, "", tooltip="Drop table rolled when it dies."),
-        Field("currency_drop", str, "", tooltip="Currencies dropped when it dies, e.g. 'gold=5-12; gems=0-1'."),
         Field(
-            "loot_level", int, 1, minimum=0, tooltip="Item level of the equipment it drops (which affixes can roll)."
+            "knockback_resistance",
+            float,
+            0.0,
+            minimum=0.0,
+            maximum=1.0,
+            tooltip="1 ignores knockback.",
         ),
-        Field("loot_luck", float, 0.0, minimum=0.0, tooltip="Makes rarer drops more likely (elites, bosses)."),
-        Field("experience", float, 0.0, minimum=0.0, tooltip="Experience the one who defeats it gains."),
+        Field(
+            "hurt_iframes",
+            float,
+            0.0,
+            minimum=0.0,
+            tooltip="Invincible seconds after every hit it takes.",
+        ),
+        Field(
+            "death",
+            str,
+            "remove",
+            choices=DEATH_BEHAVIOURS,
+            tooltip="What happens to the entity when it dies.",
+        ),
+        Field("drop_table_id", str, "", tooltip="Drop table rolled when it dies."),
+        Field(
+            "currency_drop",
+            str,
+            "",
+            tooltip="Currencies dropped when it dies, e.g. 'gold=5-12; gems=0-1'.",
+        ),
+        Field(
+            "loot_level",
+            int,
+            1,
+            minimum=0,
+            tooltip="Item level of the equipment it drops (which affixes can roll).",
+        ),
+        Field(
+            "loot_luck",
+            float,
+            0.0,
+            minimum=0.0,
+            tooltip="Makes rarer drops more likely (elites, bosses).",
+        ),
+        Field(
+            "experience",
+            float,
+            0.0,
+            minimum=0.0,
+            tooltip="Experience the one who defeats it gains.",
+        ),
         Field("death_event", str, "", tooltip="Gameplay event reported when it dies."),
         Field("enabled", bool, True),
     ),
@@ -144,7 +242,8 @@ class CombatantComponent(Component):
         self.state = None  # CombatantState, built on first use
 
     def reset_state(self):
-        """Forget runtime values so they are rebuilt from the authored fields (e.g. after editing them)."""
+        """Forget runtime values so they are rebuilt from the authored fields (e.g. after editing
+        them)."""
         self.state = None
 
 
@@ -155,7 +254,9 @@ class CombatantState:
     tags: TagSet
     poise: float = 0.0
     dead: bool = False
-    armor_level: int = 0  # timed super armor (action cue), on top of the component's permanent level
+    armor_level: int = (
+        0  # timed super armor (action cue), on top of the component's permanent level
+    )
     armor_left: float = 0.0
     down_phase: str = ""  # "", "down", "getting_up"
     down_left: float = 0.0
@@ -167,12 +268,15 @@ def _inline_state(combatant):
     pool = ResourcePool()
     for name, maximum in parse_values(combatant.resources).items():
         pool.define(name, maximum)
-    return CombatantState(StatBlock(parse_values(combatant.stats)), pool, TagSet(parse_tags(combatant.tags)))
+    return CombatantState(
+        StatBlock(parse_values(combatant.stats)), pool, TagSet(parse_tags(combatant.tags))
+    )
 
 
 @dataclass(frozen=True, slots=True)
 class CombatEvent:
-    kind: str  # damage, staggered, knocked_down, got_up, death, drop, hit_event, state_applied, state_ended
+    # damage, staggered, knocked_down, got_up, death, drop, hit_event, state_applied, state_ended
+    kind: str
     target_id: str
     attacker_id: str = ""
     attack_id: str = ""
@@ -184,7 +288,8 @@ class CombatEvent:
 
 
 class CombatSystem(System):
-    """Resolves this update's ``HitEvent``s from ``hits`` (a ``HitboxSystem``) with the project's attacks."""
+    """Resolves this update's ``HitEvent``s from ``hits`` (a ``HitboxSystem``) with the project's
+    attacks."""
 
     order = 65  # after HitboxSystem (60)
 
@@ -202,14 +307,20 @@ class CombatSystem(System):
         switches=None,
         states=None,
     ):
-        self.state_registry = states  # gameplay StateRegistry (GameplayLibrary.states) for real-time states
-        self.attacks = attacks  # mapping attack_id -> AttackDefinition (e.g. GameplayLibrary.attacks)
+        self.state_registry = (
+            states  # gameplay StateRegistry (GameplayLibrary.states) for real-time states
+        )
+        self.attacks = (
+            attacks  # mapping attack_id -> AttackDefinition (e.g. GameplayLibrary.attacks)
+        )
         self.hits = hits
         self.formulas = formulas if formulas is not None else {}
         self.actions = actions  # EntityActionSystem: stagger / hitstun cancel the target's action
         self.drop_tables = drop_tables if drop_tables is not None else {}
         self.rng = rng or random.Random(0)
-        self.stats_provider = stats_provider  # callable(entity, combatant) -> CombatantState | None
+        self.stats_provider = (
+            stats_provider  # callable(entity, combatant) -> CombatantState | None
+        )
         self.counters = counters if counters is not None else {}  # drop table pity counters
         self.switches = switches
         self.events: list[CombatEvent] = []
@@ -219,25 +330,34 @@ class CombatSystem(System):
         self._frozen: dict[str, float] = {}
         self._landed: dict[str, int] = {}
         self._armor_requests: dict[str, tuple] = {}
-        self.protected: set = set()  # entity ids never removed or disabled by death (the player: it respawns)
+        self.protected: set = (
+            set()
+        )  # entity ids never removed or disabled by death (the player: it respawns)
 
     # -- queries ---------------------------------------------------------------------------------
     def state(self, entity):
         """The combatant's runtime state (stats, resources, tags, poise), built on first use."""
         combatant = entity.get(CombatantComponent)
         if combatant.state is None:
-            provided = self.stats_provider(entity, combatant) if self.stats_provider is not None else None
-            state = combatant.state = provided if provided is not None else _inline_state(combatant)
+            provided = (
+                self.stats_provider(entity, combatant) if self.stats_provider is not None else None
+            )
+            state = combatant.state = (
+                provided if provided is not None else _inline_state(combatant)
+            )
             state.poise = combatant.poise
             state.regen = parse_values(combatant.regen)
             if self.state_registry is not None:
                 from asteria.gameplay.states import StateRuntime
 
-                state.states = StateRuntime(self.state_registry, state.stats, state.resources, state.tags)
+                state.states = StateRuntime(
+                    self.state_registry, state.stats, state.resources, state.tags
+                )
         return combatant.state
 
     def apply_state(self, entity, state_id, *, duration=None, source_id=None):
-        """Put a gameplay state (poison, haste...) on a combatant; it ticks in real time. False if it cannot."""
+        """Put a gameplay state (poison, haste...) on a combatant; it ticks in real time. False if
+        it cannot."""
         state = self.state(entity)
         if state.states is None or state.dead or self.state_registry.get(state_id) is None:
             return False
@@ -253,7 +373,10 @@ class CombatSystem(System):
         if not modifiers or not modifiers.modifiers():
             return state.stats
         return StatBlock(
-            {name: modifiers.evaluate(name, state.stats.get(name), tags=state.tags) for name in state.stats.names()}
+            {
+                name: modifiers.evaluate(name, state.stats.get(name), tags=state.tags)
+                for name in state.stats.names()
+            }
         )
 
     def armor_level(self, entity):
@@ -331,8 +454,12 @@ class CombatSystem(System):
                 listener(event)
 
     def _emit(self, kind, target, **values):
-        x, y = world_position(target) if target is not None and target.has(Transform) else (0.0, 0.0)
-        self.events.append(CombatEvent(kind, "" if target is None else target.id, x=x, y=y, **values))
+        x, y = (
+            world_position(target) if target is not None and target.has(Transform) else (0.0, 0.0)
+        )
+        self.events.append(
+            CombatEvent(kind, "" if target is None else target.id, x=x, y=y, **values)
+        )
 
     def _resolve(self, scene, hit, removed):
         attack = self.attacks.get(hit.hit_tag)
@@ -348,17 +475,27 @@ class CombatSystem(System):
         state = self.state(target)
         if state.dead:
             return
-        if attack.max_targets and hit.origin is None:  # projectiles count targets with their own pierce
+        if (
+            attack.max_targets and hit.origin is None
+        ):  # projectiles count targets with their own pierce
             landed = self._landed.get(hit.attacker_id, 0)
             if landed >= attack.max_targets:
                 return
             self._landed[hit.attacker_id] = landed + 1
 
-        source = self.state(attacker) if attacker is not None and attacker.has(CombatantComponent) else None
+        source = (
+            self.state(attacker)
+            if attacker is not None and attacker.has(CombatantComponent)
+            else None
+        )
         source_tags = TagSet(source.tags.values() if source is not None else ())
         for tag in attack.tags:
             source_tags.add(tag)
-        formula = self.formulas.get(attack.damage_formula_id) if attack.damage_formula_id else attack.damage
+        formula = (
+            self.formulas.get(attack.damage_formula_id)
+            if attack.damage_formula_id
+            else attack.damage
+        )
         amount = 0.0
         critical = False
         if formula is not None:
@@ -381,7 +518,9 @@ class CombatSystem(System):
         if armored:
             amount *= combatant.armor_damage_multiplier
         common = {"attacker_id": hit.attacker_id, "attack_id": attack.attack_id}
-        resource = attack.damage_resource or combatant.life_resource  # "" = whatever this target lives on
+        resource = (
+            attack.damage_resource or combatant.life_resource
+        )  # "" = whatever this target lives on
         if state.resources.contains(resource):
             state.resources.change(resource, -amount)
         self._emit(
@@ -408,7 +547,9 @@ class CombatSystem(System):
                         controller.lock_control(combatant.stagger_time)
                     if self.actions is not None:
                         self.actions.cancel(target.id, scene, force=True)
-                    self._emit("staggered", target, data={"seconds": combatant.stagger_time}, **common)
+                    self._emit(
+                        "staggered", target, data={"seconds": combatant.stagger_time}, **common
+                    )
         if react and (knocked_down or attack.knockdown):
             seconds = attack.knockdown_time or combatant.knockdown_time
             state.down_phase, state.down_left = "down", seconds
@@ -432,7 +573,8 @@ class CombatSystem(System):
             scale = 1.0 - combatant.knockback_resistance
             dx, dy = self._knock_direction(attack, attacker, target, hit)
             controller.apply_impulse(
-                dx * attack.knockback * scale, (dy * attack.knockback - attack.knockback_lift) * scale
+                dx * attack.knockback * scale,
+                (dy * attack.knockback - attack.knockback_lift) * scale,
             )
 
         if attack.hitstop > 0:
@@ -449,7 +591,12 @@ class CombatSystem(System):
 
         for entry in attack.apply_states:
             if entry["chance"] >= 1.0 or self.rng.random() < entry["chance"]:
-                if self.apply_state(target, entry["state"], duration=entry.get("duration"), source_id=hit.attacker_id):
+                if self.apply_state(
+                    target,
+                    entry["state"],
+                    duration=entry.get("duration"),
+                    source_id=hit.attacker_id,
+                ):
                     continue
                 self._emit("state_unknown", target, data={"state": entry["state"]}, **common)
         self._check_death(scene, target, combatant, state, removed, common)
@@ -457,7 +604,11 @@ class CombatSystem(System):
     def _check_death(self, scene, entity, combatant, state, removed, common):
         life = combatant.life_resource
         resources = state.resources
-        if life and resources.contains(life) and resources.current(life) <= resources.get(life).minimum:
+        if (
+            life
+            and resources.contains(life)
+            and resources.current(life) <= resources.get(life).minimum
+        ):
             self._die(scene, entity, combatant, state, removed, common)
 
     @staticmethod
@@ -488,14 +639,23 @@ class CombatSystem(System):
 
     def _die(self, scene, target, combatant, state, removed, common):
         state.dead = True
-        self._emit("death", target, data={"event": combatant.death_event, "experience": combatant.experience}, **common)
+        self._emit(
+            "death",
+            target,
+            data={"event": combatant.death_event, "experience": combatant.experience},
+            **common,
+        )
         table = self.drop_tables.get(combatant.drop_table_id) if combatant.drop_table_id else None
         items = {}
         if table is not None:
             from asteria.rpg.drop_tables import roll_drop_table
 
             items = roll_drop_table(
-                table, self.rng, counters=self.counters, luck=combatant.loot_luck, switches=self.switches
+                table,
+                self.rng,
+                counters=self.counters,
+                luck=combatant.loot_luck,
+                switches=self.switches,
             )
         currencies = {}
         for chunk in str(combatant.currency_drop or "").replace(",", ";").split(";"):
@@ -520,7 +680,11 @@ class CombatSystem(System):
         elif combatant.death == "remove":
             removed.append(target)
         elif combatant.death == "disable":
-            for component_type in (Hurtbox2DComponent, Hitbox2DComponent, CharacterController2DComponent):
+            for component_type in (
+                Hurtbox2DComponent,
+                Hitbox2DComponent,
+                CharacterController2DComponent,
+            ):
                 component = target.try_get(component_type)
                 if component is not None:
                     component.enabled = False

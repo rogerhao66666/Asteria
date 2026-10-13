@@ -1,8 +1,11 @@
 """Layouts that use the width they get, so a form shows as much as fits instead of one long column.
 
-* ``ResponsiveForm`` - label / field pairs flow into as many columns as fit (1-4, about ``column_width``
-  pixels each); full-width rows (groups, tables) span every column. It re-flows when its width changes.
-* ``ResponsiveSplit`` - two parts side by side when wide enough (a list next to its detail form), stacked
+* ``ResponsiveForm`` - label / field pairs flow into as many columns as fit (1-4, about
+  ``column_width``
+  pixels each); full-width rows (groups, tables) span every column. It re-flows when its width
+  changes.
+* ``ResponsiveSplit`` - two parts side by side when wide enough (a list next to its detail form),
+  stacked
   when narrow.
 """
 
@@ -13,7 +16,8 @@ from PySide6.QtWidgets import QBoxLayout, QGridLayout, QLabel, QSizePolicy, QVBo
 
 
 def _field_cell(label, widget):
-    """A label above its field (no crowded label column; every field gets the cell's whole width)."""
+    """A label above its field (no crowded label column; every field gets the cell's whole
+    width)."""
     cell = QWidget()
     box = QVBoxLayout(cell)
     box.setContentsMargins(0, 0, 0, 0)
@@ -55,7 +59,8 @@ class ResponsiveForm(QWidget):
 
     def columns_for(self, width):
         wanted = max(1, min(self.max_columns, int(width) // self.column_width))
-        # hysteresis: only add a column with 24 px to spare, so a scroll bar appearing / disappearing
+        # hysteresis: only add a column with 24 px to spare, so a scroll bar appearing /
+        # disappearing
         # cannot flip the layout back and forth
         if wanted > self.columns > 0 and int(width) < wanted * self.column_width + 24:
             return self.columns
@@ -90,14 +95,25 @@ class ResponsiveForm(QWidget):
             self.grid.setColumnStretch(c, 1)
         for r in range(self.grid.rowCount()):
             self.grid.setRowStretch(r, 0)
-        self.grid.setRowStretch(row + 1, 1)  # fields pack at the top; spare height stays below them
+        self.grid.setRowStretch(
+            row + 1, 1
+        )  # fields pack at the top; spare height stays below them
 
 
 class ResponsiveSplit(QWidget):
-    """``first`` beside ``second`` when at least ``side_by_side_at`` pixels wide, else ``first`` above."""
+    """``first`` beside ``second`` when at least ``side_by_side_at`` pixels wide, else ``first``
+    above."""
 
     def __init__(
-        self, first, second, parent=None, *, side_by_side_at=520, first_share=1, second_share=2, stacked_height=130
+        self,
+        first,
+        second,
+        parent=None,
+        *,
+        side_by_side_at=520,
+        first_share=1,
+        second_share=2,
+        stacked_height=130,
     ):
         super().__init__(parent)
         self.stacked_height = int(stacked_height)
@@ -117,15 +133,22 @@ class ResponsiveSplit(QWidget):
 
     def resizeEvent(self, event):  # noqa: N802 - Qt API
         super().resizeEvent(event)
-        wanted = QBoxLayout.LeftToRight if self.width() >= self.side_by_side_at else QBoxLayout.TopToBottom
+        wanted = (
+            QBoxLayout.LeftToRight
+            if self.width() >= self.side_by_side_at
+            else QBoxLayout.TopToBottom
+        )
         if self.box.direction() != wanted:
             self.box.setDirection(wanted)
             # stacked, the first part (a list) stays short so the form below it is visible
-            self.first.setMaximumHeight(16777215 if wanted == QBoxLayout.LeftToRight else self.stacked_height)
+            self.first.setMaximumHeight(
+                16777215 if wanted == QBoxLayout.LeftToRight else self.stacked_height
+            )
 
 
 class ResponsiveColumns(QWidget):
-    """Panels (group boxes) flow into as many columns as fit, each about ``column_width`` wide, filling
+    """Panels (group boxes) flow into as many columns as fit, each about ``column_width`` wide,
+    filling
     columns top to bottom so the tallest column stays short; one column when narrow."""
 
     def __init__(self, panels=(), parent=None, *, column_width=360, max_columns=3):

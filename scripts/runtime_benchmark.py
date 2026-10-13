@@ -26,15 +26,21 @@ def main(argv=None):
     parser.add_argument("--frames", type=int, default=600)
     args = parser.parse_args(argv)
     reports = run_benchmark(
-        REPO, field_frames=args.frames, battle_frames=args.frames, enemies=args.enemies, real_window=args.real_window
+        REPO,
+        field_frames=args.frames,
+        battle_frames=args.frames,
+        enemies=args.enemies,
+        real_window=args.real_window,
     )
     Path(args.output).write_text(json.dumps(reports, indent=2), encoding="utf-8")
     for name, report in reports.items():
         frame = report["frame"]
         pacing = report["pacing"] or {}
         print(
-            f"{name:7} frames={report['frames']} mean={frame['mean_ms']}ms p95={frame['p95_ms']}ms "
-            f"fps={pacing.get('measured_fps')} entities={report['counters'].get('entity_count', {}).get('max')} "
+            f"{name:7} frames={report['frames']} mean={frame['mean_ms']}ms "
+            f"p95={frame['p95_ms']}ms "
+            f"fps={pacing.get('measured_fps')} "
+            f"entities={report['counters'].get('entity_count', {}).get('max')} "
             f"unsupported={sorted(report['unsupported'])} not_recorded={report['not_recorded']}"
         )
     return 0

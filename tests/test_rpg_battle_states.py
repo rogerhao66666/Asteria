@@ -61,9 +61,14 @@ def test_state_application_uses_chance_stats_and_source_provenance():
     src = subject(stats={"status_power": 20, "status_resist": 0, "speed": 10}, states=[state])
     dst = subject(stats={"status_power": 0, "status_resist": 10, "speed": 10}, states=[state])
     policy = BattleStatePolicy(
-        "poison", base_chance=0.5, source_stat_terms={"status_power": 0.01}, target_stat_terms={"status_resist": -0.01}
+        "poison",
+        base_chance=0.5,
+        source_stat_terms={"status_power": 0.01},
+        target_stat_terms={"status_resist": -0.01},
     )
-    result = BattleStateRuntime([policy]).apply("poison", "hero", src, "slime", dst, rng=random.Random(1))
+    result = BattleStateRuntime([policy]).apply(
+        "poison", "hero", src, "slime", dst, rng=random.Random(1)
+    )
     assert result.applied
     assert result.chance == pytest.approx(0.6)
     assert dst.states.get("poison").source_id == "hero"
@@ -73,8 +78,12 @@ def test_immunity_is_tag_driven_not_state_name_driven():
     state = StateDefinition("machine.overheat", 3)
     src = subject(states=[state])
     dst = subject(tags=["boss.phase1.control_immune"], states=[state])
-    policy = BattleStatePolicy("machine.overheat", immune_target_tags=["boss.phase1.control_immune"])
-    result = BattleStateRuntime([policy]).apply("machine.overheat", "a", src, "b", dst, rng=random.Random(0))
+    policy = BattleStatePolicy(
+        "machine.overheat", immune_target_tags=["boss.phase1.control_immune"]
+    )
+    result = BattleStateRuntime([policy]).apply(
+        "machine.overheat", "a", src, "b", dst, rng=random.Random(0)
+    )
     assert result.immune and not result.applied
     assert dst.states.get("machine.overheat") is None
 
@@ -83,7 +92,9 @@ def test_duration_resistance_can_shorten_state_without_hardcoded_status_logic():
     state = StateDefinition("slow", 10)
     src = subject(states=[state])
     dst = subject(stats={"status_power": 0, "status_resist": 25, "speed": 10}, states=[state])
-    policy = BattleStatePolicy("slow", duration_multiplier=1, duration_target_stat_terms={"status_resist": -0.02})
+    policy = BattleStatePolicy(
+        "slow", duration_multiplier=1, duration_target_stat_terms={"status_resist": -0.02}
+    )
     result = BattleStateRuntime([policy]).apply("slow", "a", src, "b", dst, rng=random.Random(1))
     assert result.duration == pytest.approx(5)
     assert dst.states.get("slow").remaining == pytest.approx(5)
@@ -121,7 +132,9 @@ def test_periodic_effect_can_tick_on_battle_lifecycle():
     poison = StateDefinition(
         "poison",
         3,
-        periodic=[PeriodicEffect(1, Effect("poison_tick", [EffectOperation("resource_delta", "hp", -7)]))],
+        periodic=[
+            PeriodicEffect(1, Effect("poison_tick", [EffectOperation("resource_delta", "hp", -7)]))
+        ],
     )
     actor = subject(states=[poison])
     actor.states.apply("poison")
@@ -152,7 +165,9 @@ def test_state_snapshot_v1_stays_backward_readable():
         {
             "schema": "asteria.state_runtime",
             "version": 1,
-            "active": [{"state_id": "legacy", "remaining": 2, "stacks": 1, "periodic_elapsed": []}],
+            "active": [
+                {"state_id": "legacy", "remaining": 2, "stacks": 1, "periodic_elapsed": []}
+            ],
         }
     )
     assert rt.get("legacy").remaining == 2
@@ -171,15 +186,25 @@ def battle_fixture():
     )
     runtime = AbilityRuntime(registry)
     parties = [
-        Party("heroes", [PartyMember("hero", "heroes", hero, ability_ids=["slash", "fire"], initiative=10)]),
-        Party("enemies", [PartyMember("enemy", "enemies", enemy, ability_ids=["slash"], initiative=1)]),
+        Party(
+            "heroes",
+            [PartyMember("hero", "heroes", hero, ability_ids=["slash", "fire"], initiative=10)],
+        ),
+        Party(
+            "enemies",
+            [PartyMember("enemy", "enemies", enemy, ability_ids=["slash"], initiative=1)],
+        ),
     ]
     battle = BattleRuntime(
         parties,
         runtime,
         state_policies=[
             BattleStatePolicy("stun", prevent_action=True, tick_trigger="rpg.battle.turn_ended"),
-            BattleStatePolicy("silence", blocked_ability_tags=["ability.magic"], tick_trigger="rpg.battle.turn_ended"),
+            BattleStatePolicy(
+                "silence",
+                blocked_ability_tags=["ability.magic"],
+                tick_trigger="rpg.battle.turn_ended",
+            ),
         ],
     )
     return battle
@@ -226,7 +251,9 @@ def test_many_custom_states_have_no_engine_cap():
     policies = [BattleStatePolicy(d.state_id) for d in definitions]
     rt = BattleStateRuntime(policies)
     for definition in definitions:
-        result = rt.apply(definition.state_id, "source", actor, "target", actor, rng=random.Random(1))
+        result = rt.apply(
+            definition.state_id, "source", actor, "target", actor, rng=random.Random(1)
+        )
         assert result.applied
     assert len(actor.states.active_states()) == 256
 
@@ -252,7 +279,11 @@ def test_remove_trigger_supports_sleep_wake_style_composition():
     actor.states.apply("sleep")
     member = PartyMember("hero", "heroes", actor)
     rt = BattleStateRuntime(
-        [BattleStatePolicy("sleep", prevent_action=True, remove_triggers=["rpg.battle.damage_received"])]
+        [
+            BattleStatePolicy(
+                "sleep", prevent_action=True, remove_triggers=["rpg.battle.damage_received"]
+            )
+        ]
     )
     rt.apply_trigger("rpg.battle.damage_received", [member])
     assert actor.states.get("sleep") is None

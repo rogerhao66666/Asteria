@@ -40,7 +40,11 @@ class PreflightMaterializer:
         if not preflight.ok:
             return PreflightMaterializationReport(
                 (),
-                (RuntimeMaterializationIssue("", "runtime.preflight.failed", "backend preflight contains errors"),),
+                (
+                    RuntimeMaterializationIssue(
+                        "", "runtime.preflight.failed", "backend preflight contains errors"
+                    ),
+                ),
                 False,
             )
         owned = []
@@ -57,7 +61,11 @@ class PreflightMaterializer:
             except Exception as e:
                 return PreflightMaterializationReport(
                     (),
-                    (RuntimeMaterializationIssue(entry.resolved.binding.object_id, "runtime.resource.failed", str(e)),),
+                    (
+                        RuntimeMaterializationIssue(
+                            entry.resolved.binding.object_id, "runtime.resource.failed", str(e)
+                        ),
+                    ),
                     False,
                     self._cleanup(owned),
                 )
@@ -70,6 +78,9 @@ class PreflightMaterializer:
             except Exception:
                 pass
             return PreflightMaterializationReport(
-                (), (RuntimeMaterializationIssue("", "runtime.commit.failed", str(e)),), False, self._cleanup(owned)
+                (),
+                (RuntimeMaterializationIssue("", "runtime.commit.failed", str(e)),),
+                False,
+                self._cleanup(owned),
             )
         return PreflightMaterializationReport(values, (), True)

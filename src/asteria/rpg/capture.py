@@ -29,7 +29,10 @@ class CaptureRule:
 
     def __init__(self, enemy_id, actor_id, *, base_chance=0.25, low_health_bonus=0.5, item_id=""):
         base_chance, low_health_bonus = float(base_chance), float(low_health_bonus)
-        if not (isfinite(base_chance) and isfinite(low_health_bonus)) or not 0.0 <= base_chance <= 1.0:
+        if (
+            not (isfinite(base_chance) and isfinite(low_health_bonus))
+            or not 0.0 <= base_chance <= 1.0
+        ):
             raise ValueError("capture chances are invalid")
         object.__setattr__(self, "enemy_id", _id(enemy_id, "enemy_id"))
         object.__setattr__(self, "actor_id", _id(actor_id, "actor_id"))

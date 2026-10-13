@@ -19,7 +19,10 @@ from .rpg_maker_mv_map import RPGMakerMVMap, discover_mv_maps, to_asteria_scene
 
 def _thaw(value: Any) -> Any:
     if isinstance(value, tuple):
-        if all(isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], str) for item in value):
+        if all(
+            isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], str)
+            for item in value
+        ):
             return {key: _thaw(item) for key, item in value}
         return [_thaw(item) for item in value]
     return value
@@ -38,8 +41,10 @@ class RPGMakerMVProjectImporter:
     def import_project(
         layout: RPGMakerMVProjectLayout, *, map_ids: Iterable[int] | None = None, output_root=None
     ) -> RPGMakerMVProjectImport:
-        """Convert an MV project. With ``output_root`` (the new Asteria project folder) every map is baked
-        into canonical tile assets there, the party leader becomes the player at the MV start position and
+        """Convert an MV project. With ``output_root`` (the new Asteria project folder) every map
+        is baked
+        into canonical tile assets there, the party leader becomes the player at the MV start
+        position and
         the game starts on the MV start map (W-18)."""
         database = RPGMakerMVDatabase.load(layout)
         catalog = RPGMakerMVCatalog.build(layout, database)
@@ -56,7 +61,8 @@ class RPGMakerMVProjectImporter:
             project.assets.register(asset)
 
         def menu_icon(icon):
-            """An ``mv.icon.<index>`` icon asset (one IconSet cell) for menus; "" for none (MV index 0)."""
+            """An ``mv.icon.<index>`` icon asset (one IconSet cell) for menus; "" for none (MV
+            index 0)."""
             if icon is None or icon.index <= 0:
                 return ""
             asset_id = f"mv.icon.{icon.index}"
@@ -67,7 +73,9 @@ class RPGMakerMVProjectImporter:
                         asset_id,
                         "icon",
                         AssetSource(
-                            str(icon.source), provider="rpg_maker_mv", provenance=(("development_fixture", True),)
+                            str(icon.source),
+                            provider="rpg_maker_mv",
+                            provenance=(("development_fixture", True),),
                         ),
                         tags=frozenset({"source:rpg-maker-mv", "mv:icon"}),
                         metadata=(("region", (x0, y0, x1 - x0, y1 - y0)),),
@@ -109,10 +117,14 @@ class RPGMakerMVProjectImporter:
                 elif skill_id:
                     issues.append(
                         MVReferenceIssue(
-                            "class.unknown_skill", "Classes.json", f"class {record.id} references skill {skill_id}"
+                            "class.unknown_skill",
+                            "Classes.json",
+                            f"class {record.id} references skill {skill_id}",
                         )
                     )
-            project.rpg_database.add_class(ClassDefinition(target_id, record.name, granted_abilities=abilities))
+            project.rpg_database.add_class(
+                ClassDefinition(target_id, record.name, granted_abilities=abilities)
+            )
             source_ids["classes"][record.id] = target_id
             source_metadata["classes"][record.id] = {"mv_metadata": metadata}
 
@@ -123,9 +135,17 @@ class RPGMakerMVProjectImporter:
                 ActorDefinition(target_id, record.name, class_id=class_id, tags=("source.mv",))
             )
             source_ids["actors"][record.id] = target_id
-            character = catalog.resolve_image("characters", record.character_name) if record.character_name else None
+            character = (
+                catalog.resolve_image("characters", record.character_name)
+                if record.character_name
+                else None
+            )
             face = catalog.resolve_image("faces", record.face_name) if record.face_name else None
-            battler = catalog.resolve_image("sv_actors", record.battler_name) if record.battler_name else None
+            battler = (
+                catalog.resolve_image("sv_actors", record.battler_name)
+                if record.battler_name
+                else None
+            )
             source_metadata["actors"][record.id] = {
                 "character": None if character is None else str(character),
                 "character_index": record.character_index,
@@ -139,7 +159,9 @@ class RPGMakerMVProjectImporter:
             target_id = f"mv.item.{record.id}"
             icon = catalog.icon(record.icon_index)
             project.rpg_database.add_item(
-                ItemDefinition(target_id, record.name, tags=("source.mv",), icon_id=menu_icon(icon))
+                ItemDefinition(
+                    target_id, record.name, tags=("source.mv",), icon_id=menu_icon(icon)
+                )
             )
             source_ids["items"][record.id] = target_id
             source_metadata["items"][record.id] = {
@@ -153,7 +175,9 @@ class RPGMakerMVProjectImporter:
         for record in (*database.weapons, *database.armors):
             target_id = f"mv.{record.equipment_kind}.{record.id}"
             record_metadata = _thaw(record.metadata)
-            type_id = int(record_metadata.get("wtypeId", 0)) if record.equipment_kind == "weapon" else 0
+            type_id = (
+                int(record_metadata.get("wtypeId", 0)) if record.equipment_kind == "weapon" else 0
+            )
             weapon_type = weapon_types[type_id] if 0 <= type_id < len(weapon_types) else ""
             tags = ("source.mv", record.equipment_kind)
             if weapon_type:
@@ -168,8 +192,12 @@ class RPGMakerMVProjectImporter:
                     icon_id=menu_icon(icon),
                 )
             )
-            source_ids["equipment"][record.id if record.equipment_kind == "weapon" else 100000 + record.id] = target_id
-            source_metadata["equipment"][record.id if record.equipment_kind == "weapon" else 100000 + record.id] = {
+            source_ids["equipment"][
+                record.id if record.equipment_kind == "weapon" else 100000 + record.id
+            ] = target_id
+            source_metadata["equipment"][
+                record.id if record.equipment_kind == "weapon" else 100000 + record.id
+            ] = {
                 "kind": record.equipment_kind,
                 "icon_index": record.icon_index,
                 "weapon_type": weapon_type,
@@ -178,9 +206,20 @@ class RPGMakerMVProjectImporter:
             }
 
         entries = discover_mv_maps(layout)
-        selected = {entry.map_id for entry in entries} if map_ids is None else {int(value) for value in map_ids}
+        selected = (
+            {entry.map_id for entry in entries}
+            if map_ids is None
+            else {int(value) for value in map_ids}
+        )
         system = database.system
-        leader = next((a for a in database.actors if system.party_members and a.id == system.party_members[0]), None)
+        leader = next(
+            (
+                a
+                for a in database.actors
+                if system.party_members and a.id == system.party_members[0]
+            ),
+            None,
+        )
         leader_key = (
             None
             if leader is None or not leader.character_name
@@ -199,7 +238,11 @@ class RPGMakerMVProjectImporter:
             baked_character = bake_character(catalog, key[0], key[1], output_root)
             characters[key] = baked_character
             if baked_character is None:
-                issues.append(MVReferenceIssue("character.missing", "characters", f"character {key} not found"))
+                issues.append(
+                    MVReferenceIssue(
+                        "character.missing", "characters", f"character {key} not found"
+                    )
+                )
             else:
                 for record in baked_character.records:
                     project.assets.add(record)
@@ -220,7 +263,9 @@ class RPGMakerMVProjectImporter:
                     project.assets.add(record)
                 for tile_id in baked.unsupported_tiles:
                     issues.append(
-                        MVReferenceIssue("map.unsupported_tile", entry.path.name, f"tile {tile_id} has no image")
+                        MVReferenceIssue(
+                            "map.unsupported_tile", entry.path.name, f"tile {tile_id} has no image"
+                        )
                     )
                 for event in mv_map.events:
                     if event.image.character_name:
@@ -230,7 +275,11 @@ class RPGMakerMVProjectImporter:
                     start = (system.start_x, system.start_y, leader_key)
             else:
                 issues.append(
-                    MVReferenceIssue("map.not_baked", entry.path.name, "map tiles need an output folder to be baked")
+                    MVReferenceIssue(
+                        "map.not_baked",
+                        entry.path.name,
+                        "map tiles need an output folder to be baked",
+                    )
                 )
             event_issues = []
             scene = project.add_scene(
@@ -244,7 +293,9 @@ class RPGMakerMVProjectImporter:
                     issues=event_issues,
                 )
             )
-            issues.extend(MVReferenceIssue(code, entry.path.name, message) for code, message in event_issues)
+            issues.extend(
+                MVReferenceIssue(code, entry.path.name, message) for code, message in event_issues
+            )
             if start is not None:
                 start_scene = scene
                 player_entity = next((e for e in scene.entities() if e.name == "Player"), None)
@@ -256,16 +307,24 @@ class RPGMakerMVProjectImporter:
                 "tilemap_asset_id": None if baked is None else baked.tilemap_id,
                 "blocked_cells": None if baked is None else baked.blocked_cells,
             }
-        if output_root is not None:  # a door to a map that was not imported would fail at runtime: say so now
+        if (
+            output_root is not None
+        ):  # a door to a map that was not imported would fail at runtime: say so now
             for program_id in project.event_programs.ids():
                 for instruction in project.event_programs.get(program_id).instructions:
-                    args = instruction.args.get("args", {}) if instruction.opcode == "WORLD" else {}
-                    if instruction.args.get("command") == "TRANSFER" and project.scene(args.get("scene_id")) is None:
+                    args = (
+                        instruction.args.get("args", {}) if instruction.opcode == "WORLD" else {}
+                    )
+                    if (
+                        instruction.args.get("command") == "TRANSFER"
+                        and project.scene(args.get("scene_id")) is None
+                    ):
                         issues.append(
                             MVReferenceIssue(
                                 "event.transfer_target_missing",
                                 program_id,
-                                "transfer to a map that was not imported (import it too, or edit the event)",
+                                "transfer to a map that was not imported (import it too, or "
+                                "edit the event)",
                             )
                         )
         if start_scene is not None:
@@ -286,7 +345,8 @@ class RPGMakerMVProjectImporter:
 
 
 def import_mv_project(source, output, *, map_ids=None, name=None):
-    """Import the MV project folder ``source`` (with ``data/System.json``) as a new Asteria project in ``output``.
+    """Import the MV project folder ``source`` (with ``data/System.json``) as a new Asteria
+    project in ``output``.
 
     Returns ``(project_path, RPGMakerMVProjectImport)``.
     """
@@ -310,7 +370,9 @@ def import_mv_project(source, output, *, map_ids=None, name=None):
 def import_mv_main(argv=None):
     import argparse
 
-    parser = argparse.ArgumentParser(description="Import an RPG Maker MV project as a new Asteria project")
+    parser = argparse.ArgumentParser(
+        description="Import an RPG Maker MV project as a new Asteria project"
+    )
     parser.add_argument("source", help="MV project folder (contains data/System.json)")
     parser.add_argument("output", help="new Asteria project folder")
     parser.add_argument("--maps", type=int, nargs="*", help="map ids to import (default: all)")

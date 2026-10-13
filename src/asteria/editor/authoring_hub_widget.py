@@ -84,7 +84,8 @@ except ImportError:
 
 
 def with_optional_fields(data, value):
-    """Show optional fields a definition leaves out of its data when they are empty (``OPTIONAL_DATA``), so an
+    """Show optional fields a definition leaves out of its data when they are empty
+    (``OPTIONAL_DATA``), so an
     author can find and fill them; empty values are still left out when saved."""
     if not isinstance(data, dict):
         return data
@@ -95,7 +96,9 @@ def with_optional_fields(data, value):
         defaults = getattr(kind, "OPTIONAL_DATA", None) or {}
         if isinstance(entries, list) and defaults:
             data[key] = [
-                {**x, **{k: deepcopy(v) for k, v in defaults.items() if k not in x}} if isinstance(x, dict) else x
+                {**x, **{k: deepcopy(v) for k, v in defaults.items() if k not in x}}
+                if isinstance(x, dict)
+                else x
                 for x in entries
             ]
     return data
@@ -151,7 +154,8 @@ _SCALARS = (str, int, float, bool)
 
 
 def _coerce_list(text, original):
-    """``"a, b"`` -> ``["a", "b"]``; each entry takes the type of the list's existing entries (text if empty)."""
+    """``"a, b"`` -> ``["a", "b"]``; each entry takes the type of the list's existing entries (text
+    if empty)."""
     template = original[0] if original else ""
     return [_coerce_like(part.strip(), template) for part in str(text).split(",") if part.strip()]
 
@@ -182,13 +186,17 @@ _ACRONYMS = {
 
 
 def field_label(key):
-    """``display_name`` -> "Display Name", ``actor_id`` -> "Actor ID" (the data key itself is unchanged)."""
+    """``display_name`` -> "Display Name", ``actor_id`` -> "Actor ID" (the data key itself is
+    unchanged)."""
     words = str(key).replace("-", "_").split("_")
-    return " ".join(_ACRONYMS.get(w.lower(), w[:1].upper() + w[1:]) for w in words if w) or str(key)
+    return " ".join(_ACRONYMS.get(w.lower(), w[:1].upper() + w[1:]) for w in words if w) or str(
+        key
+    )
 
 
 def _summary(value):
-    """A short name for a list entry: its id / name if it has one, the value itself if it is short."""
+    """A short name for a list entry: its id / name if it has one, the value itself if it is
+    short."""
     if isinstance(value, dict):
         for key in ("id", "name", "display_name", "label", "title"):
             if isinstance(value.get(key), (str, int)) and str(value[key]):
@@ -232,7 +240,8 @@ class StructuredRecordEditor(QTreeWidget):
         self.setHeaderLabels(["Field", "Value"])
         self.setAlternatingRowColors(True)
         self._data = None
-        # field name -> callable returning ((value, QIcon or None), ...): those leaves get an editable
+        # field name -> callable returning ((value, QIcon or None), ...): those leaves get an
+        # editable
         # drop-down of suggestions (any typed value is still accepted)
         self.field_choices = {}
         self.itemChanged.connect(lambda *_: self.changed.emit())
@@ -244,9 +253,15 @@ class StructuredRecordEditor(QTreeWidget):
         try:
             self.clear()
             self._data = deepcopy(data)
-            root = self._append(None, self._data, title or _record_title(self._data), (), root=True)
-            if isinstance(self._data, dict) and ("schema" in self._data or "version" in self._data):
-                root.setToolTip(0, f"Format {self._data.get('schema', '?')} v{self._data.get('version', '?')}")
+            root = self._append(
+                None, self._data, title or _record_title(self._data), (), root=True
+            )
+            if isinstance(self._data, dict) and (
+                "schema" in self._data or "version" in self._data
+            ):
+                root.setToolTip(
+                    0, f"Format {self._data.get('schema', '?')} v{self._data.get('version', '?')}"
+                )
             self.expandToDepth(1)
             self.resizeColumnToContents(0)  # full field names (they were cut to "def…", "resour…")
             self.setColumnWidth(0, min(max(self.columnWidth(0), 140), 360))
@@ -263,7 +278,8 @@ class StructuredRecordEditor(QTreeWidget):
         if isinstance(value, dict):
             for key, val in value.items():
                 if root and key in _FORMAT_KEYS:
-                    continue  # file-format bookkeeping, not game data (kept as is; shown in the tooltip)
+                    # file-format bookkeeping, not game data (kept as is; shown in the tooltip)
+                    continue
                 child = self._append(item, val, field_label(key), path + (key,))
                 child.setToolTip(0, str(key))
             if not root:
@@ -278,7 +294,12 @@ class StructuredRecordEditor(QTreeWidget):
         elif isinstance(value, list):
             for index, val in enumerate(value):
                 summary = _summary(val)
-                self._append(item, val, f"#{index + 1}" + (f" · {summary}" if summary else ""), path + (index,))
+                self._append(
+                    item,
+                    val,
+                    f"#{index + 1}" + (f" · {summary}" if summary else ""),
+                    path + (index,),
+                )
             item.setText(1, f"{len(value)} item" + ("" if len(value) == 1 else "s"))
             item.setForeground(1, self.palette().placeholderText())
         else:
@@ -304,11 +325,14 @@ class StructuredRecordEditor(QTreeWidget):
         combo.setCurrentText(value)
         combo.setToolTip("Pick one, or type any id or path; empty for none")
         combo.currentTextChanged.connect(lambda text, it=item: it.setText(1, text))
-        item.setForeground(1, QBrush(Qt.transparent))  # the combo shows the value; the text stays for record()
+        item.setForeground(
+            1, QBrush(Qt.transparent)
+        )  # the combo shows the value; the text stays for record()
         self.setItemWidget(item, 1, combo)
         return combo
 
-    # Entries a list field starts from when "Add Entry" is used on an empty list (any field may have one).
+    # Entries a list field starts from when "Add Entry" is used on an empty list (any field may
+    # have one).
     LIST_TEMPLATES = {
         "hits": {"tags": [], "power": 1.0},
         "battle_resource_gains": {"to": "targets", "resource": "", "amount": 1.0},
@@ -322,14 +346,17 @@ class StructuredRecordEditor(QTreeWidget):
         return data
 
     def _structure_menu(self, position):
-        """Add or remove list entries and dict fields (hits, commands, battle costs...) - the tree's structure."""
+        """Add or remove list entries and dict fields (hits, commands, battle costs...) - the
+        tree's structure."""
         item = self.itemAt(position)
         if item is None or self._data is None:
             return
         path = tuple(item.data(0, Qt.UserRole) or ())
         menu = QMenu(self)
         target = self._value_at(self.record(), path)
-        if isinstance(target, list) and not (target and all(isinstance(v, _SCALARS) for v in target)):
+        if isinstance(target, list) and not (
+            target and all(isinstance(v, _SCALARS) for v in target)
+        ):
             menu.addAction("Add Entry", lambda: self.add_entry(path))
         if isinstance(target, dict) and path:
             menu.addAction("Add Field…", lambda: self.add_field(path))
@@ -483,13 +510,22 @@ class AuthoringHubWidget(QWidget):
 
     def _list_ids(self, category):
         # Controller families use either library ids or definitions().
-        if hasattr(self.controller, "library") and category in getattr(self.controller, "CATEGORIES", ()):
+        if hasattr(self.controller, "library") and category in getattr(
+            self.controller, "CATEGORIES", ()
+        ):
             return self.controller.library.ids(category)
-        if hasattr(self.controller, "library") and category in self.controller.library.categories():
+        if (
+            hasattr(self.controller, "library")
+            and category in self.controller.library.categories()
+        ):
             return self.controller.library.ids(category)
-        kind = getattr(getattr(self.controller, "information_architecture", None), "kind", lambda x: None)(category)
+        kind = getattr(
+            getattr(self.controller, "information_architecture", None), "kind", lambda x: None
+        )(category)
         if kind is not None:
-            return tuple(str(getattr(x, kind.key_attr)) for x in self.controller.definitions(category))
+            return tuple(
+                str(getattr(x, kind.key_attr)) for x in self.controller.definitions(category)
+            )
         # RPG authoring controllers expose canonical database mappings. Adapter encode
         # supplies mapping lookup and may expose an ids callback.
         ids = getattr(self.encode, "ids", None)
@@ -555,7 +591,11 @@ class SkillTreeGraphView(QGraphicsView):
             depths[nid] = (
                 0
                 if not req
-                else 1 + max((depth(next(x for x in nodes if x["node_id"] == r["node_id"])) for r in req), default=0)
+                else 1
+                + max(
+                    (depth(next(x for x in nodes if x["node_id"] == r["node_id"])) for r in req),
+                    default=0,
+                )
             )
             return depths[nid]
 
@@ -582,7 +622,9 @@ class SkillTreeGraphView(QGraphicsView):
                     a = source.sceneBoundingRect().center()
                     b = target.sceneBoundingRect().center()
                     self.scene_graph.addLine(a.x(), a.y(), b.x(), b.y())
-        self.scene_graph.setSceneRect(self.scene_graph.itemsBoundingRect().adjusted(-40, -40, 40, 40))
+        self.scene_graph.setSceneRect(
+            self.scene_graph.itemsBoundingRect().adjusted(-40, -40, 40, 40)
+        )
 
     def positions(self):
         return {key: [item.pos().x(), item.pos().y()] for key, item in self.node_items.items()}
@@ -733,7 +775,9 @@ class AdapterFamilyWidget(QWidget):
         if adapter is None:
             return
         needle = self.search.text().strip().lower()
-        self._ids = self._sorted([key for key in adapter.ids() if not needle or needle in key.lower()])
+        self._ids = self._sorted(
+            [key for key in adapter.ids() if not needle or needle in key.lower()]
+        )
         self.browser.addItems(self._ids)
         _category_icons(self.browser, self.category.currentText())
         _count_heading(self.heading, self.category.currentText(), len(self._ids))
@@ -839,7 +883,9 @@ class AdapterFamilyWidget(QWidget):
         from .record_operations import copy_records
 
         ids = self.selected_ids
-        return bool(ids) and self._run("Copy", lambda: copy_records(self.document.clipboard, self.adapter, ids))
+        return bool(ids) and self._run(
+            "Copy", lambda: copy_records(self.document.clipboard, self.adapter, ids)
+        )
 
     def cut_selected(self):
         from .record_operations import cut_records
@@ -847,7 +893,9 @@ class AdapterFamilyWidget(QWidget):
         ids = self.selected_ids
         if not ids:
             return False
-        done = self._run("Cut", lambda: cut_records(self.document, self.document.clipboard, self.adapter, ids))
+        done = self._run(
+            "Cut", lambda: cut_records(self.document, self.document.clipboard, self.adapter, ids)
+        )
         if done:
             self.changed.emit()
             self.refresh()
@@ -864,7 +912,9 @@ class AdapterFamilyWidget(QWidget):
     def paste(self):
         from .record_operations import paste_records
 
-        created = self._run("Paste", lambda: paste_records(self.document, self.document.clipboard, self.adapter))
+        created = self._run(
+            "Paste", lambda: paste_records(self.document, self.document.clipboard, self.adapter)
+        )
         if created:
             self.changed.emit()
             self.refresh(keep=created)
@@ -899,7 +949,9 @@ class AdapterFamilyWidget(QWidget):
         ids = self.selected_ids
         if not ids:
             return False
-        done = self._run("Batch Edit", lambda: batch_set(self.document, self.adapter, ids, path, value))
+        done = self._run(
+            "Batch Edit", lambda: batch_set(self.document, self.adapter, ids, path, value)
+        )
         if done:
             self.changed.emit()
             self.refresh(keep=ids)
@@ -923,9 +975,17 @@ class AdapterFamilyWidget(QWidget):
             ("Copy", self.copy_selected, has and editable),
             ("Cut", self.cut_selected, has and editable),
             ("Paste", self.paste, self.can_paste()),
-            ("Duplicate…", self.duplicate_selected, has and not many and self.adapter.duplicate is not None),
+            (
+                "Duplicate…",
+                self.duplicate_selected,
+                has and not many and self.adapter.duplicate is not None,
+            ),
             (None, None, False),
-            (f"Batch Edit {len(self.selected_ids)} Records…", self.open_batch_edit, many and editable),
+            (
+                f"Batch Edit {len(self.selected_ids)} Records…",
+                self.open_batch_edit,
+                many and editable,
+            ),
             ("Delete", self.delete_selected, has),
         ]
 

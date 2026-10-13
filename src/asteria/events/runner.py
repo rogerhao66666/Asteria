@@ -54,7 +54,8 @@ class EventRunner:
         self.dialogue = DialogueRuntimeState()
         self.call_stack: list[EventCallFrame] = []
         self.sequence_host = None
-        self.sequences: list = []  # (program_id, EventSequence); foreground (blocking) ones hold the program
+        # (program_id, EventSequence); foreground (blocking) ones hold the program
+        self.sequences: list = []
         self.background_tweens: list = []
 
     @property
@@ -472,9 +473,13 @@ class EventRunner:
             source_entity_id=str(data["source_entity_id"]),
             local_scope_id=str(data["local_scope_id"]),
         )
-        self.call_stack = [EventCallFrame.from_data(item) for item in data["call_stack"]] if version >= 2 else []
+        self.call_stack = (
+            [EventCallFrame.from_data(item) for item in data["call_stack"]] if version >= 2 else []
+        )
         self.dialogue = (
-            DialogueRuntimeState.from_data(data["dialogue_state"]) if version >= 3 else DialogueRuntimeState()
+            DialogueRuntimeState.from_data(data["dialogue_state"])
+            if version >= 3
+            else DialogueRuntimeState()
         )
         self.sequences = []
         self.background_tweens = []
@@ -483,5 +488,7 @@ class EventRunner:
 
             for saved in data["sequences"]:
                 program = self.registry.require(saved["program_id"])
-                self.sequences.append((saved["program_id"], EventSequence.from_data(saved, program, self)))
+                self.sequences.append(
+                    (saved["program_id"], EventSequence.from_data(saved, program, self))
+                )
             self.background_tweens = [_Tween.from_data(x) for x in data["background_tweens"]]

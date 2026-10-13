@@ -48,7 +48,9 @@ def runtime():
             effects=[
                 AbilityEffect(
                     AbilityTargetMode.SELECTED,
-                    Effect("meteor", [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", -25)]),
+                    Effect(
+                        "meteor", [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", -25)]
+                    ),
                 )
             ],
         )
@@ -57,12 +59,18 @@ def runtime():
 
 
 def battle(*, policy=None, seed=123):
-    hero = PartyMember("hero", "heroes", subject(speed=100), ability_ids=("meteor",), initiative=100)
-    enemy = PartyMember("enemy", "enemies", subject(speed=20), ability_ids=("meteor",), initiative=20)
+    hero = PartyMember(
+        "hero", "heroes", subject(speed=100), ability_ids=("meteor",), initiative=100
+    )
+    enemy = PartyMember(
+        "enemy", "enemies", subject(speed=20), ability_ids=("meteor",), initiative=20
+    )
     return BattleRuntime(
         [Party("heroes", [hero]), Party("enemies", [enemy])],
         runtime(),
-        scheduler_definition=BattleSchedulerDefinition("ct", mode="continuous", timeline_scale=100),
+        scheduler_definition=BattleSchedulerDefinition(
+            "ct", mode="continuous", timeline_scale=100
+        ),
         action_timing_definitions=[ActionTimingDefinition("meteor", cast_time=5)],
         transaction_policies=[] if policy is None else [policy],
         rng_seed=seed,
@@ -153,7 +161,9 @@ def test_transaction_reservation_survives_snapshot_restore():
 
 def test_snapshot_restores_summoned_combatant_topology():
     b = battle()
-    summon = PartyMember("sprite", "heroes", subject(hp=40, speed=30), ability_ids=("meteor",), initiative=30)
+    summon = PartyMember(
+        "sprite", "heroes", subject(hp=40, speed=30), ability_ids=("meteor",), initiative=30
+    )
     b.summon(summon, owner_id="hero")
     snap = b.snapshot()
     b.remove_combatant("sprite")

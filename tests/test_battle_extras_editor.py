@@ -1,5 +1,7 @@
-"""The battle extras of an ability (divine boost costs, hits of several damage types, boost gains, commands, states)
-are authored in the Database editor: optional fields are shown, list entries and dict fields can be added and
+"""The battle extras of an ability (divine boost costs, hits of several damage types, boost gains,
+commands, states)
+are authored in the Database editor: optional fields are shown, list entries and dict fields can
+be added and
 removed from the record tree, and Apply stores them (one undo step)."""
 
 import pytest
@@ -24,7 +26,9 @@ def test_hits_costs_and_states_are_added_in_the_record_tree_and_applied():
     family.select_ids(["oct_sword"])
     tree = family.editor
     record = tree.record()
-    assert record["hits"] == [] and record["battle_costs"] == {} and record["apply_states"] == []  # discoverable
+    assert (
+        record["hits"] == [] and record["battle_costs"] == {} and record["apply_states"] == []
+    )  # discoverable
     tree.add_entry(("hits",))
     tree.add_entry(("hits",))
     data = tree.record()

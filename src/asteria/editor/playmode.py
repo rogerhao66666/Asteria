@@ -33,7 +33,11 @@ def resolve_play_scene(document):
     sel = document.selection
     if sel.kind == "scene" and not sel.multiple and sel.value is not None:
         return sel.value
-    if sel.kind == "entity" and sel.value is not None and getattr(sel.value, "scene", None) is not None:
+    if (
+        sel.kind == "entity"
+        and sel.value is not None
+        and getattr(sel.value, "scene", None) is not None
+    ):
         return sel.value.scene
     if sel.kind == "component" and sel.value is not None:
         entity = getattr(sel.value, "entity", None)
@@ -45,7 +49,9 @@ def resolve_play_scene(document):
     return scene
 
 
-def create_play_session(document, *, runtime_save=None, playtest_profile_id=None, from_start=False):
+def create_play_session(
+    document, *, runtime_save=None, playtest_profile_id=None, from_start=False
+):
     """Clone project data into a runtime snapshot.
 
     Runtime mutations during play cannot mutate the editor's canonical project.
@@ -73,7 +79,9 @@ def create_play_session(document, *, runtime_save=None, playtest_profile_id=None
         source_project_id=document.project.id,
         source_scene_id=source_scene_id,
         runtime_project=snapshot,
-        resource_root=(document.file_path.resolve().parent if document.file_path is not None else None),
+        resource_root=(
+            document.file_path.resolve().parent if document.file_path is not None else None
+        ),
         runtime_save=runtime_save,
         playtest_profile_id=None if playtest_profile_id is None else str(playtest_profile_id),
     )

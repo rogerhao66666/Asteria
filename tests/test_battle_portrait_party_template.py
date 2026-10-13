@@ -76,13 +76,19 @@ def test_battlefield_visibility_cap_is_presentation_overflow_only():
     )
     assert result.overflow_battlefield_ids == ("e3", "e4", "e5")
     assert len(result.battlefield_member_ids) == 6
-    visible = [x.member_id for x in result.placements if x.battlefield_visible and x.member_id.startswith("e")]
+    visible = [
+        x.member_id
+        for x in result.placements
+        if x.battlefield_visible and x.member_id.startswith("e")
+    ]
     assert visible == ["e0", "e1", "e2"]
 
 
 def test_duplicate_member_across_roles_is_rejected():
     with pytest.raises(ValueError, match="duplicate member"):
-        BattlePortraitPartyTemplateRuntime().resolve(portrait_party_ids=("same",), battlefield_member_ids=("same",))
+        BattlePortraitPartyTemplateRuntime().resolve(
+            portrait_party_ids=("same",), battlefield_member_ids=("same",)
+        )
 
 
 def test_hud_and_battlefield_roles_are_independent():

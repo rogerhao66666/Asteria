@@ -1,18 +1,28 @@
-"""Real-time ability use (ASTERIA_SPEC §20: combos, cancel windows, dash / dodge, cooldowns / resources, lock-on).
+"""Real-time ability use (ASTERIA_SPEC §20: combos, cancel windows, dash / dodge, cooldowns /
+resources, lock-on).
 
-``ActionCombatComponent`` binds input actions to abilities (``"attack=slash; dodge=roll; skill_1=fireball"``) and
-sets how the entity aims and locks on. ``ActionCombatSystem.use(entity, ability_id)`` is the one door for players,
+``ActionCombatComponent`` binds input actions to abilities (``"attack=slash; dodge=roll;
+skill_1=fireball"``) and
+sets how the entity aims and locks on. ``ActionCombatSystem.use(entity, ability_id)`` is the one
+door for players,
 behaviour trees and scripts:
 
-* the ability's ``timeline_id`` is played on the entity (``EntityActionSystem``), aimed at the lock-on target, the
+* the ability's ``timeline_id`` is played on the entity (``EntityActionSystem``), aimed at the
+  lock-on target, the
   stick direction or the facing;
-* while its action runs, pressing the same ability inside the timeline's combo window plays the window's ``next``
-  timeline (a combo chain); inside a cancel window — or for an ability with ``interrupts_actions`` (dodges) — the new
-  ability cuts the running one; otherwise the press is buffered for ``buffer_time`` and tried again;
-* ``cooldown_seconds`` and the ability's ``costs`` (formulas over the user's stats, paid from its combatant
-  resources) are checked and paid when a chain starts; ``move_while_acting`` scales movement during the action.
+* while its action runs, pressing the same ability inside the timeline's combo window plays the
+  window's ``next``
+  timeline (a combo chain); inside a cancel window — or for an ability with ``interrupts_actions``
+  (dodges) — the new
+  ability cuts the running one; otherwise the press is buffered for ``buffer_time`` and tried
+  again;
+* ``cooldown_seconds`` and the ability's ``costs`` (formulas over the user's stats, paid from its
+  combatant
+  resources) are checked and paid when a chain starts; ``move_while_acting`` scales movement
+  during the action.
 
-Every outcome is an ``ActionCombatEvent`` (dispatched to ``listeners`` at once; ``events`` keeps those since the
+Every outcome is an ``ActionCombatEvent`` (dispatched to ``listeners`` at once; ``events`` keeps
+those since the
 system's last update) (used, combo, buffered, denied with a reason, lock_on, lock_lost) so the
 game and its presentation can react. Nothing here names a game's buttons, abilities or rules.
 """
@@ -25,14 +35,20 @@ from math import hypot
 from asteria.core import Component, Field, System, Transform, component_schema, world_position
 from asteria.gameplay.formulas import FormulaContext
 
-from .character_control import CharacterController2DComponent, Hurtbox2DComponent, facing_from, facing_vector
+from .character_control import (
+    CharacterController2DComponent,
+    Hurtbox2DComponent,
+    facing_from,
+    facing_vector,
+)
 
 AIM_MODES = ("target_input_facing", "input_facing", "facing")
 LOCK_MODES = ("off", "manual", "nearest")
 
 
 def parse_bindings(text):
-    """``"attack=slash; dodge=roll"`` -> ``{"attack": "slash", "dodge": "roll"}`` (input action -> ability id)."""
+    """``"attack=slash; dodge=roll"`` -> ``{"attack": "slash", "dodge": "roll"}`` (input action ->
+    ability id)."""
     bindings = {}
     for chunk in str(text or "").replace(",", ";").split(";"):
         if chunk.strip():
@@ -48,32 +64,54 @@ def parse_bindings(text):
     version=1,
     fields=(
         Field(
-            "bindings", str, "", tooltip="Input action = ability, e.g. 'attack=slash; dodge=roll; skill_1=fireball'."
+            "bindings",
+            str,
+            "",
+            tooltip="Input action = ability, e.g. 'attack=slash; dodge=roll; skill_1=fireball'.",
         ),
-        Field("buffer_time", float, 0.2, minimum=0.0, tooltip="How long a press waits for the running action."),
+        Field(
+            "buffer_time",
+            float,
+            0.2,
+            minimum=0.0,
+            tooltip="How long a press waits for the running action.",
+        ),
         Field(
             "lock_mode",
             str,
             "off",
             choices=LOCK_MODES,
-            tooltip="manual: the lock action picks / drops a target; nearest: every use aims at the nearest foe.",
+            tooltip="manual: the lock action picks / drops a target; nearest: every use aims at "
+            "the nearest foe.",
         ),
         Field("lock_range", float, 220.0, minimum=0.0),
-        Field("lock_action", str, "lock_on", tooltip="Input action that locks on / off (manual mode)."),
-        Field("lock_switch_action", str, "lock_switch", tooltip="Input action that moves the lock to the next foe."),
+        Field(
+            "lock_action",
+            str,
+            "lock_on",
+            tooltip="Input action that locks on / off (manual mode).",
+        ),
+        Field(
+            "lock_switch_action",
+            str,
+            "lock_switch",
+            tooltip="Input action that moves the lock to the next foe.",
+        ),
         Field(
             "aim",
             str,
             "target_input_facing",
             choices=AIM_MODES,
-            tooltip="Where actions aim: the lock target, else the stick direction, else the facing.",
+            tooltip="Where actions aim: the lock target, else the stick direction, else the "
+            "facing.",
         ),
         Field("face_target", bool, True, tooltip="Turn toward the aim when an ability starts."),
         Field(
             "require_known",
             bool,
             False,
-            tooltip="Only abilities the linked RPG actor knows (class, skill tree, equipment) can be used.",
+            tooltip="Only abilities the linked RPG actor knows (class, skill tree, equipment) "
+            "can be used.",
         ),
         Field("enabled", bool, True),
     ),
@@ -105,7 +143,8 @@ class ActionCombatEvent:
 
 
 class ActionCombatSystem(System):
-    order = 22  # after input (10) and AI (20) set intents, before action timelines (25) and controllers (30)
+    # after input (10) and AI (20) set intents, before action timelines (25) and controllers (30)
+    order = 22
 
     def __init__(
         self,
@@ -123,8 +162,12 @@ class ActionCombatSystem(System):
         self.actions = actions  # EntityActionSystem
         self.combat = combat  # CombatSystem: costs are paid from combatant resources
         self.formulas = formulas if formulas is not None else {}
-        self.snapshot_provider = snapshot_provider  # callable() -> InputSnapshot | None (player input)
-        self.known_abilities = known_abilities  # callable(entity) -> set of ability ids, or None (no limit)
+        self.snapshot_provider = (
+            snapshot_provider  # callable() -> InputSnapshot | None (player input)
+        )
+        self.known_abilities = (
+            known_abilities  # callable(entity) -> set of ability ids, or None (no limit)
+        )
         self.cooldowns: dict[tuple, float] = {}
         self.buffered: dict[str, tuple] = {}  # entity id -> (ability id, seconds left, aim)
         self.events: list[ActionCombatEvent] = []
@@ -145,7 +188,8 @@ class ActionCombatSystem(System):
 
     # -- using abilities -------------------------------------------------------------------------
     def _emit(self, kind, entity, ability_id="", reason="", **data):
-        """Record and dispatch at once (``use`` may be called by behaviour trees or scripts outside ``update``)."""
+        """Record and dispatch at once (``use`` may be called by behaviour trees or scripts outside
+        ``update``)."""
         if self._quiet and kind in ("denied", "buffered"):
             return
         event = ActionCombatEvent(kind, entity.id, str(ability_id), reason, data)
@@ -154,7 +198,8 @@ class ActionCombatSystem(System):
             listener(event)
 
     def use(self, entity, ability_id, *, aim=None, scene=None, buffer=True):
-        """Use ``ability_id`` now (or buffer it); returns ``"used"``, ``"combo"``, ``"buffered"`` or a denial
+        """Use ``ability_id`` now (or buffer it); returns ``"used"``, ``"combo"``, ``"buffered"``
+        or a denial
         reason (``unknown``, ``no_timeline``, ``busy``, ``cooldown``, ``cost:<resource>``)."""
         scene = scene or self._scene or entity.scene
         ability = self.abilities.get(str(ability_id))
@@ -175,7 +220,9 @@ class ActionCombatSystem(System):
             aim = self.aim_of(entity, scene)
         running = self.actions.active(entity.id)
         if running:
-            if self.actions.source(entity.id) == ability.ability_id and self.actions.window_open(entity.id, "combo"):
+            if self.actions.source(entity.id) == ability.ability_id and self.actions.window_open(
+                entity.id, "combo"
+            ):
                 follow = self.timelines.get(self.actions.combo_next(entity.id) or "")
                 if follow is not None:
                     self.actions.cancel(entity.id, scene, force=True)
@@ -216,7 +263,8 @@ class ActionCombatSystem(System):
         return "used"
 
     def _cooldown_seconds(self, entity, ability):
-        """``cooldown_formula`` over the user's stats (skill ranks, cooldown reduction...) or ``cooldown_seconds``."""
+        """``cooldown_formula`` over the user's stats (skill ranks, cooldown reduction...) or
+        ``cooldown_seconds``."""
         if ability.cooldown_formula is None:
             return ability.cooldown_seconds
         from .combat import CombatantComponent
@@ -225,11 +273,14 @@ class ActionCombatSystem(System):
             return ability.cooldown_seconds
         state = self.combat.state(entity)
         stats = self.combat.effective_stats(state)
-        context = FormulaContext(stats, state.resources, state.tags, stats, state.resources, state.tags)
+        context = FormulaContext(
+            stats, state.resources, state.tags, stats, state.resources, state.tags
+        )
         return max(0.0, ability.cooldown_formula.evaluate(context))
 
     def _prices(self, entity, ability):
-        """``[(resource, amount)]`` the ability costs now, or ``"cost:<resource>"`` when it cannot be paid."""
+        """``[(resource, amount)]`` the ability costs now, or ``"cost:<resource>"`` when it cannot
+        be paid."""
         if not ability.costs:
             return []
         from .combat import CombatantComponent
@@ -238,11 +289,16 @@ class ActionCombatSystem(System):
             return f"cost:{ability.costs[0].resource}"
         state = self.combat.state(entity)
         stats = self.combat.effective_stats(state)
-        context = FormulaContext(stats, state.resources, state.tags, stats, state.resources, state.tags)
+        context = FormulaContext(
+            stats, state.resources, state.tags, stats, state.resources, state.tags
+        )
         prices = []
         for cost in ability.costs:
             amount = cost.amount.evaluate(context)
-            if not state.resources.contains(cost.resource) or state.resources.current(cost.resource) < amount:
+            if (
+                not state.resources.contains(cost.resource)
+                or state.resources.current(cost.resource) < amount
+            ):
                 return f"cost:{cost.resource}"
             prices.append((cost.resource, amount))
         return prices
@@ -272,7 +328,12 @@ class ActionCombatSystem(System):
         x, y = world_position(entity)
         found = []
         for other, hurtbox in scene.query(Hurtbox2DComponent):
-            if other is entity or not hurtbox.enabled or (team and hurtbox.team == team) or not other.has(Transform):
+            if (
+                other is entity
+                or not hurtbox.enabled
+                or (team and hurtbox.team == team)
+                or not other.has(Transform)
+            ):
                 continue
             combatant = other.try_get(CombatantComponent)
             if combatant is not None and combatant.state is not None and combatant.state.dead:
@@ -363,7 +424,9 @@ class ActionCombatSystem(System):
             controller = None if entity is None else entity.try_get(CharacterController2DComponent)
             if controller is not None:
                 scale = ability.move_while_acting
-                controller.set_intent(controller.intent_x * scale, controller.intent_y * scale, jump=controller.jump)
+                controller.set_intent(
+                    controller.intent_x * scale, controller.intent_y * scale, jump=controller.jump
+                )
 
     def _check_lock(self, entity, spec, scene):
         if not spec.lock_target_id:

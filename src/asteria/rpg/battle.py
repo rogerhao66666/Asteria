@@ -52,7 +52,9 @@ class PartyMember:
     initiative: float = 0.0
     initiative_stat: str = ""
 
-    def __init__(self, member_id, side, subject, *, ability_ids=(), initiative=0.0, initiative_stat=""):
+    def __init__(
+        self, member_id, side, subject, *, ability_ids=(), initiative=0.0, initiative_stat=""
+    ):
         if not isinstance(subject, GameplaySubject):
             raise TypeError("subject must be GameplaySubject")
         object.__setattr__(self, "member_id", _id(member_id, "member_id"))
@@ -68,7 +70,8 @@ class PartyMember:
 
     @property
     def current_initiative(self):
-        """Initiative now: the ``initiative_stat`` of the subject when named (so speed changes in battle -
+        """Initiative now: the ``initiative_stat`` of the subject when named (so speed changes in
+        battle -
         haste, slow - move later turns), else the fixed ``initiative``."""
         stats = self.subject.stats
         if self.initiative_stat and stats.contains(self.initiative_stat):
@@ -196,7 +199,9 @@ class TurnQueue:
             raise KeyError(member.member_id)
         self._source = tuple(source)
         self._pending = [
-            TurnEntry(x.member_id, x.side, member.initiative) if x.member_id == member.member_id else x
+            TurnEntry(x.member_id, x.side, member.initiative)
+            if x.member_id == member.member_id
+            else x
             for x in self._pending
         ]
 
@@ -210,7 +215,10 @@ class TurnQueue:
             "version": 1,
             "policy": self.policy.value,
             "round_index": self._round,
-            "pending": [{"member_id": x.member_id, "side": x.side, "initiative": x.initiative} for x in self._pending],
+            "pending": [
+                {"member_id": x.member_id, "side": x.side, "initiative": x.initiative}
+                for x in self._pending
+            ],
         }
 
     @classmethod
@@ -221,7 +229,9 @@ class TurnQueue:
         result.policy = TurnOrderPolicy(data["policy"])
         result._source = tuple(members)
         result._round = int(data["round_index"])
-        result._pending = [TurnEntry(x["member_id"], x["side"], x["initiative"]) for x in data["pending"]]
+        result._pending = [
+            TurnEntry(x["member_id"], x["side"], x["initiative"]) for x in data["pending"]
+        ]
         return result
 
 
@@ -326,8 +336,12 @@ class BattleRuntime:
             raise ValueError("duplicate battle member id")
         self.members = {m.member_id: m for m in members}
         self._base_is_active = self.is_active
-        self.combatants = CombatantLifecycleRuntime(members, hooks=hooks, initial_active=self._base_is_active)
-        self.is_active = lambda member: self.combatants.is_active(member) and self._base_is_active(member)
+        self.combatants = CombatantLifecycleRuntime(
+            members, hooks=hooks, initial_active=self._base_is_active
+        )
+        self.is_active = lambda member: (
+            self.combatants.is_active(member) and self._base_is_active(member)
+        )
         self.objectives = BattleObjectiveRuntime(objective_definitions, hooks=hooks)
         self.escape_rules = {}
         for rule in escape_rules:
@@ -339,7 +353,8 @@ class BattleRuntime:
         self._escaped_sides = set()
         self._transform_stacks = {}
         self.ability_runtime = ability_runtime
-        self.cooldowns = {}  # member id -> {ability id: turns left} (AbilityDefinition.cooldown_turns)
+        # member id -> {ability id: turns left} (AbilityDefinition.cooldown_turns)
+        self.cooldowns = {}
         self._used_this_turn = set()
         self.battle_resources = BattleResourceRuntime(resource_definitions, members, hooks=hooks)
         self.interactions = InteractionResolver(interaction_rules, outcome_checks, hooks=hooks)
@@ -371,7 +386,9 @@ class BattleRuntime:
             self.turn_queue = self.scheduler
         self.action_timing = BattleActionTimingRuntime(action_timing_definitions)
         self.action_sequences = ActionSequenceRuntime(action_sequence_definitions)
-        self.gauge_compositions = BattleGaugeCompositionRuntime(gauge_composition_definitions, hooks=hooks)
+        self.gauge_compositions = BattleGaugeCompositionRuntime(
+            gauge_composition_definitions, hooks=hooks
+        )
         self.reactions = ReactionRuntime(reaction_definitions, hooks=hooks)
         self.enemy_ai = EnemyAIRuntime(
             enemy_ai_definitions,
@@ -401,12 +418,16 @@ class BattleRuntime:
         return self.combatants.can_act(member_id) and self._base_is_active(member)
 
     def incapacitate(self, member_id, *, state_id="incapacitated", targetable=True, reason=""):
-        state = self.combatants.incapacitate(member_id, state_id=state_id, targetable=targetable, reason=reason)
+        state = self.combatants.incapacitate(
+            member_id, state_id=state_id, targetable=targetable, reason=reason
+        )
         self.turn_queue.remove_pending(member_id)
         return state
 
     def revive(self, member_id, *, state_id="active", targetable=True, reason=""):
-        return self.combatants.revive(member_id, state_id=state_id, targetable=targetable, reason=reason)
+        return self.combatants.revive(
+            member_id, state_id=state_id, targetable=targetable, reason=reason
+        )
 
     def remove_combatant(self, member_id, *, state_id="removed", reason=""):
         state = self.combatants.remove(member_id, state_id=state_id, reason=reason)
@@ -438,7 +459,9 @@ class BattleRuntime:
         if owner_id is not None:
             owner_state = self.combatants.state(owner_id)
             generation = owner_state.summon_generation + 1
-        self.combatants.register(member.member_id, summon_owner_id=owner_id, summon_generation=generation)
+        self.combatants.register(
+            member.member_id, summon_owner_id=owner_id, summon_generation=generation
+        )
         self.battle_resources.register_member(member)
         self.targeting.members[member.member_id] = member
         self.turn_queue.register_member(member, join_current_round=join_current_round)
@@ -496,8 +519,13 @@ class BattleRuntime:
         if result.succeeded:
             self._escaped_sides.add(rule.side)
             for member in tuple(self.parties[rule.side].members):
-                if member.member_id in self.members and self.combatants.state(member.member_id).present:
-                    self.remove_combatant(member.member_id, state_id="escaped", reason=rule.rule_id)
+                if (
+                    member.member_id in self.members
+                    and self.combatants.state(member.member_id).present
+                ):
+                    self.remove_combatant(
+                        member.member_id, state_id="escaped", reason=rule.rule_id
+                    )
             self.set_objective_flag(f"escape.{rule.side}", True)
         return result
 
@@ -522,20 +550,33 @@ class BattleRuntime:
         actor = self.member(action.actor_id)
         if not self.can_act(actor.member_id):
             raise ValueError("actor cannot act in current combatant lifecycle state")
-        granted = getattr(self, "granted_abilities", ())  # e.g. the ability of an item used in battle
-        if action.ability_id not in actor.ability_ids and (actor.member_id, action.ability_id) not in granted:
+        granted = getattr(
+            self, "granted_abilities", ()
+        )  # e.g. the ability of an item used in battle
+        if (
+            action.ability_id not in actor.ability_ids
+            and (actor.member_id, action.ability_id) not in granted
+        ):
             raise ValueError("actor does not know ability")
         availability = self.ability_availability(actor.member_id, action.ability_id)
         if not availability.allowed:
-            raise ValueError(f"ability blocked by active state: {', '.join(availability.blocking_states)}")
+            raise ValueError(
+                f"ability blocked by active state: {', '.join(availability.blocking_states)}"
+            )
         left = self.cooldown_remaining(actor.member_id, action.ability_id)
-        if left and (actor.member_id, action.ability_id) not in self._used_this_turn:  # repeats in one turn (boost)
+        if (
+            left and (actor.member_id, action.ability_id) not in self._used_this_turn
+        ):  # repeats in one turn (boost)
             raise ValueError(f"ability cooling down: {action.ability_id} ({left} turns)")
-        target_resolution = self.resolve_targets(actor.member_id, action.ability_id, action.target_ids, rng=rng)
+        target_resolution = self.resolve_targets(
+            actor.member_id, action.ability_id, action.target_ids, rng=rng
+        )
         if not target_resolution.valid:
             raise ValueError("invalid battle targets: " + ", ".join(target_resolution.errors))
         if target_resolution.selected_ids != action.target_ids:
-            action = BattleAction(action.actor_id, action.ability_id, target_resolution.selected_ids)
+            action = BattleAction(
+                action.actor_id, action.ability_id, target_resolution.selected_ids
+            )
         return action
 
     def submit_action(self, action, *, rng=None):
@@ -553,7 +594,9 @@ class BattleRuntime:
         current_time = float(getattr(self.turn_queue, "current_time", 0.0) or 0.0)
         ready_entry = self.turn_queue.peek()
         if ready_entry is not None and ready_entry.member_id == action.actor_id:
-            current_time = max(current_time, float(getattr(ready_entry, "ready_time", current_time)))
+            current_time = max(
+                current_time, float(getattr(ready_entry, "ready_time", current_time))
+            )
         pending = self.action_timing.begin(action, current_time=current_time)
         if pending is None:
             result = self.execute(action, rng=rng)
@@ -562,13 +605,23 @@ class BattleRuntime:
         actor = self.member(action.actor_id)
         target_subject = self.member(action.target_ids[0]).subject if action.target_ids else None
         committed = self.transactions.commit_start(
-            pending.token, action.actor_id, action.ability_id, actor.subject, target_subject, self.ability_runtime
+            pending.token,
+            action.actor_id,
+            action.ability_id,
+            actor.subject,
+            target_subject,
+            self.ability_runtime,
         )
         emit_hook(
             self.hooks,
             "rpg.battle.action_cast_started",
             source=action.actor_id,
-            data={"action": action, "pending": pending, "timing": definition, "committed_costs": committed},
+            data={
+                "action": action,
+                "pending": pending,
+                "timing": definition,
+                "committed_costs": committed,
+            },
         )
         self.advance_turn(recovery=definition.windup + definition.recovery)
         return pending
@@ -584,23 +637,38 @@ class BattleRuntime:
             )
         results = []
         for pending in self.action_timing.pop_due(float(through_time)):
-            if self.scheduler is not None and self.scheduler.mode == BattleSchedulerMode.CONTINUOUS:
+            if (
+                self.scheduler is not None
+                and self.scheduler.mode == BattleSchedulerMode.CONTINUOUS
+            ):
                 self.scheduler.advance_time(pending.resolve_at)
-            if pending.actor_id not in self.members or not self.combatants.state(pending.actor_id).present:
-                reservation = self.transactions.cancel(pending.token, self.member(pending.actor_id).subject)
+            if (
+                pending.actor_id not in self.members
+                or not self.combatants.state(pending.actor_id).present
+            ):
+                reservation = self.transactions.cancel(
+                    pending.token, self.member(pending.actor_id).subject
+                )
                 emit_hook(
                     self.hooks,
                     "rpg.battle.action_cancelled",
                     source=pending.actor_id,
-                    data={"pending": pending, "reason": "actor_not_present", "reservation": reservation},
+                    data={
+                        "pending": pending,
+                        "reason": "actor_not_present",
+                        "reservation": reservation,
+                    },
                 )
                 continue
             action = BattleAction(pending.actor_id, pending.ability_id, pending.target_ids)
-            # Targets are revalidated at resolution because battle state may have changed during cast.
+            # Targets are revalidated at resolution because battle state may have changed during
+            # cast.
             try:
                 action = self._validate_action(action, rng=rng)
             except ValueError as exc:
-                reservation = self.transactions.cancel(pending.token, self.member(pending.actor_id).subject)
+                reservation = self.transactions.cancel(
+                    pending.token, self.member(pending.actor_id).subject
+                )
                 emit_hook(
                     self.hooks,
                     "rpg.battle.action_cancelled",
@@ -609,7 +677,9 @@ class BattleRuntime:
                 )
                 continue
             reservation = self.transactions.consume(pending.token)
-            wrapped = self.execute(action, rng=rng, prepaid_costs=None if reservation is None else reservation.costs)
+            wrapped = self.execute(
+                action, rng=rng, prepaid_costs=None if reservation is None else reservation.costs
+            )
             results.append(wrapped)
             emit_hook(
                 self.hooks,
@@ -644,7 +714,11 @@ class BattleRuntime:
         return removed
 
     def shift_timeline(self, member_id, delta, *, include_cast=True):
-        scheduled = self.scheduler.shift_member(member_id, delta) if self.scheduler is not None else tuple()
+        scheduled = (
+            self.scheduler.shift_member(member_id, delta)
+            if self.scheduler is not None
+            else tuple()
+        )
         casting = self.action_timing.shift(member_id, delta) if include_cast else tuple()
         emit_hook(
             self.hooks,
@@ -718,7 +792,9 @@ class BattleRuntime:
             resolved = self.interactions.resolve_value(
                 -float(value), source, member.subject, action_tags=policy.interaction_tags
             )
-            self.periodic_interactions.append((member.member_id, active.state_id, operation.target, resolved))
+            self.periodic_interactions.append(
+                (member.member_id, active.state_id, operation.target, resolved)
+            )
             if resolved.disposition == InteractionDisposition.NULLIFY:
                 return 0.0
             if resolved.disposition == InteractionDisposition.ABSORB:
@@ -741,7 +817,10 @@ class BattleRuntime:
             return BattleActionPreview(action, False, (str(exc),), {})
         actor = self.member(effective.actor_id)
         ids = (actor.member_id, *effective.target_ids)
-        clones = {member_id: _clone_subject(self.member(member_id).subject) for member_id in dict.fromkeys(ids)}
+        clones = {
+            member_id: _clone_subject(self.member(member_id).subject)
+            for member_id in dict.fromkeys(ids)
+        }
         record = []
         transform = self._interaction_transform(
             actor,
@@ -766,7 +845,11 @@ class BattleRuntime:
             if changes:
                 deltas[member_id] = changes
         return BattleActionPreview(
-            effective, result.executed, tuple(result.errors), deltas, tuple(record) if result.executed else ()
+            effective,
+            result.executed,
+            tuple(result.errors),
+            deltas,
+            tuple(record) if result.executed else (),
         )
 
     def execute(self, action, *, rng=None, prepaid_costs=None):
@@ -784,12 +867,21 @@ class BattleRuntime:
         target_values = tuple(AbilityTarget(x.member_id, x.subject) for x in targets)
         record = []
         transform = self._interaction_transform(
-            actor, action.ability_id, (actor.subject, {x.member_id: x.subject for x in targets}), record
+            actor,
+            action.ability_id,
+            (actor.subject, {x.member_id: x.subject for x in targets}),
+            record,
         )
         result = self.ability_runtime.execute(
-            action.ability_id, source, target_values, prepaid_costs=prepaid_costs, value_transform=transform
+            action.ability_id,
+            source,
+            target_values,
+            prepaid_costs=prepaid_costs,
+            value_transform=transform,
         )
-        wrapped = BattleActionResult(effective_action, result, tuple(record) if result.executed else ())
+        wrapped = BattleActionResult(
+            effective_action, result, tuple(record) if result.executed else ()
+        )
         if result.executed:
             self._start_cooldown(actor.member_id, action.ability_id)
         emit_hook(
@@ -874,7 +966,12 @@ class BattleRuntime:
             self.hooks,
             "rpg.battle.sequence_finished",
             source=plan.participant_ids[0],
-            data={"plan": plan, "results": tuple(results), "failures": tuple(failures), "completed": completed},
+            data={
+                "plan": plan,
+                "results": tuple(results),
+                "failures": tuple(failures),
+                "completed": completed,
+            },
         )
         return plan, tuple(results), tuple(failures)
 
@@ -891,7 +988,12 @@ class BattleRuntime:
             raise KeyError(actor_id)
         if not self.can_act(actor_id):
             return ()
-        emit_hook(self.hooks, "rpg.battle.ai.turn_started", source=actor_id, data={"battle": self, "ai_id": str(ai_id)})
+        emit_hook(
+            self.hooks,
+            "rpg.battle.ai.turn_started",
+            source=actor_id,
+            data={"battle": self, "ai_id": str(ai_id)},
+        )
         results = self.enemy_ai.run_ready(self, ai_id, actor_id, rng=rng)
         emit_hook(
             self.hooks,
@@ -912,7 +1014,16 @@ class BattleRuntime:
         return self
 
     def apply_gauge_impact(
-        self, composition_id, source_id, target_id, *, trigger, outcome=None, outcome_tags=(), value=None, rng=None
+        self,
+        composition_id,
+        source_id,
+        target_id,
+        *,
+        trigger,
+        outcome=None,
+        outcome_tags=(),
+        value=None,
+        rng=None,
     ):
         """Compose interaction outcomes into arbitrary battle gauges.
 
@@ -974,7 +1085,11 @@ class BattleRuntime:
             if entry is None:
                 return None
             actor = self.member(entry.member_id)
-            ready_key = (self.turn_queue.round_index, entry.member_id, getattr(entry, "ready_time", None))
+            ready_key = (
+                self.turn_queue.round_index,
+                entry.member_id,
+                getattr(entry, "ready_time", None),
+            )
             if self._resource_ready_entry != ready_key:
                 self.battle_resources.apply_trigger("rpg.battle.turn_ready", (actor.member_id,))
                 self.battle_states.apply_trigger("rpg.battle.turn_ready", (actor,))
@@ -1020,7 +1135,8 @@ class BattleRuntime:
         self._used_this_turn.add((member_id, ability_id))
 
     def _tick_cooldowns(self, member_id):
-        """End of ``member_id``'s turn: its cooldowns count down, except those started in this turn."""
+        """End of ``member_id``'s turn: its cooldowns count down, except those started in this
+        turn."""
         member_id = str(member_id)
         waiting = self.cooldowns.get(member_id, {})
         for ability_id in list(waiting):
@@ -1039,7 +1155,9 @@ class BattleRuntime:
         if entry is not None:
             self._resource_ready_entry = None
             self.battle_resources.apply_trigger("rpg.battle.turn_ended", (entry.member_id,))
-            self.battle_states.apply_trigger("rpg.battle.turn_ended", (self.member(entry.member_id),))
+            self.battle_states.apply_trigger(
+                "rpg.battle.turn_ended", (self.member(entry.member_id),)
+            )
             emit_hook(
                 self.hooks,
                 "rpg.battle.turn_ended",
@@ -1107,7 +1225,10 @@ class BattleRuntime:
             active_sides = []
             defeated = []
             for side, party in self.parties.items():
-                if any(member.member_id in self.members and self.is_active(member) for member in party.members):
+                if any(
+                    member.member_id in self.members and self.is_active(member)
+                    for member in party.members
+                ):
                     active_sides.append(side)
                 else:
                     defeated.append(side)

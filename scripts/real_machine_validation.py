@@ -44,7 +44,9 @@ def check_gpu_window(out):
     backend = ModernglRuntimeBackend()
     backend.open("Asteria GPU window validation", 640, 360)
     renderer = backend.ctx.info["GL_RENDERER"]
-    texture = backend.load_texture("hero", str(PROJECT / "playable_assets" / "battle" / "hero_01.png"))
+    texture = backend.load_texture(
+        "hero", str(PROJECT / "playable_assets" / "battle" / "hero_01.png")
+    )
     profiler = RuntimeProfiler(target_fps=60)
     sprites = 400
     for frame in range(240):
@@ -54,7 +56,9 @@ def check_gpu_window(out):
         for i in range(sprites):
             x = (i * 37 + frame * 3) % 600
             y = (i * 53) % 320
-            backend.draw_texture(texture, TextureDraw("hero", (64 * (frame // 8 % 4 + 1), 0, 64, 64), x, y, 32, 32))
+            backend.draw_texture(
+                texture, TextureDraw("hero", (64 * (frame // 8 % 4 + 1), 0, 64, 64), x, y, 32, 32)
+            )
         with profiler.section("present"):
             backend.end_frame()
         profiler.end_frame()
@@ -71,7 +75,8 @@ def check_gpu_window(out):
         "gpu_window",
         "PASS" if ok else "FAIL",
         f"ModernGL window on '{renderer}': {sprites} sprites/frame for 240 frames, "
-        f"{report['pacing']['measured_fps']} fps, read-back framebuffer has {distinct} sampled colours",
+        f"{report['pacing']['measured_fps']} fps, read-back framebuffer has {distinct} sampled "
+        f"colours",
         renderer=renderer,
         pacing=report["pacing"],
         frame=report["frame"],
@@ -91,7 +96,11 @@ def check_input(out):
     source = PygameInputSource(pygame)
     tracker = InputActionTracker(InputActionMap.default())
     seen = {}
-    for key, action in ((pygame.K_RIGHT, "move_right"), (pygame.K_RETURN, "confirm"), (pygame.K_ESCAPE, "cancel")):
+    for key, action in (
+        (pygame.K_RIGHT, "move_right"),
+        (pygame.K_RETURN, "confirm"),
+        (pygame.K_ESCAPE, "cancel"),
+    ):
         pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=key))
         source.handle_events(pygame.event.get())
         tracker.update(source.raw_state())
@@ -104,11 +113,15 @@ def check_input(out):
     keyboard = result(
         "input_keyboard_event_queue",
         "PASS" if all(seen.values()) else "FAIL",
-        f"Key events posted to the real {driver} window's SDL event queue reached the input map: {seen}",
-        note="Synthetic events through the OS window queue; a physical key press is a separate manual item.",
+        f"Key events posted to the real {driver} window's SDL event queue reached the input "
+        f"map: {seen}",
+        note="Synthetic events through the OS window queue; a physical key press is a separate "
+        "manual item.",
     )
     physical = result(
-        "input_keyboard_physical", "NOT EXECUTED", "Needs a person pressing keys in the game window (procedure M1)."
+        "input_keyboard_physical",
+        "NOT EXECUTED",
+        "Needs a person pressing keys in the game window (procedure M1).",
     )
     controller = result(
         "input_controller",
@@ -144,7 +157,8 @@ def check_audio(out):
         result(
             "audio_playback_device",
             "PASS" if ok else "FAIL",
-            f"CoreAudio device opened {init}; hit.wav ({length:.3f}s) kept its channel busy for {elapsed:.3f}s; "
+            f"CoreAudio device opened {init}; hit.wav ({length:.3f}s) kept its channel busy "
+            f"for {elapsed:.3f}s; "
             f"battle_theme.ogg streaming={music_busy}",
             note="Device-level playback only; audible confirmation is manual item M3.",
         ),
@@ -153,7 +167,8 @@ def check_audio(out):
             "audio_latency",
             "NOT EXECUTED",
             "Output latency needs an acoustic or loopback measurement (procedure M4); "
-            "the configured mixer buffer is not reported by pygame and is not presented as latency.",
+            "the configured mixer buffer is not reported by pygame and is not presented as "
+            "latency.",
         ),
     ]
 
@@ -165,7 +180,9 @@ def _runtime(battle_presentation="canonical", backend=None):
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
-    runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), PROJECT, backend=backend)
+    runtime = PlayableTestRuntime(
+        project, project.game_start.instantiate(project), PROJECT, backend=backend
+    )
     runtime.manifest["battle"]["presentation"] = {"adapter": battle_presentation}
     runtime._battle_presentation = create_battle_presentation_adapter(runtime)
     return runtime
@@ -192,7 +209,12 @@ def check_battle_frame_pacing(out):
     while time.perf_counter() - start < 10.0 and runtime.running:
         dt = min(runtime.clock.tick(60) / 1000.0, 0.05)
         events = pygame.event.get()
-        if not adapter.busy() and runtime.game.mode == "battle" and not runtime._victory and frames % 20 == 0:
+        if (
+            not adapter.busy()
+            and runtime.game.mode == "battle"
+            and not runtime._victory
+            and frames % 20 == 0
+        ):
             key = (pygame.K_2, pygame.K_1, pygame.K_1)[uses % 3]
             events.append(pygame.event.Event(pygame.KEYDOWN, key=key))
             uses += 1
@@ -227,8 +249,10 @@ def check_battle_frame_pacing(out):
         result(
             "animation_smoothness",
             "PASS" if smooth_ok else "FAIL",
-            f"Canonical battle screen in a real {driver} window: combatant sprites drawn, boss animation "
-            f"advanced {frame_changes} frames in {elapsed:.1f}s ({frame_changes / elapsed:.1f}/s); "
+            f"Canonical battle screen in a real {driver} window: combatant sprites drawn, boss "
+            f"animation "
+            f"advanced {frame_changes} frames in {elapsed:.1f}s "
+            f"({frame_changes / elapsed:.1f}/s); "
             f"{uses} skills used through the key-event queue; VFX particles peaked at "
             f"{report['counters'].get('particles', {}).get('max', 0):g}",
             screenshots=shots,
@@ -237,8 +261,10 @@ def check_battle_frame_pacing(out):
         result(
             "frame_pacing",
             "PASS" if pacing_ok else "FAIL",
-            f"{frames} frames: {pacing['measured_fps']} fps (target 60), jitter {pacing['interval_jitter_ms']} ms, "
-            f"p99 interval {pacing['interval_p99_ms']} ms, {pacing['frames_over_budget']} frames over 1.5x budget",
+            f"{frames} frames: {pacing['measured_fps']} fps (target 60), jitter "
+            f"{pacing['interval_jitter_ms']} ms, "
+            f"p99 interval {pacing['interval_p99_ms']} ms, {pacing['frames_over_budget']} "
+            f"frames over 1.5x budget",
             pacing=pacing,
             frame=report["frame"],
             sections={k: v["mean_ms"] for k, v in report["sections"].items()},
@@ -248,7 +274,8 @@ def check_battle_frame_pacing(out):
 
 
 def check_field_camera(out):
-    """CAM-02: the boss event's camera focus in a real window (zoom, map coverage, boss framing)."""
+    """CAM-02: the boss event's camera focus in a real window (zoom, map coverage, boss
+    framing)."""
     import pygame
 
     from asteria.core import Transform
@@ -257,7 +284,9 @@ def check_field_camera(out):
     runtime.open()
     driver = pygame.display.get_driver()
     runtime._ui_mode = "field"
-    boss = next(e for e in runtime.game.scene.entities() if e.name == "Astral Tyrant").get(Transform)
+    boss = next(e for e in runtime.game.scene.entities() if e.name == "Astral Tyrant").get(
+        Transform
+    )
 
     def run(seconds):
         start = time.perf_counter()
@@ -274,7 +303,12 @@ def check_field_camera(out):
     after = runtime._field_screen_xy(boss.x, boss.y)
     zoom = runtime.field_camera.zoom
     bx, by, bw, bh = runtime.field_camera.background_rect()
-    covered = bx <= 0 and by <= 0 and bx + bw >= runtime.width - 1e-6 and by + bh >= runtime.height - 1e-6
+    covered = (
+        bx <= 0
+        and by <= 0
+        and bx + bw >= runtime.width - 1e-6
+        and by + bh >= runtime.height - 1e-6
+    )
     pygame.image.save(runtime.screen, str(out / "field_camera_boss_focus.png"))
     runtime.close()
     centre = (runtime.width / 2, runtime.height / 2)
@@ -283,8 +317,10 @@ def check_field_camera(out):
     return result(
         "field_camera_boss_focus",
         "PASS" if ok else "FAIL",
-        f"Boss event camera in a real {driver} window: zoom {zoom:.2f} (authored 1.6), map image covers the "
-        f"screen={covered}, boss moved from x={before[0]:.0f} to x={after[0]:.0f} (screen centre {centre[0]:.0f})",
+        f"Boss event camera in a real {driver} window: zoom {zoom:.2f} (authored 1.6), map "
+        f"image covers the "
+        f"screen={covered}, boss moved from x={before[0]:.0f} to x={after[0]:.0f} (screen "
+        f"centre {centre[0]:.0f})",
         screenshots=["field_camera_home.png", "field_camera_boss_focus.png"],
         note="Whether the move feels right to a player is part of manual item M5.",
     )
@@ -321,12 +357,14 @@ def check_editor_playtest(out):
         "editor_to_runtime_playtest",
         "PASS" if ok else "FAIL",
         f"Qt platform '{platform_name}': Run Project started the runtime process={started}, "
-        f"still running after 4 s={alive_after}, Stop Play returned={stopped}, process exited={exited}",
+        f"still running after 4 s={alive_after}, Stop Play returned={stopped}, process "
+        f"exited={exited}",
     )
 
 
 def check_editor_tools(out):
-    """CB10 editors in a real Cocoa editor window: each tool is driven, measured and screenshotted (nothing saved)."""
+    """CB10 editors in a real Cocoa editor window: each tool is driven, measured and screenshotted
+    (nothing saved)."""
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
@@ -364,7 +402,9 @@ def check_editor_tools(out):
     window.ui_workspace.setCurrentWidget(window.vfx_editor)
     checks["vfx_tool"] = window.vfx_editor.select_vfx("battle.fx.flame")
     window.vfx_editor.scrub.setValue(450)
-    checks["vfx_preview"] = window.vfx_editor._render() is not None and not window.vfx_editor.stage.pixmap.isNull()
+    checks["vfx_preview"] = (
+        window.vfx_editor._render() is not None and not window.vfx_editor.stage.pixmap.isNull()
+    )
     shot("editor_vfx.png")
     window.workspace.set_mode(WorkspaceMode.RPG)
     window.rpg_workspace.setCurrentWidget(window.enemy_ai_editor)
@@ -379,7 +419,9 @@ def check_editor_tools(out):
     family = window.rpg_authoring.child
     family.category.setCurrentIndex(family.category.findData("enemies"))
     family.select_ids(family._ids[:3])
-    checks["multi_select_batch_fields"] = len(family.selected_ids) == 3 and "stats.power" in family.batch_fields()
+    checks["multi_select_batch_fields"] = (
+        len(family.selected_ids) == 3 and "stats.power" in family.batch_fields()
+    )
     shot("editor_records_multiselect.png")
     db = window.document.project.rpg_database
     encounter = db.encounters["boss_room"]
@@ -387,13 +429,20 @@ def check_editor_tools(out):
     window.problems_widget.refresh()
     window.problems_dock.raise_()
     problem = next(
-        (p for p in window.problems_widget.problems if p.target[:3] == ("record", "rpg", "encounters")), None
+        (
+            p
+            for p in window.problems_widget.problems
+            if p.target[:3] == ("record", "rpg", "encounters")
+        ),
+        None,
     )
     checks["problems_panel"] = problem is not None and window.navigate_to_problem(problem)
     shot("editor_problems.png")
     db.enemies["mender_wisp"] = removed
     window.problems_widget.refresh()
-    checks["problems_clear_again"] = window.problems_widget.problems == [] and encounter is db.encounters["boss_room"]
+    checks["problems_clear_again"] = (
+        window.problems_widget.problems == [] and encounter is db.encounters["boss_room"]
+    )
     window.workspace.set_mode(WorkspaceMode.CODE)
     code = window.code_workspace
     code.editor.setPlainText('scene = project.scene_named("Map")\nscene.')
@@ -421,12 +470,14 @@ def check_editor_tools(out):
         f"Qt platform '{app.platformName()}': "
         + ", ".join(f"{k}={'ok' if v else 'FAILED'}" for k, v in checks.items()),
         screenshots=shots,
-        note="Screenshots are reviewed by the engineer; hands-on use by a person is not part of this check.",
+        note="Screenshots are reviewed by the engineer; hands-on use by a person is not part of "
+        "this check.",
     )
 
 
 def check_editor_d17(out):
-    """D17 editor surfaces in a real Cocoa editor: export, state machine, composition, trees, input map, profiler."""
+    """D17 editor surfaces in a real Cocoa editor: export, state machine, composition, trees, input
+    map, profiler."""
     import tempfile
 
     from PySide6.QtWidgets import QApplication, QGraphicsPixmapItem
@@ -461,14 +512,18 @@ def check_editor_d17(out):
     # Export Game first, while the document is clean (export saves a dirty project).
     with tempfile.TemporaryDirectory() as tmp:
         exported = window.export_game(Path(tmp) / "dist", name="RM Export", pyz=True, app=True)
-        checks["export_game"] = exported["pyz"].is_file() and (exported["app"] / "Contents" / "Info.plist").is_file()
+        checks["export_game"] = (
+            exported["pyz"].is_file() and (exported["app"] / "Contents" / "Info.plist").is_file()
+        )
     sheet = "battle.combatant.hero_01"
     window.workspace.set_mode(WorkspaceMode.UI)
     machine = window.state_machine_editor
     window.ui_workspace.setCurrentWidget(machine)
     machine.refresh(select=sheet)
     machine._try(lambda: machine.api.create(sheet), "Created")
-    checks["animation_states"] = bool(machine.add_state("attack", "attack")) and set(machine.graph.nodes) >= {
+    checks["animation_states"] = bool(machine.add_state("attack", "attack")) and set(
+        machine.graph.nodes
+    ) >= {
         "idle",
         "attack",
     }
@@ -486,7 +541,9 @@ def check_editor_d17(out):
     composition.attach_scale.setValue(0.4)
     composition.item_frame.setValue(5)
     composition.attach_from_form()
-    pixmaps = [i for i in composition.preview.scene().items() if isinstance(i, QGraphicsPixmapItem)]
+    pixmaps = [
+        i for i in composition.preview.scene().items() if isinstance(i, QGraphicsPixmapItem)
+    ]
     checks["character_composition"] = composition.attachments.count() == 1 and len(pixmaps) == 2
     shot("editor_character_composition.png")
     inputs = window.input_map_editor
@@ -502,7 +559,9 @@ def check_editor_d17(out):
     trees = window.behavior_tree_editor
     window.rpg_workspace.setCurrentWidget(trees)
     checks["behavior_trees"] = bool(
-        trees.create_tree("rm_sentry", "selector") and trees.add_child("sequence") and trees.select_node((1,))
+        trees.create_tree("rm_sentry", "selector")
+        and trees.add_child("sequence")
+        and trees.select_node((1,))
     )
     shot("editor_behavior_trees.png")
     # Profiler dock reads the running game (Play), then Stop.
@@ -549,11 +608,13 @@ def check_runtime_exit_and_recovery(out):
         driver = (
             "import sys,time,pygame;sys.path.insert(0,{src!r});"
             "from asteria.editor import EditorDocument;from asteria.project import Project;"
-            "from asteria.runtime.playable_test_runtime import PlayableTestRuntime;from pathlib import Path;"
+            "from asteria.runtime.playable_test_runtime import PlayableTestRuntime;from pathlib "
+            "import Path;"
             "p=Project.load_json(Path({proj!r}),EditorDocument().component_registry);"
             "rt=PlayableTestRuntime(p,p.game_start.instantiate(p),Path({root!r}));rt.open();rt._ui_mode='field';"
             "rt.game.set_player_position(7.0,3.0);rt.save_playtest();print('SAVED',flush=True);"
-            "[ (rt._frame(pygame.event.get(),0.016),pygame.display.flip(),time.sleep(0.016)) for _ in range(100000)]"
+            "[ (rt._frame(pygame.event.get(),0.016),pygame.display.flip(),time.sleep(0.016)) "
+            "for _ in range(100000)]"
         ).format(src=str(REPO / "src"), proj=str(PROJECT_FILE), root=str(PROJECT))
         child = subprocess.Popen([sys.executable, "-c", driver], stdout=subprocess.PIPE, text=True)
         line = ""
@@ -582,13 +643,15 @@ def check_runtime_exit_and_recovery(out):
         result(
             "runtime_exit",
             "PASS" if clean else "FAIL",
-            f"Real-window runtime ran 90 frames and exited with code {finished.returncode} in {clean_time:.1f}s",
+            f"Real-window runtime ran 90 frames and exited with code {finished.returncode} in "
+            f"{clean_time:.1f}s",
             stderr=finished.stderr[-500:],
         ),
         result(
             "runtime_recovery",
             "PASS" if recovered else "FAIL",
-            f"Runtime saved ({line}), was killed with SIGKILL (exit {child.returncode}); the save reloaded "
+            f"Runtime saved ({line}), was killed with SIGKILL (exit {child.returncode}); the "
+            f"save reloaded "
             f"with player position {tuple(restored.player_position)}",
         ),
     ]
@@ -598,7 +661,8 @@ def check_runtime_exit_and_recovery(out):
 
 
 def _pump(runtime, seconds, *, before=None, after=None):
-    """Run real frames (ticked at 60 fps, flipped to the window) for ``seconds``; returns the frame count."""
+    """Run real frames (ticked at 60 fps, flipped to the window) for ``seconds``; returns the frame
+    count."""
     import pygame
 
     start, frames = time.perf_counter(), 0
@@ -621,7 +685,8 @@ def _key(key, up=False):
 
 
 def check_cutscene(out):
-    """EVT-03 / EVT-04: a skippable cutscene (move, camera, VFX, fade in parallel) through real key events."""
+    """EVT-03 / EVT-04: a skippable cutscene (move, camera, VFX, fade in parallel) through real key
+    events."""
     import pygame
 
     from asteria.core import Transform
@@ -641,11 +706,16 @@ def check_cutscene(out):
     tracks = [
         track("hero", ("MOVE", {"entity": "player", "x": 20, "y": 0, "duration": 1.5})),
         track("camera", world("CAMERA_FOCUS", entity="Astral Tyrant", zoom=1.4, blend=0.3)),
-        track("effects", world("PLAY_VFX", wait=0.3, asset_id="battle.fx.flame", entity="Astral Tyrant")),
+        track(
+            "effects",
+            world("PLAY_VFX", wait=0.3, asset_id="battle.fx.flame", entity="Astral Tyrant"),
+        ),
     ]
     program = EventProgram(
         (
-            EventInstruction("SEQUENCE", {"tracks": tracks, "cutscene": True, "skippable": True, "wait": "all"}),
+            EventInstruction(
+                "SEQUENCE", {"tracks": tracks, "cutscene": True, "skippable": True, "wait": "all"}
+            ),
             EventInstruction("WORLD", {"command": "CAMERA_RELEASE", "args": {"blend": 0}}),
             EventInstruction("SET_SWITCH", {"name": "rm_cutscene_done", "value": True}),
         )
@@ -674,10 +744,12 @@ def check_cutscene(out):
     return result(
         "cutscene_real_window",
         "PASS" if ok else "FAIL",
-        f"Real {driver} window: after 0.6 s the tween had moved the player to x={mid_x:.1f} of 20 with the arrow "
+        f"Real {driver} window: after 0.6 s the tween had moved the player to x={mid_x:.1f} of "
+        f"20 with the arrow "
         f"key held (input locked), camera zoom {zoom:.2f}, letterbox pixel {letterbox}, "
         f"{vfx} VFX at peak (parallel track); "
-        f"Esc (real key event) skipped to x={end_x:.1f}, switch set={done}, cutscene active={active}, "
+        f"Esc (real key event) skipped to x={end_x:.1f}, switch set={done}, cutscene "
+        f"active={active}, "
         f"errors={len(errors)}",
         screenshots=["cutscene_mid.png", "cutscene_skipped.png"],
         note="Whether the cutscene reads well to a player is part of manual item M5.",
@@ -725,7 +797,9 @@ def check_battle_features(out):
     from asteria.runtime.camera import Camera2D
 
     layout = adapter.screen.composer.layout
-    frame = adapter.screen.animation.build_frame(Camera2D(width=layout.virtual_width, height=layout.virtual_height))
+    frame = adapter.screen.animation.build_frame(
+        Camera2D(width=layout.virtual_width, height=layout.virtual_height)
+    )
     parts = sum(1 for d in frame.combatant_draws if d.texture_asset_id == "battle.fx.heal")
     composed = len(adapter.screen.animation.compositions)
     runtime.close()
@@ -737,8 +811,10 @@ def check_battle_features(out):
         result(
             "battle_boss_intro_camera",
             "PASS" if intro_ok else "FAIL",
-            f"Real {driver} window, boss encounter: camera zoom peaked at {peak:.2f} (authored 1.35) and settled at "
-            f"{settled:.2f}; commands blocked during the intro={busy[0] if busy else None}, free afterwards="
+            f"Real {driver} window, boss encounter: camera zoom peaked at {peak:.2f} (authored "
+            f"1.35) and settled at "
+            f"{settled:.2f}; commands blocked during the intro={busy[0] if busy else None}, "
+            f"free afterwards="
             f"{not busy[-1] if busy else None}",
             screenshots=shots[:1],
             note="How the intro feels is part of manual item M5.",
@@ -746,7 +822,8 @@ def check_battle_features(out):
         result(
             "battle_layered_characters",
             "PASS" if layered_ok else "FAIL",
-            f"{composed} heroes carry an authored socket attachment + back layer; {parts} part draws in the frame "
+            f"{composed} heroes carry an authored socket attachment + back layer; {parts} part "
+            f"draws in the frame "
             f"(expected >= {2 * composed}); drawn in a real {driver} window",
             screenshots=shots[1:],
         ),
@@ -794,7 +871,9 @@ def check_game_menus(out):
         # rebind "move_right" to D through the Controls screen, then walk with it
         from asteria.runtime.input_rebinding import ControlsMenu
 
-        runtime.controls_menu = ControlsMenu(runtime.project.input_map, runtime.settings.input_overrides)
+        runtime.controls_menu = ControlsMenu(
+            runtime.project.input_map, runtime.settings.input_overrides
+        )
         runtime._ui_mode = "controls"
         rows = [action for action, _ in runtime.controls_menu.rows()]
         target = rows.index("move_right")
@@ -834,17 +913,20 @@ def check_game_menus(out):
         result(
             "save_slots_real_window",
             "PASS" if saved and abs(loaded - 11.0) < 1e-6 else "FAIL",
-            f"Save to slot 1 through the slot screen (overwrite confirmed with a second Enter) wrote the file="
+            f"Save to slot 1 through the slot screen (overwrite confirmed with a second Enter) "
+            f"wrote the file="
             f"{saved}; loading slot 1 restored player x={loaded:.1f} (saved 11.0)",
             screenshots=["menu_save_slots.png"],
         ),
         result(
             "controls_rebinding_real_window",
             "PASS" if walked > 5.0 else "FAIL",
-            f"move_right rebound to D on the Controls screen (bindings now {rebound or 'n/a'}); holding D moved the "
+            f"move_right rebound to D on the Controls screen (bindings now "
+            f"{rebound or 'n/a'}); holding D moved the "
             f"player to x={walked:.1f} in 0.6 s",
             screenshots=["menu_controls.png"],
-            note="Physical key presses by a person remain manual item M1; gamepad rebinding needs a controller (M2).",
+            note="Physical key presses by a person remain manual item M1; gamepad rebinding "
+            "needs a controller (M2).",
         ),
     ]
 
@@ -877,7 +959,8 @@ def check_follow_camera(out):
     return result(
         "field_follow_camera",
         "PASS" if ok else "FAIL",
-        f"Real {driver} window: follow zoom {end[2]:.2f}; the player walked from x=-60 to x={player_x:.1f} and the "
+        f"Real {driver} window: follow zoom {end[2]:.2f}; the player walked from x=-60 to "
+        f"x={player_x:.1f} and the "
         f"camera centre moved {moved:.1f} world units with it",
         screenshots=["follow_camera_start.png", "follow_camera_end.png"],
     )
@@ -898,7 +981,12 @@ def check_packaged_app(out):
         exe = built["app"] / "Contents" / "MacOS" / "Asteria_RM"
         t0 = time.perf_counter()
         proc = subprocess.run(
-            [str(exe), "--frames", "120"], cwd=tmp, env=env, capture_output=True, text=True, timeout=180
+            [str(exe), "--frames", "120"],
+            cwd=tmp,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=180,
         )
         elapsed = time.perf_counter() - t0
         size = built["pyz"].stat().st_size
@@ -906,7 +994,8 @@ def check_packaged_app(out):
     return result(
         "packaged_app_real_window",
         "PASS" if ok else "FAIL",
-        f"Asteria RM.app ({size / 1e6:.1f} MB .pyz inside) launched from a temporary folder outside the repo, ran "
+        f"Asteria RM.app ({size / 1e6:.1f} MB .pyz inside) launched from a temporary folder "
+        f"outside the repo, ran "
         f"120 frames in a real window and exited {proc.returncode} in {elapsed:.1f}s",
         stderr=proc.stderr[-800:],
         note="Double-clicking the .app in Finder (Gatekeeper, unsigned app) is manual item M6.",
@@ -977,8 +1066,10 @@ def on_frame(frame):
 frames = run_tilemap_field(field, backend, 816, 624, max_frames=900, on_frame=on_frame)
 t = field.session.player.get(Transform)
 log.update(environment_unsupported=getattr(backend, "environment_unsupported", []))
-log.update(frames=frames, transferred=field.session.scene.id != start_scene, scene=field.session.scene.name,
-           cell=[int(t.x // 48), int(t.y // 48)], errors=[str(e) for e in field.session.event_errors],
+log.update(frames=frames, transferred=field.session.scene.id != start_scene,
+scene=field.session.scene.name,
+           cell=[int(t.x // 48), int(t.y // 48)], errors=[str(e) for e in
+           field.session.event_errors],
            shots=state["shots"], mv_modules=sorted(m for m in sys.modules if "rpg_maker" in m))
 backend.close()
 print("MV_PLAY:" + json.dumps(log, ensure_ascii=False))
@@ -986,7 +1077,8 @@ print("MV_PLAY:" + json.dumps(log, ensure_ascii=False))
 
 
 def check_mv_import(out):
-    """W-18: an imported RPG Maker MV project (local reference) plays in a real window as a native project."""
+    """W-18: an imported RPG Maker MV project (local reference) plays in a real window as a native
+    project."""
     import tempfile
 
     from asteria.assets.local_reference import discover_mv_projects, resolve_rpg_maker_mv_root
@@ -996,19 +1088,31 @@ def check_mv_import(out):
         []
         if root is None
         else [
-            l for l in discover_mv_projects(root) if l.relative_path.endswith("parallax_Resource_Pack/sample_project")
+            l
+            for l in discover_mv_projects(root)
+            if l.relative_path.endswith("parallax_Resource_Pack/sample_project")
         ]
     )
     if not layouts:
         return result(
-            "mv_import_real_window", "BLOCKED", "The local RPG Maker MV reference (parallax sample) is absent."
+            "mv_import_real_window",
+            "BLOCKED",
+            "The local RPG Maker MV reference (parallax sample) is absent.",
         )
     from asteria.assets.rpg_maker_mv_project import import_mv_project
 
     with tempfile.TemporaryDirectory() as tmp:
-        project_path, imported = import_mv_project(layouts[0].root, Path(tmp) / "imported", map_ids=(1, 2))
+        project_path, imported = import_mv_project(
+            layouts[0].root, Path(tmp) / "imported", map_ids=(1, 2)
+        )
         proc = subprocess.run(
-            [sys.executable, "-c", MV_PLAY_SCRIPT, str(project_path.parent), str(Path(out).resolve())],
+            [
+                sys.executable,
+                "-c",
+                MV_PLAY_SCRIPT,
+                str(project_path.parent),
+                str(Path(out).resolve()),
+            ],
             capture_output=True,
             text=True,
             timeout=300,
@@ -1017,7 +1121,10 @@ def check_mv_import(out):
     line = next((l for l in proc.stdout.splitlines() if l.startswith("MV_PLAY:")), None)
     if line is None:
         return result(
-            "mv_import_real_window", "FAIL", f"play process exited {proc.returncode}", stderr=proc.stderr[-1500:]
+            "mv_import_real_window",
+            "FAIL",
+            f"play process exited {proc.returncode}",
+            stderr=proc.stderr[-1500:],
         )
     log = json.loads(line[len("MV_PLAY:") :])
     ok = (
@@ -1030,9 +1137,12 @@ def check_mv_import(out):
     return result(
         "mv_import_real_window",
         "PASS" if ok else "FAIL",
-        f"Parallax sample (maps 1-2) imported, saved, reloaded in a fresh process and played in a real "
-        f"{log['driver']} window by real key events: NPC said {log.get('dialogue')!r}; the door transferred "
-        f"to '{log['scene']}' cell {log['cell']} (expected [8, 23]); event errors {len(log['errors'])}; "
+        f"Parallax sample (maps 1-2) imported, saved, reloaded in a fresh process and played "
+        f"in a real "
+        f"{log['driver']} window by real key events: NPC said {log.get('dialogue')!r}; the "
+        f"door transferred "
+        f"to '{log['scene']}' cell {log['cell']} (expected [8, 23]); event errors "
+        f"{len(log['errors'])}; "
         f"MV modules loaded while playing {log['mv_modules']}",
         screenshots=log["shots"],
         note="Visual review of the tiles and characters is part of manual item M9.",
@@ -1040,7 +1150,8 @@ def check_mv_import(out):
 
 
 def check_gpu_playable(out):
-    """ENG-12: the playable game on the ModernGL presenter, same battle workload as frame_pacing (pygame)."""
+    """ENG-12: the playable game on the ModernGL presenter, same battle workload as frame_pacing
+    (pygame)."""
     import pygame
 
     from asteria.runtime.profiler import RuntimeProfiler
@@ -1049,12 +1160,18 @@ def check_gpu_playable(out):
     runtime.open()
     if runtime.gpu is None:
         runtime.close()
-        return result("gpu_playable_runtime", "FAIL", f"GPU presenter did not start: {runtime.gpu_fallback_reason}")
+        return result(
+            "gpu_playable_runtime",
+            "FAIL",
+            f"GPU presenter did not start: {runtime.gpu_fallback_reason}",
+        )
     renderer = runtime.gpu.renderer
     profiler = runtime.enable_profiling(RuntimeProfiler(target_fps=60))
     runtime._ui_mode = "field"
     _pump(runtime, 1.0)
-    field_identity = pygame.image.tobytes(runtime.capture(), "RGB") == pygame.image.tobytes(runtime.screen, "RGB")
+    field_identity = pygame.image.tobytes(runtime.capture(), "RGB") == pygame.image.tobytes(
+        runtime.screen, "RGB"
+    )
     pygame.image.save(runtime.capture(), str(out / "gpu_field.png"))
     runtime.game.start_encounter("boss_room")
     runtime._battle_presentation.begin()
@@ -1065,8 +1182,17 @@ def check_gpu_playable(out):
     while time.perf_counter() - start < 10.0 and runtime.running:
         dt = min(runtime.clock.tick(60) / 1000.0, 0.05)
         events = pygame.event.get()
-        if not adapter.busy() and runtime.game.mode == "battle" and not runtime._victory and frames % 20 == 0:
-            events.append(pygame.event.Event(pygame.KEYDOWN, key=(pygame.K_2, pygame.K_1, pygame.K_1)[uses % 3]))
+        if (
+            not adapter.busy()
+            and runtime.game.mode == "battle"
+            and not runtime._victory
+            and frames % 20 == 0
+        ):
+            events.append(
+                pygame.event.Event(
+                    pygame.KEYDOWN, key=(pygame.K_2, pygame.K_1, pygame.K_1)[uses % 3]
+                )
+            )
             uses += 1
         profiler.begin_frame()
         runtime._frame(events, dt)
@@ -1078,21 +1204,31 @@ def check_gpu_playable(out):
         frames += 1
         if frames == 120:
             pygame.image.save(runtime.capture(), str(out / "gpu_battle.png"))
-    battle_identity = pygame.image.tobytes(runtime.capture(), "RGB") == pygame.image.tobytes(runtime.screen, "RGB")
+    battle_identity = pygame.image.tobytes(runtime.capture(), "RGB") == pygame.image.tobytes(
+        runtime.screen, "RGB"
+    )
     report = profiler.report()
     runtime.close()
     pacing = report["pacing"]
     (out / "gpu_battle_profile.json").write_text(json.dumps(report, indent=2))
-    ok = field_identity and battle_identity and pacing["measured_fps"] >= 55 and pacing["interval_p99_ms"] <= 25.0
+    ok = (
+        field_identity
+        and battle_identity
+        and pacing["measured_fps"] >= 55
+        and pacing["interval_p99_ms"] <= 25.0
+    )
     gpu = report["sections"].get("gpu_time", {})
     return result(
         "gpu_playable_runtime",
         "PASS" if ok else "FAIL",
-        f"Playable game on the ModernGL presenter ({renderer}): field and canonical battle in a real window; "
+        f"Playable game on the ModernGL presenter ({renderer}): field and canonical battle in "
+        f"a real window; "
         f"the GPU frame equals the composed frame pixel for pixel (field={field_identity}, "
-        f"battle={battle_identity}); battle workload {frames} frames, {pacing['measured_fps']} fps, p99 interval "
+        f"battle={battle_identity}); battle workload {frames} frames, {pacing['measured_fps']} "
+        f"fps, p99 interval "
         f"{pacing['interval_p99_ms']} ms; frame mean {report['frame']['mean_ms']} ms; upload mean "
-        f"{sum(uploads) / max(1, len(uploads)):.3f} ms; GPU time mean {gpu.get('mean_ms')} ms; draw calls "
+        f"{sum(uploads) / max(1, len(uploads)):.3f} ms; GPU time mean {gpu.get('mean_ms')} ms; "
+        f"draw calls "
         f"{report['counters'].get('draw_calls', {}).get('max')} per frame; {uses} skills used",
         screenshots=["gpu_field.png", "gpu_battle.png"],
         sections={k: v["mean_ms"] for k, v in report["sections"].items()},
@@ -1101,7 +1237,8 @@ def check_gpu_playable(out):
 
 
 def _vfx_scene(runtime, *, weather="rain", particles=400):
-    """In-memory (never saved) environment on the reference field: lights, shadow, water, weather, post."""
+    """In-memory (never saved) environment on the reference field: lights, shadow, water, weather,
+    post."""
     from asteria.core import Entity, Transform
     from asteria.runtime.environment2d import (
         Environment2DComponent,
@@ -1140,7 +1277,8 @@ def _vfx_scene(runtime, *, weather="rain", particles=400):
 
 
 def check_vfx_environment(out):
-    """VFX-02 / VFX-03 in real windows: GPU effect chain, the pygame fallback, battle afterimages, weather load."""
+    """VFX-02 / VFX-03 in real windows: GPU effect chain, the pygame fallback, battle afterimages,
+    weather load."""
     import pygame
 
     from asteria.runtime.profiler import RuntimeProfiler
@@ -1152,7 +1290,11 @@ def check_vfx_environment(out):
         driver = pygame.display.get_driver()
         if backend == "moderngl" and runtime.gpu is None:
             results.append(
-                result("vfx_gpu_field", "FAIL", f"GPU presenter did not start: {runtime.gpu_fallback_reason}")
+                result(
+                    "vfx_gpu_field",
+                    "FAIL",
+                    f"GPU presenter did not start: {runtime.gpu_fallback_reason}",
+                )
             )
             runtime.close()
             continue
@@ -1183,9 +1325,12 @@ def check_vfx_environment(out):
             result(
                 f"vfx_{backend}_field",
                 "PASS" if ok else "FAIL",
-                f"{backend} ({driver}): field with lighting (ambient + player light + shadow-casting lamp), water, "
-                f"rain ({particles:g} particles), bloom, grading, vignette for 5 s: {pacing['measured_fps']} fps, "
-                f"p99 interval {pacing['interval_p99_ms']} ms, frame interval mean {report['frame']['mean_ms']} ms, "
+                f"{backend} ({driver}): field with lighting (ambient + player light + "
+                f"shadow-casting lamp), water, "
+                f"rain ({particles:g} particles), bloom, grading, vignette for 5 s: "
+                f"{pacing['measured_fps']} fps, "
+                f"p99 interval {pacing['interval_p99_ms']} ms, frame interval mean "
+                f"{report['frame']['mean_ms']} ms, "
                 f"draw calls/frame {draw_calls}; shader errors {errors}; "
                 f"GPU-only effects reported unsupported {unsupported}",
                 screenshots=[name],
@@ -1202,7 +1347,9 @@ def check_vfx_environment(out):
     document.set_project(runtime.game.project)
     timeline = ActionTimelineController(document)
     for sequence_id in timeline.sequences():
-        timeline.add_beat(sequence_id, "rm_echo", 0.0, "motion_fx", "afterimage", "@source", duration=1.2)
+        timeline.add_beat(
+            sequence_id, "rm_echo", 0.0, "motion_fx", "afterimage", "@source", duration=1.2
+        )
     runtime.open()
     env = _vfx_scene(runtime, weather="none")
     env.lighting_enabled = False
@@ -1212,7 +1359,9 @@ def check_vfx_environment(out):
     adapter.begin()
     runtime._advance_to_hero_turn()
     _pump(runtime, 1.5)
-    runtime._use_skill(0)  # the acting hero's first skill: its motion sequence carries the motion_fx beat
+    runtime._use_skill(
+        0
+    )  # the acting hero's first skill: its motion sequence carries the motion_fx beat
     ghosts = {"max": 0}
 
     def count(frame):
@@ -1227,7 +1376,8 @@ def check_vfx_environment(out):
         result(
             "vfx_gpu_battle_afterimage",
             "PASS" if ghosts["max"] >= 2 else "FAIL",
-            f"Canonical battle on the GPU with bloom, grading and vignette; a skill's motion_fx beat produced up to "
+            f"Canonical battle on the GPU with bloom, grading and vignette; a skill's "
+            f"motion_fx beat produced up to "
             f"{ghosts['max']} afterimage copies of the acting member",
             screenshots=["vfx_gpu_battle_afterimage.png"],
             note="Whether the effects look good is manual item M10.",
@@ -1250,7 +1400,8 @@ def check_vfx_environment(out):
         result(
             "vfx_weather_load",
             "PASS" if pacing["measured_fps"] >= 55 else "FAIL",
-            f"Rain at {particles:g} particles plus the full GPU chain for 4 s: {pacing['measured_fps']} fps, "
+            f"Rain at {particles:g} particles plus the full GPU chain for 4 s: "
+            f"{pacing['measured_fps']} fps, "
             f"p99 interval {pacing['interval_p99_ms']} ms, vfx section mean "
             f"{report['sections'].get('vfx', {}).get('mean_ms')} ms",
         )
@@ -1259,7 +1410,8 @@ def check_vfx_environment(out):
 
 
 def check_mv_import_gpu(out):
-    """W-18 + ENG-12 + VFX: the imported MV project on the ModernGL backend, at night (lights, rain, bloom)."""
+    """W-18 + ENG-12 + VFX: the imported MV project on the ModernGL backend, at night (lights,
+    rain, bloom)."""
     import tempfile
 
     from asteria.assets.local_reference import discover_mv_projects, resolve_rpg_maker_mv_root
@@ -1269,19 +1421,29 @@ def check_mv_import_gpu(out):
         []
         if root is None
         else [
-            l for l in discover_mv_projects(root) if l.relative_path.endswith("parallax_Resource_Pack/sample_project")
+            l
+            for l in discover_mv_projects(root)
+            if l.relative_path.endswith("parallax_Resource_Pack/sample_project")
         ]
     )
     if not layouts:
-        return result("mv_import_gpu_night", "BLOCKED", "The local RPG Maker MV reference (parallax sample) is absent.")
+        return result(
+            "mv_import_gpu_night",
+            "BLOCKED",
+            "The local RPG Maker MV reference (parallax sample) is absent.",
+        )
     from asteria.assets.rpg_maker_mv_project import import_mv_project
     from asteria.core import Entity, Transform
     from asteria.project_tools import load_project
     from asteria.runtime.environment2d import Environment2DComponent, LightSource2DComponent
 
     with tempfile.TemporaryDirectory() as tmp:
-        project_path, _ = import_mv_project(layouts[0].root, Path(tmp) / "imported", map_ids=(1, 2))
-        project = load_project(project_path)  # author a night environment on map 1, as an editor user would
+        project_path, _ = import_mv_project(
+            layouts[0].root, Path(tmp) / "imported", map_ids=(1, 2)
+        )
+        project = load_project(
+            project_path
+        )  # author a night environment on map 1, as an editor user would
         scene = project.scene(project.startup_scene_id)
         settings = scene.add_entity(Entity("Night"))
         settings.add_component(Transform())
@@ -1294,7 +1456,14 @@ def check_mv_import_gpu(out):
         lamp.radius, lamp.intensity = 150.0, 1.4
         project.save_json(project_path)
         proc = subprocess.run(
-            [sys.executable, "-c", MV_PLAY_SCRIPT, str(project_path.parent), str(Path(out).resolve()), "moderngl"],
+            [
+                sys.executable,
+                "-c",
+                MV_PLAY_SCRIPT,
+                str(project_path.parent),
+                str(Path(out).resolve()),
+                "moderngl",
+            ],
             capture_output=True,
             text=True,
             timeout=300,
@@ -1303,7 +1472,10 @@ def check_mv_import_gpu(out):
     line = next((l for l in proc.stdout.splitlines() if l.startswith("MV_PLAY:")), None)
     if line is None:
         return result(
-            "mv_import_gpu_night", "FAIL", f"play process exited {proc.returncode}", stderr=proc.stderr[-1500:]
+            "mv_import_gpu_night",
+            "FAIL",
+            f"play process exited {proc.returncode}",
+            stderr=proc.stderr[-1500:],
         )
     log = json.loads(line[len("MV_PLAY:") :])
     ok = (
@@ -1316,15 +1488,19 @@ def check_mv_import_gpu(out):
     return result(
         "mv_import_gpu_night",
         "PASS" if ok else "FAIL",
-        f"Imported parallax sample with an authored night environment (Environment2D + a light on the player, "
-        f"rain, bloom) on the ModernGL backend in a real {log['driver']} window: dialogue {log.get('dialogue')!r}, "
-        f"door transfer to cell {log['cell']}, event errors {len(log['errors'])}, MV modules {log['mv_modules']}",
+        f"Imported parallax sample with an authored night environment (Environment2D + a light "
+        f"on the player, "
+        f"rain, bloom) on the ModernGL backend in a real {log['driver']} window: dialogue "
+        f"{log.get('dialogue')!r}, "
+        f"door transfer to cell {log['cell']}, event errors {len(log['errors'])}, MV modules "
+        f"{log['mv_modules']}",
         screenshots=log["shots"],
     )
 
 
 def check_gameplay_systems(out):
-    """STR-01 / BTL / RPG: the JRPG stress playthrough in the real playable window, canonical battle drawn."""
+    """STR-01 / BTL / RPG: the JRPG stress playthrough in the real playable window, canonical
+    battle drawn."""
     import pygame
 
     from asteria.validation.jrpg_stress import run_jrpg_stress
@@ -1343,7 +1519,11 @@ def check_gameplay_systems(out):
             runtime._frame(pygame.event.get(), dt)
             runtime.present()
             state["frames"] += 1
-            if runtime.game.mode == "battle" and not adapter.busy() and time.perf_counter() - start > 0.3:
+            if (
+                runtime.game.mode == "battle"
+                and not adapter.busy()
+                and time.perf_counter() - start > 0.3
+            ):
                 break
 
     def on_step(name):
@@ -1365,16 +1545,20 @@ def check_gameplay_systems(out):
     return result(
         "gameplay_systems_real_window",
         "PASS" if ok else "FAIL",
-        f"JRPG stress playthrough (STR-01) in the real playable {driver} window with the canonical battle screen "
-        f"presenting every step ({state['frames']} frames): {len(report.evidence)}/13 items, outcome "
+        f"JRPG stress playthrough (STR-01) in the real playable {driver} window with the "
+        f"canonical battle screen "
+        f"presenting every step ({state['frames']} frames): {len(report.evidence)}/13 items, "
+        f"outcome "
         f"{report.outcome}, missing {report.missing}, event errors {len(errors)}. {items}",
         screenshots=[f"gameplay_{n}.png" for n in state["shots"]] + ["gameplay_end.png"],
-        note="Actions go through the game session API; keys and menus are covered by the battle / menus checks.",
+        note="Actions go through the game session API; keys and menus are covered by the battle "
+        "/ menus checks.",
     )
 
 
 def check_game_menus_more(out):
-    """UI-01 / UI-02 / RPG-05 / WLD-01: pause, quest log, shop, item use, equipment, settings, game over by keys."""
+    """UI-01 / UI-02 / RPG-05 / WLD-01: pause, quest log, shop, item use, equipment, settings, game
+    over by keys."""
     import pygame
 
     from asteria.gameplay.effects import Effect, EffectOperation, EffectOperationKind
@@ -1384,13 +1568,23 @@ def check_game_menus_more(out):
 
     runtime = _runtime()
     db = runtime.game.project.rpg_database  # in-memory content (nothing is saved)
-    db.add_shop(ShopDefinition("rm_shop", "RM Shop", [ShopEntry("ether_leaf", buy_prices={"gold": 30}, stock=3)]))
+    db.add_shop(
+        ShopDefinition(
+            "rm_shop", "RM Shop", [ShopEntry("ether_leaf", buy_prices={"gold": 30}, stock=3)]
+        )
+    )
     db.add_quest(
         QuestDefinition(
             "rm_quest",
             "RM Quest",
             objectives=[
-                QuestObjective("leaves", "item", target="ether_leaf", required=99, description="Collect ether leaves")
+                QuestObjective(
+                    "leaves",
+                    "item",
+                    target="ether_leaf",
+                    required=99,
+                    description="Collect ether leaves",
+                )
             ],
         )
     )
@@ -1398,7 +1592,12 @@ def check_game_menus_more(out):
         ItemDefinition(
             "rm_potion",
             "RM Potion",
-            use_effects=[Effect("rm.heal", [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "vitality", 30)])],
+            use_effects=[
+                Effect(
+                    "rm.heal",
+                    [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "vitality", 30)],
+                )
+            ],
         )
     )
     saves = PROJECT / "saves"
@@ -1436,7 +1635,9 @@ def check_game_menus_more(out):
         shot("menus_quest_log.png")
         press(pygame.K_ESCAPE, pygame.K_ESCAPE)
         game.open_shop("rm_shop")
-        game.save.rpg_state.currencies["gold"] = game.save.rpg_state.currencies.get("gold", 0.0) + 100
+        game.save.rpg_state.currencies["gold"] = (
+            game.save.rpg_state.currencies.get("gold", 0.0) + 100
+        )
         gold = game.save.rpg_state.currencies["gold"]
         leaves = game.save.rpg_state.inventory.count("ether_leaf")
         _pump(runtime, 0.2)
@@ -1460,23 +1661,34 @@ def check_game_menus_more(out):
         for _ in range(target - menu.row):
             press(pygame.K_DOWN, wait=0.05)
         press(pygame.K_RETURN)
-        healed = game.save.rpg_state.actor_snapshots[actor].resources["values"]["vitality"]["current"]
-        checks["item_use"] = healed == values["maximum"] - 20 and game.save.rpg_state.inventory.count("rm_potion") == 0
+        healed = game.save.rpg_state.actor_snapshots[actor].resources["values"]["vitality"][
+            "current"
+        ]
+        checks["item_use"] = (
+            healed == values["maximum"] - 20
+            and game.save.rpg_state.inventory.count("rm_potion") == 0
+        )
         shot("menus_item_used.png")
         while menu.tab != "equipment":
             press(pygame.K_TAB, wait=0.05)
         loadout = game.save.rpg_state.loadouts[menu.actor_id]
         weapon = loadout.equipped("weapon")[0].equipment.equipment_id
-        slot_row = next(i for i, r in enumerate(menu.rows()) if r[0] == "slot" and r[1] == "weapon")
+        slot_row = next(
+            i for i, r in enumerate(menu.rows()) if r[0] == "slot" and r[1] == "weapon"
+        )
         while menu.row != slot_row:
             press(pygame.K_DOWN if menu.row < slot_row else pygame.K_UP, wait=0.05)
         press(pygame.K_RETURN)
         unequipped = not loadout.equipped("weapon")
-        candidate = next(i for i, r in enumerate(menu.rows()) if r[0] == "candidate" and r[1] == weapon)
+        candidate = next(
+            i for i, r in enumerate(menu.rows()) if r[0] == "candidate" and r[1] == weapon
+        )
         while menu.row != candidate:
             press(pygame.K_DOWN if menu.row < candidate else pygame.K_UP, wait=0.05)
         press(pygame.K_RETURN)
-        checks["equip_cycle"] = unequipped and loadout.equipped("weapon")[0].equipment.equipment_id == weapon
+        checks["equip_cycle"] = (
+            unequipped and loadout.equipped("weapon")[0].equipment.equipment_id == weapon
+        )
         shot("menus_equipment.png")
         press(pygame.K_ESCAPE)
         choose_pause("settings")
@@ -1485,7 +1697,9 @@ def check_game_menus_more(out):
         press(pygame.K_ESCAPE, pygame.K_ESCAPE)
         game.start_encounter("boss_room")
         for member_id in tuple(game.active_hero_ids()):
-            game.battle.member(member_id).subject.resources.set_current(game.rules.knockout_resource_id, 0)
+            game.battle.member(member_id).subject.resources.set_current(
+                game.rules.knockout_resource_id, 0
+            )
         runtime._defeat = True
         _pump(runtime, 0.3)
         checks["game_over"] = runtime._ui_mode == "game_over"
@@ -1510,7 +1724,8 @@ def check_game_menus_more(out):
 
 
 def check_editor_workflows(out):
-    """Editor workflows in a shown Cocoa editor (EDT-02/03/04/11/13/14/16, AST-02, ENG-23); nothing is saved."""
+    """Editor workflows in a shown Cocoa editor (EDT-02/03/04/11/13/14/16, AST-02, ENG-23); nothing
+    is saved."""
     from PySide6.QtWidgets import QApplication
 
     from asteria.core import Transform
@@ -1553,7 +1768,8 @@ def check_editor_workflows(out):
     window.refresh_asset_list()
     items = [window.asset_list.item(i) for i in range(window.asset_list.count())]
     checks["asset_browser_thumbnails"] = bool(items) and any(not i.icon().isNull() for i in items)
-    # EDT-03 / EDT-13 / EDT-14 records: search, copy / paste / cut by the window's shortcuts, batch edit
+    # EDT-03 / EDT-13 / EDT-14 records: search, copy / paste / cut by the window's shortcuts, batch
+    # edit
     window.workspace.set_mode(WorkspaceMode.RPG)
     window.rpg_workspace.setCurrentWidget(window.rpg_authoring)
     family = window.rpg_authoring.child
@@ -1562,7 +1778,9 @@ def check_editor_workflows(out):
     family.search.setText("leaf")
     checks["record_search"] = bool(family._ids) and len(family._ids) < len(everything)
     family.search.clear()
-    deadline = time.perf_counter() + 2.0  # another window (a previous check's) may still hold the focus
+    deadline = (
+        time.perf_counter() + 2.0
+    )  # another window (a previous check's) may still hold the focus
     while window._focused_record_family() is not family and time.perf_counter() < deadline:
         window.raise_()
         window.activateWindow()
@@ -1577,7 +1795,9 @@ def check_editor_workflows(out):
         pasted = copy_id in window.document.project.rpg_database.items
         family.select_ids([copy_id])
         window.cut_action.trigger()
-        checks["record_copy_paste_cut_shortcuts"] = pasted and copy_id not in window.document.project.rpg_database.items
+        checks["record_copy_paste_cut_shortcuts"] = (
+            pasted and copy_id not in window.document.project.rpg_database.items
+        )
     else:
         checks["record_copy_paste_cut_shortcuts"] = False
     shot("workflow_records.png")
@@ -1585,7 +1805,9 @@ def check_editor_workflows(out):
     ids = family._ids[:2]
     family.select_ids(ids)
     enemies = window.document.project.rpg_database.enemies
-    batch = family.batch_edit_selected("stats.power", "77") and all(enemies[k].stats["power"] == 77 for k in ids)
+    batch = family.batch_edit_selected("stats.power", "77") and all(
+        enemies[k].stats["power"] == 77 for k in ids
+    )
     window.document.undo()
     checks["batch_edit_and_undo"] = batch and not all(enemies[k].stats["power"] == 77 for k in ids)
     # EDT-14 hierarchy drag and drop (the drop the tree performs), one undo step
@@ -1614,7 +1836,9 @@ def check_editor_workflows(out):
     propagated = b.get(Interaction2DComponent).range == 99.0
     window.document.select_entity(b)
     reverted = window.revert_instance_to_prefab() is not None
-    checks["prefab_create_place_apply_revert"] = created and a.has(PrefabInstanceComponent) and propagated and reverted
+    checks["prefab_create_place_apply_revert"] = (
+        created and a.has(PrefabInstanceComponent) and propagated and reverted
+    )
     shot("workflow_prefab.png")
     # AST-02 pivot edit in the animation editor
     window.workspace.set_mode(WorkspaceMode.UI)
@@ -1625,12 +1849,19 @@ def check_editor_workflows(out):
     pivot = editor.apply_sheet() and editor.api.data("battle.combatant.hero_01")["pivot"][0] == 0.4
     shot("workflow_pivot.png")
     window.document.undo()
-    checks["pivot_edit_and_undo"] = pivot and editor.api.data("battle.combatant.hero_01")["pivot"][0] != 0.4
-    # EDT-04 + EDT-11: an event authored in the editor runs in the live game; Play from Selection, Restart
-    window.event_flow_editor.api.new_program(
-        "rm_editor_event", "RM", [EventInstruction("SET_SWITCH", {"name": "rm_editor_event_ran", "value": True})]
+    checks["pivot_edit_and_undo"] = (
+        pivot and editor.api.data("battle.combatant.hero_01")["pivot"][0] != 0.4
     )
-    player = next(e for e in scene.entities() if e.id == window.document.project.game_start.player_entity_id)
+    # EDT-04 + EDT-11: an event authored in the editor runs in the live game; Play from Selection,
+    # Restart
+    window.event_flow_editor.api.new_program(
+        "rm_editor_event",
+        "RM",
+        [EventInstruction("SET_SWITCH", {"name": "rm_editor_event_ran", "value": True})],
+    )
+    player = next(
+        e for e in scene.entities() if e.id == window.document.project.game_start.player_entity_id
+    )
     window.document.selection.set_single("entity", player)
     started = window.play_from_selection()
     ran = restarted = False
@@ -1651,7 +1882,9 @@ def check_editor_workflows(out):
         while again is None and time.perf_counter() < deadline:
             settle(0.5)
             again = window.debugger_widget.refresh()
-        restarted = bool(restarted and again and not again.get("switches", {}).get("rm_editor_event_ran"))
+        restarted = bool(
+            restarted and again and not again.get("switches", {}).get("rm_editor_event_ran")
+        )
     checks["editor_event_runs_in_live_game"] = bool(started and ran)
     checks["play_from_selection_and_restart"] = bool(started and restarted)
     shot("workflow_play_from_selection.png")
@@ -1673,7 +1906,8 @@ def check_editor_workflows(out):
 
 
 def check_battle_without_art(out):
-    """D19 / CB15 A9: a project without battle art fights on the canonical screen (pygame and ModernGL)."""
+    """D19 / CB15 A9: a project without battle art fights on the canonical screen (pygame and
+    ModernGL)."""
     import pygame
 
     from asteria.runtime.profiler import RuntimeProfiler
@@ -1714,7 +1948,10 @@ def check_battle_without_art(out):
                     name = f"no_art_{backend}_battle.png"
                     pygame.image.save(runtime.capture(), str(out / name))
                     shots.append(name)
-            generated = all(v.sprite_sheet_asset_id.startswith("generated.") for v in adapter.screen.scene.combatants)
+            generated = all(
+                v.sprite_sheet_asset_id.startswith("generated.")
+                for v in adapter.screen.scene.combatants
+            )
             victory = runtime._victory
             _pump(runtime, 3.0)
             _key(pygame.K_RETURN)
@@ -1726,14 +1963,24 @@ def check_battle_without_art(out):
             report = profiler.report()
             runtime.close()
             pacing = report["pacing"]
-            ok = generated and victory and back_to_field and saved and vfx > 0 and pacing["measured_fps"] >= 55
+            ok = (
+                generated
+                and victory
+                and back_to_field
+                and saved
+                and vfx > 0
+                and pacing["measured_fps"] >= 55
+            )
             results.append(
                 result(
                     f"battle_without_art_{backend}",
                     "PASS" if ok else "FAIL",
-                    f"{backend} ({driver}): no combatant visuals / motion sequences; generated combatants={generated}, "
-                    f"manifest fx played as VFX (peak {vfx}), victory={victory} after {frames} frames by real key "
-                    f"events, back to the field={back_to_field}, F5 save={saved}; {pacing['measured_fps']} fps, "
+                    f"{backend} ({driver}): no combatant visuals / motion sequences; generated "
+                    f"combatants={generated}, "
+                    f"manifest fx played as VFX (peak {vfx}), victory={victory} after {frames} "
+                    f"frames by real key "
+                    f"events, back to the field={back_to_field}, F5 save={saved}; "
+                    f"{pacing['measured_fps']} fps, "
                     f"p99 {pacing['interval_p99_ms']} ms",
                     screenshots=shots,
                 )
@@ -1748,7 +1995,8 @@ def check_battle_without_art(out):
 
 def check_engine_systems(out):
     """ENG-05 / ENG-07 / ENG-16 / ENG-17 / ANI-03 / ANI-05 / CAM-02 in the engine's own main loop:
-    ``Application.run`` with the pygame backend in a real window, real clock, 8 s, scene drawn every frame."""
+    ``Application.run`` with the pygame backend in a real window, real clock, 8 s, scene drawn
+    every frame."""
 
     from asteria.core import (
         Application,
@@ -1783,7 +2031,16 @@ def check_engine_systems(out):
     from asteria.runtime.entity_actions import EntityActionSystem
     from asteria.runtime.systems import CameraFollowSystem
 
-    seen = {"fixed": 0, "frames": 0, "trigger": [], "pairs": set(), "hits": [], "anim": [], "cues": [], "lead": []}
+    seen = {
+        "fixed": 0,
+        "frames": 0,
+        "trigger": [],
+        "pairs": set(),
+        "hits": [],
+        "anim": [],
+        "cues": [],
+        "lead": [],
+    }
 
     def body(scene, name, x, y, size=24, layer=0, mask=0xFFFFFFFF, trigger=False, *extra):
         entity = scene.add_entity(Entity(name))
@@ -1801,7 +2058,9 @@ def check_engine_systems(out):
     clips = {
         "hero": AnimationClipSet(
             {
-                "walk": SpriteClip("walk", [SpriteKeyframe(1, 0.1, ("footstep",)), SpriteKeyframe(2, 0.1)], True),
+                "walk": SpriteClip(
+                    "walk", [SpriteKeyframe(1, 0.1, ("footstep",)), SpriteKeyframe(2, 0.1)], True
+                ),
             }
         )
     }
@@ -1814,11 +2073,31 @@ def check_engine_systems(out):
         def fixed_update(self, scene, dt):
             seen["fixed"] += 1
 
-    for system in (Counter(), actions, CharacterControllerSystem(), collisions, hitboxes, animation, camera):
+    for system in (
+        Counter(),
+        actions,
+        CharacterControllerSystem(),
+        collisions,
+        hitboxes,
+        animation,
+        camera,
+    ):
         town.scheduler.add(system)
     sword = Hitbox2DComponent()
     sword.team, sword.width = "hero", 24
-    hero = body(town, "Hero", 100, 200, 24, 1, 0b100, False, sword, Hurtbox2DComponent(), SpriteRenderer2D())
+    hero = body(
+        town,
+        "Hero",
+        100,
+        200,
+        24,
+        1,
+        0b100,
+        False,
+        sword,
+        Hurtbox2DComponent(),
+        SpriteRenderer2D(),
+    )
     controller = hero.add_component(CharacterController2DComponent())
     controller.speed = 60
     spec = hero.add_component(Animator2DComponent())
@@ -1867,27 +2146,38 @@ def check_engine_systems(out):
                     actions.play(hero.id, lunge)
                     seen["lunge_started"] = True
                 for contact in CollisionWorld.from_scene(town).contacts():
-                    names = tuple(sorted((town.get_entity(contact.a).name, town.get_entity(contact.b).name)))
+                    names = tuple(
+                        sorted((town.get_entity(contact.a).name, town.get_entity(contact.b).name))
+                    )
                     seen["pairs"].add(names)
                 seen["cues"] += [c.kind for c in actions.events]
                 view = camera.camera(rig.id)
                 if view is not None and 0.5 < t < 2.9:
                     centre = view.x + view.width / view.zoom / 2
                     seen["lead"].append(centre - transform.x)
-                    # ENG-13 parallax: a far layer (0.5) moves half as fast on screen as the play layer
+                    # ENG-13 parallax: a far layer (0.5) moves half as fast on screen as the play
+                    # layer
                     near = view.world_to_screen(500.0, 100.0)[0]
                     far = view.world_to_screen(500.0, 100.0, 0.5, 1.0)[0]
                     seen.setdefault("parallax", []).append((near, far))
                 if 3.4 < t < 4.6 and not seen.get("grouped"):
-                    seen["grouped"] = True  # CAM-02 target group: frame the hero and the foe together
-                    cam.follow_entity_id, cam.group_entity_ids, cam.group_padding = "", f"{hero.id}, {foe.id}", 0
+                    seen["grouped"] = (
+                        True  # CAM-02 target group: frame the hero and the foe together
+                    )
+                    cam.follow_entity_id, cam.group_entity_ids, cam.group_padding = (
+                        "",
+                        f"{hero.id}, {foe.id}",
+                        0,
+                    )
                 if seen.get("grouped") and 4.0 < t < 4.6 and view is not None:
                     middle = (hero.get(Transform).x + foe.get(Transform).x) / 2
                     centre = view.x + view.width / view.zoom / 2
                     seen.setdefault("group", []).append((abs(centre - middle), view.zoom))
                 if t > 5.0 and app._transition is None and not seen.get("changed"):
                     seen["changed"] = True
-                    app.change_scene(cave, SceneTransition(fade_out=0.3, fade_in=0.3, color=(0, 0, 0)))
+                    app.change_scene(
+                        cave, SceneTransition(fade_out=0.3, fade_in=0.3, color=(0, 0, 0))
+                    )
             self.draw(scene, t)
             super().end_frame()
             if t > 8.0:
@@ -1896,7 +2186,12 @@ def check_engine_systems(out):
         def draw(self, scene, t):
             view = camera.camera(rig.id) if scene is town else None
             ox = (view.x if view is not None else 0) - 0
-            colors = {"Hero": (90, 170, 255), "Zone": (90, 220, 140), "Wall": (230, 120, 90), "Ghost": (150, 150, 160)}
+            colors = {
+                "Hero": (90, 170, 255),
+                "Zone": (90, 220, 140),
+                "Wall": (230, 120, 90),
+                "Ghost": (150, 150, 160),
+            }
             if view is not None:  # the far (parallax 0.5) backdrop column
                 fx, _ = view.world_to_screen(500.0, 100.0, 0.5, 1.0)
                 self.pg.draw.rect(self.screen, (60, 64, 90), (fx - 40, 60, 80, 300))
@@ -1910,7 +2205,8 @@ def check_engine_systems(out):
             font = self.pg.font.Font(None, 24)
             lines = [
                 f"Application.run  t={t:4.1f}s  scene={scene.name}  fixed steps={seen['fixed']}",
-                f"trigger {seen['trigger'][-3:]}  hits {seen['hits'][-2:]}  anim events {len(seen['anim'])}",
+                f"trigger {seen['trigger'][-3:]}  hits {seen['hits'][-2:]}  anim events "
+                f"{len(seen['anim'])}",
             ]
             for i, line in enumerate(lines):
                 self.screen.blit(font.render(line, True, (230, 232, 240)), (12, 12 + 22 * i))
@@ -1925,7 +2221,9 @@ def check_engine_systems(out):
                 self.pg.image.save(self.screen, str(out / name))
 
     backend = Backend()
-    app = Application(backend, ApplicationConfig("Asteria engine systems", 960, 400, fixed_timestep=1 / 50))
+    app = Application(
+        backend, ApplicationConfig("Asteria engine systems", 960, 400, fixed_timestep=1 / 50)
+    )
     app.set_scene(town)
     start = time.perf_counter()
     app.run()
@@ -1942,7 +2240,8 @@ def check_engine_systems(out):
         "trigger_enter_stay_exit": seen["trigger"][:1] == ["enter"]
         and "stay" in seen["trigger"]
         and "exit" in seen["trigger"],
-        "layers_masks": ("Hero", "Wall") in seen["pairs"] and ("Ghost", "Hero") not in seen["pairs"],
+        "layers_masks": ("Hero", "Wall") in seen["pairs"]
+        and ("Ghost", "Hero") not in seen["pairs"],
         "hitbox": "lunge" in seen["hits"],
         "frame_events": "footstep" in seen["anim"],
         "action_timeline_cues": "vfx" in seen["cues"],
@@ -1959,21 +2258,28 @@ def check_engine_systems(out):
         f"({seen['frames']} town frames, real clock, {simulated:.2f} s simulated): "
         f"fixed steps {seen['fixed']} at 50 Hz "
         f"(expected ~{expected_fixed:.0f}); "
-        f"trigger events {sorted(set(seen['trigger']))}; contact pairs {sorted(seen['pairs'])}; hits {seen['hits']}; "
-        f"frame events {sorted(set(seen['anim']))}; action cues {sorted(set(seen['cues']))}; camera lead "
-        f"{min(seen['lead'] or [0]):.0f}..{max(seen['lead'] or [0]):.0f} px; parallax 0.5 layer moved "
-        f"{(parallax_ratio or 0):.3f}x the play layer; target group centre off the hero-foe midpoint by "
+        f"trigger events {sorted(set(seen['trigger']))}; contact pairs "
+        f"{sorted(seen['pairs'])}; hits {seen['hits']}; "
+        f"frame events {sorted(set(seen['anim']))}; action cues {sorted(set(seen['cues']))}; "
+        f"camera lead "
+        f"{min(seen['lead'] or [0]):.0f}..{max(seen['lead'] or [0]):.0f} px; parallax 0.5 "
+        f"layer moved "
+        f"{(parallax_ratio or 0):.3f}x the play layer; target group centre off the hero-foe "
+        f"midpoint by "
         f"{min((d for d, _ in seen.get('group') or [(99, 0)])):.1f} px (zoom "
         f"{(seen.get('group') or [(0, 0)])[-1][1]:.2f}); hero moved to {hero.scene.name}. "
         + ", ".join(f"{k}={'ok' if v else 'FAIL'}" for k, v in checks.items()),
         screenshots=["engine_systems_town.png", "engine_systems_cave.png"],
-        note="Movement is scripted (no keys); key-driven input is covered by the input / menus / battle checks.",
+        note="Movement is scripted (no keys); key-driven input is covered by the input / menus "
+        "/ battle checks.",
     )
 
 
 def check_m10_compare(out):
-    """M10 (automatable part): the same field frame on ModernGL and on the pygame fallback, compared by numbers,
-    plus a 30 s soak per backend. Whether the effects look right stays manual (M10 visual confirmation)."""
+    """M10 (automatable part): the same field frame on ModernGL and on the pygame fallback,
+    compared by numbers,
+    plus a 30 s soak per backend. Whether the effects look right stays manual (M10 visual
+    confirmation)."""
     import pygame
     from PIL import Image, ImageChops, ImageStat
 
@@ -1986,7 +2292,11 @@ def check_m10_compare(out):
             runtime.open()
             if backend == "moderngl" and runtime.gpu is None:
                 runtime.close()
-                return result("m10_compare", "FAIL", f"GPU presenter did not start: {runtime.gpu_fallback_reason}")
+                return result(
+                    "m10_compare",
+                    "FAIL",
+                    f"GPU presenter did not start: {runtime.gpu_fallback_reason}",
+                )
             if mode == "effects":
                 _vfx_scene(runtime, weather="none")
             runtime._ui_mode = "field"
@@ -2019,7 +2329,9 @@ def check_m10_compare(out):
             "fps": report["pacing"]["measured_fps"],
             "p99_ms": report["pacing"]["interval_p99_ms"],
             "max_ms": report["frame"].get("max_ms"),
-            "over_budget": report["pacing"].get("frames_over_budget", report["pacing"].get("over_1_5x")),
+            "over_budget": report["pacing"].get(
+                "frames_over_budget", report["pacing"].get("over_1_5x")
+            ),
             "errors": len(runtime.environment_errors) + len(runtime.game.event_errors),
             "rss_growth_mb": round(_rss_mb() - rss_start, 1),
             "rss_growth_after_warmup_mb": round(_rss_mb() - rss_warm, 1),
@@ -2037,12 +2349,19 @@ def check_m10_compare(out):
         diff = ImageChops.difference(a, b).convert("L")
         hist = diff.histogram()
         total = sum(hist)
-        return round(sum(i * n for i, n in enumerate(hist)) / total, 2), round(sum(hist[24:]) / total * 100, 2)
+        return round(sum(i * n for i, n in enumerate(hist)) / total, 2), round(
+            sum(hist[24:]) / total * 100, 2
+        )
 
     plain = differ(load(("moderngl", "plain")), load(("pygame", "plain")))
     effects = differ(load(("moderngl", "effects")), load(("pygame", "effects")))
     gpu, cpu = load(("moderngl", "effects")), load(("pygame", "effects"))
-    heat = ImageChops.difference(gpu, cpu).convert("L").point(lambda v: min(255, v * 4)).convert("RGB")
+    heat = (
+        ImageChops.difference(gpu, cpu)
+        .convert("L")
+        .point(lambda v: min(255, v * 4))
+        .convert("RGB")
+    )
     sheet = Image.new("RGB", (gpu.width * 3 + 40, gpu.height), (12, 12, 16))
     for i, image in enumerate((gpu, cpu, heat)):
         sheet.paste(image, (i * (gpu.width + 20), 0))
@@ -2050,7 +2369,10 @@ def check_m10_compare(out):
     lum = {b: stats(load((b, "effects"))) for b in ("moderngl", "pygame")}
     ok = (
         plain[1] < 1.0  # without environment effects the two backends draw the same frame
-        and all(v["errors"] == 0 and v["fps"] >= 55 and v["rss_growth_after_warmup_mb"] < 10 for v in soak.values())
+        and all(
+            v["errors"] == 0 and v["fps"] >= 55 and v["rss_growth_after_warmup_mb"] < 10
+            for v in soak.values()
+        )
         and set(notes["pygame"]["unsupported"]) >= {"bloom", "grade", "vignette", "shadows"}
         and not notes["moderngl"]["unsupported"]
     )
@@ -2065,26 +2387,36 @@ def check_m10_compare(out):
     return result(
         "m10_compare",
         "PASS" if ok else "FAIL",
-        f"Same field frame on both backends in real cocoa windows. Without environment effects: mean |diff| "
-        f"{plain[0]}, {plain[1]}% pixels differ by >24. With lighting, shadow, water, bloom, grading, vignette: "
-        f"mean |diff| {effects[0]}, {effects[1]}% pixels differ; luma mean/std ModernGL {lum['moderngl']} vs "
-        f"pygame {lum['pygame']}; pygame reports unsupported {notes['pygame']['unsupported']}, ModernGL "
+        f"Same field frame on both backends in real cocoa windows. Without environment "
+        f"effects: mean |diff| "
+        f"{plain[0]}, {plain[1]}% pixels differ by >24. With lighting, shadow, water, bloom, "
+        f"grading, vignette: "
+        f"mean |diff| {effects[0]}, {effects[1]}% pixels differ; luma mean/std ModernGL "
+        f"{lum['moderngl']} vs "
+        f"pygame {lum['pygame']}; pygame reports unsupported {notes['pygame']['unsupported']}, "
+        f"ModernGL "
         f"{notes['moderngl']['unsupported'] or 'none'}. 30 s soak with rain (800 particles): "
         + "; ".join(
-            f"{b} {v['frames']} frames {v['fps']} fps p99 {v['p99_ms']} ms max {v['max_ms']} ms errors {v['errors']} "
-            f"RSS {v['rss_growth_mb']:+} MB ({v['rss_growth_after_warmup_mb']:+} MB after the first 10 s)"
+            f"{b} {v['frames']} frames {v['fps']} fps p99 {v['p99_ms']} ms max {v['max_ms']} "
+            f"ms errors {v['errors']} "
+            f"RSS {v['rss_growth_mb']:+} MB ({v['rss_growth_after_warmup_mb']:+} MB after the "
+            f"first 10 s)"
             for b, v in soak.items()
         ),
         screenshots=["m10_moderngl_pygame_diff.png", *[p.name for p in frames.values()]],
-        note="Numbers only. Whether the GPU effects look right (and whether the fallback is acceptable) is M10's "
+        note="Numbers only. Whether the GPU effects look right (and whether the fallback is "
+        "acceptable) is M10's "
         "visual confirmation, still NOT EXECUTED.",
     )
 
 
 def check_migrated_project_plays(out):
-    """ENG-20: the reference project is stored in older formats (project v8, RPG database v24, component
-    Interaction2D v1). Copy it, upgrade it with the asteria-upgrade CLI in its own process, then play the
-    upgraded project in a real window: walk, talk to the boss by key, save with F5 and load the save."""
+    """ENG-20: the reference project is stored in older formats (project v8, RPG database v24,
+    component
+    Interaction2D v1). Copy it, upgrade it with the asteria-upgrade CLI in its own process, then
+    play the
+    upgraded project in a real window: walk, talk to the boss by key, save with F5 and load the
+    save."""
     import shutil
     import tempfile
 
@@ -2098,13 +2430,16 @@ def check_migrated_project_plays(out):
     before = json.loads(PROJECT_FILE.read_text())
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp) / "old_project"
-        shutil.copytree(PROJECT, root, ignore=shutil.ignore_patterns("saves", "__pycache__", "*.bak"))
+        shutil.copytree(
+            PROJECT, root, ignore=shutil.ignore_patterns("saves", "__pycache__", "*.bak")
+        )
         path = root / "project.asteria.json"
         upgrade = subprocess.run(
             [
                 sys.executable,
                 "-c",
-                "import sys; from asteria.project_tools import upgrade_main; sys.exit(upgrade_main([sys.argv[1]]))",
+                "import sys; from asteria.project_tools import upgrade_main; "
+                "sys.exit(upgrade_main([sys.argv[1]]))",
                 str(path),
             ],
             capture_output=True,
@@ -2155,9 +2490,12 @@ def check_migrated_project_plays(out):
     return result(
         "migrated_project_plays",
         "PASS" if ok else "FAIL",
-        f"Reference project copied in its stored format (project v{before.get('version')}), upgraded by the "
-        f"asteria-upgrade CLI in its own process ({upgrade.stdout.strip() or upgrade.stderr.strip()[-200:]}) to "
-        f"v{after.get('version')}, then played in a real {driver} window: walked by key events={walked}, "
+        f"Reference project copied in its stored format (project v{before.get('version')}), "
+        f"upgraded by the "
+        f"asteria-upgrade CLI in its own process "
+        f"({upgrade.stdout.strip() or upgrade.stderr.strip()[-200:]}) to "
+        f"v{after.get('version')}, then played in a real {driver} window: walked by key "
+        f"events={walked}, "
         f"pressed E at the boss -> dialogue / event / battle={talked}, F5 save written and loaded="
         f"{loaded is not None}",
         screenshots=["migrated_project_playing.png"],
@@ -2165,9 +2503,12 @@ def check_migrated_project_plays(out):
 
 
 def check_asset_categories(out):
-    """AST-07 / AST-08: one asset of every canonical category (the golden set: character, NPC, monster,
-    tileset, prop, icon, VFX, skill, scene, projectile, UI) loaded through the canonical asset store the
-    editor and runtime use, and shown in a real window - animated categories play their first clip."""
+    """AST-07 / AST-08: one asset of every canonical category (the golden set: character, NPC,
+    monster,
+    tileset, prop, icon, VFX, skill, scene, projectile, UI) loaded through the canonical asset
+    store the
+    editor and runtime use, and shown in a real window - animated categories play their first
+    clip."""
     import pygame
 
     from asteria.runtime.animation import AnimatorState
@@ -2187,14 +2528,20 @@ def check_asset_categories(out):
         source = _sprite_source(asset, manifest)
         uri = source[0] if source else manifest.source
         image = None
-        for candidate in (uri, getattr(asset, "image", ""), *(v.image_uri for v in getattr(asset, "visuals", ()))):
+        for candidate in (
+            uri,
+            getattr(asset, "image", ""),
+            *(v.image_uri for v in getattr(asset, "visuals", ())),
+        ):
             if candidate and str(candidate).endswith(".png") and (root / candidate).is_file():
                 image = pygame.image.load(str(root / candidate)).convert_alpha()
                 break
         clips = _clips_of(asset)
         clip = next(iter(clips.values()), None)
         frame = tuple(source[1]) if source else (image.get_size() if image else (32, 32))
-        cells.append((manifest.kind, manifest.asset_id, image, frame, AnimatorState(clip) if clip else None))
+        cells.append(
+            (manifest.kind, manifest.asset_id, image, frame, AnimatorState(clip) if clip else None)
+        )
         rows[manifest.asset_id] = {"kind": manifest.kind, "frames_seen": set(), "pixels": 0}
     start = time.perf_counter()
     while time.perf_counter() - start < 1.2:
@@ -2208,12 +2555,18 @@ def check_asset_categories(out):
                 index = animator.frame_index if animator else 0
                 if animator:
                     animator.update(dt)
-                rect = pygame.Rect((index % columns) * frame[0], (index // columns) * frame[1], *frame)
+                rect = pygame.Rect(
+                    (index % columns) * frame[0], (index // columns) * frame[1], *frame
+                )
                 rect = rect.clip(image.get_rect())
                 part = image.subsurface(rect)
                 scale = min(130 / max(1, part.get_width()), 170 / max(1, part.get_height()), 4)
                 part = pygame.transform.scale(
-                    part, (max(1, int(part.get_width() * scale)), max(1, int(part.get_height() * scale)))
+                    part,
+                    (
+                        max(1, int(part.get_width() * scale)),
+                        max(1, int(part.get_height() * scale)),
+                    ),
                 )
                 screen.blit(part, (cx, cy))
                 rows[asset_id]["frames_seen"].add(index)
@@ -2238,17 +2591,22 @@ def check_asset_categories(out):
     return result(
         "asset_categories_real_window",
         "PASS" if ok else "FAIL",
-        f"{len(rows)} golden assets in {len(kinds)} categories {kinds} loaded through the canonical asset store and "
-        f"drawn in a real {driver} window; drawn {drawn}; animated in the window (more than one frame shown) "
+        f"{len(rows)} golden assets in {len(kinds)} categories {kinds} loaded through the "
+        f"canonical asset store and "
+        f"drawn in a real {driver} window; drawn {drawn}; animated in the window (more than "
+        f"one frame shown) "
         f"{animated}. Audio playback (AST-08) is item 3a; prefabs are item 28 (editor workflows).",
         screenshots=["asset_categories.png"],
     )
 
 
 def check_editor_characters(out):
-    """EDT-16 + AST-11 in a shown Cocoa editor on a copy of the reference project: import a walking sprite
-    sheet, place the character (Actor + linked entity), give an Actor that appearance, play the project and
-    find the character in the live game; then auto-fix an image (preview, backup, confirmation) and pack an
+    """EDT-16 + AST-11 in a shown Cocoa editor on a copy of the reference project: import a
+    walking sprite
+    sheet, place the character (Actor + linked entity), give an Actor that appearance, play the
+    project and
+    find the character in the live game; then auto-fix an image (preview, backup, confirmation)
+    and pack an
     atlas from the Asset list."""
     import shutil
     import tempfile
@@ -2268,7 +2626,9 @@ def check_editor_characters(out):
     checks, shots, notes = {}, [], {}
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp) / "project"
-        shutil.copytree(PROJECT, root, ignore=shutil.ignore_patterns("saves", "__pycache__", "*.bak"))
+        shutil.copytree(
+            PROJECT, root, ignore=shutil.ignore_patterns("saves", "__pycache__", "*.bak")
+        )
         path = root / "project.asteria.json"
         project = Project.load_json(path, EditorDocument().component_registry)
         window = AsteriaEditorWindow(project)
@@ -2300,7 +2660,9 @@ def check_editor_characters(out):
         entity = created.entity if created is not None else None
         link = entity.get(ActorLinkComponent).actor_id if entity is not None else None
         checks["sheet_copied_into_project"] = copied
-        checks["character_placed_and_linked_to_actor"] = bool(link) and link in project.rpg_database.actors
+        checks["character_placed_and_linked_to_actor"] = (
+            bool(link) and link in project.rpg_database.actors
+        )
         window.refresh_asset_list()
         items = [window.asset_list.item(i) for i in range(window.asset_list.count())]
         walker = [i for i in items if "rm_walker" in i.text()]
@@ -2310,9 +2672,13 @@ def check_editor_characters(out):
             window.refresh_inspector()
         shot("characters_placed.png")
         # Actor appearance: another actor takes the new sheet
-        sheet_id = entity.get(SpriteRenderer2D).sprite_sheet_asset_id if entity is not None else None
+        sheet_id = (
+            entity.get(SpriteRenderer2D).sprite_sheet_asset_id if entity is not None else None
+        )
         other = next((a for a in sorted(project.rpg_database.actors) if a != link), None)
-        applied = bool(other and sheet_id and window.set_actor_appearance(other, sheet_id) is not False)
+        applied = bool(
+            other and sheet_id and window.set_actor_appearance(other, sheet_id) is not False
+        )
         checks["actor_appearance_applied"] = applied
         notes["sheet"] = sheet_id
         # play from the placed character: the live game shows it in its field
@@ -2324,11 +2690,14 @@ def check_editor_characters(out):
             settle(0.5)
             snapshot = window.debugger_widget.refresh()
         names = [e["name"] for e in (snapshot or {}).get("field_entities", [])]
-        checks["character_in_live_game"] = bool(started and snapshot and entity is not None and entity.name in names)
+        checks["character_in_live_game"] = bool(
+            started and snapshot and entity is not None and entity.name in names
+        )
         notes["live_entities"] = len(names)
         shot("characters_playing.png")
         window.stop_play()
-        # AST-11: auto-fix from the Asset list - a padded copy of the sheet, cropped with preview and backup
+        # AST-11: auto-fix from the Asset list - a padded copy of the sheet, cropped with preview
+        # and backup
         padded = root / "playable_assets" / "rm_padded.png"
         with Image.open(sheet) as source:
             frame = source.convert("RGBA").crop((0, 0, 64, 64))
@@ -2337,7 +2706,9 @@ def check_editor_characters(out):
         canvas.save(padded)
         from asteria.assets import AssetRecord
 
-        project.assets.add(AssetRecord.create(kind="texture", source_path="playable_assets/rm_padded.png"))
+        project.assets.add(
+            AssetRecord.create(kind="texture", source_path="playable_assets/rm_padded.png")
+        )
         window.refresh_asset_list()
         for i in range(window.asset_list.count()):
             item = window.asset_list.item(i)
@@ -2355,25 +2726,34 @@ def check_editor_characters(out):
         with Image.open(padded) as fixed:
             fixed_size = fixed.size
         checks["autofix_preview_apply_backup"] = (
-            report is not None and fixed_size[0] < 96 and (padded.parent / "rm_padded.bak.png").is_file()
+            report is not None
+            and fixed_size[0] < 96
+            and (padded.parent / "rm_padded.bak.png").is_file()
         )
         notes["autofix"] = f"{seen.get('preview')} -> {fixed_size}"
         soft = root / "playable_assets" / "rm_soft.png"
         Image.new("RGBA", (8, 8), (200, 40, 40, 100)).save(soft)
-        project.assets.add(AssetRecord.create(kind="texture", source_path="playable_assets/rm_soft.png"))
+        project.assets.add(
+            AssetRecord.create(kind="texture", source_path="playable_assets/rm_soft.png")
+        )
         window.refresh_asset_list()
         for i in range(window.asset_list.count()):
             item = window.asset_list.item(i)
             item.setSelected("rm_soft.png" in item.text())
         refused = window.auto_fix_selected_image(
-            dialog_hook=lambda d: (d.fix.setCurrentIndex(d.fix.findData("normalize_alpha")), d.apply(confirm=False))
+            dialog_hook=lambda d: (
+                d.fix.setCurrentIndex(d.fix.findData("normalize_alpha")),
+                d.apply(confirm=False),
+            )
         )
         checks["destructive_fix_needs_confirmation"] = (
             refused is None and not (soft.parent / "rm_soft.bak.png").exists()
         )
         for i in range(window.asset_list.count()):
             item = window.asset_list.item(i)
-            item.setSelected(any(n in item.text() for n in ("rm_padded.png", "rm_walker", "rm_soft.png")))
+            item.setSelected(
+                any(n in item.text() for n in ("rm_padded.png", "rm_walker", "rm_soft.png"))
+            )
         packed = window.pack_selected_images(root / "atlas" / "rm_atlas.png")
         regions = json.loads(packed[1].read_text())["regions"] if packed else {}
         checks["atlas_packed_with_regions"] = len(regions) >= 3
@@ -2389,7 +2769,8 @@ def check_editor_characters(out):
         "PASS" if not failed else "FAIL",
         f"Qt platform '{app.platformName()}', shown editor on a copy of the reference project: "
         + ", ".join(f"{k}={'ok' if v else 'FAILED'}" for k, v in checks.items())
-        + f"; sheet {notes.get('sheet')}, {notes.get('live_entities')} live field entities, auto-fix "
+        + f"; sheet {notes.get('sheet')}, {notes.get('live_entities')} live field entities, "
+        f"auto-fix "
         f"{notes.get('autofix')}, atlas regions {notes.get('atlas')}",
         screenshots=shots,
         note="Hands-on use by a person (mouse drags, typing) is manual item M7.",
@@ -2397,9 +2778,12 @@ def check_editor_characters(out):
 
 
 def check_icons_and_particles(out):
-    """AST-07 menu icons (shop, Items, Equipment by real key events) and VFX-01 particles in real windows: a
-    field emitter on an entity plus a PLAY_VFX one-shot (pygame and ModernGL, fps measured) and a battle
-    timeline beat that bursts particles on the target. Effects are added in memory; nothing is saved."""
+    """AST-07 menu icons (shop, Items, Equipment by real key events) and VFX-01 particles in real
+    windows: a
+    field emitter on an entity plus a PLAY_VFX one-shot (pygame and ModernGL, fps measured) and a
+    battle
+    timeline beat that bursts particles on the target. Effects are added in memory; nothing is
+    saved."""
     import dataclasses
 
     import pygame
@@ -2411,14 +2795,17 @@ def check_icons_and_particles(out):
     from asteria.runtime.profiler import RuntimeProfiler
 
     results = []
-    # -- AST-07: icons in the shop and the status menu ----------------------------------------------------
+    # -- AST-07: icons in the shop and the status menu --------------------------------------------
     runtime = _runtime()
     game = runtime.game
     game.project.rpg_database.add_shop(
         ShopDefinition(
             "rm_icons",
             "RM Icons",
-            [ShopEntry(i, buy_prices={"gold": 10}) for i in ("ether_leaf", "healing_herb", "iron_ore")],
+            [
+                ShopEntry(i, buy_prices={"gold": 10})
+                for i in ("ether_leaf", "healing_herb", "iron_ore")
+            ],
         )
     )
     drawn = {}
@@ -2428,7 +2815,9 @@ def check_icons_and_particles(out):
         shown = original(icon_id, x, y, size)
         if shown:
             drawn.setdefault(
-                runtime._ui_mode + ("/" + runtime.status_menu.tab if runtime._ui_mode == "status" else ""), set()
+                runtime._ui_mode
+                + ("/" + runtime.status_menu.tab if runtime._ui_mode == "status" else ""),
+                set(),
             ).add(icon_id)
         return shown
 
@@ -2462,7 +2851,10 @@ def check_icons_and_particles(out):
     pygame.image.save(runtime.capture(), str(out / "icons_equipment.png"))
     runtime.close()
     screens = {k: sorted(v) for k, v in drawn.items()}
-    ok = all(screens.get(k) for k in ("shop", "status/items", "status/equipment")) and driver == "cocoa"
+    ok = (
+        all(screens.get(k) for k in ("shop", "status/items", "status/equipment"))
+        and driver == "cocoa"
+    )
     results.append(
         result(
             "menu_icons_real_window",
@@ -2472,7 +2864,7 @@ def check_icons_and_particles(out):
         )
     )
 
-    # -- VFX-01: field emitter + PLAY_VFX one-shot, both backends ------------------------------------------
+    # -- VFX-01: field emitter + PLAY_VFX one-shot, both backends ---------------------------------
     def field_run(backend, shot_name):
         runtime = _runtime(backend=backend)
         project = runtime.game.project
@@ -2490,7 +2882,11 @@ def check_icons_and_particles(out):
             EventProgram(
                 (
                     EventInstruction(
-                        "WORLD", {"command": "PLAY_VFX", "args": {"asset_id": "rm.heal", "entity": "player"}}
+                        "WORLD",
+                        {
+                            "command": "PLAY_VFX",
+                            "args": {"asset_id": "rm.heal", "entity": "player"},
+                        },
                     ),
                 )
             ),
@@ -2505,7 +2901,9 @@ def check_icons_and_particles(out):
             profiler.end_frame()
             profiler.begin_frame()
             counts["max"] = max(counts["max"], getattr(runtime, "particles_drawn", 0))
-            counts["one_shot"] = max(counts["one_shot"], sum(p.system.count for p in runtime.field_effects.particles))
+            counts["one_shot"] = max(
+                counts["one_shot"], sum(p.system.count for p in runtime.field_effects.particles)
+            )
             if frame == 30:
                 game.events.start("rm_heal_fx")
             if frame == 60:
@@ -2520,27 +2918,38 @@ def check_icons_and_particles(out):
 
     for backend, name in ((None, "pygame"), ("moderngl", "moderngl")):
         driver, pacing, counts, emitters = field_run(backend, f"particles_field_{name}.png")
-        ok = counts["max"] > 20 and counts["one_shot"] > 0 and emitters == 2 and pacing["measured_fps"] >= 50
+        ok = (
+            counts["max"] > 20
+            and counts["one_shot"] > 0
+            and emitters == 2
+            and pacing["measured_fps"] >= 50
+        )
         results.append(
             result(
                 f"particles_field_{name}",
                 "PASS" if ok else "FAIL",
-                f"{name} ({driver}): two entity emitters (fire on the boss, sparkle following the player) and a "
-                f"PLAY_VFX heal one-shot for 3 s: up to {counts['max']} particles drawn per frame, one-shot peak "
-                f"{counts['one_shot']}, {pacing['measured_fps']} fps, p99 interval {pacing['interval_p99_ms']} ms",
+                f"{name} ({driver}): two entity emitters (fire on the boss, sparkle following "
+                f"the player) and a "
+                f"PLAY_VFX heal one-shot for 3 s: up to {counts['max']} particles drawn per "
+                f"frame, one-shot peak "
+                f"{counts['one_shot']}, {pacing['measured_fps']} fps, p99 interval "
+                f"{pacing['interval_p99_ms']} ms",
                 screenshots=[f"particles_field_{name}.png"],
                 note="Whether the particles look good is manual item M10.",
             )
         )
 
-    # -- VFX-01: battle beat ------------------------------------------------------------------------------
+    # -- VFX-01: battle beat ----------------------------------------------------------------------
     runtime = _runtime()
     project = runtime.game.project
     project.assets.register(particle_effect_asset(preset("explosion", "rm.burst")))
     library = project.battle_presentation_library
     for sequence_id in library.ids("motion_sequences"):  # every skill's VFX beat bursts particles
         sequence = library.require("motion_sequences", sequence_id)
-        beats = tuple(dataclasses.replace(b, cue="rm.burst") if b.channel == "vfx" else b for b in sequence.beats)
+        beats = tuple(
+            dataclasses.replace(b, cue="rm.burst") if b.channel == "vfx" else b
+            for b in sequence.beats
+        )
         library.set("motion_sequences", sequence_id, dataclasses.replace(sequence, beats=beats))
     runtime.open()
     driver = pygame.display.get_driver()
@@ -2569,7 +2978,11 @@ def check_icons_and_particles(out):
     runtime._advance_to_hero_turn()
     used = 0
     for _ in range(60):  # a skill by a real key press whenever the hero may act
-        if not adapter.busy() and runtime.game.mode == "battle" and runtime._battle_actor() is not None:
+        if (
+            not adapter.busy()
+            and runtime.game.mode == "battle"
+            and runtime._battle_actor() is not None
+        ):
             _key(pygame.K_1)
             _pump(runtime, 0.05)
             _key(pygame.K_1, up=True)
@@ -2584,8 +2997,10 @@ def check_icons_and_particles(out):
         result(
             "particles_battle_beat",
             "PASS" if peak["n"] >= 30 and peak["shot"] and targets else "FAIL",
-            f"Canonical battle in a real {driver} window: every action timeline's VFX beat cues a particle effect; "
-            f"bursts drawn on {targets} (whichever side acted first; {used} hero skill key presses), up to "
+            f"Canonical battle in a real {driver} window: every action timeline's VFX beat "
+            f"cues a particle effect; "
+            f"bursts drawn on {targets} (whichever side acted first; {used} hero skill key "
+            f"presses), up to "
             f"{peak['n']} particles in one frame",
             screenshots=["particles_battle.png"] if peak["shot"] else [],
         )
@@ -2594,8 +3009,10 @@ def check_icons_and_particles(out):
 
 
 def check_editor_particles(out):
-    """VFX-01 in a shown Cocoa editor: Particle Effects tab - new effect from a preset, values changed in the
-    form, the live preview running on its own timer, Apply / Undo, an emitter's Inspector choice, usage."""
+    """VFX-01 in a shown Cocoa editor: Particle Effects tab - new effect from a preset, values
+    changed in the
+    form, the live preview running on its own timer, Apply / Undo, an emitter's Inspector choice,
+    usage."""
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
@@ -2635,7 +3052,9 @@ def check_editor_particles(out):
     checks["preview_runs"] = live is not None and live.count > 40 and live.definition.rate == 90.0
     editor.grab().save(str(out / "editor_particles.png"))
     shots.append("editor_particles.png")
-    checks["apply"] = editor.apply() and effect_definition(project.assets, "rm.campfire").rate == 90.0
+    checks["apply"] = (
+        editor.apply() and effect_definition(project.assets, "rm.campfire").rate == 90.0
+    )
     window.document.undo()
     checks["undo"] = effect_definition(project.assets, "rm.campfire").rate == 40.0
     window.document.redo()
@@ -2670,9 +3089,12 @@ def check_editor_particles(out):
 
 
 def check_octopath_demo(out):
-    """BTL-02 / BTL-03 / GP-02: the Octopath-style demo project played in a real window by key events through
-    the battle command menu: boost and a chosen target, a divine skill (three boost points, particle burst),
-    concocting two ingredients, then the battle won. Enemies are worn down in memory to keep the run short."""
+    """BTL-02 / BTL-03 / GP-02: the Octopath-style demo project played in a real window by key
+    events through
+    the battle command menu: boost and a chosen target, a divine skill (three boost points,
+    particle burst),
+    concocting two ingredients, then the battle won. Enemies are worn down in memory to keep the
+    run short."""
     import pygame
 
     from asteria.editor import EditorDocument
@@ -2681,7 +3103,9 @@ def check_octopath_demo(out):
 
     root = REPO / "reference_projects" / "octopath_demo"
     project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
-    runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), root, width=960, height=540)
+    runtime = PlayableTestRuntime(
+        project, project.game_start.instantiate(project), root, width=960, height=540
+    )
     runtime.open()
     driver = pygame.display.get_driver()
     game, checks, shots = runtime.game, {}, []
@@ -2734,7 +3158,11 @@ def check_octopath_demo(out):
     game.battle.battle_resources.change(actor, "bp", 3)
     press(pygame.K_RIGHT)
     checks["boost_set_by_key"] = runtime.battle_commands.boost == 1
-    attack = next(r.action_id for r in runtime.battle_commands.entries(actor) if r.action_id.startswith("attack_"))
+    attack = next(
+        r.action_id
+        for r in runtime.battle_commands.entries(actor)
+        if r.action_id.startswith("attack_")
+    )
     select(actor, attack)
     checks["target_menu"] = runtime.battle_commands.mode == "target"
     shot("octo_target.png")
@@ -2747,7 +3175,10 @@ def check_octopath_demo(out):
         if actor is None:
             break
         known = game.battle.member(actor).ability_ids
-        divine = next((a for a in known if "divine" in game.project.gameplay_library.abilities.get(a).tags), None)
+        divine = next(
+            (a for a in known if "divine" in game.project.gameplay_library.abilities.get(a).tags),
+            None,
+        )
         if divine is not None:
             break
         press(pygame.K_RETURN)
@@ -2764,7 +3195,9 @@ def check_octopath_demo(out):
 
     runtime.particle_drawer.draw = counted
     if divine is not None:
-        game.battle.battle_resources.change(actor, "bp", 3 - game.battle.battle_resources.current(actor, "bp"))
+        game.battle.battle_resources.change(
+            actor, "bp", 3 - game.battle.battle_resources.current(actor, "bp")
+        )
         before = game.battle.battle_resources.current(actor, "bp")
         select(actor, divine)
         if runtime.battle_commands.mode == "target":
@@ -2774,7 +3207,9 @@ def check_octopath_demo(out):
             if peak.get("due") and not peak["shot"]:
                 shot("octo_divine.png")
                 peak["shot"] = True
-        checks["divine_spends_three_bp"] = before - game.battle.battle_resources.current(actor, "bp") >= 3
+        checks["divine_spends_three_bp"] = (
+            before - game.battle.battle_resources.current(actor, "bp") >= 3
+        )
         checks["divine_particle_burst"] = peak["shot"]
     else:
         checks["divine_spends_three_bp"] = checks["divine_particle_burst"] = False
@@ -2792,7 +3227,10 @@ def check_octopath_demo(out):
             select(actor, "fire_dust")  # catalyst: a fire bomb on every enemy
             if runtime.battle_commands.mode == "target":
                 press(pygame.K_RETURN)
-            concocted = game.save.rpg_state.inventory.count("healing_herb") < herbs and "bomb_fire" in executed
+            concocted = (
+                game.save.rpg_state.inventory.count("healing_herb") < herbs
+                and "bomb_fire" in executed
+            )
             break
         press(pygame.K_RETURN)
         press(pygame.K_RETURN)
@@ -2816,8 +3254,12 @@ def check_octopath_demo(out):
     runtime.close()
     # the other enemy kinds: each encounter opens with its art, shields and weaknesses
     for encounter_id in ("slime_pit", "old_crypt", "gazer_nest", "samurai_duel"):
-        fresh = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
-        other = PlayableTestRuntime(fresh, fresh.game_start.instantiate(fresh), root, width=960, height=540)
+        fresh = Project.load_json(
+            root / "project.asteria.json", EditorDocument().component_registry
+        )
+        other = PlayableTestRuntime(
+            fresh, fresh.game_start.instantiate(fresh), root, width=960, height=540
+        )
         other.open()
         other._ui_mode = "field"
         other.game.start_encounter(encounter_id)
@@ -2846,12 +3288,15 @@ def check_octopath_demo(out):
 
 
 def _rss_mb():
-    value = subprocess.run(["ps", "-o", "rss=", "-p", str(os.getpid())], capture_output=True, text=True).stdout
+    value = subprocess.run(
+        ["ps", "-o", "rss=", "-p", str(os.getpid())], capture_output=True, text=True
+    ).stdout
     return int(value.strip()) / 1024.0
 
 
 def check_battle_memory(out):
-    """ENG-10: battle-scoped images are released after every battle; process memory stays flat over 12 battles
+    """ENG-10: battle-scoped images are released after every battle; process memory stays flat
+    over 12 battles
     in the real playable window."""
     import pygame
 
@@ -2887,18 +3332,25 @@ def check_battle_memory(out):
     return result(
         "battle_memory_real_window",
         "PASS" if ok else "FAIL",
-        f"12 boss battles entered and left in the real playable {driver} window: battle-scoped images left in the "
-        f"cache after each battle {field_cache}; {released} images released in total; process RSS per battle (MB) "
-        f"{[round(x, 1) for x in samples]}; growth from battle 2 to 12 {growth:+.1f} MB (limit +25 MB)",
+        f"12 boss battles entered and left in the real playable {driver} window: battle-scoped "
+        f"images left in the "
+        f"cache after each battle {field_cache}; {released} images released in total; process "
+        f"RSS per battle (MB) "
+        f"{[round(x, 1) for x in samples]}; growth from battle 2 to 12 {growth:+.1f} MB (limit "
+        f"+25 MB)",
         screenshots=["battle_memory_after_12.png"],
     )
 
 
-# -- D19: session-level integration tests replayed in the real playable window ----------------------
+# -- D19: session-level integration tests replayed in the real playable window --------------------
 
 REPLAY = {
-    "RPG-02": ["shops_and_quests::test_equipment_set_bonuses_apply_by_piece_count_and_survive_save_load"],
-    "RPG-04": ["drop_tables::test_victory_rolls_the_enemy_drop_table_and_pity_survives_save_and_load"],
+    "RPG-02": [
+        "shops_and_quests::test_equipment_set_bonuses_apply_by_piece_count_and_survive_save_load"
+    ],
+    "RPG-04": [
+        "drop_tables::test_victory_rolls_the_enemy_drop_table_and_pity_survives_save_and_load"
+    ],
     "RPG-05": [
         "shops_and_quests::test_shop_buys_sells_and_tracks_limited_stock",
         "game_menus::test_runtime_opens_shop_from_an_event_and_buys",
@@ -2950,8 +3402,12 @@ REPLAY = {
         "event_flow_integration::test_common_events_autorun_and_parallel_follow_their_switches",
         "event_flow_integration::test_battle_event_fires_on_its_condition_once_and_holds_battle_input",
     ],
-    "EVT-04": ["event_flow_integration::test_a_sequence_runs_dialogue_and_music_tracks_in_parallel"],
-    "RPG-01": ["inventory_rules::test_the_game_session_applies_the_project_rules_to_events_and_shops"],
+    "EVT-04": [
+        "event_flow_integration::test_a_sequence_runs_dialogue_and_music_tracks_in_parallel"
+    ],
+    "RPG-01": [
+        "inventory_rules::test_the_game_session_applies_the_project_rules_to_events_and_shops"
+    ],
     "RPG-08": [
         "companions_and_summons::test_a_boss_summons_minions_it_owns_and_they_take_turns",
         "companions_and_summons::test_a_companion_in_reserve_is_called_into_the_battle_and_events_can_summon",
@@ -2970,7 +3426,9 @@ REPLAY = {
         "octopath_style_battle::test_boost_repeats_attacks_and_powers_spells",
         "octopath_style_battle::test_secondary_job_and_a_poison_that_worsens_every_turn",
     ],
-    "ANI-02": ["canonical_battle_presentation::test_an_authored_state_machine_chooses_the_battle_clips"],
+    "ANI-02": [
+        "canonical_battle_presentation::test_an_authored_state_machine_chooses_the_battle_clips"
+    ],
     "BTL-03": [
         "octopath_demo::test_boosted_sword_attack_hits_three_times_breaks_shields_and_reveals_the_weakness",
         "octopath_demo::test_break_skips_the_enemy_turn_and_doubles_damage",
@@ -2993,12 +3451,16 @@ REPLAY = {
 
 
 def check_b_items_replay(out):
-    """B items whose remaining gap was "no real-machine run": their session-level integration tests run
-    inside the real playable window (tests/real_window.py), unchanged, with frames presented after each
+    """B items whose remaining gap was "no real-machine run": their session-level integration
+    tests run
+    inside the real playable window (tests/real_window.py), unchanged, with frames presented after
+    each
     session call. Tests that never drove the window do not count."""
     report_path = out / "b_items_replay.json"
     shots = out / "replay"
-    files = sorted({f"tests/test_{name.split('::')[0]}.py" for names in REPLAY.values() for name in names})
+    files = sorted(
+        {f"tests/test_{name.split('::')[0]}.py" for names in REPLAY.values() for name in names}
+    )
     env = dict(os.environ, ASTERIA_REAL_WINDOW="1", ASTERIA_REAL_WINDOW_REPORT=str(report_path))
     env["ASTERIA_REAL_WINDOW_SHOTS"] = str(shots)
     for key in ("SDL_VIDEODRIVER", "SDL_AUDIODRIVER", "QT_QPA_PLATFORM"):
@@ -3027,7 +3489,8 @@ def check_b_items_replay(out):
             result(
                 f"replay_{item}",
                 "PASS" if ok else "FAIL",
-                f"{item}: session-level integration tests replayed in the real playable {report['driver']} window "
+                f"{item}: session-level integration tests replayed in the real playable "
+                f"{report['driver']} window "
                 f"(same assertions; frames presented after each session call): {detail}",
                 screenshots=[f"replay/{n}.png" for n, _, _ in rows],
             )
@@ -3036,7 +3499,8 @@ def check_b_items_replay(out):
         result(
             "b_items_replay_run",
             "PASS" if proc.returncode == 0 else "FAIL",
-            f"pytest exit {proc.returncode}; {len(report['results'])} tests in {len(files)} files, "
+            f"pytest exit {proc.returncode}; {len(report['results'])} tests in {len(files)} "
+            f"files, "
             f"{report['frames']} frames presented in total; {summary}",
         )
     )
@@ -3081,13 +3545,19 @@ CHECKS = {
 
 def _run_child(name, out):
     proc = subprocess.run(
-        [sys.executable, __file__, str(out), "--child", name], capture_output=True, text=True, timeout=600, cwd=REPO
+        [sys.executable, __file__, str(out), "--child", name],
+        capture_output=True,
+        text=True,
+        timeout=600,
+        cwd=REPO,
     )
     marker = "RESULT_JSON:"
     for line in proc.stdout.splitlines():
         if line.startswith(marker):
             return json.loads(line[len(marker) :])
-    return [result(name, "FAIL", f"check crashed (exit {proc.returncode})", stderr=proc.stderr[-1500:])]
+    return [
+        result(name, "FAIL", f"check crashed (exit {proc.returncode})", stderr=proc.stderr[-1500:])
+    ]
 
 
 def main(argv=None):
@@ -3113,7 +3583,9 @@ def main(argv=None):
     }
     results_path = out / "results.json"
     if args.only and results_path.exists():  # keep evidence of checks that were not re-run
-        rerun = {r["check"] for r in results} | set(args.only)  # also drop old crash entries (named by key)
+        rerun = {r["check"] for r in results} | set(
+            args.only
+        )  # also drop old crash entries (named by key)
         previous = json.loads(results_path.read_text()).get("results", [])
         results = [r for r in previous if r["check"] not in rerun] + results
     results_path.write_text(json.dumps({"meta": meta, "results": results}, indent=2))

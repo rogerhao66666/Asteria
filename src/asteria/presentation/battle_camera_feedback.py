@@ -110,12 +110,16 @@ class BattleCameraFeedbackRuntime:
             ax = _finite(payload.get("amplitude_x", amplitude), "camera amplitude_x")
             ay = _finite(payload.get("amplitude_y", amplitude), "camera amplitude_y")
             frequency = _positive(payload.get("frequency", 18.0), "camera frequency")
-            self.impulses.append(BattleCameraImpulse(event.sequence, cue_id, ax, ay, frequency, 0.0, duration))
+            self.impulses.append(
+                BattleCameraImpulse(event.sequence, cue_id, ax, ay, frequency, 0.0, duration)
+            )
             return True
         if kind == ActionCueKind.SCREEN_FX.value:
             effect = str(payload.get("effect", "custom")).strip() or "custom"
             duration = _positive(payload.get("duration", 0.1), "screen effect duration")
-            self.screen_fx.append(BattleScreenFxCue(event.sequence, cue_id, effect, payload, 0.0, duration))
+            self.screen_fx.append(
+                BattleScreenFxCue(event.sequence, cue_id, effect, payload, 0.0, duration)
+            )
             return True
         return False
 
@@ -149,8 +153,12 @@ class BattleCameraFeedbackRuntime:
     def update(self, dt):
         dt = _nonnegative(dt, "dt")
         self.time += dt
-        self.impulses = [replace(x, age=x.age + dt) for x in self.impulses if x.age + dt < x.duration]
-        self.screen_fx = [replace(x, age=x.age + dt) for x in self.screen_fx if x.age + dt < x.duration]
+        self.impulses = [
+            replace(x, age=x.age + dt) for x in self.impulses if x.age + dt < x.duration
+        ]
+        self.screen_fx = [
+            replace(x, age=x.age + dt) for x in self.screen_fx if x.age + dt < x.duration
+        ]
 
     def camera_offset(self):
         x = y = 0.0
@@ -165,7 +173,13 @@ class BattleCameraFeedbackRuntime:
             raise TypeError("base_camera must be Camera2D")
         dx, dy = self.camera_offset()
         # World-space camera translation; the canonical/base camera remains untouched.
-        return Camera2D(base_camera.x + dx, base_camera.y + dy, base_camera.width, base_camera.height, base_camera.zoom)
+        return Camera2D(
+            base_camera.x + dx,
+            base_camera.y + dy,
+            base_camera.width,
+            base_camera.height,
+            base_camera.zoom,
+        )
 
     def build_frame(self, base_camera: Camera2D):
         view = self.camera_view(base_camera)
@@ -235,7 +249,10 @@ class BattleCameraFeedbackRuntime:
         }
 
     def restore(self, data):
-        if data.get("schema") != "asteria.battle_camera_feedback_runtime" or data.get("version") != 1:
+        if (
+            data.get("schema") != "asteria.battle_camera_feedback_runtime"
+            or data.get("version") != 1
+        ):
             raise ValueError("unsupported battle camera feedback snapshot")
         if data.get("scene_id") != self.scene.scene_id:
             raise ValueError("battle camera feedback scene mismatch")

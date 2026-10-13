@@ -268,7 +268,9 @@ class PlayableRpgValidationHarness:
         entries = []
         for order, ability_id in enumerate(build.abilities):
             sources = build.ability_sources(ability_id)
-            source_text = ", ".join(f"{source.source_kind}:{source.source_id}" for source in sources)
+            source_text = ", ".join(
+                f"{source.source_kind}:{source.source_id}" for source in sources
+            )
             entries.append(
                 BattleActionEntry(
                     ability_id,
@@ -316,7 +318,10 @@ class PlayableRpgValidationHarness:
             ability_sources.append(
                 (
                     ability_id,
-                    tuple((source.source_kind, source.source_id) for source in build.ability_sources(ability_id)),
+                    tuple(
+                        (source.source_kind, source.source_id)
+                        for source in build.ability_sources(ability_id)
+                    ),
                 )
             )
         resources = tuple(sorted(build.resources.to_data()["values"]))

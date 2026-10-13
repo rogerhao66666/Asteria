@@ -1,10 +1,18 @@
 """Verify Batch 81 against one canonical Asteria Project definition set."""
+
 from pathlib import Path
 import json
 
 from asteria.editor.model import EditorDocument
 from asteria.editor.storage import load_document
-from asteria.gameplay import AbilityRegistry, AbilityRuntime, GameplaySubject, ResourcePool, StatBlock, TagSet
+from asteria.gameplay import (
+    AbilityRegistry,
+    AbilityRuntime,
+    GameplaySubject,
+    ResourcePool,
+    StatBlock,
+    TagSet,
+)
 from asteria.rpg import BattleRuntime, Party, PartyMember
 
 root = Path(__file__).resolve().parents[2]
@@ -19,7 +27,8 @@ hero_resources = ResourcePool()
 hero_resources.define("hp", 120, current=120)
 hero_resources.define("mp", 60, current=42)
 hero = PartyMember(
-    "aria", "heroes",
+    "aria",
+    "heroes",
     GameplaySubject(StatBlock({"speed": 18}), hero_resources, TagSet()),
     initiative=18,
 )
@@ -28,7 +37,8 @@ enemy_resources = ResourcePool()
 enemy_resources.define("hp", 300, current=300)
 enemy_resources.define("mp", 20, current=20)
 enemy = PartyMember(
-    "iron_beetle", "monsters",
+    "iron_beetle",
+    "monsters",
     GameplaySubject(StatBlock({"speed": 6}), enemy_resources, TagSet()),
     initiative=6,
 )

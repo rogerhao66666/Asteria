@@ -1,4 +1,5 @@
-"""Problems dock (EDT-15): the project's validation issues in one list; double-click jumps to the place."""
+"""Problems dock (EDT-15): the project's validation issues in one list; double-click jumps to the
+place."""
 
 from __future__ import annotations
 
@@ -80,7 +81,9 @@ class ProblemsWidget(QWidget):
         self.tree.clear()
         shown = self.visible_problems()
         for problem in shown:
-            item = QTreeWidgetItem(["✗" if problem.severity == "error" else "!", problem.area, problem.message])
+            item = QTreeWidgetItem(
+                ["✗" if problem.severity == "error" else "!", problem.area, problem.message]
+            )
             item.setText(3, problem.location)
             item.setToolTip(2, problem.message)
             item.setData(0, Qt.UserRole, problem)

@@ -39,7 +39,9 @@ class ActorProgressionState:
     SCHEMA = "asteria.rpg.actor_progression_state"
     VERSION = 1
 
-    def __init__(self, level=1, experience=0.0, *, points=None, unlocked_class_ids=(), active_class_ids=()):
+    def __init__(
+        self, level=1, experience=0.0, *, points=None, unlocked_class_ids=(), active_class_ids=()
+    ):
         self.level = int(level)
         self.experience = float(experience)
         if self.level < 1:
@@ -144,7 +146,9 @@ class RpgRuntimeState:
         from .world_record import WorldRecord
 
         self.world = world if world is not None else WorldRecord()
-        self.equipment_bag = list(equipment_bag or [])  # unequipped EquippedItem instances (rolled loot)
+        self.equipment_bag = list(
+            equipment_bag or []
+        )  # unequipped EquippedItem instances (rolled loot)
         if not isinstance(self.world, WorldRecord):
             raise TypeError("world must be WorldRecord")
 
@@ -183,8 +187,13 @@ class RpgRuntimeState:
         self.actor_progression = dict(actor_progression or {})
         if any(not isinstance(x, ActorProgressionState) for x in self.actor_progression.values()):
             raise TypeError("actor_progression must contain ActorProgressionState values")
-        if any(not isinstance(x, ProgressionAllocationRuntime) for x in self.progression_allocations.values()):
-            raise TypeError("progression_allocations must contain ProgressionAllocationRuntime values")
+        if any(
+            not isinstance(x, ProgressionAllocationRuntime)
+            for x in self.progression_allocations.values()
+        ):
+            raise TypeError(
+                "progression_allocations must contain ProgressionAllocationRuntime values"
+            )
         if any(not isinstance(x, RpgActorSnapshot) for x in self.actor_snapshots.values()):
             raise TypeError("actor_snapshots must contain RpgActorSnapshot values")
         for actor_id, snapshot in self.actor_snapshots.items():
@@ -236,24 +245,33 @@ class RpgRuntimeState:
                         raise ValueError(f"actor snapshot references unknown passive {passive_id}")
                 for rule_id in state.selected_evolutions.values():
                     if rule_id not in database.ability_evolutions:
-                        raise ValueError(f"actor snapshot references unknown ability evolution {rule_id}")
+                        raise ValueError(
+                            f"actor snapshot references unknown ability evolution {rule_id}"
+                        )
         for actor_id, loadout in self.loadouts.items():
             if actor_id not in database.actors:
                 raise ValueError(f"loadout references unknown actor {actor_id}")
             for item in loadout.equipped():
                 if item.equipment.equipment_id not in database.equipment:
-                    raise ValueError(f"loadout references unknown equipment {item.equipment.equipment_id}")
+                    raise ValueError(
+                        f"loadout references unknown equipment {item.equipment.equipment_id}"
+                    )
                 if item.growth is not None:
                     growth_id = item.growth.definition.growth_id
                     if growth_id not in database.equipment_growth:
-                        raise ValueError(f"loadout references unknown equipment growth {growth_id}")
+                        raise ValueError(
+                            f"loadout references unknown equipment growth {growth_id}"
+                        )
                     if item.equipment.growth_id != growth_id:
                         raise ValueError(
-                            f"equipment instance {item.instance_id} growth does not match equipment definition"
+                            f"equipment instance {item.instance_id} growth does not match "
+                            f"equipment definition"
                         )
                 for attachment in item.attachments.values():
                     if attachment.attachment_id not in database.attachments:
-                        raise ValueError(f"loadout references unknown attachment {attachment.attachment_id}")
+                        raise ValueError(
+                            f"loadout references unknown attachment {attachment.attachment_id}"
+                        )
         expected = set(database.progression_tracks)
         if set(self.progression.definitions) != expected:
             raise ValueError("progression runtime definitions do not match RPG database")
@@ -293,14 +311,23 @@ class RpgRuntimeState:
             "loadouts": {k: self.loadouts[k].to_data() for k in sorted(self.loadouts)},
             "party_actor_ids": list(self.party_actor_ids),
             "party_active_actor_ids": list(self.party_active_actor_ids),
-            "party_placements": {k: self.party_placements[k] for k in sorted(self.party_placements)},
-            "currencies": {k: self.currencies[k] for k in sorted(self.currencies)},
-            "actor_snapshots": {k: self.actor_snapshots[k].to_data() for k in sorted(self.actor_snapshots)},
-            "progression_allocations": {
-                k: self.progression_allocations[k].to_data() for k in sorted(self.progression_allocations)
+            "party_placements": {
+                k: self.party_placements[k] for k in sorted(self.party_placements)
             },
-            "actor_progression": {k: self.actor_progression[k].to_data() for k in sorted(self.actor_progression)},
-            "shop_stock": {k: dict(sorted(self.shop_stock[k].items())) for k in sorted(self.shop_stock)},
+            "currencies": {k: self.currencies[k] for k in sorted(self.currencies)},
+            "actor_snapshots": {
+                k: self.actor_snapshots[k].to_data() for k in sorted(self.actor_snapshots)
+            },
+            "progression_allocations": {
+                k: self.progression_allocations[k].to_data()
+                for k in sorted(self.progression_allocations)
+            },
+            "actor_progression": {
+                k: self.actor_progression[k].to_data() for k in sorted(self.actor_progression)
+            },
+            "shop_stock": {
+                k: dict(sorted(self.shop_stock[k].items())) for k in sorted(self.shop_stock)
+            },
             "quests": {k: self.quests[k].to_data() for k in sorted(self.quests)},
             "world": self.world.to_data(),
             "equipment_bag": [item.to_data() for item in self.equipment_bag],
@@ -351,7 +378,9 @@ class RpgRuntimeState:
             raise ValueError("invalid RPG runtime state")
         result = cls(
             inventory=Inventory.from_data(data["inventory"]),
-            progression=ProgressionRuntime.from_data(data["progression"], database.progression_tracks.values()),
+            progression=ProgressionRuntime.from_data(
+                data["progression"], database.progression_tracks.values()
+            ),
             loadouts={
                 actor_id: EquipmentLoadout.from_data(
                     raw,
@@ -367,10 +396,13 @@ class RpgRuntimeState:
             party_placements=data.get("party_placements", {}),
             currencies=data["currencies"],
             actor_snapshots={
-                actor_id: RpgActorSnapshot.from_data(raw) for actor_id, raw in data.get("actor_snapshots", {}).items()
+                actor_id: RpgActorSnapshot.from_data(raw)
+                for actor_id, raw in data.get("actor_snapshots", {}).items()
             },
             progression_allocations={
-                scope_id: ProgressionAllocationRuntime.from_data(raw, database.progression_graphs.values(), hooks=hooks)
+                scope_id: ProgressionAllocationRuntime.from_data(
+                    raw, database.progression_graphs.values(), hooks=hooks
+                )
                 for scope_id, raw in data.get("progression_allocations", {}).items()
             },
             actor_progression={
@@ -378,7 +410,10 @@ class RpgRuntimeState:
                 for actor_id, raw in data.get("actor_progression", {}).items()
             },
             shop_stock=data.get("shop_stock", {}),
-            quests={quest_id: QuestProgress.from_data(raw) for quest_id, raw in data.get("quests", {}).items()},
+            quests={
+                quest_id: QuestProgress.from_data(raw)
+                for quest_id, raw in data.get("quests", {}).items()
+            },
             world=WorldRecord.from_data(data["world"]) if "world" in data else None,
             equipment_bag=[
                 EquippedItem.from_data(

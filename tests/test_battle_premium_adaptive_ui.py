@@ -66,7 +66,9 @@ def test_action_menu_uses_interaction_surface_and_selected_hierarchy():
         (
             BattleActionEntry("slash", "Slash", category="weapon", cost_text="3 SP"),
             BattleActionEntry("guard", "Guard", category="stance"),
-            BattleActionEntry("locked", "Limit", category="special", enabled=False, disabled_reason="Not ready"),
+            BattleActionEntry(
+                "locked", "Limit", category="special", enabled=False, disabled_reason="Not ready"
+            ),
         )
     )
     composer = BattleUiComposer(_scene(), polish=BattleUiPolishProfile(interaction_width=170))

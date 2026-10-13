@@ -71,7 +71,8 @@ class PartySetupDefinition:
         if len(active) > active_capacity:
             raise ValueError("active actor count exceeds active_capacity")
         placements = tuple(
-            x if isinstance(x, PartyPlacementDefinition) else PartyPlacementDefinition.from_data(x) for x in placements
+            x if isinstance(x, PartyPlacementDefinition) else PartyPlacementDefinition.from_data(x)
+            for x in placements
         )
         if len({x.actor_id for x in placements}) != len(placements):
             raise ValueError("actor cannot occupy multiple formation slots")
@@ -86,7 +87,11 @@ class PartySetupDefinition:
         object.__setattr__(self, "roster_actor_ids", roster)
         object.__setattr__(self, "active_actor_ids", active)
         object.__setattr__(self, "active_capacity", active_capacity)
-        object.__setattr__(self, "formation_id", None if formation_id is None else _id(formation_id, "formation_id"))
+        object.__setattr__(
+            self,
+            "formation_id",
+            None if formation_id is None else _id(formation_id, "formation_id"),
+        )
         object.__setattr__(self, "placements", placements)
         object.__setattr__(self, "allow_reserve", bool(allow_reserve))
         object.__setattr__(self, "allow_swap", bool(allow_swap))
@@ -165,13 +170,19 @@ class PartyPresentationPolicyDefinition:
         object.__setattr__(self, "profile_id", _id(profile_id, "profile_id"))
         object.__setattr__(self, "group_order", order)
         object.__setattr__(
-            self, "group_labels", tuple(sorted((str(k), str(v)) for k, v in dict(group_labels or {}).items()))
+            self,
+            "group_labels",
+            tuple(sorted((str(k), str(v)) for k, v in dict(group_labels or {}).items())),
         )
         object.__setattr__(
-            self, "member_labels", tuple(sorted((str(k), str(v)) for k, v in dict(member_labels or {}).items()))
+            self,
+            "member_labels",
+            tuple(sorted((str(k), str(v)) for k, v in dict(member_labels or {}).items())),
         )
         object.__setattr__(
-            self, "slot_labels", tuple(sorted((str(k), str(v)) for k, v in dict(slot_labels or {}).items()))
+            self,
+            "slot_labels",
+            tuple(sorted((str(k), str(v)) for k, v in dict(slot_labels or {}).items())),
         )
         object.__setattr__(self, "visible_limits", tuple(sorted(limits)))
 
@@ -189,7 +200,10 @@ class PartyPresentationPolicyDefinition:
 
     @classmethod
     def from_data(cls, data):
-        if data.get("schema") != "asteria.rpg.party_presentation_policy" or data.get("version") != 1:
+        if (
+            data.get("schema") != "asteria.rpg.party_presentation_policy"
+            or data.get("version") != 1
+        ):
             raise ValueError("unsupported party presentation policy")
         return cls(
             data["profile_id"],

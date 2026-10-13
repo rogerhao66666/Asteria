@@ -79,10 +79,14 @@ class BattleHudResourceStyle:
             raise ValueError("segments must be >= 0")
         group = _id(group, "group")
         object.__setattr__(self, "resource_id", resource_id)
-        object.__setattr__(self, "label", resource_id.upper() if label is None else _id(label, "label"))
+        object.__setattr__(
+            self, "label", resource_id.upper() if label is None else _id(label, "label")
+        )
         object.__setattr__(self, "order", int(order))
         object.__setattr__(
-            self, "icon_asset_id", None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id")
+            self,
+            "icon_asset_id",
+            None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id"),
         )
         object.__setattr__(self, "visible", bool(visible) and presentation != "hidden")
         object.__setattr__(self, "presentation", presentation)
@@ -151,12 +155,21 @@ class BattleHudProfile:
     SCHEMA = "asteria.battle_hud_profile"
     VERSION = 1
 
-    def __init__(self, resources=(), statuses=(), *, show_unmapped_resources=True, show_unmapped_statuses=False):
+    def __init__(
+        self,
+        resources=(),
+        statuses=(),
+        *,
+        show_unmapped_resources=True,
+        show_unmapped_statuses=False,
+    ):
         resources = tuple(
-            x if isinstance(x, BattleHudResourceStyle) else BattleHudResourceStyle.from_data(x) for x in resources
+            x if isinstance(x, BattleHudResourceStyle) else BattleHudResourceStyle.from_data(x)
+            for x in resources
         )
         statuses = tuple(
-            x if isinstance(x, BattleHudStatusStyle) else BattleHudStatusStyle.from_data(x) for x in statuses
+            x if isinstance(x, BattleHudStatusStyle) else BattleHudStatusStyle.from_data(x)
+            for x in statuses
         )
         if len({x.resource_id for x in resources}) != len(resources):
             raise ValueError("duplicate HUD resource style")
@@ -255,7 +268,9 @@ class _PoolValue:
         self.maximum = float(raw["maximum"])
         self.overflow = 0.0
         span = self.maximum - self.minimum
-        self.normalized = 0.0 if span <= 0 else max(0.0, min(1.0, (self.current - self.minimum) / span))
+        self.normalized = (
+            0.0 if span <= 0 else max(0.0, min(1.0, (self.current - self.minimum) / span))
+        )
         self.full = self.current >= self.maximum
 
 
@@ -337,7 +352,10 @@ class BattleHudRuntime:
         pool = getattr(subject, "resources", None)
         if pool is not None:
             for resource_id, raw in sorted(pool.to_data()["values"].items()):
-                if resource_id not in values and self.profile.resource_style(resource_id) is not None:
+                if (
+                    resource_id not in values
+                    and self.profile.resource_style(resource_id) is not None
+                ):
                     gauges.append(self._gauge(resource_id, _PoolValue(raw)))
         gauges = [x for x in gauges if x is not None]
         gauges.sort(key=lambda x: (x.order, x.resource_id))

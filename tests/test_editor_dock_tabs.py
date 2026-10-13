@@ -1,4 +1,5 @@
-"""D19: the editor never shows a duplicate dock tab strip (the stale "Assets / Console" bar Qt 6 leaves
+"""D19: the editor never shows a duplicate dock tab strip (the stale "Assets / Console" bar Qt 6
+leaves
 behind when a second dock group is tabified)."""
 
 import pytest
@@ -96,10 +97,14 @@ def test_each_workspace_keeps_its_own_panels():
         _settle(app)
         inspector = window.findChild(QDockWidget, "InspectorDock")
         console = window.findChild(QDockWidget, "ConsoleDock")
-        assert inspector.isVisible() and console.isVisible()  # Scene keeps the Inspector and the bottom panels
+        assert (
+            inspector.isVisible() and console.isVisible()
+        )  # Scene keeps the Inspector and the bottom panels
         window.workspace.set_mode(WorkspaceMode.RPG)
         _settle(app)
-        assert not inspector.isVisible() and not console.isVisible()  # the database uses the whole window
+        assert (
+            not inspector.isVisible() and not console.isVisible()
+        )  # the database uses the whole window
         console.show()  # the user opens the console in the Database workspace...
         window.workspace.set_mode(WorkspaceMode.SCENE)
         _settle(app)

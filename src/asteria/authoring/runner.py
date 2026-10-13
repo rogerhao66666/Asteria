@@ -47,7 +47,12 @@ def _diagnostic_for_exception(exc, filename):
 
 
 def script_namespace(
-    project, *, execute=None, filename="<asteria-script>", selection_kind="none", selection_value=None
+    project,
+    *,
+    execute=None,
+    filename="<asteria-script>",
+    selection_kind="none",
+    selection_value=None,
 ):
     """Globals a project script receives (also used by the editor for completion)."""
     session = AuthoringSession(project, execute=execute)
@@ -101,7 +106,11 @@ def run_authoring_script(
     This is deliberately not a security sandbox.
     """
     namespace = script_namespace(
-        project, execute=execute, filename=filename, selection_kind=selection_kind, selection_value=selection_value
+        project,
+        execute=execute,
+        filename=filename,
+        selection_kind=selection_kind,
+        selection_value=selection_value,
     )
     output = io.StringIO()
 

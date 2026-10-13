@@ -21,7 +21,11 @@ def _clip_dec(p):
         pivot=tuple(p.get("pivot", (0, 0))),
         layers=tuple(
             VisualLayer(
-                x["name"], x.get("z", 0), x.get("blend_mode", "normal"), x.get("opacity", 1.0), x.get("material")
+                x["name"],
+                x.get("z", 0),
+                x.get("blend_mode", "normal"),
+                x.get("opacity", 1.0),
+                x.get("material"),
             )
             for x in p.get("layers", ())
         ),
@@ -37,7 +41,13 @@ def _clip_enc(c):
         "timings": [{"duration_ms": x.duration_ms} for x in c.timings],
         "pivot": list(c.pivot),
         "layers": [
-            {"name": x.asset_id, "z": x.z, "blend_mode": x.blend_mode, "opacity": x.opacity, "material": x.material}
+            {
+                "name": x.asset_id,
+                "z": x.z,
+                "blend_mode": x.blend_mode,
+                "opacity": x.opacity,
+                "material": x.material,
+            }
             for x in c.layers
         ],
         "loop": c.loop,
@@ -50,7 +60,9 @@ def tileset_codec():
         ts = []
         for x in p.get("tiles", ()):
             c = x.get("collision", {})
-            col = TileCollision(c.get("kind", "none"), tuple(tuple(q) for q in c.get("points", ())))
+            col = TileCollision(
+                c.get("kind", "none"), tuple(tuple(q) for q in c.get("points", ()))
+            )
             ts.append(
                 TileDef(
                     x["tile_id"],
@@ -84,7 +96,10 @@ def tileset_codec():
                 {
                     "tile_id": x.tile_id,
                     "terrain": x.terrain,
-                    "collision": {"kind": x.collision.kind, "points": [list(q) for q in x.collision.points]},
+                    "collision": {
+                        "kind": x.collision.kind,
+                        "points": [list(q) for q in x.collision.points],
+                    },
                     "properties": dict(x.properties),
                     "animation": list(x.animation),
                     "frame_ms": x.frame_ms,
@@ -114,7 +129,8 @@ def monster_codec():
     def enc(a):
         return {
             "animations": [
-                {"name": x.name, "clip": _clip_enc(x.clip), "directions": list(x.directions)} for x in a.animations
+                {"name": x.name, "clip": _clip_enc(x.clip), "directions": list(x.directions)}
+                for x in a.animations
             ],
             "default_animation": a.default_animation,
             "collision_bounds": list(a.collision_bounds) if a.collision_bounds else None,
@@ -134,7 +150,11 @@ def vfx_codec():
                 VFXVariant(
                     x["name"],
                     _clip_dec(x["clip"]),
-                    VFXAnchor(an.get("mode", "local"), tuple(an.get("offset", (0, 0))), an.get("bone_or_socket")),
+                    VFXAnchor(
+                        an.get("mode", "local"),
+                        tuple(an.get("offset", (0, 0))),
+                        an.get("bone_or_socket"),
+                    ),
                     tuple(x.get("scale", (1, 1))),
                     x.get("rotation_deg", 0),
                     _pairs(x.get("properties")),

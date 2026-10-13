@@ -29,7 +29,10 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 
 from asteria.assets.canonical import AssetSource, CanonicalAsset  # noqa: E402
-from asteria.assets.serialization import deserialize_asset_registry, serialize_asset_registry  # noqa: E402
+from asteria.assets.serialization import (  # noqa: E402
+    deserialize_asset_registry,
+    serialize_asset_registry,
+)
 from asteria.presentation.battle_combatant_visuals import (  # noqa: E402
     BattleCombatantVisualProfile,
     BattleVisualAssetSet,
@@ -37,7 +40,10 @@ from asteria.presentation.battle_combatant_visuals import (  # noqa: E402
     BattleVisualTransform,
 )
 from asteria.presentation.battle_hud import BattleHudProfile, BattleHudResourceStyle  # noqa: E402
-from asteria.presentation.battle_motion_sequence import BattleMotionBeat, BattleMotionSequence  # noqa: E402
+from asteria.presentation.battle_motion_sequence import (  # noqa: E402
+    BattleMotionBeat,
+    BattleMotionSequence,
+)
 from asteria.presentation.library import BattlePresentationLibrary  # noqa: E402
 
 PROJECT_DIR = REPO / "reference_projects" / "complex_reference_rpg"
@@ -60,7 +66,10 @@ HEROES = {
     "hero_11": "Villager",
     "hero_12": "OldMan",
 }
-MONSTERS = {"mender_wisp": "Monster/Flam/SpriteSheet.png", "ember_hound": "Monster/Beast/Beast.png"}
+MONSTERS = {
+    "mender_wisp": "Monster/Flam/SpriteSheet.png",
+    "ember_hound": "Monster/Beast/Beast.png",
+}
 CHARACTER_ENEMIES = {"iron_guard": "Skeleton"}
 BOSS = ("astral_tyrant", "Boss/DemonCyclop")
 PLAYER_CHARACTER = HEROES["hero_01"]  # the party leader also walks the field
@@ -72,14 +81,18 @@ EFFECTS = {  # asset id -> (source, frame width, frame height, scale)
 
 
 def _crop(image, column, row, size):
-    return image.crop((column * size[0], row * size[1], (column + 1) * size[0], (row + 1) * size[1]))
+    return image.crop(
+        (column * size[0], row * size[1], (column + 1) * size[0], (row + 1) * size[1])
+    )
 
 
 def _strip(frames, scale):
     w, h = frames[0].size
     sheet = Image.new("RGBA", (w * scale * len(frames), h * scale), (0, 0, 0, 0))
     for i, frame in enumerate(frames):
-        sheet.alpha_composite(frame.resize((w * scale, h * scale), Image.NEAREST), (i * w * scale, 0))
+        sheet.alpha_composite(
+            frame.resize((w * scale, h * scale), Image.NEAREST), (i * w * scale, 0)
+        )
     return sheet
 
 
@@ -100,12 +113,26 @@ def character_sheet(root, name):
     base = root / NINJA / "Actor" / "Character" / name / "SeparateAnim"
     load = lambda f: Image.open(base / f).convert("RGBA")  # noqa: E731
     cell = (16, 16)
-    idle, walk, attack, dead = load("Idle.png"), load("Walk.png"), load("Attack.png"), load("Dead.png")
+    idle, walk, attack, dead = (
+        load("Idle.png"),
+        load("Walk.png"),
+        load("Attack.png"),
+        load("Dead.png"),
+    )
     frames = [_crop(idle, RIGHT, 0, cell)] + [_crop(walk, RIGHT, r, cell) for r in range(4)]
-    frames += [_crop(attack, RIGHT, 0, cell), _flash(_crop(idle, RIGHT, 0, cell)), _crop(dead, 0, 0, cell)]
+    frames += [
+        _crop(attack, RIGHT, 0, cell),
+        _flash(_crop(idle, RIGHT, 0, cell)),
+        _crop(dead, 0, 0, cell),
+    ]
     clips = {
         "idle": {"frames": [0, 0, 2, 0], "frame_duration": 0.22, "loop": True},
-        "attack": {"frames": [1, 3, 5, 5, 0], "frame_duration": 0.08, "loop": False, "events": {"2": ["hit"]}},
+        "attack": {
+            "frames": [1, 3, 5, 5, 0],
+            "frame_duration": 0.08,
+            "loop": False,
+            "events": {"2": ["hit"]},
+        },
         "hit": {"frames": [6, 0, 6, 0], "frame_duration": 0.07, "loop": False},
         "ko": {"frames": [7], "frame_duration": 0.5, "loop": False},
     }
@@ -113,16 +140,29 @@ def character_sheet(root, name):
 
 
 def field_player_sheet(root, name, *, scale=3, frame=64):
-    """Ninja Adventure walk cycle -> engine 3x4 sheet (rows down/left/right/up; stride, stand, stride)."""
-    walk = Image.open(root / NINJA / "Actor" / "Character" / name / "SeparateAnim" / "Walk.png").convert("RGBA")
-    source_column = {"down": 0, "left": 2, "right": 3, "up": 1}  # Walk.png columns: down, up, left, right
+    """Ninja Adventure walk cycle -> engine 3x4 sheet (rows down/left/right/up; stride, stand,
+    stride)."""
+    walk = Image.open(
+        root / NINJA / "Actor" / "Character" / name / "SeparateAnim" / "Walk.png"
+    ).convert("RGBA")
+    source_column = {
+        "down": 0,
+        "left": 2,
+        "right": 3,
+        "up": 1,
+    }  # Walk.png columns: down, up, left, right
     pattern_row = (1, 0, 3)  # stride, standing, other stride
     out = Image.new("RGBA", (3 * frame, 4 * frame), (0, 0, 0, 0))
     size = 16 * scale
     for engine_row, facing in enumerate(("down", "left", "right", "up")):
         for pattern, source_row in enumerate(pattern_row):
-            cell = _crop(walk, source_column[facing], source_row, (16, 16)).resize((size, size), Image.NEAREST)
-            out.alpha_composite(cell, (pattern * frame + (frame - size) // 2, engine_row * frame + frame - size - 2))
+            cell = _crop(walk, source_column[facing], source_row, (16, 16)).resize(
+                (size, size), Image.NEAREST
+            )
+            out.alpha_composite(
+                cell,
+                (pattern * frame + (frame - size) // 2, engine_row * frame + frame - size - 2),
+            )
     return out
 
 
@@ -133,7 +173,12 @@ def monster_sheet(root, relative):
     frames = walk + [_flash(walk[0]), _darken(walk[0])]
     clips = {
         "idle": {"frames": [0, 1, 2, 3], "frame_duration": 0.16, "loop": True},
-        "attack": {"frames": [0, 1, 2, 3, 0], "frame_duration": 0.07, "loop": False, "events": {"2": ["hit"]}},
+        "attack": {
+            "frames": [0, 1, 2, 3, 0],
+            "frame_duration": 0.07,
+            "loop": False,
+            "events": {"2": ["hit"]},
+        },
         "hit": {"frames": [4, 0, 4, 0], "frame_duration": 0.07, "loop": False},
         "ko": {"frames": [5], "frame_duration": 0.5, "loop": False},
     }
@@ -145,11 +190,18 @@ def boss_sheet(root, relative):
     cell = (50, 50)
     idle = Image.open(base / "Idle.png").convert("RGBA")
     hit = Image.open(base / "Hit.png").convert("RGBA")
-    frames = [_crop(idle, c, 0, cell) for c in range(5)] + [_crop(hit, c, 0, cell) for c in range(3)]
+    frames = [_crop(idle, c, 0, cell) for c in range(5)] + [
+        _crop(hit, c, 0, cell) for c in range(3)
+    ]
     frames.append(_darken(frames[-1]))
     clips = {
         "idle": {"frames": [0, 1, 2, 3, 4], "frame_duration": 0.14, "loop": True},
-        "attack": {"frames": [0, 2, 4, 4, 2, 0], "frame_duration": 0.07, "loop": False, "events": {"2": ["hit"]}},
+        "attack": {
+            "frames": [0, 2, 4, 4, 2, 0],
+            "frame_duration": 0.07,
+            "loop": False,
+            "events": {"2": ["hit"]},
+        },
         "hit": {"frames": [5, 6, 7], "frame_duration": 0.09, "loop": False},
         "ko": {"frames": [8], "frame_duration": 0.5, "loop": False},
     }
@@ -179,9 +231,14 @@ def _asset(asset_id, path, frame_size, clips, tags, pivot=(0.5, 1.0)):
 
 
 def _profile(member_key, asset_id, scale=1.0):
-    states = tuple(BattleVisualStateDefinition(role, role) for role in ("idle", "attack", "hit", "ko"))
+    states = tuple(
+        BattleVisualStateDefinition(role, role) for role in ("idle", "attack", "hit", "ko")
+    )
     return BattleCombatantVisualProfile(
-        member_key, BattleVisualAssetSet(asset_id), states, BattleVisualTransform(scale_x=scale, scale_y=scale)
+        member_key,
+        BattleVisualAssetSet(asset_id),
+        states,
+        BattleVisualTransform(scale_x=scale, scale_y=scale),
     )
 
 
@@ -199,7 +256,9 @@ def motion_sequences():
             _beat("shake", hit_at, "camera", "shake", "@target", amplitude=shake, duration=0.18),
         ]
         if flash:
-            beats.append(_beat("flash", hit_at, "screen_fx", "flash", "@target", alpha=flash, duration=0.08))
+            beats.append(
+                _beat("flash", hit_at, "screen_fx", "flash", "@target", alpha=flash, duration=0.08)
+            )
         return BattleMotionSequence(sequence_id, duration, beats)
 
     return (
@@ -225,7 +284,9 @@ def main(argv=None):
     if not (root / NINJA).is_dir():
         raise SystemExit(f"Ninja Adventure pack not found under {root}")
     OUT.mkdir(parents=True, exist_ok=True)
-    field_player_sheet(root, PLAYER_CHARACTER).save(PROJECT_DIR / "playable_assets" / "player_field_sheet.png")
+    field_player_sheet(root, PLAYER_CHARACTER).save(
+        PROJECT_DIR / "playable_assets" / "player_field_sheet.png"
+    )
     assets = []
     profiles = []
 
@@ -241,25 +302,40 @@ def main(argv=None):
     for actor_id, name in HEROES.items():
         write(actor_id, character_sheet(root, name), [actor_id], {"battle", "combatant", "hero"})
     for enemy_id, relative in MONSTERS.items():
-        write(enemy_id, monster_sheet(root, relative), [enemy_id], {"battle", "combatant", "enemy"})
+        write(
+            enemy_id, monster_sheet(root, relative), [enemy_id], {"battle", "combatant", "enemy"}
+        )
     for enemy_id, name in CHARACTER_ENEMIES.items():
         write(enemy_id, character_sheet(root, name), [enemy_id], {"battle", "combatant", "enemy"})
-    write(BOSS[0], boss_sheet(root, BOSS[1]), [BOSS[0]], {"battle", "combatant", "enemy", "boss"}, scale=0.8)
+    write(
+        BOSS[0],
+        boss_sheet(root, BOSS[1]),
+        [BOSS[0]],
+        {"battle", "combatant", "enemy", "boss"},
+        scale=0.8,
+    )
     for asset_id, (relative, fw, fh, scale) in EFFECTS.items():
         image, frame_size, clips = effect_sheet(root, relative, fw, fh, scale)
         path = OUT / f"{asset_id.rsplit('.', 1)[-1]}.png"
         image.save(path)
-        assets.append(_asset(asset_id, path, frame_size, clips, {"battle", "vfx"}, pivot=(0.5, 0.5)))
+        assets.append(
+            _asset(asset_id, path, frame_size, clips, {"battle", "vfx"}, pivot=(0.5, 0.5))
+        )
     # The procedural heal sheet (4 x 4 frames of 64 px) already ships with the project.
     heal = PROJECT_DIR / "playable_assets" / "fx_heal.png"
     assets.append(
         CanonicalAsset(
             "battle.fx.heal",
             "sprite_sheet",
-            AssetSource(str(heal.relative_to(PROJECT_DIR)), "project", (("license", "repository"),)),
+            AssetSource(
+                str(heal.relative_to(PROJECT_DIR)), "project", (("license", "repository"),)
+            ),
             tags=frozenset({"battle", "vfx"}),
             metadata=(
-                ("clips", {"play": {"frames": list(range(16)), "frame_duration": 0.04, "loop": False}}),
+                (
+                    "clips",
+                    {"play": {"frames": list(range(16)), "frame_duration": 0.04, "loop": False}},
+                ),
                 ("frame_size", [64, 64]),
                 ("pivot", [0.5, 0.5]),
             ),
@@ -270,7 +346,9 @@ def main(argv=None):
     data = json.loads(project_path.read_text(encoding="utf-8"))
     registry = deserialize_asset_registry(data["assets"])
     for asset in assets:
-        registry.register(asset, replace=asset.asset_id in {a.asset_id for a in registry.snapshot()})
+        registry.register(
+            asset, replace=asset.asset_id in {a.asset_id for a in registry.snapshot()}
+        )
     data["assets"] = serialize_asset_registry(registry)
     library = BattlePresentationLibrary.from_data(data["battle_presentation_library"])
     for profile in profiles:
@@ -286,7 +364,11 @@ def main(argv=None):
         "ui_layout",
         "adaptive",
         replace(
-            layout, party_hud="bottom_row", overhead_zones=("left",), action_menu_placement="actor", stage_top=0.44
+            layout,
+            party_hud="bottom_row",
+            overhead_zones=("left",),
+            action_menu_placement="actor",
+            stage_top=0.44,
         ),
     )
     library.set(
@@ -301,8 +383,13 @@ def main(argv=None):
         ),
     )
     data["battle_presentation_library"] = library.to_data()
-    project_path.write_text(json.dumps(data, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
-    print(f"wrote {len(assets)} sprite sheet assets, {len(profiles)} combatant profiles to {project_path.name}")
+    project_path.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    print(
+        f"wrote {len(assets)} sprite sheet assets, {len(profiles)} combatant profiles to "
+        f"{project_path.name}"
+    )
     return 0
 
 

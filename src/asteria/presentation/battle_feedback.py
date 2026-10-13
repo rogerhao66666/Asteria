@@ -75,11 +75,15 @@ class BattleFeedbackProfile:
             return tuple(sorted(result))
 
         object.__setattr__(self, "outcome_tag_labels", pairs(outcome_tag_labels, "outcome label"))
-        object.__setattr__(self, "disposition_labels", pairs(disposition_labels, "disposition label"))
+        object.__setattr__(
+            self, "disposition_labels", pairs(disposition_labels, "disposition label")
+        )
         object.__setattr__(self, "threshold_labels", pairs(threshold_labels, "threshold label"))
         object.__setattr__(self, "value_duration", _positive(value_duration, "value_duration"))
         object.__setattr__(self, "label_duration", _positive(label_duration, "label_duration"))
-        object.__setattr__(self, "vfx_default_duration", _positive(vfx_default_duration, "vfx_default_duration"))
+        object.__setattr__(
+            self, "vfx_default_duration", _positive(vfx_default_duration, "vfx_default_duration")
+        )
 
     def labels_for(self, *, outcome_tags=(), disposition=None):
         tag_map = dict(self.outcome_tag_labels)
@@ -199,11 +203,19 @@ class BattleFeedbackRuntime:
         payload = dict(cue.get("payload", {}))
         member_id = self._member_id(payload)
         if kind == ActionCueKind.VFX.value:
-            duration = _positive(payload.get("duration", self.profile.vfx_default_duration), "vfx duration")
-            self.vfx.append(BattleVfxCue(event.sequence, str(cue.get("cue_id", "")), member_id, payload, 0.0, duration))
+            duration = _positive(
+                payload.get("duration", self.profile.vfx_default_duration), "vfx duration"
+            )
+            self.vfx.append(
+                BattleVfxCue(
+                    event.sequence, str(cue.get("cue_id", "")), member_id, payload, 0.0, duration
+                )
+            )
             return True
         if kind == ActionCueKind.AUDIO.value:
-            self._audio_pending.append(BattleAudioCue(event.sequence, str(cue.get("cue_id", "")), member_id, payload))
+            self._audio_pending.append(
+                BattleAudioCue(event.sequence, str(cue.get("cue_id", "")), member_id, payload)
+            )
             return True
         return False
 
@@ -215,14 +227,23 @@ class BattleFeedbackRuntime:
         disposition = str(payload.get("disposition", InteractionDisposition.NORMAL.value))
         target_id = _id(payload["target_id"], "target_id")
         source_id = str(payload.get("source_id", ""))
-        duration = _positive(payload.get("duration", self.profile.value_duration), "value duration")
+        duration = _positive(
+            payload.get("duration", self.profile.value_duration), "value duration"
+        )
         self.values.append(
-            BattleFloatingValue(event.sequence, target_id, source_id, value, kind, tags, disposition, 0.0, duration)
+            BattleFloatingValue(
+                event.sequence, target_id, source_id, value, kind, tags, disposition, 0.0, duration
+            )
         )
         for label in self.profile.labels_for(outcome_tags=tags, disposition=disposition):
             self.labels.append(
                 BattleFeedbackLabel(
-                    event.sequence, target_id, label, f"interaction:{disposition}", 0.0, self.profile.label_duration
+                    event.sequence,
+                    target_id,
+                    label,
+                    f"interaction:{disposition}",
+                    0.0,
+                    self.profile.label_duration,
                 )
             )
         return True
@@ -248,7 +269,9 @@ class BattleFeedbackRuntime:
         if not isinstance(event, BattlePresentationEvent):
             raise TypeError("event must be BattlePresentationEvent")
         if event.sequence <= self.last_sequence:
-            raise ValueError("presentation feedback events must be applied in increasing sequence order")
+            raise ValueError(
+                "presentation feedback events must be applied in increasing sequence order"
+            )
         self.last_sequence = event.sequence
         if event.kind == BattlePresentationEventKind.TIMELINE_CUE:
             return self._apply_timeline(event)
@@ -379,13 +402,18 @@ class BattleFeedbackRuntime:
         ]
         self._audio_pending = [
             BattleAudioCue(
-                int(x["sequence"]), str(x["cue_id"]), str(x.get("member_id", "")), dict(x.get("payload", {}))
+                int(x["sequence"]),
+                str(x["cue_id"]),
+                str(x.get("member_id", "")),
+                dict(x.get("payload", {})),
             )
             for x in data.get("audio_pending", ())
         ]
 
 
-def resolved_value_payload(result, *, target_id, source_id="", value_kind=BattleValueKind.DAMAGE, duration=None):
+def resolved_value_payload(
+    result, *, target_id, source_id="", value_kind=BattleValueKind.DAMAGE, duration=None
+):
     """Convert an already-resolved interaction result into presentation primitives."""
     if isinstance(result, OutcomeResolutionResult):
         tags = result.outcome_tags

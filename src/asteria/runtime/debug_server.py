@@ -74,7 +74,9 @@ class DebugServer:
                 response = {"id": request.get("id"), "ok": False, "error": "invalid token"}
             else:
                 try:
-                    result = self.debugger.execute(str(request.get("command", "")), request.get("args") or {})
+                    result = self.debugger.execute(
+                        str(request.get("command", "")), request.get("args") or {}
+                    )
                     response = {"id": request.get("id"), "ok": True, "result": result}
                 except Exception as exc:  # noqa: BLE001 - reported to the editor, never crashes the game
                     response = {"id": request.get("id"), "ok": False, "error": str(exc)}
@@ -108,10 +110,17 @@ class DebugClientError(RuntimeError):
 
 
 class DebugClient:
-    """Editor side. ``pump`` (optional) is called while waiting, e.g. to let an in-process game poll."""
+    """Editor side. ``pump`` (optional) is called while waiting, e.g. to let an in-process game
+    poll."""
 
     def __init__(self, port, token, *, host="127.0.0.1", timeout=2.0, pump=None):
-        self.port, self.token, self.host, self.timeout, self.pump = int(port), str(token), host, float(timeout), pump
+        self.port, self.token, self.host, self.timeout, self.pump = (
+            int(port),
+            str(token),
+            host,
+            float(timeout),
+            pump,
+        )
         self._sock = None
         self._buffer = b""
         self._next = 0

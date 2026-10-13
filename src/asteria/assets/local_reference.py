@@ -40,7 +40,8 @@ class RPGMakerMVProjectLayout:
 
     @classmethod
     def from_root(cls, root) -> RPGMakerMVProjectLayout:
-        """Layout of one MV project folder (``root/data/System.json``), e.g. a user's own project."""
+        """Layout of one MV project folder (``root/data/System.json``), e.g. a user's own
+        project."""
         root = Path(root).expanduser().resolve()
         if not (root / "data" / "System.json").is_file():
             raise ValueError(f"{root} is not an RPG Maker MV project")
@@ -149,7 +150,9 @@ def discover_mv_projects(root: Path) -> tuple[RPGMakerMVProjectLayout, ...]:
                 js=optional("js"),
             )
         )
-    return tuple(sorted(projects, key=lambda item: (item.relative_path != "NewData", item.relative_path)))
+    return tuple(
+        sorted(projects, key=lambda item: (item.relative_path != "NewData", item.relative_path))
+    )
 
 
 def _hash_file(path: Path) -> str:
@@ -175,15 +178,26 @@ def inventory_tree(root: Path) -> ReferenceInventory:
 
 def build_rpg_maker_mv_source_inventory(source_root: Path) -> ReferenceInventory:
     source_root = Path(source_root).expanduser().resolve()
-    generator = inventory_tree(source_root / "RPG Maker MV.app" / "Contents" / "MacOS" / "Generator")
+    generator = inventory_tree(
+        source_root / "RPG Maker MV.app" / "Contents" / "MacOS" / "Generator"
+    )
     new_data = inventory_tree(source_root / "RPG Maker MV.app" / "Contents" / "MacOS" / "NewData")
     dlc = inventory_tree(source_root / "dlc")
     files = tuple(
         sorted(
             (
-                *(ReferenceFile(f"Generator/{item.relative_path}", item.size, item.sha256) for item in generator.files),
-                *(ReferenceFile(f"NewData/{item.relative_path}", item.size, item.sha256) for item in new_data.files),
-                *(ReferenceFile(f"dlc/{item.relative_path}", item.size, item.sha256) for item in dlc.files),
+                *(
+                    ReferenceFile(f"Generator/{item.relative_path}", item.size, item.sha256)
+                    for item in generator.files
+                ),
+                *(
+                    ReferenceFile(f"NewData/{item.relative_path}", item.size, item.sha256)
+                    for item in new_data.files
+                ),
+                *(
+                    ReferenceFile(f"dlc/{item.relative_path}", item.size, item.sha256)
+                    for item in dlc.files
+                ),
             ),
             key=lambda item: item.relative_path,
         )
@@ -191,7 +205,9 @@ def build_rpg_maker_mv_source_inventory(source_root: Path) -> ReferenceInventory
     return ReferenceInventory("rpg_maker_mv", files)
 
 
-def compare_inventories(source: ReferenceInventory, destination: ReferenceInventory) -> tuple[ReferenceMismatch, ...]:
+def compare_inventories(
+    source: ReferenceInventory, destination: ReferenceInventory
+) -> tuple[ReferenceMismatch, ...]:
     actual = {item.relative_path: item for item in destination.files}
     result = []
     for expected in source.files:
@@ -213,7 +229,10 @@ def synchronize_tree(source: Path, destination: Path) -> int:
         source_stat = path.stat()
         if target.is_file():
             target_stat = target.stat()
-            if target_stat.st_size == source_stat.st_size and target_stat.st_mtime_ns == source_stat.st_mtime_ns:
+            if (
+                target_stat.st_size == source_stat.st_size
+                and target_stat.st_mtime_ns == source_stat.st_mtime_ns
+            ):
                 continue
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(path, target)

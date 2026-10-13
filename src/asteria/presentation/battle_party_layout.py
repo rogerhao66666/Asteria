@@ -92,10 +92,16 @@ class BattlePartyLayoutPolicy:
             return "expanded", count
         if count * self.compact_row_height <= available_height:
             return "compact", count
-        capacity = max(1, floor(available_height / self.minimal_row_height)) if available_height > 0 else 1
+        capacity = (
+            max(1, floor(available_height / self.minimal_row_height))
+            if available_height > 0
+            else 1
+        )
         return "minimal", min(count, capacity)
 
-    def resolve(self, member_ids, *, zone_by_member=None, focus_member_id=None, available_height=130.0):
+    def resolve(
+        self, member_ids, *, zone_by_member=None, focus_member_id=None, available_height=130.0
+    ):
         member_ids = tuple(str(x) for x in member_ids)
         if len(member_ids) != len(set(member_ids)):
             raise ValueError("duplicate party layout member")
@@ -127,7 +133,9 @@ class BattlePartyLayoutPolicy:
             for index, member_id in enumerate(values):
                 is_visible = member_id in visible_set
                 visible_index = visible.index(member_id) if is_visible else index
-                placements.append(BattlePartyPlacement(member_id, zone, visible_index, density, is_visible))
+                placements.append(
+                    BattlePartyPlacement(member_id, zone, visible_index, density, is_visible)
+                )
             zones.append(BattlePartyZoneLayout(zone, density, tuple(visible), tuple(hidden)))
         return BattlePartyLayoutResult(tuple(placements), tuple(zones))
 
@@ -173,4 +181,6 @@ class BattlePartyLayoutPolicy:
     def from_data(cls, data):
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported battle party layout policy")
-        return cls(**{key: value for key, value in data.items() if key not in {"schema", "version"}})
+        return cls(
+            **{key: value for key, value in data.items() if key not in {"schema", "version"}}
+        )

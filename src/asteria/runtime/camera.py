@@ -1,7 +1,9 @@
-"""2D cameras (CAM-01, CAM-02): follow with dead zone, smoothing, look-ahead and bounds; target groups;
+"""2D cameras (CAM-01, CAM-02): follow with dead zone, smoothing, look-ahead and bounds; target
+groups;
 a director that blends authored shots (cutscene / boss focus) with eased transitions; camera shake.
 
-Positions on ``Camera2D`` are the top-left of the view; the group and director work with view centres.
+Positions on ``Camera2D`` are the top-left of the view; the group and director work with view
+centres.
 """
 
 from dataclasses import dataclass, field
@@ -45,7 +47,10 @@ class CameraFollow2D:
         want_x = self.look_ahead_x * ((vx > 1e-6) - (vx < -1e-6))
         want_y = self.look_ahead_y * ((vy > 1e-6) - (vy < -1e-6))
         if velocity is not None and abs(vx) <= 1e-6 and abs(vy) <= 1e-6:
-            want_x, want_y = self._look_x, self._look_y  # standing still keeps the last look direction
+            want_x, want_y = (
+                self._look_x,
+                self._look_y,
+            )  # standing still keeps the last look direction
         if self.look_ahead_smoothing <= 0 or dt <= 0:
             self._look_x, self._look_y = want_x, want_y
         else:
@@ -55,7 +60,8 @@ class CameraFollow2D:
         return self._look_x, self._look_y
 
     def update(self, target_x, target_y, dt, velocity=None):
-        """Move toward ``target`` (plus look-ahead along ``velocity``), inside bounds, with smoothing."""
+        """Move toward ``target`` (plus look-ahead along ``velocity``), inside bounds, with
+        smoothing."""
         if self.look_ahead_x or self.look_ahead_y:
             look_x, look_y = self._update_look_ahead(velocity, dt)
             target_x, target_y = target_x + look_x, target_y + look_y
@@ -85,14 +91,23 @@ class CameraFollow2D:
 def clamp_center_to_bounds(cx, cy, view_width, view_height, bounds):
     """Keep a ``view_width`` x ``view_height`` view centred at (cx, cy) inside ``bounds``.
 
-    ``bounds`` is ``(min_x, min_y, max_x, max_y)``; a view larger than the bounds is centred on them.
+    ``bounds`` is ``(min_x, min_y, max_x, max_y)``; a view larger than the bounds is centred on
+    them.
     """
     if bounds is None:
         return cx, cy
     min_x, min_y, max_x, max_y = bounds
     half_w, half_h = view_width / 2, view_height / 2
-    cx = (min_x + max_x) / 2 if max_x - min_x <= view_width else min(max(cx, min_x + half_w), max_x - half_w)
-    cy = (min_y + max_y) / 2 if max_y - min_y <= view_height else min(max(cy, min_y + half_h), max_y - half_h)
+    cx = (
+        (min_x + max_x) / 2
+        if max_x - min_x <= view_width
+        else min(max(cx, min_x + half_w), max_x - half_w)
+    )
+    cy = (
+        (min_y + max_y) / 2
+        if max_y - min_y <= view_height
+        else min(max(cy, min_y + half_h), max_y - half_h)
+    )
     return cx, cy
 
 
@@ -135,7 +150,8 @@ EASINGS = {
 
 @dataclass(slots=True)
 class CameraShot:
-    """An authored view: a fixed centre, or ``follow`` (callable returning the live centre), and a zoom."""
+    """An authored view: a fixed centre, or ``follow`` (callable returning the live centre), and a
+    zoom."""
 
     x: float = 0.0
     y: float = 0.0
@@ -144,10 +160,12 @@ class CameraShot:
 
 
 class CameraDirector:
-    """Blends the follow camera (base view) with authored shots — cutscene and boss focus — and shake.
+    """Blends the follow camera (base view) with authored shots — cutscene and boss focus — and
+    shake.
 
     ``update(dt, base)`` takes the follow view ``(cx, cy, zoom)`` and returns the view to render.
-    ``focus`` starts a blend from the current view to a shot; ``release`` blends back to the live follow
+    ``focus`` starts a blend from the current view to a shot; ``release`` blends back to the live
+    follow
     view. Shake is a deterministic decaying wobble (reproducible in tests and replays).
     """
 
@@ -160,7 +178,10 @@ class CameraDirector:
         self._ease = EASINGS["smooth"]
         self._last = None
         self._shake = None  # (intensity, duration, frequency, elapsed)
-        self.shake_offset = (0.0, 0.0)  # part of the last view that came from shake (hosts may apply it separately)
+        self.shake_offset = (
+            0.0,
+            0.0,
+        )  # part of the last view that came from shake (hosts may apply it separately)
 
     @property
     def active(self):
@@ -221,6 +242,9 @@ class CameraDirector:
                 self._shake[3] = elapsed
                 decay = 1.0 - elapsed / duration
                 phase = 2 * pi * frequency * elapsed
-                self.shake_offset = (intensity * decay * sin(phase), intensity * decay * cos(phase * 1.3))
+                self.shake_offset = (
+                    intensity * decay * sin(phase),
+                    intensity * decay * cos(phase * 1.3),
+                )
                 view = (view[0] + self.shake_offset[0], view[1] + self.shake_offset[1], view[2])
         return view

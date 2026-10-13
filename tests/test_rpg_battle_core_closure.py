@@ -66,7 +66,10 @@ def ability_runtime():
             effects=[
                 AbilityEffect(
                     AbilityTargetMode.SELECTED,
-                    Effect("hit.effect", [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", -10)]),
+                    Effect(
+                        "hit.effect",
+                        [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", -10)],
+                    ),
                 )
             ],
         )
@@ -79,7 +82,10 @@ def ability_runtime():
             effects=[
                 AbilityEffect(
                     AbilityTargetMode.SELECTED,
-                    Effect("meteor.effect", [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", -25)]),
+                    Effect(
+                        "meteor.effect",
+                        [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", -25)],
+                    ),
                 )
             ],
         )
@@ -91,7 +97,10 @@ def ability_runtime():
             effects=[
                 AbilityEffect(
                     AbilityTargetMode.SELECTED,
-                    Effect("counter.effect", [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", -4)]),
+                    Effect(
+                        "counter.effect",
+                        [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", -4)],
+                    ),
                 )
             ],
         )
@@ -101,16 +110,26 @@ def ability_runtime():
 
 def make_battle(*, hooks=None, states=(), **kwargs):
     hero = PartyMember(
-        "hero", "heroes", subject(speed=10, states=states), ability_ids=("hit", "meteor", "counter"), initiative=10
+        "hero",
+        "heroes",
+        subject(speed=10, states=states),
+        ability_ids=("hit", "meteor", "counter"),
+        initiative=10,
     )
     enemy = PartyMember(
-        "enemy", "enemies", subject(speed=10, states=states), ability_ids=("hit", "meteor", "counter"), initiative=10
+        "enemy",
+        "enemies",
+        subject(speed=10, states=states),
+        ability_ids=("hit", "meteor", "counter"),
+        initiative=10,
     )
     return BattleRuntime(
         [Party("heroes", [hero]), Party("enemies", [enemy])],
         ability_runtime(),
         hooks=hooks,
-        scheduler_definition=BattleSchedulerDefinition("ct", mode="continuous", timeline_scale=100),
+        scheduler_definition=BattleSchedulerDefinition(
+            "ct", mode="continuous", timeline_scale=100
+        ),
         **kwargs,
     )
 
@@ -128,25 +147,33 @@ def test_equal_speed_order_is_stable_and_survives_snapshot_restore():
 def test_break_threshold_can_interrupt_cast_and_refund_through_hook_seam():
     hooks = LifecycleHookBus()
     holder = {}
-    hooks.subscribe("custom.break", lambda event: holder["battle"].interrupt_action(event.source, force=True))
+    hooks.subscribe(
+        "custom.break", lambda event: holder["battle"].interrupt_action(event.source, force=True)
+    )
     broken = StateDefinition("broken", 2)
     composition = GaugeCompositionDefinition(
         "poise",
         impacts=[GaugeImpactRule("pressure", "stagger", "battle.hit", delta=-30)],
         thresholds=[
-            GaugeThresholdRule("zero", "stagger", "at_or_below", 0, state_id="broken", emit_trigger="custom.break")
+            GaugeThresholdRule(
+                "zero", "stagger", "at_or_below", 0, state_id="broken", emit_trigger="custom.break"
+            )
         ],
     )
     battle = make_battle(
         hooks=hooks,
         states=(broken,),
-        resource_definitions=[BattleResourceDefinition("stagger", minimum=0, maximum=30, start_mode="maximum")],
+        resource_definitions=[
+            BattleResourceDefinition("stagger", minimum=0, maximum=30, start_mode="maximum")
+        ],
         state_policies=[BattleStatePolicy("broken")],
         gauge_composition_definitions=[composition],
         action_timing_definitions=[ActionTimingDefinition("meteor", cast_time=5)],
         transaction_policies=[
             ActionTransactionPolicy(
-                "meteor", cost_commit=CostCommitMode.START, interrupt_cost=InterruptCostPolicy.REFUND
+                "meteor",
+                cost_commit=CostCommitMode.START,
+                interrupt_cost=InterruptCostPolicy.REFUND,
             )
         ],
     )
@@ -173,7 +200,9 @@ def test_multihit_sequence_observes_state_change_on_later_hit():
 
     def on_before(event):
         if event.data["action"].ability_id == "hit":
-            before.append(holder["battle"].member("enemy").subject.states.get("broken") is not None)
+            before.append(
+                holder["battle"].member("enemy").subject.states.get("broken") is not None
+            )
 
     def on_after(event):
         if event.data["result"].action.ability_id == "hit":
@@ -184,7 +213,9 @@ def test_multihit_sequence_observes_state_change_on_later_hit():
     battle = make_battle(
         hooks=hooks,
         states=(broken,),
-        resource_definitions=[BattleResourceDefinition("stagger", minimum=0, maximum=30, start_mode="maximum")],
+        resource_definitions=[
+            BattleResourceDefinition("stagger", minimum=0, maximum=30, start_mode="maximum")
+        ],
         state_policies=[BattleStatePolicy("broken")],
         gauge_composition_definitions=[composition],
         action_sequence_definitions=[sequence],
@@ -200,7 +231,9 @@ def test_ko_mid_sequence_uses_authored_sequence_failure_policy_without_crashing(
     holder = {}
     count = {"n": 0}
     sequence = ActionSequenceDefinition(
-        "triple", steps=[ActionSequenceStep("hit", repeat=3)], interruption_policy="cancel_remaining"
+        "triple",
+        steps=[ActionSequenceStep("hit", repeat=3)],
+        interruption_policy="cancel_remaining",
     )
 
     def after(event):
@@ -211,7 +244,9 @@ def test_ko_mid_sequence_uses_authored_sequence_failure_policy_without_crashing(
 
     hooks.subscribe("rpg.battle.after_action", after)
     battle = make_battle(
-        hooks=hooks, action_sequence_definitions=[sequence], targeting_definitions=[BattleTargetingDefinition("hit")]
+        hooks=hooks,
+        action_sequence_definitions=[sequence],
+        targeting_definitions=[BattleTargetingDefinition("hit")],
     )
     holder["battle"] = battle
     _, results, failures = battle.execute_sequence("triple", ("hero",), ("enemy",))
@@ -253,13 +288,17 @@ def test_boss_phase_can_change_between_hits_via_normal_ai_hook_points():
     phases = []
     phase1 = BossPhaseDefinition(
         "p1",
-        conditions=[AICondition("resource_ratio", params={"resource_id": "hp", "op": ">", "value": 0.8})],
+        conditions=[
+            AICondition("resource_ratio", params={"resource_id": "hp", "op": ">", "value": 0.8})
+        ],
         priority=10,
         decision_rule_ids=("poke",),
     )
     phase2 = BossPhaseDefinition(
         "p2",
-        conditions=[AICondition("resource_ratio", params={"resource_id": "hp", "op": "<=", "value": 0.8})],
+        conditions=[
+            AICondition("resource_ratio", params={"resource_id": "hp", "op": "<=", "value": 0.8})
+        ],
         priority=20,
         decision_rule_ids=("poke",),
         enter_hook="custom.phase2",
@@ -272,7 +311,8 @@ def test_boss_phase_can_change_between_hits_via_normal_ai_hook_points():
     )
     hooks.subscribe("custom.phase2", lambda event: phases.append(event.data["phase_id"]))
     battle = make_battle(hooks=hooks, enemy_ai_definitions=[ai])
-    # Author/project decides when phase reevaluation happens; engine supplies stable AI and hook seams.
+    # Author/project decides when phase reevaluation happens; engine supplies stable AI and hook
+    # seams.
     battle.execute(BattleAction("hero", "meteor", ("enemy",)))
     decision = battle.enemy_ai.decide(battle, "boss", "enemy", rng=battle.rng)
     assert decision.phase_id == "p2"

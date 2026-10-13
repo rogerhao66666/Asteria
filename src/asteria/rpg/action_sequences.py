@@ -20,7 +20,8 @@ def _nonnegative(value, label):
 
 @dataclass(frozen=True, slots=True)
 class ActionSequenceStep:
-    """One authored step. participant_index makes the same model cover solo and N-person actions."""
+    """One authored step. participant_index makes the same model cover solo and N-person
+    actions."""
 
     ability_id: str
     participant_index: int = 0
@@ -50,8 +51,14 @@ class ActionSequenceStep:
         object.__setattr__(self, "repeat", int(repeat))
         object.__setattr__(self, "delay", _nonnegative(delay, "delay"))
         object.__setattr__(self, "target_policy", _id(target_policy, "target_policy"))
-        object.__setattr__(self, "required_previous_tags", tuple(dict.fromkeys(str(x) for x in required_previous_tags)))
-        object.__setattr__(self, "emitted_tags", tuple(dict.fromkeys(str(x) for x in emitted_tags)))
+        object.__setattr__(
+            self,
+            "required_previous_tags",
+            tuple(dict.fromkeys(str(x) for x in required_previous_tags)),
+        )
+        object.__setattr__(
+            self, "emitted_tags", tuple(dict.fromkeys(str(x) for x in emitted_tags))
+        )
 
     def to_data(self):
         return {
@@ -113,8 +120,12 @@ class ActionSequenceDefinition:
         object.__setattr__(self, "steps", steps)
         object.__setattr__(self, "min_participants", lo)
         object.__setattr__(self, "max_participants", hi)
-        object.__setattr__(self, "participant_policy", _id(participant_policy, "participant_policy"))
-        object.__setattr__(self, "interruption_policy", _id(interruption_policy, "interruption_policy"))
+        object.__setattr__(
+            self, "participant_policy", _id(participant_policy, "participant_policy")
+        )
+        object.__setattr__(
+            self, "interruption_policy", _id(interruption_policy, "interruption_policy")
+        )
         object.__setattr__(self, "tags", tuple(dict.fromkeys(str(x) for x in tags)))
 
     def to_data(self):
@@ -132,7 +143,10 @@ class ActionSequenceDefinition:
 
     @classmethod
     def from_data(cls, data):
-        if data.get("schema") != "asteria.rpg.action_sequence_definition" or data.get("version") != 1:
+        if (
+            data.get("schema") != "asteria.rpg.action_sequence_definition"
+            or data.get("version") != 1
+        ):
             raise ValueError("unsupported action sequence definition")
         return cls(
             data["sequence_id"],
@@ -187,7 +201,10 @@ class ActionSequenceRuntime:
             raise ValueError("duplicate action sequence participant")
         if len(participants) < definition.min_participants:
             raise ValueError("not enough action sequence participants")
-        if definition.max_participants is not None and len(participants) > definition.max_participants:
+        if (
+            definition.max_participants is not None
+            and len(participants) > definition.max_participants
+        ):
             raise ValueError("too many action sequence participants")
         targets = tuple(_id(x, "target_id") for x in target_ids)
         emitted = set()
@@ -202,8 +219,15 @@ class ActionSequenceRuntime:
             for hit in range(step.repeat):
                 planned.append(
                     PlannedSequenceStep(
-                        step_index, hit, participants[step.participant_index], step.ability_id, targets, offset
+                        step_index,
+                        hit,
+                        participants[step.participant_index],
+                        step.ability_id,
+                        targets,
+                        offset,
                     )
                 )
             emitted.update(step.emitted_tags)
-        return ActionSequencePlan(definition.sequence_id, participants, tuple(planned), definition.tags)
+        return ActionSequencePlan(
+            definition.sequence_id, participants, tuple(planned), definition.tags
+        )

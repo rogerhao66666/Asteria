@@ -64,4 +64,6 @@ class VFXValidator:
 
 
 def vfx_asset(asset_id, uri, variants, default_variant="default", **kw):
-    return VFXAsset(CanonicalAsset(asset_id, "vfx", AssetSource(uri)), tuple(variants), default_variant, **kw)
+    return VFXAsset(
+        CanonicalAsset(asset_id, "vfx", AssetSource(uri)), tuple(variants), default_variant, **kw
+    )

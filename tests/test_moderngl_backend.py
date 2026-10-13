@@ -44,7 +44,9 @@ def _standalone_backend(size=(16, 16)):
     backend.ctx = ctx
     ctx.enable(moderngl.BLEND)
     ctx.blend_func = moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA
-    backend._program = ctx.program(vertex_shader=SPRITE_VERTEX_SHADER, fragment_shader=SPRITE_FRAGMENT_SHADER)
+    backend._program = ctx.program(
+        vertex_shader=SPRITE_VERTEX_SHADER, fragment_shader=SPRITE_FRAGMENT_SHADER
+    )
     backend._program["u_texture"] = 0
     backend._white_texture = ctx.texture((1, 1), 4, bytes((255, 255, 255, 255)))
     backend._white_texture.filter = (moderngl.NEAREST, moderngl.NEAREST)

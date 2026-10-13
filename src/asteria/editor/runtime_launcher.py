@@ -124,7 +124,9 @@ def launch_play_session(
             process = popen_factory(args, stdout=log_file, stderr=subprocess.STDOUT)
         else:
             process = popen_factory(args)
-        return RuntimeProcess(process, snapshot_path, save_snapshot_path, debug_port, debug_token, log_path, log_file)
+        return RuntimeProcess(
+            process, snapshot_path, save_snapshot_path, debug_port, debug_token, log_path, log_file
+        )
     except Exception as exc:
         try:
             snapshot_path.unlink()

@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import random
 
-from asteria.gameplay import AbilityRegistry, AbilityRuntime, GameplaySubject, ResourcePool, StatBlock, TagSet
+from asteria.gameplay import (
+    AbilityRegistry,
+    AbilityRuntime,
+    GameplaySubject,
+    ResourcePool,
+    StatBlock,
+    TagSet,
+)
 from asteria.rpg import (
     BattleEscapeRule,
     BattleObjectiveCondition,
@@ -14,7 +21,8 @@ from asteria.rpg import (
 
 
 def subject(hp, **stats):
-    resources = ResourcePool(); resources.define("hp", hp)
+    resources = ResourcePool()
+    resources.define("hp", hp)
     return GameplaySubject(StatBlock(stats), resources, TagSet())
 
 
@@ -27,18 +35,24 @@ objective = BattleObjectiveDefinition(
     "seal.portal",
     success_conditions=(BattleObjectiveCondition("flag", "portal.sealed"),),
     failure_conditions=(BattleObjectiveCondition("member_active", "guardian", "==", False),),
-    winning_sides=("heroes",), defeated_sides=("enemies",),
+    winning_sides=("heroes",),
+    defeated_sides=("enemies",),
 )
 escape = BattleEscapeRule(
-    "retreat", "heroes", base_chance=0.35,
-    source_stat="speed", source_scale=0.01,
-    opponent_stat="pursuit", opponent_scale=0.005,
+    "retreat",
+    "heroes",
+    base_chance=0.35,
+    source_stat="speed",
+    source_scale=0.01,
+    opponent_stat="pursuit",
+    opponent_scale=0.005,
 )
 battle = BattleRuntime(
     [Party("heroes", heroes), Party("enemies", enemies)],
     AbilityRuntime(AbilityRegistry()),
     is_active=lambda m: m.subject.resources.current("hp") > 0,
-    objective_definitions=(objective,), escape_rules=(escape,),
+    objective_definitions=(objective,),
+    escape_rules=(escape,),
 )
 
 assert not battle.resolve_outcome().finished
@@ -54,5 +68,12 @@ battle = BattleRuntime(
 )
 result = battle.attempt_escape("retreat", rng=random.Random(1))
 print("objective:", outcome.objective_ids, "winner:", outcome.winning_sides)
-print("escape chance:", round(result.chance, 3), "roll:", round(result.roll, 3), "success:", result.succeeded)
+print(
+    "escape chance:",
+    round(result.chance, 3),
+    "roll:",
+    round(result.roll, 3),
+    "success:",
+    result.succeeded,
+)
 print("PASS")

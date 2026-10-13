@@ -1,4 +1,5 @@
-"""Rewrite tests/golden/baselines/{golden_summary,regression}.json from the current code and assets.
+"""Rewrite tests/golden/baselines/{golden_summary,regression}.json from the current code and
+assets.
 
     python scripts/update_golden_baselines.py
 
@@ -30,9 +31,12 @@ def main():
     BASELINE.parent.mkdir(parents=True, exist_ok=True)
     BASELINE.write_text(summary_json(report) + "\n", encoding="utf-8")
     regression = BASELINE.with_name("regression.json")
-    regression.write_text(json.dumps(regression_snapshot(REPO), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    regression.write_text(
+        json.dumps(regression_snapshot(REPO), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     print(
-        f"updated {BASELINE.relative_to(REPO)} and {regression.relative_to(REPO)}; review `git diff` before committing"
+        f"updated {BASELINE.relative_to(REPO)} and {regression.relative_to(REPO)}; review `git "
+        f"diff` before committing"
     )
     return 0
 

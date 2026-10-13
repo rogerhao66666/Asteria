@@ -1,4 +1,11 @@
-from asteria.core import ComponentRegistry, Entity, Scene, Transform, deserialize_scene, serialize_scene
+from asteria.core import (
+    ComponentRegistry,
+    Entity,
+    Scene,
+    Transform,
+    deserialize_scene,
+    serialize_scene,
+)
 
 
 def test_component_scene_serialization_roundtrip():

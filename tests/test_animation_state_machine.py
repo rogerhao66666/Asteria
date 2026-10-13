@@ -1,4 +1,5 @@
-"""CB8: animation state machine, transition parameters and runtime frame events (ASTERIA_SPEC §11)."""
+"""CB8: animation state machine, transition parameters and runtime frame events (ASTERIA_SPEC
+§11)."""
 
 import json
 
@@ -24,10 +25,16 @@ def _clips():
         "idle": SpriteClip("idle", [SpriteKeyframe(0, 0.5)], True),
         "walk": SpriteClip(
             "walk",
-            [SpriteKeyframe(1, 0.1, ("footstep",)), SpriteKeyframe(2, 0.1), SpriteKeyframe(3, 0.1, ("footstep",))],
+            [
+                SpriteKeyframe(1, 0.1, ("footstep",)),
+                SpriteKeyframe(2, 0.1),
+                SpriteKeyframe(3, 0.1, ("footstep",)),
+            ],
             True,
         ),
-        "attack": SpriteClip("attack", [SpriteKeyframe(4, 0.1), SpriteKeyframe(5, 0.1, ("hit",))], False),
+        "attack": SpriteClip(
+            "attack", [SpriteKeyframe(4, 0.1), SpriteKeyframe(5, 0.1, ("hit",))], False
+        ),
     }
 
 
@@ -71,14 +78,19 @@ def test_parameters_triggers_any_state_and_wait_for_finish():
 
 def test_definition_validation_and_round_trip():
     definition = _definition()
-    assert AnimationStateMachineDefinition.from_data(json.loads(json.dumps(definition.to_data()))) == definition
+    assert (
+        AnimationStateMachineDefinition.from_data(json.loads(json.dumps(definition.to_data())))
+        == definition
+    )
     with pytest.raises(ValueError):
         AnimationStateMachineDefinition({"a": "idle"}, "missing")
     with pytest.raises(ValueError):
         AnimationStateMachineDefinition({"a": "idle"}, "a", (AnimationTransition("a", "b"),))
     with pytest.raises(ValueError):
         AnimationStateMachineDefinition(
-            {"a": "idle", "b": "walk"}, "a", (AnimationTransition("a", "b", (AnimationCondition("x"),)),)
+            {"a": "idle", "b": "walk"},
+            "a",
+            (AnimationTransition("a", "b", (AnimationCondition("x"),)),),
         )
     with pytest.raises(ValueError):
         AnimationStateMachine(
@@ -118,7 +130,11 @@ def test_reference_loader_reads_events_and_state_machine(tmp_path):
             name: {
                 "loop": clip.loop,
                 "keyframes": [
-                    {"frame_index": k.frame_index, "duration": k.duration, "events": list(k.events)}
+                    {
+                        "frame_index": k.frame_index,
+                        "duration": k.duration,
+                        "events": list(k.events),
+                    }
                     for k in clip.keyframes
                 ],
             }

@@ -1,10 +1,16 @@
-"""Real-time play in a field scene (ASTERIA_SPEC §20; D22 A8): the scene setting, default controls and the HUD.
+"""Real-time play in a field scene (ASTERIA_SPEC §20; D22 A8): the scene setting, default controls
+and the HUD.
 
-``CombatSceneComponent`` (on any entity of a scene, like the environment) makes the scene an action scene: enemies are
-fought in real time instead of starting a turn-based encounter, the player moves through its controller, falls and
-respawns. ``ARPG_ACTIONS`` are the input actions action scenes use; a project's own input map wins, these only fill in
-what it lacks. ``ActionHud`` draws what a real-time fight needs on top of the field: overhead HP, damage numbers, hit
-flashes, projectiles, loot labels, the lock-on marker, the player's bars, the skill bar with cooldowns, level-ups and
+``CombatSceneComponent`` (on any entity of a scene, like the environment) makes the scene an
+action scene: enemies are
+fought in real time instead of starting a turn-based encounter, the player moves through its
+controller, falls and
+respawns. ``ARPG_ACTIONS`` are the input actions action scenes use; a project's own input map
+wins, these only fill in
+what it lacks. ``ActionHud`` draws what a real-time fight needs on top of the field: overhead HP,
+damage numbers, hit
+flashes, projectiles, loot labels, the lock-on marker, the player's bars, the skill bar with
+cooldowns, level-ups and
 the respawn countdown — all from engine state, nothing game-specific.
 """
 
@@ -17,7 +23,8 @@ from asteria.core import Component, Field, Transform, component_schema, world_po
 COMBAT_MODES = ("encounter", "action")
 VIEWS = ("topdown", "side")
 
-# input action -> default key / gamepad bindings, added only when the project's input map has no such action
+# input action -> default key / gamepad bindings, added only when the project's input map has no
+# such action
 ARPG_ACTIONS = {
     "attack": (("key", "j"), ("gamepad_button", "2")),
     "dodge": (("key", "k"), ("key", "left shift"), ("gamepad_button", "1")),
@@ -42,16 +49,37 @@ ARPG_ACTIONS = {
             str,
             "encounter",
             choices=COMBAT_MODES,
-            tooltip="encounter: touching an enemy starts a turn-based battle; action: enemies are fought in real time.",
+            tooltip="encounter: touching an enemy starts a turn-based battle; action: enemies "
+            "are fought in real time.",
         ),
-        Field("view", str, "topdown", choices=VIEWS, tooltip="How the scene is seen (the player's controller mode)."),
+        Field(
+            "view",
+            str,
+            "topdown",
+            choices=VIEWS,
+            tooltip="How the scene is seen (the player's controller mode).",
+        ),
         Field("on_player_death", str, "respawn", choices=("respawn", "game_over")),
         Field("respawn_delay", float, 2.0, minimum=0.0),
         Field("respawn_heal", bool, True, tooltip="Respawn with full resources."),
-        Field("draw_colliders", bool, False, tooltip="Draw solid colliders, slopes and ladders (block-out levels)."),
-        Field("camera_look_ahead", float, 0.0, minimum=0.0, tooltip="World units the camera leads the player by."),
         Field(
-            "background_color", str, "", tooltip="'#rrggbb' fills the screen instead of the field image (block-outs)."
+            "draw_colliders",
+            bool,
+            False,
+            tooltip="Draw solid colliders, slopes and ladders (block-out levels).",
+        ),
+        Field(
+            "camera_look_ahead",
+            float,
+            0.0,
+            minimum=0.0,
+            tooltip="World units the camera leads the player by.",
+        ),
+        Field(
+            "background_color",
+            str,
+            "",
+            tooltip="'#rrggbb' fills the screen instead of the field image (block-outs).",
         ),
         Field(
             "player_life_resource",
@@ -83,7 +111,8 @@ def combat_scene(scene):
 
 
 def missing_action_bindings(input_map):
-    """``{action: (InputBinding, ...)}`` for ARPG actions the project's input map does not define."""
+    """``{action: (InputBinding, ...)}`` for ARPG actions the project's input map does not
+    define."""
     from .input_map import InputBinding
 
     known = set(input_map.actions())
@@ -120,7 +149,7 @@ class ActionHud:
         self.flash: dict[str, float] = {}
         self.banner = ("", 0.0)
 
-    # -- events --------------------------------------------------------------------------------------------------
+    # -- events -----------------------------------------------------------------------------------
     def observe(self, game, dt):
         """Read this frame's combat, loot and progression events (call after ``field_update``)."""
         for f in self.floats:
@@ -132,17 +161,35 @@ class ActionHud:
         for event in game.combat.events:
             if event.kind == "damage" and event.amount:
                 heal = event.amount < 0
-                color = (120, 230, 140) if heal else (255, 220, 90) if event.critical else (255, 255, 255)
+                color = (
+                    (120, 230, 140)
+                    if heal
+                    else (255, 220, 90)
+                    if event.critical
+                    else (255, 255, 255)
+                )
                 text = f"{abs(event.amount):.0f}{'!' if event.critical else ''}"
                 self.floats.append(_Float(event.x, event.y - 10, text, color))
                 self.flash[event.target_id] = 0.12
             elif event.kind in ("staggered", "knocked_down"):
                 self.floats.append(
-                    _Float(event.x, event.y - 22, event.kind.replace("_", " "), (255, 160, 90), life=0.7)
+                    _Float(
+                        event.x,
+                        event.y - 22,
+                        event.kind.replace("_", " "),
+                        (255, 160, 90),
+                        life=0.7,
+                    )
                 )
             elif event.kind == "state_applied":
                 self.floats.append(
-                    _Float(event.x, event.y - 22, event.data.get("state", ""), (200, 140, 255), life=0.8)
+                    _Float(
+                        event.x,
+                        event.y - 22,
+                        event.data.get("state", ""),
+                        (200, 140, 255),
+                        life=0.8,
+                    )
                 )
         for event in game.loot.events:
             if event.kind == "picked" and event.looter_id == game.player.id:
@@ -153,10 +200,11 @@ class ActionHud:
             if result.get("levels_gained"):
                 self.banner = (f"Level {result['new_level']}!", 2.0)
 
-    # -- world layer ---------------------------------------------------------------------------------------------
+    # -- world layer ------------------------------------------------------------------------------
     @staticmethod
     def _unit(rt):
-        """Screen pixels per world unit (the field's world-to-screen scale times the camera zoom)."""
+        """Screen pixels per world unit (the field's world-to-screen scale times the camera
+        zoom)."""
         x0, _ = rt._field_screen_xy(0.0, 0.0)
         x1, _ = rt._field_screen_xy(1.0, 0.0)
         return abs(x1 - x0) or 1.0
@@ -176,7 +224,9 @@ class ActionHud:
             image = rt.pg.font.Font(None, 20).render(text, True, color)
             box = pg.Rect(0, 0, image.get_width() + 8, image.get_height() + 4)
             box.midbottom = (int(sx), int(sy - 4 * zoom))
-            while any(box.colliderect(other) for other in placed):  # stack labels of drops lying close together
+            while any(
+                box.colliderect(other) for other in placed
+            ):  # stack labels of drops lying close together
                 box.y -= box.height + 2
             placed.append(box)
             pg.draw.rect(screen, (12, 14, 22), box)
@@ -193,14 +243,25 @@ class ActionHud:
                 pg.draw.circle(screen, color, (int(sx), int(sy)), radius)
                 pg.draw.circle(screen, (20, 20, 28), (int(sx), int(sy)), radius, 2)
             if entity.id in self.flash:
-                pg.draw.circle(screen, (255, 255, 255), (int(sx), int(sy)), max(4, int(6 * zoom)), 0)
+                pg.draw.circle(
+                    screen, (255, 255, 255), (int(sx), int(sy)), max(4, int(6 * zoom)), 0
+                )
             state = combatant.state
             if state is None or combatant.team == player_team or not combatant.life_resource:
                 continue
             if state.resources.contains(combatant.life_resource):
                 value = state.resources.get(combatant.life_resource)
                 if value.current < value.maximum or entity.id == self._lock_id(game):
-                    self._bar(rt, sx - 20, sy - 11 * zoom, 40, 5, value.current, value.maximum, (220, 70, 70))
+                    self._bar(
+                        rt,
+                        sx - 20,
+                        sy - 11 * zoom,
+                        40,
+                        5,
+                        value.current,
+                        value.maximum,
+                        (220, 70, 70),
+                    )
         for view in game.projectiles.views():
             sx, sy = rt._field_screen_xy(view.x, view.y)
             pg.draw.circle(screen, (255, 230, 140), (int(sx), int(sy)), max(3, int(1.5 * zoom)))
@@ -216,7 +277,9 @@ class ActionHud:
             sx, sy = rt._field_screen_xy(f.x, f.y)
             image = font.render(f.text, True, f.color)
             image.set_alpha(int(255 * max(0.0, 1.0 - f.age / f.life)))
-            screen.blit(image, (int(sx - image.get_width() / 2), int(sy - 30 * f.age - image.get_height())))
+            screen.blit(
+                image, (int(sx - image.get_width() / 2), int(sy - 30 * f.age - image.get_height()))
+            )
 
     @staticmethod
     def _lock_id(game):
@@ -230,7 +293,11 @@ class ActionHud:
 
         pg, screen = rt.pg, rt.screen
         for entity, collider in rt.game.scene.query(Collider2DComponent):
-            if entity is rt.game.player or entity.has(_combatant_type()) or not entity.has(Transform):
+            if (
+                entity is rt.game.player
+                or entity.has(_combatant_type())
+                or not entity.has(Transform)
+            ):
                 continue
             x, y = world_position(entity)
             x, y = x + collider.offset_x, y + collider.offset_y
@@ -243,14 +310,20 @@ class ActionHud:
             }
             if collider.ladder:
                 left, right = corners["tl"][0], corners["tr"][0]
-                for k in range(int(corners["tl"][1]), int(corners["bl"][1]), max(6, int(6 * zoom))):
+                for k in range(
+                    int(corners["tl"][1]), int(corners["bl"][1]), max(6, int(6 * zoom))
+                ):
                     pg.draw.line(screen, (190, 140, 80), (int(left), k), (int(right), k), 2)
                 pg.draw.line(screen, (150, 100, 60), corners["tl"], corners["bl"], 3)
                 pg.draw.line(screen, (150, 100, 60), corners["tr"], corners["br"], 3)
             elif collider.shape == "slope_right":
-                pg.draw.polygon(screen, (88, 96, 120), [corners["bl"], corners["br"], corners["tr"]])
+                pg.draw.polygon(
+                    screen, (88, 96, 120), [corners["bl"], corners["br"], corners["tr"]]
+                )
             elif collider.shape == "slope_left":
-                pg.draw.polygon(screen, (88, 96, 120), [corners["bl"], corners["br"], corners["tl"]])
+                pg.draw.polygon(
+                    screen, (88, 96, 120), [corners["bl"], corners["br"], corners["tl"]]
+                )
             elif collider.shape == "box" and not collider.is_trigger:
                 color = (120, 110, 90) if collider.one_way else (70, 78, 100)
                 rect = pg.Rect(
@@ -262,7 +335,7 @@ class ActionHud:
                 pg.draw.rect(screen, color, rect)
                 pg.draw.rect(screen, (150, 160, 190), rect, 1)
 
-    # -- screen layer --------------------------------------------------------------------------------------------
+    # -- screen layer -----------------------------------------------------------------------------
     def _bar(self, rt, x, y, w, h, current, maximum, color):
         pg, screen = rt.pg, rt.screen
         pg.draw.rect(screen, (20, 22, 30), (int(x) - 1, int(y) - 1, int(w) + 2, int(h) + 2))
@@ -318,7 +391,8 @@ class ActionHud:
                 key = {"attack": "J", "dodge": "K"}.get(action, action.replace("skill_", ""))
                 rt.text(key, x + 30, y + 34, size=15, color=(255, 220, 124), center=True)
         rt.text(
-            "Move: WASD  J: Attack  K: Dodge  1-4: Skills  L: Lock  F: Pick up  B: Bag  C: Build  Esc: Pause",
+            "Move: WASD  J: Attack  K: Dodge  1-4: Skills  L: Lock  F: Pick up  B: Bag  C: "
+            "Build  Esc: Pause",
             rt.width / 2,
             rt.height - 14,
             size=16,

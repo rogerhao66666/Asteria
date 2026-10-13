@@ -23,7 +23,9 @@ def artifact_key(*, asset_id, source_hash, importer, importer_version, settings)
         "importer_version": int(importer_version),
         "settings": json.loads(canonical_settings(settings)),
     }
-    raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode(
+        "utf-8"
+    )
     return hashlib.sha256(raw).hexdigest()
 
 

@@ -1,4 +1,5 @@
-"""CMP-03: generic animated text in the running game - item gains, a full bag and authored SHOW_POPUP lines
+"""CMP-03: generic animated text in the running game - item gains, a full bag and authored
+SHOW_POPUP lines
 rise and fade above field characters (AnimatedTextRuntime + AnimatedTextRenderComposer)."""
 
 import pytest
@@ -27,16 +28,24 @@ def test_item_gains_and_authored_popups_rise_and_fade_above_characters(runtime):
     name = db.items[item_id].display_name
     _run(
         runtime,
-        EventInstruction("WORLD", {"command": "GIVE_ITEM", "args": {"item_id": item_id, "quantity": 2}}),
-        EventInstruction("WORLD", {"command": "SHOW_POPUP", "args": {"text": "!?", "entity": "Astral Tyrant"}}),
+        EventInstruction(
+            "WORLD", {"command": "GIVE_ITEM", "args": {"item_id": item_id, "quantity": 2}}
+        ),
+        EventInstruction(
+            "WORLD", {"command": "SHOW_POPUP", "args": {"text": "!?", "entity": "Astral Tyrant"}}
+        ),
     )
     _frames(runtime, 2)
     texts = {r.text: r for r in runtime.popup_frame}
     assert f"+2 {name}" in texts and "!?" in texts
     assert texts["!?"].anchor_id == "Astral Tyrant"
-    boss = next(e for e in runtime.game.scene.entities() if e.name == "Astral Tyrant").get(Transform)
+    boss = next(e for e in runtime.game.scene.entities() if e.name == "Astral Tyrant").get(
+        Transform
+    )
     bx, by = runtime._popup_anchor("Astral Tyrant")
-    assert (bx, by + 48 * runtime.field_camera.zoom) == pytest.approx(runtime._field_screen_xy(boss.x, boss.y))
+    assert (bx, by + 48 * runtime.field_camera.zoom) == pytest.approx(
+        runtime._field_screen_xy(boss.x, boss.y)
+    )
     first = texts[f"+2 {name}"].transform.y
     _frames(runtime, 6)
     later = {r.text: r for r in runtime.popup_frame}[f"+2 {name}"].transform
@@ -53,10 +62,17 @@ def test_a_full_bag_says_so(runtime):
     item_id = sorted(db.items)[0]
     game.save.rpg_state.inventory.configure(InventoryRules("bag", max_kinds=1), db.items.get)
     held = [i for i in sorted(db.items) if game.save.rpg_state.inventory.count(i)]
-    other = next(i for i in sorted(db.items) if i not in held and i != item_id) if held else item_id
+    other = (
+        next(i for i in sorted(db.items) if i not in held and i != item_id) if held else item_id
+    )
     if not held:
         game.save.rpg_state.inventory.add(item_id, 1)
         other = next(i for i in sorted(db.items) if i != item_id)
-    _run(runtime, EventInstruction("WORLD", {"command": "GIVE_ITEM", "args": {"item_id": other, "quantity": 1}}))
+    _run(
+        runtime,
+        EventInstruction(
+            "WORLD", {"command": "GIVE_ITEM", "args": {"item_id": other, "quantity": 1}}
+        ),
+    )
     _frames(runtime, 2)
     assert any(r.text.startswith("No room for") for r in runtime.popup_frame)

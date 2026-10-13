@@ -1,9 +1,20 @@
-from asteria.presentation import FrameTiming, HighFidelityClip, HighFidelityEditorModel, SyncCue, VisualLayer
+from asteria.presentation import (
+    FrameTiming,
+    HighFidelityClip,
+    HighFidelityEditorModel,
+    SyncCue,
+    VisualLayer,
+)
 
 
 def M():
     c = HighFidelityClip(
-        "hero", (512, 768), ("a", "b", "c"), (FrameTiming(10),), pivot=(256, 700), layers=(VisualLayer("weapon", 2),)
+        "hero",
+        (512, 768),
+        ("a", "b", "c"),
+        (FrameTiming(10),),
+        pivot=(256, 700),
+        layers=(VisualLayer("weapon", 2),),
     )
     return HighFidelityEditorModel(c, (SyncCue(10, "audio", "play", {"id": "s"}),))
 

@@ -64,6 +64,17 @@ def passthrough_codec(kind):
 
 
 def install_common_passthrough_codecs(registry):
-    for kind in ("character", "monster", "tileset", "prop", "icon", "portrait", "vfx", "audio", "font", "material"):
+    for kind in (
+        "character",
+        "monster",
+        "tileset",
+        "prop",
+        "icon",
+        "portrait",
+        "vfx",
+        "audio",
+        "font",
+        "material",
+    ):
         registry.register(passthrough_codec(kind))
     return registry

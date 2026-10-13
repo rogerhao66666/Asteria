@@ -56,7 +56,9 @@ def runtime():
             effects=[
                 AbilityEffect(
                     AbilityTargetMode.SELECTED,
-                    Effect("hit", [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", -10)]),
+                    Effect(
+                        "hit", [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", -10)]
+                    ),
                 )
             ],
         )
@@ -286,7 +288,12 @@ def test_explicit_objectives_override_legacy_elimination_fallback():
 
 
 def test_failed_summon_slot_validation_is_atomic():
-    from asteria.rpg import BattleFormationRuntime, BattlePlacement, FormationDefinition, FormationSlotDefinition
+    from asteria.rpg import (
+        BattleFormationRuntime,
+        BattlePlacement,
+        FormationDefinition,
+        FormationSlotDefinition,
+    )
 
     base = make_battle()
     formation = BattleFormationRuntime(

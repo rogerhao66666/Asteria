@@ -21,7 +21,13 @@ class ActionTransactionPolicy:
     cost_commit: CostCommitMode = CostCommitMode.RESOLUTION
     interrupt_cost: InterruptCostPolicy = InterruptCostPolicy.KEEP
 
-    def __init__(self, ability_id, *, cost_commit=CostCommitMode.RESOLUTION, interrupt_cost=InterruptCostPolicy.KEEP):
+    def __init__(
+        self,
+        ability_id,
+        *,
+        cost_commit=CostCommitMode.RESOLUTION,
+        interrupt_cost=InterruptCostPolicy.KEEP,
+    ):
         ability_id = str(ability_id).strip()
         if not ability_id:
             raise ValueError("ability_id is required")
@@ -40,7 +46,10 @@ class ActionTransactionPolicy:
 
     @classmethod
     def from_data(cls, data):
-        if data.get("schema") != "asteria.rpg.action_transaction_policy" or data.get("version") != 1:
+        if (
+            data.get("schema") != "asteria.rpg.action_transaction_policy"
+            or data.get("version") != 1
+        ):
             raise ValueError("unsupported action transaction policy")
         return cls(
             data["ability_id"],
@@ -107,7 +116,11 @@ class BattleTransactionRuntime:
                 raise ValueError(f"invalid cost: {cost.resource}")
             if not subject.resources.contains(cost.resource):
                 raise ValueError(f"missing resource: {cost.resource}")
-            if subject.resources.current(cost.resource) - subject.resources.get(cost.resource).minimum < amount:
+            if (
+                subject.resources.current(cost.resource)
+                - subject.resources.get(cost.resource).minimum
+                < amount
+            ):
                 raise ValueError(f"insufficient resource: {cost.resource}")
             result.append((cost.resource, amount))
         return tuple(result)
@@ -153,5 +166,7 @@ class BattleTransactionRuntime:
     def restore_from_data(self, data):
         if data.get("schema") != self.SCHEMA or data.get("version") != self.VERSION:
             raise ValueError("unsupported battle transaction runtime")
-        self._reservations = {x["token"]: PendingCostReservation.from_data(x) for x in data.get("reservations", ())}
+        self._reservations = {
+            x["token"]: PendingCostReservation.from_data(x) for x in data.get("reservations", ())
+        }
         return self

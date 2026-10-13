@@ -56,7 +56,9 @@ class BattlePresentationLayeringProfile:
 
     def __init__(self, channels=()):
         channels = tuple(
-            x if isinstance(x, BattlePresentationChannelPolicy) else BattlePresentationChannelPolicy.from_data(x)
+            x
+            if isinstance(x, BattlePresentationChannelPolicy)
+            else BattlePresentationChannelPolicy.from_data(x)
             for x in channels
         )
         if len({x.channel for x in channels}) != len(channels):
@@ -65,7 +67,10 @@ class BattlePresentationLayeringProfile:
 
     def policy_for(self, channel):
         channel = str(channel)
-        return next((x for x in self.channels if x.channel == channel), BattlePresentationChannelPolicy(channel))
+        return next(
+            (x for x in self.channels if x.channel == channel),
+            BattlePresentationChannelPolicy(channel),
+        )
 
     def to_data(self):
         return {
@@ -138,7 +143,10 @@ class BattlePresentationLayeringRuntime:
             gain = _positive(staging.get("gain", policy.gain), "staging gain")
             layer = int(staging.get("layer", policy.layer))
             priority = int(staging.get("priority", 0))
-            group_id = str(staging.get("group_id", outer.get("timeline_id", "default"))).strip() or "default"
+            group_id = (
+                str(staging.get("group_id", outer.get("timeline_id", "default"))).strip()
+                or "default"
+            )
             bus = str(staging.get("bus", policy.bus)).strip() or policy.bus
 
             payload["staging"] = {
@@ -154,11 +162,17 @@ class BattlePresentationLayeringRuntime:
             # Channel-specific presentation scaling. Only copied cue payload changes.
             if channel == "camera":
                 if "amplitude" in payload:
-                    payload["amplitude"] = _finite(payload["amplitude"], "camera amplitude") * intensity * gain
+                    payload["amplitude"] = (
+                        _finite(payload["amplitude"], "camera amplitude") * intensity * gain
+                    )
                 if "amplitude_x" in payload:
-                    payload["amplitude_x"] = _finite(payload["amplitude_x"], "camera amplitude_x") * intensity * gain
+                    payload["amplitude_x"] = (
+                        _finite(payload["amplitude_x"], "camera amplitude_x") * intensity * gain
+                    )
                 if "amplitude_y" in payload:
-                    payload["amplitude_y"] = _finite(payload["amplitude_y"], "camera amplitude_y") * intensity * gain
+                    payload["amplitude_y"] = (
+                        _finite(payload["amplitude_y"], "camera amplitude_y") * intensity * gain
+                    )
             elif channel == "audio":
                 payload["gain"] = gain * intensity
                 payload["bus"] = bus
@@ -168,7 +182,9 @@ class BattlePresentationLayeringRuntime:
 
             cue["payload"] = payload
             outer["cue"] = cue
-            result.append(BattlePresentationEvent(event.sequence, event.kind, event.source_id, outer))
+            result.append(
+                BattlePresentationEvent(event.sequence, event.kind, event.source_id, outer)
+            )
         return tuple(result)
 
     def context_for_event(self, event):

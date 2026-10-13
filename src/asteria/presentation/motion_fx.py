@@ -54,7 +54,8 @@ class MotionEcho:
         self.active_until = max(self.active_until, now + float(duration))
 
     def record(self, now, payload, *, moving=True):
-        """Take a snapshot when active (or moving, for always-on trails) and the interval has passed."""
+        """Take a snapshot when active (or moving, for always-on trails) and the interval has
+        passed."""
         if (now <= self.active_until or moving) and now - self._last >= self.settings.interval:
             self.snapshots.append((now, payload))
             self._last = now
@@ -64,7 +65,10 @@ class MotionEcho:
         while self.snapshots and now - self.snapshots[0][0] > self.settings.lifetime:
             self.snapshots.popleft()
         n = len(self.snapshots)
-        return [(payload, self.settings.fade ** (n - i)) for i, (_, payload) in enumerate(self.snapshots)]
+        return [
+            (payload, self.settings.fade ** (n - i))
+            for i, (_, payload) in enumerate(self.snapshots)
+        ]
 
     @property
     def idle(self):

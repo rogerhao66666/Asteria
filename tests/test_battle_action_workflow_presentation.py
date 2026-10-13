@@ -58,12 +58,18 @@ def test_multiple_selection_step_can_model_runes_cards_or_ingredients():
         "Combine",
         (
             BattleWorkflowStep(
-                "parts", "Choose Parts", selection_mode="multiple", minimum_selections=2, maximum_selections=3
+                "parts",
+                "Choose Parts",
+                selection_mode="multiple",
+                minimum_selections=2,
+                maximum_selections=3,
             ),
         ),
     )
     runtime = BattleActionWorkflowRuntime()
-    runtime.begin(definition, tuple(BattleWorkflowOption(x, x.upper()) for x in ("a", "b", "c", "d")))
+    runtime.begin(
+        definition, tuple(BattleWorkflowOption(x, x.upper()) for x in ("a", "b", "c", "d"))
+    )
     runtime.select("a")
     assert not runtime.view.can_advance
     runtime.select("b")
@@ -79,7 +85,9 @@ def test_disabled_options_are_supplied_not_recomputed():
     runtime.begin(
         _definition(),
         (
-            BattleWorkflowOption("rare", "Rare Herb", enabled=False, disabled_reason="Out of stock"),
+            BattleWorkflowOption(
+                "rare", "Rare Herb", enabled=False, disabled_reason="Out of stock"
+            ),
             BattleWorkflowOption("common", "Common Herb"),
         ),
     )

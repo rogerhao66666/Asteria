@@ -1,4 +1,5 @@
-"""D22 A9: the Real-Time Combat workspace (attacks, projectiles, rarities, affixes with live previews), the scene
+"""D22 A9: the Real-Time Combat workspace (attacks, projectiles, rarities, affixes with live
+previews), the scene
 view's collider / hurtbox / hitbox overlay, and the Problems checks for real-time combat."""
 
 import pytest
@@ -14,7 +15,11 @@ from asteria.gameplay.projectiles import ProjectileDefinition
 from asteria.project import Project
 from asteria.rpg.behavior_tree import BehaviorNode, BehaviorTree
 from asteria.runtime.action_combat import ActionCombatComponent
-from asteria.runtime.character_control import CharacterController2DComponent, Hitbox2DComponent, Hurtbox2DComponent
+from asteria.runtime.character_control import (
+    CharacterController2DComponent,
+    Hitbox2DComponent,
+    Hurtbox2DComponent,
+)
 from asteria.runtime.collision import Collider2DComponent
 from asteria.runtime.combat import CombatantComponent
 
@@ -46,14 +51,21 @@ def test_every_kind_is_created_edited_duplicated_deleted_and_undone():
     with pytest.raises(CombatAuthoringError):
         api.apply("attacks", "one", dict(api.data("attacks", "one"), attack_id="other"))
     library = document.project.gameplay_library
-    library.add_timeline(ActionTimeline("swing", [ActionCue("h", 0, "hitbox", {"hit_tag": "one", "duration": 0.1})]))
+    library.add_timeline(
+        ActionTimeline("swing", [ActionCue("h", 0, "hitbox", {"hit_tag": "one", "duration": 0.1})])
+    )
     library.projectiles["one"] = ProjectileDefinition("one", attack_id="one")
     assert set(api.usage("attacks", "one")) == {"projectile one", "timeline swing"}
 
 
 def test_the_workspace_form_edits_the_record_and_previews_live():
     QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
-    from asteria.editor.combat_workspace import AttackPreview, CombatWorkspace, ProjectilePreview, RarityPreview
+    from asteria.editor.combat_workspace import (
+        AttackPreview,
+        CombatWorkspace,
+        ProjectilePreview,
+        RarityPreview,
+    )
 
     qapp = QApplication.instance() or QApplication([])
 
@@ -74,7 +86,11 @@ def test_the_workspace_form_edits_the_record_and_previews_live():
     assert "Apply" in widget.status.text()
     widget.apply()
     attack = document.project.gameplay_library.attacks["slash"]
-    assert attack.knockdown and attack.damage.terms[0].key == "power" and attack.damage.multipliers[0].multiplier == 2.0
+    assert (
+        attack.knockdown
+        and attack.damage.terms[0].key == "power"
+        and attack.damage.multipliers[0].multiplier == 2.0
+    )
     widget.show_kind("projectiles")
     assert widget.new_record("arrow") == "arrow" and isinstance(widget.preview, ProjectilePreview)
     widget.inputs["attack_id"].setCurrentText("slash")
@@ -140,7 +156,9 @@ def test_problems_name_broken_real_time_combat_references():
     document = _document()
     project = document.project
     library = project.gameplay_library
-    library.add_attack(AttackDefinition("bite", damage_formula_id="missing", apply_states=[{"state": "nope"}]))
+    library.add_attack(
+        AttackDefinition("bite", damage_formula_id="missing", apply_states=[{"state": "nope"}])
+    )
     library.add_projectile(ProjectileDefinition("dart", attack_id="ghost"))
     library.add_timeline(
         ActionTimeline(
@@ -153,7 +171,10 @@ def test_problems_name_broken_real_time_combat_references():
         )
     )
     project.rpg_database.add_behavior_tree(
-        BehaviorTree("brain", BehaviorNode("selector", {}, (BehaviorNode("use_ability", {"ability": "zap"}),)))
+        BehaviorTree(
+            "brain",
+            BehaviorNode("selector", {}, (BehaviorNode("use_ability", {"ability": "zap"}),)),
+        )
     )
     scene = project.create_scene("Arena") if hasattr(project, "create_scene") else None
     if scene is None:
@@ -180,6 +201,9 @@ def test_problems_name_broken_real_time_combat_references():
     ):
         assert expected in text, expected
     located = next(p for m, p in messages.items() if "attack ghost" in m)
-    assert located.target == ("combat", "projectiles", "dart") and located.location == "projectiles / dart"
+    assert (
+        located.target == ("combat", "projectiles", "dart")
+        and located.location == "projectiles / dart"
+    )
     warning = next(p for m, p in messages.items() if "hit tag custom" in m)
     assert warning.severity == "warning"

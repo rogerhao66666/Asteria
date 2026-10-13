@@ -45,7 +45,9 @@ def CL():
 
 
 def test_audio():
-    a = AudioAsset(C("a", "audio"), "a.flac", 1234.5, 2, 96000, (100.25, 900.75), (("stream", True),))
+    a = AudioAsset(
+        C("a", "audio"), "a.flac", 1234.5, 2, 96000, (100.25, 900.75), (("stream", True),)
+    )
     q = audio_request(a)
     assert q.sample_rate == 96000 and q.loop_region_ms == (100.25, 900.75)
 
@@ -56,7 +58,9 @@ def test_font():
 
 
 def test_material():
-    a = MaterialAsset(C("m", "material"), "shader/custom", (("glow", 2.75),), (("albedo", "tex/a"),), ())
+    a = MaterialAsset(
+        C("m", "material"), "shader/custom", (("glow", 2.75),), (("albedo", "tex/a"),), ()
+    )
     assert material_request(a).parameters[0][1] == 2.75
 
 
@@ -100,7 +104,14 @@ def test_monster():
 
 
 def test_vfx():
-    v = VFXVariant("cin", CL(), VFXAnchor("socket", (1.25, -2.5), "weapon_tip"), (2.0, 0.5), 37.25, (("x", 9),))
+    v = VFXVariant(
+        "cin",
+        CL(),
+        VFXAnchor("socket", (1.25, -2.5), "weapon_tip"),
+        (2.0, 0.5),
+        37.25,
+        (("x", 9),),
+    )
     a = VFXAsset(C("fx", "vfx"), (v,), "cin")
     q = vfx_request(a)
     assert q.socket == "weapon_tip" and q.rotation_deg == 37.25

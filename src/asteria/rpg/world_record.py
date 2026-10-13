@@ -1,4 +1,5 @@
-"""Long-lived world state: faction reputation, relationships, achievements and the bestiary (ASTERIA_SPEC §26).
+"""Long-lived world state: faction reputation, relationships, achievements and the bestiary
+(ASTERIA_SPEC §26).
 
 Definitions (factions, achievements) live in the RPG database; the mutable
 :class:`WorldRecord` lives in the save.
@@ -28,7 +29,16 @@ class FactionDefinition:
     initial: float
     ranks: tuple[tuple[float, str], ...]
 
-    def __init__(self, faction_id, display_name=None, *, minimum=-100.0, maximum=100.0, initial=0.0, ranks=()):
+    def __init__(
+        self,
+        faction_id,
+        display_name=None,
+        *,
+        minimum=-100.0,
+        maximum=100.0,
+        initial=0.0,
+        ranks=(),
+    ):
         minimum, maximum, initial = float(minimum), float(maximum), float(initial)
         if not all(isfinite(x) for x in (minimum, maximum, initial)) or minimum > maximum:
             raise ValueError("faction range is invalid")
@@ -97,7 +107,15 @@ class AchievementDefinition:
     hidden: bool
 
     def __init__(
-        self, achievement_id, display_name=None, *, description="", kind="switch", target, value=1.0, hidden=False
+        self,
+        achievement_id,
+        display_name=None,
+        *,
+        description="",
+        kind="switch",
+        target,
+        value=1.0,
+        hidden=False,
     ):
         if kind not in ACHIEVEMENT_KINDS:
             raise ValueError(f"unknown achievement kind: {kind}")
@@ -153,7 +171,8 @@ class WorldRecord:
     achievements: list = field(default_factory=list)
     bestiary: dict = field(default_factory=dict)
     known_recipes: list = field(default_factory=list)
-    # WLD-02: per-NPC saved state, npc_id -> {scene_id, position, facing, visible, alive, mood, stage, flags}
+    # WLD-02: per-NPC saved state, npc_id -> {scene_id, position, facing, visible, alive, mood,
+    # stage, flags}
     npcs: dict = field(default_factory=dict)
 
     SCHEMA = "asteria.rpg.world_record"
@@ -175,7 +194,8 @@ class WorldRecord:
         )
 
     def npc_value(self, npc_id, key):
-        """``visible``, ``alive``, ``mood``, ``stage``, ``scene_id`` or ``flag.<name>`` of an NPC."""
+        """``visible``, ``alive``, ``mood``, ``stage``, ``scene_id`` or ``flag.<name>`` of an
+        NPC."""
         state = self.npcs.get(str(npc_id))
         if state is None:
             return {"visible": True, "alive": True, "mood": "", "stage": 0}.get(key)
@@ -202,7 +222,9 @@ class WorldRecord:
         return self.counters[counter_id]
 
     def note_enemy(self, enemy_id, key, amount=1):
-        entry = self.bestiary.setdefault(_id(enemy_id, "enemy id"), {"seen": 0, "defeated": 0, "captured": 0})
+        entry = self.bestiary.setdefault(
+            _id(enemy_id, "enemy id"), {"seen": 0, "defeated": 0, "captured": 0}
+        )
         entry[key] = entry.get(key, 0) + int(amount)
         return entry
 
@@ -226,7 +248,10 @@ class WorldRecord:
             if achievement_id in self.achievements:
                 continue
             if self.achievement_met(
-                achievements[achievement_id], factions=factions, switches=switches, quest_status=quest_status
+                achievements[achievement_id],
+                factions=factions,
+                switches=switches,
+                quest_status=quest_status,
             ):
                 self.achievements.append(achievement_id)
                 unlocked.append(achievement_id)
@@ -242,7 +267,10 @@ class WorldRecord:
             "achievements": list(self.achievements),
             "bestiary": {k: dict(sorted(v.items())) for k, v in sorted(self.bestiary.items())},
             "known_recipes": sorted(self.known_recipes),
-            "npcs": {k: dict(v, flags=dict(sorted(v["flags"].items()))) for k, v in sorted(self.npcs.items())},
+            "npcs": {
+                k: dict(v, flags=dict(sorted(v["flags"].items())))
+                for k, v in sorted(self.npcs.items())
+            },
         }
 
     @classmethod
@@ -256,5 +284,8 @@ class WorldRecord:
             [str(x) for x in data["achievements"]],
             {str(k): {str(a): int(b) for a, b in v.items()} for k, v in data["bestiary"].items()},
             [str(x) for x in data.get("known_recipes", ())],
-            {str(k): dict(v, flags=dict(v.get("flags", {}))) for k, v in data.get("npcs", {}).items()},
+            {
+                str(k): dict(v, flags=dict(v.get("flags", {})))
+                for k, v in data.get("npcs", {}).items()
+            },
         )

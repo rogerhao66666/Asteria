@@ -44,7 +44,9 @@ class SemanticAssetImporter:
             shutil.copytree(source, staged_pkg)
             store = self.store_factory()
             rep = store.load(staged_pkg)
-            issues = tuple(ImportTransactionIssue(x.code, x.message, x.path, x.severity) for x in rep.issues)
+            issues = tuple(
+                ImportTransactionIssue(x.code, x.message, x.path, x.severity) for x in rep.issues
+            )
             if not rep.ok:
                 return ImportTransactionReport(issues=issues)
             # Semantic PASS; only now publish through Batch64 filesystem transaction.
@@ -53,12 +55,19 @@ class SemanticAssetImporter:
             )
             if not inst.ok:
                 return ImportTransactionReport(
-                    issues=tuple(ImportTransactionIssue(x.code, x.message, x.path) for x in inst.issues)
+                    issues=tuple(
+                        ImportTransactionIssue(x.code, x.message, x.path) for x in inst.issues
+                    )
                 )
             return ImportTransactionReport(
-                inst.installed, tuple(x.manifest.asset_id for x in rep.loaded), issues, inst.replaced
+                inst.installed,
+                tuple(x.manifest.asset_id for x in rep.loaded),
+                issues,
+                inst.replaced,
             )
         except Exception as e:
-            return ImportTransactionReport(issues=(ImportTransactionIssue("asset.import.failed", str(e)),))
+            return ImportTransactionReport(
+                issues=(ImportTransactionIssue("asset.import.failed", str(e)),)
+            )
         finally:
             shutil.rmtree(stage, ignore_errors=True)

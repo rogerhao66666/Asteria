@@ -41,7 +41,10 @@ def test_canonical_resolved_build_composes_multiclass_allocation_passive_and_equ
             granted_abilities=("slash",),
         ),
         "mage": ClassDefinition(
-            "mage", stat_bonuses={"magic": 4}, granted_tags=("capability.weapon.staff",), granted_abilities=("spark",)
+            "mage",
+            stat_bonuses={"magic": 4},
+            granted_tags=("capability.weapon.staff",),
+            granted_abilities=("spark",),
         ),
     }
     actor = RpgActorRuntime(actor_def, class_definitions=classes)
@@ -68,7 +71,9 @@ def test_canonical_resolved_build_composes_multiclass_allocation_passive_and_equ
             ),
         ),
     )
-    allocation = ProgressionAllocationRuntime((graph,), allocations={"hero_board": {"training": 1}})
+    allocation = ProgressionAllocationRuntime(
+        (graph,), allocations={"hero_board": {"training": 1}}
+    )
 
     growth_def = EquipmentGrowthDefinition(
         "blade_growth",
@@ -107,7 +112,15 @@ def test_canonical_resolved_build_composes_multiclass_allocation_passive_and_equ
     assert build.resources.get("mp").maximum == 17
     assert "capability.weapon.greatblade" in build.capabilities
     assert "capability.weapon.awakened" in build.capabilities
-    assert build.abilities == ("basic_attack", "slash", "spark", "burst", "heal", "blood_strike", "counter")
+    assert build.abilities == (
+        "basic_attack",
+        "slash",
+        "spark",
+        "burst",
+        "heal",
+        "blood_strike",
+        "counter",
+    )
     assert build.equipment_instance_ids == ("blade-1",)
     assert build.class_assignment_ids == ("job-warrior", "job-mage")
     assert build.ability_sources("blood_strike")[0].source_kind == "equipment_growth"
@@ -128,9 +141,13 @@ def test_resolved_build_is_derived_and_does_not_mutate_intrinsic_actor_state():
 def test_resolved_build_provenance_explains_sources():
     actor = RpgActorRuntime(
         ActorDefinition(
-            "hero", class_assignments=(ClassAssignment("job", assignment_id="j1"),), base_stats={"attack": 5}
+            "hero",
+            class_assignments=(ClassAssignment("job", assignment_id="j1"),),
+            base_stats={"attack": 5},
         ),
-        class_definitions={"job": ClassDefinition("job", stat_bonuses={"attack": 2}, granted_abilities=("slash",))},
+        class_definitions={
+            "job": ClassDefinition("job", stat_bonuses={"attack": 2}, granted_abilities=("slash",))
+        },
     )
     build = resolve_actor_build(actor)
     assert {(x.source_kind, x.source_id) for x in build.sources_for("stat", "attack")} == {
@@ -144,7 +161,9 @@ def test_resolved_build_provenance_explains_sources():
 
 
 def test_empty_optional_layers_still_resolve_canonical_build():
-    actor = RpgActorRuntime(ActorDefinition("hero", base_stats={"speed": 12}, tags=("hero",), abilities=("wait",)))
+    actor = RpgActorRuntime(
+        ActorDefinition("hero", base_stats={"speed": 12}, tags=("hero",), abilities=("wait",))
+    )
     build = resolve_actor_build(actor)
     assert build.stats.get("speed") == 12
     assert build.tags.contains("hero")

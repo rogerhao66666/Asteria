@@ -21,7 +21,11 @@ NPC_KEYS = ("visible", "alive", "mood", "stage")
 @component_schema(
     type_name="asteria.NpcIdentity2D",
     version=1,
-    fields=(Field("npc_id", str, "", tooltip="Stable NPC id; its state is saved across scenes and loads."),),
+    fields=(
+        Field(
+            "npc_id", str, "", tooltip="Stable NPC id; its state is saved across scenes and loads."
+        ),
+    ),
 )
 class NpcIdentity2DComponent(Component):
     def __init__(self):
@@ -59,7 +63,11 @@ def apply_npc_states(scene, world, facing=None):
 
 def coerce_npc_value(key, value):
     if key in ("visible", "alive"):
-        return value if isinstance(value, bool) else str(value).strip().lower() in ("1", "true", "yes", "on")
+        return (
+            value
+            if isinstance(value, bool)
+            else str(value).strip().lower() in ("1", "true", "yes", "on")
+        )
     if key == "stage":
         return int(value)
     return value

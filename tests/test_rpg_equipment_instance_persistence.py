@@ -15,7 +15,10 @@ def definitions(socket_count=2):
         "blade",
         slot="weapon",
         tags=["equipment.weapon"],
-        sockets=[SocketDefinition(f"s{i}", accepted_tags=["attachment.weapon"]) for i in range(socket_count)],
+        sockets=[
+            SocketDefinition(f"s{i}", accepted_tags=["attachment.weapon"])
+            for i in range(socket_count)
+        ],
     )
     ruby = AttachmentDefinition("ruby", tags=["attachment.weapon", "gem"])
     sapphire = AttachmentDefinition("sapphire", tags=["attachment.weapon", "gem"])

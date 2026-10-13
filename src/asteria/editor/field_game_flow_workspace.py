@@ -46,7 +46,11 @@ class FieldGameFlowWorkspaceModel:
         self.entity_id = e.id
         flow = self.controller.action_flow(self.scene_id, e.id)
         self.binding_id = flow["binding"].binding_id if flow and flow["binding"] else None
-        self.program_id = flow["program"].name if False else (flow["interaction"].event_program_id if flow else None)
+        self.program_id = (
+            flow["program"].name
+            if False
+            else (flow["interaction"].event_program_id if flow else None)
+        )
         self.focused_command_index = None
 
     def focus_command(self, index):

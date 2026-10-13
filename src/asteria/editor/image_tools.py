@@ -1,7 +1,9 @@
-"""Editor image tools (AST-11): the asset pipeline's safe auto-fixes and atlas packing, from the Asset list.
+"""Editor image tools (AST-11): the asset pipeline's safe auto-fixes and atlas packing, from the
+Asset list.
 
 * Auto-fix Image... - choose a fix, see the image before and after, apply. The original is kept as
-  ``<name>.bak.png``; fixes that would lose visible pixels ask for confirmation first (``autofix``).
+  ``<name>.bak.png``; fixes that would lose visible pixels ask for confirmation first
+  (``autofix``).
 * Pack into Atlas... - the selected images packed into one PNG plus a JSON of named regions.
 """
 
@@ -47,11 +49,14 @@ def _pixmap(image, box=220):
     qimage = QImage.fromData(data.getvalue())
     pixmap = QPixmap.fromImage(qimage)
     scale = max(1, min(box // max(1, pixmap.width()), box // max(1, pixmap.height())))
-    return pixmap.scaled(pixmap.width() * scale, pixmap.height() * scale, Qt.KeepAspectRatio, Qt.FastTransformation)
+    return pixmap.scaled(
+        pixmap.width() * scale, pixmap.height() * scale, Qt.KeepAspectRatio, Qt.FastTransformation
+    )
 
 
 def fix_image_file(path, fix, *, confirmed=False):
-    """Apply ``fix`` to the PNG at ``path``; the original is kept beside it. Returns the FixReport."""
+    """Apply ``fix`` to the PNG at ``path``; the original is kept beside it. Returns the
+    FixReport."""
     from PIL import Image
 
     path = Path(path)
@@ -66,7 +71,8 @@ def fix_image_file(path, fix, *, confirmed=False):
 
 
 def pack_atlas(paths, output, *, padding=1, max_width=1024):
-    """Pack the PNGs at ``paths`` into ``output`` (PNG) and ``output``.json (``{"regions": {name: [x,y,w,h]}}``)."""
+    """Pack the PNGs at ``paths`` into ``output`` (PNG) and ``output``.json (``{"regions": {name:
+    [x,y,w,h]}}``)."""
     from PIL import Image
 
     frames = {}
@@ -80,7 +86,9 @@ def pack_atlas(paths, output, *, padding=1, max_width=1024):
     atlas.image.save(output)
     regions = {name: list(rect) for name, rect in sorted(atlas.regions.items())}
     meta = output.with_suffix(".json")
-    meta.write_text(json.dumps({"image": output.name, "regions": regions}, indent=2) + "\n", encoding="utf-8")
+    meta.write_text(
+        json.dumps({"image": output.name, "regions": regions}, indent=2) + "\n", encoding="utf-8"
+    )
     return output, meta, report
 
 
@@ -133,8 +141,15 @@ class ImageFixDialog(QDialog):
         before, after, report = preview_fix(self.fix_id, self.image)
         self.before.setPixmap(_pixmap(before))
         self.after.setPixmap(_pixmap(after))
-        size = f"{report.before_size[0]}x{report.before_size[1]} → {report.after_size[0]}x{report.after_size[1]}"
-        warning = "  This fix loses visible pixels; you will be asked to confirm." if report.destructive else ""
+        size = (
+            f"{report.before_size[0]}x{report.before_size[1]} → "
+            f"{report.after_size[0]}x{report.after_size[1]}"
+        )
+        warning = (
+            "  This fix loses visible pixels; you will be asked to confirm."
+            if report.destructive
+            else ""
+        )
         self.report.setText(f"{size}.{warning}")
         self.preview_report = report
 
@@ -142,7 +157,9 @@ class ImageFixDialog(QDialog):
         confirmed = False
         if self.preview_report.destructive:
             answer = (
-                confirm if confirm is not None else QMessageBox.question(self, "Auto-fix Image", self.report.text())
+                confirm
+                if confirm is not None
+                else QMessageBox.question(self, "Auto-fix Image", self.report.text())
             )
             confirmed = answer in (True, QMessageBox.Yes)
             if not confirmed:
@@ -156,7 +173,8 @@ class ImageFixDialog(QDialog):
 
 
 def icon_choices(document):
-    """The project's icon assets as ``((asset id, QIcon or None), ...)`` for an ``icon_id`` field (AST-07)."""
+    """The project's icon assets as ``((asset id, QIcon or None), ...)`` for an ``icon_id`` field
+    (AST-07)."""
     from PySide6.QtGui import QIcon
 
     from asteria.runtime.menu_icons import icon_source

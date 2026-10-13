@@ -68,13 +68,19 @@ class EventFlowWidget(QWidget):
         self.common_trigger.addItems(list(COMMON_TRIGGERS))
         self.common_switch = QLineEdit()
         self.common_switch.setPlaceholderText("switch name (empty = always)")
-        common_box = QGroupBox("Common events — reusable programs; autorun / parallel ones run while the switch is on")
+        common_box = QGroupBox(
+            "Common events — reusable programs; autorun / parallel ones run while the switch is on"
+        )
         form = QFormLayout()
         form.addRow("Program", self.common_program)
         form.addRow("Trigger", self.common_trigger)
         form.addRow("Switch", self.common_switch)
         buttons = QHBoxLayout()
-        for label, slot in (("Add", self.add_common), ("Apply", self.apply_common), ("Remove", self.remove_common)):
+        for label, slot in (
+            ("Add", self.add_common),
+            ("Apply", self.apply_common),
+            ("Remove", self.remove_common),
+        ):
             b = QPushButton(label)
             b.clicked.connect(slot)
             buttons.addWidget(b)
@@ -97,7 +103,9 @@ class EventFlowWidget(QWidget):
         self.cond_source = QComboBox()
         self.cond_source.addItems(["battle", "switch", "variable"])
         self.cond_name = QLineEdit()
-        self.cond_name.setPlaceholderText("round · hp_ratio:astral_tyrant · alive:mender_wisp · switch name")
+        self.cond_name.setPlaceholderText(
+            "round · hp_ratio:astral_tyrant · alive:mender_wisp · switch name"
+        )
         self.cond_op = QComboBox()
         self.cond_op.addItems(list(COMPARATORS))
         self.cond_value = QLineEdit("0.5")
@@ -117,7 +125,11 @@ class EventFlowWidget(QWidget):
         bform.addRow("", cond_row)
         bform.addRow("", self.battle_once)
         bbuttons = QHBoxLayout()
-        for label, slot in (("Add", self.add_battle), ("Apply", self.apply_battle), ("Remove", self.remove_battle)):
+        for label, slot in (
+            ("Add", self.add_battle),
+            ("Apply", self.apply_battle),
+            ("Remove", self.remove_battle),
+        ):
             b = QPushButton(label)
             b.clicked.connect(slot)
             bbuttons.addWidget(b)
@@ -129,14 +141,18 @@ class EventFlowWidget(QWidget):
         new_program = QPushButton("New Program…")
         new_program.clicked.connect(self._new_program_clicked)
         top = QHBoxLayout()
-        top.addWidget(QLabel("Programs are edited in the Event Program tab (entity events) or by script."))
+        top.addWidget(
+            QLabel("Programs are edited in the Event Program tab (entity events) or by script.")
+        )
         top.addStretch(1)
         top.addWidget(new_program)
         from .responsive_form import ResponsiveColumns
 
         layout = QVBoxLayout(self)
         layout.addLayout(top)
-        layout.addWidget(ResponsiveColumns((common_box, battle_box), column_width=360), 1)  # side by side if wide
+        layout.addWidget(
+            ResponsiveColumns((common_box, battle_box), column_width=360), 1
+        )  # side by side if wide
         layout.addWidget(self.status)
         self._condition_values = []
         self.refresh()
@@ -186,14 +202,19 @@ class EventFlowWidget(QWidget):
             row = self.battle.rowCount()
             self.battle.insertRow(row)
             when = " and ".join(describe_condition(c) for c in b.conditions) or "always"
-            values = (b.hook_name.removeprefix("rpg.battle."), b.event_program_id, when, "yes" if b.once else "")
+            values = (
+                b.hook_name.removeprefix("rpg.battle."),
+                b.event_program_id,
+                when,
+                "yes" if b.once else "",
+            )
             for col, text in enumerate(values):
                 self.battle.setItem(row, col, QTableWidgetItem(text))
             self._battle_index.append(index)
         self.common.resizeColumnsToContents()
         self.battle.resizeColumnsToContents()
 
-    # -- common --------------------------------------------------------------------------------------
+    # -- common -----------------------------------------------------------------------------------
     def _common_selected(self):
         row = self.common.currentRow()
         if row < 0:
@@ -209,18 +230,23 @@ class EventFlowWidget(QWidget):
             self.common_trigger.currentText(),
             self.common_switch.text(),
         )
-        return self._try(lambda: self.api.add_common_event(pid, trigger, switch.strip()), f"{pid} is a common event")
+        return self._try(
+            lambda: self.api.add_common_event(pid, trigger, switch.strip()),
+            f"{pid} is a common event",
+        )
 
     def apply_common(self):
         row = self.common.currentRow()
         trigger, switch = self.common_trigger.currentText(), self.common_switch.text().strip()
-        return row >= 0 and self._try(lambda: self.api.set_common_event(row, trigger=trigger, switch=switch), "Saved")
+        return row >= 0 and self._try(
+            lambda: self.api.set_common_event(row, trigger=trigger, switch=switch), "Saved"
+        )
 
     def remove_common(self):
         row = self.common.currentRow()
         return row >= 0 and self._try(lambda: self.api.remove_common_event(row), "Removed")
 
-    # -- battle --------------------------------------------------------------------------------------
+    # -- battle -----------------------------------------------------------------------------------
     def _battle_selected(self):
         row = self.battle.currentRow()
         if row < 0:
@@ -243,7 +269,10 @@ class EventFlowWidget(QWidget):
             return False
         self._condition_values.append(
             EventCondition(
-                self.cond_source.currentText(), name, self.cond_op.currentText(), _coerce(self.cond_value.text())
+                self.cond_source.currentText(),
+                name,
+                self.cond_op.currentText(),
+                _coerce(self.cond_value.text()),
             )
         )
         self._show_conditions()
@@ -251,7 +280,9 @@ class EventFlowWidget(QWidget):
 
     def _form_conditions(self):
         kept = {self.conditions.item(i).text() for i in range(self.conditions.count())}
-        self._condition_values = [c for c in self._condition_values if describe_condition(c) in kept]
+        self._condition_values = [
+            c for c in self._condition_values if describe_condition(c) in kept
+        ]
         return tuple(self._condition_values)
 
     def add_battle(self):
@@ -261,7 +292,9 @@ class EventFlowWidget(QWidget):
             self.battle_once.isChecked(),
         )
         conditions = self._form_conditions()
-        return self._try(lambda: self.api.add_battle_event(hook, pid, conditions=conditions, once=once), "Added")
+        return self._try(
+            lambda: self.api.add_battle_event(hook, pid, conditions=conditions, once=once), "Added"
+        )
 
     def apply_battle(self):
         row = self.battle.currentRow()
@@ -275,13 +308,17 @@ class EventFlowWidget(QWidget):
         )
         conditions = self._form_conditions()
         return self._try(
-            lambda: self.api.set_battle_event(index, hook=hook, program_id=pid, conditions=conditions, once=once),
+            lambda: self.api.set_battle_event(
+                index, hook=hook, program_id=pid, conditions=conditions, once=once
+            ),
             "Saved",
         )
 
     def remove_battle(self):
         row = self.battle.currentRow()
-        return row >= 0 and self._try(lambda: self.api.remove_battle_event(self._battle_index[row]), "Removed")
+        return row >= 0 and self._try(
+            lambda: self.api.remove_battle_event(self._battle_index[row]), "Removed"
+        )
 
     def _new_program_clicked(self):
         value, ok = QInputDialog.getText(self, "New Event Program", "Program id:")
@@ -293,7 +330,13 @@ class SequenceEditorDialog(QDialog):
     """Edit a SEQUENCE: parallel tracks, each an ordered list of track instructions."""
 
     FORMS = {
-        "MOVE": (("entity", "player"), ("x", "0"), ("y", "0"), ("duration", "1.0"), ("relative", "false")),
+        "MOVE": (
+            ("entity", "player"),
+            ("x", "0"),
+            ("y", "0"),
+            ("duration", "1.0"),
+            ("relative", "false"),
+        ),
         "FACE": (("entity", "player"), ("facing", "down")),
         "ANIMATE": (("entity", "player"), ("clip", "idle")),
         "DIALOGUE": (("speaker", ""), ("text", "")),
@@ -389,7 +432,9 @@ class SequenceEditorDialog(QDialog):
             return
         from asteria.events import EventInstruction
 
-        self.steps.addItems([describe_instruction(EventInstruction.from_data(x)) for x in track["instructions"]])
+        self.steps.addItems(
+            [describe_instruction(EventInstruction.from_data(x)) for x in track["instructions"]]
+        )
 
     @property
     def current_track(self):
@@ -419,7 +464,10 @@ class SequenceEditorDialog(QDialog):
         opcode = self.opcode.currentText()
         values = {k: w.text() for k, w in self.fields.items()}
         if opcode == "WORLD":
-            args = {"command": values["command"].strip().upper(), "args": parse_world_args(values["args"])}
+            args = {
+                "command": values["command"].strip().upper(),
+                "args": parse_world_args(values["args"]),
+            }
             if float(values["wait"] or 0) > 0:
                 args["wait"] = float(values["wait"])
             return {"opcode": "WORLD", "args": args}

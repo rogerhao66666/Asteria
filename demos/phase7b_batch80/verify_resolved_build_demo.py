@@ -1,4 +1,5 @@
 """Verify Batch 80 against one canonical Project + RPG save."""
+
 from pathlib import Path
 import json
 
@@ -12,7 +13,9 @@ load_document(document, root / "AsteriaPhase7B_ResolvedBuildDemo.asteria.json")
 project = document.project
 db = project.rpg_database
 state = RpgRuntimeState.from_data(
-    json.loads((root / "reference_data" / "phase7b_batch80_resolved_build_demo.save.json").read_text()),
+    json.loads(
+        (root / "reference_data" / "phase7b_batch80_resolved_build_demo.save.json").read_text()
+    ),
     db,
 )
 build = resolve_actor_from_state("aria", db, state)
@@ -34,4 +37,7 @@ print("Equipment instances:", build.equipment_instance_ids)
 print("Effective stats:", build.stats.to_data()["values"])
 print("Capabilities:", [x for x in build.capabilities if x.startswith("capability.")])
 print("Abilities:", build.abilities)
-print("Power Strike sources:", [(x.source_kind, x.source_id) for x in build.ability_sources("power_strike")])
+print(
+    "Power Strike sources:",
+    [(x.source_kind, x.source_id) for x in build.ability_sources("power_strike")],
+)

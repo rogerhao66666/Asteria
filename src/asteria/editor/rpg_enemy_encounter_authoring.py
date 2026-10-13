@@ -57,15 +57,27 @@ class EnemyEncounterInformationArchitecture:
             ("Identity", "Stats & Resources", "Abilities", "Tags", "Behavior", "Rewards"),
         ),
         EnemyEncounterSection(
-            "encounters", "Encounters", "composition_detail", ("Identity", "Members", "Counts & Weights", "Tags")
+            "encounters",
+            "Encounters",
+            "composition_detail",
+            ("Identity", "Members", "Counts & Weights", "Tags"),
         ),
         EnemyEncounterSection(
             "ai",
             "AI / Boss Phases",
             "rule_phase_detail",
-            ("Decision Rules", "Selected Rule", "Phases", "Selected Phase", "Conditions", "Targets & Actions"),
+            (
+                "Decision Rules",
+                "Selected Rule",
+                "Phases",
+                "Selected Phase",
+                "Conditions",
+                "Targets & Actions",
+            ),
         ),
-        EnemyEncounterSection("rewards", "Rewards", "embedded_detail", ("Currencies", "Progression", "Loot")),
+        EnemyEncounterSection(
+            "rewards", "Rewards", "embedded_detail", ("Currencies", "Progression", "Loot")
+        ),
     )
     primary_navigation: str = "category_sidebar"
     browser_pattern: str = "search_filter_list"
@@ -108,10 +120,14 @@ class RpgEnemyEncounterAuthoringController:
     def _validate_reward(self, reward):
         missing_items = sorted({x.item_id for x in reward.loot} - set(self.database.items))
         if missing_items:
-            raise RpgEnemyEncounterAuthoringError("unknown reward items: " + ", ".join(missing_items))
+            raise RpgEnemyEncounterAuthoringError(
+                "unknown reward items: " + ", ".join(missing_items)
+            )
         missing_tracks = sorted(set(reward.experience) - set(self.database.progression_tracks))
         if missing_tracks:
-            raise RpgEnemyEncounterAuthoringError("unknown progression tracks: " + ", ".join(missing_tracks))
+            raise RpgEnemyEncounterAuthoringError(
+                "unknown progression tracks: " + ", ".join(missing_tracks)
+            )
 
     def _validate_enemy(self, value):
         missing = sorted(set(value.abilities) - set(self.project.gameplay_library.abilities.ids()))
@@ -145,11 +161,17 @@ class RpgEnemyEncounterAuthoringController:
         old = self.database.enemies.get(key)
         if old is None:
             raise RpgEnemyEncounterAuthoringError(f"unknown enemy: {key}")
-        refs = [x.encounter_id for x in self.database.encounters.values() if any(m.enemy_id == key for m in x.members)]
+        refs = [
+            x.encounter_id
+            for x in self.database.encounters.values()
+            if any(m.enemy_id == key for m in x.members)
+        ]
         if key in self.database.enemy_behavior_bindings:
             refs.append("behavior_binding")
         if refs:
-            raise RpgEnemyEncounterAuthoringError(f"enemy {key} is referenced by " + ", ".join(sorted(refs)))
+            raise RpgEnemyEncounterAuthoringError(
+                f"enemy {key} is referenced by " + ", ".join(sorted(refs))
+            )
         self._execute(_MapCommand(self.database.enemies, key, None, old, f"Delete Enemy {key}"))
 
     def create_encounter(self, value):
@@ -159,8 +181,12 @@ class RpgEnemyEncounterAuthoringController:
             raise RpgEnemyEncounterAuthoringError(f"duplicate encounter: {key}")
         missing = sorted({m.enemy_id for m in value.members} - set(self.database.enemies))
         if missing:
-            raise RpgEnemyEncounterAuthoringError("unknown encounter enemies: " + ", ".join(missing))
-        self._execute(_MapCommand(self.database.encounters, key, value, None, f"Add Encounter {key}"))
+            raise RpgEnemyEncounterAuthoringError(
+                "unknown encounter enemies: " + ", ".join(missing)
+            )
+        self._execute(
+            _MapCommand(self.database.encounters, key, value, None, f"Add Encounter {key}")
+        )
         return value
 
     def edit_encounter(self, encounter_id, value):
@@ -173,8 +199,12 @@ class RpgEnemyEncounterAuthoringController:
             raise RpgEnemyEncounterAuthoringError("encounter id cannot change during edit")
         missing = sorted({m.enemy_id for m in value.members} - set(self.database.enemies))
         if missing:
-            raise RpgEnemyEncounterAuthoringError("unknown encounter enemies: " + ", ".join(missing))
-        self._execute(_MapCommand(self.database.encounters, key, value, old, f"Edit Encounter {key}"))
+            raise RpgEnemyEncounterAuthoringError(
+                "unknown encounter enemies: " + ", ".join(missing)
+            )
+        self._execute(
+            _MapCommand(self.database.encounters, key, value, old, f"Edit Encounter {key}")
+        )
         return value
 
     def delete_encounter(self, encounter_id):
@@ -182,7 +212,9 @@ class RpgEnemyEncounterAuthoringController:
         old = self.database.encounters.get(key)
         if old is None:
             raise RpgEnemyEncounterAuthoringError(f"unknown encounter: {key}")
-        self._execute(_MapCommand(self.database.encounters, key, None, old, f"Delete Encounter {key}"))
+        self._execute(
+            _MapCommand(self.database.encounters, key, None, old, f"Delete Encounter {key}")
+        )
 
     def create_ai(self, value):
         value = self._coerce(value, EnemyAIDefinition)
@@ -222,10 +254,16 @@ class RpgEnemyEncounterAuthoringController:
         old = self.database.enemy_ai.get(key)
         if old is None:
             raise RpgEnemyEncounterAuthoringError(f"unknown enemy AI: {key}")
-        refs = [x.enemy_id for x in self.database.enemy_behavior_bindings.values() if x.ai_id == key]
+        refs = [
+            x.enemy_id for x in self.database.enemy_behavior_bindings.values() if x.ai_id == key
+        ]
         if refs:
-            raise RpgEnemyEncounterAuthoringError(f"AI {key} is bound to enemies: " + ", ".join(sorted(refs)))
-        self._execute(_MapCommand(self.database.enemy_ai, key, None, old, f"Delete Enemy AI {key}"))
+            raise RpgEnemyEncounterAuthoringError(
+                f"AI {key} is bound to enemies: " + ", ".join(sorted(refs))
+            )
+        self._execute(
+            _MapCommand(self.database.enemy_ai, key, None, old, f"Delete Enemy AI {key}")
+        )
 
     def bind_enemy_ai(self, enemy_id, ai_id, *, tags=()):
         enemy_id = str(enemy_id)
@@ -237,7 +275,13 @@ class RpgEnemyEncounterAuthoringController:
         value = EnemyBehaviorBinding(enemy_id, ai_id, tags=tags)
         old = self.database.enemy_behavior_bindings.get(enemy_id)
         self._execute(
-            _MapCommand(self.database.enemy_behavior_bindings, enemy_id, value, old, f"Bind Enemy AI {enemy_id}")
+            _MapCommand(
+                self.database.enemy_behavior_bindings,
+                enemy_id,
+                value,
+                old,
+                f"Bind Enemy AI {enemy_id}",
+            )
         )
         return value
 
@@ -246,7 +290,11 @@ class RpgEnemyEncounterAuthoringController:
         old = self.database.enemy_behavior_bindings.get(key)
         if old is None:
             raise RpgEnemyEncounterAuthoringError(f"enemy has no AI binding: {key}")
-        self._execute(_MapCommand(self.database.enemy_behavior_bindings, key, None, old, f"Unbind Enemy AI {key}"))
+        self._execute(
+            _MapCommand(
+                self.database.enemy_behavior_bindings, key, None, old, f"Unbind Enemy AI {key}"
+            )
+        )
 
     def validate(self):
         try:

@@ -67,7 +67,9 @@ def _combine(
     return Transform2D(
         x=x,
         y=y,
-        rotation_deg=(parent.rotation_deg + child.rotation_deg) if inherit_rotation else child.rotation_deg,
+        rotation_deg=(parent.rotation_deg + child.rotation_deg)
+        if inherit_rotation
+        else child.rotation_deg,
         scale_x=(parent.scale_x * child.scale_x) if inherit_scale else child.scale_x,
         scale_y=(parent.scale_y * child.scale_y) if inherit_scale else child.scale_y,
         flip_x=parent.flip_x ^ child.flip_x if inherit_scale else child.flip_x,
@@ -136,8 +138,12 @@ class AttachmentRuntime:
     rig: SocketRig
     root_transform: Transform2D = Transform2D()
     instances: dict[str, AttachmentInstance] = field(default_factory=dict)
-    _on_attach: list[Callable[[AttachmentInstance], None]] = field(default_factory=list, repr=False)
-    _on_detach: list[Callable[[AttachmentInstance], None]] = field(default_factory=list, repr=False)
+    _on_attach: list[Callable[[AttachmentInstance], None]] = field(
+        default_factory=list, repr=False
+    )
+    _on_detach: list[Callable[[AttachmentInstance], None]] = field(
+        default_factory=list, repr=False
+    )
 
     def __post_init__(self) -> None:
         self.rig.validate()
@@ -182,7 +188,10 @@ class AttachmentRuntime:
 
     def swap(self, attachment_id: str, replacement: Attachment) -> AttachmentInstance:
         """Atomically replace an active attachment while preserving stable slot intent."""
-        if attachment_id not in self.instances or self.instances[attachment_id].state == AttachmentState.DETACHED:
+        if (
+            attachment_id not in self.instances
+            or self.instances[attachment_id].state == AttachmentState.DETACHED
+        ):
             raise KeyError(f"attachment not active: {attachment_id}")
         validate_attachments(self.rig, (replacement,))
         if replacement.id != attachment_id:
@@ -199,7 +208,9 @@ class AttachmentRuntime:
             raise KeyError(f"attachment not active: {attachment_id}")
         return instance
 
-    def socket_world_transform(self, socket_id: str, frame: int, subframe: float = 0.0) -> Transform2D:
+    def socket_world_transform(
+        self, socket_id: str, frame: int, subframe: float = 0.0
+    ) -> Transform2D:
         if socket_id not in self.rig.sockets:
             raise KeyError(f"unknown socket: {socket_id}")
         chain = []
@@ -241,12 +252,20 @@ class AttachmentRuntime:
                 world.z_offset,
             )
         return ResolvedAttachment(
-            spec.id, spec.asset_id, spec.socket_id, world, instance.state, dict(spec.metadata), spec.render_layer
+            spec.id,
+            spec.asset_id,
+            spec.socket_id,
+            world,
+            instance.state,
+            dict(spec.metadata),
+            spec.render_layer,
         )
 
     def resolve_all(self, frame: int, subframe: float = 0.0) -> tuple[ResolvedAttachment, ...]:
         resolved = [
-            self.resolve(k, frame, subframe) for k, v in self.instances.items() if v.state != AttachmentState.DETACHED
+            self.resolve(k, frame, subframe)
+            for k, v in self.instances.items()
+            if v.state != AttachmentState.DETACHED
         ]
         return tuple(sorted(resolved, key=lambda r: (r.transform.z_offset, r.id)))
 

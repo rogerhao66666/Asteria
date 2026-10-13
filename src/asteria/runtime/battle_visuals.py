@@ -44,11 +44,18 @@ SPRITE_SHEET_KIND = "sprite_sheet"
 DEFAULT_SEQUENCE_ID = "default_action"
 VFX_ANCHORS = ("feet", "center", "head")
 VFX_BLENDS = ("normal", "add")
-VFX_DEFAULTS = {"anchor": "center", "offset": [0.0, 0.0], "scale": 0.6, "opacity": 1.0, "blend": "normal"}
+VFX_DEFAULTS = {
+    "anchor": "center",
+    "offset": [0.0, 0.0],
+    "scale": 0.6,
+    "opacity": 1.0,
+    "blend": "normal",
+}
 
 
 def vfx_placement(meta, overrides=None):
-    """Placement of a VFX sheet: defaults, then the sheet's ``vfx`` metadata, then beat payload overrides."""
+    """Placement of a VFX sheet: defaults, then the sheet's ``vfx`` metadata, then beat payload
+    overrides."""
     placement = {**VFX_DEFAULTS, **dict((meta or {}).get("vfx", {}))}
     for key in VFX_DEFAULTS:
         if overrides and key in overrides:
@@ -64,16 +71,23 @@ def vfx_placement(meta, overrides=None):
 
 
 def vfx_keyframe(age, duration, keyframe_count):
-    """Keyframe a VFX shows ``age`` seconds into an effect lasting ``duration`` (played once, stretched to fit)."""
+    """Keyframe a VFX shows ``age`` seconds into an effect lasting ``duration`` (played once,
+    stretched to fit)."""
     progress = min(0.999, max(0.0, float(age) / max(float(duration), 1e-6)))
     return int(progress * int(keyframe_count))
 
 
 def vfx_rect(placement, anchor_x, anchor_y, body_height, frame_width, frame_height):
-    """World-space ``(centre_x, centre_y, width, height)`` of a VFX frame on a member standing at the anchor."""
+    """World-space ``(centre_x, centre_y, width, height)`` of a VFX frame on a member standing at
+    the anchor."""
     lift = {"feet": 0.0, "center": 0.5, "head": 1.0}[placement["anchor"]] * body_height
     width, height = frame_width * placement["scale"], frame_height * placement["scale"]
-    return (anchor_x + placement["offset"][0], anchor_y - lift + placement["offset"][1], width, height)
+    return (
+        anchor_x + placement["offset"][0],
+        anchor_y - lift + placement["offset"][1],
+        width,
+        height,
+    )
 
 
 class BattleVisualError(ValueError):
@@ -91,7 +105,8 @@ class _TextureRef:
 
 
 class BattleVisualResolver:
-    """Builds SpriteSheets, AnimationClipSets, combatant visuals and choreography from project data.
+    """Builds SpriteSheets, AnimationClipSets, combatant visuals and choreography from project
+    data.
 
     ``image_size(uri) -> (width, height)`` measures source images (the host
     loads them through its own cache).
@@ -103,13 +118,17 @@ class BattleVisualResolver:
         self._sheets = {}
         self._clips = {}
         # Generated sheets / profiles for combatants and effects that have no authored battle art
-        # (asset id -> {"image", "size", "meta"}; member key -> profile). The host builds the images.
+        # (asset id -> {"image", "size", "meta"}; member key -> profile). The host builds the
+        # images.
         self._generated = {}
         self._generated_profiles = {}
 
     # -- generated visuals (projects without battle art) ------------------------
-    def register_generated(self, asset_id, image, size, *, frame_size, clips, pivot=(0.5, 1.0), **meta):
-        """A sheet the host drew itself; ``clips`` uses the asset-metadata form ({name: {frames, ...}})."""
+    def register_generated(
+        self, asset_id, image, size, *, frame_size, clips, pivot=(0.5, 1.0), **meta
+    ):
+        """A sheet the host drew itself; ``clips`` uses the asset-metadata form ({name: {frames,
+        ...}})."""
         data = {"frame_size": list(frame_size), "pivot": list(pivot), "clips": dict(clips), **meta}
         self._generated[str(asset_id)] = {"image": image, "size": tuple(size), "meta": data}
         self._sheets.pop(str(asset_id), None)
@@ -123,9 +142,14 @@ class BattleVisualResolver:
             BattleVisualTransform,
         )
 
-        states = tuple(BattleVisualStateDefinition(role, role) for role in ("idle", "attack", "hit", "ko"))
+        states = tuple(
+            BattleVisualStateDefinition(role, role) for role in ("idle", "attack", "hit", "ko")
+        )
         self._generated_profiles[str(member_key)] = BattleCombatantVisualProfile(
-            str(member_key), BattleVisualAssetSet(str(asset_id)), states, BattleVisualTransform(scale, scale)
+            str(member_key),
+            BattleVisualAssetSet(str(asset_id)),
+            states,
+            BattleVisualTransform(scale, scale),
         )
 
     def is_generated(self, asset_id):
@@ -170,7 +194,11 @@ class BattleVisualResolver:
             columns, rows = width // fw, height // fh
             if columns < 1 or rows < 1:
                 raise BattleVisualError(f"{asset_id}: image smaller than one frame")
-            frames = [SpriteFrame(c * fw, r * fh, fw, fh, px, py) for r in range(rows) for c in range(columns)]
+            frames = [
+                SpriteFrame(c * fw, r * fh, fw, fh, px, py)
+                for r in range(rows)
+                for c in range(columns)
+            ]
             sheet = SpriteSheet(_TextureRef(str(asset_id)), frames)
             sheet.validate()
             self._sheets[asset_id] = sheet
@@ -219,7 +247,8 @@ class BattleVisualResolver:
         return tuple(m for m in member_ids if self.profile_for(m) is None)
 
     def combatant_visuals(self, sides, placement, layout):
-        """``sides``: ``{side_id: [member_id, ...]}``; ``placement``: ``{side_id: "left"|"right"}``.
+        """``sides``: ``{side_id: [member_id, ...]}``; ``placement``: ``{side_id:
+        "left"|"right"}``.
 
         Combatants stand in the free stage between the HUD columns of the UI
         ``layout`` (BattleUiLayoutProfile), above the action menu: up to three
@@ -235,7 +264,8 @@ class BattleVisualResolver:
             # ground band between ``stage_top`` and the bottom HUD row.
             left_edge, right_edge = margin, width - margin
             top = max(
-                float(getattr(layout, "timeline_y", 7.0)) + 30.0, height * float(getattr(layout, "stage_top", 0.0))
+                float(getattr(layout, "timeline_y", 7.0)) + 30.0,
+                height * float(getattr(layout, "stage_top", 0.0)),
             )
             bottom = height - margin - 24.0 - 6.0
         else:
@@ -255,14 +285,18 @@ class BattleVisualResolver:
                 if profile is None:
                     raise BattleVisualError(f"no combatant visual profile for {member_id}")
                 frame = self.sprite_sheet(profile.assets.battlefield_asset_id).frames[0]
-                return frame.width * float(profile.transform.scale_x), frame.height * float(profile.transform.scale_y)
+                return frame.width * float(profile.transform.scale_x), frame.height * float(
+                    profile.transform.scale_y
+                )
 
             sizes = {m: logical_size(m) for m in members}
             smallest = min(h for _, h in sizes.values()) if sizes else 0.0
             # Large combatants (bosses) get their own column behind the others.
             large = [m for m in members if sizes[m][1] > smallest * 1.5]
             regular = [m for m in members if m not in large]
-            columns = [regular[i : i + 3] for i in range(0, len(regular), 3)] + [[m] for m in large]
+            columns = [regular[i : i + 3] for i in range(0, len(regular), 3)] + [
+                [m] for m in large
+            ]
             # Column centres: each column clears the previous one by the widest sprites.
             xs, x = [], front_x
             for index, column in enumerate(columns):
@@ -271,7 +305,9 @@ class BattleVisualResolver:
                     x -= direction * (previous / 2 + max(sizes[m][0] for m in column) / 2 + 4)
                 xs.append(x)
             edge = left_edge if zone == "left" else right_edge
-            outer = xs[-1] - direction * max(sizes[m][0] for m in columns[-1]) / 2 if columns else edge
+            outer = (
+                xs[-1] - direction * max(sizes[m][0] for m in columns[-1]) / 2 if columns else edge
+            )
             overflow = (edge - outer) * direction if (outer - edge) * direction < 0 else 0.0
             xs = [value + direction * overflow for value in xs]
             for column_index, column in enumerate(columns):
@@ -286,12 +322,17 @@ class BattleVisualResolver:
                     if len(column) == 1 and member_id in large:
                         y = (top + bottom) / 2 + sizes[member_id][1] / 3
                     else:
-                        y = top + (bottom - top) * ((row_index + 0.5 + 0.5 * column_index) / max(3, len(column) + 0.5))
+                        y = top + (bottom - top) * (
+                            (row_index + 0.5 + 0.5 * column_index) / max(3, len(column) + 0.5)
+                        )
                     # Keep the whole sprite below the turn timeline (and its overhead bar).
                     tall = self.sprite_sheet(sheet_id).frames[0].height * float(transform.scale_y)
                     y = max(y, float(getattr(layout, "timeline_y", 7.0)) + 46.0 + tall)
                     anchor = BattleVisualAnchor(
-                        x + transform.offset_x, y + transform.offset_y, "right" if zone == "left" else "left", depth=y
+                        x + transform.offset_x,
+                        y + transform.offset_y,
+                        "right" if zone == "left" else "left",
+                        depth=y,
                     )
                     roles = {state.state_id: state.clip_role for state in profile.states}
                     visuals.append(

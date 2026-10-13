@@ -88,7 +88,9 @@ class AbilityScreenProfile:
             ("passive_categories", passive_categories),
             ("category_labels", category_labels),
         ):
-            object.__setattr__(self, name, tuple(sorted((str(k), str(v)) for k, v in dict(values or {}).items())))
+            object.__setattr__(
+                self, name, tuple(sorted((str(k), str(v)) for k, v in dict(values or {}).items()))
+            )
         limits = []
         for key, value in dict(visible_limits or {}).items():
             value = int(value)
@@ -178,7 +180,11 @@ class AbilityScreenRuntime:
                 category_ids.append(entry.category)
         result = []
         for category_id in category_ids:
-            ids = tuple((x.passive_id if passive else x.ability_id) for x in entries if x.category == category_id)
+            ids = tuple(
+                (x.passive_id if passive else x.ability_id)
+                for x in entries
+                if x.category == category_id
+            )
             limit = self.profile.visible_limit(category_id)
             visible = ids if limit is None else ids[:limit]
             result.append(
@@ -193,7 +199,13 @@ class AbilityScreenRuntime:
         return tuple(result)
 
     def project(
-        self, resolved_build, *, ability_state=None, ability_catalog=(), passive_catalog=(), passive_capacity=None
+        self,
+        resolved_build,
+        *,
+        ability_state=None,
+        ability_catalog=(),
+        passive_catalog=(),
+        passive_capacity=None,
     ):
         if not isinstance(resolved_build, ResolvedActorBuild):
             raise TypeError("resolved_build must be ResolvedActorBuild")
@@ -208,7 +220,9 @@ class AbilityScreenRuntime:
         active_passives = tuple(resolved_build.active_passives)
         grants = {}
         for grant in resolved_build.ability_grants:
-            grants.setdefault(grant.ability_id, []).append(f"{grant.source_kind}:{grant.source_id}")
+            grants.setdefault(grant.ability_id, []).append(
+                f"{grant.source_kind}:{grant.source_id}"
+            )
 
         definitions = {}
         for definition in ability_catalog:
@@ -224,7 +238,9 @@ class AbilityScreenRuntime:
             tags = () if definition is None else tuple(definition.tags)
             label = self.profile.ability_label(ability_id)
             category = self.profile.ability_category(ability_id)
-            haystack = " ".join((ability_id, label, category, *tags, *grants.get(ability_id, ()))).casefold()
+            haystack = " ".join(
+                (ability_id, label, category, *tags, *grants.get(ability_id, ()))
+            ).casefold()
             if query and query not in haystack:
                 continue
             abilities.append(
@@ -262,18 +278,28 @@ class AbilityScreenRuntime:
                 )
             )
 
-        abilities = tuple(sorted(abilities, key=lambda x: (x.category, x.label.casefold(), x.ability_id)))
-        passives = tuple(sorted(passives, key=lambda x: (x.category, x.label.casefold(), x.passive_id)))
+        abilities = tuple(
+            sorted(abilities, key=lambda x: (x.category, x.label.casefold(), x.ability_id))
+        )
+        passives = tuple(
+            sorted(passives, key=lambda x: (x.category, x.label.casefold(), x.passive_id))
+        )
         ability_groups = self._groups(abilities)
         passive_groups = self._groups(passives, passive=True)
 
         current = abilities if self.active_tab == "abilities" else passives
-        valid_ids = {(x.ability_id if self.active_tab == "abilities" else x.passive_id) for x in current}
+        valid_ids = {
+            (x.ability_id if self.active_tab == "abilities" else x.passive_id) for x in current
+        }
         if self.selected_entry_id not in valid_ids:
             self.selected_entry_id = (
                 None
                 if not current
-                else (current[0].ability_id if self.active_tab == "abilities" else current[0].passive_id)
+                else (
+                    current[0].ability_id
+                    if self.active_tab == "abilities"
+                    else current[0].passive_id
+                )
             )
 
         groups = ability_groups if self.active_tab == "abilities" else passive_groups
@@ -310,7 +336,11 @@ class AbilityScreenRuntime:
     def set_category(self, category_id):
         if self._view is None:
             raise RuntimeError("ability screen has not been projected")
-        groups = self._view.ability_groups if self.active_tab == "abilities" else self._view.passive_groups
+        groups = (
+            self._view.ability_groups
+            if self.active_tab == "abilities"
+            else self._view.passive_groups
+        )
         category_id = str(category_id)
         if category_id not in {x.category_id for x in groups}:
             raise KeyError(f"unknown ability screen category: {category_id}")
@@ -325,7 +355,9 @@ class AbilityScreenRuntime:
         if self._view is None:
             raise RuntimeError("ability screen has not been projected")
         entry_id = str(entry_id)
-        known = {x.ability_id for x in self._view.abilities} | {x.passive_id for x in self._view.passives}
+        known = {x.ability_id for x in self._view.abilities} | {
+            x.passive_id for x in self._view.passives
+        }
         if entry_id not in known:
             raise KeyError(f"unknown ability/passive entry: {entry_id}")
         self.selected_entry_id = entry_id

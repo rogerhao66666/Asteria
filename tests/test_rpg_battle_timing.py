@@ -44,7 +44,10 @@ def ability_runtime():
                 effects=[
                     AbilityEffect(
                         AbilityTargetMode.SELECTED,
-                        Effect(aid, [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", -damage)]),
+                        Effect(
+                            aid,
+                            [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", -damage)],
+                        ),
                     )
                 ],
             )
@@ -53,18 +56,24 @@ def ability_runtime():
 
 
 def make_battle(timings=()):
-    hero = PartyMember("hero", "heroes", subject(), ability_ids=("quick", "meteor", "heavy"), initiative=100)
+    hero = PartyMember(
+        "hero", "heroes", subject(), ability_ids=("quick", "meteor", "heavy"), initiative=100
+    )
     enemy = PartyMember("enemy", "enemies", subject(), ability_ids=("quick",), initiative=20)
     return BattleRuntime(
         [Party("heroes", [hero]), Party("enemies", [enemy])],
         ability_runtime(),
-        scheduler_definition=BattleSchedulerDefinition("ct", mode="continuous", timeline_scale=100),
+        scheduler_definition=BattleSchedulerDefinition(
+            "ct", mode="continuous", timeline_scale=100
+        ),
         action_timing_definitions=timings,
     )
 
 
 def test_timing_definition_roundtrip_and_windup():
-    d = ActionTimingDefinition("meteor", startup=1, cast_time=4, recovery=3, priority=9, interrupt_threshold=2)
+    d = ActionTimingDefinition(
+        "meteor", startup=1, cast_time=4, recovery=3, priority=9, interrupt_threshold=2
+    )
     assert d.windup == 5
     assert ActionTimingDefinition.from_data(d.to_data()) == d
 
@@ -82,7 +91,9 @@ def test_pending_queue_orders_same_time_by_priority_then_sequence():
 
 
 def test_interrupt_respects_interruptible_and_threshold():
-    rt = BattleActionTimingRuntime([ActionTimingDefinition("cast", cast_time=5, interrupt_threshold=10)])
+    rt = BattleActionTimingRuntime(
+        [ActionTimingDefinition("cast", cast_time=5, interrupt_threshold=10)]
+    )
     rt.begin(BattleAction("hero", "cast", ("enemy",)), current_time=0)
     assert not rt.interrupt("hero", power=9).interrupted
     assert rt.interrupt("hero", power=10).interrupted
@@ -90,7 +101,9 @@ def test_interrupt_respects_interruptible_and_threshold():
 
 
 def test_uninterruptible_action_requires_force():
-    rt = BattleActionTimingRuntime([ActionTimingDefinition("cast", cast_time=5, interruptible=False)])
+    rt = BattleActionTimingRuntime(
+        [ActionTimingDefinition("cast", cast_time=5, interruptible=False)]
+    )
     rt.begin(BattleAction("hero", "cast", ("enemy",)), current_time=0)
     assert rt.interrupt("hero", power=999).reason == "not_interruptible"
     assert rt.interrupt("hero", force=True).interrupted
@@ -105,7 +118,9 @@ def test_shift_pending_cast_clamps_to_start_time():
 
 def test_continuous_scheduler_timeline_shift_delay_and_advance():
     members = [PartyMember("hero", "h", subject(), initiative=100)]
-    s = BattleScheduler(members, BattleSchedulerDefinition("ct", mode="continuous", timeline_scale=100))
+    s = BattleScheduler(
+        members, BattleSchedulerDefinition("ct", mode="continuous", timeline_scale=100)
+    )
     assert s.peek().ready_time == 1
     s.shift_member("hero", 4)
     assert s.peek().ready_time == 5
@@ -152,7 +167,10 @@ def test_shift_timeline_moves_both_actor_readiness_and_cast_resolution():
     old_ready = next(x.ready_time for x in battle.scheduler.pending() if x.member_id == "hero")
     battle.shift_timeline("hero", 2)
     assert battle.action_timing.next_pending().resolve_at == pending.resolve_at + 2
-    assert next(x.ready_time for x in battle.scheduler.pending() if x.member_id == "hero") == old_ready + 2
+    assert (
+        next(x.ready_time for x in battle.scheduler.pending() if x.member_id == "hero")
+        == old_ready + 2
+    )
 
 
 def test_timing_runtime_snapshot_restores_pending_order():

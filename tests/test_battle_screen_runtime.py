@@ -76,7 +76,9 @@ def _scene():
         "battle.bg.reference",
         (
             BattleCombatantVisual("hero", "sheet.hero", "clips.hero", BattleVisualAnchor(72, 104)),
-            BattleCombatantVisual("mimic", "sheet.mimic", "clips.mimic", BattleVisualAnchor(232, 104, "left")),
+            BattleCombatantVisual(
+                "mimic", "sheet.mimic", "clips.mimic", BattleVisualAnchor(232, 104, "left")
+            ),
         ),
     )
 
@@ -113,9 +115,13 @@ def test_screen_runtime_fans_out_one_event_stream_to_animation_camera_and_feedba
     screen.coordinator.consume_timeline_cues(
         (
             PresentationCue(
-                "hero.attack", ActionCue("attack", 0, "animation", {"member_id": "hero", "role": "attack"})
+                "hero.attack",
+                ActionCue("attack", 0, "animation", {"member_id": "hero", "role": "attack"}),
             ),
-            PresentationCue("hit.audio", ActionCue("hit", 0, "audio", {"member_id": "mimic", "sound_id": "sfx.hit"})),
+            PresentationCue(
+                "hit.audio",
+                ActionCue("hit", 0, "audio", {"member_id": "mimic", "sound_id": "sfx.hit"}),
+            ),
         )
     )
     screen.coordinator.push_target_selection(("mimic",), primary_target_id="mimic")
@@ -136,22 +142,31 @@ def test_equipped_weapon_overlay_changes_with_type_only_during_attack():
     }
     screen = _screen()
     loadout = EquipmentLoadout((EquipmentSlotDefinition("weapon"),))
-    loadout.equip("weapon", EquippedItem(EquipmentDefinition("sword", slot="weapon", tags=("mv-weapon-type:sword",))))
+    loadout.equip(
+        "weapon",
+        EquippedItem(EquipmentDefinition("sword", slot="weapon", tags=("mv-weapon-type:sword",))),
+    )
     sword = weapon_overlay_for_loadout(loadout, system, lambda name: "weapon.sword")
     screen.animation.set_overlay("hero", sword)
     assert all(
-        draw.texture_asset_id != "weapon.sword" for draw in screen.animation.build_frame(Camera2D()).combatant_draws
+        draw.texture_asset_id != "weapon.sword"
+        for draw in screen.animation.build_frame(Camera2D()).combatant_draws
     )
 
     screen.animation.combatant("hero").set_role("attack")
     attack = screen.animation.build_frame(Camera2D()).combatant_draws
     assert screen.animation.combatant("hero").role == "attack"
-    assert any(draw.texture_asset_id == "weapon.sword" and draw.source == sword.frames[0] for draw in attack)
+    assert any(
+        draw.texture_asset_id == "weapon.sword" and draw.source == sword.frames[0]
+        for draw in attack
+    )
 
     bow = CombatantOverlay("weapon.bow", ((0, 0, 96, 64),))
     screen.animation.set_overlay("hero", bow)
     swapped = screen.animation.build_frame(Camera2D()).combatant_draws
-    assert any(draw.texture_asset_id == "weapon.bow" and draw.source == bow.frames[0] for draw in swapped)
+    assert any(
+        draw.texture_asset_id == "weapon.bow" and draw.source == bow.frames[0] for draw in swapped
+    )
     assert all(draw.texture_asset_id != "weapon.sword" for draw in swapped)
 
     screen.animation.set_overlay("hero", None)
@@ -168,8 +183,12 @@ def test_mv_weapon_overlays_follow_real_loadout_but_ignore_armor():
             {"type": 2, "weaponImageId": 13},
         ],
     }
-    loadout = EquipmentLoadout((EquipmentSlotDefinition("weapon"), EquipmentSlotDefinition("armor")))
-    sword = EquippedItem(EquipmentDefinition("sword", slot="weapon", tags=("mv-weapon-type:sword",)))
+    loadout = EquipmentLoadout(
+        (EquipmentSlotDefinition("weapon"), EquipmentSlotDefinition("armor"))
+    )
+    sword = EquippedItem(
+        EquipmentDefinition("sword", slot="weapon", tags=("mv-weapon-type:sword",))
+    )
     armor = EquippedItem(EquipmentDefinition("armor", slot="armor"))
     loadout.equip("weapon", sword)
     loadout.equip("armor", armor)
@@ -177,13 +196,20 @@ def test_mv_weapon_overlays_follow_real_loadout_but_ignore_armor():
     screen.animation.combatant("hero").set_role("attack")
     members = screen.animation._member_order
 
-    apply_weapon_overlays(screen.animation, members, {"hero": loadout}, system, lambda name: f"mv.system.{name}")
+    apply_weapon_overlays(
+        screen.animation, members, {"hero": loadout}, system, lambda name: f"mv.system.{name}"
+    )
     first = screen.animation.build_frame(Camera2D()).combatant_draws
     assert any(draw.texture_asset_id == "mv.system.Weapons1" for draw in first)
 
     loadout.unequip("weapon", 0)
-    loadout.equip("weapon", EquippedItem(EquipmentDefinition("bow", slot="weapon", tags=("mv-weapon-type:bow",))))
-    apply_weapon_overlays(screen.animation, members, {"hero": loadout}, system, lambda name: f"mv.system.{name}")
+    loadout.equip(
+        "weapon",
+        EquippedItem(EquipmentDefinition("bow", slot="weapon", tags=("mv-weapon-type:bow",))),
+    )
+    apply_weapon_overlays(
+        screen.animation, members, {"hero": loadout}, system, lambda name: f"mv.system.{name}"
+    )
     second = screen.animation.build_frame(Camera2D()).combatant_draws
     assert any(draw.texture_asset_id == "mv.system.Weapons2" for draw in second)
     assert all(draw.texture_asset_id != "mv.system.Weapons1" for draw in second)
@@ -226,7 +252,12 @@ class _TextureRecorder:
 def test_render_runs_world_then_ui_path_and_drains_audio_once():
     screen = _screen()
     screen.coordinator.consume_timeline_cues(
-        (PresentationCue("hit.audio", ActionCue("hit", 0, "audio", {"member_id": "mimic", "sound_id": "sfx.hit"})),)
+        (
+            PresentationCue(
+                "hit.audio",
+                ActionCue("hit", 0, "audio", {"member_id": "mimic", "sound_id": "sfx.hit"}),
+            ),
+        )
     )
     screen.consume_events()
     screen.sync_battle(_battle_mirror(), current_member_id="hero")

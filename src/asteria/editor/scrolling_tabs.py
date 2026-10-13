@@ -1,11 +1,14 @@
 """Editor pages that scroll instead of growing the window.
 
 A QTabWidget / QStackedWidget is as large as its largest page's minimum size, so one tall editor
-(Character Composition) made the whole editor window taller than a laptop screen. Pages here sit in a
+(Character Composition) made the whole editor window taller than a laptop screen. Pages here sit
+in a
 resizable scroll area: they fill the space when it is large enough and scroll when it is not.
 
-``ScrollingTabWidget`` keeps the page objects as the tab API sees them (``widget``, ``currentWidget``,
-``indexOf``, ``setCurrentWidget`` take and return the page, not its scroll area), so callers do not change.
+``ScrollingTabWidget`` keeps the page objects as the tab API sees them (``widget``,
+``currentWidget``,
+``indexOf``, ``setCurrentWidget`` take and return the page, not its scroll area), so callers do
+not change.
 """
 
 from __future__ import annotations
@@ -28,7 +31,9 @@ def scrollable(page, parent=None):
 class ScrollingTabWidget(QTabWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setUsesScrollButtons(True)  # macOS defaults to off: nine tab titles set the window's minimum width
+        self.setUsesScrollButtons(
+            True
+        )  # macOS defaults to off: nine tab titles set the window's minimum width
         self.setElideMode(Qt.ElideNone)  # full titles; the bar scrolls instead of truncating them
         self._page_of = {}  # scroll area -> page
         self._area_of = {}  # page -> scroll area

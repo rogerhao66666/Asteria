@@ -1,10 +1,15 @@
-"""Attack definitions: what one hit does (ASTERIA_SPEC §20 hitbox/hurtbox, knockback, stagger/poise, hitstop,
+"""Attack definitions: what one hit does (ASTERIA_SPEC §20 hitbox/hurtbox, knockback,
+stagger/poise, hitstop,
 super armor, knockdown).
 
-An ``AttackDefinition`` is plain authored data. A hitbox whose ``hit_tag`` is the attack id (usually set by an action
-timeline ``hitbox`` cue) applies it to every target it hits; ``runtime.combat.CombatSystem`` does the resolving.
-Nothing here names a game, a class or a stat: the damage is a ``ValueFormula`` over whatever stats the project
-defines, it lowers whichever resource the author picks (a negative amount restores it), and every reaction is an
+An ``AttackDefinition`` is plain authored data. A hitbox whose ``hit_tag`` is the attack id
+(usually set by an action
+timeline ``hitbox`` cue) applies it to every target it hits; ``runtime.combat.CombatSystem`` does
+the resolving.
+Nothing here names a game, a class or a stat: the damage is a ``ValueFormula`` over whatever stats
+the project
+defines, it lowers whichever resource the author picks (a negative amount restores it), and every
+reaction is an
 option with a neutral default.
 """
 
@@ -38,12 +43,16 @@ class AttackDefinition:
     damage: ValueFormula | None = None  # inline formula; ignored when damage_formula_id is set
     damage_formula_id: str = ""  # a shared formula in the gameplay library
     damage_resource: str = ""  # "" = the target's life resource (CombatantComponent.life_resource)
-    tags: tuple[str, ...] = ()  # added to the attacker's tags while the formula runs (e.g. Element.Fire)
+    tags: tuple[
+        str, ...
+    ] = ()  # added to the attacker's tags while the formula runs (e.g. Element.Fire)
     poise_damage: float = 0.0
     hitstun: float = 0.0  # seconds the target cannot act
     knockback: float = 0.0  # push speed, world units / s
     knockback_direction: str = "away"
-    knockback_angle: float = 0.0  # degrees; "fixed" = world angle (0 right, 90 down), else turns the push
+    knockback_angle: float = (
+        0.0  # degrees; "fixed" = world angle (0 right, 90 down), else turns the push
+    )
     knockback_lift: float = 0.0  # side view: upward launch speed
     hitstop: float = 0.0
     hitstop_scope: str = "participants"
@@ -56,7 +65,8 @@ class AttackDefinition:
     armor_break: int = 0  # super armor holds while the target's armor level is above this
     knockdown: bool = False
     knockdown_time: float = 0.0  # 0 = the target's own knockdown_time
-    apply_states: tuple = ()  # ({"state": id, "chance": 0..1, "duration": seconds or omitted}, ...)
+    # ({"state": id, "chance": 0..1, "duration": seconds or omitted}, ...)
+    apply_states: tuple = ()
 
     def __init__(
         self,
@@ -115,9 +125,17 @@ class AttackDefinition:
         set_(self, "hitstop_scope", hitstop_scope)
         set_(self, "target_iframes", _number(target_iframes, "target_iframes", minimum=0.0))
         set_(self, "max_targets", int(max_targets))
-        set_(self, "critical_chance", _number(critical_chance, "critical_chance", minimum=0.0, maximum=1.0))
+        set_(
+            self,
+            "critical_chance",
+            _number(critical_chance, "critical_chance", minimum=0.0, maximum=1.0),
+        )
         set_(self, "critical_chance_stat", str(critical_chance_stat).strip())
-        set_(self, "critical_multiplier", _number(critical_multiplier, "critical_multiplier", minimum=0.0))
+        set_(
+            self,
+            "critical_multiplier",
+            _number(critical_multiplier, "critical_multiplier", minimum=0.0),
+        )
         set_(self, "on_hit_event", str(on_hit_event).strip())
         if int(armor_break) < 0:
             raise ValueError("armor_break must be >= 0")

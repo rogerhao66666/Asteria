@@ -46,7 +46,9 @@ class DropEntry:
         object.__setattr__(self, "minimum", int(self.minimum))
         object.__setattr__(self, "maximum", int(self.maximum))
         if not str(self.rarity).strip():
-            raise ValueError("rarity is required (any authored rarity id; RARITIES are the defaults)")
+            raise ValueError(
+                "rarity is required (any authored rarity id; RARITIES are the defaults)"
+            )
 
     def to_data(self):
         return {
@@ -91,15 +93,21 @@ class DropTable:
             raise ValueError("rolls must be >= 0")
         object.__setattr__(self, "rolls", int(self.rolls))
         object.__setattr__(self, "nothing_weight", _num(self.nothing_weight, "nothing_weight"))
-        object.__setattr__(self, "luck_weight_bonus", _num(self.luck_weight_bonus, "luck_weight_bonus"))
+        object.__setattr__(
+            self, "luck_weight_bonus", _num(self.luck_weight_bonus, "luck_weight_bonus")
+        )
         object.__setattr__(self, "entries", tuple(_entry(x) for x in self.entries))
         object.__setattr__(self, "guaranteed", tuple(_entry(x) for x in self.guaranteed))
         object.__setattr__(
-            self, "pity", tuple(x if isinstance(x, PityRule) else PityRule(**dict(x)) for x in self.pity)
+            self,
+            "pity",
+            tuple(x if isinstance(x, PityRule) else PityRule(**dict(x)) for x in self.pity),
         )
 
     def item_ids(self):
-        return {e.item_id for e in (*self.entries, *self.guaranteed)} | {p.item_id for p in self.pity}
+        return {e.item_id for e in (*self.entries, *self.guaranteed)} | {
+            p.item_id for p in self.pity
+        }
 
     def to_data(self):
         return {
@@ -128,7 +136,8 @@ def _entry(value):
 
 
 def roll_drop_table(table, rng, *, counters=None, luck=0.0, switches=None):
-    """Items ``{item_id: quantity}`` from one roll of ``table``; updates pity ``counters`` in place."""
+    """Items ``{item_id: quantity}`` from one roll of ``table``; updates pity ``counters`` in
+    place."""
     counters = {} if counters is None else counters
     items = {}
 
@@ -140,9 +149,16 @@ def roll_drop_table(table, rng, *, counters=None, luck=0.0, switches=None):
     for entry in table.guaranteed:
         if not entry.required_switch or (switches is not None and switches(entry.required_switch)):
             give(entry)
-    pool = [e for e in table.entries if not e.required_switch or (switches is not None and switches(e.required_switch))]
+    pool = [
+        e
+        for e in table.entries
+        if not e.required_switch or (switches is not None and switches(e.required_switch))
+    ]
     for _ in range(table.rolls):
-        weights = [e.weight * (1.0 + luck * table.luck_weight_bonus if e.rarity != "common" else 1.0) for e in pool]
+        weights = [
+            e.weight * (1.0 + luck * table.luck_weight_bonus if e.rarity != "common" else 1.0)
+            for e in pool
+        ]
         total = sum(weights) + table.nothing_weight
         if total <= 0:
             break

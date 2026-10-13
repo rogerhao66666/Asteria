@@ -89,7 +89,9 @@ class AnimationStateMachineDefinition:
                 raise ValueError(f"transition {t.source}->{t.target} names an unknown state")
             for c in t.conditions:
                 if c.parameter not in self.parameters and c.parameter not in self.triggers:
-                    raise ValueError(f"transition {t.source}->{t.target} tests unknown parameter {c.parameter}")
+                    raise ValueError(
+                        f"transition {t.source}->{t.target} tests unknown parameter {c.parameter}"
+                    )
 
     def validate_clips(self, clip_set):
         missing = sorted(clip for clip in self.states.values() if clip_set.get(clip) is None)
@@ -145,7 +147,11 @@ class AnimationStateMachine:
 
     def _candidates(self):
         ordered = sorted(
-            (t for t in self.definition.transitions if t.source in (self.state, "*") and t.target != self.state),
+            (
+                t
+                for t in self.definition.transitions
+                if t.source in (self.state, "*") and t.target != self.state
+            ),
             key=lambda t: (-t.priority, t.source == "*"),
         )
         return ordered
@@ -160,7 +166,9 @@ class AnimationStateMachine:
                     if c.parameter in self.definition.triggers:
                         self.parameters[c.parameter] = False
                 self.state = transition.target
-                self.animator.set_clip(self.clip_set.get(self.definition.states[self.state]), restart=True)
+                self.animator.set_clip(
+                    self.clip_set.get(self.definition.states[self.state]), restart=True
+                )
                 return self.state
         return None
 

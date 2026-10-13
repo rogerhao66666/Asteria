@@ -25,7 +25,16 @@ class PassiveDefinition:
     granted_abilities: tuple[str, ...] = ()
     triggers: tuple[GameplayTrigger, ...] = ()
 
-    def __init__(self, passive_id, display_name=None, *, tags=(), modifiers=(), granted_abilities=(), triggers=()):
+    def __init__(
+        self,
+        passive_id,
+        display_name=None,
+        *,
+        tags=(),
+        modifiers=(),
+        granted_abilities=(),
+        triggers=(),
+    ):
         passive_id = _id(passive_id, "passive_id")
         modifiers = tuple(modifiers)
         triggers = tuple(triggers)
@@ -93,7 +102,9 @@ class AbilityEvolutionRule:
         object.__setattr__(
             self,
             "progression_track_id",
-            None if progression_track_id is None else _id(progression_track_id, "progression_track_id"),
+            None
+            if progression_track_id is None
+            else _id(progression_track_id, "progression_track_id"),
         )
         minimum_rank = int(minimum_rank)
         if minimum_rank < 1:
@@ -175,7 +186,9 @@ class ActorAbilityState:
         self.active_passives = tuple(x for x in self.active_passives if x != passive_id)
 
     def select_evolution(self, source_ability_id, rule_id):
-        self.selected_evolutions[_id(source_ability_id, "source_ability_id")] = _id(rule_id, "rule_id")
+        self.selected_evolutions[_id(source_ability_id, "source_ability_id")] = _id(
+            rule_id, "rule_id"
+        )
 
     def to_data(self):
         return {

@@ -53,7 +53,9 @@ class ActionTimingDefinition:
         object.__setattr__(self, "recovery", _nonnegative(recovery, "recovery"))
         object.__setattr__(self, "priority", int(priority))
         object.__setattr__(self, "interruptible", bool(interruptible))
-        object.__setattr__(self, "interrupt_threshold", _nonnegative(interrupt_threshold, "interrupt_threshold"))
+        object.__setattr__(
+            self, "interrupt_threshold", _nonnegative(interrupt_threshold, "interrupt_threshold")
+        )
 
     @property
     def windup(self):
@@ -74,7 +76,10 @@ class ActionTimingDefinition:
 
     @classmethod
     def from_data(cls, data):
-        if data.get("schema") != "asteria.rpg.action_timing_definition" or data.get("version") != 1:
+        if (
+            data.get("schema") != "asteria.rpg.action_timing_definition"
+            or data.get("version") != 1
+        ):
             raise ValueError("unsupported action timing definition")
         return cls(
             data["ability_id"],
@@ -252,7 +257,10 @@ class BattleActionTimingRuntime:
 
     @classmethod
     def from_data(cls, data):
-        if data.get("schema") != "asteria.rpg.battle_action_timing_runtime" or data.get("version") != 1:
+        if (
+            data.get("schema") != "asteria.rpg.battle_action_timing_runtime"
+            or data.get("version") != 1
+        ):
             raise ValueError("unsupported battle action timing runtime")
         result = cls(ActionTimingDefinition.from_data(x) for x in data.get("definitions", ()))
         result._sequence = int(data.get("sequence", 0))

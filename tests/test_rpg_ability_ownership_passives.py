@@ -37,7 +37,9 @@ def make_db():
             "aria",
             class_assignments=[
                 ClassAssignment("warrior", assignment_id="job.warrior"),
-                ClassAssignment("scholar", assignment_id="job.scholar", progression_track_ids=["scholar_rank"]),
+                ClassAssignment(
+                    "scholar", assignment_id="job.scholar", progression_track_ids=["scholar_rank"]
+                ),
             ],
             abilities=["basic_attack"],
             base_stats={"attack": 10},
@@ -72,7 +74,9 @@ def test_learned_skill_persists_independently_from_job_grants():
     assert "heal" in actor.effective_abilities()
     # Rebuild a definition without Scholar: learned runtime skill remains when state is restored.
     snap = actor.snapshot()
-    changed = ActorDefinition("aria", class_assignments=[ClassAssignment("warrior")], abilities=["basic_attack"])
+    changed = ActorDefinition(
+        "aria", class_assignments=[ClassAssignment("warrior")], abilities=["basic_attack"]
+    )
     runtime = type(actor)(changed, class_definitions={"warrior": db.classes["warrior"]})
     runtime.restore(snap)
     assert "heal" in runtime.effective_abilities()
@@ -109,8 +113,12 @@ def test_evolution_rule_upgrades_skill_when_requirement_is_met():
     runtime = db.build_actor("aria")
     low = ProgressionRuntime(db.progression_tracks.values(), totals={"scholar_rank": 10})
     high = ProgressionRuntime(db.progression_tracks.values(), totals={"scholar_rank": 20})
-    assert "fireball" in runtime.effective_abilities(progression=low, evolution_rules=db.ability_evolutions.values())
-    result = runtime.resolve_abilities(progression=high, evolution_rules=db.ability_evolutions.values())
+    assert "fireball" in runtime.effective_abilities(
+        progression=low, evolution_rules=db.ability_evolutions.values()
+    )
+    result = runtime.resolve_abilities(
+        progression=high, evolution_rules=db.ability_evolutions.values()
+    )
     assert "fireball" not in result.abilities
     assert "firestorm" in result.abilities
     assert result.sources_for("firestorm")[0].source_kind == "evolution"
@@ -132,7 +140,10 @@ def test_selected_evolution_supports_branch_choice_deterministically():
     runtime.ability_state.select_evolution("fireball", "fireball_to_inferno")
     high = ProgressionRuntime(db.progression_tracks.values(), totals={"scholar_rank": 20})
     assert (
-        runtime.effective_abilities(progression=high, evolution_rules=db.ability_evolutions.values())[-1] == "inferno"
+        runtime.effective_abilities(
+            progression=high, evolution_rules=db.ability_evolutions.values()
+        )[-1]
+        == "inferno"
     )
 
 

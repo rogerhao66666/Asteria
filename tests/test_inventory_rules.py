@@ -1,5 +1,7 @@
-"""RPG-01: inventory rules authored per project - stack limits, unique items, a cap on different items with
-exempt key items, and what happens when items do not fit. No rules = the bag is unlimited (as before)."""
+"""RPG-01: inventory rules authored per project - stack limits, unique items, a cap on different
+items with
+exempt key items, and what happens when items do not fit. No rules = the bag is unlimited (as
+before)."""
 
 import pytest
 from test_session_events import BOSS_PROGRAM, _interact, _replace_program, _session
@@ -28,7 +30,9 @@ def test_stack_limits_fill_or_reject_and_unique_items():
     assert bag.add("crown") == 1 and bag.add("crown") == 1  # unique: only one
     strict = _bag(overflow="reject")
     strict.add("potion", 2)
-    assert strict.add("potion", 2) == 2 and strict.overflow == [("potion", 2)]  # reject: none of it
+    assert strict.add("potion", 2) == 2 and strict.overflow == [
+        ("potion", 2)
+    ]  # reject: none of it
     free = _bag(stack_limits=False)
     assert free.add("potion", 50) == 50
 
@@ -52,7 +56,9 @@ def test_no_rules_is_unlimited_and_saved_counts_load_exactly():
 
 
 def test_rules_round_trip_and_old_databases_have_none():
-    rules = InventoryRules("bag", "Bag", stack_limits=False, max_kinds=20, exempt_tags=("item.key", "quest"))
+    rules = InventoryRules(
+        "bag", "Bag", stack_limits=False, max_kinds=20, exempt_tags=("item.key", "quest")
+    )
     assert InventoryRules.from_data(rules.to_data()) == rules
     db = RpgDatabase()
     db.add_inventory_rules(rules)
@@ -73,7 +79,9 @@ def test_the_game_session_applies_the_project_rules_to_events_and_shops():
     item_id = sorted(db.items)[0]
     limit = db.items[item_id].stack_limit
     db.add_inventory_rules(InventoryRules("bag", overflow="fill"))
-    db.add_shop(ShopDefinition("rm_bag_shop", "Shop", [ShopEntry(item_id, buy_prices={"gold": 1})]))
+    db.add_shop(
+        ShopDefinition("rm_bag_shop", "Shop", [ShopEntry(item_id, buy_prices={"gold": 1})])
+    )
     project, game = _session(project)
     state = game.save.rpg_state
     held = state.inventory.count(item_id)
@@ -81,7 +89,10 @@ def test_the_game_session_applies_the_project_rules_to_events_and_shops():
         project,
         BOSS_PROGRAM,
         [
-            EventInstruction("WORLD", {"command": "GIVE_ITEM", "args": {"item_id": item_id, "quantity": limit + 5}}),
+            EventInstruction(
+                "WORLD",
+                {"command": "GIVE_ITEM", "args": {"item_id": item_id, "quantity": limit + 5}},
+            ),
             EventInstruction("END"),
         ],
     )

@@ -1,5 +1,7 @@
-"""ASTERIA_SPEC §20 (D22 A4): enemy and boss AI — field AI on column storage, behaviour-tree nodes for real-time
-combat (abilities, distance, strafing, side-view patrol, jumps, summons, states, HP phases), contact damage."""
+"""ASTERIA_SPEC §20 (D22 A4): enemy and boss AI — field AI on column storage, behaviour-tree nodes
+for real-time
+combat (abilities, distance, strafing, side-view patrol, jumps, summons, states, HP phases),
+contact damage."""
 
 import random
 from array import array
@@ -53,29 +55,48 @@ def _n(kind, *children, **params):
 
 def _tl(timeline_id, *cues, length):
     return ActionTimeline(
-        timeline_id, [*cues, ActionCue(f"end_{timeline_id}", length, "gameplay_event", {"name": "end"})]
+        timeline_id,
+        [*cues, ActionCue(f"end_{timeline_id}", length, "gameplay_event", {"name": "end"})],
     )
 
 
 class Arena:
-    def __init__(self, trees=(), abilities=(), timelines=(), attacks=(), projectiles=(), states=(), prefabs=None):
+    def __init__(
+        self,
+        trees=(),
+        abilities=(),
+        timelines=(),
+        attacks=(),
+        projectiles=(),
+        states=(),
+        prefabs=None,
+    ):
         self.scene = Scene("Arena")
         registry = StateRegistry()
         for state in states:
             registry.register(state)
         self.hits = HitboxSystem()
         self.combat = CombatSystem(
-            {a.attack_id: a for a in attacks}, hits=self.hits, rng=random.Random(3), states=registry
+            {a.attack_id: a for a in attacks},
+            hits=self.hits,
+            rng=random.Random(3),
+            states=registry,
         )
         self.projectiles = ProjectileSystem(
             {p.projectile_id: p for p in projectiles}, hits=self.hits, combat=self.combat
         )
         self.actions = EntityActionSystem(
-            hitboxes=self.hits, paused=self.combat.paused, armor=self.combat, projectiles=self.projectiles
+            hitboxes=self.hits,
+            paused=self.combat.paused,
+            armor=self.combat,
+            projectiles=self.projectiles,
         )
         self.combat.actions = self.actions
         self.action_combat = ActionCombatSystem(
-            AbilityRegistry(abilities), {t.timeline_id: t for t in timelines}, actions=self.actions, combat=self.combat
+            AbilityRegistry(abilities),
+            {t.timeline_id: t for t in timelines},
+            actions=self.actions,
+            combat=self.combat,
         )
         self.controllers = CharacterControllerSystem(paused=self.combat.paused)
         self.prefabs = prefabs
@@ -119,11 +140,24 @@ class Arena:
     def enemy(self, name, tree_id, x=0.0, y=0.0, hp=100, mode="topdown", **combatant):
         foe = self.scene.add_entity(Entity(name))
         foe.add_component(Transform(x, y))
-        foe.add_component(_set(CharacterController2DComponent(), speed=60.0, mode=mode, facing="right"))
+        foe.add_component(
+            _set(CharacterController2DComponent(), speed=60.0, mode=mode, facing="right")
+        )
         foe.add_component(_set(AIController2DComponent(), driver="behavior_tree", tree_id=tree_id))
         foe.add_component(_set(Hurtbox2DComponent(), team="foe"))
-        foe.add_component(_set(Hitbox2DComponent(), team="foe", width=30, height=20, offset_x=15, follow_facing=True))
-        foe.add_component(_set(CombatantComponent(), team="foe", resources=f"hp={hp}", **combatant))
+        foe.add_component(
+            _set(
+                Hitbox2DComponent(),
+                team="foe",
+                width=30,
+                height=20,
+                offset_x=15,
+                follow_facing=True,
+            )
+        )
+        foe.add_component(
+            _set(CombatantComponent(), team="foe", resources=f"hp={hp}", **combatant)
+        )
         return foe
 
     def solid(self, x, y, w, h, **fields):
@@ -140,7 +174,7 @@ class Arena:
         return self.combat.state(entity).resources.current("hp")
 
 
-# -- field AI on columns ---------------------------------------------------------------------------------------------
+# -- field AI on columns --------------------------------------------------------------------------
 @pytest.mark.parametrize("seed", range(4))
 def test_field_ai_kernel_matches_the_reference(seed):
     rng = random.Random(seed)
@@ -150,7 +184,10 @@ def test_field_ai_kernel_matches_the_reference(seed):
         for name, tc in column_spec(FieldAIComponent).items()
     }
     t = {name: array("d", [rng.uniform(-200, 200) for _ in range(n)]) for name in ("x", "y")}
-    c = {name: array("d", [rng.uniform(20, 90) for _ in range(n)]) for name in ("intent_x", "intent_y", "speed")}
+    c = {
+        name: array("d", [rng.uniform(20, 90) for _ in range(n)])
+        for name in ("intent_x", "intent_y", "speed")
+    }
     for s in range(n):
         f["mode_code"][s] = rng.randrange(6)
         f["home_x"][s], f["home_y"][s] = rng.uniform(-50, 50), rng.uniform(-50, 50)
@@ -165,11 +202,18 @@ def test_field_ai_kernel_matches_the_reference(seed):
     tx = [rng.uniform(-200, 200) if h else float("nan") for h in has]
     ty = [rng.uniform(-200, 200) if h else float("nan") for h in has]
     copies = [
-        ({k: array(v.typecode, v) for k, v in f.items()}, {k: array(v.typecode, v) for k, v in c.items()})
+        (
+            {k: array(v.typecode, v) for k, v in f.items()},
+            {k: array(v.typecode, v) for k, v in c.items()},
+        )
         for _ in range(2)
     ]
-    rest_ref = _python.fieldai_step(copies[0][0], t, copies[0][1], slots, behaviour, tx, ty, has, DT)
-    rest_np = np_kernels.fieldai_step(copies[1][0], t, copies[1][1], slots, behaviour, tx, ty, has, DT)
+    rest_ref = _python.fieldai_step(
+        copies[0][0], t, copies[0][1], slots, behaviour, tx, ty, has, DT
+    )
+    rest_np = np_kernels.fieldai_step(
+        copies[1][0], t, copies[1][1], slots, behaviour, tx, ty, has, DT
+    )
     assert rest_np == rest_ref and copies[0] == copies[1]
 
 
@@ -214,12 +258,16 @@ def test_field_ai_scenes_end_identically_with_every_kernel_set():
     assert {mode for *_, mode in results[0]} >= {"chase", "wander", "patrol", "idle"}
 
 
-# -- behaviour trees -------------------------------------------------------------------------------------------------
+# -- behaviour trees ------------------------------------------------------------------------------
 def _melee():
     slash = AbilityDefinition("slash", timeline_id="slash", cooldown_seconds=0.8)
     slam = AbilityDefinition("slam", timeline_id="slam", cooldown_seconds=1.5)
     timelines = [
-        _tl("slash", ActionCue("hit", 0.1, "hitbox", {"duration": 0.1, "hit_tag": "slash"}), length=0.3),
+        _tl(
+            "slash",
+            ActionCue("hit", 0.1, "hitbox", {"duration": 0.1, "hit_tag": "slash"}),
+            length=0.3,
+        ),
         _tl(
             "slam",
             ActionCue("armor", 0.0, "armor", {"duration": 0.6}),
@@ -270,12 +318,20 @@ def test_a_boss_switches_phase_by_hp_and_uses_its_abilities_in_reach():
 
 def test_a_ranged_enemy_keeps_its_distance_and_shoots_the_player():
     shoot = AbilityDefinition("shoot", timeline_id="shoot", cooldown_seconds=0.5)
-    timeline = _tl("shoot", ActionCue("loose", 0.0, "projectile", {"projectile_id": "dart", "aim": True}), length=0.2)
+    timeline = _tl(
+        "shoot",
+        ActionCue("loose", 0.0, "projectile", {"projectile_id": "dart", "aim": True}),
+        length=0.2,
+    )
     tree = BehaviorTree(
         "archer",
         _n(
             "selector",
-            _n("sequence", _n("keep_distance", min=80, max=120), _n("use_ability", ability="shoot")),
+            _n(
+                "sequence",
+                _n("keep_distance", min=80, max=120),
+                _n("use_ability", ability="shoot"),
+            ),
             _n("wait", seconds=0.1),
         ),
     )
@@ -322,8 +378,12 @@ def test_side_patrol_turns_at_ledges_and_walls_and_jump_leaves_the_ground():
     for _ in range(360):
         a.scene.update(DT)
         xs.append(walker.get(Transform).x)
-    assert min(xs) > -60 and max(xs) < 40 - 3 and walker.get(Transform).y < 10  # never walked off or through
-    assert sum(1 for p, q, r in zip(xs, xs[1:], xs[2:]) if (q - p) * (r - q) < 0) >= 2  # turned around
+    assert (
+        min(xs) > -60 and max(xs) < 40 - 3 and walker.get(Transform).y < 10
+    )  # never walked off or through
+    assert (
+        sum(1 for p, q, r in zip(xs, xs[1:], xs[2:]) if (q - p) * (r - q) < 0) >= 2
+    )  # turned around
     jumper_tree = BehaviorTree("jumper", _n("jump"))
     b = Arena([jumper_tree])
     b.player(500, -500)
@@ -339,7 +399,9 @@ def test_summon_states_and_contact_damage():
     minion.add_component(_set(CombatantComponent(), team="foe"))
     prefabs = PrefabLibrary()
     prefabs.add(prefab_from_entity(minion, "minion"))
-    rage = StateDefinition("rage", 10.0, modifiers=[StatModifier("rage", "attack", "multiply", 2.0)])
+    rage = StateDefinition(
+        "rage", 10.0, modifiers=[StatModifier("rage", "attack", "multiply", 2.0)]
+    )
     tree = BehaviorTree(
         "caller",
         _n(
@@ -351,14 +413,25 @@ def test_summon_states_and_contact_damage():
         ),
     )
     a = Arena(
-        [tree], states=[rage], prefabs=prefabs, attacks=[AttackDefinition("touch", damage=ValueFormula.constant(3))]
+        [tree],
+        states=[rage],
+        prefabs=prefabs,
+        attacks=[AttackDefinition("touch", damage=ValueFormula.constant(3))],
     )
     hero = a.player(0, 0)
     caller = a.enemy("Caller", "caller", 200, 0)
     blob = a.scene.add_entity(Entity("Blob"))
     blob.add_component(Transform(5, 0))
     blob.add_component(
-        _set(Hitbox2DComponent(), team="foe", width=20, height=20, active=True, hit_tag="touch", rehit_interval=0.5)
+        _set(
+            Hitbox2DComponent(),
+            team="foe",
+            width=20,
+            height=20,
+            active=True,
+            hit_tag="touch",
+            rehit_interval=0.5,
+        )
     )
     a.run(1.05)
     assert len([e for e, _ in a.scene.query(Transform) if e.name == "Minion"]) == 3
@@ -382,7 +455,11 @@ def test_new_nodes_are_authored_in_the_editor():
     last = (len(api.get("brute").root.children) - 1,)
     api.set_params("brute", last, ability="smash", wait=True)
     node = api.get("brute").node(last)
-    assert (node.kind, node.params["ability"], node.params["wait"]) == ("use_ability", "smash", True)
+    assert (node.kind, node.params["ability"], node.params["wait"]) == (
+        "use_ability",
+        "smash",
+        True,
+    )
 
 
 def test_a_behavior_tree_enemy_attacks_in_the_game_session(runtime):
@@ -390,15 +467,25 @@ def test_a_behavior_tree_enemy_attacks_in_the_game_session(runtime):
     library = game.project.gameplay_library
     library.add_attack(AttackDefinition("test_bite", damage=ValueFormula.constant(7)))
     library.add_timeline(
-        _tl("test_bite", ActionCue("hit", 0.0, "hitbox", {"duration": 0.1, "hit_tag": "test_bite"}), length=0.2)
+        _tl(
+            "test_bite",
+            ActionCue("hit", 0.0, "hitbox", {"duration": 0.1, "hit_tag": "test_bite"}),
+            length=0.2,
+        )
     )
-    library.add_ability(AbilityDefinition("test_bite", timeline_id="test_bite", cooldown_seconds=1.0))
+    library.add_ability(
+        AbilityDefinition("test_bite", timeline_id="test_bite", cooldown_seconds=1.0)
+    )
     game.project.rpg_database.add_behavior_tree(
         BehaviorTree(
             "test_biter",
             _n(
                 "selector",
-                _n("sequence", _n("player_within", radius=25), _n("use_ability", ability="test_bite")),
+                _n(
+                    "sequence",
+                    _n("player_within", radius=25),
+                    _n("use_ability", ability="test_bite"),
+                ),
                 _n("chase", arrive=16),
             ),
         )
@@ -409,8 +496,12 @@ def test_a_behavior_tree_enemy_attacks_in_the_game_session(runtime):
     biter = game.scene.add_entity(Entity("TestBiter"))
     biter.add_component(Transform(60.0, 0.0))
     biter.add_component(_set(CharacterController2DComponent(), speed=50.0))
-    biter.add_component(_set(AIController2DComponent(), driver="behavior_tree", tree_id="test_biter"))
-    biter.add_component(_set(Hitbox2DComponent(), team="foe", width=30, height=20, offset_x=12, follow_facing=True))
+    biter.add_component(
+        _set(AIController2DComponent(), driver="behavior_tree", tree_id="test_biter")
+    )
+    biter.add_component(
+        _set(Hitbox2DComponent(), team="foe", width=30, height=20, offset_x=12, follow_facing=True)
+    )
     biter.add_component(_set(CombatantComponent(), team="foe"))
     for _ in range(120):
         game.field_update(1 / 60)

@@ -6,7 +6,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .scene_binding import ResolvedSceneAsset, SceneAssetBinding, SceneAssetResolver, binding_from_dict
+from .scene_binding import (
+    ResolvedSceneAsset,
+    SceneAssetBinding,
+    SceneAssetResolver,
+    binding_from_dict,
+)
 from .store import AssetStore
 
 
@@ -46,12 +51,18 @@ class ProjectLoader:
                 continue
             if not isinstance(data, Mapping):
                 issues.append(
-                    ProjectLoadIssue(str(p0), "scene.document.not_object", "scene document must be an object")
+                    ProjectLoadIssue(
+                        str(p0), "scene.document.not_object", "scene document must be an object"
+                    )
                 )
                 continue
             raw = data.get("asset_bindings", [])
             if not isinstance(raw, list):
-                issues.append(ProjectLoadIssue(str(p0), "scene.bindings.not_list", "asset_bindings must be a list"))
+                issues.append(
+                    ProjectLoadIssue(
+                        str(p0), "scene.bindings.not_list", "asset_bindings must be a list"
+                    )
+                )
                 continue
             for i, item in enumerate(raw):
                 try:
@@ -77,7 +88,12 @@ class ProjectLoader:
                 except KeyError as e:
                     issues.append(ProjectLoadIssue(b.object_id, "scene.asset.unresolved", str(e)))
                 except ValueError as e:
-                    issues.append(ProjectLoadIssue(b.object_id, "scene.asset.kind_mismatch", str(e)))
+                    issues.append(
+                        ProjectLoadIssue(b.object_id, "scene.asset.kind_mismatch", str(e))
+                    )
         ok = not any(x.severity == "error" for x in issues)
-        # Activation is represented only by a fully valid report; actual runtime activation stays external.
-        return ProjectLoadReport(tuple(ar.loaded), bindings, tuple(resolved) if ok else (), tuple(issues), ok)
+        # Activation is represented only by a fully valid report; actual runtime activation stays
+        # external.
+        return ProjectLoadReport(
+            tuple(ar.loaded), bindings, tuple(resolved) if ok else (), tuple(issues), ok
+        )

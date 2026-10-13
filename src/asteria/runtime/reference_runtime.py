@@ -75,13 +75,19 @@ class ReferenceRuntime:
         clips.validate(hero_sheet)
         animator = AnimatorState(clips.idle["down"])
         animation = CharacterAnimationController(clips, animator)
-        controller = CharacterController2D(transform.x, transform.y, speed=72.0, half_width=5.0, half_height=7.0)
+        controller = CharacterController2D(
+            transform.x, transform.y, speed=72.0, half_width=5.0, half_height=7.0
+        )
         player = PlayerCameraSlice(
             hero,
             controller,
             animation,
             follow,
-            hero.get(__import__("asteria.runtime.components2d", fromlist=["SpriteRenderer2D"]).SpriteRenderer2D),
+            hero.get(
+                __import__(
+                    "asteria.runtime.components2d", fromlist=["SpriteRenderer2D"]
+                ).SpriteRenderer2D
+            ),
             camera_target,
         )
         # Follow cameras begin centered on their target. Fixed cameras retain

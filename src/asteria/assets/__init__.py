@@ -55,7 +55,9 @@ def __getattr__(name):
 
     for module_name in _LAZY_MODULES:
         module = importlib.import_module(f".{module_name}", __name__)
-        public = getattr(module, "__all__", None) or [n for n in vars(module) if not n.startswith("_")]
+        public = getattr(module, "__all__", None) or [
+            n for n in vars(module) if not n.startswith("_")
+        ]
         if name in public:
             value = getattr(module, name)
             globals()[name] = value

@@ -1,4 +1,5 @@
-"""CB10 / EDT-03, EDT-13, EDT-14: record cut/copy/paste, multi-delete and batch edit on the canonical model."""
+"""CB10 / EDT-03, EDT-13, EDT-14: record cut/copy/paste, multi-delete and batch edit on the
+canonical model."""
 
 from pathlib import Path
 
@@ -48,7 +49,9 @@ def test_copy_paste_creates_fresh_ids_as_one_undo_step(setup):
     created = paste_records(document, document.clipboard, items)
     assert created == [f"{x}_copy" for x in source] and set(items.ids()) == before | set(created)
     assert items.get(created[0]).item_id == created[0]
-    assert items.encode(items.get(created[0])) | {"item_id": source[0]} == items.encode(items.get(source[0]))
+    assert items.encode(items.get(created[0])) | {"item_id": source[0]} == items.encode(
+        items.get(source[0])
+    )
     assert paste_records(document, document.clipboard, items) == [f"{x}_copy2" for x in source]
     document.undo()
     document.undo()
@@ -71,7 +74,9 @@ def test_cut_removes_unreferenced_records_and_refuses_referenced_ones(setup):
     (spare,) = paste_records(document, document.clipboard, items)
     cut_records(document, document.clipboard, items, [spare])
     assert spare not in items.ids() and document.clipboard.record_payload.records[0][0] == spare
-    assert paste_records(document, document.clipboard, items) == [spare]  # cut + paste moves it back
+    assert paste_records(document, document.clipboard, items) == [
+        spare
+    ]  # cut + paste moves it back
     actors = adapters["actors"]
     used = sorted(actors.ids())[0]
     classes = adapters["classes"]

@@ -3,7 +3,13 @@ import math
 import pytest
 
 from asteria.presentation.attachment_runtime import AttachmentRuntime
-from asteria.presentation.attachments import Attachment, GripTransform, Socket, SocketRig, Transform2D
+from asteria.presentation.attachments import (
+    Attachment,
+    GripTransform,
+    Socket,
+    SocketRig,
+    Transform2D,
+)
 
 
 def rig():
@@ -35,7 +41,9 @@ def test_authored_grip_lands_on_socket_position_and_orientation():
 
 def test_different_assets_can_share_same_body_motion_without_socket_changes():
     rt = AttachmentRuntime(rig())
-    sword = Attachment("held", "iron_sword", "hand_r", grip=GripTransform(x=10, y=2, rotation_deg=5))
+    sword = Attachment(
+        "held", "iron_sword", "hand_r", grip=GripTransform(x=10, y=2, rotation_deg=5)
+    )
     katana = Attachment("held", "katana", "hand_r", grip=GripTransform(x=17, y=4, rotation_deg=-8))
     rt.attach(sword)
     a = rt.resolve("held", 0)

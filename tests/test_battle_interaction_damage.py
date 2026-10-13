@@ -23,7 +23,14 @@ from asteria.gameplay import (
     TagSet,
     TargetingRule,
 )
-from asteria.rpg import BattleAction, BattleRuntime, InteractionRule, Party, PartyMember, ReactionDefinition
+from asteria.rpg import (
+    BattleAction,
+    BattleRuntime,
+    InteractionRule,
+    Party,
+    PartyMember,
+    ReactionDefinition,
+)
 
 
 def _ability(ability_id, tags, value):
@@ -34,7 +41,10 @@ def _ability(ability_id, tags, value):
         effects=(
             AbilityEffect(
                 AbilityTargetMode.SELECTED,
-                Effect(f"{ability_id}.fx", (EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", value),)),
+                Effect(
+                    f"{ability_id}.fx",
+                    (EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", value),),
+                ),
             ),
         ),
     )
@@ -66,18 +76,29 @@ def _rules(fire=2.0):
             outcome_tags=("outcome.weak",),
         ),
         InteractionRule(
-            "ice_resist", source_tags_all=("element.ice",), target_tags_all=("resist.ice",), multiplier=0.5
+            "ice_resist",
+            source_tags_all=("element.ice",),
+            target_tags_all=("resist.ice",),
+            multiplier=0.5,
         ),
         InteractionRule(
-            "dark_absorb", source_tags_all=("element.dark",), target_tags_all=("absorb.dark",), disposition="absorb"
+            "dark_absorb",
+            source_tags_all=("element.dark",),
+            target_tags_all=("absorb.dark",),
+            disposition="absorb",
         ),
         InteractionRule(
-            "holy_reflect", source_tags_all=("element.holy",), target_tags_all=("reflect.holy",), disposition="reflect"
+            "holy_reflect",
+            source_tags_all=("element.holy",),
+            target_tags_all=("reflect.holy",),
+            disposition="reflect",
         ),
     )
 
 
-def _battle(rules, enemy_tags=("weak.fire", "resist.ice", "absorb.dark", "reflect.holy"), reactions=()):
+def _battle(
+    rules, enemy_tags=("weak.fire", "resist.ice", "absorb.dark", "reflect.holy"), reactions=()
+):
     registry = AbilityRegistry()
     for ability in ABILITIES:
         registry.register(ability)
@@ -119,9 +140,13 @@ def test_rules_scale_damage_and_preview_matches_runtime(ability_id, enemy_change
     assert result.execution_result.executed
     assert _hp(battle, "enemy") - before["enemy"] == enemy_change
     assert _hp(battle, "hero") - before["hero"] == hero_change
-    observed = {m: {"hp": _hp(battle, m) - before[m]} for m in before if _hp(battle, m) != before[m]}
+    observed = {
+        m: {"hp": _hp(battle, m) - before[m]} for m in before if _hp(battle, m) != before[m]
+    }
     assert preview.resource_deltas == observed and preview.executable
-    assert [(t, r) for t, r, _ in preview.interactions] == [(t, r) for t, r, _ in result.interactions]
+    assert [(t, r) for t, r, _ in preview.interactions] == [
+        (t, r) for t, r, _ in result.interactions
+    ]
 
 
 def test_multipliers_come_from_project_data_not_code():
@@ -140,7 +165,9 @@ def test_multipliers_come_from_project_data_not_code():
 def test_healing_is_not_treated_as_damage():
     battle = _battle(_rules())
     battle.member("enemy").subject.resources.change("hp", -200)
-    battle.execute(BattleAction("hero", "mend", ("enemy",)))  # fire-tagged heal on a fire-weak target
+    battle.execute(
+        BattleAction("hero", "mend", ("enemy",))
+    )  # fire-tagged heal on a fire-weak target
     assert _hp(battle, "enemy") == 850
 
 
@@ -157,7 +184,9 @@ def test_reaction_counterattacks_use_the_same_pipeline():
     battle.member("hero").subject.tags.add("weak.fire")
     _, chain = battle.execute_with_reactions(BattleAction("hero", "strike", ("enemy",)))
     assert [x.reaction_id for x in chain.requests] == ["counter"]
-    assert _hp(battle, "enemy") == 900 and _hp(battle, "hero") == 800  # counter fire_bolt x2 on a fire-weak hero
+    assert (
+        _hp(battle, "enemy") == 900 and _hp(battle, "hero") == 800
+    )  # counter fire_bolt x2 on a fire-weak hero
 
 
 def test_reference_session_skill_and_normal_attack_match_preview():

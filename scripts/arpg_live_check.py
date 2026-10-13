@@ -1,8 +1,10 @@
-"""Real-window check of the ARPG playground (D22 A8): real assets, scripted keys posted into pygame's event queue.
+"""Real-window check of the ARPG playground (D22 A8): real assets, scripted keys posted into
+pygame's event queue.
 
     python scripts/arpg_live_check.py topdown|side OUT_DIR
 
-Saves screenshots at fixed frames and prints a JSON summary (video driver, fps, abilities used, HP, kills, loot).
+Saves screenshots at fixed frames and prints a JSON summary (video driver, fps, abilities used,
+HP, kills, loot).
 """
 
 import json
@@ -21,7 +23,9 @@ view = sys.argv[1]
 out = Path(sys.argv[2])
 root = REPO / "reference_projects" / "complex_reference_rpg"
 project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
-rt = PlayableTestRuntime(project, project.game_start.instantiate(project), root, width=1280, height=720)
+rt = PlayableTestRuntime(
+    project, project.game_start.instantiate(project), root, width=1280, height=720
+)
 rt.open()
 game = build_playground(rt, view)
 pg = rt.pg
@@ -75,7 +79,10 @@ for frame in range(frames):
     rt.present()
     if frame in shots:
         pg.image.save(rt.screen, str(out / f"arpg_{view}_{shots[frame]}.png"))
-    log += [(frame, e.kind, e.entity_id == game.player.id, e.ability_id, e.reason) for e in game.action_combat.events]
+    log += [
+        (frame, e.kind, e.entity_id == game.player.id, e.ability_id, e.reason)
+        for e in game.action_combat.events
+    ]
 p = game.player
 state = game.combat.state(p)
 life = p.get(CombatantComponent).life_resource
@@ -91,7 +98,9 @@ summary = {
         if e is not p and c.state is not None
     ),
     "kills": sorted(e.target_id[:6] for e in seen if e.kind == "death"),
-    "player_hits_landed": sum(1 for e in seen if e.kind == "damage" and e.attacker_id == game.player.id),
+    "player_hits_landed": sum(
+        1 for e in seen if e.kind == "damage" and e.attacker_id == game.player.id
+    ),
     "hits_taken": sum(1 for e in seen if e.kind == "damage" and e.target_id == game.player.id),
     "bag": len(game.save.rpg_state.equipment_bag),
     "gold": game.save.rpg_state.currencies.get("gold", 0),

@@ -46,13 +46,16 @@ class AssetBrowserModel:
                 continue
             if q.tags and not q.tags.issubset(a.tags):
                 continue
-            hay = " ".join((a.asset_id, a.kind, *a.tags, *(str(v) for _, v in a.metadata))).casefold()
+            hay = " ".join(
+                (a.asset_id, a.kind, *a.tags, *(str(v) for _, v in a.metadata))
+            ).casefold()
             if text and text not in hay:
                 continue
             out.append(AssetBrowserItem(a.asset_id, a.kind, tuple(sorted(a.tags)), a.metadata))
-        key = {"id": lambda x: x.asset_id.casefold(), "kind": lambda x: (x.kind.casefold(), x.asset_id.casefold())}.get(
-            q.sort_by
-        )
+        key = {
+            "id": lambda x: x.asset_id.casefold(),
+            "kind": lambda x: (x.kind.casefold(), x.asset_id.casefold()),
+        }.get(q.sort_by)
         if key is None:
             raise ValueError("sort_by")
         return tuple(sorted(out, key=key, reverse=q.descending))
@@ -80,7 +83,9 @@ class AssetBrowserModel:
         if aid is None:
             return None
         a = self.registry.resolve(aid)
-        return AssetInspector(a.asset_id, a.kind, a.source.uri, a.version, tuple(sorted(a.tags)), a.metadata)
+        return AssetInspector(
+            a.asset_id, a.kind, a.source.uri, a.version, tuple(sorted(a.tags)), a.metadata
+        )
 
     def preview(self, asset_id=None):
         i = self.inspector(asset_id)

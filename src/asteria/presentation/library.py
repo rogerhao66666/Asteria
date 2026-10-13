@@ -316,7 +316,9 @@ class BattlePresentationLibrary:
             "schema": self.SCHEMA,
             "version": self.VERSION,
             "categories": {
-                category: {key: self._encode(category, value) for key, value in sorted(mapping.items())}
+                category: {
+                    key: self._encode(category, value) for key, value in sorted(mapping.items())
+                }
                 for category, mapping in self._records.items()
             },
         }
@@ -329,7 +331,9 @@ class BattlePresentationLibrary:
         raw_categories = data.get("categories", {})
         unknown = set(raw_categories) - set(cls.CATEGORIES)
         if unknown:
-            raise ValueError("unknown battle presentation categories: " + ", ".join(sorted(unknown)))
+            raise ValueError(
+                "unknown battle presentation categories: " + ", ".join(sorted(unknown))
+            )
         for category in cls.CATEGORIES:
             for key, raw in raw_categories.get(category, {}).items():
                 result.add(category, key, result._decode(category, raw))

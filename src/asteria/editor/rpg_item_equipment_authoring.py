@@ -81,7 +81,14 @@ class ItemEquipmentInformationArchitecture:
             "growth",
             "Equipment Growth",
             "graph_detail",
-            ("Graph", "Selected Node", "Ranks & Requirements", "Prerequisites", "Rewards", "Evolution"),
+            (
+                "Graph",
+                "Selected Node",
+                "Ranks & Requirements",
+                "Prerequisites",
+                "Rewards",
+                "Evolution",
+            ),
         ),
         ItemEquipmentSection(
             "recipes",
@@ -155,7 +162,9 @@ class RpgItemEquipmentAuthoringController:
                 for reward in node.rewards:
                     target = reward.evolution_equipment_id
                     if target is not None and target not in self.database.equipment:
-                        raise RpgItemEquipmentAuthoringError(f"unknown evolution equipment: {target}")
+                        raise RpgItemEquipmentAuthoringError(
+                            f"unknown evolution equipment: {target}"
+                        )
 
         if isinstance(value, CompositionRecipeDefinition):
             known = set(self.database.items)
@@ -199,13 +208,17 @@ class RpgItemEquipmentAuthoringController:
             raise RpgItemEquipmentAuthoringError(f"unknown item: {key}")
         refs = []
         for recipe in self.database.composition_recipes.values():
-            if any(key in x.item_ids for x in recipe.selections) or any(x.item_id == key for x in recipe.outputs):
+            if any(key in x.item_ids for x in recipe.selections) or any(
+                x.item_id == key for x in recipe.outputs
+            ):
                 refs.append(f"recipe:{recipe.recipe_id}")
         for enemy in self.database.enemies.values():
             if any(x.item_id == key for x in enemy.reward.loot):
                 refs.append(f"enemy:{enemy.enemy_id}")
         if refs:
-            raise RpgItemEquipmentAuthoringError(f"item {key} is referenced by " + ", ".join(sorted(refs)))
+            raise RpgItemEquipmentAuthoringError(
+                f"item {key} is referenced by " + ", ".join(sorted(refs))
+            )
         self._execute(_MapCommand(self.database.items, key, None, old, f"Delete Item {key}"))
 
     def create_equipment(self, value):
@@ -235,8 +248,12 @@ class RpgItemEquipmentAuthoringController:
                 if any(reward.evolution_equipment_id == key for reward in node.rewards):
                     refs.append(f"growth:{growth.growth_id}:{node.node_id}")
         if refs:
-            raise RpgItemEquipmentAuthoringError(f"equipment {key} is referenced by " + ", ".join(sorted(refs)))
-        self._execute(_MapCommand(self.database.equipment, key, None, old, f"Delete Equipment {key}"))
+            raise RpgItemEquipmentAuthoringError(
+                f"equipment {key} is referenced by " + ", ".join(sorted(refs))
+            )
+        self._execute(
+            _MapCommand(self.database.equipment, key, None, old, f"Delete Equipment {key}")
+        )
 
     def create_attachment(self, value):
         value = self._coerce(value, AttachmentDefinition)
@@ -259,7 +276,9 @@ class RpgItemEquipmentAuthoringController:
         old = self.database.attachments.get(key)
         if old is None:
             raise RpgItemEquipmentAuthoringError(f"unknown attachment: {key}")
-        self._execute(_MapCommand(self.database.attachments, key, None, old, f"Delete Attachment {key}"))
+        self._execute(
+            _MapCommand(self.database.attachments, key, None, old, f"Delete Attachment {key}")
+        )
 
     def create_growth(self, value):
         value = self._coerce(value, EquipmentGrowthDefinition)
@@ -287,10 +306,20 @@ class RpgItemEquipmentAuthoringController:
         old = self.database.equipment_growth.get(key)
         if old is None:
             raise RpgItemEquipmentAuthoringError(f"unknown growth: {key}")
-        refs = [f"equipment:{x.equipment_id}" for x in self.database.equipment.values() if x.growth_id == key]
-        refs += [f"attachment:{x.attachment_id}" for x in self.database.attachments.values() if x.growth_id == key]
+        refs = [
+            f"equipment:{x.equipment_id}"
+            for x in self.database.equipment.values()
+            if x.growth_id == key
+        ]
+        refs += [
+            f"attachment:{x.attachment_id}"
+            for x in self.database.attachments.values()
+            if x.growth_id == key
+        ]
         if refs:
-            raise RpgItemEquipmentAuthoringError(f"growth {key} is referenced by " + ", ".join(sorted(refs)))
+            raise RpgItemEquipmentAuthoringError(
+                f"growth {key} is referenced by " + ", ".join(sorted(refs))
+            )
         self._execute(
             _MapCommand(
                 self.database.equipment_growth,

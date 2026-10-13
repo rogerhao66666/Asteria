@@ -2,15 +2,22 @@
 
 Nothing here is one game's loot system. A project authors:
 
-* ``RarityDefinition`` records — name, label colour, how many random affixes an item of that rarity rolls, its weight
-  when a rarity is rolled, its sort order. A rarity with ``max_affixes`` 0 (a "unique" or a plain item) keeps exactly
+* ``RarityDefinition`` records — name, label colour, how many random affixes an item of that
+  rarity rolls, its weight
+  when a rarity is rolled, its sort order. A rarity with ``max_affixes`` 0 (a "unique" or a plain
+  item) keeps exactly
   the equipment's authored modifiers.
-* ``AffixDefinition`` records — a prefix or suffix (or any authored ``position``), which equipment it may appear on
-  (``allowed_tags`` / ``slots``), the item levels it appears at, its weight, an exclusive ``group``, and modifiers whose
-  values roll inside ``[minimum, maximum]`` (optionally whole numbers, optionally scaled by item level).
+* ``AffixDefinition`` records — a prefix or suffix (or any authored ``position``), which equipment
+  it may appear on
+  (``allowed_tags`` / ``slots``), the item levels it appears at, its weight, an exclusive
+  ``group``, and modifiers whose
+  values roll inside ``[minimum, maximum]`` (optionally whole numbers, optionally scaled by item
+  level).
 
-``roll_rarity`` and ``roll_equipment`` turn them into an ``EquippedItem`` carrying ``item_level``, ``rarity`` and
-``rolled_affixes``; its stat modifiers join the build exactly like the equipment's own (``EquippedItem.modifiers()``),
+``roll_rarity`` and ``roll_equipment`` turn them into an ``EquippedItem`` carrying ``item_level``,
+``rarity`` and
+``rolled_affixes``; its stat modifiers join the build exactly like the equipment's own
+(``EquippedItem.modifiers()``),
 and the rolls are saved with the instance.
 """
 
@@ -32,7 +39,9 @@ def _id(value, label):
 def _num(value, label, *, minimum=None):
     value = float(value)
     if not isfinite(value) or (minimum is not None and value < minimum):
-        raise ValueError(f"{label} must be a finite number" + ("" if minimum is None else f" >= {minimum}"))
+        raise ValueError(
+            f"{label} must be a finite number" + ("" if minimum is None else f" >= {minimum}")
+        )
     return value
 
 
@@ -43,7 +52,9 @@ class RarityDefinition:
     color: str = "#ffffff"  # label / name colour, "#rrggbb"
     min_affixes: int = 0
     max_affixes: int = 0
-    weight: float = 1.0  # chance when a rarity is rolled (0 = never rolled, only given by drop entries)
+    weight: float = (
+        1.0  # chance when a rarity is rolled (0 = never rolled, only given by drop entries)
+    )
     order: int = 0  # sorting and "at least this rare" filters
     max_prefixes: int = -1  # -1 = no separate limit
     max_suffixes: int = -1
@@ -140,7 +151,9 @@ class AffixDefinition:
         object.__setattr__(self, "affix_id", _id(self.affix_id, "affix_id"))
         object.__setattr__(self, "display_name", str(self.display_name or self.affix_id))
         object.__setattr__(self, "position", _id(self.position, "position"))
-        modifiers = tuple(m if isinstance(m, AffixModifier) else AffixModifier(**dict(m)) for m in self.modifiers)
+        modifiers = tuple(
+            m if isinstance(m, AffixModifier) else AffixModifier(**dict(m)) for m in self.modifiers
+        )
         object.__setattr__(self, "modifiers", modifiers)
         for name in ("allowed_tags", "slots", "rarities"):
             object.__setattr__(self, name, tuple(str(x) for x in getattr(self, name)))
@@ -183,7 +196,8 @@ class AffixDefinition:
 
 @dataclass(frozen=True, slots=True)
 class RolledAffix:
-    """One affix as it rolled on one item. It keeps its own ``(stat, operation, value)`` entries, so the item stays
+    """One affix as it rolled on one item. It keeps its own ``(stat, operation, value)`` entries,
+    so the item stays
     exactly as it dropped even if the affix is edited later (and saves need no lookup)."""
 
     affix_id: str
@@ -200,7 +214,9 @@ class RolledAffix:
 
     @classmethod
     def from_data(cls, data):
-        return cls(str(data["affix_id"]), tuple((str(s), str(o), float(v)) for s, o, v in data["entries"]))
+        return cls(
+            str(data["affix_id"]), tuple((str(s), str(o), float(v)) for s, o, v in data["entries"])
+        )
 
 
 def _weighted(rng, entries):
@@ -216,18 +232,24 @@ def _weighted(rng, entries):
 
 
 def roll_rarity(rarities, rng, *, luck=0.0):
-    """A rarity id by weight; ``luck`` multiplies the weight of rarer ones (order > 0) by ``1 + luck * order``."""
-    entries = [(r.rarity_id, r.weight * (1.0 + luck * r.order if r.order > 0 else 1.0)) for r in rarities.values()]
+    """A rarity id by weight; ``luck`` multiplies the weight of rarer ones (order > 0) by ``1 +
+    luck * order``."""
+    entries = [
+        (r.rarity_id, r.weight * (1.0 + luck * r.order if r.order > 0 else 1.0))
+        for r in rarities.values()
+    ]
     return _weighted(rng, sorted(entries))
 
 
 def roll_affixes(equipment, item_level, rarity, affixes, rng):
-    """Random affixes for ``equipment`` of ``rarity`` at ``item_level`` (respecting groups and per-position limits)."""
+    """Random affixes for ``equipment`` of ``rarity`` at ``item_level`` (respecting groups and
+    per-position limits)."""
     count = rng.randint(rarity.min_affixes, rarity.max_affixes) if rarity.max_affixes else 0
     limits = {"prefix": rarity.max_prefixes, "suffix": rarity.max_suffixes}
     chosen, groups, per_position = [], set(), {}
     pool = sorted(
-        (a for a in affixes.values() if a.fits(equipment, item_level, rarity.rarity_id)), key=lambda a: a.affix_id
+        (a for a in affixes.values() if a.fits(equipment, item_level, rarity.rarity_id)),
+        key=lambda a: a.affix_id,
     )
     for _ in range(count):
         candidates = [
@@ -235,7 +257,10 @@ def roll_affixes(equipment, item_level, rarity, affixes, rng):
             for a in pool
             if a.affix_id not in {c.affix_id for c in chosen}
             and not (a.group and a.group in groups)
-            and not (limits.get(a.position, -1) >= 0 and per_position.get(a.position, 0) >= limits[a.position])
+            and not (
+                limits.get(a.position, -1) >= 0
+                and per_position.get(a.position, 0) >= limits[a.position]
+            )
         ]
         affix = _weighted(rng, candidates)
         if affix is None:
@@ -245,13 +270,26 @@ def roll_affixes(equipment, item_level, rarity, affixes, rng):
             groups.add(affix.group)
         per_position[affix.position] = per_position.get(affix.position, 0) + 1
     return tuple(
-        RolledAffix(a.affix_id, tuple((m.stat, m.operation, m.roll(rng, item_level)) for m in a.modifiers))
+        RolledAffix(
+            a.affix_id, tuple((m.stat, m.operation, m.roll(rng, item_level)) for m in a.modifiers)
+        )
         for a in chosen
     )
 
 
-def roll_equipment(equipment, rng, *, item_level=1, rarity_id=None, rarities=None, affixes=None, luck=0.0, instance_id):
-    """A new ``EquippedItem`` of ``equipment``: rarity (given, or rolled by weight), item level and random affixes."""
+def roll_equipment(
+    equipment,
+    rng,
+    *,
+    item_level=1,
+    rarity_id=None,
+    rarities=None,
+    affixes=None,
+    luck=0.0,
+    instance_id,
+):
+    """A new ``EquippedItem`` of ``equipment``: rarity (given, or rolled by weight), item level and
+    random affixes."""
     from .items import EquippedItem
 
     rarities = dict(rarities or {r.rarity_id: r for r in DEFAULT_RARITIES})
@@ -260,7 +298,11 @@ def roll_equipment(equipment, rng, *, item_level=1, rarity_id=None, rarities=Non
     rarity = rarities.get(rarity_id) or RarityDefinition(str(rarity_id))
     rolled = roll_affixes(equipment, int(item_level), rarity, dict(affixes or {}), rng)
     return EquippedItem(
-        equipment, instance_id=instance_id, item_level=int(item_level), rarity=rarity.rarity_id, rolled_affixes=rolled
+        equipment,
+        instance_id=instance_id,
+        item_level=int(item_level),
+        rarity=rarity.rarity_id,
+        rolled_affixes=rolled,
     )
 
 

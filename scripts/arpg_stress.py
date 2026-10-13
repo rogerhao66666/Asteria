@@ -1,4 +1,5 @@
-"""ARPG stress scene (D22 A2): enemies + projectiles in a real GameSession field update, profiled per kernel set.
+"""ARPG stress scene (D22 A2): enemies + projectiles in a real GameSession field update, profiled
+per kernel set.
 
     python scripts/arpg_stress.py OUTPUT.json [--enemies 300] [--projectiles 500] [--frames 300]
                                   [--kernels python numpy]
@@ -28,12 +29,17 @@ def main(argv=None):
     reports = {}
     for kernel in args.kernels:
         report = run_arpg_stress(
-            REPO, enemies=args.enemies, projectiles=args.projectiles, frames=args.frames, kernel=kernel
+            REPO,
+            enemies=args.enemies,
+            projectiles=args.projectiles,
+            frames=args.frames,
+            kernel=kernel,
         )
         reports[kernel] = report
         sections = ", ".join(f"{k}={v['mean_ms']}" for k, v in report["sections"].items())
         print(
-            f"{kernel:6} frame mean={report['frame']['mean_ms']}ms p95={report['frame']['p95_ms']}ms "
+            f"{kernel:6} frame mean={report['frame']['mean_ms']}ms "
+            f"p95={report['frame']['p95_ms']}ms "
             f"hits={report['arpg']['hits']} | {sections}"
         )
     Path(args.output).write_text(json.dumps(reports, indent=2), encoding="utf-8")

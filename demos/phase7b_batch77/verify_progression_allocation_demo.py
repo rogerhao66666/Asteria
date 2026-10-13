@@ -1,4 +1,5 @@
 """Verify Batch 77 using the delivered playable project and canonical RPG save."""
+
 from pathlib import Path
 import json
 
@@ -10,7 +11,9 @@ root = Path(__file__).resolve().parents[2]
 document = EditorDocument()
 load_document(document, root / "AsteriaPhase7B_ProgressionAllocationDemo.asteria.json")
 project = document.project
-save = json.loads((root / "reference_data" / "phase7b_batch77_progression_allocation_demo.save.json").read_text())
+save = json.loads(
+    (root / "reference_data" / "phase7b_batch77_progression_allocation_demo.save.json").read_text()
+)
 state = RpgRuntimeState.from_data(save, project.rpg_database)
 allocation = state.progression_allocations["actor:aria"]
 actor = project.rpg_database.build_actor("aria")

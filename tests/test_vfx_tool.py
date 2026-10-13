@@ -5,7 +5,11 @@ from pathlib import Path
 import pytest
 
 from asteria.editor import EditorDocument
-from asteria.editor.vfx_authoring import PREVIEW_BODY_HEIGHT, VFXAuthoringController, VFXAuthoringError
+from asteria.editor.vfx_authoring import (
+    PREVIEW_BODY_HEIGHT,
+    VFXAuthoringController,
+    VFXAuthoringError,
+)
 from asteria.project import Project
 from asteria.runtime.battle_visuals import VFX_DEFAULTS, vfx_keyframe, vfx_placement, vfx_rect
 
@@ -22,21 +26,38 @@ def api():
 def test_placement_rule_defaults_keep_the_original_battle_look():
     placement = vfx_placement({})
     assert placement == {**VFX_DEFAULTS, "offset": [0.0, 0.0]}
-    assert vfx_rect(placement, 100, 200, 80, 64, 64) == (100, 160, 64 * 0.6, 64 * 0.6)  # mid-body, 0.6 scale
+    assert vfx_rect(placement, 100, 200, 80, 64, 64) == (
+        100,
+        160,
+        64 * 0.6,
+        64 * 0.6,
+    )  # mid-body, 0.6 scale
     head = vfx_placement({"vfx": {"anchor": "head", "offset": [4, -2], "scale": 1}}, {"scale": 2})
-    assert vfx_rect(head, 100, 200, 80, 10, 10) == (104, 118, 20, 20)  # beat payload overrides the sheet
+    assert vfx_rect(head, 100, 200, 80, 10, 10) == (
+        104,
+        118,
+        20,
+        20,
+    )  # beat payload overrides the sheet
     assert [vfx_keyframe(t, 1.0, 4) for t in (0, 0.26, 0.5, 0.99, 5)] == [0, 1, 2, 3, 3]
 
 
 def test_vfx_list_usage_and_checks_on_the_reference_project(api):
-    assert api.vfx_ids() == ("battle.fx.explosion", "battle.fx.flame", "battle.fx.heal", "battle.fx.slash")
+    assert api.vfx_ids() == (
+        "battle.fx.explosion",
+        "battle.fx.flame",
+        "battle.fx.heal",
+        "battle.fx.slash",
+    )
     assert "fire_arc" in {sequence for sequence, _ in api.usages("battle.fx.flame")}
     assert all(api.problems(x) == [] for x in api.vfx_ids())
 
 
 def test_placement_edits_are_undoable_and_validated(api):
     document = api.document
-    assert api.set_placement("battle.fx.flame", anchor="feet", offset=(0, -12), scale=1.2, blend="add", opacity=0.8)
+    assert api.set_placement(
+        "battle.fx.flame", anchor="feet", offset=(0, -12), scale=1.2, blend="add", opacity=0.8
+    )
     assert api.placement("battle.fx.flame") == {
         "anchor": "feet",
         "offset": [0.0, -12.0],
@@ -124,7 +145,10 @@ def test_the_battle_renderer_draws_with_the_authored_placement(resource_root, mo
     try:
         assets = runtime.game.project.assets
         flame = assets.resolve("battle.fx.flame")
-        meta = {**flame.meta(), "vfx": {"anchor": "feet", "scale": 1.2, "opacity": 0.5, "blend": "add"}}
+        meta = {
+            **flame.meta(),
+            "vfx": {"anchor": "feet", "scale": 1.2, "opacity": 0.5, "blend": "add"},
+        }
         assets.register(replace(flame, metadata=tuple(sorted(meta.items()))), replace=True)
         runtime._battle_presentation = adapter = CanonicalBattleAdapter(runtime)
         runtime.game.start_encounter("boss_room")
@@ -164,7 +188,9 @@ def window():
 
     app = QApplication.instance() or QApplication([])
     value = AsteriaEditorWindow(None)
-    value.document.set_project(Project.load_json(REF, value.document.component_registry), file_path=REF)
+    value.document.set_project(
+        Project.load_json(REF, value.document.component_registry), file_path=REF
+    )
     value.refresh_all()
     yield value
     value.document.mark_saved()

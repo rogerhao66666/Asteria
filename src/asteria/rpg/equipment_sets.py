@@ -34,7 +34,9 @@ class EquipmentSetBonus:
         object.__setattr__(self, "modifiers", modifiers)
         object.__setattr__(self, "tags", tuple(sorted({_id(x, "tag") for x in tags})))
         object.__setattr__(
-            self, "granted_abilities", tuple(dict.fromkeys(_id(x, "ability id") for x in granted_abilities))
+            self,
+            "granted_abilities",
+            tuple(dict.fromkeys(_id(x, "ability id") for x in granted_abilities)),
         )
 
     def to_data(self):

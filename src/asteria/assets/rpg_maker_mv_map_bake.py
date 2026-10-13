@@ -75,7 +75,8 @@ def _sheet_data(texture_id, frames):
     return {
         "texture_asset_id": texture_id,
         "frames": [
-            {"x": x, "y": y, "width": w, "height": h, "pivot_x": px, "pivot_y": py} for x, y, w, h, px, py in frames
+            {"x": x, "y": y, "width": w, "height": h, "pivot_x": px, "pivot_y": py}
+            for x, y, w, h, px, py in frames
         ],
     }
 
@@ -114,7 +115,8 @@ def _layer(name, order, cells, width, height, *, visible=True, collision=False):
 
 
 def bake_map(layout, catalog, mv_map, out_root) -> BakedMap:
-    """Write the map's atlas, sprite sheet, tileset and tilemap under ``out_root``; return their records."""
+    """Write the map's atlas, sprite sheet, tileset and tilemap under ``out_root``; return their
+    records."""
     out_root = Path(out_root)
     folder = f"imported/mv/map_{mv_map.map_id:03d}"
     resolver = MVTileResolver(layout, catalog, tileset_id=mv_map.tileset_id)
@@ -159,7 +161,9 @@ def bake_map(layout, catalog, mv_map, out_root) -> BakedMap:
         if any(t != EMPTY_TILE for t in below):
             layers.append(_layer(f"Layer {z + 1}", z, below, width, height))
         if any(t != EMPTY_TILE for t in above):
-            layers.append(_layer(f"Layer {z + 1} (above characters)", 200 + z, above, width, height))
+            layers.append(
+                _layer(f"Layer {z + 1} (above characters)", 200 + z, above, width, height)
+            )
 
     blocked_tile = len(images)
     walk = [EMPTY_TILE] * (width * height)
@@ -179,35 +183,71 @@ def bake_map(layout, catalog, mv_map, out_root) -> BakedMap:
     (out_root / folder).mkdir(parents=True, exist_ok=True)
     atlas.save(out_root / folder / "tiles.png")
 
-    ids = {kind: stable_id("mv-map", mv_map.map_id, kind) for kind in ("texture", "sheet", "tileset", "tilemap")}
-    tiles = {str(i): {"frame_index": i, "collision": "none", "terrain": None, "tags": []} for i in range(len(images))}
+    ids = {
+        kind: stable_id("mv-map", mv_map.map_id, kind)
+        for kind in ("texture", "sheet", "tileset", "tilemap")
+    }
+    tiles = {
+        str(i): {"frame_index": i, "collision": "none", "terrain": None, "tags": []}
+        for i in range(len(images))
+    }
     for tile_id, index in local.items():
         flag = flags[tile_id] if tile_id < len(flags) else 0
         tiles[str(index)]["tags"] = ["above"] if flag & STAR else []
-    tiles[str(blocked_tile)] = {"frame_index": 0, "collision": "solid", "terrain": None, "tags": ["walkability"]}
+    tiles[str(blocked_tile)] = {
+        "frame_index": 0,
+        "collision": "solid",
+        "terrain": None,
+        "tags": ["walkability"],
+    }
     _write_json(out_root / folder / "tiles_sheet.json", _sheet_data(ids["texture"], frames))
     _write_json(
         out_root / folder / "tileset.json",
-        {"sprite_sheet_asset_id": ids["sheet"], "tile_width": TILE, "tile_height": TILE, "tiles": tiles},
+        {
+            "sprite_sheet_asset_id": ids["sheet"],
+            "tile_width": TILE,
+            "tile_height": TILE,
+            "tiles": tiles,
+        },
     )
     tilemap = TileMap(AssetRef(ids["tileset"], "tileset"), TILE, TILE, CHUNK, CHUNK, layers)
     tilemap.validate()
     _write_json(out_root / folder / "tilemap.json", tilemap_to_data(tilemap))
-    provenance = {"source": "rpg_maker_mv", "map_id": mv_map.map_id, "tileset_id": mv_map.tileset_id}
+    provenance = {
+        "source": "rpg_maker_mv",
+        "map_id": mv_map.map_id,
+        "tileset_id": mv_map.tileset_id,
+    }
     name = mv_map.display_name or mv_map.name
     records = [
         _record(ids["texture"], "texture", f"{folder}/tiles.png", f"{name} Tiles", provenance),
-        _record(ids["sheet"], "sprite_sheet", f"{folder}/tiles_sheet.json", f"{name} Tile Sheet", provenance),
-        _record(ids["tileset"], "tileset", f"{folder}/tileset.json", f"{name} Tileset", provenance),
-        _record(ids["tilemap"], "tilemap", f"{folder}/tilemap.json", f"{name} TileMap", provenance),
+        _record(
+            ids["sheet"],
+            "sprite_sheet",
+            f"{folder}/tiles_sheet.json",
+            f"{name} Tile Sheet",
+            provenance,
+        ),
+        _record(
+            ids["tileset"], "tileset", f"{folder}/tileset.json", f"{name} Tileset", provenance
+        ),
+        _record(
+            ids["tilemap"], "tilemap", f"{folder}/tilemap.json", f"{name} TileMap", provenance
+        ),
     ]
     return BakedMap(
-        ids["tilemap"], width, height, records, tuple(sorted(unsupported)), sum(1 for t in walk if t != EMPTY_TILE)
+        ids["tilemap"],
+        width,
+        height,
+        records,
+        tuple(sorted(unsupported)),
+        sum(1 for t in walk if t != EMPTY_TILE),
     )
 
 
 def bake_character(catalog, character_name, character_index, out_root) -> BakedCharacter | None:
-    """A 3 x 4 MV walking character as a canonical sprite sheet + idle/walk clip set (None when not found)."""
+    """A 3 x 4 MV walking character as a canonical sprite sheet + idle/walk clip set (None when not
+    found)."""
     source = catalog.resolve_image("characters", character_name)
     if source is None:
         return None
@@ -220,7 +260,9 @@ def bake_character(catalog, character_name, character_index, out_root) -> BakedC
     with Image.open(source) as image:
         image = image.convert("RGBA")
         for row, direction in enumerate(WALK_DIRECTIONS):
-            boxes = RPGMakerMVImporter.walk_clip_boxes(imported, character_index=character_index, direction=direction)
+            boxes = RPGMakerMVImporter.walk_clip_boxes(
+                imported, character_index=character_index, direction=direction
+            )
             for column, box in enumerate(boxes):
                 sheet.paste(image.crop(box), (column * fw, row * fh))
     out = Path(out_root) / folder
@@ -235,17 +277,36 @@ def bake_character(catalog, character_name, character_index, out_root) -> BakedC
     clips = {}
     for row, direction in enumerate(WALK_DIRECTIONS):
         base = row * 3
-        clips[f"idle_{direction}"] = {"keyframes": [{"frame_index": base + 1, "duration": 0.4}], "loop": True}
+        clips[f"idle_{direction}"] = {
+            "keyframes": [{"frame_index": base + 1, "duration": 0.4}],
+            "loop": True,
+        }
         clips[f"walk_{direction}"] = {
             "keyframes": [{"frame_index": base + i, "duration": 0.15} for i in (0, 1, 2, 1)],
             "loop": True,
         }
     _write_json(out / "walk_animation.json", {"clips": clips})
-    provenance = {"source": "rpg_maker_mv", "character": character_name, "character_index": character_index}
+    provenance = {
+        "source": "rpg_maker_mv",
+        "character": character_name,
+        "character_index": character_index,
+    }
     label = f"{Path(character_name).name} {character_index}"
     records = [
         _record(texture_id, "texture", f"{folder}/walk.png", f"{label} Walk", provenance),
-        _record(sheet_id, "sprite_sheet", f"{folder}/walk_sheet.json", f"{label} Walk Sheet", provenance),
-        _record(animation_id, "animation", f"{folder}/walk_animation.json", f"{label} Walk Animation", provenance),
+        _record(
+            sheet_id,
+            "sprite_sheet",
+            f"{folder}/walk_sheet.json",
+            f"{label} Walk Sheet",
+            provenance,
+        ),
+        _record(
+            animation_id,
+            "animation",
+            f"{folder}/walk_animation.json",
+            f"{label} Walk Animation",
+            provenance,
+        ),
     ]
     return BakedCharacter(sheet_id, animation_id, records)

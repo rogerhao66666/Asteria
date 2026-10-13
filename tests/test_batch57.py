@@ -69,7 +69,9 @@ def test_second_binding_failure_no_partial():
     r.register(
         "*",
         lambda x, c: (
-            (_ for _ in ()).throw(RuntimeError("bad")) if x.binding.object_id == "o1" else {"id": x.binding.object_id}
+            (_ for _ in ()).throw(RuntimeError("bad"))
+            if x.binding.object_id == "o1"
+            else {"id": x.binding.object_id}
         ),
     )
     t = RecordingRuntimeScene()

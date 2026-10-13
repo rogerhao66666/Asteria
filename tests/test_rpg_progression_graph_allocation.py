@@ -175,7 +175,11 @@ def test_graph_rejects_unknown_prerequisite_and_cycles():
     with pytest.raises(ValueError, match="unknown prerequisite"):
         ProgressionGraphDefinition(
             "bad",
-            nodes=[ProgressionNodeDefinition("a", prerequisites=[ProgressionNodeRequirement("missing")])],
+            nodes=[
+                ProgressionNodeDefinition(
+                    "a", prerequisites=[ProgressionNodeRequirement("missing")]
+                )
+            ],
         )
     with pytest.raises(ValueError, match="cycle"):
         ProgressionGraphDefinition(
@@ -193,7 +197,9 @@ def test_database_validation_rejects_unknown_passive_reward_reference():
         ProgressionGraphDefinition(
             "bad_passive",
             nodes=[
-                ProgressionNodeDefinition("node", rewards=ProgressionNodeReward(unlocked_passives=["missing_passive"]))
+                ProgressionNodeDefinition(
+                    "node", rewards=ProgressionNodeReward(unlocked_passives=["missing_passive"])
+                )
             ],
         )
     )

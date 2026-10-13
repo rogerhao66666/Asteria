@@ -33,10 +33,18 @@ def formation():
     return FormationDefinition(
         "line",
         (
-            FormationSlotDefinition("front_l", x=0, y=0, tags=("front",), adjacent_to=("front_r", "back_l")),
-            FormationSlotDefinition("front_r", x=1, y=0, tags=("front",), adjacent_to=("front_l", "back_r")),
-            FormationSlotDefinition("back_l", x=0, y=1, tags=("back",), adjacent_to=("front_l", "back_r")),
-            FormationSlotDefinition("back_r", x=1, y=1, tags=("back",), adjacent_to=("front_r", "back_l")),
+            FormationSlotDefinition(
+                "front_l", x=0, y=0, tags=("front",), adjacent_to=("front_r", "back_l")
+            ),
+            FormationSlotDefinition(
+                "front_r", x=1, y=0, tags=("front",), adjacent_to=("front_l", "back_r")
+            ),
+            FormationSlotDefinition(
+                "back_l", x=0, y=1, tags=("back",), adjacent_to=("front_l", "back_r")
+            ),
+            FormationSlotDefinition(
+                "back_r", x=1, y=1, tags=("back",), adjacent_to=("front_r", "back_l")
+            ),
         ),
     )
 
@@ -46,7 +54,9 @@ def test_formation_full_slot_data_and_undo():
     f = c.create_formation(formation())
     assert f.slot("front_l").tags == ("front",)
     assert "back_l" in f.slot("front_l").adjacent_to
-    edited = FormationDefinition("line", (FormationSlotDefinition("solo", x=3, y=4, tags=("focus",)),))
+    edited = FormationDefinition(
+        "line", (FormationSlotDefinition("solo", x=3, y=4, tags=("focus",)),)
+    )
     c.edit_formation("line", edited)
     assert p.rpg_database.formations["line"].slot("solo").x == 3
     assert doc.undo()
@@ -91,7 +101,10 @@ def test_set_active_preserves_valid_placements_only():
             active_actor_ids=("a", "b", "c", "d"),
             active_capacity=4,
             formation_id="line",
-            placements=(PartyPlacementDefinition("a", "front_l"), PartyPlacementDefinition("b", "front_r")),
+            placements=(
+                PartyPlacementDefinition("a", "front_l"),
+                PartyPlacementDefinition("b", "front_r"),
+            ),
         )
     )
     c.set_active("main", ("a", "c", "d", "e"))
@@ -123,7 +136,9 @@ def test_unknown_actor_and_slot_refs_are_rejected():
     _, _, c = make()
     c.create_formation(formation())
     with pytest.raises(RpgPartyFormationAuthoringError):
-        c.create_party(PartySetupDefinition("bad", roster_actor_ids=("missing",), active_actor_ids=()))
+        c.create_party(
+            PartySetupDefinition("bad", roster_actor_ids=("missing",), active_actor_ids=())
+        )
     with pytest.raises(RpgPartyFormationAuthoringError):
         c.create_party(
             PartySetupDefinition(
@@ -162,7 +177,10 @@ def test_presentation_policy_is_canonical_and_undoable():
         slot_labels={"front_l": "Front Left"},
     )
     c.set_presentation_profile("default", profile)
-    assert p.rpg_database.party_presentation_policies["default"].visible_limits == (("active", 4), ("reserve", 6))
+    assert p.rpg_database.party_presentation_policies["default"].visible_limits == (
+        ("active", 4),
+        ("reserve", 6),
+    )
     assert doc.undo()
     assert "default" not in p.rpg_database.party_presentation_policies
     assert doc.redo()
@@ -182,7 +200,8 @@ def test_database_v22_roundtrip_preserves_party_setup_and_ui_policy():
         )
     )
     c.set_presentation_profile(
-        "default", PartyPresentationPolicyDefinition("default", visible_limits={"active": 4, "reserve": 8})
+        "default",
+        PartyPresentationPolicyDefinition("default", visible_limits={"active": 4, "reserve": 8}),
     )
     raw = p.to_data()
     assert raw["rpg_database"]["version"] == 30
@@ -218,7 +237,9 @@ def test_information_architecture_avoids_large_party_visual_sprawl():
 def test_workspace_focus_is_contextual():
     _, _, c = make()
     c.create_formation(formation())
-    c.create_party(PartySetupDefinition("main", roster_actor_ids=("a", "b"), active_actor_ids=("a",)))
+    c.create_party(
+        PartySetupDefinition("main", roster_actor_ids=("a", "b"), active_actor_ids=("a",))
+    )
     w = RpgPartyFormationWorkspaceModel(c)
     w.select("main")
     w.focus_actor("b")
@@ -240,7 +261,10 @@ def test_project_validation_after_party_authoring():
             active_actor_ids=("a", "b"),
             active_capacity=2,
             formation_id="line",
-            placements=(PartyPlacementDefinition("a", "front_l"), PartyPlacementDefinition("b", "front_r")),
+            placements=(
+                PartyPlacementDefinition("a", "front_l"),
+                PartyPlacementDefinition("b", "front_r"),
+            ),
         )
     )
     assert c.validate() == ()

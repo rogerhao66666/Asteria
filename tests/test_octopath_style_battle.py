@@ -1,8 +1,13 @@
-"""An Octopath-Traveler-style battle built only from authored data on the reference project (BTL-02 / BTL-03 /
-GP-02): weapon and element weaknesses with any multiplier, resistances, shields broken by weakness hits, a
-Break that delays the enemy and makes it take more damage, Boost that repeats attacks or powers spells, two
-weapons carried at once, a secondary job, and a poison that hurts more every turn. No engine rule is
-special-cased: everything is interaction rules, tags, gauges, states and options a designer sets."""
+"""An Octopath-Traveler-style battle built only from authored data on the reference project
+(BTL-02 / BTL-03 /
+GP-02): weapon and element weaknesses with any multiplier, resistances, shields broken by weakness
+hits, a
+Break that delays the enemy and makes it take more damage, Boost that repeats attacks or powers
+spells, two
+weapons carried at once, a secondary job, and a poison that hurts more every turn. No engine rule
+is
+special-cased: everything is interaction rules, tags, gauges, states and options a designer
+sets."""
 
 import dataclasses
 
@@ -29,16 +34,25 @@ def _project():
         ("oct_bow", ("weapon.bow",)),
         ("oct_fire", ("damage.fire", "boost.power")),  # spells grow stronger with boost
     ):
-        abilities._definitions[ability_id] = dataclasses.replace(strike, ability_id=ability_id, tags=tags)
+        abilities._definitions[ability_id] = dataclasses.replace(
+            strike, ability_id=ability_id, tags=tags
+        )
     base_targeting = db.battle_targeting.get("strike")
     if base_targeting is not None:
         for ability_id in ("oct_sword", "oct_bow", "oct_fire"):
-            db.battle_targeting[ability_id] = dataclasses.replace(base_targeting, ability_id=ability_id)
+            db.battle_targeting[ability_id] = dataclasses.replace(
+                base_targeting, ability_id=ability_id
+            )
     weapon = db.equipment["weapon_12"]
-    # The attack names its weapon type (ability tag weapon.sword); the item only says what is carried
-    # (equip.sword). Item tags join the wielder's tags, so with two weapons both would apply to every hit.
+    # The attack names its weapon type (ability tag weapon.sword); the item only says what is
+    # carried
+    # (equip.sword). Item tags join the wielder's tags, so with two weapons both would apply to
+    # every hit.
     db.equipment["oct_sword_item"] = dataclasses.replace(
-        weapon, equipment_id="oct_sword_item", granted_abilities=("oct_sword",), tags=("weapon", "equip.sword")
+        weapon,
+        equipment_id="oct_sword_item",
+        granted_abilities=("oct_sword",),
+        tags=("weapon", "equip.sword"),
     )
     db.equipment["oct_bow_item"] = dataclasses.replace(
         weapon,
@@ -55,26 +69,38 @@ def _project():
             outcome_tags=("outcome.weak",),
         ),
         InteractionRule(
-            "oct_resist_bow", source_tags_all=("weapon.bow",), target_tags_all=("resist.bow",), multiplier=0.5
+            "oct_resist_bow",
+            source_tags_all=("weapon.bow",),
+            target_tags_all=("resist.bow",),
+            multiplier=0.5,
         ),
-        InteractionRule("oct_broken", target_tags_all=("state.broken",), multiplier=2.0, priority=-1),
+        InteractionRule(
+            "oct_broken", target_tags_all=("state.broken",), multiplier=2.0, priority=-1
+        ),
         InteractionRule("oct_boost_2", source_tags_all=("boost.2", "boost.power"), multiplier=2.5),
     ):
         db.interaction_rules[rule.rule_id] = rule
     states = library.states
-    states._definitions["broken"] = dataclasses.replace(states.get("broken"), contributed_tags=("state.broken",))
+    states._definitions["broken"] = dataclasses.replace(
+        states.get("broken"), contributed_tags=("state.broken",)
+    )
     states._definitions["oct_venom"] = StateDefinition(
         "oct_venom",
         10,
         periodic=(
             PeriodicEffect(
                 1,
-                Effect("oct_venom.tick", (EffectOperation(EffectOperationKind.RESOURCE_DELTA, DAMAGE, -10),)),
+                Effect(
+                    "oct_venom.tick",
+                    (EffectOperation(EffectOperationKind.RESOURCE_DELTA, DAMAGE, -10),),
+                ),
                 growth=1.0,  # 10, 20, 30... a poison that worsens every turn
             ),
         ),
     )
-    db.battle_state_policies["oct_venom"] = BattleStatePolicy("oct_venom", tick_trigger="rpg.battle.turn_ended")
+    db.battle_state_policies["oct_venom"] = BattleStatePolicy(
+        "oct_venom", tick_trigger="rpg.battle.turn_ended"
+    )
     return project
 
 
@@ -82,7 +108,9 @@ def _battle(project=None):
     project, game = _session(project or _project())
     hero = game.save.rpg_state.party_active_actor_ids[0]
     loadout = game.save.rpg_state.loadouts[hero]
-    loadout._slots["weapon"] = EquipmentSlotDefinition("weapon", capacity=2)  # this class carries two weapons
+    loadout._slots["weapon"] = EquipmentSlotDefinition(
+        "weapon", capacity=2
+    )  # this class carries two weapons
     loadout._equipped.setdefault("weapon", [])
     loadout._equipped["weapon"].clear()
     game.equip_definition(hero, "oct_sword_item", replace=False)
@@ -97,7 +125,9 @@ def _battle(project=None):
 
 def _hit(game, hero, boss, ability_id, **kwargs):
     pool = game.battle.member(boss).subject.resources
-    pool.set_current(DAMAGE, max(pool.current(DAMAGE), 8000))  # never let the boss fall mid-measurement
+    pool.set_current(
+        DAMAGE, max(pool.current(DAMAGE), 8000)
+    )  # never let the boss fall mid-measurement
     before = pool.current(DAMAGE)
     game.use_ability(hero, ability_id, (boss,), **kwargs)
     return before - pool.current(DAMAGE)
@@ -136,17 +166,25 @@ def test_boost_repeats_attacks_and_powers_spells():
     assert level == 2
     single = _hit(game, hero, boss, "oct_bow")
     game.battle.battle_resources.change(hero, rules.boost_resource_id, 10)
-    assert _hit(game, hero, boss, "oct_bow", boost_level=2) == pytest.approx(single * 3)  # attack: 3 hits
+    assert _hit(game, hero, boss, "oct_bow", boost_level=2) == pytest.approx(
+        single * 3
+    )  # attack: 3 hits
     plain = _hit(game, hero, boss, "oct_fire")
     game.battle.battle_resources.change(hero, rules.boost_resource_id, 10)
-    assert _hit(game, hero, boss, "oct_fire", boost_level=2) == pytest.approx(plain * 2.5)  # spell: one, x2.5
-    assert not game.battle.member(hero).subject.tags.contains("boost.2")  # boost tags last one action
+    assert _hit(game, hero, boss, "oct_fire", boost_level=2) == pytest.approx(
+        plain * 2.5
+    )  # spell: one, x2.5
+    assert not game.battle.member(hero).subject.tags.contains(
+        "boost.2"
+    )  # boost tags last one action
 
 
 def test_secondary_job_and_a_poison_that_worsens_every_turn():
     game, hero, boss = _battle()
     progress = game.save.rpg_state.actor_progression[hero]
-    alternate = next((c for c in progress.unlocked_class_ids if c not in progress.active_class_ids), None)
+    alternate = next(
+        (c for c in progress.unlocked_class_ids if c not in progress.active_class_ids), None
+    )
     if alternate is not None:  # the secondary job is active and its build applies
         game.set_secondary_class(hero, alternate)
         assert game.save.rpg_state.actor_progression[hero].active_class_ids[-1] == alternate
@@ -169,16 +207,26 @@ def test_status_definitions_and_poison_growth_are_editable_in_game_data():
 
     project = _project()
     document = EditorDocument(project)
-    adapter = next(a for a in IntegratedAuthoringControllers(document).rpg_categories() if a.category_id == "states")
+    adapter = next(
+        a
+        for a in IntegratedAuthoringControllers(document).rpg_categories()
+        if a.category_id == "states"
+    )
     assert adapter.label == "Status Definitions" and "oct_venom" in adapter.ids()
     plain = StateDefinition(
         "oct_burn",
         3,
-        periodic=(PeriodicEffect(1, Effect("b", (EffectOperation(EffectOperationKind.RESOURCE_DELTA, DAMAGE, -5),))),),
+        periodic=(
+            PeriodicEffect(
+                1, Effect("b", (EffectOperation(EffectOperationKind.RESOURCE_DELTA, DAMAGE, -5),))
+            ),
+        ),
     )
     adapter.create("oct_burn", plain)
     shown = with_optional_fields(adapter.encode(adapter.get("oct_burn")), adapter.get("oct_burn"))
-    assert shown["periodic"][0]["growth"] == 0.0 and shown["periodic"][0]["growth_mode"] == "add"  # discoverable
+    assert (
+        shown["periodic"][0]["growth"] == 0.0 and shown["periodic"][0]["growth_mode"] == "add"
+    )  # discoverable
     shown["periodic"][0].update(growth=2.0, growth_mode="multiply", growth_cap=8.0)
     adapter.edit("oct_burn", adapter.decode(shown))
     edited = project.gameplay_library.states.get("oct_burn").periodic[0]
@@ -187,15 +235,20 @@ def test_status_definitions_and_poison_growth_are_editable_in_game_data():
     assert project.gameplay_library.states.get("oct_burn").periodic[0].growth == 0.0
 
 
-# -- divine skills, weapon requirements, mixed hits, giving boost, pets, concoct, ailments -------------------
+# -- divine skills, weapon requirements, mixed hits, giving boost, pets, concoct, ailments --------
 
 
 def _with(project, ability_id, **changes):
-    """A copy of strike with ``changes``, granted by the sword (so the hero knows it), before the battle starts."""
+    """A copy of strike with ``changes``, granted by the sword (so the hero knows it), before the
+    battle starts."""
     db, abilities = project.rpg_database, project.gameplay_library.abilities
-    abilities._definitions[ability_id] = dataclasses.replace(abilities.get("strike"), ability_id=ability_id, **changes)
+    abilities._definitions[ability_id] = dataclasses.replace(
+        abilities.get("strike"), ability_id=ability_id, **changes
+    )
     if "strike" in db.battle_targeting:
-        db.battle_targeting[ability_id] = dataclasses.replace(db.battle_targeting["strike"], ability_id=ability_id)
+        db.battle_targeting[ability_id] = dataclasses.replace(
+            db.battle_targeting["strike"], ability_id=ability_id
+        )
     sword = db.equipment["oct_sword_item"]
     db.equipment["oct_sword_item"] = dataclasses.replace(
         sword, granted_abilities=(*sword.granted_abilities, ability_id)
@@ -204,7 +257,9 @@ def _with(project, ability_id, **changes):
 
 
 def test_a_divine_skill_costs_several_boost_points_and_says_why_it_waits():
-    game, hero, boss = _battle(_with(_project(), "oct_divine", tags=("weapon.sword",), battle_costs={BP: 3}))
+    game, hero, boss = _battle(
+        _with(_project(), "oct_divine", tags=("weapon.sword",), battle_costs={BP: 3})
+    )
     bp = game.battle.battle_resources
     bp.change(hero, BP, -bp.current(hero, BP))
     bp.change(hero, BP, 2)
@@ -220,7 +275,9 @@ def test_a_divine_skill_costs_several_boost_points_and_says_why_it_waits():
 def test_a_skill_can_require_two_kinds_of_weapon_equipped():
     from asteria.gameplay.conditions import ConditionGroup, TagCondition
 
-    both = ConditionGroup((TagCondition("source", "equip.sword"), TagCondition("source", "equip.bow")))
+    both = ConditionGroup(
+        (TagCondition("source", "equip.sword"), TagCondition("source", "equip.bow"))
+    )
     game, hero, boss = _battle(_with(_project(), "oct_twin", conditions=both))
     assert game.ability_unavailable(hero, "oct_twin") == ""
     assert _hit(game, hero, boss, "oct_twin") > 0
@@ -231,15 +288,24 @@ def test_a_skill_can_require_two_kinds_of_weapon_equipped():
 
 
 def test_one_skill_lands_several_hits_of_different_damage_types():
-    hits = [{"tags": ["weapon.sword"]}, {"tags": ["weapon.bow"]}, {"tags": ["weapon.sword"], "power": 0.5}]
+    hits = [
+        {"tags": ["weapon.sword"]},
+        {"tags": ["weapon.bow"]},
+        {"tags": ["weapon.sword"], "power": 0.5},
+    ]
     game, hero, boss = _battle(_with(_project(), "oct_flurry", tags=(), hits=hits))
     sword = _hit(game, hero, boss, "oct_sword")
     shield = game.battle.battle_resources.current(boss, "stagger")
     total = _hit(game, hero, boss, "oct_flurry")
     bow = sword / 3  # x1.5 weakness against x0.5 resistance
     assert total == pytest.approx(sword + bow + sword * 0.5)
-    assert game.battle.battle_resources.current(boss, "stagger") == shield - 2  # each weak hit breaks a shield point
-    assert len([e for e in game.battle_log if e.kind == "action" and e.ability_id == "oct_flurry"]) == 3
+    assert (
+        game.battle.battle_resources.current(boss, "stagger") == shield - 2
+    )  # each weak hit breaks a shield point
+    assert (
+        len([e for e in game.battle_log if e.kind == "action" and e.ability_id == "oct_flurry"])
+        == 3
+    )
 
 
 def test_a_skill_gives_boost_points_to_an_ally():
@@ -263,7 +329,11 @@ def test_a_skill_gives_boost_points_to_an_ally():
 def test_a_skill_calls_a_pet_into_the_battle():
     project = _project()
     pet = "hero_07"  # in the roster, kept in reserve (the test save fields hero_01..06)
-    _with(project, "oct_unleash", commands=[{"command": "SUMMON", "args": {"actor_id": pet, "owner_id": "@actor"}}])
+    _with(
+        project,
+        "oct_unleash",
+        commands=[{"command": "SUMMON", "args": {"actor_id": pet, "owner_id": "@actor"}}],
+    )
     game, hero, boss = _battle(project)
     _hit(game, hero, boss, "oct_unleash")
     assert pet in game.active_hero_ids()
@@ -271,16 +341,27 @@ def test_a_skill_calls_a_pet_into_the_battle():
 
 
 def test_concoct_combines_ingredients_into_an_item_that_acts_at_once():
-    from asteria.rpg.composition import CompositionOutput, CompositionRecipeDefinition, CompositionSelection
+    from asteria.rpg.composition import (
+        CompositionOutput,
+        CompositionRecipeDefinition,
+        CompositionSelection,
+    )
 
     project = _with(
-        _with(_project(), "oct_bomb_blast", tags=("damage.fire",)), "oct_concoct", concoct_station="concoct"
+        _with(_project(), "oct_bomb_blast", tags=("damage.fire",)),
+        "oct_concoct",
+        concoct_station="concoct",
     )
     db = project.rpg_database
-    db.items["oct_fire_bomb"] = ItemDefinition("oct_fire_bomb", "Fire Bomb", battle_ability="oct_bomb_blast")
+    db.items["oct_fire_bomb"] = ItemDefinition(
+        "oct_fire_bomb", "Fire Bomb", battle_ability="oct_bomb_blast"
+    )
     db.composition_recipes["oct_fire_bomb"] = CompositionRecipeDefinition(
         "oct_fire_bomb",
-        selections=[CompositionSelection("base", ["healing_herb"]), CompositionSelection("catalyst", ["fire_dust"])],
+        selections=[
+            CompositionSelection("base", ["healing_herb"]),
+            CompositionSelection("catalyst", ["fire_dust"]),
+        ],
         outputs=[CompositionOutput("oct_fire_bomb")],
         station="concoct",
     )
@@ -294,13 +375,22 @@ def test_concoct_combines_ingredients_into_an_item_that_acts_at_once():
     assert game.ability_unavailable(hero, "oct_concoct") == ""
     pool = game.battle.member(boss).subject.resources
     pool.set_current(DAMAGE, 8000)
-    game.concoct(hero, "oct_concoct", {"base": ["healing_herb"], "catalyst": ["fire_dust"]}, (boss,))
+    game.concoct(
+        hero, "oct_concoct", {"base": ["healing_herb"], "catalyst": ["fire_dust"]}, (boss,)
+    )
     assert pool.current(DAMAGE) < 8000  # the bomb went off on the boss
-    assert inventory.count("healing_herb") == inventory.count("fire_dust") == inventory.count("oct_fire_bomb") == 0
+    assert (
+        inventory.count("healing_herb")
+        == inventory.count("fire_dust")
+        == inventory.count("oct_fire_bomb")
+        == 0
+    )
     inventory.add("healing_herb", 1)
     inventory.add("iron_ore", 1)
     with pytest.raises(Exception, match="make nothing"):  # no recipe of the station combines these
-        game.concoct(hero, "oct_concoct", {"base": ["healing_herb"], "catalyst": ["iron_ore"]}, (boss,))
+        game.concoct(
+            hero, "oct_concoct", {"base": ["healing_herb"], "catalyst": ["iron_ore"]}, (boss,)
+        )
 
 
 def test_ailments_sleep_and_silence_come_from_authored_policies():

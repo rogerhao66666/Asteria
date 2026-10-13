@@ -1,4 +1,5 @@
-"""EDT-19: Profiler panel in the editor, fed by the running game's RuntimeProfiler over the debug channel."""
+"""EDT-19: Profiler panel in the editor, fed by the running game's RuntimeProfiler over the debug
+channel."""
 
 import pytest
 
@@ -52,7 +53,9 @@ def test_profiler_dock_shows_the_live_profile(runtime):
     assert report["frames"] >= 29 and "fps" in widget.summary.text()
     names = [widget.sections.item(r, 0).text() for r in range(widget.sections.rowCount())]
     assert "update" in names and widget.counters.rowCount() >= 1
-    assert widget.unsupported.count() == 2 and widget.unsupported.item(0).text().startswith("draw_calls")
+    assert widget.unsupported.count() == 2 and widget.unsupported.item(0).text().startswith(
+        "draw_calls"
+    )
     detached = ProfilerWidget(lambda: None)
     assert detached.refresh() is None and "not attached" in detached.summary.text()
     client.close()

@@ -45,7 +45,11 @@ def regs():
 def test_large_image_explicit_error():
     q = ImageRequest("i", "x.png", (8192, 4096))
     x = regs().validate(q, BackendCapabilities(max_texture_size=(4096, 4096)))
-    assert not x.ok and x.issues[0].code == "backend.texture.too_large" and x.request.size == (8192, 4096)
+    assert (
+        not x.ok
+        and x.issues[0].code == "backend.texture.too_large"
+        and x.request.size == (8192, 4096)
+    )
 
 
 def test_supported_image_unchanged():
@@ -139,13 +143,25 @@ def test_checked_factory_passes_exact_request():
     calls = []
     q = ImageRequest("i", "x.png", (512, 256))
     f = capability_checked_factory(
-        regs(), BackendCapabilities(max_texture_size=(1024, 1024)), lambda q, c: calls.append(q) or "h"
+        regs(),
+        BackendCapabilities(max_texture_size=(1024, 1024)),
+        lambda q, c: calls.append(q) or "h",
     )
     assert f(q, None) == "h" and calls == [q]
 
 
 def test_vfx_clip_validation():
-    v = VFXRequest("fx", "v", clip_request("fx", "v", clip()), "socket", (0.0, 0.0), "tip", (1.0, 1.0), 0.0, ())
+    v = VFXRequest(
+        "fx",
+        "v",
+        clip_request("fx", "v", clip()),
+        "socket",
+        (0.0, 0.0),
+        "tip",
+        (1.0, 1.0),
+        0.0,
+        (),
+    )
     x = regs().validate(v, BackendCapabilities(blend_modes=frozenset({"alpha"})))
     assert x.issues[0].code == "backend.blend.unsupported"
 

@@ -45,7 +45,9 @@ class AssetRegistry:
         if asset.asset_id in self._assets and not replace:
             raise KeyError(asset.asset_id)
         self._assets[asset.asset_id] = asset
-        self._events.append(AssetEvent("replace" if replace else "register", asset.asset_id, asset.kind))
+        self._events.append(
+            AssetEvent("replace" if replace else "register", asset.asset_id, asset.kind)
+        )
         return CanonicalAssetRef(asset.asset_id)
 
     def resolve(self, ref):
@@ -60,7 +62,11 @@ class AssetRegistry:
 
     def query(self, kind=None, tags=()):
         wanted = set(tags)
-        return tuple(a for a in self._assets.values() if (kind is None or a.kind == kind) and wanted.issubset(a.tags))
+        return tuple(
+            a
+            for a in self._assets.values()
+            if (kind is None or a.kind == kind) and wanted.issubset(a.tags)
+        )
 
     def snapshot(self):
         return tuple(self._assets.values())

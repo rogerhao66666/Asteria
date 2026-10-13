@@ -44,7 +44,9 @@ def test_opaque_member_ids_work_without_player_enemy_keywords():
 
 
 def test_hud_zones_are_explicit_and_independent_from_battlefield_zone():
-    result = BattleSideviewTemplateRuntime().resolve(left_member_ids=("a",), right_member_ids=("b",))
+    result = BattleSideviewTemplateRuntime().resolve(
+        left_member_ids=("a",), right_member_ids=("b",)
+    )
     assert dict(result.hud_zone_by_member) == {"a": "hud.left", "b": "hud.right"}
 
 
@@ -76,7 +78,9 @@ def test_project_profile_can_choose_presentation_visibility_cap_without_gameplay
 
 def test_duplicate_member_across_zones_is_rejected():
     with pytest.raises(ValueError, match="duplicate member"):
-        BattleSideviewTemplateRuntime().resolve(left_member_ids=("same",), right_member_ids=("same",))
+        BattleSideviewTemplateRuntime().resolve(
+            left_member_ids=("same",), right_member_ids=("same",)
+        )
 
 
 def test_project_can_reverse_or_replace_visual_grammar_without_core_change():
@@ -87,7 +91,9 @@ def test_project_can_reverse_or_replace_visual_grammar_without_core_change():
         left_hud_zone_id="hud.a",
         right_hud_zone_id="hud.b",
     )
-    result = BattleSideviewTemplateRuntime(profile).resolve(left_member_ids=("x",), right_member_ids=("y",))
+    result = BattleSideviewTemplateRuntime(profile).resolve(
+        left_member_ids=("x",), right_member_ids=("y",)
+    )
     assert {x.member_id: x.facing for x in result.placements} == {"x": "left", "y": "right"}
     assert dict(result.hud_zone_by_member) == {"x": "hud.a", "y": "hud.b"}
 

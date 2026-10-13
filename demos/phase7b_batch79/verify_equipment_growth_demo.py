@@ -1,4 +1,5 @@
 """Verify Batch 79 using the delivered canonical Asteria project and RPG save."""
+
 from pathlib import Path
 import json
 

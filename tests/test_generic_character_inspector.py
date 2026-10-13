@@ -44,11 +44,17 @@ def test_create_character_from_any_walking_sheet_links_entity_to_actor():
     assert entity.get(Animator2DComponent).clip_set_id == "animation.ranger"
     assert entity.get(ActorLinkComponent).actor_id == "actor.ranger"
     assert project.rpg_database.actors["actor.ranger"].display_name == "Ranger"
-    assert dict(project.assets.resolve("character/ranger/walking").metadata)["frame_size"] == (64, 64)
+    assert dict(project.assets.resolve("character/ranger/walking").metadata)["frame_size"] == (
+        64,
+        64,
+    )
     assert SHEET.is_file()  # the command never owns or deletes a referenced sheet
 
     command.undo()
-    assert scene.get_entity(created.entity_id) is None and "actor.ranger" not in project.rpg_database.actors
+    assert (
+        scene.get_entity(created.entity_id) is None
+        and "actor.ranger" not in project.rpg_database.actors
+    )
     command.redo()
     assert scene.get_entity(created.entity_id) is not None
 
@@ -68,9 +74,15 @@ def test_actor_appearance_updates_every_linked_entity_in_one_undo_step():
     ).execute()
     entity = scene.get_entity(created.entity_id)
 
-    assert apply_actor_appearance(document, "actor.mage", "sheet.other", frame_index=4, flip_x=True)
+    assert apply_actor_appearance(
+        document, "actor.mage", "sheet.other", frame_index=4, flip_x=True
+    )
     sprite = entity.get(SpriteRenderer2D)
-    assert (sprite.sprite_sheet_asset_id, sprite.frame_index, sprite.flip_x) == ("sheet.other", 4, True)
+    assert (sprite.sprite_sheet_asset_id, sprite.frame_index, sprite.flip_x) == (
+        "sheet.other",
+        4,
+        True,
+    )
     assert get_actor_appearance(document, "actor.mage").sprite_sheet_asset_id == "sheet.other"
     document.undo()
     assert sprite.sprite_sheet_asset_id == "character/mage/walking"
@@ -98,14 +110,19 @@ def test_inspector_offers_actor_sprite_and_clip_choices():
         return [value for _, value in inspector_choices(document, component, field)]
 
     assert choices(entity.get(ActorLinkComponent), "actor_id") == ["", "actor.knight"]
-    assert choices(entity.get(SpriteRenderer2D), "sprite_sheet_asset_id") == ["", "character/knight/walking"]
+    assert choices(entity.get(SpriteRenderer2D), "sprite_sheet_asset_id") == [
+        "",
+        "character/knight/walking",
+    ]
     assert choices(entity.get(Animator2DComponent), "clip_set_id") == ["", "animation.knight"]
     link = entity.get(ActorLinkComponent)
     link.actor_id = "actor.gone"
     assert choices(link, "actor_id")[-1] == "actor.gone"  # a dangling id stays visible
 
 
-def test_editor_places_sheet_character_copies_it_and_lists_it_with_a_thumbnail(tmp_path, monkeypatch):
+def test_editor_places_sheet_character_copies_it_and_lists_it_with_a_thumbnail(
+    tmp_path, monkeypatch
+):
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox
 
@@ -124,7 +141,10 @@ def test_editor_places_sheet_character_copies_it_and_lists_it_with_a_thumbnail(t
         assert visual.walking_asset.source.uri == str(Path("characters") / "field_hero.png")
 
         created = window._place_character_at((4, 5))
-        assert created is not None and created.entity.get(ActorLinkComponent).actor_id == "actor.field_hero"
+        assert (
+            created is not None
+            and created.entity.get(ActorLinkComponent).actor_id == "actor.field_hero"
+        )
         assert created.entity.get(Transform).x > 0
 
         window.refresh_asset_list()
@@ -138,9 +158,13 @@ def test_editor_places_sheet_character_copies_it_and_lists_it_with_a_thumbnail(t
         widgets = [table.cellWidget(r, 1) for r in range(table.rowCount())]
         assert any(isinstance(w, QComboBox) for w in widgets)  # sprite sheet picker
         combo = next(w for w in widgets if isinstance(w, QComboBox))
-        assert not combo.currentText().startswith("Missing")  # the placed sheet is a loaded choice at once
+        assert not combo.currentText().startswith(
+            "Missing"
+        )  # the placed sheet is a loaded choice at once
         rows = [r for r in range(table.rowCount()) if table.cellWidget(r, 1) is not None]
-        assert all(table.item(r, 1).text() == "" for r in rows)  # no value text beneath the widgets
+        assert all(
+            table.item(r, 1).text() == "" for r in rows
+        )  # no value text beneath the widgets
         assert any(isinstance(w, QCheckBox) for w in widgets)  # flip_x / visible
     finally:
         window.document.mark_saved()

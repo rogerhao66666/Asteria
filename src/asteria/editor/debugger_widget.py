@@ -1,4 +1,5 @@
-"""Debugger dock (EDT-10): inspect a running play-test and run debug actions over the debug channel."""
+"""Debugger dock (EDT-10): inspect a running play-test and run debug actions over the debug
+channel."""
 
 from __future__ import annotations
 
@@ -36,7 +37,10 @@ ACTIONS = {
     "remove_state": ("Remove state (battle)", [("member_id", "text"), ("state_id", "text")]),
     "teleport": ("Teleport player", [("x", "number"), ("y", "number")]),
     "trigger_event": ("Trigger event", [("program_id", "text")]),
-    "spawn_enemy": ("Spawn enemy", [("enemy_id", "text"), ("prefab_id", "text"), ("x", "number"), ("y", "number")]),
+    "spawn_enemy": (
+        "Spawn enemy",
+        [("enemy_id", "text"), ("prefab_id", "text"), ("x", "number"), ("y", "number")],
+    ),
     "kill_enemy": ("Kill enemy", [("target_id", "text")]),
     "set_switch": ("Set switch", [("name", "text"), ("value", "bool")]),
     "set_variable": ("Set variable", [("name", "text"), ("value", "text")]),
@@ -155,7 +159,10 @@ class DebuggerWidget(QWidget):
         for key, value in snapshot.items():
             item = _fill(self.tree, key, value)
             item.setExpanded(key in expanded or key in {"player", "party", "battle"})
-        self.status.setText(f"Attached — mode {snapshot.get('mode')}, scene {snapshot.get('scene', {}).get('name')}")
+        self.status.setText(
+            f"Attached — mode {snapshot.get('mode')}, scene "
+            f"{snapshot.get('scene', {}).get('name')}"
+        )
         return snapshot
 
     # -- actions --------------------------------------------------------------------

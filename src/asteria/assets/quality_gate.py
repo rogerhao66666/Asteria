@@ -22,7 +22,9 @@ class QualityEvidence:
 
     @property
     def final_pass(self) -> bool:
-        return all(x is GateStatus.PASS for x in (self.technical, self.art, self.motion, self.in_scene))
+        return all(
+            x is GateStatus.PASS for x in (self.technical, self.art, self.motion, self.in_scene)
+        )
 
 
 @dataclass(frozen=True)
@@ -71,7 +73,11 @@ class PackQualityGate:
             q = (doc.get("payload") or {}).get("quality")
             if not isinstance(q, dict):
                 for key in self.KEYS:
-                    report.issues.append(QualityIssue(aid, key, GateStatus.REVIEW_REQUIRED, "quality evidence missing"))
+                    report.issues.append(
+                        QualityIssue(
+                            aid, key, GateStatus.REVIEW_REQUIRED, "quality evidence missing"
+                        )
+                    )
                 continue
             ev = evidence_from_dict(q)
             for key, status in (
@@ -81,5 +87,7 @@ class PackQualityGate:
                 ("in_scene", ev.in_scene),
             ):
                 if status is not GateStatus.PASS:
-                    report.issues.append(QualityIssue(aid, key, status, f"{key} gate is {status.value}"))
+                    report.issues.append(
+                        QualityIssue(aid, key, status, f"{key} gate is {status.value}")
+                    )
         return report

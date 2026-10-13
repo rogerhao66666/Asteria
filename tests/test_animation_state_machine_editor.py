@@ -1,11 +1,15 @@
-"""ANI-02: graphical animation state machine editor; the authored machine drives the runtime clip set."""
+"""ANI-02: graphical animation state machine editor; the authored machine drives the runtime clip
+set."""
 
 from pathlib import Path
 
 import pytest
 
 from asteria.editor import EditorDocument
-from asteria.editor.animation_state_machine_authoring import AnimationStateMachineAuthoring, StateMachineAuthoringError
+from asteria.editor.animation_state_machine_authoring import (
+    AnimationStateMachineAuthoring,
+    StateMachineAuthoringError,
+)
 from asteria.project import Project
 
 REF = Path(__file__).parents[1] / "reference_projects/complex_reference_rpg/project.asteria.json"
@@ -36,7 +40,13 @@ def test_states_transitions_and_parameters_are_undoable_edits(api):
     assert definition.initial == "idle" and set(definition.states) == {"idle", "attack", "down"}
     assert api.layout(SHEET)["attack"] == [200.0, 40.0]
     assert api.simulate(
-        SHEET, [(0.1, {"attacking": True}, []), (0.1, {"attacking": False}, []), (3, {}, []), (0.1, {}, [])]
+        SHEET,
+        [
+            (0.1, {"attacking": True}, []),
+            (0.1, {"attacking": False}, []),
+            (3, {}, []),
+            (0.1, {}, []),
+        ],
     ) == [
         "idle",
         "attack",
@@ -44,7 +54,9 @@ def test_states_transitions_and_parameters_are_undoable_edits(api):
         "attack",
         "idle",
     ]
-    assert api.simulate(SHEET, [(0.1, {}, ["hit"])])[-1] == "down"  # any-state transition with a trigger
+    assert (
+        api.simulate(SHEET, [(0.1, {}, ["hit"])])[-1] == "down"
+    )  # any-state transition with a trigger
     with pytest.raises(StateMachineAuthoringError, match="does not have"):
         api.add_state(SHEET, "fly", "fly_clip_missing")
     with pytest.raises(StateMachineAuthoringError, match="initial"):
@@ -63,7 +75,9 @@ def test_the_runtime_clip_set_carries_the_authored_machine(api):
     from asteria.runtime.systems import AnimationSystem
 
     _build(api)
-    resolver = BattleVisualResolver(api.document.project, lambda uri: api.animation.image_size(SHEET))
+    resolver = BattleVisualResolver(
+        api.document.project, lambda uri: api.animation.image_size(SHEET)
+    )
     assert resolver.clip_set(SHEET).state_machine is not None
     scene = Scene("S")
     system = AnimationSystem(resolver.clip_set)
@@ -106,4 +120,7 @@ def test_graph_editor_builds_moves_and_previews(api):
     assert widget.graph.nodes["attack"].pos().x() == 300.0
     widget.preview_values.setText("attacking=true")
     assert widget.preview_step(0.1) == "attack" and "attack" in widget.preview_label.text()
-    assert widget.parse_conditions("speed > 0.5; grounded") == [("speed", ">", 0.5), ("grounded", "==", True)]
+    assert widget.parse_conditions("speed > 0.5; grounded") == [
+        ("speed", ">", 0.5),
+        ("grounded", "==", True),
+    ]

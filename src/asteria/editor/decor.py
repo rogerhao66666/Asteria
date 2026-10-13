@@ -1,16 +1,21 @@
 """Icons and colour roles for the editor's controls, applied app-wide.
 
-Buttons, tabs and pickers are made in many editor modules; instead of touching each one, ``install(app)``
+Buttons, tabs and pickers are made in many editor modules; instead of touching each one,
+``install(app)``
 watches widgets as they appear and gives them an icon and a colour role from their text:
 
-* buttons - "Delete" / "Remove" are ``danger`` (red), "Apply" / "Save" / "Run" / "Create" are ``primary``,
+* buttons - "Delete" / "Remove" are ``danger`` (red), "Apply" / "Save" / "Run" / "Create" are
+  ``primary``,
   "Add" / "New" get a green plus; every known verb gets its icon
-* tab titles, and entries of combo boxes marked ``decorate=True`` (database categories), get the matching icon
+* tab titles, and entries of combo boxes marked ``decorate=True`` (database categories), get the
+  matching icon
 
 It only sets icons and the ``role`` property the theme styles; it never changes behaviour.
 
-``compact`` keeps panels narrow so more columns fit on screen (``compact_widget``): combo boxes stop
-growing to their longest entry (the drop-down still shows it), long one-line labels wrap, and a long
+``compact`` keeps panels narrow so more columns fit on screen (``compact_widget``): combo boxes
+stop
+growing to their longest entry (the drop-down still shows it), long one-line labels wrap, and a
+long
 group title keeps its name while its explanation moves into a wrapped hint inside the group.
 """
 
@@ -154,7 +159,9 @@ def decorate_combo(combo):
                 combo.setItemIcon(index, icon(name))
 
 
-COMBO_CHARS = 8  # a combo box shows about this many characters; its drop-down is as wide as it needs
+COMBO_CHARS = (
+    8  # a combo box shows about this many characters; its drop-down is as wide as it needs
+)
 WRAP_AT = 48  # one-line labels longer than this wrap
 COMBO_MIN_WIDTH = 96
 SPIN_MIN_WIDTH = 64
@@ -162,12 +169,19 @@ SPIN_MIN_WIDTH = 64
 
 def compact_widget(widget):
     if isinstance(widget, QComboBox):
-        if widget.sizeAdjustPolicy() != QComboBox.AdjustToMinimumContentsLengthWithIcon and not widget.isEditable():
+        if (
+            widget.sizeAdjustPolicy() != QComboBox.AdjustToMinimumContentsLengthWithIcon
+            and not widget.isEditable()
+        ):
             widget.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
             widget.setMinimumContentsLength(COMBO_CHARS)
         if widget.minimumWidth() == 0:
-            widget.setMinimumWidth(COMBO_MIN_WIDTH)  # explicit: the styled size hint ignores the policy
-        if widget.property("full_text_tip") is None:  # a narrow combo box still tells its whole value
+            widget.setMinimumWidth(
+                COMBO_MIN_WIDTH
+            )  # explicit: the styled size hint ignores the policy
+        if (
+            widget.property("full_text_tip") is None
+        ):  # a narrow combo box still tells its whole value
             widget.setProperty("full_text_tip", True)
             widget.currentTextChanged.connect(widget.setToolTip)
             widget.setToolTip(widget.currentText())
@@ -176,7 +190,12 @@ def compact_widget(widget):
             widget.setMinimumWidth(SPIN_MIN_WIDTH)
     elif isinstance(widget, QLabel):
         text = widget.text()
-        if not widget.wordWrap() and len(text) > WRAP_AT and "\n" not in text and widget.pixmap().isNull():
+        if (
+            not widget.wordWrap()
+            and len(text) > WRAP_AT
+            and "\n" not in text
+            and widget.pixmap().isNull()
+        ):
             widget.setWordWrap(True)
     elif isinstance(widget, QGroupBox) and widget.property("compacted") is None:
         widget.setProperty("compacted", True)
@@ -206,8 +225,14 @@ def _widen_popup(container):
     if not isinstance(combo, QComboBox):
         return
     metrics = combo.fontMetrics()
-    widest = max((metrics.horizontalAdvance(combo.itemText(i)) for i in range(combo.count())), default=0)
-    icon = combo.iconSize().width() + 8 if any(not combo.itemIcon(i).isNull() for i in range(combo.count())) else 0
+    widest = max(
+        (metrics.horizontalAdvance(combo.itemText(i)) for i in range(combo.count())), default=0
+    )
+    icon = (
+        combo.iconSize().width() + 8
+        if any(not combo.itemIcon(i).isNull() for i in range(combo.count()))
+        else 0
+    )
     container.setMinimumWidth(min(520, max(combo.width(), widest + icon + 44)))
 
 
@@ -235,7 +260,9 @@ def flow_button_rows(layout):
             flow = FlowLayout(spacing=max(4, child.spacing()))
             if leading_stretch:
                 flow.setAlignment(Qt.AlignRight)
-            for widget in [child.itemAt(i).widget() for i in range(child.count()) if child.itemAt(i).widget()]:
+            for widget in [
+                child.itemAt(i).widget() for i in range(child.count()) if child.itemAt(i).widget()
+            ]:
                 child.removeWidget(widget)
                 flow.addWidget(widget)
             layout.takeAt(index)
@@ -246,7 +273,9 @@ def flow_button_rows(layout):
 
 
 def _button_row(row):
-    widgets = [row.itemAt(i).widget() for i in range(row.count()) if row.itemAt(i).widget() is not None]
+    widgets = [
+        row.itemAt(i).widget() for i in range(row.count()) if row.itemAt(i).widget() is not None
+    ]
     return len(widgets) >= 2 and all(isinstance(w, QAbstractButton) for w in widgets)
 
 
@@ -261,7 +290,9 @@ def compact(widget):
 def decorate(widget):
     """Decorate ``widget`` and everything inside it (safe to call again)."""
     for w in (widget, *widget.findChildren(QObject)):
-        if isinstance(w, QPushButton) or (isinstance(w, QToolButton) and w.text() and not w.defaultAction()):
+        if isinstance(w, QPushButton) or (
+            isinstance(w, QToolButton) and w.text() and not w.defaultAction()
+        ):
             decorate_button(w)
         elif isinstance(w, QTabWidget):
             decorate_tabs(w)
@@ -277,7 +308,9 @@ class _Decorator(QObject):
                 compact_widget(obj)
             elif obj.metaObject().className() == "QComboBoxPrivateContainer":
                 _widen_popup(obj)
-            layout = QWidget.layout(obj) if isinstance(obj, QWidget) else None  # some editors override layout()
+            layout = (
+                QWidget.layout(obj) if isinstance(obj, QWidget) else None
+            )  # some editors override layout()
             if isinstance(layout, QFormLayout):
                 _wrap_form(layout)
             elif isinstance(layout, QBoxLayout) and obj.property("flowed") is None:
@@ -287,7 +320,9 @@ class _Decorator(QObject):
                 decorate_tabs(obj)
             elif isinstance(obj, QComboBox) and obj.property("decorate") is True:
                 decorate_combo(obj)
-            elif isinstance(obj, QAbstractButton) and not (isinstance(obj, QToolButton) and obj.defaultAction()):
+            elif isinstance(obj, QAbstractButton) and not (
+                isinstance(obj, QToolButton) and obj.defaultAction()
+            ):
                 if isinstance(obj, QPushButton) or obj.text():
                     decorate_button(obj)
         return False

@@ -11,11 +11,30 @@ from asteria.runtime import Camera2D
 
 def _entries():
     return (
-        BattleActionEntry("slash", "Slash", category="weapon", kind="ability", order=10, cost_text="3 SP"),
+        BattleActionEntry(
+            "slash", "Slash", category="weapon", kind="ability", order=10, cost_text="3 SP"
+        ),
         BattleActionEntry("guard", "Guard", category="stance", kind="command", order=20),
-        BattleActionEntry("fire", "Fire", category="magic", kind="ability", order=30, cost_text="8 MP", tags=("fire",)),
-        BattleActionEntry("heal", "Heal", category="magic", kind="ability", order=40, cost_text="6 MP"),
-        BattleActionEntry("mix", "Concoct", category="craft", kind="workflow", order=50, detail="Combine ingredients"),
+        BattleActionEntry(
+            "fire",
+            "Fire",
+            category="magic",
+            kind="ability",
+            order=30,
+            cost_text="8 MP",
+            tags=("fire",),
+        ),
+        BattleActionEntry(
+            "heal", "Heal", category="magic", kind="ability", order=40, cost_text="6 MP"
+        ),
+        BattleActionEntry(
+            "mix",
+            "Concoct",
+            category="craft",
+            kind="workflow",
+            order=50,
+            detail="Combine ingredients",
+        ),
         BattleActionEntry("summon", "Summon", category="special", kind="workflow", order=60),
         BattleActionEntry(
             "locked",
@@ -26,7 +45,9 @@ def _entries():
             enabled=False,
             disabled_reason="Requires Overdrive",
         ),
-        BattleActionEntry("bomb", "Bomb", category="item", kind="item", order=80, search_terms=("explosive",)),
+        BattleActionEntry(
+            "bomb", "Bomb", category="item", kind="item", order=80, search_terms=("explosive",)
+        ),
     )
 
 
@@ -95,7 +116,9 @@ def test_composer_renders_generic_action_view_without_gameplay_resolution():
     )
     assert any(x.panel_id == "action_menu" for x in frame.panels)
     assert any(x.text.startswith("▶ ") for x in frame.texts)
-    assert any(x.text == "Requires Overdrive" and x.role == "action_disabled_reason" for x in frame.texts)
+    assert any(
+        x.text == "Requires Overdrive" and x.role == "action_disabled_reason" for x in frame.texts
+    )
 
 
 def test_policy_and_runtime_snapshot_roundtrip_preserve_view_state():

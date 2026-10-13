@@ -22,7 +22,9 @@ def test_world_anchor_offsets_position():
 
 
 def test_world_anchor_preserves_animation_offset():
-    r = ResolvedText("x", "hi", "world", "a", None, None, None, TextTransform(x=3, y=-7), 0, False, {})
+    r = ResolvedText(
+        "x", "hi", "world", "a", None, None, None, TextTransform(x=3, y=-7), 0, False, {}
+    )
     p = AnimatedTextRenderComposer(lambda i: (10, 20)).compose_one(r)
     assert (p.x, p.y) == (13, 13)
 
@@ -38,16 +40,27 @@ def test_unknown_anchor_rejected():
 
 
 def test_font_material_refs_preserved_and_validated():
-    r = resolved(space="screen", font_asset_id="font.main", material_asset_id="mat.glow", style_id="project.crit")
+    r = resolved(
+        space="screen",
+        font_asset_id="font.main",
+        material_asset_id="mat.glow",
+        style_id="project.crit",
+    )
     p = AnimatedTextRenderComposer(
         font_exists=lambda x: x == "font.main", material_exists=lambda x: x == "mat.glow"
     ).compose_one(r)
-    assert (p.font_asset_id, p.material_asset_id, p.style_id) == ("font.main", "mat.glow", "project.crit")
+    assert (p.font_asset_id, p.material_asset_id, p.style_id) == (
+        "font.main",
+        "mat.glow",
+        "project.crit",
+    )
 
 
 def test_unknown_font_rejected():
     with pytest.raises(ValueError):
-        AnimatedTextRenderComposer(font_exists=lambda x: False).compose_one(resolved(space="screen", font_asset_id="x"))
+        AnimatedTextRenderComposer(font_exists=lambda x: False).compose_one(
+            resolved(space="screen", font_asset_id="x")
+        )
 
 
 def test_unknown_material_rejected():
@@ -64,7 +77,9 @@ def test_z_order_deterministic():
 
 
 def test_zero_opacity_filtered():
-    r = ResolvedText("a", "a", "screen", None, None, None, None, TextTransform(opacity=0), 0, False, {})
+    r = ResolvedText(
+        "a", "a", "screen", None, None, None, None, TextTransform(opacity=0), 0, False, {}
+    )
     assert AnimatedTextRenderComposer().compose((r,)) == ()
 
 

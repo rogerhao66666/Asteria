@@ -1,5 +1,7 @@
-"""UI-01: Status / Items / Equipment / Skills screens in the playable runtime, projected through the
-canonical presentation screen runtimes; item use and equipment changes go through the game session."""
+"""UI-01: Status / Items / Equipment / Skills screens in the playable runtime, projected through
+the
+canonical presentation screen runtimes; item use and equipment changes go through the game
+session."""
 
 import pygame
 
@@ -19,7 +21,9 @@ def test_status_menu_opens_from_the_field_and_shows_every_tab(runtime):
         _key(runtime, pygame.K_TAB)
     assert set(seen) == {"status", "items", "equipment", "skills"}
     assert any(r[0] == "resource" and r[1] == "vitality" for r in seen["status"])
-    assert any(r[0] == "item" for r in seen["items"]) and any(r[0] == "slot" for r in seen["equipment"])
+    assert any(r[0] == "item" for r in seen["items"]) and any(
+        r[0] == "slot" for r in seen["equipment"]
+    )
     assert any(r[0] == "ability" for r in seen["skills"])
     first = menu.actor_id
     _key(runtime, pygame.K_e)
@@ -36,7 +40,12 @@ def test_using_a_consumable_changes_the_party_member_and_the_bag(runtime):
     potion = ItemDefinition(
         "test_potion",
         "Test Potion",
-        use_effects=[Effect("potion.heal", [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "vitality", 30)])],
+        use_effects=[
+            Effect(
+                "potion.heal",
+                [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "vitality", 30)],
+            )
+        ],
     )
     game.project.rpg_database.add_item(potion)
     actor = game.save.rpg_state.party_active_actor_ids[0]
@@ -52,7 +61,10 @@ def test_using_a_consumable_changes_the_party_member_and_the_bag(runtime):
     result = menu.activate()
     assert result.used and menu.message == "Used Test Potion"
     healed = game.save.rpg_state.actor_snapshots[actor].resources["values"]["vitality"]["current"]
-    assert healed == values["maximum"] - 20 and game.save.rpg_state.inventory.count("test_potion") == 1
+    assert (
+        healed == values["maximum"] - 20
+        and game.save.rpg_state.inventory.count("test_potion") == 1
+    )
 
 
 def test_equipment_tab_unequips_to_the_bag_and_equips_back(runtime):

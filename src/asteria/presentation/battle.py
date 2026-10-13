@@ -84,10 +84,16 @@ class BattleCombatantVisual:
     ):
         if not isinstance(anchor, BattleVisualAnchor):
             raise TypeError("anchor must be BattleVisualAnchor")
-        roles = dict(animation_roles or {"idle": "idle", "attack": "attack", "hit": "hit", "ko": "ko"})
-        normalized = tuple(sorted((_id(k, "animation role"), _id(v, "animation clip")) for k, v in roles.items()))
+        roles = dict(
+            animation_roles or {"idle": "idle", "attack": "attack", "hit": "hit", "ko": "ko"}
+        )
+        normalized = tuple(
+            sorted((_id(k, "animation role"), _id(v, "animation clip")) for k, v in roles.items())
+        )
         object.__setattr__(self, "member_id", _id(member_id, "member_id"))
-        object.__setattr__(self, "sprite_sheet_asset_id", _id(sprite_sheet_asset_id, "sprite_sheet_asset_id"))
+        object.__setattr__(
+            self, "sprite_sheet_asset_id", _id(sprite_sheet_asset_id, "sprite_sheet_asset_id")
+        )
         object.__setattr__(self, "clip_set_id", _id(clip_set_id, "clip_set_id"))
         object.__setattr__(self, "anchor", anchor)
         object.__setattr__(self, "animation_roles", normalized)
@@ -139,7 +145,9 @@ class BattlePresentationScene:
     combatants: tuple[BattleCombatantVisual, ...]
     camera_preset_id: str = "battle.default"
 
-    def __init__(self, scene_id, background_asset_id, combatants=(), camera_preset_id="battle.default"):
+    def __init__(
+        self, scene_id, background_asset_id, combatants=(), camera_preset_id="battle.default"
+    ):
         combatants = tuple(combatants)
         if any(not isinstance(x, BattleCombatantVisual) for x in combatants):
             raise TypeError("combatants must be BattleCombatantVisual")
@@ -147,7 +155,9 @@ class BattlePresentationScene:
         if len(ids) != len(set(ids)):
             raise ValueError("duplicate combatant visual member_id")
         object.__setattr__(self, "scene_id", _id(scene_id, "scene_id"))
-        object.__setattr__(self, "background_asset_id", _id(background_asset_id, "background_asset_id"))
+        object.__setattr__(
+            self, "background_asset_id", _id(background_asset_id, "background_asset_id")
+        )
         object.__setattr__(self, "combatants", combatants)
         object.__setattr__(self, "camera_preset_id", _id(camera_preset_id, "camera_preset_id"))
 
@@ -228,7 +238,9 @@ class BattlePresentationCoordinator:
         if self._active:
             return None
         self._active = True
-        return self._emit(BattlePresentationEventKind.SCENE_STARTED, payload={"scene_id": self.scene.scene_id})
+        return self._emit(
+            BattlePresentationEventKind.SCENE_STARTED, payload={"scene_id": self.scene.scene_id}
+        )
 
     def finish(self, result=None):
         if not self._active:
@@ -285,11 +297,17 @@ class BattlePresentationCoordinator:
         if kind is not None:
             self._emit(kind, event.source, {"hook": event.name, "data": dict(event.data)})
 
-    def push_resolved_value(self, result, *, target_id, source_id="", value_kind="damage", duration=None):
+    def push_resolved_value(
+        self, result, *, target_id, source_id="", value_kind="damage", duration=None
+    ):
         from .battle_feedback import resolved_value_payload
 
         payload = resolved_value_payload(
-            result, target_id=target_id, source_id=source_id, value_kind=value_kind, duration=duration
+            result,
+            target_id=target_id,
+            source_id=source_id,
+            value_kind=value_kind,
+            duration=duration,
         )
         return self._emit(BattlePresentationEventKind.RESOLVED_VALUE, source_id, payload)
 
@@ -310,7 +328,9 @@ class BattlePresentationCoordinator:
         targets = tuple(_id(x, "target_id") for x in target_ids)
         if len(targets) != len(set(targets)):
             raise ValueError("duplicate target_ids")
-        primary = None if primary_target_id is None else _id(primary_target_id, "primary_target_id")
+        primary = (
+            None if primary_target_id is None else _id(primary_target_id, "primary_target_id")
+        )
         if primary is not None and primary not in targets:
             raise ValueError("primary_target_id must be present in target_ids")
         return self._emit(

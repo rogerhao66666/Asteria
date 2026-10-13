@@ -36,7 +36,12 @@ class AssetStoreReport:
 
 
 class AssetStore:
-    def __init__(self, codecs: AssetCodecRegistry, registry=None, validators: Mapping[str, Callable] | None = None):
+    def __init__(
+        self,
+        codecs: AssetCodecRegistry,
+        registry=None,
+        validators: Mapping[str, Callable] | None = None,
+    ):
         self.codecs = codecs
         self.registry = registry or AssetRegistry()
         self.validators = dict(validators or {})
@@ -50,7 +55,9 @@ class AssetStore:
         except (OSError, json.JSONDecodeError) as e:
             return None, AssetStoreIssue(str(path), "asset.document.invalid_json", str(e))
         if not isinstance(data, dict):
-            return None, AssetStoreIssue(str(path), "asset.document.not_object", "asset document must be a JSON object")
+            return None, AssetStoreIssue(
+                str(path), "asset.document.not_object", "asset document must be a JSON object"
+            )
         try:
             m = manifest_from_dict(data)
         except (KeyError, TypeError, ValueError) as e:
@@ -76,7 +83,9 @@ class AssetStore:
         for aid, (_, m) in docs.items():
             for dep in m.dependencies:
                 if dep not in docs and dep not in existing:
-                    issues.append(AssetStoreIssue(paths[aid], "asset.dependency.missing", f"{aid} -> {dep}"))
+                    issues.append(
+                        AssetStoreIssue(paths[aid], "asset.dependency.missing", f"{aid} -> {dep}")
+                    )
         indeg = {a: 0 for a in docs}
         out = {a: [] for a in docs}
         for aid, (_, m) in docs.items():
@@ -114,7 +123,9 @@ class AssetStore:
                 except Exception as e:
                     issues.append(AssetStoreIssue(paths[aid], "asset.validation.failed", str(e)))
                     continue
-                issues.extend(AssetStoreIssue(paths[aid], x.code, x.message, x.severity) for x in rep.issues)
+                issues.extend(
+                    AssetStoreIssue(paths[aid], x.code, x.message, x.severity) for x in rep.issues
+                )
             staged.append(LoadedAsset(paths[aid], m, obj))
         if any(x.severity == "error" for x in issues):
             return AssetStoreReport((), tuple(issues))
@@ -122,7 +133,9 @@ class AssetStore:
         conflicts = sorted(x.manifest.asset_id for x in staged if x.manifest.asset_id in current)
         if conflicts:
             return AssetStoreReport(
-                (), tuple(issues) + (AssetStoreIssue(str(root), "asset.registry.conflict", ", ".join(conflicts)),)
+                (),
+                tuple(issues)
+                + (AssetStoreIssue(str(root), "asset.registry.conflict", ", ".join(conflicts)),),
             )
         canon = []
         for x in staged:
@@ -131,7 +144,9 @@ class AssetStore:
                 c = x.asset.get("manifest").canonical()
             if not isinstance(c, CanonicalAsset):
                 return AssetStoreReport(
-                    (), tuple(issues) + (AssetStoreIssue(x.path, "asset.canonical.missing", x.manifest.asset_id),)
+                    (),
+                    tuple(issues)
+                    + (AssetStoreIssue(x.path, "asset.canonical.missing", x.manifest.asset_id),),
                 )
             canon.append(c)
         for c in canon:

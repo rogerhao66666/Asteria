@@ -57,7 +57,11 @@ def test_database_v24_persists_rules_and_v23_still_loads():
 
 def test_reference_project_declares_its_session_rules():
     rules = _project().rpg_database.battle_session_rules["reference_session"]
-    assert (rules.knockout_resource_id, rules.boost_resource_id, rules.boost_max_level) == ("vitality", "momentum", 3)
+    assert (rules.knockout_resource_id, rules.boost_resource_id, rules.boost_max_level) == (
+        "vitality",
+        "momentum",
+        3,
+    )
 
 
 def test_default_targets_follow_ability_targeting_data():

@@ -225,23 +225,51 @@ class BattleStateRuntime:
             result = BattleStateApplicationResult(
                 state_id, str(source_id), str(target_id), False, True, 0.0, None, None, "immune"
             )
-            emit_hook(self.hooks, "rpg.battle.state_resisted", source=str(target_id), data={"result": result})
+            emit_hook(
+                self.hooks,
+                "rpg.battle.state_resisted",
+                source=str(target_id),
+                data={"result": result},
+            )
             return result
         chance = self._chance(policy, source, target)
         roller = rng.random if rng is not None else random.random
         roll = float(roller())
         if roll >= chance:
             result = BattleStateApplicationResult(
-                state_id, str(source_id), str(target_id), False, False, chance, roll, None, "resisted"
+                state_id,
+                str(source_id),
+                str(target_id),
+                False,
+                False,
+                chance,
+                roll,
+                None,
+                "resisted",
             )
-            emit_hook(self.hooks, "rpg.battle.state_resisted", source=str(target_id), data={"result": result})
+            emit_hook(
+                self.hooks,
+                "rpg.battle.state_resisted",
+                source=str(target_id),
+                data={"result": result},
+            )
             return result
         duration = self._duration(policy, target)
         target.states.apply(state_id, duration=duration, source_id=str(source_id))
         result = BattleStateApplicationResult(
-            state_id, str(source_id), str(target_id), True, False, chance, roll, duration, "applied"
+            state_id,
+            str(source_id),
+            str(target_id),
+            True,
+            False,
+            chance,
+            roll,
+            duration,
+            "applied",
         )
-        emit_hook(self.hooks, "rpg.battle.state_applied", source=str(target_id), data={"result": result})
+        emit_hook(
+            self.hooks, "rpg.battle.state_applied", source=str(target_id), data={"result": result}
+        )
         return result
 
     def ability_availability(self, subject, ability_tags=()):

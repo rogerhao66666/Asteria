@@ -22,7 +22,10 @@ def scene():
                 {"idle": "idle", "attack": "slash", "hit": "hurt", "ko": "down"},
             ),
             BattleCombatantVisual(
-                "slime", "battle.slime.sheet", "battle.slime.clips", BattleVisualAnchor(236, 108, "left")
+                "slime",
+                "battle.slime.sheet",
+                "battle.slime.clips",
+                BattleVisualAnchor(236, 108, "left"),
             ),
         ],
     )

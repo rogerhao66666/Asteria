@@ -55,8 +55,12 @@ def test_every_combatant_has_an_animated_sprite_with_default_staging(battle):
     width = adapter.screen.composer.layout.virtual_width
     heroes = [v for k, v in visuals.items() if k.startswith("hero")]
     enemies = [v for k, v in visuals.items() if not k.startswith("hero")]
-    assert all(v.anchor.x > width / 2 and v.anchor.facing == "left" for v in heroes)  # party on the right
-    assert all(v.anchor.x < width / 2 and v.anchor.facing == "right" for v in enemies)  # enemies on the left
+    assert all(
+        v.anchor.x > width / 2 and v.anchor.facing == "left" for v in heroes
+    )  # party on the right
+    assert all(
+        v.anchor.x < width / 2 and v.anchor.facing == "right" for v in enemies
+    )  # enemies on the left
     adapter.textures.draw_count = 0
     runtime._present_battle(0.016)
     assert adapter.textures.draw_count >= len(visuals)  # real texture blits, not a data mock
@@ -84,19 +88,24 @@ def test_skill_choreography_plays_animation_vfx_audio_camera_in_order(battle):
         clock += 0.02
         if seen["attack"] is None and _role(screen.animation.combatant(hero)) == "attack":
             seen["attack"] = clock
-        if seen["vfx"] is None and any(v.payload.get("asset_id") == "battle.fx.flame" for v in screen.feedback.vfx):
+        if seen["vfx"] is None and any(
+            v.payload.get("asset_id") == "battle.fx.flame" for v in screen.feedback.vfx
+        ):
             seen["vfx"] = clock
             assert adapter.particle_count() >= 1
         if seen["hit"] is None and _role(screen.animation.combatant(target)) == "hit":
             seen["hit"] = clock
         if seen["shake"] is None and screen.camera_feedback.camera_offset() != (0.0, 0.0):
             seen["shake"] = clock
-        if seen["audio"] is None and any(dict(c.payload).get("asset_id") == "hit" for c in adapter.audio_cues):
+        if seen["audio"] is None and any(
+            dict(c.payload).get("asset_id") == "hit" for c in adapter.audio_cues
+        ):
             seen["audio"] = clock
         if seen["value"] is None and any(v.target_id == target for v in screen.feedback.values):
             seen["value"] = clock
     assert all(v is not None for v in seen.values()), seen
-    # Authored order: swing -> effect -> impact (hit pose, damage number, sound and shake together).
+    # Authored order: swing -> effect -> impact (hit pose, damage number, sound and shake
+    # together).
     assert seen["attack"] < seen["vfx"] < seen["hit"]
     assert seen["hit"] == seen["value"] == seen["audio"] == seen["shake"]
 
@@ -137,23 +146,37 @@ def test_capture_prompt_appears_in_the_canonical_action_menu(battle):
     db = runtime.game.project.rpg_database
     db.add_capture_rule(CaptureRule("mender_wisp", "hero_01", base_chance=0.25))
     runtime._present_battle(0.016)
-    labels = [e.label for e in adapter.screen.action_menu._source]  # every page of the command menu
+    labels = [
+        e.label for e in adapter.screen.action_menu._source
+    ]  # every page of the command menu
     assert any(label.startswith("X  Capture (") for label in labels)
 
 
-def test_missing_visual_profile_gets_a_generated_combatant_not_the_legacy_screen(battle, monkeypatch):
+def test_missing_visual_profile_gets_a_generated_combatant_not_the_legacy_screen(
+    battle, monkeypatch
+):
     runtime, adapter = battle
     runtime.game.project.battle_presentation_library.remove("combatant_visuals", "astral_tyrant")
     monkeypatch.setattr(
-        runtime, "_draw_battle_world", lambda *a, **k: pytest.fail("legacy drawing used"), raising=False
+        runtime,
+        "_draw_battle_world",
+        lambda *a, **k: pytest.fail("legacy drawing used"),
+        raising=False,
     )
     fresh = CanonicalBattleAdapter(runtime)
     fresh.begin()
     assert fresh.visuals_enabled and not fresh.fallback_reason
-    boss = next(v for v in fresh.screen.scene.combatants if v.member_id.startswith("astral_tyrant"))
+    boss = next(
+        v for v in fresh.screen.scene.combatants if v.member_id.startswith("astral_tyrant")
+    )
     assert boss.sprite_sheet_asset_id == "generated.combatant.astral_tyrant"
     assert fresh.resolver.generated_image(boss.sprite_sheet_asset_id) is not None
-    assert set(fresh.resolver.clip_set(boss.sprite_sheet_asset_id).clips) == {"idle", "attack", "hit", "ko"}
+    assert set(fresh.resolver.clip_set(boss.sprite_sheet_asset_id).clips) == {
+        "idle",
+        "attack",
+        "hit",
+        "ko",
+    }
     runtime._battle_presentation = fresh
     runtime._present_battle(0.016)  # draws through the canonical screen
 
@@ -178,7 +201,9 @@ def _frame(adapter):
     from asteria.runtime.camera import Camera2D
 
     layout = adapter.screen.composer.layout
-    return layout, adapter.screen.build_frame(Camera2D(width=layout.virtual_width, height=layout.virtual_height))
+    return layout, adapter.screen.build_frame(
+        Camera2D(width=layout.virtual_width, height=layout.virtual_height)
+    )
 
 
 def test_combatants_stand_on_the_ground_below_the_backdrop(battle):
@@ -202,7 +227,9 @@ def test_enemy_hp_floats_over_enemies_and_party_hp_sits_in_a_bottom_row(battle):
     assert all((hero, "vitality") in bars for hero in heroes)  # HP in each party cell
     for enemy in enemies:
         visual = adapter.screen.scene.visual_for(enemy)
-        assert overhead[enemy].y < visual.anchor.y - adapter.screen.member_heights[enemy]  # above the head
+        assert (
+            overhead[enemy].y < visual.anchor.y - adapter.screen.member_heights[enemy]
+        )  # above the head
     hud = [p for p in frame.panels if p.panel_id.startswith("hud:")]
     assert {p.member_id for p in hud} == heroes and len({p.y for p in hud}) == 1
 
@@ -260,7 +287,9 @@ def test_repeated_battles_keep_the_image_cache_bounded(battle):
         runtime._frame([], 0.016)
         runtime._present_battle(0.016)
         for enemy in game.active_enemy_ids():
-            game.battle.member(enemy).subject.resources.set_current(game.rules.knockout_resource_id, 0)
+            game.battle.member(enemy).subject.resources.set_current(
+                game.rules.knockout_resource_id, 0
+            )
         game.finish_victory()
         runtime._frame([], 0.016)
         sizes.append(len(runtime._loaded))
@@ -281,7 +310,8 @@ def _impact_time(runtime, adapter, ability):
 
 
 def test_hit_stop_beat_freezes_the_action_at_the_impact(battle):
-    """BTL-04: a timing/hit_stop beat holds the presentation clock and animation for its duration."""
+    """BTL-04: a timing/hit_stop beat holds the presentation clock and animation for its
+    duration."""
     from asteria.editor import EditorDocument
     from asteria.editor.action_timeline_authoring import ActionTimelineController
 
@@ -305,7 +335,9 @@ def test_hit_stop_beat_freezes_the_action_at_the_impact(battle):
     document.set_project(runtime.game.project)
     api = ActionTimelineController(document)
     flame_at = next(b.at for b in api.beats("fire_arc") if b.channel == "vfx")
-    api.add_beat("fire_arc", "freeze", flame_at, "timing", "hit_stop", member="@source", duration=0.2)
+    api.add_beat(
+        "fire_arc", "freeze", flame_at, "timing", "hit_stop", member="@source", duration=0.2
+    )
     assert api.problems(api.get("fire_arc")) == []
     frozen_clock = adapter._clock
     adapter._start_hit_stop(0.1)
@@ -318,8 +350,10 @@ def test_hit_stop_beat_freezes_the_action_at_the_impact(battle):
 
 
 def test_an_authored_state_machine_chooses_the_battle_clips(resource_root, monkeypatch):
-    """ANI-02: a sheet's state machine (Animation States editor) drives the battle animation: battle roles
-    fire its triggers and it picks the clip - here "attack" deliberately plays the sheet's "hit" clip."""
+    """ANI-02: a sheet's state machine (Animation States editor) drives the battle animation:
+    battle roles
+    fire its triggers and it picks the clip - here "attack" deliberately plays the sheet's "hit"
+    clip."""
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
     from asteria.editor import EditorDocument
@@ -336,7 +370,9 @@ def test_an_authored_state_machine_chooses_the_battle_clips(resource_root, monke
         api.create(sheet, initial_clip="idle")
         api.add_state(sheet, "struck_pose", "hit")
         api.add_parameter(sheet, "attack", trigger=True)
-        api.add_transition(sheet, "*", "struck_pose", conditions=(("attack", "==", True),), priority=5)
+        api.add_transition(
+            sheet, "*", "struck_pose", conditions=(("attack", "==", True),), priority=5
+        )
         api.add_transition(sheet, "struck_pose", api.definition(sheet).initial, when_finished=True)
         runtime._battle_presentation = adapter = CanonicalBattleAdapter(runtime)
         runtime.game.start_encounter("boss_room")
@@ -344,11 +380,15 @@ def test_an_authored_state_machine_chooses_the_battle_clips(resource_root, monke
         animator = adapter.screen.animation.combatant("hero_01")
         assert animator.machine is not None and animator.clip_name == "idle"
         animator.set_role("attack")
-        assert animator.machine.state == "struck_pose" and animator.clip_name == "hit"  # the machine chose
+        assert (
+            animator.machine.state == "struck_pose" and animator.clip_name == "hit"
+        )  # the machine chose
         for _ in range(200):
             animator.update(0.05)
             if animator.machine.state == animator.machine.definition.initial:
                 break
-        assert animator.clip_name == "idle" and animator.role.value == "idle"  # back to rest when finished
+        assert (
+            animator.clip_name == "idle" and animator.role.value == "idle"
+        )  # back to rest when finished
     finally:
         runtime.close()

@@ -174,7 +174,9 @@ def test_database_validates_class_and_job_progression_references():
     db.add_actor(
         ActorDefinition(
             "hero",
-            class_assignments=[ClassAssignment("warrior", progression_track_ids=["missing_job_rank"])],
+            class_assignments=[
+                ClassAssignment("warrior", progression_track_ids=["missing_job_rank"])
+            ],
         )
     )
     with pytest.raises(ValueError, match="missing_job_rank"):

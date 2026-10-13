@@ -27,7 +27,9 @@ def scene():
         "bg.arena",
         (
             BattleCombatantVisual("hero", "hero.sheet", "hero.clips", BattleVisualAnchor(70, 100)),
-            BattleCombatantVisual("mimic", "mimic.sheet", "mimic.clips", BattleVisualAnchor(240, 94)),
+            BattleCombatantVisual(
+                "mimic", "mimic.sheet", "mimic.clips", BattleVisualAnchor(240, 94)
+            ),
         ),
     )
 
@@ -50,7 +52,9 @@ def hud_members():
             ),
             (BattleHudStatusIcon("poison", "Poison", "status.poison", 1, 2.0, "mimic", 0),),
         ),
-        BattleHudMember("mimic", (BattleHudGauge("hp", "HP", 45, 0, 80, 0, 0.5625, False, None, 0),), ()),
+        BattleHudMember(
+            "mimic", (BattleHudGauge("hp", "HP", 45, 0, 80, 0, 0.5625, False, None, 0),), ()
+        ),
     )
 
 
@@ -80,13 +84,19 @@ def test_composer_builds_one_adapter_ready_battle_ui_frame():
     assert frame.background_asset_id == "bg.arena"
     assert len(frame.combatant_draws) == 1
     assert {x.panel_id for x in frame.panels} >= {"hud:hero", "hud:mimic", "timeline"}
-    assert {(x.member_id, x.resource_id) for x in frame.gauges} == {("hero", "hp"), ("hero", "mp"), ("mimic", "hp")}
+    assert {(x.member_id, x.resource_id) for x in frame.gauges} == {
+        ("hero", "hp"),
+        ("hero", "mp"),
+        ("mimic", "hp"),
+    }
     assert any(x.asset_id == "status.poison" for x in frame.icons)
     assert any(x.text == "hero" and x.role == "timeline_current" for x in frame.texts)
 
 
 def test_enemy_hud_is_laid_out_on_opposite_side_without_gameplay_inference():
-    composer = BattleUiComposer(scene(), BattleUiLayoutProfile(virtual_width=320, virtual_height=180))
+    composer = BattleUiComposer(
+        scene(), BattleUiLayoutProfile(virtual_width=320, virtual_height=180)
+    )
     frame = composer.compose(
         Camera2D(),
         battle_frame(),
@@ -100,7 +110,9 @@ def test_enemy_hud_is_laid_out_on_opposite_side_without_gameplay_inference():
 
 def test_feedback_and_target_markers_are_projected_from_existing_presentation_state():
     feedback = BattleFeedbackRuntime()
-    feedback.values = [BattleFloatingValue(1, "mimic", "hero", 27, BattleValueKind.DAMAGE, (), "normal", 0.2, 0.9)]
+    feedback.values = [
+        BattleFloatingValue(1, "mimic", "hero", 27, BattleValueKind.DAMAGE, (), "normal", 0.2, 0.9)
+    ]
     feedback.labels = [BattleFeedbackLabel(2, "mimic", "WEAK", "interaction:normal", 0.1, 0.65)]
     camera_frame = BattleCameraFeedbackFrame(
         0,

@@ -15,11 +15,17 @@ def test_batch95_reference_scene_and_original_asteria_assets_are_runtime_valid()
     )
     sheets = {
         "10000000-0000-4000-8000-000000000012": load_sprite_sheet(DATA / "hero_sheet.json"),
-        "10000000-0000-4000-8000-000000000096": load_sprite_sheet(DATA / "batch95_mimic_sheet.json"),
+        "10000000-0000-4000-8000-000000000096": load_sprite_sheet(
+            DATA / "batch95_mimic_sheet.json"
+        ),
     }
     clips = {
-        "10000000-0000-4000-8000-000000000095": load_animation_set(DATA / "batch95_hero_battle_animation.json"),
-        "10000000-0000-4000-8000-000000000097": load_animation_set(DATA / "batch95_mimic_animation.json"),
+        "10000000-0000-4000-8000-000000000095": load_animation_set(
+            DATA / "batch95_hero_battle_animation.json"
+        ),
+        "10000000-0000-4000-8000-000000000097": load_animation_set(
+            DATA / "batch95_mimic_animation.json"
+        ),
     }
     runtime = BattlePresentationRuntime(scene, clips.get, sheets.get)
     frame = runtime.build_frame(Camera2D(width=320, height=180, zoom=2.0))

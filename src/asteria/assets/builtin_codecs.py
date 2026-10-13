@@ -152,7 +152,11 @@ def font_codec():
     def dec(d):
         p = d.payload
         return FontAsset(
-            _canon(d), p["uri"], p.get("family_hint"), tuple(p.get("fallback_refs", ())), _pairs(p.get("properties"))
+            _canon(d),
+            p["uri"],
+            p.get("family_hint"),
+            tuple(p.get("fallback_refs", ())),
+            _pairs(p.get("properties")),
         )
 
     def enc(a):
@@ -212,11 +216,22 @@ def prop_codec():
             for c in p.get("collisions", ())
         )
         ins = tuple(
-            InteractionPoint(x["name"], tuple(x["position"]), frozenset(x.get("tags", ())), _pairs(x.get("metadata")))
+            InteractionPoint(
+                x["name"],
+                tuple(x["position"]),
+                frozenset(x.get("tags", ())),
+                _pairs(x.get("metadata")),
+            )
             for x in p.get("interactions", ())
         )
         return PropAsset(
-            _canon(d), vs, cs, ins, _pairs(p.get("properties")), p.get("animation_ref"), p.get("presentation_ref")
+            _canon(d),
+            vs,
+            cs,
+            ins,
+            _pairs(p.get("properties")),
+            p.get("animation_ref"),
+            p.get("presentation_ref"),
         )
 
     def enc(a):
@@ -242,7 +257,12 @@ def prop_codec():
                 for c in a.collisions
             ],
             "interactions": [
-                {"name": x.name, "position": list(x.position), "tags": sorted(x.tags), "metadata": dict(x.metadata)}
+                {
+                    "name": x.name,
+                    "position": list(x.position),
+                    "tags": sorted(x.tags),
+                    "metadata": dict(x.metadata),
+                }
                 for x in a.interactions
             ],
             "properties": dict(a.properties),
@@ -254,6 +274,13 @@ def prop_codec():
 
 
 def install_simple_typed_codecs(r):
-    for c in (icon_codec(), portrait_codec(), audio_codec(), font_codec(), material_codec(), prop_codec()):
+    for c in (
+        icon_codec(),
+        portrait_codec(),
+        audio_codec(),
+        font_codec(),
+        material_codec(),
+        prop_codec(),
+    ):
         r.register(c, replace=True)
     return r

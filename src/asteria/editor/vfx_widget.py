@@ -1,4 +1,5 @@
-"""VFX tool (EDT-08): battle VFX list, import, in-battle placement, playback preview and where each VFX is used."""
+"""VFX tool (EDT-08): battle VFX list, import, in-battle placement, playback preview and where each
+VFX is used."""
 
 from __future__ import annotations
 
@@ -27,7 +28,8 @@ from .vfx_authoring import PREVIEW_BODY_HEIGHT, VFXAuthoringController, VFXAutho
 
 
 class VFXStage(QWidget):
-    """A member stand-in on the battle ground with the VFX frame drawn where the battle draws it."""
+    """A member stand-in on the battle ground with the VFX frame drawn where the battle draws
+    it."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -161,7 +163,9 @@ class VFXEditorWidget(QWidget):
         edit_frames = QPushButton("Edit Frames && Timing…")
         edit_frames.clicked.connect(lambda: self.vfx_id and self.openAnimation.emit(self.vfx_id))
         self.usages = QListWidget()
-        self.usages.itemActivated.connect(lambda item: self.openTimeline.emit(item.text().split(".", 1)[0]))
+        self.usages.itemActivated.connect(
+            lambda item: self.openTimeline.emit(item.text().split(".", 1)[0])
+        )
         self.problems = QListWidget()
         self.status = QLabel("")
         self.status.setWordWrap(True)
@@ -265,16 +269,22 @@ class VFXEditorWidget(QWidget):
         if asset_id is None:
             return None
         try:
-            preview = self.api.preview(asset_id, self.scrub.value() / 1000 * self.api.duration(asset_id))
+            preview = self.api.preview(
+                asset_id, self.scrub.value() / 1000 * self.api.duration(asset_id)
+            )
         except VFXAuthoringError as exc:
             self.status.setText(str(exc))
             self.stage.show_frame(None, None, None, None)
             return None
-        placement = self.form_placement()  # unsaved form values preview with the battle's placement rule
+        placement = (
+            self.form_placement()
+        )  # unsaved form values preview with the battle's placement rule
         fw, fh = preview.source[2], preview.source[3]
         rect = vfx_rect(placement, 0.0, 0.0, PREVIEW_BODY_HEIGHT, fw, fh)
         self.stage.show_frame(self._pixmap(asset_id), preview.source, rect, placement)
-        self.time_label.setText(f"{self.scrub.value() / 1000 * preview.duration:.2f}s  frame {preview.frame_index}")
+        self.time_label.setText(
+            f"{self.scrub.value() / 1000 * preview.duration:.2f}s  frame {preview.frame_index}"
+        )
         return rect
 
     # -- playback ---------------------------------------------------------------------
@@ -312,30 +322,42 @@ class VFXEditorWidget(QWidget):
     def apply_placement(self):
         asset_id = self.vfx_id
         values = self.form_placement()
-        return asset_id and self._try(lambda: self.api.set_placement(asset_id, **values), "Placement saved")
+        return asset_id and self._try(
+            lambda: self.api.set_placement(asset_id, **values), "Placement saved"
+        )
 
     def mark_selected(self, enabled):
         asset_id = self.vfx_id
         return asset_id and self._try(lambda: self.api.mark_as_vfx(asset_id, enabled), "Updated")
 
     def use_sheet(self, asset_id):
-        return self._try(lambda: self.api.mark_as_vfx(asset_id, True), f"{asset_id} is now a VFX", select=asset_id)
+        return self._try(
+            lambda: self.api.mark_as_vfx(asset_id, True),
+            f"{asset_id} is now a VFX",
+            select=asset_id,
+        )
 
     def import_vfx(self, asset_id, path, frame_width, frame_height, frame_duration=0.06):
         return self._try(
-            lambda: self.api.import_sheet(asset_id, path, frame_width, frame_height, frame_duration=frame_duration),
+            lambda: self.api.import_sheet(
+                asset_id, path, frame_width, frame_height, frame_duration=frame_duration
+            ),
             f"Imported {asset_id}",
             select=asset_id,
         )
 
     def _import_clicked(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Import VFX Sprite Sheet", "", "Images (*.png *.webp)")
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Import VFX Sprite Sheet", "", "Images (*.png *.webp)"
+        )
         if not path:
             return
         asset_id, ok = QInputDialog.getText(self, "Import VFX", "Asset id:", text="battle.fx.new")
         if not ok or not asset_id.strip():
             return
-        size, ok = QInputDialog.getText(self, "Import VFX", "Frame size (width x height):", text="64x64")
+        size, ok = QInputDialog.getText(
+            self, "Import VFX", "Frame size (width x height):", text="64x64"
+        )
         if not ok:
             return
         try:
@@ -350,6 +372,8 @@ class VFXEditorWidget(QWidget):
         if not options:
             self.status.setText("No other sprite sheets in the project")
             return
-        asset_id, ok = QInputDialog.getItem(self, "Use Sheet as VFX", "Sprite sheet:", options, 0, False)
+        asset_id, ok = QInputDialog.getItem(
+            self, "Use Sheet as VFX", "Sprite sheet:", options, 0, False
+        )
         if ok:
             self.use_sheet(asset_id)

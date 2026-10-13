@@ -1,15 +1,21 @@
-"""The player's battle commands (BTL / UI): every known ability, items, concocting, boost and target choice.
+"""The player's battle commands (BTL / UI): every known ability, items, concocting, boost and
+target choice.
 
-``BattleCommands`` is the controller between the keyboard and ``GameSessionRuntime`` - no pygame here, so
-tests drive it directly. It produces ``BattleActionEntry`` rows for the canonical battle screen's menu:
+``BattleCommands`` is the controller between the keyboard and ``GameSessionRuntime`` - no pygame
+here, so
+tests drive it directly. It produces ``BattleActionEntry`` rows for the canonical battle screen's
+menu:
 
-* **command** - categories *Skills* and *Items* (Tab switches); Up / Down choose; Left / Right set the boost
+* **command** - categories *Skills* and *Items* (Tab switches); Up / Down choose; Left / Right set
+  the boost
   level; a row that cannot be used now is shown disabled with the reason (``ability_unavailable``).
 * **ingredients** - a concoct ability asks for one item per recipe step of its station.
-* **target** - Up / Down pick the target among the valid candidates (self-only and all-target actions skip
+* **target** - Up / Down pick the target among the valid candidates (self-only and all-target
+  actions skip
   this); Enter acts, Esc goes back one step.
 
-``press(key)`` takes ``"up" | "down" | "left" | "right" | "confirm" | "cancel" | "category"`` and returns
+``press(key)`` takes ``"up" | "down" | "left" | "right" | "confirm" | "cancel" | "category"`` and
+returns
 ``True`` once an action was taken (the host then ends the turn).
 """
 
@@ -44,7 +50,7 @@ class BattleCommands:
         self.ingredients = {}
         self.message = ""
 
-    # -- what the menu shows -------------------------------------------------------------------------------
+    # -- what the menu shows ----------------------------------------------------------------------
     def _name(self, ability_id):
         meta = self.labels.get(ability_id) or {}
         return meta.get("label") or ability_id.replace("_", " ").title()
@@ -76,7 +82,9 @@ class BattleCommands:
         game, rows = self.game, []
         registry = game.battle.ability_runtime.registry
         known = game.battle.member(actor_id).ability_ids
-        ordered = [a for a in self.labels if a in known] + [a for a in known if a not in self.labels]
+        ordered = [a for a in self.labels if a in known] + [
+            a for a in known if a not in self.labels
+        ]
         for ability_id in ordered:  # the authored skills first (they are also on keys 1-4)
             definition = registry.get(ability_id)
             if definition is None:
@@ -98,7 +106,12 @@ class BattleCommands:
         if capture:
             best = max(chance for _, chance, _ in capture)
             rows.append(
-                BattleActionEntry("capture", f"X  Capture ({best * 100:.0f}%)", category="Skills", order=len(rows))
+                BattleActionEntry(
+                    "capture",
+                    f"X  Capture ({best * 100:.0f}%)",
+                    category="Skills",
+                    order=len(rows),
+                )
             )
         game_rules = game.rules
         if game_rules.boost_enabled and game.max_boost_level(actor_id) > 0:
@@ -125,7 +138,11 @@ class BattleCommands:
                 continue
             rows.append(
                 BattleActionEntry(
-                    item_id, f"{item.display_name}", category="Items", cost_text=f"x{count}", order=len(rows)
+                    item_id,
+                    f"{item.display_name}",
+                    category="Items",
+                    cost_text=f"x{count}",
+                    order=len(rows),
                 )
             )
         return rows
@@ -156,7 +173,9 @@ class BattleCommands:
                 item = self.game.project.rpg_database.items.get(item_id)
                 name = item.display_name if item else item_id
                 rows.append(
-                    BattleActionEntry(item_id, name, category=step.title(), cost_text=f"x{left}", order=len(rows))
+                    BattleActionEntry(
+                        item_id, name, category=step.title(), cost_text=f"x{left}", order=len(rows)
+                    )
                 )
         return rows
 
@@ -170,7 +189,11 @@ class BattleCommands:
             pool = member.subject.resources
             hp = game.rules.knockout_resource_id
             detail = f"{pool.current(hp):g}" if pool.contains(hp) else ""
-            rows.append(BattleActionEntry(member_id, name, category="Target", cost_text=detail, order=len(rows)))
+            rows.append(
+                BattleActionEntry(
+                    member_id, name, category="Target", cost_text=detail, order=len(rows)
+                )
+            )
         return rows
 
     def display_name(self, member_id):
@@ -196,7 +219,7 @@ class BattleCommands:
         self.cursor = min(self.cursor, max(0, len(rows) - 1))
         return rows
 
-    # -- targets ----------------------------------------------------------------------------------------------
+    # -- targets ----------------------------------------------------------------------------------
     def _definition(self, ability_id):
         return self.game.battle.ability_runtime.registry.get(ability_id)
 
@@ -212,7 +235,11 @@ class BattleCommands:
         from asteria.rpg import CompositionRuntime
 
         station = self._definition(self.pending[1]).concoct_station
-        recipes = [r for r in self.game.project.rpg_database.composition_recipes.values() if r.station == station]
+        recipes = [
+            r
+            for r in self.game.project.rpg_database.composition_recipes.values()
+            if r.station == station
+        ]
         recipe = CompositionRuntime(recipes).resolve(self.ingredients)
         if recipe is None or not recipe.outputs:
             return None
@@ -224,8 +251,16 @@ class BattleCommands:
         battle = self.game.battle
         if ability_id is None:  # a plain item: the acting side
             side = battle.member(actor_id).side
-            return tuple(m.member_id for m in battle.members.values() if m.side == side and battle.is_active(m))
-        return tuple(m for m in battle.targeting.candidates(actor_id, ability_id) if battle.is_active(battle.member(m)))
+            return tuple(
+                m.member_id
+                for m in battle.members.values()
+                if m.side == side and battle.is_active(m)
+            )
+        return tuple(
+            m
+            for m in battle.targeting.candidates(actor_id, ability_id)
+            if battle.is_active(battle.member(m))
+        )
 
     def _needs_target(self, actor_id):
         ability_id = self._action_ability()
@@ -238,7 +273,7 @@ class BattleCommands:
         maximum = 1 if definition is None else definition.maximum_targets
         return len(candidates) > 1 and maximum < len(candidates)
 
-    # -- input ------------------------------------------------------------------------------------------------
+    # -- input ------------------------------------------------------------------------------------
     def press(self, key, actor_id):
         if actor_id is None:
             return False

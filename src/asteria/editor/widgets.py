@@ -24,7 +24,8 @@ except ImportError:
 
 
 class _HierarchyTree(QTreeWidget if QT_AVAILABLE else object):
-    """Drops are applied to the scene model (reparent / reorder / move scene), never as a visual-only move."""
+    """Drops are applied to the scene model (reparent / reorder / move scene), never as a
+    visual-only move."""
 
     def __init__(self, owner):
         super().__init__()
@@ -62,10 +63,15 @@ class ProjectTreeWidget(QWidget):
         self.refresh()
 
     def drop_selected(self, target_payload, position="on"):
-        """Drag-and-drop of the selected entities onto a scene or an entity (EDT-14); one undo step."""
+        """Drag-and-drop of the selected entities onto a scene or an entity (EDT-14); one undo
+        step."""
         from .hierarchy import HierarchyEditError, drop_entities
 
-        entities = [p[1] for p in (i.data(0, Qt.UserRole) for i in self.tree.selectedItems()) if p and p[0] == "entity"]
+        entities = [
+            p[1]
+            for p in (i.data(0, Qt.UserRole) for i in self.tree.selectedItems())
+            if p and p[0] == "entity"
+        ]
         if not entities or target_payload is None or target_payload[0] not in ("scene", "entity"):
             return False
         try:
@@ -124,7 +130,12 @@ class ProjectTreeWidget(QWidget):
             from .icons import icon
 
             folder_icons = {"Scenes": "scene", "Prefabs": "prefab", "Assets": "folder"}
-            kind_icons = {"project": "project", "scene": "scene", "entity": "entity", "component": "settings"}
+            kind_icons = {
+                "project": "project",
+                "scene": "scene",
+                "entity": "entity",
+                "component": "settings",
+            }
 
             def item(label, kind=None, value=None):
                 tree_item = QTreeWidgetItem([label])
@@ -255,7 +266,9 @@ class InspectorWidget(QWidget):
         heading = QLabel("Nothing selected")
         heading.setObjectName("EmptyStateTitle")
         heading.setAlignment(Qt.AlignCenter)
-        hint = QLabel("Pick an entity in the scene or the project tree to edit its properties here.")
+        hint = QLabel(
+            "Pick an entity in the scene or the project tree to edit its properties here."
+        )
         hint.setObjectName("EmptyStateHint")
         hint.setAlignment(Qt.AlignCenter)
         hint.setWordWrap(True)
@@ -336,7 +349,9 @@ class InspectorWidget(QWidget):
                     combo.setEnabled(f.editable)
                     if f.tooltip:
                         combo.setToolTip(f.tooltip)
-                    combo.currentIndexChanged.connect(lambda _index, r=row, c=combo: self._choice_changed(r, c))
+                    combo.currentIndexChanged.connect(
+                        lambda _index, r=row, c=combo: self._choice_changed(r, c)
+                    )
                     v.setText("")  # the widget shows the value; text beneath would show through
                     self.table.setItem(row, 1, v)
                     self.table.setCellWidget(row, 1, combo)

@@ -45,7 +45,9 @@ class BehaviorTreeSystem(System):
         world=None,
         spawn=None,
     ):
-        self.trees = trees  # mapping tree_id -> BehaviorTree (e.g. project.rpg_database.behavior_trees)
+        self.trees = (
+            trees  # mapping tree_id -> BehaviorTree (e.g. project.rpg_database.behavior_trees)
+        )
         self.target_id = str(target_id or "")
         self.switches = switches or (lambda _name: False)
         self.set_switch = set_switch or (lambda _name, _value: None)
@@ -59,7 +61,7 @@ class BehaviorTreeSystem(System):
         self.memory: dict[str, dict] = {}
         self.status: dict[str, str] = {}  # last root status per entity (inspection / debugger)
 
-    # -- movement ----------------------------------------------------------------------------------
+    # -- movement ---------------------------------------------------------------------------------
     def _move(self, ctx, goal, params, *, away=False, keep_speed=False):
         t = ctx["transform"]
         dx, dy = goal[0] - t.x, goal[1] - t.y
@@ -70,7 +72,11 @@ class BehaviorTreeSystem(System):
             return 0.0
         controller = ctx["controller"]
         if controller is not None:
-            scale = 1.0 if away or keep_speed else min(1.0, distance / max(controller.speed * ctx["dt"], 1e-9))
+            scale = (
+                1.0
+                if away or keep_speed
+                else min(1.0, distance / max(controller.speed * ctx["dt"], 1e-9))
+            )
             controller.set_intent(dx / distance * scale, dy / distance * scale)
         else:
             step = (
@@ -82,7 +88,7 @@ class BehaviorTreeSystem(System):
             t.y += dy / distance * step
         return distance
 
-    # -- real-time combat helpers -------------------------------------------------------------------------------
+    # -- real-time combat helpers -----------------------------------------------------------------
     @staticmethod
     def _is_combatant(entity):
         from .combat import CombatantComponent
@@ -117,7 +123,9 @@ class BehaviorTreeSystem(System):
         if aim is not None and abs(aim[0]) < 1e-9 and abs(aim[1]) < 1e-9:
             aim = None
         ability_id = str(p.get("ability", ""))
-        result = self.action_combat.use(entity, ability_id, aim=aim, scene=ctx["scene"], buffer=False)
+        result = self.action_combat.use(
+            entity, ability_id, aim=aim, scene=ctx["scene"], buffer=False
+        )
         if result not in ("used", "combo"):
             return FAILURE
         if p.get("wait"):
@@ -137,7 +145,11 @@ class BehaviorTreeSystem(System):
         direction = state.get("direction", 1.0 if controller.facing != "left" else -1.0)
         if state.get("moved") and controller.hit_wall:
             direction = -direction  # bumped into a wall last step
-        elif controller.grounded and self.world is not None and not self._ground_ahead(ctx, controller, direction):
+        elif (
+            controller.grounded
+            and self.world is not None
+            and not self._ground_ahead(ctx, controller, direction)
+        ):
             direction = -direction  # a ledge ahead
         state["direction"] = direction
         state["moved"] = True
@@ -175,7 +187,8 @@ class BehaviorTreeSystem(System):
         state = mem.setdefault(path, {})
         kind, p = node.kind, node.params
         if kind == "selector":
-            # Reactive: higher-priority children are re-checked every tick and interrupt a running lower one.
+            # Reactive: higher-priority children are re-checked every tick and interrupt a running
+            # lower one.
             for index, child in enumerate(node.children):
                 result = self._tick(child, (*path, index), ctx)
                 if result != FAILURE:
@@ -236,19 +249,32 @@ class BehaviorTreeSystem(System):
         if kind == "player_within":
             return (
                 SUCCESS
-                if target is not None and self._distance_to(ctx, target) <= float(p.get("radius", 64))
+                if target is not None
+                and self._distance_to(ctx, target) <= float(p.get("radius", 64))
                 else FAILURE
             )
         if kind == "player_beyond":
-            return SUCCESS if target is None or self._distance_to(ctx, target) > float(p.get("radius", 64)) else FAILURE
+            return (
+                SUCCESS
+                if target is None or self._distance_to(ctx, target) > float(p.get("radius", 64))
+                else FAILURE
+            )
         if kind == "home_within":
-            return SUCCESS if self._distance_to(ctx, ctx["home"]) <= float(p.get("radius", 4)) else FAILURE
+            return (
+                SUCCESS
+                if self._distance_to(ctx, ctx["home"]) <= float(p.get("radius", 4))
+                else FAILURE
+            )
         if kind in ("hp_below", "hp_above"):
             fraction = self._fraction(ctx, str(p.get("resource", "hp")))
             if fraction is None:
                 return FAILURE
             limit = float(p.get("fraction", 0.5))
-            return SUCCESS if (fraction < limit if kind == "hp_below" else fraction > limit) else FAILURE
+            return (
+                SUCCESS
+                if (fraction < limit if kind == "hp_below" else fraction > limit)
+                else FAILURE
+            )
         if kind == "ability_ready":
             if self.action_combat is None:
                 return FAILURE
@@ -256,10 +282,18 @@ class BehaviorTreeSystem(System):
             entity = ctx["entity"]
             ability = self.action_combat.abilities.get(ability_id)
             ready = ability is not None and self.action_combat.cooldown(entity, ability_id) <= 0
-            return SUCCESS if ready and not isinstance(self.action_combat._prices(entity, ability), str) else FAILURE
+            return (
+                SUCCESS
+                if ready and not isinstance(self.action_combat._prices(entity, ability), str)
+                else FAILURE
+            )
         if kind == "has_state":
             state = self._combat_state(ctx)
-            found = state is not None and state.states is not None and state.states.get(str(p.get("state", "")))
+            found = (
+                state is not None
+                and state.states is not None
+                and state.states.get(str(p.get("state", "")))
+            )
             return SUCCESS if found else FAILURE
         if kind == "acting":
             actions = getattr(self.action_combat, "actions", None)
@@ -271,7 +305,9 @@ class BehaviorTreeSystem(System):
         # actions
         if kind == "chase":
             lose = p.get("lose_radius")
-            if target is None or (lose is not None and self._distance_to(ctx, target) > float(lose)):
+            if target is None or (
+                lose is not None and self._distance_to(ctx, target) > float(lose)
+            ):
                 return FAILURE
             if self._distance_to(ctx, target) <= float(p.get("arrive", 4.0)):
                 return SUCCESS
@@ -283,7 +319,11 @@ class BehaviorTreeSystem(System):
             self._move(ctx, target, p, away=True)
             return RUNNING
         if kind in ("move_to", "return_home"):
-            goal = ctx["home"] if kind == "return_home" else (float(p.get("x", 0)), float(p.get("y", 0)))
+            goal = (
+                ctx["home"]
+                if kind == "return_home"
+                else (float(p.get("x", 0)), float(p.get("y", 0)))
+            )
             if self._distance_to(ctx, goal) <= float(p.get("arrive", 2.0)):
                 return SUCCESS
             self._move(ctx, goal, p)
@@ -301,8 +341,14 @@ class BehaviorTreeSystem(System):
         if kind == "wander":
             goal = state.get("goal")
             if goal is None:
-                angle, reach = self.rng.uniform(0, 2 * pi), self.rng.uniform(0, float(p.get("radius", 48.0)))
-                goal = state["goal"] = (ctx["home"][0] + cos(angle) * reach, ctx["home"][1] + sin(angle) * reach)
+                angle, reach = (
+                    self.rng.uniform(0, 2 * pi),
+                    self.rng.uniform(0, float(p.get("radius", 48.0))),
+                )
+                goal = state["goal"] = (
+                    ctx["home"][0] + cos(angle) * reach,
+                    ctx["home"][1] + sin(angle) * reach,
+                )
             if self._distance_to(ctx, goal) <= float(p.get("arrive", 2.0)):
                 state.pop("goal", None)
                 return SUCCESS
@@ -355,7 +401,10 @@ class BehaviorTreeSystem(System):
                 return FAILURE
             t = ctx["transform"]
             for _ in range(max(1, int(p.get("count", 1)))):
-                angle, reach = self.rng.uniform(0, 2 * pi), self.rng.uniform(0, float(p.get("radius", 32.0)))
+                angle, reach = (
+                    self.rng.uniform(0, 2 * pi),
+                    self.rng.uniform(0, float(p.get("radius", 32.0))),
+                )
                 self.spawn(str(p["prefab"]), t.x + cos(angle) * reach, t.y + sin(angle) * reach)
             return SUCCESS
         if kind == "apply_state":
@@ -382,7 +431,9 @@ class BehaviorTreeSystem(System):
             if tree is None:
                 self.status[entity.id] = FAILURE
                 continue
-            entry = self.memory.setdefault(entity.id, {"nodes": {}, "home": (transform.x, transform.y), "time": 0.0})
+            entry = self.memory.setdefault(
+                entity.id, {"nodes": {}, "home": (transform.x, transform.y), "time": 0.0}
+            )
             entry["time"] += dt
             controller = entity.try_get(CharacterController2DComponent)
             if controller is not None and controller.enabled:

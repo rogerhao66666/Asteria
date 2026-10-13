@@ -62,10 +62,16 @@ def measure_action_timing(repo, frame_times, *, ability_id="fire_arc", target="a
         runtime._present_battle(0.0)  # consumes the action at the current presentation time
         screen = adapter.screen
         authored = {
-            "attack_pose": next(b.at for b in sequence.beats if b.channel == "animation" and b.cue == "attack"),
+            "attack_pose": next(
+                b.at for b in sequence.beats if b.channel == "animation" and b.cue == "attack"
+            ),
             "effect": next(b.at for b in sequence.beats if b.channel == "vfx"),
-            "hit_pose": next(b.at for b in sequence.beats if b.channel == "animation" and b.cue == "hit"),
-            "damage_number": next(b.at for b in sequence.beats if b.channel == "animation" and b.cue == "hit"),
+            "hit_pose": next(
+                b.at for b in sequence.beats if b.channel == "animation" and b.cue == "hit"
+            ),
+            "damage_number": next(
+                b.at for b in sequence.beats if b.channel == "animation" and b.cue == "hit"
+            ),
             "hit_sound": next(b.at for b in sequence.beats if b.channel == "audio"),
         }
         observed = {}
@@ -81,7 +87,9 @@ def measure_action_timing(repo, frame_times, *, ability_id="fire_arc", target="a
                 "effect": any(v.payload.get("asset_id") for v in screen.feedback.vfx),
                 "hit_pose": role(target) == "hit",
                 "damage_number": any(v.target_id == target for v in screen.feedback.values),
-                "hit_sound": any(dict(c.payload).get("asset_id") == "hit" for c in adapter.audio_cues),
+                "hit_sound": any(
+                    dict(c.payload).get("asset_id") == "hit" for c in adapter.audio_cues
+                ),
             }
             for key, value in seen.items():
                 if value and key not in observed:

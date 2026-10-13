@@ -34,7 +34,9 @@ def clip(name="fx", size=(777, 333), n=5):
         "frames": [f"{i}.png" for i in range(n)],
         "timings": [{"duration_ms": 8 + i * 3} for i in range(n)],
         "pivot": [100.25, 300.75],
-        "layers": [{"name": "core", "z": 2, "blend_mode": "add", "opacity": 0.7, "material": "mat/glow"}],
+        "layers": [
+            {"name": "core", "z": 2, "blend_mode": "add", "opacity": 0.7, "material": "mat/glow"}
+        ],
         "loop": True,
     }
 
@@ -113,7 +115,11 @@ def test_vfx_roundtrip():
     }
     a, b = rt("vfx", D("vfx", p))
     v = b.variant()
-    assert v.anchor.bone_or_socket == "weapon_tip" and v.rotation_deg == 37 and len(v.clip.frames) == 12
+    assert (
+        v.anchor.bone_or_socket == "weapon_tip"
+        and v.rotation_deg == 37
+        and len(v.clip.frames) == 12
+    )
 
 
 def test_manifest_preserved():
@@ -125,7 +131,18 @@ def test_manifest_preserved():
 def test_registry_all_typed():
     r = reg()
     assert all(
-        r.codec(k) for k in ("icon", "portrait", "audio", "font", "material", "prop", "tileset", "monster", "vfx")
+        r.codec(k)
+        for k in (
+            "icon",
+            "portrait",
+            "audio",
+            "font",
+            "material",
+            "prop",
+            "tileset",
+            "monster",
+            "vfx",
+        )
     )
 
 
@@ -136,13 +153,19 @@ def test_project_extension_survives():
 
 
 def test_large_monster_clip():
-    p = {"animations": [{"name": "boss", "clip": clip("boss", (4096, 2048), 240)}], "default_animation": "boss"}
+    p = {
+        "animations": [{"name": "boss", "clip": clip("boss", (4096, 2048), 240)}],
+        "default_animation": "boss",
+    }
     a, b = rt("monster", D("monster", p))
     assert len(b.animation("boss").clip.frames) == 240
 
 
 def test_100_vfx_variants():
-    p = {"variants": [{"name": f"v{i}", "clip": clip(f"v{i}", n=3)} for i in range(100)], "default_variant": "v0"}
+    p = {
+        "variants": [{"name": f"v{i}", "clip": clip(f"v{i}", n=3)} for i in range(100)],
+        "default_variant": "v0",
+    }
     a, b = rt("vfx", D("vfx", p))
     assert len(b.variants) == 100
 

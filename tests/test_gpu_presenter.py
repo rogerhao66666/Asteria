@@ -1,4 +1,5 @@
-"""ENG-12 R1: the GPU presenter shows the playable runtime's Surface exactly (identity chain), and the
+"""ENG-12 R1: the GPU presenter shows the playable runtime's Surface exactly (identity chain), and
+the
 playable runtime falls back to pygame when OpenGL is unavailable."""
 
 import pytest
@@ -65,7 +66,9 @@ def test_playable_runtime_falls_back_to_pygame_when_gl_fails(resource_root, monk
     def broken(*args, **kwargs):
         raise gpu_presenter.GpuPresenterError("no OpenGL in this environment")
 
-    monkeypatch.setattr(gpu_presenter.GpuPresenter, "open_window", classmethod(lambda cls, *a, **k: broken()))
+    monkeypatch.setattr(
+        gpu_presenter.GpuPresenter, "open_window", classmethod(lambda cls, *a, **k: broken())
+    )
     project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
     save = GameRuntimeSave.load_json(ROOT / "saves" / "boss_stress.asteria-save.json", project)
     runtime = PlayableTestRuntime(project, save, ROOT, backend="moderngl")

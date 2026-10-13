@@ -46,8 +46,14 @@ class TilesetAsset:
             raise ValueError("dimensions")
         if self.margin < 0 or self.spacing < 0:
             raise ValueError("layout")
-        expected_w = self.margin * 2 + self.columns * self.tile_size[0] + max(0, self.columns - 1) * self.spacing
-        expected_h = self.margin * 2 + self.rows * self.tile_size[1] + max(0, self.rows - 1) * self.spacing
+        expected_w = (
+            self.margin * 2
+            + self.columns * self.tile_size[0]
+            + max(0, self.columns - 1) * self.spacing
+        )
+        expected_h = (
+            self.margin * 2 + self.rows * self.tile_size[1] + max(0, self.rows - 1) * self.spacing
+        )
         if (expected_w, expected_h) != self.image_size:
             raise ValueError("image/grid mismatch")
         ids = [x.tile_id for x in self.tiles]
@@ -72,5 +78,10 @@ class TilesetValidator:
 
 def tileset_asset(asset_id, uri, image_size, tile_size, columns, rows, **kw):
     return TilesetAsset(
-        CanonicalAsset(asset_id, "tileset", AssetSource(uri)), image_size, tile_size, columns, rows, **kw
+        CanonicalAsset(asset_id, "tileset", AssetSource(uri)),
+        image_size,
+        tile_size,
+        columns,
+        rows,
+        **kw,
     )

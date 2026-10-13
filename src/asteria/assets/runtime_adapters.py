@@ -84,21 +84,38 @@ def portrait_request(a, variant=None):
 
 def audio_request(a):
     return AudioRequest(
-        a.canonical.asset_id, a.uri, a.duration_ms, a.channels, a.sample_rate, a.loop_region_ms, a.properties
+        a.canonical.asset_id,
+        a.uri,
+        a.duration_ms,
+        a.channels,
+        a.sample_rate,
+        a.loop_region_ms,
+        a.properties,
     )
 
 
 def font_request(a):
-    return FontRequest(a.canonical.asset_id, a.uri, a.family_hint, tuple(a.fallback_refs), a.properties)
+    return FontRequest(
+        a.canonical.asset_id, a.uri, a.family_hint, tuple(a.fallback_refs), a.properties
+    )
 
 
 def material_request(a):
-    return MaterialRequest(a.canonical.asset_id, a.shader_ref, a.parameters, a.texture_refs, a.properties)
+    return MaterialRequest(
+        a.canonical.asset_id, a.shader_ref, a.parameters, a.texture_refs, a.properties
+    )
 
 
 def clip_request(aid, name, c):
     return ClipRequest(
-        aid, name, c.frame_size, len(c.frames), tuple(x.duration_ms for x in c.timings), c.pivot, c.loop, c.layers
+        aid,
+        name,
+        c.frame_size,
+        len(c.frames),
+        tuple(x.duration_ms for x in c.timings),
+        c.pivot,
+        c.loop,
+        c.layers,
     )
 
 

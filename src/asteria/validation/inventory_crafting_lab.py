@@ -15,7 +15,10 @@ class CompositionRecipe:
     outputs: tuple[tuple[str, int], ...]
 
     def matches(self, payload):
-        selected = {str(step_id): tuple(sorted(str(x) for x in values)) for step_id, values in dict(payload).items()}
+        selected = {
+            str(step_id): tuple(sorted(str(x) for x in values))
+            for step_id, values in dict(payload).items()
+        }
         required = {str(step_id): tuple(sorted(values)) for step_id, values in self.selections}
         return selected == required
 
@@ -46,8 +49,12 @@ class InventoryCraftingLab:
         self.item_catalog = {x.item_id: x for x in self.scenario.item_catalog}
         self.item_catalog.update(
             {
-                "healing_tonic": ItemDefinition("healing_tonic", "Healing Tonic", tags=("crafted", "restorative")),
-                "spark_tonic": ItemDefinition("spark_tonic", "Spark Tonic", tags=("crafted", "volatile")),
+                "healing_tonic": ItemDefinition(
+                    "healing_tonic", "Healing Tonic", tags=("crafted", "restorative")
+                ),
+                "spark_tonic": ItemDefinition(
+                    "spark_tonic", "Spark Tonic", tags=("crafted", "volatile")
+                ),
             }
         )
         self.workflow = BattleActionWorkflowRuntime()
@@ -145,7 +152,9 @@ class InventoryCraftingLab:
             if self.inventory.count(item_id) < amount
         )
         if missing:
-            text = ", ".join(f"{item_id} requires {amount}, owned {owned}" for item_id, amount, owned in missing)
+            text = ", ".join(
+                f"{item_id} requires {amount}, owned {owned}" for item_id, amount, owned in missing
+            )
             raise ValueError("insufficient materials: " + text)
 
         before = self.inventory.to_data()

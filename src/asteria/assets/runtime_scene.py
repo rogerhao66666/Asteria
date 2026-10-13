@@ -41,7 +41,9 @@ class RuntimeSceneMaterializer:
                 (),
                 (
                     RuntimeMaterializationIssue(
-                        "", "runtime.project.not_activatable", "project load report is not activatable"
+                        "",
+                        "runtime.project.not_activatable",
+                        "project load report is not activatable",
                     ),
                 ),
                 False,
@@ -52,10 +54,15 @@ class RuntimeSceneMaterializer:
             try:
                 staged.append(self.binders.bind(resolved, runtime_context))
             except Exception as e:
-                issues.append(RuntimeMaterializationIssue(resolved.binding.object_id, "runtime.binding.failed", str(e)))
+                issues.append(
+                    RuntimeMaterializationIssue(
+                        resolved.binding.object_id, "runtime.binding.failed", str(e)
+                    )
+                )
                 break
         if issues:
-            # Staged values have never been exposed to target; optional disposable objects are cleaned
+            # Staged values have never been exposed to target; optional disposable objects are
+            # cleaned
             # by target only after commit, so there is nothing scene-visible to rollback here.
             return RuntimeMaterializationReport((), tuple(issues), False)
         batch = tuple(staged)

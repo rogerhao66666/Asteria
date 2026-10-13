@@ -37,7 +37,9 @@ def sprite_draw(
         (world_x, world_y),
         CharacterPlacement((frame.width, frame.height), (frame.pivot_x, frame.pivot_y)),
     )
-    sx, sy = camera.world_to_screen(draw_x, draw_y, placement.parallax_x, placement.parallax_y, placement.elevation)
+    sx, sy = camera.world_to_screen(
+        draw_x, draw_y, placement.parallax_x, placement.parallax_y, placement.elevation
+    )
     return TextureDraw(
         sheet.texture.asset_id,
         (frame.x, frame.y, frame.width, frame.height),

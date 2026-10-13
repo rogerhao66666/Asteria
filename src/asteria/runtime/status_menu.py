@@ -73,12 +73,14 @@ class StatusMenu:
         count = len(self.rows())
         self.row = (self.row + step) % count if count else 0
 
-    # -- projection through the canonical screen runtimes -------------------------------------------
+    # -- projection through the canonical screen runtimes -----------------------------------------
     def view(self):
         game, db, actor_id = self.game, self.game.project.rpg_database, self.actor_id
         state = game.save.rpg_state
         if self.tab == "items":
-            return self.screens["items"].project(state.inventory, item_catalog=tuple(db.items.values()))
+            return self.screens["items"].project(
+                state.inventory, item_catalog=tuple(db.items.values())
+            )
         if actor_id is None:
             return None
         if self.tab == "status":
@@ -89,7 +91,9 @@ class StatusMenu:
             )
         if self.tab == "equipment":
             owned = [db.equipment[k] for k in sorted(db.equipment) if state.inventory.count(k) > 0]
-            return self.screens["equipment"].project(state.loadouts[actor_id], equipment_catalog=tuple(owned))
+            return self.screens["equipment"].project(
+                state.loadouts[actor_id], equipment_catalog=tuple(owned)
+            )
         return self.screens["skills"].project(
             game.resolve_actor_build(actor_id),
             ability_state=game._ability_state(actor_id),
@@ -110,39 +114,54 @@ class StatusMenu:
                 (
                     "item",
                     i.item_id,
-                    equipment[i.item_id].display_name if i.label == i.item_id and i.item_id in equipment else i.label,
+                    equipment[i.item_id].display_name
+                    if i.label == i.item_id and i.item_id in equipment
+                    else i.label,
                     f"x{i.count}" + ("  (use)" if i.usable else ""),
                 )
                 for i in view.items
                 if i.count > 0
             ]
         if self.tab == "status":
-            rows = [("resource", r.resource_id, r.label, f"{r.current:g} / {r.maximum:g}") for r in view.resources]
+            rows = [
+                ("resource", r.resource_id, r.label, f"{r.current:g} / {r.maximum:g}")
+                for r in view.resources
+            ]
             rows += [("stat", s.stat_id, s.label, f"{s.value:g}") for s in view.stats]
             return rows
         if self.tab == "equipment":
             rows = [
-                ("slot", slot.slot_id, slot.label, ", ".join(i.label for i in slot.items) or "—") for slot in view.slots
+                ("slot", slot.slot_id, slot.label, ", ".join(i.label for i in slot.items) or "—")
+                for slot in view.slots
             ]
-            rows += [("candidate", c.equipment_id, c.label, f"→ {c.slot_id}") for c in view.candidates]
+            rows += [
+                ("candidate", c.equipment_id, c.label, f"→ {c.slot_id}") for c in view.candidates
+            ]
             return rows
         rows = [
             ("ability", a.ability_id, a.label, "learned" if a.learned else "")
             for a in view.abilities
             if a.learned or a.resolved
         ]
-        rows += [("passive", p.passive_id, p.label, "active" if p.active else "") for p in view.passives]
+        rows += [
+            ("passive", p.passive_id, p.label, "active" if p.active else "") for p in view.passives
+        ]
         return rows
 
     # -- actions ---------------------------------------------------------------------------------
     def row_icons(self):
-        """The icon id of each row of ``rows()`` (``""`` for none): items, equipment, and a slot's first item."""
+        """The icon id of each row of ``rows()`` (``""`` for none): items, equipment, and a slot's
+        first item."""
         from .menu_icons import record_icon_id
 
         project = self.game.project
         if self.tab == "equipment":
             view = self.view()
-            firsts = {s.slot_id: (s.items[0].equipment_id if s.items else "") for s in view.slots} if view else {}
+            firsts = (
+                {s.slot_id: (s.items[0].equipment_id if s.items else "") for s in view.slots}
+                if view
+                else {}
+            )
         icons = []
         for kind, key, _label, _detail in self.rows():
             if kind == "slot":
@@ -159,7 +178,9 @@ class StatusMenu:
         kind, key, label, _ = rows[self.row % len(rows)]
         if kind == "item":
             result = self.game.use_item(self.actor_id, key)
-            self.message = f"Used {label}" if result.used else f"{label} can't be used ({result.reason})"
+            self.message = (
+                f"Used {label}" if result.used else f"{label} can't be used ({result.reason})"
+            )
             return result
         if kind == "candidate":
             self.game.equip_from_inventory(self.actor_id, key)

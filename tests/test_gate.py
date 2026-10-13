@@ -15,7 +15,14 @@ def add(r, aid, t, src, **kw):
 def complete(r):
     for c in ["idle", "walk", "run", "attack", "hurt", "death"]:
         add(
-            r, "c." + c, "character_animation", c + ".png", clip=c, frame_size=[64, 64], grid=[4, 4], frame_ms=[100] * 4
+            r,
+            "c." + c,
+            "character_animation",
+            c + ".png",
+            clip=c,
+            frame_size=[64, 64],
+            grid=[4, 4],
+            frame_ms=[100] * 4,
         )
     for t in ["monster", "vfx", "tileset", "prop", "icon", "portrait", "background"]:
         add(r, t, t, t + ".png")

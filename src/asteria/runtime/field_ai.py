@@ -24,7 +24,14 @@ from asteria.core.prefab import instantiate
 from .character import CharacterController2D
 
 FIELD_AI_BEHAVIOURS = ("idle", "patrol", "wander", "chase", "flee")
-MODES = ("idle", "patrol", "wander", "chase", "flee", "return")  # mode codes in the FieldAI columns
+MODES = (
+    "idle",
+    "patrol",
+    "wander",
+    "chase",
+    "flee",
+    "return",
+)  # mode codes in the FieldAI columns
 
 
 def parse_path(text):
@@ -56,8 +63,19 @@ def parse_path(text):
         ),
         Field("speed", float, 48.0, minimum=0.0),
         Field("detect_radius", float, 96.0, minimum=0.0),
-        Field("lose_radius", float, 160.0, minimum=0.0, tooltip="Distance at which a chase or flee gives up."),
-        Field("target_entity_id", str, "", tooltip="Entity to chase or flee from (usually the player)."),
+        Field(
+            "lose_radius",
+            float,
+            160.0,
+            minimum=0.0,
+            tooltip="Distance at which a chase or flee gives up.",
+        ),
+        Field(
+            "target_entity_id",
+            str,
+            "",
+            tooltip="Entity to chase or flee from (usually the player).",
+        ),
         Field("patrol_path", str, "", tooltip="Patrol points as 'x1,y1; x2,y2'."),
         Field("wander_radius", float, 48.0, minimum=0.0),
         Field("arrive_distance", float, 2.0, minimum=0.0),
@@ -87,10 +105,14 @@ class FieldAIState:
 class FieldAISystem(System):
     """Runs every FieldAIComponent.
 
-    Entities with an enabled ``CharacterController2D`` react and steer together on column storage (one kernel call:
-    detect / lose the target, chase, flee, return home); patrol and wander, and entities without a controller, keep
-    the per-entity logic. ``blocking`` is any ``collides_world_point`` query, or a callable ``entity -> query`` (so
-    an entity's own collider can be excluded). ``default_target_id`` is chased / fled when a component names no
+    Entities with an enabled ``CharacterController2D`` react and steer together on column storage
+    (one kernel call:
+    detect / lose the target, chase, flee, return home); patrol and wander, and entities without a
+    controller, keep
+    the per-entity logic. ``blocking`` is any ``collides_world_point`` query, or a callable
+    ``entity -> query`` (so
+    an entity's own collider can be excluded). ``default_target_id`` is chased / fled when a
+    component names no
     target.
     """
 
@@ -106,12 +128,18 @@ class FieldAISystem(System):
         self._controller = None
 
     def state(self, entity_id):
-        """Mode, home, patrol index and wander goal of an entity (a snapshot; ``None`` before its first update)."""
+        """Mode, home, patrol index and wander goal of an entity (a snapshot; ``None`` before its
+        first update)."""
         spec = self._specs.get(str(entity_id))
         if spec is None or not spec.started:
             return None
         extra = self._extra.get(str(entity_id)) or FieldAIState()
-        return FieldAIState(MODES[spec.mode_code], (spec.home_x, spec.home_y), extra.patrol_index, extra.wander_goal)
+        return FieldAIState(
+            MODES[spec.mode_code],
+            (spec.home_x, spec.home_y),
+            extra.patrol_index,
+            extra.wander_goal,
+        )
 
     @property
     def states(self):
@@ -125,14 +153,19 @@ class FieldAISystem(System):
         if distance <= (0.0 if away else spec.arrive_distance):
             return True
         if self._controller is not None:
-            # ENG-02: an AI entity with a CharacterController2D moves through it (same collision as the player)
-            scale = min(1.0, distance / max(self._controller.speed * dt, 1e-9)) if not away else 1.0
+            # ENG-02: an AI entity with a CharacterController2D moves through it (same collision as
+            # the player)
+            scale = (
+                min(1.0, distance / max(self._controller.speed * dt, 1e-9)) if not away else 1.0
+            )
             self._controller.set_intent(dx / distance * scale, dy / distance * scale)
             return False
         step = spec.speed * dt
         if not away and step > distance:  # land exactly on the goal
             dx, dy = dx * distance / step, dy * distance / step
-        mover = CharacterController2D(transform.x, transform.y, speed=spec.speed, half_width=0.0, half_height=0.0)
+        mover = CharacterController2D(
+            transform.x, transform.y, speed=spec.speed, half_width=0.0, half_height=0.0
+        )
         mover.move(dx / distance, dy / distance, dt, self._query or _Open())
         transform.x, transform.y = mover.x, mover.y
         return False
@@ -141,11 +174,16 @@ class FieldAISystem(System):
         target_id = spec.target_entity_id or self.default_target_id
         if target_id not in cache:
             target = scene.get_entity(target_id) if target_id else None
-            cache[target_id] = target.get(Transform) if target is not None and target.has(Transform) else None
+            cache[target_id] = (
+                target.get(Transform) if target is not None and target.has(Transform) else None
+            )
         return cache[target_id]
 
     def update(self, scene, dt):
-        from asteria.runtime.character_control import AIController2DComponent, CharacterController2DComponent
+        from asteria.runtime.character_control import (
+            AIController2DComponent,
+            CharacterController2DComponent,
+        )
 
         table, transforms = scene.columns(FieldAIComponent), scene.columns(Transform)
         if table is None or transforms is None:
@@ -157,13 +195,20 @@ class FieldAISystem(System):
         for slot in table.slots():
             spec = table.components[slot]
             entity = spec._entity
-            if not entity.enabled or entity._destroy_requested or slot >= len(placed) or placed[slot] is None:
+            if (
+                not entity.enabled
+                or entity._destroy_requested
+                or slot >= len(placed)
+                or placed[slot] is None
+            ):
                 continue
             ai = entity._components.get(AIController2DComponent)
             if ai is not None and (not ai.enabled or ai.driver != "field_ai"):
                 continue  # another driver (behavior tree) or none owns this entity
             rows.append((entity._order, slot, entity, spec, placed[slot]))
-        rows.sort(key=lambda row: row[0])  # scene order: wander goals draw from the rng in the same order
+        rows.sort(
+            key=lambda row: row[0]
+        )  # scene order: wander goals draw from the rng in the same order
         targets = {}
         batch, single = [], []
         for _, slot, entity, spec, transform in rows:
@@ -192,7 +237,9 @@ class FieldAISystem(System):
                 table.data, transforms.data, controllers.data, slots, codes, tx, ty, has, dt
             )
             later = [(batch[k][1], batch[k][2], batch[k][3], batch[k][4]) for k in rest]
-        for entity, spec, transform, controller in sorted(single + later, key=lambda row: row[0]._order):
+        for entity, spec, transform, controller in sorted(
+            single + later, key=lambda row: row[0]._order
+        ):
             self._think(scene, entity, spec, transform, controller, targets, dt)
 
     def _think(self, scene, entity, spec, transform, controller, targets, dt):
@@ -201,13 +248,17 @@ class FieldAISystem(System):
         extra = self._extra.setdefault(entity.id, FieldAIState())
         self._query = (
             self.blocking(entity)
-            if controller is None and callable(self.blocking) and not hasattr(self.blocking, "collides_world_point")
+            if controller is None
+            and callable(self.blocking)
+            and not hasattr(self.blocking, "collides_world_point")
             else self.blocking
             if controller is None
             else None
         )
         target = self._target_of(scene, spec, targets)
-        distance = None if target is None else hypot(target.x - transform.x, target.y - transform.y)
+        distance = (
+            None if target is None else hypot(target.x - transform.x, target.y - transform.y)
+        )
         mode = MODES[spec.mode_code]
         if spec.behaviour in ("chase", "flee") and distance is not None:
             if mode in ("chase", "flee"):
@@ -227,14 +278,19 @@ class FieldAISystem(System):
         elif spec.behaviour == "patrol":
             path = parse_path(spec.patrol_path)
             mode = "patrol"
-            if path and self._step_toward(transform, spec, path[extra.patrol_index % len(path)], dt):
+            if path and self._step_toward(
+                transform, spec, path[extra.patrol_index % len(path)], dt
+            ):
                 extra.patrol_index = (extra.patrol_index + 1) % len(path)
         elif spec.behaviour == "wander":
             mode = "wander"
             if extra.wander_goal is None:
                 angle = self.rng.uniform(0, 2 * pi)
                 reach = self.rng.uniform(0, spec.wander_radius)
-                extra.wander_goal = (spec.home_x + cos(angle) * reach, spec.home_y + sin(angle) * reach)
+                extra.wander_goal = (
+                    spec.home_x + cos(angle) * reach,
+                    spec.home_y + sin(angle) * reach,
+                )
             if self._step_toward(transform, spec, extra.wander_goal, dt):
                 extra.wander_goal = None
         else:
@@ -355,7 +411,12 @@ class SpawnSystem(System):
     type_name="asteria.VisibleEncounter",
     version=1,
     fields=(
-        Field("encounter_id", str, "", tooltip="Encounter started when the player touches this entity."),
+        Field(
+            "encounter_id",
+            str,
+            "",
+            tooltip="Encounter started when the player touches this entity.",
+        ),
         Field("touch_radius", float, 12.0, minimum=0.0),
         Field("remove_on_start", bool, True),
     ),

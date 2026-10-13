@@ -15,7 +15,12 @@ from asteria.core import Entity, Transform
 from asteria.graphics import SpriteClip, SpriteKeyframe
 from asteria.project import Project
 from asteria.rpg import ActorDefinition
-from asteria.runtime import ActorLinkComponent, AnimationClipSet, Animator2DComponent, SpriteRenderer2D
+from asteria.runtime import (
+    ActorLinkComponent,
+    AnimationClipSet,
+    Animator2DComponent,
+    SpriteRenderer2D,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,7 +38,9 @@ def _directional_clips() -> AnimationClipSet:
     clips = {}
     for row, direction in enumerate(("down", "left", "right", "up")):
         base = row * 3
-        clips[f"idle_{direction}"] = SpriteClip(f"idle_{direction}", [SpriteKeyframe(base + 1, 0.4)], True)
+        clips[f"idle_{direction}"] = SpriteClip(
+            f"idle_{direction}", [SpriteKeyframe(base + 1, 0.4)], True
+        )
         # MV's middle cell is the standing pose. Repeat it between the two
         # alternating step poses so the loop matches the native 3-frame gait.
         clips[f"walk_{direction}"] = SpriteClip(
@@ -96,7 +103,9 @@ class CreateCharacterCommand:
             ("frame_size", tuple(visual.frame_size)),
         )
         assets[0] = replace(walking, metadata=tuple(walking.metadata) + animation_metadata)
-        self.created = CreatedCharacter(actor_id, entity_id, clip_set_id, actor, entity, clip_set, tuple(assets))
+        self.created = CreatedCharacter(
+            actor_id, entity_id, clip_set_id, actor, entity, clip_set, tuple(assets)
+        )
         self._paths = tuple(visual.owned_paths)
         self._file_bytes: dict[Path, bytes] | None = None
         self._registered_asset_ids: list[str] = []
@@ -162,7 +171,10 @@ class CreateCharacterCommand:
         if self._entity_added and self.created.entity.scene is self.scene:
             self.scene.detach_entity(self.created.entity)
         self._entity_added = False
-        if self._actor_added and self.project.rpg_database.actors.get(self.created.actor_id) is self.created.actor:
+        if (
+            self._actor_added
+            and self.project.rpg_database.actors.get(self.created.actor_id) is self.created.actor
+        ):
             self.project.rpg_database.actors.pop(self.created.actor_id)
         self._actor_added = False
         for asset_id in reversed(self._registered_asset_ids):

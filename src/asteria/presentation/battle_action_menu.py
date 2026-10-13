@@ -60,7 +60,9 @@ class BattleActionEntry:
         object.__setattr__(self, "category", category)
         object.__setattr__(self, "kind", kind)
         object.__setattr__(
-            self, "icon_asset_id", None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id")
+            self,
+            "icon_asset_id",
+            None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id"),
         )
         object.__setattr__(self, "detail", str(detail))
         object.__setattr__(self, "cost_text", str(cost_text))
@@ -195,10 +197,14 @@ class BattleActionMenuRuntime:
 
     def _sort(self, values):
         if self.policy.sort_mode == "priority":
-            return sorted(values, key=lambda x: (-x.priority, x.order, x.label.casefold(), x.action_id))
+            return sorted(
+                values, key=lambda x: (-x.priority, x.order, x.label.casefold(), x.action_id)
+            )
         if self.policy.sort_mode == "label":
             return sorted(values, key=lambda x: (x.label.casefold(), x.order, x.action_id))
-        return sorted(values, key=lambda x: (x.order, -x.priority, x.label.casefold(), x.action_id))
+        return sorted(
+            values, key=lambda x: (x.order, -x.priority, x.label.casefold(), x.action_id)
+        )
 
     def _categories(self):
         values = []
@@ -217,7 +223,10 @@ class BattleActionMenuRuntime:
         values = [
             x
             for x in self._source
-            if (self.active_category == self.policy.all_category_id or x.category == self.active_category)
+            if (
+                self.active_category == self.policy.all_category_id
+                or x.category == self.active_category
+            )
             and x.matches(self.query)
         ]
         values = self._sort(values)
@@ -245,7 +254,10 @@ class BattleActionMenuRuntime:
         return self._view
 
     def set_entries(self, entries):
-        entries = tuple(x if isinstance(x, BattleActionEntry) else BattleActionEntry.from_data(x) for x in entries)
+        entries = tuple(
+            x if isinstance(x, BattleActionEntry) else BattleActionEntry.from_data(x)
+            for x in entries
+        )
         if len({x.action_id for x in entries}) != len(entries):
             raise ValueError("duplicate action menu action_id")
         self._source = entries
@@ -266,7 +278,8 @@ class BattleActionMenuRuntime:
         return self._refresh()
 
     def show(self, entries, category, index):
-        """Entries, the active category and the selected row (``index`` within that category, any page) at once:
+        """Entries, the active category and the selected row (``index`` within that category, any
+        page) at once:
         for a controller that keeps its own cursor."""
         self._source = tuple(entries)
         self.active_category = _id(category, "category")

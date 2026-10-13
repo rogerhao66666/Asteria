@@ -31,7 +31,12 @@ def test_projects_counts_catalog_and_zero_count_catalog_entries_read_only():
 def test_project_owned_groups_and_labels_are_generic():
     profile = InventoryScreenProfile(
         item_labels={"ore": "Forging Ore"},
-        item_groups={"potion": "supplies", "ether": "supplies", "ore": "crafting", "key_fragment": "quest"},
+        item_groups={
+            "potion": "supplies",
+            "ether": "supplies",
+            "ore": "crafting",
+            "key_fragment": "quest",
+        },
         group_labels={"crafting": "Crafting"},
     )
     view = InventoryScreenRuntime(profile).project(_inventory(), _catalog())
@@ -59,7 +64,11 @@ def test_large_inventory_overflow_is_presentation_only():
     profile = InventoryScreenProfile(item_groups=groups, visible_limits={"bag": 6})
     view = InventoryScreenRuntime(profile).project(inv, tuple(catalog))
     group = view.groups[0]
-    assert len(group.item_ids) == 20 and len(group.visible_item_ids) == 6 and group.overflow_count == 14
+    assert (
+        len(group.item_ids) == 20
+        and len(group.visible_item_ids) == 6
+        and group.overflow_count == 14
+    )
     assert len(inv.to_data()["counts"]) == 20
 
 
@@ -91,5 +100,7 @@ def test_no_fixed_consumable_material_key_item_taxonomy():
     inv = Inventory()
     inv.add("memory_shard", 3)
     profile = InventoryScreenProfile(item_groups={"memory_shard": "dream_archive"})
-    view = InventoryScreenRuntime(profile).project(inv, (ItemDefinition("memory_shard", tags=("story_memory",)),))
+    view = InventoryScreenRuntime(profile).project(
+        inv, (ItemDefinition("memory_shard", tags=("story_memory",)),)
+    )
     assert view.groups[0].group_id == "dream_archive"

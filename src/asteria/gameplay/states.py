@@ -29,7 +29,8 @@ class PeriodicEffect:
 
     Escalation (all optional): tick n (1, 2, 3...) applies the effect's values times a factor -
     ``growth_mode="add"``: 1 + growth x (n - 1) (growth 1: x1, x2, x3 - a poison that worsens);
-    ``growth_mode="multiply"``: growth ^ (n - 1) (growth 2: x1, x2, x4); ``growth_cap`` caps the factor.
+    ``growth_mode="multiply"``: growth ^ (n - 1) (growth 2: x1, x2, x4); ``growth_cap`` caps the
+    factor.
     """
 
     interval: float
@@ -37,7 +38,11 @@ class PeriodicEffect:
     growth: float = 0.0
     growth_mode: str = "add"
     growth_cap: float | None = None
-    OPTIONAL_DATA = {"growth": 0.0, "growth_mode": "add", "growth_cap": None}  # shown in the editor
+    OPTIONAL_DATA = {
+        "growth": 0.0,
+        "growth_mode": "add",
+        "growth_cap": None,
+    }  # shown in the editor
 
     def __init__(self, interval, effect, *, growth=0.0, growth_mode="add", growth_cap=None):
         interval = float(interval)
@@ -80,7 +85,11 @@ class PeriodicEffect:
 
     @classmethod
     def from_data(cls, data):
-        if not {"interval", "effect"} <= set(data) <= {"interval", "effect", "growth", "growth_mode", "growth_cap"}:
+        if (
+            not {"interval", "effect"}
+            <= set(data)
+            <= {"interval", "effect", "growth", "growth_mode", "growth_cap"}
+        ):
             raise ValueError("invalid periodic effect")
         return cls(
             data["interval"],
@@ -265,7 +274,9 @@ class ActiveState:
     stacks: int = 1
     periodic_elapsed: list[float] | None = None
     source_id: str | None = None
-    periodic_ticks: list[int] | None = None  # applications so far, per periodic effect (escalation)
+    periodic_ticks: list[int] | None = (
+        None  # applications so far, per periodic effect (escalation)
+    )
 
     def __post_init__(self):
         self.state_id = str(self.state_id)
@@ -364,7 +375,8 @@ class StateRuntime:
             active.remaining = applied_duration
             active.source_id = source_id
             active.periodic_elapsed = [0.0] * len(definition.periodic)
-            active.periodic_ticks = []  # a fresh application: escalation starts over (STACK keeps it)
+            # a fresh application: escalation starts over (STACK keeps it)
+            active.periodic_ticks = []
         else:
             active.stacks = min(definition.max_stacks, active.stacks + 1)
             active.remaining = applied_duration
@@ -432,7 +444,13 @@ class StateRuntime:
                 transform = _scaled(periodic.factor(_count_tick(active, index)), value_transform)
                 repeat = active.stacks if definition.stacking == StackingPolicy.STACK else 1
                 for _ in range(repeat):
-                    apply_effect(periodic.effect, self.stats, self.resources, self.tags, value_transform=transform)
+                    apply_effect(
+                        periodic.effect,
+                        self.stats,
+                        self.resources,
+                        self.tags,
+                        value_transform=transform,
+                    )
         if active.remaining <= 0.0:
             self.expire(state_id)
             return True
@@ -459,7 +477,13 @@ class StateRuntime:
                     transform = _scaled(periodic.factor(_count_tick(active, index)), None)
                     repeat = active.stacks if definition.stacking == StackingPolicy.STACK else 1
                     for _ in range(repeat):
-                        apply_effect(periodic.effect, self.stats, self.resources, self.tags, value_transform=transform)
+                        apply_effect(
+                            periodic.effect,
+                            self.stats,
+                            self.resources,
+                            self.tags,
+                            value_transform=transform,
+                        )
 
             if active.remaining <= 0.0:
                 expired.append(state_id)

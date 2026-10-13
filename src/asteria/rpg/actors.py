@@ -184,7 +184,11 @@ class ClassAssignment:
             "progression_track_ids",
             "tags",
         }
-        if set(data) != expected or data.get("schema") != "asteria.rpg.class_assignment" or data.get("version") != 1:
+        if (
+            set(data) != expected
+            or data.get("schema") != "asteria.rpg.class_assignment"
+            or data.get("version") != 1
+        ):
             raise ValueError("unsupported class assignment")
         return cls(
             data["class_id"],
@@ -226,7 +230,8 @@ class ActorDefinition:
             assignments = () if class_id is None else (ClassAssignment(class_id, role="primary"),)
         else:
             assignments = tuple(
-                x if isinstance(x, ClassAssignment) else ClassAssignment.from_data(x) for x in class_assignments
+                x if isinstance(x, ClassAssignment) else ClassAssignment.from_data(x)
+                for x in class_assignments
             )
         ids = [x.assignment_id for x in assignments]
         if len(ids) != len(set(ids)):
@@ -422,7 +427,9 @@ class RpgActorRuntime:
         )
         self.class_assignments = assignments
         self.class_definitions = definitions
-        self.class_definition = definitions[assignments[0].class_id] if len(assignments) == 1 else None
+        self.class_definition = (
+            definitions[assignments[0].class_id] if len(assignments) == 1 else None
+        )
         build = build_actor(actor, class_definitions=definitions)
         self.stats = build.stats
         self.resources = build.resources
@@ -463,7 +470,9 @@ class RpgActorRuntime:
         if progression is None:
             return bonuses, tags, abilities
         assigned_tracks = {
-            track_id for assignment in self.class_assignments for track_id in assignment.progression_track_ids
+            track_id
+            for assignment in self.class_assignments
+            for track_id in assignment.progression_track_ids
         }
         # Phase 7A actors did not record progression ownership. Preserve that
         # behavior when no assignment declares tracks; new multi-job actors can
@@ -491,7 +500,9 @@ class RpgActorRuntime:
         if allocations is not None:
             for stat, value in allocations.contribution().stat_bonuses.items():
                 values.add(stat, value)
-        tags = self.effective_tags(progression=progression, allocations=allocations, loadout=loadout, passives=passives)
+        tags = self.effective_tags(
+            progression=progression, allocations=allocations, loadout=loadout, passives=passives
+        )
         if loadout is not None:
             values = loadout.modifier_set().evaluate_block(values, tags=tags)
         if passives is not None:
@@ -517,7 +528,9 @@ class RpgActorRuntime:
                 result.add(tag)
         return result
 
-    def effective_capabilities(self, *, progression=None, allocations=None, loadout=None, passives=None):
+    def effective_capabilities(
+        self, *, progression=None, allocations=None, loadout=None, passives=None
+    ):
         """Return the generic capability vocabulary used by equipment rules.
 
         Capabilities intentionally share the canonical tag namespace.  This lets
@@ -531,7 +544,9 @@ class RpgActorRuntime:
             passives=passives,
         ).values()
 
-    def equipment_eligibility(self, loadout, slot_id, item, *, progression=None, allocations=None, passives=None):
+    def equipment_eligibility(
+        self, loadout, slot_id, item, *, progression=None, allocations=None, passives=None
+    ):
         return loadout.check_equip(
             slot_id,
             item,
@@ -543,7 +558,9 @@ class RpgActorRuntime:
             ),
         )
 
-    def equip_item(self, loadout, slot_id, item, *, progression=None, allocations=None, passives=None):
+    def equip_item(
+        self, loadout, slot_id, item, *, progression=None, allocations=None, passives=None
+    ):
         return loadout.equip(
             slot_id,
             item,
@@ -630,7 +647,13 @@ class RpgActorRuntime:
         return AbilityResolution(tuple(ordered), tuple(grants))
 
     def effective_abilities(
-        self, *, progression=None, allocations=None, loadout=None, passives=None, evolution_rules=()
+        self,
+        *,
+        progression=None,
+        allocations=None,
+        loadout=None,
+        passives=None,
+        evolution_rules=(),
     ):
         return self.resolve_abilities(
             progression=progression,
@@ -1017,12 +1040,16 @@ class RpgDatabase:
     def add_achievement(self, value):
         from .world_record import AchievementDefinition
 
-        return self._add_keyed(self.achievements, value, AchievementDefinition, "achievement_id", "achievement")
+        return self._add_keyed(
+            self.achievements, value, AchievementDefinition, "achievement_id", "achievement"
+        )
 
     def add_behavior_tree(self, value):
         from .behavior_tree import BehaviorTree
 
-        return self._add_keyed(self.behavior_trees, value, BehaviorTree, "tree_id", "behavior tree")
+        return self._add_keyed(
+            self.behavior_trees, value, BehaviorTree, "tree_id", "behavior tree"
+        )
 
     def add_rarity(self, value):
         from .loot import RarityDefinition
@@ -1048,12 +1075,16 @@ class RpgDatabase:
     def add_inventory_rules(self, value):
         from .items import InventoryRules
 
-        return self._add_keyed(self.inventory_rules, value, InventoryRules, "rules_id", "inventory rules")
+        return self._add_keyed(
+            self.inventory_rules, value, InventoryRules, "rules_id", "inventory rules"
+        )
 
     def add_world_interaction(self, value):
         from .world_interactions import WorldInteraction
 
-        return self._add_keyed(self.world_interactions, value, WorldInteraction, "interaction_id", "world interaction")
+        return self._add_keyed(
+            self.world_interactions, value, WorldInteraction, "interaction_id", "world interaction"
+        )
 
     def add_capture_rule(self, value):
         from .capture import CaptureRule
@@ -1127,9 +1158,13 @@ class RpgDatabase:
                             f"references unknown progression track {track_id}"
                         )
         for rule in self.ability_evolutions.values():
-            if rule.progression_track_id is not None and rule.progression_track_id not in self.progression_tracks:
+            if (
+                rule.progression_track_id is not None
+                and rule.progression_track_id not in self.progression_tracks
+            ):
                 errors.append(
-                    f"ability evolution {rule.rule_id} references unknown progression track {rule.progression_track_id}"
+                    f"ability evolution {rule.rule_id} references unknown progression track "
+                    f"{rule.progression_track_id}"
                 )
         for graph in self.progression_graphs.values():
             for node in graph.nodes:
@@ -1141,14 +1176,22 @@ class RpgDatabase:
                                 f"references unknown passive {passive_id}"
                             )
         for equipment in self.equipment.values():
-            if equipment.growth_id is not None and equipment.growth_id not in self.equipment_growth:
+            if (
+                equipment.growth_id is not None
+                and equipment.growth_id not in self.equipment_growth
+            ):
                 errors.append(
-                    f"equipment {equipment.equipment_id} references unknown equipment growth {equipment.growth_id}"
+                    f"equipment {equipment.equipment_id} references unknown equipment growth "
+                    f"{equipment.growth_id}"
                 )
         for attachment in self.attachments.values():
-            if attachment.growth_id is not None and attachment.growth_id not in self.equipment_growth:
+            if (
+                attachment.growth_id is not None
+                and attachment.growth_id not in self.equipment_growth
+            ):
                 errors.append(
-                    f"attachment {attachment.attachment_id} references unknown equipment growth {attachment.growth_id}"
+                    f"attachment {attachment.attachment_id} references unknown equipment "
+                    f"growth {attachment.growth_id}"
                 )
         for growth in self.equipment_growth.values():
             for node in growth.nodes:
@@ -1159,13 +1202,15 @@ class RpgDatabase:
                     ):
                         errors.append(
                             f"equipment growth {growth.growth_id} node {node.node_id} "
-                            f"references unknown evolution equipment {reward.evolution_equipment_id}"
+                            f"references unknown evolution equipment "
+                            f"{reward.evolution_equipment_id}"
                         )
                     for socket_id in reward.unlocked_sockets:
                         owners = [
                             e
                             for e in self.equipment.values()
-                            if e.growth_id == growth.growth_id and any(s.socket_id == socket_id for s in e.sockets)
+                            if e.growth_id == growth.growth_id
+                            and any(s.socket_id == socket_id for s in e.sockets)
                         ]
                         if not owners:
                             errors.append(
@@ -1174,53 +1219,79 @@ class RpgDatabase:
                             )
         for binding in self.enemy_behavior_bindings.values():
             if binding.enemy_id not in self.enemies:
-                errors.append(f"enemy behavior binding references unknown enemy {binding.enemy_id}")
+                errors.append(
+                    f"enemy behavior binding references unknown enemy {binding.enemy_id}"
+                )
             if binding.ai_id not in self.enemy_ai:
-                errors.append(f"enemy behavior binding for {binding.enemy_id} references unknown AI {binding.ai_id}")
+                errors.append(
+                    f"enemy behavior binding for {binding.enemy_id} references unknown AI "
+                    f"{binding.ai_id}"
+                )
         for party in self.party_setups.values():
             for actor_id in party.roster_actor_ids:
                 if actor_id not in self.actors:
-                    errors.append(f"party setup {party.party_id} references unknown actor {actor_id}")
+                    errors.append(
+                        f"party setup {party.party_id} references unknown actor {actor_id}"
+                    )
             if party.formation_id is not None:
                 formation = self.formations.get(party.formation_id)
                 if formation is None:
-                    errors.append(f"party setup {party.party_id} references unknown formation {party.formation_id}")
+                    errors.append(
+                        f"party setup {party.party_id} references unknown formation "
+                        f"{party.formation_id}"
+                    )
                 else:
                     known_slots = {x.slot_id for x in formation.slots}
                     for placement in party.placements:
                         if placement.slot_id not in known_slots:
                             errors.append(
-                                f"party setup {party.party_id} references unknown formation slot {placement.slot_id}"
+                                f"party setup {party.party_id} references unknown formation "
+                                f"slot {placement.slot_id}"
                             )
         for recipe in self.composition_recipes.values():
             for selection in recipe.selections:
                 for item_id in selection.item_ids:
                     if item_id not in self.items:
-                        errors.append(f"composition recipe {recipe.recipe_id} references unknown input item {item_id}")
+                        errors.append(
+                            f"composition recipe {recipe.recipe_id} references unknown input "
+                            f"item {item_id}"
+                        )
             for item_id in recipe.all_output_item_ids():
                 if item_id not in self.items:
-                    errors.append(f"composition recipe {recipe.recipe_id} references unknown output item {item_id}")
+                    errors.append(
+                        f"composition recipe {recipe.recipe_id} references unknown output item "
+                        f"{item_id}"
+                    )
             for track_id in recipe.experience:
                 if track_id not in self.progression_tracks:
                     errors.append(
-                        f"composition recipe {recipe.recipe_id} references unknown progression track {track_id}"
+                        f"composition recipe {recipe.recipe_id} references unknown progression "
+                        f"track {track_id}"
                     )
         for equipment_set in self.equipment_sets.values():
             for equipment_id in equipment_set.equipment_ids:
                 if equipment_id not in self.equipment:
-                    errors.append(f"equipment set {equipment_set.set_id} references unknown equipment {equipment_id}")
+                    errors.append(
+                        f"equipment set {equipment_set.set_id} references unknown equipment "
+                        f"{equipment_id}"
+                    )
         for tree in self.behavior_trees.values():
             for encounter_id in sorted(tree.encounter_ids()):
                 if encounter_id not in self.encounters:
-                    errors.append(f"behavior tree {tree.tree_id} references unknown encounter {encounter_id}")
+                    errors.append(
+                        f"behavior tree {tree.tree_id} references unknown encounter {encounter_id}"
+                    )
         for table in self.drop_tables.values():
             for item_id in sorted(table.item_ids()):
-                if item_id not in self.items and item_id not in self.equipment:  # equipment drops are rolled loot
+                if (
+                    item_id not in self.items and item_id not in self.equipment
+                ):  # equipment drops are rolled loot
                     errors.append(f"drop table {table.table_id} references unknown item {item_id}")
         for enemy in self.enemies.values():
             if enemy.reward.drop_table_id and enemy.reward.drop_table_id not in self.drop_tables:
                 errors.append(
-                    f"enemy {enemy.enemy_id} reward references unknown drop table {enemy.reward.drop_table_id}"
+                    f"enemy {enemy.enemy_id} reward references unknown drop table "
+                    f"{enemy.reward.drop_table_id}"
                 )
         for interaction in self.world_interactions.values():
             where = f"world interaction {interaction.interaction_id}"
@@ -1236,11 +1307,19 @@ class RpgDatabase:
             if rule.enemy_id not in self.enemies:
                 errors.append(f"capture rule references unknown enemy {rule.enemy_id}")
             if rule.actor_id not in self.actors:
-                errors.append(f"capture rule {rule.enemy_id} references unknown actor {rule.actor_id}")
+                errors.append(
+                    f"capture rule {rule.enemy_id} references unknown actor {rule.actor_id}"
+                )
             if rule.item_id and rule.item_id not in self.items:
-                errors.append(f"capture rule {rule.enemy_id} references unknown item {rule.item_id}")
+                errors.append(
+                    f"capture rule {rule.enemy_id} references unknown item {rule.item_id}"
+                )
         for achievement in self.achievements.values():
-            store = {"defeated": self.enemies, "reputation": self.factions, "quest": self.quests}.get(achievement.kind)
+            store = {
+                "defeated": self.enemies,
+                "reputation": self.factions,
+                "quest": self.quests,
+            }.get(achievement.kind)
             if store is not None and achievement.target not in store:
                 errors.append(
                     f"achievement {achievement.achievement_id} references unknown "
@@ -1256,26 +1335,43 @@ class RpgDatabase:
                     errors.append(f"quest {quest.quest_id} references unknown quest {quest_id}")
             for objective in quest.objectives:
                 if objective.kind == "item" and objective.target not in self.items:
-                    errors.append(f"quest {quest.quest_id} references unknown item {objective.target}")
+                    errors.append(
+                        f"quest {quest.quest_id} references unknown item {objective.target}"
+                    )
                 if objective.kind == "defeat_enemy" and objective.target not in self.enemies:
-                    errors.append(f"quest {quest.quest_id} references unknown enemy {objective.target}")
+                    errors.append(
+                        f"quest {quest.quest_id} references unknown enemy {objective.target}"
+                    )
             for entry in quest.reward.loot:
                 if entry.item_id not in self.items:
-                    errors.append(f"quest {quest.quest_id} reward references unknown item {entry.item_id}")
+                    errors.append(
+                        f"quest {quest.quest_id} reward references unknown item {entry.item_id}"
+                    )
             for track_id in quest.reward.experience:
                 if track_id not in self.progression_tracks:
-                    errors.append(f"quest {quest.quest_id} reward references unknown progression track {track_id}")
+                    errors.append(
+                        f"quest {quest.quest_id} reward references unknown progression track "
+                        f"{track_id}"
+                    )
         for encounter in self.encounters.values():
             for member in encounter.members:
                 if member.enemy_id not in self.enemies:
-                    errors.append(f"encounter {encounter.encounter_id} references unknown enemy {member.enemy_id}")
+                    errors.append(
+                        f"encounter {encounter.encounter_id} references unknown enemy "
+                        f"{member.enemy_id}"
+                    )
         for enemy in self.enemies.values():
             for entry in enemy.reward.loot:
                 if entry.item_id not in self.items:
-                    errors.append(f"enemy {enemy.enemy_id} reward references unknown item {entry.item_id}")
+                    errors.append(
+                        f"enemy {enemy.enemy_id} reward references unknown item {entry.item_id}"
+                    )
             for track_id in enemy.reward.experience:
                 if track_id not in self.progression_tracks:
-                    errors.append(f"enemy {enemy.enemy_id} reward references unknown progression track {track_id}")
+                    errors.append(
+                        f"enemy {enemy.enemy_id} reward references unknown progression track "
+                        f"{track_id}"
+                    )
         return sorted(errors)
 
     def validate(self):
@@ -1287,7 +1383,8 @@ class RpgDatabase:
     def build_actor(self, actor_id):
         actor = self.actors[str(actor_id)]
         definitions = {
-            assignment.class_id: self.classes[assignment.class_id] for assignment in actor.enabled_class_assignments()
+            assignment.class_id: self.classes[assignment.class_id]
+            for assignment in actor.enabled_class_assignments()
         }
         return RpgActorRuntime(actor, class_definitions=definitions)
 
@@ -1302,47 +1399,89 @@ class RpgDatabase:
             "attachments": [self.attachments[k].to_data() for k in sorted(self.attachments)],
             "enemies": [self.enemies[k].to_data() for k in sorted(self.enemies)],
             "encounters": [self.encounters[k].to_data() for k in sorted(self.encounters)],
-            "progression_tracks": [self.progression_tracks[k].to_data() for k in sorted(self.progression_tracks)],
+            "progression_tracks": [
+                self.progression_tracks[k].to_data() for k in sorted(self.progression_tracks)
+            ],
             "passives": [self.passives[k].to_data() for k in sorted(self.passives)],
-            "ability_evolutions": [self.ability_evolutions[k].to_data() for k in sorted(self.ability_evolutions)],
-            "progression_graphs": [self.progression_graphs[k].to_data() for k in sorted(self.progression_graphs)],
-            "equipment_growth": [self.equipment_growth[k].to_data() for k in sorted(self.equipment_growth)],
-            "battle_resources": [self.battle_resources[k].to_data() for k in sorted(self.battle_resources)],
-            "interaction_rules": [self.interaction_rules[k].to_data() for k in sorted(self.interaction_rules)],
-            "outcome_checks": [self.outcome_checks[k].to_data() for k in sorted(self.outcome_checks)],
+            "ability_evolutions": [
+                self.ability_evolutions[k].to_data() for k in sorted(self.ability_evolutions)
+            ],
+            "progression_graphs": [
+                self.progression_graphs[k].to_data() for k in sorted(self.progression_graphs)
+            ],
+            "equipment_growth": [
+                self.equipment_growth[k].to_data() for k in sorted(self.equipment_growth)
+            ],
+            "battle_resources": [
+                self.battle_resources[k].to_data() for k in sorted(self.battle_resources)
+            ],
+            "interaction_rules": [
+                self.interaction_rules[k].to_data() for k in sorted(self.interaction_rules)
+            ],
+            "outcome_checks": [
+                self.outcome_checks[k].to_data() for k in sorted(self.outcome_checks)
+            ],
             "battle_state_policies": [
                 self.battle_state_policies[k].to_data() for k in sorted(self.battle_state_policies)
             ],
             "formations": [self.formations[k].to_data() for k in sorted(self.formations)],
-            "battle_targeting": [self.battle_targeting[k].to_data() for k in sorted(self.battle_targeting)],
-            "battle_objectives": [self.battle_objectives[k].to_data() for k in sorted(self.battle_objectives)],
+            "battle_targeting": [
+                self.battle_targeting[k].to_data() for k in sorted(self.battle_targeting)
+            ],
+            "battle_objectives": [
+                self.battle_objectives[k].to_data() for k in sorted(self.battle_objectives)
+            ],
             "escape_rules": [self.escape_rules[k].to_data() for k in sorted(self.escape_rules)],
-            "battle_schedulers": [self.battle_schedulers[k].to_data() for k in sorted(self.battle_schedulers)],
-            "action_timings": [self.action_timings[k].to_data() for k in sorted(self.action_timings)],
-            "action_sequences": [self.action_sequences[k].to_data() for k in sorted(self.action_sequences)],
-            "gauge_compositions": [self.gauge_compositions[k].to_data() for k in sorted(self.gauge_compositions)],
+            "battle_schedulers": [
+                self.battle_schedulers[k].to_data() for k in sorted(self.battle_schedulers)
+            ],
+            "action_timings": [
+                self.action_timings[k].to_data() for k in sorted(self.action_timings)
+            ],
+            "action_sequences": [
+                self.action_sequences[k].to_data() for k in sorted(self.action_sequences)
+            ],
+            "gauge_compositions": [
+                self.gauge_compositions[k].to_data() for k in sorted(self.gauge_compositions)
+            ],
             "reactions": [self.reactions[k].to_data() for k in sorted(self.reactions)],
             "enemy_ai": [self.enemy_ai[k].to_data() for k in sorted(self.enemy_ai)],
-            "action_transactions": [self.action_transactions[k].to_data() for k in sorted(self.action_transactions)],
-            "composition_recipes": [self.composition_recipes[k].to_data() for k in sorted(self.composition_recipes)],
+            "action_transactions": [
+                self.action_transactions[k].to_data() for k in sorted(self.action_transactions)
+            ],
+            "composition_recipes": [
+                self.composition_recipes[k].to_data() for k in sorted(self.composition_recipes)
+            ],
             "party_setups": [self.party_setups[k].to_data() for k in sorted(self.party_setups)],
             "party_presentation_policies": [
-                self.party_presentation_policies[k].to_data() for k in sorted(self.party_presentation_policies)
+                self.party_presentation_policies[k].to_data()
+                for k in sorted(self.party_presentation_policies)
             ],
             "enemy_behavior_bindings": [
-                self.enemy_behavior_bindings[k].to_data() for k in sorted(self.enemy_behavior_bindings)
+                self.enemy_behavior_bindings[k].to_data()
+                for k in sorted(self.enemy_behavior_bindings)
             ],
-            "battle_session_rules": [self.battle_session_rules[k].to_data() for k in sorted(self.battle_session_rules)],
+            "battle_session_rules": [
+                self.battle_session_rules[k].to_data() for k in sorted(self.battle_session_rules)
+            ],
             "shops": [self.shops[k].to_data() for k in sorted(self.shops)],
-            "equipment_sets": [self.equipment_sets[k].to_data() for k in sorted(self.equipment_sets)],
+            "equipment_sets": [
+                self.equipment_sets[k].to_data() for k in sorted(self.equipment_sets)
+            ],
             "factions": [self.factions[k].to_data() for k in sorted(self.factions)],
             "achievements": [self.achievements[k].to_data() for k in sorted(self.achievements)],
             "capture_rules": [self.capture_rules[k].to_data() for k in sorted(self.capture_rules)],
             "quests": [self.quests[k].to_data() for k in sorted(self.quests)],
-            "world_interactions": [self.world_interactions[k].to_data() for k in sorted(self.world_interactions)],
+            "world_interactions": [
+                self.world_interactions[k].to_data() for k in sorted(self.world_interactions)
+            ],
             "drop_tables": [self.drop_tables[k].to_data() for k in sorted(self.drop_tables)],
-            "behavior_trees": [self.behavior_trees[k].to_data() for k in sorted(self.behavior_trees)],
-            "inventory_rules": [self.inventory_rules[k].to_data() for k in sorted(self.inventory_rules)],
+            "behavior_trees": [
+                self.behavior_trees[k].to_data() for k in sorted(self.behavior_trees)
+            ],
+            "inventory_rules": [
+                self.inventory_rules[k].to_data() for k in sorted(self.inventory_rules)
+            ],
             "rarities": [self.rarities[k].to_data() for k in sorted(self.rarities)],
             "affixes": [self.affixes[k].to_data() for k in sorted(self.affixes)],
         }
@@ -1502,7 +1641,9 @@ class RpgDatabase:
             for x in data.get("party_setups", ()):
                 result.add_party_setup(PartySetupDefinition.from_data(x))
             for x in data.get("party_presentation_policies", ()):
-                result.add_party_presentation_policy(PartyPresentationPolicyDefinition.from_data(x))
+                result.add_party_presentation_policy(
+                    PartyPresentationPolicyDefinition.from_data(x)
+                )
         if data["version"] >= 23:
             from .enemy_behavior import EnemyBehaviorBinding
 

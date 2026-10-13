@@ -47,7 +47,9 @@ class AuthoringCategoryAdapter:
     encode: Callable[[object], dict]
     decode: Callable[[dict], object]
     duplicate: Callable[[str, str], object] | None = None
-    create: Callable[[str, object], object] | None = None  # (new id, decoded record) — paste (EDT-13)
+    create: Callable[[str, object], object] | None = (
+        None  # (new id, decoded record) — paste (EDT-13)
+    )
 
 
 class IntegratedAuthoringControllers:
@@ -370,7 +372,9 @@ class IntegratedAuthoringControllers:
                 "Field Action Timelines",
                 lambda: tuple(sorted(timelines)),
                 lambda k: timelines[k],
-                lambda key, value: self._mapping_edit(timelines, "Field Action Timeline")(key, value),
+                lambda key, value: self._mapping_edit(timelines, "Field Action Timeline")(
+                    key, value
+                ),
                 lambda key: self._mapping_delete(timelines, "Field Action Timeline")(key),
                 td,
                 fd(ActionTimeline),
@@ -445,7 +449,8 @@ class IntegratedAuthoringControllers:
         return tuple(result)
 
     def _states_adapter(self):
-        """Status definitions (gameplay states: duration, stacking, stat changes, periodic effects such as an
+        """Status definitions (gameplay states: duration, stacking, stat changes, periodic effects
+        such as an
         escalating poison). Battle-side rules for them live under Battle > Status Effects."""
         from asteria.gameplay.states import StateDefinition
 
@@ -470,7 +475,9 @@ class IntegratedAuthoringControllers:
             key = str(key)
             if key not in mapping:
                 raise ValueError(f"unknown {label} {key}")
-            self.document.execute(_DefinitionCommand(mapping, key, value, mapping[key], f"Edit {label} {key}"))
+            self.document.execute(
+                _DefinitionCommand(mapping, key, value, mapping[key], f"Edit {label} {key}")
+            )
             return value
 
         return edit
@@ -480,7 +487,9 @@ class IntegratedAuthoringControllers:
             from .rpg_actor_class_authoring import _DefinitionCommand
 
             key = str(key)
-            self.document.execute(_DefinitionCommand(mapping, key, None, mapping[key], f"Delete {label} {key}"))
+            self.document.execute(
+                _DefinitionCommand(mapping, key, None, mapping[key], f"Delete {label} {key}")
+            )
 
         return delete
 
@@ -491,7 +500,9 @@ class IntegratedAuthoringControllers:
             key = str(key)
             if key in mapping:
                 raise ValueError(f"{label} {key} already exists")
-            self.document.execute(_DefinitionCommand(mapping, key, value, None, f"Add {label} {key}"))
+            self.document.execute(
+                _DefinitionCommand(mapping, key, value, None, f"Add {label} {key}")
+            )
             return value
 
         return create
@@ -505,15 +516,18 @@ class IntegratedAuthoringControllers:
                     kind.kind_id,
                     kind.label,
                     lambda k=kind.kind_id: tuple(
-                        str(getattr(v, c.information_architecture.kind(k).key_attr)) for v in c.definitions(k)
+                        str(getattr(v, c.information_architecture.kind(k).key_attr))
+                        for v in c.definitions(k)
                     ),
-                    lambda key, k=kind.kind_id: getattr(c.database, c.information_architecture.kind(k).mapping_name)[
-                        key
-                    ],
+                    lambda key, k=kind.kind_id: getattr(
+                        c.database, c.information_architecture.kind(k).mapping_name
+                    )[key],
                     lambda key, value, k=kind.kind_id: c.edit(k, key, value),
                     lambda key, k=kind.kind_id: c.delete(k, key),
                     lambda value: value.to_data(),
-                    lambda data, k=kind.kind_id: c.information_architecture.kind(k).definition_type.from_data(data),
+                    lambda data, k=kind.kind_id: c.information_architecture.kind(
+                        k
+                    ).definition_type.from_data(data),
                     None,
                     lambda key, value, k=kind.kind_id: c.create(k, value),
                 )

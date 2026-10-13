@@ -63,9 +63,9 @@ def test_projects_arbitrary_slots_capacities_and_equipped_items():
 def test_projects_socket_attachment_without_mutation():
     loadout = _loadout()
     before = loadout.to_data()
-    view = EquipmentScreenRuntime(EquipmentScreenProfile(socket_labels={"gem": "Gem Socket"})).project(
-        loadout, _catalog(), capabilities=("blade_use",)
-    )
+    view = EquipmentScreenRuntime(
+        EquipmentScreenProfile(socket_labels={"gem": "Gem Socket"})
+    ).project(loadout, _catalog(), capabilities=("blade_use",))
     main = next(x for x in view.slots if x.slot_id == "main")
     socket = main.items[0].sockets[0]
     assert socket.label == "Gem Socket"
@@ -98,7 +98,10 @@ def test_slot_selection_filters_compatibility_without_fixed_slot_names():
 
 
 def test_query_and_paging_are_presentation_only():
-    catalog = tuple(EquipmentDefinition(f"item_{i}", f"Item {i}", slot="main", tags=("blade",)) for i in range(15))
+    catalog = tuple(
+        EquipmentDefinition(f"item_{i}", f"Item {i}", slot="main", tags=("blade",))
+        for i in range(15)
+    )
     profile = EquipmentScreenProfile(page_size=5)
     runtime = EquipmentScreenRuntime(profile)
     runtime.project(_loadout(), catalog)
@@ -115,7 +118,9 @@ def test_labels_are_project_owned():
         slot_labels={"main": "Primary Matrix"},
         equipment_labels={"blade_alpha": "Aster Blade"},
     )
-    view = EquipmentScreenRuntime(profile).project(_loadout(), _catalog(), capabilities=("blade_use",))
+    view = EquipmentScreenRuntime(profile).project(
+        _loadout(), _catalog(), capabilities=("blade_use",)
+    )
     main = next(x for x in view.slots if x.slot_id == "main")
     assert main.label == "Primary Matrix"
     blade = next(x for x in view.candidates if x.equipment_id == "blade_alpha")
@@ -142,7 +147,9 @@ def test_profile_and_navigation_snapshot_roundtrip():
 def test_no_weapon_armor_or_fixed_slot_assumption():
     profile = EquipmentScreenProfile()
     runtime = EquipmentScreenRuntime(profile)
-    loadout = EquipmentLoadout((EquipmentSlotDefinition("sigil_array", accepted_tags=("sigil",), capacity=7),))
+    loadout = EquipmentLoadout(
+        (EquipmentSlotDefinition("sigil_array", accepted_tags=("sigil",), capacity=7),)
+    )
     catalog = (EquipmentDefinition("moon_sigil", slot="sigil_array", tags=("sigil",)),)
     view = runtime.project(loadout, catalog)
     assert view.slots[0].slot_id == "sigil_array"

@@ -97,7 +97,9 @@ class AttachmentDefinition:
             tuple(dict.fromkeys(_id(x, "ability_id") for x in granted_abilities)),
         )
         object.__setattr__(self, "triggers", triggers)
-        object.__setattr__(self, "growth_id", None if growth_id is None else _id(growth_id, "growth_id"))
+        object.__setattr__(
+            self, "growth_id", None if growth_id is None else _id(growth_id, "growth_id")
+        )
 
     def to_data(self):
         return {
@@ -197,7 +199,9 @@ class EquipmentDefinition:
         object.__setattr__(self, "required_capabilities", _tags(required_capabilities))
         object.__setattr__(self, "any_capabilities", _tags(any_capabilities))
         object.__setattr__(self, "forbidden_capabilities", _tags(forbidden_capabilities))
-        object.__setattr__(self, "growth_id", None if growth_id is None else _id(growth_id, "growth_id"))
+        object.__setattr__(
+            self, "growth_id", None if growth_id is None else _id(growth_id, "growth_id")
+        )
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def to_data(self):
@@ -223,7 +227,9 @@ class EquipmentDefinition:
         available = {str(x).strip().lower() for x in capabilities if str(x).strip()}
         missing = tuple(x for x in self.required_capabilities if x not in available)
         forbidden = tuple(x for x in self.forbidden_capabilities if x in available)
-        any_missing = bool(self.any_capabilities) and not any(x in available for x in self.any_capabilities)
+        any_missing = bool(self.any_capabilities) and not any(
+            x in available for x in self.any_capabilities
+        )
         reasons = []
         if missing:
             reasons.append("missing required capabilities: " + ", ".join(missing))
@@ -263,11 +269,21 @@ class ItemDefinition:
     stack_limit: int = 99
     use_effects: tuple[Effect, ...] = ()
     icon_id: str = ""  # a project icon asset shown in menus; written only when set
-    battle_ability: str = ""  # used in battle, the item runs this ability (its targets, rules and VFX)
+    battle_ability: str = (
+        ""  # used in battle, the item runs this ability (its targets, rules and VFX)
+    )
     OPTIONAL_DATA = {"icon_id": "", "battle_ability": ""}
 
     def __init__(
-        self, item_id, display_name=None, *, tags=(), stack_limit=99, use_effects=(), icon_id="", battle_ability=""
+        self,
+        item_id,
+        display_name=None,
+        *,
+        tags=(),
+        stack_limit=99,
+        use_effects=(),
+        icon_id="",
+        battle_ability="",
     ):
         item_id = _id(item_id, "item_id")
         stack_limit = int(stack_limit)
@@ -309,7 +325,9 @@ class ItemDefinition:
             data["display_name"],
             tags=data["tags"],
             stack_limit=data["stack_limit"],
-            use_effects=[] if data["version"] == 1 else [Effect.from_data(x) for x in data["use_effects"]],
+            use_effects=[]
+            if data["version"] == 1
+            else [Effect.from_data(x) for x in data["use_effects"]],
             icon_id=data.get("icon_id", ""),
             battle_ability=data.get("battle_ability", ""),
         )
@@ -320,12 +338,15 @@ INVENTORY_OVERFLOW = ("fill", "reject")
 
 @dataclass(frozen=True, slots=True)
 class InventoryRules:
-    """How much the party can carry (RPG-01). Every rule is optional; with none, the bag is unlimited.
+    """How much the party can carry (RPG-01). Every rule is optional; with none, the bag is
+    unlimited.
 
-    * ``stack_limits``  - an item stacks up to its own ``stack_limit`` (``stack_limit=1`` makes it unique)
+    * ``stack_limits``  - an item stacks up to its own ``stack_limit`` (``stack_limit=1`` makes it
+      unique)
     * ``max_kinds``     - how many different items fit (``None`` = no limit); items carrying one of
       ``exempt_tags`` (key items by default) never take a place
-    * ``overflow``      - what happens when an amount does not fit: ``"fill"`` keeps what fits, ``"reject"``
+    * ``overflow``      - what happens when an amount does not fit: ``"fill"`` keeps what fits,
+      ``"reject"``
       keeps none of it. What did not fit is reported in ``Inventory.overflow``.
     """
 
@@ -393,7 +414,8 @@ class Inventory:
         self.overflow = []  # (item_id, amount that did not fit), newest last
 
     def configure(self, rules, lookup):
-        """Apply ``rules`` (or ``None``); ``lookup(item_id)`` gives the item's definition (stack_limit, tags)."""
+        """Apply ``rules`` (or ``None``); ``lookup(item_id)`` gives the item's definition
+        (stack_limit, tags)."""
         self.rules = rules
         self._lookup = lookup
         return self
@@ -513,16 +535,25 @@ class EquippedItem:
             "version": 2,
             "instance_id": self.instance_id,
             "equipment_id": self.equipment.equipment_id,
-            "attachments": {key: value.attachment_id for key, value in sorted(self.attachments.items())},
+            "attachments": {
+                key: value.attachment_id for key, value in sorted(self.attachments.items())
+            },
             "growth": None if self.growth is None else self.growth.to_data(),
             **({"item_level": self.item_level} if self.item_level != 1 else {}),
             **({"rarity": self.rarity} if self.rarity else {}),
-            **({"rolled_affixes": [a.to_data() for a in self.rolled_affixes]} if self.rolled_affixes else {}),
+            **(
+                {"rolled_affixes": [a.to_data() for a in self.rolled_affixes]}
+                if self.rolled_affixes
+                else {}
+            ),
         }
 
     @classmethod
     def from_data(cls, data, *, equipment, attachments, growth_definitions=None, hooks=None):
-        if data.get("schema") != "asteria.rpg.equipment_instance" or data.get("version") not in {1, 2}:
+        if data.get("schema") != "asteria.rpg.equipment_instance" or data.get("version") not in {
+            1,
+            2,
+        }:
             raise ValueError("unsupported equipment instance")
         equipment_id = data["equipment_id"]
         if equipment_id not in equipment:
@@ -594,7 +625,9 @@ class EquippedItem:
             raise ValueError("equipment socket is locked")
         # Growth-unlocked sockets may be authored with locked=True; once the
         # runtime unlock exists, compatibility still follows accepted_tags.
-        if socket.accepted_tags and not any(tag in attachment.tags for tag in socket.accepted_tags):
+        if socket.accepted_tags and not any(
+            tag in attachment.tags for tag in socket.accepted_tags
+        ):
             raise ValueError("attachment is not compatible with socket")
         self.attachments[socket_id] = attachment
 
@@ -693,7 +726,10 @@ class EquipmentLoadout:
             "schema": "asteria.rpg.equipment_loadout",
             "version": 1,
             "slots": [self._slots[key].to_data() for key in sorted(self._slots)],
-            "equipped": {key: [item.to_data() for item in self._equipped[key]] for key in sorted(self._equipped)},
+            "equipped": {
+                key: [item.to_data() for item in self._equipped[key]]
+                for key in sorted(self._equipped)
+            },
         }
 
     @classmethod
@@ -761,7 +797,9 @@ class EquipmentLoadout:
                         "forbidden_capabilities": eligibility.forbidden_capabilities,
                     },
                 )
-                if eligibility.reasons and eligibility.reasons[0].startswith("unknown equipment slot"):
+                if eligibility.reasons and eligibility.reasons[0].startswith(
+                    "unknown equipment slot"
+                ):
                     raise KeyError(eligibility.reasons[0])
                 raise ValueError("; ".join(eligibility.reasons))
         else:
@@ -893,7 +931,9 @@ class ItemUseResult:
     reason: str | None = None
 
 
-def use_inventory_item(inventory, item, target_stats, target_resources, target_tags, *, hooks=None):
+def use_inventory_item(
+    inventory, item, target_stats, target_resources, target_tags, *, hooks=None
+):
     """Use one item atomically with inventory consumption after all effects succeed."""
     if not isinstance(inventory, Inventory):
         raise TypeError("inventory must be Inventory")
@@ -921,7 +961,9 @@ def use_inventory_item(inventory, item, target_stats, target_resources, target_t
     for effect in item.use_effects:
         result = apply_effect(effect, stats, resources, tags)
         if not result.applied:
-            failed = ItemUseResult(False, item.item_id, tuple(results) + (result,), "effect_rejected")
+            failed = ItemUseResult(
+                False, item.item_id, tuple(results) + (result,), "effect_rejected"
+            )
             emit_hook(
                 hooks,
                 "rpg.item.use_failed",

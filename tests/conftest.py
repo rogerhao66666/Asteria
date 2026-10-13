@@ -54,22 +54,29 @@ def resource_root(tmp_path):
     """Reference manifest plus flat-colour placeholder images; battle sheets are copied as-is."""
     from PIL import Image
 
-    shutil.copy(REFERENCE_PROJECT / "playable_test_manifest.json", tmp_path / "playable_test_manifest.json")
+    shutil.copy(
+        REFERENCE_PROJECT / "playable_test_manifest.json", tmp_path / "playable_test_manifest.json"
+    )
     manifest = json.loads((tmp_path / "playable_test_manifest.json").read_text(encoding="utf-8"))
     for relative in set(_image_paths(manifest)):
         path = tmp_path / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         Image.new("RGBA", (512, 512), (90, 120, 200, 255)).save(path)
     # Canonical battle presentation sheets (CC0) are real project assets; copy them as-is.
-    shutil.copytree(REFERENCE_PROJECT / "playable_assets" / "battle", tmp_path / "playable_assets" / "battle")
+    shutil.copytree(
+        REFERENCE_PROJECT / "playable_assets" / "battle", tmp_path / "playable_assets" / "battle"
+    )
     for name in ("fx_heal.png", "item_icons.png"):  # the item / equipment menu icons (AST-07) too
-        shutil.copy(REFERENCE_PROJECT / "playable_assets" / name, tmp_path / "playable_assets" / name)
+        shutil.copy(
+            REFERENCE_PROJECT / "playable_assets" / name, tmp_path / "playable_assets" / name
+        )
     return tmp_path
 
 
 @pytest.fixture
 def runtime(resource_root, monkeypatch, request):
-    """A headless PlayableTestRuntime on the reference project (blocking legacy effects disabled)."""
+    """A headless PlayableTestRuntime on the reference project (blocking legacy effects
+    disabled)."""
     pytest.importorskip("pygame")
     import real_window
 
@@ -83,8 +90,12 @@ def runtime(resource_root, monkeypatch, request):
     else:
         monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
         monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
-    project = Project.load_json(REFERENCE_PROJECT / "project.asteria.json", EditorDocument().component_registry)
-    value = PlayableTestRuntime(project, project.game_start.instantiate(project), resource_root, width=960, height=540)
+    project = Project.load_json(
+        REFERENCE_PROJECT / "project.asteria.json", EditorDocument().component_registry
+    )
+    value = PlayableTestRuntime(
+        project, project.game_start.instantiate(project), resource_root, width=960, height=540
+    )
     value.open()
     if real_window.enabled():
         real_window.set_stage(value)
@@ -110,7 +121,9 @@ def _real_window_test_name(request):
     real_window.STATE["test"] = request.node.nodeid
     yield
     stage = real_window.STATE["stage"]
-    if stage is not None:  # a window opened by test_session_events._session (the runtime fixture closes its own)
+    if (
+        stage is not None
+    ):  # a window opened by test_session_events._session (the runtime fixture closes its own)
         real_window.save_screenshot(request.node.name)
         real_window.STATE["stage"] = None
         if real_window._alive(stage):

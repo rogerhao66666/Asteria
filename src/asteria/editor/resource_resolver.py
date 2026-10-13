@@ -79,17 +79,22 @@ def resolve_project_resources(document):
             for row in range(height // frame_height)
             for column in range(width // frame_width)
         ]
-        document.asset_views.set_sprite_sheet(asset.asset_id, SpriteSheet(AssetRef(asset.asset_id), frames))
+        document.asset_views.set_sprite_sheet(
+            asset.asset_id, SpriteSheet(AssetRef(asset.asset_id), frames)
+        )
 
     # Validate cross-resource references only after every record is resolved.
     for tilemap_id, tilemap in document.asset_views.tilemaps():
         tileset = document.asset_views.tileset(tilemap.tileset.asset_id)
         if tileset is None:
-            raise EditorResourceError(f"TileMap {tilemap_id} references unresolved Tileset {tilemap.tileset.asset_id}")
+            raise EditorResourceError(
+                f"TileMap {tilemap_id} references unresolved Tileset {tilemap.tileset.asset_id}"
+            )
         sprite_sheet = document.asset_views.sprite_sheet(tileset.sprite_sheet.asset_id)
         if sprite_sheet is None:
             raise EditorResourceError(
-                f"Tileset {tilemap.tileset.asset_id} references unresolved SpriteSheet {tileset.sprite_sheet.asset_id}"
+                f"Tileset {tilemap.tileset.asset_id} references unresolved SpriteSheet "
+                f"{tileset.sprite_sheet.asset_id}"
             )
         tilemap.validate()
         tileset.validate(len(sprite_sheet.frames))

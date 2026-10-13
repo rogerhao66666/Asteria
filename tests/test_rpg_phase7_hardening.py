@@ -32,7 +32,11 @@ def test_public_replace_seams_preserve_identity_and_replace_contents():
     other = ResourcePool()
     other.define("heat", 20, current=7)
     resources.replace_from(other)
-    assert id(resources) == same_resources and resources.names() == ("heat",) and resources.current("heat") == 7
+    assert (
+        id(resources) == same_resources
+        and resources.names() == ("heat",)
+        and resources.current("heat") == 7
+    )
 
     tags = TagSet(["a"])
     same_tags = id(tags)
@@ -90,7 +94,9 @@ def test_reward_rolls_back_state_if_lifecycle_subscriber_raises_mid_commit():
     inventory = Inventory()
     inventory.add("potion", 1)
     currencies = {"gold": 2.0}
-    runtime = RewardRuntime(inventory=inventory, progression=progression, currencies=currencies, hooks=hooks)
+    runtime = RewardRuntime(
+        inventory=inventory, progression=progression, currencies=currencies, hooks=hooks
+    )
 
     with pytest.raises(RuntimeError, match="observer failed"):
         runtime.apply(RewardRoll({"gold": 8}, {"xp": 4}, {"potion": 2}))

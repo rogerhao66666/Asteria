@@ -59,7 +59,9 @@ def test_basic_attack_preset_executes_without_advanced_configuration():
     srcpool.define("hp", 100, current=100)
     tgtpool = ResourcePool()
     tgtpool.define("hp", 100, current=100)
-    src = AbilityTarget("hero", GameplaySubject(StatBlock(), srcpool, TagSet(["actor.player"]), None))
+    src = AbilityTarget(
+        "hero", GameplaySubject(StatBlock(), srcpool, TagSet(["actor.player"]), None)
+    )
     tgt = AbilityTarget("enemy", GameplaySubject(StatBlock(), tgtpool, TagSet(["enemy"]), None))
     result = AbilityRuntime(reg.abilities).execute("basic_attack", src, [tgt])
     assert result.executed

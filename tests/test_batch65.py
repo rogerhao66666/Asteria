@@ -54,7 +54,11 @@ def test_missing_dependency_never_publishes(tmp_path):
     s.mkdir()
     write(s, "a.asset.json", doc("a", deps=("missing",)))
     q = SemanticAssetImporter(tmp_path / "Assets", factory).import_tree(s)
-    assert not q.ok and q.issues[0].code == "asset.dependency.missing" and not (tmp_path / "Assets").exists()
+    assert (
+        not q.ok
+        and q.issues[0].code == "asset.dependency.missing"
+        and not (tmp_path / "Assets").exists()
+    )
 
 
 def test_cycle_never_publishes(tmp_path):
@@ -109,7 +113,9 @@ def test_destination(tmp_path):
     s = tmp_path / "pkg"
     s.mkdir()
     write(s, "a.asset.json", doc("a"))
-    q = SemanticAssetImporter(tmp_path / "Assets", factory).import_tree(s, destination="Characters/Hero")
+    q = SemanticAssetImporter(tmp_path / "Assets", factory).import_tree(
+        s, destination="Characters/Hero"
+    )
     assert q.ok and (tmp_path / "Assets/Characters/Hero/a.asset.json").exists()
 
 

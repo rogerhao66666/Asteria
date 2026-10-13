@@ -1,9 +1,14 @@
-"""ARPG stress scene (ASTERIA_SPEC §35 ARPG stress test; D22 A2): many enemies, many projectiles, measured.
+"""ARPG stress scene (ASTERIA_SPEC §35 ARPG stress test; D22 A2): many enemies, many projectiles,
+measured.
 
-``run_arpg_stress(repo, enemies=300, projectiles=500, frames=300, kernel="numpy")`` loads the reference project in a
-headless ``PlayableTestRuntime``, fills the field with chasing enemies (controller, collider, hurtbox, combatant) and a
-few walls, keeps ``projectiles`` shots in flight, swings a melee hitbox every half second, and profiles every
-``GameSession.field_update`` section (ai, collision, combat, projectiles...). Engine work only — drawing comes with the
+``run_arpg_stress(repo, enemies=300, projectiles=500, frames=300, kernel="numpy")`` loads the
+reference project in a
+headless ``PlayableTestRuntime``, fills the field with chasing enemies (controller, collider,
+hurtbox, combatant) and a
+few walls, keeps ``projectiles`` shots in flight, swings a melee hitbox every half second, and
+profiles every
+``GameSession.field_update`` section (ai, collision, combat, projectiles...). Engine work only —
+drawing comes with the
 ARPG presentation. Numbers belong to this machine; compare runs on the same machine only.
 """
 
@@ -41,26 +46,40 @@ def _populate(game, enemies, rng):
 
     library = game.project.gameplay_library
     library.attacks.setdefault(
-        "stress_bolt", AttackDefinition("stress_bolt", damage=ValueFormula.constant(1), knockback=40)
+        "stress_bolt",
+        AttackDefinition("stress_bolt", damage=ValueFormula.constant(1), knockback=40),
     )
     library.attacks.setdefault(
-        "stress_slash", AttackDefinition("stress_slash", damage=ValueFormula.constant(2), knockback=120, hitstun=0.1)
+        "stress_slash",
+        AttackDefinition(
+            "stress_slash", damage=ValueFormula.constant(2), knockback=120, hitstun=0.1
+        ),
     )
     library.projectiles.setdefault(
         "stress_bolt",
-        ProjectileDefinition("stress_bolt", attack_id="stress_bolt", speed=220, lifetime=2.5, pierce=-1, wall_mask=1),
+        ProjectileDefinition(
+            "stress_bolt", attack_id="stress_bolt", speed=220, lifetime=2.5, pierce=-1, wall_mask=1
+        ),
     )
     library.timelines.setdefault(
         "stress_slash",
         ActionTimeline(
-            "stress_slash", [ActionCue("hit", 0.0, "hitbox", {"duration": 0.15, "hit_tag": "stress_slash"})]
+            "stress_slash",
+            [ActionCue("hit", 0.0, "hitbox", {"duration": 0.15, "hit_tag": "stress_slash"})],
         ),
     )
     player = game.player
     px, py = player.get(Transform).x, player.get(Transform).y
     for component in (
         _set(Hurtbox2DComponent(), team="hero"),
-        _set(Hitbox2DComponent(), team="hero", width=48.0, height=32.0, offset_x=20.0, follow_facing=True),
+        _set(
+            Hitbox2DComponent(),
+            team="hero",
+            width=48.0,
+            height=32.0,
+            offset_x=20.0,
+            follow_facing=True,
+        ),
         _set(CombatantComponent(), team="hero", resources="hp=1000000"),
     ):
         if not player.has(type(component)):
@@ -77,18 +96,30 @@ def _populate(game, enemies, rng):
         angle, reach = rng.uniform(0, 2 * pi), rng.uniform(80, 400)
         enemy = scene.add_entity(Entity(f"Stress Enemy {k}"))
         enemy.add_component(Transform(px + cos(angle) * reach, py + sin(angle) * reach))
-        enemy.add_component(_set(CharacterController2DComponent(), speed=40.0, half_width=5.0, half_height=5.0))
+        enemy.add_component(
+            _set(CharacterController2DComponent(), speed=40.0, half_width=5.0, half_height=5.0)
+        )
         enemy.add_component(_set(AIController2DComponent(), driver="field_ai"))
-        enemy.add_component(_set(FieldAIComponent(), behaviour="chase", detect_radius=2000.0, lose_radius=4000.0))
+        enemy.add_component(
+            _set(FieldAIComponent(), behaviour="chase", detect_radius=2000.0, lose_radius=4000.0)
+        )
         enemy.add_component(_set(Collider2DComponent(), width=10.0, height=10.0, layer=1))
         enemy.add_component(_set(Hurtbox2DComponent(), team="foe", width=14.0, height=14.0))
         enemy.add_component(
-            _set(CombatantComponent(), team="foe", resources="hp=1000000", knockback_resistance=0.5, death="keep")
+            _set(
+                CombatantComponent(),
+                team="foe",
+                resources="hp=1000000",
+                knockback_resistance=0.5,
+                death="keep",
+            )
         )
     return px, py
 
 
-def run_arpg_stress(repo, *, enemies=300, projectiles=500, frames=300, kernel=None, seed=1, target_fps=60):
+def run_arpg_stress(
+    repo, *, enemies=300, projectiles=500, frames=300, kernel=None, seed=1, target_fps=60
+):
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
     from asteria import kernels
@@ -117,7 +148,14 @@ def run_arpg_stress(repo, *, enemies=300, projectiles=500, frames=300, kernel=No
             for _ in range(max(0, missing)):
                 angle = rng.uniform(0, 2 * pi)
                 sx, sy = px + rng.uniform(-60, 60), py + rng.uniform(-60, 60)
-                shots.fire("stress_bolt", sx, sy, (cos(angle), sin(angle)), owner_id=game.player.id, team="hero")
+                shots.fire(
+                    "stress_bolt",
+                    sx,
+                    sy,
+                    (cos(angle), sin(angle)),
+                    owner_id=game.player.id,
+                    team="hero",
+                )
             if index % 30 == 0:
                 game.play_action(game.player.id, "stress_slash")
             profiler.begin_frame()
@@ -132,7 +170,9 @@ def run_arpg_stress(repo, *, enemies=300, projectiles=500, frames=300, kernel=No
         from asteria.core import Transform
 
         state = sorted(
-            (e.name, t.x, t.y) for e, t in game.scene.query(Transform) if e.name.startswith("Stress Enemy")
+            (e.name, t.x, t.y)
+            for e, t in game.scene.query(Transform)
+            if e.name.startswith("Stress Enemy")
         ) + sorted((v.x, v.y, v.vx, v.vy) for v in shots.views())
         report["arpg"] = {
             "kernel": kernels.active().NAME,
@@ -141,7 +181,9 @@ def run_arpg_stress(repo, *, enemies=300, projectiles=500, frames=300, kernel=No
             "frames": frames,
             "hits": hits,
             "damage_events": landed,
-            "state_digest": hashlib.sha256(repr(state).encode()).hexdigest(),  # every enemy and shot, exactly
+            "state_digest": hashlib.sha256(
+                repr(state).encode()
+            ).hexdigest(),  # every enemy and shot, exactly
         }
         return report
     finally:

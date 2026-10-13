@@ -66,7 +66,11 @@ class EventVM:
 
     def resume(self):
         if self.state.status == EventVMStatus.STOPPED:
-            self.state.status = EventVMStatus.COMPLETED if self.state.pc >= len(self.program) else EventVMStatus.RUNNING
+            self.state.status = (
+                EventVMStatus.COMPLETED
+                if self.state.pc >= len(self.program)
+                else EventVMStatus.RUNNING
+            )
         return self.state.status
 
     def update_wait(self, dt: float):
@@ -79,7 +83,11 @@ class EventVM:
         remaining = max(0.0, self.state.wait_remaining - dt)
         self.state.wait_remaining = remaining
         if remaining == 0.0:
-            self.state.status = EventVMStatus.COMPLETED if self.state.pc >= len(self.program) else EventVMStatus.RUNNING
+            self.state.status = (
+                EventVMStatus.COMPLETED
+                if self.state.pc >= len(self.program)
+                else EventVMStatus.RUNNING
+            )
         return self.state.status
 
     def step(self):

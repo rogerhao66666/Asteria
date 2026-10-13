@@ -42,7 +42,10 @@ def abilities():
                 effects=[
                     AbilityEffect(
                         AbilityTargetMode.SELECTED,
-                        Effect(f"{aid}.effect", [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", delta)]),
+                        Effect(
+                            f"{aid}.effect",
+                            [EffectOperation(EffectOperationKind.RESOURCE_DELTA, "hp", delta)],
+                        ),
                     )
                 ],
             )
@@ -51,11 +54,19 @@ def abilities():
 
 
 def make_battle(definitions=()):
-    hero = PartyMember("hero", "heroes", subject(), ability_ids=("hit", "counter", "follow"), initiative=20)
-    ally = PartyMember("ally", "heroes", subject(), ability_ids=("counter", "follow"), initiative=15)
-    enemy = PartyMember("enemy", "enemies", subject(), ability_ids=("hit", "counter", "follow"), initiative=10)
+    hero = PartyMember(
+        "hero", "heroes", subject(), ability_ids=("hit", "counter", "follow"), initiative=20
+    )
+    ally = PartyMember(
+        "ally", "heroes", subject(), ability_ids=("counter", "follow"), initiative=15
+    )
+    enemy = PartyMember(
+        "enemy", "enemies", subject(), ability_ids=("hit", "counter", "follow"), initiative=10
+    )
     return BattleRuntime(
-        [Party("heroes", [hero, ally]), Party("enemies", [enemy])], abilities(), reaction_definitions=definitions
+        [Party("heroes", [hero, ally]), Party("enemies", [enemy])],
+        abilities(),
+        reaction_definitions=definitions,
     )
 
 
@@ -136,7 +147,8 @@ def test_reaction_on_reaction_can_be_bounded_by_per_chain_counts():
     )
     battle = make_battle([rule])
     _, chain = battle.execute_with_reactions(BattleAction("hero", "hit", ["enemy"]))
-    # enemy counters hero, then hero may counter enemy once; the same reactor/rule cannot loop forever.
+    # enemy counters hero, then hero may counter enemy once; the same reactor/rule cannot loop
+    # forever.
     assert len(chain.requests) <= 2
     assert battle.member("hero").subject.resources.current("hp") >= 86
 
@@ -168,8 +180,12 @@ def test_tags_can_opt_in_and_block_reaction_rules():
         allow_self=False,
     )
     battle = make_battle([rule])
-    assert battle.resolve_reactions("custom", "hero", ["enemy"], tags=("outcome.critical",)).requests
-    assert not battle.resolve_reactions("custom", "hero", ["enemy"], tags=("outcome.critical", "reaction")).requests
+    assert battle.resolve_reactions(
+        "custom", "hero", ["enemy"], tags=("outcome.critical",)
+    ).requests
+    assert not battle.resolve_reactions(
+        "custom", "hero", ["enemy"], tags=("outcome.critical", "reaction")
+    ).requests
 
 
 def test_database_v18_owns_reactions_and_v17_is_backward_readable():
@@ -185,5 +201,7 @@ def test_database_v18_owns_reactions_and_v17_is_backward_readable():
 
 
 def test_many_reactions_have_no_engine_content_cap():
-    runtime = ReactionRuntime([ReactionDefinition(f"r{i}", f"t{i}", "event_targets") for i in range(256)])
+    runtime = ReactionRuntime(
+        [ReactionDefinition(f"r{i}", f"t{i}", "event_targets") for i in range(256)]
+    )
     assert len(runtime.definitions) == 256

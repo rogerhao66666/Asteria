@@ -90,7 +90,9 @@ def test_program_edit_helpers_insert_move_remove_without_mutating_original():
         name="Test",
     )
 
-    inserted = program_with_insert(original, 1, EventInstruction("SET_SWITCH", {"name": "x", "value": True}))
+    inserted = program_with_insert(
+        original, 1, EventInstruction("SET_SWITCH", {"name": "x", "value": True})
+    )
     moved = program_with_move(inserted, 1, 0)
     removed = program_with_remove(moved, 0)
 

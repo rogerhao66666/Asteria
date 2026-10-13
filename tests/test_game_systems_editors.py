@@ -25,8 +25,15 @@ def _controller():
 def test_python_api_create_edit_duplicate_delete_with_undo():
     document, api = _controller()
     db = document.project.rpg_database
-    api.create("shops", ShopDefinition("apothecary", "Apothecary", [ShopEntry("ether_leaf", buy_prices={"gold": 30})]))
-    api.edit("shops", "apothecary", dict(db.shops["apothecary"].to_data(), display_name="Herbalist"))
+    api.create(
+        "shops",
+        ShopDefinition(
+            "apothecary", "Apothecary", [ShopEntry("ether_leaf", buy_prices={"gold": 30})]
+        ),
+    )
+    api.edit(
+        "shops", "apothecary", dict(db.shops["apothecary"].to_data(), display_name="Herbalist")
+    )
     assert db.shops["apothecary"].display_name == "Herbalist"
     api.duplicate("shops", "apothecary", "apothecary_2")
     assert set(api.ids("shops")) == {"apothecary", "apothecary_2"}
@@ -116,7 +123,9 @@ def test_shop_editor_form_adds_stock_rows_and_applies(window):
     assert editor.apply(), editor.status.text()
     shop = db.shops["apothecary"]
     assert shop.display_name == "Apothecary"
-    assert shop.entries == (ShopEntry("ether_leaf", buy_prices={"gold": 30}, sell_prices={"gold": 12}, stock=5),)
+    assert shop.entries == (
+        ShopEntry("ether_leaf", buy_prices={"gold": 30}, sell_prices={"gold": 12}, stock=5),
+    )
     window.document.undo()
     assert db.shops["apothecary"].entries == ()
 
@@ -162,7 +171,10 @@ def test_faction_achievement_set_and_capture_editors(window):
     ranks.add_row("20", "Friendly")
     _field(editor.form, "maximum").setValue(50)
     assert editor.apply(), editor.status.text()
-    assert db.factions["guild"].ranks == ((0.0, "Neutral"), (20.0, "Friendly")) and db.factions["guild"].maximum == 50
+    assert (
+        db.factions["guild"].ranks == ((0.0, "Neutral"), (20.0, "Friendly"))
+        and db.factions["guild"].maximum == 50
+    )
 
     editor.set_kind("achievements")
     editor.new_record("friend")
@@ -170,9 +182,14 @@ def test_faction_achievement_set_and_capture_editors(window):
     _field(editor.form, "target").setText("guild")
     _field(editor.form, "value").setValue(20)
     assert editor.apply(), editor.status.text()
-    assert (db.achievements["friend"].kind, db.achievements["friend"].target) == ("reputation", "guild")
+    assert (db.achievements["friend"].kind, db.achievements["friend"].target) == (
+        "reputation",
+        "guild",
+    )
     _field(editor.form, "target").setText("no_such_faction")
-    assert not editor.apply() and "unknown" in editor.status.text()  # canonical validation surfaces in the UI
+    assert (
+        not editor.apply() and "unknown" in editor.status.text()
+    )  # canonical validation surfaces in the UI
 
     editor.set_kind("equipment_sets")
     editor.new_record("ember")

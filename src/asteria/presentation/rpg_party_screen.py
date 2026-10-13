@@ -85,7 +85,9 @@ class PartyScreenProfile:
             tuple(
                 sorted(
                     (str(k), str(v))
-                    for k, v in dict(group_labels or {"active": "Active", "reserve": "Reserve"}).items()
+                    for k, v in dict(
+                        group_labels or {"active": "Active", "reserve": "Reserve"}
+                    ).items()
                 )
             ),
         )
@@ -165,7 +167,9 @@ class PartyScreenRuntime:
     def view(self):
         return self._view
 
-    def project(self, roster_member_ids, *, active_member_ids=(), formation=None, group_by_member=None):
+    def project(
+        self, roster_member_ids, *, active_member_ids=(), formation=None, group_by_member=None
+    ):
         roster = tuple(dict.fromkeys(str(x) for x in roster_member_ids))
         if any(not x.strip() for x in roster):
             raise ValueError("party member id is required")

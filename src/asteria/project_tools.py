@@ -23,7 +23,18 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 PROJECT_FILE = "project.asteria.json"
-RESOURCE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".ogg", ".wav", ".mp3", ".json", ".ttf", ".otf"}
+RESOURCE_SUFFIXES = {
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".webp",
+    ".ogg",
+    ".wav",
+    ".mp3",
+    ".json",
+    ".ttf",
+    ".otf",
+}
 NOTICE_NAMES = ("CREDITS.md", "CREDITS.txt", "LICENSE", "LICENSE.txt", "LICENSE.md")
 RESOURCE_DIRS = ("reference_data",)
 
@@ -41,7 +52,8 @@ if __name__ == "__main__":
     raise SystemExit(main([str(HERE / "{project}"), *sys.argv[1:]]))
 '''
 
-PYZ_MAIN = '''"""Packaged Asteria game: unpacks once into the user cache, keeps saves in the user data folder."""
+PYZ_MAIN = '''"""Packaged Asteria game: unpacks once into the user cache, keeps saves in the user
+data folder."""
 import os
 import shutil
 import sys
@@ -68,7 +80,8 @@ def unpack(archive):
     if not (target / ".complete").is_file():
         shutil.rmtree(target, ignore_errors=True)
         with zipfile.ZipFile(archive) as bundle:
-            bundle.extractall(target, [n for n in bundle.namelist() if n.startswith(("engine/", "game/"))])
+            bundle.extractall(target, [n for n in bundle.namelist() if n.startswith(("engine/",
+            "game/"))])
         (target / ".complete").write_text(BUILD)
     saves = _user_dir("data") / NAME / "saves"
     saves.mkdir(parents=True, exist_ok=True)
@@ -186,7 +199,9 @@ def export_game(project_path, output, *, allow_missing=False, bundle_engine=True
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
         report.files.append(target)
-        notice_dirs.update(parent for parent in source.parents if root in parent.parents or parent == root)
+        notice_dirs.update(
+            parent for parent in source.parents if root in parent.parents or parent == root
+        )
     for directory in notice_dirs:  # attribution / license files travel with the assets
         for name in NOTICE_NAMES:
             notice = directory / name
@@ -209,18 +224,24 @@ def _copy_engine(target):
 
     source = Path(asteria.__file__).resolve().parent
     shutil.rmtree(target / "asteria", ignore_errors=True)
-    shutil.copytree(source, target / "asteria", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    shutil.copytree(
+        source, target / "asteria", ignore=shutil.ignore_patterns("__pycache__", "*.pyc")
+    )
     return sorted(p for p in (target / "asteria").rglob("*") if p.is_file())
 
 
 def _slug(name):
-    return "".join(c if c.isalnum() or c in "-_" else "_" for c in str(name).strip()) or "AsteriaGame"
+    return (
+        "".join(c if c.isalnum() or c in "-_" else "_" for c in str(name).strip()) or "AsteriaGame"
+    )
 
 
 def build_pyz(game_folder, output, *, name):
     """One-file build of an exported game folder (``python Game.pyz`` runs it)."""
     game_folder, output = Path(game_folder), Path(output)
-    files = sorted(p for p in game_folder.rglob("*") if p.is_file() and "__pycache__" not in p.parts)
+    files = sorted(
+        p for p in game_folder.rglob("*") if p.is_file() and "__pycache__" not in p.parts
+    )
     digest = hashlib.sha256()
     for path in files:
         digest.update(str(path.relative_to(game_folder)).encode())
@@ -230,7 +251,9 @@ def build_pyz(game_folder, output, *, name):
     shutil.rmtree(staging, ignore_errors=True)
     shutil.copytree(game_folder / "engine", staging / "engine")
     shutil.copytree(
-        game_folder, staging / "game", ignore=shutil.ignore_patterns("engine", "run_game.py", "saves", "__pycache__")
+        game_folder,
+        staging / "game",
+        ignore=shutil.ignore_patterns("engine", "run_game.py", "saves", "__pycache__"),
     )
     (staging / "__main__.py").write_text(
         PYZ_MAIN.format(name=_slug(name), build=build, project=PROJECT_FILE), encoding="utf-8"
@@ -242,7 +265,8 @@ def build_pyz(game_folder, output, *, name):
 
 
 def build_macos_app(pyz, output_dir, *, name, identifier=None):
-    """``Name.app`` around a ``.pyz``: double-clickable on macOS, runs with the user's python3 + pygame-ce."""
+    """``Name.app`` around a ``.pyz``: double-clickable on macOS, runs with the user's python3 +
+    pygame-ce."""
     pyz = Path(pyz)
     app = Path(output_dir) / f"{name}.app"
     shutil.rmtree(app, ignore_errors=True)
@@ -285,7 +309,9 @@ def package_game(project_path, output, *, name=None, pyz=True, app=False, allow_
 
 
 def upgrade_main(argv=None):
-    parser = argparse.ArgumentParser(description="Upgrade an Asteria project file to the current format")
+    parser = argparse.ArgumentParser(
+        description="Upgrade an Asteria project file to the current format"
+    )
     parser.add_argument("project")
     parser.add_argument("--no-backup", action="store_true")
     args = parser.parse_args(argv)
@@ -299,8 +325,12 @@ def export_main(argv=None):
     parser.add_argument("project")
     parser.add_argument("output")
     parser.add_argument("--allow-missing", action="store_true")
-    parser.add_argument("--pyz", action="store_true", help="also build a single-file game (Name.pyz)")
-    parser.add_argument("--app", action="store_true", help="also build a macOS app bundle (Name.app)")
+    parser.add_argument(
+        "--pyz", action="store_true", help="also build a single-file game (Name.pyz)"
+    )
+    parser.add_argument(
+        "--app", action="store_true", help="also build a macOS app bundle (Name.app)"
+    )
     parser.add_argument("--name", help="game name (default: the project name)")
     args = parser.parse_args(argv)
     if not (args.pyz or args.app):
@@ -311,12 +341,19 @@ def export_main(argv=None):
         print(f"Run: python {report.output / 'run_game.py'}")
         return 0
     result = package_game(
-        args.project, args.output, name=args.name, pyz=True, app=args.app, allow_missing=args.allow_missing
+        args.project,
+        args.output,
+        name=args.name,
+        pyz=True,
+        app=args.app,
+        allow_missing=args.allow_missing,
     )
     for missing in result["report"].missing:
         print(f"  missing: {missing}")
     print(f"Game folder: {result['folder']}  (python run_game.py)")
     print(f"Single file: {result['pyz']}  (python3 {result['pyz'].name})")
     if result["app"] is not None:
-        print(f"macOS app:   {result['app']}  (needs python3 with pygame-ce, or set ASTERIA_PYTHON)")
+        print(
+            f"macOS app:   {result['app']}  (needs python3 with pygame-ce, or set ASTERIA_PYTHON)"
+        )
     return 0

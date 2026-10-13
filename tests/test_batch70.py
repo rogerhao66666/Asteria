@@ -2,7 +2,14 @@ import json
 
 import pytest
 
-from asteria.presentation.attachments import Attachment, Socket, SocketKey, SocketRig, Transform2D, validate_attachments
+from asteria.presentation.attachments import (
+    Attachment,
+    Socket,
+    SocketKey,
+    SocketRig,
+    Transform2D,
+    validate_attachments,
+)
 
 
 def T(x=0, y=0, r=0, sx=1, sy=1, **kw):
@@ -33,7 +40,8 @@ def test_arbitrary_semantics_not_weapon_specific():
     rig.add(Socket("head"))
     rig.add(Socket("effect_anchor"))
     xs = validate_attachments(
-        rig, [Attachment("hat", "asset.hat", "head"), Attachment("aura", "vfx.aura", "effect_anchor")]
+        rig,
+        [Attachment("hat", "asset.hat", "head"), Attachment("aura", "vfx.aura", "effect_anchor")],
     )
     assert [x.asset_id for x in xs] == ["asset.hat", "vfx.aura"]
 

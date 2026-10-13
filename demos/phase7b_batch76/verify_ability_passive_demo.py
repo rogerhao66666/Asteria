@@ -1,4 +1,5 @@
 """Verify Batch 76 using the same canonical playable project/save delivered to users."""
+
 from pathlib import Path
 import json
 
@@ -10,7 +11,9 @@ root = Path(__file__).resolve().parents[2]
 document = EditorDocument()
 load_document(document, root / "AsteriaPhase7B_AbilityPassiveDemo.asteria.json")
 project = document.project
-save = json.loads((root / "reference_data" / "phase7b_batch76_ability_passive_demo.save.json").read_text())
+save = json.loads(
+    (root / "reference_data" / "phase7b_batch76_ability_passive_demo.save.json").read_text()
+)
 state = RpgRuntimeState.from_data(save, project.rpg_database)
 actor = project.rpg_database.build_actor("aria")
 actor.restore(state.actor_snapshots["aria"])

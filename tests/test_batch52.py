@@ -1,4 +1,10 @@
-from asteria.assets import AssetBrowserModel, AssetBrowserQuery, AssetRegistry, AssetSource, CanonicalAsset
+from asteria.assets import (
+    AssetBrowserModel,
+    AssetBrowserQuery,
+    AssetRegistry,
+    AssetSource,
+    CanonicalAsset,
+)
 
 
 def model(n=20):
@@ -40,7 +46,9 @@ def test_tag_filter():
 def test_combined():
     assert all(
         x.kind == "icon" and "starter" in x.tags
-        for x in model().items(AssetBrowserQuery(kinds=frozenset(("icon",)), tags=frozenset(("starter",))))
+        for x in model().items(
+            AssetBrowserQuery(kinds=frozenset(("icon",)), tags=frozenset(("starter",)))
+        )
     )
 
 
@@ -93,7 +101,11 @@ def test_inspector_explicit():
 
 
 def test_preview():
-    assert model().preview("icon/2") == {"asset_id": "icon/2", "kind": "icon", "source_uri": "Assets/2.dat"}
+    assert model().preview("icon/2") == {
+        "asset_id": "icon/2",
+        "kind": "icon",
+        "source_uri": "Assets/2.dat",
+    }
 
 
 def test_no_preview_selection():

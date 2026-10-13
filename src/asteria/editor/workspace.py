@@ -82,7 +82,8 @@ class EditorWorkspace(QWidget):
 
     @staticmethod
     def _scrolling(page):
-        """Pages that do not scroll by themselves get a scroll area, so one large editor never makes the
+        """Pages that do not scroll by themselves get a scroll area, so one large editor never
+        makes the
         window larger than the screen (tab pages and the scene view already scroll)."""
         from PySide6.QtWidgets import QAbstractScrollArea, QTabWidget
 

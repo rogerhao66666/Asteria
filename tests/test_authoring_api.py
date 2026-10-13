@@ -53,7 +53,8 @@ def test_script_failure_can_be_rolled_back_transactionally():
         tx.add(command)
 
     result = run_authoring_script(
-        'hero = project.scene("Town").entity("Hero")\nhero.transform.x = 50\nraise RuntimeError("boom")\n',
+        'hero = project.scene("Town").entity("Hero")\nhero.transform.x = 50\nraise '
+        'RuntimeError("boom")\n',
         p,
         execute=apply,
     )

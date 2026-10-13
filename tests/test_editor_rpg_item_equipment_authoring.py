@@ -40,7 +40,9 @@ def test_item_complete_fields_and_undo():
     p, doc, c = make()
     item = c.create_item(ItemDefinition("potion", "Potion", tags=("heal",), stack_limit=50))
     assert item.stack_limit == 50
-    edited = c.edit_item("potion", ItemDefinition("potion", "Hi Potion", tags=("heal", "rare"), stack_limit=20))
+    edited = c.edit_item(
+        "potion", ItemDefinition("potion", "Hi Potion", tags=("heal", "rare"), stack_limit=20)
+    )
     assert edited.display_name == "Hi Potion"
     assert doc.undo()
     assert p.rpg_database.items["potion"].display_name == "Potion"
@@ -74,7 +76,9 @@ def test_equipment_complete_fields():
 
 def test_attachment_complete_fields_and_growth_reference():
     p, doc, c = make()
-    c.create_growth(EquipmentGrowthDefinition("rune_growth", nodes=(EquipmentGrowthNodeDefinition("root"),)))
+    c.create_growth(
+        EquipmentGrowthDefinition("rune_growth", nodes=(EquipmentGrowthNodeDefinition("root"),))
+    )
     att = c.create_attachment(
         AttachmentDefinition(
             "ember_rune",
@@ -108,7 +112,9 @@ def test_growth_graph_supports_ranks_requirements_prereqs_rewards_and_evolution(
         exclusive_group="path",
     )
     growth = c.create_growth(
-        EquipmentGrowthDefinition("blade_growth", "Blade Growth", nodes=(root, evo), tags=("weapon",))
+        EquipmentGrowthDefinition(
+            "blade_growth", "Blade Growth", nodes=(root, evo), tags=("weapon",)
+        )
     )
     assert growth.require_node("root").max_rank == 2
     assert growth.require_node("evolve").prerequisites == (("root", 2),)

@@ -21,7 +21,10 @@ class DebuggerError(ValueError):
 
 
 def _resources(pool_data):
-    return {k: {"current": v["current"], "maximum": v["maximum"]} for k, v in sorted(pool_data["values"].items())}
+    return {
+        k: {"current": v["current"], "maximum": v["maximum"]}
+        for k, v in sorted(pool_data["values"].items())
+    }
 
 
 class RuntimeDebugger:
@@ -78,10 +81,17 @@ class RuntimeDebugger:
                 continue
             t = entity.get(Transform)
             data["field_entities"].append(
-                {"id": entity.id, "name": entity.name, "position": [t.x, t.y], "ai": ai_states.get(entity.id)}
+                {
+                    "id": entity.id,
+                    "name": entity.name,
+                    "position": [t.x, t.y],
+                    "ai": ai_states.get(entity.id),
+                }
             )
         if game.battle is not None:
-            adapter = getattr(self.host, "_battle_presentation", None) if self.host is not None else None
+            adapter = (
+                getattr(self.host, "_battle_presentation", None) if self.host is not None else None
+            )
             members = {}
             for side, party in game.battle.parties.items():
                 for member in party.members:
@@ -99,7 +109,9 @@ class RuntimeDebugger:
                         "active": game.battle.is_active(member),
                         "stats": dict(sorted(subject.stats.to_data()["values"].items())),
                         "resources": _resources(subject.resources.to_data()),
-                        "states": [s.state_id for s in subject.states.active_states()] if subject.states else [],
+                        "states": [s.state_id for s in subject.states.active_states()]
+                        if subject.states
+                        else [],
                         "abilities": list(member.ability_ids),
                         "animation": animation,
                     }
@@ -144,14 +156,17 @@ class RuntimeDebugger:
         return True
 
     def cmd_profile(self):
-        """The live runtime profile (frame, pacing, sections, counters, memory, unsupported metrics)."""
+        """The live runtime profile (frame, pacing, sections, counters, memory, unsupported
+        metrics)."""
         return self._profiler(start=True).report()
 
     def cmd_profile_reset(self):
         from asteria.runtime.profiler import RuntimeProfiler
 
         old = self._profiler(start=True)
-        self.host.enable_profiling(RuntimeProfiler(target_fps=old.target_fps, track_python_heap=False))
+        self.host.enable_profiling(
+            RuntimeProfiler(target_fps=old.target_fps, track_python_heap=False)
+        )
         return True
 
     def cmd_give_item(self, item_id, quantity=1):
@@ -187,7 +202,10 @@ class RuntimeDebugger:
         if member_id not in snapshots:
             raise DebuggerError(f"unknown member {member_id}")
         snap = snapshots[member_id]
-        resources = {**snap.resources, "values": {k: dict(v) for k, v in snap.resources["values"].items()}}
+        resources = {
+            **snap.resources,
+            "values": {k: dict(v) for k, v in snap.resources["values"].items()},
+        }
         entry = resources["values"].get(resource_id)
         if entry is None:
             raise DebuggerError(f"{member_id} has no resource {resource_id}")

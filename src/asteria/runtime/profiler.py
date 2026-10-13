@@ -152,7 +152,9 @@ class RuntimeProfiler:
 
     def report(self):
         counters = {
-            k: {"last": v[-1], "max": max(v), "mean": round(mean(v), 4)} for k, v in sorted(self.counters.items()) if v
+            k: {"last": v[-1], "max": max(v), "mean": round(mean(v), 4)}
+            for k, v in sorted(self.counters.items())
+            if v
         }
         measured = set(self.sections) | set(counters) | {"frame", "memory"}
         missing = [m for m in SPEC_METRICS if m not in measured and m not in self._unsupported]

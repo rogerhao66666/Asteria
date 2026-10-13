@@ -37,7 +37,9 @@ def renderable_text(pg, font, value, cache):
             cache[key] = cached
         return cached
 
-    return "".join(char if has_glyph(char) else GLYPH_FALLBACKS.get(char, "?") for char in str(value))
+    return "".join(
+        char if has_glyph(char) else GLYPH_FALLBACKS.get(char, "?") for char in str(value)
+    )
 
 
 class PygameBattleUiBackend:
@@ -71,7 +73,9 @@ class PygameBattleUiBackend:
         return round(float(value) * self.scale)
 
     def _rect(self, x, y, width, height):
-        return self.pg.Rect(self._s(x), self._s(y), max(1, self._s(width)), max(1, self._s(height)))
+        return self.pg.Rect(
+            self._s(x), self._s(y), max(1, self._s(width)), max(1, self._s(height))
+        )
 
     @staticmethod
     def _rgb(color):
@@ -94,7 +98,11 @@ class PygameBattleUiBackend:
         self.pg.draw.rect(self.screen, self._rgb(fill), rect, border_radius=self._s(radius))
         if border_width:
             self.pg.draw.rect(
-                self.screen, self._rgb(border), rect, width=max(1, self._s(border_width)), border_radius=self._s(radius)
+                self.screen,
+                self._rgb(border),
+                rect,
+                width=max(1, self._s(border_width)),
+                border_radius=self._s(radius),
             )
 
     def draw_gauge(self, gauge, *, track, fill):
@@ -105,34 +113,51 @@ class PygameBattleUiBackend:
         if mode in {"pips", "segmented_bar", "icon_stack"}:
             segments = int(getattr(gauge, "segments", 0))
             if segments <= 0:
-                segments = max(1, int(round(float(gauge.maximum)))) if float(gauge.maximum) <= 24 else 5
+                segments = (
+                    max(1, int(round(float(gauge.maximum)))) if float(gauge.maximum) <= 24 else 5
+                )
             gap = max(1, self._s(1))
             cell_w = max(1, (rect.width - gap * (segments - 1)) // segments)
             filled_count = int(round(normalized * segments))
             icon = None
-            if mode == "icon_stack" and self.resolve_icon is not None and getattr(gauge, "icon_asset_id", None):
+            if (
+                mode == "icon_stack"
+                and self.resolve_icon is not None
+                and getattr(gauge, "icon_asset_id", None)
+            ):
                 value = self.resolve_icon(gauge.icon_asset_id)
                 icon = getattr(value, "backend_handle", value)
             for index in range(segments):
                 cell = self.pg.Rect(rect.x + index * (cell_w + gap), rect.y, cell_w, rect.height)
                 active = index < filled_count
                 if icon is not None and active:
-                    image = icon if icon.get_size() == cell.size else self.pg.transform.scale(icon, cell.size)
+                    image = (
+                        icon
+                        if icon.get_size() == cell.size
+                        else self.pg.transform.scale(icon, cell.size)
+                    )
                     self.screen.blit(image, cell.topleft)
                 else:
                     self.pg.draw.rect(
-                        self.screen, self._rgb(fill if active else track), cell, border_radius=max(1, cell.height // 3)
+                        self.screen,
+                        self._rgb(fill if active else track),
+                        cell,
+                        border_radius=max(1, cell.height // 3),
                     )
             return
 
         if mode == "ring":
             radius = max(3, round(max(rect.width, rect.height) / 2))
             center = (rect.x + rect.width // 2, rect.y + rect.height // 2)
-            self.pg.draw.circle(self.screen, self._rgb(track), center, radius, width=max(1, radius // 4))
+            self.pg.draw.circle(
+                self.screen, self._rgb(track), center, radius, width=max(1, radius // 4)
+            )
             if normalized > 0:
                 import math
 
-                ring_rect = self.pg.Rect(center[0] - radius, center[1] - radius, radius * 2, radius * 2)
+                ring_rect = self.pg.Rect(
+                    center[0] - radius, center[1] - radius, radius * 2, radius * 2
+                )
                 start = -math.pi / 2
                 self.pg.draw.arc(
                     self.screen,
@@ -145,11 +170,15 @@ class PygameBattleUiBackend:
             return
 
         # bar/action_gauge/timeline/custom roles have a readable bar fallback.
-        self.pg.draw.rect(self.screen, self._rgb(track), rect, border_radius=max(1, rect.height // 2))
+        self.pg.draw.rect(
+            self.screen, self._rgb(track), rect, border_radius=max(1, rect.height // 2)
+        )
         width = max(0, min(rect.width, round(rect.width * normalized)))
         if width:
             filled = self.pg.Rect(rect.x, rect.y, width, rect.height)
-            self.pg.draw.rect(self.screen, self._rgb(fill), filled, border_radius=max(1, rect.height // 2))
+            self.pg.draw.rect(
+                self.screen, self._rgb(fill), filled, border_radius=max(1, rect.height // 2)
+            )
 
     def draw_icon(self, icon):
         surface = None
@@ -158,7 +187,11 @@ class PygameBattleUiBackend:
             surface = getattr(value, "backend_handle", value)
         target = self._rect(icon.x, icon.y, 8, 8)
         if surface is not None:
-            image = surface if surface.get_size() == target.size else self.pg.transform.scale(surface, target.size)
+            image = (
+                surface
+                if surface.get_size() == target.size
+                else self.pg.transform.scale(surface, target.size)
+            )
             self.screen.blit(image, target.topleft)
         else:
             self.pg.draw.rect(self.screen, (116, 130, 154), target, border_radius=2)

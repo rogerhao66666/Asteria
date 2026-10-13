@@ -44,7 +44,9 @@ def test_initial_added(tmp_path):
     r = AssetRegistry()
     q = LiveAssetReconciler(sf, r).reconcile(tmp_path)
     assert (
-        q.ok and [(x.operation, x.asset_id) for x in q.changes] == [("added", "a")] and r.resolve("a").asset_id == "a"
+        q.ok
+        and [(x.operation, x.asset_id) for x in q.changes] == [("added", "a")]
+        and r.resolve("a").asset_id == "a"
     )
 
 
@@ -83,7 +85,11 @@ def test_mixed_deterministic(tmp_path):
     w(tmp_path, "b", 2)
     w(tmp_path, "d")
     q = LiveAssetReconciler(sf, r).reconcile(tmp_path)
-    assert [(x.operation, x.asset_id) for x in q.changes] == [("removed", "a"), ("added", "d"), ("changed", "b")]
+    assert [(x.operation, x.asset_id) for x in q.changes] == [
+        ("removed", "a"),
+        ("added", "d"),
+        ("changed", "b"),
+    ]
 
 
 def test_invalid_refresh_keeps_live_registry(tmp_path):

@@ -45,16 +45,28 @@ class InventoryScreenProfile:
     VERSION = 1
 
     def __init__(
-        self, *, item_labels=None, item_groups=None, group_labels=None, visible_limits=None, default_group="items"
+        self,
+        *,
+        item_labels=None,
+        item_groups=None,
+        group_labels=None,
+        visible_limits=None,
+        default_group="items",
     ):
         object.__setattr__(
-            self, "item_labels", tuple(sorted((str(k), str(v)) for k, v in dict(item_labels or {}).items()))
+            self,
+            "item_labels",
+            tuple(sorted((str(k), str(v)) for k, v in dict(item_labels or {}).items())),
         )
         object.__setattr__(
-            self, "item_groups", tuple(sorted((str(k), str(v)) for k, v in dict(item_groups or {}).items()))
+            self,
+            "item_groups",
+            tuple(sorted((str(k), str(v)) for k, v in dict(item_groups or {}).items())),
         )
         object.__setattr__(
-            self, "group_labels", tuple(sorted((str(k), str(v)) for k, v in dict(group_labels or {}).items()))
+            self,
+            "group_labels",
+            tuple(sorted((str(k), str(v)) for k, v in dict(group_labels or {}).items())),
         )
         limits = []
         for k, v in dict(visible_limits or {}).items():
@@ -153,7 +165,12 @@ class InventoryScreenRuntime:
                     selected=item_id == self.selected_item_id,
                 )
             )
-        items = tuple(sorted(items, key=lambda x: (self.profile.group_for(x.item_id), x.label.casefold(), x.item_id)))
+        items = tuple(
+            sorted(
+                items,
+                key=lambda x: (self.profile.group_for(x.item_id), x.label.casefold(), x.item_id),
+            )
+        )
         groups = []
         cats = []
         for item in items:
@@ -165,13 +182,21 @@ class InventoryScreenRuntime:
             limit = self.profile.visible_limit(g)
             visible = ids if limit is None else ids[:limit]
             groups.append(
-                InventoryGroupView(g, self.profile.group_label(g), ids, tuple(visible), max(0, len(ids) - len(visible)))
+                InventoryGroupView(
+                    g,
+                    self.profile.group_label(g),
+                    ids,
+                    tuple(visible),
+                    max(0, len(ids) - len(visible)),
+                )
             )
         valid = {x.item_id for x in items}
         if self.selected_item_id not in valid:
             self.selected_item_id = items[0].item_id if items else None
         self.revision += 1
-        self._view = InventoryScreenView(items, tuple(groups), self.query, self.selected_item_id, self.revision)
+        self._view = InventoryScreenView(
+            items, tuple(groups), self.query, self.selected_item_id, self.revision
+        )
         return self._view
 
     def set_query(self, q):

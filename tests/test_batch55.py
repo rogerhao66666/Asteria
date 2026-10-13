@@ -88,7 +88,14 @@ def test_kind_mismatch():
 
 def test_resolve_many():
     r = SceneAssetResolver(registry())
-    assert len(r.resolve_many((B(), SceneAssetBinding("o2", "asset", SceneAssetRef("audio/b", "audio"))))) == 2
+    assert (
+        len(
+            r.resolve_many(
+                (B(), SceneAssetBinding("o2", "asset", SceneAssetRef("audio/b", "audio")))
+            )
+        )
+        == 2
+    )
 
 
 def test_generic_runtime():

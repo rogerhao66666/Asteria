@@ -1,13 +1,17 @@
 """Item and equipment icons for the Complex Reference RPG (AST-07).
 
-Packs one CC0 icon per item / equipment record from the Ninja Adventure Asset Pack (kept un-tracked in
-``local_reference/free_assets/``) into ``playable_assets/item_icons.png`` (18x18 cells, icons centred), then
+Packs one CC0 icon per item / equipment record from the Ninja Adventure Asset Pack (kept
+un-tracked in
+``local_reference/free_assets/``) into ``playable_assets/item_icons.png`` (18x18 cells, icons
+centred), then
 adds to ``project.asteria.json``, in its stored format:
 
-* one canonical ``icon`` asset per record, ``icon.<record id>``, whose ``region`` metadata is its cell;
+* one canonical ``icon`` asset per record, ``icon.<record id>``, whose ``region`` metadata is its
+  cell;
 * ``icon_id`` on each item and equipment record.
 
-Running it again rebuilds the atlas and rewrites the same entries (idempotent). Nothing else changes.
+Running it again rebuilds the atlas and rewrites the same entries (idempotent). Nothing else
+changes.
 """
 
 from __future__ import annotations
@@ -20,7 +24,14 @@ from PIL import Image
 
 REPO = Path(__file__).resolve().parents[1]
 PROJECT = REPO / "reference_projects" / "complex_reference_rpg"
-PACK = REPO / "local_reference" / "free_assets" / "ninja_adventure" / "extracted" / "Ninja Adventure - Asset Pack"
+PACK = (
+    REPO
+    / "local_reference"
+    / "free_assets"
+    / "ninja_adventure"
+    / "extracted"
+    / "Ninja Adventure - Asset Pack"
+)
 ATLAS = "playable_assets/item_icons.png"
 CELL = 18
 COLUMNS = 8
@@ -100,7 +111,10 @@ def update_project(path, regions):
                 "kind": "icon",
                 "metadata": [["region", region]],
                 "source": {
-                    "provenance": [["license", "CC0 1.0"], ["source", "Ninja Adventure Asset Pack"]],
+                    "provenance": [
+                        ["license", "CC0 1.0"],
+                        ["source", "Ninja Adventure Asset Pack"],
+                    ],
                     "provider": "project",
                     "uri": ATLAS,
                 },
@@ -113,13 +127,18 @@ def update_project(path, regions):
         for record in _records(db[table], key):
             if record[key] in regions:
                 record["icon_id"] = f"icon.{record[key]}"
-    path.write_text(json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def main():
     missing = [s for s in ICONS.values() if not (PACK / s).is_file()]
     if missing:
-        print("Missing source icons (download the Ninja Adventure Asset Pack into local_reference):", missing)
+        print(
+            "Missing source icons (download the Ninja Adventure Asset Pack into local_reference):",
+            missing,
+        )
         return 1
     regions = build_atlas(PROJECT / ATLAS)
     update_project(PROJECT / "project.asteria.json", regions)

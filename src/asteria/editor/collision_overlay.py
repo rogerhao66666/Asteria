@@ -44,7 +44,8 @@ def build_collision_cells(tilemap, camera, *, origin_x=0.0, origin_y=0.0):
 
 @dataclass(frozen=True, slots=True)
 class CombatBox:
-    """One shape to outline in the scene view: ``kind`` is solid, one_way, slope_right, slope_left, ladder,
+    """One shape to outline in the scene view: ``kind`` is solid, one_way, slope_right,
+    slope_left, ladder,
     trigger, hurtbox or hitbox; ``points`` are screen corners (a triangle for slopes)."""
 
     kind: str
@@ -53,7 +54,8 @@ class CombatBox:
 
 
 def build_combat_boxes(scene, camera):
-    """Colliders, hurtboxes and hitboxes of a scene in screen space (D22 A9): what blocks, what can be hit,
+    """Colliders, hurtboxes and hitboxes of a scene in screen space (D22 A9): what blocks, what
+    can be hit,
     what hits (hitboxes are shown where they reach with the entity's facing)."""
     if scene is None:
         return ()
@@ -64,7 +66,9 @@ def build_combat_boxes(scene, camera):
     boxes = []
 
     def corners(x0, y0, x1, y1):
-        return tuple(camera.world_to_screen(x, y) for x, y in ((x0, y0), (x1, y0), (x1, y1), (x0, y1)))
+        return tuple(
+            camera.world_to_screen(x, y) for x, y in ((x0, y0), (x1, y0), (x1, y1), (x0, y1))
+        )
 
     for entity in scene.entities():
         if not entity.enabled or not entity.has(Transform):
@@ -80,10 +84,14 @@ def build_combat_boxes(scene, camera):
                 hw, hh = collider.width / 2, collider.height / 2
                 x0, y0, x1, y1 = cx - hw, cy - hh, cx + hw, cy + hh
             if collider.shape == "slope_right":
-                points = tuple(camera.world_to_screen(px, py) for px, py in ((x0, y1), (x1, y1), (x1, y0)))
+                points = tuple(
+                    camera.world_to_screen(px, py) for px, py in ((x0, y1), (x1, y1), (x1, y0))
+                )
                 kind = "slope_right"
             elif collider.shape == "slope_left":
-                points = tuple(camera.world_to_screen(px, py) for px, py in ((x0, y1), (x1, y1), (x0, y0)))
+                points = tuple(
+                    camera.world_to_screen(px, py) for px, py in ((x0, y1), (x1, y1), (x0, y0))
+                )
                 kind = "slope_left"
             else:
                 points = corners(x0, y0, x1, y1)
@@ -97,7 +105,10 @@ def build_combat_boxes(scene, camera):
                     else "solid"
                 )
             boxes.append(CombatBox(kind, entity.id, points))
-        for component_type, kind in ((Hurtbox2DComponent, "hurtbox"), (Hitbox2DComponent, "hitbox")):
+        for component_type, kind in (
+            (Hurtbox2DComponent, "hurtbox"),
+            (Hitbox2DComponent, "hitbox"),
+        ):
             component = entity.try_get(component_type)
             if component is not None and component.enabled:
                 boxes.append(CombatBox(kind, entity.id, corners(*facing_box(entity, component))))

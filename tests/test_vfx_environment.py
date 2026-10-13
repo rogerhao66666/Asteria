@@ -1,4 +1,5 @@
-"""VFX-02 / VFX-03: scene environment (lights, shadows, normal maps, fog, weather, bloom, grading, screen
+"""VFX-02 / VFX-03: scene environment (lights, shadows, normal maps, fog, weather, bloom, grading,
+screen
 shaders) on the GPU effect chain, the pygame fallback, and the scene data round trip."""
 
 import pytest
@@ -30,7 +31,12 @@ def _light(scene, x, y, *, radius=40.0, intensity=1.0, shadow=False, height=20.0
     entity = scene.add_entity(Entity("Lamp"))
     entity.add_component(Transform(x, y))
     light = entity.add_component(LightSource2DComponent())
-    light.radius, light.intensity, light.casts_shadow, light.height = radius, intensity, shadow, height
+    light.radius, light.intensity, light.casts_shadow, light.height = (
+        radius,
+        intensity,
+        shadow,
+        height,
+    )
     light.color_r = light.color_g = light.color_b = 1.0
     return entity
 
@@ -75,7 +81,9 @@ def test_lights_brighten_their_radius_over_the_ambient(gl):
     scene = _scene(lighting_enabled=True, ambient_intensity=0.2)
     _light(scene, 48, 32)
     out, presenter = _render(gl, _world(), _env(scene))
-    assert _lum(out, 48, 32) > 150 and _lum(out, 2, 2) < 60  # lit centre, ambient corner (200 * 0.2 = 40)
+    assert (
+        _lum(out, 48, 32) > 150 and _lum(out, 2, 2) < 60
+    )  # lit centre, ambient corner (200 * 0.2 = 40)
     assert presenter.last_draw_calls >= 4  # light map + scene + grade + UI composite
 
 
@@ -87,7 +95,9 @@ def test_shadow_casters_block_shadow_casting_lights(gl):
     caster = wall.add_component(ShadowCaster2DComponent())
     caster.width, caster.height, caster.offset_y = 4.0, 30.0, 0.0
     out, _ = _render(gl, _world(), _env(scene))
-    assert _lum(out, 60, 32) < _lum(out, 12, 32) * 0.3  # behind the wall vs the same distance in front
+    assert (
+        _lum(out, 60, 32) < _lum(out, 12, 32) * 0.3
+    )  # behind the wall vs the same distance in front
 
 
 def test_normal_maps_shade_toward_the_light(gl):
@@ -95,9 +105,15 @@ def test_normal_maps_shade_toward_the_light(gl):
     _light(scene, 48, 32, radius=80, height=6.0)
     normals = pygame.Surface((W, H), 0, 32)
     normals.fill((128, 128, 255))
-    pygame.draw.rect(normals, (40, 128, 160), (16, 24, 16, 16))  # left patch faces left (away from the light)
-    pygame.draw.rect(normals, (216, 128, 160), (64, 24, 16, 16))  # right patch... faces right (away too)
-    pygame.draw.rect(normals, (216, 128, 160), (20, 44, 8, 8))  # faces right = toward the light, left side
+    pygame.draw.rect(
+        normals, (40, 128, 160), (16, 24, 16, 16)
+    )  # left patch faces left (away from the light)
+    pygame.draw.rect(
+        normals, (216, 128, 160), (64, 24, 16, 16)
+    )  # right patch... faces right (away too)
+    pygame.draw.rect(
+        normals, (216, 128, 160), (20, 44, 8, 8)
+    )  # faces right = toward the light, left side
     out, _ = _render(gl, _world(), _env(scene), normals=normals)
     toward, away = _lum(out, 24, 48), _lum(out, 24, 32)
     assert toward > away * 1.5
@@ -107,7 +123,9 @@ def test_bloom_spreads_light_from_bright_pixels(gl):
     world = _world((0, 0, 0))
     pygame.draw.rect(world, (255, 255, 255), (44, 28, 8, 8))
     dark, _ = _render(gl, world, _env(_scene(vignette=0.0001)))
-    bloomed, _ = _render(gl, world, _env(_scene(bloom_enabled=True, bloom_threshold=0.5, bloom_intensity=1.5)))
+    bloomed, _ = _render(
+        gl, world, _env(_scene(bloom_enabled=True, bloom_threshold=0.5, bloom_intensity=1.5))
+    )
     assert _lum(dark, 40, 32) == 0 and _lum(bloomed, 40, 32) > 10  # glow beside the bright square
 
 
@@ -132,20 +150,30 @@ def test_builtin_and_project_screen_shaders(gl, tmp_path):
     env = _env(_scene(screen_shader_asset_id="s"), read_shader=lambda asset_id: source)
     inverted, _ = _render(gl, world, env)
     assert tuple(inverted.get_at((10, 10)))[:3] == (55, 205, 205)
-    broken = _env(_scene(screen_shader_asset_id="bad"), read_shader=lambda asset_id: "this is not glsl")
+    broken = _env(
+        _scene(screen_shader_asset_id="bad"), read_shader=lambda asset_id: "this is not glsl"
+    )
     out, presenter = _render(gl, world, broken)
-    assert presenter.post.errors and tuple(out.get_at((10, 10)))[:3] == (200, 50, 50)  # reported, game goes on
+    assert presenter.post.errors and tuple(out.get_at((10, 10)))[:3] == (
+        200,
+        50,
+        50,
+    )  # reported, game goes on
 
 
 def test_fog_mixes_toward_its_colour(gl):
-    out, _ = _render(gl, _world((0, 0, 0)), _env(_scene(fog_density=0.8, fog_r=1.0, fog_g=1.0, fog_b=1.0)))
+    out, _ = _render(
+        gl, _world((0, 0, 0)), _env(_scene(fog_density=0.8, fog_r=1.0, fog_g=1.0, fog_b=1.0))
+    )
     assert _lum(out, 48, 32) > 80
 
 
 def test_pygame_fallback_lights_and_fogs_and_reports_gpu_only_effects():
     from asteria.runtime.environment_fallback import PygameEnvironmentRenderer, unsupported
 
-    scene = _scene(lighting_enabled=True, ambient_intensity=0.2, bloom_enabled=True, fog_density=0.0)
+    scene = _scene(
+        lighting_enabled=True, ambient_intensity=0.2, bloom_enabled=True, fog_density=0.0
+    )
     _light(scene, 48, 32)
     env = _env(scene)
     world = _world()
@@ -163,8 +191,12 @@ def test_weather_is_deterministic_capped_and_follows_the_camera():
             system.update(1 / 60, "snow", 0.5, 200, camera=(0.0, 0.0))
     assert (a.x, a.y) == (b.x, b.y) and a.count == int(200 * 0.5 * 0.8)
     before = list(a.x)
-    a.update(0.0, "snow", 0.5, 200, camera=(10.0, 0.0), scale=2.0)  # camera moved right 10 world units
-    stayed = [(x, after) for x, after in zip(before, a.x, strict=True) if x - 20.0 >= -60]  # others respawn
+    a.update(
+        0.0, "snow", 0.5, 200, camera=(10.0, 0.0), scale=2.0
+    )  # camera moved right 10 world units
+    stayed = [
+        (x, after) for x, after in zip(before, a.x, strict=True) if x - 20.0 >= -60
+    ]  # others respawn
     assert stayed and all(abs(after - (x - 20.0)) < 1e-6 for x, after in stayed)
     surface = _world((0, 0, 0))
     assert a.draw(pygame, surface) == a.count
@@ -177,16 +209,23 @@ def test_environment_components_survive_project_save_and_reload(tmp_path):
     from asteria.runtime.component_registry import default_component_registry
 
     project = Project("Env")
-    scene = project.add_scene(_scene(lighting_enabled=True, weather="rain", bloom_enabled=True, saturation=0.4))
+    scene = project.add_scene(
+        _scene(lighting_enabled=True, weather="rain", bloom_enabled=True, saturation=0.4)
+    )
     _light(scene, 5, 6, shadow=True)
     project.save_json(tmp_path / "p.json")
     again = Project.load_json(tmp_path / "p.json", default_component_registry())
     env = _env(again.scenes()[0])
-    assert env.lighting and env.weather == "rain" and env.post_effect("bloom") and env.post_effect("grade")
+    assert (
+        env.lighting
+        and env.weather == "rain"
+        and env.post_effect("bloom")
+        and env.post_effect("grade")
+    )
     assert env.lights[0][0].casts_shadow and (env.lights[0][0].x, env.lights[0][0].y) == (5.0, 6.0)
 
 
-# --- VFX-03: water, afterimages, trails --------------------------------------------------------------------
+# --- VFX-03: water, afterimages, trails ----------------------------------------------------------
 
 
 def _water(scene, x, y, w, h, **kw):
@@ -216,7 +255,9 @@ def test_water_ripples_and_tints_only_inside_its_region(gl):
     inside = [tuple(out.get_at((x, y)))[:3] for x in range(0, 48) for y in range(0, H)]
     original_inside = [tuple(world.get_at((x, y)))[:3] for x in range(0, 48) for y in range(0, H)]
     assert inside != original_inside  # distorted and tinted
-    assert all(out.get_at((x, y))[:3] == world.get_at((x, y))[:3] for x in range(52, W) for y in range(H))
+    assert all(
+        out.get_at((x, y))[:3] == world.get_at((x, y))[:3] for x in range(52, W) for y in range(H)
+    )
 
 
 def test_water_fallback_shifts_rows_and_tints():
@@ -241,7 +282,9 @@ def test_motion_echo_records_fades_and_expires():
     for i in range(10):
         echo.record(i * 0.03, f"pose{i}", moving=False)
     ghosts = echo.ghosts(0.27)
-    assert 1 <= len(ghosts) <= 4 and ghosts[0][1] < ghosts[-1][1] <= 1.0  # older copies are fainter
+    assert (
+        1 <= len(ghosts) <= 4 and ghosts[0][1] < ghosts[-1][1] <= 1.0
+    )  # older copies are fainter
     assert echo.ghosts(5.0) == [] and echo.idle  # expired
     trail = EchoSettings.of("trail", count=20)
     assert trail.count == 20 and trail.interval < EchoSettings.of("afterimage").interval
@@ -263,12 +306,18 @@ def test_motion_fx_beats_give_battle_afterimages(resource_root, monkeypatch):
         document.set_project(runtime.game.project)
         timeline = ActionTimelineController(document)
         for sequence_id in timeline.sequences():
-            timeline.add_beat(sequence_id, "echo", 0.0, "motion_fx", "afterimage", "@source", duration=1.0)
-            assert not [p for p in timeline.problems(timeline.get(sequence_id)) if "motion_fx" in p]
+            timeline.add_beat(
+                sequence_id, "echo", 0.0, "motion_fx", "afterimage", "@source", duration=1.0
+            )
+            assert not [
+                p for p in timeline.problems(timeline.get(sequence_id)) if "motion_fx" in p
+            ]
         from asteria.editor.action_timeline_authoring import ActionTimelineError
 
         with pytest.raises(ActionTimelineError, match="motion_fx cue"):  # rejected when authored
-            timeline.add_beat("default_action", "bad_echo", 0.0, "motion_fx", "sparkles", "@source")
+            timeline.add_beat(
+                "default_action", "bad_echo", 0.0, "motion_fx", "sparkles", "@source"
+            )
         runtime._battle_presentation = adapter = CanonicalBattleAdapter(runtime)
         runtime.game.start_encounter("boss_room")
         adapter.begin()
@@ -285,7 +334,9 @@ def test_motion_fx_beats_give_battle_afterimages(resource_root, monkeypatch):
             frame = adapter.screen.animation.build_frame(camera)
             for member in list(adapter.screen.animation.echoes.by_key):
                 visual = adapter.screen.scene.visual_for(member)
-                draws = [d for d in frame.combatant_draws if abs(d.depth - visual.anchor.depth) < 1e-3]
+                draws = [
+                    d for d in frame.combatant_draws if abs(d.depth - visual.anchor.depth) < 1e-3
+                ]
                 if len(draws) >= 3:
                     actor_draws = draws
             if actor_draws:
@@ -338,7 +389,8 @@ def test_field_trail_and_environment_layers_on_the_pygame_path(resource_root, mo
 
 
 def test_framebuffer_world_is_sampled_upright(gl):
-    """The ModernGL backend renders the world into a framebuffer (v flipped) before the effect chain."""
+    """The ModernGL backend renders the world into a framebuffer (v flipped) before the effect
+    chain."""
     from asteria.platform.gpu_effects import EffectChain
 
     world_tex = gl.texture((W, H), 4)
@@ -346,13 +398,20 @@ def test_framebuffer_world_is_sampled_upright(gl):
     world_fbo.use()
     gl.viewport = (0, 0, W, H)
     world_fbo.clear(0, 0, 0, 1)
-    gl.scissor = (0, H - 8, 8, 8)  # GL origin is bottom-left: this is the TOP-left 8x8 of the screen
+    gl.scissor = (
+        0,
+        H - 8,
+        8,
+        8,
+    )  # GL origin is bottom-left: this is the TOP-left 8x8 of the screen
     world_fbo.clear(1, 0, 0, 1)
     gl.scissor = None
     chain = EffectChain(gl, (W, H))
     chain.environment = _env(_scene(vignette=0.0001))
     target = gl.simple_framebuffer((W, H), components=4)
     chain.render(world_tex, target, world_flipped=True)
-    image = pygame.transform.flip(pygame.image.frombytes(target.read(components=3), (W, H), "RGB"), False, True)
+    image = pygame.transform.flip(
+        pygame.image.frombytes(target.read(components=3), (W, H), "RGB"), False, True
+    )
     assert image.get_at((2, 2))[:3] == (255, 0, 0) and image.get_at((2, H - 3))[:3] == (0, 0, 0)
     chain.release()

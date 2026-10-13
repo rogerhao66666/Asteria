@@ -2,23 +2,33 @@
 
 A ``BehaviorTree`` record (RPG database) is a node tree:
 
-composites   ``sequence`` (all children succeed in order; resumes where it was), ``selector`` (first
+composites   ``sequence`` (all children succeed in order; resumes where it was), ``selector``
+(first
              child that does not fail; re-checked every tick so a higher-priority branch interrupts
-             a running lower one), ``parallel`` (all children each tick; ``success_count`` successes needed)
-decorators   ``inverter``, ``succeeder``, ``repeater`` (``count``, 0 = forever), ``cooldown`` (``seconds``)
+             a running lower one), ``parallel`` (all children each tick; ``success_count``
+             successes needed)
+decorators   ``inverter``, ``succeeder``, ``repeater`` (``count``, 0 = forever), ``cooldown``
+(``seconds``)
 conditions   ``player_within`` (``radius``), ``player_beyond`` (``radius``), ``switch`` (``name``),
              ``chance`` (``probability``), ``home_within`` (``radius``),
-             real-time combat (ASTERIA_SPEC §20): ``hp_below`` / ``hp_above`` (``fraction`` of ``resource``; boss
-             phases), ``ability_ready`` (``ability``: off cooldown and affordable), ``has_state`` (``state``),
+             real-time combat (ASTERIA_SPEC §20): ``hp_below`` / ``hp_above`` (``fraction`` of
+             ``resource``; boss
+             phases), ``ability_ready`` (``ability``: off cooldown and affordable), ``has_state``
+             (``state``),
              ``acting`` (an action timeline is running on it)
-actions      ``chase`` (until within ``arrive``; fails beyond ``lose_radius``), ``flee`` (until beyond
-             ``radius``), ``move_to`` (``x``, ``y``), ``return_home``, ``patrol`` (``points`` "x,y; x,y"),
+actions      ``chase`` (until within ``arrive``; fails beyond ``lose_radius``), ``flee`` (until
+beyond
+             ``radius``), ``move_to`` (``x``, ``y``), ``return_home``, ``patrol`` (``points``
+             "x,y; x,y"),
              ``wander`` (``radius``),
              ``wait`` (``seconds``), ``face_player``, ``set_switch`` (``name``, ``value``),
              ``start_encounter`` (``encounter_id``),
-             real-time combat: ``use_ability`` (``ability``, aimed at the player; ``wait`` until its action ends),
-             ``keep_distance`` (``min``, ``max``), ``strafe`` (circle the player: ``direction`` 1 / -1,
-             ``seconds``), ``side_patrol`` (side view: walk, turn at walls and ledges; ``seconds`` 0 = forever),
+             real-time combat: ``use_ability`` (``ability``, aimed at the player; ``wait`` until
+             its action ends),
+             ``keep_distance`` (``min``, ``max``), ``strafe`` (circle the player: ``direction`` 1
+             / -1,
+             ``seconds``), ``side_patrol`` (side view: walk, turn at walls and ledges; ``seconds``
+             0 = forever),
              ``jump`` (side view, when grounded), ``summon`` (``prefab``, ``count``, ``radius``),
              ``apply_state`` (``state`` on ``to`` self / player)
 
@@ -77,7 +87,9 @@ class BehaviorNode:
     def __post_init__(self):
         if self.kind not in NODE_KINDS:
             raise ValueError(f"unknown behavior node kind {self.kind}")
-        children = tuple(c if isinstance(c, BehaviorNode) else BehaviorNode.from_data(c) for c in self.children)
+        children = tuple(
+            c if isinstance(c, BehaviorNode) else BehaviorNode.from_data(c) for c in self.children
+        )
         if self.kind in COMPOSITES and not children:
             raise ValueError(f"{self.kind} needs at least one child")
         if self.kind in DECORATORS and len(children) != 1:
@@ -103,7 +115,10 @@ class BehaviorNode:
     @classmethod
     def from_data(cls, data):
         return cls(
-            str(data["kind"]), dict(data.get("params", {})), tuple(data.get("children", ())), str(data.get("name", ""))
+            str(data["kind"]),
+            dict(data.get("params", {})),
+            tuple(data.get("children", ())),
+            str(data.get("name", "")),
         )
 
 
@@ -116,7 +131,9 @@ class BehaviorTree:
     def __post_init__(self):
         if not str(self.tree_id).strip():
             raise ValueError("tree_id is required")
-        root = self.root if isinstance(self.root, BehaviorNode) else BehaviorNode.from_data(self.root)
+        root = (
+            self.root if isinstance(self.root, BehaviorNode) else BehaviorNode.from_data(self.root)
+        )
         object.__setattr__(self, "root", root)
 
     def node(self, path):
@@ -126,7 +143,11 @@ class BehaviorTree:
         return node
 
     def encounter_ids(self):
-        return {n.params.get("encounter_id") for _, n in self.root.walk() if n.kind == "start_encounter"} - {None}
+        return {
+            n.params.get("encounter_id")
+            for _, n in self.root.walk()
+            if n.kind == "start_encounter"
+        } - {None}
 
     def to_data(self):
         return {
@@ -141,4 +162,6 @@ class BehaviorTree:
     def from_data(cls, data):
         if data.get("schema") != "asteria.rpg.behavior_tree" or data.get("version") != 1:
             raise ValueError("unsupported behavior tree")
-        return cls(data["tree_id"], BehaviorNode.from_data(data["root"]), data.get("display_name", ""))
+        return cls(
+            data["tree_id"], BehaviorNode.from_data(data["root"]), data.get("display_name", "")
+        )

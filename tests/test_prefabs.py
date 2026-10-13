@@ -70,15 +70,23 @@ def test_instances_keep_overrides_and_placement_when_the_prefab_changes():
     a = InstantiatePrefabCommand(project, REGISTRY, scene, "chest", 10, 20).execute()
     b = InstantiatePrefabCommand(project, REGISTRY, scene, "chest", 70, 80).execute()
     b.get(SpriteRenderer2D).frame_index = 9  # override on one instance
-    assert instance_overrides(b, project.prefabs.resolve("chest")) == {"asteria.SpriteRenderer2D": {"frame_index": 9}}
+    assert instance_overrides(b, project.prefabs.resolve("chest")) == {
+        "asteria.SpriteRenderer2D": {"frame_index": 9}
+    }
 
     changed = prefab_from_entity(_chest_entity(), "chest")
     sprite_record = next(r for r in changed.components if r["type"] == "asteria.SpriteRenderer2D")
     sprite_record["fields"].update(sprite_sheet_asset_id="sheet.chest_v2", frame_index=1)
     command = ReplacePrefabsCommand(project, REGISTRY, {"chest": changed})
     command.execute()
-    assert (a.get(SpriteRenderer2D).sprite_sheet_asset_id, a.get(SpriteRenderer2D).frame_index) == ("sheet.chest_v2", 1)
-    assert (b.get(SpriteRenderer2D).sprite_sheet_asset_id, b.get(SpriteRenderer2D).frame_index) == ("sheet.chest_v2", 9)
+    assert (
+        a.get(SpriteRenderer2D).sprite_sheet_asset_id,
+        a.get(SpriteRenderer2D).frame_index,
+    ) == ("sheet.chest_v2", 1)
+    assert (
+        b.get(SpriteRenderer2D).sprite_sheet_asset_id,
+        b.get(SpriteRenderer2D).frame_index,
+    ) == ("sheet.chest_v2", 9)
     assert (a.get(Transform).x, b.get(Transform).x) == (10, 70)
     command.undo()
     assert a.get(SpriteRenderer2D).sprite_sheet_asset_id == "sheet.chest"
@@ -97,7 +105,9 @@ def test_variant_instances_follow_base_changes():
     )
     gold = InstantiatePrefabCommand(project, REGISTRY, scene, "gold_chest").execute()
     base = prefab_from_entity(_chest_entity(), "chest")
-    next(r for r in base.components if r["type"] == "asteria.Interaction2D")["fields"]["event_program_id"] = "open_v2"
+    next(r for r in base.components if r["type"] == "asteria.Interaction2D")["fields"][
+        "event_program_id"
+    ] = "open_v2"
     ReplacePrefabsCommand(project, REGISTRY, {"chest": base}).execute()
     assert gold.get(Interaction2DComponent).event_program_id == "open_v2"
     assert gold.get(SpriteRenderer2D).frame_index == 3
@@ -127,8 +137,15 @@ def test_prefabs_and_instances_round_trip_with_the_project():
     restored = Project.from_data(data, REGISTRY)
     assert restored.prefabs.ids() == ("chest",)
     entity = next(e for e in restored.scene(scene.id).entities() if e.has(PrefabInstanceComponent))
-    assert entity.get(PrefabInstanceComponent).prefab_id == "chest" and entity.get(Transform).x == 5
-    assert instantiate(restored.prefabs, "chest", REGISTRY).get(Interaction2DComponent).event_program_id == "open_chest"
+    assert (
+        entity.get(PrefabInstanceComponent).prefab_id == "chest" and entity.get(Transform).x == 5
+    )
+    assert (
+        instantiate(restored.prefabs, "chest", REGISTRY)
+        .get(Interaction2DComponent)
+        .event_program_id
+        == "open_chest"
+    )
 
 
 def test_editor_prefab_menu_flow_with_undo():

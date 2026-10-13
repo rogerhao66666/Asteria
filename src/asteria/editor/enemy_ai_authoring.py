@@ -40,7 +40,9 @@ class AIScenario:
 
     round_index: int = 1
     resource_ratios: dict = field(default_factory=dict)  # resource_id -> 0..1 of its maximum
-    resource_values: dict = field(default_factory=dict)  # resource_id -> current amount (overrides the ratio)
+    resource_values: dict = field(
+        default_factory=dict
+    )  # resource_id -> current amount (overrides the ratio)
     resource_maxima: dict = field(default_factory=dict)  # resource_id -> maximum (default 100)
     stats: dict = field(default_factory=dict)
     memory: dict = field(default_factory=dict)
@@ -87,7 +89,9 @@ def condition(kind, *, negate=False, **params):
             params["value"] = float(params["value"])
             if kind == "resource_ratio" and not 0.0 <= params["value"] <= 1.0:
                 raise EnemyAIEditorError("resource ratio must be between 0 and 1")
-    return AICondition(kind, params={k: v for k, v in params.items() if v is not None}, negate=negate)
+    return AICondition(
+        kind, params={k: v for k, v in params.items() if v is not None}, negate=negate
+    )
 
 
 def _conditions(values):
@@ -97,7 +101,11 @@ def _conditions(values):
             result.append(value)
         else:
             data = dict(value)
-            result.append(condition(data.pop("kind"), negate=data.pop("negate", False), **data.pop("params", data)))
+            result.append(
+                condition(
+                    data.pop("kind"), negate=data.pop("negate", False), **data.pop("params", data)
+                )
+            )
     return tuple(result)
 
 
@@ -138,21 +146,32 @@ class EnemyAIEditor:
         return tuple(sorted(self.document.project.gameplay_library.abilities.ids()))
 
     def bound_enemies(self, ai_id):
-        return tuple(sorted(b.enemy_id for b in self.database.enemy_behavior_bindings.values() if b.ai_id == ai_id))
+        return tuple(
+            sorted(
+                b.enemy_id
+                for b in self.database.enemy_behavior_bindings.values()
+                if b.ai_id == ai_id
+            )
+        )
 
     def resources(self, ai_id):
-        """Resource ids of the enemies using this AI (for resource_ratio conditions and preview sliders)."""
+        """Resource ids of the enemies using this AI (for resource_ratio conditions and preview
+        sliders)."""
         ids = set()
         for enemy_id in self.bound_enemies(ai_id):
             ids.update(self.database.enemies[enemy_id].resources)
         return tuple(sorted(ids or {"vitality"}))
 
     def resource_maximum(self, ai_id, resource_id):
-        """Battle-resource maximum if the project defines one, else the largest bound enemy's value."""
+        """Battle-resource maximum if the project defines one, else the largest bound enemy's
+        value."""
         battle_resource = self.database.battle_resources.get(resource_id)
         if battle_resource is not None and battle_resource.maximum is not None:
             return float(battle_resource.maximum)
-        values = [self.database.enemies[e].resources.get(resource_id, 0) for e in self.bound_enemies(ai_id)]
+        values = [
+            self.database.enemies[e].resources.get(resource_id, 0)
+            for e in self.bound_enemies(ai_id)
+        ]
         return float(max(values, default=0) or 100.0)
 
     # -- whole records ----------------------------------------------------------------
@@ -213,7 +232,9 @@ class EnemyAIEditor:
 
     @staticmethod
     def _check_selector(selector):
-        if selector not in TARGET_SELECTORS and not any(selector.startswith(p) for p in TARGET_SELECTOR_PREFIXES):
+        if selector not in TARGET_SELECTORS and not any(
+            selector.startswith(p) for p in TARGET_SELECTOR_PREFIXES
+        ):
             raise EnemyAIEditorError(f"unknown target selector {selector}")
 
     def add_rule(
@@ -251,7 +272,9 @@ class EnemyAIEditor:
         action_kind = changes.pop("action_kind", old.action_kind)
         selector = changes.pop("target_selector", old.target_selector)
         self._check_selector(selector)
-        payload = self._payload(action_kind, changes.pop("ability_id", None), changes.pop("hook", None), old.payload)
+        payload = self._payload(
+            action_kind, changes.pop("ability_id", None), changes.pop("hook", None), old.payload
+        )
         unknown = set(changes) - {"priority", "weight", "tags", "conditions"}
         if unknown:
             raise EnemyAIEditorError(f"unknown rule fields: {sorted(unknown)}")
@@ -260,13 +283,17 @@ class EnemyAIEditor:
             action_kind,
             payload=payload,
             target_selector=selector,
-            conditions=_conditions(changes["conditions"]) if "conditions" in changes else old.conditions,
+            conditions=_conditions(changes["conditions"])
+            if "conditions" in changes
+            else old.conditions,
             priority=changes.get("priority", old.priority),
             weight=changes.get("weight", old.weight),
             tags=changes.get("tags", old.tags),
         )
         ai = self.get(ai_id)
-        return self._replace(ai_id, rules=tuple(rule if r.rule_id == rule_id else r for r in ai.rules))
+        return self._replace(
+            ai_id, rules=tuple(rule if r.rule_id == rule_id else r for r in ai.rules)
+        )
 
     def remove_rule(self, ai_id, rule_id):
         ai = self.get(ai_id)
@@ -274,13 +301,19 @@ class EnemyAIEditor:
         if len(ai.rules) == 1:
             raise EnemyAIEditorError("an AI needs at least one rule")
         phases = tuple(
-            _rebuild_phase(p, decision_rule_ids=tuple(x for x in p.decision_rule_ids if x != rule_id))
+            _rebuild_phase(
+                p, decision_rule_ids=tuple(x for x in p.decision_rule_ids if x != rule_id)
+            )
             for p in ai.phases
         )
-        return self._replace(ai_id, rules=tuple(r for r in ai.rules if r.rule_id != rule_id), phases=phases)
+        return self._replace(
+            ai_id, rules=tuple(r for r in ai.rules if r.rule_id != rule_id), phases=phases
+        )
 
     # -- phases -----------------------------------------------------------------------
-    def add_phase(self, ai_id, phase_id, *, priority=0, rule_ids=(), actions_per_ready=None, conditions=()):
+    def add_phase(
+        self, ai_id, phase_id, *, priority=0, rule_ids=(), actions_per_ready=None, conditions=()
+    ):
         ai = self.get(ai_id)
         if any(p.phase_id == phase_id for p in ai.phases):
             raise EnemyAIEditorError(f"{ai_id} already has phase {phase_id}")
@@ -296,7 +329,14 @@ class EnemyAIEditor:
 
     def edit_phase(self, ai_id, phase_id, **changes):
         old = self.phase(ai_id, phase_id)
-        allowed = {"priority", "rule_ids", "actions_per_ready", "conditions", "enter_hook", "exit_hook"}
+        allowed = {
+            "priority",
+            "rule_ids",
+            "actions_per_ready",
+            "conditions",
+            "enter_hook",
+            "exit_hook",
+        }
         unknown = set(changes) - allowed
         if unknown:
             raise EnemyAIEditorError(f"unknown phase fields: {sorted(unknown)}")
@@ -309,22 +349,32 @@ class EnemyAIEditor:
                 changes[hook] = None
         phase = _rebuild_phase(old, **changes)
         ai = self.get(ai_id)
-        return self._replace(ai_id, phases=tuple(phase if p.phase_id == phase_id else p for p in ai.phases))
+        return self._replace(
+            ai_id, phases=tuple(phase if p.phase_id == phase_id else p for p in ai.phases)
+        )
 
     def remove_phase(self, ai_id, phase_id):
         ai = self.get(ai_id)
         self.phase(ai_id, phase_id)
         phases = tuple(p for p in ai.phases if p.phase_id != phase_id)
-        initial = ai.initial_phase_id if ai.initial_phase_id != phase_id else (phases[0].phase_id if phases else None)
+        initial = (
+            ai.initial_phase_id
+            if ai.initial_phase_id != phase_id
+            else (phases[0].phase_id if phases else None)
+        )
         return self._replace(ai_id, phases=phases, initial_phase_id=initial)
 
     # -- conditions on a rule or phase --------------------------------------------------
     def _owner(self, ai_id, owner):
         kind, owner_id = owner
         if kind == "rule":
-            return self.rule(ai_id, owner_id), lambda c: self.edit_rule(ai_id, owner_id, conditions=c)
+            return self.rule(ai_id, owner_id), lambda c: self.edit_rule(
+                ai_id, owner_id, conditions=c
+            )
         if kind == "phase":
-            return self.phase(ai_id, owner_id), lambda c: self.edit_phase(ai_id, owner_id, conditions=c)
+            return self.phase(ai_id, owner_id), lambda c: self.edit_phase(
+                ai_id, owner_id, conditions=c
+            )
         raise EnemyAIEditorError("owner must be ('rule', id) or ('phase', id)")
 
     def add_condition(self, ai_id, owner, kind, *, negate=False, **params):
@@ -357,7 +407,9 @@ class EnemyAIEditor:
             try:
                 self._check_selector(rule.target_selector)
             except EnemyAIEditorError:
-                found.append(f"{where}: target {rule.target_selector} needs a project target resolver")
+                found.append(
+                    f"{where}: target {rule.target_selector} needs a project target resolver"
+                )
             found.extend(_condition_problems(where, rule.conditions))
         for phase in ai.phases:
             found.extend(_condition_problems(f"phase {phase.phase_id}", phase.conditions))
@@ -382,15 +434,20 @@ class EnemyAIEditor:
             raise EnemyAIEditorError(f"preview needs a project resolver: {exc}") from exc
 
     def phase_by_ratio(self, ai_id, resource_id="vitality", steps=10, scenario=None):
-        """[(ratio, phase_id)] from full to empty ``resource_id`` — how a boss moves through its phases."""
+        """[(ratio, phase_id)] from full to empty ``resource_id`` — how a boss moves through its
+        phases."""
         base = scenario or AIScenario()
         result = []
         phase_id = base.phase_id
         for step in range(int(steps), -1, -1):
             ratio = step / int(steps)
             ratios = {**base.resource_ratios, resource_id: ratio}
-            values = {k: v for k, v in base.resource_values.items() if k != resource_id}  # the sweep sets it
-            current = replace(base, resource_ratios=ratios, resource_values=values, phase_id=phase_id)
+            values = {
+                k: v for k, v in base.resource_values.items() if k != resource_id
+            }  # the sweep sets it
+            current = replace(
+                base, resource_ratios=ratios, resource_values=values, phase_id=phase_id
+            )
             phase_id = self.preview(ai_id, current).phase_id
             result.append((ratio, phase_id))
         return result
@@ -416,7 +473,9 @@ def _condition_problems(where, conditions):
     found = []
     for index, value in enumerate(conditions, start=1):
         if value.kind not in CONDITION_KINDS:
-            found.append(f"{where} condition {index}: {value.kind} needs a project condition resolver")
+            found.append(
+                f"{where} condition {index}: {value.kind} needs a project condition resolver"
+            )
         elif value.params.get("op", "==") not in COMPARISONS:
             found.append(f"{where} condition {index}: unknown comparison {value.params.get('op')}")
     return found

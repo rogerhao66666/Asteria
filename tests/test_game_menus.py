@@ -17,7 +17,9 @@ def _add_content(project):
             "apothecary",
             "Apothecary",
             [
-                ShopEntry("ether_leaf", buy_prices={"gold": 30}, sell_prices={"gold": 12}, stock=1),
+                ShopEntry(
+                    "ether_leaf", buy_prices={"gold": 30}, sell_prices={"gold": 12}, stock=1
+                ),
                 ShopEntry("boss_emblem", sell_prices={"gold": 500}),
             ],
         )
@@ -27,7 +29,13 @@ def _add_content(project):
             "gather",
             "Gather Leaves",
             objectives=[
-                QuestObjective("leaves", "item", target="ether_leaf", required=999, description="Collect ether leaves"),
+                QuestObjective(
+                    "leaves",
+                    "item",
+                    target="ether_leaf",
+                    required=999,
+                    description="Collect ether leaves",
+                ),
             ],
         )
     )

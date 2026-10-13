@@ -9,11 +9,19 @@ def put(root, aid, q=None):
     payload = {"asset_type": "icon"}
     if q is not None:
         payload["quality"] = q
-    (root / (aid + ".asset.json")).write_text(json.dumps({"asset_id": aid, "source": "x.png", "payload": payload}))
+    (root / (aid + ".asset.json")).write_text(
+        json.dumps({"asset_id": aid, "source": "x.png", "payload": payload})
+    )
 
 
 def allpass():
-    return {"technical": "pass", "art": "pass", "motion": "pass", "in_scene": "pass", "notes": ["reviewed"]}
+    return {
+        "technical": "pass",
+        "art": "pass",
+        "motion": "pass",
+        "in_scene": "pass",
+        "notes": ["reviewed"],
+    }
 
 
 def test_missing_evidence_blocks(tmp_path):

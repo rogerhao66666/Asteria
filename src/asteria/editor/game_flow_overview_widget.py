@@ -94,5 +94,7 @@ class GameFlowOverviewWidget(QWidget):
         self.binding.setText(b.binding_id if b else "—")
         self.program.setText(b.program_id if b else (c.event_program_id if c else "—"))
         self.interaction.setText(
-            f"range={c.range:g}, facing={'yes' if c.require_facing else 'no'}" if c else "No Interaction2D"
+            f"range={c.range:g}, facing={'yes' if c.require_facing else 'no'}"
+            if c
+            else "No Interaction2D"
         )

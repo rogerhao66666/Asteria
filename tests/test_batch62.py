@@ -70,7 +70,8 @@ def test_missing_adapter_aggregates():
 
 def test_explicit_fallback():
     q = setup().run(
-        (R("x", (8192, 8192)),), fallback_selector=lambda r, req, c, i: replace(req, size=c.max_texture_size)
+        (R("x", (8192, 8192)),),
+        fallback_selector=lambda r, req, c, i: replace(req, size=c.max_texture_size),
     )
     assert q.ok and q.entries[0].fallback_applied and q.entries[0].request.size == (4096, 4096)
 
@@ -78,7 +79,11 @@ def test_explicit_fallback():
 def test_no_fallback_no_mutation():
     r = R("x", (8192, 8192))
     q = setup().run((r,))
-    assert not q.ok and q.entries[0].request.size == (8192, 8192) and not q.entries[0].fallback_applied
+    assert (
+        not q.ok
+        and q.entries[0].request.size == (8192, 8192)
+        and not q.entries[0].fallback_applied
+    )
 
 
 def test_bad_fallback_still_error():

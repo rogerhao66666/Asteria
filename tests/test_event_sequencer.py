@@ -1,4 +1,5 @@
-"""EVT-04: the event sequencer — parallel tracks, shared dialogue, completion, skip, cancel, save/resume."""
+"""EVT-04: the event sequencer — parallel tracks, shared dialogue, completion, skip, cancel,
+save/resume."""
 
 import pytest
 
@@ -53,7 +54,11 @@ CUTSCENE = (
         cutscene=True,
         skippable=True,
         tracks=[
-            tr("hero", I("MOVE", entity="hero", x=30, y=0, duration=1.0), I("FACE", entity="hero", facing="left")),
+            tr(
+                "hero",
+                I("MOVE", entity="hero", x=30, y=0, duration=1.0),
+                I("FACE", entity="hero", facing="left"),
+            ),
             tr(
                 "camera",
                 I("WORLD", command="CAMERA_FOCUS", args={"entity": "npc"}, wait=0.5),
@@ -75,17 +80,25 @@ def test_tracks_run_in_parallel_and_the_event_continues_only_when_all_finish():
     runner, seen = _runner(*CUTSCENE)
     runner.start("cut")
     runner.update(0.0)
-    assert [n for n, _ in seen] == ["CAMERA_FOCUS", "PLAY_BGM"]  # both tracks started in the same frame
+    assert [n for n, _ in seen] == [
+        "CAMERA_FOCUS",
+        "PLAY_BGM",
+    ]  # both tracks started in the same frame
     assert runner.cutscene and runner.busy
     runner.update(0.5)
     host = runner.sequence_host
-    assert host.pos["hero"] == (15.0, 0.0) and host.pos["npc"] == (5.0, 0.0)  # moving at the same time
+    assert host.pos["hero"] == (15.0, 0.0) and host.pos["npc"] == (
+        5.0,
+        0.0,
+    )  # moving at the same time
     assert runner.dialogue.blocked and not runner.context.get_switch("after")
     runner.update(0.25)
     assert host.pos["hero"] == (15.0, 0.0)  # an open dialogue line pauses the whole scene
     runner.acknowledge_dialogue()
     runner.update(0.25)
-    assert runner.context.get_switch("spoke") and not runner.context.get_switch("after")  # hero still walking
+    assert runner.context.get_switch("spoke") and not runner.context.get_switch(
+        "after"
+    )  # hero still walking
     runner.update(0.3)
     assert host.pos["hero"] == (30.0, 0.0) and ("face", "hero", "left") in host.log
     assert runner.context.get_switch("after") and not runner.busy and not runner.cutscene
@@ -105,7 +118,9 @@ def test_skipping_lands_on_the_same_end_state_as_watching():
     skipped.update(0.0)
     assert skipped.sequence_host.pos == watched.sequence_host.pos
     assert skipped.context.switches == watched.context.switches == {"spoke": True, "after": True}
-    assert sorted(n for n, _ in skipped_seen) == sorted(n for n, _ in watched_seen)  # world commands ran once each
+    assert sorted(n for n, _ in skipped_seen) == sorted(
+        n for n, _ in watched_seen
+    )  # world commands ran once each
     assert not skipped.busy
 
 
@@ -138,7 +153,11 @@ def test_cancel_stops_tracks_where_they_are():
 
 def test_wait_none_lets_the_event_continue_alongside_its_tracks():
     runner, _ = _runner(
-        I("SEQUENCE", wait="none", tracks=[tr("walk", I("MOVE", entity="hero", x=10, y=0, duration=1.0))]),
+        I(
+            "SEQUENCE",
+            wait="none",
+            tracks=[tr("walk", I("MOVE", entity="hero", x=10, y=0, duration=1.0))],
+        ),
         I("SET_SWITCH", name="next", value=True),
     )
     runner.start("cut")
@@ -151,7 +170,12 @@ def test_wait_none_lets_the_event_continue_alongside_its_tracks():
 
 
 def test_invalid_sequences_are_rejected():
-    runner, _ = _runner(I("SEQUENCE", tracks=[tr("bad", I("CHOICE", prompt="?", choices=[{"text": "a", "value": 1}]))]))
+    runner, _ = _runner(
+        I(
+            "SEQUENCE",
+            tracks=[tr("bad", I("CHOICE", prompt="?", choices=[{"text": "a", "value": 1}]))],
+        )
+    )
     runner.start("cut")
     with pytest.raises(SequenceError, match="CHOICE"):
         runner.update(0.0)

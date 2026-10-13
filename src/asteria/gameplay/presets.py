@@ -40,11 +40,23 @@ def simple_rpg_attributes():
 
 
 def standard_physical_formula(base=10):
-    return FormulaBuilder().constant(base).source_stat("attack", 1.0).target_stat("defense", -0.5).build()
+    return (
+        FormulaBuilder()
+        .constant(base)
+        .source_stat("attack", 1.0)
+        .target_stat("defense", -0.5)
+        .build()
+    )
 
 
 def standard_magic_formula(base=10):
-    return FormulaBuilder().constant(base).source_stat("magic", 1.2).target_stat("resistance", -0.5).build()
+    return (
+        FormulaBuilder()
+        .constant(base)
+        .source_stat("magic", 1.2)
+        .target_stat("resistance", -0.5)
+        .build()
+    )
 
 
 def flat_formula(value=10):

@@ -32,7 +32,8 @@ class LiveAssetReconciler:
         self.registry = registry
 
     def reconcile(self, assets_root):
-        # Load into an isolated registry so live state is untouched on parse/decode/validation failure.
+        # Load into an isolated registry so live state is untouched on parse/decode/validation
+        # failure.
         temp = AssetRegistry()
         store = self.store_factory(temp)
         rep = store.load(assets_root)

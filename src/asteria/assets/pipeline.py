@@ -20,7 +20,9 @@ class ImportPipeline:
             importer_version=asset_record.importer_version,
             settings=asset_record.import_settings or {},
         )
-        ext = artifact_extension if artifact_extension.startswith(".") else "." + artifact_extension
+        ext = (
+            artifact_extension if artifact_extension.startswith(".") else "." + artifact_extension
+        )
         relative_path = str(PurePosixPath(key[:2]) / f"{key}{ext}")
         artifact = ImportArtifact(
             asset_id=asset_record.id,

@@ -53,13 +53,17 @@ def test_uses_preflight_request_not_readapt():
     pf = pre((RR("a"),))
     req = pf.entries[0].request
     seen = []
-    PreflightMaterializer(RecordingRuntimeScene(), lambda r, c: seen.append(r) or "h").materialize(pf)
+    PreflightMaterializer(RecordingRuntimeScene(), lambda r, c: seen.append(r) or "h").materialize(
+        pf
+    )
     assert seen[0] is req
 
 
 def test_context():
     pf = pre((RR("a"),))
-    q = PreflightMaterializer(RecordingRuntimeScene(), lambda r, c: c["h"]).materialize(pf, {"h": 7})
+    q = PreflightMaterializer(RecordingRuntimeScene(), lambda r, c: c["h"]).materialize(
+        pf, {"h": 7}
+    )
     assert q.objects == (7,)
 
 
@@ -81,7 +85,9 @@ def test_commit_failure_cleanup():
     log = []
     pf = pre((RR("a"), RR("b")))
     t = RecordingRuntimeScene(True)
-    q = PreflightMaterializer(t, lambda r, c: RuntimeResource(r.asset_id, lambda: log.append("f"))).materialize(pf)
+    q = PreflightMaterializer(
+        t, lambda r, c: RuntimeResource(r.asset_id, lambda: log.append("f"))
+    ).materialize(pf)
     assert not q.ok and log == ["f", "f"] and not t.objects
 
 
@@ -94,7 +100,9 @@ def test_staged_passthrough():
 
 def test_order():
     xs = tuple(RR(str(i)) for i in range(100))
-    q = PreflightMaterializer(RecordingRuntimeScene(), lambda r, c: r.asset_id).materialize(pre(xs))
+    q = PreflightMaterializer(RecordingRuntimeScene(), lambda r, c: r.asset_id).materialize(
+        pre(xs)
+    )
     assert q.objects == tuple(str(i) for i in range(100))
 
 
@@ -104,10 +112,13 @@ def test_fallback_request_is_materialized():
     ar = install_builtin_runtime_adapters(RuntimeAdapterRegistry())
     vr = install_builtin_capability_validators(CapabilityValidatorRegistry())
     pf = BackendPreflight(ar, vr, BackendCapabilities(max_texture_size=(1024, 1024))).run(
-        (RR("a", (2048, 2048)),), fallback_selector=lambda rr, r, c, i: replace(r, size=(1024, 1024))
+        (RR("a", (2048, 2048)),),
+        fallback_selector=lambda rr, r, c, i: replace(r, size=(1024, 1024)),
     )
     seen = []
-    q = PreflightMaterializer(RecordingRuntimeScene(), lambda r, c: seen.append(r.size) or "h").materialize(pf)
+    q = PreflightMaterializer(
+        RecordingRuntimeScene(), lambda r, c: seen.append(r.size) or "h"
+    ).materialize(pf)
     assert q.ok and seen == [(1024, 1024)]
 
 

@@ -45,7 +45,9 @@ def build_entity_sprite_draws(scene, camera, resolve_sprite_sheet):
         sheet = resolve_sprite_sheet(renderer.sprite_sheet_asset_id)
         if sheet is None or not (0 <= renderer.frame_index < len(sheet.frames)):
             continue
-        placement = RenderPlacement2D(layer=renderer.layer, depth=renderer.depth, elevation=renderer.elevation)
+        placement = RenderPlacement2D(
+            layer=renderer.layer, depth=renderer.depth, elevation=renderer.elevation
+        )
         draw = sprite_draw(
             sheet=sheet,
             frame_index=renderer.frame_index,

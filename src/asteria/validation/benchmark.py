@@ -30,11 +30,18 @@ def _install_enemies(game, count):
     transform = zone.add_component(Transform())
     transform.x, transform.y = -60.0, 20.0
     spec = zone.add_component(SpawnZoneComponent())
-    spec.prefab_id, spec.max_alive, spec.radius, spec.respawn_seconds = "benchmark_slime", count, 50.0, 0.5
+    spec.prefab_id, spec.max_alive, spec.radius, spec.respawn_seconds = (
+        "benchmark_slime",
+        count,
+        50.0,
+        0.5,
+    )
     game.scene.add_entity(zone)
 
 
-def run_benchmark(repo, *, field_frames=600, battle_frames=600, enemies=50, real_window=False, target_fps=60):
+def run_benchmark(
+    repo, *, field_frames=600, battle_frames=600, enemies=50, real_window=False, target_fps=60
+):
     if not real_window:
         os.environ["SDL_VIDEODRIVER"] = "dummy"
         os.environ["SDL_AUDIODRIVER"] = "dummy"
@@ -56,7 +63,11 @@ def run_benchmark(repo, *, field_frames=600, battle_frames=600, enemies=50, real
         def phase(name, frames, before_frame=None):
             profiler = runtime.enable_profiling(RuntimeProfiler(target_fps=target_fps))
             for index in range(frames):
-                dt = min(runtime.clock.tick(target_fps) / 1000.0, 0.05) if real_window else 1.0 / target_fps
+                dt = (
+                    min(runtime.clock.tick(target_fps) / 1000.0, 0.05)
+                    if real_window
+                    else 1.0 / target_fps
+                )
                 events = pg.event.get()
                 if before_frame is not None:
                     events = list(events) + list(before_frame(index))

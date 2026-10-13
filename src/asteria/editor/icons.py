@@ -1,7 +1,10 @@
-"""Asteria editor icons: small vector drawings made with QPainter (no image files, no third-party art).
+"""Asteria editor icons: small vector drawings made with QPainter (no image files, no third-party
+art).
 
-``icon(name, color=None)`` returns a QIcon drawn crisply at 1x, 2x and 3x. Each icon is drawn on a 24 x 24
-grid with round strokes, plus a soft tinted fill where a shape has a body, so the set reads as one family.
+``icon(name, color=None)`` returns a QIcon drawn crisply at 1x, 2x and 3x. Each icon is drawn on a
+24 x 24
+grid with round strokes, plus a soft tinted fill where a shape has a body, so the set reads as one
+family.
 ``ACCENTS`` gives each workspace and panel its colour; ``icon`` uses it when no colour is passed.
 """
 
@@ -78,7 +81,7 @@ def _star(cx, cy, outer, inner, n=5, rot=-90):
     return path
 
 
-# -- drawings ----------------------------------------------------------------------------------------------
+# -- drawings -------------------------------------------------------------------------------------
 # Each takes (painter, colour). The painter's pen is already the colour's stroke.
 
 
@@ -144,13 +147,20 @@ def _target(p, c):  # reset view
     p.drawEllipse(QPointF(12, 12), 7, 7)
     p.setBrush(QColor(c))
     p.drawEllipse(QPointF(12, 12), 2, 2)
-    for a, b in (((12, 2), (12, 5)), ((12, 19), (12, 22)), ((2, 12), (5, 12)), ((19, 12), (22, 12))):
+    for a, b in (
+        ((12, 2), (12, 5)),
+        ((12, 19), (12, 22)),
+        ((2, 12), (5, 12)),
+        ((19, 12), (22, 12)),
+    ):
         p.drawLine(QPointF(*a), QPointF(*b))
 
 
 def _folder(p, c):
     p.setBrush(_fill(c))
-    p.drawPath(_poly([(3, 7), (3, 19), (21, 19), (21, 8.5), (11.5, 8.5), (9.5, 6), (3, 6), (3, 7)]))
+    p.drawPath(
+        _poly([(3, 7), (3, 19), (21, 19), (21, 8.5), (11.5, 8.5), (9.5, 6), (3, 6), (3, 7)])
+    )
 
 
 def _project(p, c):  # a star badge
@@ -176,7 +186,15 @@ def _image(p, c):
     p.setBrush(QColor(c))
     p.drawEllipse(QPointF(8.5, 9.5), 1.6, 1.6)
     p.setBrush(Qt.NoBrush)
-    p.drawPolyline([QPointF(4, 17), QPointF(10, 12), QPointF(14, 15.5), QPointF(16.5, 13.5), QPointF(20, 16.5)])
+    p.drawPolyline(
+        [
+            QPointF(4, 17),
+            QPointF(10, 12),
+            QPointF(14, 15.5),
+            QPointF(16.5, 13.5),
+            QPointF(20, 16.5),
+        ]
+    )
 
 
 def _audio(p, c):  # a note
@@ -351,7 +369,20 @@ def _armor(p, c):
     p.setBrush(_fill(c))
     p.drawPath(
         _poly(
-            [(8, 4), (12, 6), (16, 4), (21, 7), (19, 11), (17, 10), (17, 20), (7, 20), (7, 10), (5, 11), (3, 7), (8, 4)]
+            [
+                (8, 4),
+                (12, 6),
+                (16, 4),
+                (21, 7),
+                (19, 11),
+                (17, 10),
+                (17, 20),
+                (7, 20),
+                (7, 10),
+                (5, 11),
+                (3, 7),
+                (8, 4),
+            ]
         )
     )
 
@@ -477,7 +508,9 @@ def _palette(p, c):  # presentation / runtime UI
     p.setBrush(_fill(c))
     p.drawPath(path)
     p.setPen(Qt.NoPen)
-    for (x, y), col in zip(((8, 9), (12.5, 7), (16.5, 10)), ("#f06a6a", "#f4b545", "#56c1f5"), strict=True):
+    for (x, y), col in zip(
+        ((8, 9), (12.5, 7), (16.5, 10)), ("#f06a6a", "#f4b545", "#56c1f5"), strict=True
+    ):
         p.setBrush(QColor(col))
         p.drawEllipse(QPointF(x, y), 1.8, 1.8)
 

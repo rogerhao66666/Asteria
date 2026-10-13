@@ -15,7 +15,9 @@ from pathlib import Path
 
 
 def _digest(value):
-    return hashlib.sha256(json.dumps(value, sort_keys=True, default=str).encode("utf-8")).hexdigest()[:16]
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, default=str).encode("utf-8")
+    ).hexdigest()[:16]
 
 
 def _project(repo):

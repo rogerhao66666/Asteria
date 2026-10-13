@@ -124,7 +124,9 @@ def test_unresolved_ref(tmp_path):
     s = tmp_path / "s.json"
     scene(s, [B("missing")])
     r = loader().load(tmp_path, [s])
-    assert not r.ok and not r.resolved and any(x.code == "scene.asset.unresolved" for x in r.issues)
+    assert (
+        not r.ok and not r.resolved and any(x.code == "scene.asset.unresolved" for x in r.issues)
+    )
 
 
 def test_kind_mismatch(tmp_path):
@@ -160,7 +162,13 @@ def test_custom_kind(tmp_path):
     p = tmp_path / "c.asset.json"
     p.write_text(
         json.dumps(
-            {"schema_version": 1, "asset_id": "c", "kind": "project.custom", "source": "c.dat", "payload": {"x": 1}}
+            {
+                "schema_version": 1,
+                "asset_id": "c",
+                "kind": "project.custom",
+                "source": "c.dat",
+                "payload": {"x": 1},
+            }
         )
     )
     s = tmp_path / "s.json"
@@ -173,7 +181,9 @@ def test_warning_asset_can_activate(tmp_path):
     asset(tmp_path)
 
     def v(a):
-        return ValidationReport(a.canonical.asset_id, (ValidationIssue("review", "review", "warning"),))
+        return ValidationReport(
+            a.canonical.asset_id, (ValidationIssue("review", "review", "warning"),)
+        )
 
     r = ProjectLoader(AssetStore(C(), validators={"audio": v})).load(tmp_path)
     assert r.ok and r.activated and r.issues[0].severity == "warning"

@@ -89,4 +89,6 @@ class Choreography:
 
 def presentation_cues(*items):
     """Convenience only: channels/actions remain project-defined strings."""
-    return tuple(SyncCue(float(t), str(ch), str(act), dict(payload)) for t, ch, act, payload in items)
+    return tuple(
+        SyncCue(float(t), str(ch), str(act), dict(payload)) for t, ch, act, payload in items
+    )

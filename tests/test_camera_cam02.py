@@ -1,4 +1,5 @@
-"""CAM-02: look-ahead, bounds, target groups, authored shots (cutscene / boss) with eased transitions, shake."""
+"""CAM-02: look-ahead, bounds, target groups, authored shots (cutscene / boss) with eased
+transitions, shake."""
 
 import pytest
 
@@ -58,13 +59,19 @@ def test_director_blends_to_a_shot_and_back_to_the_live_follow_view():
     assert director.update(0.5, (0, 0, 1)) == pytest.approx((100, 50, 2.0))
     assert director.active and not director.transitioning
     director.release(blend=1.0, ease="smooth")
-    mid = director.update(0.5, (10, 0, 1))  # the follow view moved meanwhile; release targets it live
+    mid = director.update(
+        0.5, (10, 0, 1)
+    )  # the follow view moved meanwhile; release targets it live
     assert mid == pytest.approx((55, 25, 1.5))  # smoothstep(0.5) == 0.5
     assert director.update(0.5, (20, 0, 1)) == (20, 0, 1) and not director.active
     target = {"x": 0.0}
     director.focus(CameraShot(follow=lambda: (target["x"], 7)), blend=0, ease="cut")
     target["x"] = 33
-    assert director.update(0.1, (0, 0, 1)) == (33, 7, 1)  # follows a moving entity, keeps the base zoom
+    assert director.update(0.1, (0, 0, 1)) == (
+        33,
+        7,
+        1,
+    )  # follows a moving entity, keeps the base zoom
     with pytest.raises(ValueError, match="easing"):
         director.focus(CameraShot(), ease="bouncy")
 
@@ -98,18 +105,28 @@ def test_follow_system_uses_component_bounds_groups_and_director_shots():
     a.add_component(Transform(0, 0))
     b = scene.add_entity(Entity("B"))
     b.add_component(Transform(400, 0))
-    rig, spec = _rig(scene, group_entity_ids=f"{a.id}, {b.id}", group_padding=0, min_zoom=0.1, max_zoom=4)
+    rig, spec = _rig(
+        scene, group_entity_ids=f"{a.id}, {b.id}", group_padding=0, min_zoom=0.1, max_zoom=4
+    )
     scene.update(0.016)
     view = system.camera(rig.id)
     assert _center(view) == pytest.approx((200, 0)) and view.zoom == pytest.approx(320 / 400)
     spec.group_entity_ids, spec.follow_entity_id = "", b.id
     spec.bounds_enabled, spec.bounds_max_x, spec.bounds_max_y = True, 500, 300
     scene.update(0.016)
-    assert _center(system.camera(rig.id)) == pytest.approx((500 - 160, 90))  # clamped inside the bounds
+    assert _center(system.camera(rig.id)) == pytest.approx(
+        (500 - 160, 90)
+    )  # clamped inside the bounds
     system.director(rig.id).focus(CameraShot(10, 20, zoom=2), blend=0)
     scene.update(0.016)
-    assert _center(system.camera(rig.id)) == pytest.approx((10, 20)) and system.camera(rig.id).zoom == 2
-    assert (rig.get(Transform).x, rig.get(Transform).y) != (system.camera(rig.id).x, system.camera(rig.id).y)
+    assert (
+        _center(system.camera(rig.id)) == pytest.approx((10, 20))
+        and system.camera(rig.id).zoom == 2
+    )
+    assert (rig.get(Transform).x, rig.get(Transform).y) != (
+        system.camera(rig.id).x,
+        system.camera(rig.id).y,
+    )
 
 
 def test_version_1_camera_records_load_with_v2_defaults():
@@ -132,7 +149,12 @@ def test_version_1_camera_records_load_with_v2_defaults():
         },
     }
     camera = deserialize_component(old, registry)
-    assert camera.zoom == 2.0 and camera.look_ahead_x == 0.0 and camera.bounds is None and camera.group_ids == ()
+    assert (
+        camera.zoom == 2.0
+        and camera.look_ahead_x == 0.0
+        and camera.bounds is None
+        and camera.group_ids == ()
+    )
     assert serialize_component(camera)["version"] == 2
 
 
@@ -153,7 +175,10 @@ def test_field_camera_is_identity_by_default_and_never_shows_past_the_map():
 
     camera = FieldViewCamera(960, 540, 3.0)
     camera.update(0.016)
-    assert camera.world_to_screen(10, 20) == (960 / 2 + 30, 540 / 2 + 65 + 60)  # the old fixed mapping
+    assert camera.world_to_screen(10, 20) == (
+        960 / 2 + 30,
+        540 / 2 + 65 + 60,
+    )  # the old fixed mapping
     assert camera.background_rect() == pytest.approx((0, 0, 960, 540))
     camera.director.focus(CameraShot(150, 80, zoom=2), blend=0)  # far corner
     camera.update(0.016)
@@ -163,7 +188,9 @@ def test_field_camera_is_identity_by_default_and_never_shows_past_the_map():
     assert camera.update(0.016)[2] == 1.0  # never zooms out past the map
 
 
-def test_boss_event_focuses_the_camera_on_the_boss_then_cuts_back_for_the_battle(resource_root, monkeypatch):
+def test_boss_event_focuses_the_camera_on_the_boss_then_cuts_back_for_the_battle(
+    resource_root, monkeypatch
+):
     pygame = pytest.importorskip("pygame")
     from pathlib import Path
 
@@ -185,10 +212,14 @@ def test_boss_event_focuses_the_camera_on_the_boss_then_cuts_back_for_the_battle
         assert runtime.game.pending_dialogue.line.speaker == "Astral Tyrant"
         for _ in range(70):  # the 0.8 s focus blend while the line is shown
             runtime._frame([], 0.016)
-        boss = next(e for e in runtime.game.scene.entities() if e.name == "Astral Tyrant").get(Transform)
+        boss = next(e for e in runtime.game.scene.entities() if e.name == "Astral Tyrant").get(
+            Transform
+        )
         bx, by = runtime._field_screen_xy(boss.x, boss.y)
         assert runtime.field_camera.zoom == pytest.approx(1.6)
-        assert abs(bx - 480) < abs(480 + boss.x * 3 - 480)  # the boss moved toward the screen centre
+        assert abs(bx - 480) < abs(
+            480 + boss.x * 3 - 480
+        )  # the boss moved toward the screen centre
         x, y, w, h = runtime.field_camera.background_rect()
         assert x <= 0 and y <= 0 and x + w >= 960 - 1e-6 and y + h >= 540 - 1e-6
         runtime._frame([key(pygame.K_RETURN)], 0.016)
@@ -233,7 +264,8 @@ def test_boss_battles_open_with_a_boss_intro_camera(resource_root, monkeypatch):
         boss = adapter.screen.scene.visual_for(adapter.intro_boss_id)
         half_w = layout.virtual_width / (2 * 1.35)
         assert max(zooms) == pytest.approx(1.35)
-        # moves onto the boss as far as the battlefield edge allows (never shows past the background)
+        # moves onto the boss as far as the battlefield edge allows (never shows past the
+        # background)
         expected = min(max(boss.anchor.x, half_w), layout.virtual_width - half_w)
         assert centres[-1] == pytest.approx(expected, abs=1.0)
         for cx, zoom in zip(centres, zooms, strict=True):
@@ -242,7 +274,9 @@ def test_boss_battles_open_with_a_boss_intro_camera(resource_root, monkeypatch):
         assert not adapter.screen.action_menu.view.total_count  # no commands during the intro
         for _ in range(60):
             runtime._present_battle(0.02)
-        assert adapter._camera_view == pytest.approx((layout.virtual_width / 2, layout.virtual_height / 2, 1.0))
+        assert adapter._camera_view == pytest.approx(
+            (layout.virtual_width / 2, layout.virtual_height / 2, 1.0)
+        )
         assert not adapter.busy()
     finally:
         runtime.close()
@@ -259,7 +293,9 @@ def test_boss_intro_can_be_switched_off(resource_root, monkeypatch):
 def test_field_follow_camera_follows_the_player_inside_the_map(runtime):
     from asteria.runtime.field_camera import FieldViewCamera
 
-    camera = FieldViewCamera(960, 540, 3.0, follow={"zoom": 2.0, "smoothing": 0, "deadzone": (5, 5)})
+    camera = FieldViewCamera(
+        960, 540, 3.0, follow={"zoom": 2.0, "smoothing": 0, "deadzone": (5, 5)}
+    )
     camera.update(0.016, (0.0, 0.0))
     start = camera.view
     camera.update(0.016, (3.0, 0.0))

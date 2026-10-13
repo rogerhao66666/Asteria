@@ -74,4 +74,9 @@ class IconValidator:
 
 
 def icon_asset(asset_id, source_uri, variants, default_variant="default", **kw):
-    return IconAsset(CanonicalAsset(asset_id, "icon", AssetSource(source_uri)), tuple(variants), default_variant, **kw)
+    return IconAsset(
+        CanonicalAsset(asset_id, "icon", AssetSource(source_uri)),
+        tuple(variants),
+        default_variant,
+        **kw,
+    )

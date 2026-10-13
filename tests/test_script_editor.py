@@ -1,4 +1,5 @@
-"""CB10 / EDT-09: script editor — highlighting, API completion, traceback navigation, files, reload, run."""
+"""CB10 / EDT-09: script editor — highlighting, API completion, traceback navigation, files,
+reload, run."""
 
 from pathlib import Path
 
@@ -33,7 +34,10 @@ def test_traceback_frames_belong_to_the_script_file():
         '  File "scripts/main.py", line 7, in helper\n    1 / 0\n'
         "ZeroDivisionError: division by zero\n"
     )
-    assert script_frames(text, "scripts/main.py") == [(3, "<module>", "helper()"), (7, "helper", "1 / 0")]
+    assert script_frames(text, "scripts/main.py") == [
+        (3, "<module>", "helper()"),
+        (7, "helper", "1 / 0"),
+    ]
 
 
 @pytest.fixture
@@ -81,7 +85,9 @@ def test_typing_dot_offers_api_members_and_inserting_completes(window):
 
 def test_run_error_shows_traceback_frames_that_jump_to_the_line(window):
     code = window.code_workspace
-    code.editor.setPlainText('scene = project.scene_named("Town")\n\ndef boom():\n    return 1 / 0\n\nboom()\n')
+    code.editor.setPlainText(
+        'scene = project.scene_named("Town")\n\ndef boom():\n    return 1 / 0\n\nboom()\n'
+    )
     code._request_run()
     assert "ZeroDivisionError" in code.output.toPlainText()
     assert code.frames.count() == 2
@@ -90,7 +96,8 @@ def test_run_error_shows_traceback_frames_that_jump_to_the_line(window):
 
 
 MOVE_HERO = (
-    'hero = project.scene_named("Town").entity_named("Hero")\nhero.transform.position = (40, 50)\nprint("moved")\n'
+    'hero = project.scene_named("Town").entity_named("Hero")\nhero.transform.position = '
+    '(40, 50)\nprint("moved")\n'
 )
 
 

@@ -2,7 +2,8 @@
 
 An item's or equipment's ``icon_id`` names any of these, whichever the author finds easiest:
 
-* a canonical asset of the project (kind ``icon``, ``texture`` or any image asset); a ``region`` in its
+* a canonical asset of the project (kind ``icon``, ``texture`` or any image asset); a ``region``
+  in its
   metadata (``[x, y, width, height]``) picks one cell of a sheet (an RPG Maker IconSet, an atlas);
 * a legacy asset record id (its ``source_path``);
 * a path to a PNG, relative to the project folder.
@@ -27,7 +28,12 @@ def icon_source(project, icon_id):
         meta = dict(asset.metadata)
         region = meta.get("region") or meta.get("atlas")
         if isinstance(region, dict):
-            region = (region.get("x", 0), region.get("y", 0), region.get("width", 0), region.get("height", 0))
+            region = (
+                region.get("x", 0),
+                region.get("y", 0),
+                region.get("width", 0),
+                region.get("height", 0),
+            )
         region = tuple(int(v) for v in region) if region else None
         return asset.source.uri, region
     record = assets.get(icon_id)

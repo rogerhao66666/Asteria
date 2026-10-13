@@ -51,10 +51,16 @@ class BattleAnimationTimingRule:
             raise ValueError("animation timing role is required")
         object.__setattr__(self, "role", role)
         object.__setattr__(self, "playback_rate", _positive(self.playback_rate, "playback_rate"))
-        object.__setattr__(self, "transition_duration", _nonnegative(self.transition_duration, "transition_duration"))
+        object.__setattr__(
+            self,
+            "transition_duration",
+            _nonnegative(self.transition_duration, "transition_duration"),
+        )
         easing_value(self.transition_easing, 0.5)
         object.__setattr__(self, "transition_easing", str(self.transition_easing).strip().lower())
-        object.__setattr__(self, "recovery_hold", _nonnegative(self.recovery_hold, "recovery_hold"))
+        object.__setattr__(
+            self, "recovery_hold", _nonnegative(self.recovery_hold, "recovery_hold")
+        )
 
     def to_data(self):
         return {
@@ -91,7 +97,10 @@ class BattleAnimationTimingProfile:
         default_recovery_hold=0.0,
     ):
         rules = tuple(
-            x if isinstance(x, BattleAnimationTimingRule) else BattleAnimationTimingRule.from_data(x) for x in rules
+            x
+            if isinstance(x, BattleAnimationTimingRule)
+            else BattleAnimationTimingRule.from_data(x)
+            for x in rules
         )
         if len({x.role for x in rules}) != len(rules):
             raise ValueError("duplicate animation timing role")
@@ -102,7 +111,9 @@ class BattleAnimationTimingProfile:
         object.__setattr__(self, "rules", rules)
         object.__setattr__(self, "default_playback_rate", float(default_playback_rate))
         object.__setattr__(self, "default_transition_duration", float(default_transition_duration))
-        object.__setattr__(self, "default_transition_easing", str(default_transition_easing).strip().lower())
+        object.__setattr__(
+            self, "default_transition_easing", str(default_transition_easing).strip().lower()
+        )
         object.__setattr__(self, "default_recovery_hold", float(default_recovery_hold))
 
     def rule_for(self, role):

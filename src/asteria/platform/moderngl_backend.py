@@ -78,7 +78,9 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         self.pg.init()
         self.pg.display.gl_set_attribute(self.pg.GL_CONTEXT_MAJOR_VERSION, 3)
         self.pg.display.gl_set_attribute(self.pg.GL_CONTEXT_MINOR_VERSION, 3)
-        self.pg.display.gl_set_attribute(self.pg.GL_CONTEXT_PROFILE_MASK, self.pg.GL_CONTEXT_PROFILE_CORE)
+        self.pg.display.gl_set_attribute(
+            self.pg.GL_CONTEXT_PROFILE_MASK, self.pg.GL_CONTEXT_PROFILE_CORE
+        )
         self.pg.display.set_mode(
             (int(width), int(height)),
             self.pg.OPENGL | self.pg.DOUBLEBUF | self.pg.RESIZABLE,
@@ -87,7 +89,9 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         self.ctx = self._gl.create_context()
         self.ctx.enable(self._gl.BLEND)
         self.ctx.blend_func = self._gl.SRC_ALPHA, self._gl.ONE_MINUS_SRC_ALPHA
-        self._program = self.ctx.program(vertex_shader=SPRITE_VERTEX_SHADER, fragment_shader=SPRITE_FRAGMENT_SHADER)
+        self._program = self.ctx.program(
+            vertex_shader=SPRITE_VERTEX_SHADER, fragment_shader=SPRITE_FRAGMENT_SHADER
+        )
         self._program["u_texture"] = 0
         self._white_texture = self.ctx.texture((1, 1), 4, bytes((255, 255, 255, 255)))
         self._white_texture.filter = (self._gl.NEAREST, self._gl.NEAREST)
@@ -111,7 +115,9 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         for event in self.pg.event.get():
             if self.input_source is not None:
                 self.input_source.handle_event(event)
-            if event.type == self.pg.QUIT or (event.type == self.pg.KEYDOWN and event.key == self.pg.K_ESCAPE):
+            if event.type == self.pg.QUIT or (
+                event.type == self.pg.KEYDOWN and event.key == self.pg.K_ESCAPE
+            ):
                 self._close = True
             elif event.type == self.pg.VIDEORESIZE:
                 self.screen_size = (event.w, event.h)
@@ -133,7 +139,8 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
     # ---- scene environment (VFX-02 / VFX-03) ----
 
     def set_environment(self, environment, time=0.0):
-        """Run the GPU effect chain over this frame's world draws (``None`` / inactive: draw directly)."""
+        """Run the GPU effect chain over this frame's world draws (``None`` / inactive: draw
+        directly)."""
         self.environment, self.environment_time = environment, float(time)
 
     def _environment_active(self):
@@ -143,7 +150,14 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
     def draw_rects(self, rects):
         """Flat rectangles ``(x, y, w, h, (r, g, b, a))`` in screen pixels (weather particles)."""
         for x, y, w, h, color in rects:
-            self._enqueue_solid(x, y, w, h, tuple(c / 255 for c in color[:3]), color[3] / 255 if len(color) > 3 else 1)
+            self._enqueue_solid(
+                x,
+                y,
+                w,
+                h,
+                tuple(c / 255 for c in color[:3]),
+                color[3] / 255 if len(color) > 3 else 1,
+            )
 
     def draw_grid(self, spacing=32, offset_x=0, offset_y=0):
         if self.ctx is None:
@@ -193,10 +207,14 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
             if self._pending_text is not None:
                 self.draw_text_box(self._pending_text, _now=True)
                 self._flush_batch()
-        if getattr(self, "_capture_requested", False):  # read before the swap (the back buffer is then undefined)
+        if getattr(
+            self, "_capture_requested", False
+        ):  # read before the swap (the back buffer is then undefined)
             self._capture_requested = False
             width, height = self.ctx.screen.size
-            image = self.pg.image.frombytes(self.ctx.screen.read(components=3), (width, height), "RGB")
+            image = self.pg.image.frombytes(
+                self.ctx.screen.read(components=3), (width, height), "RGB"
+            )
             self.captured = self.pg.transform.flip(image, False, True)
         self.pg.display.flip()
 
@@ -254,7 +272,8 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         )
 
     def draw_text_box(self, text, _now=False):
-        """Dialogue box along the bottom: drawn once into an RGBA texture (cached per text), then one quad."""
+        """Dialogue box along the bottom: drawn once into an RGBA texture (cached per text), then
+        one quad."""
         if self._environment_active() and not _now:
             self._pending_text = text  # UI: drawn after the effect chain, never lit or graded
             return
@@ -272,7 +291,9 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
             box.fill((13, 17, 28, 225))
             pg.draw.rect(box, (124, 145, 190), box.get_rect(), 2, border_radius=6)
             for row, line in enumerate(str(text).split("\n")[:4]):
-                image = self._font.render(renderable_text(pg, self._font, line, self._glyphs), True, (240, 242, 248))
+                image = self._font.render(
+                    renderable_text(pg, self._font, line, self._glyphs), True, (240, 242, 248)
+                )
                 box.blit(image, (18, 12 + row * self._font.get_linesize()))
             if cached is not None:
                 cached[1].release()
@@ -338,7 +359,10 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
             angle = math.radians(float(rotation_deg))
             ca, sa = math.cos(angle), math.sin(angle)
             cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-            corners = [(cx + (x - cx) * ca - (y - cy) * sa, cy + (x - cx) * sa + (y - cy) * ca) for x, y in corners]
+            corners = [
+                (cx + (x - cx) * ca - (y - cy) * sa, cy + (x - cx) * sa + (y - cy) * ca)
+                for x, y in corners
+            ]
         uvs = ((u0, v0), (u1, v0), (u1, v1), (u0, v1))
         base = len(self._batch_vertices) // _FLOATS_PER_VERTEX
         for (x, y), (u, v) in zip(corners, uvs, strict=True):

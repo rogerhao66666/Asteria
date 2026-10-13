@@ -129,7 +129,9 @@ class SceneEntityAuthoringController:
         return self._execute(build_reorder_entity_command(entity, new_index))
 
     def move_entity_to_scene(self, entity, target_scene, target_index=None):
-        return self._execute(build_move_entity_to_scene_command(entity, target_scene, target_index))
+        return self._execute(
+            build_move_entity_to_scene_command(entity, target_scene, target_index)
+        )
 
     def add_component(self, entity, component_type):
         cmd = build_add_component_command(entity, component_type)
@@ -156,7 +158,9 @@ class SceneEntityAuthoringController:
         entities = tuple(entities)
         if not entities:
             return ()
-        commands = [build_duplicate_entity_command(e, self.document.component_registry) for e in entities]
+        commands = [
+            build_duplicate_entity_command(e, self.document.component_registry) for e in entities
+        ]
         tx = CommandTransaction(f"Duplicate {len(commands)} Entities", commands)
         self._execute(tx)
         return tuple(c.duplicate_entity for c in commands)

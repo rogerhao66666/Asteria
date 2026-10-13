@@ -1,4 +1,5 @@
-"""VFX-01: particle effects as authored data - a deterministic simulation used by field emitters, the PLAY_VFX
+"""VFX-01: particle effects as authored data - a deterministic simulation used by field emitters,
+the PLAY_VFX
 event command, battle action-timeline beats and the editor's live preview."""
 
 import dataclasses
@@ -31,7 +32,9 @@ def test_every_setting_round_trips_and_bad_values_are_named():
     with pytest.raises(ValueError, match="unknown particle effect fields"):
         ParticleEffectDefinition.from_data({"effect_id": "x", "colour": [1, 2, 3]})
     # any numbers the author wants: huge rates, negative gravity, wide spreads
-    wild = ParticleEffectDefinition("x", rate=5000, gravity=(-300, -900), spread=720, max_particles=10000)
+    wild = ParticleEffectDefinition(
+        "x", rate=5000, gravity=(-300, -900), spread=720, max_particles=10000
+    )
     assert wild.rate == 5000 and wild.gravity == (-300.0, -900.0)
 
 
@@ -48,11 +51,15 @@ def test_the_simulation_is_deterministic_and_follows_its_settings():
     capped = ParticleSystem(fire.replace(rate=1000, max_particles=25, lifetime=(5, 5)))
     _run(capped, 1.0)
     assert capped.count == 25
-    fading = ParticleSystem(ParticleEffectDefinition("x", burst=1, rate=0, lifetime=(1, 1), size=(10, 0)))
+    fading = ParticleSystem(
+        ParticleEffectDefinition("x", burst=1, rate=0, lifetime=(1, 1), size=(10, 0))
+    )
     fading.update(0.0)
     fading.update(0.5)
     (half,) = fading.views()
-    assert half.size == pytest.approx(5) and 0 < half.color[3] < 255  # halfway between birth and death
+    assert (
+        half.size == pytest.approx(5) and 0 < half.color[3] < 255
+    )  # halfway between birth and death
 
 
 def test_one_shots_end_emitting_and_local_particles_follow_the_emitter():
@@ -96,7 +103,9 @@ def _field_emitter(runtime, effect, entity_name="Astral Tyrant", **fields):
 
     runtime.project.assets.register(particle_effect_asset(effect), replace=True)
     entity = next(e for e in runtime.game.scene.entities() if e.name == entity_name)
-    component = entity.try_get(ParticleEmitter2DComponent) or entity.add_component(ParticleEmitter2DComponent())
+    component = entity.try_get(ParticleEmitter2DComponent) or entity.add_component(
+        ParticleEmitter2DComponent()
+    )
     component.effect_id = effect.effect_id
     for key, value in fields.items():
         setattr(component, key, value)
@@ -113,7 +122,10 @@ def test_a_field_entity_emits_its_particles_and_they_are_drawn(runtime):
     from asteria.core import world_position
 
     x, y = world_position(entity)
-    assert (emitter.system.x, emitter.system.y) == (x, y - 20.0)  # follows the entity, with its offset
+    assert (emitter.system.x, emitter.system.y) == (
+        x,
+        y - 20.0,
+    )  # follows the entity, with its offset
     component.playing = False
     for _ in range(30):
         runtime._frame([], 0.05)
@@ -129,7 +141,12 @@ def test_play_vfx_plays_a_particle_effect_once_at_an_entity(runtime):
     runtime._ui_mode = "field"
     runtime.project.assets.register(particle_effect_asset(preset("heal", "fx.heal")))
     program = EventProgram(
-        (EventInstruction("WORLD", {"command": "PLAY_VFX", "args": {"asset_id": "fx.heal", "entity": "player"}}),)
+        (
+            EventInstruction(
+                "WORLD",
+                {"command": "PLAY_VFX", "args": {"asset_id": "fx.heal", "entity": "player"}},
+            ),
+        )
     )
     runtime.game.project.event_programs.register("heal_fx", program)
     runtime.game.events.start("heal_fx")
@@ -156,7 +173,10 @@ def test_a_battle_timeline_beat_can_cue_a_particle_effect(resource_root, monkeyp
         project.assets.register(particle_effect_asset(preset("explosion", "fx.burst")))
         library = project.battle_presentation_library
         sequence = library.require("motion_sequences", "fire_arc")
-        beats = tuple(dataclasses.replace(b, cue="fx.burst") if b.channel == "vfx" else b for b in sequence.beats)
+        beats = tuple(
+            dataclasses.replace(b, cue="fx.burst") if b.channel == "vfx" else b
+            for b in sequence.beats
+        )
         library.set("motion_sequences", "fire_arc", dataclasses.replace(sequence, beats=beats))
         runtime._battle_presentation = adapter = CanonicalBattleAdapter(runtime)
         runtime.game.start_encounter("boss_room")
@@ -168,8 +188,15 @@ def test_a_battle_timeline_beat_can_cue_a_particle_effect(resource_root, monkeyp
         draw = runtime.particle_drawer.draw
 
         def record(surface, systems, *args, **kwargs):
-            for system in systems:  # the burst must grow from one cue to the next frame, not restart
-                spread[0] = max([spread[0], *(abs(v.x - system.x) + abs(v.y - system.y) for v in system.views())])
+            for (
+                system
+            ) in systems:  # the burst must grow from one cue to the next frame, not restart
+                spread[0] = max(
+                    [
+                        spread[0],
+                        *(abs(v.x - system.x) + abs(v.y - system.y) for v in system.views()),
+                    ]
+                )
             drawn.append(draw(surface, systems, *args, **kwargs))
             return drawn[-1]
 
@@ -219,7 +246,11 @@ def test_the_editor_creates_edits_previews_and_undoes_particle_effects():
     entity = scene.add_entity(Entity("Torch"))
     emitter = entity.add_component(ParticleEmitter2DComponent())
     field = next(f for f in build_inspector_fields(emitter) if f.name == "effect_id")
-    assert [v for _, v in inspector_choices(document, emitter, field)] == ["", "fx.campfire", "fx.campfire_2"]
+    assert [v for _, v in inspector_choices(document, emitter, field)] == [
+        "",
+        "fx.campfire",
+        "fx.campfire_2",
+    ]
     emitter.effect_id = "fx.campfire_2"
     assert "Map / Torch" in widget.api.usages("fx.campfire_2")
     widget.refresh(select="fx.campfire_2")
@@ -241,5 +272,7 @@ def test_problems_warn_about_an_emitter_without_its_effect():
     scene = project.add_scene(Scene("Map"))
     torch = scene.add_entity(Entity("Torch"))
     torch.add_component(ParticleEmitter2DComponent()).effect_id = "fx.gone"
-    problems = [p for p in collect_problems(EditorDocument(project)) if p.area == "Particle Effects"]
+    problems = [
+        p for p in collect_problems(EditorDocument(project)) if p.area == "Particle Effects"
+    ]
     assert problems and "fx.gone" in problems[0].message

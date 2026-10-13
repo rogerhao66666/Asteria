@@ -181,7 +181,9 @@ class SceneViewportWidget(QWidget):
         if scene is None:
             return False
         selected = self._selected_entities()
-        candidates = [entity for entity in selected if entity.try_get(Camera2DComponent) is not None]
+        candidates = [
+            entity for entity in selected if entity.try_get(Camera2DComponent) is not None
+        ]
         if not candidates:
             candidates = [
                 entity
@@ -293,7 +295,9 @@ class SceneViewportWidget(QWidget):
             y += spacing
 
         if self.render_source is not None:
-            draws = build_scene_texture_draws(self.render_source, self.camera, self.width(), self.height())
+            draws = build_scene_texture_draws(
+                self.render_source, self.camera, self.width(), self.height()
+            )
             paint_texture_draws(
                 painter,
                 draws,
@@ -367,7 +371,8 @@ class SceneViewportWidget(QWidget):
             has_sprite = (
                 renderer is not None
                 and renderer.visible
-                and self.document.asset_views.sprite_sheet(renderer.sprite_sheet_asset_id) is not None
+                and self.document.asset_views.sprite_sheet(renderer.sprite_sheet_asset_id)
+                is not None
             )
             if has_sprite and not m.selected:
                 continue
@@ -385,7 +390,9 @@ class SceneViewportWidget(QWidget):
             x2, y2 = self._box_end.x(), self._box_end.y()
             painter.setPen(QPen(QColor(100, 145, 195), 1))
             painter.setBrush(QBrush(QColor(100, 145, 195, 35)))
-            painter.drawRect(int(min(x1, x2)), int(min(y1, y2)), int(abs(x2 - x1)), int(abs(y2 - y1)))
+            painter.drawRect(
+                int(min(x1, x2)), int(min(y1, y2)), int(abs(x2 - x1)), int(abs(y2 - y1))
+            )
 
         selected = [m for m in markers if m.selected]
         if selected:
@@ -393,9 +400,13 @@ class SceneViewportWidget(QWidget):
             painter.setPen(QPen(QColor(215, 220, 228), 1))
             painter.drawEllipse(QPointF(m.screen_x, m.screen_y), 3, 3)
             painter.setPen(QPen(QColor(211, 91, 91), 2))
-            painter.drawLine(int(m.screen_x), int(m.screen_y), int(m.screen_x + 34), int(m.screen_y))
+            painter.drawLine(
+                int(m.screen_x), int(m.screen_y), int(m.screen_x + 34), int(m.screen_y)
+            )
             painter.setPen(QPen(QColor(92, 181, 122), 2))
-            painter.drawLine(int(m.screen_x), int(m.screen_y), int(m.screen_x), int(m.screen_y - 34))
+            painter.drawLine(
+                int(m.screen_x), int(m.screen_y), int(m.screen_x), int(m.screen_y - 34)
+            )
         painter.end()
 
     def mousePressEvent(self, event):
@@ -408,16 +419,24 @@ class SceneViewportWidget(QWidget):
             event.accept()
             return
         if event.button() == Qt.LeftButton and self.character_placement_active:
-            self.characterCellClicked.emit(self.cell_at_screen(event.position().x(), event.position().y()))
+            self.characterCellClicked.emit(
+                self.cell_at_screen(event.position().x(), event.position().y())
+            )
             event.accept()
             return
-        if event.button() == Qt.LeftButton and self.render_source is not None and self.tile_tools.mode == "fill":
+        if (
+            event.button() == Qt.LeftButton
+            and self.render_source is not None
+            and self.tile_tools.mode == "fill"
+        ):
             if self.tile_tools.active_layer is None:
                 event.accept()
                 return
             cell = self._screen_to_tile(event.position().x(), event.position().y())
             try:
-                cells = flood_fill_cells(self.render_source.tilemap, self.tile_tools.active_layer, *cell)
+                cells = flood_fill_cells(
+                    self.render_source.tilemap, self.tile_tools.active_layer, *cell
+                )
                 self.document.execute(
                     build_paint_command(
                         self.render_source.tilemap,
@@ -434,11 +453,17 @@ class SceneViewportWidget(QWidget):
             event.accept()
             return
 
-        if event.button() == Qt.LeftButton and self.render_source is not None and self.tile_tools.mode == "rectangle":
+        if (
+            event.button() == Qt.LeftButton
+            and self.render_source is not None
+            and self.tile_tools.mode == "rectangle"
+        ):
             if self.tile_tools.active_layer is None:
                 event.accept()
                 return
-            self._tile_rect_start = self._screen_to_tile(event.position().x(), event.position().y())
+            self._tile_rect_start = self._screen_to_tile(
+                event.position().x(), event.position().y()
+            )
             event.accept()
             return
 
@@ -452,7 +477,9 @@ class SceneViewportWidget(QWidget):
                 return
             self._tile_stroke_cells = []
             self._last_tile_cell = None
-            self._append_tile_stroke(self._screen_to_tile(event.position().x(), event.position().y()))
+            self._append_tile_stroke(
+                self._screen_to_tile(event.position().x(), event.position().y())
+            )
             self.update()
             event.accept()
             return
@@ -470,7 +497,9 @@ class SceneViewportWidget(QWidget):
                 elif entity not in self._selected_entities():
                     self.document.selection.set_single("entity", entity)
                 self._drag_entity = entity
-                self._drag_start_world = self.camera.screen_to_world(event.position().x(), event.position().y())
+                self._drag_start_world = self.camera.screen_to_world(
+                    event.position().x(), event.position().y()
+                )
                 window = self.window()
                 if hasattr(window, "refresh_all"):
                     window.refresh_all()
@@ -492,7 +521,9 @@ class SceneViewportWidget(QWidget):
             event.accept()
             return
         if self._tile_stroke_cells and self.tile_tools.mode in {"paint", "erase"}:
-            self._append_tile_stroke(self._screen_to_tile(event.position().x(), event.position().y()))
+            self._append_tile_stroke(
+                self._screen_to_tile(event.position().x(), event.position().y())
+            )
             self.update()
             event.accept()
             return
@@ -514,7 +545,11 @@ class SceneViewportWidget(QWidget):
             self.unsetCursor()
             event.accept()
             return
-        if event.button() == Qt.LeftButton and self._tile_rect_start is not None and self.render_source is not None:
+        if (
+            event.button() == Qt.LeftButton
+            and self._tile_rect_start is not None
+            and self.render_source is not None
+        ):
             end = self._screen_to_tile(event.position().x(), event.position().y())
             try:
                 cells = rectangle_cells(*self._tile_rect_start, *end)
@@ -535,7 +570,11 @@ class SceneViewportWidget(QWidget):
             event.accept()
             return
 
-        if event.button() == Qt.LeftButton and self._tile_stroke_cells and self.render_source is not None:
+        if (
+            event.button() == Qt.LeftButton
+            and self._tile_stroke_cells
+            and self.render_source is not None
+        ):
             try:
                 command = build_paint_command(
                     self.render_source.tilemap,
@@ -554,7 +593,11 @@ class SceneViewportWidget(QWidget):
             event.accept()
             return
 
-        if event.button() == Qt.LeftButton and self._drag_entity is not None and self._drag_start_world is not None:
+        if (
+            event.button() == Qt.LeftButton
+            and self._drag_entity is not None
+            and self._drag_start_world is not None
+        ):
             end = self.camera.screen_to_world(event.position().x(), event.position().y())
             dx = end[0] - self._drag_start_world[0]
             dy = end[1] - self._drag_start_world[1]

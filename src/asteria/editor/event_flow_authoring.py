@@ -1,4 +1,5 @@
-"""Common events, battle events and sequences (EVT-03, EVT-04) — the editor and the Authoring API share this.
+"""Common events, battle events and sequences (EVT-03, EVT-04) — the editor and the Authoring API
+share this.
 
 All edits are undoable document commands on the canonical Project:
 ``project.common_events`` (``CommonEvent``), ``project.lifecycle_event_bindings``
@@ -27,7 +28,16 @@ BATTLE_HOOKS = (
     "rpg.battle.round_ended",
     "rpg.battle.finished",
 )
-TRACK_OPCODES = ("MOVE", "FACE", "ANIMATE", "DIALOGUE", "WORLD", "WAIT", "SET_SWITCH", "SET_VARIABLE")
+TRACK_OPCODES = (
+    "MOVE",
+    "FACE",
+    "ANIMATE",
+    "DIALOGUE",
+    "WORLD",
+    "WAIT",
+    "SET_SWITCH",
+    "SET_VARIABLE",
+)
 
 
 class EventFlowError(ValueError):
@@ -93,7 +103,9 @@ class EventFlowAuthoring:
         if not program_id or self.project.event_programs.get(program_id) is not None:
             raise EventFlowError(f"program id {program_id!r} is empty or taken")
         program = EventProgram(tuple(instructions), name=str(name or program_id))
-        self.document.execute(AddEventProgramCommand(self.project.event_programs, program_id, program))
+        self.document.execute(
+            AddEventProgramCommand(self.project.event_programs, program_id, program)
+        )
         return program
 
     # -- common events --------------------------------------------------------------------------
@@ -108,7 +120,9 @@ class EventFlowAuthoring:
             value = CommonEvent(str(program_id), str(trigger), str(switch))
         except ValueError as exc:
             raise EventFlowError(str(exc)) from exc
-        self._set("common_events", [*self.project.common_events, value], f"Add Common Event {program_id}")
+        self._set(
+            "common_events", [*self.project.common_events, value], f"Add Common Event {program_id}"
+        )
         return value
 
     def set_common_event(self, index, *, trigger=None, switch=None):
@@ -117,7 +131,9 @@ class EventFlowAuthoring:
         if trigger is not None and trigger not in COMMON_TRIGGERS:
             raise EventFlowError(f"trigger must be one of {COMMON_TRIGGERS}")
         values[int(index)] = CommonEvent(
-            old.program_id, old.trigger if trigger is None else trigger, old.switch if switch is None else switch
+            old.program_id,
+            old.trigger if trigger is None else trigger,
+            old.switch if switch is None else switch,
         )
         self._set("common_events", values, f"Edit Common Event {old.program_id}")
         return values[int(index)]
@@ -132,7 +148,9 @@ class EventFlowAuthoring:
     def battle_events(self):
         """``[(index in lifecycle_event_bindings, binding)]`` for ``rpg.battle.*`` hooks."""
         return [
-            (i, b) for i, b in enumerate(self.project.lifecycle_event_bindings) if b.hook_name.startswith("rpg.battle.")
+            (i, b)
+            for i, b in enumerate(self.project.lifecycle_event_bindings)
+            if b.hook_name.startswith("rpg.battle.")
         ]
 
     def add_battle_event(self, hook, program_id, *, conditions=(), once=False):
@@ -156,19 +174,30 @@ class EventFlowAuthoring:
             conditions=old.conditions if conditions is None else conditions,
             once=old.once if once is None else once,
         )
-        self._set("lifecycle_event_bindings", values, f"Edit Battle Event {values[int(index)].event_program_id}")
+        self._set(
+            "lifecycle_event_bindings",
+            values,
+            f"Edit Battle Event {values[int(index)].event_program_id}",
+        )
         return values[int(index)]
 
     def remove_battle_event(self, index):
         values = list(self.project.lifecycle_event_bindings)
         removed = values.pop(int(index))
-        self._set("lifecycle_event_bindings", values, f"Remove Battle Event {removed.event_program_id}")
+        self._set(
+            "lifecycle_event_bindings", values, f"Remove Battle Event {removed.event_program_id}"
+        )
         return removed
 
     # -- sequences --------------------------------------------------------------------------------
     @staticmethod
     def sequence_args(tracks, *, cutscene=False, skippable=False, wait="all"):
-        args = {"tracks": list(tracks), "cutscene": bool(cutscene), "skippable": bool(skippable), "wait": wait}
+        args = {
+            "tracks": list(tracks),
+            "cutscene": bool(cutscene),
+            "skippable": bool(skippable),
+            "wait": wait,
+        }
         try:
             validate_sequence_args(args)
         except (SequenceError, ValueError, KeyError) as exc:
@@ -178,13 +207,17 @@ class EventFlowAuthoring:
     def _replace_program(self, program_id, instructions, label):
         old = self.project.event_programs.require(program_id)
         new = EventProgram(tuple(instructions), name=old.name)
-        self.document.execute(ReplaceEventProgramCommand(self.project.event_programs, program_id, new, old))
+        self.document.execute(
+            ReplaceEventProgramCommand(self.project.event_programs, program_id, new, old)
+        )
         return new
 
     def insert_sequence(self, program_id, index, tracks, **options):
         program = self.project.event_programs.require(str(program_id))
         items = list(program.instructions)
-        items.insert(int(index), EventInstruction("SEQUENCE", self.sequence_args(tracks, **options)))
+        items.insert(
+            int(index), EventInstruction("SEQUENCE", self.sequence_args(tracks, **options))
+        )
         return self._replace_program(str(program_id), items, f"Add Sequence to {program_id}")
 
     def replace_sequence(self, program_id, index, tracks, **options):

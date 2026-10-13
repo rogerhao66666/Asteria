@@ -1,6 +1,8 @@
-"""Draw particle systems (VFX-01) on a pygame surface - the field and the battle use the same drawer.
+"""Draw particle systems (VFX-01) on a pygame surface - the field and the battle use the same
+drawer.
 
-Shapes go to one reusable layer per blend mode (``alpha`` or ``add``); only the area particles touched
+Shapes go to one reusable layer per blend mode (``alpha`` or ``add``); only the area particles
+touched
 is cleared and composited, so an effect costs what it covers, not the whole screen.
 """
 
@@ -28,8 +30,10 @@ class ParticleDrawer:
         return layer
 
     def draw(self, surface, systems, to_screen, pixels_per_unit, *, image=None):
-        """``systems``: ParticleSystems; ``to_screen(x, y)`` -> screen point; ``pixels_per_unit``: screen pixels per
-        world unit (zoom included); ``image(image_id)`` -> pygame surface or None (image particles)."""
+        """``systems``: ParticleSystems; ``to_screen(x, y)`` -> screen point; ``pixels_per_unit``:
+        screen pixels per
+        world unit (zoom included); ``image(image_id)`` -> pygame surface or None (image
+        particles)."""
         pg = self.pg
         size = surface.get_size()
         dirty = {"alpha": [], "add": []}
@@ -38,7 +42,11 @@ class ParticleDrawer:
             definition = system.definition
             blend = definition.blend
             layer = self._layer(blend, size)
-            source = image(definition.image) if definition.particle == "image" and image is not None else None
+            source = (
+                image(definition.image)
+                if definition.particle == "image" and image is not None
+                else None
+            )
             for p in system.views():
                 alpha = p.color[3]
                 if alpha <= 0:
@@ -61,10 +69,16 @@ class ParticleDrawer:
                     width = max(1, round(radius / 3))
                     a = math.radians(p.angle)
                     dx, dy = math.cos(a) * radius * 1.6, math.sin(a) * radius * 1.6
-                    rect = pg.draw.line(layer, color, (sx - dx, sy - dy), (sx + dx, sy + dy), width)
-                    rect = rect.union(pg.draw.line(layer, color, (sx + dy, sy - dx), (sx - dy, sy + dx), width))
+                    rect = pg.draw.line(
+                        layer, color, (sx - dx, sy - dy), (sx + dx, sy + dy), width
+                    )
+                    rect = rect.union(
+                        pg.draw.line(layer, color, (sx + dy, sy - dx), (sx - dy, sy + dx), width)
+                    )
                 else:
-                    rect = pg.draw.circle(layer, color, (round(sx), round(sy)), max(1, round(radius)))
+                    rect = pg.draw.circle(
+                        layer, color, (round(sx), round(sy)), max(1, round(radius))
+                    )
                 dirty[blend].append(rect)
                 drawn += 1
         for blend, rects in dirty.items():
@@ -106,4 +120,7 @@ class ParticleDrawer:
 def _square(x, y, radius, angle):
     a = math.radians(angle + 45)
     r = radius * math.sqrt(2)
-    return [(x + math.cos(a + k * math.pi / 2) * r, y + math.sin(a + k * math.pi / 2) * r) for k in range(4)]
+    return [
+        (x + math.cos(a + k * math.pi / 2) * r, y + math.sin(a + k * math.pi / 2) * r)
+        for k in range(4)
+    ]

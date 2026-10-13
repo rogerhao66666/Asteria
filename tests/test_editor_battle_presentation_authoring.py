@@ -45,7 +45,9 @@ def make():
 def profiles():
     return {
         "combatant_visuals": BattleCombatantVisualProfile(
-            "hero_visual", BattleVisualAssetSet("hero.sprite"), (BattleVisualStateDefinition("idle", "idle"),)
+            "hero_visual",
+            BattleVisualAssetSet("hero.sprite"),
+            (BattleVisualStateDefinition("idle", "idle"),),
         ),
         "feedback": BattleFeedbackProfile(),
         "hud": BattleHudProfile(),
@@ -68,7 +70,9 @@ def profiles():
         "party_layout": BattlePartyLayoutPolicy(),
         "ui_theme": BattleUiTheme(),
         "motion_sequences": BattleMotionSequence("attack", 1.0),
-        "action_workflows": BattleActionWorkflowDefinition("cast", steps=(BattleWorkflowStep("spell", "Spell"),)),
+        "action_workflows": BattleActionWorkflowDefinition(
+            "cast", steps=(BattleWorkflowStep("spell", "Spell"),)
+        ),
     }
 
 
@@ -112,7 +116,10 @@ def test_old_project_v6_remains_backward_readable():
     raw.pop("battle_presentation_library")
     clone = Project.from_data(raw, doc.component_registry)
     assert clone.battle_presentation_library.categories()
-    assert all(not clone.battle_presentation_library.ids(x) for x in clone.battle_presentation_library.categories())
+    assert all(
+        not clone.battle_presentation_library.ids(x)
+        for x in clone.battle_presentation_library.categories()
+    )
 
 
 def test_visual_profile_roundtrip_preserves_nested_state():
@@ -127,11 +134,21 @@ def test_visual_profile_roundtrip_preserves_nested_state():
 
 def test_template_and_motion_roundtrip_for_custom_codecs():
     p, doc, c = make()
-    for category in ("sideview_templates", "portrait_templates", "motion_sequences", "interaction", "ui_layout"):
+    for category in (
+        "sideview_templates",
+        "portrait_templates",
+        "motion_sequences",
+        "interaction",
+        "ui_layout",
+    ):
         c.create(category, "x", profiles()[category])
     clone = Project.from_data(p.to_data(), doc.component_registry)
-    assert clone.battle_presentation_library.require("sideview_templates", "x").template_id == "side"
-    assert clone.battle_presentation_library.require("motion_sequences", "x").sequence_id == "attack"
+    assert (
+        clone.battle_presentation_library.require("sideview_templates", "x").template_id == "side"
+    )
+    assert (
+        clone.battle_presentation_library.require("motion_sequences", "x").sequence_id == "attack"
+    )
     assert clone.battle_presentation_library.require("ui_layout", "x").virtual_width == 320
 
 

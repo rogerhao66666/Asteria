@@ -90,7 +90,8 @@ class Camera2DComponent(Component):
 
 @component_migration("asteria.Camera2D", from_version=1)
 def _camera2d_v1_to_v2(fields):
-    return fields  # v2 only adds look-ahead, bounds and group fields; their defaults keep v1 behaviour
+    # v2 only adds look-ahead, bounds and group fields; their defaults keep v1 behaviour
+    return fields
 
 
 @component_schema(
@@ -154,7 +155,8 @@ def _interaction2d_v1_to_v2(fields):
             "action",
             choices=("action", "touch"),
             label="Trigger",
-            tooltip="action: the interact button while in range; touch: walking into range (doors, transfers).",
+            tooltip="action: the interact button while in range; touch: walking into range "
+            "(doors, transfers).",
         ),
     ),
 )

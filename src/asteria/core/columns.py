@@ -1,16 +1,22 @@
 """Column storage for hot component data (D22-C1).
 
-A component class marked with ``@column_storage`` keeps its numeric fields (float, int, bool schema fields plus the
-runtime fields it names) in per-scene columns instead of on the object. Each entity in a scene owns a *slot*; column
+A component class marked with ``@column_storage`` keeps its numeric fields (float, int, bool
+schema fields plus the
+runtime fields it names) in per-scene columns instead of on the object. Each entity in a scene
+owns a *slot*; column
 ``name`` of component type ``T`` is one ``array.array`` indexed by slot, so
 
-* game code, scripts, the inspector and serialization keep using plain attributes (``transform.x = 3``) — the
+* game code, scripts, the inspector and serialization keep using plain attributes (``transform.x =
+  3``) — the
   attribute is a descriptor that reads and writes the column;
-* engine systems read and write whole columns at once (``scene.columns(Transform)``): the python kernels use the
+* engine systems read and write whole columns at once (``scene.columns(Transform)``): the python
+  kernels use the
   arrays directly, numpy wraps the same memory without copying (``numpy.frombuffer``).
 
-A component that is not in a scene (being built, detached for undo, or on an entity waiting to be added) keeps its
-values on itself; attaching copies them into the scene's columns and detaching copies them back, so nothing is lost
+A component that is not in a scene (being built, detached for undo, or on an entity waiting to be
+added) keeps its
+values on itself; attaching copies them into the scene's columns and detaching copies them back,
+so nothing is lost
 and nothing else changes for callers. ``enabled`` and text fields stay ordinary attributes.
 """
 
@@ -56,7 +62,8 @@ class _Column:
 
 
 def column_storage(*runtime_fields):
-    """Class decorator: keep the schema's numeric fields and ``runtime_fields`` (``(name, type, default)``) in
+    """Class decorator: keep the schema's numeric fields and ``runtime_fields`` (``(name, type,
+    default)``) in
     columns."""
 
     def deco(cls):

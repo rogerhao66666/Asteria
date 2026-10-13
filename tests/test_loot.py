@@ -1,4 +1,5 @@
-"""ASTERIA_SPEC §35 (D22 A6): loot — authored rarities, random affixes, rolled equipment that joins the build and the
+"""ASTERIA_SPEC §35 (D22 A6): loot — authored rarities, random affixes, rolled equipment that
+joins the build and the
 save, loot on the ground and picking it up."""
 
 import json
@@ -74,10 +75,18 @@ def _db():
             group="attack",
         )
     )
-    db.add_affix(AffixDefinition("of_bear", "of the Bear", "suffix", [AffixModifier("hp", "add", 10, 20)]))
-    db.add_affix(AffixDefinition("of_fox", "of the Fox", "suffix", [AffixModifier("speed", "multiply", 1.05, 1.1)]))
     db.add_affix(
-        AffixDefinition("gleaming", "Gleaming", "prefix", [AffixModifier("luck", "add", 1, 1)], slots=["ring"])
+        AffixDefinition("of_bear", "of the Bear", "suffix", [AffixModifier("hp", "add", 10, 20)])
+    )
+    db.add_affix(
+        AffixDefinition(
+            "of_fox", "of the Fox", "suffix", [AffixModifier("speed", "multiply", 1.05, 1.1)]
+        )
+    )
+    db.add_affix(
+        AffixDefinition(
+            "gleaming", "Gleaming", "prefix", [AffixModifier("luck", "add", 1, 1)], slots=["ring"]
+        )
     )
     return db
 
@@ -92,10 +101,14 @@ def test_records_round_trip_and_the_database_keeps_them():
     old.pop("rarities")
     old.pop("affixes")
     assert RpgDatabase.from_data(old).affixes == {}
-    assert RpgDatabase().loot_rarities() == {r.rarity_id: r for r in DEFAULT_RARITIES}  # nothing authored: defaults
+    assert RpgDatabase().loot_rarities() == {
+        r.rarity_id: r for r in DEFAULT_RARITIES
+    }  # nothing authored: defaults
     with pytest.raises(ValueError):
         RarityDefinition("bad", color="orange")
-    assert DropEntry("anything", rarity="mythic").rarity == "mythic"  # rarities are authored ids now
+    assert (
+        DropEntry("anything", rarity="mythic").rarity == "mythic"
+    )  # rarities are authored ids now
 
 
 def test_rarity_rolls_follow_the_weights_and_luck_shifts_them():
@@ -115,19 +128,29 @@ def test_affixes_respect_tags_slots_levels_groups_and_position_limits():
     for _ in range(300):
         rolled = roll_affixes(sword, 5, db.rarities["magic"], db.affixes, rng)
         ids = [a.affix_id for a in rolled]
-        assert 1 <= len(ids) <= 2 and "keen" not in ids and "gleaming" not in ids  # level 5 < 10; ring-only
+        assert (
+            1 <= len(ids) <= 2 and "keen" not in ids and "gleaming" not in ids
+        )  # level 5 < 10; ring-only
         positions = Counter(db.affixes[i].position for i in ids)
         assert positions["prefix"] <= 1 and positions["suffix"] <= 1
         for affix in rolled:
             for stat, _operation, value in affix.entries:
                 if affix.affix_id == "sharp":
                     assert stat == "attack" and value in (6.0, 7.0, 8.0)  # 2..4 plus 4 levels x 1
-    high = [a.affix_id for _ in range(200) for a in roll_affixes(sword, 12, db.rarities["relic"], db.affixes, rng)]
+    high = [
+        a.affix_id
+        for _ in range(200)
+        for a in roll_affixes(sword, 12, db.rarities["relic"], db.affixes, rng)
+    ]
     assert "keen" in high  # level 12 unlocks the stronger tier
     for _ in range(100):  # sharp and keen share a group: never both
         ids = [a.affix_id for a in roll_affixes(sword, 12, db.rarities["relic"], db.affixes, rng)]
         assert not {"sharp", "keen"} <= set(ids)
-    assert {a.affix_id for _ in range(50) for a in roll_affixes(ring, 1, db.rarities["magic"], db.affixes, rng)} <= {
+    assert {
+        a.affix_id
+        for _ in range(50)
+        for a in roll_affixes(ring, 1, db.rarities["magic"], db.affixes, rng)
+    } <= {
         "gleaming",
         "of_bear",
         "of_fox",
@@ -159,7 +182,10 @@ def test_rolled_equipment_joins_the_build_and_round_trips():
     loadout = EquipmentLoadout([EquipmentSlotDefinition("weapon")])
     loadout.equip("weapon", fixed, validate_requirements=False)
     stats = loadout.modifier_set().evaluate_block(StatBlock({"attack": 10, "hp": 100}))
-    assert (stats.get("attack"), stats.get("hp")) == (22.0, 115.0)  # 10 + base 5 + rolled 7; 100 + 15
+    assert (stats.get("attack"), stats.get("hp")) == (
+        22.0,
+        115.0,
+    )  # 10 + base 5 + rolled 7; 100 + 15
     assert item_display_name(fixed, db.affixes) == "Sharp Sword of the Bear"
     data = json.loads(json.dumps(fixed.to_data()))
     back = EquippedItem.from_data(data, equipment=db.equipment, attachments={})
@@ -169,7 +195,9 @@ def test_rolled_equipment_joins_the_build_and_round_trips():
         fixed.modifiers(),
     )
     plain = EquippedItem(db.equipment["ring"], instance_id="ring#1").to_data()
-    assert "rarity" not in plain and "rolled_affixes" not in plain  # plain instances save exactly as before
+    assert (
+        "rarity" not in plain and "rolled_affixes" not in plain
+    )  # plain instances save exactly as before
 
 
 def test_the_equipment_bag_is_saved():
@@ -221,13 +249,20 @@ def _set(component, **fields):
 def test_drops_lie_on_the_ground_until_walked_over_or_picked_up():
     db = _db()
     scene, system, hero, collected = _loot_scene(db, pickup_radius=40, auto_pickup="currency")
-    dropped = system.drop(scene, 10, 0, items={"sword": 2, "potion": 3}, currencies={"gold": 12}, level=4)
+    dropped = system.drop(
+        scene, 10, 0, items={"sword": 2, "potion": 3}, currencies={"gold": 12}, level=4
+    )
     assert len(dropped) == 4 and [e.kind for e in system.events].count("dropped") == 4
     swords = [e.get(LootComponent) for e in dropped if e.get(LootComponent).kind == "equipment"]
-    assert all(s.rarity in db.rarities and json.loads(s.instance)["equipment_id"] == "sword" for s in swords)
+    assert all(
+        s.rarity in db.rarities and json.loads(s.instance)["equipment_id"] == "sword"
+        for s in swords
+    )
     assert {label[3] for label in system.labels(scene)} >= {"3 Potion", "12 gold"}
     scene.update(1 / 60)
-    assert [(c[1].kind, c[1].amount) for c in collected] == [("currency", 12)]  # walked over: only money
+    assert [(c[1].kind, c[1].amount) for c in collected] == [
+        ("currency", 12)
+    ]  # walked over: only money
     assert system.pick_up_nearest(scene, hero)
     while system.pick_up_nearest(scene, hero):
         pass
@@ -235,7 +270,9 @@ def test_drops_lie_on_the_ground_until_walked_over_or_picked_up():
     assert kinds["equipment"] == 2 and all(
         isinstance(c[2], EquippedItem) for c in collected if c[1].kind == "equipment"
     )
-    assert [e.get(LootComponent).item_id for e, _ in scene.query(LootComponent)] == ["potion"]  # refused: stays
+    assert [e.get(LootComponent).item_id for e, _ in scene.query(LootComponent)] == [
+        "potion"
+    ]  # refused: stays
     far = system.drop(scene, 500, 0, items={"potion": 1})
     assert not system.pick_up_nearest(scene, hero) and scene.get_entity(far[0].id) is not None
 
@@ -261,9 +298,13 @@ def test_enemies_drop_loot_in_the_game_session_and_it_reaches_the_save(runtime):
     game = runtime.game
     db = game.project.rpg_database
     db.add_equipment(EquipmentDefinition("test_axe", "Test Axe", slot="weapon", tags=["weapon"]))
-    db.add_affix(AffixDefinition("test_heavy", "Heavy", "prefix", [AffixModifier("attack", "add", 3, 3)]))
+    db.add_affix(
+        AffixDefinition("test_heavy", "Heavy", "prefix", [AffixModifier("attack", "add", 3, 3)])
+    )
     db.add_drop_table(DropTable("test_axe_drop", guaranteed=[DropEntry("test_axe")]))
-    game.project.gameplay_library.add_attack(AttackDefinition("test_kill", damage=ValueFormula.constant(999)))
+    game.project.gameplay_library.add_attack(
+        AttackDefinition("test_kill", damage=ValueFormula.constant(999))
+    )
     game.set_player_position(0.0, 0.0)
     game.player.add_component(_set(LooterComponent(), pickup_radius=60, auto_pickup="currency"))
     ogre = game.scene.add_entity(Entity("TestOgre"))
@@ -271,7 +312,11 @@ def test_enemies_drop_loot_in_the_game_session_and_it_reaches_the_save(runtime):
     ogre.add_component(_set(Hurtbox2DComponent(), team="foe"))
     ogre.add_component(
         _set(
-            CombatantComponent(), team="foe", drop_table_id="test_axe_drop", currency_drop="test_gold=5-5", loot_level=7
+            CombatantComponent(),
+            team="foe",
+            drop_table_id="test_axe_drop",
+            currency_drop="test_gold=5-5",
+            loot_level=7,
         )
     )
     gold_before = game.save.rpg_state.currencies.get("test_gold", 0)
@@ -279,11 +324,15 @@ def test_enemies_drop_loot_in_the_game_session_and_it_reaches_the_save(runtime):
     game.field_update(1 / 60)
     game.field_update(1 / 60)
     assert game.save.rpg_state.currencies.get("test_gold", 0) == gold_before + 5
-    assert any(e.get(LootComponent).item_id == "test_axe" for e, _ in game.scene.query(LootComponent))
+    assert any(
+        e.get(LootComponent).item_id == "test_axe" for e, _ in game.scene.query(LootComponent)
+    )
     assert game.loot.pick_up_nearest(game.scene, game.player)
     axe = game.save.rpg_state.equipment_bag[-1]
     assert axe.equipment.equipment_id == "test_axe" and axe.item_level == 7
-    restored = type(game.save.rpg_state).from_data(json.loads(json.dumps(game.save.rpg_state.to_data())), db)
+    restored = type(game.save.rpg_state).from_data(
+        json.loads(json.dumps(game.save.rpg_state.to_data())), db
+    )
     assert restored.equipment_bag[-1].to_data() == axe.to_data()
 
 
@@ -293,11 +342,16 @@ def test_rarities_and_affixes_are_authored_in_the_editor(runtime):
 
     document = EditorDocument()
     document.set_project(runtime.game.project)
-    categories = {a.category_id: a for a in IntegratedAuthoringControllers(document).rpg_categories()}
-    categories["rarities"].create("test_mythic", RarityDefinition("test_mythic", "Mythic", "#ff0000", 6, 6, 0.1, 9))
+    categories = {
+        a.category_id: a for a in IntegratedAuthoringControllers(document).rpg_categories()
+    }
+    categories["rarities"].create(
+        "test_mythic", RarityDefinition("test_mythic", "Mythic", "#ff0000", 6, 6, 0.1, 9)
+    )
     affixes = categories["affixes"]
     affixes.create(
-        "test_vamp", AffixDefinition("test_vamp", "Vampiric", "prefix", [AffixModifier("drain", "add", 1, 3)])
+        "test_vamp",
+        AffixDefinition("test_vamp", "Vampiric", "prefix", [AffixModifier("drain", "add", 1, 3)]),
     )
     data = affixes.encode(affixes.get("test_vamp"))
     data["weight"] = 0.5

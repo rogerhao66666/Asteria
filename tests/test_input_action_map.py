@@ -7,7 +7,12 @@ import pytest
 from asteria.core import Scene
 from asteria.editor import EditorDocument
 from asteria.project import Project
-from asteria.runtime.input_map import InputActionMap, InputActionTracker, InputBinding, RawInputState
+from asteria.runtime.input_map import (
+    InputActionMap,
+    InputActionTracker,
+    InputBinding,
+    RawInputState,
+)
 
 
 def test_default_map_reads_keyboard_stick_dpad_and_buttons():
@@ -50,7 +55,9 @@ def test_input_map_persists_with_the_project_and_old_projects_get_the_default():
     data.pop("input_map")
     data.pop("prefabs")
     data.pop("common_events", None)
-    assert Project.from_data(data, registry).input_map.to_data() == InputActionMap.default().to_data()
+    assert (
+        Project.from_data(data, registry).input_map.to_data() == InputActionMap.default().to_data()
+    )
 
 
 def test_tracker_reports_edges():
@@ -108,7 +115,9 @@ def test_gamepad_stick_moves_the_player_in_the_playable_runtime(monkeypatch, tmp
     try:
         runtime._ui_mode = "field"
         start = runtime.game.player.get(Transform).x
-        monkeypatch.setattr(runtime.input_source, "raw_state", lambda: RawInputState(axes={"0": 1.0}))
+        monkeypatch.setattr(
+            runtime.input_source, "raw_state", lambda: RawInputState(axes={"0": 1.0})
+        )
         for _ in range(10):
             runtime._frame([], 0.05)
         assert runtime.game.player.get(Transform).x > start

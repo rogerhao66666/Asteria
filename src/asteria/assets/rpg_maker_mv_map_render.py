@@ -30,12 +30,18 @@ def _autotile_table(js_path: Path, name: str):
 
 
 class MVTileResolver:
-    def __init__(self, layout: RPGMakerMVProjectLayout, catalog: RPGMakerMVCatalog, *, tileset_id: int):
+    def __init__(
+        self, layout: RPGMakerMVProjectLayout, catalog: RPGMakerMVCatalog, *, tileset_id: int
+    ):
         self.layout = layout
         self.catalog = catalog
         self.tileset_id = int(tileset_id)
         records = json.loads((layout.data / "Tilesets.json").read_text(encoding="utf-8-sig"))
-        if self.tileset_id <= 0 or self.tileset_id >= len(records) or not isinstance(records[self.tileset_id], dict):
+        if (
+            self.tileset_id <= 0
+            or self.tileset_id >= len(records)
+            or not isinstance(records[self.tileset_id], dict)
+        ):
             raise ValueError(f"unknown MV tileset: {self.tileset_id}")
         self.names = tuple(records[self.tileset_id].get("tilesetNames", ()))
         js = (layout.js or layout.root / "js") / "rpg_core.js"
@@ -50,7 +56,9 @@ class MVTileResolver:
         source = self.catalog.resolve_image("tilesets", name)
         if source is None:
             return None, ""
-        asset = next((item for item in self.catalog.assets if item.source.uri == str(source)), None)
+        asset = next(
+            (item for item in self.catalog.assets if item.source.uri == str(source)), None
+        )
         return source, "" if asset is None else asset.asset_id
 
     def resolve(self, tile_id: int) -> MVTileRegion | None:
@@ -61,11 +69,15 @@ class MVTileResolver:
             set_number = tile_id // 256 + 5
             local = tile_id % 256
             source, asset_id = self._source(set_number)
-            return MVTileRegion(tile_id, source, asset_id, ((local % 16 * 48, local // 16 * 48, 48, 48),))
+            return MVTileRegion(
+                tile_id, source, asset_id, ((local % 16 * 48, local // 16 * 48, 48, 48),)
+            )
         if 1536 <= tile_id < 2048:
             local = tile_id - 1536
             source, asset_id = self._source(4)
-            return MVTileRegion(tile_id, source, asset_id, ((local % 8 * 48, local // 8 * 48, 48, 48),))
+            return MVTileRegion(
+                tile_id, source, asset_id, ((local % 8 * 48, local // 8 * 48, 48, 48),)
+            )
         if not 2048 <= tile_id < 8192:
             return MVTileRegion(tile_id, None, "", ())
 
@@ -102,7 +114,9 @@ class MVTileResolver:
                 table = self.wall
                 shape %= len(table)
         source, asset_id = self._source(set_number)
-        quarters = tuple(((bx * 2 + qx) * 24, (by * 2 + qy) * 24, 24, 24) for qx, qy in table[shape])
+        quarters = tuple(
+            ((bx * 2 + qx) * 24, (by * 2 + qy) * 24, 24, 24) for qx, qy in table[shape]
+        )
         return MVTileRegion(tile_id, source, asset_id, quarters)
 
 

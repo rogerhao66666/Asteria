@@ -33,17 +33,25 @@ class BattleSessionRules:
     boost_resource_id: str = ""
     boost_cost_per_level: float = 1.0
     boost_max_level: int = 0
-    # How authored ActionTimingDefinitions act in play (GP-02): "immediate" resolves every action at once
-    # (timings only shape the presentation); "timeline" delays resolution by startup + cast time and pushes
-    # the actor's next turn back by the cast and its recovery. Left out of the data while "immediate".
+    # How authored ActionTimingDefinitions act in play (GP-02): "immediate" resolves every action
+    # at once
+    # (timings only shape the presentation); "timeline" delays resolution by startup + cast time
+    # and pushes
+    # the actor's next turn back by the cast and its recovery. Left out of the data while
+    # "immediate".
     action_timing: str = "immediate"
-    # Boost (GP-02 / BTL-03): "repeat" repeats the action once per level; "power" uses it once and leaves
-    # the effect to interaction rules. Either way the actor carries the tags "boost" and "boost.<level>"
-    # during the action, so rules can scale anything; an ability tagged "boost.repeat" or "boost.power"
+    # Boost (GP-02 / BTL-03): "repeat" repeats the action once per level; "power" uses it once and
+    # leaves
+    # the effect to interaction rules. Either way the actor carries the tags "boost" and
+    # "boost.<level>"
+    # during the action, so rules can scale anything; an ability tagged "boost.repeat" or
+    # "boost.power"
     # overrides the project default (e.g. attacks repeat, spells grow stronger).
     boost_mode: str = "repeat"
-    # Battle screen: the battle resource shown as each enemy's shield count ("" = the first break gauge's), and
-    # the interaction outcome tag that marks a weakness hit (its rule is then shown as revealed for that enemy).
+    # Battle screen: the battle resource shown as each enemy's shield count ("" = the first break
+    # gauge's), and
+    # the interaction outcome tag that marks a weakness hit (its rule is then shown as revealed for
+    # that enemy).
     shield_resource_id: str = ""
     weakness_outcome_tag: str = "outcome.weak"
     OPTIONAL_DATA = {

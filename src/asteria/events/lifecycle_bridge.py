@@ -10,7 +10,8 @@ from .runner import EventRunner
 
 @dataclass(frozen=True, slots=True)
 class LifecycleEventBinding:
-    """Run ``event_program_id`` when ``hook_name`` fires (battle events use ``rpg.battle.*`` hooks).
+    """Run ``event_program_id`` when ``hook_name`` fires (battle events use ``rpg.battle.*``
+    hooks).
 
     ``conditions`` (all must hold) can read switches, variables, locals and
     host providers such as ``battle`` (``round``, ``hp_ratio:<member or enemy id>``).
@@ -23,7 +24,9 @@ class LifecycleEventBinding:
     conditions: tuple = ()
     once: bool = False
 
-    def __init__(self, hook_name, event_program_id, *, source_entity_id="", conditions=(), once=False):
+    def __init__(
+        self, hook_name, event_program_id, *, source_entity_id="", conditions=(), once=False
+    ):
         from .conditions import EventCondition
 
         hook_name = str(hook_name).strip()

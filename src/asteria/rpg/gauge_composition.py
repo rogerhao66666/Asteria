@@ -90,7 +90,9 @@ class GaugeImpactRule:
         tags = set(_tags(outcome_tags))
         if not set(self.required_outcome_tags_all).issubset(tags):
             return False
-        if self.required_outcome_tags_any and not set(self.required_outcome_tags_any).intersection(tags):
+        if self.required_outcome_tags_any and not set(self.required_outcome_tags_any).intersection(
+            tags
+        ):
             return False
         if set(self.blocked_outcome_tags).intersection(tags):
             return False
@@ -175,10 +177,18 @@ class GaugeThresholdRule:
         object.__setattr__(self, "resource_id", _id(resource_id, "resource_id"))
         object.__setattr__(self, "comparison", GaugeThresholdComparison(comparison))
         object.__setattr__(self, "threshold", _number(threshold, "threshold"))
-        object.__setattr__(self, "state_id", None if state_id is None else _id(state_id, "state_id"))
+        object.__setattr__(
+            self, "state_id", None if state_id is None else _id(state_id, "state_id")
+        )
         object.__setattr__(self, "timeline_shift", _number(timeline_shift, "timeline_shift"))
-        object.__setattr__(self, "reset_to", None if reset_to is None else _number(reset_to, "reset_to"))
-        object.__setattr__(self, "emit_trigger", None if emit_trigger is None else _id(emit_trigger, "emit_trigger"))
+        object.__setattr__(
+            self, "reset_to", None if reset_to is None else _number(reset_to, "reset_to")
+        )
+        object.__setattr__(
+            self,
+            "emit_trigger",
+            None if emit_trigger is None else _id(emit_trigger, "emit_trigger"),
+        )
         object.__setattr__(self, "include_cast_in_shift", bool(include_cast_in_shift))
         object.__setattr__(self, "priority", int(priority))
         object.__setattr__(self, "reset_to_maximum", bool(reset_to_maximum))
@@ -236,8 +246,12 @@ class GaugeCompositionDefinition:
     VERSION = 1
 
     def __init__(self, composition_id, *, impacts=(), thresholds=()):
-        impacts = tuple(x if isinstance(x, GaugeImpactRule) else GaugeImpactRule(**x) for x in impacts)
-        thresholds = tuple(x if isinstance(x, GaugeThresholdRule) else GaugeThresholdRule(**x) for x in thresholds)
+        impacts = tuple(
+            x if isinstance(x, GaugeImpactRule) else GaugeImpactRule(**x) for x in impacts
+        )
+        thresholds = tuple(
+            x if isinstance(x, GaugeThresholdRule) else GaugeThresholdRule(**x) for x in thresholds
+        )
         impact_ids = [x.impact_id for x in impacts]
         threshold_ids = [x.threshold_id for x in thresholds]
         if len(set(impact_ids)) != len(impact_ids):
@@ -245,8 +259,14 @@ class GaugeCompositionDefinition:
         if len(set(threshold_ids)) != len(threshold_ids):
             raise ValueError("duplicate gauge threshold id")
         object.__setattr__(self, "composition_id", _id(composition_id, "composition_id"))
-        object.__setattr__(self, "impacts", tuple(sorted(impacts, key=lambda x: (-x.priority, x.impact_id))))
-        object.__setattr__(self, "thresholds", tuple(sorted(thresholds, key=lambda x: (-x.priority, x.threshold_id))))
+        object.__setattr__(
+            self, "impacts", tuple(sorted(impacts, key=lambda x: (-x.priority, x.impact_id)))
+        )
+        object.__setattr__(
+            self,
+            "thresholds",
+            tuple(sorted(thresholds, key=lambda x: (-x.priority, x.threshold_id))),
+        )
 
     def to_data(self):
         return {
@@ -310,7 +330,18 @@ class BattleGaugeCompositionRuntime:
             self.definitions[definition.composition_id] = definition
         self.hooks = hooks
 
-    def apply(self, battle, composition_id, source_id, target_id, *, trigger, outcome_tags=(), value=0.0, rng=None):
+    def apply(
+        self,
+        battle,
+        composition_id,
+        source_id,
+        target_id,
+        *,
+        trigger,
+        outcome_tags=(),
+        value=0.0,
+        rng=None,
+    ):
         composition = self.definitions[str(composition_id)]
         source_id = _id(source_id, "source_id")
         target_id = _id(target_id, "target_id")
@@ -352,7 +383,9 @@ class BattleGaugeCompositionRuntime:
                     continue
                 state_applied = False
                 if threshold.state_id is not None:
-                    state_result = battle.apply_state(threshold.state_id, source_id, member_id, rng=rng)
+                    state_result = battle.apply_state(
+                        threshold.state_id, source_id, member_id, rng=rng
+                    )
                     state_applied = bool(state_result.applied)
                 if threshold.timeline_shift != 0:
                     battle.shift_timeline(
@@ -362,12 +395,17 @@ class BattleGaugeCompositionRuntime:
                     )
                 if threshold.emit_trigger is not None:
                     battle.battle_resources.apply_trigger(threshold.emit_trigger, [member_id])
-                    battle.battle_states.apply_trigger(threshold.emit_trigger, [battle.member(member_id)])
+                    battle.battle_states.apply_trigger(
+                        threshold.emit_trigger, [battle.member(member_id)]
+                    )
                     emit_hook(
                         self.hooks,
                         threshold.emit_trigger,
                         source=member_id,
-                        data={"composition_id": composition.composition_id, "threshold_id": threshold.threshold_id},
+                        data={
+                            "composition_id": composition.composition_id,
+                            "threshold_id": threshold.threshold_id,
+                        },
                     )
                 target = threshold.reset_to
                 if threshold.reset_to_maximum:
@@ -396,7 +434,10 @@ class BattleGaugeCompositionRuntime:
                     self.hooks,
                     "rpg.battle.gauge_threshold_crossed",
                     source=member_id,
-                    data={"composition_id": composition.composition_id, "result": threshold_result},
+                    data={
+                        "composition_id": composition.composition_id,
+                        "result": threshold_result,
+                    },
                 )
 
         result = GaugeCompositionResult(

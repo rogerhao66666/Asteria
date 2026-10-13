@@ -219,7 +219,9 @@ class QuestLog:
         return self.progress[quest_id].counts.get(objective.objective_id, 0)
 
     def objective_done(self, quest_id, objective):
-        return self.objective_value(quest_id, objective) >= (1 if objective.kind == "switch" else objective.required)
+        return self.objective_value(quest_id, objective) >= (
+            1 if objective.kind == "switch" else objective.required
+        )
 
     def is_ready(self, quest_id):
         quest = self._definition(quest_id)
@@ -235,7 +237,9 @@ class QuestLog:
         if objective is None or objective.kind != "counter":
             raise QuestError(f"{quest.quest_id} has no counter objective {objective_id}")
         counts = self.progress[quest.quest_id].counts
-        counts[objective.objective_id] = min(objective.required, counts.get(objective.objective_id, 0) + int(amount))
+        counts[objective.objective_id] = min(
+            objective.required, counts.get(objective.objective_id, 0) + int(amount)
+        )
         self.refresh()
         return counts[objective.objective_id]
 
@@ -247,7 +251,8 @@ class QuestLog:
             for objective in self._definition(quest_id).objectives:
                 if objective.kind == "defeat_enemy" and objective.target == enemy_id:
                     progress.counts[objective.objective_id] = min(
-                        objective.required, progress.counts.get(objective.objective_id, 0) + int(amount)
+                        objective.required,
+                        progress.counts.get(objective.objective_id, 0) + int(amount),
                     )
         self.refresh()
 

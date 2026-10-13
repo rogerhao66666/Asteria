@@ -95,7 +95,9 @@ def effect_sheet(kind, color, frames=16, size=64):
         mid = size // 2
         if kind == "ring":
             r = 4 + t * (mid - 6)
-            d.ellipse((mid - r, mid - r, mid + r, mid + r), outline=c, width=max(1, int(6 * (1 - t)) + 1))
+            d.ellipse(
+                (mid - r, mid - r, mid + r, mid + r), outline=c, width=max(1, int(6 * (1 - t)) + 1)
+            )
         elif kind == "slash":
             span = 40 + 140 * t
             d.arc((6, 6, size - 6, size - 6), 210, 210 + span, fill=c, width=5)
@@ -115,8 +117,12 @@ def effect_sheet(kind, color, frames=16, size=64):
 
 
 def build(free_assets: Path, output: Path = OUTPUT):
-    dungeon = Image.open(free_assets / "kenney_tiny-dungeon/extracted/Tilemap/tilemap_packed.png").convert("RGBA")
-    town = Image.open(free_assets / "kenney_tiny-town/extracted/Tilemap/tilemap_packed.png").convert("RGBA")
+    dungeon = Image.open(
+        free_assets / "kenney_tiny-dungeon/extracted/Tilemap/tilemap_packed.png"
+    ).convert("RGBA")
+    town = Image.open(
+        free_assets / "kenney_tiny-town/extracted/Tilemap/tilemap_packed.png"
+    ).convert("RGBA")
     output.mkdir(parents=True, exist_ok=True)
 
     files = {

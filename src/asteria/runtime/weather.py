@@ -3,7 +3,8 @@
 The simulation is backend-neutral and deterministic (seeded per scene); it runs on both the
 pygame and the GPU presenter paths (it is drawn into the world layer before lighting and
 post-processing). Particles live in screen space and are shifted by the camera's movement,
-so they stay put in the world while the camera pans. Storage, motion and drawing are the active compute
+so they stay put in the world while the camera pans. Storage, motion and drawing are the active
+compute
 kernel's ``WeatherStore`` (D21); ``max_particles`` caps the cost.
 """
 
@@ -54,7 +55,8 @@ class WeatherSystem:
         )
 
     def update(self, dt, kind, intensity, max_particles, wind=0.0, camera=None, scale=1.0):
-        """Advance ``dt`` seconds. ``camera`` = current view centre in world units (pans the particles)."""
+        """Advance ``dt`` seconds. ``camera`` = current view centre in world units (pans the
+        particles)."""
         dt = max(0.0, float(dt))
         self.time += dt
         particles = self._particles
@@ -76,7 +78,9 @@ class WeatherSystem:
                 shift_y = (self._last_camera[1] - camera[1]) * scale
             self._last_camera = camera
         sway = kind in ("snow", "leaves", "dust")
-        for index, fell_out in particles.step(dt, wind, self.time, sway, shift_x, shift_y, self.width, self.height):
+        for index, fell_out in particles.step(
+            dt, wind, self.time, sway, shift_x, shift_y, self.width, self.height
+        ):
             particles.set_row(index, self._new_particle(top=fell_out))
 
     def draw(self, pg, surface, wind=0.0):

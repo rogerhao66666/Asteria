@@ -1,4 +1,5 @@
-"""Authoring API for shops, quests, factions, achievements, equipment sets and capture rules (CB10h).
+"""Authoring API for shops, quests, factions, achievements, equipment sets and capture rules
+(CB10h).
 
 The Python API (:class:`GameSystemsAuthoringController`) and the Qt editor
 (:mod:`asteria.editor.game_systems_widget`) share these canonical
@@ -131,9 +132,25 @@ FORMS = {
         F("rules_id", "Rules ID", "id"),
         F("display_name", "Name", "text", default=""),
         F("stack_limits", "Items Stack Up to Their Stack Limit", "bool", default=True),
-        F("max_kinds", "Most Different Items Carried (empty = no limit)", "optional_int", default=None),
-        F("exempt_tags", "Tags That Never Take a Place (key items)", "string_list", default=("item.key",)),
-        F("overflow", "When Items Do Not Fit", "choice", choices=INVENTORY_OVERFLOW, default="fill"),
+        F(
+            "max_kinds",
+            "Most Different Items Carried (empty = no limit)",
+            "optional_int",
+            default=None,
+        ),
+        F(
+            "exempt_tags",
+            "Tags That Never Take a Place (key items)",
+            "string_list",
+            default=("item.key",),
+        ),
+        F(
+            "overflow",
+            "When Items Do Not Fit",
+            "choice",
+            choices=INVENTORY_OVERFLOW,
+            default="fill",
+        ),
     ),
     "drop_tables": (
         F("table_id", "Table ID", "id"),
@@ -146,7 +163,10 @@ FORMS = {
             "pity",
             "Pity (guarantee after misses)",
             "table",
-            fields=(F("item_id", "Item", "ref", source="items"), F("after_misses", "After Misses", "int", default=10)),
+            fields=(
+                F("item_id", "Item", "ref", source="items"),
+                F("after_misses", "After Misses", "int", default=10),
+            ),
             default=(),
         ),
         F("luck_weight_bonus", "Luck Bonus to Rare Weights", "float", default=0.0),
@@ -168,9 +188,21 @@ FORMS = {
         F("success_items", "Success: Items", "amounts", source="items", default={}),
         F("success_currencies", "Success: Currencies", "amounts", default={}),
         F("success_switch", "Success: Set Switch", "text", default=""),
-        F("success_event", "Success: Follow-up Event", "optional_ref", source="event_programs", default=""),
+        F(
+            "success_event",
+            "Success: Follow-up Event",
+            "optional_ref",
+            source="event_programs",
+            default="",
+        ),
         F("failure_switch", "Failure: Set Switch", "text", default=""),
-        F("failure_event", "Failure: Follow-up Event", "optional_ref", source="event_programs", default=""),
+        F(
+            "failure_event",
+            "Failure: Follow-up Event",
+            "optional_ref",
+            source="event_programs",
+            default="",
+        ),
         F("reputation", "Consequence: Reputation", "amounts", source="factions", default={}),
         F("repeatable", "Repeatable", "bool", default=True),
     ),
@@ -242,7 +274,13 @@ FORMS = {
                 F("pieces", "Pieces Equipped", "int", default=2),
                 F("modifiers", "Stat Modifiers", "table", fields=_MODIFIER, default=()),
                 F("tags", "Granted Tags", "string_list", default=()),
-                F("granted_abilities", "Granted Abilities", "ref_list", source="abilities", default=()),
+                F(
+                    "granted_abilities",
+                    "Granted Abilities",
+                    "ref_list",
+                    source="abilities",
+                    default=(),
+                ),
             ),
         ),
     ),
@@ -269,11 +307,15 @@ class _Kind:
 def _templates():
     return {
         "shops": lambda key, c: ShopDefinition(key, key),
-        "quests": lambda key, c: QuestDefinition(key, key, objectives=[QuestObjective("objective")]),
+        "quests": lambda key, c: QuestDefinition(
+            key, key, objectives=[QuestObjective("objective")]
+        ),
         "factions": lambda key, c: FactionDefinition(key, key),
         "achievements": lambda key, c: AchievementDefinition(key, key, target="switch.name"),
         "equipment_sets": lambda key, c: EquipmentSetDefinition(key, key),
-        "capture_rules": lambda key, c: CaptureRule(key, next(iter(sorted(c.database.actors)), "actor")),
+        "capture_rules": lambda key, c: CaptureRule(
+            key, next(iter(sorted(c.database.actors)), "actor")
+        ),
         "world_interactions": lambda key, c: WorldInteraction(key, key),
         "drop_tables": lambda key, c: DropTable(key, key),
         "inventory_rules": lambda key, c: InventoryRules(key, key),
@@ -287,7 +329,13 @@ KINDS = (
     _Kind("achievements", "Achievements", "achievements", "achievement_id", AchievementDefinition),
     _Kind("equipment_sets", "Equipment Sets", "equipment_sets", "set_id", EquipmentSetDefinition),
     _Kind("capture_rules", "Capture Rules", "capture_rules", "enemy_id", CaptureRule),
-    _Kind("world_interactions", "World Interactions", "world_interactions", "interaction_id", WorldInteraction),
+    _Kind(
+        "world_interactions",
+        "World Interactions",
+        "world_interactions",
+        "interaction_id",
+        WorldInteraction,
+    ),
     _Kind("drop_tables", "Drop Tables", "drop_tables", "table_id", DropTable),
     _Kind("inventory_rules", "Inventory Rules", "inventory_rules", "rules_id", InventoryRules),
 )
@@ -303,7 +351,9 @@ def _with_defaults(spec, data):
         elif f.kind == "table":
             data[f.key] = [_with_defaults(f.fields, row) for row in data.get(f.key, [])]
         elif f.key not in data:
-            data[f.key] = copy.deepcopy(list(f.default) if isinstance(f.default, tuple) else f.default)
+            data[f.key] = copy.deepcopy(
+                list(f.default) if isinstance(f.default, tuple) else f.default
+            )
     return data
 
 
@@ -319,7 +369,9 @@ def new_row(fields):
             row[f.key] = {}
         else:
             row[f.key] = (
-                copy.deepcopy(f.default) if f.default is not None else ("" if f.kind != "optional_int" else None)
+                copy.deepcopy(f.default)
+                if f.default is not None
+                else ("" if f.kind != "optional_int" else None)
             )
     return row
 
@@ -444,7 +496,9 @@ class GameSystemsAuthoringController:
         if key in self.store(kind_id):
             raise GameSystemsAuthoringError(f"duplicate {kind_id}: {key}")
         self._validated(kind_id, key, value)
-        self.document.execute(_MapCommand(self.store(kind_id), key, value, None, f"Add {kind.label[:-1]} {key}"))
+        self.document.execute(
+            _MapCommand(self.store(kind_id), key, value, None, f"Add {kind.label[:-1]} {key}")
+        )
         return value
 
     def create_new(self, kind_id, key):
@@ -459,7 +513,9 @@ class GameSystemsAuthoringController:
         if getattr(value, kind.key) != key:
             raise GameSystemsAuthoringError(f"{kind.key} cannot change during edit")
         self._validated(kind_id, key, value)
-        self.document.execute(_MapCommand(self.store(kind_id), key, value, old, f"Edit {kind.label[:-1]} {key}"))
+        self.document.execute(
+            _MapCommand(self.store(kind_id), key, value, old, f"Edit {kind.label[:-1]} {key}")
+        )
         return value
 
     def duplicate(self, kind_id, key, new_key):
@@ -474,7 +530,9 @@ class GameSystemsAuthoringController:
         users = self.where_used(kind_id, key)
         if users:
             raise GameSystemsAuthoringError(f"{key} is used by " + ", ".join(users))
-        self.document.execute(_MapCommand(self.store(kind_id), key, None, old, f"Delete {kind.label[:-1]} {key}"))
+        self.document.execute(
+            _MapCommand(self.store(kind_id), key, None, old, f"Delete {kind.label[:-1]} {key}")
+        )
         return old
 
 

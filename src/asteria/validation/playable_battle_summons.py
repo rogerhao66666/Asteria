@@ -143,7 +143,11 @@ class PlayableBattleSummonHarness:
 
     def active_member_ids(self):
         return tuple(
-            sorted(state.member_id for state in self.battle.combatants.states() if state.present and state.active)
+            sorted(
+                state.member_id
+                for state in self.battle.combatants.states()
+                if state.present and state.active
+            )
         )
 
     def snapshot(self):

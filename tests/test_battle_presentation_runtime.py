@@ -92,10 +92,14 @@ def test_animation_cues_drive_attack_and_hit_then_return_to_idle():
     coordinator.consume_timeline_cues(
         (
             PresentationCue(
-                "hero.slash", ActionCue("hero_attack", 0.0, "animation", {"member_id": "hero", "role": "attack"})
+                "hero.slash",
+                ActionCue(
+                    "hero_attack", 0.0, "animation", {"member_id": "hero", "role": "attack"}
+                ),
             ),
             PresentationCue(
-                "hero.slash", ActionCue("mimic_hit", 0.1, "animation", {"member_id": "mimic", "role": "hit"})
+                "hero.slash",
+                ActionCue("mimic_hit", 0.1, "animation", {"member_id": "mimic", "role": "hit"}),
             ),
         )
     )
@@ -138,11 +142,18 @@ def test_missing_attack_role_falls_back_to_idle_without_gameplay_side_effect():
         BattleVisualAnchor(0, 0),
         {"idle": "idle", "hit": "hurt", "ko": "down"},
     )
-    runtime = BattlePresentationRuntime(BattlePresentationScene("fallback", "bg", (visual,)), clips.get, sheets.get)
+    runtime = BattlePresentationRuntime(
+        BattlePresentationScene("fallback", "bg", (visual,)), clips.get, sheets.get
+    )
     coordinator = BattlePresentationCoordinator(runtime.scene)
     marker = {"damage": 123, "target_valid": True}
     coordinator.consume_timeline_cues(
-        (PresentationCue("missing", ActionCue("attack", 0.0, "animation", {"member_id": "hero", "role": "attack"})),)
+        (
+            PresentationCue(
+                "missing",
+                ActionCue("attack", 0.0, "animation", {"member_id": "hero", "role": "attack"}),
+            ),
+        )
     )
     result = runtime.apply_events(coordinator.drain())
     assert result == (False,)
@@ -204,12 +215,21 @@ def _sized_actor_runtime(cell_size, *, source_ratio=1.0, with_aura=False, transi
 def test_high_resolution_visual_scales_source_frames_to_same_logical_bounds():
     camera = Camera2D(width=320, height=180, zoom=1.5)
     standard = _sized_actor_runtime(64).build_frame(camera).combatant_draws[0]
-    high_resolution = _sized_actor_runtime(128, source_ratio=2.0).build_frame(camera).combatant_draws[0]
+    high_resolution = (
+        _sized_actor_runtime(128, source_ratio=2.0).build_frame(camera).combatant_draws[0]
+    )
 
     assert standard.source == (0, 0, 64, 64)
     assert high_resolution.source == (0, 0, 128, 128)
-    assert (high_resolution.screen_x, high_resolution.screen_y) == (standard.screen_x, standard.screen_y)
-    assert (high_resolution.width, high_resolution.height) == (standard.width, standard.height) == (96, 96)
+    assert (high_resolution.screen_x, high_resolution.screen_y) == (
+        standard.screen_x,
+        standard.screen_y,
+    )
+    assert (
+        (high_resolution.width, high_resolution.height)
+        == (standard.width, standard.height)
+        == (96, 96)
+    )
 
 
 def test_high_resolution_aura_and_transition_share_scaled_bounds():
@@ -236,7 +256,9 @@ def test_high_resolution_aura_and_transition_share_scaled_bounds():
 
 
 def test_legacy_visual_data_defaults_source_pixel_ratio_to_one():
-    visual = BattleCombatantVisual("hero", "sized.actor", "sized.clips", BattleVisualAnchor(72, 104), {"idle": "idle"})
+    visual = BattleCombatantVisual(
+        "hero", "sized.actor", "sized.clips", BattleVisualAnchor(72, 104), {"idle": "idle"}
+    )
     legacy_payload = visual.to_data()
     legacy_payload.pop("source_pixels_per_logical_pixel", None)
     restored = BattleCombatantVisual.from_data(legacy_payload)
@@ -266,7 +288,9 @@ def test_battle_visual_rejects_non_positive_or_non_finite_source_pixel_ratio():
     from pytest import raises
 
     for ratio in (0.0, -1.0, float("nan"), float("inf")):
-        with raises(ValueError, match="source_pixels_per_logical_pixel must be finite and positive"):
+        with raises(
+            ValueError, match="source_pixels_per_logical_pixel must be finite and positive"
+        ):
             BattleCombatantVisual(
                 "hero",
                 "sheet",
@@ -318,7 +342,10 @@ def test_aura_sheet_tracks_actor_frame_and_draws_behind_character():
     runtime.combatant("hero").set_role("attack")
     attack_draws = runtime.build_frame(Camera2D(width=320, height=180)).combatant_draws
     assert attack_draws[-1].texture_asset_id == "sheet.weapon"
-    assert max(draw.layer for draw in attack_draws if draw.texture_asset_id != "sheet.weapon") < attack_draws[-1].layer
+    assert (
+        max(draw.layer for draw in attack_draws if draw.texture_asset_id != "sheet.weapon")
+        < attack_draws[-1].layer
+    )
 
 
 def test_battle_visual_aura_asset_id_round_trips_and_old_payloads_stay_valid():
@@ -372,7 +399,12 @@ def test_snapshot_restore_is_deterministic_and_presentation_only():
     runtime = _runtime()
     coordinator = BattlePresentationCoordinator(_scene())
     coordinator.consume_timeline_cues(
-        (PresentationCue("hero.slash", ActionCue("attack", 0.0, "animation", {"member_id": "hero", "role": "attack"})),)
+        (
+            PresentationCue(
+                "hero.slash",
+                ActionCue("attack", 0.0, "animation", {"member_id": "hero", "role": "attack"}),
+            ),
+        )
     )
     runtime.apply_events(coordinator.drain())
     runtime.update(0.15)
@@ -409,10 +441,17 @@ def test_project_defined_animation_role_is_not_limited_by_builtin_enum():
         BattleVisualAnchor(0, 0),
         {"idle": "idle", "dance_combo": "slash", "ko": "down"},
     )
-    runtime = BattlePresentationRuntime(BattlePresentationScene("custom-role", "bg", (visual,)), clips.get, sheets.get)
+    runtime = BattlePresentationRuntime(
+        BattlePresentationScene("custom-role", "bg", (visual,)), clips.get, sheets.get
+    )
     coordinator = BattlePresentationCoordinator(runtime.scene)
     coordinator.consume_timeline_cues(
-        (PresentationCue("custom", ActionCue("dance", 0.0, "animation", {"member_id": "hero", "role": "dance_combo"})),)
+        (
+            PresentationCue(
+                "custom",
+                ActionCue("dance", 0.0, "animation", {"member_id": "hero", "role": "dance_combo"}),
+            ),
+        )
     )
     assert runtime.apply_events(coordinator.drain()) == (True,)
     assert runtime.combatant("hero").role == "dance_combo"

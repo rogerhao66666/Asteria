@@ -7,7 +7,10 @@ from PIL import Image
 
 from asteria.editor import EditorDocument
 from asteria.editor.action_timeline_authoring import ActionTimelineController, ActionTimelineError
-from asteria.editor.animation_authoring import AnimationAuthoringController, AnimationAuthoringError
+from asteria.editor.animation_authoring import (
+    AnimationAuthoringController,
+    AnimationAuthoringError,
+)
 from asteria.project import Project
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"

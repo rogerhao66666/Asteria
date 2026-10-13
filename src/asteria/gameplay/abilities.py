@@ -182,18 +182,24 @@ class AbilityDefinition:
     conditions: GameplayCondition | None = None
     effects: tuple[AbilityEffect, ...] = ()
     tags: tuple[str, ...] = ()
-    # Turns of its user before the ability can be used again (0 = none). Left out of the data while 0.
+    # Turns of its user before the ability can be used again (0 = none). Left out of the data while
+    # 0.
     cooldown_turns: int = 0
     # Battle extras, all optional and left out of the data while empty:
     # battle_costs           {resource: amount} paid from battle resources (e.g. boost points)
-    # hits                   [{"tags": [...], "power": 1.0}] - the action lands once per hit; each hit adds its
-    #                        tags (damage types) for the interaction rules and scales the damage by its power
-    # battle_resource_gains  [{"to": "self" | "targets" | "allies", "resource": id, "amount": n}] after the action
-    # commands               [{"command": "SUMMON", "args": {...}}] world commands run after the action;
+    # hits                   [{"tags": [...], "power": 1.0}] - the action lands once per hit; each
+    # hit adds its
+    # tags (damage types) for the interaction rules and scales the damage by its power
+    # battle_resource_gains  [{"to": "self" | "targets" | "allies", "resource": id, "amount": n}]
+    # after the action
+    # commands               [{"command": "SUMMON", "args": {...}}] world commands run after the
+    # action;
     #                        "@actor" / "@target" in string args are replaced by member ids
-    # concoct_station        the action combines ingredients the player picks (recipes of that station)
-    # apply_states           [{"state": id, "to": "targets" | "self" | "allies", "remove": false}] after the
-    #                        action: states go through the battle's state policies (chance, immunity, duration)
+    # concoct_station        the action combines ingredients the player picks (recipes of that
+    # station)
+    # apply_states           [{"state": id, "to": "targets" | "self" | "allies", "remove": false}]
+    # after the
+    # action: states go through the battle's state policies (chance, immunity, duration)
     battle_costs: dict = None
     hits: tuple = ()
     battle_resource_gains: tuple = ()
@@ -202,14 +208,19 @@ class AbilityDefinition:
     apply_states: tuple = ()
     # real-time use (ASTERIA_SPEC §20; runtime.action_combat):
     # timeline_id            action timeline played when the ability is used in real time
-    # cooldown_seconds       seconds before it can be used again (turn-based battles use cooldown_turns)
-    # move_while_acting      movement speed kept while its action runs: 0 rooted, 1 free, between = slowed
-    # interrupts_actions     it may cut the user's running action at any moment (dodges), not only in cancel windows
+    # cooldown_seconds       seconds before it can be used again (turn-based battles use
+    # cooldown_turns)
+    # move_while_acting      movement speed kept while its action runs: 0 rooted, 1 free, between =
+    # slowed
+    # interrupts_actions     it may cut the user's running action at any moment (dodges), not only
+    # in cancel windows
     timeline_id: str = ""
     cooldown_seconds: float = 0.0
     move_while_acting: float = 0.0
     interrupts_actions: bool = False
-    cooldown_formula: object = None  # ValueFormula over the user's stats; replaces cooldown_seconds when set
+    cooldown_formula: object = (
+        None  # ValueFormula over the user's stats; replaces cooldown_seconds when set
+    )
     OPTIONAL_DATA = {
         "cooldown_turns": 0,
         "battle_costs": {},
@@ -285,7 +296,10 @@ class AbilityDefinition:
             if unknown:
                 raise ValueError(f"unknown hit fields: {sorted(unknown)}")
             clean_hits.append(
-                {"tags": sorted({normalize_tag(t) for t in hit.get("tags", ())}), "power": float(hit.get("power", 1.0))}
+                {
+                    "tags": sorted({normalize_tag(t) for t in hit.get("tags", ())}),
+                    "power": float(hit.get("power", 1.0)),
+                }
             )
         object.__setattr__(self, "hits", tuple(clean_hits))
         gains = []
@@ -309,7 +323,10 @@ class AbilityDefinition:
             if not str(command.get("command", "")).strip():
                 raise ValueError("commands need a command name")
             clean_commands.append(
-                {"command": str(command["command"]).strip().upper(), "args": dict(command.get("args", {}))}
+                {
+                    "command": str(command["command"]).strip().upper(),
+                    "args": dict(command.get("args", {})),
+                }
             )
         object.__setattr__(self, "commands", tuple(clean_commands))
         object.__setattr__(self, "concoct_station", str(concoct_station or "").strip())
@@ -362,12 +379,18 @@ class AbilityDefinition:
             ),
             **({"commands": [dict(c) for c in self.commands]} if self.commands else {}),
             **({"concoct_station": self.concoct_station} if self.concoct_station else {}),
-            **({"apply_states": [dict(x) for x in self.apply_states]} if self.apply_states else {}),
+            **(
+                {"apply_states": [dict(x) for x in self.apply_states]} if self.apply_states else {}
+            ),
             **({"timeline_id": self.timeline_id} if self.timeline_id else {}),
             **({"cooldown_seconds": self.cooldown_seconds} if self.cooldown_seconds else {}),
             **({"move_while_acting": self.move_while_acting} if self.move_while_acting else {}),
             **({"interrupts_actions": True} if self.interrupts_actions else {}),
-            **({"cooldown_formula": self.cooldown_formula.to_data()} if self.cooldown_formula is not None else {}),
+            **(
+                {"cooldown_formula": self.cooldown_formula.to_data()}
+                if self.cooldown_formula is not None
+                else {}
+            ),
         }
 
     @classmethod
@@ -405,7 +428,9 @@ class AbilityDefinition:
             move_while_acting=data.get("move_while_acting", 0.0),
             interrupts_actions=data.get("interrupts_actions", False),
             cooldown_formula=(
-                ValueFormula.from_data(data["cooldown_formula"]) if data.get("cooldown_formula") is not None else None
+                ValueFormula.from_data(data["cooldown_formula"])
+                if data.get("cooldown_formula") is not None
+                else None
             ),
         )
 
@@ -447,13 +472,15 @@ class AbilityExecutionResult:
 
 
 def _effective_stats(subject: GameplaySubject):
-    """The subject's stats with its active states' modifiers applied (attack up, defence down...)."""
+    """The subject's stats with its active states' modifiers applied (attack up, defence
+    down...)."""
     states = subject.states
     modifiers = states.modifiers() if states is not None else None
     if not modifiers or not modifiers.modifiers():
         return subject.stats
     values = {
-        name: modifiers.evaluate(name, subject.stats.get(name), tags=subject.tags) for name in subject.stats.names()
+        name: modifiers.evaluate(name, subject.stats.get(name), tags=subject.tags)
+        for name in subject.stats.names()
     }
     return StatBlock(values)
 
@@ -483,7 +510,8 @@ def _clone_subject(subject: GameplaySubject):
 def _commit_subject(staged: GameplaySubject, actual: GameplaySubject):
     actual.stats._values = dict(staged.stats._values)
     actual.resources._values = {
-        key: type(value).from_data(value.to_data()) for key, value in staged.resources._values.items()
+        key: type(value).from_data(value.to_data())
+        for key, value in staged.resources._values.items()
     }
     actual.tags._tags = set(staged.tags._tags)
 
@@ -523,7 +551,9 @@ class AbilityRuntime:
 
         errors = list(definition.targeting.validate(source, targets))
         condition_target = targets[0].subject if targets else None
-        if not definition.conditions.evaluate(GameplayConditionContext(source.subject, condition_target)):
+        if not definition.conditions.evaluate(
+            GameplayConditionContext(source.subject, condition_target)
+        ):
             errors.append("conditions_failed")
 
         evaluated_costs = []
@@ -541,7 +571,8 @@ class AbilityRuntime:
                 errors.append(f"missing_resource:{cost.resource}")
                 continue
             available = (
-                source.subject.resources.current(cost.resource) - source.subject.resources.get(cost.resource).minimum
+                source.subject.resources.current(cost.resource)
+                - source.subject.resources.get(cost.resource).minimum
             )
             if prepaid_costs is None and available < amount:
                 errors.append(f"insufficient_resource:{cost.resource}")
@@ -554,7 +585,9 @@ class AbilityRuntime:
         actual_by_id = {source.target_id: source.subject}
         for target in targets:
             actual_by_id[target.target_id] = target.subject
-        staged_by_id = {target_id: _clone_subject(subject) for target_id, subject in actual_by_id.items()}
+        staged_by_id = {
+            target_id: _clone_subject(subject) for target_id, subject in actual_by_id.items()
+        }
 
         staged_source = staged_by_id[source.target_id]
         if prepaid_costs is None:
@@ -568,7 +601,9 @@ class AbilityRuntime:
         else:
             normalized_prepaid = tuple((str(r), float(a)) for r, a in prepaid_costs)
             if normalized_prepaid != tuple(evaluated_costs):
-                return AbilityExecutionResult(definition.ability_id, False, ("prepaid_cost_mismatch",))
+                return AbilityExecutionResult(
+                    definition.ability_id, False, ("prepaid_cost_mismatch",)
+                )
 
         effect_results = []
         for ability_effect in definition.effects:
@@ -588,7 +623,9 @@ class AbilityRuntime:
                     transform = None
                     if value_transform is not None:
 
-                        def transform(operation, value, _target_id=target.target_id, _reflected=reflected):
+                        def transform(
+                            operation, value, _target_id=target.target_id, _reflected=reflected
+                        ):
                             routed = value_transform(_target_id, operation, value)
                             if isinstance(routed, tuple):
                                 routed, back = routed

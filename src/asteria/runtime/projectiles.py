@@ -1,13 +1,20 @@
 """Projectiles in the scene (ASTERIA_SPEC §20 projectiles).
 
-Projectiles are not entities: their numbers live in a kernel ``ProjectileStore`` (``asteria.kernels``, python or numpy)
-so hundreds can fly at once; this module keeps the few per-shot facts (definition, owner, team, targets already hit).
+Projectiles are not entities: their numbers live in a kernel ``ProjectileStore``
+(``asteria.kernels``, python or numpy)
+so hundreds can fly at once; this module keeps the few per-shot facts (definition, owner, team,
+targets already hit).
 
-``ProjectileSystem.fire`` / ``fire_from`` launch shots (count, spread, angle and offset turned with the shooter's
-facing). Each update moves them (homing toward the nearest target in range, gravity), ends them on walls (or bounces /
-stops them, as authored), tests them against hurtboxes in one batched overlap test, and hands every hit to the combat
-system as a ``HitEvent`` whose ``hit_tag`` is the definition's attack — with the projectile's position and travel
-direction, so knockback pushes away from the shot. ``events`` reports fired / hit / ended for presentation and game
+``ProjectileSystem.fire`` / ``fire_from`` launch shots (count, spread, angle and offset turned
+with the shooter's
+facing). Each update moves them (homing toward the nearest target in range, gravity), ends them on
+walls (or bounces /
+stops them, as authored), tests them against hurtboxes in one batched overlap test, and hands
+every hit to the combat
+system as a ``HitEvent`` whose ``hit_tag`` is the definition's attack — with the projectile's
+position and travel
+direction, so knockback pushes away from the shot. ``events`` reports fired / hit / ended for
+presentation and game
 rules; ``views()`` gives what to draw.
 """
 
@@ -73,13 +80,17 @@ def _team_of(entity):
 class ProjectileSystem(System):
     order = 62  # after HitboxSystem (60), before CombatSystem (65)
 
-    def __init__(self, definitions, *, hits=None, combat=None, world=None, cell_size=64.0, paused=None):
-        self.definitions = definitions  # mapping projectile_id -> ProjectileDefinition (GameplayLibrary.projectiles)
+    def __init__(
+        self, definitions, *, hits=None, combat=None, world=None, cell_size=64.0, paused=None
+    ):
+        # mapping projectile_id -> ProjectileDefinition (GameplayLibrary.projectiles)
+        self.definitions = definitions
         self.hits = hits  # HitboxSystem: i-frames are respected
         self.combat = combat  # CombatSystem: hits are queued on combat.pending
         self.world = world  # callable() -> CollisionWorld for walls (None: no walls)
         self.cell_size = float(cell_size)
-        self.paused = paused  # callable(entity_id); paused("") is True while a hitstop freezes the whole scene
+        # callable(entity_id); paused("") is True while a hitstop freezes the whole scene
+        self.paused = paused
         self.store = kernels.active().ProjectileStore()
         self.shots: dict[int, _Shot] = {}
         self.events: list[ProjectileEvent] = []
@@ -92,8 +103,20 @@ class ProjectileSystem(System):
         return len(self.store)
 
     # -- firing ----------------------------------------------------------------------------------
-    def fire(self, projectile_id, x, y, direction=(1.0, 0.0), *, owner_id="", team="", count=1, spread=0.0):
-        """Launch ``count`` shots from ``(x, y)`` fanned over ``spread`` degrees around ``direction``; their uids."""
+    def fire(
+        self,
+        projectile_id,
+        x,
+        y,
+        direction=(1.0, 0.0),
+        *,
+        owner_id="",
+        team="",
+        count=1,
+        spread=0.0,
+    ):
+        """Launch ``count`` shots from ``(x, y)`` fanned over ``spread`` degrees around
+        ``direction``; their uids."""
         definition = self.definitions.get(str(projectile_id))
         if definition is None:
             raise ValueError(f"unknown projectile {projectile_id}")
@@ -124,14 +147,18 @@ class ProjectileSystem(System):
                 )
             )
             self.shots[uid] = _Shot(definition, str(owner_id), str(team), definition.pierce)
-            self._pending_events.append(ProjectileEvent("fired", uid, definition.projectile_id, x, y))
+            self._pending_events.append(
+                ProjectileEvent("fired", uid, definition.projectile_id, x, y)
+            )
             uids.append(uid)
         self.store.add(rows)
         return uids
 
     def fire_from(self, entity, payload):
-        """Fire from an entity (action timeline ``projectile`` cue): ``projectile_id``, ``count``, ``spread`` and
-        ``angle`` (degrees, authored for facing right), ``offset_x`` / ``offset_y`` (turned with the facing);
+        """Fire from an entity (action timeline ``projectile`` cue): ``projectile_id``, ``count``,
+        ``spread`` and
+        ``angle`` (degrees, authored for facing right), ``offset_x`` / ``offset_y`` (turned with
+        the facing);
         ``direction`` (a world vector) aims the shot instead of the facing."""
         payload = dict(payload)
         controller = entity.try_get(CharacterController2DComponent)
@@ -142,7 +169,9 @@ class ProjectileSystem(System):
             direction = (ax * cos(angle) - ay * sin(angle), ax * sin(angle) + ay * cos(angle))
         else:
             direction = turn_with_facing(cos(angle), sin(angle), facing)
-        ox, oy = turn_with_facing(float(payload.get("offset_x", 0.0)), float(payload.get("offset_y", 0.0)), facing)
+        ox, oy = turn_with_facing(
+            float(payload.get("offset_x", 0.0)), float(payload.get("offset_y", 0.0)), facing
+        )
         x, y = world_position(entity)
         count = int(payload.get("count", 1))
         if payload.get("count_stat") and self.combat is not None:  # e.g. a skill rank adding shots
@@ -185,8 +214,12 @@ class ProjectileSystem(System):
             return
         frame = None if self.hits is None else self.hits.frame_hurtboxes
         if frame is not None:
-            self.hits.frame_hurtboxes = None  # taken: fresh from this frame's HitboxSystem, nothing moved since
-        targets = frame if frame is not None else box_rows(scene, Hurtbox2DComponent)  # homing and hits
+            self.hits.frame_hurtboxes = (
+                None  # taken: fresh from this frame's HitboxSystem, nothing moved since
+            )
+        targets = (
+            frame if frame is not None else box_rows(scene, Hurtbox2DComponent)
+        )  # homing and hits
         uids = [int(u) for u in self.store.column("uid")]
         target_x = target_y = None
         if any(self.shots[u].definition.homing_turn > 0 for u in uids):
@@ -239,7 +272,11 @@ class ProjectileSystem(System):
                 continue
             best, reach = None, shot.definition.homing_range
             for entity_id, team, cx, cy in centres:
-                if entity_id == shot.owner_id or entity_id in shot.hit_ids or (shot.team and team == shot.team):
+                if (
+                    entity_id == shot.owner_id
+                    or entity_id in shot.hit_ids
+                    or (shot.team and team == shot.team)
+                ):
                     continue
                 distance = hypot(cx - xs[row], cy - ys[row])
                 if distance <= reach:
@@ -249,7 +286,9 @@ class ProjectileSystem(System):
         return target_x, target_y
 
     def _blocked(self, world, shot, x, y):
-        for entity_id in world.query_point(x, y, mask=shot.definition.wall_mask, exclude=(shot.owner_id,)):
+        for entity_id in world.query_point(
+            x, y, mask=shot.definition.wall_mask, exclude=(shot.owner_id,)
+        ):
             if not world.shapes[entity_id].one_way:
                 return True
         return False
@@ -261,9 +300,16 @@ class ProjectileSystem(System):
         xs, ys = self.store.column("x"), self.store.column("y")
         vxs, vys = self.store.column("vx"), self.store.column("vy")
         shapes, columns = world.solid_columns()
-        points = (xs, ys, xs, ys)  # each shot's centre as a zero-size box: one batched test against every wall
+        points = (
+            xs,
+            ys,
+            xs,
+            ys,
+        )  # each shot's centre as a zero-size box: one batched test against every wall
         inside = set()
-        for row, j in kernels.active().aabb_cross_pairs(points, columns, self.cell_size, touching=True):
+        for row, j in kernels.active().aabb_cross_pairs(
+            points, columns, self.cell_size, touching=True
+        ):
             if row in inside:
                 continue
             shot, shape = self.shots[uids[row]], shapes[j]
@@ -272,7 +318,10 @@ class ProjectileSystem(System):
                 and not shape.one_way
                 and shape.entity_id != shot.owner_id
                 and shot.definition.wall_mask & shape.layer_bit
-                and (shape.shape != "circle" or hypot(xs[row] - shape.cx, ys[row] - shape.cy) <= shape.radius)
+                and (
+                    shape.shape != "circle"
+                    or hypot(xs[row] - shape.cx, ys[row] - shape.cy) <= shape.radius
+                )
             ):
                 inside.add(row)
         for row in sorted(inside):
@@ -290,7 +339,11 @@ class ProjectileSystem(System):
                 if not hit_x and not hit_y:
                     hit_x = hit_y = True  # a corner
                 self.store.set_values(
-                    row, x=px, y=py, vx=-vxs[row] if hit_x else vxs[row], vy=-vys[row] if hit_y else vys[row]
+                    row,
+                    x=px,
+                    y=py,
+                    vx=-vxs[row] if hit_x else vxs[row],
+                    vy=-vys[row] if hit_y else vys[row],
                 )
                 shot.bounces += 1
                 if shot.definition.bounce_limit and shot.bounces > shot.definition.bounce_limit:
@@ -327,7 +380,14 @@ class ProjectileSystem(System):
                 )
             )
             self.events.append(
-                ProjectileEvent("hit", uids[row], definition.projectile_id, xs[row], ys[row], {"target_id": target.id})
+                ProjectileEvent(
+                    "hit",
+                    uids[row],
+                    definition.projectile_id,
+                    xs[row],
+                    ys[row],
+                    {"target_id": target.id},
+                )
             )
             if shot.pierce_left == 0:
                 ended[row] = "target"

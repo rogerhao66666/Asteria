@@ -1,4 +1,5 @@
-"""CB10 / EDT-13, EDT-14: record list multi-select, filter, context menu, clipboard shortcuts, batch edit (GUI)."""
+"""CB10 / EDT-13, EDT-14: record list multi-select, filter, context menu, clipboard shortcuts,
+batch edit (GUI)."""
 
 from pathlib import Path
 
@@ -38,12 +39,21 @@ def test_filter_multi_select_copy_paste_and_undo_in_the_record_list(window):
     family = _items_family(window)
     everything = list(family._ids)
     family.search.setText("leaf")
-    assert family._ids and all("leaf" in key for key in family._ids) and len(family._ids) < len(everything)
+    assert (
+        family._ids
+        and all("leaf" in key for key in family._ids)
+        and len(family._ids) < len(everything)
+    )
     family.search.clear()
     family.select_ids(everything[:2])
     assert family.selected_ids == everything[:2]
     labels = {label: enabled for label, _, enabled in family.context_actions() if label}
-    assert labels["Copy"] and labels["Cut"] and not labels["Paste"] and labels["Batch Edit 2 Records…"]
+    assert (
+        labels["Copy"]
+        and labels["Cut"]
+        and not labels["Paste"]
+        and labels["Batch Edit 2 Records…"]
+    )
     assert family.copy_selected()
     created = family.paste()
     assert created == [f"{x}_copy" for x in everything[:2]] and family.selected_ids == created

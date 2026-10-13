@@ -1,9 +1,14 @@
-"""The Octopath-style battle demo (reference_projects/octopath_demo), played through the battle command menu the
-player uses (BattleCommands: categories, cursor, boost, targets, ingredients) and, end to end, by key presses.
+"""The Octopath-style battle demo (reference_projects/octopath_demo), played through the battle
+command menu the
+player uses (BattleCommands: categories, cursor, boost, targets, ingredients) and, end to end, by
+key presses.
 
-Covers: travellers with a main and a secondary job and two weapon kinds; weaknesses revealed by hitting them;
-shields per enemy and Break; Boost repeating attacks and powering spells; divine skills that spend several boost
-points; a skill that needs two weapon kinds; skills of several hits and several damage types; giving boost
+Covers: travellers with a main and a secondary job and two weapon kinds; weaknesses revealed by
+hitting them;
+shields per enemy and Break; Boost repeating attacks and powering spells; divine skills that spend
+several boost
+points; a skill that needs two weapon kinds; skills of several hits and several damage types;
+giving boost
 points; calling a pet; concocting; poison that worsens, sleep, silence and attack up."""
 
 from pathlib import Path
@@ -29,7 +34,9 @@ def demo(monkeypatch):
         monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
         monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
     project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
-    runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), ROOT, width=960, height=540)
+    runtime = PlayableTestRuntime(
+        project, project.game_start.instantiate(project), ROOT, width=960, height=540
+    )
     runtime.open()
     if real_window.enabled():
         real_window.set_stage(runtime)
@@ -73,11 +80,20 @@ def test_travellers_have_two_jobs_two_weapons_and_their_skills(demo):
     progression = game.save.rpg_state.actor_progression
     assert progression["hero_01"].active_class_ids == ("warrior", "merchant")
     known = set(game.battle.member("hero_01").ability_ids)
-    assert {"attack_sword", "attack_spear", "level_slash", "twin_fang", "brand_of_valor", "donate_bp"} <= known
+    assert {
+        "attack_sword",
+        "attack_spear",
+        "level_slash",
+        "twin_fang",
+        "brand_of_valor",
+        "donate_bp",
+    } <= known
     assert {"attack_bow", "attack_dagger", "call_frost_lynx", "venom_strike"} <= set(
         game.battle.member("hero_02").ability_ids
     )
-    assert game.battle.battle_resources.current(BOSS, SHIELD) == 6  # each enemy its own shield count
+    assert (
+        game.battle.battle_resources.current(BOSS, SHIELD) == 6
+    )  # each enemy its own shield count
     assert game.battle.battle_resources.current("mender_wisp:2", SHIELD) == 3
 
 
@@ -123,8 +139,12 @@ def test_divine_skill_needs_three_boost_points_and_spends_them(demo):
     hero = "hero_01"
     _bp(game, hero, 2)
     row = next(r for r in commands.entries(hero) if r.action_id == "brand_of_valor")
-    assert not row.enabled and row.disabled_reason == "Needs 3 bp (has 2)" and "3BP" in row.cost_text
-    assert not _choose(commands, hero, "brand_of_valor") and commands.message == "Needs 3 bp (has 2)"
+    assert (
+        not row.enabled and row.disabled_reason == "Needs 3 bp (has 2)" and "3BP" in row.cost_text
+    )
+    assert (
+        not _choose(commands, hero, "brand_of_valor") and commands.message == "Needs 3 bp (has 2)"
+    )
     _bp(game, hero, 3)
     _choose(commands, hero, "brand_of_valor")
     assert _target(commands, hero, BOSS)
@@ -149,7 +169,16 @@ def test_one_spell_of_three_elements_reveals_three_weaknesses(demo):
     _target(commands, hero, BOSS)
     revealed = {label for label, known in game.weaknesses(BOSS) if known}
     assert {"ice", "lightning"} <= revealed and "fire" not in {l for l, _ in game.weaknesses(BOSS)}
-    assert len([e for e in game.battle_log if e.kind == "action" and e.ability_id == "elemental_barrage"]) == 3
+    assert (
+        len(
+            [
+                e
+                for e in game.battle_log
+                if e.kind == "action" and e.ability_id == "elemental_barrage"
+            ]
+        )
+        == 3
+    )
 
 
 def test_donate_boost_call_the_pet_and_concoct(demo):
@@ -184,7 +213,9 @@ def test_poison_worsens_sleep_skips_turns_and_attack_up_raises_damage(demo):
     losses = []
     for _ in range(3):
         before = pool.current(HP)
-        battle.battle_states.apply_trigger("rpg.battle.turn_ended", (battle.member("mender_wisp:2"),))
+        battle.battle_states.apply_trigger(
+            "rpg.battle.turn_ended", (battle.member("mender_wisp:2"),)
+        )
         losses.append(before - pool.current(HP))
     assert losses == [180, 360, 540]
     battle.battle_states.policies["sleep"] = battle.battle_states.policies["sleep"].__class__(
@@ -221,7 +252,7 @@ def test_the_demo_battle_is_won_with_the_keyboard(demo):
     assert runtime._victory and game.battle is None  # every enemy beaten through the command menu
 
 
-# -- the other kinds of enemy: each one asks for a different answer -----------------------------------------------
+# -- the other kinds of enemy: each one asks for a different answer -------------------------------
 
 
 @pytest.fixture
@@ -238,8 +269,12 @@ def encounter(monkeypatch):
     opened = []
 
     def start(encounter_id):
-        project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
-        runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), ROOT, width=960, height=540)
+        project = Project.load_json(
+            ROOT / "project.asteria.json", EditorDocument().component_registry
+        )
+        runtime = PlayableTestRuntime(
+            project, project.game_start.instantiate(project), ROOT, width=960, height=540
+        )
         runtime.open()
         if real_window.enabled():
             real_window.set_stage(runtime)
@@ -271,8 +306,13 @@ def test_every_new_encounter_has_battle_art_shields_and_weaknesses(encounter):
         assert adapter.visuals_enabled, adapter.fallback_reason
         for enemy in game.active_enemy_ids():
             kind = enemy.split(":", 1)[0]
-            assert adapter.screen.scene.visual_for(enemy).sprite_sheet_asset_id == f"battle.combatant.{kind}"
-            assert game.battle.battle_resources.current(enemy, SHIELD) >= 2 and game.weaknesses(enemy)
+            assert (
+                adapter.screen.scene.visual_for(enemy).sprite_sheet_asset_id
+                == f"battle.combatant.{kind}"
+            )
+            assert game.battle.battle_resources.current(enemy, SHIELD) >= 2 and game.weaknesses(
+                enemy
+            )
 
 
 def test_fire_heals_the_gel_slime_and_lightning_breaks_it(encounter):
@@ -339,7 +379,9 @@ def test_the_iron_samurai_resists_swords_and_needs_a_spear(encounter):
     _target(commands, "hero_01", samurai)
     spear = 14000 - _hp(game, samurai)
     assert spear == pytest.approx(sword / 0.5 * 1.3)  # resisted x0.5 against weak x1.3
-    assert game.battle.battle_resources.current(samurai, SHIELD) == shields - 1  # only the spear broke a shield
+    assert (
+        game.battle.battle_resources.current(samurai, SHIELD) == shields - 1
+    )  # only the spear broke a shield
 
 
 def test_field_enemies_wander_and_touching_one_starts_its_battle(encounter):
@@ -364,14 +406,18 @@ def test_field_enemies_wander_and_touching_one_starts_its_battle(encounter):
 
 
 @pytest.mark.parametrize("encounter_id", ["slime_pit", "old_crypt", "gazer_nest", "samurai_duel"])
-def test_each_new_battle_is_won_with_the_keyboard_and_every_enemy_move_works(encounter, encounter_id):
+def test_each_new_battle_is_won_with_the_keyboard_and_every_enemy_move_works(
+    encounter, encounter_id
+):
     runtime, game, _commands = encounter(encounter_id)
     failures = []
     run = game.run_enemy_turns
 
     def watched(*args, **kwargs):
         hero, log = run(*args, **kwargs)
-        failures.extend(f"{member}: {outcome}" for member, outcome in log if isinstance(outcome, Exception))
+        failures.extend(
+            f"{member}: {outcome}" for member, outcome in log if isinstance(outcome, Exception)
+        )
         return hero, log
 
     game.run_enemy_turns = watched
@@ -382,11 +428,15 @@ def test_each_new_battle_is_won_with_the_keyboard_and_every_enemy_move_works(enc
         if step > 600:  # let the enemies act for a while first, then finish
             for enemy in game.active_enemy_ids():
                 _hp(game, enemy, min(_hp(game, enemy), 300))
-        for hero in game.active_hero_ids():  # keep the party standing so every enemy move gets used
+        for (
+            hero
+        ) in game.active_hero_ids():  # keep the party standing so every enemy move gets used
             pool = game.battle.member(hero).subject.resources
             pool.set_current(HP, max(pool.current(HP), pool.maximum(HP) * 0.5))
         waiting = not runtime._battle_presentation.busy() and game.mode == "battle"
-        runtime._frame([pygame.event.Event(pygame.KEYDOWN, key=keys[step % 3])] if waiting else [], 0.05)
+        runtime._frame(
+            [pygame.event.Event(pygame.KEYDOWN, key=keys[step % 3])] if waiting else [], 0.05
+        )
     assert runtime._victory, runtime._last_action_name
     assert failures == []
 

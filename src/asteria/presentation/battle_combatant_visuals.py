@@ -160,7 +160,9 @@ class BattleCombatantVisualRuntime:
             current.small_portrait_asset_id,
             current.icon_asset_id,
             current.transform,
-            current.battlefield_visible if battlefield_visible is None else bool(battlefield_visible),
+            current.battlefield_visible
+            if battlefield_visible is None
+            else bool(battlefield_visible),
             current.hud_visible if hud_visible is None else bool(hud_visible),
             self.revision,
         )

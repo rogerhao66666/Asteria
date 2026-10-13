@@ -53,7 +53,10 @@ class BattlePortraitPartyTemplateProfile:
             raise TypeError("battlefield_zone must be BattlePortraitPartyZone")
         _id(self.portrait_hud_zone_id, "portrait_hud_zone_id")
         _id(self.battlefield_hud_zone_id, "battlefield_hud_zone_id")
-        if self.max_visible_battlefield_members is not None and int(self.max_visible_battlefield_members) <= 0:
+        if (
+            self.max_visible_battlefield_members is not None
+            and int(self.max_visible_battlefield_members) <= 0
+        ):
             raise ValueError("max_visible_battlefield_members must be > 0 or None")
 
 
@@ -92,7 +95,9 @@ class BattlePortraitPartyTemplateRuntime:
                     member_id,
                     battlefield_visible=not self.profile.hide_portrait_party_bodies,
                     hud_visible=True,
-                    battlefield_zone_id=None if self.profile.hide_portrait_party_bodies else "battle.party",
+                    battlefield_zone_id=None
+                    if self.profile.hide_portrait_party_bodies
+                    else "battle.party",
                     hud_zone_id=self.profile.portrait_hud_zone_id,
                 )
             )

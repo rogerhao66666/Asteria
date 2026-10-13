@@ -102,5 +102,7 @@ def test_unknown_or_unowned_ability_rejected():
 def test_party_side_names_are_project_defined():
     left = PartyMember("l", "heroes.guild", subject(), ability_ids=["hit"], initiative=3)
     right = PartyMember("r", "moon.court", subject(), ability_ids=["hit"], initiative=2)
-    battle = BattleRuntime([Party("heroes.guild", [left]), Party("moon.court", [right])], ability_runtime())
+    battle = BattleRuntime(
+        [Party("heroes.guild", [left]), Party("moon.court", [right])], ability_runtime()
+    )
     assert battle.next_actor().member_id == "l"

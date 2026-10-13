@@ -1,4 +1,5 @@
-"""ASTERIA_SPEC §20 (D22 A5): side-view feel — coyote time, jump buffer, short hops, drop-through platforms,
+"""ASTERIA_SPEC §20 (D22 A5): side-view feel — coyote time, jump buffer, short hops, drop-through
+platforms,
 slopes and ladders; every option defaults to the earlier behaviour."""
 
 import pytest
@@ -143,7 +144,9 @@ def test_walking_up_and_down_a_slope_follows_the_surface():
     for _ in range(90):
         s.scene.update(DT)
         grounded += s.c().grounded
-    assert s._hero.get(Transform).x < 20 and grounded > 80  # walked down without bouncing into the air
+    assert (
+        s._hero.get(Transform).x < 20 and grounded > 80
+    )  # walked down without bouncing into the air
 
 
 def test_ladders_are_climbed_without_gravity_and_never_block():
@@ -173,7 +176,8 @@ def test_old_controllers_and_colliders_load_with_the_earlier_behaviour():
     registry = register_character_components(ComponentRegistry())
     registry.register(Collider2DComponent)
     c = deserialize_component(
-        {"type": "asteria.CharacterController2D", "version": 2, "fields": {"mode": "side"}}, registry
+        {"type": "asteria.CharacterController2D", "version": 2, "fields": {"mode": "side"}},
+        registry,
     )
     assert (c.coyote_time, c.jump_buffer, c.jump_cut, c.drop_through) == (0.0, 0.0, 1.0, False)
     collider = deserialize_component(

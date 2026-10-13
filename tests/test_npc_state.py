@@ -1,4 +1,5 @@
-"""WLD-02 (ASTERIA_SPEC §26): NPC state model — visibility, alive, mood, stage, flags, location; saved."""
+"""WLD-02 (ASTERIA_SPEC §26): NPC state model — visibility, alive, mood, stage, flags, location;
+saved."""
 
 from asteria.core import Entity, Scene, Transform
 from asteria.events import EventInstruction, EventProgram
@@ -61,7 +62,10 @@ def test_events_change_npc_state_hide_and_branch_on_it(runtime):
     game.update_events(0.0)
     assert not game.event_errors and game.save.event_context.get_switch("mira_stage_two")
     assert not mira.enabled  # hidden NPC: not drawn, not interactable (scene queries skip it)
-    assert game.world.npc_value("mira", "mood") == "happy" and game.world.npc_value("mira", "flag.met") is True
+    assert (
+        game.world.npc_value("mira", "mood") == "happy"
+        and game.world.npc_value("mira", "flag.met") is True
+    )
 
 
 def test_relocated_npc_appears_in_its_new_scene_and_state_survives_save(runtime):
@@ -76,11 +80,18 @@ def test_relocated_npc_appears_in_its_new_scene_and_state_survives_save(runtime)
     game.move_npc("mira", inn.id, 33.0, 4.0)
     assert not mira_town.enabled  # she left town
     game.transfer_player(inn.id, 0.0, 0.0)
-    assert mira_inn.enabled and (mira_inn.get(Transform).x, mira_inn.get(Transform).y) == (33.0, 4.0)
+    assert mira_inn.enabled and (mira_inn.get(Transform).x, mira_inn.get(Transform).y) == (
+        33.0,
+        4.0,
+    )
     game.set_position("Mira", 40.0, 5.0)  # e.g. a cutscene MOVE
     game.set_facing("Mira", "left")
     game.sync_world_state()
     data = game.save.to_data()
     restored = GameSessionRuntime(game.project, GameRuntimeSave.from_data(data, game.project))
     state = restored.world.npcs["mira"]
-    assert state["scene_id"] == inn.id and state["position"] == [40.0, 5.0] and state["facing"] == "left"
+    assert (
+        state["scene_id"] == inn.id
+        and state["position"] == [40.0, 5.0]
+        and state["facing"] == "left"
+    )

@@ -129,8 +129,12 @@ class CharacterScreenProfile:
         ability_labels=None,
         progression_labels=None,
     ):
-        section_order = tuple(dict.fromkeys(str(x).strip() for x in section_order if str(x).strip()))
-        hidden_sections = tuple(sorted({str(x).strip() for x in hidden_sections if str(x).strip()}))
+        section_order = tuple(
+            dict.fromkeys(str(x).strip() for x in section_order if str(x).strip())
+        )
+        hidden_sections = tuple(
+            sorted({str(x).strip() for x in hidden_sections if str(x).strip()})
+        )
         if not section_order:
             raise ValueError("character screen requires at least one section")
         object.__setattr__(self, "section_order", section_order)
@@ -278,11 +282,16 @@ class CharacterScreenRuntime:
                 items = []
                 for item in raw.get("equipped", {}).get(slot_id, ()):
                     equipment_id = str(item["equipment_id"])
-                    attachments = tuple(str(v) for _, v in sorted(dict(item.get("attachments", {})).items()))
+                    attachments = tuple(
+                        str(v) for _, v in sorted(dict(item.get("attachments", {})).items())
+                    )
                     growth = item.get("growth")
                     growth_id = None
                     if isinstance(growth, dict):
-                        growth_id = str(growth.get("growth_id") or growth.get("definition_id") or "") or None
+                        growth_id = (
+                            str(growth.get("growth_id") or growth.get("definition_id") or "")
+                            or None
+                        )
                     items.append(
                         CharacterScreenEquipmentItemView(
                             instance_id=str(item["instance_id"]),
@@ -304,7 +313,9 @@ class CharacterScreenRuntime:
 
         source_by_ability = {}
         for grant in resolved_build.ability_grants:
-            source_by_ability.setdefault(str(grant.ability_id), []).append(f"{grant.source_kind}:{grant.source_id}")
+            source_by_ability.setdefault(str(grant.ability_id), []).append(
+                f"{grant.source_kind}:{grant.source_id}"
+            )
         abilities = tuple(
             CharacterScreenAbilityView(
                 ability_id=ability_id,
@@ -335,7 +346,8 @@ class CharacterScreenRuntime:
             "equipment": len(equipment),
             "abilities": len(abilities),
             "progression": len(progression_views),
-            "status": len(tuple(resolved_build.tags.values())) + len(resolved_build.active_passives),
+            "status": len(tuple(resolved_build.tags.values()))
+            + len(resolved_build.active_passives),
         }
         labels = {
             "overview": "Overview",
@@ -431,7 +443,9 @@ class CharacterScreenRuntime:
                 )
                 for x in raw.get("abilities", ())
             ),
-            progression=tuple(CharacterScreenProgressionView(**x) for x in raw.get("progression", ())),
+            progression=tuple(
+                CharacterScreenProgressionView(**x) for x in raw.get("progression", ())
+            ),
             tags=tuple(raw.get("tags", ())),
             capabilities=tuple(raw.get("capabilities", ())),
             class_assignment_ids=tuple(raw.get("class_assignment_ids", ())),
@@ -460,7 +474,13 @@ class CharacterScreenRuntime:
                     for x in self._view.sections
                 ],
                 "stats": [
-                    {"stat_id": x.stat_id, "label": x.label, "value": x.value, "group": x.group, "priority": x.priority}
+                    {
+                        "stat_id": x.stat_id,
+                        "label": x.label,
+                        "value": x.value,
+                        "group": x.group,
+                        "priority": x.priority,
+                    }
                     for x in self._view.stats
                 ],
                 "resources": [

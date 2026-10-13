@@ -57,7 +57,11 @@ def _ability(ability_id, delta):
                 AbilityTargetMode.SELECTED,
                 Effect(
                     f"{ability_id}.effect",
-                    (EffectOperation(EffectOperationKind.RESOURCE_DELTA, "vitality", float(delta)),),
+                    (
+                        EffectOperation(
+                            EffectOperationKind.RESOURCE_DELTA, "vitality", float(delta)
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -148,7 +152,9 @@ class PlayableBattlePartyHarness:
             sorted(
                 state.member_id
                 for state in self.battle.combatants.states()
-                if state.present and state.active and self.battle.member(state.member_id).side == "side.alpha"
+                if state.present
+                and state.active
+                and self.battle.member(state.member_id).side == "side.alpha"
             )
         )
 
@@ -157,7 +163,9 @@ class PlayableBattlePartyHarness:
             sorted(
                 state.member_id
                 for state in self.battle.combatants.states()
-                if state.present and not state.active and self.battle.member(state.member_id).side == "side.alpha"
+                if state.present
+                and not state.active
+                and self.battle.member(state.member_id).side == "side.alpha"
             )
         )
 

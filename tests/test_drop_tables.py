@@ -29,7 +29,10 @@ def test_guaranteed_drops_switch_gates_and_quantities():
     table = DropTable(
         "boss",
         rolls=0,
-        guaranteed=(DropEntry("emblem", minimum=2, maximum=2), DropEntry("key", required_switch="act2")),
+        guaranteed=(
+            DropEntry("emblem", minimum=2, maximum=2),
+            DropEntry("key", required_switch="act2"),
+        ),
     )
     rng = random.Random(0)
     assert roll_drop_table(table, rng) == {"emblem": 2}
@@ -54,7 +57,10 @@ def test_pity_guarantees_the_item_after_misses_and_resets():
 def test_luck_raises_only_non_common_weights():
     table = DropTable(
         "t",
-        entries=(DropEntry("common_item", weight=1.0), DropEntry("rare_item", weight=1.0, rarity="rare")),
+        entries=(
+            DropEntry("common_item", weight=1.0),
+            DropEntry("rare_item", weight=1.0, rarity="rare"),
+        ),
         luck_weight_bonus=1.0,
     )
     rng = random.Random(3)
@@ -80,7 +86,9 @@ def test_victory_rolls_the_enemy_drop_table_and_pity_survives_save_and_load(runt
         )
     )
     wisp = db.enemies["mender_wisp"]
-    db.enemies["mender_wisp"] = replace(wisp, reward=replace(wisp.reward, drop_table_id="wisp_drops"))
+    db.enemies["mender_wisp"] = replace(
+        wisp, reward=replace(wisp.reward, drop_table_id="wisp_drops")
+    )
     game.project.validate()
     inventory = game.save.rpg_state.inventory
 
@@ -112,23 +120,32 @@ def test_drop_tables_are_edited_in_the_game_systems_forms_and_validated():
     from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
     from asteria.project import Project
 
-    ref = Path(__file__).parents[1] / "reference_projects/complex_reference_rpg/project.asteria.json"
+    ref = (
+        Path(__file__).parents[1] / "reference_projects/complex_reference_rpg/project.asteria.json"
+    )
     document = EditorDocument()
     document.set_project(Project.load_json(ref, document.component_registry), file_path=ref)
     api = GameSystemsAuthoringController(document)
     api.create_new("drop_tables", "slime_drops")
     data = api.form_data("drop_tables", "slime_drops")
     data["entries"] = [
-        {"item_id": "fire_dust", "weight": 3, "minimum": 1, "maximum": 2, "rarity": "common", "required_switch": ""}
+        {
+            "item_id": "fire_dust",
+            "weight": 3,
+            "minimum": 1,
+            "maximum": 2,
+            "rarity": "common",
+            "required_switch": "",
+        }
     ]
     data["pity"] = [{"item_id": "focus_stone", "after_misses": 5}]
     api.edit("drop_tables", "slime_drops", api.decode("drop_tables", data))
     table = document.project.rpg_database.drop_tables["slime_drops"]
     assert table.entries[0].weight == 3 and table.pity[0].after_misses == 5
     assert (
-        Project.from_data(document.project.to_data(), document.component_registry).rpg_database.drop_tables[
-            "slime_drops"
-        ]
+        Project.from_data(
+            document.project.to_data(), document.component_registry
+        ).rpg_database.drop_tables["slime_drops"]
         == table
     )
     data["entries"][0]["item_id"] = "missing_item"

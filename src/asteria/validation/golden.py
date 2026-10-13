@@ -120,13 +120,15 @@ def _grid_clip(name, frames, durations, loop, events=()):
 
     event_map = dict(events)
     keyframes = [
-        SpriteKeyframe(int(f), float(d), tuple(event_map.get(i, ()))) for i, (f, d) in enumerate(zip(frames, durations))
+        SpriteKeyframe(int(f), float(d), tuple(event_map.get(i, ())))
+        for i, (f, d) in enumerate(zip(frames, durations))
     ]
     return SpriteClip(name, keyframes, loop)
 
 
 def _play(clip):
-    """Play ``clip`` at 60 Hz for one cycle (two for loops); returns (frame changes, events with times)."""
+    """Play ``clip`` at 60 Hz for one cycle (two for loops); returns (frame changes, events with
+    times)."""
     from asteria.runtime.animation import AnimatorState
 
     duration = sum(k.duration for k in clip.keyframes)
@@ -183,7 +185,9 @@ def _sprite_source(asset, manifest):
     tile_size = getattr(asset, "tile_size", None)
     if tile_size is not None:
         return manifest.source, tuple(tile_size)
-    for item in list(getattr(asset, "animations", ()) or ()) + list(getattr(asset, "variants", ()) or ()):
+    for item in list(getattr(asset, "animations", ()) or ()) + list(
+        getattr(asset, "variants", ()) or ()
+    ):
         clip = getattr(item, "clip", None)
         if clip is not None:
             return manifest.source, tuple(clip.frame_size)
@@ -229,7 +233,11 @@ def run_golden_suite(root):
     for asset_id in sorted(by_id):
         item = by_id[asset_id]
         manifest, asset = item.manifest, item.asset
-        summary = {"kind": manifest.kind, "dependencies": list(manifest.dependencies), "tags": list(manifest.tags)}
+        summary = {
+            "kind": manifest.kind,
+            "dependencies": list(manifest.dependencies),
+            "tags": list(manifest.tags),
+        }
         report.ran(asset_id, "import")
 
         # 2. metadata
@@ -247,7 +255,9 @@ def run_golden_suite(root):
         source = _sprite_source(asset, manifest)
         dims = {}
         for uri in dict.fromkeys(
-            [manifest.source] + [v.image_uri for v in getattr(asset, "visuals", ())] + [getattr(asset, "image", "")]
+            [manifest.source]
+            + [v.image_uri for v in getattr(asset, "visuals", ())]
+            + [getattr(asset, "image", "")]
         ):
             if uri and uri.endswith(".png"):
                 size = image_size(uri)
@@ -267,11 +277,15 @@ def run_golden_suite(root):
         tileset_size = getattr(asset, "image_size", None)
         if tileset_size is not None and image_size(manifest.source) != tuple(tileset_size):
             report.fail(
-                asset_id, "dimensions", f"tileset image is {image_size(manifest.source)}, declared {tileset_size}"
+                asset_id,
+                "dimensions",
+                f"tileset image is {image_size(manifest.source)}, declared {tileset_size}",
             )
         for visual in getattr(asset, "visuals", ()):
             if image_size(visual.image_uri) != tuple(visual.size):
-                report.fail(asset_id, "dimensions", f"prop visual {visual.image_uri} size mismatch")
+                report.fail(
+                    asset_id, "dimensions", f"prop visual {visual.image_uri} size mismatch"
+                )
         summary["dimensions"] = dims
 
         # 4. reload
@@ -288,7 +302,11 @@ def run_golden_suite(root):
         refs = _payload_references(asset)
         undeclared = [r for r in refs if r not in manifest.dependencies]
         if undeclared:
-            report.fail(asset_id, "references", f"payload references not declared as dependencies: {undeclared}")
+            report.fail(
+                asset_id,
+                "references",
+                f"payload references not declared as dependencies: {undeclared}",
+            )
         summary["references"] = list(refs)
         clips = {}
         try:
@@ -341,7 +359,9 @@ def run_golden_suite(root):
                 files = package_assets(root, documents, scene_id, tmp)
                 reloaded = _store(tmp).load(tmp)
                 if not reloaded.ok:
-                    report.fail(scene_id, "package", [f"{i.code}: {i.message}" for i in reloaded.issues])
+                    report.fail(
+                        scene_id, "package", [f"{i.code}: {i.message}" for i in reloaded.issues]
+                    )
                 expected = {"golden_scene", *by_id[scene_id].manifest.dependencies}
                 got = {x.manifest.asset_id for x in reloaded.loaded}
                 if not expected <= got:

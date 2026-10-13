@@ -17,7 +17,9 @@ def progression_result():
                 "hero_level",
                 milestones=[
                     ProgressionMilestone(1, 0),
-                    ProgressionMilestone(2, 100, granted_abilities=("slash_plus",), granted_tags=("veteran",)),
+                    ProgressionMilestone(
+                        2, 100, granted_abilities=("slash_plus",), granted_tags=("veteran",)
+                    ),
                 ],
             )
         ],
@@ -35,7 +37,9 @@ def test_result_projection_mirrors_outcome_and_applied_rewards():
         progression_labels={"hero_level": "Level"},
         item_labels={"potion": "Potion"},
     )
-    view = BattleResultPresentationRuntime(profile).present(outcome, reward, perspective_side_ids=("heroes",))
+    view = BattleResultPresentationRuntime(profile).present(
+        outcome, reward, perspective_side_ids=("heroes",)
+    )
     assert view.headline == "Victory"
     assert view.winning_sides == ("heroes",)
     assert view.currencies[0].label == "Gold" and view.currencies[0].amount == 50
@@ -57,11 +61,15 @@ def test_escape_and_defeat_headlines_are_project_owned():
     profile = BattleResultProfile(defeat_label="Wiped", escape_label="Retreated")
     runtime = BattleResultPresentationRuntime(profile)
     assert (
-        runtime.present(BattleOutcome(True, (), ("heroes",), (), ()), perspective_side_ids=("heroes",)).headline
+        runtime.present(
+            BattleOutcome(True, (), ("heroes",), (), ()), perspective_side_ids=("heroes",)
+        ).headline
         == "Wiped"
     )
     assert (
-        runtime.present(BattleOutcome(True, (), (), ("heroes",), ()), perspective_side_ids=("heroes",)).headline
+        runtime.present(
+            BattleOutcome(True, (), (), ("heroes",), ()), perspective_side_ids=("heroes",)
+        ).headline
         == "Retreated"
     )
 
@@ -69,7 +77,9 @@ def test_escape_and_defeat_headlines_are_project_owned():
 def test_snapshot_restore_roundtrip():
     outcome = BattleOutcome(True, ("heroes",), ("enemies",), (), ())
     reward = RewardApplicationResult({"gold": 5}, (), {"potion": 1})
-    runtime = BattleResultPresentationRuntime(BattleResultProfile(currency_labels={"gold": "Gold"}))
+    runtime = BattleResultPresentationRuntime(
+        BattleResultProfile(currency_labels={"gold": "Gold"})
+    )
     runtime.present(outcome, reward, perspective_side_ids=("heroes",))
     snapshot = runtime.snapshot()
     restored = BattleResultPresentationRuntime()

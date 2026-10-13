@@ -45,7 +45,9 @@ class EditorAssetImportService:
 
     def import_package(self, source_root, *, destination="", collision="error"):
         imp = self.importer.import_tree(source_root, destination=destination, collision=collision)
-        issues = tuple(EditorImportIssue("import", x.code, x.message, x.path, x.severity) for x in imp.issues)
+        issues = tuple(
+            EditorImportIssue("import", x.code, x.message, x.path, x.severity) for x in imp.issues
+        )
         if not imp.ok:
             return EditorAssetImportResult(imp, None, issues)
         rec = self.reconciler.reconcile(self.importer.assets_root)

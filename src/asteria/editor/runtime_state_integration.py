@@ -26,7 +26,13 @@ class RuntimeStateIntegrationController:
         return self.document.project
 
     def new_save(
-        self, *, scene_id=None, player_entity_id="", player_facing="down", player_position=None, party_actor_ids=()
+        self,
+        *,
+        scene_id=None,
+        player_entity_id="",
+        player_facing="down",
+        player_position=None,
+        party_actor_ids=(),
     ):
         p = self.project
         scene_id = scene_id or p.startup_scene_id

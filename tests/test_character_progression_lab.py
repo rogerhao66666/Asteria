@@ -9,7 +9,10 @@ def test_lab_starts_with_clean_allocations_and_primary_job():
     assert snap.level_rank == 1
     assert snap.experience_total == 0
     assert snap.allocated_nodes == ()
-    assert any(role == "primary" and class_id == "vanguard" for _, role, class_id in snap.class_assignments)
+    assert any(
+        role == "primary" and class_id == "vanguard"
+        for _, role, class_id in snap.class_assignments
+    )
 
 
 def test_award_experience_advances_canonical_progression_rank():
@@ -28,7 +31,10 @@ def test_locked_job_cannot_be_equipped_until_project_unlocks_it():
         lab.set_job("secondary", "alchemist")
     lab.unlock_job("alchemist")
     lab.set_job("secondary", "alchemist")
-    assert any(x.role == "secondary" and x.class_id == "alchemist" for x in lab.scenario.actor.class_assignments)
+    assert any(
+        x.role == "secondary" and x.class_id == "alchemist"
+        for x in lab.scenario.actor.class_assignments
+    )
 
 
 def test_switching_primary_job_rebuilds_canonical_actor_contributions():

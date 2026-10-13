@@ -22,7 +22,9 @@ def C(a, k):
 
 
 def resolved(asset, ctype="asset"):
-    b = SceneAssetBinding("o", ctype, SceneAssetRef(asset.canonical.asset_id, asset.canonical.kind))
+    b = SceneAssetBinding(
+        "o", ctype, SceneAssetRef(asset.canonical.asset_id, asset.canonical.kind)
+    )
     return ResolvedSceneAsset(b, asset)
 
 
@@ -88,7 +90,9 @@ def test_factory_receives_request_context():
 def test_resource_dispose():
     log = []
     ar = install_builtin_runtime_adapters(RuntimeAdapterRegistry())
-    b = make_resource_aware_binder(ar, lambda q, c: RuntimeResource("h", lambda: log.append("free")))
+    b = make_resource_aware_binder(
+        ar, lambda q, c: RuntimeResource("h", lambda: log.append("free"))
+    )
     x = b(resolved(audio()))
     x.release()
     assert log == ["free"]

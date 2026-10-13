@@ -1,8 +1,12 @@
-"""Particle effect authoring (VFX-01): create, edit, duplicate and delete ``particle_effect`` assets, undoably.
+"""Particle effect authoring (VFX-01): create, edit, duplicate and delete ``particle_effect``
+assets, undoably.
 
-Every edit replaces the whole asset through the document's command stack, so Undo / Redo restore exactly
-what the runtime reads (``asteria.presentation.particles``). Nothing is refused for being "too much": any
-number the definition accepts can be authored. Deleting an effect that is still used is allowed; ``usages``
+Every edit replaces the whole asset through the document's command stack, so Undo / Redo restore
+exactly
+what the runtime reads (``asteria.presentation.particles``). Nothing is refused for being "too
+much": any
+number the definition accepts can be authored. Deleting an effect that is still used is allowed;
+``usages``
 lists where, so the editor can say so first.
 """
 
@@ -78,7 +82,9 @@ class ParticleAuthoringController:
         if preset_name not in PRESETS:
             raise ParticleAuthoringError(f"unknown preset {preset_name}")
         asset = particle_effect_asset(preset(preset_name, effect_id))
-        self.document.execute(_AddAssetCommand(self.project.assets, asset, f"New particle effect {effect_id}"))
+        self.document.execute(
+            _AddAssetCommand(self.project.assets, asset, f"New particle effect {effect_id}")
+        )
         return effect_id
 
     def update(self, effect_id, definition):
@@ -86,11 +92,15 @@ class ParticleAuthoringController:
             raise ParticleAuthoringError("definition must be a ParticleEffectDefinition")
         before = self._asset(effect_id)
         definition = definition.replace(effect_id=effect_id)
-        after = particle_effect_asset(definition, tags=tuple(sorted(before.tags)) or ("vfx", "particles"))
+        after = particle_effect_asset(
+            definition, tags=tuple(sorted(before.tags)) or ("vfx", "particles")
+        )
         if after == before:
             return False
         self.document.execute(
-            _ReplaceAssetCommand(self.project.assets, before, after, f"Edit particle effect {effect_id}")
+            _ReplaceAssetCommand(
+                self.project.assets, before, after, f"Edit particle effect {effect_id}"
+            )
         )
         return True
 
@@ -102,10 +112,13 @@ class ParticleAuthoringController:
 
     def delete(self, effect_id):
         asset = self._asset(effect_id)
-        self.document.execute(_RemoveAssetCommand(self.project.assets, asset, f"Delete particle effect {effect_id}"))
+        self.document.execute(
+            _RemoveAssetCommand(self.project.assets, asset, f"Delete particle effect {effect_id}")
+        )
 
     def usages(self, effect_id):
-        """Where the effect is used: field emitters, event programs (PLAY_VFX) and action timeline beats."""
+        """Where the effect is used: field emitters, event programs (PLAY_VFX) and action timeline
+        beats."""
         from asteria.runtime.environment2d import ParticleEmitter2DComponent
 
         project, found = self.project, []
@@ -117,7 +130,10 @@ class ParticleAuthoringController:
         for program_id in project.event_programs.ids():
             for instruction in project.event_programs.get(program_id).instructions:
                 args = instruction.args.get("args", {}) if instruction.opcode == "WORLD" else {}
-                if instruction.args.get("command") == "PLAY_VFX" and args.get("asset_id") == effect_id:
+                if (
+                    instruction.args.get("command") == "PLAY_VFX"
+                    and args.get("asset_id") == effect_id
+                ):
                     found.append(f"event {program_id}")
         library = project.battle_presentation_library
         for sequence_id in library.ids("motion_sequences"):

@@ -29,7 +29,16 @@ class Report:
 
 class StarterPackUsabilityGate:
     CLIPS = {"idle", "walk", "run", "attack", "hurt", "death"}
-    TYPES = {"character_animation", "monster", "vfx", "tileset", "prop", "icon", "portrait", "background"}
+    TYPES = {
+        "character_animation",
+        "monster",
+        "vfx",
+        "tileset",
+        "prop",
+        "icon",
+        "portrait",
+        "background",
+    }
 
     def validate(self, root: Path, semantic: int, reconciled: int, registered: int):
         issues = []
@@ -43,7 +52,9 @@ class StarterPackUsabilityGate:
         if n == 0:
             issues.append(Issue("empty_package", "No asset documents discovered"))
         if n and not n == semantic == reconciled == registered:
-            issues.append(Issue("asset_count_mismatch", f"{n}/{semantic}/{reconciled}/{registered}"))
+            issues.append(
+                Issue("asset_count_mismatch", f"{n}/{semantic}/{reconciled}/{registered}")
+            )
         types = set()
         clips = set()
         for d in docs:

@@ -26,7 +26,10 @@ def test_shared_staging_context_is_injected_without_mutating_original_event():
                 "slash",
                 0,
                 "vfx",
-                {"effect_id": "slash", "staging": {"group_id": "impact:1", "layer": 4, "intensity": 1.5}},
+                {
+                    "effect_id": "slash",
+                    "staging": {"group_id": "impact:1", "layer": 4, "intensity": 1.5},
+                },
             ),
         )
     )[0]
@@ -120,7 +123,9 @@ def test_profile_and_runtime_snapshot_roundtrip():
 
 def test_layering_runtime_never_changes_non_timeline_gameplay_semantics():
     coordinator = BattlePresentationCoordinator(_scene())
-    event = coordinator.push_custom("already.resolved", payload={"damage": 123, "target_valid": True})
+    event = coordinator.push_custom(
+        "already.resolved", payload={"damage": 123, "target_valid": True}
+    )
     runtime = BattlePresentationLayeringRuntime()
     processed = runtime.process((event,))[0]
     assert processed == event

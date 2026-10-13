@@ -59,7 +59,11 @@ def ai():
         "boss_ai",
         rules=(
             AIDecisionRule(
-                "basic", "ability", payload={"ability_id": "slash"}, target_selector="first_opponent", priority=1
+                "basic",
+                "ability",
+                payload={"ability_id": "slash"},
+                target_selector="first_opponent",
+                priority=1,
             ),
             AIDecisionRule(
                 "burn",
@@ -67,7 +71,10 @@ def ai():
                 payload={"ability_id": "fire"},
                 target_selector="all_opponents",
                 conditions=(
-                    AICondition("resource_ratio", params={"resource_id": "vitality", "op": "<=", "value": 0.5}),
+                    AICondition(
+                        "resource_ratio",
+                        params={"resource_id": "vitality", "op": "<=", "value": 0.5},
+                    ),
                 ),
                 priority=10,
             ),
@@ -77,7 +84,10 @@ def ai():
             BossPhaseDefinition(
                 "phase2",
                 conditions=(
-                    AICondition("resource_ratio", params={"resource_id": "vitality", "op": "<=", "value": 0.5}),
+                    AICondition(
+                        "resource_ratio",
+                        params={"resource_id": "vitality", "op": "<=", "value": 0.5},
+                    ),
                 ),
                 decision_rule_ids=("burn", "basic"),
                 priority=10,
@@ -105,7 +115,9 @@ def test_unknown_enemy_ability_and_reward_refs_rejected():
     with pytest.raises(RpgEnemyEncounterAuthoringError):
         c.create_enemy(EnemyDefinition("bad", abilities=("missing",)))
     with pytest.raises(RpgEnemyEncounterAuthoringError):
-        c.create_enemy(EnemyDefinition("bad2", reward=RewardDefinition(loot=(LootEntry("missing"),))))
+        c.create_enemy(
+            EnemyDefinition("bad2", reward=RewardDefinition(loot=(LootEntry("missing"),)))
+        )
 
 
 def test_encounter_composition_count_weight_and_tags():
@@ -115,7 +127,10 @@ def test_encounter_composition_count_weight_and_tags():
     enc = c.create_encounter(
         EncounterDefinition(
             "boss_room",
-            members=(EncounterMember("boss", count=1, weight=1.0), EncounterMember("add", count=3, weight=0.5)),
+            members=(
+                EncounterMember("boss", count=1, weight=1.0),
+                EncounterMember("add", count=3, weight=0.5),
+            ),
             tags=("boss", "scripted"),
         )
     )
@@ -134,7 +149,9 @@ def test_ai_rules_phases_conditions_and_targets_are_authorable():
 
 def test_ai_ability_payload_reference_is_validated():
     _, _, c = make()
-    bad = EnemyAIDefinition("bad", rules=(AIDecisionRule("r", "ability", payload={"ability_id": "missing"}),))
+    bad = EnemyAIDefinition(
+        "bad", rules=(AIDecisionRule("r", "ability", payload={"ability_id": "missing"}),)
+    )
     with pytest.raises(RpgEnemyEncounterAuthoringError):
         c.create_ai(bad)
 

@@ -180,7 +180,9 @@ class ModifierSet:
             raise TypeError("base must be StatBlock")
         names = set(base.names())
         names.update(m.stat for m in self._modifiers.values())
-        return StatBlock({name: self.evaluate(name, base.get(name), tags=tags) for name in sorted(names)})
+        return StatBlock(
+            {name: self.evaluate(name, base.get(name), tags=tags) for name in sorted(names)}
+        )
 
     def to_data(self):
         return {

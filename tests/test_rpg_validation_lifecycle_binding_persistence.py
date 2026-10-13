@@ -55,7 +55,9 @@ def test_lifecycle_binding_roundtrip_in_project_v5():
     p = project()
     p.event_programs.register("after_anything", EventProgram([EventInstruction("END")]))
     p.lifecycle_event_bindings.append(
-        LifecycleEventBinding("custom.any.workflow.finished", "after_anything", source_entity_id="source")
+        LifecycleEventBinding(
+            "custom.any.workflow.finished", "after_anything", source_entity_id="source"
+        )
     )
     raw = p.to_data()
     assert raw["version"] == 11

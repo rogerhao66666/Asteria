@@ -1,7 +1,10 @@
-"""Particle Effects editor (VFX-01): the project's particle effects, every emitter setting, a live preview.
+"""Particle Effects editor (VFX-01): the project's particle effects, every emitter setting, a live
+preview.
 
-The preview runs the same ``ParticleSystem`` the game runs, with the form's current values, so a change
-shows at once; Apply records it (one undo step). New effects start from a preset (fire, smoke, sparkle,
+The preview runs the same ``ParticleSystem`` the game runs, with the form's current values, so a
+change
+shows at once; Apply records it (one undo step). New effects start from a preset (fire, smoke,
+sparkle,
 heal, poison, explosion, rain splash) and every value can then be changed.
 """
 
@@ -99,7 +102,9 @@ class _ColorButton(QPushButton):
         self.setStyleSheet(f"background: rgba({r},{g},{b},{max(a, 60)}); color: {text};")
 
     def _pick(self):
-        color = QColorDialog.getColor(QColor(*self.rgba), self, "Particle colour", QColorDialog.ShowAlphaChannel)
+        color = QColorDialog.getColor(
+            QColor(*self.rgba), self, "Particle colour", QColorDialog.ShowAlphaChannel
+        )
         if color.isValid():
             self.set_rgba((color.red(), color.green(), color.blue(), color.alpha()))
 
@@ -112,7 +117,8 @@ class _ColorButton(QPushButton):
 
 
 class ParticlePreview(QWidget):
-    """Runs a ParticleSystem at 30 fps and paints it (alpha or additive) around the emitter point."""
+    """Runs a ParticleSystem at 30 fps and paints it (alpha or additive) around the emitter
+    point."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -165,7 +171,9 @@ class ParticlePreview(QWidget):
                 painter.translate(x, y)
                 painter.rotate(p.angle)
                 side = r * 2
-                painter.drawPixmap(int(-side / 2), int(-side / 2), int(side), int(side), self.image)
+                painter.drawPixmap(
+                    int(-side / 2), int(-side / 2), int(side), int(side), self.image
+                )
                 painter.restore()
             elif d.particle == "spark":
                 a = math.radians(p.angle)
@@ -178,7 +186,10 @@ class ParticlePreview(QWidget):
                 a = math.radians(p.angle + 45)
                 k = r * math.sqrt(2)
                 points = [
-                    QPointF(x + math.cos(a + i * math.pi / 2) * k, y + math.sin(a + i * math.pi / 2) * k)
+                    QPointF(
+                        x + math.cos(a + i * math.pi / 2) * k,
+                        y + math.sin(a + i * math.pi / 2) * k,
+                    )
                     for i in range(4)
                 ]
                 painter.setBrush(color)
@@ -373,7 +384,9 @@ class ParticleEffectWidget(QWidget):
         if definition.particle == "image" and definition.image:
             from .image_tools import icon_choices
 
-            image = next((i for c, i in icon_choices(self.document) if c == definition.image), None)
+            image = next(
+                (i for c, i in icon_choices(self.document) if c == definition.image), None
+            )
             image = image.pixmap(32, 32) if image is not None else None
         self.preview.set_definition(definition, image)
 
@@ -429,11 +442,15 @@ class ParticleEffectWidget(QWidget):
 
     def new_effect(self, effect_id=None, preset_name=None):
         if preset_name is None:
-            preset_name, ok = QInputDialog.getItem(self, "New Particle Effect", "Start from:", list(PRESETS), 0, False)
+            preset_name, ok = QInputDialog.getItem(
+                self, "New Particle Effect", "Start from:", list(PRESETS), 0, False
+            )
             if not ok:
                 return None
         if effect_id is None:
-            effect_id, ok = QInputDialog.getText(self, "New Particle Effect", "Id:", text=f"particles.{preset_name}")
+            effect_id, ok = QInputDialog.getText(
+                self, "New Particle Effect", "Id:", text=f"particles.{preset_name}"
+            )
             if not ok:
                 return None
         try:
@@ -450,7 +467,9 @@ class ParticleEffectWidget(QWidget):
         if source is None:
             return None
         if new_id is None:
-            new_id, ok = QInputDialog.getText(self, "Duplicate Particle Effect", "New id:", text=f"{source}_copy")
+            new_id, ok = QInputDialog.getText(
+                self, "Duplicate Particle Effect", "New id:", text=f"{source}_copy"
+            )
             if not ok:
                 return None
         try:
@@ -468,8 +487,14 @@ class ParticleEffectWidget(QWidget):
             return False
         used = self.api.usages(effect_id)
         if used:
-            text = f"{effect_id} is used by {', '.join(used)}. Delete it anyway? (Undo restores it.)"
-            answer = confirm if confirm is not None else QMessageBox.question(self, "Delete Particle Effect", text)
+            text = (
+                f"{effect_id} is used by {', '.join(used)}. Delete it anyway? (Undo restores it.)"
+            )
+            answer = (
+                confirm
+                if confirm is not None
+                else QMessageBox.question(self, "Delete Particle Effect", text)
+            )
             if answer not in (True, QMessageBox.Yes):
                 return False
         self.api.delete(effect_id)

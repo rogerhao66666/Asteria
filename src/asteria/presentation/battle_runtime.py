@@ -100,8 +100,10 @@ class BattleCombatantAnimator:
     transition_easing: str = "linear"
     recovery_remaining: float = 0.0
     timing_cache: dict[str, object] = field(default_factory=dict, repr=False)
-    # ANI-02: when the sheet carries an authored state machine, battle roles are its triggers (attack, hit,
-    # ko...) and it chooses the clips; parameters "role" / "defeated" are set when the machine declares them
+    # ANI-02: when the sheet carries an authored state machine, battle roles are its triggers
+    # (attack, hit,
+    # ko...) and it chooses the clips; parameters "role" / "defeated" are set when the machine
+    # declares them
     machine: object = None
 
     @classmethod
@@ -276,7 +278,12 @@ class BattleCombatantAnimator:
             raise ValueError("missing presentation clip during restore")
         frame_cursor = int(data["frame_cursor"])
         time = float(data["time"])
-        if not isfinite(time) or time < 0 or frame_cursor < 0 or frame_cursor >= len(clip.keyframes):
+        if (
+            not isfinite(time)
+            or time < 0
+            or frame_cursor < 0
+            or frame_cursor >= len(clip.keyframes)
+        ):
             raise ValueError("invalid combatant animation snapshot")
         self.role = _normalize_role(data["role"])
         self.animator.clip = clip
@@ -302,7 +309,13 @@ class BattlePresentationRuntime:
     texture draw commands through the existing runtime/render abstraction.
     """
 
-    def __init__(self, scene: BattlePresentationScene, resolve_clip_set, resolve_sprite_sheet, timing_profile=None):
+    def __init__(
+        self,
+        scene: BattlePresentationScene,
+        resolve_clip_set,
+        resolve_sprite_sheet,
+        timing_profile=None,
+    ):
         if not isinstance(scene, BattlePresentationScene):
             raise TypeError("scene must be BattlePresentationScene")
         self.scene = scene
@@ -314,11 +327,14 @@ class BattlePresentationRuntime:
         self._sprite_sheets = {}
         self._aura_sprite_sheets = {}
         self._overlays: dict[str, CombatantOverlay] = {}
-        # member id -> CharacterComposition (attachments / layers drawn with the body; CMP-01/02/04)
+        # member id -> CharacterComposition (attachments / layers drawn with the body;
+        # CMP-01/02/04)
         self.compositions = {}
         from .motion_fx import MotionEchoes
 
-        self.echoes = MotionEchoes()  # afterimages / trails (VFX-03), started by motion_fx timeline beats
+        self.echoes = (
+            MotionEchoes()
+        )  # afterimages / trails (VFX-03), started by motion_fx timeline beats
         self._part_sheets = {}
         self._member_order = tuple(x.member_id for x in scene.combatants)
         self._resolve_clip_set = resolve_clip_set
@@ -328,7 +344,8 @@ class BattlePresentationRuntime:
         self.last_sequence = 0
 
     def add_combatant(self, visual, scene):
-        """A combatant that joined mid-battle (summon, reinforcement); ``scene`` already lists it."""
+        """A combatant that joined mid-battle (summon, reinforcement); ``scene`` already lists
+        it."""
         self._register_visual(visual)
         self.scene = scene
         self._member_order = tuple(x.member_id for x in scene.combatants)
@@ -348,9 +365,14 @@ class BattlePresentationRuntime:
             if aura_sheet is None:
                 raise ValueError(f"missing aura sprite sheet: {visual.aura_sprite_sheet_asset_id}")
             if tuple(aura_sheet.frames) != tuple(sheet.frames):
-                raise ValueError(f"aura sprite sheet frame layout must match character sheet for {visual.member_id}")
+                raise ValueError(
+                    f"aura sprite sheet frame layout must match character sheet for "
+                    f"{visual.member_id}"
+                )
             self._aura_sprite_sheets[visual.member_id] = aura_sheet
-        self._combatants[visual.member_id] = BattleCombatantAnimator.create(visual, clip_set, self.timing_profile)
+        self._combatants[visual.member_id] = BattleCombatantAnimator.create(
+            visual, clip_set, self.timing_profile
+        )
 
     def combatant(self, member_id):
         return self._combatants[str(member_id)]
@@ -452,7 +474,9 @@ class BattlePresentationRuntime:
             frame = sheet.frames[state.frame_index]
             mix = state.transition_mix()
 
-            if state.transition_from_frame is not None and 0 <= state.transition_from_frame < len(sheet.frames):
+            if state.transition_from_frame is not None and 0 <= state.transition_from_frame < len(
+                sheet.frames
+            ):
                 previous = sheet.frames[state.transition_from_frame]
                 previous_width = previous.width / source_ratio
                 previous_height = previous.height / source_ratio
@@ -464,7 +488,12 @@ class BattlePresentationRuntime:
                     draws.append(
                         TextureDraw(
                             aura_sheet.texture.asset_id,
-                            (aura_previous.x, aura_previous.y, aura_previous.width, aura_previous.height),
+                            (
+                                aura_previous.x,
+                                aura_previous.y,
+                                aura_previous.width,
+                                aura_previous.height,
+                            ),
                             psx,
                             psy,
                             aura_previous.width / source_ratio * camera.zoom,
@@ -546,7 +575,13 @@ class BattlePresentationRuntime:
             if composition is not None:
                 draws.extend(
                     self._composition_draws(
-                        composition, state, visual, frame, (draw_x, draw_y), camera, max(0.0, min(1.0, mix))
+                        composition,
+                        state,
+                        visual,
+                        frame,
+                        (draw_x, draw_y),
+                        camera,
+                        max(0.0, min(1.0, mix)),
                     )
                 )
             overlay = self._overlays.get(visual.member_id)
@@ -570,10 +605,13 @@ class BattlePresentationRuntime:
                     )
                 )
         draws.sort(key=lambda d: (d.layer, d.depth, d.screen_y, d.screen_x))
-        return BattlePresentationFrame(self.scene.scene_id, self.scene.background_asset_id, tuple(draws))
+        return BattlePresentationFrame(
+            self.scene.scene_id, self.scene.background_asset_id, tuple(draws)
+        )
 
     def start_motion_fx(self, member_id, kind, duration, **params):
-        """Afterimage / trail echoes of ``member_id``'s sprite for ``duration`` seconds (VFX-03)."""
+        """Afterimage / trail echoes of ``member_id``'s sprite for ``duration`` seconds
+        (VFX-03)."""
         from .motion_fx import EchoSettings
 
         settings = EchoSettings.of(kind, **params)
@@ -585,7 +623,8 @@ class BattlePresentationRuntime:
         return self._part_sheets[asset_id]
 
     def _composition_draws(self, composition, state, visual, body, body_origin, camera, opacity):
-        """Attachment / layer draws for a body frame; depth nudges keep back parts behind and front parts on top."""
+        """Attachment / layer draws for a body frame; depth nudges keep back parts behind and front
+        parts on top."""
         ratio = visual.source_pixels_per_logical_pixel
         mirrored = visual.anchor.facing.lower() == "left"
         out = []
@@ -596,7 +635,8 @@ class BattlePresentationRuntime:
             frame = sheet.frames[part.frame_index % len(sheet.frames)]
             width, height = frame.width * part.scale_x, frame.height * part.scale_y
             a = math.radians(part.rotation_deg)
-            # centre of the (rotated) part in body source pixels, from the pivot or from the frame's left edge
+            # centre of the (rotated) part in body source pixels, from the pivot or from the
+            # frame's left edge
             cx = part.x + width / 2 * math.cos(a) - height / 2 * math.sin(a)
             cy = part.y + width / 2 * math.sin(a) + height / 2 * math.cos(a)
             if part.kind == "layer":

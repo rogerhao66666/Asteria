@@ -90,7 +90,8 @@ class FormationDefinition:
             unknown = set(slot.adjacent_to) - known
             if unknown:
                 raise ValueError(
-                    f"formation slot {slot.slot_id} references unknown adjacent slots: " + ", ".join(sorted(unknown))
+                    f"formation slot {slot.slot_id} references unknown adjacent slots: "
+                    + ", ".join(sorted(unknown))
                 )
             if slot.slot_id in slot.adjacent_to:
                 raise ValueError("formation slot cannot be adjacent to itself")
@@ -119,7 +120,9 @@ class FormationDefinition:
         expected = {"schema", "version", "formation_id", "slots"}
         if set(data) != expected:
             raise ValueError("invalid formation definition")
-        return cls(data["formation_id"], [FormationSlotDefinition.from_data(x) for x in data["slots"]])
+        return cls(
+            data["formation_id"], [FormationSlotDefinition.from_data(x) for x in data["slots"]]
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -190,18 +193,26 @@ class BattleFormationRuntime:
         return tuple(sorted(result))
 
     def placements(self):
-        return tuple(BattlePlacement(member_id, slot_id) for member_id, slot_id in sorted(self._member_to_slot.items()))
+        return tuple(
+            BattlePlacement(member_id, slot_id)
+            for member_id, slot_id in sorted(self._member_to_slot.items())
+        )
 
     def to_data(self):
         return {
             "schema": "asteria.rpg.battle_formation_runtime",
             "version": 1,
             "definition_id": self.definition.formation_id,
-            "placements": [{"member_id": x.member_id, "slot_id": x.slot_id} for x in self.placements()],
+            "placements": [
+                {"member_id": x.member_id, "slot_id": x.slot_id} for x in self.placements()
+            ],
         }
 
     def restore_from_data(self, data):
-        if data.get("schema") != "asteria.rpg.battle_formation_runtime" or data.get("version") != 1:
+        if (
+            data.get("schema") != "asteria.rpg.battle_formation_runtime"
+            or data.get("version") != 1
+        ):
             raise ValueError("unsupported battle formation runtime")
         if data.get("definition_id") != self.definition.formation_id:
             raise ValueError("formation definition mismatch")
@@ -349,7 +360,10 @@ class BattleTargetingDefinition:
 
     @classmethod
     def from_data(cls, data):
-        if data.get("schema") != "asteria.rpg.battle_targeting_definition" or data.get("version") != 1:
+        if (
+            data.get("schema") != "asteria.rpg.battle_targeting_definition"
+            or data.get("version") != 1
+        ):
             raise ValueError("unsupported battle targeting definition")
         return cls(
             data["ability_id"],
@@ -362,7 +376,9 @@ class BattleTargetingDefinition:
             blocked_subject_tags=data["blocked_subject_tags"],
             required_slot_tags=data["required_slot_tags"],
             blocked_slot_tags=data["blocked_slot_tags"],
-            metric_conditions=[TargetMetricCondition.from_data(x) for x in data["metric_conditions"]],
+            metric_conditions=[
+                TargetMetricCondition.from_data(x) for x in data["metric_conditions"]
+            ],
             adjacent_to_actor=data["adjacent_to_actor"],
             active_only=data["active_only"],
         )
@@ -379,7 +395,9 @@ class TargetResolution:
 
 
 class BattleTargetingRuntime:
-    def __init__(self, members, *, definitions=(), formations=None, is_active=None, is_targetable=None):
+    def __init__(
+        self, members, *, definitions=(), formations=None, is_active=None, is_targetable=None
+    ):
         self.members = dict(members)
         self.definitions = {}
         for definition in definitions:
@@ -437,7 +455,9 @@ class BattleTargetingRuntime:
         adjacent = None
         if definition.adjacent_to_actor:
             formation = self._formation_for(actor.side)
-            adjacent = set() if formation is None else set(formation.adjacent_member_ids(actor.member_id))
+            adjacent = (
+                set() if formation is None else set(formation.adjacent_member_ids(actor.member_id))
+            )
         result = []
         for candidate in self.members.values():
             if not self.is_targetable(candidate):
@@ -452,11 +472,15 @@ class BattleTargetingRuntime:
                 definition.required_subject_tags
             ):
                 continue
-            if definition.blocked_subject_tags and candidate.subject.tags.contains_any(definition.blocked_subject_tags):
+            if definition.blocked_subject_tags and candidate.subject.tags.contains_any(
+                definition.blocked_subject_tags
+            ):
                 continue
             if not self._slot_matches(candidate, definition):
                 continue
-            if not all(condition.matches(candidate.subject) for condition in definition.metric_conditions):
+            if not all(
+                condition.matches(candidate.subject) for condition in definition.metric_conditions
+            ):
                 continue
             result.append(candidate.member_id)
         return tuple(sorted(result, key=self._candidate_sort_key))
@@ -466,7 +490,9 @@ class BattleTargetingRuntime:
         candidates = self.candidates(actor_id, ability_id)
         if definition is None:
             requested = tuple(dict.fromkeys(str(x) for x in requested_ids))
-            return TargetResolution(str(ability_id), str(actor_id), candidates, requested, True, ())
+            return TargetResolution(
+                str(ability_id), str(actor_id), candidates, requested, True, ()
+            )
         candidate_set = set(candidates)
         raw_requested = tuple(str(x) for x in requested_ids)
         requested = tuple(dict.fromkeys(raw_requested))
@@ -478,10 +504,18 @@ class BattleTargetingRuntime:
         elif definition.selection_mode is TargetSelectionMode.ALL:
             selected = candidates
         elif definition.selection_mode is TargetSelectionMode.FIRST_N:
-            count = definition.selection_count if definition.selection_count is not None else definition.maximum_targets
+            count = (
+                definition.selection_count
+                if definition.selection_count is not None
+                else definition.maximum_targets
+            )
             selected = candidates[:count]
         else:
-            count = definition.selection_count if definition.selection_count is not None else definition.maximum_targets
+            count = (
+                definition.selection_count
+                if definition.selection_count is not None
+                else definition.maximum_targets
+            )
             count = min(count, len(candidates))
             engine = rng if rng is not None else random.Random()
             selected = tuple(sorted(engine.sample(list(candidates), count)))

@@ -14,7 +14,9 @@ def clips():
     return AnimationClipSet(
         {
             "idle_down": SpriteClip("idle_down", [SpriteKeyframe(0, 0.1)], True),
-            "walk_down": SpriteClip("walk_down", [SpriteKeyframe(0, 0.1), SpriteKeyframe(1, 0.1)], True),
+            "walk_down": SpriteClip(
+                "walk_down", [SpriteKeyframe(0, 0.1), SpriteKeyframe(1, 0.1)], True
+            ),
         }
     )
 

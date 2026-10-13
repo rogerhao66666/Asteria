@@ -45,17 +45,23 @@ class DockTitleBar(QWidget):
         layout.setContentsMargins(10, 5, 6, 5)
         layout.setSpacing(7)
         self.icon_label = QLabel()
-        self.icon_label.setPixmap(pixmap(icon_name, 16, self.accent.name(), self.devicePixelRatioF() or 2.0))
+        self.icon_label.setPixmap(
+            pixmap(icon_name, 16, self.accent.name(), self.devicePixelRatioF() or 2.0)
+        )
         self.title = QLabel(dock.windowTitle())
         self.title.setObjectName("DockTitle")
         layout.addWidget(self.icon_label)
         layout.addWidget(self.title, 1)
         self.float_button = self._button("float", "Float / dock this panel", self._toggle_float)
-        self.close_button = self._button("close", "Close this panel (View ▸ Panels reopens it)", dock.close)
+        self.close_button = self._button(
+            "close", "Close this panel (View ▸ Panels reopens it)", dock.close
+        )
         layout.addWidget(self.float_button)
         layout.addWidget(self.close_button)
         dock.windowTitleChanged.connect(self.title.setText)
-        dock.setWindowIcon(icon(icon_name, self.accent.name()))  # shown on the dock's tab when tabified
+        dock.setWindowIcon(
+            icon(icon_name, self.accent.name())
+        )  # shown on the dock's tab when tabified
 
     def _button(self, kind, tip, slot):
         button = QToolButton(self)

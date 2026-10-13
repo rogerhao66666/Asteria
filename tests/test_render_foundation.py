@@ -26,7 +26,9 @@ def test_2d_native_25d_render_environment_pipeline():
         particle_emitters=(ParticleEmitter2D("dust"),),
         post_stack=PostProcessStack((PostEffect2D("color_grade"),)),
     )
-    plan = build_frame_plan(draws=(draw,), shadow_casters=(shadow,), lights=(light,), environment=env)
+    plan = build_frame_plan(
+        draws=(draw,), shadow_casters=(shadow,), lights=(light,), environment=env
+    )
     b = HeadlessRenderBackend()
     execute_frame(plan, b, (mat,))
     names = [x[0] for x in b.ops]

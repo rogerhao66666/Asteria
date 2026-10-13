@@ -123,7 +123,8 @@ class SlotMenu:
         return self.slots.slots()[self.row]
 
     def activate(self, game=None):
-        """Enter: ``("saved", path)``, ``("loaded", save)``, ``("confirm", slot)`` or ``("refused", reason)``."""
+        """Enter: ``("saved", path)``, ``("loaded", save)``, ``("confirm", slot)`` or ``("refused",
+        reason)``."""
         info = self.slots.info(self.slot)
         if self.mode == "load":
             if not info.exists or info.error:

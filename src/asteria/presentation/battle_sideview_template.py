@@ -48,7 +48,9 @@ class BattleSideviewTemplateProfile:
 
     def __post_init__(self):
         _id(self.template_id, "template_id")
-        if not isinstance(self.left_zone, BattleSideviewZone) or not isinstance(self.right_zone, BattleSideviewZone):
+        if not isinstance(self.left_zone, BattleSideviewZone) or not isinstance(
+            self.right_zone, BattleSideviewZone
+        ):
             raise TypeError("left_zone/right_zone must be BattleSideviewZone")
         if self.left_zone.zone_id == self.right_zone.zone_id:
             raise ValueError("left/right zone ids must differ")

@@ -78,7 +78,14 @@ class RuntimeRpgUiInformationArchitecture:
             "party",
             "Party & Formation",
             ("rpg_party_screen",),
-            ("Preview", "Active Party", "Reserve", "Formation Slots", "Member Labels", "Density / Overflow"),
+            (
+                "Preview",
+                "Active Party",
+                "Reserve",
+                "Formation Slots",
+                "Member Labels",
+                "Density / Overflow",
+            ),
         ),
         RuntimeRpgUiSection(
             "inventory",
@@ -134,10 +141,19 @@ class RuntimeRpgUiAuthoringController:
         category = self._category(category)
         profile_id = str(profile_id).strip()
         if self.library.get(category, profile_id) is not None:
-            raise RuntimeRpgUiAuthoringError(f"duplicate runtime UI profile: {category}/{profile_id}")
+            raise RuntimeRpgUiAuthoringError(
+                f"duplicate runtime UI profile: {category}/{profile_id}"
+            )
         self.library._validate_type(category, value)
         self.document.execute(
-            _ProfileCommand(self.library, category, profile_id, value, None, f"Add Runtime UI {category}/{profile_id}")
+            _ProfileCommand(
+                self.library,
+                category,
+                profile_id,
+                value,
+                None,
+                f"Add Runtime UI {category}/{profile_id}",
+            )
         )
         return value
 
@@ -146,10 +162,19 @@ class RuntimeRpgUiAuthoringController:
         profile_id = str(profile_id)
         old = self.library.get(category, profile_id)
         if old is None:
-            raise RuntimeRpgUiAuthoringError(f"unknown runtime UI profile: {category}/{profile_id}")
+            raise RuntimeRpgUiAuthoringError(
+                f"unknown runtime UI profile: {category}/{profile_id}"
+            )
         self.library._validate_type(category, value)
         self.document.execute(
-            _ProfileCommand(self.library, category, profile_id, value, old, f"Edit Runtime UI {category}/{profile_id}")
+            _ProfileCommand(
+                self.library,
+                category,
+                profile_id,
+                value,
+                old,
+                f"Edit Runtime UI {category}/{profile_id}",
+            )
         )
         return value
 
@@ -158,9 +183,18 @@ class RuntimeRpgUiAuthoringController:
         profile_id = str(profile_id)
         old = self.library.get(category, profile_id)
         if old is None:
-            raise RuntimeRpgUiAuthoringError(f"unknown runtime UI profile: {category}/{profile_id}")
+            raise RuntimeRpgUiAuthoringError(
+                f"unknown runtime UI profile: {category}/{profile_id}"
+            )
         self.document.execute(
-            _ProfileCommand(self.library, category, profile_id, None, old, f"Delete Runtime UI {category}/{profile_id}")
+            _ProfileCommand(
+                self.library,
+                category,
+                profile_id,
+                None,
+                old,
+                f"Delete Runtime UI {category}/{profile_id}",
+            )
         )
 
     def duplicate(self, category, profile_id, new_profile_id):

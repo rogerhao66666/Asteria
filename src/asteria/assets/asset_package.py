@@ -27,7 +27,8 @@ def _payload_files(data):
 
 
 def asset_closure(documents, asset_id):
-    """``documents``: ``{asset_id: (manifest_path, data)}``; returns the dependency closure in load order."""
+    """``documents``: ``{asset_id: (manifest_path, data)}``; returns the dependency closure in load
+    order."""
     order, seen = [], set()
 
     def visit(key, stack=()):
@@ -47,12 +48,16 @@ def asset_closure(documents, asset_id):
 
 
 def package_assets(root, documents, asset_id, output):
-    """Copy ``asset_id``'s closure (manifests, source and payload images) under ``output``; returns relative paths."""
+    """Copy ``asset_id``'s closure (manifests, source and payload images) under ``output``; returns
+    relative paths."""
     root, output = Path(root), Path(output)
     files = []
     for key in asset_closure(documents, asset_id):
         manifest_path, data = documents[key]
-        relative = [Path(manifest_path).resolve().relative_to(root.resolve()).as_posix(), data["source"]]
+        relative = [
+            Path(manifest_path).resolve().relative_to(root.resolve()).as_posix(),
+            data["source"],
+        ]
         relative += _payload_files(data)
         for item in dict.fromkeys(relative):
             source = root / item

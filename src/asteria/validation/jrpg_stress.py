@@ -1,11 +1,15 @@
-"""JRPG stress test (STR-01, ASTERIA_SPEC §35) on the complex reference project's real game session.
+"""JRPG stress test (STR-01, ASTERIA_SPEC §35) on the complex reference project's real game
+session.
 
 One new game of the reference project, played through ``GameSessionRuntime`` (the same session the
-playable game and its editor use): build edits, an NPC interaction, then the multi-phase boss fought
-turn by turn under the battle scheduler. Every §35 item is recorded with the evidence that showed it.
+playable game and its editor use): build edits, an NPC interaction, then the multi-phase boss
+fought
+turn by turn under the battle scheduler. Every §35 item is recorded with the evidence that showed
+it.
 
 Two pieces of content the reference project does not author yet are added the way a designer would,
-through the canonical database API, before the run: a capture rule (Mender Wisp joins as a companion)
+through the canonical database API, before the run: a capture rule (Mender Wisp joins as a
+companion)
 and a "talk" world interaction. No engine code is special-cased for this scenario.
 """
 
@@ -59,8 +63,10 @@ def _queue(battle):
 
 
 def run_jrpg_stress(project, *, seed=7, max_turns=400, game=None, on_step=None):
-    """Play the scenario. ``game``: an existing session (e.g. the playable runtime's, so a real window shows
-    it); ``on_step(name)`` is called after each step (presentation, screenshots). Returns (report, game)."""
+    """Play the scenario. ``game``: an existing session (e.g. the playable runtime's, so a real
+    window shows
+    it); ``on_step(name)`` is called after each step (presentation, screenshots). Returns (report,
+    game)."""
     from asteria.runtime.game_session import GameSessionRuntime
 
     step = on_step or (lambda name: None)
@@ -70,13 +76,21 @@ def run_jrpg_stress(project, *, seed=7, max_turns=400, game=None, on_step=None):
     db = project.rpg_database
     if "mender_wisp" not in db.capture_rules:
         companion = next(
-            a for a in db.actors if a not in project.game_start.instantiate(project).rpg_state.party_actor_ids
+            a
+            for a in db.actors
+            if a not in project.game_start.instantiate(project).rpg_state.party_actor_ids
         )
-        db.add_capture_rule(CaptureRule("mender_wisp", companion, base_chance=0.6, low_health_bonus=0.4))
+        db.add_capture_rule(
+            CaptureRule("mender_wisp", companion, base_chance=0.6, low_health_bonus=0.4)
+        )
     if "stress_talk" not in db.world_interactions:
         db.add_world_interaction(
             WorldInteraction(
-                "stress_talk", "Talk to the guide", "talk", base_chance=1.0, success_switch="stress_talked"
+                "stress_talk",
+                "Talk to the guide",
+                "talk",
+                base_chance=1.0,
+                success_switch="stress_talked",
             )
         )
 
@@ -97,7 +111,9 @@ def run_jrpg_stress(project, *, seed=7, max_turns=400, game=None, on_step=None):
     game.set_secondary_class(lead, alternate)
     gained = set(game.resolve_actor_build(lead).abilities) - before
     if state.actor_progression[lead].active_class_ids[-1] == alternate:
-        ev["jobs_secondary_jobs"] = f"{lead} secondary job {alternate}: +{sorted(gained) or 'class bonuses'}"
+        ev["jobs_secondary_jobs"] = (
+            f"{lead} secondary job {alternate}: +{sorted(gained) or 'class bonuses'}"
+        )
     game.set_passives(lead, ("passive_01", "passive_02"), capacity=4)
     if game.resolve_actor_build(lead).active_passives:
         ev["passives"] = f"{lead} passives {game.resolve_actor_build(lead).active_passives}"
@@ -108,13 +124,13 @@ def run_jrpg_stress(project, *, seed=7, max_turns=400, game=None, on_step=None):
     if weapon is not None and weapon.instance_id in after_build.equipment_instance_ids and granted:
         ev["equipment_interactions"] = f"weapon_12 equipped on {lead}: grants {granted}"
 
-    # -- NPC interaction ---------------------------------------------------------------------------
+    # -- NPC interaction --------------------------------------------------------------------------
     outcome, _detail = game.perform_interaction("stress_talk")
     if outcome == "success" and save.event_context.get_switch("stress_talked"):
         ev["npc_interactions"] = "talk interaction succeeded and set its switch"
 
     step("build")
-    # -- the boss, turn by turn under the battle scheduler -------------------------------------------
+    # -- the boss, turn by turn under the battle scheduler ----------------------------------------
     battle = game.start_encounter("boss_room")
     step("battle_started")
     boss = next(x for x in game.active_enemy_ids() if x.startswith("astral_tyrant"))
@@ -152,7 +168,9 @@ def run_jrpg_stress(project, *, seed=7, max_turns=400, game=None, on_step=None):
             before = dict(_queue(battle))
             game.use_ability(actor, "haste_song")
             after = dict(_queue(battle))
-            moved = {m: (before[m], after[m]) for m in after if m in before and after[m] < before[m]}
+            moved = {
+                m: (before[m], after[m]) for m in after if m in before and after[m] < before[m]
+            }
             if moved:
                 ev["turn_order_manipulation"] = f"haste_song brought turns forward: {moved}"
             del ally
@@ -162,26 +180,44 @@ def run_jrpg_stress(project, *, seed=7, max_turns=400, game=None, on_step=None):
             game.use_ability(actor, "slow_hex", (boss,))
             after = dict(_queue(battle)).get(boss)
             if before is not None and after is not None and after > before:
-                ev.setdefault("turn_order_manipulation", f"slow_hex pushed {boss} back: {before} -> {after}")
+                ev.setdefault(
+                    "turn_order_manipulation", f"slow_hex pushed {boss} back: {before} -> {after}"
+                )
         elif boss_alive and "fire_arc" in abilities and _resource(battle, boss, "stagger"):
             level = game.max_boost_level(actor) if "boost" not in done else 0
             stagger_before = _resource(battle, boss, "stagger")
             boss_ready = dict(_queue(battle)).get(boss)
-            results = game.use_ability(actor, "fire_arc", (boss,), boost_level=level)  # failures must surface
+            results = game.use_ability(
+                actor, "fire_arc", (boss,), boost_level=level
+            )  # failures must surface
             if level >= 1 and len(results) >= 2:
                 done.add("boost")
-                ev["boost_resource"] = f"{actor} boost {level} ({rules.boost_resource_id}): {len(results)} actions"
+                ev["boost_resource"] = (
+                    f"{actor} boost {level} ({rules.boost_resource_id}): {len(results)} actions"
+                )
                 ev["multi_hit"] = f"fire_arc landed {len(results)} hits from one command"
             stagger_after = _resource(battle, boss, "stagger")
-            if results and stagger_after is not None and stagger_before is not None and stagger_after < stagger_before:
+            if (
+                results
+                and stagger_after is not None
+                and stagger_before is not None
+                and stagger_after < stagger_before
+            ):
                 ev.setdefault(
-                    "weaknesses", f"fire_arc hit the boss's fire weakness: stagger {stagger_before} -> {stagger_after}"
+                    "weaknesses",
+                    f"fire_arc hit the boss's fire weakness: stagger {stagger_before} -> "
+                    f"{stagger_after}",
                 )
-                ev["guard_shield_resource"] = f"boss stagger shield {stagger_start} -> {stagger_after}"
-            if stagger_after == 0 or (stagger_before == 1 and results and stagger_after == stagger_start):
+                ev["guard_shield_resource"] = (
+                    f"boss stagger shield {stagger_start} -> {stagger_after}"
+                )
+            if stagger_after == 0 or (
+                stagger_before == 1 and results and stagger_after == stagger_start
+            ):
                 broken = battle.member(boss).subject.states.get("broken") is not None
                 ev.setdefault(
-                    "break_mechanic", f"boss stagger shield broken after {report.turns} turns (broken={broken})"
+                    "break_mechanic",
+                    f"boss stagger shield broken after {report.turns} turns (broken={broken})",
                 )
                 delayed = dict(_queue(battle)).get(boss)
                 if boss_ready is not None and delayed is not None and delayed > boss_ready:

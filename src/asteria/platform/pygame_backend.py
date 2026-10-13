@@ -2,7 +2,8 @@ from asteria.assets import TextureResource
 
 from .backend import RuntimeBackend, TextureBackend
 
-# System fonts that also cover CJK text (imported projects are often Japanese); the default font is the fallback.
+# System fonts that also cover CJK text (imported projects are often Japanese); the default font is
+# the fallback.
 DIALOGUE_FONTS = (
     "hiraginosans",
     "hiraginosansgb",
@@ -66,7 +67,11 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
         for event in self.pg.event.get():
             if self.input_source is not None:
                 self.input_source.handle_event(event)
-            if event.type == self.pg.QUIT or event.type == self.pg.KEYDOWN and event.key == self.pg.K_ESCAPE:
+            if (
+                event.type == self.pg.QUIT
+                or event.type == self.pg.KEYDOWN
+                and event.key == self.pg.K_ESCAPE
+            ):
                 self._close = True
         self.screen.fill((24, 26, 30))
 
@@ -120,7 +125,8 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
         self.screen.blit(image, (round(draw_command.screen_x), round(draw_command.screen_y)))
 
     def set_environment(self, environment, time=0.0):
-        """Apply the scene environment (pygame fallback: approximate lights, fog, water) at end of frame."""
+        """Apply the scene environment (pygame fallback: approximate lights, fog, water) at end of
+        frame."""
         self.environment, self.environment_time = environment, float(time)
 
     def draw_rects(self, rects):
@@ -150,7 +156,9 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
         if not hasattr(self, "_font"):
             self._font, self._glyphs = dialogue_font(self.pg, 26), {}
         for row, line in enumerate(str(text).split("\n")[:4]):
-            image = self._font.render(renderable_text(self.pg, self._font, line, self._glyphs), True, (240, 242, 248))
+            image = self._font.render(
+                renderable_text(self.pg, self._font, line, self._glyphs), True, (240, 242, 248)
+            )
             self.screen.blit(image, (box.x + 18, box.y + 12 + row * self._font.get_linesize()))
 
     def end_frame(self):

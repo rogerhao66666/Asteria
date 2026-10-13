@@ -101,7 +101,9 @@ def test_slot_capacity_is_enforced_canonically():
     # A third instance authored for the same generic slot exceeds capacity.
     from asteria.rpg import EquippedItem
 
-    lab.instances["frost_blade:02"] = EquippedItem(lab.equipment_catalog["frost_blade"], instance_id="frost_blade:02")
+    lab.instances["frost_blade:02"] = EquippedItem(
+        lab.equipment_catalog["frost_blade"], instance_id="frost_blade:02"
+    )
     with pytest.raises(ValueError, match="slot is full"):
         lab.equip("main_hand", "frost_blade:02")
 

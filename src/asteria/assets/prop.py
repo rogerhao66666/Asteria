@@ -67,11 +67,17 @@ class PropValidator:
             issues.append(ValidationIssue("prop.visual.missing", "prop has no visual", "warning"))
         for c in a.collisions:
             if c.kind == "polygon" and len(c.points) < 3:
-                issues.append(ValidationIssue("prop.collision.polygon", "polygon needs >=3 points"))
-            if c.kind in ("rect", "ellipse") and (c.size is None or c.size[0] <= 0 or c.size[1] <= 0):
+                issues.append(
+                    ValidationIssue("prop.collision.polygon", "polygon needs >=3 points")
+                )
+            if c.kind in ("rect", "ellipse") and (
+                c.size is None or c.size[0] <= 0 or c.size[1] <= 0
+            ):
                 issues.append(ValidationIssue("prop.collision.size", "shape needs positive size"))
         return ValidationReport(a.canonical.asset_id, tuple(issues))
 
 
 def prop_asset(asset_id, source_uri, visuals, **kw):
-    return PropAsset(CanonicalAsset(asset_id, "prop", AssetSource(source_uri)), tuple(visuals), **kw)
+    return PropAsset(
+        CanonicalAsset(asset_id, "prop", AssetSource(source_uri)), tuple(visuals), **kw
+    )

@@ -1,4 +1,5 @@
-"""RPG-07 (ASTERIA_SPEC §24): generic world interactions — capability, requirements, cost, check, outcome."""
+"""RPG-07 (ASTERIA_SPEC §24): generic world interactions — capability, requirements, cost, check,
+outcome."""
 
 import pytest
 
@@ -18,7 +19,8 @@ def test_refusals_cost_success_rewards_and_one_time_use(runtime):
     state, ctx = game.save.rpg_state, game.save.event_context
     game.project.rpg_database.add_faction(FactionDefinition("guild", "Guild"))
     game.project.event_programs.register(
-        "thanks", EventProgram((EventInstruction("SET_SWITCH", {"name": "thanked", "value": True}),))
+        "thanks",
+        EventProgram((EventInstruction("SET_SWITCH", {"name": "thanked", "value": True}),)),
     )
     _add(
         game,
@@ -26,7 +28,9 @@ def test_refusals_cost_success_rewards_and_one_time_use(runtime):
         verb="open",
         actor_tag="roster.01",
         required_item="ether_leaf",
-        requirements=({"source": "switch", "name": "vault_found", "operator": "==", "value": "true"},),
+        requirements=(
+            {"source": "switch", "name": "vault_found", "operator": "==", "value": "true"},
+        ),
         cost_currencies={"gold": 10},
         success_items={"focus_stone": 2},
         success_switch="vault_open",
@@ -56,8 +60,17 @@ def test_refusals_cost_success_rewards_and_one_time_use(runtime):
 
 def test_party_capability_and_cost_are_checked(runtime):
     game = runtime.game
-    _add(game, interaction_id="persuade_guard", verb="persuade", actor_tag="diplomat", cost_items={"fire_dust": 1})
-    assert game.perform_interaction("persuade_guard") == ("refused", "needs a party member with diplomat")
+    _add(
+        game,
+        interaction_id="persuade_guard",
+        verb="persuade",
+        actor_tag="diplomat",
+        cost_items={"fire_dust": 1},
+    )
+    assert game.perform_interaction("persuade_guard") == (
+        "refused",
+        "needs a party member with diplomat",
+    )
     _add(game, interaction_id="trade", verb="buy", cost_items={"boss_emblem": 999})
     assert game.perform_interaction("trade")[0] == "refused"
 
@@ -75,10 +88,23 @@ def test_stat_checks_are_deterministic_and_failures_run_their_branch(runtime):
     )
     assert game.perform_interaction("pick_lock") == ("failure", "")
     assert game.save.event_context.get_switch("alarm")
-    _add(game, interaction_id="lift_rock", verb="custom", check_stat="power", difficulty=0, base_chance=1.0)
+    _add(
+        game,
+        interaction_id="lift_rock",
+        verb="custom",
+        check_stat="power",
+        difficulty=0,
+        base_chance=1.0,
+    )
     assert game.perform_interaction("lift_rock") == ("success", "")
-    chances = WorldInteraction("x", check_stat="power", difficulty=50, base_chance=0.5, chance_per_point=0.01)
-    assert chances.chance(70) == pytest.approx(0.7) and chances.chance(500) == 1.0 and chances.chance(-500) == 0.0
+    chances = WorldInteraction(
+        "x", check_stat="power", difficulty=50, base_chance=0.5, chance_per_point=0.01
+    )
+    assert (
+        chances.chance(70) == pytest.approx(0.7)
+        and chances.chance(500) == 1.0
+        and chances.chance(-500) == 0.0
+    )
 
 
 def test_an_event_runs_an_interaction_and_branches_on_its_outcome(runtime):
@@ -89,7 +115,9 @@ def test_an_event_runs_an_interaction_and_branches_on_its_outcome(runtime):
         "bush",
         EventProgram(
             (
-                EventInstruction("WORLD", {"command": "INTERACT", "args": {"interaction_id": "search_bush"}}),
+                EventInstruction(
+                    "WORLD", {"command": "INTERACT", "args": {"interaction_id": "search_bush"}}
+                ),
                 EventInstruction(
                     "IF_FALSE_SKIP",
                     {
@@ -121,13 +149,20 @@ def test_the_world_interactions_form_editor_creates_valid_records(tmp_path):
     from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
     from asteria.project import Project
 
-    ref = Path(__file__).parents[1] / "reference_projects/complex_reference_rpg/project.asteria.json"
+    ref = (
+        Path(__file__).parents[1] / "reference_projects/complex_reference_rpg/project.asteria.json"
+    )
     document = EditorDocument()
     document.set_project(Project.load_json(ref, document.component_registry), file_path=ref)
     api = GameSystemsAuthoringController(document)
     api.create_new("world_interactions", "fish_pond")
     data = api.form_data("world_interactions", "fish_pond")
-    data.update(verb="fish", check_stat="speed", success_items={"fire_dust": 1}, failure_event="boss_interaction_event")
+    data.update(
+        verb="fish",
+        check_stat="speed",
+        success_items={"fire_dust": 1},
+        failure_event="boss_interaction_event",
+    )
     data["requirements"] = [{"source": "variable", "name": "rod", "operator": ">=", "value": "1"}]
     api.edit("world_interactions", "fish_pond", api.decode("world_interactions", data))
     value = document.project.rpg_database.world_interactions["fish_pond"]

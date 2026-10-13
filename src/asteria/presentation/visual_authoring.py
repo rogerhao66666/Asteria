@@ -76,7 +76,11 @@ class PresentationVisualProjection:
 
         def walk(n, l):
             nonlocal cursor
-            bs.append(TimelineBlock(n.id, l, cursor, n.duration_ms if n.kind == Kind.WAIT else None, self._label(n)))
+            bs.append(
+                TimelineBlock(
+                    n.id, l, cursor, n.duration_ms if n.kind == Kind.WAIT else None, self._label(n)
+                )
+            )
             if n.kind == Kind.SEQUENCE:
                 for c in n.children:
                     walk(c, l)

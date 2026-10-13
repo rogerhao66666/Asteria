@@ -88,9 +88,13 @@ class PresentationPreviewSession:
     def _record(self, events):
         for e in events:
             if isinstance(e, RuntimeEvent):
-                self.diagnostics.append(PreviewDiagnostic(self.time_ms, e.kind, e.node_id, e.payload))
+                self.diagnostics.append(
+                    PreviewDiagnostic(self.time_ms, e.kind, e.node_id, e.payload)
+                )
             elif isinstance(e, ExecutorSignal):
-                self.diagnostics.append(PreviewDiagnostic(self.time_ms, "signal", None, (e.name, e.payload)))
+                self.diagnostics.append(
+                    PreviewDiagnostic(self.time_ms, "signal", None, (e.name, e.payload))
+                )
 
     def scrub(self, target_ms, quantum_ms=16):
         """Deterministic replay-from-zero scrub; preview state never enters canonical data."""

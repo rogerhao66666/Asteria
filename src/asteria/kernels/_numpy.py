@@ -1,10 +1,17 @@
-"""numpy kernels - the reference arithmetic on whole arrays (same operations, same order, same results)."""
+"""numpy kernels - the reference arithmetic on whole arrays (same operations, same order, same
+results)."""
 
 from __future__ import annotations
 
 import numpy as np
 
-from asteria.kernels._python import FIELDS, PROJECTILE_FIELDS, WEATHER_FIELDS, _decay_factors, _turn_cosines
+from asteria.kernels._python import (
+    FIELDS,
+    PROJECTILE_FIELDS,
+    WEATHER_FIELDS,
+    _decay_factors,
+    _turn_cosines,
+)
 
 NAME = "numpy"
 
@@ -46,12 +53,16 @@ class ParticleStore:
         c0 = np.asarray(color_from, dtype=float)
         c1 = np.asarray(color_to, dtype=float)
         colors = map(tuple, (c0 + (c1 - c0) * t[:, None]).astype(np.int64).tolist())
-        return list(zip(px.tolist(), py.tolist(), size.tolist(), colors, angle.tolist(), strict=True))
+        return list(
+            zip(px.tolist(), py.tolist(), size.tolist(), colors, angle.tolist(), strict=True)
+        )
 
 
 class WeatherStore:
-    """Weather particles as arrays. Drawing stamps each particle's shape: pygame truncates coordinates to whole
-    pixels, so a line, ellipse or dot depends only on whole-pixel sizes - each distinct shape is drawn once by
+    """Weather particles as arrays. Drawing stamps each particle's shape: pygame truncates
+    coordinates to whole
+    pixels, so a line, ellipse or dot depends only on whole-pixel sizes - each distinct shape is
+    drawn once by
     pygame itself and then copied to every particle that has it, giving the reference's pixels."""
 
     def __init__(self):
@@ -138,7 +149,8 @@ class WeatherStore:
 
 
 def aabb_pairs(x0, y0, x1, y1, cell_size=64.0):
-    """Same pairs as the reference, found by sort-and-sweep along the wider axis (``cell_size`` is unused)."""
+    """Same pairs as the reference, found by sort-and-sweep along the wider axis (``cell_size`` is
+    unused)."""
     if cell_size <= 0:
         raise ValueError("cell_size must be positive")
     n = len(x0)
@@ -178,7 +190,8 @@ def _cells(x0, y0, x1, y1, cell_size):
 
 
 def aabb_cross_pairs(a, b, cell_size=64.0, touching=False):
-    """Same pairs as the reference: a grid join (cells of ``a`` matched to sorted cells of ``b``)."""
+    """Same pairs as the reference: a grid join (cells of ``a`` matched to sorted cells of
+    ``b``)."""
     if cell_size <= 0:
         raise ValueError("cell_size must be positive")
     ax0, ay0, ax1, ay1 = (np.asarray(v, dtype=float) for v in a)
@@ -195,7 +208,9 @@ def aabb_cross_pairs(a, b, cell_size=64.0, touching=False):
     if not total:
         return []
     i = np.repeat(a_row, counts)
-    j = b_row[np.repeat(lo, counts) + np.arange(total) - np.repeat(np.cumsum(counts) - counts, counts)]
+    j = b_row[
+        np.repeat(lo, counts) + np.arange(total) - np.repeat(np.cumsum(counts) - counts, counts)
+    ]
     if touching:
         hit = (ax0[i] <= bx1[j]) & (bx0[j] <= ax1[i]) & (ay0[i] <= by1[j]) & (by0[j] <= ay1[i])
     else:
@@ -362,7 +377,12 @@ def box_columns(t, b, slots, codes):
     noy = np.where(down, ox, np.where(up, -ox, oy))
     nw, nh = np.where(turned, h, w), np.where(turned, w, h)
     cx, cy = _view(t["x"])[idx] + nox, _view(t["y"])[idx] + noy
-    return (cx - nw / 2).tolist(), (cy - nh / 2).tolist(), (cx + nw / 2).tolist(), (cy + nh / 2).tolist()
+    return (
+        (cx - nw / 2).tolist(),
+        (cy - nh / 2).tolist(),
+        (cx + nw / 2).tolist(),
+        (cy + nh / 2).tolist(),
+    )
 
 
 def blocked_rows(boxes, walls, pairs, mover_mask, mover_row, wall_bit, wall_one_way, wall_circle):
@@ -373,7 +393,9 @@ def blocked_rows(boxes, walls, pairs, mover_mask, mover_row, wall_bit, wall_one_
     x0, y0, x1, y1 = (np.asarray(c, dtype=float) for c in boxes)
     cx, cy, radius = (np.asarray(c, dtype=float) for c in walls)
     ok = (j != np.asarray(mover_row, dtype=np.int64)[i]) & ~np.asarray(wall_one_way, dtype=bool)[j]
-    ok &= (np.asarray(mover_mask, dtype=np.int64)[i] & np.asarray(wall_bit, dtype=np.int64)[j]) != 0
+    ok &= (
+        np.asarray(mover_mask, dtype=np.int64)[i] & np.asarray(wall_bit, dtype=np.int64)[j]
+    ) != 0
     circle = np.asarray(wall_circle, dtype=bool)[j]
     if circle.any():
         nx = np.minimum(np.maximum(cx[j], x0[i]), x1[i])

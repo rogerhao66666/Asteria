@@ -73,14 +73,22 @@ class SpriteClipData:
         return self.frame_duration * len(self.frames)
 
     def to_data(self):
-        data = {"frames": list(self.frames), "frame_duration": self.frame_duration, "loop": self.loop}
+        data = {
+            "frames": list(self.frames),
+            "frame_duration": self.frame_duration,
+            "loop": self.loop,
+        }
         if self.events:
             data["events"] = {str(p): list(n) for p, n in self.events}
         return data
 
     @classmethod
     def from_data(cls, name, data):
-        events = tuple(sorted((int(k), tuple(str(x) for x in v)) for k, v in dict(data.get("events", {})).items()))
+        events = tuple(
+            sorted(
+                (int(k), tuple(str(x) for x in v)) for k, v in dict(data.get("events", {})).items()
+            )
+        )
         return cls(
             name,
             tuple(int(x) for x in data["frames"]),
@@ -120,7 +128,9 @@ class SpriteData:
 
     @classmethod
     def from_data(cls, data):
-        clips = tuple(SpriteClipData.from_data(k, v) for k, v in sorted(dict(data.get("clips", {})).items()))
+        clips = tuple(
+            SpriteClipData.from_data(k, v) for k, v in sorted(dict(data.get("clips", {})).items())
+        )
         return cls(
             data["image"],
             _size(data["frame_size"], "frame_size"),
@@ -157,25 +167,34 @@ class SpriteData:
         clips = {}
         for c in self.clips:
             events = dict(c.events)
-            keyframes = [SpriteKeyframe(f, c.frame_duration, events.get(i, ())) for i, f in enumerate(c.frames)]
+            keyframes = [
+                SpriteKeyframe(f, c.frame_duration, events.get(i, ()))
+                for i, f in enumerate(c.frames)
+            ]
             clips[c.name] = SpriteClip(c.name, keyframes, c.loop)
         return AnimationClipSet(clips)
 
     def issues(self, label, image_size):
-        """Dimension problems: the image must be a whole grid of frames and clips must stay inside it."""
+        """Dimension problems: the image must be a whole grid of frames and clips must stay inside
+        it."""
         found = []
         fw, fh = self.frame_size
         if image_size is None:
             return [ValidationIssue("sprite.image.missing", f"{label}: {self.image}")]
         if image_size[0] % fw or image_size[1] % fh:
             found.append(
-                ValidationIssue("sprite.grid.mismatch", f"{label}: {image_size} is not a grid of {self.frame_size}")
+                ValidationIssue(
+                    "sprite.grid.mismatch",
+                    f"{label}: {image_size} is not a grid of {self.frame_size}",
+                )
             )
         columns, rows = self.grid(image_size)
         for clip in self.clips:
             for frame in clip.frames:
                 if frame >= columns * rows:
-                    found.append(ValidationIssue("sprite.clip.frame", f"{label}: {clip.name} frame {frame}"))
+                    found.append(
+                        ValidationIssue("sprite.clip.frame", f"{label}: {clip.name} frame {frame}")
+                    )
         return found
 
 
@@ -254,7 +273,9 @@ class SkillAsset:
             raise ValueError("duration must be > 0")
         if any(b.at > self.duration for b in self.beats):
             raise ValueError("beat after the skill ends")
-        object.__setattr__(self, "beats", tuple(sorted(self.beats, key=lambda b: (b.at, b.channel, b.cue))))
+        object.__setattr__(
+            self, "beats", tuple(sorted(self.beats, key=lambda b: (b.at, b.channel, b.cue)))
+        )
 
     def referenced_assets(self):
         ids = [self.icon_id] if self.icon_id else []
@@ -323,7 +344,9 @@ def _codec(kind, decode, encode):
 def character_codec():
     return _codec(
         "character",
-        lambda d: CharacterAsset(_canon(d), SpriteData.from_data(d.payload["sprite"]), d.payload["default_clip"]),
+        lambda d: CharacterAsset(
+            _canon(d), SpriteData.from_data(d.payload["sprite"]), d.payload["default_clip"]
+        ),
         lambda a: {"sprite": a.sprite.to_data(), "default_clip": a.default_clip},
     )
 
@@ -381,8 +404,12 @@ def projectile_codec():
 def skill_codec():
     def dec(d):
         p = d.payload
-        beats = tuple(SkillBeat(float(b["at"]), b["channel"], b["cue"]) for b in p.get("beats", ()))
-        return SkillAsset(_canon(d), p["ability_id"], p.get("icon_id", ""), float(p["duration"]), beats)
+        beats = tuple(
+            SkillBeat(float(b["at"]), b["channel"], b["cue"]) for b in p.get("beats", ())
+        )
+        return SkillAsset(
+            _canon(d), p["ability_id"], p.get("icon_id", ""), float(p["duration"]), beats
+        )
 
     def enc(a):
         return {
@@ -399,7 +426,13 @@ def ui_codec():
     def dec(d):
         p = d.payload
         states = tuple(sorted((k, tuple(int(x) for x in v)) for k, v in dict(p["states"]).items()))
-        return UiAsset(_canon(d), p["image"], _size(p["size"], "size"), tuple(int(x) for x in p["slices"]), states)
+        return UiAsset(
+            _canon(d),
+            p["image"],
+            _size(p["size"], "size"),
+            tuple(int(x) for x in p["slices"]),
+            states,
+        )
 
     def enc(a):
         return {
@@ -416,7 +449,8 @@ def scene_codec():
     def dec(d):
         p = d.payload
         placements = tuple(
-            ScenePlacement(x["asset_id"], float(x["x"]), float(x["y"]), int(x.get("layer", 0))) for x in p["placements"]
+            ScenePlacement(x["asset_id"], float(x["x"]), float(x["y"]), int(x.get("layer", 0)))
+            for x in p["placements"]
         )
         return SceneAsset(
             _canon(d),
@@ -432,7 +466,10 @@ def scene_codec():
             "tileset_id": a.tileset_id,
             "size": list(a.size),
             "tiles": list(a.tiles),
-            "placements": [{"asset_id": p.asset_id, "x": p.x, "y": p.y, "layer": p.layer} for p in a.placements],
+            "placements": [
+                {"asset_id": p.asset_id, "x": p.x, "y": p.y, "layer": p.layer}
+                for p in a.placements
+            ],
             "spawn": list(a.spawn),
         }
 
@@ -440,7 +477,14 @@ def scene_codec():
 
 
 def install_sprite_kind_codecs(registry):
-    for codec in (character_codec(), npc_codec(), projectile_codec(), skill_codec(), ui_codec(), scene_codec()):
+    for codec in (
+        character_codec(),
+        npc_codec(),
+        projectile_codec(),
+        skill_codec(),
+        ui_codec(),
+        scene_codec(),
+    ):
         registry.register(codec, replace=True)
     return registry
 
@@ -455,7 +499,9 @@ def sprite_kind_validators(image_size):
         return ValidationReport(asset.canonical.asset_id, tuple(issues))
 
     def sprite(asset):
-        return report(asset, asset.sprite.issues(asset.canonical.asset_id, image_size(asset.sprite.image)))
+        return report(
+            asset, asset.sprite.issues(asset.canonical.asset_id, image_size(asset.sprite.image))
+        )
 
     def ui(asset):
         size = image_size(asset.image)
@@ -464,7 +510,11 @@ def sprite_kind_validators(image_size):
             issues.append(ValidationIssue("ui.image.missing", asset.image))
         else:
             if tuple(size) != asset.size:
-                issues.append(ValidationIssue("ui.image.size", f"{asset.image} is {size}, declared {asset.size}"))
+                issues.append(
+                    ValidationIssue(
+                        "ui.image.size", f"{asset.image} is {size}, declared {asset.size}"
+                    )
+                )
             for name, (x, y, w, h) in asset.states:
                 if x + w > size[0] or y + h > size[1]:
                     issues.append(ValidationIssue("ui.state.bounds", name))
@@ -480,7 +530,8 @@ def sprite_kind_validators(image_size):
 
 
 def standard_asset_codecs():
-    """Every typed codec the engine ships (Phase-1 kinds, extended kinds, passthrough fallbacks)."""
+    """Every typed codec the engine ships (Phase-1 kinds, extended kinds, passthrough
+    fallbacks)."""
     from .builtin_codecs import install_simple_typed_codecs
     from .codecs import AssetCodecRegistry, install_common_passthrough_codecs
     from .complex_codecs import install_complex_typed_codecs

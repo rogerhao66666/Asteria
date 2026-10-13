@@ -79,7 +79,9 @@ def test_shop_buys_sells_and_tracks_limited_stock():
     gold, leaves = state.currencies["gold"], state.inventory.count("ether_leaf")
     game.open_shop("apothecary")
     game.buy("ether_leaf", 2)
-    assert state.currencies["gold"] == gold - 60 and state.inventory.count("ether_leaf") == leaves + 2
+    assert (
+        state.currencies["gold"] == gold - 60 and state.inventory.count("ether_leaf") == leaves + 2
+    )
     assert game.shops.remaining("apothecary", "ether_leaf") == 1
     with pytest.raises(ShopError):
         game.buy("ether_leaf", 2)  # only 1 left
@@ -134,7 +136,9 @@ def test_victory_advances_defeat_objectives_and_events_drive_quests():
         BOSS_PROGRAM,
         [
             EventInstruction("WORLD", {"command": "START_QUEST", "args": {"quest_id": "hunt"}}),
-            EventInstruction("WORLD", {"command": "START_ENCOUNTER", "args": {"encounter_id": "boss_room"}}),
+            EventInstruction(
+                "WORLD", {"command": "START_ENCOUNTER", "args": {"encounter_id": "boss_room"}}
+            ),
             EventInstruction("END"),
         ],
     )
@@ -198,7 +202,12 @@ def test_conditional_and_luck_scaled_loot():
         "boss_emblem": 1,
         "focus_stone": 1,
     }
-    assert LootEntry.from_data(LootEntry("x", required_switch="s", luck_bonus=0.1).to_data()).required_switch == "s"
+    assert (
+        LootEntry.from_data(
+            LootEntry("x", required_switch="s", luck_bonus=0.1).to_data()
+        ).required_switch
+        == "s"
+    )
     assert "luck_bonus" not in LootEntry("x").to_data()  # old data stays byte-identical
 
 
@@ -218,7 +227,9 @@ def test_equipment_set_bonuses_apply_by_piece_count_and_survive_save_load(tmp_pa
                 "weapon_01",
             ],
             bonuses=[
-                EquipmentSetBonus(2, modifiers=[StatModifier("p", "power", ModifierOperation.ADD, 10)]),
+                EquipmentSetBonus(
+                    2, modifiers=[StatModifier("p", "power", ModifierOperation.ADD, 10)]
+                ),
                 EquipmentSetBonus(3, tags=["set.ember"], granted_abilities=["strike"]),
             ],
         )
@@ -229,7 +240,10 @@ def test_equipment_set_bonuses_apply_by_piece_count_and_survive_save_load(tmp_pa
     hero02 = game.resolve_actor_build("hero_02")  # 1 piece: no bonus
     assert hero01.stats.get("power") == base_power + 10 and "set.ember" in hero01.tags.values()
     assert "set.ember" not in hero02.tags.values()
-    assert [b.pieces for _, b in game.save.rpg_state.loadouts["hero_01"].active_set_bonuses()] == [2, 3]
+    assert [b.pieces for _, b in game.save.rpg_state.loadouts["hero_01"].active_set_bonuses()] == [
+        2,
+        3,
+    ]
     path = tmp_path / "save.json"
     game.sync_world_state().save_json(path)
     restored = GameRuntimeSave.load_json(path, project)
@@ -243,7 +257,12 @@ def test_equipment_set_bonuses_apply_by_piece_count_and_survive_save_load(tmp_pa
 def test_crafting_station_chance_quality_and_experience():
     import random
 
-    from asteria.rpg import CompositionOutput, CompositionQualityTier, CompositionRecipeDefinition, CompositionRuntime
+    from asteria.rpg import (
+        CompositionOutput,
+        CompositionQualityTier,
+        CompositionRecipeDefinition,
+        CompositionRuntime,
+    )
     from asteria.rpg.progression import ProgressionRuntime
 
     project, game = _session()
@@ -261,7 +280,9 @@ def test_crafting_station_chance_quality_and_experience():
         ],
         experience={track: 25},
     )
-    assert CompositionRecipeDefinition.from_data(json.loads(json.dumps(recipe.to_data()))) == recipe
+    assert (
+        CompositionRecipeDefinition.from_data(json.loads(json.dumps(recipe.to_data()))) == recipe
+    )
     project.rpg_database.add_composition_recipe(recipe)
     project.rpg_database.validate()
     inventory = Inventory()
@@ -271,7 +292,9 @@ def test_crafting_station_chance_quality_and_experience():
     payload = {"base": ["ether_leaf", "fire_dust"]}
     with pytest.raises(ValueError):
         runtime.craft(
-            inventory, payload, progression=ProgressionRuntime(project.rpg_database.progression_tracks.values())
+            inventory,
+            payload,
+            progression=ProgressionRuntime(project.rpg_database.progression_tracks.values()),
         )
     progression = ProgressionRuntime(project.rpg_database.progression_tracks.values())
     results = [
@@ -286,13 +309,20 @@ def test_crafting_station_chance_quality_and_experience():
         for seed in range(8)
     ]
     failures = [r for r in results if not r.success]
-    assert failures and all(r.produced == (("alchemy_salt", 1),) and r.experience == () for r in failures)
+    assert failures and all(
+        r.produced == (("alchemy_salt", 1),) and r.experience == () for r in failures
+    )
     successes = [r for r in results if r.success]
     assert successes and {r.quality for r in successes} <= {"", "fine", "masterwork"}
     assert any(r.quality for r in successes)  # bonus pushes rolls into tiers
     assert inventory.count("ether_leaf") == 2  # 8 crafts consumed materials
-    assert progression.to_data() != ProgressionRuntime(project.rpg_database.progression_tracks.values()).to_data()
+    assert (
+        progression.to_data()
+        != ProgressionRuntime(project.rpg_database.progression_tracks.values()).to_data()
+    )
     plain = CompositionRecipeDefinition(
-        "p", selections=[{"step_id": "a", "item_ids": ["x"]}], outputs=[{"item_id": "y", "amount": 1}]
+        "p",
+        selections=[{"step_id": "a", "item_ids": ["x"]}],
+        outputs=[{"item_id": "y", "amount": 1}],
     )
     assert plain.to_data()["version"] == 1 and "station" not in plain.to_data()

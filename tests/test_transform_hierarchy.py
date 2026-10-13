@@ -114,11 +114,17 @@ def test_editor_tree_nests_children_under_their_parent():
         window.refresh_all()
         tree = window.project_tree.tree
         root = tree.topLevelItem(0)
-        scenes = next(root.child(i) for i in range(root.childCount()) if root.child(i).text(0) == "Scenes")
+        scenes = next(
+            root.child(i) for i in range(root.childCount()) if root.child(i).text(0) == "Scenes"
+        )
         map_item = scenes.child(0)
         top_names = [map_item.child(i).text(0) for i in range(map_item.childCount())]
         assert "Wagon" in top_names and "Wheel" not in top_names
-        wagon = next(map_item.child(i) for i in range(map_item.childCount()) if map_item.child(i).text(0) == "Wagon")
+        wagon = next(
+            map_item.child(i)
+            for i in range(map_item.childCount())
+            if map_item.child(i).text(0) == "Wagon"
+        )
         assert "Wheel" in [wagon.child(i).text(0) for i in range(wagon.childCount())]
     finally:
         window.document.mark_saved()

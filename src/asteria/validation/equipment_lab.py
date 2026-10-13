@@ -105,7 +105,9 @@ class EquipmentLab:
             loadout=self.scenario.loadout,
             passives=self.scenario.passives,
         )
-        return self.scenario.loadout.equip(str(slot_id), item, capabilities=capabilities, validate_requirements=True)
+        return self.scenario.loadout.equip(
+            str(slot_id), item, capabilities=capabilities, validate_requirements=True
+        )
 
     def unequip(self, slot_id, index=0):
         return self.scenario.loadout.unequip(str(slot_id), index)

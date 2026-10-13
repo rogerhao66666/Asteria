@@ -16,6 +16,7 @@ Controls:
   R         restart
   Esc       quit
 """
+
 from __future__ import annotations
 
 import random
@@ -99,10 +100,18 @@ def side_formation(prefix):
     return FormationDefinition(
         f"{prefix}.formation",
         [
-            FormationSlotDefinition("front.a", x=0, y=0, tags=("row.front",), adjacent_to=("front.b", "back.a")),
-            FormationSlotDefinition("front.b", x=1, y=0, tags=("row.front",), adjacent_to=("front.a", "back.b")),
-            FormationSlotDefinition("back.a", x=0, y=1, tags=("row.back",), adjacent_to=("front.a", "back.b")),
-            FormationSlotDefinition("back.b", x=1, y=1, tags=("row.back",), adjacent_to=("front.b", "back.a")),
+            FormationSlotDefinition(
+                "front.a", x=0, y=0, tags=("row.front",), adjacent_to=("front.b", "back.a")
+            ),
+            FormationSlotDefinition(
+                "front.b", x=1, y=0, tags=("row.front",), adjacent_to=("front.a", "back.b")
+            ),
+            FormationSlotDefinition(
+                "back.a", x=0, y=1, tags=("row.back",), adjacent_to=("front.a", "back.b")
+            ),
+            FormationSlotDefinition(
+                "back.b", x=1, y=1, tags=("row.back",), adjacent_to=("front.b", "back.a")
+            ),
         ],
     )
 
@@ -110,26 +119,76 @@ def side_formation(prefix):
 def make_battle():
     abilities = ("strike", "sweep", "backshot", "chaos", "meteor")
     heroes = [
-        PartyMember("Aria", "heroes", make_subject(100, ("actor.hero",)), ability_ids=abilities, initiative=20),
-        PartyMember("Bram", "heroes", make_subject(82, ("actor.hero",)), ability_ids=abilities, initiative=12),
+        PartyMember(
+            "Aria",
+            "heroes",
+            make_subject(100, ("actor.hero",)),
+            ability_ids=abilities,
+            initiative=20,
+        ),
+        PartyMember(
+            "Bram",
+            "heroes",
+            make_subject(82, ("actor.hero",)),
+            ability_ids=abilities,
+            initiative=12,
+        ),
     ]
     enemies = [
-        PartyMember("Beetle", "enemies", make_subject(100, ("enemy",)), ability_ids=abilities, initiative=16),
-        PartyMember("Mage", "enemies", make_subject(72, ("enemy",)), ability_ids=abilities, initiative=10),
-        PartyMember("Core", "enemies", make_subject(90, ("enemy", "boss.part")), ability_ids=abilities, initiative=8),
+        PartyMember(
+            "Beetle",
+            "enemies",
+            make_subject(100, ("enemy",)),
+            ability_ids=abilities,
+            initiative=16,
+        ),
+        PartyMember(
+            "Mage", "enemies", make_subject(72, ("enemy",)), ability_ids=abilities, initiative=10
+        ),
+        PartyMember(
+            "Core",
+            "enemies",
+            make_subject(90, ("enemy", "boss.part")),
+            ability_ids=abilities,
+            initiative=8,
+        ),
     ]
-    hf = BattleFormationRuntime(side_formation("heroes"), [
-        BattlePlacement("Aria", "front.a"), BattlePlacement("Bram", "back.a")
-    ])
-    ef = BattleFormationRuntime(side_formation("enemies"), [
-        BattlePlacement("Beetle", "front.a"), BattlePlacement("Mage", "back.a"), BattlePlacement("Core", "back.b")
-    ])
+    hf = BattleFormationRuntime(
+        side_formation("heroes"),
+        [BattlePlacement("Aria", "front.a"), BattlePlacement("Bram", "back.a")],
+    )
+    ef = BattleFormationRuntime(
+        side_formation("enemies"),
+        [
+            BattlePlacement("Beetle", "front.a"),
+            BattlePlacement("Mage", "back.a"),
+            BattlePlacement("Core", "back.b"),
+        ],
+    )
     active = lambda m: m.subject.resources.current("hp") > 0
     targeting = [
         BattleTargetingDefinition("strike", relation="opponent", selection_mode="manual"),
-        BattleTargetingDefinition("sweep", relation="opponent", selection_mode="all", minimum_targets=1, maximum_targets=8),
-        BattleTargetingDefinition("backshot", relation="opponent", selection_mode="manual", required_slot_tags=("row.back",)),
-        BattleTargetingDefinition("chaos", relation="opponent", selection_mode="random_n", minimum_targets=2, maximum_targets=2, selection_count=2),
+        BattleTargetingDefinition(
+            "sweep",
+            relation="opponent",
+            selection_mode="all",
+            minimum_targets=1,
+            maximum_targets=8,
+        ),
+        BattleTargetingDefinition(
+            "backshot",
+            relation="opponent",
+            selection_mode="manual",
+            required_slot_tags=("row.back",),
+        ),
+        BattleTargetingDefinition(
+            "chaos",
+            relation="opponent",
+            selection_mode="random_n",
+            minimum_targets=2,
+            maximum_targets=2,
+            selection_count=2,
+        ),
         BattleTargetingDefinition("meteor", relation="opponent", selection_mode="manual"),
     ]
     objective = BattleObjectiveDefinition(
@@ -147,13 +206,22 @@ def make_battle():
         formations={"heroes": hf, "enemies": ef},
         objective_definitions=(objective,),
         escape_rules=(escape,),
-        scheduler_definition=BattleSchedulerDefinition("continuous.demo", mode="continuous", timeline_scale=100),
+        scheduler_definition=BattleSchedulerDefinition(
+            "continuous.demo", mode="continuous", timeline_scale=100
+        ),
         action_timing_definitions=(
             ActionTimingDefinition("strike", recovery=0.5),
             ActionTimingDefinition("sweep", startup=0.5, recovery=1.5),
             ActionTimingDefinition("backshot", recovery=0.25, priority=2),
             ActionTimingDefinition("chaos", startup=0.5, recovery=1.0),
-            ActionTimingDefinition("meteor", startup=1.0, cast_time=4.0, recovery=2.0, priority=10, interrupt_threshold=5),
+            ActionTimingDefinition(
+                "meteor",
+                startup=1.0,
+                cast_time=4.0,
+                recovery=2.0,
+                priority=10,
+                interrupt_threshold=5,
+            ),
         ),
     )
     return battle
@@ -182,27 +250,42 @@ def main():
     def execute_now(actor, target_ids):
         nonlocal selected_targets
         try:
-            result = battle.submit_action(BattleAction(actor.member_id, selected_ability, target_ids), rng=rng)
+            result = battle.submit_action(
+                BattleAction(actor.member_id, selected_ability, target_ids), rng=rng
+            )
             if hasattr(result, "resolve_at"):
-                log.append(f"{actor.member_id}: CAST {selected_ability} -> resolves t={result.resolve_at:.2f}")
+                log.append(
+                    f"{actor.member_id}: CAST {selected_ability} -> resolves "
+                    f"t={result.resolve_at:.2f}"
+                )
             else:
-                log.append(f"{actor.member_id}: {selected_ability} -> {', '.join(result.action.target_ids)}")
+                log.append(
+                    f"{actor.member_id}: {selected_ability} -> "
+                    f"{', '.join(result.action.target_ids)}"
+                )
             for target_id in tuple(battle.members):
                 target = battle.member(target_id)
-                if target.subject.resources.current("hp") <= 0 and battle.combatants.is_active(target_id):
+                if target.subject.resources.current("hp") <= 0 and battle.combatants.is_active(
+                    target_id
+                ):
                     battle.incapacitate(target_id, state_id="ko", reason="hp.empty")
                     log.append(f"{target_id} -> KO")
             selected_targets = []
             outcome = battle.resolve_outcome()
             if outcome.finished:
-                log.append(f"BATTLE FINISHED winners={outcome.winning_sides} escaped={outcome.escaped_sides}")
+                log.append(
+                    f"BATTLE FINISHED winners={outcome.winning_sides} "
+                    f"escaped={outcome.escaped_sides}"
+                )
         except Exception as exc:
             log.append(f"REJECTED: {exc}")
 
     running = True
     while running:
         actor = current_actor()
-        resolution = battle.resolve_targets(actor.member_id, selected_ability, selected_targets, rng=random.Random(8401))
+        resolution = battle.resolve_targets(
+            actor.member_id, selected_ability, selected_targets, rng=random.Random(8401)
+        )
         candidate_ids = set(resolution.candidate_ids)
 
         member_rects = {}
@@ -215,7 +298,11 @@ def main():
                 y = 230 + slot.y * 190
                 member_rects[placement.member_id] = pygame.Rect(int(x), int(y), 145, 100)
                 placed.add(placement.member_id)
-            extras = [m.member_id for m in battle.parties[side].members if m.member_id not in placed and battle.combatants.state(m.member_id).present]
+            extras = [
+                m.member_id
+                for m in battle.parties[side].members
+                if m.member_id not in placed and battle.combatants.state(m.member_id).present
+            ]
             for i, member_id in enumerate(extras):
                 member_rects[member_id] = pygame.Rect(base_x + i * 155, 440, 145, 82)
 
@@ -247,7 +334,13 @@ def main():
                     summon_id = f"Sprite{summon_counter}"
                     try:
                         battle.summon(
-                            PartyMember(summon_id, "heroes", make_subject(55, ("summon",)), ability_ids=("strike",), initiative=14),
+                            PartyMember(
+                                summon_id,
+                                "heroes",
+                                make_subject(55, ("summon",)),
+                                ability_ids=("strike",),
+                                initiative=14,
+                            ),
                             owner_id="Aria",
                             join_current_round=False,
                         )
@@ -256,7 +349,13 @@ def main():
                         log.append(f"SUMMON REJECTED: {exc}")
                 elif event.key == pygame.K_t:
                     if battle.combatants.state("Aria").form_id is None:
-                        transformed = PartyMember("Aria", "heroes", make_subject(100, ("actor.hero", "form.dragon")), ability_ids=("strike", "sweep", "backshot", "chaos", "meteor"), initiative=35)
+                        transformed = PartyMember(
+                            "Aria",
+                            "heroes",
+                            make_subject(100, ("actor.hero", "form.dragon")),
+                            ability_ids=("strike", "sweep", "backshot", "chaos", "meteor"),
+                            initiative=35,
+                        )
                         battle.transform("Aria", transformed, form_id="dragon", reason="harness")
                         log.append("Aria transformed -> dragon")
                 elif event.key == pygame.K_y:
@@ -265,14 +364,21 @@ def main():
                         log.append("Aria reverted form")
                 elif event.key == pygame.K_e:
                     result = battle.attempt_escape("retreat", rng=rng)
-                    log.append(f"Escape roll {result.roll:.2f} / {result.chance:.2f}: {'SUCCESS' if result.succeeded else 'FAIL'}")
+                    log.append(
+                        f"Escape roll {result.roll:.2f} / {result.chance:.2f}: "
+                        f"{'SUCCESS' if result.succeeded else 'FAIL'}"
+                    )
                 elif event.key == pygame.K_i:
                     pending = battle.action_timing.next_pending()
                     if pending is None:
                         log.append("No pending cast to interrupt")
                     else:
-                        result = battle.interrupt_action(pending.actor_id, power=5, reason="harness.interrupt")
-                        log.append(f"Interrupt {pending.actor_id}: {result.interrupted} ({result.reason})")
+                        result = battle.interrupt_action(
+                            pending.actor_id, power=5, reason="harness.interrupt"
+                        )
+                        log.append(
+                            f"Interrupt {pending.actor_id}: {result.interrupted} ({result.reason})"
+                        )
                 elif event.key == pygame.K_d:
                     target_id = selected_targets[0] if selected_targets else actor.member_id
                     battle.shift_timeline(target_id, 2.0)
@@ -282,9 +388,18 @@ def main():
                     battle.shift_timeline(target_id, -2.0)
                     log.append(f"Advance {target_id} -2.0")
                 elif event.key == pygame.K_r:
-                    battle = make_battle(); selected_targets = []; summon_counter = 0; log.append("Restarted battle.")
+                    battle = make_battle()
+                    selected_targets = []
+                    summon_counter = 0
+                    log.append("Restarted battle.")
                 elif event.key in (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5):
-                    selected_ability = {pygame.K_1:"strike", pygame.K_2:"sweep", pygame.K_3:"backshot", pygame.K_4:"chaos", pygame.K_5:"meteor"}[event.key]
+                    selected_ability = {
+                        pygame.K_1: "strike",
+                        pygame.K_2: "sweep",
+                        pygame.K_3: "backshot",
+                        pygame.K_4: "chaos",
+                        pygame.K_5: "meteor",
+                    }[event.key]
                     selected_targets = []
                 elif event.key == pygame.K_SPACE:
                     definition = battle.targeting.definition_for(selected_ability)
@@ -299,12 +414,33 @@ def main():
                         break
 
         screen.fill((24, 27, 34))
-        title = font.render(f"Actor: {actor.member_id} | Round {battle.turn_queue.round_index} | t={battle.scheduler.current_time:.2f}", True, (240,240,240))
+        title = font.render(
+            f"Actor: {actor.member_id} | Round {battle.turn_queue.round_index} | "
+            f"t={battle.scheduler.current_time:.2f}",
+            True,
+            (240, 240, 240),
+        )
         screen.blit(title, (35, 25))
-        ability_text = "1 Strike   2 Sweep [Space]   3 Backshot   4 Random2 [Space]   5 Meteor CAST"
-        screen.blit(small.render(ability_text, True, (210,210,210)), (35, 62))
-        screen.blit(small.render(f"Selected: {selected_ability} | candidates: {', '.join(sorted(candidate_ids))}", True, (210,210,210)), (35, 90))
-        screen.blit(small.render("Click/Enter | I interrupt cast | D delay | A advance | K/V KO/revive | R restart", True, (180,180,180)), (35, 116))
+        ability_text = (
+            "1 Strike   2 Sweep [Space]   3 Backshot   4 Random2 [Space]   5 Meteor CAST"
+        )
+        screen.blit(small.render(ability_text, True, (210, 210, 210)), (35, 62))
+        screen.blit(
+            small.render(
+                f"Selected: {selected_ability} | candidates: {', '.join(sorted(candidate_ids))}",
+                True,
+                (210, 210, 210),
+            ),
+            (35, 90),
+        )
+        screen.blit(
+            small.render(
+                "Click/Enter | I interrupt cast | D delay | A advance | K/V KO/revive | R restart",
+                True,
+                (180, 180, 180),
+            ),
+            (35, 116),
+        )
 
         for member_id, rect in member_rects.items():
             m = battle.member(member_id)
@@ -313,25 +449,41 @@ def main():
             if member_id in candidate_ids:
                 base = tuple(min(255, c + 55) for c in base)
             if member_id in selected_targets:
-                pygame.draw.rect(screen, (245, 220, 90), rect.inflate(8,8), 4)
+                pygame.draw.rect(screen, (245, 220, 90), rect.inflate(8, 8), 4)
             pygame.draw.rect(screen, base, rect, border_radius=8)
             if member_id == actor.member_id:
-                pygame.draw.rect(screen, (110, 220, 255), rect.inflate(4,4), 3, border_radius=8)
-            screen.blit(font.render(member_id, True, (255,255,255)), (rect.x+10, rect.y+10))
+                pygame.draw.rect(screen, (110, 220, 255), rect.inflate(4, 4), 3, border_radius=8)
+            screen.blit(font.render(member_id, True, (255, 255, 255)), (rect.x + 10, rect.y + 10))
             lifecycle = battle.combatants.state(member_id)
             form = f" form={lifecycle.form_id}" if lifecycle.form_id else ""
-            screen.blit(small.render(f"HP {int(hp)}/100 | {lifecycle.state_id}{form}", True, (255,255,255)), (rect.x+10, rect.y+48))
+            screen.blit(
+                small.render(
+                    f"HP {int(hp)}/100 | {lifecycle.state_id}{form}", True, (255, 255, 255)
+                ),
+                (rect.x + 10, rect.y + 48),
+            )
             slot = battle.formations[m.side].slot_for(member_id)
             if slot is not None:
-                screen.blit(small.render(" / ".join(slot.tags), True, (215,215,215)), (rect.x+10, rect.y+72))
+                screen.blit(
+                    small.render(" / ".join(slot.tags), True, (215, 215, 215)),
+                    (rect.x + 10, rect.y + 72),
+                )
 
-        pending_text = ", ".join(f"{x.actor_id}:{x.ability_id}@{x.resolve_at:.1f}" for x in battle.action_timing.pending()) or "none"
-        screen.blit(small.render(f"Pending casts: {pending_text}", True, (220,205,150)), (35, 505))
+        pending_text = (
+            ", ".join(
+                f"{x.actor_id}:{x.ability_id}@{x.resolve_at:.1f}"
+                for x in battle.action_timing.pending()
+            )
+            or "none"
+        )
+        screen.blit(
+            small.render(f"Pending casts: {pending_text}", True, (220, 205, 150)), (35, 505)
+        )
         y = 535
-        screen.blit(small.render("Battle log", True, (235,235,235)), (35, y))
+        screen.blit(small.render("Battle log", True, (235, 235, 235)), (35, y))
         for line in log[-5:]:
             y += 24
-            screen.blit(small.render(line, True, (190,190,190)), (35, y))
+            screen.blit(small.render(line, True, (190, 190, 190)), (35, y))
 
         pygame.display.flip()
         clock.tick(60)

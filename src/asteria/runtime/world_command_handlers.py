@@ -113,7 +113,9 @@ def register_standard_world_commands(router, session):
         return session.start_encounter(_required(command, "encounter_id"))
 
     def transfer(command):
-        scene_id = str(command.args.get("scene_id") or command.args.get("destination") or session.scene.id)
+        scene_id = str(
+            command.args.get("scene_id") or command.args.get("destination") or session.scene.id
+        )
         return session.transfer_player(
             scene_id,
             command.args.get("x"),
@@ -147,7 +149,9 @@ def register_standard_world_commands(router, session):
 
     def take_item(command):
         item_id = str(_required(command, "item_id"))
-        if not session.save.rpg_state.inventory.remove(item_id, int(_amount(command, "quantity", 1))):
+        if not session.save.rpg_state.inventory.remove(
+            item_id, int(_amount(command, "quantity", 1))
+        ):
             raise WorldCommandError(f"not enough {item_id} to take")
         session.refresh_quests()
         return session.save.rpg_state.inventory.count(item_id)
@@ -167,7 +171,11 @@ def register_standard_world_commands(router, session):
 
             quest_id = str(_required(command, "quest_id"))
             args = (
-                (quest_id, str(_required(command, "objective_id")), int(_amount(command, "amount", 1)))
+                (
+                    quest_id,
+                    str(_required(command, "objective_id")),
+                    int(_amount(command, "amount", 1)),
+                )
                 if objective
                 else (quest_id,)
             )
@@ -189,7 +197,10 @@ def register_standard_world_commands(router, session):
         return command
 
     def summon(command):
-        enemy_id, actor_id = command.args.get("enemy_id") or None, command.args.get("actor_id") or None
+        enemy_id, actor_id = (
+            command.args.get("enemy_id") or None,
+            command.args.get("actor_id") or None,
+        )
         try:
             return session.summon(
                 enemy_id=enemy_id,
@@ -222,7 +233,9 @@ def register_standard_world_commands(router, session):
     router.register("CHANGE_REPUTATION", change_reputation)
     router.register(
         "CHANGE_RELATIONSHIP",
-        lambda c: session.change_relationship(str(_required(c, "subject_id")), _amount(c, "amount", 0)),
+        lambda c: session.change_relationship(
+            str(_required(c, "subject_id")), _amount(c, "amount", 0)
+        ),
     )
 
     def learn_recipe(command):
@@ -236,23 +249,34 @@ def register_standard_world_commands(router, session):
         return session.open_crafting_station
 
     router.register(
-        "SET_NPC", lambda c: session.set_npc(str(_required(c, "npc")), str(_required(c, "key")), c.args.get("value"))
+        "SET_NPC",
+        lambda c: session.set_npc(
+            str(_required(c, "npc")), str(_required(c, "key")), c.args.get("value")
+        ),
     )
     router.register(
         "MOVE_NPC",
         lambda c: session.move_npc(
-            str(_required(c, "npc")), str(_required(c, "scene_id")), _amount(c, "x", 0), _amount(c, "y", 0)
+            str(_required(c, "npc")),
+            str(_required(c, "scene_id")),
+            _amount(c, "x", 0),
+            _amount(c, "y", 0),
         ),
     )
-    router.register("INTERACT", lambda c: session.perform_interaction(str(_required(c, "interaction_id")))[0])
+    router.register(
+        "INTERACT", lambda c: session.perform_interaction(str(_required(c, "interaction_id")))[0]
+    )
     router.register(
         "PLAY_ACTION",
-        lambda c: session.play_action(str(_required(c, "entity")), str(_required(c, "timeline_id"))),
+        lambda c: session.play_action(
+            str(_required(c, "entity")), str(_required(c, "timeline_id"))
+        ),
     )
     router.register("LEARN_RECIPE", learn_recipe)
     router.register("OPEN_CRAFTING", open_crafting)
     router.register(
-        "ADD_COUNTER", lambda c: session.add_counter(str(_required(c, "counter_id")), _amount(c, "amount", 1))
+        "ADD_COUNTER",
+        lambda c: session.add_counter(str(_required(c, "counter_id")), _amount(c, "amount", 1)),
     )
     for name in PRESENTATION_COMMANDS:
         router.register(name, presentation_request)

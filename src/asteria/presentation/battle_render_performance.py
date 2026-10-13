@@ -72,7 +72,12 @@ class BattleFrameBudgetTracker:
     def metrics(self):
         avg = 0.0 if not self.frame_count else self.total_frame_ms / self.frame_count
         return BattleFrameBudgetMetrics(
-            self.frame_count, self.dropped_frames, self.last_frame_ms, self.max_frame_ms, avg, self.target_frame_ms
+            self.frame_count,
+            self.dropped_frames,
+            self.last_frame_ms,
+            self.max_frame_ms,
+            avg,
+            self.target_frame_ms,
         )
 
 
@@ -92,7 +97,12 @@ class BattleRenderVisibilityCuller:
                 continue
             right = draw.x + draw.width
             bottom = draw.y + draw.height
-            if right < self.min_x or draw.x > self.max_x or bottom < self.min_y or draw.y > self.max_y:
+            if (
+                right < self.min_x
+                or draw.x > self.max_x
+                or bottom < self.min_y
+                or draw.y > self.max_y
+            ):
                 culled.append(draw.draw_id)
             else:
                 visible.append(draw)

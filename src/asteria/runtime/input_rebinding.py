@@ -68,7 +68,8 @@ class ControlsMenu:
         self.message = ""
 
     def capture(self, binding):
-        """Bind ``binding`` to the action being captured, replacing that action's binding on the same device."""
+        """Bind ``binding`` to the action being captured, replacing that action's binding on the
+        same device."""
         action = self.capturing
         if action is None:
             return False
@@ -77,7 +78,9 @@ class ControlsMenu:
         current.rebind(action, same_device[0] if same_device else None, binding, exclusive=True)
         # store every action that changed (exclusive rebinding may have freed the input elsewhere)
         for other in current.actions():
-            if [b.to_data() for b in current.bindings(other)] != [b.to_data() for b in self.base.bindings(other)]:
+            if [b.to_data() for b in current.bindings(other)] != [
+                b.to_data() for b in self.base.bindings(other)
+            ]:
                 self.overrides[other] = [b.to_data() for b in current.bindings(other)]
             else:
                 self.overrides.pop(other, None)

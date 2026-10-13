@@ -104,7 +104,10 @@ class EverythingCombinedScenario:
         summons = PlayableBattleSummonHarness()
         summons.summon_player_spirit()
         summons.summon_boss_add()
-        summon_exercised = "spirit_echo" in summons.active_member_ids() and "ember_add" in summons.active_member_ids()
+        summon_exercised = (
+            "spirit_echo" in summons.active_member_ids()
+            and "ember_add" in summons.active_member_ids()
+        )
         summons.execute("spirit_echo", "spirit_bolt", summons.scenario.boss_id)
         self.steps.append("battle.summon.add")
 

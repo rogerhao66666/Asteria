@@ -1,4 +1,5 @@
-"""BTL-02 in the game session: damage over time is fixed damage, or - when its battle state policy carries
+"""BTL-02 in the game session: damage over time is fixed damage, or - when its battle state policy
+carries
 interaction tags - goes through the battle's interaction rules (the author decides, per state)."""
 
 import pytest
@@ -17,7 +18,11 @@ def _boss_burn_tick(interaction_tags):
             5,
             periodic=(
                 PeriodicEffect(
-                    1, Effect("rm_burn.tick", (EffectOperation(EffectOperationKind.RESOURCE_DELTA, "vitality", -40),))
+                    1,
+                    Effect(
+                        "rm_burn.tick",
+                        (EffectOperation(EffectOperationKind.RESOURCE_DELTA, "vitality", -40),),
+                    ),
                 ),
             ),
         )
@@ -40,7 +45,9 @@ def _boss_burn_tick(interaction_tags):
 def test_damage_over_time_is_fixed_unless_the_author_gives_it_interaction_tags():
     fixed, battle = _boss_burn_tick(())
     assert fixed == pytest.approx(40) and battle.periodic_interactions == []
-    fire, battle = _boss_burn_tick(("damage.fire",))  # the boss is weak to fire (x1.5 rule weak_fire)
+    fire, battle = _boss_burn_tick(
+        ("damage.fire",)
+    )  # the boss is weak to fire (x1.5 rule weak_fire)
     assert fire == pytest.approx(60)
     assert [r.matched_rules for *_, r in battle.periodic_interactions] == [("weak_fire",)]
     other, _ = _boss_burn_tick(("damage.poison",))  # tags no rule matches: unchanged

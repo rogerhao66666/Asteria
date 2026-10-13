@@ -25,7 +25,14 @@ def make():
 def profiles():
     return {
         "rpg_character_screen": CharacterScreenProfile(
-            section_order=("overview", "resources", "equipment", "abilities", "progression", "status"),
+            section_order=(
+                "overview",
+                "resources",
+                "equipment",
+                "abilities",
+                "progression",
+                "status",
+            ),
             resource_labels={"vitality": "HP", "technique": "SP"},
         ),
         "rpg_equipment_screen": EquipmentScreenProfile(page_size=12),
@@ -38,7 +45,9 @@ def profiles():
         "rpg_inventory_screen": InventoryScreenProfile(
             item_groups={"potion": "consumables"}, visible_limits={"consumables": 20}
         ),
-        "rpg_party_screen": PartyScreenProfile(group_order=("active", "reserve"), visible_limits={"reserve": 8}),
+        "rpg_party_screen": PartyScreenProfile(
+            group_order=("active", "reserve"), visible_limits={"reserve": 8}
+        ),
     }
 
 
@@ -59,7 +68,10 @@ def test_runtime_rpg_ui_roundtrips_with_project_v7():
     clone = Project.from_data(raw, d.component_registry)
     assert clone.to_data() == raw
     assert (
-        clone.battle_presentation_library.require("rpg_character_screen", "default").resource_label("vitality") == "HP"
+        clone.battle_presentation_library.require(
+            "rpg_character_screen", "default"
+        ).resource_label("vitality")
+        == "HP"
     )
 
 
@@ -95,7 +107,11 @@ def test_information_architecture_does_not_dump_all_runtime_systems():
     assert ia.live_preview_expected and ia.progressive_disclosure
     assert not ia.show_all_screens_simultaneously
     assert not ia.show_all_details_simultaneously
-    assert ia.section("build").categories == ("rpg_equipment_screen", "rpg_ability_screen", "rpg_progression_screen")
+    assert ia.section("build").categories == (
+        "rpg_equipment_screen",
+        "rpg_ability_screen",
+        "rpg_progression_screen",
+    )
 
 
 def test_workspace_build_section_uses_tabs_not_one_giant_page():

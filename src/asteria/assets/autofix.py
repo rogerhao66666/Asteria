@@ -59,7 +59,9 @@ def crop_transparent_border(image):
 def remove_empty_outer(image):
     """Remove fully transparent outer rows/columns (alias kept for the SPEC wording)."""
     out, report = crop_transparent_border(image)
-    return out, FixReport("remove_empty_outer", report.before_size, report.after_size, False, report.details)
+    return out, FixReport(
+        "remove_empty_outer", report.before_size, report.after_size, False, report.details
+    )
 
 
 def pad_frame(image, size, *, anchor=(0.5, 1.0)):
@@ -71,7 +73,9 @@ def pad_frame(image, size, *, anchor=(0.5, 1.0)):
     out = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     out.alpha_composite(image, (max(0, x), max(0, y)), (max(0, -x), max(0, -y)))
     lost = _opaque_count(image) - _opaque_count(out)
-    return out, FixReport("pad_frame", image.size, out.size, lost > 0, (("offset", (x, y)), ("lost_pixels", lost)))
+    return out, FixReport(
+        "pad_frame", image.size, out.size, lost > 0, (("offset", (x, y)), ("lost_pixels", lost))
+    )
 
 
 def resize_nearest(image, size):
@@ -79,7 +83,11 @@ def resize_nearest(image, size):
     out = image.resize(tuple(size), Image.NEAREST)
     downscale = size[0] < image.width or size[1] < image.height
     return out, FixReport(
-        "resize_nearest", image.size, out.size, downscale, (("scale", (size[0] / image.width, size[1] / image.height)),)
+        "resize_nearest",
+        image.size,
+        out.size,
+        downscale,
+        (("scale", (size[0] / image.width, size[1] / image.height)),),
     )
 
 
@@ -88,7 +96,9 @@ def shift_frame(image, dx, dy):
     out = Image.new("RGBA", image.size, (0, 0, 0, 0))
     out.alpha_composite(image, (max(0, dx), max(0, dy)), (max(0, -dx), max(0, -dy)))
     lost = _opaque_count(image) - _opaque_count(out)
-    return out, FixReport("shift_frame", image.size, out.size, lost > 0, (("shift", (dx, dy)), ("lost_pixels", lost)))
+    return out, FixReport(
+        "shift_frame", image.size, out.size, lost > 0, (("shift", (dx, dy)), ("lost_pixels", lost))
+    )
 
 
 def content_pivot(image):
@@ -105,7 +115,9 @@ def align_pivot(image, pivot=(0.5, 1.0)):
     image = _rgba(image)
     box = image.getchannel("A").getbbox()
     if not box:
-        return image.copy(), FixReport("align_pivot", image.size, image.size, False, (("shift", (0, 0)),))
+        return image.copy(), FixReport(
+            "align_pivot", image.size, image.size, False, (("shift", (0, 0)),)
+        )
     dx = round(pivot[0] * image.width - (box[0] + box[2]) / 2)
     dy = round(pivot[1] * image.height - box[3])
     out, report = shift_frame(image, dx, dy)
@@ -113,7 +125,8 @@ def align_pivot(image, pivot=(0.5, 1.0)):
 
 
 def normalize_alpha(image, threshold=128):
-    """Snap alpha to fully transparent / opaque (pixel art); RGB of transparent pixels is cleared."""
+    """Snap alpha to fully transparent / opaque (pixel art); RGB of transparent pixels is
+    cleared."""
     image = _rgba(image)
     mask = image.getchannel("A").point(lambda a: 255 if a >= threshold else 0)
     out = Image.new("RGBA", image.size, (0, 0, 0, 0))
@@ -122,7 +135,9 @@ def normalize_alpha(image, threshold=128):
     out.paste(solid, (0, 0), mask)
     difference = ImageChops.difference(image, out).convert("L").histogram()
     changed = image.width * image.height - difference[0]
-    return out, FixReport("normalize_alpha", image.size, out.size, changed > 0, (("changed_pixels", changed),))
+    return out, FixReport(
+        "normalize_alpha", image.size, out.size, changed > 0, (("changed_pixels", changed),)
+    )
 
 
 @dataclass
@@ -133,7 +148,9 @@ class Atlas:
 
 def repack_atlas(frames, *, padding=1, max_width=1024):
     """Shelf-pack ``{name: image}`` deterministically (tallest first, then name) into one atlas."""
-    items = sorted(((name, _rgba(img)) for name, img in frames.items()), key=lambda kv: (-kv[1].height, kv[0]))
+    items = sorted(
+        ((name, _rgba(img)) for name, img in frames.items()), key=lambda kv: (-kv[1].height, kv[0])
+    )
     x = y = shelf = width = 0
     regions = {}
     for name, img in items:
@@ -151,7 +168,9 @@ def repack_atlas(frames, *, padding=1, max_width=1024):
         rx, ry, _, _ = regions[name]
         atlas.alpha_composite(img, (rx, ry))
     before = (sum(i.width for _, i in items), max((i.height for _, i in items), default=0))
-    return Atlas(atlas, regions), FixReport("repack_atlas", before, atlas.size, False, (("regions", len(regions)),))
+    return Atlas(atlas, regions), FixReport(
+        "repack_atlas", before, atlas.size, False, (("regions", len(regions)),)
+    )
 
 
 def preview_fix(name, image, *args, **kwargs):
@@ -166,5 +185,7 @@ def apply_fix(name, image, *args, confirmed=False, **kwargs):
     """Apply a fix; destructive results require ``confirmed=True`` (see ``preview_fix``)."""
     _, after, report = preview_fix(name, image, *args, **kwargs)
     if report.destructive and not confirmed:
-        raise ConfirmationRequired(f"{name} would lose pixels: preview it and confirm ({report.details})")
+        raise ConfirmationRequired(
+            f"{name} would lose pixels: preview it and confirm ({report.details})"
+        )
     return after, report

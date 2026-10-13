@@ -1,4 +1,5 @@
 """Verify Batch 78 using the delivered canonical project and RPG save."""
+
 from pathlib import Path
 import json
 
@@ -13,7 +14,9 @@ project = document.project
 db = project.rpg_database
 state = RpgRuntimeState.from_data(
     json.loads(
-        (root / "reference_data" / "phase7b_batch78_equipment_capability_demo.save.json").read_text()
+        (
+            root / "reference_data" / "phase7b_batch78_equipment_capability_demo.save.json"
+        ).read_text()
     ),
     db,
 )
@@ -119,4 +122,6 @@ print("Saved accessory count:", len(loadout.equipped("accessory")))
 print("Titan Blade before badge:", blocked.reasons)
 print("Titan Blade after badge: allowed")
 print("Effective attack:", stats.get("attack"))
-print("Capabilities:", tuple(sorted(x for x in capabilities if x.startswith("capability.weapon."))))
+print(
+    "Capabilities:", tuple(sorted(x for x in capabilities if x.startswith("capability.weapon.")))
+)

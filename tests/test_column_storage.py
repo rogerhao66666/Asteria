@@ -1,4 +1,5 @@
-"""D22-C1 / C2: column storage for hot components, the per-type scene index, and the column kernels."""
+"""D22-C1 / C2: column storage for hot components, the per-type scene index, and the column
+kernels."""
 
 import random
 from array import array
@@ -27,8 +28,12 @@ def _entity(scene, name, x=0.0, y=0.0, *components):
 
 def test_hot_components_keep_numbers_in_scene_columns_and_plain_attributes_still_work():
     assert {"x", "y", "rotation", "scale_x", "scale_y"} <= set(column_spec(Transform))
-    assert "parent_id" not in column_spec(Transform) and "enabled" not in column_spec(Collider2DComponent)
-    assert {"intent_x", "push_x", "control_lock", "facing_code"} <= set(column_spec(CharacterController2DComponent))
+    assert "parent_id" not in column_spec(Transform) and "enabled" not in column_spec(
+        Collider2DComponent
+    )
+    assert {"intent_x", "push_x", "control_lock", "facing_code"} <= set(
+        column_spec(CharacterController2DComponent)
+    )
     scene = Scene("S")
     hero = _entity(scene, "Hero", 3.0, 4.0, CharacterController2DComponent())
     table = scene.columns(Transform)
@@ -56,7 +61,11 @@ def test_values_survive_detach_reattach_scene_moves_and_serialization():
     hero.get(Collider2DComponent).width = 33.0
     first.detach_entity(hero)  # undo-style detach: values come back onto the components
     t = hero.get(Transform)
-    assert t._ctable is None and (t.x, t.y) == (1.0, 2.0) and hero.get(Collider2DComponent).width == 33.0
+    assert (
+        t._ctable is None
+        and (t.x, t.y) == (1.0, 2.0)
+        and hero.get(Collider2DComponent).width == 33.0
+    )
     t.x = 5.0
     second.add_entity(hero)
     assert second.columns(Transform).data["x"][second.slot_of(hero)] == 5.0
@@ -101,7 +110,9 @@ def test_adding_and_removing_during_an_update_waits_for_the_flush():
 
     scene.scheduler.add(Spawner())
     scene.update(0.016)
-    assert scene.get_entity(keep.id) is None and late.get(Transform)._ctable is scene.columns(Transform)
+    assert scene.get_entity(keep.id) is None and late.get(Transform)._ctable is scene.columns(
+        Transform
+    )
     assert [e.name for e, _ in scene.query(Transform)] == ["late"]
 
 
@@ -111,7 +122,10 @@ def test_persistent_entities_carry_their_values_to_the_next_scene():
     old, new = Scene("Old"), Scene("New")
     hero = _entity(old, "Hero", 12.0, -3.0, PersistentComponent())
     carry_persistent_entities(old, new)
-    assert new.columns(Transform).data["x"][new.slot_of(hero)] == 12.0 and hero.get(Transform).y == -3.0
+    assert (
+        new.columns(Transform).data["x"][new.slot_of(hero)] == 12.0
+        and hero.get(Transform).y == -3.0
+    )
 
 
 def test_collision_world_from_columns_matches_the_shapes_built_one_by_one():
@@ -123,7 +137,11 @@ def test_collision_world_from_columns_matches_the_shapes_built_one_by_one():
     for k in range(40):
         collider = Collider2DComponent()
         collider.shape = "circle" if k % 3 == 0 else "box"
-        collider.width, collider.height, collider.radius = rng.uniform(2, 30), rng.uniform(2, 30), rng.uniform(1, 9)
+        collider.width, collider.height, collider.radius = (
+            rng.uniform(2, 30),
+            rng.uniform(2, 30),
+            rng.uniform(1, 9),
+        )
         collider.offset_x, collider.layer, collider.one_way = rng.uniform(-5, 5), k % 4, k % 5 == 0
         child = _entity(scene, f"C{k}", rng.uniform(-100, 100), rng.uniform(-100, 100), collider)
         if k % 7 == 0:
@@ -133,7 +151,7 @@ def test_collision_world_from_columns_matches_the_shapes_built_one_by_one():
     assert world.shapes == expected and list(world.shapes) == list(expected) and world.parented
 
 
-# -- column kernels: numpy == python -------------------------------------------------------------------------------
+# -- column kernels: numpy == python --------------------------------------------------------------
 def _columns(rng, spec, n):
     data = {}
     for name, typecode in spec.items():
@@ -169,12 +187,12 @@ def test_column_kernels_match_the_reference(seed):
     fast = np_kernels.topdown_prepare(b, slots, 1 / 60)
     assert list(fast) == list(ref) and a == b
     dx, dy, mx, my, locked = ref
-    assert np_kernels.facing_codes(dx, dy, [a["facing_code"][s] for s in slots], locked) == _python.facing_codes(
+    assert np_kernels.facing_codes(
         dx, dy, [a["facing_code"][s] for s in slots], locked
-    )
-    assert [list(map(float, c)) for c in np_kernels.moved_boxes(a, transform, slots, mx, my)] == list(
-        map(list, _python.moved_boxes(a, transform, slots, mx, my))
-    )
+    ) == _python.facing_codes(dx, dy, [a["facing_code"][s] for s in slots], locked)
+    assert [
+        list(map(float, c)) for c in np_kernels.moved_boxes(a, transform, slots, mx, my)
+    ] == list(map(list, _python.moved_boxes(a, transform, slots, mx, my)))
     pa, pb = _copy(a), _copy(a)
     _python.decay_push(pa, slots, 1 / 60, 0.5)
     np_kernels.decay_push(pb, slots, 1 / 60, 0.5)
@@ -222,7 +240,16 @@ def test_the_arpg_stress_scene_ends_identically_with_both_kernel_sets(resource_r
 
     repo = Path(__file__).resolve().parents[1]
     reports = [
-        run_arpg_stress(repo, enemies=40, projectiles=60, frames=45, kernel=name) for name in kernels.available()
+        run_arpg_stress(repo, enemies=40, projectiles=60, frames=45, kernel=name)
+        for name in kernels.available()
     ]
-    assert len({(r["arpg"]["hits"], r["arpg"]["damage_events"], r["arpg"]["state_digest"]) for r in reports}) == 1
+    assert (
+        len(
+            {
+                (r["arpg"]["hits"], r["arpg"]["damage_events"], r["arpg"]["state_digest"])
+                for r in reports
+            }
+        )
+        == 1
+    )
     assert reports[0]["arpg"]["hits"] > 0

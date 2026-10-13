@@ -41,7 +41,9 @@ def battle_fixture(*, composition=None, state_defs=(), scheduler=False):
     enemy = PartyMember("enemy", "enemies", subject(states=state_defs), initiative=10)
     kwargs = {}
     if scheduler:
-        kwargs["scheduler_definition"] = BattleSchedulerDefinition("timeline", mode="continuous", timeline_scale=100)
+        kwargs["scheduler_definition"] = BattleSchedulerDefinition(
+            "timeline", mode="continuous", timeline_scale=100
+        )
     return BattleRuntime(
         [Party("heroes", [hero]), Party("enemies", [enemy])],
         AbilityRuntime(AbilityRegistry()),
@@ -90,7 +92,11 @@ def test_definition_round_trip_is_generic_and_not_break_named_by_engine():
     definition = GaugeCompositionDefinition(
         "heat_model",
         impacts=[GaugeImpactRule("fire_heat", "guard", "custom.contact", delta=3)],
-        thresholds=[GaugeThresholdRule("overheat", "guard", "at_or_above", 40, emit_trigger="custom.overheat")],
+        thresholds=[
+            GaugeThresholdRule(
+                "overheat", "guard", "at_or_above", 40, emit_trigger="custom.overheat"
+            )
+        ],
     )
     assert GaugeCompositionDefinition.from_data(definition.to_data()) == definition
 
@@ -199,7 +205,9 @@ def test_source_recipient_supports_combo_or_heat_gain_without_special_system():
     )
     battle = battle_fixture(composition=composition)
     battle.apply_gauge_impact("combo_gain", "hero", "enemy", trigger="battle.hit")
-    assert battle.battle_resources.current("hero", "guard") == 50  # starts max, clamp proves recipient
+    assert (
+        battle.battle_resources.current("hero", "guard") == 50
+    )  # starts max, clamp proves recipient
     battle.battle_resources.change("hero", "guard", -20)
     battle.apply_gauge_impact("combo_gain", "hero", "enemy", trigger="battle.hit")
     assert battle.battle_resources.current("hero", "guard") == 34
@@ -209,7 +217,9 @@ def test_source_recipient_supports_combo_or_heat_gain_without_special_system():
 def test_value_scaled_pressure_uses_resolved_value_magnitude():
     composition = GaugeCompositionDefinition(
         "poise",
-        impacts=[GaugeImpactRule("damage_pressure", "stagger", "damage.applied", value_scale=-0.5)],
+        impacts=[
+            GaugeImpactRule("damage_pressure", "stagger", "damage.applied", value_scale=-0.5)
+        ],
     )
     battle = battle_fixture(composition=composition)
     battle.apply_gauge_impact("poise", "hero", "enemy", trigger="damage.applied", value=30)
@@ -233,7 +243,9 @@ def test_database_v17_owns_gauge_compositions_and_v16_remains_backward_readable(
 
 def test_many_compositions_and_rules_have_no_engine_cap():
     definitions = [
-        GaugeCompositionDefinition(f"c{i}", impacts=[GaugeImpactRule(f"i{i}", "stagger", f"trigger.{i}", delta=-1)])
+        GaugeCompositionDefinition(
+            f"c{i}", impacts=[GaugeImpactRule(f"i{i}", "stagger", f"trigger.{i}", delta=-1)]
+        )
         for i in range(256)
     ]
     runtime = BattleGaugeCompositionRuntime(definitions)

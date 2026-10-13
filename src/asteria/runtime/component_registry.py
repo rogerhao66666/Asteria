@@ -1,4 +1,5 @@
-"""The engine's built-in component types: one list shared by the game, the editor and project tools."""
+"""The engine's built-in component types: one list shared by the game, the editor and project
+tools."""
 
 from __future__ import annotations
 
@@ -49,9 +50,16 @@ def default_component_registry():
     from .action_play import register_action_play_components
 
     register_action_play_components(registry)  # ASTERIA_SPEC §20 action scenes
-    for component in (NpcIdentity2DComponent, FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent):
+    for component in (
+        NpcIdentity2DComponent,
+        FieldAIComponent,
+        SpawnZoneComponent,
+        VisibleEncounterComponent,
+    ):
         registry.register(component)
     from .environment2d import register_environment_components
 
-    register_environment_components(registry)  # VFX-02 / VFX-03 scene environment, lights, shadow casters
+    register_environment_components(
+        registry
+    )  # VFX-02 / VFX-03 scene environment, lights, shadow casters
     return registry

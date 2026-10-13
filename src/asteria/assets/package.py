@@ -30,7 +30,12 @@ class AssetManifest:
 
     def canonical(self):
         return CanonicalAsset(
-            self.asset_id, self.kind, AssetSource(self.source), self.schema_version, frozenset(self.tags), self.metadata
+            self.asset_id,
+            self.kind,
+            AssetSource(self.source),
+            self.schema_version,
+            frozenset(self.tags),
+            self.metadata,
         )
 
 

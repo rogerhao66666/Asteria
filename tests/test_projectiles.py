@@ -1,4 +1,5 @@
-"""ASTERIA_SPEC §20 (D22 A2): projectiles — firing, facing, spread, walls, pierce, homing, gravity, lifetime, hits
+"""ASTERIA_SPEC §20 (D22 A2): projectiles — firing, facing, spread, walls, pierce, homing,
+gravity, lifetime, hits
 resolved by the combat system; the same results with every kernel set."""
 
 import random
@@ -46,7 +47,10 @@ class Range:
     def __init__(self, *projectiles, attacks=()):
         self.scene = Scene("Range")
         self.hits = HitboxSystem()
-        attack_map = {a.attack_id: a for a in (AttackDefinition("shot", damage=ValueFormula.constant(10)), *attacks)}
+        attack_map = {
+            a.attack_id: a
+            for a in (AttackDefinition("shot", damage=ValueFormula.constant(10)), *attacks)
+        }
         self.combat = CombatSystem(attack_map, hits=self.hits, rng=random.Random(1))
         self.projectiles = ProjectileSystem(
             {p.projectile_id: p for p in projectiles},
@@ -55,9 +59,16 @@ class Range:
             world=lambda: CollisionWorld.from_scene(self.scene),
             paused=self.combat.paused,
         )
-        self.actions = EntityActionSystem(hitboxes=self.hits, projectiles=self.projectiles, paused=self.combat.paused)
+        self.actions = EntityActionSystem(
+            hitboxes=self.hits, projectiles=self.projectiles, paused=self.combat.paused
+        )
         self.combat.actions = self.actions
-        for system in (self.actions, CharacterControllerSystem(paused=self.combat.paused), self.hits, self.projectiles):
+        for system in (
+            self.actions,
+            CharacterControllerSystem(paused=self.combat.paused),
+            self.hits,
+            self.projectiles,
+        ):
             self.scene.scheduler.add(system)
         self.scene.scheduler.add(self.combat)
         self.log = []
@@ -132,7 +143,10 @@ def test_pierce_counts_extra_targets(kernel):
     assert [r.hp(f) for f in foes] == [90, 90, 100, 100]
     r.projectiles.fire("ray", 0, 0, (1, 0), team="hero")
     r.run(0.6)
-    assert [r.hp(f) for f in foes] == [80, 80, 90, 90] and r.ended() == [("lance", "target"), ("ray", "lifetime")]
+    assert [r.hp(f) for f in foes] == [80, 80, 90, 90] and r.ended() == [
+        ("lance", "target"),
+        ("ray", "lifetime"),
+    ]
 
 
 def test_walls_destroy_bounce_stop_or_let_shots_pass(kernel):
@@ -151,16 +165,26 @@ def test_walls_destroy_bounce_stop_or_let_shots_pass(kernel):
     r.run(0.3)
     views = {v.uid: v for v in r.projectiles.views()}
     assert uids["rock"] not in views and ("rock", "wall") in r.ended()
-    assert views[uids["ball"]].vx < 0 and views[uids["ghost"]].x > 60 and views[uids["filtered"]].x > 60
+    assert (
+        views[uids["ball"]].vx < 0
+        and views[uids["ghost"]].x > 60
+        and views[uids["filtered"]].x > 60
+    )
     dart = views[uids["dart"]]
     assert (dart.vx, dart.vy) == (0, 0) and 50 < dart.x < 56
     r.run(0.6)  # back across to the far wall
-    assert uids["ball"] not in {v.uid for v in r.projectiles.views()}  # second wall: past its bounce limit
+    assert uids["ball"] not in {
+        v.uid for v in r.projectiles.views()
+    }  # second wall: past its bounce limit
     assert ("ball", "wall") in r.ended() and ("ghost", "lifetime") in r.ended()
 
 
 def test_homing_curves_into_a_target_in_range_and_ignores_far_ones(kernel):
-    r = Range(ProjectileDefinition("orb", attack_id="shot", speed=150, homing_turn=360, homing_range=200, lifetime=3))
+    r = Range(
+        ProjectileDefinition(
+            "orb", attack_id="shot", speed=150, homing_turn=360, homing_range=200, lifetime=3
+        )
+    )
     near = r.target("Near", 0, 80)
     far = r.target("Far", 0, -400)
     r.projectiles.fire("orb", 0, 0, (1, 0), team="hero")
@@ -182,10 +206,22 @@ def test_gravity_makes_an_arc_for_lobbed_shots(kernel):
 def test_fire_from_turns_offset_and_angle_with_the_facing_and_fans_a_spread(kernel):
     r = Range(ProjectileDefinition("arrow", speed=100))
     archer = r.entity(
-        "Archer", 50, 50, _set(CharacterController2DComponent(), facing="left"), _set(Hurtbox2DComponent(), team="hero")
+        "Archer",
+        50,
+        50,
+        _set(CharacterController2DComponent(), facing="left"),
+        _set(Hurtbox2DComponent(), team="hero"),
     )
     uids = r.projectiles.fire_from(
-        archer, {"projectile_id": "arrow", "offset_x": 10, "offset_y": -4, "angle": 0, "count": 3, "spread": 40}
+        archer,
+        {
+            "projectile_id": "arrow",
+            "offset_x": 10,
+            "offset_y": -4,
+            "angle": 0,
+            "count": 3,
+            "spread": 40,
+        },
     )
     views = sorted(r.projectiles.views(), key=lambda v: v.vy)
     assert [v.uid for v in r.projectiles.views()] == uids
@@ -200,7 +236,11 @@ def test_fire_from_turns_offset_and_angle_with_the_facing_and_fans_a_spread(kern
 def test_iframes_and_a_scene_wide_hitstop_hold_shots(kernel):
     r = Range(
         ProjectileDefinition("bolt", attack_id="stop", speed=300, pierce=-1),
-        attacks=[AttackDefinition("stop", damage=ValueFormula.constant(10), hitstop=0.2, hitstop_scope="global")],
+        attacks=[
+            AttackDefinition(
+                "stop", damage=ValueFormula.constant(10), hitstop=0.2, hitstop_scope="global"
+            )
+        ],
     )
     ghost = r.target("Ghost", 40)
     r.hits.grant_invincibility(ghost.id, 1.0)
@@ -220,7 +260,9 @@ def test_an_action_timeline_cue_fires_and_both_kernel_sets_agree():
         previous = kernels.use(name)
         try:
             r = Range(
-                ProjectileDefinition("fan", attack_id="shot", speed=250, homing_turn=45, lifetime=1.2, gravity=30)
+                ProjectileDefinition(
+                    "fan", attack_id="shot", speed=250, homing_turn=45, lifetime=1.2, gravity=30
+                )
             )
             caster = r.entity(
                 "Caster",
@@ -230,10 +272,14 @@ def test_an_action_timeline_cue_fires_and_both_kernel_sets_agree():
                 _set(Hurtbox2DComponent(), team="hero"),
             )
             foes = [r.target(f"F{k}", 120, -60 + 30 * k, size=10) for k in range(5)]
-            cue = ActionCue("cast", 0.1, "projectile", {"projectile_id": "fan", "count": 5, "spread": 60})
+            cue = ActionCue(
+                "cast", 0.1, "projectile", {"projectile_id": "fan", "count": 5, "spread": 60}
+            )
             r.actions.play(caster.id, ActionTimeline("volley", [cue]))
             r.run(1.5)
-            outcomes.append(([r.hp(f) for f in foes], r.ended(), [(e.kind, e.uid, e.x, e.y) for e in r.log]))
+            outcomes.append(
+                ([r.hp(f) for f in foes], r.ended(), [(e.kind, e.uid, e.x, e.y) for e in r.log])
+            )
         finally:
             kernels.use(previous)
     assert sum(100 - hp for hp in outcomes[0][0]) >= 30  # at least three of the five shots land
@@ -244,10 +290,17 @@ def test_projectiles_run_in_the_game_session_field_update(runtime):
     game = runtime.game
     library = game.project.gameplay_library
     library.add_attack(AttackDefinition("test_arrow_hit", damage=ValueFormula.constant(25)))
-    library.add_projectile(ProjectileDefinition("test_arrow", attack_id="test_arrow_hit", speed=300))
+    library.add_projectile(
+        ProjectileDefinition("test_arrow", attack_id="test_arrow_hit", speed=300)
+    )
     library.add_timeline(
         ActionTimeline(
-            "test_shoot", [ActionCue("loose", 0.0, "projectile", {"projectile_id": "test_arrow", "offset_x": 12})]
+            "test_shoot",
+            [
+                ActionCue(
+                    "loose", 0.0, "projectile", {"projectile_id": "test_arrow", "offset_x": 12}
+                )
+            ],
         )
     )
     game.set_player_position(0.0, 0.0)

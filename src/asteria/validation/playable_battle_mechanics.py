@@ -284,7 +284,8 @@ class PlayableBattleMechanicsHarness:
     def status_snapshot(self, member_id):
         state_runtime = self.battle.member(member_id).subject.states
         return tuple(
-            (state.state_id, state.remaining, state.stacks, state.source_id) for state in state_runtime.active_states()
+            (state.state_id, state.remaining, state.stacks, state.source_id)
+            for state in state_runtime.active_states()
         )
 
     def apply_status(self, state_id, source_id=None, target_id=None):

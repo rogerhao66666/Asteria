@@ -101,9 +101,13 @@ class EquipmentScreenProfile:
             ("socket_labels", socket_labels),
             ("growth_labels", growth_labels),
         ):
-            object.__setattr__(self, name, tuple(sorted((str(k), str(v)) for k, v in dict(values or {}).items())))
+            object.__setattr__(
+                self, name, tuple(sorted((str(k), str(v)) for k, v in dict(values or {}).items()))
+            )
         object.__setattr__(self, "page_size", page_size)
-        object.__setattr__(self, "include_incompatible_candidates", bool(include_incompatible_candidates))
+        object.__setattr__(
+            self, "include_incompatible_candidates", bool(include_incompatible_candidates)
+        )
 
     def _lookup(self, pairs, key):
         key = str(key)
@@ -273,7 +277,9 @@ class EquipmentScreenRuntime:
                 reasons = tuple(reasons)
 
             label = self.profile.equipment_label(definition.equipment_id)
-            haystack = " ".join((definition.equipment_id, label, definition.slot, *definition.tags)).casefold()
+            haystack = " ".join(
+                (definition.equipment_id, label, definition.slot, *definition.tags)
+            ).casefold()
             if query and query not in haystack:
                 continue
             candidates.append(
@@ -292,7 +298,12 @@ class EquipmentScreenRuntime:
                     reasons=reasons,
                 )
             )
-        candidates = tuple(sorted(candidates, key=lambda x: (not bool(x.eligible), x.label.casefold(), x.equipment_id)))
+        candidates = tuple(
+            sorted(
+                candidates,
+                key=lambda x: (not bool(x.eligible), x.label.casefold(), x.equipment_id),
+            )
+        )
 
         if self.selected_equipment_id not in {x.equipment_id for x in candidates}:
             self.selected_equipment_id = candidates[0].equipment_id if candidates else None

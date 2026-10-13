@@ -57,11 +57,18 @@ class PresentationWorkspaceController:
             return self.edit.cut(k.get("node_id"))
         if a == "paste":
             return self.edit.paste(
-                k["parent_id"], k.get("suffix", "_copy"), k.get("index"), k.get("branch", "children")
+                k["parent_id"],
+                k.get("suffix", "_copy"),
+                k.get("index"),
+                k.get("branch", "children"),
             )
         if a == "duplicate":
             return self.edit.duplicate(
-                k["node_id"], k["parent_id"], k.get("index"), k.get("branch", "children"), k.get("suffix", "_copy")
+                k["node_id"],
+                k["parent_id"],
+                k.get("index"),
+                k.get("branch", "children"),
+                k.get("suffix", "_copy"),
             )
         raise KeyError(a)
 
@@ -74,7 +81,9 @@ class PresentationWorkspaceController:
     def asset_intake_actions(self):
         return (
             AssetIntakeAction("import_any_source", "Import Art…", "Broad source intake."),
-            AssetIntakeAction("review_candidates", "Review Candidates…", "Resolve ambiguous/detached content."),
+            AssetIntakeAction(
+                "review_candidates", "Review Candidates…", "Resolve ambiguous/detached content."
+            ),
             AssetIntakeAction("manual_region", "Manual Region…", "Explicit source selection."),
             AssetIntakeAction("reimport", "Reimport Source…", "Re-run source adapter."),
         )

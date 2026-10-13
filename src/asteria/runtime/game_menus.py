@@ -1,4 +1,5 @@
-"""Backend-free models for the in-game shop, quest log, pause and game-over screens (ASTERIA_SPEC §29).
+"""Backend-free models for the in-game shop, quest log, pause and game-over screens (ASTERIA_SPEC
+§29).
 
 A presentation layer draws these rows and forwards named input actions; the
 models talk only to :class:`GameSessionRuntime`, so they are testable
@@ -26,7 +27,9 @@ GAME_OVER_OPTIONS = (("load", "Load Last Save"), ("title", "Return to Title"))
 
 
 def _price_text(prices):
-    return " + ".join(f"{amount:g} {currency}" for currency, amount in sorted(prices.items())) or "—"
+    return (
+        " + ".join(f"{amount:g} {currency}" for currency, amount in sorted(prices.items())) or "—"
+    )
 
 
 class MenuCursor:
@@ -81,7 +84,9 @@ class ShopScreen:
             remaining = self.game.shops.remaining(shop.shop_id, entry.item_id)
             owned = state.inventory.count(entry.item_id)
             if self.tab == "buy":
-                available = (remaining is None or remaining > 0) and self.game.shops.can_afford(prices, 1)
+                available = (remaining is None or remaining > 0) and self.game.shops.can_afford(
+                    prices, 1
+                )
             else:
                 available = owned > 0
             item = items.get(entry.item_id)
@@ -144,13 +149,22 @@ def quest_rows(game):
     quests = game.project.rpg_database.quests
     order = {"active": 0, "completed": 1, "failed": 2}
     rows = []
-    for quest_id, progress in sorted(game.save.rpg_state.quests.items(), key=lambda kv: (order[kv[1].status], kv[0])):
+    for quest_id, progress in sorted(
+        game.save.rpg_state.quests.items(), key=lambda kv: (order[kv[1].status], kv[0])
+    ):
         quest = quests[quest_id]
         objectives = []
         for objective in quest.objectives:
             required = 1 if objective.kind == "switch" else objective.required
             value = min(required, log.objective_value(quest_id, objective))
-            objectives.append((objective.description or objective.objective_id, value, required, value >= required))
+            objectives.append(
+                (
+                    objective.description or objective.objective_id,
+                    value,
+                    required,
+                    value >= required,
+                )
+            )
         rows.append(QuestRow(quest_id, quest.display_name, progress.status, tuple(objectives)))
     return tuple(rows)
 
@@ -190,7 +204,9 @@ class CraftingScreen:
             for selection in recipe.selections:
                 for item_id in selection.item_ids:
                     needed[item_id] = needed.get(item_id, 0) + 1
-            materials = tuple((self._name(k), n, inventory.count(k)) for k, n in sorted(needed.items()))
+            materials = tuple(
+                (self._name(k), n, inventory.count(k)) for k, n in sorted(needed.items())
+            )
             outputs = ", ".join(f"{self._name(o.item_id)} x{o.amount}" for o in recipe.outputs)
             rows.append(
                 CraftingRow(
@@ -275,7 +291,9 @@ class GameSettings:
     music_volume: float = 0.8
     effects_volume: float = 0.8
     show_battle_log: bool = True
-    input_overrides: dict = None  # ENG-15: action -> [binding data], laid over the project input map
+    input_overrides: dict = (
+        None  # ENG-15: action -> [binding data], laid over the project input map
+    )
 
     OPTIONS = (
         ("music_volume", "Music Volume"),

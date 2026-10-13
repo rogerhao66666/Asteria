@@ -33,7 +33,12 @@ class BattleSchedulerDefinition:
     minimum_speed: float = 1.0
 
     def __init__(
-        self, scheduler_id, *, mode=BattleSchedulerMode.SPEED_ORDERED, timeline_scale=100.0, minimum_speed=1.0
+        self,
+        scheduler_id,
+        *,
+        mode=BattleSchedulerMode.SPEED_ORDERED,
+        timeline_scale=100.0,
+        minimum_speed=1.0,
     ):
         object.__setattr__(self, "scheduler_id", _id(scheduler_id, "scheduler_id"))
         object.__setattr__(self, "mode", BattleSchedulerMode(mode))
@@ -52,7 +57,10 @@ class BattleSchedulerDefinition:
 
     @classmethod
     def from_data(cls, data):
-        if data.get("schema") != "asteria.rpg.battle_scheduler_definition" or data.get("version") != 1:
+        if (
+            data.get("schema") != "asteria.rpg.battle_scheduler_definition"
+            or data.get("version") != 1
+        ):
             raise ValueError("unsupported battle scheduler definition")
         return cls(
             data["scheduler_id"],
@@ -107,7 +115,10 @@ class BattleScheduler:
         return self.definition.mode
 
     def _speed(self, member):
-        return max(self.definition.minimum_speed, float(getattr(member, "current_initiative", member.initiative)))
+        return max(
+            self.definition.minimum_speed,
+            float(getattr(member, "current_initiative", member.initiative)),
+        )
 
     def _initialize(self):
         if self.mode == BattleSchedulerMode.CONTINUOUS:
@@ -125,14 +136,20 @@ class BattleScheduler:
         self._pending = []
         for m in values:
             self._sequence += 1
-            self._pending.append(ScheduledTurn(m.member_id, m.side, self._time, self._speed(m), self._sequence))
+            self._pending.append(
+                ScheduledTurn(m.member_id, m.side, self._time, self._speed(m), self._sequence)
+            )
 
     def _schedule_continuous(self, member, *, from_time):
         speed = self._speed(member)
         self._sequence += 1
         self._pending.append(
             ScheduledTurn(
-                member.member_id, member.side, from_time + self.definition.timeline_scale / speed, speed, self._sequence
+                member.member_id,
+                member.side,
+                from_time + self.definition.timeline_scale / speed,
+                speed,
+                self._sequence,
             )
         )
         self._pending.sort(key=lambda x: (x.ready_time, x.member_id, x.sequence))
@@ -213,7 +230,9 @@ class BattleScheduler:
         elif join_current_round:
             self._sequence += 1
             self._pending.append(
-                ScheduledTurn(member.member_id, member.side, self._time, self._speed(member), self._sequence)
+                ScheduledTurn(
+                    member.member_id, member.side, self._time, self._speed(member), self._sequence
+                )
             )
             if self.mode == BattleSchedulerMode.SPEED_ORDERED:
                 self._pending.sort(key=lambda x: (-x.speed, x.member_id))
@@ -265,7 +284,13 @@ class BattleScheduler:
         result._sequence = int(data["sequence"])
         result._acted_this_round = set(data.get("acted_this_round", ()))
         result._pending = [
-            ScheduledTurn(x["member_id"], x["side"], float(x["ready_time"]), float(x["speed"]), int(x["sequence"]))
+            ScheduledTurn(
+                x["member_id"],
+                x["side"],
+                float(x["ready_time"]),
+                float(x["speed"]),
+                int(x["sequence"]),
+            )
             for x in data["pending"]
         ]
         return result

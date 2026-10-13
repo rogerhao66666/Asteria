@@ -21,18 +21,31 @@ def test_behaviour_matches_the_regression_baseline():
     snapshot = json.loads(json.dumps(regression_snapshot(REPO), sort_keys=True))
     baseline = json.loads(BASELINE.read_text(encoding="utf-8"))
     for key in ("boss_battle", "reference_saves", "rpg_database", "golden_summary"):
-        assert snapshot[key] == baseline[key], f"{key} drifted (see tests/golden/README.md before updating)"
+        assert snapshot[key] == baseline[key], (
+            f"{key} drifted (see tests/golden/README.md before updating)"
+        )
     assert snapshot["boss_battle"]["winner"] == "heroes"
 
 
 @pytest.mark.parametrize(
     "frames",
-    [[1 / 30] * 60, [1 / 60] * 120, [1 / 144] * 290, [random.Random(3).uniform(0.008, 0.04) for _ in range(120)]],
+    [
+        [1 / 30] * 60,
+        [1 / 60] * 120,
+        [1 / 144] * 290,
+        [random.Random(3).uniform(0.008, 0.04) for _ in range(120)],
+    ],
     ids=["30fps", "60fps", "144fps", "jitter"],
 )
 def test_presented_beats_land_on_the_first_frame_after_their_authored_time(frames):
     samples = measure_action_timing(REPO, frames)
-    assert {s.cue for s in samples} == {"attack_pose", "effect", "hit_pose", "damage_number", "hit_sound"}
+    assert {s.cue for s in samples} == {
+        "attack_pose",
+        "effect",
+        "hit_pose",
+        "damage_number",
+        "hit_sound",
+    }
     for sample in samples:
         assert sample.ok, (sample.cue, sample.authored, sample.observed, sample.frame)
 

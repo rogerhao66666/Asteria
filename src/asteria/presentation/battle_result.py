@@ -40,7 +40,9 @@ class BattleResultProfile:
         object.__setattr__(self, "escape_label", str(escape_label))
         object.__setattr__(self, "complete_label", str(complete_label))
         object.__setattr__(
-            self, "currency_labels", tuple(sorted((str(k), str(v)) for k, v in dict(currency_labels or {}).items()))
+            self,
+            "currency_labels",
+            tuple(sorted((str(k), str(v)) for k, v in dict(currency_labels or {}).items())),
         )
         object.__setattr__(
             self,
@@ -48,7 +50,9 @@ class BattleResultProfile:
             tuple(sorted((str(k), str(v)) for k, v in dict(progression_labels or {}).items())),
         )
         object.__setattr__(
-            self, "item_labels", tuple(sorted((str(k), str(v)) for k, v in dict(item_labels or {}).items()))
+            self,
+            "item_labels",
+            tuple(sorted((str(k), str(v)) for k, v in dict(item_labels or {}).items())),
         )
 
     def _label(self, pairs, key):
@@ -195,7 +199,9 @@ class BattleResultPresentationRuntime:
         items = ()
         if reward_result is not None:
             currencies = tuple(
-                BattleCurrencyRewardView(str(k), self.profile.currency_label(k), _finite(v, "currency reward"))
+                BattleCurrencyRewardView(
+                    str(k), self.profile.currency_label(k), _finite(v, "currency reward")
+                )
                 for k, v in sorted(reward_result.currencies.items())
             )
             items = tuple(
@@ -206,9 +212,13 @@ class BattleResultPresentationRuntime:
             for result in reward_result.progression_results:
                 crossed = tuple(result.crossed)
                 granted_abilities = tuple(
-                    dict.fromkeys(ability for milestone in crossed for ability in milestone.granted_abilities)
+                    dict.fromkeys(
+                        ability for milestone in crossed for ability in milestone.granted_abilities
+                    )
                 )
-                granted_tags = tuple(sorted({tag for milestone in crossed for tag in milestone.granted_tags}))
+                granted_tags = tuple(
+                    sorted({tag for milestone in crossed for tag in milestone.granted_tags})
+                )
                 progression_values.append(
                     BattleProgressionRewardView(
                         str(result.track_id),
@@ -276,7 +286,10 @@ class BattleResultPresentationRuntime:
                     }
                     for x in self._view.progression
                 ],
-                "items": [{"item_id": x.item_id, "label": x.label, "amount": x.amount} for x in self._view.items],
+                "items": [
+                    {"item_id": x.item_id, "label": x.label, "amount": x.amount}
+                    for x in self._view.items
+                ],
             },
         }
 

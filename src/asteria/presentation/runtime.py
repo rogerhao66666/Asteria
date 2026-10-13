@@ -114,7 +114,12 @@ class Runtime:
         k = n.kind
         if k == Kind.COMMAND:
             if not f.started:
-                cmd = Command(n.command.channel, n.command.action, bind(n.command.args, self.ctx), n.command.blocking)
+                cmd = Command(
+                    n.command.channel,
+                    n.command.action,
+                    bind(n.command.args, self.ctx),
+                    n.command.blocking,
+                )
                 self._emit(RuntimeEvent("command", n.id, cmd))
                 f.started = True
             if not n.command.blocking or "command.completed:" + n.id in self.signals:
@@ -137,7 +142,9 @@ class Runtime:
             return budget
         if k == Kind.SET_VARIABLE:
             self.ctx.variables[n.variable] = bind(n.value, self.ctx)
-            self._emit(RuntimeEvent("variable", n.id, (n.variable, self.ctx.variables[n.variable])))
+            self._emit(
+                RuntimeEvent("variable", n.id, (n.variable, self.ctx.variables[n.variable]))
+            )
             f.done = True
             return budget
         if k in (Kind.SEQUENCE, Kind.PARALLEL, Kind.BRANCH, Kind.LOOP, Kind.NESTED):
@@ -159,7 +166,10 @@ class Runtime:
                     return (
                         self._tick(f, remaining, depth)
                         if remaining > 0
-                        or all(x.n.kind not in (Kind.WAIT, Kind.WAIT_EVENT, Kind.COMMAND) for x in f.children)
+                        or all(
+                            x.n.kind not in (Kind.WAIT, Kind.WAIT_EVENT, Kind.COMMAND)
+                            for x in f.children
+                        )
                         else 0.0
                     )
             return remaining if f.done else 0.0

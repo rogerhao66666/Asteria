@@ -1,4 +1,5 @@
-"""Particle effects (VFX-01): authored emitter data and a deterministic simulation, independent of any renderer.
+"""Particle effects (VFX-01): authored emitter data and a deterministic simulation, independent of
+any renderer.
 
 A particle effect is a canonical asset of kind ``particle_effect``; its ``emitter`` metadata is a
 ``ParticleEffectDefinition``. The same effect is used by
@@ -60,7 +61,10 @@ class ParticleEffectDefinition:
     gravity: tuple[float, float] = (0.0, 0.0)
     drag: float = 0.0  # fraction of velocity lost per second
     shape: str = "point"
-    shape_size: tuple[float, float] = (0.0, 0.0)  # radius (circle / ring) or width, height (rect / line)
+    shape_size: tuple[float, float] = (
+        0.0,
+        0.0,
+    )  # radius (circle / ring) or width, height (rect / line)
     size: tuple[float, float] = (4.0, 1.0)  # at birth, at death
     size_jitter: float = 0.0  # +- fraction of the size per particle
     color_start: tuple[int, int, int, int] = (255, 220, 120, 255)
@@ -244,8 +248,10 @@ class ParticleView(NamedTuple):
 
 
 class ParticleSystem:
-    """One running emitter. ``update(dt)`` advances it deterministically (seeded); ``views()`` lists what to
-    draw. ``move_to`` follows an entity; ``stop()`` ends emission and lets the live particles finish."""
+    """One running emitter. ``update(dt)`` advances it deterministically (seeded); ``views()``
+    lists what to
+    draw. ``move_to`` follows an entity; ``stop()`` ends emission and lets the live particles
+    finish."""
 
     def __init__(self, definition, *, x=0.0, y=0.0, seed=0, scale=1.0, emit_for=None):
         self.definition = definition
@@ -338,11 +344,15 @@ class ParticleSystem:
 
     def views(self):
         d = self.definition
-        return [ParticleView(*v) for v in self._particles.views(*d.size, d.color_start, d.color_end, self.scale)]
+        return [
+            ParticleView(*v)
+            for v in self._particles.views(*d.size, d.color_start, d.color_end, self.scale)
+        ]
 
 
 def effect_definition(assets, asset_id):
-    """The ``ParticleEffectDefinition`` of a ``particle_effect`` asset, or None when ``asset_id`` is not one."""
+    """The ``ParticleEffectDefinition`` of a ``particle_effect`` asset, or None when ``asset_id``
+    is not one."""
     try:
         asset = assets.resolve(asset_id)
     except (KeyError, ValueError):
@@ -354,7 +364,8 @@ def effect_definition(assets, asset_id):
 
 
 def particle_effect_asset(definition, *, tags=("vfx", "particles")):
-    """A canonical asset holding ``definition`` (``source.uri`` is the image of image particles, else "")."""
+    """A canonical asset holding ``definition`` (``source.uri`` is the image of image particles,
+    else "")."""
     from asteria.assets.canonical import AssetSource, CanonicalAsset
 
     emitter = definition.to_data()

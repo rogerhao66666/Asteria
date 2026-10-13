@@ -142,7 +142,9 @@ class AnimationAuthoringController:
             raise AnimationAuthoringError("; ".join(problems))
         before = self.asset(asset_id)
         meta = dict(before.metadata)
-        meta.update(frame_size=list(data["frame_size"]), pivot=list(data["pivot"]), clips=data["clips"])
+        meta.update(
+            frame_size=list(data["frame_size"]), pivot=list(data["pivot"]), clips=data["clips"]
+        )
         after = replace(before, metadata=tuple(sorted(meta.items())))
         self.document.execute(_ReplaceAssetCommand(self.project.assets, before, after, label))
         return self.data(asset_id)
@@ -176,7 +178,11 @@ class AnimationAuthoringController:
             raise AnimationAuthoringError(f"unknown clip {name}")
         if frames is not None:
             clip["frames"] = [int(f) for f in frames]
-            events = {k: v for k, v in dict(clip.get("events", {})).items() if int(k) < len(clip["frames"])}
+            events = {
+                k: v
+                for k, v in dict(clip.get("events", {})).items()
+                if int(k) < len(clip["frames"])
+            }
             clip.pop("events", None)
             if events:
                 clip["events"] = events
@@ -239,7 +245,8 @@ class AnimationAuthoringController:
         return animator.frame_index
 
     def preview_events(self, asset_id, name, until):
-        """``[(time, event)]`` fired from 0 to ``until`` seconds at their authored keyframe times."""
+        """``[(time, event)]`` fired from 0 to ``until`` seconds at their authored keyframe
+        times."""
         clip = self._clip(asset_id, name)
         fired, time = [], 0.0
         while time <= until + 1e-9:

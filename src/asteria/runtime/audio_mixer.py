@@ -95,7 +95,10 @@ class AudioMixer:
             self.device.stop_music(fade_ms=int(fade_in * 1000))
         self._music_volume = max(0.0, min(1.0, float(volume)))
         self.device.play_music(
-            path, loops=-1, fade_ms=int(fade_in * 1000), volume=self._music_volume * self._bus_volume("bgm")
+            path,
+            loops=-1,
+            fade_ms=int(fade_in * 1000),
+            volume=self._music_volume * self._bus_volume("bgm"),
         )
         self.music_asset_id = asset_id
         return True
@@ -116,7 +119,10 @@ class AudioMixer:
             return False
         volume = max(0.0, min(1.0, float(volume)))
         handle = self.device.play_sound(
-            path, loops=-1, fade_ms=int(fade_in * 1000), volume=volume * self._bus_volume("ambient")
+            path,
+            loops=-1,
+            fade_ms=int(fade_in * 1000),
+            volume=volume * self._bus_volume("ambient"),
         )
         self._ambient[asset_id] = (handle, volume)
         return True
@@ -133,7 +139,10 @@ class AudioMixer:
         if path is None:
             return None
         return self.device.play_sound(
-            path, loops=0, fade_ms=0, volume=max(0.0, min(1.0, float(volume))) * self._bus_volume(bus)
+            path,
+            loops=0,
+            fade_ms=0,
+            volume=max(0.0, min(1.0, float(volume))) * self._bus_volume(bus),
         )
 
     # -- WORLD command requests from event programs ------------------------
@@ -150,5 +159,7 @@ class AudioMixer:
         if name == "STOP_BGM":
             return self.stop_music(fade_out=float(args.get("fade", 0.0)))
         if name == "PLAY_SE":
-            return self.play_effect(str(args.get("asset_id", "")), volume=float(args.get("volume", 1.0)))
+            return self.play_effect(
+                str(args.get("asset_id", "")), volume=float(args.get("volume", 1.0))
+            )
         return None

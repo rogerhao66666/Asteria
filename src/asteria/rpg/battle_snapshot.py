@@ -85,7 +85,9 @@ def _unpack_member(raw):
     tags = TagSet.from_data(raw["tags"])
     states = None
     if raw.get("states") is not None:
-        registry = StateRegistry(StateDefinition.from_data(x) for x in raw.get("state_registry", ()))
+        registry = StateRegistry(
+            StateDefinition.from_data(x) for x in raw.get("state_registry", ())
+        )
         states = StateRuntime(registry, stats, resources, tags)
         states.restore(raw["states"])
     subject = GameplaySubject(stats, resources, tags, states)
@@ -99,7 +101,9 @@ def _unpack_member(raw):
 
 
 def capture_battle_snapshot(battle) -> BattleSnapshot:
-    members = {member_id: _pack_member(battle.members[member_id]) for member_id in sorted(battle.members)}
+    members = {
+        member_id: _pack_member(battle.members[member_id]) for member_id in sorted(battle.members)
+    }
     formations = {side: runtime.to_data() for side, runtime in sorted(battle.formations.items())}
     data = {
         "schema": BattleSnapshot.SCHEMA,
@@ -119,7 +123,8 @@ def capture_battle_snapshot(battle) -> BattleSnapshot:
         "transactions": battle.transactions.to_data(),
         "transform_stacks": {
             member_id: [
-                {"member": _pack_member(member), "prior_form_id": prior_form_id} for member, prior_form_id in stack
+                {"member": _pack_member(member), "prior_form_id": prior_form_id}
+                for member, prior_form_id in stack
             ]
             for member_id, stack in sorted(battle._transform_stacks.items())
         },
@@ -128,7 +133,9 @@ def capture_battle_snapshot(battle) -> BattleSnapshot:
 
 
 def restore_battle_snapshot(battle, snapshot):
-    snapshot = snapshot if isinstance(snapshot, BattleSnapshot) else BattleSnapshot.from_data(snapshot)
+    snapshot = (
+        snapshot if isinstance(snapshot, BattleSnapshot) else BattleSnapshot.from_data(snapshot)
+    )
     data = snapshot.data
     snapshot_ids = set(data["members"])
     current_ids = set(battle.members)
@@ -159,7 +166,9 @@ def restore_battle_snapshot(battle, snapshot):
     from .battle_timing import BattleActionTimingRuntime
 
     battle.combatants = CombatantLifecycleRuntime.from_data(data["combatants"], hooks=battle.hooks)
-    battle.is_active = lambda member: battle.combatants.is_active(member) and battle._base_is_active(member)
+    battle.is_active = lambda member: (
+        battle.combatants.is_active(member) and battle._base_is_active(member)
+    )
     if data["turn_kind"] == "scheduler":
         battle.scheduler = BattleScheduler.from_data(data["turn_runtime"], battle.members.values())
         battle.turn_queue = battle.scheduler

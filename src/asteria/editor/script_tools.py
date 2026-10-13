@@ -30,7 +30,8 @@ class _Type:
 
 
 def _annotation_type(callable_obj):
-    """Class named by a callable's return annotation (string annotations resolved in its module)."""
+    """Class named by a callable's return annotation (string annotations resolved in its
+    module)."""
     import sys
     import typing
 
@@ -89,7 +90,9 @@ def _resolve(expression, namespace, assignments, depth=0):
 def _assignments(text):
     """Latest ``name = <expression>`` per name in the script text before the cursor."""
     found = {}
-    for match in re.finditer(r"^[ \t]*([A-Za-z_][A-Za-z0-9_]*)[ \t]*=[ \t]*([^\n#]+)", text, re.MULTILINE):
+    for match in re.finditer(
+        r"^[ \t]*([A-Za-z_][A-Za-z0-9_]*)[ \t]*=[ \t]*([^\n#]+)", text, re.MULTILINE
+    ):
         found[match.group(1)] = match.group(2).strip()
     return found
 
@@ -109,7 +112,11 @@ def complete(source, position, namespace):
         target = _resolve(chain.group(1), namespace, _assignments(text))
         if target is None:
             return prefix, []
-        candidates = [n for n in dir(target.cls if isinstance(target, _Type) else target) if not n.startswith("_")]
+        candidates = [
+            n
+            for n in dir(target.cls if isinstance(target, _Type) else target)
+            if not n.startswith("_")
+        ]
     else:
         match = re.search(r"([A-Za-z_][A-Za-z0-9_]*)$", line)
         if not match:
@@ -159,18 +166,24 @@ try:
         return fmt
 
     class PythonHighlighter(QSyntaxHighlighter):
-        """Keywords, builtins, Asteria script globals, numbers, decorators, strings and comments."""
+        """Keywords, builtins, Asteria script globals, numbers, decorators, strings and
+        comments."""
 
         def __init__(self, document):
             super().__init__(document)
             words = r"\b(" + "|".join(keyword.kwlist) + r")\b"
             builtin_names = (
-                r"\b(" + "|".join(n for n in dir(builtins) if not n.startswith("_") and n.isidentifier()) + r")\b"
+                r"\b("
+                + "|".join(n for n in dir(builtins) if not n.startswith("_") and n.isidentifier())
+                + r")\b"
             )
             self.rules = [
                 (QRegularExpression(builtin_names), _format("#7fc8d8")),
                 (QRegularExpression(words), _format("#c792ea", bold=True)),
-                (QRegularExpression(r"\b(" + "|".join(SCRIPT_GLOBALS) + r")\b"), _format("#f0c674", bold=True)),
+                (
+                    QRegularExpression(r"\b(" + "|".join(SCRIPT_GLOBALS) + r")\b"),
+                    _format("#f0c674", bold=True),
+                ),
                 (QRegularExpression(r"\b[0-9]+(\.[0-9]+)?\b"), _format("#f78c6c")),
                 (QRegularExpression(r"@[A-Za-z_][A-Za-z0-9_.]*"), _format("#82aaff")),
                 (QRegularExpression(r"\"[^\"\\n]*\"|'[^'\\n]*'"), _format("#c3e88d")),
@@ -192,7 +205,11 @@ try:
                 iterator = expression.globalMatch(block_text)
                 while iterator.hasNext():
                     match = iterator.next()
-                    if match.capturedStart() <= column < match.capturedStart() + match.capturedLength():
+                    if (
+                        match.capturedStart()
+                        <= column
+                        < match.capturedStart() + match.capturedLength()
+                    ):
                         found = name
             return found
 

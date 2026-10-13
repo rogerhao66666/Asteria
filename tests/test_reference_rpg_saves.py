@@ -32,7 +32,10 @@ def test_reference_save_loads_and_validates(name):
 
 def test_reference_saves_scale_in_complexity():
     p = load_project()
-    saves = {n: GameRuntimeSave.load_json(save_path(n), p) for n in ("early", "mid", "endgame_complex", "boss_stress")}
+    saves = {
+        n: GameRuntimeSave.load_json(save_path(n), p)
+        for n in ("early", "mid", "endgame_complex", "boss_stress")
+    }
     assert [len(saves[n].rpg_state.party_actor_ids) for n in saves] == [6, 8, 12, 12]
     assert (
         saves["early"].rpg_state.currencies["gold"]
@@ -83,7 +86,9 @@ def test_boss_stress_save_is_near_encounter_and_tracks_world_state():
 
 def test_actor_progression_state_rejects_locked_active_class():
     with pytest.raises(ValueError, match="active classes must be unlocked"):
-        ActorProgressionState(10, 100, unlocked_class_ids=("vanguard",), active_class_ids=("arcanist",))
+        ActorProgressionState(
+            10, 100, unlocked_class_ids=("vanguard",), active_class_ids=("arcanist",)
+        )
 
 
 def test_rpg_runtime_v3_backward_read_defaults_actor_progression_empty():

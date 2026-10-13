@@ -79,7 +79,11 @@ def test_easing_library_is_deterministic_and_backend_neutral():
 
 def test_transition_crossfade_emits_previous_and_current_sprite_draws():
     profile = BattleAnimationTimingProfile(
-        (BattleAnimationTimingRule("attack", transition_duration=0.2, transition_easing="ease_out"),)
+        (
+            BattleAnimationTimingRule(
+                "attack", transition_duration=0.2, transition_easing="ease_out"
+            ),
+        )
     )
     runtime = _runtime(profile)
     runtime.apply_events(_attack_event(runtime))
@@ -102,8 +106,12 @@ def test_transition_crossfade_emits_previous_and_current_sprite_draws():
 
 
 def test_role_playback_rate_changes_only_animation_clock():
-    slow = _runtime(BattleAnimationTimingProfile((BattleAnimationTimingRule("attack", playback_rate=0.5),)))
-    fast = _runtime(BattleAnimationTimingProfile((BattleAnimationTimingRule("attack", playback_rate=2.0),)))
+    slow = _runtime(
+        BattleAnimationTimingProfile((BattleAnimationTimingRule("attack", playback_rate=0.5),))
+    )
+    fast = _runtime(
+        BattleAnimationTimingProfile((BattleAnimationTimingRule("attack", playback_rate=2.0),))
+    )
     slow.apply_events(_attack_event(slow))
     fast.apply_events(_attack_event(fast))
     slow.update(0.11)

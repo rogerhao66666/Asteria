@@ -43,7 +43,9 @@ def build_add_component_command(entity, component_type):
     try:
         component = component_type()
     except TypeError as exc:
-        raise StructureEditError(f"{component_type.__name__} cannot be default-constructed") from exc
+        raise StructureEditError(
+            f"{component_type.__name__} cannot be default-constructed"
+        ) from exc
     return AddComponentCommand(entity, component)
 
 

@@ -1,6 +1,7 @@
 """A layout that places widgets left to right and wraps to a new line when the row is full.
 
-Rows of action buttons (Add / Key at Frame / Remove...) use it, so a narrow panel shows its buttons on
+Rows of action buttons (Add / Key at Frame / Remove...) use it, so a narrow panel shows its
+buttons on
 two lines instead of forcing the whole editor wider.
 """
 
@@ -43,7 +44,9 @@ class FlowLayout(QLayout):
         self._place(rect, apply=True)
 
     def sizeHint(self):
-        width = sum(item.sizeHint().width() for item in self._items) + self.spacing() * max(0, len(self._items) - 1)
+        width = sum(item.sizeHint().width() for item in self._items) + self.spacing() * max(
+            0, len(self._items) - 1
+        )
         height = max((item.sizeHint().height() for item in self._items), default=0)
         m = self.contentsMargins()
         return QSize(width + m.left() + m.right(), height + m.top() + m.bottom())
@@ -59,7 +62,9 @@ class FlowLayout(QLayout):
         m = self.contentsMargins()
         area = rect.adjusted(m.left(), m.top(), -m.right(), -m.bottom())
         x, y, line = area.x(), area.y(), 0
-        visible = [item for item in self._items if not (item.widget() and item.widget().isHidden())]
+        visible = [
+            item for item in self._items if not (item.widget() and item.widget().isHidden())
+        ]
         right_aligned = bool(self.alignment() & Qt.AlignRight)
         rows, row = [], []
         for item in visible:

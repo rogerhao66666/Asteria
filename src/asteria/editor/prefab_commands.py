@@ -101,7 +101,9 @@ class CreatePrefabFromEntityCommand:
 
     def __init__(self, project, entity, prefab_id, name=None, *, base_prefab_id=""):
         self.project, self.entity = project, entity
-        self.definition = prefab_from_entity(entity, prefab_id, name, base_prefab_id=base_prefab_id)
+        self.definition = prefab_from_entity(
+            entity, prefab_id, name, base_prefab_id=base_prefab_id
+        )
         self._added_marker = None
 
     @property
@@ -159,11 +161,19 @@ def apply_instance_to_prefab_command(project, registry, entity):
     """Make the instance's current components the prefab's (other instances update)."""
     prefab_id = entity.get(PrefabInstanceComponent).prefab_id
     current = project.prefabs.require(prefab_id)
-    captured = prefab_from_entity(entity, prefab_id, current.name, base_prefab_id=current.base_prefab_id)
-    definition = PrefabDefinition(
-        prefab_id, current.name, captured.components, current.base_prefab_id, current.removed_components
+    captured = prefab_from_entity(
+        entity, prefab_id, current.name, base_prefab_id=current.base_prefab_id
     )
-    return ReplacePrefabsCommand(project, registry, {prefab_id: definition}, label=f"Apply to Prefab {current.name}")
+    definition = PrefabDefinition(
+        prefab_id,
+        current.name,
+        captured.components,
+        current.base_prefab_id,
+        current.removed_components,
+    )
+    return ReplacePrefabsCommand(
+        project, registry, {prefab_id: definition}, label=f"Apply to Prefab {current.name}"
+    )
 
 
 class RevertInstanceCommand:

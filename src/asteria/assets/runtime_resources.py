@@ -61,7 +61,9 @@ class ResourceAwareMaterializer:
                 (),
                 (
                     RuntimeMaterializationIssue(
-                        "", "runtime.project.not_activatable", "project load report is not activatable"
+                        "",
+                        "runtime.project.not_activatable",
+                        "project load report is not activatable",
                     ),
                 ),
                 False,
@@ -71,10 +73,18 @@ class ResourceAwareMaterializer:
         for resolved in project.resolved:
             try:
                 out = self.binders.bind(resolved, runtime_context)
-                owned.append(out if isinstance(out, StagedRuntimeObject) else StagedRuntimeObject(out))
+                owned.append(
+                    out if isinstance(out, StagedRuntimeObject) else StagedRuntimeObject(out)
+                )
             except Exception as e:
-                issues.append(RuntimeMaterializationIssue(resolved.binding.object_id, "runtime.binding.failed", str(e)))
-                return ResourceMaterializationReport((), tuple(issues), False, self._cleanup(owned))
+                issues.append(
+                    RuntimeMaterializationIssue(
+                        resolved.binding.object_id, "runtime.binding.failed", str(e)
+                    )
+                )
+                return ResourceMaterializationReport(
+                    (), tuple(issues), False, self._cleanup(owned)
+                )
         values = tuple(x.value for x in owned)
         try:
             self.target.commit_objects(values)

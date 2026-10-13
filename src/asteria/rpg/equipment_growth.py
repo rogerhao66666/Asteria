@@ -72,7 +72,9 @@ class EquipmentGrowthReward:
         object.__setattr__(
             self,
             "evolution_equipment_id",
-            None if evolution_equipment_id is None else _id(evolution_equipment_id, "evolution_equipment_id"),
+            None
+            if evolution_equipment_id is None
+            else _id(evolution_equipment_id, "evolution_equipment_id"),
         )
 
     def to_data(self):
@@ -157,7 +159,8 @@ class EquipmentGrowthNodeDefinition:
         if len(rewards) != max_rank:
             raise ValueError("rewards must contain one entry per rank")
         rewards = tuple(
-            x if isinstance(x, EquipmentGrowthReward) else EquipmentGrowthReward.from_data(x) for x in rewards
+            x if isinstance(x, EquipmentGrowthReward) else EquipmentGrowthReward.from_data(x)
+            for x in rewards
         )
         parsed_prereqs = []
         for entry in prerequisites:
@@ -266,7 +269,9 @@ class EquipmentGrowthDefinition:
                 if dep not in mapping:
                     raise ValueError(f"node {node.node_id} references unknown prerequisite {dep}")
                 if rank > mapping[dep].max_rank:
-                    raise ValueError(f"node {node.node_id} prerequisite rank exceeds {dep} max rank")
+                    raise ValueError(
+                        f"node {node.node_id} prerequisite rank exceeds {dep} max rank"
+                    )
             socket_ids = set()
             for reward in node.rewards:
                 overlap = socket_ids.intersection(reward.unlocked_sockets)
@@ -318,7 +323,11 @@ class EquipmentGrowthDefinition:
     @classmethod
     def from_data(cls, data):
         expected = {"schema", "version", "growth_id", "display_name", "nodes", "tags"}
-        if set(data) != expected or data.get("schema") != "asteria.rpg.equipment_growth" or data.get("version") != 1:
+        if (
+            set(data) != expected
+            or data.get("schema") != "asteria.rpg.equipment_growth"
+            or data.get("version") != 1
+        ):
             raise ValueError("unsupported equipment growth definition")
         return cls(
             data["growth_id"],
@@ -384,7 +393,9 @@ class EquipmentGrowthRuntime:
                 continue
             previous = groups.get(node.exclusive_group)
             if previous is not None and previous != node.node_id:
-                raise ValueError(f"exclusive growth group has multiple active nodes: {node.exclusive_group}")
+                raise ValueError(
+                    f"exclusive growth group has multiple active nodes: {node.exclusive_group}"
+                )
             groups[node.exclusive_group] = node.node_id
 
     def rank(self, node_id):
@@ -430,7 +441,9 @@ class EquipmentGrowthRuntime:
         requirements = {}
         if new_rank > node.max_rank:
             reasons.append("growth node is already at max rank")
-            return EquipmentGrowthUnlockPreview(node.node_id, old_rank, old_rank, False, tuple(reasons), requirements)
+            return EquipmentGrowthUnlockPreview(
+                node.node_id, old_rank, old_rank, False, tuple(reasons), requirements
+            )
         requirements = node.requirement_for_rank(new_rank)
         for counter_id, needed in sorted(requirements.items()):
             current = self.counter(counter_id)
@@ -538,7 +551,11 @@ class EquipmentGrowthRuntime:
     @classmethod
     def from_data(cls, data, definitions, *, hooks=None, source=None):
         expected = {"schema", "version", "growth_id", "counters", "ranks"}
-        if set(data) != expected or data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
+        if (
+            set(data) != expected
+            or data.get("schema") != cls.SCHEMA
+            or data.get("version") != cls.VERSION
+        ):
             raise ValueError("unsupported equipment growth runtime")
         definitions = dict(definitions)
         growth_id = data["growth_id"]

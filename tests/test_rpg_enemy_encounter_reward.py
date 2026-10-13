@@ -28,7 +28,9 @@ def test_enemy_runtime_uses_generic_gameplay_primitives():
 
 
 def test_enemy_and_encounter_roundtrip():
-    enemy = EnemyDefinition("slime", resources={"life": 10}, reward=RewardDefinition(currencies={"coin": 3}))
+    enemy = EnemyDefinition(
+        "slime", resources={"life": 10}, reward=RewardDefinition(currencies={"coin": 3})
+    )
     encounter = EncounterDefinition("pair", members=[EncounterMember("slime", count=2)])
     assert EnemyDefinition.from_data(enemy.to_data()) == enemy
     assert EncounterDefinition.from_data(encounter.to_data()) == encounter

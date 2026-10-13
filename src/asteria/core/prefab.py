@@ -49,7 +49,9 @@ class PrefabDefinition:
     def __post_init__(self):
         if not str(self.prefab_id).strip():
             raise PrefabError("prefab_id is required")
-        object.__setattr__(self, "components", tuple(copy.deepcopy(dict(c)) for c in self.components))
+        object.__setattr__(
+            self, "components", tuple(copy.deepcopy(dict(c)) for c in self.components)
+        )
         object.__setattr__(self, "removed_components", tuple(self.removed_components))
         if any(c.get("type") == INSTANCE_TYPE for c in self.components):
             raise PrefabError("a prefab cannot contain PrefabInstance")
@@ -157,7 +159,11 @@ class PrefabLibrary:
 
 def _component_record(type_name, fields, registry):
     component_type = registry.resolve(type_name)
-    return {"type": type_name, "version": get_component_schema(component_type).version, "fields": fields}
+    return {
+        "type": type_name,
+        "version": get_component_schema(component_type).version,
+        "fields": fields,
+    }
 
 
 def instantiate(library, prefab_id, registry, *, name=None, entity_id=None):
@@ -165,7 +171,9 @@ def instantiate(library, prefab_id, registry, *, name=None, entity_id=None):
     definition = library.require(prefab_id)
     entity = Entity(name or definition.name, entity_id=entity_id)
     for type_name, fields in library.resolve(prefab_id).items():
-        entity.add_component(deserialize_component(_component_record(type_name, fields, registry), registry))
+        entity.add_component(
+            deserialize_component(_component_record(type_name, fields, registry), registry)
+        )
     marker = entity.add_component(PrefabInstanceComponent())
     marker.prefab_id = definition.prefab_id
     return entity
@@ -186,7 +194,10 @@ def prefab_from_entity(entity, prefab_id, name=None, *, base_prefab_id=""):
 
 
 def _entity_values(entity):
-    return {serialize_component(c)["type"]: serialize_component(c)["fields"] for c in entity.components()}
+    return {
+        serialize_component(c)["type"]: serialize_component(c)["fields"]
+        for c in entity.components()
+    }
 
 
 def instance_overrides(entity, resolution):
@@ -200,14 +211,19 @@ def instance_overrides(entity, resolution):
         if base is None:
             overrides[type_name] = dict(fields)  # component added on the instance only
             continue
-        changed = {k: v for k, v in fields.items() if k not in PLACEMENT_FIELDS.get(type_name, ()) and base.get(k) != v}
+        changed = {
+            k: v
+            for k, v in fields.items()
+            if k not in PLACEMENT_FIELDS.get(type_name, ()) and base.get(k) != v
+        }
         if changed:
             overrides[type_name] = changed
     return overrides
 
 
 def sync_instance(entity, old_resolution, new_resolution, registry):
-    """Rebuild an instance from ``new_resolution`` keeping its overrides against ``old_resolution``."""
+    """Rebuild an instance from ``new_resolution`` keeping its overrides against
+    ``old_resolution``."""
     overrides = instance_overrides(entity, old_resolution)
     by_type = {serialize_component(c)["type"]: c for c in entity.components()}
     for type_name in set(old_resolution) - set(new_resolution):
@@ -219,7 +235,9 @@ def sync_instance(entity, old_resolution, new_resolution, registry):
         merged.update(overrides.get(type_name, {}))
         component = by_type.get(type_name)
         if component is None:
-            entity.add_component(deserialize_component(_component_record(type_name, merged, registry), registry))
+            entity.add_component(
+                deserialize_component(_component_record(type_name, merged, registry), registry)
+            )
             continue
         schema = get_component_schema(type(component))
         for name, value in merged.items():

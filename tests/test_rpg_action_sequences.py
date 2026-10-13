@@ -1,6 +1,11 @@
 import pytest
 
-from asteria.rpg import ActionSequenceDefinition, ActionSequenceRuntime, ActionSequenceStep, RpgDatabase
+from asteria.rpg import (
+    ActionSequenceDefinition,
+    ActionSequenceRuntime,
+    ActionSequenceStep,
+    RpgDatabase,
+)
 
 
 def test_multi_hit_plan_is_deterministic():
@@ -29,7 +34,10 @@ def test_cooperative_n_person_sequence():
 
 def test_missing_participant_and_duplicate_rejected():
     d = ActionSequenceDefinition(
-        "duet", [ActionSequenceStep("a", participant_index=1)], min_participants=2, max_participants=3
+        "duet",
+        [ActionSequenceStep("a", participant_index=1)],
+        min_participants=2,
+        max_participants=3,
     )
     r = ActionSequenceRuntime([d])
     with pytest.raises(ValueError):
@@ -47,7 +55,9 @@ def test_step_tag_prerequisite_is_authored_not_hardcoded():
         ],
     )
     assert len(ActionSequenceRuntime([good]).plan("x", ["h"]).steps) == 2
-    bad = ActionSequenceDefinition("y", [ActionSequenceStep("b", required_previous_tags=("element.fire",))])
+    bad = ActionSequenceDefinition(
+        "y", [ActionSequenceStep("b", required_previous_tags=("element.fire",))]
+    )
     with pytest.raises(ValueError):
         ActionSequenceRuntime([bad]).plan("y", ["h"])
 
@@ -78,7 +88,10 @@ def test_database_v16_owns_sequences_and_v15_backwards_reads():
 
 def test_unlimited_participants_has_no_engine_cap():
     d = ActionSequenceDefinition(
-        "raid", [ActionSequenceStep("a", participant_index=127)], min_participants=128, max_participants=None
+        "raid",
+        [ActionSequenceStep("a", participant_index=127)],
+        min_participants=128,
+        max_participants=None,
     )
     p = ActionSequenceRuntime([d]).plan("raid", [f"p{i}" for i in range(128)])
     assert p.steps[0].actor_id == "p127"
@@ -124,7 +137,9 @@ def test_battle_executes_multi_hit_sequence_through_normal_ability_runtime():
     enemy = PartyMember("enemy", "e", subj())
     seq = ActionSequenceDefinition("triple", [ActionSequenceStep("slash", repeat=3)])
     battle = BattleRuntime(
-        [Party("h", [hero]), Party("e", [enemy])], AbilityRuntime(reg), action_sequence_definitions=(seq,)
+        [Party("h", [hero]), Party("e", [enemy])],
+        AbilityRuntime(reg),
+        action_sequence_definitions=(seq,),
     )
     plan, results, failures = battle.execute_sequence("triple", ["hero"], ["enemy"])
     assert len(results) == 3 and not failures and enemy.subject.resources.current("hp") == 79

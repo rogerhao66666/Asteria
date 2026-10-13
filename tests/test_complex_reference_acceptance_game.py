@@ -50,7 +50,9 @@ def test_build_customization_all_mutates_runtime_state():
     weapon = game.equip_definition(actor, "weapon_12")
     assert weapon.equipment.equipment_id == "weapon_12"
     next_node = next(
-        node.node_id for node in weapon.growth.definition.nodes if weapon.growth.preview_unlock(node.node_id).allowed
+        node.node_id
+        for node in weapon.growth.definition.nodes
+        if weapon.growth.preview_unlock(node.node_id).allowed
     )
     before_rank = weapon.growth.rank(next_node)
     game.upgrade_equipment(actor, weapon.instance_id, next_node)
@@ -89,7 +91,9 @@ def test_level_ap_ability_points_and_player_save_round_trip(tmp_path):
     game = GameSessionRuntime(project, save)
     actor = save.rpg_state.party_actor_ids[0]
     old = save.rpg_state.actor_progression[actor]
-    info = game.grant_actor_experience(actor, 1600, level_threshold=1000, ap_per_level=2, ability_points_per_level=1)
+    info = game.grant_actor_experience(
+        actor, 1600, level_threshold=1000, ap_per_level=2, ability_points_per_level=1
+    )
     assert info["new_level"] > old.level
     assert info["points"]["ability_points"] > old.points["ability_points"]
     graph = save.rpg_state.progression_allocations[actor]

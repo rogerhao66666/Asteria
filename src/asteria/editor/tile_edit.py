@@ -93,7 +93,11 @@ class AddTileLayerCommand:
             raise TileEditError("Layer already attached")
         if any(x.name == self.layer.name for x in self.tilemap.layers):
             raise TileEditError("Duplicate layer name")
-        idx = len(self.tilemap.layers) if self.index is None else max(0, min(self.index, len(self.tilemap.layers)))
+        idx = (
+            len(self.tilemap.layers)
+            if self.index is None
+            else max(0, min(self.index, len(self.tilemap.layers)))
+        )
         self.tilemap.layers.insert(idx, self.layer)
 
     def undo(self):

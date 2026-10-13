@@ -13,7 +13,11 @@ pygame = pytest.importorskip("pygame")
 
 from asteria.core import Entity, Transform  # noqa: E402
 from asteria.core.prefab import prefab_from_entity  # noqa: E402
-from asteria.runtime import FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent  # noqa: E402
+from asteria.runtime import (  # noqa: E402
+    FieldAIComponent,
+    SpawnZoneComponent,
+    VisibleEncounterComponent,
+)
 
 
 def _install_fixture(game, *, behaviour="chase", radius=0.0, offset=(70.0, 0.0)):
@@ -29,7 +33,12 @@ def _install_fixture(game, *, behaviour="chase", radius=0.0, offset=(70.0, 0.0))
     zone_transform = zone.add_component(Transform())
     zone_transform.x, zone_transform.y = p.x + offset[0], p.y + offset[1]
     spec = zone.add_component(SpawnZoneComponent())
-    spec.prefab_id, spec.max_alive, spec.radius, spec.respawn_seconds = "field_slime", 1, radius, 5.0
+    spec.prefab_id, spec.max_alive, spec.radius, spec.respawn_seconds = (
+        "field_slime",
+        1,
+        radius,
+        5.0,
+    )
     game.scene.add_entity(zone)
     return zone
 
@@ -45,10 +54,14 @@ def test_spawned_enemy_chases_player_and_starts_battle_in_the_runtime(runtime):
     runtime._frame([], 0.016)
     (slime,) = _spawned(game)
     start = hypot(
-        slime.get(Transform).x - game.player.get(Transform).x, slime.get(Transform).y - game.player.get(Transform).y
+        slime.get(Transform).x - game.player.get(Transform).x,
+        slime.get(Transform).y - game.player.get(Transform).y,
     )
     pixel = runtime.screen.get_at(
-        tuple(int(v) for v in runtime._field_screen_xy(slime.get(Transform).x, slime.get(Transform).y))
+        tuple(
+            int(v)
+            for v in runtime._field_screen_xy(slime.get(Transform).x, slime.get(Transform).y)
+        )
     )
     assert tuple(pixel)[:3] == (200, 70, 80)  # visible on the field
     frames = 0
@@ -100,7 +113,9 @@ def test_battle_capture_menu_captures_a_weakened_enemy(runtime):
             abilities=base.abilities,
         )
     )
-    db.add_capture_rule(CaptureRule("astral_tyrant", "tyrant_ally", base_chance=0.0, low_health_bonus=1.0))
+    db.add_capture_rule(
+        CaptureRule("astral_tyrant", "tyrant_ally", base_chance=0.0, low_health_bonus=1.0)
+    )
     runtime._ui_mode = "field"
     game.start_encounter("boss_room")
     runtime._frame([], 0.016)  # field branch starts the battle presentation

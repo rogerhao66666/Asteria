@@ -38,10 +38,12 @@ Ordering within an operation is `(priority, modifier_id)`.
 Example:
 
 ```python
-mods = ModifierSet([
-    StatModifier("sword", "power", "add", 10),
-    StatModifier("rage", "power", "multiply", 1.5),
-])
+mods = ModifierSet(
+    [
+        StatModifier("sword", "power", "add", 10),
+        StatModifier("rage", "power", "multiply", 1.5),
+    ]
+)
 
 effective = mods.evaluate("power", 20)
 # (20 + 10) * 1.5 = 45
@@ -69,9 +71,12 @@ If any operation fails, the original gameplay state is unchanged.
 Example:
 
 ```python
-heal = Effect("heal", [
-    EffectOperation("resource_delta", "hp", 30),
-])
+heal = Effect(
+    "heal",
+    [
+        EffectOperation("resource_delta", "hp", 30),
+    ],
+)
 
 hero.gameplay.apply_effect(heal)
 ```

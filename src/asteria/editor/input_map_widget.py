@@ -71,12 +71,16 @@ class InputMapAuthoring:
         def change(m):
             data = m.to_data()
             data["actions"].pop(action_id)
-            m.__init__({a: [InputBinding.from_data(b) for b in bs] for a, bs in data["actions"].items()})
+            m.__init__(
+                {a: [InputBinding.from_data(b) for b in bs] for a, bs in data["actions"].items()}
+            )
 
         self._commit(change, f"Remove action {action_id}")
 
     def add_binding(self, action_id, binding, *, exclusive=False):
-        self._commit(lambda m: m.rebind(action_id, None, binding, exclusive=exclusive), f"Bind {action_id}")
+        self._commit(
+            lambda m: m.rebind(action_id, None, binding, exclusive=exclusive), f"Bind {action_id}"
+        )
 
     def remove_binding(self, action_id, index):
         def change(m):
@@ -98,7 +102,9 @@ class InputMapWidget(QWidget):
         self.bindings = QListWidget()
         add_action, remove_action = QPushButton("Add Action…"), QPushButton("Remove Action")
         add_action.clicked.connect(self._add_action_clicked)
-        remove_action.clicked.connect(lambda: self._try(lambda: self.api.remove_action(self.action_id)))
+        remove_action.clicked.connect(
+            lambda: self._try(lambda: self.api.remove_action(self.action_id))
+        )
         self.device = QComboBox()
         self.device.addItems(list(DEVICES))
         self.code = QLineEdit()
@@ -109,9 +115,13 @@ class InputMapWidget(QWidget):
         add_binding, remove_binding = QPushButton("Add Binding"), QPushButton("Remove Binding")
         add_binding.clicked.connect(self.add_binding_from_form)
         remove_binding.clicked.connect(
-            lambda: self._try(lambda: self.api.remove_binding(self.action_id, self.bindings.currentRow()))
+            lambda: self._try(
+                lambda: self.api.remove_binding(self.action_id, self.bindings.currentRow())
+            )
         )
-        self.status = QLabel("Defaults for the project; players can rebind in the game (Settings → Controls).")
+        self.status = QLabel(
+            "Defaults for the project; players can rebind in the game (Settings → Controls)."
+        )
         self.status.setWordWrap(True)
         form = QFormLayout()
         form.addRow("Device", self.device)
@@ -161,7 +171,9 @@ class InputMapWidget(QWidget):
     def _load_bindings(self):
         self.bindings.clear()
         if self.action_id is not None:
-            self.bindings.addItems([describe_binding(b) for b in self.api.input_map.bindings(self.action_id)])
+            self.bindings.addItems(
+                [describe_binding(b) for b in self.api.input_map.bindings(self.action_id)]
+            )
 
     def _try(self, action):
         try:
@@ -179,7 +191,9 @@ class InputMapWidget(QWidget):
 
     def add_binding_from_form(self):
         try:
-            binding = InputBinding(self.device.currentText(), self.code.text(), int(self.direction.value() or 1))
+            binding = InputBinding(
+                self.device.currentText(), self.code.text(), int(self.direction.value() or 1)
+            )
         except ValueError as exc:
             self.status.setText(str(exc))
             return False

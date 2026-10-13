@@ -1,5 +1,7 @@
-"""ASTERIA_SPEC §20 (D22 A8): action scenes in the playable runtime — keys drive the player's abilities, enemies fight
-back, the HUD draws, loot is picked up, the bag equips rolled items, the player falls and respawns; side view jumps."""
+"""ASTERIA_SPEC §20 (D22 A8): action scenes in the playable runtime — keys drive the player's
+abilities, enemies fight
+back, the HUD draws, loot is picked up, the bag equips rolled items, the player falls and
+respawns; side view jumps."""
 
 import pytest
 
@@ -51,7 +53,10 @@ def test_keys_fight_in_an_action_scene_with_the_hud(runtime):
     _run(rt, 30)
     mine = [e.kind for e in used if e.entity_id == player.id and e.kind in ("used", "combo")]
     assert mine[:2] == ["used", "combo"]
-    assert any(f.text for f in rt.action_hud.floats) or game.combat.state(slime).resources.current("hp") < 30
+    assert (
+        any(f.text for f in rt.action_hud.floats)
+        or game.combat.state(slime).resources.current("hp") < 30
+    )
     _press(rt, rt.pg.K_k)  # dodge
     assert any(e.ability_id == "pg_roll" and e.kind == "used" for e in used)
     _run(rt, 40)
@@ -91,7 +96,9 @@ def test_loot_pickup_bag_and_respawn_through_the_runtime(runtime):
     assert game.player_down > 0 and game.scene.get_entity(player.id) is player
     _run(rt, int(game.combat_scene.respawn_delay / DT) + 3)
     assert game.player_down == 0 and state.resources.current(life) == state.resources.maximum(life)
-    assert (player.get(Transform).x, player.get(Transform).y) == pytest.approx(game._action_spawn[game.scene.id])
+    assert (player.get(Transform).x, player.get(Transform).y) == pytest.approx(
+        game._action_spawn[game.scene.id]
+    )
 
 
 def test_side_view_jumps_on_the_block_out_course(runtime):

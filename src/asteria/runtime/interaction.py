@@ -138,7 +138,11 @@ class TouchTriggerController:
             interaction = entity.try_get(Interaction2DComponent)
             if interaction is None or entity.try_get(Transform) is None:
                 continue
-            if not interaction.enabled or not interaction.event_program_id or interaction.trigger != "touch":
+            if (
+                not interaction.enabled
+                or not interaction.event_program_id
+                or interaction.trigger != "touch"
+            ):
                 continue
             ex, ey = world_position(entity)
             if hypot(ex - ax, ey - ay) <= interaction.range:
@@ -154,4 +158,6 @@ class TouchTriggerController:
         if not fresh:
             return None
         entity, interaction = min(fresh, key=lambda item: item[0].id)
-        return InteractionTrigger(entity.id, interaction.event_program_id, interaction.local_scope_id or entity.id)
+        return InteractionTrigger(
+            entity.id, interaction.event_program_id, interaction.local_scope_id or entity.id
+        )

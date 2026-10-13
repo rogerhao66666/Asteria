@@ -13,7 +13,12 @@ def test_every_icon_draws_something():
     QApplication.instance() or QApplication([])
     for name in DRAWINGS:
         image = pixmap(name, 24, ratio=1.0).toImage()
-        painted = sum(1 for x in range(0, 24, 2) for y in range(0, 24, 2) if image.pixelColor(x, y).alpha() > 0)
+        painted = sum(
+            1
+            for x in range(0, 24, 2)
+            for y in range(0, 24, 2)
+            if image.pixelColor(x, y).alpha() > 0
+        )
         assert painted >= 4, name
         assert not icon(name).isNull()
     assert icon("no-such-icon").isNull()
@@ -56,14 +61,23 @@ def test_editor_has_icons_roles_and_titled_docks():
             assert not action.icon().isNull()
         roles = {b.text(): b.property("role") for b in window.findChildren(QPushButton)}
         assert roles.get("Delete") == "danger" and roles.get("Apply Changes") == "primary"
-        assert all(not window.ui_workspace.tabIcon(i).isNull() for i in range(window.ui_workspace.count()))
+        assert all(
+            not window.ui_workspace.tabIcon(i).isNull() for i in range(window.ui_workspace.count())
+        )
     finally:
         window.close()
         window.deleteLater()
 
 
 def test_compact_pass_keeps_panels_narrow():
-    from PySide6.QtWidgets import QApplication, QComboBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+    from PySide6.QtWidgets import (
+        QApplication,
+        QComboBox,
+        QHBoxLayout,
+        QPushButton,
+        QVBoxLayout,
+        QWidget,
+    )
 
     from asteria.editor.decor import compact
     from asteria.editor.flow_layout import FlowLayout
@@ -106,17 +120,28 @@ def test_record_editor_shows_readable_field_names_and_keeps_the_data():
     root = editor.topLevelItem(0)
     assert root.text(0) == "hero_01" and "asteria.rpg.actor" in root.toolTip(0)
     labels = [root.child(i).text(0) for i in range(root.childCount())]
-    assert labels == ["Actor ID", "Display Name", "Class Assignments", "Base Stats"]  # no schema / version rows
+    assert labels == [
+        "Actor ID",
+        "Display Name",
+        "Class Assignments",
+        "Base Stats",
+    ]  # no schema / version rows
     assignments = root.child(2)
     assert assignments.text(1) == "1 item" and assignments.child(0).text(0) == "#1 · fighter"
     root.child(1).setText(1, "Aria")
     record = editor.record()
-    assert record["display_name"] == "Aria" and record["schema"] == "asteria.rpg.actor" and record["version"] == 2
+    assert (
+        record["display_name"] == "Aria"
+        and record["schema"] == "asteria.rpg.actor"
+        and record["version"] == 2
+    )
 
 
 def test_tag_lists_are_editable_and_optional_dot_tags_show_in_the_editor():
-    """BTL-02: damage over time is fixed by default or uses the interaction rules when the author gives it
-    tags; both are reachable from the editor (the empty field is shown, a list is typed as text)."""
+    """BTL-02: damage over time is fixed by default or uses the interaction rules when the author
+    gives it
+    tags; both are reachable from the editor (the empty field is shown, a list is typed as
+    text)."""
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor.authoring_hub_widget import StructuredRecordEditor, with_optional_fields
@@ -129,10 +154,19 @@ def test_tag_lists_are_editable_and_optional_dot_tags_show_in_the_editor():
     editor = StructuredRecordEditor()
     editor.set_record(data)
     root = editor.topLevelItem(0)
-    tags = next(root.child(i) for i in range(root.childCount()) if root.child(i).toolTip(0) == "interaction_tags")
+    tags = next(
+        root.child(i)
+        for i in range(root.childCount())
+        if root.child(i).toolTip(0) == "interaction_tags"
+    )
     tags.setText(1, "element.fire, dot.burn")
     edited = BattleStatePolicy.from_data(editor.record())
-    assert set(edited.interaction_tags) == {"element.fire", "dot.burn"}  # DOT now resolved through the rules
+    assert set(edited.interaction_tags) == {
+        "element.fire",
+        "dot.burn",
+    }  # DOT now resolved through the rules
     tags.setText(1, "")
-    assert BattleStatePolicy.from_data(editor.record()).interaction_tags == ()  # back to fixed damage
+    assert (
+        BattleStatePolicy.from_data(editor.record()).interaction_tags == ()
+    )  # back to fixed damage
     assert "interaction_tags" not in BattleStatePolicy.from_data(editor.record()).to_data()

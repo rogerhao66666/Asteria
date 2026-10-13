@@ -6,7 +6,9 @@ from asteria.assets import AssetRegistry
 from asteria.assets.local_reference import resolve_rpg_maker_mv_root
 from asteria.assets.rpg_maker_mv import RPGMakerMVImporter
 
-STEAM_MV_ROOT = Path("/Users/roger/Library/Application Support/Steam/steamapps/common/RPG Maker MV")
+STEAM_MV_ROOT = Path(
+    "/Users/roger/Library/Application Support/Steam/steamapps/common/RPG Maker MV"
+)
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 

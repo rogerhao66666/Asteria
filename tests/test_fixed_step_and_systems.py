@@ -26,7 +26,9 @@ class Recorder(System):
 
 
 def _app(step=0.02, max_steps=5):
-    app = Application(backend=None, config=ApplicationConfig(fixed_timestep=step, max_fixed_steps=max_steps))
+    app = Application(
+        backend=None, config=ApplicationConfig(fixed_timestep=step, max_fixed_steps=max_steps)
+    )
     scene = Scene("S")
     recorder = Recorder()
     scene.scheduler.add(recorder)

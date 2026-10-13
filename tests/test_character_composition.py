@@ -1,11 +1,15 @@
-"""CMP-01 / CMP-02 / CMP-04: layered characters, sockets and attachments authored on a sheet and drawn in battle."""
+"""CMP-01 / CMP-02 / CMP-04: layered characters, sockets and attachments authored on a sheet and
+drawn in battle."""
 
 from pathlib import Path
 
 import pytest
 
 from asteria.editor import EditorDocument
-from asteria.editor.character_composition_authoring import CharacterCompositionAuthoring, CompositionAuthoringError
+from asteria.editor.character_composition_authoring import (
+    CharacterCompositionAuthoring,
+    CompositionAuthoringError,
+)
 from asteria.presentation.character_composition import CharacterComposition
 from asteria.project import Project
 
@@ -16,7 +20,9 @@ ITEM = "battle.fx.heal"  # any sprite sheet can be worn; 64x64 frames in a 4x4 g
 
 def _api(project=None):
     document = EditorDocument()
-    document.set_project(project or Project.load_json(REF, document.component_registry), file_path=REF)
+    document.set_project(
+        project or Project.load_json(REF, document.component_registry), file_path=REF
+    )
     return CharacterCompositionAuthoring(document)
 
 
@@ -33,10 +39,15 @@ def test_sockets_attachments_and_layers_are_undoable_sheet_metadata():
     _author(api)
     rig, attachments, layers = api.composition(BODY)
     assert set(rig.sockets) == {"hand"} and [k.frame for k in rig.sockets["hand"].keys] == [0, 4]
-    assert [(a.id, a.asset_id, a.socket_id, a.metadata["frame"]) for a in attachments] == [("charm", ITEM, "hand", 5)]
+    assert [(a.id, a.asset_id, a.socket_id, a.metadata["frame"]) for a in attachments] == [
+        ("charm", ITEM, "hand", 5)
+    ]
     assert [(x.component_id, x.z, x.clips) for x in layers.layers] == [("cape", -1.0, ("idle",))]
     meta = api.animation.asset(BODY).meta()  # canonical storage: the body sheet's asset metadata
-    assert meta["attachments"][0]["socket_id"] == "hand" and meta["socket_rig"]["sockets"][0]["id"] == "hand"
+    assert (
+        meta["attachments"][0]["socket_id"] == "hand"
+        and meta["socket_rig"]["sockets"][0]["id"] == "hand"
+    )
     with pytest.raises(CompositionAuthoringError, match="holds attachments"):
         api.remove_socket(BODY, "hand")
     with pytest.raises(CompositionAuthoringError, match="unknown socket"):
@@ -58,10 +69,14 @@ def test_the_attachment_follows_the_socket_keyed_per_frame():
     assert parts["cape"].behind and not parts["charm"].behind
     assert (parts["charm"].x, parts["charm"].y, parts["charm"].rotation_deg) == (10.0, -30.0, 0.0)
     halfway = {p.id: p for p in api.parts(BODY, 2, "attack")}
-    assert halfway["charm"].x == pytest.approx(15.0) and halfway["charm"].rotation_deg == pytest.approx(22.5)
+    assert halfway["charm"].x == pytest.approx(15.0) and halfway[
+        "charm"
+    ].rotation_deg == pytest.approx(22.5)
     assert "cape" not in halfway  # the layer only shows in the idle clip
     keyed = {p.id: p for p in api.parts(BODY, 4)}
-    assert keyed["charm"].rotation_deg == pytest.approx(45.0) and keyed["charm"].scale_x == pytest.approx(0.25)
+    assert keyed["charm"].rotation_deg == pytest.approx(45.0) and keyed[
+        "charm"
+    ].scale_x == pytest.approx(0.25)
     api.edit_attachment(BODY, "charm", visible=False)
     assert [p.id for p in api.parts(BODY, 0, "idle")] == ["cape"]
 
@@ -70,7 +85,7 @@ def test_a_sheet_without_composition_costs_nothing():
     assert CharacterComposition.from_meta(_api().animation.asset(BODY).meta()) is None
 
 
-# --- the real battle screen draws what was authored -------------------------------------------------------
+# --- the real battle screen draws what was authored ----------------------------------------------
 
 
 @pytest.fixture
@@ -100,7 +115,9 @@ def _draws(adapter):
     from asteria.runtime.camera import Camera2D
 
     layout = adapter.screen.composer.layout
-    return adapter.screen.animation.build_frame(Camera2D(width=layout.virtual_width, height=layout.virtual_height))
+    return adapter.screen.animation.build_frame(
+        Camera2D(width=layout.virtual_width, height=layout.virtual_height)
+    )
 
 
 def test_battle_draws_layers_behind_and_attachments_in_front_of_the_body(battle):
@@ -117,23 +134,33 @@ def test_battle_draws_layers_behind_and_attachments_in_front_of_the_body(battle)
     assert staged and all(v.member_id in adapter.screen.animation.compositions for v in staged)
     for hero in staged:
         body = next(
-            d for d in order if d.texture_asset_id == hero.sprite_sheet_asset_id and d.depth == hero.anchor.depth
+            d
+            for d in order
+            if d.texture_asset_id == hero.sprite_sheet_asset_id and d.depth == hero.anchor.depth
         )
-        mine = [d for d in order if d.texture_asset_id == ITEM and abs(d.depth - hero.anchor.depth) < 1e-3]
+        mine = [
+            d
+            for d in order
+            if d.texture_asset_id == ITEM and abs(d.depth - hero.anchor.depth) < 1e-3
+        ]
         behind = [d for d in mine if d.depth < body.depth]
         front = [d for d in mine if d.depth > body.depth]
-        assert len(behind) == 1 and len(front) == 1  # cape layer (idle pose) behind, charm in front
+        assert (
+            len(behind) == 1 and len(front) == 1
+        )  # cape layer (idle pose) behind, charm in front
         assert order.index(behind[0]) < order.index(body) < order.index(front[0])
         charm = front[0]
         assert charm.width == pytest.approx(64 * 0.25 / hero.source_pixels_per_logical_pixel)
         assert charm.flip_x == (hero.anchor.facing.lower() == "left")  # mirrors with the body
     enemies = [v for v in adapter.screen.scene.combatants if v not in staged]
-    assert enemies and all(v.member_id not in adapter.screen.animation.compositions for v in enemies)
+    assert enemies and all(
+        v.member_id not in adapter.screen.animation.compositions for v in enemies
+    )
     adapter.draw()  # renders through the pygame texture drawer
     assert adapter.textures.draw_count >= len(staged) * 3
 
 
-# --- rotated parts render the same on both backends --------------------------------------------------------
+# --- rotated parts render the same on both backends ----------------------------------------------
 
 
 def test_rotated_quads_turn_about_their_centre_on_the_gpu_backend():
@@ -142,9 +169,14 @@ def test_rotated_quads_turn_about_their_centre_on_the_gpu_backend():
     backend = ModernglRuntimeBackend.__new__(ModernglRuntimeBackend)
     texture = object()
     backend._batch_texture, backend._batch_vertices, backend._batch_indices = texture, [], []
-    backend._enqueue_quad(texture, 10, 10, (0, 0, 10, 10), 0, 0, 10, 20, 1.0, False, rotation_deg=90)
-    corners = [tuple(round(v, 6) for v in backend._batch_vertices[i : i + 2]) for i in range(0, 32, 8)]
-    # a 10x20 quad centred on (5, 10) turned a quarter clockwise (y down): top-left goes to the top-right
+    backend._enqueue_quad(
+        texture, 10, 10, (0, 0, 10, 10), 0, 0, 10, 20, 1.0, False, rotation_deg=90
+    )
+    corners = [
+        tuple(round(v, 6) for v in backend._batch_vertices[i : i + 2]) for i in range(0, 32, 8)
+    ]
+    # a 10x20 quad centred on (5, 10) turned a quarter clockwise (y down): top-left goes to the
+    # top-right
     assert corners == [(15.0, 5.0), (15.0, 15.0), (-5.0, 15.0), (-5.0, 5.0)]
 
 
@@ -171,12 +203,14 @@ def test_rotated_parts_keep_their_centre_on_the_pygame_backend(resource_root, mo
         def source_uri(self, asset_id):
             return asset_id
 
-    PygameTextureDrawer(Host(), Resolver(), 1.0).blit_region("x", (0, 0, 10, 20), 40, 40, 10, 20, rotation_deg=90)
+    PygameTextureDrawer(Host(), Resolver(), 1.0).blit_region(
+        "x", (0, 0, 10, 20), 40, 40, 10, 20, rotation_deg=90
+    )
     painted = pygame.mask.from_surface(screen).get_bounding_rects()[0]
     assert painted.center == (45, 50) and painted.size == (20, 10)
 
 
-# --- the Character Composition tab -------------------------------------------------------------------------
+# --- the Character Composition tab ---------------------------------------------------------------
 
 
 def test_composition_tab_authors_through_its_forms_and_previews_the_parts():
@@ -207,11 +241,15 @@ def test_composition_tab_authors_through_its_forms_and_previews_the_parts():
     pixmaps = [i for i in widget.preview.scene().items() if isinstance(i, QGraphicsPixmapItem)]
     assert len(pixmaps) == 3  # cape behind, body, charm in front
     widget.attachment_id.setText("charm")
-    assert widget.attach_from_form() is None and "unique" in widget.last_error  # errors surface, nothing changes
+    assert (
+        widget.attach_from_form() is None and "unique" in widget.last_error
+    )  # errors surface, nothing changes
     widget.sockets.setCurrentRow(0)
     widget.attachments.setCurrentRow(0)
     rig, attachments, _ = widget.api.composition(BODY)
-    assert [a.id for a in attachments] == ["charm"] and rig.sockets["hand"].keys[-1].transform.rotation_deg == 45
+    assert [a.id for a in attachments] == ["charm"] and rig.sockets["hand"].keys[
+        -1
+    ].transform.rotation_deg == 45
     widget.api.document.undo()  # the layer
     widget.refresh()
     assert widget.layers.count() == 0
@@ -228,7 +266,8 @@ def test_game_text_falls_back_to_ascii_for_glyphs_the_font_lacks():
 
 
 def test_the_playable_field_draws_the_players_layers_and_attachments(resource_root, monkeypatch):
-    """CMP-01 in the field: a composition authored on the player's canonical sheet is drawn with the player."""
+    """CMP-01 in the field: a composition authored on the player's canonical sheet is drawn with
+    the player."""
     pytest.importorskip("pygame")
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
@@ -243,7 +282,10 @@ def test_the_playable_field_draws_the_players_layers_and_attachments(resource_ro
         fw, fh = runtime.manifest["field"]["player_frame_size"]
         project.assets.register(
             CanonicalAsset(
-                "field.player", "sprite_sheet", AssetSource(sheet), metadata=(("frame_size", [fw, fh]), ("clips", {}))
+                "field.player",
+                "sprite_sheet",
+                AssetSource(sheet),
+                metadata=(("frame_size", [fw, fh]), ("clips", {})),
             )
         )
         api = _api(project)
@@ -253,10 +295,14 @@ def test_the_playable_field_draws_the_players_layers_and_attachments(resource_ro
         runtime._ui_mode = "field"
         runtime._frame([], 0.016)
         plain_counts = (len(runtime.__dict__.get("_field_compositions", {})),)
-        behind, front = runtime._composition_parts(sheet, 1, "idle_down", (fw, fh), (64, 64), (100, 100))
+        behind, front = runtime._composition_parts(
+            sheet, 1, "idle_down", (fw, fh), (64, 64), (100, 100)
+        )
         assert len(behind) == 1 and len(front) == 1 and plain_counts == (1,)
         charm_image, (cx, cy) = front[0]
-        assert charm_image.get_width() == round(64 * 0.5)  # ITEM frames are 64 px, scaled with the body
+        assert charm_image.get_width() == round(
+            64 * 0.5
+        )  # ITEM frames are 64 px, scaled with the body
         assert (cx, cy) == (100 + 32 + 12, 100 + 64 - 20)  # pivot (feet) + socket offset
     finally:
         runtime.close()

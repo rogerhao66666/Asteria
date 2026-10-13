@@ -78,7 +78,9 @@ class AssetBrowserWorkspace:
         return self.refresh()
 
     def set_sort(self, sort_by, descending=False):
-        self.state = replace(self.state, query=replace(self.state.query, sort_by=sort_by, descending=descending))
+        self.state = replace(
+            self.state, query=replace(self.state.query, sort_by=sort_by, descending=descending)
+        )
         return self.refresh()
 
     def set_grouped(self, enabled):
@@ -86,7 +88,11 @@ class AssetBrowserWorkspace:
         return self.refresh()
 
     def refresh(self):
-        return self.model.groups(self.state.query) if self.state.group_by_kind else self.model.items(self.state.query)
+        return (
+            self.model.groups(self.state.query)
+            if self.state.group_by_kind
+            else self.model.items(self.state.query)
+        )
 
     def select(self, asset_id):
         self.model.select(asset_id)

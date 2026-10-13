@@ -204,7 +204,7 @@ class AuthoringSession:
         self._execute(command)
         return command
 
-    # -- common and battle events (EVT-03) ----------------------------------------------------------
+    # -- common and battle events (EVT-03) --------------------------------------------------------
     @property
     def _event_flow(self):
         from types import SimpleNamespace
@@ -214,7 +214,8 @@ class AuthoringSession:
         return EventFlowAuthoring(SimpleNamespace(project=self._project, execute=self._run))
 
     def new_event(self, program_id, name="") -> AuthoringEvent:
-        """Create an empty event program (for common / battle events) and return it for building."""
+        """Create an empty event program (for common / battle events) and return it for
+        building."""
         self._event_flow.new_program(program_id, name)
         return AuthoringEvent(self, str(program_id))
 
@@ -223,12 +224,16 @@ class AuthoringSession:
         return AuthoringEvent(self, str(program_id))
 
     def common_event(self, program_id, trigger="call", switch=""):
-        """Make a program a common event: ``call`` (CALL only), ``autorun`` or ``parallel`` while ``switch`` is on."""
+        """Make a program a common event: ``call`` (CALL only), ``autorun`` or ``parallel`` while
+        ``switch`` is on."""
         return self._event_flow.add_common_event(program_id, trigger, switch)
 
     def battle_event(self, hook, program_id, *, conditions=(), once=False):
-        """Run ``program_id`` at a battle moment (``rpg.battle.round_started``...) when ``conditions`` hold."""
-        return self._event_flow.add_battle_event(hook, program_id, conditions=conditions, once=once)
+        """Run ``program_id`` at a battle moment (``rpg.battle.round_started``...) when
+        ``conditions`` hold."""
+        return self._event_flow.add_battle_event(
+            hook, program_id, conditions=conditions, once=once
+        )
 
 
 class AuthoringScene:
@@ -305,7 +310,9 @@ class AuthoringTransform:
 
     @rotation.setter
     def rotation(self, value):
-        self._session._run(_SetAttribute(self._transform, "rotation", float(value), self._transform.rotation))
+        self._session._run(
+            _SetAttribute(self._transform, "rotation", float(value), self._transform.rotation)
+        )
 
     @property
     def scale(self):
@@ -314,8 +321,12 @@ class AuthoringTransform:
     @scale.setter
     def scale(self, value):
         x, y = value
-        self._session._run(_SetAttribute(self._transform, "scale_x", float(x), self._transform.scale_x))
-        self._session._run(_SetAttribute(self._transform, "scale_y", float(y), self._transform.scale_y))
+        self._session._run(
+            _SetAttribute(self._transform, "scale_x", float(x), self._transform.scale_x)
+        )
+        self._session._run(
+            _SetAttribute(self._transform, "scale_y", float(y), self._transform.scale_y)
+        )
 
 
 class AuthoringEvent:
@@ -367,10 +378,13 @@ class AuthoringEvent:
         return self.world("TRANSFER", **payload)
 
     def sequence(self, *tracks, cutscene=False, skippable=False, wait="all") -> AuthoringEvent:
-        """Add a SEQUENCE: ``tracks`` built with ``track(name, move(...), say(...), ...)`` run in parallel."""
+        """Add a SEQUENCE: ``tracks`` built with ``track(name, move(...), say(...), ...)`` run in
+        parallel."""
         from asteria.editor.event_flow_authoring import EventFlowAuthoring
 
-        args = EventFlowAuthoring.sequence_args(tracks, cutscene=cutscene, skippable=skippable, wait=wait)
+        args = EventFlowAuthoring.sequence_args(
+            tracks, cutscene=cutscene, skippable=skippable, wait=wait
+        )
         return self.append("SEQUENCE", **args)
 
     def end(self):
@@ -389,7 +403,9 @@ class AuthoringGameplayAttributes:
         block = StatBlock(self._component.stats)
         block.set(name, value)
         new_values = dict(block.to_data()["values"])
-        self._session._run(_SetAttribute(self._component, "stats", new_values, self._component.stats))
+        self._session._run(
+            _SetAttribute(self._component, "stats", new_values, self._component.stats)
+        )
         return block.get(name)
 
     def add_stat(self, name, delta):
@@ -411,7 +427,9 @@ class AuthoringGameplayAttributes:
             replace=replace,
         )
         new_values = dict(pool.to_data()["values"])
-        self._session._run(_SetAttribute(self._component, "resources", new_values, self._component.resources))
+        self._session._run(
+            _SetAttribute(self._component, "resources", new_values, self._component.resources)
+        )
         return resource.current
 
     def resource(self, name):
@@ -434,7 +452,9 @@ class AuthoringGameplayAttributes:
         )
         value = pool.change(name, delta)
         new_values = dict(pool.to_data()["values"])
-        self._session._run(_SetAttribute(self._component, "resources", new_values, self._component.resources))
+        self._session._run(
+            _SetAttribute(self._component, "resources", new_values, self._component.resources)
+        )
         return value
 
     def spend_resource(self, name, amount):
@@ -448,21 +468,27 @@ class AuthoringGameplayAttributes:
         if not pool.spend(name, amount):
             return False
         new_values = dict(pool.to_data()["values"])
-        self._session._run(_SetAttribute(self._component, "resources", new_values, self._component.resources))
+        self._session._run(
+            _SetAttribute(self._component, "resources", new_values, self._component.resources)
+        )
         return True
 
     def add_tag(self, tag):
         tags = TagSet(self._component.tags)
         if not tags.add(tag):
             return False
-        self._session._run(_SetAttribute(self._component, "tags", list(tags.values()), self._component.tags))
+        self._session._run(
+            _SetAttribute(self._component, "tags", list(tags.values()), self._component.tags)
+        )
         return True
 
     def remove_tag(self, tag):
         tags = TagSet(self._component.tags)
         if not tags.remove(tag):
             return False
-        self._session._run(_SetAttribute(self._component, "tags", list(tags.values()), self._component.tags))
+        self._session._run(
+            _SetAttribute(self._component, "tags", list(tags.values()), self._component.tags)
+        )
         return True
 
     def has_tag(self, tag):
@@ -500,7 +526,9 @@ class AuthoringGameplayAttributes:
         new_tags = list(tags.values())
 
         if new_stats != self._component.stats:
-            self._session._run(_SetAttribute(self._component, "stats", new_stats, self._component.stats))
+            self._session._run(
+                _SetAttribute(self._component, "stats", new_stats, self._component.stats)
+            )
         if new_resources != self._component.resources:
             self._session._run(
                 _SetAttribute(
@@ -511,7 +539,9 @@ class AuthoringGameplayAttributes:
                 )
             )
         if new_tags != self._component.tags:
-            self._session._run(_SetAttribute(self._component, "tags", new_tags, self._component.tags))
+            self._session._run(
+                _SetAttribute(self._component, "tags", new_tags, self._component.tags)
+            )
         return result
 
 
@@ -539,7 +569,9 @@ class AuthoringEntity:
 
     @enabled.setter
     def enabled(self, value):
-        self._session._run(_SetAttribute(self._entity, "enabled", bool(value), self._entity.enabled))
+        self._session._run(
+            _SetAttribute(self._entity, "enabled", bool(value), self._entity.enabled)
+        )
 
     @property
     def transform(self) -> AuthoringTransform:
@@ -574,7 +606,7 @@ class AuthoringEntity:
         return AuthoringEvent(self._session, program_id)
 
 
-# -- sequence track helpers (EVT-04) -----------------------------------------------------------------
+# -- sequence track helpers (EVT-04) --------------------------------------------------------------
 def track(name, *steps):
     """A parallel track: ``track("hero", move("player", 40, 0, 1.0), face("player", "left"))``."""
     from asteria.editor.event_flow_authoring import track as make_track
@@ -583,7 +615,17 @@ def track(name, *steps):
 
 
 def move(entity, x, y, duration=1.0, *, relative=False, wait=True):
-    return ("MOVE", {"entity": str(entity), "x": x, "y": y, "duration": duration, "relative": relative, "wait": wait})
+    return (
+        "MOVE",
+        {
+            "entity": str(entity),
+            "x": x,
+            "y": y,
+            "duration": duration,
+            "relative": relative,
+            "wait": wait,
+        },
+    )
 
 
 def face(entity, facing):

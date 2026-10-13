@@ -7,8 +7,10 @@ Three palettes ship with the editor; View ▸ Theme switches between them live a
 * ``twilight``           - deep indigo with gold highlights (a fantasy-RPG mood)
 * ``daylight``           - a light theme (RPG Maker MZ family)
 
-Workspace accents (Scene teal, Database amber, Battle coral, Presentation violet, Events sky, Code blue)
-are the same in every palette, so a workspace keeps its colour; they are mid-tones that read on both
+Workspace accents (Scene teal, Database amber, Battle coral, Presentation violet, Events sky, Code
+blue)
+are the same in every palette, so a workspace keeps its colour; they are mid-tones that read on
+both
 dark and light surfaces.
 """
 
@@ -126,7 +128,8 @@ PALETTES = {"graphite": GRAPHITE, "twilight": TWILIGHT, "daylight": DAYLIGHT}
 DEFAULT_PALETTE = "graphite"
 ASTERIA_DARK = GRAPHITE  # kept for existing callers
 
-# Workspace accents (same values as ``icons.ACCENTS``): the active workspace's toolbar button and its
+# Workspace accents (same values as ``icons.ACCENTS``): the active workspace's toolbar button and
+# its
 # panels' title stripe use them, so where you are reads at a glance.
 WORKSPACE_ACCENTS = {
     "scene": "#46b896",
@@ -140,9 +143,11 @@ WORKSPACE_ACCENTS = {
 _TEMPLATE = Template(
     """
 QMainWindow, QDialog { background: $base; color: $text; }
-QToolTip { background: $raised; color: $text; border: 1px solid $border_strong; padding: 5px 8px; border-radius: 5px; }
+QToolTip { background: $raised; color: $text; border: 1px solid $border_strong; padding: 5px 8px;
+border-radius: 5px; }
 
-/* -- docks ------------------------------------------------------------------------------------- */
+/* -- docks -------------------------------------------------------------------------------------
+*/
 QDockWidget { color: $text_dim; font-weight: 600; }
 QDockWidget::title {
     background: $panel; border-bottom: 1px solid $border;
@@ -150,7 +155,8 @@ QDockWidget::title {
 }
 QWidget#DockTitleBar { background: $panel; border-bottom: 1px solid $border; }
 QLabel#DockTitle { color: $text; font-weight: 700; padding: 0 2px; }
-QToolButton#DockTitleButton { background: transparent; border: 0; border-radius: 5px; padding: 3px; }
+QToolButton#DockTitleButton { background: transparent; border: 0; border-radius: 5px; padding:
+3px; }
 QToolButton#DockTitleButton:hover { background: $hover; }
 QDockWidget::close-button, QDockWidget::float-button {
     background: transparent; border: 0; border-radius: 4px;
@@ -160,8 +166,10 @@ QDockWidget::close-button { subcontrol-position: top left; left: 6px; }
 QDockWidget::float-button { subcontrol-position: top left; left: 29px; }
 QDockWidget::close-button:hover, QDockWidget::float-button:hover { background: $hover; }
 
-/* -- tabs ---------------------------------------------------------------------------------------- */
-QTabWidget::pane { border: 1px solid $border; border-radius: 8px; top: -1px; background: $panel; padding: 10px 12px; }
+/* -- tabs
+---------------------------------------------------------------------------------------- */
+QTabWidget::pane { border: 1px solid $border; border-radius: 8px; top: -1px; background: $panel;
+padding: 10px 12px; }
 QTabBar { background: transparent; }
 QTabBar::tab {
     background: $panel; color: $text_dim;
@@ -174,7 +182,8 @@ QMainWindow > QTabBar::tab { min-width: 0; padding: 6px 12px; background: $base;
 QTabBar::tab:selected { background: $raised; color: $text; border-bottom: 2px solid $primary; }
 QTabBar::tab:hover:!selected { background: $hover; color: $text; }
 
-/* -- lists, trees, tables ------------------------------------------------------------------------ */
+/* -- lists, trees, tables
+------------------------------------------------------------------------ */
 QTreeWidget, QListWidget, QTableWidget, QTreeView, QListView, QTableView {
     background: $list; alternate-background-color: $list_alt;
     border: 1px solid $border; border-radius: 6px; outline: 0; color: $text;
@@ -190,16 +199,19 @@ QHeaderView::section {
 }
 QTableCornerButton::section { background: $header; border: 0; }
 
-/* -- console and text ---------------------------------------------------------------------------- */
+/* -- console and text
+---------------------------------------------------------------------------- */
 QWidget#ConsolePanel { background: $base; }
 QTextEdit#ConsoleOutput {
     background: $list; color: $text;
     border: 1px solid $border; border-radius: 6px;
     padding: 8px; selection-background-color: $selection;
 }
-QPlainTextEdit, QTextEdit { background: $input; color: $text; border: 1px solid $border; border-radius: 6px; }
+QPlainTextEdit, QTextEdit { background: $input; color: $text; border: 1px solid $border;
+border-radius: 6px; }
 
-/* -- menus --------------------------------------------------------------------------------------- */
+/* -- menus
+--------------------------------------------------------------------------------------- */
 QMenuBar { background: $base; color: $text; padding: 3px 6px; border-bottom: 1px solid $border; }
 QMenuBar::item { background: transparent; padding: 4px 10px; margin: 0 1px; border-radius: 5px; }
 QMenuBar::item:selected { background: $hover; }
@@ -208,13 +220,16 @@ QMenu::item { padding: 6px 22px 6px 26px; border-radius: 5px; }
 QMenu::item:selected { background: $selection; color: $selection_text; }
 QMenu::separator { height: 1px; background: $border; margin: 4px 8px; }
 
-/* -- inputs -------------------------------------------------------------------------------------- */
+/* -- inputs
+-------------------------------------------------------------------------------------- */
 QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {
     background: $input; border: 1px solid $border_strong; border-radius: 6px;
     padding: 3px 6px; color: $text;
 }
-QLineEdit:hover, QComboBox:hover, QSpinBox:hover, QDoubleSpinBox:hover { border-color: $text_muted; }
-QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus { border: 1px solid $focus; }
+QLineEdit:hover, QComboBox:hover, QSpinBox:hover, QDoubleSpinBox:hover { border-color:
+$text_muted; }
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus { border: 1px solid $focus;
+}
 QComboBox::drop-down {
     border: 0; background: transparent; width: 22px;
     subcontrol-origin: padding; subcontrol-position: center right;
@@ -229,9 +244,11 @@ QGroupBox {
     border: 1px solid $border; border-radius: 8px; margin-top: 12px; padding: 8px 5px 5px 5px;
     background: $panel;
 }
-QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; color: $text_dim; font-weight: 700; }
+QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; color: $text_dim;
+font-weight: 700; }
 
-/* -- buttons ------------------------------------------------------------------------------------- */
+/* -- buttons
+------------------------------------------------------------------------------------- */
 QPushButton {
     background: $raised; border: 1px solid $border_strong; border-radius: 6px;
     padding: 4px 9px; color: $text;
@@ -244,11 +261,14 @@ QPushButton#PrimaryButton, QPushButton[role="primary"] {
 }
 QPushButton#PrimaryButton { padding: 8px 12px; }
 QPushButton#PrimaryButton:hover, QPushButton[role="primary"]:hover { background: $primary_hi; }
-QPushButton[role="success"] { background: $success; border: 1px solid $success_hi; color: #ffffff; font-weight: 600; }
+QPushButton[role="success"] { background: $success; border: 1px solid $success_hi; color: #ffffff;
+font-weight: 600; }
 QPushButton[role="success"]:hover { background: $success_hi; }
-QPushButton[role="danger"] { background: $danger_bg; border: 1px solid $danger_border; color: $danger_text; }
+QPushButton[role="danger"] { background: $danger_bg; border: 1px solid $danger_border; color:
+$danger_text; }
 QPushButton[role="danger"]:hover { border-color: $danger_text; }
-QPushButton[role="primary"]:disabled, QPushButton[role="success"]:disabled, QPushButton[role="danger"]:disabled {
+QPushButton[role="primary"]:disabled, QPushButton[role="success"]:disabled,
+QPushButton[role="danger"]:disabled {
     color: $text_muted; background: $panel; border-color: $border;
 }
 
@@ -259,7 +279,8 @@ QToolButton {
 QToolButton:hover { background: $hover; color: $text; }
 QToolButton:checked { background: $selection; border-color: $primary; color: $selection_text; }
 
-/* -- layers panel -------------------------------------------------------------------------------- */
+/* -- layers panel
+-------------------------------------------------------------------------------- */
 QWidget#LayerListGroup { background: $list; border: 1px solid $border; border-radius: 6px; }
 QLabel#LayerSectionLabel {
     background: $header; color: $text_dim;
@@ -275,7 +296,8 @@ QToolButton#LayerControlButton {
 QToolButton#LayerControlButton:hover { background: $hover; }
 QToolButton#LayerControlButton:pressed { background: $panel; }
 
-/* -- labels -------------------------------------------------------------------------------------- */
+/* -- labels
+-------------------------------------------------------------------------------------- */
 QLabel { color: $text; }
 QLabel#SectionLabel { color: $text_dim; font-size: 11px; font-weight: 800; padding: 3px 1px; }
 QLabel#MutedLabel { color: $text_muted; padding: 2px 1px; }
@@ -285,10 +307,13 @@ QLabel#EmptyStateHint { color: $text_muted; }
 QLabel#ErrorLabel { color: $error; }
 QListWidget#TilePaletteList::item { min-height: 26px; padding: 3px 6px; }
 
-/* -- cards (designer workspaces: sections of one record) ---------------------------------------- */
+/* -- cards (designer workspaces: sections of one record) ----------------------------------------
+*/
 QFrame#Card { background: $raised; border: 1px solid $border; border-radius: 10px; }
-QLabel#CardTitle { color: $text; font-size: 13px; font-weight: 800; padding: 0; background: transparent; }
-QLabel#CardHint { color: $text_muted; font-size: 11px; padding: 0 0 2px 0; background: transparent; }
+QLabel#CardTitle { color: $text; font-size: 13px; font-weight: 800; padding: 0; background:
+transparent; }
+QLabel#CardHint { color: $text_muted; font-size: 11px; padding: 0 0 2px 0; background:
+transparent; }
 QFrame#Card QLabel { background: transparent; }
 QLabel#RecordHeading { color: $text; font-size: 17px; font-weight: 800; }
 QLabel#RecordId { color: $text_muted; font-size: 11px; }
@@ -297,22 +322,28 @@ QToolButton#KindButton {
     padding: 7px 10px; color: $text_dim; text-align: left; font-weight: 700;
 }
 QToolButton#KindButton:hover { background: $hover; color: $text; }
-QToolButton#KindButton:checked { background: $selection; border-color: $primary; color: $selection_text; }
+QToolButton#KindButton:checked { background: $selection; border-color: $primary; color:
+$selection_text; }
 QFrame#PreviewFrame { background: $input; border: 1px solid $border; border-radius: 10px; }
-QLabel#ChipLabel { background: $hover; color: $text_dim; border-radius: 9px; padding: 2px 8px; font-size: 11px; }
+QLabel#ChipLabel { background: $hover; color: $text_dim; border-radius: 9px; padding: 2px 8px;
+font-size: 11px; }
 
-/* -- toolbar and status bar ---------------------------------------------------------------------- */
+/* -- toolbar and status bar
+---------------------------------------------------------------------- */
 QToolBar {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 $toolbar_top, stop:1 $toolbar_bottom);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 $toolbar_top, stop:1
+    $toolbar_bottom);
     border-bottom: 1px solid $border; spacing: 3px; padding: 5px 6px;
 }
 QToolBar::separator { background: $border; width: 1px; margin: 4px 8px; }
 QStatusBar { background: $base; color: $text_dim; border-top: 1px solid $border; }
 
-/* -- scroll bars --------------------------------------------------------------------------------- */
+/* -- scroll bars
+--------------------------------------------------------------------------------- */
 QScrollBar:vertical { background: transparent; width: 10px; margin: 2px; }
 QScrollBar:horizontal { background: transparent; height: 10px; margin: 2px; }
-QScrollBar::handle:vertical, QScrollBar::handle:horizontal { background: $scroll; border-radius: 3px; }
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal { background: $scroll; border-radius:
+3px; }
 QScrollBar::handle:vertical { min-height: 24px; }
 QScrollBar::handle:horizontal { min-width: 24px; }
 QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover { background: $scroll_hi; }
@@ -330,7 +361,8 @@ def _workspace_rules(palette):
         r, g, b = (int(colour[i : i + 2], 16) for i in (1, 3, 5))
         alpha = 0.22 if palette.dark else 0.16
         rules.append(
-            f'QToolButton[workspace="{name}"]:checked {{ background: rgba({r}, {g}, {b}, {alpha}); '
+            f'QToolButton[workspace="{name}"]:checked '
+            f"{{ background: rgba({r}, {g}, {b}, {alpha}); "
             f"border: 1px solid {colour}; color: {palette.text}; }}"
         )
         rules.append(f'QToolButton[workspace="{name}"]:hover:!checked {{ color: {colour}; }}')
@@ -389,7 +421,8 @@ def qt_palette(palette):
 
 
 def _branch_rules(palette):
-    """Tree expand arrows in the palette's colour (the native ones are drawn for one fixed background)."""
+    """Tree expand arrows in the palette's colour (the native ones are drawn for one fixed
+    background)."""
     import tempfile
     from pathlib import Path
 
@@ -430,7 +463,9 @@ def _branch_rules(palette):
 def apply_asteria_theme(app, name=None):
     palette = PALETTES.get(name or DEFAULT_PALETTE, GRAPHITE)
     CURRENT["palette"] = palette
-    app.setPalette(qt_palette(palette))  # what the style draws itself (tree arrows, check marks...)
+    app.setPalette(
+        qt_palette(palette)
+    )  # what the style draws itself (tree arrows, check marks...)
     app.setStyleSheet(build_qss(palette) + _branch_rules(palette))
     from .decor import install
 

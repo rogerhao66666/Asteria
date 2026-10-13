@@ -48,7 +48,13 @@ class BattleUiPolishProfile:
         ):
             _positive(getattr(self, name), name)
         _nonnegative(self.interaction_bottom_gap, "interaction_bottom_gap")
-        for name in ("selected_prefix", "selected_option_prefix", "idle_prefix", "empty_label", "page_separator"):
+        for name in (
+            "selected_prefix",
+            "selected_option_prefix",
+            "idle_prefix",
+            "empty_label",
+            "page_separator",
+        ):
             if not isinstance(getattr(self, name), str):
                 raise TypeError(f"{name} must be str")
 

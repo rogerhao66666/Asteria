@@ -42,7 +42,9 @@ def test_reference_project_resolves_editor_tile_and_animation_resources(tmp_path
     assert source is not None
     assert source.tilemap is document.asset_views.tilemap(TILEMAP_ID)
     assert source.tileset is document.asset_views.tileset(source.tilemap.tileset.asset_id)
-    assert source.sprite_sheet is document.asset_views.sprite_sheet(source.tileset.sprite_sheet.asset_id)
+    assert source.sprite_sheet is document.asset_views.sprite_sheet(
+        source.tileset.sprite_sheet.asset_id
+    )
     assert [layer.name for layer in source.tilemap.layers] == [
         "Ground",
         "Props",

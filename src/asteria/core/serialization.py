@@ -30,7 +30,9 @@ def deserialize_component(data, registry):
         from .migration import MigrationError, migrate_component_fields
 
         try:
-            incoming = migrate_component_fields(data["type"], incoming, data["version"], schema.version)
+            incoming = migrate_component_fields(
+                data["type"], incoming, data["version"], schema.version
+            )
         except MigrationError as exc:
             raise ValueError(f"Unsupported component schema version: {exc}") from exc
     unknown = set(incoming) - set(schema.fields)

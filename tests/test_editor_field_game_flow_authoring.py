@@ -2,7 +2,10 @@ import pytest
 
 from asteria.core import Entity, Scene, Transform
 from asteria.editor import EditorDocument
-from asteria.editor.field_game_flow_authoring import FieldGameFlowAuthoringController, FieldGameFlowAuthoringError
+from asteria.editor.field_game_flow_authoring import (
+    FieldGameFlowAuthoringController,
+    FieldGameFlowAuthoringError,
+)
 from asteria.editor.field_game_flow_workspace import FieldGameFlowWorkspaceModel
 from asteria.events import EventBinding, EventInstruction, EventProgram, EventTriggerKind
 from asteria.project import Project
@@ -56,8 +59,12 @@ def test_binding_requires_existing_scene_entity_and_program():
 def test_interaction_configuration_connects_entity_binding_and_program():
     _, s, _, boss, _, c = make()
     c.create_program("boss_event", encounter_program())
-    c.create_binding(s.id, EventBinding("boss_interact", boss.id, "boss_event", local_scope_id="boss"))
-    comp = c.configure_interaction(s.id, boss.id, binding_id="boss_interact", range=32, require_facing=True)
+    c.create_binding(
+        s.id, EventBinding("boss_interact", boss.id, "boss_event", local_scope_id="boss")
+    )
+    comp = c.configure_interaction(
+        s.id, boss.id, binding_id="boss_interact", range=32, require_facing=True
+    )
     assert isinstance(comp, Interaction2DComponent)
     assert comp.event_binding_id == "boss_interact"
     assert comp.event_program_id == "boss_event"
@@ -68,7 +75,9 @@ def test_interaction_configuration_connects_entity_binding_and_program():
 def test_interaction_rejects_autorun_binding():
     _, s, _, boss, _, c = make()
     c.create_program("boss_event", encounter_program())
-    c.create_binding(s.id, EventBinding("boss_auto", boss.id, "boss_event", trigger=EventTriggerKind.AUTORUN))
+    c.create_binding(
+        s.id, EventBinding("boss_auto", boss.id, "boss_event", trigger=EventTriggerKind.AUTORUN)
+    )
     with pytest.raises(FieldGameFlowAuthoringError):
         c.configure_interaction(s.id, boss.id, binding_id="boss_auto")
 
@@ -132,7 +141,12 @@ def test_information_architecture_keeps_flow_contextual():
     assert ia.inspector_pattern == "viewport_plus_contextual_detail"
     assert ia.progressive_disclosure
     assert not ia.show_all_flow_details_simultaneously
-    assert ia.section("encounter").detail_groups == ("Trigger", "Encounter Command", "Battle Transition", "Return Flow")
+    assert ia.section("encounter").detail_groups == (
+        "Trigger",
+        "Encounter Command",
+        "Battle Transition",
+        "Return Flow",
+    )
 
 
 def test_workspace_scene_entity_and_command_focus():

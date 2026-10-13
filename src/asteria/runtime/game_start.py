@@ -40,10 +40,16 @@ class GameStartDefinition:
     def instantiate(self, project):
         scene_id = self.scene_id or project.startup_scene_id
         if self.rpg_state_data is None:
-            rpg = RpgRuntimeState(progression=ProgressionRuntime(project.rpg_database.progression_tracks.values()))
+            rpg = RpgRuntimeState(
+                progression=ProgressionRuntime(project.rpg_database.progression_tracks.values())
+            )
         else:
             rpg = RpgRuntimeState.from_data(self.rpg_state_data, project.rpg_database)
-        ctx = EventContext() if self.event_context_data is None else EventContext.from_data(self.event_context_data)
+        ctx = (
+            EventContext()
+            if self.event_context_data is None
+            else EventContext.from_data(self.event_context_data)
+        )
         value = GameRuntimeSave(
             project.id,
             scene_id,
@@ -67,7 +73,9 @@ class GameStartDefinition:
             "scene_id": self.scene_id,
             "player_entity_id": self.player_entity_id,
             "player_facing": self.player_facing,
-            "player_position": None if self.player_position is None else list(self.player_position),
+            "player_position": None
+            if self.player_position is None
+            else list(self.player_position),
             "rpg_state": self.rpg_state_data,
             "event_context": self.event_context_data,
         }

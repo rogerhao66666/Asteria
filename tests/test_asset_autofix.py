@@ -1,4 +1,5 @@
-"""AST-11 / AP §17, §21: deterministic auto-fixes and atlas packing; destructive fixes need confirmation."""
+"""AST-11 / AP §17, §21: deterministic auto-fixes and atlas packing; destructive fixes need
+confirmation."""
 
 import pytest
 from PIL import Image, ImageDraw

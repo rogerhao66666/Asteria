@@ -9,7 +9,11 @@ from asteria.runtime.battle_presentation_adapters import create_battle_presentat
 from asteria.runtime.battle_visuals import vfx_rect
 from asteria.runtime.collision import CollisionWorld
 from asteria.runtime.field_camera import CAMERA_COMMANDS, FieldCameraError, FieldViewCamera
-from asteria.runtime.field_presentation import FIELD_EFFECT_COMMANDS, FieldEffectError, FieldEffects
+from asteria.runtime.field_presentation import (
+    FIELD_EFFECT_COMMANDS,
+    FieldEffectError,
+    FieldEffects,
+)
 from asteria.runtime.game_menus import (
     GAME_OVER_OPTIONS,
     PAUSE_OPTIONS,
@@ -68,12 +72,15 @@ class PlayableTestRuntime:
     input, pixels, simple menu navigation and VFX playback.
     """
 
-    def __init__(self, project, runtime_save, resource_root, *, width=960, height=540, backend=None):
+    def __init__(
+        self, project, runtime_save, resource_root, *, width=960, height=540, backend=None
+    ):
         try:
             import pygame
         except ImportError as exc:
             raise RuntimeError(
-                "Playable reference game requires pygame-ce. Install with: pip install 'pygame-ce>=2.5'"
+                "Playable reference game requires pygame-ce. Install with: pip install "
+                "'pygame-ce>=2.5'"
             ) from exc
 
         self.pg = pygame
@@ -84,7 +91,8 @@ class PlayableTestRuntime:
         self.save = runtime_save
         self.width = int(width)
         self.height = int(height)
-        # ENG-12: "pygame" (default) or "moderngl" (GPU presentation + post-processing); manifest render.backend
+        # ENG-12: "pygame" (default) or "moderngl" (GPU presentation + post-processing); manifest
+        # render.backend
         self.backend_kind = backend or self.manifest.get("render", {}).get("backend", "pygame")
         self.gpu = None
         self.gpu_fallback_reason = ""
@@ -148,7 +156,8 @@ class PlayableTestRuntime:
         return self._loaded[rel]
 
     def icon_image(self, icon_id, size=24):
-        """The menu icon ``icon_id`` (see ``menu_icons``) scaled to fit ``size`` pixels, or None."""
+        """The menu icon ``icon_id`` (see ``menu_icons``) scaled to fit ``size`` pixels, or
+        None."""
         from .menu_icons import icon_source
 
         cache = self._icon_cache
@@ -167,7 +176,9 @@ class PlayableTestRuntime:
                 scale = min(size / max(1, w), size / max(1, h))
                 target = (max(1, round(w * scale)), max(1, round(h * scale)))
                 pixel_art = scale >= 1 and float(scale).is_integer()
-                icon = (self.pg.transform.scale if pixel_art else self.pg.transform.smoothscale)(image, target)
+                icon = (self.pg.transform.scale if pixel_art else self.pg.transform.smoothscale)(
+                    image, target
+                )
             except (OSError, ValueError, self.pg.error):
                 icon = None  # a missing or broken icon shows the name only
         cache[key] = icon
@@ -183,7 +194,8 @@ class PlayableTestRuntime:
         return drawer
 
     def particle_image(self, image_id):
-        """The image of image particles (VFX-01): any id ``menu_icons`` resolves (icon cell, image, path)."""
+        """The image of image particles (VFX-01): any id ``menu_icons`` resolves (icon cell, image,
+        path)."""
         from .menu_icons import icon_source
 
         source = icon_source(self.project, image_id)
@@ -192,7 +204,9 @@ class PlayableTestRuntime:
         uri, region = source
         try:
             image = self.load_image(uri)
-            return image.subsurface(self.pg.Rect(region).clip(image.get_rect())) if region else image
+            return (
+                image.subsurface(self.pg.Rect(region).clip(image.get_rect())) if region else image
+            )
         except (OSError, ValueError, self.pg.error):
             return None
 
@@ -259,12 +273,17 @@ class PlayableTestRuntime:
             setattr(self, name, timed)
 
     def enable_profiling(self, profiler=None, *, target_fps=60.0):
-        """Attach a RuntimeProfiler (also to the game session) and declare what pygame cannot measure."""
+        """Attach a RuntimeProfiler (also to the game session) and declare what pygame cannot
+        measure."""
         self.profiler = profiler or RuntimeProfiler(target_fps=target_fps)
         self.game.profiler = self.profiler
         if self.gpu is None:
-            self.profiler.unsupported("draw_calls", "pygame software blitting exposes no draw-call counter")
-            self.profiler.unsupported("gpu_time", "pygame backend renders on the CPU; no GPU timer")
+            self.profiler.unsupported(
+                "draw_calls", "pygame software blitting exposes no draw-call counter"
+            )
+            self.profiler.unsupported(
+                "gpu_time", "pygame backend renders on the CPU; no GPU timer"
+            )
         return self.profiler
 
     def _sample_counters(self):
@@ -284,9 +303,14 @@ class PlayableTestRuntime:
 
             try:
                 self.gpu = GpuPresenter.open_window(self.pg, (self.width, self.height), title)
-                self.screen = self.pg.Surface((self.width, self.height), 0, 32)  # composed here, shown by the GPU
+                self.screen = self.pg.Surface(
+                    (self.width, self.height), 0, 32
+                )  # composed here, shown by the GPU
             except GpuPresenterError as exc:
-                self.gpu, self.gpu_fallback_reason = None, str(exc)  # keep playing on the pygame window
+                self.gpu, self.gpu_fallback_reason = (
+                    None,
+                    str(exc),
+                )  # keep playing on the pygame window
         if self.screen is None:
             self.screen = self.pg.display.set_mode((self.width, self.height))
         self.pg.display.set_caption(title)
@@ -300,7 +324,9 @@ class PlayableTestRuntime:
         input_map = effective_input_map(self.project.input_map, self.settings.input_overrides)
         from asteria.runtime.action_play import missing_action_bindings
 
-        for action, bindings in missing_action_bindings(input_map).items():  # action-scene controls (not saved)
+        for action, bindings in missing_action_bindings(
+            input_map
+        ).items():  # action-scene controls (not saved)
             input_map.set_bindings(action, bindings)
         self.input = InputActionTracker(input_map)
         from asteria.platform.pygame_audio import open_audio_device
@@ -326,13 +352,16 @@ class PlayableTestRuntime:
                 path = self.resource_root / path
         return path if path.is_file() else None
 
-    # -- scene environment: lighting, fog, weather, post-processing (VFX-02 / VFX-03) -----------------
+    # -- scene environment: lighting, fog, weather, post-processing (VFX-02 / VFX-03) -------------
     def _resolve_environment(self, kind):
         from asteria.runtime.environment2d import resolve_environment
 
         defaults = self.manifest.get("render", {}).get("environment")
         if kind == "field":
-            scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0)) * self.field_camera.zoom
+            scale = (
+                float(self.manifest["field"].get("world_to_screen_scale", 3.0))
+                * self.field_camera.zoom
+            )
             return resolve_environment(
                 self.game.scene,
                 defaults=defaults,
@@ -340,8 +369,11 @@ class PlayableTestRuntime:
                 scale=scale,
                 read_shader=self._read_shader,
             )
-        env = resolve_environment(self.game.scene, defaults=defaults, read_shader=self._read_shader)
-        env.lighting = False  # scene lights are placed in the field; battles keep fog, weather and post effects
+        env = resolve_environment(
+            self.game.scene, defaults=defaults, read_shader=self._read_shader
+        )
+        # scene lights are placed in the field; battles keep fog, weather and post effects
+        env.lighting = False
         return env
 
     def _read_shader(self, asset_id):
@@ -353,8 +385,10 @@ class PlayableTestRuntime:
         return path.read_text(encoding="utf-8") if path.is_file() else None
 
     def world_done(self, kind):
-        """The world layer for this frame is drawn: weather goes on it, and what follows (HUD, menus,
-        dialogue, fades) is drawn on a separate UI layer so lighting and post effects never touch it."""
+        """The world layer for this frame is drawn: weather goes on it, and what follows (HUD,
+        menus,
+        dialogue, fades) is drawn on a separate UI layer so lighting and post effects never touch
+        it."""
         env = self._resolve_environment(kind)
         self._frame_env = env
         if env is None or not env.active:
@@ -363,9 +397,14 @@ class PlayableTestRuntime:
             from asteria.runtime.weather import WeatherSystem
 
             if self._weather is None:
-                self._weather = WeatherSystem(self.width, self.height, seed=f"{self.game.scene.id}:weather")
+                self._weather = WeatherSystem(
+                    self.width, self.height, seed=f"{self.game.scene.id}:weather"
+                )
             camera = self.field_camera.view[:2] if kind == "field" else None
-            scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0)) * self.field_camera.zoom
+            scale = (
+                float(self.manifest["field"].get("world_to_screen_scale", 3.0))
+                * self.field_camera.zoom
+            )
             self._weather.update(
                 self._frame_dt,
                 env.weather,
@@ -376,7 +415,9 @@ class PlayableTestRuntime:
                 scale=scale,
             )
             with self.profiler.section("vfx"):
-                self.profiler.count("particles", self._weather.draw(self.pg, self.screen, env.weather_wind))
+                self.profiler.count(
+                    "particles", self._weather.draw(self.pg, self.screen, env.weather_wind)
+                )
         self._world_layer = self.screen
         if self._ui_layer is None or self._ui_layer.get_size() != self.screen.get_size():
             self._ui_layer = self.pg.Surface(self.screen.get_size(), self.pg.SRCALPHA, 32)
@@ -384,7 +425,8 @@ class PlayableTestRuntime:
         self.screen = self._ui_layer
 
     def drawing_world(self):
-        """Context manager: draw into the world layer even after ``world_done`` (e.g. battle VFX)."""
+        """Context manager: draw into the world layer even after ``world_done`` (e.g. battle
+        VFX)."""
         from contextlib import contextmanager
 
         @contextmanager
@@ -401,7 +443,8 @@ class PlayableTestRuntime:
         return scope()
 
     def present(self):
-        """Show the composed frame: GPU presenter (upload + effect chain) or the pygame window flip."""
+        """Show the composed frame: GPU presenter (upload + effect chain) or the pygame window
+        flip."""
         world, ui = self.screen, None
         if self._world_layer is not None:
             world, ui = self._world_layer, self.screen
@@ -413,12 +456,17 @@ class PlayableTestRuntime:
         self._normal_layer_active = False
         if self.gpu is not None:
             with self.profiler.section("gpu_present"):
-                self.gpu.present_layers(world, ui, self.pg, environment=env, normals=normals, time=self._clock_seconds)
+                self.gpu.present_layers(
+                    world, ui, self.pg, environment=env, normals=normals, time=self._clock_seconds
+                )
             if self.gpu.post is not None and self.gpu.post.errors:
                 self.environment_errors = list(self.gpu.post.errors)
         else:
             if env is not None and env.active:
-                from asteria.runtime.environment_fallback import PygameEnvironmentRenderer, unsupported
+                from asteria.runtime.environment_fallback import (
+                    PygameEnvironmentRenderer,
+                    unsupported,
+                )
 
                 if self._l0 is None:
                     self._l0 = PygameEnvironmentRenderer(self.pg)
@@ -428,7 +476,9 @@ class PlayableTestRuntime:
             if ui is not None:
                 world.blit(ui, (0, 0))
         if self.gpu is not None:
-            self.profiler.count("draw_calls", self.gpu.last_draw_calls)  # presenter + effect passes
+            self.profiler.count(
+                "draw_calls", self.gpu.last_draw_calls
+            )  # presenter + effect passes
             if self.gpu.last_gpu_ms is not None:
                 self.profiler.add_time("gpu_time", self.gpu.last_gpu_ms / 1000.0)
         self.pg.display.flip()
@@ -485,7 +535,10 @@ class PlayableTestRuntime:
         if camera is None:
             scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0))
             camera = self._field_camera = FieldViewCamera(
-                self.width, self.height, scale, follow=self.manifest["field"].get("camera", {}).get("follow")
+                self.width,
+                self.height,
+                scale,
+                follow=self.manifest["field"].get("camera", {}).get("follow"),
             )
         return camera
 
@@ -516,7 +569,9 @@ class PlayableTestRuntime:
                 ax, ay = t.x, t.y
             else:
                 ax, ay = effect.x, effect.y
-            x, y, w, h = vfx_rect(effect.placement, ax, ay, FIELD_BODY_HEIGHT, fw / scale, fh / scale)
+            x, y, w, h = vfx_rect(
+                effect.placement, ax, ay, FIELD_BODY_HEIGHT, fw / scale, fh / scale
+            )
             sx, sy = camera.world_to_screen(x, y)
             size = (max(1, round(w * scale * camera.zoom)), max(1, round(h * scale * camera.zoom)))
             image = self.pg.transform.scale(
@@ -525,12 +580,18 @@ class PlayableTestRuntime:
             if effect.placement["opacity"] < 1.0:
                 image.set_alpha(int(effect.placement["opacity"] * 255))
             flags = self.pg.BLEND_RGB_ADD if effect.placement["blend"] == "add" else 0
-            self.screen.blit(image, (round(sx - size[0] / 2), round(sy - size[1] / 2)), special_flags=flags)
+            self.screen.blit(
+                image, (round(sx - size[0] / 2), round(sy - size[1] / 2)), special_flags=flags
+            )
         systems = [p.system for p in self.field_effects.all_particles()]
         if systems:
             with self.profiler.section("vfx"):
                 self.particles_drawn = self.particle_drawer.draw(
-                    self.screen, systems, camera.world_to_screen, scale * camera.zoom, image=self.particle_image
+                    self.screen,
+                    systems,
+                    camera.world_to_screen,
+                    scale * camera.zoom,
+                    image=self.particle_image,
                 )
         self.world_done("field")
         alpha = self.field_effects.fade_alpha
@@ -543,7 +604,13 @@ class PlayableTestRuntime:
             self.pg.draw.rect(self.screen, (0, 0, 0), (0, 0, self.width, bar))
             self.pg.draw.rect(self.screen, (0, 0, 0), (0, self.height - bar, self.width, bar))
             if self.game.cutscene_skippable:
-                self.text("Esc: skip", self.width - 130, self.height - bar + 8, size=18, color=(190, 200, 215))
+                self.text(
+                    "Esc: skip",
+                    self.width - 130,
+                    self.height - bar + 8,
+                    size=18,
+                    color=(190, 200, 215),
+                )
 
     def _field_screen_xy(self, world_x, world_y):
         return self.field_camera.world_to_screen(world_x, world_y)
@@ -557,12 +624,15 @@ class PlayableTestRuntime:
 
     def _interaction_candidate(self):
         try:
-            return self.game.interaction.query.nearest(self.game.scene, self.game.player, self.game.facing)
+            return self.game.interaction.query.nearest(
+                self.game.scene, self.game.player, self.game.facing
+            )
         except Exception:
             return None
 
     def _normal_image(self, image_path):
-        """The normal map for an image, from its canonical asset's ``material.normal_asset_id`` (or None)."""
+        """The normal map for an image, from its canonical asset's ``material.normal_asset_id`` (or
+        None)."""
         cache = self.__dict__.setdefault("_normal_images", {})
         if image_path not in cache:
             normal = None
@@ -584,13 +654,17 @@ class PlayableTestRuntime:
         if self.gpu is None or not getattr(self, "_lit_last_frame", False):
             self._normal_layer_active = False
             return
-        if getattr(self, "_normal_layer", None) is None or self._normal_layer.get_size() != (self.width, self.height):
+        if getattr(self, "_normal_layer", None) is None or self._normal_layer.get_size() != (
+            self.width,
+            self.height,
+        ):
             self._normal_layer = self.pg.Surface((self.width, self.height), 0, 32)
         self._normal_layer.fill((128, 128, 255))
         self._normal_layer_active = True
 
     def _blit_normal(self, image_path, source_rect, size, position):
-        """Draw the normal-map frame matching a world sprite blit (same source rect, size and place)."""
+        """Draw the normal-map frame matching a world sprite blit (same source rect, size and
+        place)."""
         if not getattr(self, "_normal_layer_active", False):
             return
         normal = self._normal_image(image_path)
@@ -602,7 +676,8 @@ class PlayableTestRuntime:
         self._normal_layer.blit(frame, position)
 
     def _blit_with_trail(self, entity, image, position):
-        """Blit a field sprite; with MotionTrail2D, fading echoes of earlier positions go behind it (VFX-03)."""
+        """Blit a field sprite; with MotionTrail2D, fading echoes of earlier positions go behind it
+        (VFX-03)."""
         from asteria.presentation.motion_fx import EchoSettings, MotionEchoes
         from asteria.runtime.environment2d import MotionTrail2DComponent
 
@@ -610,7 +685,11 @@ class PlayableTestRuntime:
         if trail is not None and trail.enabled:
             echoes = self.__dict__.setdefault("_field_echoes", MotionEchoes())
             settings = EchoSettings.of(
-                trail.kind, interval=trail.interval, count=trail.count, fade=trail.fade, lifetime=trail.lifetime
+                trail.kind,
+                interval=trail.interval,
+                count=trail.count,
+                fade=trail.fade,
+                lifetime=trail.lifetime,
             )
             echo = echoes.get(entity.id, settings)
             t = entity.get(Transform)
@@ -623,11 +702,16 @@ class PlayableTestRuntime:
                 ghost = ghost_image.copy()
                 ghost.set_alpha(int(200 * opacity))
                 self.screen.blit(ghost, ghost_position)
-            echo.record(self._clock_seconds, (image, position), moving=moving or not trail.only_while_moving)
+            echo.record(
+                self._clock_seconds,
+                (image, position),
+                moving=moving or not trail.only_while_moving,
+            )
         self.screen.blit(image, position)
 
     def _field_composition(self, image_path):
-        """CharacterComposition of the canonical sprite-sheet asset whose image is ``image_path`` (CMP-01)."""
+        """CharacterComposition of the canonical sprite-sheet asset whose image is ``image_path``
+        (CMP-01)."""
         cache = self.__dict__.setdefault("_field_compositions", {})
         if image_path not in cache:
             from asteria.presentation.character_composition import CharacterComposition
@@ -641,12 +725,16 @@ class PlayableTestRuntime:
         return cache[image_path]
 
     def _composition_parts(self, image_path, frame_index, clip, frame_size, render_size, position):
-        """``(behind, front)`` lists of ``(surface, position)`` for a field sprite's layers and attachments."""
+        """``(behind, front)`` lists of ``(surface, position)`` for a field sprite's layers and
+        attachments."""
         composition = self._field_composition(image_path)
         if composition is None:
             return (), ()
         scale = render_size[0] / frame_size[0]
-        pivot = (position[0] + render_size[0] / 2, position[1] + render_size[1])  # feet: bottom centre
+        pivot = (
+            position[0] + render_size[0] / 2,
+            position[1] + render_size[1],
+        )  # feet: bottom centre
         behind, front = [], []
         for part in composition.parts(clip, frame_index):
             try:
@@ -659,7 +747,10 @@ class PlayableTestRuntime:
             columns = max(1, sheet.get_width() // fw)
             index = part.frame_index % max(1, columns * max(1, sheet.get_height() // fh))
             image = sheet.subsurface(((index % columns) * fw, (index // columns) * fh, fw, fh))
-            size = (max(1, round(fw * part.scale_x * scale)), max(1, round(fh * part.scale_y * scale)))
+            size = (
+                max(1, round(fw * part.scale_x * scale)),
+                max(1, round(fh * part.scale_y * scale)),
+            )
             image = self.pg.transform.scale(image, size)
             if part.rotation_deg:
                 image = self.pg.transform.rotate(image, -part.rotation_deg)
@@ -684,13 +775,17 @@ class PlayableTestRuntime:
         self._prune_field_echoes()
         zoom = self.field_camera.zoom
         settings = self.game.combat_scene
-        if settings is not None and settings.background_color:  # a block-out level: a flat colour, no field image
+        if (
+            settings is not None and settings.background_color
+        ):  # a block-out level: a flat colour, no field image
             color = settings.background_color.lstrip("#")
             self.screen.fill(tuple(int(color[i : i + 2], 16) for i in (0, 2, 4)))
         else:
             bg = self.load_image(self.manifest["field"]["background"])
             bx, by, bw, bh = self.field_camera.background_rect()
-            self.screen.blit(self.pg.transform.smoothscale(bg, (round(bw), round(bh))), (round(bx), round(by)))
+            self.screen.blit(
+                self.pg.transform.smoothscale(bg, (round(bw), round(bh))), (round(bx), round(by))
+            )
 
         sprites = self.manifest["field"].get("entity_sprites", {})
         from asteria.runtime.field_ai import FieldAIComponent, VisibleEncounterComponent
@@ -709,7 +804,9 @@ class PlayableTestRuntime:
                 et = entity.get(Transform)
                 ex, ey = self._field_screen_xy(et.x, et.y)
                 self.pg.draw.circle(self.screen, (200, 70, 80), (int(ex), int(ey)), int(14 * zoom))
-                self.pg.draw.circle(self.screen, (255, 230, 230), (int(ex), int(ey)), int(14 * zoom), 2)
+                self.pg.draw.circle(
+                    self.screen, (255, 230, 230), (int(ex), int(ey)), int(14 * zoom), 2
+                )
                 continue
             if spec is None or entity is self.game.player:
                 continue
@@ -736,17 +833,24 @@ class PlayableTestRuntime:
             walking_pattern_index(self._field_step) if moving else 1
         )
         clip = f"{'walk' if moving else 'idle'}_{self.game.facing}"
-        behind, front = self._composition_parts(sheet_path, frame_index, clip, (fw, fh), (render_w, render_h), position)
+        behind, front = self._composition_parts(
+            sheet_path, frame_index, clip, (fw, fh), (render_w, render_h), position
+        )
         for image, at in behind:
             self.screen.blit(image, at)
         self._blit_with_trail(self.game.player, pf, position)
         for image, at in front:
             self.screen.blit(image, at)
-        if getattr(self, "_normal_layer_active", False) and self._normal_image(sheet_path) is not None:
+        if (
+            getattr(self, "_normal_layer_active", False)
+            and self._normal_image(sheet_path) is not None
+        ):
             fw, fh = self.manifest["field"]["player_frame_size"]
             row = walking_row_index(self.game.facing)
             col = walking_pattern_index(self._field_step) if moving else 1
-            self._blit_normal(sheet_path, (col * fw, row * fh, fw, fh), (render_w, render_h), position)
+            self._blit_normal(
+                sheet_path, (col * fw, row * fh, fw, fh), (render_w, render_h), position
+            )
         if self.game.action_scene:
             self.action_hud.draw_world(self)
         self._draw_field_effects()
@@ -757,7 +861,9 @@ class PlayableTestRuntime:
         if self.game.action_scene:
             self.action_hud.draw_overlay(self)
             if self.message and self.pg.time.get_ticks() < self.message_until:
-                self.text(self.message, self.width / 2, 92, size=22, color=(175, 235, 255), center=True)
+                self.text(
+                    self.message, self.width / 2, 92, size=22, color=(175, 235, 255), center=True
+                )
             self._draw_dialogue()
             return
 
@@ -780,14 +886,21 @@ class PlayableTestRuntime:
                 center=True,
             )
         if self.message and self.pg.time.get_ticks() < self.message_until:
-            self.text(self.message, self.width / 2, 92, size=22, color=(175, 235, 255), center=True)
+            self.text(
+                self.message, self.width / 2, 92, size=22, color=(175, 235, 255), center=True
+            )
         self._draw_dialogue()
 
-    # -- popups (CMP-03: generic animated text above field characters) -----------------------------
+    # -- popups (CMP-03: generic animated text above field characters) ----------------------------
     POPUP_COLORS = {"item": (170, 240, 170), "warning": (255, 170, 150), "info": (230, 232, 240)}
 
     def _update_popups(self, dt):
-        from asteria.presentation.animated_text import AnimatedTextRuntime, AnimatedTextSpec, TextKey, TextTransform
+        from asteria.presentation.animated_text import (
+            AnimatedTextRuntime,
+            AnimatedTextSpec,
+            TextKey,
+            TextTransform,
+        )
 
         if getattr(self, "popups", None) is None:
             self.popups, self._popup_serial = AnimatedTextRuntime(), 0
@@ -814,7 +927,14 @@ class PlayableTestRuntime:
         if anchor_id == "player":
             entity = self.game.player
         else:
-            entity = next((e for e in self.game.scene.entities() if e.name == anchor_id or e.id == anchor_id), None)
+            entity = next(
+                (
+                    e
+                    for e in self.game.scene.entities()
+                    if e.name == anchor_id or e.id == anchor_id
+                ),
+                None,
+            )
         transform = entity.get(Transform) if entity is not None else None
         if transform is None:
             return None
@@ -847,7 +967,10 @@ class PlayableTestRuntime:
             shadow = font.render(packet.text, True, (10, 12, 20))
             shadow.set_alpha(round(160 * packet.opacity))
             image.set_alpha(round(255 * packet.opacity))
-            at = (round(packet.x - image.get_width() / 2), round(packet.y - image.get_height() / 2))
+            at = (
+                round(packet.x - image.get_width() / 2),
+                round(packet.y - image.get_height() / 2),
+            )
             self.screen.blit(shadow, (at[0] + 2, at[1] + 2))
             self.screen.blit(image, at)
 
@@ -855,17 +978,34 @@ class PlayableTestRuntime:
         request = self.game.pending_dialogue
         if request is None:
             return
-        self.panel((60, self.height - 230, self.width - 120, 130), fill=(10, 14, 24, 235), border=(240, 201, 93))
+        self.panel(
+            (60, self.height - 230, self.width - 120, 130),
+            fill=(10, 14, 24, 235),
+            border=(240, 201, 93),
+        )
         line = getattr(request, "line", None)
         if line is not None:
             if line.speaker:
                 self.text(line.speaker, 84, self.height - 218, size=24, color=(255, 220, 124))
             self.text(line.text, 84, self.height - 184, size=22)
-            self.text("Enter / E: continue", self.width - 250, self.height - 128, size=18, color=(170, 210, 240))
+            self.text(
+                "Enter / E: continue",
+                self.width - 250,
+                self.height - 128,
+                size=18,
+                color=(170, 210, 240),
+            )
             return
-        self.text(request.prompt or "Choose", 84, self.height - 218, size=22, color=(255, 220, 124))
+        self.text(
+            request.prompt or "Choose", 84, self.height - 218, size=22, color=(255, 220, 124)
+        )
         for i, choice in enumerate(request.choices[:9], 1):
-            self.text(f"{i}. {choice.text}", 84 + ((i - 1) % 3) * 270, self.height - 184 + ((i - 1) // 3) * 26, size=20)
+            self.text(
+                f"{i}. {choice.text}",
+                84 + ((i - 1) % 3) * 270,
+                self.height - 184 + ((i - 1) // 3) * 26,
+                size=20,
+            )
 
     def _dialogue_input(self, events):
         """Route keys to a waiting dialogue/choice. Returns True when one is open."""
@@ -906,7 +1046,9 @@ class PlayableTestRuntime:
             mag = max(1.0, (dx * dx + dy * dy) ** 0.5)
             speed = 36.0
             pt = self.game.player.get(Transform)
-            blocked = CollisionWorld.from_scene(self.game.scene).blocking_query(exclude={self.game.player.id})
+            blocked = CollisionWorld.from_scene(self.game.scene).blocking_query(
+                exclude={self.game.player.id}
+            )
             nx = max(-120.0, min(120.0, pt.x + dx / mag * speed * dt))
             if not blocked.collides_world_point(nx, pt.y):
                 pt.x = nx
@@ -940,7 +1082,7 @@ class PlayableTestRuntime:
                 self.game.field_step({"interact": 0.0})
         return moving
 
-    # -- action scenes (ASTERIA_SPEC §20; D22 A8) ---------------------------------------------------------------------
+    # -- action scenes (ASTERIA_SPEC §20; D22 A8) -------------------------------------------------
     @property
     def action_hud(self):
         hud = getattr(self, "_action_hud", None)
@@ -951,7 +1093,8 @@ class PlayableTestRuntime:
         return hud
 
     def _action_input(self, events):
-        """Real-time control: the input actions drive the player's controller and abilities through the session."""
+        """Real-time control: the input actions drive the player's controller and abilities through
+        the session."""
         self.game.prepare_action_player()
         self.game.set_field_input(dict(self.input.current.actions))
         if self.input.just_pressed("pickup"):
@@ -1007,14 +1150,26 @@ class PlayableTestRuntime:
         db = self.game.project.rpg_database
         rarities = db.loot_rarities()
         self.text("Equipment Bag", 40, 28, size=32, color=(255, 220, 124))
-        self.text("Up / Down: choose   Enter: equip   B / Esc: back", 40, 64, size=18, color=(170, 180, 200))
+        self.text(
+            "Up / Down: choose   Enter: equip   B / Esc: back",
+            40,
+            64,
+            size=18,
+            color=(170, 180, 200),
+        )
         bag = self.game.save.rpg_state.equipment_bag
         for row, item in enumerate(bag[:14]):
             rarity = rarities.get(item.rarity)
             color = rarity.rgb() if rarity is not None else (230, 230, 230)
             prefix = "> " if row == getattr(self, "_bag_index", 0) else "  "
             name = item_display_name(item, db.affixes)
-            self.text(f"{prefix}{name}  (ilvl {item.item_level})", 40, 100 + row * 26, size=22, color=color)
+            self.text(
+                f"{prefix}{name}  (ilvl {item.item_level})",
+                40,
+                100 + row * 26,
+                size=22,
+                color=color,
+            )
         selected = bag[getattr(self, "_bag_index", 0)] if bag else None
         x = self.width / 2 + 40
         self.text("Equipped", x, 100, size=24, color=(255, 220, 124))
@@ -1025,15 +1180,29 @@ class PlayableTestRuntime:
             for item in loadout.equipped():
                 rarity = rarities.get(item.rarity)
                 color = rarity.rgb() if rarity is not None else (230, 230, 230)
-                self.text(item_display_name(item, db.affixes), x, 132 + row * 24, size=20, color=color)
+                self.text(
+                    item_display_name(item, db.affixes), x, 132 + row * 24, size=20, color=color
+                )
                 row += 1
         if selected is not None:
             self.text("Selected", x, 160 + row * 24, size=24, color=(255, 220, 124))
             for k, modifier in enumerate(selected.modifiers()):
                 sign = "x" if modifier.operation.value == "multiply" else "+"
-                self.text(f"{modifier.stat} {sign}{modifier.value:.1f}", x, 192 + row * 24 + k * 22, size=19)
+                self.text(
+                    f"{modifier.stat} {sign}{modifier.value:.1f}",
+                    x,
+                    192 + row * 24 + k * 22,
+                    size=19,
+                )
         if self.message and self.pg.time.get_ticks() < self.message_until:
-            self.text(self.message, self.width / 2, self.height - 30, size=20, color=(175, 235, 255), center=True)
+            self.text(
+                self.message,
+                self.width / 2,
+                self.height - 30,
+                size=20,
+                color=(175, 235, 255),
+                center=True,
+            )
 
     def _draw_title(self):
         bg = self.load_image(self.manifest["field"]["background"])
@@ -1048,8 +1217,18 @@ class PlayableTestRuntime:
         self.text("L   Load Game", 330, 330, size=28)
         from asteria.runtime.save_slots import SaveSlots
 
-        used = sum(1 for s in SaveSlots(self.resource_root / "saves", self.project).slots() if self._slot_exists(s))
-        self.text(f"{used} save(s) found" if used else "No saves yet", 330, 372, size=18, color=(170, 210, 240))
+        used = sum(
+            1
+            for s in SaveSlots(self.resource_root / "saves", self.project).slots()
+            if self._slot_exists(s)
+        )
+        self.text(
+            f"{used} save(s) found" if used else "No saves yet",
+            330,
+            372,
+            size=18,
+            color=(170, 210, 240),
+        )
 
     def _load_player_save(self):
         path = self.resource_root / "saves" / "playtest_autosave.asteria-save.json"
@@ -1099,7 +1278,8 @@ class PlayableTestRuntime:
         self.text("Character / Build Acceptance Menu", 44, 38, size=30, color=(255, 220, 120))
         self.text(f"Q/E Actor   C Close     Current: {actor_id}", 44, 76, size=19)
         self.text(
-            f"Level {state.level}   EXP {int(state.experience)}   AP {int(allocation.balance('ap'))}"
+            f"Level {state.level}   EXP {int(state.experience)}   AP "
+            f"{int(allocation.balance('ap'))}"
             f"   Ability Pts {int(state.points.get('ability_points', 0))}",
             44,
             106,
@@ -1109,7 +1289,9 @@ class PlayableTestRuntime:
         classes = " + ".join(state.active_class_ids) or "—"
         self.text(f"1 Secondary Class: {classes}", 44, 148, size=20)
         self.text(f"3 Passives: {', '.join(ability.active_passives[:4]) or '—'}", 44, 178, size=20)
-        self.text(f"4 Weapon: {weapon.equipment.display_name if weapon else '—'}", 44, 208, size=20)
+        self.text(
+            f"4 Weapon: {weapon.equipment.display_name if weapon else '—'}", 44, 208, size=20
+        )
         growth = (
             "—"
             if weapon is None or weapon.growth is None
@@ -1117,11 +1299,18 @@ class PlayableTestRuntime:
         )
         self.text(f"5 Weapon Upgrade: {growth}", 44, 238, size=20)
         accessories = self.save.rpg_state.loadouts[actor_id].equipped("accessory")
-        self.text(f"6 Accessories: {', '.join(x.equipment.display_name for x in accessories) or '—'}", 44, 268, size=20)
+        self.text(
+            f"6 Accessories: {', '.join(x.equipment.display_name for x in accessories) or '—'}",
+            44,
+            268,
+            size=20,
+        )
         active = self.save.rpg_state.party_active_actor_ids
         self.text(f"7 Party / Formation: {', '.join(active)}", 44, 298, size=20)
         self.text("2 Skill Tree: allocate next available node", 44, 328, size=20)
-        graph_id = (state.active_class_ids[-1] if state.active_class_ids else next(iter(db.classes))) + "_tree"
+        graph_id = (
+            state.active_class_ids[-1] if state.active_class_ids else next(iter(db.classes))
+        ) + "_tree"
         graph = db.progression_graphs.get(graph_id)
         if graph is not None:
             ox, oy = 485, 150
@@ -1137,14 +1326,26 @@ class PlayableTestRuntime:
                         px = ox + px * 0.55
                         py = oy + py * 0.65
                         self.pg.draw.line(
-                            self.screen, (100, 120, 155), (int(px + 38), int(py + 12)), (int(x + 38), int(y + 12)), 2
+                            self.screen,
+                            (100, 120, 155),
+                            (int(px + 38), int(py + 12)),
+                            (int(x + 38), int(y + 12)),
+                            2,
                         )
                     rect = (int(x), int(y), 78, 25)
                     self.pg.draw.rect(
-                        self.screen, (45, 70, 60) if ranks.get(node.node_id, 0) else (40, 46, 62), rect, border_radius=4
+                        self.screen,
+                        (45, 70, 60) if ranks.get(node.node_id, 0) else (40, 46, 62),
+                        rect,
+                        border_radius=4,
                     )
                     self.pg.draw.rect(self.screen, (190, 200, 225), rect, 1, border_radius=4)
-                    self.text(node.display_name.replace(graph.display_name.split()[0], "")[:10], x + 4, y + 5, size=14)
+                    self.text(
+                        node.display_name.replace(graph.display_name.split()[0], "")[:10],
+                        x + 4,
+                        y + 5,
+                        size=14,
+                    )
             else:
                 ranks = allocation.allocations.get(graph.graph_id, {})
                 for i, node in enumerate(graph.nodes[:6]):
@@ -1200,7 +1401,9 @@ class PlayableTestRuntime:
         self.game.set_passives(actor_id, values, capacity=4)
 
     def _cycle_weapon(self, actor_id):
-        ids = sorted(k for k, v in self.project.rpg_database.equipment.items() if v.slot == "weapon")
+        ids = sorted(
+            k for k, v in self.project.rpg_database.equipment.items() if v.slot == "weapon"
+        )
         current = self._current_weapon(actor_id)
         cur = None if current is None else current.equipment.equipment_id
         idx = -1 if cur not in ids else ids.index(cur)
@@ -1221,7 +1424,9 @@ class PlayableTestRuntime:
         self.message_until = self.pg.time.get_ticks() + 1400
 
     def _cycle_accessory(self, actor_id):
-        ids = sorted(k for k, v in self.project.rpg_database.equipment.items() if v.slot == "accessory")
+        ids = sorted(
+            k for k, v in self.project.rpg_database.equipment.items() if v.slot == "accessory"
+        )
         loadout = self.save.rpg_state.loadouts[actor_id]
         if loadout.equipped("accessory"):
             loadout.unequip("accessory", 0)
@@ -1235,7 +1440,9 @@ class PlayableTestRuntime:
             return
         rotated = roster[1:] + roster[:1]
         chosen = rotated[: min(6, len(rotated))]
-        self.game.set_active_party(chosen, {actor_id: f"slot_{i + 1}" for i, actor_id in enumerate(chosen)})
+        self.game.set_active_party(
+            chosen, {actor_id: f"slot_{i + 1}" for i, actor_id in enumerate(chosen)}
+        )
 
     def _build_menu_input(self, events):
         actor = self._menu_actor()
@@ -1272,7 +1479,9 @@ class PlayableTestRuntime:
         if log:
             member_id, outcome = log[-1]
             name = member_id.split(":", 1)[0].replace("_", " ").title()
-            self._last_action_name = f"Enemy AI: {outcome}" if isinstance(outcome, Exception) else f"{name} acts"
+            self._last_action_name = (
+                f"Enemy AI: {outcome}" if isinstance(outcome, Exception) else f"{name} acts"
+            )
         self._turn_actor = hero
         self._boost_level = 0
         if not self.game.active_hero_ids():
@@ -1280,7 +1489,8 @@ class PlayableTestRuntime:
 
     @property
     def battle_commands(self):
-        """The player's battle command menu for the current game (skills, items, concoct, boost, targets)."""
+        """The player's battle command menu for the current game (skills, items, concoct, boost,
+        targets)."""
         from .battle_commands import BattleCommands
 
         commands = getattr(self, "_battle_commands", None)
@@ -1332,7 +1542,11 @@ class PlayableTestRuntime:
 
     def _flush_victory_audio(self):
         pending_cues = getattr(self._battle_presentation, "audio_cues", ())
-        if getattr(self, "_victory_audio_pending", False) and not self._presentation_busy() and not pending_cues:
+        if (
+            getattr(self, "_victory_audio_pending", False)
+            and not self._presentation_busy()
+            and not pending_cues
+        ):
             self._victory_audio_pending = False
             self.audio.stop_music(fade_out=0.3)
             self._sound(self.manifest["battle"].get("victory_jingle"))
@@ -1349,7 +1563,8 @@ class PlayableTestRuntime:
         self._flush_victory_audio()
 
     def _draw_battle_extras(self):
-        """Shields and weaknesses under each enemy, boost points under each hero, the chosen boost level."""
+        """Shields and weaknesses under each enemy, boost points under each hero, the chosen boost
+        level."""
         game, adapter = self.game, self._battle_presentation
         box = getattr(adapter, "member_screen_box", None)
         if game.battle is None or box is None or self._victory or self._defeat:
@@ -1375,11 +1590,18 @@ class PlayableTestRuntime:
                     value = battle.battle_resources.current(member.member_id, shield)
                     cells.append((f"{value:g}", (120, 150, 210)))
                 for label, revealed in game.weaknesses(member.member_id):
-                    cells.append((label[:5] if revealed else "?", (70, 80, 100) if not revealed else (200, 170, 70)))
+                    cells.append(
+                        (
+                            label[:5] if revealed else "?",
+                            (70, 80, 100) if not revealed else (200, 170, 70),
+                        )
+                    )
                 widths = [max(16, len(text) * 7 + 6) for text, _ in cells]
                 cx = x - (sum(widths) + 2 * (len(cells) - 1)) / 2
                 for (text, color), width in zip(cells, widths, strict=True):
-                    pg.draw.rect(self.screen, (16, 18, 28), (cx - 1, y - 1, width + 2, 16), border_radius=3)
+                    pg.draw.rect(
+                        self.screen, (16, 18, 28), (cx - 1, y - 1, width + 2, 16), border_radius=3
+                    )
                     pg.draw.rect(self.screen, color, (cx, y, width, 14), border_radius=3)
                     self.text(text, cx + width / 2, y, size=15, color=(250, 250, 255), center=True)
                     cx += width + 2
@@ -1389,7 +1611,9 @@ class PlayableTestRuntime:
                 for i in range(int(top)):
                     filled = i < value
                     centre = (round(x - (top - 1) * 5 + i * 10), round(y + 4))
-                    pg.draw.circle(self.screen, (255, 196, 70) if filled else (60, 66, 84), centre, 4)
+                    pg.draw.circle(
+                        self.screen, (255, 196, 70) if filled else (60, 66, 84), centre, 4
+                    )
             states = member.subject.states
             names = [a.state_id for a in states.active_states()] if states is not None else []
             if names:  # poison, silence, attack up...
@@ -1401,10 +1625,22 @@ class PlayableTestRuntime:
             where = box(actor)
             if where is not None and commands.boost:
                 self.text(
-                    f"BOOST x{commands.boost + 1}", where[0], where[1] - 22, size=22, color=(255, 210, 90), center=True
+                    f"BOOST x{commands.boost + 1}",
+                    where[0],
+                    where[1] - 22,
+                    size=22,
+                    color=(255, 210, 90),
+                    center=True,
                 )
             if commands.message:
-                self.text(commands.message, self.width / 2, 70, size=20, color=(255, 170, 150), center=True)
+                self.text(
+                    commands.message,
+                    self.width / 2,
+                    70,
+                    size=20,
+                    color=(255, 170, 150),
+                    center=True,
+                )
 
     def _use_skill(self, slot):
         actor = self._battle_actor()
@@ -1446,7 +1682,9 @@ class PlayableTestRuntime:
                     )
                 self._victory = True
                 # The jingle waits for the presentation to finish showing the final blows.
-                self._victory_audio_pending = True  # played by _present_battle once the screen is idle
+                self._victory_audio_pending = (
+                    True  # played by _present_battle once the screen is idle
+                )
                 self._last_action_name = "Victory — rewards + progression applied"
             except Exception as exc:
                 self._last_action_name = f"Victory finalize failed: {exc}"
@@ -1478,7 +1716,11 @@ class PlayableTestRuntime:
             if self._presentation_busy():
                 return  # the result is still being presented
             for event in events:
-                if event.type == self.pg.KEYDOWN and event.key in (self.pg.K_RETURN, self.pg.K_e, self.pg.K_SPACE):
+                if event.type == self.pg.KEYDOWN and event.key in (
+                    self.pg.K_RETURN,
+                    self.pg.K_e,
+                    self.pg.K_SPACE,
+                ):
                     self._victory = False
                     self.game.mode = "field"
                     self._last_action_name = ""
@@ -1499,7 +1741,9 @@ class PlayableTestRuntime:
             elif event.key == self.pg.K_b:
                 actor = self._battle_actor()
                 if actor:
-                    self._boost_level = (self._boost_level + 1) % (self.game.max_boost_level(actor) + 1)
+                    self._boost_level = (self._boost_level + 1) % (
+                        self.game.max_boost_level(actor) + 1
+                    )
             elif event.key in self._COMMAND_KEYS:
                 actor = self._battle_actor()
                 commands = self.battle_commands
@@ -1538,7 +1782,7 @@ class PlayableTestRuntime:
         self.audio.stop_music(fade_out=0.3)
         self._ui_mode = "title"
 
-    # -- status menu (UI-01) -----------------------------------------------------------------------
+    # -- status menu (UI-01) ----------------------------------------------------------------------
     def open_status_menu(self, back="field"):
         from asteria.runtime.status_menu import StatusMenu
 
@@ -1595,9 +1839,13 @@ class PlayableTestRuntime:
             y = 92 + i * 28
             selected = start + i == menu.row
             if selected:
-                self.pg.draw.rect(self.screen, (40, 52, 78), (40, y - 4, self.width - 80, 26), border_radius=4)
+                self.pg.draw.rect(
+                    self.screen, (40, 52, 78), (40, y - 4, self.width - 80, 26), border_radius=4
+                )
             self._draw_icon(icons[start + i], 56, y - 3)
-            self.text(label, label_x, y, size=20, color=(255, 255, 255) if selected else (210, 215, 225))
+            self.text(
+                label, label_x, y, size=20, color=(255, 255, 255) if selected else (210, 215, 225)
+            )
             self.text(detail, self.width - 420, y, size=20, color=(170, 210, 240))
         if not rows:
             self.text("Nothing here yet.", 56, 92, size=20, color=(150, 160, 180))
@@ -1715,17 +1963,21 @@ class PlayableTestRuntime:
             if self.input.just_pressed("confirm"):
                 from asteria.runtime.input_rebinding import ControlsMenu
 
-                self.controls_menu = ControlsMenu(self.project.input_map, self.settings.input_overrides)
+                self.controls_menu = ControlsMenu(
+                    self.project.input_map, self.settings.input_overrides
+                )
                 self._ui_mode = "controls"
             return
-        delta = (1 if self.input.just_pressed("move_right") else 0) - (1 if self.input.just_pressed("move_left") else 0)
+        delta = (1 if self.input.just_pressed("move_right") else 0) - (
+            1 if self.input.just_pressed("move_left") else 0
+        )
         if self.input.just_pressed("confirm") and key == "show_battle_log":
             delta = 1
         if delta:
             self.settings.adjust(key, delta)
             self.settings.apply(self.audio)
 
-    # -- save slots (ENG-21) -------------------------------------------------------------------------
+    # -- save slots (ENG-21) ----------------------------------------------------------------------
     def _slot_exists(self, slot):
         from asteria.runtime.save_slots import SaveSlots
 
@@ -1774,14 +2026,20 @@ class PlayableTestRuntime:
             y = 140 + i * 64
             selected = i == menu.row
             if selected:
-                self.pg.draw.rect(self.screen, (40, 52, 78), (120, y - 8, self.width - 240, 54), border_radius=6)
+                self.pg.draw.rect(
+                    self.screen, (40, 52, 78), (120, y - 8, self.width - 240, 54), border_radius=6
+                )
             name = "Autosave (F5)" if info.slot == "autosave" else f"Slot {info.slot}"
-            self.text(name, 140, y, size=24, color=(255, 226, 129) if selected else (235, 238, 245))
+            self.text(
+                name, 140, y, size=24, color=(255, 226, 129) if selected else (235, 238, 245)
+            )
             self.text(info.summary, 140, y + 24, size=18, color=(170, 210, 240))
         hint = menu.message or "Enter: choose   Delete: erase   Esc: back"
-        self.text(hint, self.width / 2, self.height - 96, size=19, color=(255, 226, 129), center=True)
+        self.text(
+            hint, self.width / 2, self.height - 96, size=19, color=(255, 226, 129), center=True
+        )
 
-    # -- controls / rebinding (ENG-15) ----------------------------------------------------------------
+    # -- controls / rebinding (ENG-15) ------------------------------------------------------------
     def _controls_input(self, events):
         from asteria.runtime.input_map import InputBinding
 
@@ -1818,7 +2076,9 @@ class PlayableTestRuntime:
         from asteria.runtime.input_rebinding import effective_input_map
 
         self.settings.input_overrides = dict(self.controls_menu.overrides)
-        self.input = InputActionTracker(effective_input_map(self.project.input_map, self.settings.input_overrides))
+        self.input = InputActionTracker(
+            effective_input_map(self.project.input_map, self.settings.input_overrides)
+        )
         self.settings.save(self._settings_path())
 
     def _draw_controls(self):
@@ -1833,7 +2093,9 @@ class PlayableTestRuntime:
             self.text(("> " if selected else "   ") + action, 90, y, size=21, color=color)
             self.text(bindings, self.width / 2, y, size=21, color=(170, 210, 240))
         hint = menu.message or "Enter: rebind   Backspace: reset action   Esc: save and back"
-        self.text(hint, self.width / 2, self.height - 58, size=19, color=(255, 226, 129), center=True)
+        self.text(
+            hint, self.width / 2, self.height - 58, size=19, color=(255, 226, 129), center=True
+        )
 
     def _draw_crafting(self):
         screen = self._crafting_screen
@@ -1841,7 +2103,9 @@ class PlayableTestRuntime:
         if screen is None:
             return
         self.panel((60, 40, self.width - 120, self.height - 80))
-        title = "Crafting" + (f" — {screen.station.replace('_', ' ').title()}" if screen.station else "")
+        title = "Crafting" + (
+            f" — {screen.station.replace('_', ' ').title()}" if screen.station else ""
+        )
         self.text(title, 90, 54, size=30, color=(255, 220, 124))
         rows = screen.rows()
         if not rows:
@@ -1851,20 +2115,48 @@ class PlayableTestRuntime:
             if y > self.height - 150:
                 break
             selected = i == screen.index
-            color = (255, 226, 129) if selected else (235, 238, 245) if row.craftable else (130, 135, 150)
-            self.text(("> " if selected else "   ") + f"{row.name}  ->  {row.outputs}", 90, y, size=22, color=color)
+            color = (
+                (255, 226, 129)
+                if selected
+                else (235, 238, 245)
+                if row.craftable
+                else (130, 135, 150)
+            )
+            self.text(
+                ("> " if selected else "   ") + f"{row.name}  ->  {row.outputs}",
+                90,
+                y,
+                size=22,
+                color=color,
+            )
             y += 26
             materials = "   ".join(f"{name} {have}/{need}" for name, need, have in row.materials)
-            self.text(materials, 120, y, size=17, color=(170, 210, 240) if row.craftable else (200, 130, 130))
+            self.text(
+                materials,
+                120,
+                y,
+                size=17,
+                color=(170, 210, 240) if row.craftable else (200, 130, 130),
+            )
             y += 30
         hidden = screen.undiscovered()
         if hidden:
             self.text(
-                f"??? {hidden} recipe(s) not yet discovered", 90, self.height - 128, size=18, color=(150, 155, 175)
+                f"??? {hidden} recipe(s) not yet discovered",
+                90,
+                self.height - 128,
+                size=18,
+                color=(150, 155, 175),
             )
         if screen.message:
             self.text(screen.message, 90, self.height - 100, size=20, color=(255, 220, 124))
-        self.text("Up/Down: select   Enter: craft   Esc: back", 90, self.height - 72, size=18, color=(170, 210, 240))
+        self.text(
+            "Up/Down: select   Enter: craft   Esc: back",
+            90,
+            self.height - 72,
+            size=18,
+            color=(170, 210, 240),
+        )
 
     def _draw_list_screen(self, kind):
         self._draw_backdrop()
@@ -1873,7 +2165,12 @@ class PlayableTestRuntime:
             rows = achievement_rows(self.game)
             done = sum(1 for r in rows if r[2])
             self.text(
-                f"Achievements  {done}/{len(rows)}", self.width / 2, 56, size=30, color=(255, 220, 124), center=True
+                f"Achievements  {done}/{len(rows)}",
+                self.width / 2,
+                56,
+                size=30,
+                color=(255, 220, 124),
+                center=True,
             )
             lines = [
                 (
@@ -1887,7 +2184,12 @@ class PlayableTestRuntime:
             rows = bestiary_rows(self.game)
             seen = sum(1 for r in rows if r[1])
             self.text(
-                f"Bestiary  {seen}/{len(rows)} seen", self.width / 2, 56, size=30, color=(255, 220, 124), center=True
+                f"Bestiary  {seen}/{len(rows)} seen",
+                self.width / 2,
+                56,
+                size=30,
+                color=(255, 220, 124),
+                center=True,
             )
             lines = [
                 (
@@ -1895,7 +2197,8 @@ class PlayableTestRuntime:
                     (
                         ""
                         if not s
-                        else f"seen {s}   defeated {d}   captured {c}" + (f"   {', '.join(tags)}" if tags else "")
+                        else f"seen {s}   defeated {d}   captured {c}"
+                        + (f"   {', '.join(tags)}" if tags else "")
                     ),
                     (235, 238, 245) if s else (150, 155, 175),
                 )
@@ -1915,7 +2218,11 @@ class PlayableTestRuntime:
                 y += 24
             y += 6
         self.text(
-            "Up/Down: scroll   Enter / Esc: back", self.width - 360, self.height - 72, size=18, color=(170, 210, 240)
+            "Up/Down: scroll   Enter / Esc: back",
+            self.width - 360,
+            self.height - 72,
+            size=18,
+            color=(170, 210, 240),
         )
 
     def _draw_settings(self):
@@ -1927,10 +2234,22 @@ class PlayableTestRuntime:
         for i, (key, label) in enumerate(cursor.options):
             selected = i == cursor.index
             color = (255, 226, 129) if selected else (235, 238, 245)
-            self.text(("> " if selected else "   ") + label, x + 40, y + 76 + i * 38, size=24, color=color)
+            self.text(
+                ("> " if selected else "   ") + label,
+                x + 40,
+                y + 76 + i * 38,
+                size=24,
+                color=color,
+            )
             value = self.settings.value_text(key)
             if value:
-                self.text(f"< {value} >" if selected else value, x + 300, y + 76 + i * 38, size=24, color=color)
+                self.text(
+                    f"< {value} >" if selected else value,
+                    x + 300,
+                    y + 76 + i * 38,
+                    size=24,
+                    color=color,
+                )
         self.text(
             "Left/Right: change   Esc: save and back",
             self.width / 2,
@@ -1965,7 +2284,14 @@ class PlayableTestRuntime:
                 color=(255, 226, 129) if selected else (235, 238, 245),
             )
         if self.message and self.pg.time.get_ticks() < self.message_until:
-            self.text(self.message, self.width / 2, y + height + 14, size=20, color=(175, 235, 255), center=True)
+            self.text(
+                self.message,
+                self.width / 2,
+                y + height + 14,
+                size=20,
+                color=(175, 235, 255),
+                center=True,
+            )
 
     def _draw_quests(self):
         self._draw_backdrop()
@@ -1975,7 +2301,11 @@ class PlayableTestRuntime:
         if not rows:
             self.text("No quests yet.", 90, 110, size=22, color=(170, 210, 240))
         y = 104
-        colors = {"active": (235, 238, 245), "completed": (130, 220, 150), "failed": (230, 120, 120)}
+        colors = {
+            "active": (235, 238, 245),
+            "completed": (130, 220, 150),
+            "failed": (230, 120, 120),
+        }
         for row in rows:
             if y > self.height - 110:
                 break
@@ -1991,7 +2321,9 @@ class PlayableTestRuntime:
                 )
                 y += 24
             y += 8
-        self.text("Enter / Esc: back", self.width - 260, self.height - 72, size=18, color=(170, 210, 240))
+        self.text(
+            "Enter / Esc: back", self.width - 260, self.height - 72, size=18, color=(170, 210, 240)
+        )
 
     def _draw_shop(self):
         screen = self._shop_screen
@@ -2021,7 +2353,13 @@ class PlayableTestRuntime:
             y = 134 + i * 30
             if y > self.height - 130:
                 break
-            color = (255, 226, 129) if i == screen.index else (235, 238, 245) if row.available else (120, 125, 140)
+            color = (
+                (255, 226, 129)
+                if i == screen.index
+                else (235, 238, 245)
+                if row.available
+                else (120, 125, 140)
+            )
             self.text("> " if i == screen.index else "", 72, y, size=22, color=color)
             self._draw_icon(icons[i], 90, y - 2)
             self.text(row.name, name_x, y, size=22, color=color)
@@ -2030,7 +2368,9 @@ class PlayableTestRuntime:
             self.text(str(row.owned), 740, y, size=22, color=color)
         self.text(screen.wallet(), 90, self.height - 100, size=20, color=(175, 235, 255))
         if screen.message:
-            self.text(screen.message, self.width / 2, self.height - 100, size=20, color=(255, 220, 124))
+            self.text(
+                screen.message, self.width / 2, self.height - 100, size=20, color=(255, 220, 124)
+            )
         self.text(
             "Up/Down: select   Left/Right: buy/sell   Enter: confirm   Esc: leave",
             90,
@@ -2079,7 +2419,9 @@ class PlayableTestRuntime:
             name = member_id.split(":", 1)[0].replace("_", " ").title()
             need = f"  (uses {item_id}: {inventory.count(item_id)})" if item_id else ""
             self.text(f"{i}. {name}  {chance * 100:.0f}%{need}", 320, 236 + (i - 1) * 30, size=20)
-        self.text("Esc: cancel", 480, 190 + height - 24, size=16, color=(170, 210, 240), center=True)
+        self.text(
+            "Esc: cancel", 480, 190 + height - 24, size=16, color=(170, 210, 240), center=True
+        )
 
     def save_playtest(self):
         self.game.sync_world_state()
@@ -2162,7 +2504,11 @@ class PlayableTestRuntime:
                     self._ui_mode = "field"
                 elif self._ui_mode == "title":
                     self.running = False
-            elif event.type == self.pg.KEYDOWN and event.key == self.pg.K_F5 and self._ui_mode != "title":
+            elif (
+                event.type == self.pg.KEYDOWN
+                and event.key == self.pg.K_F5
+                and self._ui_mode != "title"
+            ):
                 self.save_playtest()
 
         if self._ui_mode == "title":
@@ -2212,7 +2558,10 @@ class PlayableTestRuntime:
             if self.game.mode == "battle":
                 with self.profiler.section("events"):
                     self.game.update_events(dt)  # battle events (EVT-03)
-            if not (self._dialogue_input(events) or (self.game.mode == "battle" and self.game.event_busy)):
+            if not (
+                self._dialogue_input(events)
+                or (self.game.mode == "battle" and self.game.event_busy)
+            ):
                 self._battle_input(events)
             self._present_battle(dt)
             self._draw_dialogue()
@@ -2227,7 +2576,11 @@ class PlayableTestRuntime:
             if self._ui_mode == "field" and self.game.open_shop_id and not self.game.event_busy:
                 self._shop_screen = ShopScreen(self.game)
                 self._ui_mode = "shop"
-            if self._ui_mode == "field" and self.game.open_crafting_station is not None and not self.game.event_busy:
+            if (
+                self._ui_mode == "field"
+                and self.game.open_crafting_station is not None
+                and not self.game.event_busy
+            ):
                 self._open_crafting(self.game.open_crafting_station, back="field")
             if self.game.mode == "field" and self._ui_mode == "field":
                 with self.profiler.section("update"):
@@ -2240,10 +2593,16 @@ class PlayableTestRuntime:
                         self._ui_mode = "game_over"
             pt = self.game.player.get(Transform)
             last = getattr(self, "_last_player_xy", None)
-            velocity = ((pt.x - last[0]) / dt, (pt.y - last[1]) / dt) if last is not None and dt > 0 else None
+            velocity = (
+                ((pt.x - last[0]) / dt, (pt.y - last[1]) / dt)
+                if last is not None and dt > 0
+                else None
+            )
             self._last_player_xy = (pt.x, pt.y)
             self.field_camera.update(dt, (pt.x, pt.y), velocity)
-            self.field_effects.sync_emitters(self.game.scene, self.game.project.assets)  # VFX-01 emitters
+            self.field_effects.sync_emitters(
+                self.game.scene, self.game.project.assets
+            )  # VFX-01 emitters
             self.field_effects.update(dt)
             if self.game.mode == "battle":
                 self._turn_actor = None
@@ -2279,9 +2638,12 @@ def run_playable_test_runtime(
             runtime_save = GameRuntimeSave.load_json(save_path, project)
         else:
             raise ValueError(
-                "playable test content requires Project Game Start runtime state or an explicit Player Save"
+                "playable test content requires Project Game Start runtime state or an explicit "
+                "Player Save"
             )
-    runtime = PlayableTestRuntime(project, runtime_save, resource_root, width=width, height=height, backend=backend)
+    runtime = PlayableTestRuntime(
+        project, runtime_save, resource_root, width=width, height=height, backend=backend
+    )
     if battle_presentation:
         runtime.manifest.setdefault("battle", {})["presentation"] = {
             **runtime.manifest.get("battle", {}).get("presentation", {}),

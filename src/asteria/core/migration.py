@@ -34,7 +34,9 @@ def component_migration(type_name, *, from_version):
 def migrate_component_fields(type_name, fields, from_version, to_version):
     """Return ``fields`` upgraded from ``from_version`` to ``to_version``."""
     if from_version > to_version:
-        raise MigrationError(f"{type_name} v{from_version} is newer than this engine (v{to_version})")
+        raise MigrationError(
+            f"{type_name} v{from_version} is newer than this engine (v{to_version})"
+        )
     fields = dict(fields)
     for version in range(int(from_version), int(to_version)):
         step = _STEPS.get((type_name, version))

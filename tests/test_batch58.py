@@ -25,7 +25,9 @@ def P(n=3):
 def test_success_no_dispose():
     log = []
     r = RuntimeBindingRegistry()
-    r.register("*", lambda x, c: staged(x.binding.object_id, lambda: log.append(x.binding.object_id)))
+    r.register(
+        "*", lambda x, c: staged(x.binding.object_id, lambda: log.append(x.binding.object_id))
+    )
     t = RecordingRuntimeScene()
     q = ResourceAwareMaterializer(r, t).materialize(P())
     assert q.ok and len(t.objects) == 3 and log == []
@@ -50,7 +52,10 @@ def test_failure_disposes_previous_reverse():
 def test_commit_failure_disposes_all_reverse():
     log = []
     r = RuntimeBindingRegistry()
-    r.register("*", lambda x, c: staged(x.binding.object_id, lambda oid=x.binding.object_id: log.append(oid)))
+    r.register(
+        "*",
+        lambda x, c: staged(x.binding.object_id, lambda oid=x.binding.object_id: log.append(oid)),
+    )
     t = RecordingRuntimeScene(True)
     q = ResourceAwareMaterializer(r, t).materialize(P())
     assert not q.ok and log == ["o2", "o1", "o0"]

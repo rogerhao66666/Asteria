@@ -29,15 +29,23 @@ class FieldGameFlowSection:
 @dataclass(frozen=True, slots=True)
 class FieldGameFlowInformationArchitecture:
     sections: tuple[FieldGameFlowSection, ...] = (
-        FieldGameFlowSection("scene", "Scene Flow", ("Scene", "Startup / Entry", "Lifecycle", "Transitions")),
         FieldGameFlowSection(
-            "interaction", "Interactions", ("Entity", "Interaction Range", "Facing", "Binding", "Conditions")
+            "scene", "Scene Flow", ("Scene", "Startup / Entry", "Lifecycle", "Transitions")
         ),
         FieldGameFlowSection(
-            "events", "Event Programs", ("Program", "Commands", "Selected Command", "Branches / Conditions")
+            "interaction",
+            "Interactions",
+            ("Entity", "Interaction Range", "Facing", "Binding", "Conditions"),
         ),
         FieldGameFlowSection(
-            "encounter", "Encounter Flow", ("Trigger", "Encounter Command", "Battle Transition", "Return Flow")
+            "events",
+            "Event Programs",
+            ("Program", "Commands", "Selected Command", "Branches / Conditions"),
+        ),
+        FieldGameFlowSection(
+            "encounter",
+            "Encounter Flow",
+            ("Trigger", "Encounter Command", "Battle Transition", "Return Flow"),
         ),
     )
     primary_navigation: str = "game_flow_section_sidebar"
@@ -79,14 +87,18 @@ class FieldGameFlowAuthoringController:
             raise TypeError("program must be EventProgram")
         if self.project.event_programs.get(program_id) is not None:
             raise FieldGameFlowAuthoringError(f"duplicate event program: {program_id}")
-        self.document.execute(AddEventProgramCommand(self.project.event_programs, str(program_id), program))
+        self.document.execute(
+            AddEventProgramCommand(self.project.event_programs, str(program_id), program)
+        )
         return program
 
     def edit_program(self, program_id, program):
         old = self.project.event_programs.get(str(program_id))
         if old is None:
             raise FieldGameFlowAuthoringError(f"unknown event program: {program_id}")
-        self.document.execute(ReplaceEventProgramCommand(self.project.event_programs, str(program_id), program, old))
+        self.document.execute(
+            ReplaceEventProgramCommand(self.project.event_programs, str(program_id), program, old)
+        )
         return program
 
     def create_binding(self, scene_id, binding):
@@ -117,7 +129,14 @@ class FieldGameFlowAuthoringController:
         return binding
 
     def configure_interaction(
-        self, scene_id, entity_id, *, binding_id, range=24.0, require_facing=True, local_scope_id=""
+        self,
+        scene_id,
+        entity_id,
+        *,
+        binding_id,
+        range=24.0,
+        require_facing=True,
+        local_scope_id="",
     ):
         scene = self.scene(scene_id)
         entity = self.entity(scene_id, entity_id)
@@ -152,7 +171,13 @@ class FieldGameFlowAuthoringController:
             return None
         binding = bindings_for_scene(self.project, scene).bindings.get(component.event_binding_id)
         program = self.project.event_programs.get(component.event_program_id)
-        return {"scene": scene, "entity": entity, "interaction": component, "binding": binding, "program": program}
+        return {
+            "scene": scene,
+            "entity": entity,
+            "interaction": component,
+            "binding": binding,
+            "program": program,
+        }
 
     def validate(self):
         issues = []
@@ -173,6 +198,9 @@ class FieldGameFlowAuthoringController:
                     continue
                 if comp.event_binding_id and comp.event_binding_id not in bindings.bindings:
                     issues.append(f"{scene.name}/{entity.name}: interaction binding missing")
-                if comp.event_program_id and self.project.event_programs.get(comp.event_program_id) is None:
+                if (
+                    comp.event_program_id
+                    and self.project.event_programs.get(comp.event_program_id) is None
+                ):
                     issues.append(f"{scene.name}/{entity.name}: interaction program missing")
         return tuple(issues)

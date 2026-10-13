@@ -18,7 +18,9 @@ from asteria.rpg.interactions import (
 
 
 def _coordinator():
-    return BattlePresentationCoordinator(BattlePresentationScene("feedback", "battle.bg.reference", ()))
+    return BattlePresentationCoordinator(
+        BattlePresentationScene("feedback", "battle.bg.reference", ())
+    )
 
 
 def _profile():
@@ -105,7 +107,11 @@ def test_gauge_threshold_feedback_consumes_resolved_threshold_only():
         "hit",
         ("impact.poise",),
         (),
-        (GaugeThresholdResult("guard_break", "mimic", "poise", 12, 0, True, -2.0, 0, "battle.break"),),
+        (
+            GaugeThresholdResult(
+                "guard_break", "mimic", "poise", 12, 0, True, -2.0, 0, "battle.break"
+            ),
+        ),
     )
     before = deepcopy(result)
     events = coordinator.push_gauge_result(result)
@@ -141,10 +147,18 @@ def test_vfx_and_audio_timeline_cues_are_backend_neutral_queues():
         (
             PresentationCue(
                 "slash",
-                ActionCue("slash_vfx", 0.1, "vfx", {"member_id": "mimic", "asset_id": "vfx.slash", "duration": 0.25}),
+                ActionCue(
+                    "slash_vfx",
+                    0.1,
+                    "vfx",
+                    {"member_id": "mimic", "asset_id": "vfx.slash", "duration": 0.25},
+                ),
             ),
             PresentationCue(
-                "slash", ActionCue("slash_sfx", 0.1, "audio", {"member_id": "mimic", "asset_id": "sfx.slash"})
+                "slash",
+                ActionCue(
+                    "slash_sfx", 0.1, "audio", {"member_id": "mimic", "asset_id": "sfx.slash"}
+                ),
             ),
         )
     )
@@ -160,7 +174,11 @@ def test_feedback_lifetime_ordering_and_snapshot_restore_are_deterministic():
     runtime = BattleFeedbackRuntime(_profile())
     coordinator.push_resolved_value(_value(10, tags=("outcome.weak",)), target_id="mimic")
     coordinator.consume_timeline_cues(
-        (PresentationCue("fx", ActionCue("spark", 0.0, "vfx", {"target_id": "mimic", "duration": 0.75})),)
+        (
+            PresentationCue(
+                "fx", ActionCue("spark", 0.0, "vfx", {"target_id": "mimic", "duration": 0.75})
+            ),
+        )
     )
     runtime.apply_events(coordinator.drain())
     runtime.update(0.25)

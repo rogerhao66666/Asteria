@@ -6,7 +6,17 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parents[1] / "src" / "asteria"
 
 # Format-specific (RPG Maker MV) knowledge must end at the asset adapter boundary.
-CORE_LAYERS = ("core", "gameplay", "rpg", "events", "graphics", "render", "runtime", "presentation", "platform")
+CORE_LAYERS = (
+    "core",
+    "gameplay",
+    "rpg",
+    "events",
+    "graphics",
+    "render",
+    "runtime",
+    "presentation",
+    "platform",
+)
 MV_PATTERN = re.compile(r"rpg_maker|RPGMaker|mv_weapon|mv-weapon|MVGenerator")
 
 # Runtime layers must stay importable without the Editor or Qt.
@@ -43,13 +53,22 @@ def test_runtime_layers_do_not_import_the_editor_or_qt():
     assert offenders == []
 
 
-# Everything but the asset adapters and the editor (which hosts the MV import tools) is MV-free text.
+# Everything but the asset adapters and the editor (which hosts the MV import tools) is MV-free
+# text.
 NON_ADAPTER_LAYERS = ("authoring", "validation")
-TOP_LEVEL = ("project.py", "project_tools.py", "reference_data.py", "reference_ids.py", "reference_world.py")
+TOP_LEVEL = (
+    "project.py",
+    "project_tools.py",
+    "reference_data.py",
+    "reference_ids.py",
+    "reference_world.py",
+)
 
 
 def test_authoring_validation_and_top_level_modules_are_mv_free():
-    paths = [p for layer in NON_ADAPTER_LAYERS for p in _sources(layer)] + [SRC / name for name in TOP_LEVEL]
+    paths = [p for layer in NON_ADAPTER_LAYERS for p in _sources(layer)] + [
+        SRC / name for name in TOP_LEVEL
+    ]
     offenders = [
         f"{path.relative_to(SRC)}:{number}"
         for path in paths
@@ -60,7 +79,8 @@ def test_authoring_validation_and_top_level_modules_are_mv_free():
 
 
 def test_playing_the_game_never_loads_mv_adapter_code(tmp_path):
-    """AST-13 at import level: field, battle (canonical presentation) and save run with no MV module loaded."""
+    """AST-13 at import level: field, battle (canonical presentation) and save run with no MV
+    module loaded."""
     import os
     import subprocess
     import sys
@@ -93,12 +113,18 @@ for _ in range(60):
 runtime.game.sync_world_state()
 runtime.game.save.save_json(Path({str(tmp_path)!r}) / "s.json")
 runtime.close()
-loaded = sorted(m for m in sys.modules if "rpg_maker" in m or "character_bundle" in m or "mv_" in m)
+names = ("rpg_maker", "character_bundle", "mv_")
+loaded = sorted(m for m in sys.modules if any(n in m for n in names))
 print("LOADED", loaded)
 """
     env = dict(os.environ, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy")
     result = subprocess.run(
-        [sys.executable, "-c", script], cwd=tmp_path, env=env, capture_output=True, text=True, timeout=180
+        [sys.executable, "-c", script],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=180,
     )
     assert result.returncode == 0, result.stderr[-2000:]
     assert "LOADED []" in result.stdout, result.stdout[-500:]

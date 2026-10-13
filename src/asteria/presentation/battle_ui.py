@@ -59,7 +59,13 @@ class BattleUiLayoutProfile:
             raise ValueError("stage_top must be in [0, 1)")
         if not 0.0 <= float(self.stage_front) <= 0.5:
             raise ValueError("stage_front must be in [0, 0.5]")
-        for name in ("margin", "hud_panel_width", "hud_row_height", "result_panel_width", "result_panel_height"):
+        for name in (
+            "margin",
+            "hud_panel_width",
+            "hud_row_height",
+            "result_panel_width",
+            "result_panel_height",
+        ):
             if _finite(getattr(self, name), name) < 0:
                 raise ValueError(f"{name} must be >= 0")
 
@@ -144,7 +150,9 @@ class BattleUiComposer:
     MIN_MENU_WIDTH = 96.0
     TIMELINE_CHAR_WIDTH = 5.0
 
-    def __init__(self, scene: BattlePresentationScene, layout=None, party_layout=None, polish=None):
+    def __init__(
+        self, scene: BattlePresentationScene, layout=None, party_layout=None, polish=None
+    ):
         if not isinstance(scene, BattlePresentationScene):
             raise TypeError("scene must be BattlePresentationScene")
         self.scene = scene
@@ -185,7 +193,9 @@ class BattleUiComposer:
             return None
         return camera.world_to_screen(visual.anchor.x, visual.anchor.y)
 
-    def _hud_commands(self, members, side_by_member, placement_by_member=None, focus_member_id=None):
+    def _hud_commands(
+        self, members, side_by_member, placement_by_member=None, focus_member_id=None
+    ):
         panels, texts, gauges, icons = [], [], [], []
         L = self.layout
 
@@ -203,7 +213,9 @@ class BattleUiComposer:
             side = legacy.get(member.member_id, "")
             if side and side not in side_order:
                 side_order.append(side)
-        fallback_zone = {side: ("left" if index % 2 == 0 else "right") for index, side in enumerate(side_order)}
+        fallback_zone = {
+            side: ("left" if index % 2 == 0 else "right") for index, side in enumerate(side_order)
+        }
 
         zone_by_member = {}
         for member in members:
@@ -262,7 +274,9 @@ class BattleUiComposer:
                     member.gauges,
                     key=lambda g: (-int(getattr(g, "priority", 0)), g.order, g.resource_id),
                 )
-                selected = ordered_gauges if resource_limit is None else ordered_gauges[:resource_limit]
+                selected = (
+                    ordered_gauges if resource_limit is None else ordered_gauges[:resource_limit]
+                )
                 selected_ids = {g.resource_id for g in selected}
                 selected = [g for g in member.gauges if g.resource_id in selected_ids]
 
@@ -289,11 +303,24 @@ class BattleUiComposer:
                 name_role = f"member_name:{density}:focus" if focused else f"member_name:{density}"
                 panels.append(
                     BattleUiPanel(
-                        f"hud:{member.member_id}", x, panel_y, L.hud_panel_width, height, panel_role, member.member_id
+                        f"hud:{member.member_id}",
+                        x,
+                        panel_y,
+                        L.hud_panel_width,
+                        height,
+                        panel_role,
+                        member.member_id,
                     )
                 )
                 texts.append(
-                    BattleUiText(self._name(member.member_id), x + 4, panel_y + 3, name_role, "left", member.member_id)
+                    BattleUiText(
+                        self._name(member.member_id),
+                        x + 4,
+                        panel_y + 3,
+                        name_role,
+                        "left",
+                        member.member_id,
+                    )
                 )
 
                 gy = panel_y + (13 if density != "minimal" else 9)
@@ -336,7 +363,14 @@ class BattleUiComposer:
 
                     if gauge.show_label and density == "expanded":
                         texts.append(
-                            BattleUiText(self._fit(gauge.label, 5), x + 4, gy, "gauge_label", "left", member.member_id)
+                            BattleUiText(
+                                self._fit(gauge.label, 5),
+                                x + 4,
+                                gy,
+                                "gauge_label",
+                                "left",
+                                member.member_id,
+                            )
                         )
 
                     if mode in {"number", "contextual"}:
@@ -353,7 +387,11 @@ class BattleUiComposer:
                             )
                     else:
                         label_space = 30 if (gauge.show_label and density == "expanded") else 4
-                        value_space = 26 if (gauge.show_value and not gauge.compact and density == "expanded") else 8
+                        value_space = (
+                            26
+                            if (gauge.show_value and not gauge.compact and density == "expanded")
+                            else 8
+                        )
                         bar_x = x + label_space
                         bar_w = max(8.0, L.hud_panel_width - label_space - value_space)
                         gauges.append(
@@ -392,7 +430,14 @@ class BattleUiComposer:
                     for status in selected_statuses:
                         if status.icon_asset_id:
                             icons.append(
-                                BattleUiIcon(status.icon_asset_id, ix, iy, "status", member.member_id, status.label)
+                                BattleUiIcon(
+                                    status.icon_asset_id,
+                                    ix,
+                                    iy,
+                                    "status",
+                                    member.member_id,
+                                    status.label,
+                                )
                             )
                             ix += 10
 
@@ -420,8 +465,12 @@ class BattleUiComposer:
 
     @staticmethod
     def _ranked_gauges(member, limit):
-        ordered = sorted(member.gauges, key=lambda g: (-int(getattr(g, "priority", 0)), g.order, g.resource_id))
-        return [g for g in ordered if str(g.presentation) not in {"number", "contextual", "hidden"}][:limit]
+        ordered = sorted(
+            member.gauges, key=lambda g: (-int(getattr(g, "priority", 0)), g.order, g.resource_id)
+        )
+        return [
+            g for g in ordered if str(g.presentation) not in {"number", "contextual", "hidden"}
+        ][:limit]
 
     def _bar(self, member_id, gauge, x, y, width, height):
         return BattleUiGaugeBar(
@@ -463,7 +512,9 @@ class BattleUiComposer:
                 )
             )
             if ranked:
-                gauges.append(self._bar(member.member_id, ranked[0], ax - width / 2, top - 5, width, 3.0))
+                gauges.append(
+                    self._bar(member.member_id, ranked[0], ax - width / 2, top - 5, width, 3.0)
+                )
         return panels, texts, gauges
 
     def _bottom_row_commands(self, members, focus_member_id):
@@ -504,7 +555,9 @@ class BattleUiComposer:
                 )
             )
             for row, gauge in enumerate(self._ranked_gauges(member, 2)):
-                gauges.append(self._bar(member.member_id, gauge, x + 3, y + 12 + row * 6, width - 6, 3.0))
+                gauges.append(
+                    self._bar(member.member_id, gauge, x + 3, y + 12 + row * 6, width - 6, 3.0)
+                )
         return panels, texts, gauges
 
     def _action_menu_commands(self, menu):
@@ -516,7 +569,13 @@ class BattleUiComposer:
         L, P = self.layout, self.polish
         width = min(P.interaction_width, L.virtual_width - 2 * L.margin)
         # as wide as the longest row (name + cost) needs, so costs never run into names
-        chars = max((len(e.label) + 2 + (len(e.cost_text) + 2 if e.cost_text else 0) for e in menu.entries), default=0)
+        chars = max(
+            (
+                len(e.label) + 2 + (len(e.cost_text) + 2 if e.cost_text else 0)
+                for e in menu.entries
+            ),
+            default=0,
+        )
         wanted = min(width, max(88.0, min(150.0, chars * 3.8 + 2 * P.interaction_padding)))
         # Keep the menu between left/right HUD columns when there is room for it.
         hud_gap = L.virtual_width - 2 * (L.margin + L.hud_panel_width) - 2 * L.margin
@@ -536,7 +595,11 @@ class BattleUiComposer:
             L.virtual_height - L.margin - P.interaction_bottom_gap - height,
         )
         anchor = None
-        if L.action_menu_placement == "actor" and self._focus is not None and self._camera is not None:
+        if (
+            L.action_menu_placement == "actor"
+            and self._focus is not None
+            and self._camera is not None
+        ):
             anchor = self._anchor_screen(self._camera, self._focus)
         if anchor is not None:
             # Beside the acting member's group, on the side facing the stage
@@ -565,30 +628,54 @@ class BattleUiComposer:
                 width = min(width, room)
             x = edge - 6 - width if right_side else edge + 6
             x = max(L.margin, min(L.virtual_width - L.margin - width, x))
-            limit = L.virtual_height - L.margin - (28.0 if L.party_hud == "bottom_row" else 0.0) - height
+            limit = (
+                L.virtual_height
+                - L.margin
+                - (28.0 if L.party_hud == "bottom_row" else 0.0)
+                - height
+            )
             y = max(L.timeline_y + 28.0, min(limit, ay - body / 2 - height / 2))
         panels.append(BattleUiPanel("action_menu", x, y, width, height, "interaction:action_menu"))
 
         ty = y + P.interaction_padding
         if menu.categories:
             category_text = "  ".join(
-                f"[{value}]" if value == menu.active_category else value for value in menu.categories
+                f"[{value}]" if value == menu.active_category else value
+                for value in menu.categories
             )
-            texts.append(BattleUiText(category_text, x + P.interaction_padding, ty, "action_categories", "left"))
+            texts.append(
+                BattleUiText(
+                    category_text, x + P.interaction_padding, ty, "action_categories", "left"
+                )
+            )
             ty += P.interaction_header_height
 
         if menu.query:
-            texts.append(BattleUiText(f"Filter: {menu.query}", x + P.interaction_padding, ty, "action_filter", "left"))
+            texts.append(
+                BattleUiText(
+                    f"Filter: {menu.query}", x + P.interaction_padding, ty, "action_filter", "left"
+                )
+            )
             ty += P.interaction_header_height
 
         if not menu.entries:
-            texts.append(BattleUiText(P.empty_label, x + width / 2, ty + 3, "action_empty", "center"))
+            texts.append(
+                BattleUiText(P.empty_label, x + width / 2, ty + 3, "action_empty", "center")
+            )
         else:
             for index, entry in enumerate(menu.entries):
                 selected = index == menu.cursor
-                role = "action_selected" if selected else ("action_entry" if entry.enabled else "action_disabled")
+                role = (
+                    "action_selected"
+                    if selected
+                    else ("action_entry" if entry.enabled else "action_disabled")
+                )
                 prefix = P.selected_prefix if selected else P.idle_prefix
-                texts.append(BattleUiText(prefix + entry.label, x + P.interaction_padding + 2, ty, role, "left"))
+                texts.append(
+                    BattleUiText(
+                        prefix + entry.label, x + P.interaction_padding + 2, ty, role, "left"
+                    )
+                )
                 if entry.cost_text:
                     texts.append(
                         BattleUiText(
@@ -600,7 +687,9 @@ class BattleUiComposer:
                         )
                     )
                 if entry.icon_asset_id:
-                    icons.append(BattleUiIcon(entry.icon_asset_id, x + 1, ty, "action", "", entry.label))
+                    icons.append(
+                        BattleUiIcon(entry.icon_asset_id, x + 1, ty, "action", "", entry.label)
+                    )
                 ty += P.interaction_row_height
 
             selected = menu.selected
@@ -653,9 +742,17 @@ class BattleUiComposer:
             L.timeline_y + 28.0,
             L.virtual_height - L.margin - P.interaction_bottom_gap - height,
         )
-        panels.append(BattleUiPanel("action_workflow", x, y, width, height, "interaction:workflow"))
+        panels.append(
+            BattleUiPanel("action_workflow", x, y, width, height, "interaction:workflow")
+        )
         texts.append(
-            BattleUiText(workflow.label, x + P.interaction_padding, y + P.interaction_padding, "workflow_title", "left")
+            BattleUiText(
+                workflow.label,
+                x + P.interaction_padding,
+                y + P.interaction_padding,
+                "workflow_title",
+                "left",
+            )
         )
 
         if workflow.complete:
@@ -694,9 +791,15 @@ class BattleUiComposer:
                 role = "workflow_option_selected"
             else:
                 role = "workflow_option" if option.enabled else "workflow_option_disabled"
-            texts.append(BattleUiText(mark + option.label, x + P.interaction_padding + 3, oy, role, "left"))
+            texts.append(
+                BattleUiText(mark + option.label, x + P.interaction_padding + 3, oy, role, "left")
+            )
             if option.icon_asset_id:
-                icons.append(BattleUiIcon(option.icon_asset_id, x + 1, oy, "workflow_option", "", option.label))
+                icons.append(
+                    BattleUiIcon(
+                        option.icon_asset_id, x + 1, oy, "workflow_option", "", option.label
+                    )
+                )
             oy += P.interaction_row_height
         return panels, texts, icons
 
@@ -709,7 +812,11 @@ class BattleUiComposer:
         capacity = max(1, int((L.virtual_width - 2 * L.margin - 2 * padding) // slot))
         turns = tuple(timeline.turns)[:capacity]
         width = 2 * padding + slot * len(turns)
-        panels.append(BattleUiPanel("timeline", (L.virtual_width - width) / 2, L.timeline_y, width, 20.0, "timeline"))
+        panels.append(
+            BattleUiPanel(
+                "timeline", (L.virtual_width - width) / 2, L.timeline_y, width, 20.0, "timeline"
+            )
+        )
         x = (L.virtual_width - width) / 2 + padding + slot / 2
         max_chars = max(3, int(slot // self.TIMELINE_CHAR_WIDTH))
         for entry in turns:
@@ -727,7 +834,12 @@ class BattleUiComposer:
             if timeline.scheduler_mode == "continuous":
                 texts.append(
                     BattleUiText(
-                        f"{entry.ready_time:.1f}", x, L.timeline_y + 13, "timeline_time", "center", entry.member_id
+                        f"{entry.ready_time:.1f}",
+                        x,
+                        L.timeline_y + 13,
+                        "timeline_time",
+                        "center",
+                        entry.member_id,
                     )
                 )
             x += slot
@@ -757,7 +869,12 @@ class BattleUiComposer:
             sign = "+" if value.kind == BattleValueKind.HEAL and value.value >= 0 else ""
             texts.append(
                 BattleUiText(
-                    f"{sign}{value.value:g}", x, y - lift, f"value:{value.kind.value}", "center", value.target_id
+                    f"{sign}{value.value:g}",
+                    x,
+                    y - lift,
+                    f"value:{value.kind.value}",
+                    "center",
+                    value.target_id,
                 )
             )
         per_target = {}
@@ -769,7 +886,12 @@ class BattleUiComposer:
             per_target[label.target_id] = offset + 1
             texts.append(
                 BattleUiText(
-                    label.label, pos[0], pos[1] - 24.0 - offset * 8.0, "feedback_label", "center", label.target_id
+                    label.label,
+                    pos[0],
+                    pos[1] - 24.0 - offset * 8.0,
+                    "feedback_label",
+                    "center",
+                    label.target_id,
                 )
             )
         return texts
@@ -781,17 +903,33 @@ class BattleUiComposer:
         L = self.layout
         x = (L.virtual_width - L.result_panel_width) / 2
         y = (L.virtual_height - L.result_panel_height) / 2
-        panels.append(BattleUiPanel("battle_result", x, y, L.result_panel_width, L.result_panel_height, "result"))
-        texts.append(BattleUiText(result.headline, L.virtual_width / 2, y + 12, "result_headline", "center"))
+        panels.append(
+            BattleUiPanel(
+                "battle_result", x, y, L.result_panel_width, L.result_panel_height, "result"
+            )
+        )
+        texts.append(
+            BattleUiText(result.headline, L.virtual_width / 2, y + 12, "result_headline", "center")
+        )
         line_y = y + 28
         for reward in result.currencies:
-            texts.append(BattleUiText(f"{reward.label}  +{reward.amount:g}", x + 12, line_y, "reward", "left"))
+            texts.append(
+                BattleUiText(
+                    f"{reward.label}  +{reward.amount:g}", x + 12, line_y, "reward", "left"
+                )
+            )
             line_y += 9
         for reward in result.items:
-            texts.append(BattleUiText(f"{reward.label}  x{reward.amount}", x + 12, line_y, "reward", "left"))
+            texts.append(
+                BattleUiText(f"{reward.label}  x{reward.amount}", x + 12, line_y, "reward", "left")
+            )
             line_y += 9
         for reward in result.progression:
-            suffix = f"  Rank {reward.old_rank} → {reward.new_rank}" if reward.new_rank != reward.old_rank else ""
+            suffix = (
+                f"  Rank {reward.old_rank} → {reward.new_rank}"
+                if reward.new_rank != reward.old_rank
+                else ""
+            )
             texts.append(
                 BattleUiText(
                     f"{reward.label}  +{reward.new_total - reward.old_total:g}{suffix}",
@@ -864,7 +1002,8 @@ class BattleUiComposer:
         screen_fx = ()
         if camera_feedback is not None:
             markers = tuple(
-                BattleUiMarker(x.member_id, x.screen_x, x.screen_y, x.primary) for x in camera_feedback.targets
+                BattleUiMarker(x.member_id, x.screen_x, x.screen_y, x.primary)
+                for x in camera_feedback.targets
             )
             screen_fx = tuple(camera_feedback.screen_fx)
 

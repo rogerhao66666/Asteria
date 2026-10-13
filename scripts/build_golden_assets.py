@@ -24,7 +24,12 @@ sys.path.insert(0, str(REPO / "src"))
 from asteria.assets.canonical import AssetSource, CanonicalAsset  # noqa: E402
 from asteria.assets.icon import IconVariant, icon_asset  # noqa: E402
 from asteria.assets.monster import MonsterAnimation, MonsterAsset  # noqa: E402
-from asteria.assets.prop import CollisionShape, InteractionPoint, PropVisual, prop_asset  # noqa: E402
+from asteria.assets.prop import (  # noqa: E402
+    CollisionShape,
+    InteractionPoint,
+    PropVisual,
+    prop_asset,
+)
 from asteria.assets.sprite_kinds import (  # noqa: E402
     CharacterAsset,
     NpcAsset,
@@ -75,7 +80,9 @@ def save(image, relative):
 
 
 def hifi(name, frame_size, frames, ms, loop):
-    return HighFidelityClip(name, frame_size, tuple(str(f) for f in frames), (FrameTiming(ms),), loop=loop)
+    return HighFidelityClip(
+        name, frame_size, tuple(str(f) for f in frames), (FrameTiming(ms),), loop=loop
+    )
 
 
 def main():
@@ -83,8 +90,12 @@ def main():
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
 
-    # golden_character — the field player walk sheet (3 x 4 frames of 64 px; rows down/left/right/up).
-    image = save(Image.open(PLAYABLE / "player_field_sheet.png").convert("RGBA"), "golden_character/walk.png")
+    # golden_character — the field player walk sheet (3 x 4 frames of 64 px; rows
+    # down/left/right/up).
+    image = save(
+        Image.open(PLAYABLE / "player_field_sheet.png").convert("RGBA"),
+        "golden_character/walk.png",
+    )
     clips = []
     for row, facing in enumerate(("down", "left", "right", "up")):
         base = row * 3
@@ -121,13 +132,20 @@ def main():
     )
 
     # golden_monster — Ninja Adventure flame monster (idle loop + hit).
-    image = save(Image.open(PLAYABLE / "battle" / "mender_wisp.png").convert("RGBA"), "golden_monster/monster.png")
+    image = save(
+        Image.open(PLAYABLE / "battle" / "mender_wisp.png").convert("RGBA"),
+        "golden_monster/monster.png",
+    )
     write(
         MonsterAsset(
             canonical("golden_monster", "monster", image),
             (
-                MonsterAnimation("idle", hifi("idle", (64, 64), (0, 1, 2, 3), 160, True), ("right",)),
-                MonsterAnimation("hit", hifi("hit", (64, 64), (4, 0, 4, 0), 70, False), ("right",)),
+                MonsterAnimation(
+                    "idle", hifi("idle", (64, 64), (0, 1, 2, 3), 160, True), ("right",)
+                ),
+                MonsterAnimation(
+                    "hit", hifi("hit", (64, 64), (4, 0, 4, 0), 70, False), ("right",)
+                ),
             ),
             "idle",
             (8.0, 8.0, 48.0, 56.0),
@@ -151,7 +169,9 @@ def main():
     for i, color in enumerate(colors):
         x, y = (i % 4) * 16, (i // 4) * 16
         draw.rectangle((x, y, x + 15, y + 15), fill=color + (255,))
-        draw.rectangle((x, y, x + 15, y + 15), outline=tuple(max(0, c - 40) for c in color) + (255,))
+        draw.rectangle(
+            (x, y, x + 15, y + 15), outline=tuple(max(0, c - 40) for c in color) + (255,)
+        )
     tiles_uri = save(sheet, "golden_tileset/tiles.png")
     solid = TileCollision("rect", ((0, 0), (16, 0), (16, 16), (0, 16)))
     write(
@@ -189,7 +209,10 @@ def main():
     icon_uri = save(icon, "golden_icon/icon.png")
     write(
         icon_asset(
-            "golden_icon", icon_uri, (IconVariant("default", icon_uri, size=(64, 64)),), usages=frozenset({"skill"})
+            "golden_icon",
+            icon_uri,
+            (IconVariant("default", icon_uri, size=(64, 64)),),
+            usages=frozenset({"skill"}),
         )
     )
 
@@ -202,7 +225,9 @@ def main():
             canonical("golden_vfx", "vfx", flame_uri),
             (
                 VFXVariant(
-                    "burst", hifi("burst", (fw, flame.height), range(8), 60, False), VFXAnchor("target", (0.0, -24.0))
+                    "burst",
+                    hifi("burst", (fw, flame.height), range(8), 60, False),
+                    VFXAnchor("target", (0.0, -24.0)),
                 ),
             ),
             "burst",
@@ -223,7 +248,10 @@ def main():
         ProjectileAsset(
             canonical("golden_projectile", "projectile", orb_uri),
             SpriteData(
-                orb_uri, (24, 24), (0.5, 0.5), (SpriteClipData("fly", (0, 1, 2, 3), 0.05, True, ((0, ("trail",)),)),)
+                orb_uri,
+                (24, 24),
+                (0.5, 0.5),
+                (SpriteClipData("fly", (0, 1, 2, 3), 0.05, True, ((0, ("trail",)),)),),
             ),
             240.0,
             1.5,
@@ -255,10 +283,16 @@ def main():
     panel = Image.new("RGBA", (48, 144), (0, 0, 0, 0))
     draw = ImageDraw.Draw(panel)
     for i, (fill, border) in enumerate(
-        (((20, 26, 40), (124, 145, 190)), ((30, 38, 58), (200, 180, 110)), ((14, 18, 28), (90, 105, 140)))
+        (
+            ((20, 26, 40), (124, 145, 190)),
+            ((30, 38, 58), (200, 180, 110)),
+            ((14, 18, 28), (90, 105, 140)),
+        )
     ):
         y = i * 48
-        draw.rounded_rectangle((0, y, 47, y + 47), radius=6, fill=fill + (235,), outline=border + (255,), width=2)
+        draw.rounded_rectangle(
+            (0, y, 47, y + 47), radius=6, fill=fill + (235,), outline=border + (255,), width=2
+        )
     panel_uri = save(panel, "golden_ui/panel.png")
     write(
         UiAsset(

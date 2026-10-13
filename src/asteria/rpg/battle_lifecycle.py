@@ -94,7 +94,9 @@ class CombatantLifecycleRuntime:
         if state.summon_generation < 0:
             raise ValueError("summon_generation must be >= 0")
         self._states[member_id] = state
-        emit_hook(self.hooks, "rpg.battle.combatant_registered", source=member_id, data={"state": state})
+        emit_hook(
+            self.hooks, "rpg.battle.combatant_registered", source=member_id, data={"state": state}
+        )
         return state
 
     def state(self, member_id):
@@ -152,7 +154,12 @@ class CombatantLifecycleRuntime:
             defeated=True,
             reason=str(reason),
         )
-        emit_hook(self.hooks, "rpg.battle.combatant_incapacitated", source=state.member_id, data={"state": state})
+        emit_hook(
+            self.hooks,
+            "rpg.battle.combatant_incapacitated",
+            source=state.member_id,
+            data={"state": state},
+        )
         return state
 
     def revive(self, member_id, *, state_id="active", targetable=True, reason=""):
@@ -165,7 +172,12 @@ class CombatantLifecycleRuntime:
             defeated=False,
             reason=str(reason),
         )
-        emit_hook(self.hooks, "rpg.battle.combatant_revived", source=state.member_id, data={"state": state})
+        emit_hook(
+            self.hooks,
+            "rpg.battle.combatant_revived",
+            source=state.member_id,
+            data={"state": state},
+        )
         return state
 
     def remove(self, member_id, *, state_id="removed", reason=""):
@@ -178,17 +190,32 @@ class CombatantLifecycleRuntime:
             defeated=True,
             reason=str(reason),
         )
-        emit_hook(self.hooks, "rpg.battle.combatant_removed", source=state.member_id, data={"state": state})
+        emit_hook(
+            self.hooks,
+            "rpg.battle.combatant_removed",
+            source=state.member_id,
+            data={"state": state},
+        )
         return state
 
     def set_form(self, member_id, form_id, *, reason=""):
         state = self._replace(member_id, form_id=_id(form_id, "form_id"), reason=str(reason))
-        emit_hook(self.hooks, "rpg.battle.combatant_transformed", source=state.member_id, data={"state": state})
+        emit_hook(
+            self.hooks,
+            "rpg.battle.combatant_transformed",
+            source=state.member_id,
+            data={"state": state},
+        )
         return state
 
     def clear_form(self, member_id, *, reason=""):
         state = self._replace(member_id, form_id=None, reason=str(reason))
-        emit_hook(self.hooks, "rpg.battle.combatant_form_reverted", source=state.member_id, data={"state": state})
+        emit_hook(
+            self.hooks,
+            "rpg.battle.combatant_form_reverted",
+            source=state.member_id,
+            data={"state": state},
+        )
         return state
 
     def to_data(self):
@@ -214,7 +241,10 @@ class CombatantLifecycleRuntime:
 
     @classmethod
     def from_data(cls, data, *, hooks=None):
-        if data.get("schema") != "asteria.rpg.combatant_lifecycle_runtime" or data.get("version") != 1:
+        if (
+            data.get("schema") != "asteria.rpg.combatant_lifecycle_runtime"
+            or data.get("version") != 1
+        ):
             raise ValueError("unsupported combatant lifecycle runtime")
         result = cls.__new__(cls)
         result.hooks = hooks
@@ -275,7 +305,12 @@ class BattleObjectiveCondition:
         return self._compare(actual)
 
     def to_data(self):
-        return {"kind": self.kind, "subject_id": self.subject_id, "operator": self.operator, "value": self.value}
+        return {
+            "kind": self.kind,
+            "subject_id": self.subject_id,
+            "operator": self.operator,
+            "value": self.value,
+        }
 
     @classmethod
     def from_data(cls, data):
@@ -313,7 +348,10 @@ class BattleObjectiveDefinition:
     ):
         success_conditions = tuple(success_conditions)
         failure_conditions = tuple(failure_conditions)
-        if any(not isinstance(x, BattleObjectiveCondition) for x in success_conditions + failure_conditions):
+        if any(
+            not isinstance(x, BattleObjectiveCondition)
+            for x in success_conditions + failure_conditions
+        ):
             raise TypeError("objective conditions must be BattleObjectiveCondition values")
         success_mode = str(success_mode).strip().lower()
         failure_mode = str(failure_mode).strip().lower()
@@ -377,12 +415,19 @@ class BattleObjectiveDefinition:
 
     @classmethod
     def from_data(cls, data):
-        if data.get("schema") != "asteria.rpg.battle_objective_definition" or data.get("version") != 1:
+        if (
+            data.get("schema") != "asteria.rpg.battle_objective_definition"
+            or data.get("version") != 1
+        ):
             raise ValueError("unsupported battle objective definition")
         return cls(
             data["objective_id"],
-            success_conditions=[BattleObjectiveCondition.from_data(x) for x in data["success_conditions"]],
-            failure_conditions=[BattleObjectiveCondition.from_data(x) for x in data["failure_conditions"]],
+            success_conditions=[
+                BattleObjectiveCondition.from_data(x) for x in data["success_conditions"]
+            ],
+            failure_conditions=[
+                BattleObjectiveCondition.from_data(x) for x in data["failure_conditions"]
+            ],
             success_mode=data["success_mode"],
             failure_mode=data["failure_mode"],
             winning_sides=data["winning_sides"],
@@ -425,10 +470,14 @@ class BattleEscapeRule:
         object.__setattr__(self, "rule_id", _id(rule_id, "rule_id"))
         object.__setattr__(self, "side", _id(side, "side"))
         object.__setattr__(self, "base_chance", _number(base_chance, "base_chance"))
-        object.__setattr__(self, "source_stat", None if source_stat is None else _id(source_stat, "source_stat"))
+        object.__setattr__(
+            self, "source_stat", None if source_stat is None else _id(source_stat, "source_stat")
+        )
         object.__setattr__(self, "source_scale", _number(source_scale, "source_scale"))
         object.__setattr__(
-            self, "opponent_stat", None if opponent_stat is None else _id(opponent_stat, "opponent_stat")
+            self,
+            "opponent_stat",
+            None if opponent_stat is None else _id(opponent_stat, "opponent_stat"),
         )
         object.__setattr__(self, "opponent_scale", _number(opponent_scale, "opponent_scale"))
         object.__setattr__(self, "minimum_chance", minimum_chance)
@@ -490,16 +539,26 @@ class BattleObjectiveRuntime:
     def set_flag(self, flag_id, value=True):
         flag_id = _id(flag_id, "flag_id")
         self.flags[flag_id] = bool(value)
-        emit_hook(self.hooks, "rpg.battle.objective_flag_changed", source=flag_id, data={"value": bool(value)})
+        emit_hook(
+            self.hooks,
+            "rpg.battle.objective_flag_changed",
+            source=flag_id,
+            data={"value": bool(value)},
+        )
 
     def evaluate(self, battle):
         ordered = sorted(self.definitions.values(), key=lambda x: (-x.priority, x.objective_id))
-        return tuple((definition.objective_id, definition.evaluate(battle, self.flags)) for definition in ordered)
+        return tuple(
+            (definition.objective_id, definition.evaluate(battle, self.flags))
+            for definition in ordered
+        )
 
 
 def resolve_escape_chance(rule, battle):
     source_members = [
-        m for m in battle.parties[rule.side].members if m.member_id in battle.members and battle.is_active(m)
+        m
+        for m in battle.parties[rule.side].members
+        if m.member_id in battle.members and battle.is_active(m)
     ]
     opponents = [
         m
@@ -517,7 +576,9 @@ def resolve_escape_chance(rule, battle):
         )
     if rule.opponent_stat and opponents:
         chance -= (
-            sum(m.subject.stats.get(rule.opponent_stat, 0.0) for m in opponents) / len(opponents) * rule.opponent_scale
+            sum(m.subject.stats.get(rule.opponent_stat, 0.0) for m in opponents)
+            / len(opponents)
+            * rule.opponent_scale
         )
     return max(rule.minimum_chance, min(rule.maximum_chance, chance))
 

@@ -1,4 +1,5 @@
-"""Behavior tree editor (RPG-09): tree list, node hierarchy, node kind and parameters, add / remove / move."""
+"""Behavior tree editor (RPG-09): tree list, node hierarchy, node kind and parameters, add / remove
+/ move."""
 
 from __future__ import annotations
 
@@ -20,7 +21,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .behavior_tree_authoring import KIND_GROUPS, PARAMS, BehaviorTreeAuthoring, BehaviorTreeAuthoringError
+from .behavior_tree_authoring import (
+    KIND_GROUPS,
+    PARAMS,
+    BehaviorTreeAuthoring,
+    BehaviorTreeAuthoringError,
+)
 
 
 def describe(node):
@@ -54,7 +60,9 @@ class BehaviorTreeEditorWidget(QWidget):
         self.nodes.setHeaderLabels(["Node"])
         self.nodes.itemSelectionChanged.connect(self._node_selected)
         center = QVBoxLayout()
-        center.addWidget(QLabel("Ticks top to bottom: sequence = all in order, selector = first that works"))
+        center.addWidget(
+            QLabel("Ticks top to bottom: sequence = all in order, selector = first that works")
+        )
         center.addWidget(self.nodes, 1)
         center_box = QWidget()
         center_box.setLayout(center)
@@ -193,9 +201,13 @@ class BehaviorTreeEditorWidget(QWidget):
         for name, edit in self.fields.items():
             default = dict(PARAMS[self.api.get(self.tree_id).node(self.path).kind])[name]
             text = edit.text().strip()
-            values[name] = text.lower() in ("1", "true", "yes", "on") if isinstance(default, bool) else text
+            values[name] = (
+                text.lower() in ("1", "true", "yes", "on") if isinstance(default, bool) else text
+            )
         path = self.path
-        return self._try(lambda: self.api.set_params(self.tree_id, path, **values), "Parameters saved", path)
+        return self._try(
+            lambda: self.api.set_params(self.tree_id, path, **values), "Parameters saved", path
+        )
 
     def apply_kind(self):
         path, kind = self.path, self.kind.currentData()
@@ -203,7 +215,9 @@ class BehaviorTreeEditorWidget(QWidget):
 
     def add_child(self, kind):
         path = self.path
-        return self._try(lambda: self.api.add_child(self.tree_id, path, kind), f"Added {kind}", path)
+        return self._try(
+            lambda: self.api.add_child(self.tree_id, path, kind), f"Added {kind}", path
+        )
 
     def remove_node(self):
         path = self.path

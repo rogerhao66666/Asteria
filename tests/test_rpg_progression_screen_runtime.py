@@ -25,7 +25,11 @@ def _graphs():
         ),
     )
     g2 = ProgressionGraphDefinition(
-        "blade", "Blade", nodes=(ProgressionNodeDefinition("stance", "Stance", rank_costs={"sp": 1}, tags=("combat",)),)
+        "blade",
+        "Blade",
+        nodes=(
+            ProgressionNodeDefinition("stance", "Stance", rank_costs={"sp": 1}, tags=("combat",)),
+        ),
     )
     return g1, g2
 
@@ -84,7 +88,9 @@ def test_visible_limit_does_not_cap_canonical_graph():
     nodes = tuple(ProgressionNodeDefinition(f"n{i}", rank_costs={"p": 1}) for i in range(12))
     graph = ProgressionGraphDefinition("huge", nodes=nodes)
     runtime = ProgressionAllocationRuntime((graph,), balances={"p": 20})
-    view = ProgressionScreenRuntime(ProgressionScreenProfile(visible_limits={"huge": 4})).project(runtime, (graph,))
+    view = ProgressionScreenRuntime(ProgressionScreenProfile(visible_limits={"huge": 4})).project(
+        runtime, (graph,)
+    )
     assert len(view.nodes) == 12 and len(view.graphs[0].node_ids) == 4
 
 
@@ -103,5 +109,7 @@ def test_selection_and_snapshot_are_presentation_only():
 
 
 def test_profile_roundtrip():
-    profile = ProgressionScreenProfile(graph_labels={"g": "Graph"}, node_labels={"n": "Node"}, visible_limits={"g": 7})
+    profile = ProgressionScreenProfile(
+        graph_labels={"g": "Graph"}, node_labels={"n": "Node"}, visible_limits={"g": 7}
+    )
     assert ProgressionScreenProfile.from_data(profile.to_data()) == profile

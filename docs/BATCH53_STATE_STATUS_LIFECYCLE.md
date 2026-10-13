@@ -48,9 +48,12 @@ burn = StateDefinition(
     periodic=[
         PeriodicEffect(
             1,
-            Effect("burn_tick", [
-                EffectOperation("resource_delta", "hp", -8),
-            ]),
+            Effect(
+                "burn_tick",
+                [
+                    EffectOperation("resource_delta", "hp", -8),
+                ],
+            ),
         )
     ],
 )

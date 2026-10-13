@@ -9,7 +9,8 @@ first one), and gives each a ``target`` the shell can navigate to:
     ("scene", scene_id) / ("entity", scene_id, entity_id)
     ("sprite", asset_id) / ("sequence", sequence_id)
     ("script", path, line)
-    ("combat", kind_id, record_id)               Real-Time Combat workspace (attacks, projectiles, rarities, affixes)
+    ("combat", kind_id, record_id)               Real-Time Combat workspace (attacks, projectiles,
+    rarities, affixes)
     ("behavior_tree", tree_id)
     ()                                           no single location
 """
@@ -68,7 +69,8 @@ _OWNERS = (
 
 
 def locate_record_message(message):
-    """Navigation target for an RPG reference message such as ``actor hero_01 references unknown class x``."""
+    """Navigation target for an RPG reference message such as ``actor hero_01 references unknown
+    class x``."""
     for prefix, where in _OWNERS:
         found = re.match(rf"{re.escape(prefix)} (\S+)", message)
         if found:
@@ -94,11 +96,17 @@ def _structure(project, found):
     scenes = {s.id for s in project.scenes()}
     for scene_id in project.scene_event_bindings:
         if scene_id not in scenes:
-            found.append(Problem("error", "Events", f"event bindings reference unknown scene {scene_id}"))
+            found.append(
+                Problem("error", "Events", f"event bindings reference unknown scene {scene_id}")
+            )
     for binding in project.lifecycle_event_bindings:
         if binding.event_program_id not in project.event_programs.ids():
             found.append(
-                Problem("error", "Events", f"lifecycle binding references unknown program {binding.event_program_id}")
+                Problem(
+                    "error",
+                    "Events",
+                    f"lifecycle binding references unknown program {binding.event_program_id}",
+                )
             )
 
 
@@ -122,13 +130,19 @@ def _field(project, found):
             if entity is None:
                 found.append(
                     Problem(
-                        "error", "Field / Events", f"{scene.name}: binding {binding.binding_id} entity missing", target
+                        "error",
+                        "Field / Events",
+                        f"{scene.name}: binding {binding.binding_id} entity missing",
+                        target,
                     )
                 )
             if project.event_programs.get(binding.program_id) is None:
                 found.append(
                     Problem(
-                        "error", "Field / Events", f"{scene.name}: binding {binding.binding_id} program missing", target
+                        "error",
+                        "Field / Events",
+                        f"{scene.name}: binding {binding.binding_id} program missing",
+                        target,
                     )
                 )
         for entity in scene.entities():
@@ -139,13 +153,19 @@ def _field(project, found):
             if comp.event_binding_id and comp.event_binding_id not in bindings.bindings:
                 found.append(
                     Problem(
-                        "error", "Field / Events", f"{scene.name}/{entity.name}: interaction binding missing", target
+                        "error",
+                        "Field / Events",
+                        f"{scene.name}/{entity.name}: interaction binding missing",
+                        target,
                     )
                 )
             if comp.event_program_id and project.event_programs.get(comp.event_program_id) is None:
                 found.append(
                     Problem(
-                        "error", "Field / Events", f"{scene.name}/{entity.name}: interaction program missing", target
+                        "error",
+                        "Field / Events",
+                        f"{scene.name}/{entity.name}: interaction program missing",
+                        target,
                     )
                 )
         from asteria.presentation.particles import effect_definition
@@ -155,12 +175,16 @@ def _field(project, found):
             emitter = entity.try_get(ParticleEmitter2DComponent)
             if emitter is None or not emitter.enabled:
                 continue
-            if not emitter.effect_id or effect_definition(project.assets, emitter.effect_id) is None:
+            if (
+                not emitter.effect_id
+                or effect_definition(project.assets, emitter.effect_id) is None
+            ):
                 found.append(
                     Problem(
                         "warning",
                         "Particle Effects",
-                        f"{scene.name}/{entity.name}: particle effect '{emitter.effect_id}' not found (nothing shows)",
+                        f"{scene.name}/{entity.name}: particle effect '{emitter.effect_id}' "
+                        f"not found (nothing shows)",
                         ("entity", scene.id, entity.id),
                     )
                 )
@@ -179,10 +203,16 @@ def _combat(project, found):
     for attack in attacks.values():
         target = ("combat", "attacks", attack.attack_id)
         if attack.damage_formula_id and attack.damage_formula_id not in library.formulas:
-            add("error", f"attack {attack.attack_id}: shared formula {attack.damage_formula_id} not found", target)
+            add(
+                "error",
+                f"attack {attack.attack_id}: shared formula {attack.damage_formula_id} not found",
+                target,
+            )
         for entry in attack.apply_states:
             if entry["state"] not in states:
-                add("error", f"attack {attack.attack_id}: state {entry['state']} not found", target)
+                add(
+                    "error", f"attack {attack.attack_id}: state {entry['state']} not found", target
+                )
     for projectile in projectiles.values():
         if projectile.attack_id and projectile.attack_id not in attacks:
             add(
@@ -197,19 +227,22 @@ def _combat(project, found):
             if kind == "projectile" and payload.get("projectile_id") not in projectiles:
                 add(
                     "error",
-                    f"timeline {timeline.timeline_id}: projectile {payload.get('projectile_id')} not found",
+                    f"timeline {timeline.timeline_id}: projectile "
+                    f"{payload.get('projectile_id')} not found",
                     target,
                 )
             if kind == "combo_window" and payload.get("next") and payload["next"] not in timelines:
                 add(
                     "error",
-                    f"timeline {timeline.timeline_id}: combo goes to unknown timeline {payload['next']}",
+                    f"timeline {timeline.timeline_id}: combo goes to unknown timeline "
+                    f"{payload['next']}",
                     target,
                 )
             if kind == "hitbox" and payload.get("hit_tag") and payload["hit_tag"] not in attacks:
                 add(
                     "warning",
-                    f"timeline {timeline.timeline_id}: hit tag {payload['hit_tag']} is not an attack (no damage)",
+                    f"timeline {timeline.timeline_id}: hit tag {payload['hit_tag']} is not an "
+                    f"attack (no damage)",
                     target,
                 )
     for ability_id in library.abilities.ids():
@@ -254,17 +287,31 @@ def _combat(project, found):
                     bindings = {}
                 for action, ability_id in bindings.items():
                     if library.abilities.get(ability_id) is None:
-                        add("error", f"{scene.name}/{entity.name}: {action} uses unknown ability {ability_id}", target)
+                        add(
+                            "error",
+                            f"{scene.name}/{entity.name}: {action} uses unknown ability "
+                            f"{ability_id}",
+                            target,
+                        )
             combatant = entity.try_get(CombatantComponent)
             if combatant is not None:
                 if combatant.drop_table_id and combatant.drop_table_id not in db.drop_tables:
-                    add("error", f"{scene.name}/{entity.name}: drop table {combatant.drop_table_id} not found", target)
+                    add(
+                        "error",
+                        f"{scene.name}/{entity.name}: drop table {combatant.drop_table_id} not "
+                        f"found",
+                        target,
+                    )
                 try:
                     resources = parse_values(combatant.resources)
                 except ValueError as exc:
                     add("error", f"{scene.name}/{entity.name}: resources: {exc}", target)
                     continue
-                if combatant.life_resource and combatant.life_resource not in resources and not _linked(entity):
+                if (
+                    combatant.life_resource
+                    and combatant.life_resource not in resources
+                    and not _linked(entity)
+                ):
                     add(
                         "warning",
                         f"{scene.name}/{entity.name}: life resource {combatant.life_resource}"
@@ -289,7 +336,9 @@ def _sprites(document, found, resource_root):
             messages = controller.problems(asset_id)
         except Exception as exc:  # noqa: BLE001
             messages = [f"{asset_id}: {exc}"]
-        found.extend(Problem("error", "Sprite Animation", m, ("sprite", asset_id)) for m in messages)
+        found.extend(
+            Problem("error", "Sprite Animation", m, ("sprite", asset_id)) for m in messages
+        )
 
 
 def _timelines(document, found):
@@ -301,7 +350,9 @@ def _timelines(document, found):
             messages = controller.problems(controller.get(sequence_id))
         except Exception as exc:  # noqa: BLE001
             messages = [f"{sequence_id}: {exc}"]
-        found.extend(Problem("error", "Ability Timelines", m, ("sequence", sequence_id)) for m in messages)
+        found.extend(
+            Problem("error", "Ability Timelines", m, ("sequence", sequence_id)) for m in messages
+        )
 
 
 def _scripts(document, found):
@@ -316,10 +367,17 @@ def _scripts(document, found):
             compile(script.read_text(encoding="utf-8"), str(script), "exec")
         except SyntaxError as exc:
             found.append(
-                Problem("error", "Scripts", f"{script.name}: {exc.msg}", ("script", str(script), exc.lineno or 1))
+                Problem(
+                    "error",
+                    "Scripts",
+                    f"{script.name}: {exc.msg}",
+                    ("script", str(script), exc.lineno or 1),
+                )
             )
         except (OSError, UnicodeDecodeError) as exc:
-            found.append(Problem("warning", "Scripts", f"{script.name}: {exc}", ("script", str(script), 1)))
+            found.append(
+                Problem("warning", "Scripts", f"{script.name}: {exc}", ("script", str(script), 1))
+            )
 
 
 def collect_problems(document, *, resource_root=None):
@@ -337,11 +395,13 @@ def collect_problems(document, *, resource_root=None):
         ("Scripts", lambda: _scripts(document, found)),
     ):
         _attempt(found, area, step)
-    # A validator that wraps others (Game Start validates the RPG database too) repeats their messages
+    # A validator that wraps others (Game Start validates the RPG database too) repeats their
+    # messages
     # without a location; keep only the located copies.
     located = [p.message for p in found if p.target]
     found = [p for p in found if p.target or not any(m in p.message for m in located)]
-    # Safety net: anything Project.validate rejects must be visible even if no collector above names it.
+    # Safety net: anything Project.validate rejects must be visible even if no collector above
+    # names it.
     try:
         project.validate()
     except Exception as exc:  # noqa: BLE001

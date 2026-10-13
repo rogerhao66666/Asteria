@@ -10,7 +10,10 @@ def rig():
 
 def test_layers_can_be_clip_specific():
     track = ActorVisualLayerTrack(
-        (FrameVisualLayer("slash.hand", clips=("slash",)), FrameVisualLayer("cast.hand", clips=("cast",)))
+        (
+            FrameVisualLayer("slash.hand", clips=("slash",)),
+            FrameVisualLayer("cast.hand", clips=("cast",)),
+        )
     )
     assert [x.asset_id for x in track.resolve("slash", 0)] == ["slash.hand"]
     assert [x.asset_id for x in track.resolve("cast", 0)] == ["cast.hand"]
@@ -18,7 +21,16 @@ def test_layers_can_be_clip_specific():
 
 def test_layer_track_roundtrip():
     src = ActorVisualLayerTrack(
-        (FrameVisualLayer("hand", "fg", 12.5, Transform2D(x=2, y=3, rotation_deg=9), frames=(1, 2), clips=("slash",)),)
+        (
+            FrameVisualLayer(
+                "hand",
+                "fg",
+                12.5,
+                Transform2D(x=2, y=3, rotation_deg=9),
+                frames=(1, 2),
+                clips=("slash",),
+            ),
+        )
     )
     dst = ActorVisualLayerTrack.from_dict(src.to_dict())
     assert dst.layers == src.layers

@@ -30,7 +30,11 @@ def many_actions():
     values = []
     # 4 weapons and 80 skill-like actions coexist, but are paged/category routed.
     for w in range(4):
-        values.append(BattleActionEntry(f"weapon.{w}", f"Weapon {w}", category="weapon", kind="weapon", order=w))
+        values.append(
+            BattleActionEntry(
+                f"weapon.{w}", f"Weapon {w}", category="weapon", kind="weapon", order=w
+            )
+        )
     for i in range(80):
         values.append(
             BattleActionEntry(
@@ -59,7 +63,14 @@ def test_root_limits_primary_layers_and_moves_extra_to_overflow():
     r = BattleInteractionRuntime(profile())
     v = r.view
     assert len(v.primary_layers) == 6
-    assert tuple(x.layer_id for x in v.primary_layers) == ("weapon", "skills", "items", "compose", "special", "swap")
+    assert tuple(x.layer_id for x in v.primary_layers) == (
+        "weapon",
+        "skills",
+        "items",
+        "compose",
+        "special",
+        "swap",
+    )
     assert tuple(x.layer_id for x in v.overflow_layers) == ("stance",)
 
 
@@ -77,11 +88,15 @@ def test_four_weapons_are_a_layer_not_four_giant_parallel_panels():
     r.set_actions(many_actions())
     v = r.open_layer("weapon")
     assert v.menu_view.total_count == 4
-    assert tuple(x.action_id for x in v.menu_view.entries) == tuple(f"weapon.{i}" for i in range(4))
+    assert tuple(x.action_id for x in v.menu_view.entries) == tuple(
+        f"weapon.{i}" for i in range(4)
+    )
 
 
 def test_project_defined_categories_and_kinds_are_opaque():
-    r = BattleInteractionRuntime(BattleInteractionProfile((BattleInteractionLayer("runes", "Runes"),)))
+    r = BattleInteractionRuntime(
+        BattleInteractionProfile((BattleInteractionLayer("runes", "Runes"),))
+    )
     r.set_actions((BattleActionEntry("x", "X", category="runes", kind="project.custom"),))
     assert r.open_layer("runes").menu_view.entries[0].kind == "project.custom"
 

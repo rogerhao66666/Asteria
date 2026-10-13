@@ -57,10 +57,16 @@ class PartyFormationInformationArchitecture:
             ("Identity", "Roster", "Active & Reserve", "Policies", "Formation"),
         ),
         PartyFormationSection(
-            "formations", "Formations", "formation_canvas", ("Canvas", "Selected Slot", "Position", "Tags", "Adjacency")
+            "formations",
+            "Formations",
+            "formation_canvas",
+            ("Canvas", "Selected Slot", "Position", "Tags", "Adjacency"),
         ),
         PartyFormationSection(
-            "presentation", "Party UI", "profile_detail", ("Groups", "Labels", "Visible Limits", "Focused Member")
+            "presentation",
+            "Party UI",
+            "profile_detail",
+            ("Groups", "Labels", "Visible Limits", "Focused Member"),
         ),
     )
     primary_navigation: str = "category_sidebar"
@@ -106,7 +112,9 @@ class RpgPartyFormationAuthoringController:
         key = value.formation_id
         if key in self.database.formations:
             raise RpgPartyFormationAuthoringError(f"duplicate formation: {key}")
-        self._execute(_MapCommand(self.database.formations, key, value, None, f"Add Formation {key}"))
+        self._execute(
+            _MapCommand(self.database.formations, key, value, None, f"Add Formation {key}")
+        )
         return value
 
     def edit_formation(self, formation_id, value):
@@ -117,7 +125,9 @@ class RpgPartyFormationAuthoringController:
         value = self._coerce(value, FormationDefinition)
         if value.formation_id != key:
             raise RpgPartyFormationAuthoringError("formation id cannot change during edit")
-        self._execute(_MapCommand(self.database.formations, key, value, old, f"Edit Formation {key}"))
+        self._execute(
+            _MapCommand(self.database.formations, key, value, old, f"Edit Formation {key}")
+        )
         return value
 
     def delete_formation(self, formation_id):
@@ -130,7 +140,9 @@ class RpgPartyFormationAuthoringController:
             raise RpgPartyFormationAuthoringError(
                 f"formation {key} is referenced by parties: " + ", ".join(sorted(refs))
             )
-        self._execute(_MapCommand(self.database.formations, key, None, old, f"Delete Formation {key}"))
+        self._execute(
+            _MapCommand(self.database.formations, key, None, old, f"Delete Formation {key}")
+        )
 
     def create_party(self, value):
         value = self._coerce(value, PartySetupDefinition)
@@ -138,7 +150,9 @@ class RpgPartyFormationAuthoringController:
         if key in self.database.party_setups:
             raise RpgPartyFormationAuthoringError(f"duplicate party setup: {key}")
         self._validate_party(value)
-        self._execute(_MapCommand(self.database.party_setups, key, value, None, f"Add Party Setup {key}"))
+        self._execute(
+            _MapCommand(self.database.party_setups, key, value, None, f"Add Party Setup {key}")
+        )
         return value
 
     def edit_party(self, party_id, value):
@@ -150,7 +164,9 @@ class RpgPartyFormationAuthoringController:
         if value.party_id != key:
             raise RpgPartyFormationAuthoringError("party id cannot change during edit")
         self._validate_party(value)
-        self._execute(_MapCommand(self.database.party_setups, key, value, old, f"Edit Party Setup {key}"))
+        self._execute(
+            _MapCommand(self.database.party_setups, key, value, old, f"Edit Party Setup {key}")
+        )
         return value
 
     def delete_party(self, party_id):
@@ -158,7 +174,9 @@ class RpgPartyFormationAuthoringController:
         old = self.database.party_setups.get(key)
         if old is None:
             raise RpgPartyFormationAuthoringError(f"unknown party setup: {key}")
-        self._execute(_MapCommand(self.database.party_setups, key, None, old, f"Delete Party Setup {key}"))
+        self._execute(
+            _MapCommand(self.database.party_setups, key, None, old, f"Delete Party Setup {key}")
+        )
 
     def _validate_party(self, value):
         unknown = sorted(set(value.roster_actor_ids) - set(self.database.actors))
@@ -171,7 +189,9 @@ class RpgPartyFormationAuthoringController:
             slots = {x.slot_id for x in formation.slots}
             missing = sorted({x.slot_id for x in value.placements} - slots)
             if missing:
-                raise RpgPartyFormationAuthoringError("unknown formation slots: " + ", ".join(missing))
+                raise RpgPartyFormationAuthoringError(
+                    "unknown formation slots: " + ", ".join(missing)
+                )
 
     def set_active(self, party_id, active_actor_ids):
         old = self.database.party_setups[str(party_id)]
@@ -228,7 +248,13 @@ class RpgPartyFormationAuthoringController:
             raise RpgPartyFormationAuthoringError("profile id cannot change during edit")
         old = self.database.party_presentation_policies.get(key)
         self._execute(
-            _MapCommand(self.database.party_presentation_policies, key, profile, old, f"Set Party UI Profile {key}")
+            _MapCommand(
+                self.database.party_presentation_policies,
+                key,
+                profile,
+                old,
+                f"Set Party UI Profile {key}",
+            )
         )
         return profile
 
@@ -238,7 +264,13 @@ class RpgPartyFormationAuthoringController:
         if old is None:
             raise RpgPartyFormationAuthoringError(f"unknown party UI profile: {key}")
         self._execute(
-            _MapCommand(self.database.party_presentation_policies, key, None, old, f"Delete Party UI Profile {key}")
+            _MapCommand(
+                self.database.party_presentation_policies,
+                key,
+                None,
+                old,
+                f"Delete Party UI Profile {key}",
+            )
         )
 
     def validate(self):

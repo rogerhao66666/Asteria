@@ -2,7 +2,8 @@
 
     python scripts/arpg_playground.py [--side] [--frames N] [--screenshot PATH]
 
-Controls: WASD move, J attack (three-hit combo), K dodge, 1 fire bolt, L lock on, F pick up, B bag, C build,
+Controls: WASD move, J attack (three-hit combo), K dodge, 1 fire bolt, L lock on, F pick up, B
+bag, C build,
 Space jump (side view), Esc pause.
 """
 
@@ -27,7 +28,9 @@ def main(argv=None):
 
     root = REPO / "reference_projects" / "complex_reference_rpg"
     project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
-    runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), root, width=1280, height=720)
+    runtime = PlayableTestRuntime(
+        project, project.game_start.instantiate(project), root, width=1280, height=720
+    )
     runtime.open()
     build_playground(runtime, "side" if args.side else "topdown")
     frames = 0

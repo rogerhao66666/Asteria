@@ -29,7 +29,9 @@ class FrameVisualLayer:
         self.transform.validate()
 
     def matches(self, clip_id: str, frame: int) -> bool:
-        return (not self.clips or clip_id in self.clips) and (not self.frames or frame in self.frames)
+        return (not self.clips or clip_id in self.clips) and (
+            not self.frames or frame in self.frames
+        )
 
 
 @dataclass(frozen=True, slots=True)

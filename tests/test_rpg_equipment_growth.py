@@ -26,7 +26,9 @@ def make_growth():
                 max_rank=3,
                 rank_requirements=({"xp": 10}, {"xp": 30}, {"xp": 60}),
                 rewards=(
-                    EquipmentGrowthReward(modifiers=(StatModifier("temper1", "attack", ModifierOperation.ADD, 2),)),
+                    EquipmentGrowthReward(
+                        modifiers=(StatModifier("temper1", "attack", ModifierOperation.ADD, 2),)
+                    ),
                     EquipmentGrowthReward(
                         modifiers=(StatModifier("temper2", "attack", ModifierOperation.ADD, 3),),
                         granted_tags=("growth.tempered",),
@@ -87,7 +89,9 @@ def test_equipment_growth_auto_levels_are_per_instance_and_affect_build_contribu
 
     loadout = EquipmentLoadout([EquipmentSlotDefinition("weapon")])
     loadout.equip("weapon", item)
-    stats = loadout.modifier_set().evaluate_block(StatBlock({"attack": 0}), tags=TagSet(item.tags()))
+    stats = loadout.modifier_set().evaluate_block(
+        StatBlock({"attack": 0}), tags=TagSet(item.tags())
+    )
     assert stats.get("attack") == 15
 
     second = EquippedItem(
@@ -124,7 +128,9 @@ def test_equipment_growth_can_unlock_locked_socket_and_persist_attachment():
 
 def test_equipment_growth_branching_and_evolution_target_are_generic_rules():
     growth = make_growth()
-    item = EquippedItem(make_equipment(), instance_id="blade-a", growth=EquipmentGrowthRuntime(growth))
+    item = EquippedItem(
+        make_equipment(), instance_id="blade-a", growth=EquipmentGrowthRuntime(growth)
+    )
     item.growth.add_progress("xp", 30)
     item.growth.add_progress("boss_dragon", 1)
     item.growth.unlock("blood_path")

@@ -110,7 +110,12 @@ class ComplexPreBattleStressHarness:
                 f"Passive {i:02d}",
                 tags=("passive.stress", f"passive.group.{i % 4}"),
                 modifiers=(
-                    StatModifier(pid + ".stat", "focus" if i % 2 else "power", ModifierOperation.ADD, 1 + (i % 3)),
+                    StatModifier(
+                        pid + ".stat",
+                        "focus" if i % 2 else "power",
+                        ModifierOperation.ADD,
+                        1 + (i % 3),
+                    ),
                 ),
                 granted_abilities=(f"passive_ability_{i:02d}",),
             )
@@ -197,7 +202,9 @@ class ComplexPreBattleStressHarness:
             ),
             granted_abilities=(f"rune_skill_{actor_index:02d}",),
         )
-        weapon_item = EquippedItem(weapon, instance_id=f"weapon_{actor_index:02d}:instance", growth=growth)
+        weapon_item = EquippedItem(
+            weapon, instance_id=f"weapon_{actor_index:02d}:instance", growth=growth
+        )
         weapon_item.attach("rune", rune)
 
         accessories = []
@@ -217,7 +224,9 @@ class ComplexPreBattleStressHarness:
                 ),
                 granted_abilities=(f"accessory_skill_{actor_index:02d}_{slot_index}",),
             )
-            accessories.append(EquippedItem(eq, instance_id=f"accessory_{actor_index:02d}_{slot_index}:instance"))
+            accessories.append(
+                EquippedItem(eq, instance_id=f"accessory_{actor_index:02d}_{slot_index}:instance")
+            )
 
         loadout = EquipmentLoadout(
             (
@@ -238,10 +247,22 @@ class ComplexPreBattleStressHarness:
                 f"stress_actor_{i:02d}",
                 f"Stress Actor {i:02d}",
                 class_assignments=(
-                    ClassAssignment(main, assignment_id=f"main:{main}", role="primary", priority=0),
-                    ClassAssignment(secondary, assignment_id=f"secondary:{secondary}", role="secondary", priority=1),
+                    ClassAssignment(
+                        main, assignment_id=f"main:{main}", role="primary", priority=0
+                    ),
+                    ClassAssignment(
+                        secondary,
+                        assignment_id=f"secondary:{secondary}",
+                        role="secondary",
+                        priority=1,
+                    ),
                 ),
-                base_stats={"power": 18 + i, "guard": 12 + (i % 6), "focus": 14 + (i % 8), "speed": 10 + (i % 7)},
+                base_stats={
+                    "power": 18 + i,
+                    "guard": 12 + (i % 6),
+                    "focus": 14 + (i % 8),
+                    "speed": 10 + (i % 7),
+                },
                 base_resources={
                     "vitality": 260 + i * 25,
                     "technique": 50 + (i % 5) * 10,
@@ -267,7 +288,9 @@ class ComplexPreBattleStressHarness:
             allocations.allocate(graph.graph_id, f"node_{n}")
 
         loadout, rune = self._equipment(i)
-        build = resolve_actor_build(actor, allocations=allocations, loadout=loadout, passives=self.passives)
+        build = resolve_actor_build(
+            actor, allocations=allocations, loadout=loadout, passives=self.passives
+        )
         level = 12 + i * 4
         return actor, allocations, loadout, build, level, rune.attachment_id
 
@@ -287,7 +310,9 @@ class ComplexPreBattleStressHarness:
         ability_counts = []
         for actor, _allocations, _loadout, build, level, rune_id in self.characters:
             assignments = actor.class_assignments
-            stats = tuple(sorted((k, float(v)) for k, v in build.stats.to_data()["values"].items()))
+            stats = tuple(
+                sorted((k, float(v)) for k, v in build.stats.to_data()["values"].items())
+            )
             resources = tuple(sorted(build.resources.to_data()["values"]))
             abilities = tuple(build.abilities)
             ability_counts.append(len(abilities))

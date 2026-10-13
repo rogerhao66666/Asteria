@@ -55,7 +55,9 @@ class ReferenceWorldBundle:
 
 
 def _record(asset_id, kind, path, name, metadata=None):
-    return AssetRecord(asset_id, kind, path, name, "asteria.reference", 1, {}, dict(metadata or {}))
+    return AssetRecord(
+        asset_id, kind, path, name, "asteria.reference", 1, {}, dict(metadata or {})
+    )
 
 
 def _chunk_from_grid(grid, chunk_x, chunk_y, chunk_w, chunk_h):
@@ -236,7 +238,9 @@ def build_reference_world():
     for name, row in directions.items():
         base = row * 4
         clips[f"idle_{name}"] = SpriteClip(f"idle_{name}", [SpriteKeyframe(base, 0.4)], True)
-        clips[f"walk_{name}"] = SpriteClip(f"walk_{name}", [SpriteKeyframe(base + i, 0.12) for i in (0, 1, 2, 3)], True)
+        clips[f"walk_{name}"] = SpriteClip(
+            f"walk_{name}", [SpriteKeyframe(base + i, 0.12) for i in (0, 1, 2, 3)], True
+        )
     hero_clips = AnimationClipSet(clips)
 
     world = scene.add_entity(Entity("World Map", entity_id=WORLD_ENTITY_ID))
@@ -357,7 +361,10 @@ def write_reference_world(root):
                 "clips": {
                     name: {
                         "loop": clip.loop,
-                        "keyframes": [{"frame_index": k.frame_index, "duration": k.duration} for k in clip.keyframes],
+                        "keyframes": [
+                            {"frame_index": k.frame_index, "duration": k.duration}
+                            for k in clip.keyframes
+                        ],
                     }
                     for name, clip in bundle.hero_clips.clips.items()
                 }

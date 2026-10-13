@@ -2,7 +2,14 @@
 
 import pytest
 
-from asteria.core import Application, Entity, PersistentComponent, Scene, SceneTransition, Transform
+from asteria.core import (
+    Application,
+    Entity,
+    PersistentComponent,
+    Scene,
+    SceneTransition,
+    Transform,
+)
 
 
 def _scenes():
@@ -31,7 +38,11 @@ def test_fade_covers_then_swaps_then_reveals():
     assert app.scene is town and app.transition_color == (10, 20, 30)
     assert app.advance_transition(0.1) and app.transition_cover == pytest.approx(0.5)
     app.advance_transition(0.1)
-    assert app.scene is cave and companion.scene is cave and app.transition_cover == pytest.approx(1.0)
+    assert (
+        app.scene is cave
+        and companion.scene is cave
+        and app.transition_cover == pytest.approx(1.0)
+    )
     app.advance_transition(0.2)
     assert app.transition_cover == pytest.approx(0.5)
     assert not app.advance_transition(0.3)

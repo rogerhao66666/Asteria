@@ -53,7 +53,9 @@ def _boxes(rng, n, width, height, size):
     return x0, y0, [x + s for x, s in zip(x0, sizes)], [y + s for y, s in zip(y0, sizes)]
 
 
-@pytest.mark.parametrize(("n", "width", "height"), [(0, 10, 10), (1, 10, 10), (300, 800, 800), (400, 60, 3000)])
+@pytest.mark.parametrize(
+    ("n", "width", "height"), [(0, 10, 10), (1, 10, 10), (300, 800, 800), (400, 60, 3000)]
+)
 def test_numpy_broad_phase_finds_exactly_the_reference_pairs(n, width, height):
     x0, y0, x1, y1 = _boxes(random.Random(n), n, width, height, 12.0)
     expected = _python.aabb_pairs(x0, y0, x1, y1, 64.0)
@@ -127,9 +129,13 @@ def test_numpy_weather_moves_and_draws_exactly_like_the_reference(kind, wind, re
     for frame in range(90):
         camera = (frame * 0.7, -frame * 0.3)
         for system in systems.values():
-            system.update(1 / 60 if frame % 5 else 1 / 20, kind, 0.9, 400, wind, camera=camera, scale=2.0)
+            system.update(
+                1 / 60 if frame % 5 else 1 / 20, kind, 0.9, 400, wind, camera=camera, scale=2.0
+            )
         ref, fast = systems["python"], systems["numpy"]
-        assert (fast.x, fast.y, fast.size, fast.phase) == (ref.x, ref.y, ref.size, ref.phase), frame
+        assert (fast.x, fast.y, fast.size, fast.phase) == (ref.x, ref.y, ref.size, ref.phase), (
+            frame
+        )
         if frame % 15 == 0:
             frames = []
             for system in (ref, fast):
@@ -141,13 +147,18 @@ def test_numpy_weather_moves_and_draws_exactly_like_the_reference(kind, wind, re
             assert (frames[0] != (20, 40, 60)).any()
 
 
-# -- D22 A2: cross pairs and projectiles ------------------------------------------------------------------------
+# -- D22 A2: cross pairs and projectiles ----------------------------------------------------------
 def _cross_boxes(rng, n, spread, size):
     x0 = [rng.uniform(-spread, spread) for _ in range(n)]
     y0 = [rng.uniform(-spread, spread) for _ in range(n)]
     w = [rng.uniform(0.5, size) for _ in range(n)]
     h = [rng.uniform(0.5, size) for _ in range(n)]
-    return (x0, y0, [x + d for x, d in zip(x0, w, strict=True)], [y + d for y, d in zip(y0, h, strict=True)])
+    return (
+        x0,
+        y0,
+        [x + d for x, d in zip(x0, w, strict=True)],
+        [y + d for y, d in zip(y0, h, strict=True)],
+    )
 
 
 @pytest.mark.parametrize("seed", range(6))
@@ -176,7 +187,11 @@ def test_cross_pairs_match_brute_force_in_both_sets(seed):
     assert (3, 5) in touching
     assert _python.aabb_cross_pairs(a, b, 64.0, touching=True) == touching
     assert np_kernels.aabb_cross_pairs(a, b, 64.0, touching=True) == touching
-    assert np_kernels.aabb_cross_pairs(([], [], [], []), b) == _python.aabb_cross_pairs(([], [], [], []), b) == []
+    assert (
+        np_kernels.aabb_cross_pairs(([], [], [], []), b)
+        == _python.aabb_cross_pairs(([], [], [], []), b)
+        == []
+    )
 
 
 def test_numpy_projectiles_match_the_reference_step_by_step():

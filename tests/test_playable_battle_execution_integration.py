@@ -50,7 +50,9 @@ def test_player_equipment_and_progression_abilities_share_execution_mechanism():
 def test_opaque_side_ids_prove_enemy_player_names_are_not_side_semantics():
     s = build_reference_battle_scenario()
     assert set(s.battle.parties) == {"side.alpha", "side.omega"}
-    decision = s.battle.enemy_ai.decide(s.battle, s.enemy_ai_id, s.enemy_member_id, rng=s.battle.rng)
+    decision = s.battle.enemy_ai.decide(
+        s.battle, s.enemy_ai_id, s.enemy_member_id, rng=s.battle.rng
+    )
     assert decision.target_ids == ("validation_hero",)
 
 

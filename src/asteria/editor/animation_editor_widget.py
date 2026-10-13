@@ -51,7 +51,10 @@ class FrameGridView(QWidget):
     def _layout(self):
         if self.pixmap is None or self.pixmap.isNull():
             return 1.0
-        return max(0.25, min(self.width() / self.pixmap.width(), self.height() / self.pixmap.height(), 4.0))
+        return max(
+            0.25,
+            min(self.width() / self.pixmap.width(), self.height() / self.pixmap.height(), 4.0),
+        )
 
     def cell_at(self, x, y):
         if self.pixmap is None:
@@ -79,7 +82,8 @@ class FrameGridView(QWidget):
             return
         scale = self._layout()
         painter.drawPixmap(
-            QRect(0, 0, int(self.pixmap.width() * scale), int(self.pixmap.height() * scale)), self.pixmap
+            QRect(0, 0, int(self.pixmap.width() * scale), int(self.pixmap.height() * scale)),
+            self.pixmap,
         )
         fw, fh = self.frame_size
         columns = max(1, self.pixmap.width() // fw)
@@ -88,7 +92,9 @@ class FrameGridView(QWidget):
         for c in range(columns + 1):
             painter.drawLine(int(c * fw * scale), 0, int(c * fw * scale), int(rows * fh * scale))
         for r in range(rows + 1):
-            painter.drawLine(0, int(r * fh * scale), int(columns * fw * scale), int(r * fh * scale))
+            painter.drawLine(
+                0, int(r * fh * scale), int(columns * fw * scale), int(r * fh * scale)
+            )
         painter.setPen(QPen(QColor(240, 201, 93), 2))
         for order, index in enumerate(self.highlight):
             rect = QRect(
@@ -115,7 +121,11 @@ class AnimationEditorWidget(QWidget):
         self.clip_list = QListWidget()
         self.sheet_list.currentTextChanged.connect(self._sheet_changed)
         self.clip_list.currentTextChanged.connect(self._clip_changed)
-        add_clip, remove_clip, rename_clip = QPushButton("New Clip…"), QPushButton("Delete"), QPushButton("Rename…")
+        add_clip, remove_clip, rename_clip = (
+            QPushButton("New Clip…"),
+            QPushButton("Delete"),
+            QPushButton("Rename…"),
+        )
         add_clip.clicked.connect(self._new_clip_clicked)
         remove_clip.clicked.connect(self.remove_clip)
         rename_clip.clicked.connect(self._rename_clicked)
@@ -273,7 +283,11 @@ class AnimationEditorWidget(QWidget):
         self.frames.setText(", ".join(str(f) for f in clip.get("frames", [])))
         self.duration.setValue(float(clip.get("frame_duration", 0.12)))
         self.loop.setChecked(bool(clip.get("loop", True)))
-        self.events.setText(", ".join(f"{k}:{n}" for k, names in dict(clip.get("events", {})).items() for n in names))
+        self.events.setText(
+            ", ".join(
+                f"{k}:{n}" for k, names in dict(clip.get("events", {})).items() for n in names
+            )
+        )
         self.time = 0.0
         self._render()
 
@@ -317,7 +331,11 @@ class AnimationEditorWidget(QWidget):
 
         def apply():
             self.api.set_clip(
-                sheet, clip, frames=frames, frame_duration=self.duration.value(), loop=self.loop.isChecked()
+                sheet,
+                clip,
+                frames=frames,
+                frame_duration=self.duration.value(),
+                loop=self.loop.isChecked(),
             )
             current = {int(k) for k in self.api.data(sheet)["clips"][clip].get("events", {})}
             for position in current | set(events):

@@ -19,7 +19,12 @@ from asteria.presentation import (
 def make_visual(member_id, *, battlefield=True, hud=True, z=0, scale=1.0):
     return BattleCombatantVisualProfile(
         member_id,
-        BattleVisualAssetSet(f"{member_id}.battle", f"{member_id}.portrait", f"{member_id}.small", f"{member_id}.icon"),
+        BattleVisualAssetSet(
+            f"{member_id}.battle",
+            f"{member_id}.portrait",
+            f"{member_id}.small",
+            f"{member_id}.icon",
+        ),
         default_jrpg_visual_states(),
         BattleVisualTransform(scale_x=scale, scale_y=scale, z_order=z),
         battlefield_visible=battlefield,
@@ -43,13 +48,17 @@ def make_interaction():
             max_primary_layers=6,
         )
     )
-    r.set_actions(tuple(BattleActionEntry(f"skill.{i}", f"Skill {i}", category="skills") for i in range(20)))
+    r.set_actions(
+        tuple(BattleActionEntry(f"skill.{i}", f"Skill {i}", category="skills") for i in range(20))
+    )
     return r
 
 
 def make_information(focus="p0"):
     r = BattleInformationRuntime(
-        BattleInformationPolicy(persistent_limit=4, compact_limit=4, focused_limit=4, contextual_limit=4)
+        BattleInformationPolicy(
+            persistent_limit=4, compact_limit=4, focused_limit=4, contextual_limit=4
+        )
     )
     items = [
         BattleInformationItem("battle.turn", "timeline", "Turn", priority=100),
@@ -154,12 +163,21 @@ def test_action_surface_keeps_root_overflow_for_extra_categories():
         roster=roster,
         visuals=make_visuals(),
     )
-    assert frame.action_surface.root_layer_ids == ("weapon", "skills", "items", "compose", "special", "swap")
+    assert frame.action_surface.root_layer_ids == (
+        "weapon",
+        "skills",
+        "items",
+        "compose",
+        "special",
+        "swap",
+    )
     assert frame.action_surface.overflow_layer_ids == ("stance",)
 
 
 def test_hidden_battlefield_bodies_still_have_hud_cards():
-    roster = BattleRosterDensityPolicy(primary_limit=4, compact_limit=4).resolve(tuple(f"p{i}" for i in range(12)))
+    roster = BattleRosterDensityPolicy(primary_limit=4, compact_limit=4).resolve(
+        tuple(f"p{i}" for i in range(12))
+    )
     frame = BattleUiAssemblyRuntime().assemble(
         interaction=make_interaction().view,
         information=make_information(),

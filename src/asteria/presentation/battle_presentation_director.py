@@ -80,7 +80,9 @@ class BattlePresentationDirectorProfile:
 
     def __init__(self, rules=()):
         rules = tuple(
-            x if isinstance(x, BattlePresentationDirectorRule) else BattlePresentationDirectorRule.from_data(x)
+            x
+            if isinstance(x, BattlePresentationDirectorRule)
+            else BattlePresentationDirectorRule.from_data(x)
             for x in rules
         )
         object.__setattr__(self, "rules", rules)

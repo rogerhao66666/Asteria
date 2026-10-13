@@ -32,7 +32,8 @@ class FieldViewCamera:
         self.anchor_offset_y = float(anchor_offset_y)
         self.max_zoom = float(max_zoom)
         self.director = CameraDirector()
-        # Follow mode (manifest "field.camera"): zoom >= 1 around the player, dead zone, smoothing, look-ahead.
+        # Follow mode (manifest "field.camera"): zoom >= 1 around the player, dead zone, smoothing,
+        # look-ahead.
         self.follow = None
         if follow:
             self.follow = {
@@ -53,7 +54,12 @@ class FieldViewCamera:
     @property
     def bounds(self):
         s, a = self.scale, self.anchor_offset_y
-        return (-self.width / (2 * s), -(self.height / 2 + a) / s, self.width / (2 * s), (self.height / 2 - a) / s)
+        return (
+            -self.width / (2 * s),
+            -(self.height / 2 + a) / s,
+            self.width / (2 * s),
+            (self.height / 2 - a) / s,
+        )
 
     def _follow_base(self, dt, target, velocity):
         from math import exp
@@ -133,13 +139,22 @@ class FieldViewCamera:
                 raise FieldCameraError("CAMERA_FOCUS needs entity or x and y")
             zoom = args.get("zoom")
             shot = CameraShot(
-                float(args.get("x", 0.0)), float(args.get("y", 0.0)), None if zoom is None else float(zoom), follow
+                float(args.get("x", 0.0)),
+                float(args.get("y", 0.0)),
+                None if zoom is None else float(zoom),
+                follow,
             )
-            self.director.focus(shot, blend=float(args.get("blend", 0.6)), ease=str(args.get("ease", "smooth")))
+            self.director.focus(
+                shot, blend=float(args.get("blend", 0.6)), ease=str(args.get("ease", "smooth"))
+            )
         elif name == "CAMERA_RELEASE":
-            self.director.release(blend=float(args.get("blend", 0.6)), ease=str(args.get("ease", "smooth")))
+            self.director.release(
+                blend=float(args.get("blend", 0.6)), ease=str(args.get("ease", "smooth"))
+            )
         elif name == "CAMERA_SHAKE":
-            self.director.shake(float(args.get("intensity", 3.0)), float(args.get("duration", 0.4)))
+            self.director.shake(
+                float(args.get("intensity", 3.0)), float(args.get("duration", 0.4))
+            )
         else:
             raise FieldCameraError(f"not a camera command: {name}")
 

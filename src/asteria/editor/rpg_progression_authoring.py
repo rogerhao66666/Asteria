@@ -188,7 +188,9 @@ class RpgProgressionAuthoringController:
         key = definition.ability_id
         if self.abilities.get(key) is not None:
             raise RpgProgressionAuthoringError(f"duplicate ability: {key}")
-        self._execute(_AbilityRegistryCommand(self.abilities, key, definition, None, f"Add Ability {key}"))
+        self._execute(
+            _AbilityRegistryCommand(self.abilities, key, definition, None, f"Add Ability {key}")
+        )
         return definition
 
     def edit_ability(self, ability_id, definition):
@@ -202,7 +204,9 @@ class RpgProgressionAuthoringController:
             raise TypeError("definition must be AbilityDefinition or data")
         if definition.ability_id != key:
             raise RpgProgressionAuthoringError("ability id cannot change during edit")
-        self._execute(_AbilityRegistryCommand(self.abilities, key, definition, old, f"Edit Ability {key}"))
+        self._execute(
+            _AbilityRegistryCommand(self.abilities, key, definition, old, f"Edit Ability {key}")
+        )
         return definition
 
     def delete_ability(self, ability_id):
@@ -229,11 +233,22 @@ class RpgProgressionAuthoringController:
                     if key in reward.granted_abilities:
                         refs.append(f"graph:{graph.graph_id}:{node.node_id}")
         if refs:
-            raise RpgProgressionAuthoringError(f"ability {key} is referenced by " + ", ".join(sorted(refs)))
-        self._execute(_AbilityRegistryCommand(self.abilities, key, None, old, f"Delete Ability {key}"))
+            raise RpgProgressionAuthoringError(
+                f"ability {key} is referenced by " + ", ".join(sorted(refs))
+            )
+        self._execute(
+            _AbilityRegistryCommand(self.abilities, key, None, old, f"Delete Ability {key}")
+        )
 
     def create_passive(
-        self, passive_id, display_name=None, *, tags=(), modifiers=(), granted_abilities=(), triggers=()
+        self,
+        passive_id,
+        display_name=None,
+        *,
+        tags=(),
+        modifiers=(),
+        granted_abilities=(),
+        triggers=(),
     ):
         key = str(passive_id).strip()
         if key in self.database.passives:
@@ -246,11 +261,20 @@ class RpgProgressionAuthoringController:
             granted_abilities=self._check_abilities(granted_abilities),
             triggers=triggers,
         )
-        self._execute(_MappingCommand(self.database.passives, key, value, None, f"Add Passive {key}"))
+        self._execute(
+            _MappingCommand(self.database.passives, key, value, None, f"Add Passive {key}")
+        )
         return value
 
     def edit_passive(
-        self, passive_id, *, display_name=None, tags=None, modifiers=None, granted_abilities=None, triggers=None
+        self,
+        passive_id,
+        *,
+        display_name=None,
+        tags=None,
+        modifiers=None,
+        granted_abilities=None,
+        triggers=None,
     ):
         key = str(passive_id)
         old = self.database.passives.get(key)
@@ -262,11 +286,15 @@ class RpgProgressionAuthoringController:
             tags=old.tags if tags is None else tags,
             modifiers=old.modifiers if modifiers is None else modifiers,
             granted_abilities=(
-                old.granted_abilities if granted_abilities is None else self._check_abilities(granted_abilities)
+                old.granted_abilities
+                if granted_abilities is None
+                else self._check_abilities(granted_abilities)
             ),
             triggers=old.triggers if triggers is None else triggers,
         )
-        self._execute(_MappingCommand(self.database.passives, key, value, old, f"Edit Passive {key}"))
+        self._execute(
+            _MappingCommand(self.database.passives, key, value, old, f"Edit Passive {key}")
+        )
         return value
 
     def delete_passive(self, passive_id):
@@ -283,18 +311,25 @@ class RpgProgressionAuthoringController:
             raise RpgProgressionAuthoringError(
                 f"passive {key} is referenced by progression nodes: " + ", ".join(sorted(refs))
             )
-        self._execute(_MappingCommand(self.database.passives, key, None, old, f"Delete Passive {key}"))
+        self._execute(
+            _MappingCommand(self.database.passives, key, None, old, f"Delete Passive {key}")
+        )
 
     def create_track(self, track_id, display_name=None, *, milestones):
         key = str(track_id).strip()
         if key in self.database.progression_tracks:
             raise RpgProgressionAuthoringError(f"duplicate progression track: {key}")
-        ms = tuple(x if isinstance(x, ProgressionMilestone) else ProgressionMilestone.from_data(x) for x in milestones)
+        ms = tuple(
+            x if isinstance(x, ProgressionMilestone) else ProgressionMilestone.from_data(x)
+            for x in milestones
+        )
         for m in ms:
             self._check_abilities(m.granted_abilities)
         value = ProgressionTrackDefinition(key, display_name, milestones=ms)
         self._execute(
-            _MappingCommand(self.database.progression_tracks, key, value, None, f"Add Progression Track {key}")
+            _MappingCommand(
+                self.database.progression_tracks, key, value, None, f"Add Progression Track {key}"
+            )
         )
         return value
 
@@ -307,7 +342,8 @@ class RpgProgressionAuthoringController:
             old.milestones
             if milestones is None
             else tuple(
-                x if isinstance(x, ProgressionMilestone) else ProgressionMilestone.from_data(x) for x in milestones
+                x if isinstance(x, ProgressionMilestone) else ProgressionMilestone.from_data(x)
+                for x in milestones
             )
         )
         for m in ms:
@@ -316,7 +352,9 @@ class RpgProgressionAuthoringController:
             key, old.display_name if display_name is None else display_name, milestones=ms
         )
         self._execute(
-            _MappingCommand(self.database.progression_tracks, key, value, old, f"Edit Progression Track {key}")
+            _MappingCommand(
+                self.database.progression_tracks, key, value, old, f"Edit Progression Track {key}"
+            )
         )
         return value
 
@@ -334,9 +372,13 @@ class RpgProgressionAuthoringController:
             if rule.progression_track_id == key:
                 refs.append(f"evolution:{rule.rule_id}")
         if refs:
-            raise RpgProgressionAuthoringError(f"progression track {key} is referenced by " + ", ".join(sorted(refs)))
+            raise RpgProgressionAuthoringError(
+                f"progression track {key} is referenced by " + ", ".join(sorted(refs))
+            )
         self._execute(
-            _MappingCommand(self.database.progression_tracks, key, None, old, f"Delete Progression Track {key}")
+            _MappingCommand(
+                self.database.progression_tracks, key, None, old, f"Delete Progression Track {key}"
+            )
         )
 
     def _normalize_node(self, node):
@@ -349,7 +391,16 @@ class RpgProgressionAuthoringController:
             self._check_passives(reward.unlocked_passives)
         return node
 
-    def create_graph(self, graph_id, display_name=None, *, nodes, tags=(), editor_view="list", node_positions=None):
+    def create_graph(
+        self,
+        graph_id,
+        display_name=None,
+        *,
+        nodes,
+        tags=(),
+        editor_view="list",
+        node_positions=None,
+    ):
         key = str(graph_id).strip()
         if key in self.database.progression_graphs:
             raise RpgProgressionAuthoringError(f"duplicate progression graph: {key}")
@@ -362,11 +413,22 @@ class RpgProgressionAuthoringController:
             node_positions=node_positions,
         )
         self._execute(
-            _MappingCommand(self.database.progression_graphs, key, value, None, f"Add Progression Graph {key}")
+            _MappingCommand(
+                self.database.progression_graphs, key, value, None, f"Add Progression Graph {key}"
+            )
         )
         return value
 
-    def edit_graph(self, graph_id, *, display_name=None, nodes=None, tags=None, editor_view=None, node_positions=None):
+    def edit_graph(
+        self,
+        graph_id,
+        *,
+        display_name=None,
+        nodes=None,
+        tags=None,
+        editor_view=None,
+        node_positions=None,
+    ):
         key = str(graph_id)
         old = self.database.progression_graphs.get(key)
         if old is None:
@@ -380,7 +442,9 @@ class RpgProgressionAuthoringController:
             node_positions=old.node_positions if node_positions is None else node_positions,
         )
         self._execute(
-            _MappingCommand(self.database.progression_graphs, key, value, old, f"Edit Progression Graph {key}")
+            _MappingCommand(
+                self.database.progression_graphs, key, value, old, f"Edit Progression Graph {key}"
+            )
         )
         return value
 
@@ -414,9 +478,15 @@ class RpgProgressionAuthoringController:
         if graph is None:
             raise RpgProgressionAuthoringError(f"unknown progression graph: {graph_id}")
         key = str(node_id)
-        refs = [n.node_id for n in graph.nodes if any(r.node_id == key for r in n.prerequisites + n.any_prerequisites)]
+        refs = [
+            n.node_id
+            for n in graph.nodes
+            if any(r.node_id == key for r in n.prerequisites + n.any_prerequisites)
+        ]
         if refs:
-            raise RpgProgressionAuthoringError(f"node {key} is prerequisite of " + ", ".join(sorted(refs)))
+            raise RpgProgressionAuthoringError(
+                f"node {key} is prerequisite of " + ", ".join(sorted(refs))
+            )
         nodes = tuple(n for n in graph.nodes if n.node_id != key)
         if len(nodes) == len(graph.nodes):
             raise RpgProgressionAuthoringError(f"unknown progression node: {key}")
@@ -430,7 +500,9 @@ class RpgProgressionAuthoringController:
         if old is None:
             raise RpgProgressionAuthoringError(f"unknown progression graph: {key}")
         self._execute(
-            _MappingCommand(self.database.progression_graphs, key, None, old, f"Delete Progression Graph {key}")
+            _MappingCommand(
+                self.database.progression_graphs, key, None, old, f"Delete Progression Graph {key}"
+            )
         )
 
     def create_evolution(
@@ -448,8 +520,13 @@ class RpgProgressionAuthoringController:
         if key in self.database.ability_evolutions:
             raise RpgProgressionAuthoringError(f"duplicate evolution: {key}")
         self._check_abilities((source_ability_id, result_ability_id))
-        if progression_track_id is not None and progression_track_id not in self.database.progression_tracks:
-            raise RpgProgressionAuthoringError(f"unknown progression track: {progression_track_id}")
+        if (
+            progression_track_id is not None
+            and progression_track_id not in self.database.progression_tracks
+        ):
+            raise RpgProgressionAuthoringError(
+                f"unknown progression track: {progression_track_id}"
+            )
         value = AbilityEvolutionRule(
             key,
             source_ability_id,
@@ -460,7 +537,9 @@ class RpgProgressionAuthoringController:
             retain_source=retain_source,
         )
         self._execute(
-            _MappingCommand(self.database.ability_evolutions, key, value, None, f"Add Ability Evolution {key}")
+            _MappingCommand(
+                self.database.ability_evolutions, key, value, None, f"Add Ability Evolution {key}"
+            )
         )
         return value
 
@@ -479,7 +558,9 @@ class RpgProgressionAuthoringController:
         }
         unknown = set(changes) - allowed
         if unknown:
-            raise RpgProgressionAuthoringError("unsupported evolution fields: " + ", ".join(sorted(unknown)))
+            raise RpgProgressionAuthoringError(
+                "unsupported evolution fields: " + ", ".join(sorted(unknown))
+            )
         src = changes.get("source_ability_id", old.source_ability_id)
         dst = changes.get("result_ability_id", old.result_ability_id)
         self._check_abilities((src, dst))
@@ -496,7 +577,9 @@ class RpgProgressionAuthoringController:
             retain_source=changes.get("retain_source", old.retain_source),
         )
         self._execute(
-            _MappingCommand(self.database.ability_evolutions, key, value, old, f"Edit Ability Evolution {key}")
+            _MappingCommand(
+                self.database.ability_evolutions, key, value, old, f"Edit Ability Evolution {key}"
+            )
         )
         return value
 
@@ -506,7 +589,9 @@ class RpgProgressionAuthoringController:
         if old is None:
             raise RpgProgressionAuthoringError(f"unknown evolution: {key}")
         self._execute(
-            _MappingCommand(self.database.ability_evolutions, key, None, old, f"Delete Ability Evolution {key}")
+            _MappingCommand(
+                self.database.ability_evolutions, key, None, old, f"Delete Ability Evolution {key}"
+            )
         )
 
     def validate(self):

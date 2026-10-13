@@ -70,10 +70,17 @@ class PortraitValidator:
             md = dict(v.metadata)
             if any(k in md for k in ("dialogue_box_baked", "ui_chrome_baked", "nameplate_baked")):
                 issues.append(
-                    ValidationIssue("portrait.baked_ui", f"{v.name}: UI chrome must remain presentation-owned")
+                    ValidationIssue(
+                        "portrait.baked_ui", f"{v.name}: UI chrome must remain presentation-owned"
+                    )
                 )
         return ValidationReport(a.canonical.asset_id, tuple(issues))
 
 
 def portrait_asset(asset_id, uri, variants, default_variant="default", **kw):
-    return PortraitAsset(CanonicalAsset(asset_id, "portrait", AssetSource(uri)), tuple(variants), default_variant, **kw)
+    return PortraitAsset(
+        CanonicalAsset(asset_id, "portrait", AssetSource(uri)),
+        tuple(variants),
+        default_variant,
+        **kw,
+    )

@@ -18,7 +18,9 @@ REF = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_refe
 
 
 @component_schema(
-    type_name="test.Lantern", version=3, fields=(Field("brightness", float, 1.0), Field("color", str, "white"))
+    type_name="test.Lantern",
+    version=3,
+    fields=(Field("brightness", float, 1.0), Field("color", str, "white")),
 )
 class Lantern(Component):
     def __init__(self):
@@ -46,9 +48,13 @@ def _registry():
 
 
 def test_old_component_versions_are_migrated_step_by_step():
-    lantern = deserialize_component({"type": "test.Lantern", "version": 1, "fields": {"lumens": 250}}, _registry())
+    lantern = deserialize_component(
+        {"type": "test.Lantern", "version": 1, "fields": {"lumens": 250}}, _registry()
+    )
     assert (lantern.brightness, lantern.color) == (2.5, "amber")
-    current = deserialize_component({"type": "test.Lantern", "version": 3, "fields": {"color": "red"}}, _registry())
+    current = deserialize_component(
+        {"type": "test.Lantern", "version": 3, "fields": {"color": "red"}}, _registry()
+    )
     assert current.color == "red"
     with pytest.raises(ValueError):
         deserialize_component({"type": "test.Lantern", "version": 4, "fields": {}}, _registry())
@@ -63,7 +69,9 @@ def test_upgrade_rewrites_an_old_project_at_the_current_version(tmp_path):
     assert old_version < 10
     assert upgrade_project(path) == (old_version, 11)
     assert json.loads(path.read_text())["version"] == 11
-    assert json.loads((tmp_path / "project.asteria.json.bak").read_text())["version"] == old_version
+    assert (
+        json.loads((tmp_path / "project.asteria.json.bak").read_text())["version"] == old_version
+    )
     assert load_project(path).name == load_project(REF / "project.asteria.json").name
 
 
@@ -90,8 +98,14 @@ def test_export_refuses_missing_resources_unless_allowed(tmp_path):
 
 
 def _run_isolated(tmp_path, *command, home=None):
-    """Run outside the repo: ``python -I`` (no PYTHONPATH, no cwd on sys.path), reporting the engine it imported."""
-    env = dict(os.environ, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", HOME=str(home or tmp_path / "home"))
+    """Run outside the repo: ``python -I`` (no PYTHONPATH, no cwd on sys.path), reporting the
+    engine it imported."""
+    env = dict(
+        os.environ,
+        SDL_VIDEODRIVER="dummy",
+        SDL_AUDIODRIVER="dummy",
+        HOME=str(home or tmp_path / "home"),
+    )
     probe = (
         "import runpy, sys\n"
         "target = sys.argv[1]; sys.argv = [target, '--frames', '5']\n"
@@ -122,7 +136,9 @@ def test_exported_game_launches_in_its_own_process_with_its_own_engine(tmp_path)
 
 def test_single_file_build_unpacks_once_and_keeps_saves_in_the_user_data_folder(tmp_path):
     pytest.importorskip("pygame")
-    result = package_game(REF / "project.asteria.json", tmp_path / "dist", name="Ref Game", app=True)
+    result = package_game(
+        REF / "project.asteria.json", tmp_path / "dist", name="Ref Game", app=True
+    )
     pyz = result["pyz"]
     assert pyz.name == "Ref_Game.pyz" and pyz.read_bytes().startswith(b"#!/usr/bin/env python3")
     engine = _run_isolated(tmp_path, str(pyz))
@@ -132,7 +148,11 @@ def test_single_file_build_unpacks_once_and_keeps_saves_in_the_user_data_folder(
     (build,) = cache.iterdir()
     assert engine.is_relative_to(build / "engine") and (build / ".complete").is_file()
     saves = build / "game" / "saves"
-    assert saves.is_symlink() and saves.resolve().name == "saves" and "Ref_Game" in str(saves.resolve())
+    assert (
+        saves.is_symlink()
+        and saves.resolve().name == "saves"
+        and "Ref_Game" in str(saves.resolve())
+    )
     stamp = (build / ".complete").stat().st_mtime_ns
     _run_isolated(tmp_path, str(pyz))  # the second start reuses the unpacked build
     assert (build / ".complete").stat().st_mtime_ns == stamp
@@ -148,7 +168,9 @@ def test_single_file_build_unpacks_once_and_keeps_saves_in_the_user_data_folder(
 @pytest.mark.skipif(sys.platform == "win32", reason="the .app launcher is a POSIX shell script")
 def test_macos_app_launcher_starts_the_game(tmp_path):
     pytest.importorskip("pygame")
-    app = package_game(REF / "project.asteria.json", tmp_path / "dist", name="Ref Game", app=True)["app"]
+    app = package_game(REF / "project.asteria.json", tmp_path / "dist", name="Ref Game", app=True)[
+        "app"
+    ]
     env = dict(
         os.environ,
         SDL_VIDEODRIVER="dummy",
@@ -183,12 +205,16 @@ def test_editor_export_game_saves_and_packages(tmp_path):
     from asteria.editor.commands import SetAttributeCommand
 
     window.document.execute(
-        SetAttributeCommand(window.document.project, "name", "Exported From Editor", window.document.project.name)
+        SetAttributeCommand(
+            window.document.project, "name", "Exported From Editor", window.document.project.name
+        )
     )
     assert window.document.dirty
     assert window.export_action.text() == "Export Game…"
     result = window.export_game(tmp_path / "dist", pyz=True, app=False)
     assert result["pyz"].name == "Exported_From_Editor.pyz" and result["app"] is None
-    assert load_project(result["folder"] / "project.asteria.json").name == "Exported From Editor"  # saved first
+    assert (
+        load_project(result["folder"] / "project.asteria.json").name == "Exported From Editor"
+    )  # saved first
     window.close()
     app.processEvents()

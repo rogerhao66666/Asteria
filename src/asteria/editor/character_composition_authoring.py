@@ -1,4 +1,5 @@
-"""Character composition authoring (CMP-01, CMP-02, CMP-04): sockets, attachments and visual layers.
+"""Character composition authoring (CMP-01, CMP-02, CMP-04): sockets, attachments and visual
+layers.
 
 A body sprite sheet carries, in its asset metadata:
 
@@ -16,8 +17,19 @@ from __future__ import annotations
 from dataclasses import asdict, replace
 
 from asteria.presentation.actor_visual_layers import ActorVisualLayerTrack, FrameVisualLayer
-from asteria.presentation.attachments import Attachment, GripTransform, Socket, SocketKey, SocketRig, Transform2D
-from asteria.presentation.character_composition import CharacterComposition, attachment_to_data, composition_of
+from asteria.presentation.attachments import (
+    Attachment,
+    GripTransform,
+    Socket,
+    SocketKey,
+    SocketRig,
+    Transform2D,
+)
+from asteria.presentation.character_composition import (
+    CharacterComposition,
+    attachment_to_data,
+    composition_of,
+)
 
 from .animation_authoring import AnimationAuthoringController, _ReplaceAssetCommand
 
@@ -49,7 +61,9 @@ class CharacterCompositionAuthoring:
             for attachment in attachments:
                 attachment.validate()
                 if attachment.socket_id not in rig.sockets:
-                    raise ValueError(f"attachment {attachment.id} uses unknown socket {attachment.socket_id}")
+                    raise ValueError(
+                        f"attachment {attachment.id} uses unknown socket {attachment.socket_id}"
+                    )
             if len({a.id for a in attachments}) != len(attachments):
                 raise ValueError("attachment ids must be unique")
         except (ValueError, KeyError) as exc:
@@ -58,10 +72,12 @@ class CharacterCompositionAuthoring:
         meta["attachments"] = [attachment_to_data(a) for a in attachments]
         meta["visual_layers"] = layers.to_dict()
         after = replace(before, metadata=tuple(sorted(meta.items())))
-        self.document.execute(_ReplaceAssetCommand(self.animation.project.assets, before, after, label))
+        self.document.execute(
+            _ReplaceAssetCommand(self.animation.project.assets, before, after, label)
+        )
         return self.composition(asset_id)
 
-    # -- sockets -----------------------------------------------------------------------------------
+    # -- sockets ----------------------------------------------------------------------------------
     def add_socket(self, asset_id, socket_id, x=0.0, y=0.0, *, parent=None):
         rig, _, _ = self.composition(asset_id)
         if socket_id in rig.sockets:
@@ -75,7 +91,8 @@ class CharacterCompositionAuthoring:
         old = rig.sockets[socket_id]
         keys = {k.frame: k for k in old.keys}
         keys[int(frame)] = SocketKey(
-            int(frame), Transform2D(float(x), float(y), float(rotation), float(scale), float(scale))
+            int(frame),
+            Transform2D(float(x), float(y), float(rotation), float(scale), float(scale)),
         )
         sockets = dict(rig.sockets)
         sockets[socket_id] = replace(old, keys=tuple(keys[f] for f in sorted(keys)))
@@ -90,7 +107,7 @@ class CharacterCompositionAuthoring:
         sockets = {k: v for k, v in rig.sockets.items() if k != socket_id}
         return self._commit(asset_id, f"Remove socket {socket_id}", rig=SocketRig(sockets))
 
-    # -- attachments ---------------------------------------------------------------------------------
+    # -- attachments ------------------------------------------------------------------------------
     def attach(
         self,
         asset_id,
@@ -106,7 +123,8 @@ class CharacterCompositionAuthoring:
         frame=0,
         grip=None,
     ):
-        """Wear frame ``frame`` of sheet ``item_asset_id`` on a socket; ``grip`` is the item's hold point (pixels)."""
+        """Wear frame ``frame`` of sheet ``item_asset_id`` on a socket; ``grip`` is the item's hold
+        point (pixels)."""
         _, attachments, _ = self.composition(asset_id)
         try:
             self.animation.asset(item_asset_id)
@@ -116,11 +134,20 @@ class CharacterCompositionAuthoring:
             str(attachment_id),
             str(item_asset_id),
             str(socket_id),
-            Transform2D(float(x), float(y), float(rotation), float(scale), float(scale), z_offset=1 if front else -1),
+            Transform2D(
+                float(x),
+                float(y),
+                float(rotation),
+                float(scale),
+                float(scale),
+                z_offset=1 if front else -1,
+            ),
             metadata={"frame": int(frame)},
             grip=GripTransform(*(float(v) for v in grip)) if grip else GripTransform(),
         )
-        return self._commit(asset_id, f"Attach {attachment_id}", attachments=(*attachments, attachment))
+        return self._commit(
+            asset_id, f"Attach {attachment_id}", attachments=(*attachments, attachment)
+        )
 
     def edit_attachment(self, asset_id, attachment_id, **local):
         _, attachments, _ = self.composition(asset_id)
@@ -136,18 +163,31 @@ class CharacterCompositionAuthoring:
     def detach(self, asset_id, attachment_id):
         _, attachments, _ = self.composition(asset_id)
         return self._commit(
-            asset_id, f"Detach {attachment_id}", attachments=[a for a in attachments if a.id != attachment_id]
+            asset_id,
+            f"Detach {attachment_id}",
+            attachments=[a for a in attachments if a.id != attachment_id],
         )
 
-    # -- visual layers -------------------------------------------------------------------------------
-    def add_layer(self, asset_id, layer_asset_id, *, component_id="foreground", z=1.0, frames=(), clips=()):
+    # -- visual layers ----------------------------------------------------------------------------
+    def add_layer(
+        self, asset_id, layer_asset_id, *, component_id="foreground", z=1.0, frames=(), clips=()
+    ):
         _, _, layers = self.composition(asset_id)
-        self.animation.asset(layer_asset_id)  # must exist (a sheet whose frames line up with the body's)
+        self.animation.asset(
+            layer_asset_id
+        )  # must exist (a sheet whose frames line up with the body's)
         layer = FrameVisualLayer(
-            str(layer_asset_id), str(component_id), float(z), Transform2D(), tuple(frames), tuple(clips)
+            str(layer_asset_id),
+            str(component_id),
+            float(z),
+            Transform2D(),
+            tuple(frames),
+            tuple(clips),
         )
         return self._commit(
-            asset_id, f"Add layer {component_id}", layers=ActorVisualLayerTrack((*layers.layers, layer))
+            asset_id,
+            f"Add layer {component_id}",
+            layers=ActorVisualLayerTrack((*layers.layers, layer)),
         )
 
     def remove_layer(self, asset_id, index):
@@ -155,7 +195,7 @@ class CharacterCompositionAuthoring:
         kept = [x for i, x in enumerate(layers.layers) if i != int(index)]
         return self._commit(asset_id, "Remove layer", layers=ActorVisualLayerTrack(kept))
 
-    # -- preview -------------------------------------------------------------------------------------
+    # -- preview ----------------------------------------------------------------------------------
     def parts(self, asset_id, frame_index, clip_id=""):
         """What the game draws with this body frame (``CompositionPart`` list, back to front)."""
         composition = CharacterComposition(*self.composition(asset_id))

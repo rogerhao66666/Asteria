@@ -17,7 +17,8 @@ transfers... through the world command router; ``"wait": seconds`` holds the
 track while the effect plays), and the movement/animation commands carried
 out through the host:
 
-* ``MOVE``    ``entity``, ``x``, ``y`` (``relative``), ``duration`` or ``speed``; ``wait`` (default true)
+* ``MOVE``    ``entity``, ``x``, ``y`` (``relative``), ``duration`` or ``speed``; ``wait``
+  (default true)
 * ``FACE``    ``entity``, ``facing``
 * ``ANIMATE`` ``entity``, ``clip``
 
@@ -36,7 +37,17 @@ from .program import EventInstruction, EventProgram
 from .state import EventVMStatus
 from .vm import EventVM
 
-INTRINSIC = {"WAIT", "END", "SET_SWITCH", "SET_VARIABLE", "SET_LOCAL", "LABEL", "JUMP", "JUMP_IF", "IF_FALSE_SKIP"}
+INTRINSIC = {
+    "WAIT",
+    "END",
+    "SET_SWITCH",
+    "SET_VARIABLE",
+    "SET_LOCAL",
+    "LABEL",
+    "JUMP",
+    "JUMP_IF",
+    "IF_FALSE_SKIP",
+}
 HOST_OPCODES = {"MOVE", "FACE", "ANIMATE"}
 TRACK_FORBIDDEN = {"CHOICE", "CALL", "RETURN", "SEQUENCE"}
 
@@ -49,7 +60,9 @@ def track_program(raw):
     instructions = raw.get("instructions") if isinstance(raw, dict) else None
     if not isinstance(instructions, list):
         raise SequenceError("each SEQUENCE track needs an instructions list")
-    program = EventProgram(tuple(EventInstruction.from_data(x) for x in instructions), name=str(raw.get("name", "")))
+    program = EventProgram(
+        tuple(EventInstruction.from_data(x) for x in instructions), name=str(raw.get("name", ""))
+    )
     bad = sorted({i.opcode for i in program.instructions if i.opcode in TRACK_FORBIDDEN})
     if bad:
         raise SequenceError(f"not allowed inside a sequence track: {', '.join(bad)}")
@@ -85,7 +98,13 @@ class _Tween:
 
     @classmethod
     def from_data(cls, data):
-        return cls(data["entity_id"], tuple(data["start"]), tuple(data["end"]), data["duration"], data["elapsed"])
+        return cls(
+            data["entity_id"],
+            tuple(data["start"]),
+            tuple(data["end"]),
+            data["duration"],
+            data["elapsed"],
+        )
 
 
 @dataclass(slots=True)
@@ -97,7 +116,10 @@ class _Track:
 
     @property
     def done(self):
-        return self.vm.state.status in (EventVMStatus.COMPLETED, EventVMStatus.STOPPED) and self.tween is None
+        return (
+            self.vm.state.status in (EventVMStatus.COMPLETED, EventVMStatus.STOPPED)
+            and self.tween is None
+        )
 
 
 @dataclass(slots=True)
@@ -109,7 +131,9 @@ class EventSequence:
     pc: int  # program counter of the SEQUENCE instruction in the owning program
     tracks: list = field(default_factory=list)
     skipping: bool = False
-    showed_line: bool = False  # a track opened a dialogue line (the scene ends once it has been read)
+    showed_line: bool = (
+        False  # a track opened a dialogue line (the scene ends once it has been read)
+    )
 
     @classmethod
     def start(cls, instruction, runner, pc):
@@ -117,7 +141,9 @@ class EventSequence:
         sequence = cls(dict(instruction.args), runner, pc)
         for index, raw in enumerate(instruction.args["tracks"]):
             program = track_program(raw)
-            vm = EventVM(program, context=runner.context, local_scope_id=runner.local_scope or None)
+            vm = EventVM(
+                program, context=runner.context, local_scope_id=runner.local_scope or None
+            )
             sequence.tracks.append(_Track(str(raw.get("name") or f"track{index + 1}"), vm))
         return sequence
 
@@ -135,7 +161,8 @@ class EventSequence:
 
     @property
     def done(self):
-        # a line a track showed (often its last instruction) must still be read before the scene ends
+        # a line a track showed (often its last instruction) must still be read before the scene
+        # ends
         reading = self.showed_line and self.runner.dialogue.blocked and not self.skipping
         return all(t.done for t in self.tracks) and not reading
 
@@ -176,13 +203,19 @@ class EventSequence:
         if instruction.opcode == "MOVE":
             self._begin_move(track, args)
         elif instruction.opcode == "FACE":
-            self._host("FACE").set_facing(str(args.get("entity", "")), str(args.get("facing", "down")))
+            self._host("FACE").set_facing(
+                str(args.get("entity", "")), str(args.get("facing", "down"))
+            )
         elif instruction.opcode == "ANIMATE":
-            self._host("ANIMATE").play_animation(str(args.get("entity", "")), str(args.get("clip", "")))
+            self._host("ANIMATE").play_animation(
+                str(args.get("entity", "")), str(args.get("clip", ""))
+            )
 
     # -- stepping -----------------------------------------------------------------------------
     def _advance_tween(self, tween, dt):
-        tween.elapsed = min(tween.duration, tween.elapsed + dt) if not self.skipping else tween.duration
+        tween.elapsed = (
+            min(tween.duration, tween.elapsed + dt) if not self.skipping else tween.duration
+        )
         k = 1.0 if tween.duration <= 0 else tween.elapsed / tween.duration
         x = tween.start[0] + (tween.end[0] - tween.start[0]) * k
         y = tween.start[1] + (tween.end[1] - tween.start[1]) * k
@@ -237,7 +270,9 @@ class EventSequence:
                     else:
                         break
             elif instruction.opcode not in INTRINSIC:
-                raise SequenceError(f"unsupported instruction in a sequence track: {instruction.opcode}")
+                raise SequenceError(
+                    f"unsupported instruction in a sequence track: {instruction.opcode}"
+                )
             if self.skipping and vm.waiting:
                 vm.state.wait_remaining = 0.0
                 vm.update_wait(0.0)
@@ -279,7 +314,9 @@ class EventSequence:
                 {
                     "vm_state": t.vm.state.to_data(),
                     "tween": None if t.tween is None else t.tween.to_data(),
-                    "pending_dialogue": None if t.pending_dialogue is None else t.pending_dialogue.to_data(),
+                    "pending_dialogue": None
+                    if t.pending_dialogue is None
+                    else t.pending_dialogue.to_data(),
                 }
                 for t in self.tracks
             ],
@@ -295,9 +332,14 @@ class EventSequence:
         sequence.showed_line = bool(data.get("showed_line", False))
         for track, saved in zip(sequence.tracks, data["tracks"], strict=True):
             track.vm = EventVM.restore(
-                track.vm.program, saved["vm_state"], context=runner.context, local_scope_id=runner.local_scope or None
+                track.vm.program,
+                saved["vm_state"],
+                context=runner.context,
+                local_scope_id=runner.local_scope or None,
             )
             track.tween = None if saved["tween"] is None else _Tween.from_data(saved["tween"])
             pending = saved.get("pending_dialogue")
-            track.pending_dialogue = None if pending is None else EventInstruction.from_data(pending)
+            track.pending_dialogue = (
+                None if pending is None else EventInstruction.from_data(pending)
+            )
         return sequence
