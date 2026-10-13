@@ -362,6 +362,11 @@ class CodeWorkspaceWidget(QWidget):
         self.completer.complete(rect)
         return names
 
+    def hideEvent(self, event):  # noqa: N802 - Qt override
+        """A completion list never outlives the code editor (it floated over other workspaces)."""
+        self.completer.popup().hide()
+        super().hideEvent(event)
+
     def insert_completion(self, name):
         cursor = self.editor.textCursor()
         cursor.insertText(

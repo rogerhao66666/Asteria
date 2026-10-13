@@ -207,3 +207,36 @@ def test_problems_name_broken_real_time_combat_references():
     )
     warning = next(p for m, p in messages.items() if "hit tag custom" in m)
     assert warning.severity == "warning"
+
+
+def test_the_list_actions_fit_a_narrow_column_and_the_completion_list_closes_with_its_page():
+    QtWidgets = pytest.importorskip("PySide6.QtWidgets")
+    from asteria.editor.code_workspace import CodeWorkspaceWidget
+    from asteria.editor.combat_workspace import CombatWorkspace
+
+    qapp = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    document = _document()
+    document.project.gameplay_library.add_attack(AttackDefinition("slash"))
+    widget = CombatWorkspace(document)
+    widget.resize(900, 700)  # narrow: the left column gets the least width it is given
+    widget.show()
+    qapp.processEvents()
+    for button in (widget.new_button, widget.duplicate_button, widget.delete_button):
+        needed = button.fontMetrics().horizontalAdvance(button.text())
+        assert button.width() >= needed + 12, button.text()  # the whole label is visible
+    assert widget.new_button.width() > widget.duplicate_button.width()  # "New" spans the column
+    assert "Attack" in widget.new_button.toolTip()
+    widget.close()
+
+    code = CodeWorkspaceWidget(document)
+    code.show()
+    code.editor.setPlainText("ent")
+    cursor = code.editor.textCursor()
+    cursor.movePosition(cursor.MoveOperation.End)
+    code.editor.setTextCursor(cursor)
+    code.show_completions()
+    qapp.processEvents()
+    code.hide()  # switching to another workspace
+    qapp.processEvents()
+    assert not code.completer.popup().isVisible()
+    code.close()

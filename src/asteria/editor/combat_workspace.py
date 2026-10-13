@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
     QFrame,
+    QGridLayout,
     QHBoxLayout,
     QHeaderView,
     QInputDialog,
@@ -748,17 +749,25 @@ class CombatWorkspace(QWidget):
         self.list.currentItemChanged.connect(
             lambda current, _old: self.select(current.data(Qt.UserRole) if current else None)
         )
-        self.new_button = QPushButton("New…")
+        # short labels: the left column can be narrow; the tooltips carry the full wording
+        self.new_button = QPushButton("New")
         self.new_button.setProperty("role", "primary")
         self.new_button.clicked.connect(self.new_record)
-        self.duplicate_button = QPushButton("Duplicate…")
+        self.duplicate_button = QPushButton("Duplicate")
         self.duplicate_button.clicked.connect(self.duplicate_record)
         self.delete_button = QPushButton("Delete")
         self.delete_button.setProperty("role", "danger")
         self.delete_button.clicked.connect(self.delete_record)
-        actions = QHBoxLayout()
+        # two rows: "New" across the column, "Duplicate" and "Delete" side by side; the left
+        # column can be narrow, and this never clips or wraps whatever the icons add
+        actions = QGridLayout()
+        actions.setHorizontalSpacing(6)
+        actions.setVerticalSpacing(6)
+        actions.addWidget(self.new_button, 0, 0, 1, 2)
+        actions.addWidget(self.duplicate_button, 1, 0)
+        actions.addWidget(self.delete_button, 1, 1)
         for button in (self.new_button, self.duplicate_button, self.delete_button):
-            actions.addWidget(button)
+            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         left = QVBoxLayout()
         left.addLayout(kinds)
         left.addSpacing(6)
@@ -767,7 +776,7 @@ class CombatWorkspace(QWidget):
         left.addLayout(actions)
         left_panel = QWidget()
         left_panel.setLayout(left)
-        left_panel.setMinimumWidth(230)
+        left_panel.setMinimumWidth(240)
 
         # middle: heading + cards + apply bar
         self.heading = QLabel()
@@ -884,7 +893,9 @@ class CombatWorkspace(QWidget):
         self.kind_id = kind_id
         self.kind_buttons[kind_id].setChecked(True)
         spec = self.api.kind(kind_id)
-        self.new_button.setText(f"New {spec.noun}…")
+        self.new_button.setToolTip(f"New {spec.noun}…")
+        self.duplicate_button.setToolTip(f"Duplicate this {spec.noun.lower()}…")
+        self.delete_button.setToolTip(f"Delete this {spec.noun.lower()}")
         self._build_form()
         if self.preview is not None:
             self.preview.setParent(None)
