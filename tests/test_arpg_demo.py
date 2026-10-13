@@ -347,3 +347,55 @@ def test_particle_effects_and_text_use_the_tile_scenes_camera_and_are_cached(dem
     assert len(demo._text_cache) == before  # the HUD text of a still frame is not re-rendered
     assert demo.tile_view is demo.tile_view
     assert ParticleSystem is not None
+
+
+def test_a_huge_map_costs_only_what_the_camera_sees(monkeypatch, tmp_path):
+    """A 640 x 640 tile world (a 10240 px square: a pre-rendered picture would be ~400 MB) loads
+    at once, draws from a bounded number of chunk surfaces, and its walls still work."""
+    import json
+    import shutil
+    import time
+
+    pytest.importorskip("pygame")
+    import real_window
+
+    from asteria.runtime.playable_test_runtime import PlayableTestRuntime
+    from asteria.runtime.tile_scene_view import CHUNK_CACHE
+
+    root = tmp_path / "game"
+    shutil.copytree(ROOT, root)
+    path = root / "playable_assets" / "field_map.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    ground = data["layers"][0]
+    template = ground["chunks"][0]
+    tiles = list(template["tiles"])
+    side = 40  # chunks per side
+    ground["chunks"] = [
+        {"chunk_x": x, "chunk_y": y, "width": 16, "height": 16, "tiles": tiles}
+        for x in range(side)
+        for y in range(side)
+    ]
+    path.write_text(json.dumps(data), encoding="utf-8")
+    if not real_window.enabled():
+        monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+        monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
+    project = _project()
+    rt = PlayableTestRuntime(
+        project, project.game_start.instantiate(project), root, width=960, height=540
+    )
+    rt.open()
+    rt._ui_mode = "field"
+    field = _scene(project, "Greenvale")
+    started = time.perf_counter()
+    rt.game.transfer_player(field.id, 300 * 16, 300 * 16, facing="down")
+    _frames(rt, 3)
+    assert time.perf_counter() - started < 5.0
+    view = rt.tile_view
+    assert view.bounds[2] == side * 16 * 16 and view.bounds[3] == side * 16 * 16
+    for i in range(40):  # walk far across the map: chunks come and go, the cache stays bounded
+        rt.game.set_player_position(300 * 16 + i * 150, 300 * 16 + i * 90)
+        _frames(rt, 1)
+    assert len(view._chunk_cache) <= CHUNK_CACHE
+    assert view.blocking.collides_world_point(-5, 100)  # the map's edge still blocks
+    assert not view.blocking.collides_world_point(5000, 5000)
+    rt.close()

@@ -99,6 +99,7 @@ class GameSessionRuntime:
         if self.player is None:
             raise GameSessionError("saved player entity does not exist")
         self.facing = runtime_save.player_facing
+        self._turn_player_controller()  # a loaded save faces the way it was saved
         if runtime_save.player_position is not None:
             transform = self.player.get(Transform)
             transform.x, transform.y = runtime_save.player_position
@@ -177,7 +178,17 @@ class GameSessionRuntime:
     def set_player_facing(self, facing):
         self.facing = str(facing)
         self.save.player_facing = self.facing
+        self._turn_player_controller()
         return self.facing
+
+    def _turn_player_controller(self):
+        """A real-time scene's player controller keeps its own facing: turn it with the session's
+        (a door's ``facing``, a loaded save) so the two do not disagree."""
+        from asteria.runtime.character_control import FACINGS, CharacterController2DComponent
+
+        controller = self.player.try_get(CharacterController2DComponent)
+        if controller is not None and self.facing in FACINGS and controller.facing != self.facing:
+            controller.facing = self.facing
 
     def field_step(self, actions=None):
         """Feed field input; an interaction starts its event program in the foreground runner."""
@@ -253,6 +264,7 @@ class GameSessionRuntime:
                 # an ActorLink entity fights with its RPG actor's build
                 stats_provider=self._actor_combat_state,
             )
+            combat.listeners.append(self._remember_defeat)
             combat.listeners.append(self._award_experience)
             combat.listeners.append(self._player_fell)
             combat.protected.add(
@@ -361,6 +373,7 @@ class GameSessionRuntime:
             }
             self._field_simulation[scene.id] = systems
             self._apply_tile_blocking(scene.id)
+            self._remove_defeated(scene)
         return systems
 
     def set_tile_blocking(self, query, scene_id=None):
@@ -607,6 +620,22 @@ class GameSessionRuntime:
                 for name in state.resources.names():
                     state.resources.set_current(name, state.resources.maximum(name))
             self.hits.grant_invincibility(self.player.id, 1.5)
+
+    def _remember_defeat(self, event):
+        """A defeated combatant with a ``defeat_switch`` is remembered in the save."""
+        name = event.data.get("defeat_switch") if event.kind == "death" else ""
+        if name:
+            self.save.event_context.set_switch(str(name), True)
+
+    def _remove_defeated(self, scene):
+        """Entities whose ``defeat_switch`` is on stay gone (they were beaten in an earlier
+        visit or session)."""
+        from asteria.runtime.combat import CombatantComponent
+
+        for entity, combatant in list(scene.query(CombatantComponent)):
+            name = combatant.defeat_switch
+            if name and self.save.event_context.get_switch(str(name)):
+                scene.remove_entity(entity)
 
     def _award_experience(self, event):
         if event.kind != "death" or not event.data.get("experience") or not event.attacker_id:

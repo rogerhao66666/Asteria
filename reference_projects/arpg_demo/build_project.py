@@ -1500,6 +1500,7 @@ def build_scenes(project, looks, tilemaps, layouts):
         armor=0,
         stagger_result="knocked_down",
         experience=500,
+        defeat_switch="defeated.bone_champion",
         drop_table_id="elite",
         **elite,
     )
@@ -1534,6 +1535,7 @@ def build_scenes(project, looks, tilemaps, layouts):
         stagger_result="knocked_down",
         knockback_resistance=0.6,
         experience=2500,
+        defeat_switch="defeated.gorgoth",
         drop_table_id="cyclops",
         loot_level=9,
         loot_luck=2.0,
@@ -1625,6 +1627,7 @@ def build_scenes(project, looks, tilemaps, layouts):
         stagger_result="knocked_down",
         knockback_resistance=0.8,
         experience=4000,
+        defeat_switch="defeated.rust_golem",
         drop_table_id="golem",
         loot_level=12,
         loot_luck=2.5,

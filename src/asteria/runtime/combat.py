@@ -205,6 +205,13 @@ def parse_tags(text):
             tooltip="Experience the one who defeats it gains.",
         ),
         Field("death_event", str, "", tooltip="Gameplay event reported when it dies."),
+        Field(
+            "defeat_switch",
+            str,
+            "",
+            tooltip="A switch set (and saved) when it is defeated; while it is on this entity "
+            "does not come back - a boss that stays dead after save and load.",
+        ),
         Field("enabled", bool, True),
     ),
 )
@@ -237,6 +244,7 @@ class CombatantComponent(Component):
         self.loot_luck = 0.0
         self.experience = 0.0
         self.death_event = ""
+        self.defeat_switch = ""
         self.enabled = True
         # runtime (not serialized)
         self.state = None  # CombatantState, built on first use
@@ -642,7 +650,11 @@ class CombatSystem(System):
         self._emit(
             "death",
             target,
-            data={"event": combatant.death_event, "experience": combatant.experience},
+            data={
+                "event": combatant.death_event,
+                "experience": combatant.experience,
+                "defeat_switch": combatant.defeat_switch,
+            },
             **common,
         )
         table = self.drop_tables.get(combatant.drop_table_id) if combatant.drop_table_id else None

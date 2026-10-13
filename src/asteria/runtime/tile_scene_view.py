@@ -2,9 +2,11 @@
 pygame.
 
 ``TileSceneView`` loads the scene's ``TileMap2D`` binding through the project's asset records
-(tile map -> tileset -> sprite sheet -> texture), pre-renders the layers below characters
-(order < 100) and above them (order >= 100) once per scene, and each frame shows the camera's part
-of them scaled to the screen (nearest-neighbour: pixel art stays crisp). Every entity with a
+(tile map -> tileset -> sprite sheet -> texture). The layers below characters (order < 100) and
+above them (order >= 100) are drawn chunk by chunk: a chunk is rendered the first time it is seen
+and kept in a bounded cache, so a map of any size costs only what the camera can see. Each frame
+shows the camera's part of them scaled to the screen (nearest-neighbour: pixel art stays
+crisp). Every entity with a
 ``SpriteRenderer2D`` is drawn on its feet, sorted by depth; entities with an ``Animator2D`` whose
 clip set has ``idle_*`` / ``walk_*`` clips for the four facings animate from their own movement
 and facing (a controller's facing when they have one), and play ``attack_<facing>`` while an
@@ -27,19 +29,34 @@ from .tilemap_field import AssetResources, tilemap_binding
 from .tilequery import TileMapQuery
 
 DIRECTIONS = ("down", "left", "right", "up")
+CHUNK_CACHE = 192  # chunks kept rendered (about 50 MB of 16 x 16 tile chunks of 16 px tiles)
 
 
 class MapBlocking:
-    """Tile collision plus the map's edge, as a ``collides_world_point`` query."""
+    """Tile collision plus the map's edge, as a ``collides_world_point`` query. The collision
+    layers are picked once; a point test is a few dictionary lookups."""
 
     def __init__(self, query, bounds):
         self.query, self.bounds = query, bounds
+        self._layers = [
+            layer for layer in query.tilemap.ordered_layers() if layer.collision_enabled
+        ]
+        tilemap = query.tilemap
+        self._tile = (tilemap.tile_width, tilemap.tile_height)
+        self._chunk = (tilemap.chunk_width, tilemap.chunk_height)
 
     def collides_world_point(self, x, y):
         x0, y0, x1, y1 = self.bounds
         if not (x0 <= x < x1 and y0 <= y < y1):
             return True
-        return self.query.collides_world_point(x, y)
+        tx, ty = floor(x / self._tile[0]), floor(y / self._tile[1])
+        cx, cy = tx // self._chunk[0], ty // self._chunk[1]
+        index = (ty - cy * self._chunk[1]) * self._chunk[0] + (tx - cx * self._chunk[0])
+        for layer in self._layers:
+            chunk = layer.chunks.get((cx, cy))
+            if chunk is not None and chunk.tiles[index] != -1:
+                return True
+        return False
 
 
 class _Animated:
@@ -112,37 +129,46 @@ class TileSceneView:
         self.tileset = self.resources.get(self.tilemap.tileset.asset_id, "tileset")
         self.tile_sheet = self.resources.get(self.tileset.sprite_sheet.asset_id, "sprite_sheet")
         tw, th = self.tilemap.tile_width, self.tilemap.tile_height
-        cells = [
-            (c.chunk_x * self.tilemap.chunk_width + x, c.chunk_y * self.tilemap.chunk_height + y)
-            for layer in self.tilemap.layers
-            for c in layer.chunks.values()
-            for y in range(c.height)
-            for x in range(c.width)
-            if c.get(x, y) != -1
-        ]
-        columns = max((x for x, _ in cells), default=0) + 1
-        rows = max((y for _, y in cells), default=0) + 1
+        cw, ch = self.tilemap.chunk_width, self.tilemap.chunk_height
+        # the map's extent: the last tile that holds anything, by chunk (no per-cell scan of a
+        # whole big map)
+        columns = rows = 0
+        for layer in self.tilemap.layers:
+            for chunk in layer.chunks.values():
+                if all(t == -1 for t in chunk.tiles):
+                    continue
+                for y in range(chunk.height - 1, -1, -1):
+                    row = chunk.tiles[y * chunk.width : (y + 1) * chunk.width]
+                    if any(t != -1 for t in row):
+                        rows = max(rows, chunk.chunk_y * ch + y + 1)
+                        columns = max(
+                            columns,
+                            chunk.chunk_x * cw + max(x for x, t in enumerate(row) if t != -1) + 1,
+                        )
+                        break
+                for x in range(chunk.width - 1, -1, -1):
+                    if any(chunk.tiles[y * chunk.width + x] != -1 for y in range(chunk.height)):
+                        columns = max(columns, chunk.chunk_x * cw + x + 1)
+                        break
         self.bounds = (0.0, 0.0, float(columns * tw), float(rows * th))
         self.blocking = MapBlocking(TileMapQuery(self.tilemap), self.bounds)
         self.session.set_tile_blocking(self.blocking)
-        texture = self._texture(self.tile_sheet.texture.asset_id)
-        self.below = self.pg.Surface((columns * tw, rows * th), self.pg.SRCALPHA)
-        self.above = self.pg.Surface((columns * tw, rows * th), self.pg.SRCALPHA)
-        for layer in self.tilemap.ordered_layers():
-            if not layer.visible:
-                continue
-            target = self.above if layer.order >= 100 else self.below
-            for chunk in layer.chunks.values():
-                for y in range(chunk.height):
-                    for x in range(chunk.width):
-                        tile_id = chunk.get(x, y)
-                        if tile_id == -1 or tile_id not in self.tileset.tiles:
-                            continue
-                        frame = self.tile_sheet.frames[self.tileset.tiles[tile_id].frame_index]
-                        area = self.pg.Rect(frame.x, frame.y, frame.width, frame.height)
-                        gx = (chunk.chunk_x * self.tilemap.chunk_width + x) * tw
-                        gy = (chunk.chunk_y * self.tilemap.chunk_height + y) * th
-                        target.blit(texture, (gx, gy), area)
+        self._texture_surface = self._texture(self.tile_sheet.texture.asset_id)
+        self._frame_rects = {}
+        self._chunk_cache = {}  # (group, chunk_x, chunk_y) -> Surface | None, least recent first
+        self._canvas = {}
+        self._groups = {
+            "below": [
+                layer
+                for layer in self.tilemap.ordered_layers()
+                if layer.visible and layer.order < 100
+            ],
+            "above": [
+                layer
+                for layer in self.tilemap.ordered_layers()
+                if layer.visible and layer.order >= 100
+            ],
+        }
         zoom = 3.0
         for entity in scene.entities():
             spec = entity.try_get(Camera2DComponent)
@@ -242,25 +268,76 @@ class TileSceneView:
             turned = self._frames[key] = self.pg.transform.rotate(image, angle)
         return turned
 
-    def _layer(self, screen, surface):
+    def _tile_rect(self, tile_id):
+        rect = self._frame_rects.get(tile_id)
+        if rect is None:
+            definition = self.tileset.tiles.get(tile_id)
+            if definition is None:
+                rect = False
+            else:
+                frame = self.tile_sheet.frames[definition.frame_index]
+                rect = self.pg.Rect(frame.x, frame.y, frame.width, frame.height)
+            self._frame_rects[tile_id] = rect
+        return rect
+
+    def _chunk_surface(self, group, cx, cy):
+        """The pixels of one chunk of a layer group (None when it holds nothing); kept in a
+        bounded least-recently-used cache."""
+        key = (group, cx, cy)
+        cache = self._chunk_cache
+        if key in cache:
+            surface = cache.pop(key)
+            cache[key] = surface  # most recent last
+            return surface
+        tw, th = self.tilemap.tile_width, self.tilemap.tile_height
+        cw, ch = self.tilemap.chunk_width, self.tilemap.chunk_height
+        surface = None
+        for layer in self._groups[group]:
+            chunk = layer.chunks.get((cx, cy))
+            if chunk is None:
+                continue
+            for y in range(chunk.height):
+                for x in range(chunk.width):
+                    rect = self._tile_rect(chunk.tiles[y * chunk.width + x])
+                    if rect:
+                        if surface is None:
+                            surface = self.pg.Surface((cw * tw, ch * th), self.pg.SRCALPHA)
+                        surface.blit(self._texture_surface, (x * tw, y * th), rect)
+        cache[key] = surface
+        while len(cache) > CHUNK_CACHE:
+            cache.pop(next(iter(cache)))
+        return surface
+
+    def _layer(self, screen, group):
         cam = self.camera
+        tw, th = self.tilemap.tile_width, self.tilemap.tile_height
+        cwp, chp = self.tilemap.chunk_width * tw, self.tilemap.chunk_height * th
         view_w, view_h = self.width / cam.zoom, self.height / cam.zoom
         x0, y0 = floor(cam.x), floor(cam.y)
         w, h = int(view_w) + 2, int(view_h) + 2
-        area = self.pg.Rect(x0, y0, w, h).clip(surface.get_rect())
-        if area.width <= 0 or area.height <= 0:
+        canvas = self._canvas.get((w, h))
+        if canvas is None:
+            canvas = self._canvas[(w, h)] = self.pg.Surface((w, h), self.pg.SRCALPHA)
+        canvas.fill((0, 0, 0, 0))
+        drawn = False
+        for cy in range(floor(y0 / chp), floor((y0 + h) / chp) + 1):
+            for cx in range(floor(x0 / cwp), floor((x0 + w) / cwp) + 1):
+                chunk = self._chunk_surface(group, cx, cy)
+                if chunk is not None:
+                    canvas.blit(chunk, (cx * cwp - x0, cy * chp - y0))
+                    drawn = True
+        if not drawn:
             return
-        part = surface.subsurface(area)
-        size = (round(area.width * cam.zoom), round(area.height * cam.zoom))
-        sx, sy = cam.world_to_screen(area.x, area.y)
-        screen.blit(self.pg.transform.scale(part, size), (round(sx), round(sy)))
+        size = (round(w * cam.zoom), round(h * cam.zoom))
+        sx, sy = cam.world_to_screen(x0, y0)
+        screen.blit(self.pg.transform.scale(canvas, size), (round(sx), round(sy)))
 
     def draw(self, screen, flash=()):
         """Layers below characters, the sprites (depth-sorted, on their feet), layers above."""
         settings = getattr(self.session, "combat_scene", None)
         color = getattr(settings, "background_color", "") or "#0c0e14"
         screen.fill(tuple(int(color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)))
-        self._layer(screen, self.below)
+        self._layer(screen, "below")
         sprites = []
         for entity in self.session.scene.entities():
             if not entity.enabled:
@@ -295,7 +372,7 @@ class TileSceneView:
             screen.blit(
                 image, (round(sx - image.get_width() * px), round(sy - image.get_height() * py))
             )
-        self._layer(screen, self.above)
+        self._layer(screen, "above")
 
 
 __all__ = ["MapBlocking", "TileSceneView"]
