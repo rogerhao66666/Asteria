@@ -40,7 +40,7 @@ deaths = []
 
 def frame(n=1):
     for _ in range(n):
-        dt = min(rt.clock.tick(60) / 1000.0, 0.05)
+        dt = rt.tick(60)  # the runtime's own frame limiter (A11)
         frame_times.append(dt)
         rt._frame(pg.event.get(), dt)
         rt.present()

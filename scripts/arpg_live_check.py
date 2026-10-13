@@ -73,7 +73,7 @@ game.combat.listeners.append(seen.append)
 for frame in range(frames):
     for kind, key in script.get(frame, ()):
         pg.event.post(pg.event.Event(kind, key=key, mod=0, unicode="", scancode=0))
-    dt = min(rt.clock.tick(60) / 1000.0, 0.05)
+    dt = rt.tick(60)
     fps.append(dt)
     rt._frame(pg.event.get(), dt)
     rt.present()

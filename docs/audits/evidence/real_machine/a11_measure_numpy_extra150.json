@@ -1,0 +1,24 @@
+{
+ "driver": "cocoa",
+ "kernels": "numpy",
+ "enemies": 170,
+ "frames": 570,
+ "frame": {
+  "mean_ms": 8.51,
+  "p95_ms": 9.53
+ },
+ "simulate": {
+  "mean_ms": 1.84,
+  "p95_ms": 1.98
+ },
+ "draw": {
+  "mean_ms": 5.35,
+  "p95_ms": 6.27
+ },
+ "present": {
+  "mean_ms": 1.11,
+  "p95_ms": 1.7
+ },
+ "uncapped_fps": 117.6,
+ "projectiles_seen": 1
+}

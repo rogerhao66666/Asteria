@@ -2473,6 +2473,28 @@ class PlayableTestRuntime:
         self._last_action_name = self.message
         return out
 
+    def tick(self, target_fps=60):
+        """Wait for the next frame of a steady ``target_fps`` schedule; returns dt in seconds
+        (capped at 0.05). Deadlines advance by exactly one period (sleep, then a short spin), so
+        frames do not drift the way whole-millisecond waits plus a vsynced present do (A11)."""
+        import time
+
+        period = 1.0 / max(1, int(target_fps))
+        now = time.perf_counter()
+        deadline = getattr(self, "_frame_deadline", None)
+        if deadline is None or now - deadline > period:  # first frame, or far behind: restart
+            deadline = now
+        else:
+            if deadline - now > 0.002:
+                time.sleep(deadline - now - 0.0015)
+            while time.perf_counter() < deadline:
+                pass
+            now = time.perf_counter()
+        self._frame_deadline = deadline + period
+        last = getattr(self, "_frame_last", None)
+        self._frame_last = now
+        return min(now - last, 0.05) if last is not None else period
+
     def run(self, target_fps=60, max_frames=None, *, profile_path=None):
         self.open()
         if profile_path is not None:
@@ -2480,7 +2502,7 @@ class PlayableTestRuntime:
         frames = 0
         try:
             while self.running:
-                dt = min(self.clock.tick(int(target_fps)) / 1000.0, 0.05)
+                dt = self.tick(target_fps)
                 self.profiler.begin_frame()
                 self._frame(self.pg.event.get(), dt)
                 with self.profiler.section("present"):
