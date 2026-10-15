@@ -186,3 +186,12 @@ def test_a_message_with_codes_draws_coloured_text(monkeypatch):
         assert pixels.count(bytes((255, 255, 255))) > 0
     finally:
         runtime.close()
+
+
+def test_message_icons_map_numbers_to_project_icons_and_round_trip():
+    settings = MessageSettings("msg", icons={"12": "icon_potion"})
+    assert MessageSettings.from_data(settings.to_data()) == settings
+    game = _session(add_message_settings=settings)
+    assert game.message_icon(12) == "icon_potion" and game.message_icon(99) == ""
+    assert _session().message_icon(12) == ""
+    assert "icons" not in MessageSettings("plain").to_data()  # old projects stay unchanged

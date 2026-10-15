@@ -1094,11 +1094,35 @@ class GameSessionRuntime:
         loadout = self.save.rpg_state.loadouts.get(str(actor_id))
         if rules is None or loadout is None:
             return ()
+        in_battle = self.mode == "battle" and str(actor_id) in self.battle.members
+        before = self.resolve_actor_build(actor_id) if in_battle else None
         broke = rules.apply_wear(loadout, str(event))
         for item in broke:
             name = item.nickname or item.equipment.display_name
             self.notify(f"{name} broke!", kind="warning")
+        if broke and in_battle:
+            self._apply_break_to_battle(str(actor_id), before)
         return broke
+
+    def _apply_break_to_battle(self, actor_id, before):
+        """A weapon that breaks mid-battle stops helping at once: the stats and resource
+        maxima it gave are taken off the fighter and the abilities it granted are blocked."""
+        after = self.resolve_actor_build(actor_id)
+        member = self.battle.member(actor_id)
+        stats, resources = member.subject.stats, member.subject.resources
+        for name in before.stats.names():
+            delta = after.stats.get(name) - before.stats.get(name)
+            if delta and stats.contains(name):
+                stats.add(name, delta)
+        for name in before.resources.names():
+            if resources.contains(name) and after.resources.contains(name):
+                top = resources.maximum(name) + (
+                    after.resources.maximum(name) - before.resources.maximum(name)
+                )
+                resources.get(name).set_maximum(max(top, resources.get(name).minimum))
+        lost = set(before.abilities) - set(after.abilities)
+        if lost:
+            self.battle.blocked_abilities.setdefault(actor_id, set()).update(lost)
 
     def _wear_equipment(self, event):
         if self.durability_rules is None:
@@ -1375,6 +1399,13 @@ class GameSessionRuntime:
         if plain:
             return plain_message(text, self.message_context())
         return expand_message(text, self.message_context())
+
+    def message_icon(self, number):
+        """The icon asset for ``\\I[number]``: the project's message settings map numbers to icon
+        ids; with no mapping the number is itself tried as an icon id."""
+        settings = self.message_settings
+        mapped = dict(settings.icons) if settings is not None else {}
+        return mapped.get(str(number), "")
 
     def note_music_heard(self, asset_id):
         """Playing a track opens it in the music room (``music.heard.<track id>``)."""

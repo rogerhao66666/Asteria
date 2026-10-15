@@ -92,6 +92,7 @@ class MessageSettings:
     currency_label: str = ""
     backlog_limit: int = 0  # 0 = no message log screen
     default_locale: str = ""
+    icons: tuple[tuple[str, str], ...] = ()  # \\I[n] number -> project icon id
 
     def __init__(
         self,
@@ -102,6 +103,7 @@ class MessageSettings:
         currency_label="",
         backlog_limit=0,
         default_locale="",
+        icons=None,
     ):
         settings_id = _text(settings_id)
         if not settings_id:
@@ -118,6 +120,11 @@ class MessageSettings:
         object.__setattr__(self, "currency_label", _text(currency_label))
         object.__setattr__(self, "backlog_limit", int(backlog_limit))
         object.__setattr__(self, "default_locale", _text(default_locale))
+        object.__setattr__(
+            self,
+            "icons",
+            tuple(sorted((str(k), _text(v)) for k, v in dict(icons or {}).items())),
+        )
 
     def to_data(self):
         return {
@@ -127,6 +134,7 @@ class MessageSettings:
             "currency_label": self.currency_label,
             "backlog_limit": self.backlog_limit,
             "default_locale": self.default_locale,
+            **({"icons": dict(self.icons)} if self.icons else {}),
         }
 
     @classmethod

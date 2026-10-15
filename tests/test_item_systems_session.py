@@ -131,3 +131,40 @@ def test_new_game_plus_returns_a_fresh_save_with_the_carried_parts():
     assert game.save.rpg_state.currencies["gold"] == 800.0
     with pytest.raises(GameSessionError):
         _session().new_game_plus()
+
+
+def test_a_weapon_that_breaks_mid_battle_blocks_its_ability_at_once():
+    game = _session(add_durability_rules=_wear_rules())
+    game.start_encounter(sorted(game.project.rpg_database.encounters)[0])
+    foe = next(m for m, member in game.battle.members.items() if member.side == "enemies")
+    assert "attack_sword" in game.battle.member(HERO).ability_ids
+    for _ in range(3):
+        game.wear_equipment(HERO, "attack")
+    assert _sword(game).broken
+    with pytest.raises(ValueError, match="source is broken"):
+        game.battle.execute(BattleAction(HERO, "attack_sword", (foe,)))
+    assert game.battle.blocked_abilities[HERO] >= {"attack_sword"}
+
+
+def test_a_stat_giving_item_that_breaks_mid_battle_takes_its_bonus_off():
+    from asteria.gameplay import ModifierOperation, StatModifier
+    from asteria.rpg.items import EquipmentDefinition
+
+    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project.rpg_database.add_equipment(
+        EquipmentDefinition(
+            "w_power",
+            "Power Blade",
+            slot="weapon",
+            modifiers=(StatModifier("pow", "power", ModifierOperation.ADD, 25),),
+        )
+    )
+    project.rpg_database.add_durability_rules(_wear_rules())
+    game = GameSessionRuntime(project, project.game_start.instantiate(project))
+    game.equip_definition(HERO, "w_power", slot_id="weapon", replace=True)
+    game.start_encounter(sorted(game.project.rpg_database.encounters)[0])
+    stats = game.battle.member(HERO).subject.stats
+    with_bonus = stats.get("power")
+    for _ in range(3):
+        game.wear_equipment(HERO, "attack")
+    assert stats.get("power") == with_bonus - 25

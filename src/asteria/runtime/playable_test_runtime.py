@@ -1444,8 +1444,10 @@ class PlayableTestRuntime:
         left, top = x, y
         for span in parse_message(text):
             if span.icon is not None:
-                box = self.pg.Rect(left, top + 2, size - 4, size - 4)
-                self.pg.draw.rect(self.screen, span.color, box, 2, 3)
+                icon_id = self.game.message_icon(span.icon)
+                if not (icon_id and self._draw_icon(icon_id, left, top, size)):
+                    box = self.pg.Rect(left, top + 2, size - 4, size - 4)  # no icon: a box
+                    self.pg.draw.rect(self.screen, span.color, box, 2, 3)
                 left += size
                 continue
             for number, part in enumerate(span.text.split("\n")):

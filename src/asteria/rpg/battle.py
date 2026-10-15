@@ -357,6 +357,8 @@ class BattleRuntime:
         self.ability_runtime = ability_runtime
         # member id -> {ability id: turns left} (AbilityDefinition.cooldown_turns)
         self.cooldowns = {}
+        # member id -> abilities the member can no longer use (e.g. its weapon broke mid-battle)
+        self.blocked_abilities = {}
         self._used_this_turn = set()
         self.battle_resources = BattleResourceRuntime(resource_definitions, members, hooks=hooks)
         self.interactions = InteractionResolver(interaction_rules, outcome_checks, hooks=hooks)
@@ -573,6 +575,8 @@ class BattleRuntime:
             and (actor.member_id, action.ability_id) not in granted
         ):
             raise ValueError("actor does not know ability")
+        if action.ability_id in self.blocked_abilities.get(actor.member_id, ()):
+            raise ValueError(f"ability unavailable: {action.ability_id} (its source is broken)")
         availability = self.ability_availability(actor.member_id, action.ability_id)
         if not availability.allowed:
             raise ValueError(
