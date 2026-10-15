@@ -121,6 +121,9 @@ class GameSessionRuntime:
         self.enemy_levels = {}  # enemy member id -> level, when the project has level rules
         self._last_defeated = ()
         self.map_rules = None  # FieldMapRules, set when a tile field binds area rules
+        self.field_tiles = None  # the tile field's blocking query, for pathfinding
+        self.field_bounds = None  # (x0, y0, x1, y1) of the field map
+        self.walkers = {}  # entity id -> PathFollower (WALK_TO)
         self.timers = EventTimers(runtime_save.event_context)
         self._localizer = None
         self._last_logged_line = None
@@ -406,6 +409,67 @@ class GameSessionRuntime:
         systems["controllers"].extra_blocking = tiles
         systems["projectiles"].tiles = tiles
 
+    def navigation_grid(self, *, cell_size=16.0, margin=0.0, walker=None):
+        """A ``NavGrid`` over the field: tiles, solid colliders and restricted areas block it.
+
+        ``walker`` (an entity id) is left out of the colliders so it does not block itself."""
+        from .collision import CollisionWorld, CombinedQuery
+        from .navigation import NavGrid
+
+        exclude = {self.player.id} | ({str(walker)} if walker else set())
+        solids = CollisionWorld.from_scene(self.scene).blocking_query(exclude=exclude)
+        parts = [self.field_tiles, solids]
+        if self.map_rules is not None:
+            parts.append(self.map_rules.block_query("npc"))
+        bounds = self.field_bounds
+        if bounds is None:
+            points = [
+                (e.get(Transform).x, e.get(Transform).y)
+                for e in self.scene.entities()
+                if e.has(Transform)
+            ]
+            xs, ys = [p[0] for p in points] or [0.0], [p[1] for p in points] or [0.0]
+            bounds = (min(xs) - 256, min(ys) - 256, max(xs) + 256, max(ys) + 256)
+        return NavGrid(
+            bounds, cell_size, CombinedQuery(*parts).collides_world_point, margin=margin
+        )
+
+    def find_path(self, start, goal, *, walker=None, cell_size=16.0, margin=0.0):
+        """Waypoints from ``start`` to ``goal`` around everything that blocks, or ``None``."""
+        grid = self.navigation_grid(cell_size=cell_size, margin=margin, walker=walker)
+        return grid.find_path(start, goal)
+
+    def walk_to(self, entity_key, x, y, *, speed=60.0):
+        """Send an entity walking to ``(x, y)`` around obstacles (cutscenes, NPCs). Returns the
+        waypoints, or ``None`` when there is no way (the entity stays). While it walks the switch
+        ``walk.<entity id>.done`` is off; it turns on on arrival."""
+        from .navigation import PathFollower
+
+        entity = self._sequence_entity(entity_key)
+        transform = entity.get(Transform)
+        path = self.find_path((transform.x, transform.y), (float(x), float(y)), walker=entity.id)
+        done = f"walk.{entity.id}.done"
+        if path is None:
+            self.walkers.pop(entity.id, None)
+            self.save.event_context.set_switch(done, True)
+            return None
+        self.save.event_context.set_switch(done, False)
+        self.walkers[entity.id] = PathFollower(path, float(speed))
+        return path
+
+    def _advance_walkers(self, dt):
+        for entity_id in tuple(self.walkers):
+            entity = self.scene.get_entity(entity_id)
+            follower = self.walkers[entity_id]
+            if entity is None or not entity.has(Transform):
+                del self.walkers[entity_id]
+                continue
+            transform = entity.get(Transform)
+            transform.x, transform.y = follower.step(transform.x, transform.y, dt)
+            if follower.done:
+                del self.walkers[entity_id]
+                self.save.event_context.set_switch(f"walk.{entity_id}.done", True)
+
     def bind_map_rules(self, keys_at):
         """Apply the project's map rule set (floor damage, regions...) to the field's tiles.
 
@@ -464,6 +528,8 @@ class GameSessionRuntime:
             return None
         if self.map_rules is not None:
             self.map_rules.update(float(dt))
+        if self.walkers:
+            self._advance_walkers(float(dt))
         systems = self._field_systems()
         self.progression_events = []
         action = self.action_scene

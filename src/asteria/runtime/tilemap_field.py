@@ -145,6 +145,9 @@ class TileMapField:
         sets = self.session.project.rpg_database.map_rule_sets
         layer = sets[sorted(sets)[0]].region_layer if sets else "regions"
         self.session.bind_map_rules(tile_area_keys(self.tilemap, self.tileset, layer))
+        # pathfinding (session.find_path / WALK_TO) walks around this map's blocking tiles
+        self.session.field_tiles = self.query
+        self.session.field_bounds = None
         player = self.session.player
         t = player.get(Transform)
         speed, half_w, half_h = 72.0, 5.0, 7.0
@@ -194,6 +197,7 @@ class TileMapField:
             )
         self._scene_id = scene.id
         self._bounds = None
+        self.session.field_bounds = self.world_bounds()
         self.prepare_viewport(*self.viewport)
 
     def prepare_viewport(self, width, height):

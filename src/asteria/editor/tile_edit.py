@@ -149,6 +149,24 @@ def build_paint_command(tilemap, layer, cells, tile_id):
     return tx
 
 
+def build_terrain_command(tilemap, layer, tileset, autotile, cells, *, erase=False):
+    """Paint (or erase) ``cells`` with a terrain: each cell and its neighbours take the tile their
+    surroundings call for. One undo step."""
+    from asteria.graphics.autotile import terrain_updates
+
+    updates = terrain_updates(
+        tilemap, layer, tileset, {autotile.terrain_id: autotile}, cells, erase=erase
+    )
+    tx = CommandTransaction("Erase Terrain" if erase else "Paint Terrain")
+    for (tile_x, tile_y), tile_id in updates.items():
+        old = tile_at(tilemap, layer, tile_x, tile_y)
+        if old != tile_id:
+            tx.add(SetTileCommand(tilemap, layer, tile_x, tile_y, int(tile_id), old))
+    if not tx.commands:
+        raise TileEditError("No tile changes")
+    return tx
+
+
 def line_cells(x0, y0, x1, y1):
     """Integer Bresenham cells for gap-free mouse painting."""
     x0 = int(x0)

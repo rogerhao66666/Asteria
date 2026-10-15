@@ -87,6 +87,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "SUMMON": ("enemy_id", "actor_id", "count", "owner_id"),
     "SHOW_POPUP": ("text", "entity", "duration_ms", "kind"),
     "SET_CLASSES": ("actor_id", "class_ids", "unlock"),
+    "WALK_TO": ("entity", "x", "y", "speed"),
     "TIMER_START": ("timer_id", "seconds", "on_expire", "count_up", "show"),
     "TIMER_STOP": ("timer_id",),
     "TIMER_PAUSE": ("timer_id",),
@@ -291,6 +292,19 @@ def register_standard_world_commands(router, session):
         )
 
     router.register("SET_CLASSES", set_classes)
+
+    def walk_to(command):
+        try:
+            return session.walk_to(
+                _required(command, "entity"),
+                _amount(command, "x", 0),
+                _amount(command, "y", 0),
+                speed=_amount(command, "speed", 60.0),
+            )
+        except Exception as exc:  # noqa: BLE001 - a bad entity is the program's mistake
+            raise WorldCommandError(f"WALK_TO: {exc}") from exc
+
+    router.register("WALK_TO", walk_to)
 
     def timer_command(name):
         def handler(command):
