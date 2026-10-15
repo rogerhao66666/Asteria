@@ -6,6 +6,12 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from asteria.graphics.dragonbones_import import (
+    import_dragonbones_json,
+)
+from asteria.graphics.dragonbones_import import (
+    unsupported_parts as dragonbones_unsupported_parts,
+)
 from asteria.graphics.skeleton_import import import_spine_json, unsupported_parts
 
 
@@ -19,10 +25,16 @@ class BoneSegment:
 
 
 def load_rig(path, **options):
-    """Import a Spine-style JSON file; returns ``(skeleton, notes)``, ``notes`` naming whatever
-    the importer skips (meshes, IK, ...). Raises ``OSError`` / ``ValueError`` (which includes
-    ``SkeletonImportError``)."""
+    """Import Spine or DragonBones JSON; notes identify features the chosen importer skips."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if "armature" in data:
+        skeleton = import_dragonbones_json(data, **options)
+        notes = dragonbones_unsupported_parts(
+            data,
+            armature_name=options.get("armature_name"),
+            skin_name=options.get("skin_name"),
+        )
+        return skeleton, tuple(notes)
     return import_spine_json(data, **options), tuple(unsupported_parts(data))
 
 

@@ -87,7 +87,7 @@ class SkeletonViewerWidget(QWidget):
         self.slider.valueChanged.connect(self._scrub)
 
     def _choose(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Open rig", "", "Spine JSON (*.json)")
+        path, _ = QFileDialog.getOpenFileName(self, "Open rig", "", "Skeleton JSON (*.json)")
         if path:
             self.open_rig(path)
 
