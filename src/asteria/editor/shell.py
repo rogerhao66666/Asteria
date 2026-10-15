@@ -273,7 +273,9 @@ class AsteriaEditorWindow(QMainWindow):
         self.tile_palette.createMapRuleSetRequested.connect(self._create_map_rule_set)
         self.tile_palette.doodadChanged.connect(self.viewport.set_doodad)
 
-        self.skeleton_viewer = SkeletonViewerWidget(self, command_stack=self.document.commands)
+        self.skeleton_viewer = SkeletonViewerWidget(
+            self, command_stack=self.document.commands, document=self.document
+        )
         skeleton_dock = QDockWidget("Skeleton", self)
         skeleton_dock.setObjectName("SkeletonDock")
         skeleton_dock.setWidget(self.skeleton_viewer)
@@ -1418,6 +1420,8 @@ class AsteriaEditorWindow(QMainWindow):
         self.document.asset_views.set_sprite_sheet(asset_id, sprite_sheet)
         self.viewport.texture_cache.clear()
         self.viewport.refresh()
+        self.skeleton_viewer._texture_cache.clear()
+        self.skeleton_viewer.canvas.update()
 
     def set_tilemap_render_source(self, source):
         self.viewport.set_render_source(source)

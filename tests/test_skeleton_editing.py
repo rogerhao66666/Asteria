@@ -160,3 +160,50 @@ def test_skeleton_widget_saves_and_reopens_native_project_json(app, tmp_path):
     finally:
         widget.close()
         loaded.close()
+
+
+def test_skeleton_preview_draws_slot_sprite_through_runtime_adapter(app, tmp_path):
+    from PySide6.QtCore import QPoint
+    from PySide6.QtGui import QColor, QImage, QPainter
+
+    from asteria.assets import AssetRecord, AssetRef
+    from asteria.editor.model import EditorDocument
+    from asteria.editor.skeleton_widget import SkeletonViewerWidget
+    from asteria.graphics import SpriteFrame, SpriteSheet
+
+    texture = QImage(4, 4, QImage.Format_ARGB32)
+    texture.fill(QColor("lime"))
+    assert texture.save(str(tmp_path / "sprite.png"))
+    from asteria.project import Project
+
+    project = Project("Rig preview")
+    record = project.assets.add(
+        AssetRecord.create(kind="texture", source_path="sprite.png", name="Sprite")
+    )
+    document = EditorDocument(project, file_path=tmp_path / "project.asteria")
+    document.asset_views.set_sprite_sheet(
+        "sheet", SpriteSheet(AssetRef(record.id), [SpriteFrame(0, 0, 4, 4)])
+    )
+    rig = Skeleton("preview", (Bone("root", length=10),), (Slot("body", "root", "sheet"),))
+    widget = SkeletonViewerWidget(document=document)
+    widget.resize(320, 500)
+    widget.set_skeleton(rig)
+    widget.canvas.resize(300, 200)
+    widget.show()
+    app.processEvents()
+    try:
+        draws = widget.canvas.texture_draws()
+        assert len(draws) == 1
+        assert draws[0].texture_asset_id == record.id
+        assert draws[0].source == (0, 0, 4, 4)
+
+        output = QImage(widget.canvas.size(), QImage.Format_ARGB32)
+        output.fill(QColor("black"))
+        painter = QPainter(output)
+        widget.canvas.render(painter, QPoint())
+        painter.end()
+        sample_x = round(draws[0].screen_x + 4)
+        sample_y = round(draws[0].screen_y + draws[0].height / 2)
+        assert output.pixelColor(sample_x, sample_y) == QColor("lime")
+    finally:
+        widget.close()

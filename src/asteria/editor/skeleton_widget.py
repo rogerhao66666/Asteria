@@ -2,7 +2,7 @@
 
 try:
     from PySide6.QtCore import Qt, QTimer
-    from PySide6.QtGui import QColor, QPainter, QPen
+    from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
     from PySide6.QtWidgets import (
         QComboBox,
         QDoubleSpinBox,
@@ -21,7 +21,10 @@ except ImportError:
     QWidget = object
     Qt = None
 
+from asteria.runtime.skeleton_draw import to_texture_draws
+
 from .commands import CommandStack, SetSkeletonCommand
+from .scene_render import resolve_texture_source
 from .skeleton_editing import add_bone, delete_bone, edit_bone, set_key
 from .skeleton_view import bone_segments, bounds, load_rig
 
@@ -49,6 +52,8 @@ class _Canvas(QWidget):
         scale = min(self.width() / max(right - left, 1), self.height() / max(bottom - top, 1))
         ox = (self.width() - (right - left) * scale) / 2 - left * scale
         oy = (self.height() - (bottom - top) * scale) / 2 - top * scale
+        for draw in self.texture_draws(scale, ox, oy):
+            self._paint_texture(painter, draw)
         painter.setPen(QPen(QColor(120, 200, 255), 2))
         for s in segments:
             painter.drawLine(
@@ -61,17 +66,78 @@ class _Canvas(QWidget):
         for s in segments:
             painter.drawPoint(int(s.x0 * scale + ox), int(s.y0 * scale + oy))
 
+    def texture_draws(self, scale=None, ox=None, oy=None):
+        """Build preview quads through the same Skeleton and runtime draw adapters as the game."""
+        owner = self.owner
+        if owner.skeleton is None or owner.document is None:
+            return ()
+        segments = owner.segments()
+        if not segments:
+            return ()
+        left, top, right, bottom = bounds(segments)
+        scale = scale or min(
+            self.width() / max(right - left, 1), self.height() / max(bottom - top, 1)
+        )
+        ox = (self.width() - (right - left) * scale) / 2 - left * scale if ox is None else ox
+        oy = (self.height() - (bottom - top) * scale) / 2 - top * scale if oy is None else oy
+
+        class Camera:
+            zoom = scale
+
+            @staticmethod
+            def world_to_screen(x, y):
+                return x * scale + ox, y * scale + oy
+
+        clip = owner.clip()
+        clip_name = clip.name if clip else None
+        pose = owner.skeleton.pose(clip_name, owner.time)
+        rows = owner.skeleton.draws(pose, clip_name, owner.time)
+        return to_texture_draws(
+            rows,
+            owner.document.asset_views.sprite_sheet,
+            camera=Camera(),
+        )
+
+    def _paint_texture(self, painter, draw):
+        path = resolve_texture_source(self.owner.document, draw.texture_asset_id)
+        if path is None:
+            return
+        cache = self.owner._texture_cache
+        pixmap = cache.get(draw.texture_asset_id)
+        if pixmap is None:
+            pixmap = QPixmap(str(path))
+            cache[draw.texture_asset_id] = pixmap
+        if pixmap.isNull():
+            return
+        source = pixmap.copy(*draw.source)
+        painter.save()
+        painter.setOpacity(draw.opacity)
+        painter.translate(draw.screen_x + draw.width / 2, draw.screen_y + draw.height / 2)
+        painter.rotate(draw.rotation_deg)
+        if draw.flip_x:
+            painter.scale(-1, 1)
+        painter.drawPixmap(
+            int(-draw.width / 2),
+            int(-draw.height / 2),
+            max(1, round(draw.width)),
+            max(1, round(draw.height)),
+            source,
+        )
+        painter.restore()
+
 
 class SkeletonViewerWidget(QWidget):
     TICKS = 100  # slider steps across a clip
 
-    def __init__(self, parent=None, *, command_stack=None):
+    def __init__(self, parent=None, *, command_stack=None, document=None):
         if Qt is None:
             raise RuntimeError("PySide6 is required")
         super().__init__(parent)
         self.skeleton = None
         self.time = 0.0
         self.command_stack = command_stack or CommandStack()
+        self.document = document
+        self._texture_cache = {}
         self.file_path = None
         self._selected_key_time = None
         layout = QVBoxLayout(self)
@@ -105,6 +171,11 @@ class SkeletonViewerWidget(QWidget):
             lambda on: self._timer.start() if on else self._timer.stop()
         )
         self.slider.valueChanged.connect(self._scrub)
+
+    def set_document(self, document):
+        self.document = document
+        self._texture_cache.clear()
+        self.canvas.update()
 
     @staticmethod
     def _number(parent, *, minimum=-1000000.0, maximum=1000000.0, step=1.0):
