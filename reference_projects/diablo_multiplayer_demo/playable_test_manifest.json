@@ -1,0 +1,74 @@
+{
+  "schema": "asteria.playable_test_content",
+  "version": 1,
+  "title": "Asteria Diablo Multiplayer Demo",
+  "subtitle": "Hollowbrook - an ARPG demo",
+  "field": {
+    "background": "playable_assets/title.png",
+    "player_sheet": "playable_assets/hero.png",
+    "player_frame_size": [
+      16,
+      16
+    ],
+    "world_to_screen_scale": 3.0,
+    "player_start": [
+      0,
+      0
+    ],
+    "boss_world": [
+      0,
+      0
+    ],
+    "entity_sprites": {},
+    "player_render_width": 48
+  },
+  "battle": {
+    "skills": {
+      "punch": {
+        "label": "Punch"
+      },
+      "w_slash": {
+        "label": "Slash"
+      },
+      "w_whirl": {
+        "label": "Whirl"
+      },
+      "w_leap": {
+        "label": "Leap"
+      },
+      "w_shout": {
+        "label": "War Cry"
+      },
+      "r_shot": {
+        "label": "Shoot"
+      },
+      "r_volley": {
+        "label": "Volley"
+      },
+      "r_pierce": {
+        "label": "Pierce"
+      },
+      "r_tumble": {
+        "label": "Tumble"
+      },
+      "m_bolt": {
+        "label": "Firebolt"
+      },
+      "m_nova": {
+        "label": "Nova"
+      },
+      "m_meteor": {
+        "label": "Meteor"
+      },
+      "m_blink": {
+        "label": "Blink"
+      },
+      "roll": {
+        "label": "Roll"
+      },
+      "potion": {
+        "label": "Potion"
+      }
+    }
+  }
+}

@@ -302,3 +302,34 @@ def test_project_action_timelines_are_authored_as_records_and_played_from_events
     assert imp.get(Transform).x == pytest.approx(40 * 0.25, abs=0.8) and not game.event_errors
     document.undo()
     assert game.project.gameplay_library.timelines["lunge"].cues[0].payload["duration"] == 0.5
+
+
+def test_four_players_use_independent_entity_input_snapshots():
+    scene = Scene("Network field")
+    inputs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+    entities = [
+        _entity(scene, str(i), 0, 0, PlayerInput2DComponent(), CharacterController2DComponent())
+        for i in range(4)
+    ]
+    mapping = {
+        e.id: InputSnapshot(
+            {
+                "move_right": max(x, 0),
+                "move_left": max(-x, 0),
+                "move_down": max(y, 0),
+                "move_up": max(-y, 0),
+            }
+        )
+        for e, (x, y) in zip(entities, inputs)
+    }
+    system = PlayerInputSystem(
+        lambda: InputSnapshot({"move_x": 1}), entity_snapshot_provider=lambda e: mapping[e.id]
+    )
+    system.update(scene, 0.05)
+    assert [
+        (
+            e.get(CharacterController2DComponent).intent_x,
+            e.get(CharacterController2DComponent).intent_y,
+        )
+        for e in entities
+    ] == inputs

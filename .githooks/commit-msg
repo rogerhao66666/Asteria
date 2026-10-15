@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+
+message_file=${1:?commit-msg hook requires the message file}
+if grep -Eiq '^[[:space:]]*Co-Authored-By[[:space:]]*:' "$message_file"; then
+    echo "Asteria commits must not include Co-Authored-By trailers." >&2
+    exit 1
+fi
+
+author=$(git var GIT_AUTHOR_IDENT)
+case "$author" in
+    "rogerhao66666 <107384713+rogerhao66666@users.noreply.github.com>"*) ;;
+    *)
+        echo "Asteria commits must use Roger's GitHub author identity." >&2
+        echo "Current author: $author" >&2
+        exit 1
+        ;;
+esac

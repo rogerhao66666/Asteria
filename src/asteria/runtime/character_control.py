@@ -386,20 +386,28 @@ class PlayerInputSystem(System):
 
     order = 10
 
-    def __init__(self, snapshot_provider):
+    def __init__(self, snapshot_provider=None, *, entity_snapshot_provider=None):
         self.snapshot_provider = snapshot_provider
+        self.entity_snapshot_provider = entity_snapshot_provider
 
     def update(self, scene, dt):
-        snapshot = self.snapshot_provider()
-        if snapshot is None:
-            return
+        snapshot = self.snapshot_provider() if self.snapshot_provider is not None else None
         for _entity, player, controller in scene.query(
             PlayerInput2DComponent, CharacterController2DComponent
         ):
             if not player.enabled:
                 continue
-            dx, dy = snapshot.movement_vector()
-            jump = float(getattr(snapshot, "actions", {}).get(player.jump_action, 0.0)) > 0.5
+            entity_snapshot = (
+                self.entity_snapshot_provider(_entity)
+                if self.entity_snapshot_provider is not None
+                else snapshot
+            )
+            if entity_snapshot is None:
+                continue
+            dx, dy = entity_snapshot.movement_vector()
+            jump = (
+                float(getattr(entity_snapshot, "actions", {}).get(player.jump_action, 0.0)) > 0.5
+            )
             controller.set_intent(dx, dy, jump=jump)
             controller.jump_held = jump
 

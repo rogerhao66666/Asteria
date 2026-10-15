@@ -451,3 +451,18 @@ def test_input_drives_an_ability_in_the_game_session(runtime):
         game.field_update(1 / 60)
     assert [e.kind for e in used] == ["used"]
     assert game.combat.state(target).resources.current("hp") == 38
+
+
+def test_action_combat_entity_input_does_not_activate_other_players_skills():
+    field = Field([AbilityDefinition("cast", timeline_id="cast")], [_tl("cast", length=0.5)])
+    players = [field.player("skill_1=cast", x=i * 100) for i in range(4)]
+    mapping = {p.id: InputSnapshot({"skill_1": 1 if i == 2 else 0}) for i, p in enumerate(players)}
+    field.system = ActionCombatSystem(
+        AbilityRegistry([AbilityDefinition("cast", timeline_id="cast")]),
+        field.timelines,
+        actions=field.actions,
+        combat=field.combat,
+        entity_snapshot_provider=lambda e: mapping.get(e.id),
+    )
+    field.system.update(field.scene, DT)
+    assert set(field.actions.running) == {players[2].id}

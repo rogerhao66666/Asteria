@@ -1,7 +1,7 @@
 # Asteria 引擎手冊（功能、範本、demo、規則、下一步）
 
-**更新：** 2026-10-13（D25）。這份是「目前到底有什麼」的單一入口；細節和決策理由在
-[`docs/audits/DECISION_LOG.md`](audits/DECISION_LOG.md)（D1 ～ D24），規格在
+**更新：** 2026-10-14（D26）。這份是「目前到底有什麼」的單一入口；細節和決策理由在
+[`docs/audits/DECISION_LOG.md`](audits/DECISION_LOG.md)（D1 ～ D26），規格在
 [`ASTERIA_SPEC.md`](../ASTERIA_SPEC.md)。舊的 `README.md`、`START_HERE_MAC.md`、各 BATCH 文件是歷史紀錄，
 不代表現狀。
 
@@ -59,6 +59,7 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 | `src/asteria/gameplay` | 數值、資源、公式、標籤、效果、狀態、技能（Ability）、攻擊、投射物、動作時間軸 |
 | `src/asteria/rpg` | 角色、職業、技能樹、裝備與詞綴與套裝、掉落、任務、經濟、回合制戰鬥核心、捕獲、調合 |
 | `src/asteria/runtime` | 可玩的執行環境：場景、地圖、角色控制、碰撞、即時戰鬥（`action_*`）、遊戲選單、存檔、HUD |
+| `src/asteria/multiplayer` | 通用多人連線原型：TCP session/lobby、client API、遊戲 adapter、命令／狀態／事件、即時輸入同步與合作 Boss 範例 |
 | `src/asteria/presentation` | 回合制戰鬥呈現：動畫、特效、HUD、選單、鏡頭、角色／隊伍／裝備／技能畫面 |
 | `src/asteria/graphics`、`render`、`platform` | 精靈、地圖、光照、後製；pygame 與 ModernGL 兩種後端 |
 | `src/asteria/assets` | 素材管線：匯入、圖集、自動修正、品質門檻、RPG Maker MV 匯入 |
@@ -123,7 +124,7 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 
 ### 3.6 編輯器（`asteria-editor`）
 
-工作區：**Scene、Database（RPG）、Battle、Presentation（UI）、Events、Code**；面板：Project／Tiles／Layers、
+工作區：**Scene、Database（RPG）、Battle、Presentation（UI）、Events、Code、Multiplayer**；面板：Project／Tiles／Layers、
 Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
 - **File > New from Template…（Ctrl+N）**：Party RPG（八方旅人式）、Action RPG（暗黑式）兩個範本，
@@ -136,6 +137,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 - 稽核腳本 `scripts/editor_ui_audit.py` 逐工作區截圖並找：文字被截斷、溢出、過小控制項、停靠面板的分頁掉出
   分頁列；兩個專案在 1600×1000／1280×800／1100×700 皆 0 缺陷。
 - Code 工作區：寫 Python 腳本直接操作專案，有自動完成。
+- Multiplayer 工作區：本機 server、Guest ID、SQLite、專案規則模板及獨立 Diablo 多人副本。副本使用 project-backed adapter 同步原 ECS 戰鬥、技能、怪物、NPC、商店、製作、背包、裝備與角色存檔；四人 Cocoa 驗收通過。Boss 有正傷害者各得完整 100 XP，每項原掉落隨機保留給一位參與者。使用方式見 [遊戲模板](audits/MULTIPLAYER_GAMEPLAY_TEMPLATE.md)。
 - Scene 視圖操作：**滑鼠滾輪以游標為中心縮放**（一格 ×1.15）；方向鍵平移視圖（有選取實體時改為移動實體，
   Shift 加大步距）；**觸控板**雙指捲動平移、捏合縮放（維持原樣）。
 
@@ -223,6 +225,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | 手感與平衡 | 數值是 demo 用的，需要有人實際玩過調整 |
 | 寵物不是戰鬥單位 | 沒有自己的血量與回合，只提供數值給技能；寵物沒有進化、技能學習、親密度 |
 | 寵物的存檔與選單 | Pets 畫面只在專案有寵物物種時出現在暫停選單；起始寵物要改專案的 game start 資料（目前沒有表單） |
+| 多人連線 | 通用 TCP session／adapter、SQLite 原子掉落領取及完整角色存檔、可修改規則模板、獨立 Diablo 多人副本已完成四人原生驗收。Guest ID 為開發身分；伺服器重開保留角色並重建場次世界。公開網路部署、TLS、登入驗證與 WAN 品質驗收另行處理。見 [設計文件](audits/MULTIPLAYER_DESIGN.md)。 |
 
 ### 下一步的候選（沒有排序，要使用者決定）
 
@@ -235,8 +238,9 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
 ## 8. 工作方式（給之後接手的人）
 
-- 直接在 `main` 上提交，不開分支；提交訊息結尾要有 Co-Authored-By。
+- 直接在 `main` 上提交，不開分支；提交作者使用 Roger 的 GitHub 身分，且不得加入任何 `Co-Authored-By` trailer。
 - 每行 Python ≤ 99 字元（skill：`.claude/skills/line-length`）。
+- 新 clone 後執行 `git config core.hooksPath .githooks`；提交 hook 會阻擋共同作者 trailer，並確認 author 是 `rogerhao66666`。
 - 每一批的結果寫進 `docs/audits/DECISION_LOG.md`（中文，六段式：做了什麼、證據、限制）。
 - UI 和實機的東西一定在 Cocoa 真實視窗驗證，附截圖，放 `docs/audits/evidence/real_machine/`。
 - 編輯器要好看：有顏色、有圖示、版面密但不擠；稽核腳本要乾淨。

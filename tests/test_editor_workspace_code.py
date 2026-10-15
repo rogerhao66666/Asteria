@@ -10,6 +10,7 @@ def test_workspace_modes_are_stable_authoring_surfaces():
         "ui",
         "event",
         "code",
+        "multiplayer",
     ]
 
 

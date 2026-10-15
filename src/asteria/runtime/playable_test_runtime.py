@@ -87,6 +87,32 @@ class PlayableTestRuntime:
         self.project = project
         self.resource_root = Path(resource_root)
         self.manifest = _load_manifest(self.resource_root)
+        from asteria.runtime.multiplayer_preview import (
+            MultiplayerPreviewBridge,
+            load_runtime_multiplayer_profile,
+        )
+
+        self.multiplayer_profile_error = ""
+        try:
+            self.multiplayer_profile = load_runtime_multiplayer_profile(self.resource_root)
+        except ValueError as exc:
+            self.multiplayer_profile = None
+            self.multiplayer_profile_error = str(exc)
+        self.multiplayer_bridge = (
+            MultiplayerPreviewBridge(self.multiplayer_profile)
+            if self.multiplayer_profile is not None
+            else None
+        )
+        self._authoritative_project_mode = bool(
+            self.multiplayer_profile
+            and str(self.multiplayer_profile.get("adapter_factory", "")).endswith(
+                "build_project_adapter"
+            )
+        )
+        self._multiplayer_error = self.multiplayer_profile_error
+        self._network_origin = None
+        self._network_revision = -1
+        self._network_scale = float(self.manifest.get("field", {}).get("network_world_scale", 16))
         self.game = GameSessionRuntime(project, runtime_save)
         self.save = runtime_save
         self.width = int(width)
@@ -326,6 +352,16 @@ class PlayableTestRuntime:
 
         # ENG-15: the player's rebinding (settings) over the project's default bindings
         input_map = effective_input_map(self.project.input_map, self.settings.input_overrides)
+        self._network_legacy_attack_injected = False
+        if (
+            self.multiplayer_profile is not None
+            and not self._authoritative_project_mode
+            and "attack" not in input_map.actions()
+        ):
+            from asteria.runtime.input_map import InputBinding
+
+            input_map.set_bindings("attack", [InputBinding("key", "f")])
+            self._network_legacy_attack_injected = True
         from asteria.runtime.action_play import missing_action_bindings
 
         for action, bindings in missing_action_bindings(
@@ -337,6 +373,30 @@ class PlayableTestRuntime:
 
         self.audio = AudioMixer(open_audio_device(self.pg), self._audio_path)
         self.settings.apply(self.audio)
+        if self.multiplayer_bridge is not None:
+            from asteria.core import Transform
+
+            transform = self.game.player.get(Transform)
+            self._network_origin = (float(transform.x), float(transform.y))
+            if self.multiplayer_bridge.connect():
+                if (
+                    self.multiplayer_bridge.state.get("schema")
+                    == "asteria.multiplayer.project_state"
+                ):
+                    self._enable_authoritative_project_controls()
+                self.multiplayer_bridge.send_input(
+                    {"move_x": 0.0, "move_y": 0.0, "attack": False}, force=True
+                )
+                self.message = (
+                    "Co-op connected · WASD / arrows · J attack · F pickup"
+                    if self._authoritative_project_mode
+                    else "Co-op connected · move with WASD / arrows · attack with F"
+                )
+                self.message_until = self.pg.time.get_ticks() + 6000
+            else:
+                self._multiplayer_error = self.multiplayer_bridge.error
+                self.message = f"Co-op offline: {self.multiplayer_bridge.error}"
+                self.message_until = self.pg.time.get_ticks() + 8000
         return self
 
     def _settings_path(self):
@@ -492,6 +552,8 @@ class PlayableTestRuntime:
         return self.gpu.read(self.pg) if self.gpu is not None else self.screen.copy()
 
     def close(self):
+        if self.multiplayer_bridge is not None:
+            self.multiplayer_bridge.close()
         if self.gpu is not None:
             self.gpu.release()
             self.gpu = None
@@ -654,6 +716,16 @@ class PlayableTestRuntime:
             )
         elif view.scene_id != scene.id:
             view.load()
+        if self._multiplayer_connected():
+            # Network snapshots already choose each guest's own class appearance.
+            if not hasattr(view, "_offline_class_looks"):
+                view._offline_class_looks = view._apply_class_looks
+                view._apply_class_looks = lambda: None
+        elif not getattr(self, "_authoritative_project_mode", False) and hasattr(
+            view, "_offline_class_looks"
+        ):
+            view._apply_class_looks = view._offline_class_looks
+            del view._offline_class_looks
         return view
 
     def _field_screen_xy(self, world_x, world_y):
@@ -906,8 +978,283 @@ class PlayableTestRuntime:
             )
         self._draw_field_overlays()
 
+    def _multiplayer_connected(self):
+        return self.multiplayer_bridge is not None and self.multiplayer_bridge.connected
+
+    def _enable_authoritative_project_controls(self):
+        self._authoritative_project_mode = True
+        if getattr(self, "_network_legacy_attack_injected", False):
+            from asteria.runtime.action_play import ARPG_ACTIONS
+            from asteria.runtime.input_map import InputBinding
+
+            self.input.input_map.set_bindings(
+                "attack", [InputBinding(device, code) for device, code in ARPG_ACTIONS["attack"]]
+            )
+            self._network_legacy_attack_injected = False
+
+    def _network_gameplay_frozen(self):
+        return (
+            getattr(self, "_authoritative_project_mode", False)
+            and not self._multiplayer_connected()
+        )
+
+    def _server_save_command(self, command):
+        self.multiplayer_bridge.send_command(command, {})
+        self.message = (
+            f"Server {command} requested"
+            if self._multiplayer_connected()
+            else "Server connection required · F3 to retry"
+        )
+        self.message_until = self.pg.time.get_ticks() + 2500
+
+    def _send_multiplayer_input(self, move_x, move_y, actions=None):
+        bridge = self.multiplayer_bridge
+        if bridge is None or not bridge.connected:
+            return False
+        actions = actions or {}
+        attack_value = actions.get("attack", actions.get("primary_attack", 0.0))
+        input_state = {
+            **dict(actions),
+            "actions": dict(actions),
+            "move_x": max(-1.0, min(1.0, float(move_x))),
+            "move_y": max(-1.0, min(1.0, float(move_y))),
+            "attack": bool(attack_value),
+        }
+        previous = getattr(self, "_last_network_input", {})
+        changed = previous != input_state
+        self._last_network_input = input_state
+        sent = bridge.send_input(input_state, force=changed)
+        if sent and not self.message:
+            self.message = (
+                "Co-op connected · WASD / arrows · J attack · F pickup"
+                if self._authoritative_project_mode
+                else "Co-op connected · move with WASD / arrows · attack with F"
+            )
+            self.message_until = self.pg.time.get_ticks() + 6000
+        return sent
+
+    def _sync_multiplayer_player(self):
+        bridge = self.multiplayer_bridge
+        if bridge is None or not bridge.connected:
+            return
+        from asteria.core import Transform
+        from asteria.runtime.multiplayer_preview import map_network_position
+
+        state, network_events, network_revision = bridge.snapshot()
+        if state.get("schema") == "asteria.multiplayer.project_state":
+            self._enable_authoritative_project_controls()
+            from asteria.runtime.multiplayer_preview import (
+                apply_project_snapshot,
+                install_authoritative_commands,
+            )
+
+            install_authoritative_commands(self)
+            if network_revision != self._network_revision:
+                try:
+                    if apply_project_snapshot(self, state, bridge.player_id):
+                        self._network_revision = network_revision
+                        from asteria.runtime.combat import CombatEvent
+
+                        self.game.combat.events = tuple(
+                            CombatEvent(
+                                **{
+                                    key: value
+                                    for key, value in event.items()
+                                    if key in CombatEvent.__dataclass_fields__
+                                }
+                            )
+                            for event in network_events
+                            if event.get("kind")
+                            in {"damage", "staggered", "knocked_down", "state_applied"}
+                        )
+                except (KeyError, TypeError, ValueError) as exc:
+                    self._multiplayer_error = f"Invalid server snapshot: {exc}"
+            return
+        boss = state.get("boss")
+        players = state.get("players", ())
+        player_id = bridge.player_id
+        local = next(
+            (
+                player
+                for player in players
+                if isinstance(player, dict) and player.get("player_id") == player_id
+            ),
+            None,
+        )
+        if local is None:
+            return
+        if self._network_origin is None:
+            transform = self.game.player.get(Transform)
+            self._network_origin = (float(transform.x), float(transform.y))
+        x, y = map_network_position(
+            local, boss, origin=self._network_origin, scale=self._network_scale
+        )
+        transform = self.game.player.get(Transform)
+        transform.x, transform.y = x, y
+        self.game.save.player_position = (x, y)
+        if network_revision > self._network_revision:
+            self._network_revision = network_revision
+            for event in network_events:
+                if event.get("player_id") != player_id:
+                    continue
+                if event.get("type") == "experience_awarded":
+                    amount = int(event.get("amount", 0))
+                    self.message = f"Boss defeated · +{amount} XP"
+                    self.message_until = self.pg.time.get_ticks() + 6000
+                elif event.get("type") == "loot_awarded":
+                    self.message = f"Boss loot: {event.get('item_id', 'item')}"
+                    self.message_until = self.pg.time.get_ticks() + 6000
+
+    def _draw_multiplayer_world(self):
+        bridge = self.multiplayer_bridge
+        if bridge is None:
+            if self.multiplayer_profile_error:
+                self.panel((12, 12, self.width - 24, 48))
+                self.text(
+                    f"Co-op profile error: {self.multiplayer_profile_error}",
+                    24,
+                    25,
+                    size=18,
+                    color=(255, 154, 132),
+                )
+            return
+        if not bridge.connected:
+            status = self._multiplayer_error or "Start the local server in Multiplayer first"
+            self.panel((12, 12, self.width - 24, 48))
+            self.text(
+                f"Co-op offline · {status} · F3 to retry",
+                24,
+                25,
+                size=18,
+                color=(255, 190, 132),
+            )
+            return
+
+        from asteria.runtime.multiplayer_preview import map_network_position
+
+        state = bridge.state
+        if state.get("schema") == "asteria.multiplayer.project_state":
+            self.text(
+                f"Co-op · {len(state.get('players', ()))} players",
+                16,
+                12,
+                size=18,
+                color=(170, 230, 190),
+            )
+            return
+        boss = state.get("boss")
+        players = state.get("players", ())
+        if not isinstance(boss, dict) or not isinstance(players, list):
+            return
+        if self._network_origin is None:
+            player_transform = self.game.player.get(Transform)
+            self._network_origin = (float(player_transform.x), float(player_transform.y))
+        origin = self._network_origin
+        boss_world = map_network_position(boss, boss, origin=origin, scale=self._network_scale)
+        zoom = self.field_camera.zoom
+        boss_x, boss_y = self._field_screen_xy(*boss_world)
+        radius = max(12, round(12 * zoom))
+        boss_color = (220, 89, 84) if boss.get("alive", True) else (128, 128, 138)
+        self.pg.draw.rect(
+            self.screen,
+            (35, 24, 31),
+            (round(boss_x - radius), round(boss_y - radius), radius * 2, radius * 2),
+        )
+        self.pg.draw.rect(
+            self.screen,
+            boss_color,
+            (round(boss_x - radius), round(boss_y - radius), radius * 2, radius * 2),
+            max(2, round(2 * zoom)),
+        )
+        hp, max_hp = int(boss.get("hp", 0)), max(1, int(boss.get("max_hp", 1)))
+        bar_width = max(64, round(84 * zoom))
+        bar_y = round(boss_y - radius - 18 * zoom)
+        self.pg.draw.rect(
+            self.screen, (28, 28, 34), (round(boss_x - bar_width / 2), bar_y, bar_width, 7)
+        )
+        self.pg.draw.rect(
+            self.screen,
+            boss_color,
+            (
+                round(boss_x - bar_width / 2),
+                bar_y,
+                round(bar_width * max(0, min(max_hp, hp)) / max_hp),
+                7,
+            ),
+        )
+        self.text(
+            f"Co-op Boss · {hp}/{max_hp}",
+            boss_x,
+            bar_y - 22,
+            size=20,
+            color=(255, 224, 214),
+            center=True,
+        )
+
+        for drop in state.get("world_drops", []):
+            if drop.get("claimed_by") or bridge.player_id in drop.get("claimed_by_players", []):
+                continue
+            world = map_network_position(drop, boss, origin=origin, scale=self._network_scale)
+            sx, sy = self._field_screen_xy(*world)
+            self.pg.draw.circle(self.screen, (249, 214, 106), (round(sx), round(sy)), 7)
+            self.text(
+                "G: claim treasure", sx, sy + 12, size=16, color=(249, 214, 106), center=True
+            )
+
+        local_id = bridge.player_id
+        local = next(
+            (
+                player
+                for player in players
+                if isinstance(player, dict) and player.get("player_id") == local_id
+            ),
+            None,
+        )
+        local_xp = int(local.get("experience", 0)) if local is not None else 0
+        self.panel((12, 66, min(330, self.width - 24), 48))
+        self.text(
+            f"Co-op · {len(players)} players · XP {local_xp} · B: bag / G: loot",
+            24,
+            80,
+            size=20,
+            color=(132, 229, 220),
+        )
+        frame = self._player_frame("down", False)
+        source_w, source_h = frame.get_size()
+        render_width = max(18, round(self.manifest["field"].get("player_render_width", 64) * zoom))
+        render_height = max(1, round(source_h * render_width / max(1, source_w)))
+        frame = self.pg.transform.scale(frame, (render_width, render_height))
+        for index, player in enumerate(players):
+            if not isinstance(player, dict) or player.get("player_id") == local_id:
+                continue
+            world = map_network_position(player, boss, origin=origin, scale=self._network_scale)
+            screen_x, screen_y = self._field_screen_xy(*world)
+            ground = (round(screen_x), round(screen_y + 5 * zoom))
+            self.pg.draw.ellipse(
+                self.screen,
+                (28, 34, 42),
+                (ground[0] - render_width // 3, ground[1] - 4, 2 * render_width // 3, 9),
+            )
+            position = (
+                round(screen_x - render_width / 2),
+                round(screen_y - render_height + 10 * zoom),
+            )
+            self.screen.blit(frame, position)
+            color = ((84, 196, 211), (160, 132, 234), (226, 174, 78), (106, 194, 133))[index % 4]
+            self.pg.draw.circle(self.screen, color, ground, max(4, round(5 * zoom)), 2)
+            label = str(player.get("display_name", "Player"))
+            self.text(
+                f"{label} · {player.get('hp', 0)} HP",
+                screen_x,
+                position[1] - 20,
+                size=18,
+                color=color,
+                center=True,
+            )
+
     def _draw_field_overlays(self):
         """Everything drawn over the field's world: HUD, effects, popups, dialogue, help."""
+        self._draw_multiplayer_world()
         if self.game.action_scene:
             self.action_hud.draw_world(self)
         self._draw_field_effects()
@@ -1032,7 +1379,11 @@ class PlayableTestRuntime:
             self.screen.blit(image, at)
 
     def _draw_dialogue(self):
-        request = self.game.pending_dialogue
+        request = (
+            getattr(self, "_network_dialogue", None)
+            if self._multiplayer_connected()
+            else self.game.pending_dialogue
+        )
         if request is None:
             return
         self.panel(
@@ -1066,7 +1417,11 @@ class PlayableTestRuntime:
 
     def _dialogue_input(self, events):
         """Route keys to a waiting dialogue/choice. Returns True when one is open."""
-        request = self.game.pending_dialogue
+        request = (
+            getattr(self, "_network_dialogue", None)
+            if self._multiplayer_connected()
+            else self.game.pending_dialogue
+        )
         if request is None:
             return False
         if getattr(request, "line", None) is not None:
@@ -1091,15 +1446,41 @@ class PlayableTestRuntime:
                 return False
             self._dialogue_input(events)
             return False
-        if self._dialogue_input(events) or self.game.event_busy:
-            self.game.set_field_input(None)
+        if self._dialogue_input(events) or (
+            getattr(self, "_network_event_busy", False)
+            if self._multiplayer_connected()
+            else self.game.event_busy
+        ):
+            if self._multiplayer_connected():
+                self._send_multiplayer_input(0, 0, {})
+            else:
+                self.game.set_field_input(None)
             return False
+        if (
+            self.multiplayer_bridge is not None
+            and not self.multiplayer_bridge.connected
+            and any(
+                event.type == self.pg.KEYDOWN and event.key == self.pg.K_F3 for event in events
+            )
+        ):
+            if self.multiplayer_bridge.connect():
+                self.multiplayer_bridge.send_input(
+                    {"move_x": 0.0, "move_y": 0.0, "attack": False}, force=True
+                )
+                self._multiplayer_error = ""
+                self._network_revision = -1
+            else:
+                self._multiplayer_error = self.multiplayer_bridge.error
         if self.game.action_scene:
             return self._action_input(events)
         # Project input map: keyboard and gamepad (stick / d-pad) both drive movement.
         dx, dy = self.input.current.movement_vector()
         moving = bool(dx or dy)
-        if moving:
+        connected = self._multiplayer_connected()
+        if connected:
+            self._send_multiplayer_input(dx, dy, dict(self.input.current.actions))
+            self._sync_multiplayer_player()
+        elif moving:
             mag = max(1.0, (dx * dx + dy * dy) ** 0.5)
             speed = 36.0
             pt = self.game.player.get(Transform)
@@ -1133,7 +1514,7 @@ class PlayableTestRuntime:
             self._ui_mode = "quests"
             return moving
         # GameSessionRuntime interaction is edge-triggered. Emit release after press.
-        if self.input.just_pressed("interact"):
+        if self.input.just_pressed("interact") and not connected:
             self.game.field_step({"interact": 1.0})
             if self.game.mode == "field":
                 self.game.field_step({"interact": 0.0})
@@ -1152,24 +1533,56 @@ class PlayableTestRuntime:
     def _action_input(self, events):
         """Real-time control: the input actions drive the player's controller and abilities through
         the session."""
-        self.game.prepare_action_player()
-        self.game.set_field_input(dict(self.input.current.actions))
-        if self.input.just_pressed("pickup"):
+        if not self._multiplayer_connected():
+            self.game.prepare_action_player()
+        actions = dict(self.input.current.actions)
+        if self._multiplayer_connected():
+            dx, dy = self.input.current.movement_vector()
+            self._send_multiplayer_input(dx, dy, actions)
+            self._sync_multiplayer_player()
+        else:
+            self.game.set_field_input(actions)
+        if self._multiplayer_connected() and (
+            self.input.just_pressed("pickup")
+            or any(event.type == self.pg.KEYDOWN and event.key == self.pg.K_g for event in events)
+        ):
+            import uuid
+
+            self.multiplayer_bridge.send_command("pickup", {"operation_id": uuid.uuid4().hex})
+        if self.input.just_pressed("pickup") and not self._multiplayer_connected():
             self.game.loot.pick_up_nearest(self.game.scene, self.game.player)
         if self.input.just_pressed("bag"):
             from asteria.runtime.bag_screen import BagScreen
 
-            self._bag_screen = BagScreen(self)
+            if (
+                self._multiplayer_connected()
+                and self.multiplayer_bridge.state.get("schema")
+                != "asteria.multiplayer.project_state"
+            ):
+                from asteria.runtime.network_bag_screen import NetworkBagScreen
+
+                self._bag_screen = NetworkBagScreen(self)
+            else:
+                self._bag_screen = BagScreen(self)
             self._ui_mode = "bag"
         if self.input.just_pressed("menu"):  # the skill tree (D22 A10)
             from asteria.runtime.skill_tree_screen import SkillTreeScreen
 
-            self._skill_tree = SkillTreeScreen(self)
+            if self._multiplayer_connected():
+                from asteria.runtime.network_bag_screen import NetworkSkillTreeScreen
+
+                self._skill_tree = NetworkSkillTreeScreen(self)
+            else:
+                self._skill_tree = SkillTreeScreen(self)
             self._ui_mode = "skills"
         if self.input.just_pressed("cancel"):
             self._pause_menu.index = 0
             self._ui_mode = "pause"
-        if self.input.just_pressed("interact") and not self.input.just_pressed("jump"):
+        if (
+            not self._multiplayer_connected()
+            and self.input.just_pressed("interact")
+            and not self.input.just_pressed("jump")
+        ):
             self.game.field_step({"interact": 1.0})
             if self.game.mode == "field":
                 self.game.field_step({"interact": 0.0})
@@ -1194,6 +1607,17 @@ class PlayableTestRuntime:
         subtitle = self.manifest.get("subtitle") or "Complex Reference RPG"
         self.text(subtitle, self.width / 2, 180, size=36, center=True)
         self.panel((280, 250, 400, 150))
+        if self._multiplayer_connected() or self._network_gameplay_frozen():
+            self.text("N   Enter Server Session", 310, 282, size=25)
+            self.text("L   Reload Server Save", 310, 330, size=25)
+            self.text(
+                f"Guest: {self.multiplayer_bridge.player_id}",
+                310,
+                372,
+                size=16,
+                color=(170, 210, 240),
+            )
+            return
         self.text("N   New Game", 330, 282, size=28)
         self.text("L   Load Game", 330, 330, size=28)
         from asteria.runtime.save_slots import SaveSlots
@@ -1212,6 +1636,10 @@ class PlayableTestRuntime:
         )
 
     def _load_player_save(self):
+        if self._multiplayer_connected() or self._network_gameplay_frozen():
+            self._server_save_command("load")
+            self._ui_mode = "field"
+            return True
         path = self.resource_root / "saves" / "playtest_autosave.asteria-save.json"
         if not path.exists():
             self.message = "No player save exists yet"
@@ -1364,7 +1792,7 @@ class PlayableTestRuntime:
         for node in graph.nodes:
             preview = allocation.preview_allocate(graph_id, node.node_id, 1)
             if preview.allowed:
-                allocation.allocate(graph_id, node.node_id, 1)
+                self.game.allocate_progression(actor_id, graph_id, node.node_id, 1)
                 self.message = f"Learned {node.display_name}"
                 self.message_until = self.pg.time.get_ticks() + 1400
                 return
@@ -1397,6 +1825,11 @@ class PlayableTestRuntime:
         growth = item.ensure_growth(self.project.rpg_database.equipment_growth)
         for node in growth.definition.nodes:
             if growth.preview_unlock(node.node_id).allowed:
+                if self._multiplayer_connected():
+                    self.multiplayer_bridge.send_command(
+                        "upgrade", {"slot_id": "weapon", "node_id": node.node_id}
+                    )
+                    return
                 growth.unlock(node.node_id)
                 self.message = f"Weapon upgraded: {node.display_name}"
                 self.message_until = self.pg.time.get_ticks() + 1400
@@ -1410,7 +1843,10 @@ class PlayableTestRuntime:
         )
         loadout = self.save.rpg_state.loadouts[actor_id]
         if loadout.equipped("accessory"):
-            loadout.unequip("accessory", 0)
+            if self._multiplayer_connected():
+                self.game.unequip_to_bag(actor_id, "accessory")
+            else:
+                loadout.unequip("accessory", 0)
         self.game.equip_definition(
             actor_id, ids[(self._menu_actor_index) % len(ids)], slot_id="accessory", replace=False
         )
@@ -1751,6 +2187,10 @@ class PlayableTestRuntime:
         return self.input.just_pressed("confirm")
 
     def _restart_to_title(self):
+        if self._multiplayer_connected() or self._network_gameplay_frozen():
+            self._send_multiplayer_input(0, 0, {})
+            self._ui_mode = "title"
+            return
         if self.project.game_start is not None:
             self.save = self.project.game_start.instantiate(self.project)
             self.game = GameSessionRuntime(self.project, self.save)
@@ -1898,7 +2338,12 @@ class PlayableTestRuntime:
             self._sound(self.manifest.get("dialogue_confirm_sfx"))
 
     def _open_crafting(self, station, back="field"):
-        self._crafting_screen = CraftingScreen(self.game, station)
+        if self._multiplayer_connected():
+            from asteria.runtime.network_bag_screen import NetworkCraftingScreen
+
+            self._crafting_screen = NetworkCraftingScreen(self, station)
+        else:
+            self._crafting_screen = CraftingScreen(self.game, station)
         self._crafting_back = back
         self._ui_mode = "crafting"
 
@@ -1967,6 +2412,10 @@ class PlayableTestRuntime:
         return SaveSlots(self.resource_root / "saves", self.project).path(slot).exists()
 
     def open_slots(self, mode, back="pause"):
+        if self._multiplayer_connected() or self._network_gameplay_frozen():
+            self._server_save_command(mode)
+            self._ui_mode = "field" if mode == "load" else back
+            return
         from asteria.runtime.save_slots import SaveSlots, SlotMenu
 
         self.slot_menu = SlotMenu(SaveSlots(self.resource_root / "saves", self.project), mode)
@@ -2407,6 +2856,9 @@ class PlayableTestRuntime:
         )
 
     def save_playtest(self):
+        if self._multiplayer_connected() or self._network_gameplay_frozen():
+            self._server_save_command("save")
+            return None
         self.game.sync_world_state()
         out = self.resource_root / "saves" / "playtest_autosave.asteria-save.json"
         out.parent.mkdir(parents=True, exist_ok=True)
@@ -2481,6 +2933,41 @@ class PlayableTestRuntime:
         with self.profiler.section("input"):
             self.input_source.handle_events(events)
             self.input.update(self.input_source.raw_state())
+        if self._network_gameplay_frozen():
+            for event in events:
+                if event.type == self.pg.QUIT:
+                    self.running = False
+                elif event.type == self.pg.KEYDOWN and event.key == self.pg.K_F3:
+                    if self.multiplayer_bridge.connect():
+                        self._network_revision = -1
+                        self._multiplayer_error = ""
+                        self._sync_multiplayer_player()
+            if self._network_gameplay_frozen():
+                if self._ui_mode == "title":
+                    self._draw_title()
+                else:
+                    self._draw_field(False)
+                self.panel((100, self.height / 2 - 32, self.width - 200, 64))
+                self.text(
+                    "Server connection paused · F3 to retry",
+                    self.width / 2,
+                    self.height / 2 - 10,
+                    size=22,
+                    center=True,
+                    color=(255, 190, 132),
+                )
+                return
+        if self._multiplayer_connected():
+            self._sync_multiplayer_player()
+            for result in self.multiplayer_bridge.command_results(self._network_revision):
+                self.message = (
+                    f"Server {result.get('command', 'command')} confirmed"
+                    if result["accepted"]
+                    else result.get("reason", "Server rejected command")
+                )
+                self.message_until = self.pg.time.get_ticks() + 2500
+            if self._ui_mode != "field":
+                self._send_multiplayer_input(0, 0, {})
         while self.game.presentation_requests:
             request = self.game.presentation_requests.pop(0)
             if request.name in CAMERA_COMMANDS:
@@ -2591,22 +3078,39 @@ class PlayableTestRuntime:
                 self.audio.stop_music(fade_out=0.5)
         elif self.game.mode == "field":
             moving = self._field_input(events, dt)
-            with self.profiler.section("events"):
-                self.game.update_events(dt)
-            if self._ui_mode == "field" and self.game.open_shop_id and not self.game.event_busy:
+            if not self._multiplayer_connected():
+                with self.profiler.section("events"):
+                    self.game.update_events(dt)
+            if (
+                self._ui_mode == "field"
+                and self.game.open_shop_id
+                and not (
+                    getattr(self, "_network_event_busy", False)
+                    if self._multiplayer_connected()
+                    else self.game.event_busy
+                )
+            ):
                 self._shop_screen = ShopScreen(self.game)
                 self._ui_mode = "shop"
             if (
                 self._ui_mode == "field"
                 and self.game.open_crafting_station is not None
-                and not self.game.event_busy
+                and not (
+                    getattr(self, "_network_event_busy", False)
+                    if self._multiplayer_connected()
+                    else self.game.event_busy
+                )
             ):
                 self._open_crafting(self.game.open_crafting_station, back="field")
             if self.game.mode == "field" and self._ui_mode == "field":
-                with self.profiler.section("update"):
-                    self.game.field_update(dt)
+                if not self._multiplayer_connected():
+                    with self.profiler.section("update"):
+                        self.game.field_update(dt)
+                self._sync_multiplayer_player()
                 if self.game.action_scene:
                     self.action_hud.observe(self.game, dt)
+                    if self._multiplayer_connected():
+                        self.game.combat.events = ()
                     if getattr(self.game, "player_defeated", False):
                         self.game.player_defeated = False
                         self._game_over_menu.index = 0

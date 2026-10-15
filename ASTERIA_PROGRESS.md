@@ -7,6 +7,23 @@ status, known gaps and NEXT
 > Progress records implementation state and never overrides the four
 > specification documents.
 
+## 2026-10-15 update — Multiplayer ECS closeout (D26)
+
+- Generic TCP adapter/session infrastructure, editable project rules and styled Multiplayer GUI.
+- Separate Diablo copy now uses `project_demo:build_project_adapter`, loading the selected project.
+  The server runs original ECS combat/AI/physics/skills/NPCs/shops/crafting and independent players.
+  Original UI routes inventory, equipment, progression and save/load to authoritative commands.
+- SQLite persists full character saves, contributions, XP and atomic loot claims. Every positive
+  Boss contributor gets full 100 XP; each original rolled Boss item has a random eligible owner.
+- Fixed interaction facing, side-view scene controller mode and scene-entry death respawn.
+  Original J attack/F pickup bindings work online; F3 reconnects frozen disconnected gameplay.
+- Final full regression: **2307 passed in 154.86s**. Four independent Cocoa game processes passed
+  original 900 HP Cyclops combat, 100 XP each, owner pickup, equipment and SQLite reopen:
+  `/private/tmp/asteria-project-native-to1iiyj_/result.json`.
+- Local/trusted-LAN sample scope. Guest IDs are development keys; server restart restores
+  characters and starts a fresh transient world. Public deployment/authentication/WAN qualification
+  are separate work. [Gameplay template](docs/audits/MULTIPLAYER_GAMEPLAY_TEMPLATE.md).
+
 # Asteria 編輯器 --- 進度紀錄
 
 commit: `16a6ebd` --- 已 push 到 `origin/main`
@@ -399,3 +416,7 @@ three UI defects found and fixed). Matrix: A26/B56/C12/D3 (DECISION_LOG D16).
 Not done: hands-on use by a person (M1–M5), record drag-and-drop/sort, field
 follow camera in the playable map, battle-intro boss camera. The engine is
 not complete.
+
+Native editor acceptance: `/private/tmp/asteria-gui-network-762t5nko/result.json`
+reports Cocoa Host/Join/Ping/Leave/Stop, profile save and button centering passed.
+Controls were invoked by the test harness inside a visible native editor.

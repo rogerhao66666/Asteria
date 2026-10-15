@@ -21,6 +21,7 @@ class WorkspaceMode(str, Enum):
     UI = "ui"
     EVENT = "event"
     CODE = "code"
+    MULTIPLAYER = "multiplayer"
 
 
 class EditorWorkspace(QWidget):
@@ -40,6 +41,7 @@ class EditorWorkspace(QWidget):
         WorkspaceMode.UI,
         WorkspaceMode.EVENT,
         WorkspaceMode.CODE,
+        WorkspaceMode.MULTIPLAYER,
     )
 
     def __init__(self, pages: dict[WorkspaceMode, QWidget], parent=None):
@@ -66,6 +68,7 @@ class EditorWorkspace(QWidget):
             WorkspaceMode.UI: "Presentation",
             WorkspaceMode.EVENT: "Events",
             WorkspaceMode.CODE: "Code",
+            WorkspaceMode.MULTIPLAYER: "Multiplayer",
         }
         for mode in self._modes:
             self.tabs.addTab(labels[mode])

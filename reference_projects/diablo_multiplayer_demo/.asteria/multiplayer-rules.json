@@ -1,0 +1,26 @@
+{
+  "rewards": {
+    "boss": {
+      "drops": {
+        "assignment": "random_eligible_player",
+        "items": [
+          "ancient_shard"
+        ],
+        "source": "authored"
+      },
+      "eligibility": "positive_damage",
+      "experience": {
+        "amount": 100,
+        "policy": "full_amount_per_eligible_player"
+      }
+    }
+  },
+  "schema": "asteria.multiplayer.rules",
+  "version": 1,
+  "world_pickup": {
+    "policy": "first_valid_claim"
+  },
+  "project_runtime": {
+    "project_file": "project.asteria.json"
+  }
+}

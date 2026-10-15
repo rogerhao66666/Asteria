@@ -158,6 +158,7 @@ class ActionCombatSystem(System):
         combat=None,
         formulas=None,
         snapshot_provider=None,
+        entity_snapshot_provider=None,
         known_abilities=None,
         inventory=None,
     ):
@@ -169,6 +170,7 @@ class ActionCombatSystem(System):
         self.snapshot_provider = (
             snapshot_provider  # callable() -> InputSnapshot | None (player input)
         )
+        self.entity_snapshot_provider = entity_snapshot_provider
         self.known_abilities = (
             known_abilities  # callable(entity) -> set of ability ids, or None (no limit)
         )
@@ -377,7 +379,7 @@ class ActionCombatSystem(System):
                 if hypot(tx - x, ty - y) > 1e-9:
                     return (tx - x, ty - y)
         if mode in ("target_input_facing", "input_facing"):
-            snapshot = snapshot if snapshot is not None else self._snapshot()
+            snapshot = snapshot if snapshot is not None else self._snapshot(entity)
             if snapshot is not None and entity.has(_player_input_type()):
                 dx, dy = snapshot.movement_vector()
                 if dx or dy:
@@ -386,7 +388,9 @@ class ActionCombatSystem(System):
                 return (controller.intent_x, controller.intent_y)
         return facing_vector(controller.facing) if controller is not None else (1.0, 0.0)
 
-    def _snapshot(self):
+    def _snapshot(self, entity=None):
+        if entity is not None and self.entity_snapshot_provider is not None:
+            return self.entity_snapshot_provider(entity)
         return self.snapshot_provider() if self.snapshot_provider is not None else None
 
     def _lock(self, entity, spec, scene, *, switch=False):
@@ -416,8 +420,11 @@ class ActionCombatSystem(System):
             if not spec.enabled:
                 continue
             self._check_lock(entity, spec, scene)
-            if snapshot is not None and entity.has(player_input):
-                self._read_input(entity, spec, scene, snapshot)
+            entity_snapshot = (
+                self._snapshot(entity) if self.entity_snapshot_provider is not None else snapshot
+            )
+            if entity_snapshot is not None and entity.has(player_input):
+                self._read_input(entity, spec, scene, entity_snapshot)
         for entity_id, (ability_id, left, aim) in tuple(self.buffered.items()):
             entity = scene.get_entity(entity_id)
             left -= dt

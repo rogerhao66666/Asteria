@@ -7,10 +7,16 @@
 [`ASTERIA_PROGRESS.md`](ASTERIA_PROGRESS.md). `docs/CANONICAL_SPEC.md` and the batch
 documents are historical.
 
-**Current state (2026-10-13):** the engine, the editor and the two demo projects are described in
+**Current state (2026-10-15):** the engine, the editor and the reference demos are described in
 [`docs/ENGINE_HANDBOOK.md`](docs/ENGINE_HANDBOOK.md) (start there); decisions and evidence are in
-[`docs/audits/DECISION_LOG.md`](docs/audits/DECISION_LOG.md). The ARPG framework, native (C++)
-kernels, the Octopath-style and Diablo-style demos and the editor's *New from Template* are done.
+[`docs/audits/DECISION_LOG.md`](docs/audits/DECISION_LOG.md). The generic multiplayer prototype, including Counter, Movement and a four-player cooperative
+Boss adapter, lives in `src/asteria/multiplayer`; its editor workflow and known limits are
+documented in [`docs/audits/MULTIPLAYER_DESIGN.md`](docs/audits/MULTIPLAYER_DESIGN.md). It has
+project-owned SQLite player state, editable reward templates, and a separate
+`reference_projects/diablo_multiplayer_demo` copy. Its opt-in **Run Project** profile uses the project-backed authoritative adapter: original
+ECS combat, skills, monsters, NPCs, inventory, equipment and character saves are synchronized.
+The four-player sample remains for local/trusted-LAN development. See the
+[gameplay template](docs/audits/MULTIPLAYER_GAMEPLAY_TEMPLATE.md) for load steps and editable rules.
 The sections below are historical.
 
 ```bash

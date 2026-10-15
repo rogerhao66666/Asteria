@@ -24,6 +24,7 @@ ACCENTS = {
     "ui": "#9a84e0",
     "events": "#4aa9dc",
     "code": "#738ee8",
+    "multiplayer": "#55aeb8",
     # panels
     "project": "#46b896",
     "tiles": "#86bf58",
@@ -130,6 +131,17 @@ def _code(p, c):  # </>
     p.drawPolyline([QPointF(8, 7), QPointF(3, 12), QPointF(8, 17)])
     p.drawPolyline([QPointF(16, 7), QPointF(21, 12), QPointF(16, 17)])
     p.drawLine(QPointF(13.5, 5), QPointF(10.5, 19))
+
+
+def _multiplayer(p, c):  # linked participants
+    p.setPen(_pen(c, 2.0))
+    p.drawLine(QPointF(7, 8), QPointF(12, 12))
+    p.drawLine(QPointF(17, 8), QPointF(12, 12))
+    p.drawLine(QPointF(12, 12), QPointF(12, 18))
+    p.setBrush(_fill(c, 90))
+    p.drawEllipse(QPointF(6, 7), 3.1, 3.1)
+    p.drawEllipse(QPointF(18, 7), 3.1, 3.1)
+    p.drawEllipse(QPointF(12, 18), 3.5, 3.5)
 
 
 def _play(p, c):
@@ -554,6 +566,7 @@ DRAWINGS = {
     "ui": _ui,
     "events": _events,
     "code": _code,
+    "multiplayer": _multiplayer,
     "play": _play,
     "stop": _stop,
     "target": _target,
@@ -608,6 +621,7 @@ DRAWINGS = {
 # default colour per icon (an accent name or a hex colour)
 DEFAULT_COLOR = {
     "play": "success",
+    "multiplayer": "multiplayer",
     "stop": "danger",
     "target": "muted",
     "folder": "assets",

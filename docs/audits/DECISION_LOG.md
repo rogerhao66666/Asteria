@@ -1735,3 +1735,28 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 - 八方旅人排版的指令選單固定出現在行動角色左側（變窄而非移位），可蓋住其他隊友，不蓋行動角色、隊伍血量面板與敵人資訊。5 場遭遇逐一截圖確認。
 - 實機重跑：input、mv_import、vfx_weather_load 通過；vfx_moderngl_field 在此機器上 44–54 fps（門檻 55），與戰鬥畫面無關。
+
+### D26-1 — Asteria 通用多人連線能力（以 ARPG Demo 驗證）
+
+**使用者要求（2026-10-14）：** 多人連線應是任何 Asteria 遊戲類型都能導入的能力。Diablo 式 ARPG 合作打 Boss 是第一個測試案例，不是功能限定的遊戲類型。
+
+**設計提案：** 提供選配的通用連線套件和獨立 headless authoritative server，涵蓋場次、參與者身分、command/state/event 同步介面；各遊戲以 adapter 接入自身玩法。第一個端到端驗證以 2–4 人共同擊敗 ARPG Boss 為例。大型 MMO 的帳號、公開配對、持久世界、relay／代管服務不列入此提案。
+
+**現況：** 通用 TCP session/lobby、command/state/event、可選即時 input/tick API、editor workspace 和兩個 adapter 範例已加入；ARPG 參考 runtime 仍以單一玩家／save 為中心，多人 Boss 戰尚未整合或驗收。細節、風險、分批與驗收草案見 `docs/audits/MULTIPLAYER_DESIGN.md`。
+
+**待確認：** 正式同步模型、server 或玩家兼任 host、場次資料保存、Internet 連線方式及各玩法的品質門檻。現有程式仍是本機／可信任 LAN 原型；command 雙 client 往返曾人工確認，即時移動 adapter 和網路品質尚未實機驗證。
+
+
+### D26-2 — 多人連線協定收尾與合作 Boss 範例
+
+**使用者要求：** 延續通用多人連線功能，完成更多部分；用實際功能驗證，並確認原有功能沒有回歸。
+
+**做法：** Server 對即時輸入回覆接受／拒絕（含速率限制原因）；adapter state/event 在 revision 前先做嚴格 JSON 與 frame 大小檢查；拒絕無法序列化的更新。新增 `CooperativeBossAdapter`：四人上限、玩家輸入擁有權、移動／攻擊、仇恨目標、階段與範圍攻擊、倒地／救援、一次性獎勵；Multiplayer workspace 可直接選取並預覽 Boss HP 與玩家位置。Ping 顯示 round-trip 毫秒。
+
+**證據：** 新增 loopback TCP 的多人測試，含兩 client 同步移動和共同擊敗 Boss、command 重播只套用一次、輸入重播／速率限制、斷線／重新加入 spawn、adapter 拒絕及 JSON 序列化錯誤。Editor 測試檢查三種 adapter selector、profile save/load、ack 顯示、Ping 文字與 Boss marker。聚焦 multiplayer/editor 測試目前通過 17 個 case；workspace／theme 回歸測試 19 個通過。
+
+**既有功能回歸：** baseline 發現三個舊測試仍把 workspace 數量固定為六；更新斷言以涵蓋新增 Multiplayer 工作區並仍驗證原頁面。Profiler/debugger 在受限 runner 因 loopback bind 權限失敗；獲准本機 socket 後其原有測試 10 個通過。完整 suite 尚待最後重跑。
+
+**限制：** 這個 Boss 是可由兩個 client 真正連線共同操作的 network adapter 範例，尚未把既有 `reference_projects/diablo_demo` 的 ECS、素材、技能與玩家存檔改成多人。沒有 TLS、身分驗證、NAT relay、adapter 沙箱、網路 delay／jitter／loss 注入或 CPU／頻寬量測；不可宣稱公開 Internet 可用。
+
+**實機與下一步：** 全部介面已加到 Multiplayer workspace；桌面 Cocoa 驗收尚未完成，因本機螢幕鎖定、GUI automation 無法取得視窗。解鎖後需確認版面、選取 Boss 範例、本機 host/client、第二 client 加入、兩端 Boss HP 一致、離開與停止 server，並保存 Cocoa 證據截圖。

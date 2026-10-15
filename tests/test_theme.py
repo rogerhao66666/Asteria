@@ -21,7 +21,15 @@ def test_theme_has_coherent_tokens_and_nonempty_qss():
 def test_buttons_have_colour_roles_and_each_workspace_its_accent():
     for role in ("primary", "success", "danger"):
         assert f'QPushButton[role="{role}"]' in ASTERIA_DARK_QSS
-    assert set(WORKSPACE_ACCENTS) == {"scene", "rpg", "battle", "ui", "events", "code"}
+    assert set(WORKSPACE_ACCENTS) == {
+        "scene",
+        "rpg",
+        "battle",
+        "ui",
+        "events",
+        "code",
+        "multiplayer",
+    }
     for name, colour in WORKSPACE_ACCENTS.items():
         assert f'QToolButton[workspace="{name}"]:checked' in ASTERIA_DARK_QSS
         assert colour in ASTERIA_DARK_QSS

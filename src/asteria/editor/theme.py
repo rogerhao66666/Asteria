@@ -8,7 +8,7 @@ Three palettes ship with the editor; View ▸ Theme switches between them live a
 * ``daylight``           - a light theme (RPG Maker MZ family)
 
 Workspace accents (Scene teal, Database amber, Battle coral, Presentation violet, Events sky, Code
-blue)
+blue, Multiplayer cyan)
 are the same in every palette, so a workspace keeps its colour; they are mid-tones that read on
 both
 dark and light surfaces.
@@ -138,6 +138,7 @@ WORKSPACE_ACCENTS = {
     "ui": "#9a84e0",
     "events": "#4aa9dc",
     "code": "#738ee8",
+    "multiplayer": "#55aeb8",
 }
 
 _TEMPLATE = Template(
@@ -181,6 +182,15 @@ QTabBar::tab {
 QMainWindow > QTabBar::tab { min-width: 0; padding: 6px 8px; background: $base; }
 QTabBar::tab:selected { background: $raised; color: $text; border-bottom: 2px solid $primary; }
 QTabBar::tab:hover:!selected { background: $hover; color: $text; }
+
+QLabel#MultiplayerServerStatus[status="running"],
+QLabel#MultiplayerConnectionStatus[status="connected"] { color: $success; font-weight: 600; }
+QLabel#MultiplayerServerStatus[status="starting"],
+QLabel#MultiplayerConnectionStatus[status="connecting"] { color: $primary; font-weight: 600; }
+QLabel#MultiplayerServerStatus[status="error"],
+QLabel#MultiplayerConnectionStatus[status="error"] { color: $danger_text; font-weight: 600; }
+QLabel#MultiplayerServerStatus[status="offline"],
+QLabel#MultiplayerConnectionStatus[status="offline"] { color: $text_muted; }
 
 /* -- lists, trees, tables
 ------------------------------------------------------------------------ */

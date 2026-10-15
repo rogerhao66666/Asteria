@@ -112,6 +112,7 @@ _WORKSPACE_ICON = {
     WorkspaceMode.UI: "ui",
     WorkspaceMode.EVENT: "events",
     WorkspaceMode.CODE: "code",
+    WorkspaceMode.MULTIPLAYER: "multiplayer",
 }
 
 
@@ -230,6 +231,10 @@ class AsteriaEditorWindow(QMainWindow):
         self.event_flow_editor.changed.connect(self.refresh_all)
         self.events_workspace.addTab(self.event_flow_editor, "Common && Battle Events")
 
+        from .multiplayer_workspace import MultiplayerWorkspaceWidget
+
+        self.multiplayer_workspace = MultiplayerWorkspaceWidget(self.document, self)
+
         self.workspace = EditorWorkspace(
             {
                 WorkspaceMode.SCENE: self.viewport,
@@ -238,6 +243,7 @@ class AsteriaEditorWindow(QMainWindow):
                 WorkspaceMode.UI: self.ui_workspace,
                 WorkspaceMode.EVENT: self.events_workspace,
                 WorkspaceMode.CODE: self.code_workspace,
+                WorkspaceMode.MULTIPLAYER: self.multiplayer_workspace,
             },
             self,
         )
@@ -640,6 +646,10 @@ class AsteriaEditorWindow(QMainWindow):
             (getattr(self, "ui_workspace_action", None), WorkspaceMode.UI),
             (getattr(self, "event_workspace_action", None), WorkspaceMode.EVENT),
             (getattr(self, "code_workspace_action", None), WorkspaceMode.CODE),
+            (
+                getattr(self, "multiplayer_workspace_action", None),
+                WorkspaceMode.MULTIPLAYER,
+            ),
         ):
             if action is not None:
                 action.setChecked(current == candidate)
@@ -657,6 +667,8 @@ class AsteriaEditorWindow(QMainWindow):
             self._refresh_game_systems()
         elif current == WorkspaceMode.EVENT:
             self.game_flow_overview.refresh()
+        elif current == WorkspaceMode.MULTIPLAYER:
+            self.multiplayer_workspace.refresh_profile()
 
     def _code_script_saved(self, path):
         self.statusBar().showMessage(f"Saved script {path}", 3000)
@@ -881,6 +893,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.ui_workspace_action = QAction("Presentation", self)
         self.event_workspace_action = QAction("Events", self)
         self.code_workspace_action = QAction("Code", self)
+        self.multiplayer_workspace_action = QAction("Multiplayer", self)
         for action, mode in (
             (self.scene_workspace_action, WorkspaceMode.SCENE),
             (self.rpg_workspace_action, WorkspaceMode.RPG),
@@ -888,6 +901,7 @@ class AsteriaEditorWindow(QMainWindow):
             (self.ui_workspace_action, WorkspaceMode.UI),
             (self.event_workspace_action, WorkspaceMode.EVENT),
             (self.code_workspace_action, WorkspaceMode.CODE),
+            (self.multiplayer_workspace_action, WorkspaceMode.MULTIPLAYER),
         ):
             action.setCheckable(True)
             action.triggered.connect(lambda checked=False, m=mode: self.workspace.set_mode(m))
@@ -903,13 +917,14 @@ class AsteriaEditorWindow(QMainWindow):
                 self.ui_workspace_action,
                 self.event_workspace_action,
                 self.code_workspace_action,
+                self.multiplayer_workspace_action,
             ),
             start=1,
         ):
             action.setShortcut(f"Ctrl+{number}")
             action.setToolTip(f"{action.text()} workspace (Ctrl+{number})")
             workspace_menu.addAction(action)
-        # The toolbar switches workspaces; the workspace's own tab strip repeated the same six
+        # The toolbar switches workspaces; the workspace's own tab strip repeated the same seven
         # buttons
         # and took the central area's width, so it stays hidden.
         self.workspace.tabs.hide()
@@ -2377,6 +2392,7 @@ class AsteriaEditorWindow(QMainWindow):
                 return
         if self.layout_settings is not None:
             self.save_layout()
+        self.multiplayer_workspace.shutdown()
         event.accept()
 
     layout_settings = (
