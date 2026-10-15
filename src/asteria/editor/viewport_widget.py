@@ -28,7 +28,7 @@ from .tile_edit import (
     rectangle_cells,
     world_to_tile,
 )
-from .tile_palette import TileToolState
+from .tile_palette import STROKE_MODES, TileToolState
 from .viewport import ViewportCamera, pick_entity, scene_markers, selected_scene
 
 try:
@@ -110,13 +110,27 @@ class SceneViewportWidget(QWidget):
         self.render_source = source
         if source is None:
             self.tile_tools.active_layer = None
+            self.tile_tools.tileset = None
         elif self.tile_tools.active_layer not in source.tilemap.layers and source.tilemap.layers:
             self.tile_tools.active_layer = source.tilemap.ordered_layers()[0]
+        if source is not None:
+            self.tile_tools.tileset = getattr(source, "tileset", None)
         self.update()
 
     def set_tile_mode(self, mode):
         self.tile_tools.set_mode(mode)
         self.update()
+
+    def set_terrain(self, terrain_id):
+        self.tile_tools.terrain_id = terrain_id or None
+
+    def set_region(self, region_id, erase=False):
+        self.tile_tools.region_id = int(region_id)
+        self.tile_tools.region_erase = bool(erase)
+        self.update()
+
+    def set_doodad(self, definition):
+        self.tile_tools.doodad = definition
 
     def set_selected_tile(self, tile_id):
         self.tile_tools.selected_tile_id = int(tile_id)
@@ -320,6 +334,9 @@ class SceneViewportWidget(QWidget):
                     int(cell.height),
                 )
 
+        if self.render_source is not None and self.tile_tools.mode == "region":
+            self._paint_region_overlay(painter)
+
         sprite_draws = build_entity_sprite_draws(
             self.current_scene(), self.camera, self.document.asset_views.sprite_sheet
         )
@@ -410,7 +427,60 @@ class SceneViewportWidget(QWidget):
             )
         painter.end()
 
+    def _paint_region_overlay(self, painter):
+        """Tint every painted region cell and print its number (region mode only)."""
+        from .tile_edit import region_layer
+
+        tilemap = self.render_source.tilemap
+        layer = region_layer(tilemap, self.tile_tools.region_layer_name)
+        if layer is None:
+            return
+        for (chunk_x, chunk_y), chunk in layer.chunks.items():
+            for index, value in enumerate(chunk.tiles):
+                if value < 0:
+                    continue
+                tile_x = chunk_x * tilemap.chunk_width + index % tilemap.chunk_width
+                tile_y = chunk_y * tilemap.chunk_height + index // tilemap.chunk_width
+                sx, sy = self.camera.world_to_screen(
+                    self.render_source.origin_x + tile_x * tilemap.tile_width,
+                    self.render_source.origin_y + tile_y * tilemap.tile_height,
+                )
+                width = tilemap.tile_width * self.camera.zoom
+                height = tilemap.tile_height * self.camera.zoom
+                hue = (value * 47) % 360
+                painter.setPen(QPen(QColor.fromHsv(hue, 200, 255, 220), 1))
+                painter.setBrush(QBrush(QColor.fromHsv(hue, 200, 255, 70)))
+                painter.drawRect(int(sx), int(sy), int(width), int(height))
+                painter.setPen(QColor(255, 255, 255, 230))
+                painter.drawText(int(sx) + 3, int(sy) + 14, str(value))
+
+    def _place_doodad(self, x, y):
+        from .doodads import build_place_doodads_command
+
+        scene = self.current_scene()
+        definition = self.tile_tools.doodad
+        if scene is None or definition is None:
+            return
+        world_x, world_y = self.camera.screen_to_world(x, y)
+        try:
+            self.document.execute(
+                build_place_doodads_command(scene, definition, [(world_x, world_y)])
+            )
+        except ValueError:
+            return
+        window = self.window()
+        if hasattr(window, "refresh_all"):
+            window.refresh_all()
+
     def mousePressEvent(self, event):
+        if (
+            event.button() == Qt.LeftButton
+            and self.tile_tools.mode == "doodad"
+            and not event.modifiers() & Qt.AltModifier
+        ):
+            self._place_doodad(event.position().x(), event.position().y())
+            event.accept()
+            return
         if event.button() == Qt.MiddleButton or (
             event.button() == Qt.LeftButton and event.modifiers() & Qt.AltModifier
         ):
@@ -471,9 +541,9 @@ class SceneViewportWidget(QWidget):
         if (
             event.button() == Qt.LeftButton
             and self.render_source is not None
-            and self.tile_tools.mode in {"paint", "erase"}
+            and self.tile_tools.mode in STROKE_MODES
         ):
-            if self.tile_tools.active_layer is None:
+            if self.tile_tools.active_layer is None and self.tile_tools.mode != "region":
                 event.accept()
                 return
             self._tile_stroke_cells = []
@@ -521,7 +591,7 @@ class SceneViewportWidget(QWidget):
             self.update()
             event.accept()
             return
-        if self._tile_stroke_cells and self.tile_tools.mode in {"paint", "erase"}:
+        if self._tile_stroke_cells and self.tile_tools.mode in STROKE_MODES:
             self._append_tile_stroke(
                 self._screen_to_tile(event.position().x(), event.position().y())
             )
@@ -577,11 +647,8 @@ class SceneViewportWidget(QWidget):
             and self.render_source is not None
         ):
             try:
-                command = build_paint_command(
-                    self.render_source.tilemap,
-                    self.tile_tools.active_layer,
-                    self._tile_stroke_cells,
-                    self.tile_tools.effective_tile_id,
+                command = self.tile_tools.build_command(
+                    self.render_source.tilemap, self._tile_stroke_cells
                 )
                 self.document.execute(command)
             except (TileEditError, ValueError):

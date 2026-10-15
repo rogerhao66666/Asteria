@@ -167,6 +167,39 @@ def build_terrain_command(tilemap, layer, tileset, autotile, cells, *, erase=Fal
     return tx
 
 
+def region_layer(tilemap, name):
+    """The tilemap's region layer called ``name`` (``None`` when it has none yet)."""
+    return next((layer for layer in tilemap.layers if layer.name == name), None)
+
+
+def build_region_command(tilemap, layer_name, cells, region_id, *, erase=False):
+    """Paint region number ``region_id`` (or clear it) on the hidden region layer ``layer_name``.
+
+    The layer is created, invisible and above the others, when the map has none. One undo step."""
+    region_id = int(region_id)
+    if not erase and region_id < 0:
+        raise TileEditError("A region number is zero or more")
+    layer = region_layer(tilemap, layer_name)
+    tx = CommandTransaction("Erase Regions" if erase else f"Paint Region {region_id}")
+    if layer is None:
+        top = max((item.order for item in tilemap.layers), default=-1) + 1
+        layer = TileLayer(layer_name, order=top, visible=False)
+        tx.add(AddTileLayerCommand(tilemap, layer))
+    value = EMPTY_TILE if erase else region_id
+    seen = set()
+    for tile_x, tile_y in cells:
+        key = (int(tile_x), int(tile_y))
+        if key in seen:
+            continue
+        seen.add(key)
+        old = tile_at(tilemap, layer, *key)
+        if old != value:
+            tx.add(SetTileCommand(tilemap, layer, key[0], key[1], value, old))
+    if not any(isinstance(command, SetTileCommand) for command in tx.commands):
+        raise TileEditError("No tile changes")
+    return tx
+
+
 def line_cells(x0, y0, x1, y1):
     """Integer Bresenham cells for gap-free mouse painting."""
     x0 = int(x0)

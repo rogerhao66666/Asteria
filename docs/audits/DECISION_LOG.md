@@ -1820,4 +1820,16 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - DragonBones 格式沒有做（只做 Spine 風格 JSON）；匯入的骨骼還沒接進場景或編輯器。
 - 圖片只能由事件或程式顯示；編輯器沒有圖片的編輯介面。點擊判斷用整張圖的矩形，不看透明像素。
 - 戰鬥天氣不會自己隨地圖或遭遇改變；由事件或程式設定。
-- 裝飾物的放置指令有了，但編輯器還沒有「裝飾物筆刷」按鈕。
+- 裝飾物的筆刷已在 D29 補上。
+
+## D29 — 編輯器介面：表單、筆刷、骨骼預覽（2026-10-15）
+
+| 項目 | 做法 | 位置 |
+|---|---|---|
+| Game Systems 表單 | D26／D28 的 12 種規則（戰鬥擴充、敵人等級、地圖區域、耐久、拆解、職業點、新遊戲＋、翻譯、訊息設定、音樂室、製作人員、裝飾物）全都用既有的表單系統編輯，走可復原的指令；字典型欄位用 `ADAPTERS` 轉成表格 | `editor/game_systems_authoring.py` |
+| 地形筆刷 | Tiles 面板的 Terrain 按鈕＋下拉（列出有 `terrain` 與 `mask:<n>` 標籤的地形）；拖曳後呼叫 `build_terrain_command`，一次一步復原 | `editor/tile_palette.py`、`tile_palette_widget.py`、`viewport_widget.py` |
+| 區域畫筆 | Region 按鈕＋編號＋「清除」；畫在隱藏的 `regions` 圖層（沒有就自動建立，與第一筆同一個復原步驟），視窗上畫半透明編號蓋層。圖層名稱與 `MapRuleSet.region_layer` 一致 | `editor/tile_edit.py`（`build_region_command`） |
+| 裝飾物筆刷 | Doodad 按鈕＋下拉（專案的裝飾物定義）；在視窗點一下放一個，可復原 | `editor/doodads.py` |
+| 骨骼預覽 | 新的 Skeleton 面板：開啟 Spine JSON、選動畫、拖時間軸或播放，畫骨骼線；讀不了的檔案在狀態列顯示原因，匯入跳過的部分也會列出 | `editor/skeleton_view.py`、`skeleton_widget.py` |
+
+**限制：** 骨骼只能預覽、不能編輯（骨骼與關鍵影格仍要改 JSON）；沒有貼圖預覽，只有骨骼線。蓋層與筆刷在離屏 Qt 測試過，真實視窗的手感沒看過。

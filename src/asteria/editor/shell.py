@@ -92,6 +92,7 @@ from asteria.runtime.world_command_handlers import WORLD_COMMAND_ARGUMENTS
 from .animation_widget import AnimationWidget
 from .authoring_context import animation_context, scene_authoring_source
 from .resource_resolver import EditorResourceError, resolve_project_resources
+from .skeleton_widget import SkeletonViewerWidget
 from .theme import apply_asteria_theme
 from .tile_edit import (
     AddTileLayerCommand,
@@ -265,6 +266,16 @@ class AsteriaEditorWindow(QMainWindow):
         self.tabifyDockWidget(left, palette_dock)
         self.tile_palette.modeChanged.connect(self.viewport.set_tile_mode)
         self.tile_palette.tileSelected.connect(self.viewport.set_selected_tile)
+        self.tile_palette.terrainChanged.connect(self.viewport.set_terrain)
+        self.tile_palette.regionChanged.connect(self.viewport.set_region)
+        self.tile_palette.doodadChanged.connect(self.viewport.set_doodad)
+
+        self.skeleton_viewer = SkeletonViewerWidget(self)
+        skeleton_dock = QDockWidget("Skeleton", self)
+        skeleton_dock.setObjectName("SkeletonDock")
+        skeleton_dock.setWidget(self.skeleton_viewer)
+        self.addDockWidget(Qt.LeftDockWidgetArea, skeleton_dock)
+        self.tabifyDockWidget(left, skeleton_dock)
 
         self.tile_layers = TileLayersWidget(self)
         layers_dock = QDockWidget("Layers", self)
@@ -366,6 +377,7 @@ class AsteriaEditorWindow(QMainWindow):
             left: ("project", "project"),
             palette_dock: ("tiles", "tiles"),
             layers_dock: ("layers", "layers"),
+            skeleton_dock: ("animation", "layers"),
             right: ("inspector", "inspector"),
             bottom: ("assets", "assets"),
             console: ("console", "console"),
@@ -1412,6 +1424,10 @@ class AsteriaEditorWindow(QMainWindow):
                 editor.refresh()
 
     def refresh_all(self):
+        project = getattr(self.document, "project", None)
+        database = getattr(project, "rpg_database", None)
+        if database is not None and set(database.doodads) != set(self.tile_palette._doodads):
+            self.tile_palette.set_doodads(database.doodads)
         if getattr(self, "problems_widget", None) is not None:
             self.problems_widget.schedule_refresh()
         self.project_tree.refresh()
@@ -2416,6 +2432,7 @@ class AsteriaEditorWindow(QMainWindow):
         "ProblemsDock",
         "TilePaletteDock",
         "LayersDock",
+        "SkeletonDock",
     )
 
     def _switch_workspace_docks(self, mode):
