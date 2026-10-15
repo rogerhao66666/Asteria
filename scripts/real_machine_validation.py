@@ -3255,6 +3255,10 @@ def check_octopath_demo(out):
         else:
             _pump(runtime, 0.05)
     checks["battle_won_by_keys"] = bool(runtime._victory)
+    aftermath = runtime._victory_screen
+    checks["victory_aftermath_page"] = bool(
+        aftermath is not None and aftermath.pages and any(page.lines for page in aftermath.pages)
+    )
     _pump(runtime, 0.6)
     shot("octo_victory.png")
     runtime.close()
@@ -3290,6 +3294,316 @@ def check_octopath_demo(out):
         + f"; divine skill {divine}, up to {peak['n']} particles in a frame",
         screenshots=shots,
         note="Whether it plays well is for a person (M5 / M10).",
+    )
+
+
+def check_cjk_text(out):
+    """Render expanded message codes with CJK text into a real Cocoa game window."""
+    import pygame
+
+    from asteria.editor import EditorDocument
+    from asteria.platform.pygame_battle_ui import font_for_text
+    from asteria.presentation.message_codes import MessageContext, expand_message, parse_message
+    from asteria.project import Project
+    from asteria.runtime.playable_test_runtime import PlayableTestRuntime
+
+    root = REPO / "reference_projects" / "octopath_demo"
+    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    runtime = PlayableTestRuntime(
+        project, project.game_start.instantiate(project), root, width=960, height=540
+    )
+    runtime.open()
+    runtime.screen.fill((20, 23, 32))
+    runtime.panel((52, 64, 856, 168), fill=(10, 14, 24, 235), border=(124, 145, 190))
+    runtime.text("Message controls and Traditional Chinese", 76, 82, size=26)
+    context = MessageContext(
+        variable=lambda name: "等級 42" if name == "level" else None,
+        actor_name=lambda actor_id: "旅者" if actor_id == "hero" else None,
+        translate=lambda key: "準備好了" if key == "ready" else None,
+    )
+    expanded = expand_message(r"\C[2]\N[hero] · \V[level] · \T[ready] \I[1]", context)
+    runtime._draw_message(expanded, 76, 132, size=30)
+    pygame.display.flip()
+    pygame.image.save(runtime.capture(), str(out / "octo_cjk_message.png"))
+
+    fallback = pygame.font.Font(None, 30)
+    selected = font_for_text(pygame, fallback, "繁體中文", {}, 30)
+    cjk_pixels = pygame.image.tobytes(selected.render("繁體中文", True, (255, 255, 255)), "RGBA")
+    replacement_pixels = pygame.image.tobytes(
+        selected.render("????", True, (255, 255, 255)), "RGBA"
+    )
+    spans = parse_message(expanded)
+    driver = pygame.display.get_driver()
+    checks = {
+        "data_codes_expanded": "旅者 · 等級 42 · 準備好了" in expanded,
+        "colour_control_parsed": any(span.color != (255, 255, 255) for span in spans),
+        "icon_control_parsed": any(span.icon == 1 for span in spans),
+        "system_cjk_font_selected": selected is not fallback,
+        "cjk_glyphs_differ_from_question_marks": cjk_pixels != replacement_pixels,
+    }
+    runtime.close()
+    failed = sorted(key for key, value in checks.items() if not value)
+    return result(
+        "cjk_text_rendering",
+        "PASS" if not failed and driver == "cocoa" else "FAIL",
+        "Expanded RPG message controls in a Cocoa window: "
+        + ", ".join(f"{key}={'ok' if value else 'FAILED'}" for key, value in checks.items()),
+        screenshot="octo_cjk_message.png",
+    )
+
+
+def check_game_extras(out):
+    """Open Backlog, Music Room and Credits in a real game window with temporary project data."""
+    import pygame
+
+    from asteria.editor import EditorDocument
+    from asteria.project import Project
+    from asteria.rpg.extras import CreditsPage, MusicTrack
+    from asteria.rpg.localization import MessageSettings
+    from asteria.runtime import extras_screens
+    from asteria.runtime.playable_test_runtime import PlayableTestRuntime
+
+    root = REPO / "reference_projects" / "octopath_demo"
+    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    database = project.rpg_database
+    database.add_message_settings(MessageSettings("native", backlog_limit=20))
+    database.add_music_track(MusicTrack("field", "Field Theme", "battle_theme"))
+    database.add_music_track(
+        MusicTrack("secret", "Secret Theme", "battle_theme", unlock_switch="secret.open")
+    )
+    database.add_credits_page(CreditsPage("team", "Team", ("Asteria", "Roger"), order=1))
+    runtime = PlayableTestRuntime(
+        project, project.game_start.instantiate(project), root, width=960, height=540
+    )
+    runtime.open()
+    runtime.game.backlog.add("旅者", "旅者踏上旅程。")
+    checks, shots = {}, []
+    for name, screen in (
+        ("backlog", extras_screens.BacklogScreen(runtime)),
+        ("music_room", extras_screens.MusicRoomScreen(runtime)),
+        ("credits", extras_screens.CreditsScreen(runtime)),
+    ):
+        screen.draw()
+        pygame.display.flip()
+        shot = f"octo_{name}.png"
+        pygame.image.save(runtime.capture(), str(out / shot))
+        shots.append(shot)
+        checks[name] = bool(pygame.image.tobytes(runtime.screen, "RGB").strip(b"\x00"))
+    music = extras_screens.MusicRoomScreen(runtime)
+    checks["music_unlocks"] = [open_ for _track, open_ in music.tracks()] == [True, False]
+    runtime.game.save.event_context.set_switch("secret.open", True)
+    checks["music_unlock_switch"] = music.unlocked(database.music_tracks["secret"])
+    checks["backlog_has_entry"] = len(runtime.game.backlog) == 1
+    checks["credits_has_page"] = [
+        page.page_id for page in extras_screens.CreditsScreen(runtime).pages()
+    ]
+    checks["credits_has_page"] = checks["credits_has_page"] == ["team"]
+    driver = pygame.display.get_driver()
+    runtime.close()
+    failed = sorted(key for key, value in checks.items() if not value)
+    return result(
+        "game_extras_real_windows",
+        "PASS" if not failed and driver == "cocoa" else "FAIL",
+        "Cocoa screens and in-memory content: "
+        + ", ".join(f"{key}={'ok' if value else 'FAILED'}" for key, value in checks.items()),
+        screenshots=shots,
+    )
+
+
+def check_map_rules_real_window(out):
+    """Exercise damage, slippery movement and footstep requests while Octopath is open."""
+    import pygame
+
+    from asteria.core import Transform
+    from asteria.editor import EditorDocument
+    from asteria.gameplay import ResourcePool
+    from asteria.project import Project
+    from asteria.rpg.map_rules import AreaRule, MapRuleSet
+    from asteria.runtime.playable_test_runtime import PlayableTestRuntime
+
+    root = REPO / "reference_projects" / "octopath_demo"
+    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project.rpg_database.add_map_rule_set(
+        MapRuleSet(
+            "native_validation",
+            (
+                AreaRule(
+                    "region:1",
+                    damage_resource="vitality",
+                    damage_per_second=5,
+                    footstep_cue="step_grass",
+                    step_distance=8,
+                ),
+                AreaRule("region:2", slippery=True, slip_seconds=0.6),
+            ),
+        )
+    )
+    runtime = PlayableTestRuntime(
+        project, project.game_start.instantiate(project), root, width=960, height=540
+    )
+    runtime.open()
+    game = runtime.game
+
+    def keys_at(_x, _y):
+        return "region:1", "region:2"
+
+    game.bind_map_rules(keys_at)
+    player_id = game.player.id
+    hero_id = game.save.rpg_state.party_active_actor_ids[0]
+    before = game.resolve_actor_build(hero_id).resources.current("vitality")
+    game.map_rules.update(1.0)
+    after = ResourcePool.from_data(game.save.rpg_state.actor_snapshots[hero_id].resources)
+    transform = game.player.get(Transform)
+    game.presentation_requests.clear()
+    transform.x += 9
+    game.map_rules.update(0.1)
+    footsteps = [
+        request
+        for request in game.presentation_requests
+        if request.name == "PLAY_SE" and request.args["asset_id"] == "step_grass"
+    ]
+    first = game.map_rules.runtime.shape_movement(player_id, 1.0, 0.0, transform.x, transform.y)
+    coast = game.map_rules.runtime.shape_movement(player_id, 0.0, 0.0, transform.x, transform.y)
+    game.map_rules.settled(0.1)
+    checks = {
+        "floor_damage": after.current("vitality") == before - 5,
+        "footstep_request": len(footsteps) == 1,
+        "ice_carries_last_direction": first == (1.0, 0.0) and coast == (1.0, 0.0),
+        "slide_timer_active": game.map_rules.runtime.sliding(player_id),
+    }
+    runtime._draw_field(moving=True)
+    runtime.text("Region 1: damage + footsteps    Region 2: ice", 20, 20, size=18)
+    runtime.present()
+    pygame.image.save(runtime.capture(), str(out / "octo_map_rules.png"))
+    driver = pygame.display.get_driver()
+    runtime.close()
+    failed = sorted(key for key, value in checks.items() if not value)
+    return result(
+        "map_rules_real_window",
+        "PASS" if not failed and driver == "cocoa" else "FAIL",
+        "Octopath Cocoa runtime with in-memory region rules: "
+        + ", ".join(f"{key}={'ok' if value else 'FAILED'}" for key, value in checks.items()),
+        screenshot="octo_map_rules.png",
+        note="Rule effects are runtime-verified; physical movement feel is for a person.",
+    )
+
+
+def check_editor_d30(out):
+    """Drive the new Skeleton and region-rule authoring panels in the Cocoa editor."""
+    from PySide6.QtWidgets import QApplication, QDockWidget
+
+    from asteria.editor import EditorDocument
+    from asteria.editor.resource_resolver import resolve_project_resources
+    from asteria.editor.scene_render import render_source_for_scene
+    from asteria.editor.shell import AsteriaEditorWindow
+    from asteria.editor.tile_edit import build_region_command, region_layer, tile_at
+    from asteria.graphics.skeleton import Bone, Key, Skeleton, SkeletonClip
+    from asteria.project import Project
+    from asteria.rpg.map_rules import AreaRule, MapRuleSet
+
+    app = QApplication.instance() or QApplication([])
+    project_file = REPO / "reference_projects" / "diablo_demo" / "project.asteria.json"
+    original = project_file.read_bytes()
+    project = Project.load_json(project_file, EditorDocument().component_registry)
+    window = AsteriaEditorWindow(project)
+    window.document.file_path = project_file
+    resolve_project_resources(window.document)
+    window.resize(1600, 1000)
+    window.show()
+    app.processEvents()
+    checks, shots = {}, []
+    palette = window.tile_palette
+    tiles_dock = window.findChild(QDockWidget, "TilePaletteDock")
+    tiles_dock.show()
+    tiles_dock.raise_()
+    project.rpg_database.add_map_rule_set(
+        MapRuleSet(
+            "native_validation",
+            (AreaRule("region:7", damage_resource="vitality", damage_per_second=3),),
+        )
+    )
+    window.refresh_all()
+    palette.region_spin.setValue(7)
+    palette.damage_per_second.setValue(8)
+    palette.apply_region_rule.click()
+    changed = project.rpg_database.map_rule_sets["native_validation"].rule("region:7")
+    checks["region_rule_edit"] = changed.damage_per_second == 8
+    checks["region_rule_undo"] = window.document.commands.undo() and (
+        project.rpg_database.map_rule_sets["native_validation"].rule("region:7").damage_per_second
+        == 3
+    )
+    checks["terrain_brush"] = palette.terrain_button.isVisible()
+    palette.terrain_button.click()
+    checks["terrain_brush_mode"] = window.viewport.tile_tools.mode == "terrain"
+    palette.region_button.click()
+    checks["region_brush_mode"] = window.viewport.tile_tools.mode == "region"
+    scene = next(scene for scene in project.scenes() if scene.name == "Hollowbrook")
+    source = render_source_for_scene(window.document, scene)
+    checks["region_overlay_source"] = source is not None
+    if source is not None:
+        window.set_tilemap_render_source(source)
+        window.document.execute(build_region_command(source.tilemap, "regions", [(0, 0)], 7))
+        window.viewport.refresh()
+        app.processEvents()
+        shot = "editor_d30_region_overlay.png"
+        window.grab().save(str(out / shot))
+        shots.append(shot)
+        layer = region_layer(source.tilemap, "regions")
+        checks["region_overlay_painted"] = tile_at(source.tilemap, layer, 0, 0) == 7
+    else:
+        checks["region_overlay_painted"] = False
+    palette.doodad_button.click()
+    checks["doodad_brush_mode"] = window.viewport.tile_tools.mode == "doodad"
+    app.processEvents()
+    shot = "editor_d30_tiles.png"
+    window.grab().save(str(out / shot))
+    shots.append(shot)
+
+    viewer = window.skeleton_viewer
+    clip = SkeletonClip(
+        "walk", 1.0, tracks={("arm", "rotation"): (Key(0, 0), Key(1, 30, "ease_out"))}
+    )
+    viewer.set_skeleton(
+        Skeleton(
+            "native_rig",
+            (Bone("root", length=14), Bone("arm", "root", length=12)),
+            clips={"walk": clip},
+        )
+    )
+    viewer.bone_combo.setCurrentText("arm")
+    viewer.bone_name.setText("upper_arm")
+    viewer.apply_bone_button.click()
+    checks["skeleton_bone_edit"] = viewer.skeleton.bone("upper_arm").parent == "root"
+    checks["skeleton_edit_undo"] = window.document.commands.undo() and (
+        viewer.skeleton.bone("arm").bone_id == "arm"
+    )
+    viewer.track_bone.setCurrentText("arm")
+    viewer.track_channel.setCurrentText("rotation")
+    viewer.key_time.setValue(0.5)
+    viewer.key_value.setValue(45)
+    viewer.key_easing.setCurrentText("ease_in")
+    viewer.save_key_button.click()
+    checks["skeleton_key_edit"] = (
+        Key(0.5, 45, "ease_in") in dict(viewer.skeleton.clips["walk"].tracks)[("arm", "rotation")]
+    )
+    viewer.timeline.grab()
+    skeleton_dock = window.findChild(QDockWidget, "SkeletonDock")
+    skeleton_dock.raise_()
+    app.processEvents()
+    shot = "editor_d30_skeleton.png"
+    window.grab().save(str(out / shot))
+    shots.append(shot)
+    platform_name = app.platformName()
+    window.document.mark_saved()
+    window.close()
+    checks["project_file_untouched"] = project_file.read_bytes() == original
+    failed = sorted(key for key, value in checks.items() if not value)
+    return result(
+        "editor_d30_gui",
+        "PASS" if not failed and platform_name == "cocoa" else "FAIL",
+        f"Qt platform '{platform_name}': "
+        + ", ".join(f"{key}={'ok' if value else 'FAILED'}" for key, value in checks.items()),
+        screenshots=shots,
     )
 
 
@@ -3552,6 +3866,10 @@ CHECKS = {
     "icons_and_particles": check_icons_and_particles,
     "editor_particles": check_editor_particles,
     "octopath_demo": check_octopath_demo,
+    "cjk_text": check_cjk_text,
+    "game_extras": check_game_extras,
+    "map_rules": check_map_rules_real_window,
+    "editor_d30": check_editor_d30,
 }
 
 
