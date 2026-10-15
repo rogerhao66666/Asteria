@@ -1018,6 +1018,7 @@ def main():
     # -- assets and the playable manifest ---------------------------------------------------------
     manifest = json.loads((REFERENCE / "playable_test_manifest.json").read_text(encoding="utf-8"))
     manifest["title"] = "Octopath-style Battle Demo"
+    manifest["battle"]["victory_aftermath"] = True
     sprites = manifest["field"]["entity_sprites"]
     sprites["Grimgarde"] = sprites.pop(
         "Astral Tyrant", {"sprite": "playable_assets/boss_field.png", "size": [96, 96]}

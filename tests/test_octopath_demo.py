@@ -11,6 +11,7 @@ points; a skill that needs two weapon kinds; skills of several hits and several 
 giving boost
 points; calling a pet; concocting; poison that worsens, sleep, silence and attack up."""
 
+import json
 from pathlib import Path
 
 import pytest
@@ -20,6 +21,11 @@ pygame = pytest.importorskip("pygame")
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
 BP, SHIELD, HP = "bp", "shield", "vitality"
 BOSS = "astral_tyrant:1"
+
+
+def test_demo_manifest_opens_the_victory_aftermath_screen():
+    manifest = json.loads((ROOT / "playable_test_manifest.json").read_text())
+    assert manifest["battle"]["victory_aftermath"] is True
 
 
 @pytest.fixture

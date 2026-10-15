@@ -200,6 +200,7 @@
     "presentation": {
       "adapter": "canonical"
     },
+    "victory_aftermath": true,
     "command_style": "root"
   },
   "controls": {
