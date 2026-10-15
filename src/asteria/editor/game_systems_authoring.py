@@ -24,8 +24,18 @@ from asteria.rpg import (
     QuestObjective,
     ShopDefinition,
 )
+from asteria.rpg.battle_extensions import GAIN_EVENTS, BattleExtensionRules
+from asteria.rpg.disassembly import DisassemblyRecipe
+from asteria.rpg.doodads import DoodadDefinition
 from asteria.rpg.drop_tables import RARITIES, DropTable
+from asteria.rpg.durability import ON_BREAK, DurabilityRules
+from asteria.rpg.enemy_levels import EnemyLevelRules
+from asteria.rpg.extras import CreditsPage, MusicTrack
 from asteria.rpg.items import INVENTORY_OVERFLOW, InventoryRules
+from asteria.rpg.job_points import JobPointRules
+from asteria.rpg.localization import LocaleTable, MessageSettings
+from asteria.rpg.map_rules import MapRuleSet
+from asteria.rpg.new_game_plus import CARRY, NewGamePlusRules
 from asteria.rpg.quests import OBJECTIVE_KINDS
 from asteria.rpg.world_interactions import OPERATORS, VERBS, WorldInteraction
 from asteria.rpg.world_record import ACHIEVEMENT_KINDS
@@ -319,6 +329,328 @@ FORMS = {
     ),
 }
 
+# --- rules added in D26 (battle extensions, map rules, durability, messages ...) -----------------
+_STEAL_ENTRY = (
+    F("item_id", "Item", "ref", source="items"),
+    F("chance", "Chance (0–1)", "float", default=1.0),
+    F("amount", "Amount", "int", default=1),
+)
+_AREA_RULE = (
+    F("key", "Area (region:<id> or tag:<name>)", "text", default="region:1"),
+    F("damage_resource", "Floor Damage: Resource", "text", default=""),
+    F("damage_per_second", "Floor Damage per Second", "float", default=0.0),
+    F("can_kill", "Floor Damage Can Kill", "bool", default=False),
+    F("slippery", "Slippery", "bool", default=False),
+    F("slip_seconds", "Slide Seconds", "float", default=0.6),
+    F("footstep_cue", "Footstep Sound (asset)", "text", default=""),
+    F("step_distance", "Distance per Step", "float", default=28.0),
+    F("blocks", "Blocks (player, enemy, npc, all)", "string_list", default=()),
+    F("visibility", "Visibility (1 = normal, below 1 = harder to see)", "float", default=1.0),
+    F("on_enter", "Event on Enter", "optional_ref", source="event_programs", default=""),
+    F("on_leave", "Event on Leave", "optional_ref", source="event_programs", default=""),
+    F("on_step", "Event on Each Step", "optional_ref", source="event_programs", default=""),
+    F("switch", "Only While Switch Is On", "text", default=""),
+)
+
+D26_FORMS = {
+    "battle_extension_rules": (
+        F("rules_id", "Rules ID", "id"),
+        F("damage_resource", "Resource That Counts as Damage (hp)", "text", default=""),
+        F("taunt_tag", "Taunt Tag", "text", default=""),
+        F("lifesteal_stat", "Life Steal Stat (0–1 on the actor)", "text", default=""),
+        F("overkill_rate", "Overkill Reward Rate", "float", default=0.0),
+        F("overkill_cap", "Overkill Cap (share of max)", "float", default=1.0),
+        F("use_limits", "Uses per Battle", "amounts", source="abilities", default={}),
+        F(
+            "mastery",
+            "Mastery Levels (uses needed, comma separated)",
+            "table",
+            default=(),
+            fields=(
+                F("ability_id", "Ability", "ref", source="abilities"),
+                F("thresholds", "Uses for Each Level", "string_list", default=()),
+            ),
+        ),
+        F("preemptive_chance", "Preemptive Chance (0–1)", "float", default=0.0),
+        F("surprise_chance", "Surprise Chance (0–1)", "float", default=0.0),
+        F(
+            "steal_tables",
+            "Steal Tables",
+            "table",
+            default=(),
+            fields=(
+                F("target_key", "Enemy ID or Tag", "text", default=""),
+                F("once", "Once per Enemy", "bool", default=True),
+                F("entries", "Can Steal", "table", fields=_STEAL_ENTRY, default=()),
+            ),
+        ),
+        F("row_tag_prefix", "Row Tag Prefix (blank = off)", "text", default=""),
+        F(
+            "gains",
+            "Resource Gains (TP-style)",
+            "table",
+            default=(),
+            fields=(
+                F("event", "When", "choice", choices=GAIN_EVENTS, default="dealt"),
+                F("resource", "Battle Resource", "text", default="tp"),
+                F("flat", "Flat Amount", "float", default=0.0),
+                F("per_damage", "Per Point of Damage", "float", default=0.0),
+                F("per_max_hp", "Per Share of Victim Max", "float", default=0.0),
+                F("ability_tag", "Only Abilities Tagged", "text", default=""),
+            ),
+        ),
+    ),
+    "enemy_level_rules": (
+        F("rules_id", "Rules ID", "id"),
+        F("stat_growth", "Stat Growth per Level", "amounts", default={}),
+        F("resource_growth", "Resource Growth per Level", "amounts", default={}),
+        F("reward_growth", "Reward Growth per Level", "float", default=0.0),
+        F(
+            "map_levels",
+            "Levels by Map",
+            "table",
+            default=(),
+            fields=(
+                F("map_id", "Map / Area ID", "text", default=""),
+                F("lowest", "Lowest", "int", default=1),
+                F("highest", "Highest", "int", default=1),
+            ),
+        ),
+        F("party_level_offset", "Level vs Party (no map entry)", "int", default=0),
+        F("max_level", "Highest Level", "int", default=99),
+        F(
+            "difficulties",
+            "Difficulty Slider",
+            "table",
+            default=(),
+            fields=(
+                F("difficulty_id", "Name", "text", default="normal"),
+                F("strength", "Enemy Strength x", "float", default=1.0),
+                F("reward", "Reward x", "float", default=1.0),
+                F("level_offset", "Level Offset", "int", default=0),
+            ),
+        ),
+        F("default_difficulty", "Default Difficulty", "text", default=""),
+    ),
+    "map_rule_sets": (
+        F("rules_id", "Rules ID", "id"),
+        F("region_layer", "Tile Layer Holding Regions", "text", default="regions"),
+        F("crouch_visibility", "Visibility When Crouching", "float", default=1.0),
+        F("still_visibility", "Visibility When Standing Still", "float", default=1.0),
+        F("rules", "Area Rules", "table", fields=_AREA_RULE, default=()),
+    ),
+    "durability_rules": (
+        F("rules_id", "Rules ID", "id"),
+        F("max_durability", "Durability per Equipment", "amounts", source="equipment", default={}),
+        F("default_max", "Durability of Other Equipment (0 = none)", "float", default=0.0),
+        F(
+            "wear",
+            "Wear",
+            "table",
+            default=(),
+            fields=(
+                F("event", "Event (attack, hit ...)", "text", default="attack"),
+                F("slots", "Slots", "string_list", default=("weapon",)),
+                F("amount", "Wear per Event", "float", default=1.0),
+            ),
+        ),
+        F("on_break", "When It Breaks", "choice", choices=ON_BREAK, default="disable"),
+        F("repair_currency", "Repair Currency", "text", default=""),
+        F("repair_cost_per_point", "Repair Cost per Point", "float", default=0.0),
+    ),
+    "disassembly_recipes": (
+        F("item_id", "Item / Equipment ID", "id"),
+        F(
+            "yields",
+            "Yields",
+            "table",
+            default=(),
+            fields=(
+                F("item_id", "Item", "ref", source="items"),
+                F("minimum", "Minimum", "int", default=1),
+                F("maximum", "Maximum", "int", default=1),
+                F("chance", "Chance (0–1)", "float", default=1.0),
+            ),
+        ),
+        F("fee_currency", "Fee Currency", "text", default=""),
+        F("fee", "Fee", "float", default=0.0),
+    ),
+    "job_point_rules": (
+        F("rules_id", "Rules ID", "id"),
+        F("prefix", "Balance Prefix (jp -> jp.<class>)", "text", default="jp"),
+        F("per_battle", "Points per Battle", "float", default=0.0),
+        F("per_enemy", "Points per Defeated Enemy", "float", default=0.0),
+        F("secondary", "Share for Each Extra Class (0–1)", "float", default=0.5),
+    ),
+    "new_game_plus_rules": (
+        F("rules_id", "Rules ID", "id"),
+        F("carry", "Carried Over", "ref_list", source="carry_parts", default=()),
+        F("carry_switches", "Switch Prefixes That Stay On", "string_list", default=()),
+        F("level_cap", "Level Cap (0 = none)", "int", default=0),
+        F("keep_currency_share", "Share of Currency Kept (0–1)", "float", default=1.0),
+    ),
+    "locale_tables": (
+        F("locale", "Locale (fr, zh-TW ...)", "id"),
+        F(
+            "entries",
+            "Translations",
+            "table",
+            default=(),
+            fields=(F("key", "Key", "text", default=""), F("text", "Text", "text", default="")),
+        ),
+    ),
+    "message_settings": (
+        F("settings_id", "Settings ID", "id"),
+        F(
+            "macros",
+            "Macros (\\M[name])",
+            "table",
+            default=(),
+            fields=(F("name", "Name", "text", default=""), F("text", "Text", "text", default="")),
+        ),
+        F("currency_id", "Currency Shown by \\G and \\$", "text", default="gold"),
+        F("currency_label", "Currency Label", "text", default=""),
+        F("backlog_limit", "Message Log Size (0 = no log)", "int", default=0),
+        F("default_locale", "Default Locale", "text", default=""),
+        F(
+            "icons",
+            "Icons for \\I[n]",
+            "table",
+            default=(),
+            fields=(
+                F("number", "Number", "text", default="1"),
+                F("icon_id", "Icon", "text", default=""),
+            ),
+        ),
+    ),
+    "music_tracks": (
+        F("track_id", "Track ID", "id"),
+        F("name", "Name", "text", default=""),
+        F("asset_id", "Audio Asset", "text", default=""),
+        F("unlock_switch", "Unlock Switch (blank = always open)", "text", default=""),
+        F("note", "Note", "text", default=""),
+    ),
+    "credits_pages": (
+        F("page_id", "Page ID", "id"),
+        F("title", "Title", "text", default=""),
+        F("lines", "Lines (one per line)", "multiline", default=""),
+        F("order", "Order", "int", default=0),
+    ),
+    "doodads": (
+        F("doodad_id", "Doodad ID", "id"),
+        F("sprite_sheet_asset_id", "Sprite Sheet", "text", default=""),
+        F("frame", "Frame", "int", default=0),
+        F("solid_width", "Solid Width (0 = none)", "float", default=0.0),
+        F("solid_height", "Solid Height", "float", default=0.0),
+        F("solid_offset_y", "Solid Offset Y", "float", default=0.0),
+        F("layer", "Layer", "int", default=0),
+        F("depth", "Depth", "float", default=0.0),
+        F("snap", "Snap to Grid (0 = free)", "float", default=0.0),
+        F("tags", "Tags", "string_list", default=()),
+    ),
+}
+FORMS.update(D26_FORMS)
+
+
+def _dict_rows(mapping, key_name, value_name):
+    return [{key_name: k, value_name: v} for k, v in dict(mapping or {}).items()]
+
+
+def _rows_dict(rows, key_name, value_name):
+    return {r[key_name]: r[value_name] for r in rows or () if str(r.get(key_name, "")).strip()}
+
+
+def _encode_extension(data):
+    data = dict(data)
+    data["mastery"] = [
+        {"ability_id": k, "thresholds": [str(x) for x in v]}
+        for k, v in dict(data.get("mastery", {})).items()
+    ]
+    return data
+
+
+def _decode_extension(data):
+    data = dict(data)
+    data["mastery"] = {
+        r["ability_id"]: [int(x) for x in r.get("thresholds", ())]
+        for r in data.get("mastery", ())
+        if r.get("ability_id")
+    }
+    data["use_limits"] = {k: int(v) for k, v in dict(data.get("use_limits", {})).items()}
+    return data
+
+
+def _encode_levels(data):
+    data = dict(data)
+    data["map_levels"] = [
+        {"map_id": k, "lowest": v[0], "highest": v[1]}
+        for k, v in dict(data.get("map_levels", {})).items()
+    ]
+    return data
+
+
+def _decode_levels(data):
+    data = dict(data)
+    data["map_levels"] = {
+        r["map_id"]: [r["lowest"], r["highest"]] for r in data.get("map_levels", ()) if r["map_id"]
+    }
+    return data
+
+
+def _encode_text_map(field, key_name, value_name):
+    def encode(data):
+        data = dict(data)
+        data[field] = _dict_rows(data.get(field), key_name, value_name)
+        return data
+
+    return encode
+
+
+def _decode_text_map(field, key_name, value_name):
+    def decode(data):
+        data = dict(data)
+        data[field] = _rows_dict(data.get(field), key_name, value_name)
+        return data
+
+    return decode
+
+
+def _encode_message_settings(data):
+    data = _encode_text_map("macros", "name", "text")(data)
+    return _encode_text_map("icons", "number", "icon_id")(data)
+
+
+def _decode_message_settings(data):
+    data = _decode_text_map("macros", "name", "text")(data)
+    return _decode_text_map("icons", "number", "icon_id")(data)
+
+
+def _encode_credits(data):
+    data = dict(data)
+    data["lines"] = "\n".join(data.get("lines", ()))
+    return data
+
+
+def _decode_credits(data):
+    data = dict(data)
+    data["lines"] = [x for x in str(data.get("lines", "")).split("\n")]
+    while data["lines"] and not data["lines"][-1].strip():
+        data["lines"].pop()
+    return data
+
+
+# kind id -> (record data -> form data, form data -> record data)
+ADAPTERS = {
+    "battle_extension_rules": (_encode_extension, _decode_extension),
+    "enemy_level_rules": (_encode_levels, _decode_levels),
+    "locale_tables": (
+        _encode_text_map("entries", "key", "text"),
+        _decode_text_map("entries", "key", "text"),
+    ),
+    "message_settings": (_encode_message_settings, _decode_message_settings),
+    "credits_pages": (_encode_credits, _decode_credits),
+}
+
 
 @dataclass(frozen=True, slots=True)
 class _Kind:
@@ -348,6 +680,18 @@ def _templates():
         "world_interactions": lambda key, c: WorldInteraction(key, key),
         "drop_tables": lambda key, c: DropTable(key, key),
         "inventory_rules": lambda key, c: InventoryRules(key, key),
+        "battle_extension_rules": lambda key, c: BattleExtensionRules(key),
+        "enemy_level_rules": lambda key, c: EnemyLevelRules(key),
+        "map_rule_sets": lambda key, c: MapRuleSet(key),
+        "durability_rules": lambda key, c: DurabilityRules(key),
+        "disassembly_recipes": lambda key, c: DisassemblyRecipe(key),
+        "job_point_rules": lambda key, c: JobPointRules(key),
+        "new_game_plus_rules": lambda key, c: NewGamePlusRules(key),
+        "locale_tables": lambda key, c: LocaleTable(key),
+        "message_settings": lambda key, c: MessageSettings(key),
+        "music_tracks": lambda key, c: MusicTrack(key, key, "audio_asset"),
+        "credits_pages": lambda key, c: CreditsPage(key, key),
+        "doodads": lambda key, c: DoodadDefinition(key, "sprite_sheet"),
     }
 
 
@@ -368,6 +712,34 @@ KINDS = (
     ),
     _Kind("drop_tables", "Drop Tables", "drop_tables", "table_id", DropTable),
     _Kind("inventory_rules", "Inventory Rules", "inventory_rules", "rules_id", InventoryRules),
+    _Kind(
+        "battle_extension_rules",
+        "Battle Extras (taunt, steal, TP...)",
+        "battle_extension_rules",
+        "rules_id",
+        BattleExtensionRules,
+    ),
+    _Kind("enemy_level_rules", "Enemy Levels", "enemy_level_rules", "rules_id", EnemyLevelRules),
+    _Kind(
+        "map_rule_sets", "Map Areas (regions, hazards)", "map_rule_sets", "rules_id", MapRuleSet
+    ),
+    _Kind(
+        "durability_rules", "Equipment Durability", "durability_rules", "rules_id", DurabilityRules
+    ),
+    _Kind(
+        "disassembly_recipes", "Disassembly", "disassembly_recipes", "item_id", DisassemblyRecipe
+    ),
+    _Kind("job_point_rules", "Job Points", "job_point_rules", "rules_id", JobPointRules),
+    _Kind(
+        "new_game_plus_rules", "New Game Plus", "new_game_plus_rules", "rules_id", NewGamePlusRules
+    ),
+    _Kind("locale_tables", "Translations", "locale_tables", "locale", LocaleTable),
+    _Kind(
+        "message_settings", "Message Settings", "message_settings", "settings_id", MessageSettings
+    ),
+    _Kind("music_tracks", "Music Room", "music_tracks", "track_id", MusicTrack),
+    _Kind("credits_pages", "Credits", "credits_pages", "page_id", CreditsPage),
+    _Kind("doodads", "Doodads", "doodads", "doodad_id", DoodadDefinition),
 )
 _BY_ID = {k.kind_id: k for k in KINDS}
 
@@ -445,10 +817,15 @@ class GameSystemsAuthoringController:
 
     def form_data(self, kind_id, key):
         """Canonical data of a record with every form field present."""
-        return _with_defaults(FORMS[kind_id], self.get(kind_id, key).to_data())
+        data = self.get(kind_id, key).to_data()
+        if kind_id in ADAPTERS:
+            data = ADAPTERS[kind_id][0](data)
+        return _with_defaults(FORMS[kind_id], data)
 
     def decode(self, kind_id, data):
         try:
+            if kind_id in ADAPTERS:
+                data = ADAPTERS[kind_id][1](data)
             return self.kind(kind_id).cls.from_data(data)
         except (KeyError, TypeError, ValueError) as exc:
             raise GameSystemsAuthoringError(f"invalid {kind_id} record: {exc}") from exc
@@ -460,6 +837,8 @@ class GameSystemsAuthoringController:
             return tuple(sorted(self.project.gameplay_library.abilities.ids()))
         if source == "event_programs":
             return tuple(sorted(self.project.event_programs.ids()))
+        if source == "carry_parts":
+            return tuple(CARRY)
         stores = {
             "items": db.items,
             "enemies": db.enemies,
