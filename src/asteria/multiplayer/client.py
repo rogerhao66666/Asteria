@@ -335,6 +335,13 @@ class MultiplayerClient:
                 if isinstance(revision, int) and not isinstance(revision, bool):
                     if revision > self.revision:
                         self._want_resync = True  # the server is ahead: an update never arrived
+            elif kind == "input_ack":
+                sequence = value.get("sequence")
+                if not isinstance(sequence, int) or isinstance(sequence, bool) or sequence < 1:
+                    raise ProtocolError("input acknowledgement sequence must be positive")
+                if not isinstance(value.get("accepted"), bool):
+                    raise ProtocolError("input acknowledgement accepted must be a boolean")
+                return True
             elif kind == "game_update":
                 revision = value.get("revision")
                 if not isinstance(revision, int) or isinstance(revision, bool) or revision < 0:

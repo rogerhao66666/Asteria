@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 from asteria.core import Transform
@@ -113,6 +114,10 @@ class PlayableTestRuntime:
         self._network_origin = None
         self._network_revision = -1
         self._network_scale = float(self.manifest.get("field", {}).get("network_world_scale", 16))
+        self._network_predictor = None
+        self._network_prediction_sequence = 0
+        self._network_input_prediction_sequences = {}
+        self._network_prediction_reconciled_revision = -1
         self.game = GameSessionRuntime(project, runtime_save)
         self.save = runtime_save
         self.width = int(width)
@@ -1039,6 +1044,12 @@ class PlayableTestRuntime:
         changed = previous != input_state
         self._last_network_input = input_state
         sent = bridge.send_input(input_state, force=changed)
+        predictor = getattr(self, "_network_predictor", None)
+        sequence = getattr(bridge, "last_input_sequence", 0)
+        if sent and predictor is not None and sequence:
+            mappings = getattr(self, "_network_input_prediction_sequences", {})
+            mappings[sequence] = getattr(self, "_network_prediction_sequence", 0)
+            self._network_input_prediction_sequences = mappings
         if sent and not self.message:
             self.message = (
                 "Co-op connected · WASD / arrows · J attack · F pickup"
@@ -1047,6 +1058,59 @@ class PlayableTestRuntime:
             )
             self.message_until = self.pg.time.get_ticks() + 6000
         return sent
+
+    def _predict_multiplayer_player(self, move_x, move_y, dt):
+        """Predict the demo adapter's local player in its authoritative network coordinates."""
+        bridge = self.multiplayer_bridge
+        if bridge is None or not bridge.connected or self._authoritative_project_mode:
+            return False
+        state = bridge.state
+        players = state.get("players", ())
+        local = next(
+            (
+                player
+                for player in players
+                if isinstance(player, dict) and player.get("player_id") == bridge.player_id
+            ),
+            None,
+        )
+        if local is None:
+            return False
+        from asteria.multiplayer.smoothing import InputPredictor
+
+        if self._network_predictor is None:
+            speed = self.multiplayer_profile.get("preview_movement_speed", 4.0)
+            try:
+                speed = float(speed)
+            except (TypeError, ValueError):
+                speed = 4.0
+            if not math.isfinite(speed) or speed <= 0:
+                speed = 4.0
+            self._network_predictor = InputPredictor(
+                (float(local.get("x", 0)), float(local.get("y", 0))), speed=speed
+            )
+        self._network_prediction_sequence += 1
+        position = self._network_predictor.apply_local(
+            self._network_prediction_sequence,
+            max(-1.0, min(1.0, float(move_x))),
+            max(-1.0, min(1.0, float(move_y))),
+            max(0.0, min(0.1, float(dt))),
+        )
+        from asteria.runtime.multiplayer_preview import map_network_position
+
+        if self._network_origin is None:
+            transform = self.game.player.get(Transform)
+            self._network_origin = (float(transform.x), float(transform.y))
+        world_x, world_y = map_network_position(
+            {"x": position[0], "y": position[1]},
+            state.get("boss"),
+            origin=self._network_origin,
+            scale=self._network_scale,
+        )
+        transform = self.game.player.get(Transform)
+        transform.x, transform.y = world_x, world_y
+        self.game.save.player_position = (world_x, world_y)
+        return True
 
     def _sync_multiplayer_player(self):
         bridge = self.multiplayer_bridge
@@ -1057,6 +1121,8 @@ class PlayableTestRuntime:
 
         state, network_events, network_revision = bridge.snapshot()
         if state.get("schema") == "asteria.multiplayer.project_state":
+            self._network_predictor = None
+            self._network_input_prediction_sequences.clear()
             self._enable_authoritative_project_controls()
             from asteria.runtime.multiplayer_preview import (
                 apply_project_snapshot,
@@ -1105,6 +1171,37 @@ class PlayableTestRuntime:
             local, boss, origin=self._network_origin, scale=self._network_scale
         )
         transform = self.game.player.get(Transform)
+        predictor = self._network_predictor
+        if predictor is not None:
+            acknowledged = bridge.acked_input_sequence
+            acknowledged_prediction = max(
+                (
+                    prediction
+                    for sequence, prediction in self._network_input_prediction_sequences.items()
+                    if sequence <= acknowledged
+                ),
+                default=0,
+            )
+            if (
+                acknowledged_prediction
+                and network_revision > bridge.acked_input_revision
+                and network_revision > self._network_prediction_reconciled_revision
+            ):
+                predictor.reconcile(
+                    (float(local["x"]), float(local["y"])), acknowledged_prediction
+                )
+                self._network_prediction_reconciled_revision = network_revision
+                self._network_input_prediction_sequences = {
+                    sequence: prediction
+                    for sequence, prediction in self._network_input_prediction_sequences.items()
+                    if sequence > acknowledged
+                }
+            x, y = map_network_position(
+                {"x": predictor.position[0], "y": predictor.position[1]},
+                boss,
+                origin=self._network_origin,
+                scale=self._network_scale,
+            )
         transform.x, transform.y = x, y
         self.game.save.player_position = (x, y)
         if network_revision > self._network_revision:
@@ -1239,10 +1336,19 @@ class PlayableTestRuntime:
         render_width = max(18, round(self.manifest["field"].get("player_render_width", 64) * zoom))
         render_height = max(1, round(source_h * render_width / max(1, source_w)))
         frame = self.pg.transform.scale(frame, (render_width, render_height))
+        remote_positions = bridge.remote_positions()
         for index, player in enumerate(players):
             if not isinstance(player, dict) or player.get("player_id") == local_id:
                 continue
-            world = map_network_position(player, boss, origin=origin, scale=self._network_scale)
+            network_position = remote_positions.get(player.get("player_id"))
+            positioned_player = (
+                {**player, "x": network_position[0], "y": network_position[1]}
+                if network_position is not None
+                else player
+            )
+            world = map_network_position(
+                positioned_player, boss, origin=origin, scale=self._network_scale
+            )
             screen_x, screen_y = self._field_screen_xy(*world)
             ground = (round(screen_x), round(screen_y + 5 * zoom))
             self.pg.draw.ellipse(
@@ -1560,6 +1666,9 @@ class PlayableTestRuntime:
             )
         ):
             if self.multiplayer_bridge.connect():
+                self._network_predictor = None
+                self._network_input_prediction_sequences.clear()
+                self._network_prediction_reconciled_revision = -1
                 self.multiplayer_bridge.send_input(
                     {"move_x": 0.0, "move_y": 0.0, "attack": False}, force=True
                 )
@@ -1568,12 +1677,13 @@ class PlayableTestRuntime:
             else:
                 self._multiplayer_error = self.multiplayer_bridge.error
         if self.game.action_scene:
-            return self._action_input(events)
+            return self._action_input(events, dt)
         # Project input map: keyboard and gamepad (stick / d-pad) both drive movement.
         dx, dy = self.input.current.movement_vector()
         moving = bool(dx or dy)
         connected = self._multiplayer_connected()
         if connected:
+            self._predict_multiplayer_player(dx, dy, dt)
             self._send_multiplayer_input(dx, dy, dict(self.input.current.actions))
             self._sync_multiplayer_player()
         elif moving:
@@ -1626,7 +1736,7 @@ class PlayableTestRuntime:
             hud = self._action_hud = ActionHud()
         return hud
 
-    def _action_input(self, events):
+    def _action_input(self, events, dt=0.0):
         """Real-time control: the input actions drive the player's controller and abilities through
         the session."""
         if not self._multiplayer_connected():
@@ -1634,6 +1744,7 @@ class PlayableTestRuntime:
         actions = dict(self.input.current.actions)
         if self._multiplayer_connected():
             dx, dy = self.input.current.movement_vector()
+            self._predict_multiplayer_player(dx, dy, dt)
             self._send_multiplayer_input(dx, dy, actions)
             self._sync_multiplayer_player()
         else:

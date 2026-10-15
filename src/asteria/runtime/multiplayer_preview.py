@@ -17,6 +17,7 @@ from typing import Any
 
 from asteria.multiplayer.client import MultiplayerClient, MultiplayerClientError
 from asteria.multiplayer.protocol import clean_guest_id
+from asteria.multiplayer.smoothing import SnapshotInterpolator
 
 PROFILE_SCHEMA = "asteria.multiplayer.profile"
 PROFILE_VERSION = 1
@@ -69,13 +70,24 @@ def load_runtime_multiplayer_profile(resource_root: str | Path) -> dict[str, Any
 class MultiplayerPreviewBridge:
     """Thread-safe view of an authoritative multiplayer adapter for a playable runtime."""
 
-    def __init__(self, profile: Mapping[str, Any], *, client_factory=MultiplayerClient):
+    def __init__(
+        self,
+        profile: Mapping[str, Any],
+        *,
+        client_factory=MultiplayerClient,
+        clock=time.monotonic,
+    ):
         self.profile = dict(profile)
         self._client_factory = client_factory
+        self._clock = clock
         self._client: MultiplayerClient | None = None
         self._state: dict[str, Any] = {}
         self._events: tuple[dict[str, Any], ...] = ()
         self._revision = 0
+        self._remote_interpolator = SnapshotInterpolator(delay=0.1, max_extrapolation=0.1)
+        self._last_input_sequence = 0
+        self._acked_input_sequence = 0
+        self._acked_input_revision = -1
         self._lock = threading.RLock()
         self._last_input_at = 0.0
         self._pending_commands = {}
@@ -118,8 +130,60 @@ class MultiplayerPreviewBridge:
         with self._lock:
             return self._revision
 
+    @property
+    def last_input_sequence(self) -> int:
+        with self._lock:
+            return self._last_input_sequence
+
+    @property
+    def acked_input_sequence(self) -> int:
+        with self._lock:
+            return self._acked_input_sequence
+
+    @property
+    def acked_input_revision(self) -> int:
+        with self._lock:
+            return self._acked_input_revision
+
+    def remote_positions(self, *, now=None):
+        """Return timestamp-interpolated player positions from the newest server snapshots."""
+        with self._lock:
+            return self._remote_interpolator.sample(self._clock() if now is None else now)
+
+    def _remember_remote_positions(self, state):
+        rows = state.get("players", ())
+        positions = {}
+        if isinstance(rows, (list, tuple)):
+            for player in rows:
+                if not isinstance(player, Mapping):
+                    continue
+                player_id = player.get("player_id")
+                x, y = player.get("x"), player.get("y")
+                if (
+                    isinstance(player_id, str)
+                    and isinstance(x, (int, float))
+                    and not isinstance(x, bool)
+                    and isinstance(y, (int, float))
+                    and not isinstance(y, bool)
+                    and math.isfinite(x)
+                    and math.isfinite(y)
+                ):
+                    positions[player_id] = (x, y)
+        self._remote_interpolator.push(self._clock(), positions)
+
     def _on_message(self, value: dict[str, Any]) -> None:
         kind = value.get("type")
+        if kind == "input_ack":
+            sequence = value.get("sequence")
+            if (
+                value.get("accepted") is True
+                and isinstance(sequence, int)
+                and not isinstance(sequence, bool)
+            ):
+                with self._lock:
+                    self._acked_input_sequence = max(self._acked_input_sequence, sequence)
+                    self._acked_input_revision = self._revision
+            return
         if kind == "server_error":
             with self._lock:
                 self.error = str(value.get("message", "Server rejected command"))
@@ -161,6 +225,7 @@ class MultiplayerPreviewBridge:
                 )
             self._state = clean_state
             self._events = clean_events
+            self._remember_remote_positions(clean_state)
             revision = value.get("revision")
             if isinstance(revision, int) and not isinstance(revision, bool):
                 self._revision = max(self._revision, revision)
@@ -179,6 +244,10 @@ class MultiplayerPreviewBridge:
             self._events = ()
             self._pending_commands = {}
             self._command_results = []
+            self._remote_interpolator = SnapshotInterpolator(delay=0.1, max_extrapolation=0.1)
+            self._last_input_sequence = 0
+            self._acked_input_sequence = 0
+            self._acked_input_revision = -1
         client = self._client_factory(
             on_message=self._on_message, on_disconnect=self._on_disconnect
         )
@@ -206,6 +275,7 @@ class MultiplayerPreviewBridge:
                 self._state = dict(initial_state) if isinstance(initial_state, Mapping) else {}
                 self._revision = welcome_revision
                 self._events = ()
+                self._remember_remote_positions(self._state)
             self.error = ""
         return True
 
@@ -219,10 +289,13 @@ class MultiplayerPreviewBridge:
         if client is None or not client.connected:
             return False
         try:
-            client.send_input(input_state)
+            sequence = client.send_input(input_state)
         except (MultiplayerClientError, TypeError, ValueError) as exc:
             self.error = str(exc)
             return False
+        if isinstance(sequence, int) and not isinstance(sequence, bool):
+            with self._lock:
+                self._last_input_sequence = max(self._last_input_sequence, sequence)
         return True
 
     def send_command(self, command: str, payload=None):

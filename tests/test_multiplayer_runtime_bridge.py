@@ -79,6 +79,7 @@ def test_multiplayer_preview_bridge_connects_sends_input_and_tracks_authoritativ
         assert bridge.state["players"][0]["player_id"] == "guest-1"
 
         bridge.send_input({"move_x": 1.0, "move_y": 0.0, "attack": True}, force=True)
+        assert _wait_for(lambda: bridge.acked_input_sequence > 0)
 
         assert _wait_for(
             lambda: (
@@ -551,3 +552,74 @@ def test_project_snapshot_replaces_only_the_implicit_boss_attack_binding():
     runtime.input.input_map.set_bindings("attack", [InputBinding("key", "x")])
     runtime._enable_authoritative_project_controls()
     assert runtime.input.input_map.bindings("attack") == (InputBinding("key", "x"),)
+
+
+def test_bridge_interpolates_remote_positions_and_tracks_accepted_input():
+    moments = iter((1.0, 1.1))
+    bridge = MultiplayerPreviewBridge(
+        _profile(host="127.0.0.1", port=8765), clock=lambda: next(moments)
+    )
+    bridge._on_message(
+        {
+            "type": "game_update",
+            "revision": 1,
+            "state": {"players": [{"player_id": "remote", "x": 0, "y": 0}]},
+        }
+    )
+    bridge._on_message(
+        {
+            "type": "game_update",
+            "revision": 2,
+            "state": {"players": [{"player_id": "remote", "x": 10, "y": 4}]},
+        }
+    )
+    bridge._on_message({"type": "input_ack", "sequence": 7, "accepted": True, "reason": ""})
+
+    assert bridge.remote_positions(now=1.15)["remote"] == pytest.approx((5, 2))
+    assert bridge.acked_input_sequence == 7
+    assert bridge.acked_input_revision == 2
+
+
+def test_multiplayer_preview_predicts_locally_and_reconciles_acked_inputs():
+    from types import SimpleNamespace
+
+    from asteria.multiplayer.smoothing import InputPredictor
+    from asteria.runtime.playable_test_runtime import PlayableTestRuntime
+
+    transform = SimpleNamespace(x=100.0, y=200.0)
+    player = SimpleNamespace(get=lambda _component: transform)
+    save = SimpleNamespace(player_position=(100.0, 200.0))
+    state = {
+        "boss": {"x": 0.0, "y": 0.0},
+        "players": [{"player_id": "local", "x": -2.6, "y": 0.0}],
+    }
+    bridge = SimpleNamespace(
+        connected=True,
+        player_id="local",
+        state=state,
+        acked_input_sequence=1,
+        acked_input_revision=4,
+        snapshot=lambda: (state, (), 5),
+    )
+    runtime = object.__new__(PlayableTestRuntime)
+    runtime.multiplayer_bridge = bridge
+    runtime.multiplayer_profile = {"preview_movement_speed": 4.0}
+    runtime._authoritative_project_mode = False
+    runtime._network_origin = (100.0, 200.0)
+    runtime._network_scale = 16.0
+    runtime._network_predictor = InputPredictor((-3.0, 0.0), speed=4.0)
+    runtime._network_predictor.apply_local(1, 1.0, 0.0, 0.1)
+    runtime._network_predictor.apply_local(2, 1.0, 0.0, 0.1)
+    runtime._network_prediction_sequence = 2
+    runtime._network_input_prediction_sequences = {1: 1}
+    runtime._network_prediction_reconciled_revision = -1
+    runtime._network_revision = -1
+    runtime.game = SimpleNamespace(player=player, save=save)
+
+    runtime._predict_multiplayer_player(1.0, 0.0, 0.1)
+    assert runtime._network_predictor.position == pytest.approx((-1.8, 0.0))
+    runtime._sync_multiplayer_player()
+
+    assert runtime._network_predictor.position == pytest.approx((-1.8, 0.0))
+    assert (transform.x, transform.y) == pytest.approx((71.2, 200.0))
+    assert runtime._network_input_prediction_sequences == {}
