@@ -100,6 +100,7 @@ class BattleScheduler:
         self._sequence = 0
         self._pending = []
         self._acted_this_round = set()
+        self._charge_from = {}  # continuous mode: member id -> time its current charge began
         self._initialize()
 
     @property
@@ -142,6 +143,7 @@ class BattleScheduler:
 
     def _schedule_continuous(self, member, *, from_time):
         speed = self._speed(member)
+        self._charge_from[member.member_id] = from_time
         self._sequence += 1
         self._pending.append(
             ScheduledTurn(
@@ -156,6 +158,56 @@ class BattleScheduler:
 
     def peek(self):
         return self._pending[0] if self._pending else None
+
+    def gauge(self, member_id):
+        """How full the member's turn gauge is, 0..1 (continuous mode; 1 when ready, 0 otherwise).
+
+        This is the ATB bar: the share of the member's charge time that has passed.
+        """
+        member_id = str(member_id)
+        entry = next((x for x in self._pending if x.member_id == member_id), None)
+        if entry is None or self.mode != BattleSchedulerMode.CONTINUOUS:
+            return 0.0
+        start = self._charge_from.get(member_id, 0.0)
+        span = entry.ready_time - start
+        if span <= 0:
+            return 1.0
+        return max(0.0, min(1.0, (self._time - start) / span))
+
+    def gauges(self):
+        """``member id -> gauge`` for everyone waiting to act (continuous mode)."""
+        return {x.member_id: self.gauge(x.member_id) for x in self._pending}
+
+    def preview_order(self, count):
+        """The next ``count`` turns as ``(member id, ready time)`` without changing anything.
+
+        In continuous mode this runs the timeline forward (each actor re-queues at its present
+        speed), which is the turn-order bar of a charge-time battle; other modes list what is
+        pending and then the following rounds in the same order.
+        """
+        count = max(0, int(count))
+        if self.mode != BattleSchedulerMode.CONTINUOUS:
+            order = [(x.member_id, x.ready_time) for x in self._pending]
+            if not order:
+                return ()
+            full = order * (count // len(order) + 1)
+            return tuple(full[:count])
+        queue = [(x.ready_time, x.member_id, x.sequence, x.speed) for x in self._pending]
+        sequence = self._sequence
+        result = []
+        while queue and len(result) < count:
+            queue.sort()
+            ready, member_id, _, _ = queue.pop(0)
+            result.append((member_id, ready))
+            member = self._members.get(member_id)
+            if member is None:
+                continue
+            sequence += 1
+            speed = self._speed(member)
+            queue.append(
+                (ready + self.definition.timeline_scale / speed, member_id, sequence, speed)
+            )
+        return tuple(result)
 
     def pending(self):
         return tuple(self._pending)
@@ -248,6 +300,7 @@ class BattleScheduler:
     def remove_pending(self, member_id):
         member_id = str(member_id)
         self._pending = [x for x in self._pending if x.member_id != member_id]
+        self._charge_from.pop(member_id, None)
         self._members.pop(member_id, None)
         self._acted_this_round.discard(member_id)
 
@@ -260,6 +313,11 @@ class BattleScheduler:
             "current_time": self._time,
             "sequence": self._sequence,
             "acted_this_round": sorted(self._acted_this_round),
+            **(
+                {"charge_from": dict(sorted(self._charge_from.items()))}
+                if self._charge_from
+                else {}
+            ),
             "pending": [
                 {
                     "member_id": x.member_id,
@@ -283,6 +341,7 @@ class BattleScheduler:
         result._round = int(data["round_index"])
         result._sequence = int(data["sequence"])
         result._acted_this_round = set(data.get("acted_this_round", ()))
+        result._charge_from = {str(k): float(v) for k, v in data.get("charge_from", {}).items()}
         result._pending = [
             ScheduledTurn(
                 x["member_id"],
@@ -294,3 +353,51 @@ class BattleScheduler:
             for x in data["pending"]
         ]
         return result
+
+
+ATB_WAIT_MODES = {
+    "active": frozenset(),  # the gauges never stop
+    "semi": frozenset({"submenu"}),  # they stop while a skill / item list is open
+    "wait": frozenset({"submenu", "target"}),  # ... and while a target is being chosen
+}
+
+
+class ATBClock:
+    """Drives a continuous ``BattleScheduler`` from real time, like an Active Time Battle.
+
+    ``tick(dt)`` moves the battle timeline forward by ``dt * rate`` and returns the turn that
+    became ready (the first one, if several did), or ``None``. While a player is choosing, the
+    wait mode decides whether time passes: ``choosing`` is ``""`` (nothing open), ``"command"``,
+    ``"submenu"`` (skill / item list) or ``"target"``. Time stops at a ready turn, so a pending
+    turn is never skipped; once the actor has acted (``BattleRuntime.advance_turn`` pops the
+    entry) the next ``tick`` moves on.
+    """
+
+    def __init__(self, scheduler, *, wait_mode="active", rate=1.0):
+        if scheduler.mode != BattleSchedulerMode.CONTINUOUS:
+            raise ValueError("ATBClock needs a continuous scheduler")
+        if wait_mode not in ATB_WAIT_MODES:
+            raise ValueError(f"wait_mode must be one of {tuple(ATB_WAIT_MODES)}")
+        rate = float(rate)
+        if not rate > 0:
+            raise ValueError("rate must be positive")
+        self.scheduler = scheduler
+        self.wait_mode = wait_mode
+        self.rate = rate
+
+    def paused(self, choosing=""):
+        return choosing in ATB_WAIT_MODES[self.wait_mode]
+
+    def tick(self, dt, *, choosing=""):
+        dt = max(0.0, float(dt))
+        entry = self.scheduler.peek()
+        if entry is None or self.paused(choosing):
+            return None
+        target = self.scheduler.current_time + dt * self.rate
+        if entry.ready_time <= self.scheduler.current_time:
+            return entry  # already waiting for its actor
+        if entry.ready_time <= target:
+            self.scheduler.advance_time(entry.ready_time)
+            return entry
+        self.scheduler.advance_time(target)
+        return None

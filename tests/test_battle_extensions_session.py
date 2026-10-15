@@ -115,3 +115,19 @@ def test_mastery_uses_persist_in_the_world_counters():
     game.start_encounter(_first_encounter(game))
     assert game.battle.extensions.mastery_uses[(hero, ability)] == 2
     assert game.battle.extensions.mastery_level(hero, ability) == 1
+
+
+def test_session_builds_an_aftermath_from_a_won_battle():
+    game = _session()
+    game.start_encounter(_first_encounter(game))
+    before = game.capture_hero_state()
+    hero = game.save.rpg_state.party_active_actor_ids[0]
+    assert before[hero]["level"] >= 1 and before[hero]["stats"]
+    for member_id in game.active_enemy_ids():
+        game.battle.member(member_id).subject.resources.set_current(HP, 0)
+    applied = game.finish_victory()
+    game.grant_actor_experience(hero, 5000, level_threshold=1000)
+    aftermath = game.build_aftermath(applied, before, {hero: 5000})
+    actor = next(x for x in aftermath.actors if x.actor_id == hero)
+    assert actor.experience_gained == 5000 and actor.leveled_up
+    assert aftermath.defeated and aftermath.pages()[0].kind == "rewards"

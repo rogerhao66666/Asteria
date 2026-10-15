@@ -1980,6 +1980,10 @@ class PlayableTestRuntime:
         with self.profiler.section("render"):
             self._battle_presentation.draw()
             self._draw_battle_extras()
+            screen = getattr(self, "_victory_screen", None)
+            if screen is not None and self._victory and not self._presentation_busy():
+                screen.update(dt)
+                screen.draw(self)
         self._flush_victory_audio()
 
     def _draw_battle_extras(self):
@@ -2077,10 +2081,13 @@ class PlayableTestRuntime:
         self.game.end_turn()
         if not self.game.active_enemy_ids():
             try:
-                self.game.finish_victory()
+                before = self.game.capture_hero_state()
+                applied = self.game.finish_victory()
                 self._victory_summary = []
                 rewards = self.manifest.get("progression_rewards", {})
+                gained = {}
                 for hero_id in self.save.rpg_state.party_active_actor_ids:
+                    gained[hero_id] = rewards.get("experience", 1600)
                     info = self.game.grant_actor_experience(
                         hero_id,
                         rewards.get("experience", 1600),
@@ -2092,6 +2099,9 @@ class PlayableTestRuntime:
                         f"{hero_id}: Lv {info['old_level']}→{info['new_level']} "
                         f"+{info['levels_gained'] * 2:g} AP +{info['levels_gained']:g} ability pts"
                     )
+                self._victory_screen = None
+                if self.manifest.get("battle", {}).get("victory_aftermath"):
+                    self._victory_screen = self._make_victory_screen(applied, before, gained)
                 self._victory = True
                 # The jingle waits for the presentation to finish showing the final blows.
                 self._victory_audio_pending = (
@@ -2125,6 +2135,16 @@ class PlayableTestRuntime:
             pg.K_r: "boost_up",
         }
 
+    def _make_victory_screen(self, applied, before, gained):
+        from .victory_screen import VictoryScreen
+
+        db = self.game.project.rpg_database
+        aftermath = self.game.build_aftermath(applied, before, gained)
+        return VictoryScreen(
+            aftermath,
+            item_names={k: v.display_name for k, v in {**db.items, **db.equipment}.items()},
+        )
+
     def _battle_input(self, events):
         if self._victory:
             if self._presentation_busy():
@@ -2135,6 +2155,10 @@ class PlayableTestRuntime:
                     self.pg.K_e,
                     self.pg.K_SPACE,
                 ):
+                    screen = getattr(self, "_victory_screen", None)
+                    if screen is not None and not screen.confirm():
+                        continue  # the next results page
+                    self._victory_screen = None
                     self._victory = False
                     self.game.mode = "field"
                     self._last_action_name = ""

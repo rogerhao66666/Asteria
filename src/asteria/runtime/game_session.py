@@ -115,6 +115,7 @@ class GameSessionRuntime:
         self._captured = set()
         self._pets_sent = set()
         self.enemy_levels = {}  # enemy member id -> level, when the project has level rules
+        self._last_defeated = ()
         self.battle_log = []
         self._log_sequence = 0
         self._logged_turn = None
@@ -2797,6 +2798,43 @@ class GameSessionRuntime:
         except (TypeError, ValueError):
             return 0.0
 
+    def capture_hero_state(self):
+        """Level, stats and abilities of the active heroes (before / after a reward step)."""
+        state = self.save.rpg_state
+        result = {}
+        for actor_id in state.party_active_actor_ids:
+            build = self.resolve_actor_build(actor_id)
+            progress = state.actor_progression.get(actor_id)
+            result[actor_id] = {
+                "level": int(progress.level) if progress is not None else 1,
+                "stats": {name: build.stats.get(name) for name in build.stats.names()},
+                "abilities": tuple(build.abilities),
+            }
+        return result
+
+    def build_aftermath(self, applied, before, experience=None):
+        """The victory results (rewards, level changes) for the battle just won."""
+        from asteria.rpg.victory import build_aftermath
+
+        db = self.project.rpg_database
+        names = {x: db.actors[x].display_name for x in before if x in db.actors}
+        notes = []
+        extensions = None if self.battle is None else self.battle.extensions
+        if extensions is not None:
+            for member_id in sorted(extensions.overkill):
+                scale = extensions.overkill_scale(self.battle, member_id)
+                if scale > 1.0:
+                    notes.append(f"Overkill x{scale:.2g}")
+        return build_aftermath(
+            applied,
+            before,
+            self.capture_hero_state(),
+            defeated=tuple(self._last_defeated),
+            names=names,
+            experience=experience,
+            bonus_notes=tuple(dict.fromkeys(notes)),
+        )
+
     def _scaled_reward(self, reward, member_id):
         """Currency and experience grow with the enemy's level and with overkill damage."""
         scale = 1.0
@@ -2862,6 +2900,7 @@ class GameSessionRuntime:
             reward = self._scaled_reward(reward, member_id)
             applied.append(reward_runtime.apply(reward))
         self._store_mastery()
+        self._last_defeated = defeated
         self._log(
             "battle_finished", data={"winning_sides": ("heroes",), "defeated_sides": ("enemies",)}
         )
