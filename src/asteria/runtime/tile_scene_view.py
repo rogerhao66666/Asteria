@@ -30,6 +30,7 @@ from .components2d import (
     ParallaxBackground2DComponent,
     SpriteRenderer2D,
 )
+from .skeleton_component import SkeletonAnimation2DComponent, SkeletonSceneRuntime
 from .tilemap_field import AssetResources, tilemap_binding
 from .tilequery import TileMapQuery
 
@@ -113,6 +114,7 @@ class TileSceneView:
         self._textures = {}
         self._frames = {}
         self._animated = {}
+        self._skeleton_runtime = SkeletonSceneRuntime()
         self.load()
 
     # -- loading ---------------------------------------------------------------------------------
@@ -220,6 +222,7 @@ class TileSceneView:
 
         self._apply_class_looks()
         self._look_ahead(dt)
+        self._skeleton_runtime.update(self.session.scene, dt)
         for entity in self.session.scene.entities():
             animator = entity.try_get(Animator2DComponent)
             if animator is None or not animator.clip_set_id or not entity.has(Transform):
@@ -442,21 +445,33 @@ class TileSceneView:
             if not entity.enabled:
                 continue
             sprite = entity.try_get(SpriteRenderer2D)
+            skeleton = entity.try_get(SkeletonAnimation2DComponent)
             t = entity.try_get(Transform)
-            if (
-                sprite is None
-                or t is None
-                or not sprite.sprite_sheet_asset_id
-                or not sprite.visible
-            ):
+            if t is None:
                 continue
-            state = self._animated.get(entity.id)
-            frame = state.frame() if state else None
-            if frame is None:
-                frame = sprite.frame_index
-            sprites.append((t.y, entity, sprite, frame))
-        sprites.sort(key=lambda row: row[0])
-        for _, entity, sprite, frame in sprites:
+            if sprite is not None and sprite.sprite_sheet_asset_id and sprite.visible:
+                state = self._animated.get(entity.id)
+                frame = state.frame() if state else None
+                if frame is None:
+                    frame = sprite.frame_index
+                sprites.append((t.y, 0, entity, sprite, frame, ()))
+            if skeleton is not None and skeleton.visible:
+                rig_draws = self._skeleton_runtime.draw_entity(
+                    entity,
+                    self.camera,
+                    lambda asset_id: self.resources.get(asset_id, "sprite_sheet"),
+                )
+                if rig_draws:
+                    sprites.append((t.y, 1, entity, None, None, rig_draws))
+        sprites.sort(key=lambda row: (row[0], row[1]))
+        for _, _, entity, sprite, frame, rig_draws in sprites:
+            if sprite is None:
+                for draw in rig_draws:
+                    try:
+                        self._draw_skeleton_texture(screen, draw)
+                    except (KeyError, OSError, RuntimeError, TypeError, ValueError, self.pg.error):
+                        continue
+                continue
             try:
                 image, px, py = self._sprite(sprite.sprite_sheet_asset_id, frame, self.camera.zoom)
             except Exception:  # noqa: BLE001 - a missing frame is skipped, the scene keeps drawing
@@ -472,6 +487,24 @@ class TileSceneView:
                 image, (round(sx - image.get_width() * px), round(sy - image.get_height() * py))
             )
         self._layer(screen, "above")
+
+    def _draw_skeleton_texture(self, screen, draw):
+        """Draw a skeletal slot with the same pivot and rotation as TextureDraw."""
+        image = self._texture(draw.texture_asset_id).subsurface(self.pg.Rect(draw.source))
+        size = (max(1, round(draw.width)), max(1, round(draw.height)))
+        image = self.pg.transform.scale(image, size)
+        if draw.flip_x:
+            image = self.pg.transform.flip(image, True, False)
+        center = (
+            round(draw.screen_x + draw.width / 2),
+            round(draw.screen_y + draw.height / 2),
+        )
+        if draw.rotation_deg:
+            image = self.pg.transform.rotate(image, -draw.rotation_deg)
+        if draw.opacity < 1:
+            image = image.copy()
+            image.set_alpha(round(255 * draw.opacity))
+        screen.blit(image, image.get_rect(center=center))
 
 
 __all__ = ["MapBlocking", "TileSceneView"]

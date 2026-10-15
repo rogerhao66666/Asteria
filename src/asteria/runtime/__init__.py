@@ -20,6 +20,7 @@ from .components2d import (
     TileMap2DComponent,
 )
 from .draw import TextureDraw, sprite_draw
+from .skeleton_component import SkeletonAnimation2DComponent, SkeletonSceneRuntime
 from .input import InputSnapshot
 from .interaction import (
     InteractionCandidate,

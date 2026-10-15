@@ -2,7 +2,12 @@ import os
 from math import floor
 
 from asteria.core import Transform
-from asteria.runtime import Camera2DComponent, SpriteRenderer2D
+from asteria.runtime import (
+    Camera2DComponent,
+    SkeletonAnimation2DComponent,
+    SkeletonSceneRuntime,
+    SpriteRenderer2D,
+)
 
 from .collision_overlay import build_collision_cells, build_combat_boxes
 from .commands import CommandTransaction
@@ -32,7 +37,7 @@ from .tile_palette import STROKE_MODES, TileToolState
 from .viewport import ViewportCamera, pick_entity, scene_markers, selected_scene
 
 try:
-    from PySide6.QtCore import QEvent, QPointF, Qt, Signal
+    from PySide6.QtCore import QEvent, QPointF, Qt, QTimer, Signal
     from PySide6.QtGui import QBrush, QColor, QPainter, QPen, QPolygonF
     from PySide6.QtWidgets import QWidget
 except ImportError:
@@ -54,6 +59,11 @@ class SceneViewportWidget(QWidget):
         self.snap = GridSnap(True, 16.0)
         self.render_source = None
         self.texture_cache = QtTextureCache()
+        self.skeleton_runtime = SkeletonSceneRuntime()
+        self._skeleton_scene_id = None
+        self._skeleton_timer = QTimer(self)
+        self._skeleton_timer.setInterval(33)
+        self._skeleton_timer.timeout.connect(self._advance_skeletons)
         self.tile_tools = TileToolState()
         self._tile_stroke_cells = []
         self._last_tile_cell = None
@@ -79,6 +89,37 @@ class SceneViewportWidget(QWidget):
             entity = getattr(sel.value, "entity", None)
             return () if entity is None else (entity,)
         return ()
+
+    def _paint_skeletons(self, painter):
+        scene = self.current_scene()
+        has_rigs = scene is not None and any(
+            entity.try_get(SkeletonAnimation2DComponent) is not None for entity in scene.entities()
+        )
+        if not has_rigs:
+            self._skeleton_timer.stop()
+            return
+        if scene.id != self._skeleton_scene_id:
+            self.skeleton_runtime = SkeletonSceneRuntime()
+            self._skeleton_scene_id = scene.id
+        if not self._skeleton_timer.isActive():
+            self._skeleton_timer.start()
+        draws = self.skeleton_runtime.draw_commands(
+            scene, self.camera, self.document.asset_views.sprite_sheet
+        )
+        paint_texture_draws(
+            painter,
+            draws,
+            lambda asset_id: resolve_texture_source(self.document, asset_id),
+            self.texture_cache,
+        )
+
+    def _advance_skeletons(self):
+        scene = self.current_scene()
+        if scene is None:
+            self._skeleton_timer.stop()
+            return
+        self.skeleton_runtime.update(scene, self._skeleton_timer.interval() / 1000.0)
+        self.update()
 
     def markers(self):
         scene = self.current_scene()
@@ -350,6 +391,7 @@ class SceneViewportWidget(QWidget):
             lambda aid: resolve_texture_source(self.document, aid),
             self.texture_cache,
         )
+        self._paint_skeletons(painter)
 
         # D22 A9: what blocks (colliders, slopes, ladders), what can be hit and what hits
         styles = {

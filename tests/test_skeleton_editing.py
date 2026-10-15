@@ -112,11 +112,24 @@ def app():
 
 
 def test_skeleton_widget_edits_bones_and_keys_through_command_stack(app):
+    from PySide6.QtCore import QPoint, Qt
+    from PySide6.QtTest import QTest
+
     from asteria.editor.skeleton_widget import SkeletonViewerWidget
 
     widget = SkeletonViewerWidget()
     widget.set_skeleton(sample_skeleton())
     try:
+        assert widget.timeline.key_positions() == (0.0, 1.0)
+        widget.resize(520, 720)
+        widget.show()
+        app.processEvents()
+        QTest.mouseClick(
+            widget.timeline,
+            Qt.LeftButton,
+            pos=QPoint(widget.timeline.width() // 2, widget.timeline.height() // 2),
+        )
+        assert abs(widget.time - 0.5) < 0.02
         widget.bone_combo.setCurrentText("arm")
         widget.bone_name.setText("upper_arm")
         widget.bone_x.setValue(8)
@@ -205,5 +218,31 @@ def test_skeleton_preview_draws_slot_sprite_through_runtime_adapter(app, tmp_pat
         sample_x = round(draws[0].screen_x + 4)
         sample_y = round(draws[0].screen_y + draws[0].height / 2)
         assert output.pixelColor(sample_x, sample_y) == QColor("lime")
+    finally:
+        widget.close()
+
+
+def test_skeleton_widget_attaches_rig_as_one_undoable_scene_component(app):
+    from asteria.core import Entity, Scene
+    from asteria.editor.model import EditorDocument
+    from asteria.editor.skeleton_widget import SkeletonViewerWidget
+    from asteria.project import Project
+    from asteria.runtime.skeleton_component import SkeletonAnimation2DComponent
+
+    project = Project("Attach skeleton")
+    scene = project.add_scene(Scene("Field"))
+    entity = scene.add_entity(Entity("Hero"))
+    document = EditorDocument(project)
+    document.selection.set_single("entity", entity)
+    widget = SkeletonViewerWidget(document=document, command_stack=document.commands)
+    widget.set_skeleton(sample_skeleton())
+    try:
+        assert widget.attach_to_selected()
+        component = entity.try_get(SkeletonAnimation2DComponent)
+        assert component is not None and component.clip_name == "walk"
+        assert document.undo()
+        assert entity.try_get(SkeletonAnimation2DComponent) is None
+        assert document.redo()
+        assert entity.try_get(SkeletonAnimation2DComponent) is component
     finally:
         widget.close()

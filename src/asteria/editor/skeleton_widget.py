@@ -1,7 +1,7 @@
 """A small dock that plays an imported 2D skeleton so a rig can be checked before use."""
 
 try:
-    from PySide6.QtCore import Qt, QTimer
+    from PySide6.QtCore import Qt, QTimer, Signal
     from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
     from PySide6.QtWidgets import (
         QComboBox,
@@ -20,10 +20,18 @@ try:
 except ImportError:
     QWidget = object
     Qt = None
+    Signal = None
 
+from asteria.runtime import SkeletonAnimation2DComponent
 from asteria.runtime.skeleton_draw import to_texture_draws
 
-from .commands import CommandStack, SetSkeletonCommand
+from .commands import (
+    AddComponentCommand,
+    CommandStack,
+    CommandTransaction,
+    SetAttributeCommand,
+    SetSkeletonCommand,
+)
 from .scene_render import resolve_texture_source
 from .skeleton_editing import add_bone, delete_bone, edit_bone, set_key
 from .skeleton_view import bone_segments, bounds, load_rig
@@ -126,7 +134,44 @@ class _Canvas(QWidget):
         painter.restore()
 
 
+class _Timeline(QWidget):
+    def __init__(self, owner):
+        super().__init__()
+        self.owner = owner
+        self.setMinimumHeight(12)
+        self.setMaximumHeight(16)
+
+    def key_positions(self):
+        clip = self.owner.clip()
+        if clip is None:
+            return ()
+        return tuple(key.time / clip.duration for _track, keys in clip.tracks for key in keys)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.fillRect(self.rect(), QColor(29, 31, 35))
+        y = self.height() // 2
+        painter.setPen(QPen(QColor(83, 88, 98), 2))
+        painter.drawLine(0, y, self.width(), y)
+        painter.setPen(QPen(QColor(77, 210, 198), 2))
+        for position in self.key_positions():
+            x = round(position * max(0, self.width() - 1))
+            painter.drawLine(x, 1, x, self.height() - 1)
+
+    def mousePressEvent(self, event):
+        clip = self.owner.clip()
+        if clip is not None and self.width() > 1:
+            fraction = max(0.0, min(1.0, event.position().x() / (self.width() - 1)))
+            self.owner._set_time(clip.duration * fraction)
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+
 class SkeletonViewerWidget(QWidget):
+    if Signal is not None:
+        changed = Signal()
+
     TICKS = 100  # slider steps across a clip
 
     def __init__(self, parent=None, *, command_stack=None, document=None):
@@ -144,10 +189,17 @@ class SkeletonViewerWidget(QWidget):
         top = QHBoxLayout()
         self.open_button = QPushButton("Open rig…")
         self.save_button = QPushButton("Save rig…")
+        self.attach_button = QPushButton("Attach to selected entity")
         self.clip_combo = QComboBox()
         self.play_button = QPushButton("Play")
         self.play_button.setCheckable(True)
-        for widget in (self.open_button, self.save_button, self.clip_combo, self.play_button):
+        for widget in (
+            self.open_button,
+            self.save_button,
+            self.attach_button,
+            self.clip_combo,
+            self.play_button,
+        ):
             top.addWidget(widget)
         layout.addLayout(top)
         self.canvas = _Canvas(self)
@@ -155,6 +207,8 @@ class SkeletonViewerWidget(QWidget):
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setRange(0, self.TICKS)
         layout.addWidget(self.slider)
+        self.timeline = _Timeline(self)
+        layout.addWidget(self.timeline)
         self._build_bone_editor(layout)
         self._build_key_editor(layout)
         self.status = QLabel("No rig loaded")
@@ -166,6 +220,7 @@ class SkeletonViewerWidget(QWidget):
         self._timer.timeout.connect(self._advance)
         self.open_button.clicked.connect(self._choose)
         self.save_button.clicked.connect(self._choose_save)
+        self.attach_button.clicked.connect(self.attach_to_selected)
         self.clip_combo.currentTextChanged.connect(lambda _: self._set_time(0.0))
         self.play_button.toggled.connect(
             lambda on: self._timer.start() if on else self._timer.stop()
@@ -176,6 +231,41 @@ class SkeletonViewerWidget(QWidget):
         self.document = document
         self._texture_cache.clear()
         self.canvas.update()
+
+    def attach_to_selected(self):
+        if self.document is None or self.skeleton is None:
+            return False
+        selection = self.document.selection
+        entity = selection.value if selection.kind == "entity" else None
+        if selection.kind == "component" and selection.value is not None:
+            entity = getattr(selection.value, "entity", None)
+        if entity is None:
+            self.status.setText("Select an entity before attaching this rig")
+            return False
+        import json
+
+        from asteria.graphics.skeleton_data import skeleton_to_data
+
+        rig_json = json.dumps(skeleton_to_data(self.skeleton), ensure_ascii=False)
+        existing = entity.try_get(SkeletonAnimation2DComponent)
+        clip_name = self.clip_combo.currentText()
+        if existing is None:
+            component = SkeletonAnimation2DComponent(rig_json, clip_name=clip_name)
+            self.command_stack.execute(AddComponentCommand(entity, component))
+        else:
+            transaction = CommandTransaction(
+                "Update attached skeleton",
+                (
+                    SetAttributeCommand(
+                        existing, "skeleton_json", rig_json, existing.skeleton_json
+                    ),
+                    SetAttributeCommand(existing, "clip_name", clip_name, existing.clip_name),
+                ),
+            )
+            self.command_stack.execute(transaction)
+        self.status.setText(f"Attached {self.skeleton.skeleton_id} to {entity.name}")
+        self.changed.emit()
+        return True
 
     @staticmethod
     def _number(parent, *, minimum=-1000000.0, maximum=1000000.0, step=1.0):
@@ -425,6 +515,7 @@ class SkeletonViewerWidget(QWidget):
                     self.key_combo.addItem(label, key.time)
         self.key_combo.blockSignals(False)
         self._load_key_form(self.key_combo.currentIndex())
+        self.timeline.update()
 
     def _load_key_form(self, index):
         self._selected_key_time = None
@@ -504,6 +595,7 @@ class SkeletonViewerWidget(QWidget):
         self.slider.setValue(int(self.TICKS * self.time / duration) if duration else 0)
         self.slider.blockSignals(False)
         self.canvas.update()
+        self.timeline.update()
 
     def _scrub(self, value):
         clip = self.clip()

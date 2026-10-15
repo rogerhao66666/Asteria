@@ -30,6 +30,7 @@ from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
 from asteria.runtime.input_map import InputActionTracker
 from asteria.runtime.profiler import NullProfiler, RuntimeProfiler
+from asteria.runtime.skeleton_component import SkeletonSceneRuntime
 
 WALK_ROW_BY_FACING = {"down": 0, "left": 1, "right": 2, "up": 3}
 WALK_PATTERN_SEQUENCE = (0, 1, 2, 1)
@@ -119,6 +120,8 @@ class PlayableTestRuntime:
         self._network_input_prediction_sequences = {}
         self._network_prediction_reconciled_revision = -1
         self.game = GameSessionRuntime(project, runtime_save)
+        self._skeleton_scene_runtime = SkeletonSceneRuntime()
+        self._skeleton_sheet_cache = {}
         self.save = runtime_save
         self.width = int(width)
         self.height = int(height)
@@ -754,6 +757,73 @@ class PlayableTestRuntime:
             return view.world_to_screen(world_x, world_y)
         return self.field_camera.world_to_screen(world_x, world_y)
 
+    def _asset_source_path(self, asset_id, kind):
+        record = self.project.assets.get(str(asset_id))
+        if record is not None:
+            if record.kind != kind:
+                return None
+            uri = record.source_path
+        else:
+            try:
+                asset = self.project.assets.resolve(str(asset_id))
+            except KeyError:
+                return None
+            if asset.kind != kind:
+                return None
+            uri = asset.source.uri
+        path = Path(uri)
+        return path if path.is_absolute() else self.resource_root / path
+
+    def _skeleton_sheet(self, asset_id):
+        from asteria.reference_data import load_sprite_sheet
+
+        if asset_id not in self._skeleton_sheet_cache:
+            path = self._asset_source_path(asset_id, "sprite_sheet")
+            if path is None:
+                return None
+            self._skeleton_sheet_cache[asset_id] = load_sprite_sheet(path)
+        return self._skeleton_sheet_cache[asset_id]
+
+    def _draw_skeleton_entities(self):
+        if self.tile_view is not None:
+            return
+        scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0))
+        runtime = self
+
+        class Camera:
+            zoom = scale * runtime.field_camera.zoom
+
+            @staticmethod
+            def world_to_screen(x, y):
+                return runtime._field_screen_xy(x, y)
+
+        for entity in self.game.scene.entities():
+            try:
+                draws = self._skeleton_scene_runtime.draw_entity(
+                    entity, Camera(), self._skeleton_sheet
+                )
+                for draw in draws:
+                    path = self._asset_source_path(draw.texture_asset_id, "texture")
+                    if path is None:
+                        continue
+                    image = self.load_image(path)
+                    image = image.subsurface(self.pg.Rect(draw.source)).copy()
+                    size = (max(1, round(draw.width)), max(1, round(draw.height)))
+                    image = self.pg.transform.scale(image, size)
+                    if draw.flip_x:
+                        image = self.pg.transform.flip(image, True, False)
+                    if draw.rotation_deg:
+                        image = self.pg.transform.rotate(image, -draw.rotation_deg)
+                    if draw.opacity < 1:
+                        image.set_alpha(round(255 * draw.opacity))
+                    center = (
+                        round(draw.screen_x + draw.width / 2),
+                        round(draw.screen_y + draw.height / 2),
+                    )
+                    self.screen.blit(image, image.get_rect(center=center))
+            except (OSError, TypeError, ValueError, KeyError):
+                continue
+
     def _player_frame(self, facing, moving):
         sheet = self.load_image(self.manifest["field"]["player_sheet"])
         fw, fh = self.manifest["field"]["player_frame_size"]
@@ -963,6 +1033,7 @@ class PlayableTestRuntime:
             self._blit_with_trail(entity, image, position)
             self._blit_normal(spec["sprite"], None, (int(w), int(h)), position)
 
+        self._draw_skeleton_entities()
         pt = self.game.player.get(Transform)
         px, py = self._field_screen_xy(pt.x, pt.y)
         pf = self._player_frame(self.game.facing, moving)
@@ -3380,6 +3451,7 @@ class PlayableTestRuntime:
                 self.game.scene, self.game.project.assets
             )  # VFX-01 emitters
             self.field_effects.update(dt)
+            self._skeleton_scene_runtime.update(self.game.scene, dt)
             if self.game.mode == "battle":
                 self._turn_actor = None
                 self._battle_presentation.begin()

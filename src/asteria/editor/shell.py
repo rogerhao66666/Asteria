@@ -276,6 +276,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.skeleton_viewer = SkeletonViewerWidget(
             self, command_stack=self.document.commands, document=self.document
         )
+        self.skeleton_viewer.changed.connect(self.refresh_all)
         skeleton_dock = QDockWidget("Skeleton", self)
         skeleton_dock.setObjectName("SkeletonDock")
         skeleton_dock.setWidget(self.skeleton_viewer)

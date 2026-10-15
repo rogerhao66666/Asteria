@@ -22,6 +22,7 @@ def default_component_registry():
     )
     from .field_ai import FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent
     from .npc_state import NpcIdentity2DComponent
+    from .skeleton_component import SkeletonAnimation2DComponent
 
     registry = ComponentRegistry()
     for component in (
@@ -58,6 +59,7 @@ def default_component_registry():
         FieldAIComponent,
         SpawnZoneComponent,
         VisibleEncounterComponent,
+        SkeletonAnimation2DComponent,
     ):
         registry.register(component)
     from .environment2d import register_environment_components
