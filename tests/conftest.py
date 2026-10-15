@@ -142,6 +142,11 @@ def pytest_sessionfinish(session, exitstatus):
         real_window.write_report(_REPLAY_RESULTS)
 
 
+def _application_owned_top_level_widgets(app):
+    """Return root windows; topLevelWidgets also includes parent-owned popups."""
+    return [widget for widget in app.topLevelWidgets() if widget.parentWidget() is None]
+
+
 def pytest_unconfigure(config):
     """Tear Qt and SDL down in a fixed order before the interpreter exits.
 
@@ -155,12 +160,9 @@ def pytest_unconfigure(config):
     if qt is not None:
         app = qt.QApplication.instance()
         if app is not None:
-            from PySide6.QtCore import QEvent
-
             app.closeAllWindows()
-            for widget in app.topLevelWidgets():  # tests that never close what they built
+            for widget in _application_owned_top_level_widgets(app):
                 widget.deleteLater()
-            app.sendPostedEvents(None, QEvent.DeferredDelete)
             app.processEvents()
             app.quit()
             del app

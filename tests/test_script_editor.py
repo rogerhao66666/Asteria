@@ -73,14 +73,17 @@ def test_highlighting_classifies_python_and_asteria_globals(window):
 
 def test_typing_dot_offers_api_members_and_inserting_completes(window):
     code = window.code_workspace
-    code.editor.setPlainText("")
-    code.editor.insertPlainText('scene = project.scene_named("Town")\nscene.')
-    names = code.completer.model().stringList()  # popup opened by the "."
-    assert "entities" in names and "create_entity" in names
-    code.editor.insertPlainText("ent")
-    assert code.show_completions() == ["entities", "entity", "entity_named"]
-    code.insert_completion("entities")
-    assert code.editor.toPlainText().endswith("scene.entities")
+    try:
+        code.editor.setPlainText("")
+        code.editor.insertPlainText('scene = project.scene_named("Town")\nscene.')
+        names = code.completer.model().stringList()  # popup opened by the "."
+        assert "entities" in names and "create_entity" in names
+        code.editor.insertPlainText("ent")
+        assert code.show_completions() == ["entities", "entity", "entity_named"]
+        code.insert_completion("entities")
+        assert code.editor.toPlainText().endswith("scene.entities")
+    finally:
+        code.completer.popup().hide()
 
 
 def test_run_error_shows_traceback_frames_that_jump_to_the_line(window):
