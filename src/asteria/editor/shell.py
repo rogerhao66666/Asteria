@@ -1231,25 +1231,54 @@ class AsteriaEditorWindow(QMainWindow):
         return dialog.result_args() if dialog.exec() == SequenceEditorDialog.Accepted else None
 
     def _event_edit_command(self, index):
-        """Double-click on a SEQUENCE step opens the track editor; the edit is one undo step."""
+        """Open the specialized editor for sequence and picture instructions."""
         from .event_flow_authoring import EventFlowAuthoring
+        from .picture_command_dialog import PICTURE_COMMANDS, PictureCommandDialog
 
         project = self.document.project
         _, binding = self._current_event_binding()
         if project is None or binding is None:
             return False
         program = project.event_programs.require(binding.program_id)
-        if (
-            not 0 <= index < len(program.instructions)
-            or program.instructions[index].opcode != "SEQUENCE"
+        if not 0 <= index < len(program.instructions):
+            return False
+        instruction = program.instructions[index]
+        if instruction.opcode == "SEQUENCE":
+            args = self._sequence_dialog(instruction.args)
+            if args is None:
+                return False
+            EventFlowAuthoring(self.document).replace_sequence(
+                binding.program_id, index, **_sequence_kwargs(args)
+            )
+        elif (
+            instruction.opcode == "WORLD"
+            and str(instruction.args.get("command", "")).upper() in PICTURE_COMMANDS
         ):
+            dialog = PictureCommandDialog(
+                instruction.args["command"],
+                instruction.args.get("args", {}),
+                document=self.document,
+                parent=self,
+            )
+            if not dialog.exec():
+                return False
+            changed = EventInstruction(
+                "WORLD",
+                {
+                    "command": dialog.command.currentText(),
+                    "args": dialog.result_args(),
+                },
+            )
+            rows = list(program.instructions)
+            rows[index] = changed
+            new_program = EventProgram(rows, name=program.name)
+            self.document.execute(
+                ReplaceEventProgramCommand(
+                    project.event_programs, binding.program_id, new_program, program
+                )
+            )
+        else:
             return False
-        args = self._sequence_dialog(program.instructions[index].args)
-        if args is None:
-            return False
-        EventFlowAuthoring(self.document).replace_sequence(
-            binding.program_id, index, **_sequence_kwargs(args)
-        )
         self.refresh_all()
         return True
 
@@ -1303,13 +1332,21 @@ class AsteriaEditorWindow(QMainWindow):
             command, ok = QInputDialog.getText(self, "World Command", "Command:", text="TRANSFER")
             if not ok or not command.strip():
                 return None
+            from .picture_command_dialog import PICTURE_COMMANDS, PictureCommandDialog
+
+            command = command.strip().upper()
+            if command in PICTURE_COMMANDS:
+                dialog = PictureCommandDialog(command, document=self.document, parent=self)
+                if not dialog.exec():
+                    return None
+                return EventInstruction(
+                    "WORLD", {"command": command, "args": dialog.result_args()}
+                )
             raw_args, ok = QInputDialog.getText(
                 self,
                 "World Command",
                 "Arguments (key=value, ...):",
-                text=", ".join(
-                    f"{name}=" for name in WORLD_COMMAND_ARGUMENTS.get(command.strip().upper(), ())
-                ),
+                text=", ".join(f"{name}=" for name in WORLD_COMMAND_ARGUMENTS.get(command, ())),
             )
             if not ok:
                 return None
@@ -1318,7 +1355,7 @@ class AsteriaEditorWindow(QMainWindow):
             except ValueError as exc:
                 QMessageBox.warning(self, "World Command", str(exc))
                 return None
-            return EventInstruction("WORLD", {"command": command.strip().upper(), "args": args})
+            return EventInstruction("WORLD", {"command": command, "args": args})
         return None
 
     def _event_add_command(self, kind):
