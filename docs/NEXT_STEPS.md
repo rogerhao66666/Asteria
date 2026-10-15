@@ -1,7 +1,8 @@
 # 接續工作說明（給在本機繼續的人，也給下一個 session）
 
-**更新：** 2026-10-15。分支 `claude/confident-shannon-3ohnfj`（比 `main` 多 7 個 commit，沒有開 PR）。
-做了什麼、為什麼、限制：看 [`audits/DECISION_LOG.md`](audits/DECISION_LOG.md) 的 **D26**，多人連線看
+**更新：** 2026-10-15。分支 `claude/confident-shannon-3ohnfj`。
+最新實作與限制：看 [`audits/DECISION_LOG.md`](audits/DECISION_LOG.md) 的 **D30**；先前基線見 D26，
+多人連線看
 [`audits/MULTIPLAYER_DESIGN.md`](audits/MULTIPLAYER_DESIGN.md) §9，總覽看 [`ENGINE_HANDBOOK.md`](ENGINE_HANDBOOK.md)。
 
 ---
@@ -15,12 +16,16 @@ git config core.hooksPath .githooks               # 啟用 commit 檢查（見�
 
 python3 -m venv .venv && source .venv/bin/activate
 python -m pip install -e ".[pygame,editor,mv,dev]"
-QT_QPA_PLATFORM=offscreen python -m pytest -q      # 約 3–4 分鐘；預期 2441 passed、66 skipped
+QT_QPA_PLATFORM=offscreen python -m pytest -q      # 本次：2637 passed、1 warning
 ```
 
-- 全套測試結束時印 `malloc_consolidate(): unaligned fastbin chunk detected` **不是**新問題：
-  `main` 上一樣會（Qt／pygame 結束時的問題），測試結果本身是全過。
-- `real_machine_validation.py`、Cocoa 視窗、手把、聽感這些要在你的 Mac 上跑，雲端環境沒有。
+- 測試必須以 exit code 0 正常結束，且不能有 Qt／SDL／malloc 崩潰訊息；若出現就要修。
+- 本次完整測試為 **2637 passed、1 warning**，沒有收尾崩潰；warning 是既有測試的
+  `DeprecationWarning`。
+- Cocoa 視窗已驗證 Octopath 戰鬥與勝利結算、CJK 訊息、音樂室／回想／名單、區域規則，
+  以及 Skeleton 與 Terrain／Region／Doodad 面板；多人也以兩個 Cocoa 視窗連同機 server
+  驗證。真人操作手感、實體鍵盤、手把和可聽音訊仍待人工確認。沒有第二台機器，真實
+  WAN 量測未完成；區域蓋層在正確解析 TileMap 資源後的 Cocoa 畫面仍待補驗。
 - 提交前：`ruff format .`、`ruff check --select E501 .`、`ruff check src tests scripts demos reference_projects`。
   每行 Python ≤ 99 字元。
 - **commit 規則：** `.githooks/commit-msg` 要求作者是 `rogerhao66666` 且訊息**不能有 Co-Authored-By**。
@@ -31,7 +36,7 @@ QT_QPA_PLATFORM=offscreen python -m pytest -q      # 約 3–4 分鐘；預期 2
 
 開新 session 時貼這句就夠：
 
-> 讀 `docs/NEXT_STEPS.md`、`docs/ENGINE_HANDBOOK.md` 和 `docs/audits/DECISION_LOG.md` 的 D26，然後繼續做 NEXT_STEPS 第 3 節的第 N 項。
+> 讀 `docs/NEXT_STEPS.md`、`docs/ENGINE_HANDBOOK.md` 和 `docs/audits/DECISION_LOG.md` 的 D30，然後繼續做 NEXT_STEPS 第 3 節的第 N 項。
 
 這個 repo 沒有 CI（workflow 已被移除），所以「測試是綠的」要在本機確認。
 
@@ -51,37 +56,46 @@ QT_QPA_PLATFORM=offscreen python -m pytest -q      # 約 3–4 分鐘；預期 2
 | 拆解／職業點／新遊戲＋ | `rpg/disassembly.py`、`job_points.py`、`new_game_plus.py` | `disassemble()`、`finish_victory()`、`new_game_plus()` |
 | 訊息／翻譯 | `presentation/message_codes.py`、`rpg/localization.py` | `expand_message()`、`tr()`、`set_locale()` |
 | 記錄／音樂室／名單 | `runtime/backlog.py`、`rpg/extras.py`、`runtime/extras_screens.py` | 專案有資料才出現在暫停選單 |
-| 地形鋪磚 | `graphics/autotile.py`、`editor/tile_edit.py`（`build_terrain_command`） | 還沒有按鈕 |
+| 地形鋪磚 | `graphics/autotile.py`、`editor/tile_edit.py`（`build_terrain_command`） | Tiles 面板 Terrain 筆刷與選單 |
 | 尋路 | `runtime/navigation.py` | `find_path()`、`walk_to()`、世界指令 `WALK_TO` |
-| 骨骼動畫 | `graphics/skeleton.py`、`runtime/skeleton_draw.py` | 還沒接進場景或編輯器 |
+| 骨骼動畫 | `graphics/skeleton.py`、`runtime/skeleton_draw.py` | Skeleton 面板可編輯與預覽；`SkeletonAnimation2DComponent` 接進場景及測試 runtime |
 | 多人連線補強 | `multiplayer/security.py`、`netsim.py`、`metrics.py`、`scripts/multiplayer_netbench.py` | `server.py`、`client.py` |
 
 所有新規則都存在 `RpgDatabase` 的選填欄位（沒設定就不寫入，不升版本，舊專案照常載入）。
 
 ---
 
-## 3. 還沒做的事（依我的建議順序）
+## 3. 本輪完成與尚待人工驗證
 
-**A. 編輯器介面** — 已完成（D29）：Game Systems 表單、Tiles 面板的地形／區域／裝飾物筆刷、骨骼預覽面板。
-剩下：骨骼的編輯（目前只能預覽，不能改骨骼與關鍵影格）、區域規則表與區域畫筆沒有放在同一個面板。
+**A. 編輯器與骨骼（完成，D30）**
 
-**B. 沒做的 YEP 項目** — 已完成（D28）：圖片與點擊事件、裝飾物、戰鬥天氣、TP 模式、Spine 匯入。
-剩下：DragonBones 格式、把骨骼動畫接進場景、圖片的編輯介面。
+- 骨骼、變換、父子關係、動畫 Key 與緩動可在 Skeleton 面板編輯；每個操作走可復原指令，並可存回 Asteria JSON。
+- 插槽精靈預覽、DragonBones 5.x 子集匯入及不支援部分回報已完成。
+- 骨骼動畫 component 可保存／載入，在編輯器場景與 `PlayableTestRuntime` 播放及繪製。
+- 區域畫筆與 `region:<id>` 的 `AreaRule` 編輯表單已合併到 Tiles 面板。
+- Picture 指令參數編輯與圖片位置預覽已完成。
 
-**C. 要在你的機器上驗證（雲端做不了）**
-7. 勝利結算畫面、區域／滑冰／腳步聲、音樂室、訊息控制碼：在 Cocoa 真實視窗看一次畫面和手感。
-8. 手把、實體鍵盤、聽感、目視（原本審計的 B 項）。
-9. ~~耐久破損即時生效~~ 已完成（D28）。
+**B. 原生視窗驗證（功能畫面已驗證；人工手感仍待確認）**
 
-**D. 多人連線**
-10. ~~差量更新~~ 已完成（D27，頻寬降到約 1/4）。
-11. 把 `multiplayer/smoothing.py` 的插值與預測接進 `runtime/multiplayer_preview.py`，並在真實視窗調手感（工具已寫好、有測試，還沒接）。
-12. 真實跨機器 WAN 量測（`python scripts/multiplayer_netbench.py` 只量了單機迴圈回送）。
-13. NAT 穿透／配對、真正的 adapter 沙箱（白名單只限制載入什麼）。
+- Cocoa 視窗實際跑過 `octopath_demo` 戰鬥與勝利結算、地板傷害／滑冰／腳步聲、Music
+  Room、Backlog、Credits，以及 `\\C`、`\\I`、`\\V`、`\\N` 和 CJK 字型。
+- Cocoa 編輯器已操作區域規則編輯／復原、Terrain／Region／Doodad 筆刷模式、Skeleton
+  骨骼與 Key 編輯／復原；用 Diablo demo 的有效 TileMap sidecar 重跑後，區域 7 的數字
+  和半透明蓋層亦在真實 Cocoa 畫面確認。
+- SDL 鍵盤事件佇列、選單／存檔／設定等亦已在視窗驗證；CoreAudio 能開裝置並播放音效
+  與串流音樂。但真人手按鍵盤、手把（當時沒有控制器連接）、主觀聽感與音訊延遲仍未驗收。
 
-**E. 小問題**
-14. ~~diablo_multiplayer_demo 長行~~ 已修。
-15. ~~訊息圖示~~ 已完成（D28，`MessageSettings.icons`）；CJK 文字要確認字型。
+**C. 多人連線（雙視窗 loopback 驗證完成；WAN 未完成）**
+
+- `SnapshotInterpolator` 與 `InputPredictor` 已接進 `runtime/multiplayer_preview.py`，並有自動化測試。
+- 兩個原生 Cocoa runtime 視窗已連同一個 loopback server；兩端都看見 2 位玩家，各收到
+  304 個遠端快照並套用本機預測。這是資料流／視窗整合驗證；真人主觀手感仍待確認。
+- WAN 量測僅有單機 loopback，沒有第二台實體機器，跨機器結果未完成。
+- NAT 穿透／配對與真正的 adapter 沙箱只新增設計決策，沒有實作。
+
+**D. 其他先前完成項目**
+
+- D26–D29 已完成的戰鬥規則、遊戲系統表單、筆刷、多人差量同步、圖片、裝飾物、戰鬥天氣、TP、Spine 匯入與訊息圖示仍維持完成；本輪全套測試通過。
 
 ---
 

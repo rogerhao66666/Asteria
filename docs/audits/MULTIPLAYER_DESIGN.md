@@ -307,9 +307,9 @@ python -m asteria.multiplayer.server --host 0.0.0.0 --port 8765 \
 
 **誠實說明：**
 - 差量更新讓頻寬降到約 10.6 KB／秒／人（約 85 kbps），是原本的四分之一；代價是 server 每個 tick 要為每位玩家算差量，tick CPU 佔比從約 1% 升到約 3.6%（4 位玩家、同機測量）。人數很多時這個成本會隨玩家數成長（每位玩家各有自己的基準狀態）。
-- 「Boss 血量一致」比較的是 Boss 死亡這個最終結果；玩法中途的瞬時位置在不良連線上會落後一到數個 tick。`multiplayer/smoothing.py` 提供遠端插值（`SnapshotInterpolator`）與本機預測（`InputPredictor`），**但還沒有接進遊戲畫面端**（`runtime/multiplayer_preview.py`），要在真實視窗調手感。
+- 「Boss 血量一致」比較的是 Boss 死亡這個最終結果；玩法中途的瞬時位置在不良連線上會落後一到數個 tick。`SnapshotInterpolator` 遠端插值與 `InputPredictor` 本機預測／校正已接進 `runtime/multiplayer_preview.py` 並有自動化測試。另已在同一台 Mac 開兩個 Cocoa runtime 視窗連同一個 loopback server；兩端皆連線成功、看見兩位玩家並處理 304 個遠端快照。這確認了雙視窗整合與資料流，真人主觀手感仍待確認。
 - 丟包模擬丟的是整則訊息（像 UDP），比真正的 TCP 丟包更嚴苛；TCP 實際表現是延遲尖峰而不是缺口。
-- 跨機器、跨網路（真實 WAN）的測量尚未做。
+- 跨機器、跨網路（真實 WAN）的測量尚未做：只有一台實體機器可用，同機 loopback 數據不能代替 WAN 結果。
 
 ### 9.4 差量更新（delta）
 
@@ -318,3 +318,15 @@ python -m asteria.multiplayer.server --host 0.0.0.0 --port 8765 \
 - 差異格式見 `multiplayer/delta.py`（鍵差異、`$set`、`$append`、以 `player_id`／`id` 為鍵的物件清單）；`apply` 不會改動輸入，有隨機狀態往返測試。
 - `base_revision` 對不上、或差異套不上時，client 不會套用，而是要求重新同步（`delta_misses` 計數）。這也修復了遺失訊息造成的基準不一致。
 - `metrics.delta_bytes_saved` 記錄省下的位元組。
+
+---
+
+## 10. NAT 穿透／配對與 adapter 沙箱決策（D30）
+
+目前連線目標仍是遊戲作者自行部署 authoritative server，玩家手動輸入 host／port；核心不要求 Asteria 提供帳號、配對服務或 relay。公開伺服器應沿用 §9.1 的 TLS 與 token 驗證要求。
+
+未來若加入配對，建議採可選、可自架的配對服務：以短效 session code 交換 host/client 的連線候選位址，先做直連嘗試；直連失敗時可切換至可自架 relay。候選交換只是協助連線建立，並不保證穿透每種 NAT；relay、配對服務及其營運成本均尚未實作或納入現有產品承諾。
+
+`--adapter-allow` 是載入白名單，不是沙箱。未來執行不可信 adapter 時，建議將 adapter 放到獨立 OS process 或 container，以版本化 JSON RPC 傳遞輸入與權威結果，並加上檔案／網路政策、CPU／記憶體／執行時間限制、逾時終止及 fail-closed 錯誤處理。需先完成威脅模型與 Windows／macOS／Linux 的隔離能力評估，才決定具體部署方式；不應在 server 主行程載入任意第三方 Python 並宣稱安全。
+
+**本輪狀態：** 這一節是架構決策，不是功能完成聲明。NAT traversal、session matchmaking、relay 與 adapter process sandbox 都未實作。跨機器 WAN 尚未量測；本機 loopback 的 §9.3 數字不能推論真實 WAN 品質。

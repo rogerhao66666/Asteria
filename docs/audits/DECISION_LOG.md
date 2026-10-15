@@ -1833,3 +1833,45 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 | 骨骼預覽 | 新的 Skeleton 面板：開啟 Spine JSON、選動畫、拖時間軸或播放，畫骨骼線；讀不了的檔案在狀態列顯示原因，匯入跳過的部分也會列出 | `editor/skeleton_view.py`、`skeleton_widget.py` |
 
 **限制：** 骨骼只能預覽、不能編輯（骨骼與關鍵影格仍要改 JSON）；沒有貼圖預覽，只有骨骼線。蓋層與筆刷在離屏 Qt 測試過，真實視窗的手感沒看過。
+
+## D30 — 骨骼、Picture、區域規則與多人預覽收尾（2026-10-15）
+
+### 完成項目
+
+| 項目 | 做法 | 位置／提交 |
+|---|---|---|
+| 區域規則面板 | Tiles 面板選區域編號時可直接編輯對應的 `region:<id>` `AreaRule`；編輯與畫筆都走可復原指令 | `editor/tile_palette_widget.py`、`editor/game_systems_authoring.py`；`0c0bcf5` |
+| 骨骼與動畫編輯 | Skeleton 面板可新增／刪除／改名骨骼、改父骨骼與變換值；時間軸可新增／移動／刪除 Key、改屬性值與緩動。每次操作各自成為一個 undo 步驟，並能讀寫 Asteria 原生 `.asteria.skeleton.json` | `editor/skeleton_widget.py` 等；`4fdc75c` |
+| 插槽貼圖預覽 | 使用 `Skeleton.draws()` 與 `to_texture_draws()` 繪製插槽精靈，Skeleton 面板同時顯示骨骼 | `editor/skeleton_widget.py`；`ee0b61d` |
+| 場景骨骼動畫 | 新增可序列化的 `SkeletonAnimation2DComponent`，可掛到場景 entity；場景 viewport 與 `PlayableTestRuntime`（tile／一般場景）更新動畫並畫出貼圖，支援存檔／載入 | `runtime/skeleton_draw.py`、scene/runtime/editor 接線；`d85b75b` |
+| DragonBones 匯入 | 新增 5.x JSON 匯入器，回報 `unsupported_parts`，不猜測未支援語意 | `graphics/dragonbones_import.py`；`56a0c29` |
+| Picture 指令編輯器 | 可設定 `SHOW_PICTURE`、`MOVE_PICTURE`、`SET_PICTURE_FRAME`、`ERASE_PICTURE` 參數並預覽畫面位置 | event editor／picture preview；`7b7e906` |
+| 多人預測／插值 | `SnapshotInterpolator` 與 `InputPredictor` 已接進多人 preview，並以自動化測試覆蓋 | `runtime/multiplayer_preview.py`；`25d683a` |
+| Qt／SDL 收尾 | 修正測試結束時 Qt deferred-delete 與 SDL 資源清理問題 | `tests/conftest.py`；`a4ebe2c` |
+| Octopath 勝利結算 | 參考專案與 party RPG template 都開啟 `battle.victory_aftermath`，並加回歸測試 | demo manifest、template manifest、`tests/test_octopath_demo.py`；`1ed4bc8` |
+| CJK 訊息字型 | RPG 對話、戰鬥 UI、pygame／ModernGL 對話使用系統 CJK 字型；拉丁文字保留既有字型，附單元測試 | `platform/pygame_battle_ui.py` 等、`tests/test_battle_ui_renderer.py`；`ff9eddb` |
+
+### 驗證證據
+
+- `QT_QPA_PLATFORM=offscreen .venv/bin/pytest -q`：**2637 passed、1 warning**，exit code 0；結束時沒有 Qt／SDL／malloc 崩潰訊息。warning 是既有的 PySide `QMouseEvent` deprecation。
+- `.venv/bin/ruff check src tests scripts demos reference_projects`：通過。
+- `.venv/bin/ruff check --select E501 src tests scripts demos reference_projects`：通過。
+- 有測試覆蓋區域規則編輯、原生骨骼序列化／指令復原、DragonBones 支援子集、Picture 參數與預覽、骨骼 component 存取及 runtime 實際像素繪製、多玩家平滑資料流。
+- Cocoa 視窗：Octopath 戰鬥及勝利結算、區域地板傷害／滑冰／腳步聲、Music Room／Backlog／Credits、`\\C`／`\\I`／`\\V`／`\\N` 和 CJK glyph、編輯器骨骼／區域規則／Terrain／Region／Doodad 面板均有實機程序驗證與截圖。另以兩個 Cocoa runtime 視窗連同一個本機 server；兩邊都收到兩位玩家狀態、各處理 304 個遠端快照，兩個 client 均正常結束。
+- 原生按鍵事件佇列、選單／存檔／設定流程已驗證；CoreAudio 開啟 44.1 kHz 裝置、音效 channel 與音樂串流運作。這些程序驗證不代替真人手按、主觀聽感或實際音訊延遲測量。
+
+### 限制與未完成
+
+- DragonBones 僅支援明確實作的 5.x 子集；IK、FFD、z-order、事件／actions、自訂 easing、替代 skin、多 armature／skin 歧義、部分 display／scale／skew／隱藏與顏色動畫等會回報不支援或要求明確選擇，不會自行近似。
+- Skeleton component 目前嵌入原生 rig JSON；貼圖仍依專案資源 ID 解析，引用的貼圖必須存在於該專案。
+- Picture 預覽使用事件設計畫布座標；點擊命中仍是既有整張圖片矩形規則。
+- 真人主觀手感、實體鍵盤直接操作尚未驗收；測試送入 Cocoa／SDL 事件佇列，不代表由人手按鍵。當時沒有連接 game controller；可播放音訊已測到裝置層，但聽感與 latency 未測。
+- 兩個 Cocoa 視窗同機 loopback 的多人資料流、插值與預測已驗證；真人主觀延遲／移動手感仍待確認。原生驗證器先前沒有載入 tilemap sidecar，找到問題後補上資源解析；最後的 Cocoa 重驗通過，使用 Diablo demo 的 tilemap 顯示區域 7 編號及半透明蓋層，截圖 `editor_d30_region_overlay.png`。專案檔案保持未改寫。
+- 只有一台可用機器；`multiplayer_netbench.py` 的 loopback 數據不能當跨機器 WAN 結果，WAN 實測未完成。
+
+### NAT／配對與 adapter 沙箱決策
+
+- 第一階段維持遊戲作者自行部署 authoritative server 與手動輸入 host／port，不把 Asteria 核心依賴在託管配對服務上。
+- 若後續加入配對，配對服務只交換短效 session code 與連線候選位址；先嘗試直連，失敗才由可自架 relay 轉送。不能把候選位址交換誤稱為完整 NAT 穿透，也不能把 relay 當成現有功能。
+- adapter module allowlist 只限制可載入的 Python 模組，並非安全沙箱。對不可信 adapter，後續方案應採獨立 OS process／container、版本化 JSON RPC、資源與時間限制，以及拒絕時 fail closed；未完成威脅模型與跨平台評估前不在引擎行程內任意執行第三方 adapter。
+- 本輪只記錄決策與限制，沒有實作 NAT traversal、配對服務、relay 或 adapter sandbox。
