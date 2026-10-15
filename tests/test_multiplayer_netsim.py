@@ -204,3 +204,23 @@ def test_real_time_movement_stays_consistent_for_players_on_different_links(star
         finally:
             near.close()
             far.close()
+
+
+def test_a_lost_resync_reply_is_asked_for_again(start):
+    server = start(build_counter_adapter())
+    # drop most downstream frames so that a resync reply is likely to be lost at least once
+    lossy = LinkProfile(delay_ms=5, loss=0.6)
+    with LinkSimulator(server.server_address[:2], downstream=lossy, seed=4) as link:
+        watcher = MultiplayerClient()
+        driver = MultiplayerClient()
+        watcher.connect(*link.address, "Watcher", heartbeat=0.3)
+        driver.connect(*server.server_address[:2], "Driver")
+        try:
+            for _ in range(20):
+                driver.send_command("increment", {"amount": 1})
+                time.sleep(0.01)
+            assert _wait(lambda: watcher._state and watcher._state["counter"] == 20, timeout=15.0)
+            assert watcher._resync_since is None or watcher._state["counter"] == 20
+        finally:
+            watcher.close()
+            driver.close()

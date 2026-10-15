@@ -2,6 +2,7 @@ from .enemy_behavior import EnemyBehaviorBinding
 from .battle_extensions import (
     BattleExtensionRules,
     BattleExtensionRuntime,
+    ResourceGain,
     StealEntry,
     StealResult,
     StealTable,
@@ -212,6 +213,7 @@ __all__ = [
     "EnemyBehaviorBinding",
     "BattleExtensionRules",
     "BattleExtensionRuntime",
+    "ResourceGain",
     "StealEntry",
     "StealResult",
     "StealTable",

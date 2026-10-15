@@ -732,6 +732,7 @@ class RpgDatabase:
         self.message_settings = {}  # rpg.localization MessageSettings
         self.music_tracks = {}  # rpg.extras MusicTrack
         self.credits_pages = {}  # rpg.extras CreditsPage
+        self.doodads = {}  # rpg.doodads DoodadDefinition
         self.world_interactions = {}
         self.drop_tables = {}
         self.rarities = {}  # rpg.loot RarityDefinition; empty = loot.DEFAULT_RARITIES
@@ -1126,6 +1127,7 @@ class RpgDatabase:
             ("message_settings", self.message_settings),
             ("music_tracks", self.music_tracks),
             ("credits_pages", self.credits_pages),
+            ("doodads", self.doodads),
         )
         return {
             name: [store[k].to_data() for k in sorted(store)] for name, store in stores if store
@@ -1152,6 +1154,11 @@ class RpgDatabase:
         from .extras import CreditsPage
 
         return self._add_keyed(self.credits_pages, value, CreditsPage, "page_id", "credits page")
+
+    def add_doodad(self, value):
+        from .doodads import DoodadDefinition
+
+        return self._add_keyed(self.doodads, value, DoodadDefinition, "doodad_id", "doodad")
 
     def add_durability_rules(self, value):
         from .durability import DurabilityRules
@@ -1891,4 +1898,8 @@ class RpgDatabase:
                 result.add_music_track(MusicTrack.from_data(x))
             for x in data.get("credits_pages", ()):
                 result.add_credits_page(CreditsPage.from_data(x))
+            from .doodads import DoodadDefinition
+
+            for x in data.get("doodads", ()):
+                result.add_doodad(DoodadDefinition.from_data(x))
         return result

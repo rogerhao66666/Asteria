@@ -88,6 +88,23 @@ WORLD_COMMAND_ARGUMENTS = {
     "SHOW_POPUP": ("text", "entity", "duration_ms", "kind"),
     "SET_CLASSES": ("actor_id", "class_ids", "unlock"),
     "WALK_TO": ("entity", "x", "y", "speed"),
+    "SET_BATTLE_WEATHER": ("kind", "intensity", "wind"),
+    "SHOW_PICTURE": (
+        "picture_id",
+        "asset_id",
+        "x",
+        "y",
+        "scale",
+        "opacity",
+        "frame",
+        "columns",
+        "rows",
+        "layer",
+        "click_event",
+    ),
+    "MOVE_PICTURE": ("picture_id", "x", "y", "scale", "opacity", "duration", "easing"),
+    "SET_PICTURE_FRAME": ("picture_id", "frame"),
+    "ERASE_PICTURE": ("picture_id",),
     "TIMER_START": ("timer_id", "seconds", "on_expire", "count_up", "show"),
     "TIMER_STOP": ("timer_id",),
     "TIMER_PAUSE": ("timer_id",),
@@ -305,6 +322,66 @@ def register_standard_world_commands(router, session):
             raise WorldCommandError(f"WALK_TO: {exc}") from exc
 
     router.register("WALK_TO", walk_to)
+
+    def set_battle_weather(command):
+        try:
+            return session.set_battle_weather(
+                command.args.get("kind", "none"),
+                _amount(command, "intensity", 0.6),
+                _amount(command, "wind", 0.0),
+            )
+        except Exception as exc:  # noqa: BLE001
+            raise WorldCommandError(f"SET_BATTLE_WEATHER: {exc}") from exc
+
+    router.register("SET_BATTLE_WEATHER", set_battle_weather)
+
+    def picture_command(name):
+        def handler(command):
+            picture_id = str(_required(command, "picture_id"))
+            args = command.args
+            try:
+                if name == "show":
+                    return session.pictures.show(
+                        picture_id,
+                        _required(command, "asset_id"),
+                        _amount(command, "x", 0),
+                        _amount(command, "y", 0),
+                        scale=_amount(command, "scale", 1.0),
+                        opacity=_amount(command, "opacity", 1.0),
+                        frame=int(_amount(command, "frame", 0)),
+                        columns=int(_amount(command, "columns", 1)),
+                        rows=int(_amount(command, "rows", 1)),
+                        layer=int(_amount(command, "layer", 0)),
+                        click_event=str(args.get("click_event", "")),
+                    )
+                if name == "move":
+                    pick = lambda key: _amount(command, key, 0) if key in args else None  # noqa: E731
+                    return session.pictures.move(
+                        picture_id,
+                        x=pick("x"),
+                        y=pick("y"),
+                        scale=pick("scale"),
+                        opacity=pick("opacity"),
+                        duration=_amount(command, "duration", 0.0),
+                        easing=str(args.get("easing", "linear")),
+                    )
+                if name == "frame":
+                    return session.pictures.set_frame(
+                        picture_id, int(_amount(command, "frame", 0))
+                    )
+                return session.pictures.erase(picture_id)
+            except (KeyError, ValueError) as exc:
+                raise WorldCommandError(f"{command.name}: {exc}") from exc
+
+        return handler
+
+    for command_name, method in (
+        ("SHOW_PICTURE", "show"),
+        ("MOVE_PICTURE", "move"),
+        ("SET_PICTURE_FRAME", "frame"),
+        ("ERASE_PICTURE", "erase"),
+    ):
+        router.register(command_name, picture_command(method))
 
     def timer_command(name):
         def handler(command):

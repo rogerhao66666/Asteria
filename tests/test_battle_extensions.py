@@ -290,3 +290,86 @@ def test_extensions_work_with_a_continuous_scheduler():
     scheduler = BattleSchedulerDefinition("atb", mode="continuous")
     battle = _battle(BattleExtensionRules("x", taunt_tag="taunt"), scheduler=scheduler)
     assert battle.resolve_targets("hero", "strike").candidate_ids == ("guard",)
+
+
+# ---- resource gains (TP-style modes) ---------------------------------------------------------
+from asteria.rpg import ResourceGain  # noqa: E402
+from asteria.rpg.battle_resources import BattleResourceDefinition  # noqa: E402
+
+
+def _gain_battle(*gains):
+    rules = BattleExtensionRules("x", damage_resource="hp", gains=gains)
+    registry = AbilityRegistry()
+    registry.register(_ability("strike", -100))
+    hero = PartyMember("hero", "heroes", _subject(500), ability_ids=("strike",), initiative=20)
+    foe = PartyMember("foe", "foes", _subject(250), ability_ids=("strike",), initiative=1)
+    weak = PartyMember("weak", "foes", _subject(60), ability_ids=("strike",), initiative=1)
+    return BattleRuntime(
+        (Party("heroes", (hero,)), Party("foes", (foe, weak))),
+        AbilityRuntime(registry),
+        resource_definitions=(
+            BattleResourceDefinition(
+                "tp", minimum=0, maximum=100, start_mode="fixed", start_value=0
+            ),
+        ),
+        targeting_definitions=(BattleTargetingDefinition("strike"),),
+        extensions=rules,
+    )
+
+
+def _tp(battle, member):
+    return battle.battle_resources.current(member, "tp")
+
+
+def test_gain_per_action_and_per_damage_dealt():
+    battle = _gain_battle(
+        ResourceGain("action", "tp", flat=5), ResourceGain("dealt", "tp", per_damage=0.1)
+    )
+    battle.execute(BattleAction("hero", "strike", ("foe",)))
+    assert _tp(battle, "hero") == pytest.approx(5 + 10)  # 100 damage dealt
+    assert _tp(battle, "foe") == 0  # only the actor gains
+
+
+def test_gain_when_hurt_scales_with_the_share_of_max_hp_lost():
+    battle = _gain_battle(ResourceGain("taken", "tp", per_max_hp=40))
+    battle.execute(BattleAction("hero", "strike", ("foe",)))
+    assert _tp(battle, "foe") == pytest.approx(40 * 100 / 250)  # lost 100 of 250
+    assert _tp(battle, "hero") == 0
+
+
+def test_a_kill_gain_only_fires_when_the_target_falls():
+    battle = _gain_battle(ResourceGain("kill", "tp", flat=30))
+    battle.execute(BattleAction("hero", "strike", ("foe",)))
+    assert _tp(battle, "hero") == 0
+    battle.execute(BattleAction("hero", "strike", ("weak",)))  # 60 hp: 100 damage kills it
+    assert _tp(battle, "hero") == 30
+
+
+def test_a_gain_can_be_limited_to_abilities_with_a_tag():
+    battle = _gain_battle(ResourceGain("action", "tp", flat=9, ability_tag="melee"))
+    battle.execute(BattleAction("hero", "strike", ("foe",)))
+    assert _tp(battle, "hero") == 0  # "strike" carries no melee tag
+
+
+def test_gains_respect_the_resource_maximum_and_missing_resources():
+    battle = _gain_battle(
+        ResourceGain("action", "tp", flat=70), ResourceGain("action", "ghost", flat=1)
+    )
+    battle.execute(BattleAction("hero", "strike", ("foe",)))
+    battle.execute(BattleAction("hero", "strike", ("foe",)))
+    assert _tp(battle, "hero") == 100  # capped; the unknown resource is skipped silently
+    assert battle.extensions.gained[("hero", "tp")] == 100  # only what was really added
+
+
+def test_gain_rules_round_trip_and_validate():
+    rules = BattleExtensionRules(
+        "x",
+        damage_resource="hp",
+        gains=(ResourceGain("dealt", "tp", per_damage=0.5, ability_tag="melee"),),
+    )
+    assert BattleExtensionRules.from_data(rules.to_data()) == rules
+    assert "gains" not in BattleExtensionRules("plain").to_data()
+    with pytest.raises(ValueError):
+        ResourceGain("sneeze", "tp")
+    with pytest.raises(ValueError):
+        ResourceGain("action", "tp", flat=float("inf"))

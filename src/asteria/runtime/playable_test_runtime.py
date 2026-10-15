@@ -449,6 +449,10 @@ class PlayableTestRuntime:
         )
         # scene lights are placed in the field; battles keep fog, weather and post effects
         env.lighting = False
+        battle_weather = self.game.battle_weather()
+        if battle_weather is not None:  # the battle's own weather replaces the map's
+            env.weather, env.weather_intensity, env.weather_wind = battle_weather
+            env.weather_max_particles = env.weather_max_particles or 900
         return env
 
     def _read_shader(self, asset_id):
@@ -1270,6 +1274,7 @@ class PlayableTestRuntime:
             self.action_hud.draw_world(self)
         self._draw_field_effects()
         self._draw_popups()
+        self._draw_pictures()
         self._draw_event_timers()
         if self.game.cutscene_active:
             self._draw_dialogue()
@@ -1306,6 +1311,49 @@ class PlayableTestRuntime:
                 self.message, self.width / 2, 92, size=22, color=(175, 235, 255), center=True
             )
         self._draw_dialogue()
+
+    def _picture_image(self, picture):
+        """The sub-image of a picture's asset for its sprite-sheet cell, or ``None``."""
+        from .menu_icons import icon_source
+
+        source = icon_source(self.project, picture.asset_id)
+        if source is None:
+            return None
+        try:
+            image = self.load_image(source[0])
+        except (OSError, ValueError, self.pg.error):
+            return None
+        x, y, w, h = picture.cell(*image.get_size())
+        return image.subsurface(self.pg.Rect(x, y, w, h).clip(image.get_rect()))
+
+    def _picture_size(self, picture):
+        image = self._picture_image(picture)
+        if image is None:
+            return None
+        return self.load_image(self._picture_path(picture)).get_size()
+
+    def _picture_path(self, picture):
+        from .menu_icons import icon_source
+
+        return icon_source(self.project, picture.asset_id)[0]
+
+    def _draw_pictures(self):
+        """Pictures events put on screen (SHOW_PICTURE), bottom layer first."""
+        for picture in self.game.pictures.pictures():
+            image = self._picture_image(picture)
+            if image is None or picture.opacity <= 0:
+                continue
+            w, h = image.get_size()
+            target = (max(1, round(w * picture.scale)), max(1, round(h * picture.scale)))
+            if target != (w, h):
+                image = self.pg.transform.scale(image, target)
+            if picture.opacity < 1.0:
+                image = image.copy()
+                image.set_alpha(round(255 * picture.opacity))
+            self.screen.blit(image, (round(picture.x), round(picture.y)))
+
+    def _click_picture(self, x, y):
+        return self.game.click_picture(x, y, self._picture_size)
 
     def _draw_event_timers(self):
         """Visible event timers (TIMER_START) stacked at the top right: ``MM:SS``."""
@@ -1484,6 +1532,10 @@ class PlayableTestRuntime:
         return True
 
     def _field_input(self, events, dt):
+        for event in events:  # clicking a picture that has an event
+            if event.type == self.pg.MOUSEBUTTONDOWN and getattr(event, "button", 1) == 1:
+                if self._click_picture(*event.pos) is not None:
+                    return False
         if self.game.cutscene_active:
             if self.game.cutscene_skippable and self.input.just_pressed("cancel"):
                 self.game.skip_cutscene()

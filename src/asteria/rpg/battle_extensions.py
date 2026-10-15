@@ -70,6 +70,58 @@ class StealTable:
         object.__setattr__(self, "once", bool(once))
 
 
+GAIN_EVENTS = ("dealt", "taken", "kill", "action")
+
+
+@dataclass(frozen=True, slots=True)
+class ResourceGain:
+    """A battle resource (rage, TP, momentum...) that fills when something happens.
+
+    ``event``: ``dealt`` (the actor hurt an opponent), ``taken`` (a fighter was hurt), ``kill``
+    (the actor knocked an opponent out) or ``action`` (the actor used an ability). The gain is
+    ``flat`` plus ``per_damage`` x the damage, plus ``per_max_hp`` x (damage / the victim's maximum
+    of the rules' ``damage_resource``). ``ability_tag`` limits it to abilities with that tag.
+    """
+
+    event: str
+    resource: str
+    flat: float = 0.0
+    per_damage: float = 0.0
+    per_max_hp: float = 0.0
+    ability_tag: str = ""
+
+    def __init__(
+        self, event, resource, *, flat=0.0, per_damage=0.0, per_max_hp=0.0, ability_tag=""
+    ):
+        if event not in GAIN_EVENTS:
+            raise ValueError(f"event must be one of {GAIN_EVENTS}")
+        s = object.__setattr__
+        s(self, "event", event)
+        s(self, "resource", _id(resource, "resource"))
+        for name, value in (
+            ("flat", flat),
+            ("per_damage", per_damage),
+            ("per_max_hp", per_max_hp),
+        ):
+            if not isfinite(float(value)):
+                raise ValueError(f"{name} must be finite")
+            s(self, name, float(value))
+        s(self, "ability_tag", str(ability_tag or "").strip())
+
+    def amount(self, damage=0.0, victim_max=0.0):
+        share = damage / victim_max if victim_max > 0 else 0.0
+        return self.flat + self.per_damage * damage + self.per_max_hp * share
+
+    def to_data(self):
+        data = {"event": self.event, "resource": self.resource}
+        for name in ("flat", "per_damage", "per_max_hp"):
+            if getattr(self, name):
+                data[name] = getattr(self, name)
+        if self.ability_tag:
+            data["ability_tag"] = self.ability_tag
+        return data
+
+
 @dataclass(frozen=True, slots=True)
 class BattleExtensionRules:
     """Which optional battle rules a project switches on, by resource / stat / tag id.
@@ -102,6 +154,7 @@ class BattleExtensionRules:
     surprise_chance: float = 0.0
     steal_tables: tuple[StealTable, ...] = ()
     row_tag_prefix: str = ""
+    gains: tuple[ResourceGain, ...] = ()
 
     def __init__(
         self,
@@ -118,6 +171,7 @@ class BattleExtensionRules:
         surprise_chance=0.0,
         steal_tables=(),
         row_tag_prefix="",
+        gains=(),
     ):
         s = object.__setattr__
         s(self, "rules_id", _id(rules_id, "rules_id"))
@@ -148,6 +202,10 @@ class BattleExtensionRules:
             raise TypeError("steal_tables must be StealTable values")
         s(self, "steal_tables", tables)
         s(self, "row_tag_prefix", str(row_tag_prefix or "").strip())
+        gains = tuple(gains)
+        if any(not isinstance(x, ResourceGain) for x in gains):
+            raise TypeError("gains must be ResourceGain values")
+        s(self, "gains", gains)
 
     def to_data(self):
         return {
@@ -175,6 +233,7 @@ class BattleExtensionRules:
                 for t in self.steal_tables
             ],
             "row_tag_prefix": self.row_tag_prefix,
+            **({"gains": [g.to_data() for g in self.gains]} if self.gains else {}),
         }
 
     @classmethod
@@ -201,6 +260,7 @@ class BattleExtensionRules:
                 for t in data.get("steal_tables", ())
             ),
             row_tag_prefix=data.get("row_tag_prefix", ""),
+            gains=tuple(ResourceGain(**x) for x in data.get("gains", ())),
         )
 
 
@@ -228,6 +288,7 @@ class BattleExtensionRuntime:
         self.lifesteal_healed = {}  # actor id -> total given back
         self.stolen_from = set()  # (target id, table key)
         self.opening = "normal"
+        self.gained = {}  # (member id, resource id) -> total gained through ResourceGain rules
         self._raw = {}
 
     # -- availability --------------------------------------------------------------------------
@@ -295,6 +356,8 @@ class BattleExtensionRuntime:
             self.uses[key] = self.uses.get(key, 0) + 1
             self._count_mastery(battle, key)
         res = self.rules.damage_resource
+        if executed and self.rules.gains:
+            self._apply_gains(battle, action, snapshot)
         if not executed or not res:
             return
         actor = battle.member(action.actor_id)
@@ -322,6 +385,52 @@ class BattleExtensionRuntime:
                 self.lifesteal_healed[actor.member_id] = (
                     self.lifesteal_healed.get(actor.member_id, 0.0) + gained
                 )
+
+    # -- resource gains ------------------------------------------------------------------------
+    def _gain(self, battle, member_id, gain, damage=0.0, victim=None):
+        resources = battle.battle_resources
+        try:
+            resources.get(member_id, gain.resource)
+        except KeyError:
+            return  # that fighter has no such resource
+        top = 0.0
+        if victim is not None and self.rules.damage_resource:
+            pool = victim.subject.resources
+            if pool.contains(self.rules.damage_resource):
+                top = pool.maximum(self.rules.damage_resource)
+        amount = gain.amount(damage, top)
+        if amount:
+            change = resources.change(
+                member_id, gain.resource, amount, trigger=f"gain.{gain.event}"
+            )
+            self.gained[(member_id, gain.resource)] = (
+                self.gained.get((member_id, gain.resource), 0.0) + change.applied_delta
+            )
+
+    def _apply_gains(self, battle, action, snapshot):
+        res = self.rules.damage_resource
+        actor = battle.member(action.actor_id)
+        tags = battle.ability_runtime.registry.require(action.ability_id).tags
+        for gain in self.rules.gains:
+            if gain.ability_tag and gain.ability_tag not in tags:
+                continue
+            if gain.event == "action":
+                self._gain(battle, actor.member_id, gain)
+                continue
+            for target_id in action.target_ids:
+                target = battle.member(target_id)
+                if target.side == actor.side or target_id not in snapshot or not res:
+                    continue
+                pool = target.subject.resources
+                lost = max(0.0, snapshot[target_id] - pool.current(res))
+                if lost <= 0:
+                    continue
+                if gain.event == "dealt":
+                    self._gain(battle, actor.member_id, gain, lost, target)
+                elif gain.event == "taken":
+                    self._gain(battle, target_id, gain, lost, target)
+                elif gain.event == "kill" and pool.get(res).empty:
+                    self._gain(battle, actor.member_id, gain, lost, target)
 
     # -- mastery -------------------------------------------------------------------------------
     def mastery_level(self, member_id, ability_id):

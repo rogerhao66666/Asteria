@@ -1800,3 +1800,24 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - **遺失訊息的處理：** 差異的 `base_revision` 對不上就拒絕套用並要求重新同步；不良連線（延遲 120 ms、5% 丟包）下各 client 的最終結果仍一致。
 - **工具：** `multiplayer/smoothing.py` 的 `SnapshotInterpolator`（遠端插值，限量外推）和 `InputPredictor`（本機預測與回放對帳）。純函式、有測試，**還沒接進遊戲畫面端**，需要在真實視窗調手感。
 - **限制：** 差量的 server 成本隨玩家數成長（每位玩家各有基準狀態）；列表以外的物件陣列沒有鍵時整份替換；事件（`events`）遺失仍無法補回（重新同步只補狀態）。
+
+
+## D28 — 補上先前列為「沒做」的 YEP 項目（2026-10-15，使用者要求「剩下的都做」）
+
+| 項目 | 做法 | 位置 |
+|---|---|---|
+| 圖片與點擊事件（PictureCommonEvents／PictureSpritesheets） | Asteria 原本沒有圖片系統，這次新增：`PictureManager`（顯示、移動／淡入淡出含緩動、切換格子、點擊命中）、世界指令 `SHOW_PICTURE`／`MOVE_PICTURE`／`SET_PICTURE_FRAME`／`ERASE_PICTURE`，玩家滑鼠點擊會啟動圖片的事件程式。狀態存在事件變數，隨存檔保存；在執行環境繪製在場景上方 | `runtime/pictures.py`、`runtime/world_command_handlers.py`、`runtime/playable_test_runtime.py` |
+| 自由放置裝飾物（GridFreeDoodads） | `DoodadDefinition`（精靈格、腳底碰撞、排序、對齊格距）、編輯器可復原的批次放置指令、隨機散布（有最小距離、可避開）。存在 `RpgDatabase.doodads` | `rpg/doodads.py`、`editor/doodads.py` |
+| 戰鬥天氣 | 戰鬥自己的天氣（不是地圖的）：`set_battle_weather` / 指令 `SET_BATTLE_WEATHER`；每位戰鬥單位帶 `weather.<種類>` 標籤（互動規則可依天氣加成，已測 3 倍傷害）；戰鬥畫面繪製；戰鬥結束時從存檔移除標籤 | `runtime/game_session.py` |
+| TP 模式（EnhancedTP） | `ResourceGain`：戰鬥資源在「造成傷害／受到傷害／擊倒／使用技能」時增加，可用固定值、傷害比例、佔最大生命比例，並可限制技能標籤。記錄實際增加量（受上限截斷後） | `rpg/battle_extensions.py` |
+| Spine 骨骼匯入 | `import_spine_json`：骨骼、插槽、旋轉／位移／縮放時間軸（含拆軸版本）、插槽附件切換、曲線（線性／階梯／貝茲近似）、y 軸翻轉；不支援的部分（網格、皮膚、約束、變形、事件）用 `unsupported_parts` 回報而不是亂猜 | `graphics/skeleton_import.py` |
+| 訊息圖示 `\I[n]` | 專案 `MessageSettings.icons` 把編號對應到圖示；沒對應時才畫方框 | `rpg/localization.py` |
+| 耐久即時生效 | 戰鬥中武器壞掉：立刻扣掉它給的數值與資源上限，並封鎖它授予的技能 | `runtime/game_session.py`、`rpg/battle.py` |
+
+**修掉的問題：** 不良連線下，重新同步的「回覆」本身遺失時 client 永遠停在舊狀態（因為版本號已經追上，不會再觸發）。現在 client 會在心跳時重送未被回覆的請求（`test_a_lost_resync_reply_is_asked_for_again`）。
+
+**限制：**
+- DragonBones 格式沒有做（只做 Spine 風格 JSON）；匯入的骨骼還沒接進場景或編輯器。
+- 圖片只能由事件或程式顯示；編輯器沒有圖片的編輯介面。點擊判斷用整張圖的矩形，不看透明像素。
+- 戰鬥天氣不會自己隨地圖或遭遇改變；由事件或程式設定。
+- 裝飾物的放置指令有了，但編輯器還沒有「裝飾物筆刷」按鈕。

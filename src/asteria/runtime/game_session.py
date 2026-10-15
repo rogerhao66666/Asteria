@@ -35,6 +35,7 @@ from asteria.runtime.backlog import MessageBacklog
 from asteria.runtime.character_control import CharacterController2DComponent
 from asteria.runtime.input import InputSnapshot
 from asteria.runtime.interaction import InteractionController
+from asteria.runtime.pictures import PictureManager
 from asteria.runtime.world_command_handlers import (
     move_entity_to_scene,
     register_standard_world_commands,
@@ -125,6 +126,7 @@ class GameSessionRuntime:
         self.field_bounds = None  # (x0, y0, x1, y1) of the field map
         self.walkers = {}  # entity id -> PathFollower (WALK_TO)
         self.timers = EventTimers(runtime_save.event_context)
+        self.pictures = PictureManager(runtime_save.event_context)
         self._localizer = None
         self._last_logged_line = None
         self.backlog = MessageBacklog(self._backlog_limit())
@@ -1407,6 +1409,61 @@ class GameSessionRuntime:
         mapped = dict(settings.icons) if settings is not None else {}
         return mapped.get(str(number), "")
 
+    BATTLE_WEATHER = "battle.weather"  # event variable: rain, snow, leaves, dust or "" for none
+    BATTLE_WEATHER_INTENSITY = "battle.weather.intensity"
+    WEATHER_TAG_PREFIX = "weather."
+
+    def battle_weather(self):
+        """``(kind, intensity, wind)`` of the weather set for battles, or ``None``. It is separate
+        from the map's weather: set it with ``SET_BATTLE_WEATHER`` or the event variables."""
+        kind = str(self.save.event_context.get_variable(self.BATTLE_WEATHER, "") or "")
+        if not kind or kind == "none":
+            return None
+        intensity = float(
+            self.save.event_context.get_variable(self.BATTLE_WEATHER_INTENSITY, 0.6) or 0.0
+        )
+        return (
+            kind,
+            max(0.0, min(1.0, intensity)),
+            float(self.save.event_context.get_variable("battle.weather.wind", 0.0) or 0.0),
+        )
+
+    def set_battle_weather(self, kind, intensity=0.6, wind=0.0):
+        """Choose the weather the next battles (and the running one) have; ``"none"`` clears it.
+        Every fighter carries the tag ``weather.<kind>`` while it lasts, so interaction rules can
+        react to it (rain strengthens lightning, snow slows...)."""
+        from asteria.runtime.environment2d import WEATHER_KINDS
+
+        kind = str(kind or "none")
+        if kind not in WEATHER_KINDS:
+            raise GameSessionError(f"unknown weather {kind!r}; choose from {WEATHER_KINDS}")
+        context = self.save.event_context
+        context.set_variable(self.BATTLE_WEATHER, "" if kind == "none" else kind)
+        context.set_variable(self.BATTLE_WEATHER_INTENSITY, float(intensity))
+        context.set_variable("battle.weather.wind", float(wind))
+        if self.mode == "battle" and self.battle is not None:
+            self._sync_weather_tags()
+        return self.battle_weather()
+
+    def _sync_weather_tags(self):
+        weather = self.battle_weather()
+        for member in self.battle.members.values():
+            tags = member.subject.tags
+            for tag in [t for t in tags.values() if t.startswith(self.WEATHER_TAG_PREFIX)]:
+                tags.remove(tag)
+            if weather is not None:
+                tags.add(f"{self.WEATHER_TAG_PREFIX}{weather[0]}")
+
+    def click_picture(self, x, y, size_of):
+        """The player clicked the screen at ``(x, y)``: the topmost clickable picture there starts
+        its event program (queued behind a running event). Returns that picture, or ``None``."""
+        if self.mode != "field":
+            return None
+        picture = self.pictures.hit_test(x, y, size_of)
+        if picture is not None:
+            self.pending_followups.append(picture.click_event)
+        return picture
+
     def note_music_heard(self, asset_id):
         """Playing a track opens it in the music room (``music.heard.<track id>``)."""
         for track in self.project.rpg_database.music_tracks.values():
@@ -1452,6 +1509,7 @@ class GameSessionRuntime:
             except Exception as exc:
                 self.event_errors.append(exc)
                 self.common_events.stop_all()
+        self.pictures.update(dt)
         if self.mode == "field":
             for finished in self.timers.update(dt):  # event timers (TIMER_START ...)
                 if finished.on_expire:
@@ -2057,6 +2115,7 @@ class GameSessionRuntime:
             extensions=self.extension_rules,
         )
         self.opening = "normal"
+        self._sync_weather_tags()
         extensions = self.battle.extensions
         if extensions is not None:
             self._load_mastery(extensions)
@@ -2825,6 +2884,10 @@ class GameSessionRuntime:
         )
 
     def _write_battle_heroes_to_save(self):
+        for member in self.battle.members.values():  # the weather tag lasts one battle
+            tags = member.subject.tags
+            for tag in [t for t in tags.values() if t.startswith(self.WEATHER_TAG_PREFIX)]:
+                tags.remove(tag)
         for member in self.battle.parties["heroes"].members:
             old = self.save.rpg_state.actor_snapshots.get(member.member_id)
             ability_state = None if old is None else old.ability_state

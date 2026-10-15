@@ -64,6 +64,7 @@ class MultiplayerClient:
         self._state = None  # the last full state, which deltas are applied to
         self._state_revision = -1
         self._want_resync = False
+        self._resync_since = None  # when an unanswered resync request was sent
         self._heartbeat = None
 
     @property
@@ -183,6 +184,11 @@ class MultiplayerClient:
             time.sleep(interval)
             try:
                 self.send_ping()
+                with self._state_lock:  # the answer to a resync request can be lost too
+                    waiting = self._resync_since
+                    if waiting is not None and time.monotonic() - waiting >= interval:
+                        self._want_resync = True
+                self._send_resync_if_needed()
             except MultiplayerClientError:
                 return
 
@@ -334,6 +340,7 @@ class MultiplayerClient:
                 if not isinstance(revision, int) or isinstance(revision, bool) or revision < 0:
                     raise ProtocolError("game update revision must be a non-negative integer")
                 if value.get("resync"):  # the server's answer to a resync request
+                    self._resync_since = None
                     self.revision = max(self.revision, revision)
                     self._remember_state(value, revision)
                     return True
@@ -377,6 +384,8 @@ class MultiplayerClient:
         if wanted:
             try:
                 self._send(message("resync_request"))
+                with self._state_lock:
+                    self._resync_since = time.monotonic()
             except MultiplayerClientError:
                 pass
 

@@ -69,15 +69,13 @@ QT_QPA_PLATFORM=offscreen python -m pytest -q      # 約 3–4 分鐘；預期 2
    翻譯表、訊息設定、音樂室、製作人員名單。
 4. 骨骼編輯器：骨骼、關鍵影格、預覽。
 
-**B. 沒做的 YEP 項目**
-5. 圖片點擊事件（PictureCommonEvents）、自由放置裝飾物（GridFreeDoodads）：Asteria 沒有「圖片」系統，
-   要先決定是否引入。
-6. 戰鬥天氣、EnhancedTP 的多種 TP 模式、DragonBones／Spine 匯入。
+**B. 沒做的 YEP 項目** — 已完成（D28）：圖片與點擊事件、裝飾物、戰鬥天氣、TP 模式、Spine 匯入。
+剩下：DragonBones 格式、把骨骼動畫接進場景與編輯器、圖片的編輯介面。
 
 **C. 要在你的機器上驗證（雲端做不了）**
 7. 勝利結算畫面、區域／滑冰／腳步聲、音樂室、訊息控制碼：在 Cocoa 真實視窗看一次畫面和手感。
 8. 手把、實體鍵盤、聽感、目視（原本審計的 B 項）。
-9. 耐久破損目前在**下一場戰鬥**才影響戰鬥數值（進行中的戰鬥維持原數值）：想要即時生效再改。
+9. ~~耐久破損即時生效~~ 已完成（D28）。
 
 **D. 多人連線**
 10. ~~差量更新~~ 已完成（D27，頻寬降到約 1/4）。
@@ -86,9 +84,8 @@ QT_QPA_PLATFORM=offscreen python -m pytest -q      # 約 3–4 分鐘；預期 2
 13. NAT 穿透／配對、真正的 adapter 沙箱（白名單只限制載入什麼）。
 
 **E. 小問題**
-14. `reference_projects/diablo_multiplayer_demo/build_project.py` 第 14–15 行超過 99 字元
-    （你上一個 commit 帶來的，`ruff check --select E501` 會報）。
-15. 訊息控制碼的圖示 `\I[n]` 目前畫成方框；CJK 文字要確認字型。
+14. ~~diablo_multiplayer_demo 長行~~ 已修。
+15. ~~訊息圖示~~ 已完成（D28，`MessageSettings.icons`）；CJK 文字要確認字型。
 
 ---
 
