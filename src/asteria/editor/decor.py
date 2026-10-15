@@ -172,6 +172,9 @@ def compact_widget(widget):
         # Inset headings use layout padding; do not also reserve a native title row.
         widget.setContentsMargins(0, 0, 0, 0)
     if isinstance(widget, QComboBox):
+        # Use a bounded scrolling list across every workspace, including dynamic pickers.
+        widget.setMaxVisibleItems(10)
+        widget.view().setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         if (
             widget.sizeAdjustPolicy() != QComboBox.AdjustToMinimumContentsLengthWithIcon
             and not widget.isEditable()

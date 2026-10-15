@@ -383,7 +383,7 @@ QComboBox::drop-down {
     border: 0; background: transparent; width: 22px;
     subcontrol-origin: padding; subcontrol-position: center right;
 }
-QComboBox { padding-right: 24px; }
+QComboBox { padding-right: 24px; combobox-popup: 0; }
 QComboBox QLineEdit, QComboBox QLineEdit:focus, QComboBox QLineEdit:hover {
     background: transparent; border: 0; border-radius: 0; margin: 0; padding: 0;
 }

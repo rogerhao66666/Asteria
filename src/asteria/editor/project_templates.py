@@ -34,10 +34,23 @@ class ProjectTemplate:
         return REPO / "reference_projects" / self.folder
 
     def available(self):
+        if self.template_id == "empty":
+            return True
+        if self.template_id == "basic_rpg":
+            return all(
+                next(t for t in TEMPLATES if t.template_id == key).available()
+                for key in ("party_rpg", "action_rpg")
+            )
         return (self.source / "project.asteria.json").is_file()
 
 
 TEMPLATES = (
+    ProjectTemplate(
+        "basic_rpg",
+        "Basic RPG (Recommended)",
+        "One hero, two enemies, Attack, Fire and Heal; a playable field and basic battles.",
+        "octopath_demo",
+    ),
     ProjectTemplate(
         "party_rpg",
         "Party RPG (Octopath-style)",
@@ -52,6 +65,7 @@ TEMPLATES = (
         "potions, a grid bag, an action bar with cooldowns; a town, a field and a side-view mine.",
         "diablo_demo",
     ),
+    ProjectTemplate("empty", "Completely Empty", "No sample data; build everything yourself.", ""),
 )
 
 
@@ -71,8 +85,21 @@ def create_from_template(template_id, name, folder):
     target = Path(folder).expanduser().resolve()
     if target.exists() and any(target.iterdir()):
         raise ValueError(f"{target} is not empty")
+    if template_id == "empty":
+        from asteria.core import Scene
+        from asteria.project import Project
+
+        target.mkdir(parents=True, exist_ok=True)
+        project_file = target / "project.asteria.json"
+        project = Project(name=name)
+        project.add_scene(Scene("Scene"))
+        project.save_json(project_file)
+        return project_file
+    source = template.source
+    if template_id == "basic_rpg":
+        source = next(t for t in TEMPLATES if t.template_id == "party_rpg").source
     shutil.copytree(
-        template.source,
+        source,
         target,
         dirs_exist_ok=True,
         ignore=shutil.ignore_patterns(*SKIP),
@@ -83,4 +110,11 @@ def create_from_template(template_id, name, folder):
     data = json.loads(project_file.read_text())
     data["name"] = name
     project_file.write_text(json.dumps(data, indent=2))
+    if template_id == "basic_rpg":
+        from .basic_rpg_map import add_editable_field
+        from .basic_rpg_template import simplify_basic_rpg
+
+        simplify_basic_rpg(target)
+        map_source = next(t for t in TEMPLATES if t.template_id == "action_rpg").source
+        add_editable_field(target, map_source)
     return project_file

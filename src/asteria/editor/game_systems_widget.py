@@ -387,10 +387,6 @@ class GameSystemsEditorWidget(QWidget):
         super().__init__(parent)
         self.controller = controller
         self.kind_box = QComboBox()
-        # A bounded list popup stays below the picker instead of growing like a native menu.
-        self.kind_box.setStyleSheet("QComboBox { combobox-popup: 0; }")
-        self.kind_box.setMaxVisibleItems(10)
-        self.kind_box.view().setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         for kind in KINDS:
             self.kind_box.addItem(kind.label, kind.kind_id)
         self.kind_box.currentIndexChanged.connect(self.refresh)

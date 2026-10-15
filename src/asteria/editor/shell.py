@@ -809,7 +809,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.save_as_action = QAction("Save As…", self)
         self.save_as_action.setShortcut("Ctrl+Shift+S")
         self.save_as_action.triggered.connect(self.save_project_as)
-        self.new_template_action = QAction("New from Template…", self)
+        self.new_template_action = QAction("New Project…", self)
         self.new_template_action.setShortcut("Ctrl+N")
         self.new_template_action.triggered.connect(self.new_from_template_dialog)
         file_menu.addAction(self.new_template_action)
@@ -2659,7 +2659,7 @@ class AsteriaEditorWindow(QMainWindow):
 def launch_editor(project=None):
     import sys
 
-    from PySide6.QtCore import QSettings
+    from PySide6.QtCore import QSettings, QStandardPaths
 
     from .theme import palette_name
 
@@ -2668,6 +2668,23 @@ def launch_editor(project=None):
     apply_asteria_theme(app, palette_name(settings))
     window = AsteriaEditorWindow(project)
     window.restore_layout(settings)
+    if project is None:
+        from asteria.project import Project
+
+        from .project_templates import create_from_template
+
+        # Keep the starter in writable user storage so edits survive editor restarts.
+        folder = (
+            Path(QStandardPaths.writableLocation(QStandardPaths.GenericDataLocation))
+            / "Asteria"
+            / "Projects"
+            / "Basic RPG"
+        )
+        path = folder / "project.asteria.json"
+        if not path.exists():
+            create_from_template("basic_rpg", "Basic RPG", folder)
+        starter = Project.load_json(path, window.document.component_registry)
+        window.set_project(starter, file_path=path)
     window.show()
     return app.exec()
 
