@@ -17,7 +17,7 @@ project-owned SQLite player state, editable reward templates, and a separate
 ECS combat, skills, monsters, NPCs, inventory, equipment and character saves are synchronized.
 The four-player sample remains for local/trusted-LAN development. See the
 [gameplay template](docs/audits/MULTIPLAYER_GAMEPLAY_TEMPLATE.md) for load steps and editable rules.
-The sections below are historical.
+The sections below are historical. To continue the work, see [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md).
 
 ```bash
 python -m pip install -e ".[pygame,editor,mv,dev]"

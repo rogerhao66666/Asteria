@@ -227,6 +227,8 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | 寵物的存檔與選單 | Pets 畫面只在專案有寵物物種時出現在暫停選單；起始寵物要改專案的 game start 資料（目前沒有表單） |
 | 多人連線 | 通用 TCP session／adapter、SQLite 原子掉落領取及完整角色存檔、可修改規則模板、獨立 Diablo 多人副本已完成四人原生驗收。Guest ID 為開發身分；伺服器重開保留角色並重建場次世界。公開網路部署、TLS、登入驗證與 WAN 品質驗收另行處理。見 [設計文件](audits/MULTIPLAYER_DESIGN.md)。 |
 
+接續工作與本機設定：[`NEXT_STEPS.md`](NEXT_STEPS.md)。
+
 ### D26 新增的系統（資料驅動，沒設定就沒有影響；細節見 DECISION_LOG D26）
 
 戰鬥規則擴充（嘲諷、吸血、過度擊殺、次數限制、熟練度、先制、偷竊）、敵人等級與難度、ATB／CTB 量表與預測順序、勝利結算畫面、區域與地板規則（地板傷害、滑冰、腳步聲、限制通行、潛行）、事件計時器、裝備耐久與暱稱、拆解、職業點、新遊戲＋、訊息控制碼與翻譯、訊息記錄／音樂室／製作人員名單、地形自動鋪磚、格狀尋路與 `WALK_TO`、2D 骨骼動畫，以及多人連線的 TLS／token／網路模擬／度量。
