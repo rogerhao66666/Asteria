@@ -140,6 +140,11 @@ class TileMapField:
         self.tilemap.validate()
         self.tileset.validate(len(self.tile_sheet.frames))
         self.query = TileMapQuery(self.tilemap)
+        from .map_rules_field import tile_area_keys
+
+        sets = self.session.project.rpg_database.map_rule_sets
+        layer = sets[sorted(sets)[0]].region_layer if sets else "regions"
+        self.session.bind_map_rules(tile_area_keys(self.tilemap, self.tileset, layer))
         player = self.session.player
         t = player.get(Transform)
         speed, half_w, half_h = 72.0, 5.0, 7.0
@@ -287,9 +292,16 @@ class TileMapField:
             solids = CollisionWorld.from_scene(session.scene).blocking_query(
                 exclude={session.player.id}
             )
+            rules = session.map_rules
+            restricted = None if rules is None else rules.block_query("player")
+            if rules is not None:  # a slippery floor carries the player on
+                x, y = self.controller.x, self.controller.y + hh
+                dx, dy = rules.runtime.shape_movement(session.player.id, dx, dy, x, y)
             moved = self.controller.move(
-                dx, dy, dt, CombinedQuery(self.query, solids)
-            )  # tiles + solid entities
+                dx, dy, dt, CombinedQuery(self.query, solids, restricted)
+            )  # tiles + solid entities + restricted areas
+            if rules is not None:
+                rules.settled(dt, blocked=bool((dx or dy) and moved == (0.0, 0.0)))
             x0, y0, x1, y1 = self.world_bounds()  # the map edge blocks like a wall
             self.controller.x = min(
                 max(self.controller.x, x0 + self.controller.half_width),

@@ -87,6 +87,11 @@ WORLD_COMMAND_ARGUMENTS = {
     "SUMMON": ("enemy_id", "actor_id", "count", "owner_id"),
     "SHOW_POPUP": ("text", "entity", "duration_ms", "kind"),
     "SET_CLASSES": ("actor_id", "class_ids", "unlock"),
+    "TIMER_START": ("timer_id", "seconds", "on_expire", "count_up", "show"),
+    "TIMER_STOP": ("timer_id",),
+    "TIMER_PAUSE": ("timer_id",),
+    "TIMER_RESUME": ("timer_id",),
+    "TIMER_ADD": ("timer_id", "seconds"),
 }
 
 
@@ -286,6 +291,36 @@ def register_standard_world_commands(router, session):
         )
 
     router.register("SET_CLASSES", set_classes)
+
+    def timer_command(name):
+        def handler(command):
+            timer_id = str(_required(command, "timer_id"))
+            timers = session.timers
+            try:
+                if name == "start":
+                    return timers.start(
+                        timer_id,
+                        _amount(command, "seconds", 0),
+                        on_expire=str(command.args.get("on_expire", "")),
+                        count_up=bool(command.args.get("count_up", False)),
+                        show=bool(command.args.get("show", True)),
+                    )
+                if name == "add":
+                    return timers.add(timer_id, _amount(command, "seconds", 0))
+                return getattr(timers, name)(timer_id)
+            except (KeyError, ValueError) as exc:
+                raise WorldCommandError(f"{command.name}: {exc}") from exc
+
+        return handler
+
+    for command_name, method in (
+        ("TIMER_START", "start"),
+        ("TIMER_STOP", "stop"),
+        ("TIMER_PAUSE", "pause"),
+        ("TIMER_RESUME", "resume"),
+        ("TIMER_ADD", "add"),
+    ):
+        router.register(command_name, timer_command(method))
     router.register("LEARN_RECIPE", learn_recipe)
     router.register("OPEN_CRAFTING", open_crafting)
     router.register(

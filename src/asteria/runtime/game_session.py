@@ -7,6 +7,7 @@ from asteria.core import Transform
 from asteria.core.lifecycle import LifecycleHookBus
 from asteria.core.scene_transition import carry_persistent_entities
 from asteria.events import EventRunner, EventScheduler, SceneEventRuntime, WorldCommandRouter
+from asteria.events.timers import EventTimers
 from asteria.gameplay import AbilityRegistry, AbilityRuntime, GameplaySubject
 from asteria.rpg import (
     ActorAbilityState,
@@ -29,6 +30,7 @@ from asteria.rpg.economy import ShopRuntime
 from asteria.rpg.enemies import RewardDefinition
 from asteria.rpg.quests import QuestLog
 from asteria.rpg.targeting import TargetRelation
+from asteria.runtime.character_control import CharacterController2DComponent
 from asteria.runtime.input import InputSnapshot
 from asteria.runtime.interaction import InteractionController
 from asteria.runtime.world_command_handlers import (
@@ -116,6 +118,8 @@ class GameSessionRuntime:
         self._pets_sent = set()
         self.enemy_levels = {}  # enemy member id -> level, when the project has level rules
         self._last_defeated = ()
+        self.map_rules = None  # FieldMapRules, set when a tile field binds area rules
+        self.timers = EventTimers(runtime_save.event_context)
         self.battle_log = []
         self._log_sequence = 0
         self._logged_turn = None
@@ -397,10 +401,64 @@ class GameSessionRuntime:
         systems["controllers"].extra_blocking = tiles
         systems["projectiles"].tiles = tiles
 
+    def bind_map_rules(self, keys_at):
+        """Apply the project's map rule set (floor damage, regions...) to the field's tiles.
+
+        ``keys_at(x, y)`` gives the area keys at a point (see ``runtime.map_rules_field``).
+        Returns the ``FieldMapRules`` (``None`` when the project defines no rule set).
+        """
+        from asteria.rpg.map_rules import MapRulesRuntime
+
+        from .map_rules_field import FieldMapRules
+
+        sets = self.project.rpg_database.map_rule_sets
+        if not sets:
+            self.map_rules = None
+            return None
+        ruleset = sets[sorted(sets)[0]]
+        runtime = MapRulesRuntime(ruleset, keys_at, self.save.event_context.get_switch)
+        self.map_rules = FieldMapRules(self, runtime)
+        self._field_simulation.clear()  # enemy systems rebuild with the new restrictions
+        return self.map_rules
+
+    def damage_party(self, resource_id, amount, *, can_kill=False):
+        """Floor-style damage to every active hero's saved resource; without ``can_kill`` a
+        hero is left on the last point."""
+        from dataclasses import replace
+
+        from asteria.gameplay import ResourcePool
+
+        state = self.save.rpg_state
+        for actor_id in state.party_active_actor_ids:
+            snapshot = state.actor_snapshots.get(actor_id)
+            if snapshot is None:  # not fought yet: start from the actor's present build
+                if actor_id not in self.project.rpg_database.actors:
+                    continue
+                build = self.resolve_actor_build(actor_id)
+                snapshot = RpgActorSnapshot(
+                    actor_id,
+                    build.stats.to_data(),
+                    build.resources.to_data(),
+                    build.tags.to_data(),
+                    None,
+                )
+            resources = ResourcePool.from_data(snapshot.resources)
+            if not resources.contains(resource_id):
+                continue
+            value = resources.get(resource_id)
+            floor = value.minimum if can_kill else value.minimum + 1.0
+            hurt = min(float(amount), max(0.0, value.current - floor))
+            if hurt <= 0:
+                continue
+            resources.change(resource_id, -hurt)
+            state.actor_snapshots[actor_id] = replace(snapshot, resources=resources.to_data())
+
     def field_update(self, dt):
         """Advance field enemies and spawn zones, then start any touched visible encounter."""
         if self.mode != "field" or self.event_busy:
             return None
+        if self.map_rules is not None:
+            self.map_rules.update(float(dt))
         systems = self._field_systems()
         self.progression_events = []
         action = self.action_scene
@@ -423,9 +481,15 @@ class GameSessionRuntime:
         self._frame_collision_world = None
         systems["action_combat"].update(self.scene, float(dt))
         systems["actions"].update(self.scene, float(dt))
+        rules = self.map_rules
+        controller = self.player.try_get(CharacterController2DComponent)
+        if rules is not None and controller is not None:
+            rules.shape_player_intent(controller)  # a slippery floor carries the player on
         with self.profiler.section("collision"):
             systems["controllers"].update(self.scene, float(dt))
             systems["hits"].update(self.scene, float(dt))
+        if rules is not None and controller is not None:
+            rules.settled(float(dt), blocked=controller.hit_wall)
         with self.profiler.section("projectiles"):
             systems["projectiles"].update(self.scene, float(dt))
         with self.profiler.section("combat"):
@@ -1086,6 +1150,10 @@ class GameSessionRuntime:
             except Exception as exc:
                 self.event_errors.append(exc)
                 self.common_events.stop_all()
+        if self.mode == "field":
+            for finished in self.timers.update(dt):  # event timers (TIMER_START ...)
+                if finished.on_expire:
+                    self.pending_followups.append(finished.on_expire)
         if self.pending_followups and not self.events.busy:
             self.events.clear_completed()
             self.events.start(self.pending_followups.pop(0))  # an interaction's follow-up event

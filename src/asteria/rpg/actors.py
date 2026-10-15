@@ -723,6 +723,7 @@ class RpgDatabase:
         self.pet_species = {}  # rpg.pets PetSpeciesDefinition
         self.battle_extension_rules = {}  # rpg.battle_extensions BattleExtensionRules
         self.enemy_level_rules = {}  # rpg.enemy_levels EnemyLevelRules
+        self.map_rule_sets = {}  # rpg.map_rules MapRuleSet
         self.world_interactions = {}
         self.drop_tables = {}
         self.rarities = {}  # rpg.loot RarityDefinition; empty = loot.DEFAULT_RARITIES
@@ -1106,6 +1107,11 @@ class RpgDatabase:
             "rules_id",
             "battle extension rules",
         )
+
+    def add_map_rule_set(self, value):
+        from .map_rules import MapRuleSet
+
+        return self._add_keyed(self.map_rule_sets, value, MapRuleSet, "rules_id", "map rule set")
 
     def add_enemy_level_rules(self, value):
         from .enemy_levels import EnemyLevelRules
@@ -1525,6 +1531,15 @@ class RpgDatabase:
             ),
             **(
                 {
+                    "map_rule_sets": [
+                        self.map_rule_sets[k].to_data() for k in sorted(self.map_rule_sets)
+                    ]
+                }
+                if self.map_rule_sets
+                else {}
+            ),
+            **(
+                {
                     "enemy_level_rules": [
                         self.enemy_level_rules[k].to_data() for k in sorted(self.enemy_level_rules)
                     ]
@@ -1774,4 +1789,8 @@ class RpgDatabase:
                 result.add_battle_extension_rules(BattleExtensionRules.from_data(x))
             for x in data.get("enemy_level_rules", ()):
                 result.add_enemy_level_rules(EnemyLevelRules.from_data(x))
+            from .map_rules import MapRuleSet
+
+            for x in data.get("map_rule_sets", ()):
+                result.add_map_rule_set(MapRuleSet.from_data(x))
         return result

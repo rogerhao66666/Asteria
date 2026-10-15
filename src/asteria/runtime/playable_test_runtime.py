@@ -1259,6 +1259,7 @@ class PlayableTestRuntime:
             self.action_hud.draw_world(self)
         self._draw_field_effects()
         self._draw_popups()
+        self._draw_event_timers()
         if self.game.cutscene_active:
             self._draw_dialogue()
             return
@@ -1294,6 +1295,14 @@ class PlayableTestRuntime:
                 self.message, self.width / 2, 92, size=22, color=(175, 235, 255), center=True
             )
         self._draw_dialogue()
+
+    def _draw_event_timers(self):
+        """Visible event timers (TIMER_START) stacked at the top right: ``MM:SS``."""
+        for row, (timer_id, clock) in enumerate(self.game.timers.display()):
+            low = (self.game.timers.remaining(timer_id) or 99) <= 10
+            color = (255, 150, 140) if low else (245, 245, 250)
+            self.panel((self.width - 118, 14 + row * 40, 104, 34))
+            self.text(clock, self.width - 66, 31 + row * 40, size=30, color=color, center=True)
 
     # -- popups (CMP-03: generic animated text above field characters) ----------------------------
     POPUP_COLORS = {"item": (170, 240, 170), "warning": (255, 170, 150), "info": (230, 232, 240)}
