@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import importlib
 import inspect
 import json
@@ -17,6 +18,7 @@ from socketserver import StreamRequestHandler, ThreadingTCPServer
 from typing import Any
 
 from .adapter import AdapterUpdate, GameNetworkAdapter
+from .delta import diff
 from .metrics import ServerMetrics
 from .protocol import (
     MAX_COMMAND_NAME,
@@ -44,6 +46,9 @@ class _Peer:
     last_input_sequence: int = 0
     last_input_at: float | None = None
     last_resync_at: float | None = None
+    delta: bool = False  # this peer reads state deltas
+    base_state: dict | None = None  # the last state sent to this peer
+    base_revision: int = -1  # revision of the message that carried base_state
 
 
 class MultiplayerServer(ThreadingTCPServer):
@@ -70,6 +75,7 @@ class MultiplayerServer(ThreadingTCPServer):
         authenticator=None,
         allow_insecure=False,
         metrics=None,
+        delta=True,
     ):
         max_players = int(max_players)
         if not 2 <= max_players <= 64:
@@ -87,6 +93,7 @@ class MultiplayerServer(ThreadingTCPServer):
         self.tls_context = None if tls is None else tls.server_context()
         self.authenticator = authenticator
         self.metrics = metrics or ServerMetrics()
+        self.delta_enabled = bool(delta)  # peers that ask for deltas get them
         self.max_players = max_players
         self.session_name = str(session_name).strip()[:64] or "Asteria Session"
         self.session_id = uuid.uuid4().hex[:12]
@@ -256,7 +263,7 @@ class MultiplayerServer(ThreadingTCPServer):
     def _peer_data(peer: _Peer):
         return {"player_id": peer.player_id, "display_name": peer.display_name}
 
-    def join(self, handler: _ClientHandler, display_name: str, guest_id=None):
+    def join(self, handler: _ClientHandler, display_name: str, guest_id=None, features=()):
         with self._room_lock:
             if len(self._peers) >= self.max_players:
                 raise RoomFullError("This session is full")
@@ -267,6 +274,7 @@ class MultiplayerServer(ThreadingTCPServer):
             if self.store is not None:
                 self.store.register_player(player_id, clean_name)
             peer = _Peer(player_id, clean_name, handler)
+            peer.delta = self.delta_enabled and "delta" in features
             self._peers[peer.player_id] = peer
             update = None
             try:
@@ -305,6 +313,7 @@ class MultiplayerServer(ThreadingTCPServer):
                     raise ValueError(f"adapter join state is not serializable: {exc}") from exc
                 raise
             self._revision = next_revision
+            self._set_baseline(peer, welcome.get("state"), next_revision)
             self.metrics.players(len(self._peers))
             return peer, welcome, update
 
@@ -354,6 +363,7 @@ class MultiplayerServer(ThreadingTCPServer):
                 peer.last_resync_at = now
                 state = self.adapter.initial_state() if self.adapter is not None else None
                 revision = self._revision
+                self._set_baseline(peer, state, revision)
             handler.send(
                 message(
                     "game_update",
@@ -512,13 +522,48 @@ class MultiplayerServer(ThreadingTCPServer):
             )
         )
 
+    @staticmethod
+    def _set_baseline(peer: _Peer, state, revision):
+        if peer.delta and isinstance(state, dict):
+            peer.base_state, peer.base_revision = copy.deepcopy(state), int(revision)
+
+    def _deliver(self, peer: _Peer, value: Mapping[str, Any]):
+        """Send ``value`` to one peer; a state update becomes a delta when the peer reads them."""
+        state = value.get("state")
+        if (
+            not peer.delta
+            or value.get("type") != "game_update"
+            or not isinstance(state, dict)
+            or value.get("resync")
+        ):
+            if peer.delta and value.get("type") == "game_update":
+                self._set_baseline(peer, state, value.get("revision", -1))
+            return peer.handler.send(value)
+        patch = diff(peer.base_state, state) if peer.base_state is not None else None
+        revision = value.get("revision", -1)
+        if peer.base_state is None or (isinstance(patch, dict) and set(patch) == {"$set"}):
+            self._set_baseline(peer, state, revision)
+            return peer.handler.send(value)  # nothing smaller than the whole state
+        slim = {k: v for k, v in value.items() if k != "state"}
+        slim.update(
+            state_delta=patch if patch is not None else {"$del": []},
+            base_revision=peer.base_revision,
+        )
+        sent = peer.handler.send(slim)
+        if sent:
+            before = len(json.dumps(value, separators=(",", ":"), ensure_ascii=False))
+            after = len(json.dumps(slim, separators=(",", ":"), ensure_ascii=False))
+            self.metrics.saved(max(0, before - after))
+        self._set_baseline(peer, state, revision)
+        return sent
+
     def broadcast(self, value: Mapping[str, Any], *, exclude=None):
         with self._publish_lock:
             with self._room_lock:
                 peers = tuple(self._peers.values())
             for peer in peers:
                 if peer.player_id != exclude:
-                    peer.handler.send(value)
+                    self._deliver(peer, value)
 
     def _send_error(self, handler: _ClientHandler, text: str):
         handler.send(message("server_error", message=str(text)[:240]))
@@ -582,6 +627,8 @@ class _ClientHandler(StreamRequestHandler):
                 self.server._send_error(self, "display_name must be text")
                 return
             guest_id = hello.get("guest_id")
+            raw = hello.get("features", ())
+            features = tuple(x for x in raw if isinstance(x, str)) if isinstance(raw, list) else ()
             authenticator = self.server.authenticator
             if authenticator is not None:
                 try:
@@ -592,7 +639,9 @@ class _ClientHandler(StreamRequestHandler):
                     return
             with self.server._publish_lock:
                 try:
-                    peer, welcome, update = self.server.join(self, display_name, guest_id)
+                    peer, welcome, update = self.server.join(
+                        self, display_name, guest_id, features
+                    )
                 except RoomFullError as exc:
                     self.server._send_error(self, str(exc))
                     return

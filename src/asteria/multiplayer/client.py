@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import socket
 import ssl
 import threading
@@ -10,6 +11,8 @@ import uuid
 from collections.abc import Callable, Mapping
 from typing import Any
 
+from .delta import DeltaError
+from .delta import apply as apply_delta
 from .protocol import (
     MAX_FRAME_BYTES,
     ProtocolError,
@@ -57,6 +60,9 @@ class MultiplayerClient:
         self._next_sequence = 0
         self._next_input_sequence = 0
         self.gaps = 0  # times a missed update was noticed (and a resync asked for)
+        self.delta_misses = 0  # deltas that did not fit the state held (a resync was asked for)
+        self._state = None  # the last full state, which deltas are applied to
+        self._state_revision = -1
         self._want_resync = False
         self._heartbeat = None
 
@@ -83,6 +89,7 @@ class MultiplayerClient:
         cafile=None,
         server_hostname=None,
         heartbeat=None,
+        delta=True,
     ):
         """Join a session.
 
@@ -107,6 +114,8 @@ class MultiplayerClient:
                 )
             reader = connection.makefile("rb")
             hello = message("hello", display_name=str(display_name))
+            if delta:
+                hello["features"] = ["delta"]  # state updates may arrive as deltas
             if guest_id is not None:
                 hello["guest_id"] = clean_guest_id(guest_id)
             if token is not None:
@@ -140,6 +149,9 @@ class MultiplayerClient:
             self.session_name = str(welcome.get("session_name", "")) or None
             self.max_players = int(welcome.get("max_players", 0))
             self.revision = int(welcome.get("revision", 0))
+            state = welcome.get("state")
+            self._state = copy.deepcopy(state) if isinstance(state, dict) else None
+            self._state_revision = self.revision
             players = welcome.get("players", ())
             self._players = {
                 str(item.get("player_id")): {
@@ -323,6 +335,7 @@ class MultiplayerClient:
                     raise ProtocolError("game update revision must be a non-negative integer")
                 if value.get("resync"):  # the server's answer to a resync request
                     self.revision = max(self.revision, revision)
+                    self._remember_state(value, revision)
                     return True
                 if revision <= self.revision:
                     return False
@@ -330,6 +343,32 @@ class MultiplayerClient:
                     self.gaps += 1
                     self._want_resync = True
                 self.revision = revision
+                if "state_delta" in value and not self._apply_state_delta(value, revision):
+                    return False  # it did not fit what we hold: wait for the full state
+                self._remember_state(value, revision)
+        return True
+
+    def _remember_state(self, value, revision):
+        state = value.get("state")
+        if isinstance(state, dict):
+            self._state, self._state_revision = copy.deepcopy(state), revision
+
+    def _apply_state_delta(self, value, revision):
+        """Rebuild the full ``state`` from a delta (so callers never see one); False when the
+        delta's base is not the state held here."""
+        delta = value.pop("state_delta")
+        base = value.pop("base_revision", None)
+        if self._state is None or base != self._state_revision:
+            self.delta_misses += 1
+            self._want_resync = True
+            return False
+        try:
+            value["state"] = apply_delta(self._state, delta)
+        except DeltaError:
+            self.delta_misses += 1
+            self._want_resync = True
+            return False
+        value["delta"] = True
         return True
 
     def _send_resync_if_needed(self):

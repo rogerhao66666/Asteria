@@ -80,8 +80,8 @@ QT_QPA_PLATFORM=offscreen python -m pytest -q      # 約 3–4 分鐘；預期 2
 9. 耐久破損目前在**下一場戰鬥**才影響戰鬥數值（進行中的戰鬥維持原數值）：想要即時生效再改。
 
 **D. 多人連線**
-10. 差量更新（目前每 tick 送完整狀態，約 40 KB／秒／人）。
-11. 本機預測與遠端插值（遊戲畫面端）。
+10. ~~差量更新~~ 已完成（D27，頻寬降到約 1/4）。
+11. 把 `multiplayer/smoothing.py` 的插值與預測接進 `runtime/multiplayer_preview.py`，並在真實視窗調手感（工具已寫好、有測試，還沒接）。
 12. 真實跨機器 WAN 量測（`python scripts/multiplayer_netbench.py` 只量了單機迴圈回送）。
 13. NAT 穿透／配對、真正的 adapter 沙箱（白名單只限制載入什麼）。
 

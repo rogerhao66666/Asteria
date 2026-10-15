@@ -21,6 +21,7 @@ class ServerMetrics:
         self.worst_tick_seconds = 0.0
         self.rejected = Counter()  # reason -> count (rate limits, bad auth ...)
         self.peak_players = 0
+        self.delta_bytes_saved = 0
 
     def received(self, kind, size):
         with self._lock:
@@ -41,6 +42,10 @@ class ServerMetrics:
     def reject(self, reason):
         with self._lock:
             self.rejected[str(reason)[:60]] += 1
+
+    def saved(self, size):
+        with self._lock:
+            self.delta_bytes_saved += int(size)
 
     def players(self, count):
         with self._lock:
@@ -65,4 +70,5 @@ class ServerMetrics:
                 "tick_cpu_share": self.tick_seconds / elapsed,
                 "rejected": dict(self.rejected),
                 "peak_players": self.peak_players,
+                "delta_bytes_saved": self.delta_bytes_saved,
             }

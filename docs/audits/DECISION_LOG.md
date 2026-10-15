@@ -1792,3 +1792,11 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - 多人連線：NAT 穿透／配對、真正的 adapter 沙箱、本機預測與插值、真實 WAN 測量仍未做；full-state 每 tick 約 40 KB／秒／人。
 - 需要真人或裝置的審計 B 項（實體鍵盤、手把、聽感、目視）依然無法在這個環境完成。
 - 既有的 `reference_projects/diablo_multiplayer_demo/build_project.py` 第 14–15 行超過 99 字元（不是這次改的）。
+
+
+## D27 — 多人連線：差量更新、插值與預測工具（2026-10-15）
+
+- **差量更新：** 見 MULTIPLAYER_DESIGN §9.4。4 位玩家打 Boss，每位玩家 server 送出由約 42 KB／秒降到約 10.6 KB／秒；tick CPU 佔比約 1% → 約 3.6%（同機測量）。向下相容：沒要求的 client 照舊收到完整狀態；既有的 83 個多人測試不改就通過。
+- **遺失訊息的處理：** 差異的 `base_revision` 對不上就拒絕套用並要求重新同步；不良連線（延遲 120 ms、5% 丟包）下各 client 的最終結果仍一致。
+- **工具：** `multiplayer/smoothing.py` 的 `SnapshotInterpolator`（遠端插值，限量外推）和 `InputPredictor`（本機預測與回放對帳）。純函式、有測試，**還沒接進遊戲畫面端**，需要在真實視窗調手感。
+- **限制：** 差量的 server 成本隨玩家數成長（每位玩家各有基準狀態）；列表以外的物件陣列沒有鍵時整份替換；事件（`events`）遺失仍無法補回（重新同步只補狀態）。

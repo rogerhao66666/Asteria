@@ -298,13 +298,23 @@ python -m asteria.multiplayer.server --host 0.0.0.0 --port 8765 \
 
 | 連線設定 | server 送出（位元組／秒／人） | tick 平均／最差（ms） | tick CPU 佔比 | client 偵測到的缺口 | 代理丟掉的訊息 | 最終 Boss 血量一致 |
 |---|---|---|---|---|---|---|
-| ideal | 42,312 | 0.508 / 1.874 | 1.0% | 0 | 0 | 是 |
-| lan 5ms | 42,318 | 0.536 / 2.374 | 1.1% | 0 | 0 | 是 |
-| wan 60ms | 39,811 | 0.571 / 3.051 | 1.1% | 0 | 0 | 是 |
-| bad wan 120ms 5% loss | 37,960 | 0.645 / 6.703 | 1.3% | 19 | 80 | 是 |
+| ideal | 10,648 | 1.8 / 4.527 | 3.6% | 0 | 0 | 是 |
+| lan 5ms | 10,601 | 1.75 / 3.986 | 3.5% | 0 | 0 | 是 |
+| wan 60ms | 10,057 | 1.815 / 6.186 | 3.6% | 0 | 0 | 是 |
+| bad wan 120ms 5% loss | 11,281 | 1.734 / 4.439 | 3.5% | 20 | 88 | 是 |
+
+（以上是**啟用差量更新後**的數字；上一版每個 tick 送完整狀態時約 42,000 位元組／秒／人、tick CPU 約 1%。）
 
 **誠實說明：**
-- 每個 tick 都送完整狀態（含戰鬥紀錄），約 40 KB／秒／人（約 320 kbps）。這是已知的成本；差量更新（delta）尚未做，玩家多或網路窄時是第一個要改的地方。
-- 「Boss 血量一致」比較的是 Boss 死亡這個最終結果；玩法中途的瞬時位置在不良連線上會落後一到數個 tick，沒有做本機預測與遠端插值（這屬於遊戲畫面端，仍待做）。
+- 差量更新讓頻寬降到約 10.6 KB／秒／人（約 85 kbps），是原本的四分之一；代價是 server 每個 tick 要為每位玩家算差量，tick CPU 佔比從約 1% 升到約 3.6%（4 位玩家、同機測量）。人數很多時這個成本會隨玩家數成長（每位玩家各有自己的基準狀態）。
+- 「Boss 血量一致」比較的是 Boss 死亡這個最終結果；玩法中途的瞬時位置在不良連線上會落後一到數個 tick。`multiplayer/smoothing.py` 提供遠端插值（`SnapshotInterpolator`）與本機預測（`InputPredictor`），**但還沒有接進遊戲畫面端**（`runtime/multiplayer_preview.py`），要在真實視窗調手感。
 - 丟包模擬丟的是整則訊息（像 UDP），比真正的 TCP 丟包更嚴苛；TCP 實際表現是延遲尖峰而不是缺口。
 - 跨機器、跨網路（真實 WAN）的測量尚未做。
+
+### 9.4 差量更新（delta）
+
+- client 在 `hello` 帶 `features: ["delta"]`（`connect(..., delta=True)` 預設）；server 預設開啟（`delta=False` 可關）。沒要求的 client 照舊收到完整狀態。
+- server 為每位玩家記住「上一次送給他的狀態」，之後只送差異（`state_delta`＋`base_revision`）；比整份狀態更大時就直接送整份。client 在內部重建完整 `state`，所以遊戲程式碼收到的 `game_update` 永遠有完整的 `state`（多一個 `delta: true` 標記）。
+- 差異格式見 `multiplayer/delta.py`（鍵差異、`$set`、`$append`、以 `player_id`／`id` 為鍵的物件清單）；`apply` 不會改動輸入，有隨機狀態往返測試。
+- `base_revision` 對不上、或差異套不上時，client 不會套用，而是要求重新同步（`delta_misses` 計數）。這也修復了遺失訊息造成的基準不一致。
+- `metrics.delta_bytes_saved` 記錄省下的位元組。

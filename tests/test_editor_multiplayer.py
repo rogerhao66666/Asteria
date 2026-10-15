@@ -140,7 +140,10 @@ def test_editor_launches_project_server_with_sqlite_and_rule_files(app, tmp_path
         process.setProcessEnvironment(environment)
         assert widget.start_local_server()
         assert process.waitForStarted(5000)
-        QTest.qWait(300)
+        for _ in range(100):  # the server process needs a moment to import and print READY
+            if "Server ready" in widget.log.toPlainText():
+                break
+            QTest.qWait(100)
         assert "Server running" in widget.local_server_status.text()
         assert "Server ready" in widget.log.toPlainText()
         assert (tmp_path / ".asteria" / "multiplayer.sqlite3").exists()
