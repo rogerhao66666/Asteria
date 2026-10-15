@@ -3,9 +3,14 @@ try:
     from PySide6.QtWidgets import (
         QCheckBox,
         QComboBox,
+        QDoubleSpinBox,
+        QFormLayout,
+        QGroupBox,
         QHBoxLayout,
         QLabel,
+        QLineEdit,
         QListWidget,
+        QPushButton,
         QSpinBox,
         QToolButton,
         QVBoxLayout,
@@ -25,6 +30,9 @@ class TilePaletteWidget(QWidget):
         modeChanged = Signal(str)
         terrainChanged = Signal(str)
         regionChanged = Signal(int, bool)
+        areaRuleChanged = Signal(object)
+        areaRuleRemoved = Signal(int)
+        createMapRuleSetRequested = Signal()
         doodadChanged = Signal(object)
 
     def __init__(self, parent=None):
@@ -33,6 +41,7 @@ class TilePaletteWidget(QWidget):
         super().__init__(parent)
         self._tileset = None
         self._doodads = {}
+        self._area_rule_set = None
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setSpacing(6)
@@ -91,6 +100,59 @@ class TilePaletteWidget(QWidget):
             row.addWidget(widget, 1)
             layout.addLayout(row)
 
+        self.region_rules = QGroupBox("Area Rule")
+        region_layout = QVBoxLayout(self.region_rules)
+        region_layout.setContentsMargins(8, 8, 8, 8)
+        self.region_rule_status = QLabel("Create a map ruleset to edit region rules")
+        self.region_rule_status.setObjectName("MutedLabel")
+        self.region_rule_status.setWordWrap(True)
+        region_layout.addWidget(self.region_rule_status)
+        self.region_rule_form = QWidget()
+        form = QFormLayout(self.region_rule_form)
+        form.setContentsMargins(0, 0, 0, 0)
+        self.damage_resource = QLineEdit()
+        self.damage_per_second = self._rule_spin()
+        self.can_kill = QCheckBox("Can defeat player")
+        self.slippery = QCheckBox("Slippery floor")
+        self.slip_seconds = self._rule_spin()
+        self.footstep_cue = QLineEdit()
+        self.step_distance = self._rule_spin(minimum=0.01)
+        self.blocks = QLineEdit()
+        self.visibility = self._rule_spin()
+        self.on_enter = QLineEdit()
+        self.on_leave = QLineEdit()
+        self.on_step = QLineEdit()
+        self.switch = QLineEdit()
+        for label, widget in (
+            ("Damage Resource", self.damage_resource),
+            ("Damage / Second", self.damage_per_second),
+            ("Lethal Damage", self.can_kill),
+            ("Movement", self.slippery),
+            ("Slide Seconds", self.slip_seconds),
+            ("Footstep Cue", self.footstep_cue),
+            ("Step Distance", self.step_distance),
+            ("Blocks Groups", self.blocks),
+            ("Enemy Visibility", self.visibility),
+            ("On Enter Event", self.on_enter),
+            ("On Leave Event", self.on_leave),
+            ("On Step Event", self.on_step),
+            ("Required Switch", self.switch),
+        ):
+            form.addRow(label, widget)
+        region_layout.addWidget(self.region_rule_form)
+        self.region_layer_label = QLabel("Region layer: regions")
+        self.region_layer_label.setObjectName("MutedLabel")
+        region_layout.addWidget(self.region_layer_label)
+        actions = QHBoxLayout()
+        self.apply_region_rule = QPushButton("Apply Rule")
+        self.remove_region_rule = QPushButton("Remove Rule")
+        self.create_map_ruleset = QPushButton("Create Map Ruleset")
+        actions.addWidget(self.apply_region_rule)
+        actions.addWidget(self.remove_region_rule)
+        actions.addWidget(self.create_map_ruleset)
+        region_layout.addLayout(actions)
+        layout.addWidget(self.region_rules)
+
         self.layer_label = QLabel("Layer: —")
         self.layer_label.setObjectName("MutedLabel")
         layout.addWidget(self.layer_label)
@@ -110,6 +172,11 @@ class TilePaletteWidget(QWidget):
         self.terrain_combo.currentTextChanged.connect(self.terrainChanged.emit)
         self.region_spin.valueChanged.connect(self._region_changed)
         self.region_erase.toggled.connect(self._region_changed)
+        self.apply_region_rule.clicked.connect(self._apply_region_rule)
+        self.remove_region_rule.clicked.connect(
+            lambda: self.areaRuleRemoved.emit(self.region_spin.value())
+        )
+        self.create_map_ruleset.clicked.connect(self.createMapRuleSetRequested.emit)
         self.doodad_combo.currentTextChanged.connect(self._doodad_changed)
         self.list.currentRowChanged.connect(self._row_changed)
 
@@ -130,6 +197,97 @@ class TilePaletteWidget(QWidget):
 
     def _region_changed(self, *_):
         self.regionChanged.emit(self.region_spin.value(), self.region_erase.isChecked())
+        self._refresh_area_rule_form()
+
+    @staticmethod
+    def _rule_spin(*, minimum=0.0):
+        spin = QDoubleSpinBox()
+        spin.setRange(minimum, 1_000_000_000.0)
+        spin.setDecimals(2)
+        return spin
+
+    def set_area_rule_set(self, ruleset):
+        """Bind the editor to the active runtime ruleset and its region tile layer."""
+        self._area_rule_set = ruleset
+        self.set_region_layer(ruleset.region_layer if ruleset is not None else "regions")
+        self._refresh_area_rule_form()
+
+    def set_region_layer(self, layer_name):
+        self.region_layer_label.setText(f"Region layer: {layer_name or 'regions'}")
+
+    def _refresh_area_rule_form(self):
+        from asteria.rpg.map_rules import AreaRule
+
+        ruleset = self._area_rule_set
+        enabled = ruleset is not None
+        self.region_rule_form.setEnabled(enabled)
+        self.apply_region_rule.setEnabled(enabled)
+        self.remove_region_rule.setEnabled(enabled)
+        self.create_map_ruleset.setVisible(not enabled)
+        if not enabled:
+            self.region_rules.setTitle("Area Rule")
+            self.region_rule_status.setText("Create a map ruleset to edit region rules")
+            return
+        region_id = self.region_spin.value()
+        key = f"region:{region_id}"
+        existing = ruleset.rule(key)
+        rule = existing or AreaRule(key)
+        self.region_rules.setTitle(f"Area Rule · {key}")
+        self.region_rule_status.setText(
+            f"Ruleset: {ruleset.rules_id} · " + ("Existing rule" if existing else "No rule yet")
+        )
+        self.remove_region_rule.setEnabled(existing is not None)
+        values = (
+            (self.damage_resource, rule.damage_resource),
+            (self.damage_per_second, rule.damage_per_second),
+            (self.can_kill, rule.can_kill),
+            (self.slippery, rule.slippery),
+            (self.slip_seconds, rule.slip_seconds),
+            (self.footstep_cue, rule.footstep_cue),
+            (self.step_distance, rule.step_distance),
+            (self.blocks, ", ".join(rule.blocks)),
+            (self.visibility, rule.visibility),
+            (self.on_enter, rule.on_enter),
+            (self.on_leave, rule.on_leave),
+            (self.on_step, rule.on_step),
+            (self.switch, rule.switch),
+        )
+        for widget, value in values:
+            widget.blockSignals(True)
+            if isinstance(widget, QCheckBox):
+                widget.setChecked(bool(value))
+            elif isinstance(widget, QDoubleSpinBox):
+                widget.setValue(float(value))
+            else:
+                widget.setText(str(value))
+            widget.blockSignals(False)
+
+    def _apply_region_rule(self):
+        from asteria.rpg.map_rules import AreaRule
+
+        if self._area_rule_set is None:
+            return
+        try:
+            rule = AreaRule(
+                f"region:{self.region_spin.value()}",
+                damage_resource=self.damage_resource.text(),
+                damage_per_second=self.damage_per_second.value(),
+                can_kill=self.can_kill.isChecked(),
+                slippery=self.slippery.isChecked(),
+                slip_seconds=self.slip_seconds.value(),
+                footstep_cue=self.footstep_cue.text(),
+                step_distance=self.step_distance.value(),
+                blocks=tuple(item.strip() for item in self.blocks.text().split(",")),
+                visibility=self.visibility.value(),
+                on_enter=self.on_enter.text(),
+                on_leave=self.on_leave.text(),
+                on_step=self.on_step.text(),
+                switch=self.switch.text(),
+            )
+        except ValueError as exc:
+            self.region_rule_status.setText(str(exc))
+            return
+        self.areaRuleChanged.emit(rule)
 
     def _doodad_changed(self, name):
         self.doodadChanged.emit(self._doodads.get(name))

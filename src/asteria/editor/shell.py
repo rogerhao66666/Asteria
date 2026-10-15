@@ -268,6 +268,9 @@ class AsteriaEditorWindow(QMainWindow):
         self.tile_palette.tileSelected.connect(self.viewport.set_selected_tile)
         self.tile_palette.terrainChanged.connect(self.viewport.set_terrain)
         self.tile_palette.regionChanged.connect(self.viewport.set_region)
+        self.tile_palette.areaRuleChanged.connect(self._set_region_rule)
+        self.tile_palette.areaRuleRemoved.connect(self._remove_region_rule)
+        self.tile_palette.createMapRuleSetRequested.connect(self._create_map_rule_set)
         self.tile_palette.doodadChanged.connect(self.viewport.set_doodad)
 
         self.skeleton_viewer = SkeletonViewerWidget(self)
@@ -1076,6 +1079,33 @@ class AsteriaEditorWindow(QMainWindow):
 
     def _sync_scene_authoring_context(self):
         self.set_tilemap_render_source(scene_authoring_source(self.document))
+        self._sync_region_rule_context()
+
+    def _sync_region_rule_context(self):
+        project = self.document.project
+        rule_sets = project.rpg_database.map_rule_sets if project is not None else {}
+        ruleset = rule_sets[sorted(rule_sets)[0]] if rule_sets else None
+        layer_name = ruleset.region_layer if ruleset is not None else "regions"
+        self.viewport.set_region_layer_name(layer_name)
+        self.tile_palette.set_area_rule_set(ruleset)
+
+    def _create_map_rule_set(self):
+        from .map_rule_authoring import MapRuleAuthoringController
+
+        MapRuleAuthoringController(self.document).create_ruleset()
+        self.refresh_all()
+
+    def _set_region_rule(self, rule):
+        from .map_rule_authoring import MapRuleAuthoringController
+
+        MapRuleAuthoringController(self.document).set_region_rule(rule)
+        self.refresh_all()
+
+    def _remove_region_rule(self, region_id):
+        from .map_rule_authoring import MapRuleAuthoringController
+
+        if MapRuleAuthoringController(self.document).remove_region_rule(region_id):
+            self.refresh_all()
 
     def _sync_animation_context(self):
         clip_set, current = animation_context(self.document)

@@ -50,20 +50,21 @@ def test_terrain_mode_paints_through_the_tool_state_and_undoes():
 def test_region_mode_creates_a_hidden_layer_once_and_one_undo_removes_all():
     tilemap, ground = _map()
     tools = TileToolState(active_layer=ground, region_id=3)
+    tools.region_layer_name = "hazards"
     tools.set_mode("region")
     stack = CommandStack()
     stack.execute(tools.build_command(tilemap, [(0, 0), (1, 0), (1, 0)]))
-    layer = next(item for item in tilemap.layers if item.name == "regions")
+    layer = next(item for item in tilemap.layers if item.name == "hazards")
     assert not layer.visible and layer.order > ground.order
     assert tile_at(tilemap, layer, 1, 0) == 3
     tools.region_id = 5
     stack.execute(tools.build_command(tilemap, [(1, 0)]))
-    assert sum(1 for item in tilemap.layers if item.name == "regions") == 1
+    assert sum(1 for item in tilemap.layers if item.name == "hazards") == 1
     assert tile_at(tilemap, layer, 1, 0) == 5
     stack.undo()
     assert tile_at(tilemap, layer, 1, 0) == 3
     stack.undo()
-    assert all(item.name != "regions" for item in tilemap.layers)
+    assert all(item.name != "hazards" for item in tilemap.layers)
 
 
 def test_region_erase_and_noop():
@@ -107,6 +108,9 @@ def test_palette_offers_the_terrains_and_doodads_and_drives_the_viewport(app):
     palette.region_spin.setValue(9)
     palette.region_erase.setChecked(True)
     assert (viewport.tile_tools.region_id, viewport.tile_tools.region_erase) == (9, True)
+    palette.set_region_layer("hazards")
+    viewport.set_region_layer_name("hazards")
+    assert viewport.tile_tools.region_layer_name == "hazards"
     tree = DoodadDefinition("tree", SHEET, frame=2)
     palette.set_doodads({"tree": tree})
     assert viewport.tile_tools.doodad is tree

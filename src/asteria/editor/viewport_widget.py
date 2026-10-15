@@ -129,6 +129,10 @@ class SceneViewportWidget(QWidget):
         self.tile_tools.region_erase = bool(erase)
         self.update()
 
+    def set_region_layer_name(self, layer_name):
+        self.tile_tools.region_layer_name = str(layer_name or "regions")
+        self.update()
+
     def set_doodad(self, definition):
         self.tile_tools.doodad = definition
 
