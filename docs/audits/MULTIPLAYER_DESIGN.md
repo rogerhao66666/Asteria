@@ -22,8 +22,8 @@
 - 最新驗證：完整回歸 **2307 passed（154.86s）**；四個獨立 Cocoa 遊戲程序擊殺原始 900 HP Cyclops，四位參與者各得 100 XP，原掉落由持有人拾取並穿戴，SQLite 重開保存資料。輸入由驗證程式送出。
 - 連線副本接收權威 ECS 快照，原遊戲 UI 送出命令；F5／存讀檔走 server，斷線暫停並以 F3 重連。詳見 [可載入遊戲模板](MULTIPLAYER_GAMEPLAY_TEMPLATE.md)。
 - Cocoa 原生編輯器自動化控制驗收：Host／Join／Ping／Leave／Stop、Profile 保存及 Save Profile 幾何置中均通過。
-- TCP 原型仍只適合本機／可信任 LAN；TLS、身分驗證、adapter 沙箱、NAT relay、封包延遲／抖動／丟棄測試和 CPU／頻寬量測尚未完成。
-- TCP 原型目前沒有 TLS、身分驗證或 adapter 沙箱，只適合本機／可信任 LAN 的開發驗證；不要直接暴露到公開網路。
+- 安全與網路品質補強（2026-10-15，見下方「N3 補強」）：TLS、簽章 token 身分驗證、對外暴露防護、adapter 載入白名單、丟包／延遲／抖動模擬、缺口偵測與重新同步、CPU／頻寬量測都已完成。仍未完成：NAT relay／配對、真正的 adapter 沙箱（白名單只限制能載入什麼，不限制載入後的程式做什麼）、跨機器 WAN 實測。
+- 預設仍是本機開發設定；要對外開放必須啟用 TLS 與 token（見「N3 補強」），否則 server 拒絕監聽 127.0.0.1 以外的位址。
 
 ---
 
@@ -207,7 +207,7 @@ python -m asteria.multiplayer.server \
   --rules .asteria/multiplayer-rules.json
 ```
 
-這是本機開發流程。目前尚未提供 TLS、身分驗證、adapter 沙箱、公開配對或 NAT relay；在這些能力完成前，不要把 server 暴露到公開網路。
+這是本機開發流程。公開配對與 NAT relay 仍未提供。要讓 LAN／Internet 的玩家連線，請看下一節「N3 補強」。
 
 ---
 
@@ -266,3 +266,45 @@ python -m asteria.multiplayer.server \
 ## 8. 範圍紀錄
 
 D22 原 ARPG 計畫把該計畫中的多人連線實作列為「不在這次範圍」。2026-10-14 使用者進一步說明，多人連線應是 Asteria 各類遊戲皆可導入的通用能力；Diablo 式 ARPG 合作打 Boss 只是第一個驗證案例。本文件因此記錄引擎層的通用連線方向，不把能力範圍限定為 ARPG。TCP 原型與 GUI lobby 已開始實作；場次狀態保存、正式同步模型、網路品質門檻和產品化部署仍待後續驗證與決策。
+
+
+---
+
+## 9. N3 補強：安全與網路品質（2026-10-15）
+
+### 9.1 對外暴露防護、TLS 與身分驗證
+
+- **暴露防護：** server 只接受監聽 `127.0.0.1`／`localhost`／`::1`；要監聽其他位址，必須同時啟用 TLS 與 token，或明確傳 `--insecure-lan`（可信任網路）。編輯器選擇非本機位址時會自動帶 `--insecure-lan` 並在 Log 顯示警告——這是使用者明確的選擇，不是預設。
+- **TLS：** `--tls-cert cert.pem --tls-key key.pem`。每條連線在讀取任何資料前先做 TLS 握手（TLS 1.2 以上）。Client：`connect(..., tls=True, cafile="cert.pem")` 會驗證憑證與主機名稱；`tls=client_context(verify=False)` 只供拋棄式測試憑證使用。
+- **Token：** 簽章 token（HMAC-SHA256），格式 `<player>.<到期時間>.<簽章>`。server 以 `--auth-secret-file`（至少 16 位元組）啟用；`hello` 必須帶 `token`，token 的玩家必須和 `guest_id` 相符（沒帶 `guest_id` 時以 token 為準）。偽造、過期、改名、改到期時間的 token 都會被拒絕。發放：`python -m asteria.multiplayer.security issue --secret-file secret.txt --player alice --hours 24`。Client：`connect(..., token=...)`。
+- **Adapter 白名單：** `--adapter-allow asteria.multiplayer --adapter-allow mygame`（可重複）只允許從這些模組前綴載入 adapter。**這不是沙箱**：載入後的 Python 程式仍擁有 server 行程的所有權限；它只防止 server 被指示去載入任意模組。
+- 範例（對外開放）：
+
+```sh
+python -m asteria.multiplayer.server --host 0.0.0.0 --port 8765 \
+  --adapter asteria.multiplayer.boss_demo:build_boss_adapter --adapter-allow asteria.multiplayer \
+  --tls-cert cert.pem --tls-key key.pem --auth-secret-file secret.txt --metrics-file metrics.json
+```
+
+### 9.2 缺口偵測與重新同步
+
+`game_update` 的 `revision` 逐一遞增。client 發現缺號（或 `pong` 顯示 server 的 revision 更新）會送 `resync_request`，server 回一則 `resync: true` 的 `game_update`（目前完整狀態）。每位玩家 0.25 秒內只受理一次（`resync rate` 計入拒絕）。`connect(..., heartbeat=0.5)` 會定時 ping，補抓「最後一則更新遺失」的情況。`client.gaps` 記錄遺失次數。
+
+### 9.3 網路模擬與量測
+
+- `asteria.multiplayer.netsim.LinkSimulator`：以 JSON 行為單位的 TCP 代理，可設定單向延遲、抖動、丟包（整則訊息；握手不丟）與頻寬上限；保持順序。
+- `server.metrics_snapshot()` / `--metrics-file`：各類訊息數與位元組、tick 平均／最差耗時、tick CPU 佔比、拒絕原因、尖峰人數。
+- `scripts/multiplayer_netbench.py`：4 位玩家打 Boss 的量測。**迴圈回送（loopback）、client 與 server 在同一台機器同一行程**，所以 CPU 是上限而非專用主機的數字；頻寬是 server 實際寫出的位元組。本機結果（每個設定跑 6 秒）：
+
+| 連線設定 | server 送出（位元組／秒／人） | tick 平均／最差（ms） | tick CPU 佔比 | client 偵測到的缺口 | 代理丟掉的訊息 | 最終 Boss 血量一致 |
+|---|---|---|---|---|---|---|
+| ideal | 42,312 | 0.508 / 1.874 | 1.0% | 0 | 0 | 是 |
+| lan 5ms | 42,318 | 0.536 / 2.374 | 1.1% | 0 | 0 | 是 |
+| wan 60ms | 39,811 | 0.571 / 3.051 | 1.1% | 0 | 0 | 是 |
+| bad wan 120ms 5% loss | 37,960 | 0.645 / 6.703 | 1.3% | 19 | 80 | 是 |
+
+**誠實說明：**
+- 每個 tick 都送完整狀態（含戰鬥紀錄），約 40 KB／秒／人（約 320 kbps）。這是已知的成本；差量更新（delta）尚未做，玩家多或網路窄時是第一個要改的地方。
+- 「Boss 血量一致」比較的是 Boss 死亡這個最終結果；玩法中途的瞬時位置在不良連線上會落後一到數個 tick，沒有做本機預測與遠端插值（這屬於遊戲畫面端，仍待做）。
+- 丟包模擬丟的是整則訊息（像 UDP），比真正的 TCP 丟包更嚴苛；TCP 實際表現是延遲尖峰而不是缺口。
+- 跨機器、跨網路（真實 WAN）的測量尚未做。

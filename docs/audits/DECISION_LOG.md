@@ -1760,3 +1760,35 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **限制：** 這個 Boss 是可由兩個 client 真正連線共同操作的 network adapter 範例，尚未把既有 `reference_projects/diablo_demo` 的 ECS、素材、技能與玩家存檔改成多人。沒有 TLS、身分驗證、NAT relay、adapter 沙箱、網路 delay／jitter／loss 注入或 CPU／頻寬量測；不可宣稱公開 Internet 可用。
 
 **實機與下一步：** 全部介面已加到 Multiplayer workspace；桌面 Cocoa 驗收尚未完成，因本機螢幕鎖定、GUI automation 無法取得視窗。解鎖後需確認版面、選取 Boss 範例、本機 host/client、第二 client 加入、兩端 Boss HP 一致、離開與停止 server，並保存 Cocoa 證據截圖。
+
+
+## D26 — 補上與 YEP 插件、Godot 比對後缺的功能（2026-10-15，使用者要求「全部都要做」）
+
+**來源：** 使用者提供 YEP_Full_Collection.zip（258 個 RPG Maker MV 插件，不重複的系統約 150 個）和 Godot 原始碼。我把插件說明逐一對照 Asteria，列出缺口，再分七批補上。YEP 只當功能清單，沒有複製任何程式碼。每個功能都是資料驅動、可序列化，沒設定就完全不影響既有行為（舊存檔和專案照常載入）。
+
+**驗證：** 每批都跑完整測試套件（結束時 2400+ passed）、`ruff format`、`ruff check`（含 E501）。畫面類功能用 dummy 視訊驅動繪製成圖片檢查；**沒有**在 Cocoa 真實視窗驗證，也沒有人眼確認。
+
+| 批次 | 內容 | 位置 |
+|---|---|---|
+| 1 戰鬥規則 | 嘲諷、吸血、過度擊殺、技能次數限制、技能熟練度、先制／被偷襲、站位列標記、偷竊；敵人等級與難度滑桿 | `rpg/battle_extensions.py`、`rpg/enemy_levels.py` |
+| 2 ATB／CTB、結算 | 回合量表、預測行動順序、ATB 時鐘（active／semi／wait）；勝利結算畫面（獎勵、升級、掉落，manifest `battle.victory_aftermath` 開啟） | `rpg/battle_scheduler.py`、`rpg/victory.py`、`runtime/victory_screen.py` |
+| 3 地圖規則 | 區域（region／tag）事件、地板傷害、滑冰地板、腳步聲、限制通行、潛行視野；事件計時器 | `rpg/map_rules.py`、`runtime/map_rules_field.py`、`events/timers.py` |
+| 4 物品與系統 | 裝備耐久與破損／修理、裝備暱稱、拆解、職業點、新遊戲＋ | `rpg/durability.py`、`disassembly.py`、`job_points.py`、`new_game_plus.py` |
+| 5 訊息與前端 | 文字控制碼與巨集、翻譯表（地區→語言→預設）、訊息記錄、音樂室、製作人員名單 | `presentation/message_codes.py`、`rpg/localization.py`、`rpg/extras.py`、`runtime/extras_screens.py` |
+| 6 引擎 | 地形自動鋪磚（含編輯器可復原的指令）、格狀尋路與 WALK_TO、2D 骨骼動畫（階層、關鍵影格、混合、兩段 IK） | `graphics/autotile.py`、`runtime/navigation.py`、`graphics/skeleton.py` |
+| 7 多人連線 | TLS、簽章 token、對外暴露防護、adapter 白名單、缺口偵測與重新同步、網路模擬、度量與量測 | `multiplayer/security.py`、`netsim.py`、`metrics.py`（詳見 MULTIPLAYER_DESIGN §9） |
+
+**更正先前的判斷：** 我之前列了「Y 排序」為缺口，查證後引擎已經用腳底 y 當 depth 排序精靈（`tilemap_field`、`tile_scene_view`），所以沒有做。
+
+**限制（沒做或不完整）：**
+- 區域層要用編輯器的 tile 繪製工具畫一個叫 `regions` 的圖層（tile id 即區域編號）；編輯器沒有專用的區域畫筆與規則表單，規則目前用資料／Python 設定。
+- 滑冰地板在 `TileMapField`（地圖場景）與動作場景的控制器路徑都接了；沒有在實機視窗手感驗證。
+- 地形自動鋪磚有編輯器指令（可復原），但編輯器的 Tiles 面板還沒有「地形筆刷」按鈕。
+- 尋路是格狀 A*（不是 navmesh）；`WALK_TO` 不會等走完才繼續（走完會把開關 `walk.<id>.done` 打開）。
+- 骨骼動畫是資料與取樣／繪製轉換，沒有編輯器；也沒有匯入 DragonBones／Spine 檔案。
+- 耐久度的破損在**下一場戰鬥**才反映到戰鬥數值（已進行中的戰鬥維持原數值）。
+- 訊息控制碼的圖示（`\I[n]`）目前畫成方框佔位；CJK 文字要看字型是否支援。
+- 沒做的 YEP 項目：圖片點擊事件（PictureCommonEvents）、自由放置裝飾物（GridFreeDoodads）、戰鬥天氣、EnhancedTP 等 TP 模式；Asteria 沒有「圖片」系統，要先決定是否引入。
+- 多人連線：NAT 穿透／配對、真正的 adapter 沙箱、本機預測與插值、真實 WAN 測量仍未做；full-state 每 tick 約 40 KB／秒／人。
+- 需要真人或裝置的審計 B 項（實體鍵盤、手把、聽感、目視）依然無法在這個環境完成。
+- 既有的 `reference_projects/diablo_multiplayer_demo/build_project.py` 第 14–15 行超過 99 字元（不是這次改的）。

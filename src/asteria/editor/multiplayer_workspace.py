@@ -794,6 +794,11 @@ class MultiplayerWorkspaceWidget(QWidget):
         adapter = self.adapter_factory.text().strip()
         if adapter:
             arguments.extend(("--adapter", adapter))
+        if host not in ("127.0.0.1", "localhost", "::1"):
+            # Choosing a LAN address here is the explicit decision the server asks for: it listens
+            # beyond this machine without TLS or tokens (trusted network only).
+            arguments.append("--insecure-lan")
+            self._append_log("Listening beyond this machine without encryption (trusted LAN only)")
         self._server_process.setArguments(arguments)
         project_path = getattr(self.document, "file_path", None)
         if project_path is not None:

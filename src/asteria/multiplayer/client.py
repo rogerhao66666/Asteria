@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import socket
+import ssl
 import threading
 import time
 import uuid
@@ -55,6 +56,9 @@ class MultiplayerClient:
         self._players: dict[str, dict[str, str]] = {}
         self._next_sequence = 0
         self._next_input_sequence = 0
+        self.gaps = 0  # times a missed update was noticed (and a resync asked for)
+        self._want_resync = False
+        self._heartbeat = None
 
     @property
     def connected(self):
@@ -66,7 +70,27 @@ class MultiplayerClient:
         with self._state_lock:
             return tuple(dict(item) for item in self._players.values())
 
-    def connect(self, host: str, port: int, display_name="Player", *, guest_id=None, timeout=4.0):
+    def connect(
+        self,
+        host: str,
+        port: int,
+        display_name="Player",
+        *,
+        guest_id=None,
+        timeout=4.0,
+        token=None,
+        tls=None,
+        cafile=None,
+        server_hostname=None,
+        heartbeat=None,
+    ):
+        """Join a session.
+
+        ``token``: a signed player token, when the server requires one. ``tls``: ``True`` (verify
+        the server's certificate, trusting ``cafile`` if given) or a ready ``ssl.SSLContext``; the
+        server name checked is ``server_hostname`` or ``host``. ``heartbeat``: seconds between
+        pings, which also notice a missed final update (the pong carries the server's revision).
+        """
         with self._state_lock:
             if self._connected or self._socket is not None:
                 raise MultiplayerClientError("client is already connected")
@@ -74,17 +98,26 @@ class MultiplayerClient:
         try:
             connection = socket.create_connection((str(host), int(port)), timeout=float(timeout))
             connection.settimeout(float(timeout))
+            if tls:
+                from .security import client_context
+
+                context = tls if isinstance(tls, ssl.SSLContext) else client_context(cafile)
+                connection = context.wrap_socket(
+                    connection, server_hostname=str(server_hostname or host)
+                )
             reader = connection.makefile("rb")
             hello = message("hello", display_name=str(display_name))
             if guest_id is not None:
                 hello["guest_id"] = clean_guest_id(guest_id)
+            if token is not None:
+                hello["token"] = str(token)
             connection.sendall(encode_frame(hello))
             welcome = self._read_message(reader)
             if welcome.get("type") == "server_error":
                 raise MultiplayerClientError(str(welcome.get("message", "join rejected")))
             if welcome.get("type") != "welcome":
                 raise MultiplayerClientError("server did not send a welcome message")
-        except (OSError, ProtocolError, ValueError) as exc:
+        except (OSError, ProtocolError, ValueError, ssl.SSLError) as exc:
             try:
                 if "reader" in locals():
                     reader.close()
@@ -123,7 +156,23 @@ class MultiplayerClient:
             daemon=True,
         )
         self._receive_thread.start()
+        if heartbeat:
+            self._heartbeat = threading.Thread(
+                target=self._heartbeat_loop,
+                args=(float(heartbeat),),
+                name=f"AsteriaNetworkHeartbeat-{self.player_id or 'peer'}",
+                daemon=True,
+            )
+            self._heartbeat.start()
         return dict(welcome)
+
+    def _heartbeat_loop(self, interval):
+        while self.connected:
+            time.sleep(interval)
+            try:
+                self.send_ping()
+            except MultiplayerClientError:
+                return
 
     def send_ping(self):
         return self._send(message("ping", client_time=time.monotonic()))
@@ -218,6 +267,7 @@ class MultiplayerClient:
                 value = self._read_message(reader)
                 if self._update_membership(value):
                     self._notify(self._on_message, value)
+                self._send_resync_if_needed()
         except (OSError, ProtocolError, MultiplayerClientError) as exc:
             reason = str(exc) or reason
         finally:
@@ -262,14 +312,34 @@ class MultiplayerClient:
                     }
             elif kind == "peer_left":
                 self._players.pop(str(value.get("player_id", "")), None)
+            elif kind == "pong":
+                revision = value.get("revision")
+                if isinstance(revision, int) and not isinstance(revision, bool):
+                    if revision > self.revision:
+                        self._want_resync = True  # the server is ahead: an update never arrived
             elif kind == "game_update":
                 revision = value.get("revision")
                 if not isinstance(revision, int) or isinstance(revision, bool) or revision < 0:
                     raise ProtocolError("game update revision must be a non-negative integer")
+                if value.get("resync"):  # the server's answer to a resync request
+                    self.revision = max(self.revision, revision)
+                    return True
                 if revision <= self.revision:
                     return False
+                if revision > self.revision + 1:
+                    self.gaps += 1
+                    self._want_resync = True
                 self.revision = revision
         return True
+
+    def _send_resync_if_needed(self):
+        with self._state_lock:
+            wanted, self._want_resync = self._want_resync, False
+        if wanted:
+            try:
+                self._send(message("resync_request"))
+            except MultiplayerClientError:
+                pass
 
     @staticmethod
     def _notify(callback, value):

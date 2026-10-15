@@ -17,6 +17,7 @@ from socketserver import StreamRequestHandler, ThreadingTCPServer
 from typing import Any
 
 from .adapter import AdapterUpdate, GameNetworkAdapter
+from .metrics import ServerMetrics
 from .protocol import (
     MAX_COMMAND_NAME,
     MAX_FRAME_BYTES,
@@ -27,6 +28,7 @@ from .protocol import (
     encode_frame,
     message,
 )
+from .security import AuthError, TlsSettings, TokenAuthenticator, check_exposure, load_secret
 
 
 class RoomFullError(ValueError):
@@ -41,6 +43,7 @@ class _Peer:
     last_sequence: int = 0
     last_input_sequence: int = 0
     last_input_at: float | None = None
+    last_resync_at: float | None = None
 
 
 class MultiplayerServer(ThreadingTCPServer):
@@ -63,10 +66,27 @@ class MultiplayerServer(ThreadingTCPServer):
         store=None,
         store_path=None,
         rules=None,
+        tls=None,
+        authenticator=None,
+        allow_insecure=False,
+        metrics=None,
     ):
         max_players = int(max_players)
         if not 2 <= max_players <= 64:
             raise ValueError("max_players must be between 2 and 64")
+        if tls is not None and not isinstance(tls, TlsSettings):
+            raise TypeError("tls must be TlsSettings")
+        if authenticator is not None and not isinstance(authenticator, TokenAuthenticator):
+            raise TypeError("authenticator must be TokenAuthenticator")
+        check_exposure(
+            server_address[0],
+            tls=tls is not None,
+            auth=authenticator is not None,
+            allow_insecure=allow_insecure,
+        )
+        self.tls_context = None if tls is None else tls.server_context()
+        self.authenticator = authenticator
+        self.metrics = metrics or ServerMetrics()
         self.max_players = max_players
         self.session_name = str(session_name).strip()[:64] or "Asteria Session"
         self.session_id = uuid.uuid4().hex[:12]
@@ -185,6 +205,7 @@ class MultiplayerServer(ThreadingTCPServer):
                                 events=[dict(event) for event in update.events],
                             )
                         )
+                self.metrics.tick(time.monotonic() - started)
             except Exception as exc:
                 print(f"ERROR game adapter tick failed: {exc}", file=sys.stderr, flush=True)
                 with self._publish_lock:
@@ -210,6 +231,22 @@ class MultiplayerServer(ThreadingTCPServer):
             encode_frame(payload)
         except ProtocolError as exc:
             raise ValueError(f"adapter update is not serializable: {exc}") from exc
+
+    def metrics_snapshot(self):
+        """Traffic and tick-cost counters since the server started (see ``ServerMetrics``)."""
+        with self._room_lock:
+            players = len(self._peers)
+        return self.metrics.snapshot(players=players)
+
+    def handle_error(self, request, client_address):
+        # A failed TLS handshake or a dropped connection is routine; do not print a traceback.
+        import ssl
+
+        exc = sys.exc_info()[1]
+        if isinstance(exc, ssl.SSLError | ConnectionError | TimeoutError | OSError):
+            self.metrics.reject("connection")
+            return
+        super().handle_error(request, client_address)
 
     def participants(self):
         with self._room_lock:
@@ -268,6 +305,7 @@ class MultiplayerServer(ThreadingTCPServer):
                     raise ValueError(f"adapter join state is not serializable: {exc}") from exc
                 raise
             self._revision = next_revision
+            self.metrics.players(len(self._peers))
             return peer, welcome, update
 
     def leave(self, player_id: str):
@@ -296,6 +334,37 @@ class MultiplayerServer(ThreadingTCPServer):
     def handle_input(self, handler: _ClientHandler, value: Mapping[str, Any]):
         with self._publish_lock:
             self._handle_input_locked(handler, value)
+
+    resync_min_interval = 0.25  # seconds between one player's resync requests
+
+    def handle_resync(self, handler: _ClientHandler):
+        """A client noticed it missed updates (a revision gap): send it the current state."""
+        with self._publish_lock:
+            with self._room_lock:
+                peer = self._peers.get(handler.player_id)
+                if peer is None:
+                    return
+                now = time.monotonic()
+                if (
+                    peer.last_resync_at is not None
+                    and now - peer.last_resync_at < self.resync_min_interval
+                ):
+                    self.metrics.reject("resync rate")
+                    return
+                peer.last_resync_at = now
+                state = self.adapter.initial_state() if self.adapter is not None else None
+                revision = self._revision
+            handler.send(
+                message(
+                    "game_update",
+                    revision=revision,
+                    origin_player_id=None,
+                    command_id="",
+                    resync=True,
+                    state=dict(state) if state is not None else None,
+                    events=[],
+                )
+            )
 
     def _handle_input_locked(self, handler: _ClientHandler, value: Mapping[str, Any]):
         player_id = handler.player_id
@@ -493,6 +562,10 @@ class _ClientHandler(StreamRequestHandler):
     server: MultiplayerServer
 
     def setup(self):
+        context = self.server.tls_context
+        if context is not None:  # encrypt first: nothing is read in the clear
+            self.request.settimeout(self.server.handshake_timeout)
+            self.request = context.wrap_socket(self.request, server_side=True)
         super().setup()
         self.player_id = None
         self._send_lock = threading.Lock()
@@ -509,6 +582,14 @@ class _ClientHandler(StreamRequestHandler):
                 self.server._send_error(self, "display_name must be text")
                 return
             guest_id = hello.get("guest_id")
+            authenticator = self.server.authenticator
+            if authenticator is not None:
+                try:
+                    guest_id = authenticator.verify(hello.get("token"), guest_id)
+                except AuthError as exc:
+                    self.server.metrics.reject("auth")
+                    self.server._send_error(self, f"authentication failed: {exc}")
+                    return
             with self.server._publish_lock:
                 try:
                     peer, welcome, update = self.server.join(self, display_name, guest_id)
@@ -529,7 +610,15 @@ class _ClientHandler(StreamRequestHandler):
                     return
                 kind = value["type"]
                 if kind == "ping":
-                    self.send(message("pong", client_time=value.get("client_time")))
+                    self.send(
+                        message(
+                            "pong",
+                            client_time=value.get("client_time"),
+                            revision=self.server._revision,
+                        )
+                    )
+                elif kind == "resync_request":
+                    self.server.handle_resync(self)
                 elif kind == "command":
                     self.server.handle_command(self, value)
                 elif kind == "input":
@@ -554,7 +643,9 @@ class _ClientHandler(StreamRequestHandler):
             return None
         if len(frame) > MAX_FRAME_BYTES + 1 or not frame.endswith(b"\n"):
             raise ProtocolError(f"message exceeds {MAX_FRAME_BYTES} bytes")
-        return decode_frame(frame)
+        value = decode_frame(frame)
+        self.server.metrics.received(value.get("type", "?"), len(frame))
+        return value
 
     def send(self, value):
         try:
@@ -562,6 +653,7 @@ class _ClientHandler(StreamRequestHandler):
             with self._send_lock:
                 self.wfile.write(frame)
                 self.wfile.flush()
+            self.server.metrics.sent(value.get("type", "?"), len(frame))
             return True
         except (OSError, ProtocolError):
             return False
@@ -577,6 +669,9 @@ def create_server(
     store=None,
     store_path=None,
     rules=None,
+    tls=None,
+    authenticator=None,
+    allow_insecure=False,
 ) -> MultiplayerServer:
     """Create a server without starting its accept loop."""
     return MultiplayerServer(
@@ -587,15 +682,29 @@ def create_server(
         store=store,
         store_path=store_path,
         rules=rules,
+        tls=tls,
+        authenticator=authenticator,
+        allow_insecure=allow_insecure,
     )
 
 
-def _load_adapter(spec: str | None, *, store=None, rules=None, project_path=None):
+def _load_adapter(
+    spec: str | None, *, store=None, rules=None, project_path=None, allowed_prefixes=None
+):
     if not spec:
         return None
     module_name, separator, attribute = spec.partition(":")
     if not separator or not module_name or not attribute:
         raise ValueError("adapter must use the form package.module:factory")
+    if allowed_prefixes is not None and not any(
+        module_name == prefix or module_name.startswith(prefix.rstrip(".") + ".")
+        for prefix in allowed_prefixes
+    ):
+        raise ValueError(
+            f"adapter module {module_name!r} is not on the allow-list "
+            f"({', '.join(allowed_prefixes) or 'empty'}); a server runs only the code it is "
+            "told to"
+        )
     factory = getattr(importlib.import_module(module_name), attribute)
     if callable(factory):
         parameters = inspect.signature(factory).parameters
@@ -628,6 +737,25 @@ def main(argv=None):
     parser.add_argument("--database", help="server-side SQLite path for persistent player state")
     parser.add_argument("--project", help="selected project JSON for project-backed adapters")
     parser.add_argument("--rules", help="project-owned multiplayer rules JSON file")
+    parser.add_argument("--tls-cert", help="PEM certificate chain: serve over TLS")
+    parser.add_argument("--tls-key", help="PEM private key for --tls-cert")
+    parser.add_argument(
+        "--auth-secret-file",
+        help="file holding the token secret (>= 16 bytes): players must present a signed token",
+    )
+    parser.add_argument(
+        "--insecure-lan",
+        action="store_true",
+        help="allow listening beyond 127.0.0.1 without TLS and tokens (trusted network only)",
+    )
+    parser.add_argument(
+        "--adapter-allow",
+        action="append",
+        default=None,
+        metavar="PREFIX",
+        help="only load adapters from modules under PREFIX (repeatable; default: any)",
+    )
+    parser.add_argument("--metrics-file", help="write the traffic / tick counters here on exit")
     args = parser.parse_args(argv)
     store = None
     try:
@@ -640,7 +768,23 @@ def main(argv=None):
             from .rules import load_rules
 
             rules = load_rules(args.rules)
-        adapter = _load_adapter(args.adapter, store=store, rules=rules, project_path=args.project)
+        adapter = _load_adapter(
+            args.adapter,
+            store=store,
+            rules=rules,
+            project_path=args.project,
+            allowed_prefixes=args.adapter_allow,
+        )
+        tls = None
+        if args.tls_cert or args.tls_key:
+            if not (args.tls_cert and args.tls_key):
+                raise ValueError("--tls-cert and --tls-key go together")
+            tls = TlsSettings(args.tls_cert, args.tls_key)
+        authenticator = (
+            TokenAuthenticator(load_secret(args.auth_secret_file))
+            if args.auth_secret_file
+            else None
+        )
         server = create_server(
             args.host,
             args.port,
@@ -649,6 +793,9 @@ def main(argv=None):
             adapter=adapter,
             store=store,
             rules=rules,
+            tls=tls,
+            authenticator=authenticator,
+            allow_insecure=args.insecure_lan,
         )
     except Exception as exc:
         if store is not None:
@@ -664,6 +811,8 @@ def main(argv=None):
                 "port": port,
                 "session_id": server.session_id,
                 "session_name": server.session_name,
+                "tls": tls is not None,
+                "auth": authenticator is not None,
             },
             ensure_ascii=False,
         ),
@@ -674,6 +823,12 @@ def main(argv=None):
     except KeyboardInterrupt:
         pass
     finally:
+        if args.metrics_file:
+            try:
+                with open(args.metrics_file, "w", encoding="utf-8") as handle:
+                    json.dump(server.metrics_snapshot(), handle, indent=2, sort_keys=True)
+            except OSError as exc:
+                print(f"ERROR could not write metrics: {exc}", file=sys.stderr, flush=True)
         server.server_close()
         if store is not None:
             store.close()
