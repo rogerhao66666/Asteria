@@ -181,7 +181,7 @@ def resolve_actor_build(
             )
 
     if loadout is not None:
-        for item in loadout.equipped():
+        for item in loadout.working():
             for tag in item.equipment.tags:
                 contributions.append(BuildContribution("tag", tag, "equipment", item.instance_id))
             growth = item.growth_contribution()

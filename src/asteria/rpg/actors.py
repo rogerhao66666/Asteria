@@ -601,7 +601,7 @@ class RpgActorRuntime:
         for ability_id in self.ability_state.learned_abilities:
             add(ability_id, "learned", self.definition.actor_id)
         if loadout is not None:
-            for item in loadout.equipped():
+            for item in loadout.working():
                 for ability_id in item.equipment.granted_abilities:
                     add(ability_id, "equipment", item.instance_id)
                 growth = item.growth_contribution()
@@ -724,6 +724,10 @@ class RpgDatabase:
         self.battle_extension_rules = {}  # rpg.battle_extensions BattleExtensionRules
         self.enemy_level_rules = {}  # rpg.enemy_levels EnemyLevelRules
         self.map_rule_sets = {}  # rpg.map_rules MapRuleSet
+        self.durability_rules = {}  # rpg.durability DurabilityRules
+        self.disassembly_recipes = {}  # rpg.disassembly DisassemblyRecipe, by item id
+        self.job_point_rules = {}  # rpg.job_points JobPointRules
+        self.new_game_plus_rules = {}  # rpg.new_game_plus NewGamePlusRules
         self.world_interactions = {}
         self.drop_tables = {}
         self.rarities = {}  # rpg.loot RarityDefinition; empty = loot.DEFAULT_RARITIES
@@ -1106,6 +1110,45 @@ class RpgDatabase:
             BattleExtensionRules,
             "rules_id",
             "battle extension rules",
+        )
+
+    def _optional_rules_data(self):
+        stores = (
+            ("durability_rules", self.durability_rules),
+            ("disassembly_recipes", self.disassembly_recipes),
+            ("job_point_rules", self.job_point_rules),
+            ("new_game_plus_rules", self.new_game_plus_rules),
+        )
+        return {
+            name: [store[k].to_data() for k in sorted(store)] for name, store in stores if store
+        }
+
+    def add_durability_rules(self, value):
+        from .durability import DurabilityRules
+
+        return self._add_keyed(
+            self.durability_rules, value, DurabilityRules, "rules_id", "durability rules"
+        )
+
+    def add_disassembly_recipe(self, value):
+        from .disassembly import DisassemblyRecipe
+
+        return self._add_keyed(
+            self.disassembly_recipes, value, DisassemblyRecipe, "item_id", "disassembly recipe"
+        )
+
+    def add_job_point_rules(self, value):
+        from .job_points import JobPointRules
+
+        return self._add_keyed(
+            self.job_point_rules, value, JobPointRules, "rules_id", "job point rules"
+        )
+
+    def add_new_game_plus_rules(self, value):
+        from .new_game_plus import NewGamePlusRules
+
+        return self._add_keyed(
+            self.new_game_plus_rules, value, NewGamePlusRules, "rules_id", "new game plus rules"
         )
 
     def add_map_rule_set(self, value):
@@ -1529,6 +1572,7 @@ class RpgDatabase:
                 if self.battle_extension_rules
                 else {}
             ),
+            **self._optional_rules_data(),
             **(
                 {
                     "map_rule_sets": [
@@ -1793,4 +1837,17 @@ class RpgDatabase:
 
             for x in data.get("map_rule_sets", ()):
                 result.add_map_rule_set(MapRuleSet.from_data(x))
+            from .disassembly import DisassemblyRecipe
+            from .durability import DurabilityRules
+            from .job_points import JobPointRules
+            from .new_game_plus import NewGamePlusRules
+
+            for x in data.get("durability_rules", ()):
+                result.add_durability_rules(DurabilityRules.from_data(x))
+            for x in data.get("disassembly_recipes", ()):
+                result.add_disassembly_recipe(DisassemblyRecipe.from_data(x))
+            for x in data.get("job_point_rules", ()):
+                result.add_job_point_rules(JobPointRules.from_data(x))
+            for x in data.get("new_game_plus_rules", ()):
+                result.add_new_game_plus_rules(NewGamePlusRules.from_data(x))
         return result

@@ -1001,6 +1001,7 @@ class GameSessionRuntime:
         bus.subscribe(
             "rpg.battle.turn_skipped", self._turn_skipped
         )  # asleep, stunned, broken...: shown in battle
+        bus.subscribe("rpg.battle.after_action", self._wear_equipment)  # durability
         bindings = [
             b
             for b in self.project.lifecycle_event_bindings
@@ -1009,6 +1010,116 @@ class GameSessionRuntime:
         self.battle_events = LifecycleEventBridge(bus, self.events, bindings) if bindings else None
         self.save.event_context.providers["battle"] = self._battle_value
         return bus
+
+    @property
+    def durability_rules(self):
+        """Project equipment durability rules: the first by id, or ``None``."""
+        values = self.project.rpg_database.durability_rules
+        return values[sorted(values)[0]] if values else None
+
+    def wear_equipment(self, actor_id, event):
+        """Wear ``actor_id``'s gear for ``event`` (``attack``, ``hit`` ...); returns what broke."""
+        rules = self.durability_rules
+        loadout = self.save.rpg_state.loadouts.get(str(actor_id))
+        if rules is None or loadout is None:
+            return ()
+        broke = rules.apply_wear(loadout, str(event))
+        for item in broke:
+            name = item.nickname or item.equipment.display_name
+            self.notify(f"{name} broke!", kind="warning")
+        return broke
+
+    def _wear_equipment(self, event):
+        if self.durability_rules is None:
+            return
+        data = event.data
+        if not data["result"].execution_result.executed:
+            return
+        actor = data["actor"]
+        if actor.side == "heroes":
+            self.wear_equipment(actor.member_id, "attack")
+        for target in data["targets"]:
+            if target.side == "heroes" and target.side != actor.side:
+                self.wear_equipment(target.member_id, "hit")
+
+    def _equipped(self, actor_id, instance_id):
+        loadout = self.save.rpg_state.loadouts[str(actor_id)]
+        item = next((x for x in loadout.equipped() if x.instance_id == str(instance_id)), None)
+        if item is None:
+            raise GameSessionError(f"{instance_id} is not equipped by {actor_id}")
+        return item
+
+    def repair_equipment(self, actor_id, instance_id, amount=None):
+        """Repair an equipped item, paying the rules' price in currency; returns points fixed."""
+        rules = self.durability_rules
+        if rules is None:
+            raise GameSessionError("the project defines no durability rules")
+        item = self._equipped(actor_id, instance_id)
+        currency, cost = rules.repair_cost(item, amount)
+        funds = self.save.rpg_state.currencies
+        if cost and funds.get(currency, 0.0) < cost:
+            raise GameSessionError(f"a repair costs {cost:g} {currency}")
+        points = rules.repair(item, amount)
+        if cost and points:
+            funds[currency] = funds.get(currency, 0.0) - cost
+        return points
+
+    def rename_equipment(self, actor_id, instance_id, name):
+        """Give an equipped item a nickname of the player's choice."""
+        return self._equipped(actor_id, instance_id).rename(name)
+
+    def disassemble(self, item_id):
+        """Break one ``item_id`` down by the project's disassembly recipe."""
+        from asteria.rpg.disassembly import disassemble
+
+        recipe = self.project.rpg_database.disassembly_recipes.get(str(item_id))
+        if recipe is None:
+            raise GameSessionError(f"{item_id} cannot be disassembled")
+        state = self.save.rpg_state
+        counter = self.world.add_counter("disassembly.count", 1)
+        result = disassemble(
+            recipe,
+            state.inventory,
+            state.currencies,
+            random.Random(f"{item_id}:{int(counter)}:disassemble"),
+        )
+        if not result.done:
+            raise GameSessionError(f"cannot disassemble {item_id}: {result.reason}")
+        return result
+
+    @property
+    def job_point_rules(self):
+        values = self.project.rpg_database.job_point_rules
+        return values[sorted(values)[0]] if values else None
+
+    def _award_job_points(self, defeated_count):
+        rules = self.job_point_rules
+        if rules is None:
+            return {}
+        state = self.save.rpg_state
+        given = {}
+        for actor_id in state.party_active_actor_ids:
+            progress = state.actor_progression.get(actor_id)
+            allocation = state.progression_allocations.get(actor_id)
+            if progress is None or allocation is None:
+                continue
+            for balance, points in rules.award(progress.active_class_ids, defeated_count).items():
+                allocation.grant(balance, points)
+                given.setdefault(actor_id, {})[balance] = points
+        return given
+
+    def new_game_plus(self, rules_id=None):
+        """A fresh save from the project's game start that keeps what the New Game Plus rules
+        carry over from this game (the running game is left as it is)."""
+        from asteria.rpg.new_game_plus import carry_over
+
+        rules = self.project.rpg_database.new_game_plus_rules
+        if not rules:
+            raise GameSessionError("the project defines no New Game Plus rules")
+        chosen = rules[str(rules_id) if rules_id else sorted(rules)[0]]
+        self.sync_world_state()
+        fresh = self.project.game_start.instantiate(self.project)
+        return carry_over(chosen, self.save, fresh)
 
     @property
     def revealed_weaknesses(self):
@@ -1466,6 +1577,9 @@ class GameSessionRuntime:
                 else None
             ),
         )
+        rules = self.durability_rules
+        if rules is not None:
+            rules.ensure(instance)
         loadout.equip(slot_id, instance, validate_requirements=False)
         return instance
 
@@ -2968,6 +3082,7 @@ class GameSessionRuntime:
             reward = self._scaled_reward(reward, member_id)
             applied.append(reward_runtime.apply(reward))
         self._store_mastery()
+        self._award_job_points(len(defeated))
         self._last_defeated = defeated
         self._log(
             "battle_finished", data={"winning_sides": ("heroes",), "defeated_sides": ("enemies",)}

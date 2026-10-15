@@ -94,7 +94,7 @@ class BattleCommands:
             return ()
         known = set(game.battle.member(actor_id).ability_ids)
         found = []
-        for item in loadout.equipped():
+        for item in loadout.working():
             for ability_id in item.equipment.granted_abilities:
                 if ability_id in known and ability_id not in found:
                     found.append(ability_id)

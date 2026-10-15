@@ -439,6 +439,10 @@ class Inventory:
                 room = 0
         return room
 
+    def item_ids(self):
+        """Ids of every item held, sorted."""
+        return tuple(sorted(self._counts))
+
     def kinds_used(self):
         return sum(1 for item_id in self._counts if not self._exempt(item_id))
 
@@ -511,6 +515,21 @@ class EquippedItem:
     item_level: int = 1
     rarity: str = ""
     rolled_affixes: tuple = ()
+    # wear (rpg.durability): None = the instance does not wear out; a broken one (0) gives nothing
+    durability: float | None = None
+    max_durability: float = 0.0
+    nickname: str = ""
+
+    @property
+    def broken(self):
+        return self.durability is not None and self.durability <= 0.0
+
+    def rename(self, name, *, max_length=24):
+        name = " ".join(str(name).split())
+        if len(name) > int(max_length):
+            raise ValueError(f"a name is at most {max_length} characters")
+        self.nickname = name
+        return name
 
     def __post_init__(self):
         from .equipment_growth import EquipmentGrowthRuntime
@@ -541,6 +560,12 @@ class EquippedItem:
             "growth": None if self.growth is None else self.growth.to_data(),
             **({"item_level": self.item_level} if self.item_level != 1 else {}),
             **({"rarity": self.rarity} if self.rarity else {}),
+            **(
+                {"durability": self.durability, "max_durability": self.max_durability}
+                if self.durability is not None
+                else {}
+            ),
+            **({"nickname": self.nickname} if self.nickname else {}),
             **(
                 {"rolled_affixes": [a.to_data() for a in self.rolled_affixes]}
                 if self.rolled_affixes
@@ -577,6 +602,9 @@ class EquippedItem:
             item_level=int(data.get("item_level", 1)),
             rarity=str(data.get("rarity", "")),
             rolled_affixes=tuple(RolledAffix.from_data(x) for x in data.get("rolled_affixes", ())),
+            durability=data.get("durability"),
+            max_durability=float(data.get("max_durability", 0.0)),
+            nickname=str(data.get("nickname", "")),
         )
         for socket_id, attachment_id in data["attachments"].items():
             if attachment_id not in attachments:
@@ -862,9 +890,13 @@ class EquipmentLoadout:
             return tuple(self._equipped[str(slot_id)])
         return tuple(item for key in sorted(self._equipped) for item in self._equipped[key])
 
+    def working(self):
+        """The equipped items that still work (a broken one stays equipped but gives nothing)."""
+        return tuple(item for item in self.equipped() if not item.broken)
+
     def active_set_bonuses(self):
         """``(set_id, EquipmentSetBonus)`` pairs active for the equipped pieces."""
-        equipped_ids = [item.equipment.equipment_id for item in self.equipped()]
+        equipped_ids = [item.equipment.equipment_id for item in self.working()]
         return tuple(
             (definition.set_id, bonus)
             for definition in sorted(self.set_definitions, key=lambda x: x.set_id)
@@ -886,7 +918,7 @@ class EquipmentLoadout:
                         blocked_tags=modifier.blocked_tags,
                     )
                 )
-        for item in self.equipped():
+        for item in self.working():
             for modifier in item.modifiers():
                 # Modifier IDs are definition-local.  Scope them by stable
                 # equipment instance so multiple copies of the same definition
@@ -906,7 +938,7 @@ class EquipmentLoadout:
 
     def abilities(self):
         result = []
-        for item in self.equipped():
+        for item in self.working():
             result.extend(item.abilities())
         for _, bonus in self.active_set_bonuses():
             result.extend(bonus.granted_abilities)
@@ -914,13 +946,13 @@ class EquipmentLoadout:
 
     def triggers(self):
         result = []
-        for item in self.equipped():
+        for item in self.working():
             result.extend(item.triggers())
         return tuple(result)
 
     def tags(self):
         result = set()
-        for item in self.equipped():
+        for item in self.working():
             result.update(item.tags())
         for _, bonus in self.active_set_bonuses():
             result.update(bonus.tags)
