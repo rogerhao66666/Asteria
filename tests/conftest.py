@@ -140,3 +140,34 @@ def pytest_sessionfinish(session, exitstatus):
 
     if real_window.enabled():
         real_window.write_report(_REPLAY_RESULTS)
+
+
+def pytest_unconfigure(config):
+    """Tear Qt and SDL down in a fixed order before the interpreter exits.
+
+    A process that loaded both PySide6 and pygame crashed at exit (``malloc_consolidate`` /
+    segfault) when their atexit/destructor hooks ran in an arbitrary order after tests passed."""
+    import gc
+    import sys
+
+    gc.collect()
+    qt = sys.modules.get("PySide6.QtWidgets")
+    if qt is not None:
+        app = qt.QApplication.instance()
+        if app is not None:
+            from PySide6.QtCore import QEvent
+
+            app.closeAllWindows()
+            for widget in app.topLevelWidgets():  # tests that never close what they built
+                widget.deleteLater()
+            app.sendPostedEvents(None, QEvent.DeferredDelete)
+            app.processEvents()
+            app.quit()
+            del app
+    pygame = sys.modules.get("pygame")
+    if pygame is not None:
+        try:
+            pygame.quit()
+        except Exception:
+            pass
+    gc.collect()
