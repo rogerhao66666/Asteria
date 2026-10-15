@@ -108,6 +108,24 @@ class SetAttributeCommand:
 
 
 @dataclass(slots=True)
+class SetSkeletonCommand:
+    target: object
+    new_skeleton: object
+    old_skeleton: object
+    description: str = "Edit skeleton"
+
+    @property
+    def label(self):
+        return self.description
+
+    def redo(self):
+        self.target.set_skeleton(self.new_skeleton)
+
+    def undo(self):
+        self.target.set_skeleton(self.old_skeleton)
+
+
+@dataclass(slots=True)
 class RenameCommand:
     target: object
     new_name: str

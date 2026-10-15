@@ -12,6 +12,7 @@ from asteria.graphics.dragonbones_import import (
 from asteria.graphics.dragonbones_import import (
     unsupported_parts as dragonbones_unsupported_parts,
 )
+from asteria.graphics.skeleton_data import skeleton_from_data
 from asteria.graphics.skeleton_import import import_spine_json, unsupported_parts
 
 
@@ -27,6 +28,8 @@ class BoneSegment:
 def load_rig(path, **options):
     """Import Spine or DragonBones JSON; notes identify features the chosen importer skips."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if data.get("schema") == "asteria.skeleton":
+        return skeleton_from_data(data), ()
     if "armature" in data:
         skeleton = import_dragonbones_json(data, **options)
         notes = dragonbones_unsupported_parts(

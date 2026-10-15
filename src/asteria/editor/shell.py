@@ -273,7 +273,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.tile_palette.createMapRuleSetRequested.connect(self._create_map_rule_set)
         self.tile_palette.doodadChanged.connect(self.viewport.set_doodad)
 
-        self.skeleton_viewer = SkeletonViewerWidget(self)
+        self.skeleton_viewer = SkeletonViewerWidget(self, command_stack=self.document.commands)
         skeleton_dock = QDockWidget("Skeleton", self)
         skeleton_dock.setObjectName("SkeletonDock")
         skeleton_dock.setWidget(self.skeleton_viewer)
