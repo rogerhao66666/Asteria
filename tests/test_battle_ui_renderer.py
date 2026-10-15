@@ -1,3 +1,4 @@
+from asteria.platform import pygame_battle_ui
 from asteria.presentation import (
     BattleUiFrame,
     BattleUiGaugeBar,
@@ -91,3 +92,38 @@ def test_renderer_has_no_gameplay_input_or_mutation_surface():
     renderer = BattleUiRenderer(backend)
     result = renderer.render(frame())
     assert result.scene_id == "battle.reference"
+
+
+def test_cjk_text_uses_a_system_font_without_changing_latin_font(monkeypatch):
+    class FontModule:
+        def __init__(self):
+            self.created = []
+
+        def Font(self, path, size):
+            font = (path, size)
+            self.created.append(font)
+            return font
+
+        def match_font(self, _name):
+            return None
+
+    class Pygame:
+        def __init__(self):
+            self.font = FontModule()
+
+    pg = Pygame()
+    latin_font = object()
+    cache = {}
+    resolver = getattr(pygame_battle_ui, "font_for_text", None)
+    assert callable(resolver), "CJK text needs a system-font fallback"
+    monkeypatch.setattr(
+        pygame_battle_ui,
+        "cjk_font_path",
+        lambda _pg: "/System/Library/Fonts/STHeiti Medium.ttc",
+    )
+
+    assert resolver(pg, latin_font, "Hello", cache, 20) is latin_font
+    cjk_font = resolver(pg, latin_font, "繁體中文", cache, 20)
+
+    assert cjk_font == ("/System/Library/Fonts/STHeiti Medium.ttc", 20)
+    assert resolver(pg, latin_font, "繁體中文", cache, 20) is cjk_font

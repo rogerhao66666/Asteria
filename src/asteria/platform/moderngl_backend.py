@@ -282,17 +282,18 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         cached = getattr(self, "_text_box", None)
         if cached is None or cached[0] != key:
             from .pygame_backend import dialogue_font
-            from .pygame_battle_ui import renderable_text
+            from .pygame_battle_ui import font_for_text, renderable_text
 
             pg = self.pg
             if not hasattr(self, "_font"):
-                self._font, self._glyphs = dialogue_font(pg, 26), {}
+                self._font, self._glyphs, self._cjk_fonts = dialogue_font(pg, 26), {}, {}
             box = pg.Surface((width - 32, 116), pg.SRCALPHA)
             box.fill((13, 17, 28, 225))
             pg.draw.rect(box, (124, 145, 190), box.get_rect(), 2, border_radius=6)
             for row, line in enumerate(str(text).split("\n")[:4]):
-                image = self._font.render(
-                    renderable_text(pg, self._font, line, self._glyphs), True, (240, 242, 248)
+                font = font_for_text(pg, self._font, line, self._cjk_fonts, 26)
+                image = font.render(
+                    renderable_text(pg, font, line, self._glyphs), True, (240, 242, 248)
                 )
                 box.blit(image, (18, 12 + row * self._font.get_linesize()))
             if cached is not None:

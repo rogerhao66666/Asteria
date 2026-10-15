@@ -163,6 +163,7 @@ class PlayableTestRuntime:
         self._victory_summary = []
         self._fonts = {}
         self._glyphs = {}  # (font, char) -> the font can draw it
+        self._cjk_fonts = {}
         self._battle_presentation = create_battle_presentation_adapter(self)
         self.profiler = NullProfiler()
         self._drawing = False
@@ -596,7 +597,7 @@ class PlayableTestRuntime:
         f = self._fonts.get(int(size))
         if f is None:
             f = self._fonts[int(size)] = self.pg.font.Font(None, int(size))
-        from asteria.platform.pygame_battle_ui import renderable_text
+        from asteria.platform.pygame_battle_ui import font_for_text, renderable_text
 
         # rendered text is cached: HUD labels and damage numbers repeat every frame
         key = (str(value), int(size), tuple(color))
@@ -605,8 +606,9 @@ class PlayableTestRuntime:
         if surf is None:
             if len(cache) > 2048:
                 cache.clear()
-            surf = cache[key] = f.render(
-                renderable_text(self.pg, f, value, self._glyphs), True, color
+            text_font = font_for_text(self.pg, f, value, self._cjk_fonts, size)
+            surf = cache[key] = text_font.render(
+                renderable_text(self.pg, text_font, value, self._glyphs), True, color
             )
         rect = surf.get_rect()
         if anchor:

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import sys
+
 GLYPH_FALLBACKS = {
     "▶": ">",
     "▸": ">",
@@ -17,6 +20,81 @@ GLYPH_FALLBACKS = {
     "—": "-",
     "·": "-",
 }
+
+CJK_FONT_FAMILIES = (
+    "microsoftjhenghei",
+    "microsoftyahei",
+    "hiraginosans",
+    "hiraginosansgb",
+    "applesdgothicneo",
+    "arialunicode",
+    "notosanscjktc",
+    "notosanscjk",
+    "wenquanyi zen hei",
+)
+CJK_RANGES = (
+    (0x1100, 0x11FF),
+    (0x2E80, 0x2FFF),
+    (0x3000, 0x303F),
+    (0x3040, 0x30FF),
+    (0x3100, 0x312F),
+    (0x3130, 0x318F),
+    (0x31A0, 0x31EF),
+    (0x3200, 0x33FF),
+    (0x3400, 0x4DBF),
+    (0x4E00, 0x9FFF),
+    (0xAC00, 0xD7AF),
+    (0xF900, 0xFAFF),
+    (0xFE30, 0xFE4F),
+    (0xFF00, 0xFFEF),
+    (0x20000, 0x3134F),
+)
+
+
+def _cjk_font_paths(platform_name):
+    if platform_name == "darwin":
+        return (
+            "/System/Library/Fonts/STHeiti Medium.ttc",
+            "/System/Library/Fonts/AppleSDGothicNeo.ttc",
+            "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        )
+    if platform_name.startswith("win"):
+        font_dir = os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Fonts")
+        return tuple(os.path.join(font_dir, name) for name in ("msjh.ttc", "msyh.ttc"))
+    return (
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSansCJKtc-Regular.otf",
+        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+    )
+
+
+def cjk_font_path(pg):
+    """Find an installed system font that can draw common CJK scripts."""
+    for path in _cjk_font_paths(sys.platform):
+        if os.path.isfile(path):
+            return path
+    for family in CJK_FONT_FAMILIES:
+        path = pg.font.match_font(family)
+        if path:
+            return path
+    return None
+
+
+def contains_cjk(value):
+    """Whether ``value`` contains Han, kana, Hangul, or CJK punctuation."""
+    return any(any(start <= ord(char) <= end for start, end in CJK_RANGES) for char in str(value))
+
+
+def font_for_text(pg, font, value, cache, size):
+    """Use a cached CJK system font for CJK text and retain the normal font otherwise."""
+    if not contains_cjk(value):
+        return font
+    key = (id(font), int(size))
+    if key not in cache:
+        path = cjk_font_path(pg)
+        cache[key] = pg.font.Font(path, int(size)) if path else font
+    return cache[key]
 
 
 def renderable_text(pg, font, value, cache):
@@ -68,6 +146,7 @@ class PygameBattleUiBackend:
             raise ValueError("scale must be positive")
         self._fonts = {}
         self._glyph_cache = {}
+        self._cjk_fonts = {}
 
     def _s(self, value):
         return round(float(value) * self.scale)
@@ -218,6 +297,7 @@ class PygameBattleUiBackend:
 
     def draw_text(self, text, *, color, size):
         font = self._font(size)
+        font = font_for_text(self.pg, font, text.text, self._cjk_fonts, self._s(size))
         image = font.render(self._renderable(font, text.text), True, self._rgb(color))
         x, y = self._s(text.x), self._s(text.y)
         if text.align == "center":

@@ -145,7 +145,7 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
         if env is not None and env.active and not _now:
             self._pending_text = text  # UI goes on top of the environment effects
             return
-        from .pygame_battle_ui import renderable_text
+        from .pygame_battle_ui import font_for_text, renderable_text
 
         width, height = self.screen.get_size()
         box = self.pg.Rect(16, height - 132, width - 32, 116)
@@ -154,10 +154,11 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
         self.screen.blit(panel, box.topleft)
         self.pg.draw.rect(self.screen, (124, 145, 190), box, 2, border_radius=6)
         if not hasattr(self, "_font"):
-            self._font, self._glyphs = dialogue_font(self.pg, 26), {}
+            self._font, self._glyphs, self._cjk_fonts = dialogue_font(self.pg, 26), {}, {}
         for row, line in enumerate(str(text).split("\n")[:4]):
-            image = self._font.render(
-                renderable_text(self.pg, self._font, line, self._glyphs), True, (240, 242, 248)
+            font = font_for_text(self.pg, self._font, line, self._cjk_fonts, 26)
+            image = font.render(
+                renderable_text(self.pg, font, line, self._glyphs), True, (240, 242, 248)
             )
             self.screen.blit(image, (box.x + 18, box.y + 12 + row * self._font.get_linesize()))
 
