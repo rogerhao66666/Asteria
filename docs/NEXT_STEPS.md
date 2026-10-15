@@ -25,7 +25,7 @@ QT_QPA_PLATFORM=offscreen python -m pytest -q      # 本次：2637 passed、1 wa
 - Cocoa 視窗已驗證 Octopath 戰鬥與勝利結算、CJK 訊息、音樂室／回想／名單、區域規則，
   以及 Skeleton 與 Terrain／Region／Doodad 面板；多人也以兩個 Cocoa 視窗連同機 server
   驗證。真人操作手感、實體鍵盤、手把和可聽音訊仍待人工確認。沒有第二台機器，真實
-  WAN 量測未完成；區域蓋層在正確解析 TileMap 資源後的 Cocoa 畫面仍待補驗。
+  WAN 量測未完成；區域蓋層已在正確解析 TileMap 資源後以 Cocoa 畫面驗證。
 - 提交前：`ruff format .`、`ruff check --select E501 .`、`ruff check src tests scripts demos reference_projects`。
   每行 Python ≤ 99 字元。
 - **commit 規則：** `.githooks/commit-msg` 要求作者是 `rogerhao66666` 且訊息**不能有 Co-Authored-By**。
