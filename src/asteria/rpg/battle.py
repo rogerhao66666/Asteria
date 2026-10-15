@@ -10,6 +10,7 @@ from asteria.core.lifecycle import emit_hook
 from asteria.gameplay import AbilityRuntime, AbilityTarget, GameplaySubject
 
 from .action_sequences import ActionSequenceRuntime
+from .battle_extensions import BattleExtensionRules, BattleExtensionRuntime
 from .battle_lifecycle import (
     BattleEscapeRule,
     BattleObjectiveRuntime,
@@ -314,6 +315,7 @@ class BattleRuntime:
         ai_action_handlers=None,
         transaction_policies=(),
         rng_seed=0,
+        extensions=None,
     ):
         parties = tuple(parties)
         if not parties:
@@ -375,6 +377,7 @@ class BattleRuntime:
             formations=self.formations,
             is_active=self.is_active,
             is_targetable=lambda member: self.combatants.is_targetable(member),
+            candidate_filter=self._filter_candidates,
         )
         if scheduler_definition is None:
             self.scheduler = None
@@ -399,6 +402,13 @@ class BattleRuntime:
         )
         self.transactions = BattleTransactionRuntime(transaction_policies)
         self.rng = random.Random(rng_seed)
+        if isinstance(extensions, BattleExtensionRules):
+            extensions = BattleExtensionRuntime(extensions)
+        # Optional rules layered on the core (taunt, life steal, use limits ...); see
+        # battle_extensions.
+        self.extensions = extensions
+        if extensions is not None:
+            extensions.sync_row_tags(self)
         self._resource_ready_entry = None
         self._resources_finished = False
         self.battle_resources.apply_trigger("rpg.battle.started")
@@ -412,6 +422,11 @@ class BattleRuntime:
 
     def member(self, member_id):
         return self.members[str(member_id)]
+
+    def _filter_candidates(self, actor_id, candidates):
+        if self.extensions is None:
+            return candidates
+        return self.extensions.filter_candidates(self, actor_id, candidates)
 
     def can_act(self, member_id):
         member = self.member(member_id)
@@ -568,6 +583,8 @@ class BattleRuntime:
             left and (actor.member_id, action.ability_id) not in self._used_this_turn
         ):  # repeats in one turn (boost)
             raise ValueError(f"ability cooling down: {action.ability_id} ({left} turns)")
+        if self.extensions is not None:
+            self.extensions.validate(self, action)
         target_resolution = self.resolve_targets(
             actor.member_id, action.ability_id, action.target_ids, rng=rng
         )
@@ -872,6 +889,11 @@ class BattleRuntime:
             (actor.subject, {x.member_id: x.subject for x in targets}),
             record,
         )
+        extensions = self.extensions
+        snapshot = None
+        if extensions is not None:
+            snapshot = extensions.before_action(self, effective_action)
+            transform = extensions.wrap_transform(transform)
         result = self.ability_runtime.execute(
             action.ability_id,
             source,
@@ -884,6 +906,8 @@ class BattleRuntime:
         )
         if result.executed:
             self._start_cooldown(actor.member_id, action.ability_id)
+        if extensions is not None:
+            extensions.after_action(self, effective_action, snapshot, result.executed)
         emit_hook(
             self.hooks,
             "rpg.battle.after_action",

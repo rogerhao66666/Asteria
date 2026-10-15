@@ -721,6 +721,8 @@ class RpgDatabase:
         self.achievements = {}
         self.capture_rules = {}
         self.pet_species = {}  # rpg.pets PetSpeciesDefinition
+        self.battle_extension_rules = {}  # rpg.battle_extensions BattleExtensionRules
+        self.enemy_level_rules = {}  # rpg.enemy_levels EnemyLevelRules
         self.world_interactions = {}
         self.drop_tables = {}
         self.rarities = {}  # rpg.loot RarityDefinition; empty = loot.DEFAULT_RARITIES
@@ -1092,6 +1094,24 @@ class RpgDatabase:
 
         return self._add_keyed(
             self.pet_species, value, PetSpeciesDefinition, "species_id", "pet species"
+        )
+
+    def add_battle_extension_rules(self, value):
+        from .battle_extensions import BattleExtensionRules
+
+        return self._add_keyed(
+            self.battle_extension_rules,
+            value,
+            BattleExtensionRules,
+            "rules_id",
+            "battle extension rules",
+        )
+
+    def add_enemy_level_rules(self, value):
+        from .enemy_levels import EnemyLevelRules
+
+        return self._add_keyed(
+            self.enemy_level_rules, value, EnemyLevelRules, "rules_id", "enemy level rules"
         )
 
     def add_capture_rule(self, value):
@@ -1493,6 +1513,25 @@ class RpgDatabase:
                 if self.pet_species
                 else {}
             ),
+            **(
+                {
+                    "battle_extension_rules": [
+                        self.battle_extension_rules[k].to_data()
+                        for k in sorted(self.battle_extension_rules)
+                    ]
+                }
+                if self.battle_extension_rules
+                else {}
+            ),
+            **(
+                {
+                    "enemy_level_rules": [
+                        self.enemy_level_rules[k].to_data() for k in sorted(self.enemy_level_rules)
+                    ]
+                }
+                if self.enemy_level_rules
+                else {}
+            ),
             "quests": [self.quests[k].to_data() for k in sorted(self.quests)],
             "world_interactions": [
                 self.world_interactions[k].to_data() for k in sorted(self.world_interactions)
@@ -1728,4 +1767,11 @@ class RpgDatabase:
 
             for x in data.get("pet_species", ()):
                 result.add_pet_species(PetSpeciesDefinition.from_data(x))
+            from .battle_extensions import BattleExtensionRules
+            from .enemy_levels import EnemyLevelRules
+
+            for x in data.get("battle_extension_rules", ()):
+                result.add_battle_extension_rules(BattleExtensionRules.from_data(x))
+            for x in data.get("enemy_level_rules", ()):
+                result.add_enemy_level_rules(EnemyLevelRules.from_data(x))
         return result

@@ -1,4 +1,11 @@
 from .enemy_behavior import EnemyBehaviorBinding
+from .battle_extensions import (
+    BattleExtensionRules,
+    BattleExtensionRuntime,
+    StealEntry,
+    StealResult,
+    StealTable,
+)
 from .battle_session_rules import BattleSessionRules
 from .equipment_sets import EquipmentSetBonus, EquipmentSetDefinition
 from .capture import CaptureRule
@@ -203,6 +210,11 @@ from .save_state import ActorProgressionState, RpgRuntimeState
 
 __all__ = [
     "EnemyBehaviorBinding",
+    "BattleExtensionRules",
+    "BattleExtensionRuntime",
+    "StealEntry",
+    "StealResult",
+    "StealTable",
     "BattleSessionRules",
     "EquipmentSetBonus",
     "EquipmentSetDefinition",

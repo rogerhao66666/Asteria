@@ -114,6 +114,7 @@ class GameSessionRuntime:
         self._enemy_ids = ()
         self._captured = set()
         self._pets_sent = set()
+        self.enemy_levels = {}  # enemy member id -> level, when the project has level rules
         self.battle_log = []
         self._log_sequence = 0
         self._logged_turn = None
@@ -1474,6 +1475,98 @@ class GameSessionRuntime:
         states = StateRuntime(self.project.gameplay_library.states, stats, resources, tags)
         return GameplaySubject(stats, resources, tags, states)
 
+    @property
+    def extension_rules(self):
+        """Project battle extension rules (taunt, life steal...): the first by id, or ``None``."""
+        values = self.project.rpg_database.battle_extension_rules
+        return values[sorted(values)[0]] if values else None
+
+    MASTERY_PREFIX = "mastery."
+
+    def _load_mastery(self, extensions):
+        """Lifetime ability uses live in the saved world counters; mastery tags follow them."""
+        for key, value in self.world.counters.items():
+            if key.startswith(self.MASTERY_PREFIX):
+                member_id, _, ability_id = key[len(self.MASTERY_PREFIX) :].partition("|")
+                extensions.mastery_uses[(member_id, ability_id)] = int(value)
+        for member_id in self.battle.members:
+            extensions.sync_mastery_tags(self.battle, member_id)
+
+    def _store_mastery(self):
+        extensions = None if self.battle is None else self.battle.extensions
+        if extensions is None:
+            return
+        for (member_id, ability_id), uses in extensions.mastery_uses.items():
+            if member_id in self.save.rpg_state.actor_progression:
+                self.world.counters[f"{self.MASTERY_PREFIX}{member_id}|{ability_id}"] = float(uses)
+
+    def steal(self, actor_id, target_id, *, chance_bonus=0.0):
+        """Try to rob an enemy using the project's steal tables; loot goes into the bag."""
+        if self.mode != "battle":
+            raise GameSessionError("no active battle")
+        extensions = self.battle.extensions
+        if extensions is None:
+            raise GameSessionError("the project defines no steal tables")
+        result = extensions.steal(
+            self.battle,
+            actor_id,
+            target_id,
+            self.save.rpg_state.inventory,
+            random.Random(f"{self.encounter_id}:{actor_id}:{target_id}:steal"),
+            chance_bonus=chance_bonus,
+        )
+        self._log(
+            "steal",
+            member_id=str(actor_id),
+            target_ids=(str(target_id),),
+            data={"stolen": result.stolen, "item_id": result.item_id, "reason": result.reason},
+        )
+        return result
+
+    @property
+    def enemy_level_rules(self):
+        """Project enemy level rules (YEP EnemyLevels): the first by id, or ``None``."""
+        values = self.project.rpg_database.enemy_level_rules
+        return values[sorted(values)[0]] if values else None
+
+    @property
+    def difficulty(self):
+        """Name of the difficulty slider setting in force (saved in the event variables)."""
+        rules = self.enemy_level_rules
+        chosen = self.save.event_context.get_variable(self.DIFFICULTY_VARIABLE, "")
+        return str(chosen or (rules.default_difficulty if rules else ""))
+
+    def set_difficulty(self, difficulty_id):
+        rules = self.enemy_level_rules
+        if rules is None or str(difficulty_id) not in {
+            x.difficulty_id for x in rules.difficulties
+        }:
+            raise GameSessionError(f"unknown difficulty: {difficulty_id}")
+        self.save.event_context.set_variable(self.DIFFICULTY_VARIABLE, str(difficulty_id))
+        return str(difficulty_id)
+
+    def _party_level(self):
+        state = self.save.rpg_state
+        levels = [
+            int(state.actor_progression[x].level)
+            for x in state.party_active_actor_ids
+            if x in state.actor_progression
+        ]
+        return max(levels) if levels else 1
+
+    def _scale_enemy(self, subject, member_id):
+        rules = self.enemy_level_rules
+        if rules is None:
+            return 0
+        level = rules.level_for(
+            self.scene.id,
+            random.Random(f"{self.scene.id}:{member_id}:level"),
+            self._party_level(),
+            self.difficulty or None,
+        )
+        rules.apply(subject, level, self.difficulty or None)
+        return level
+
     def _actor_member(self, actor_id):
         build = self.resolve_actor_build(actor_id)
         subject = self._battle_subject(build.stats, build.resources, build.tags)
@@ -1491,7 +1584,10 @@ class GameSessionRuntime:
         definition = self.project.rpg_database.enemies[enemy_id]
         runtime = definition.instantiate()
         subject = self._battle_subject(runtime.stats, runtime.resources, runtime.tags)
-        speed = runtime.stats.get("speed")
+        level = self._scale_enemy(subject, f"{enemy_id}:{index}")
+        speed = subject.stats.get("speed")
+        if level:
+            self.enemy_levels[f"{enemy_id}:{index}"] = level
         return PartyMember(
             f"{enemy_id}:{index}",
             "enemies",
@@ -1584,7 +1680,14 @@ class GameSessionRuntime:
             transaction_policies=db.action_transactions.values(),
             rng_seed=157,
             hooks=self._battle_hook_bus(),
+            extensions=self.extension_rules,
         )
+        self.opening = "normal"
+        extensions = self.battle.extensions
+        if extensions is not None:
+            self._load_mastery(extensions)
+            self.opening = extensions.roll_opening(random.Random(f"{encounter_id}:opening"))
+            extensions.apply_opening(self.battle, self.opening, "heroes")
         self.encounter_id = str(encounter_id)
         self._enemy_ids = tuple(enemy_definition_ids)
         self._captured = set()
@@ -2684,6 +2787,7 @@ class GameSessionRuntime:
         return self._quest_call("refresh")
 
     LOOT_LUCK_VARIABLE = "loot.luck"
+    DIFFICULTY_VARIABLE = "difficulty.setting"
 
     @property
     def loot_luck(self):
@@ -2692,6 +2796,24 @@ class GameSessionRuntime:
             return float(self.save.event_context.get_variable(self.LOOT_LUCK_VARIABLE, 0.0) or 0.0)
         except (TypeError, ValueError):
             return 0.0
+
+    def _scaled_reward(self, reward, member_id):
+        """Currency and experience grow with the enemy's level and with overkill damage."""
+        scale = 1.0
+        rules = self.enemy_level_rules
+        level = self.enemy_levels.get(member_id)
+        if rules is not None and level:
+            scale *= rules.reward_multiplier(level, self.difficulty or None)
+        extensions = None if self.battle is None else self.battle.extensions
+        if extensions is not None and member_id in self.battle.members:
+            scale *= extensions.overkill_scale(self.battle, member_id)
+        if scale == 1.0:
+            return reward
+        return type(reward)(
+            {k: v * scale for k, v in reward.currencies.items()},
+            {k: v * scale for k, v in reward.experience.items()},
+            reward.items,
+        )
 
     def finish_victory(self):
         if self.mode != "battle":
@@ -2713,7 +2835,12 @@ class GameSessionRuntime:
             for serial, enemy_id in enumerate(self._enemy_ids, 1)
             if f"{enemy_id}:{serial}" not in self._captured
         )
-        for enemy_id in defeated:
+        member_ids = tuple(
+            f"{enemy_id}:{serial}"
+            for serial, enemy_id in enumerate(self._enemy_ids, 1)
+            if f"{enemy_id}:{serial}" not in self._captured
+        )
+        for enemy_id, member_id in zip(defeated, member_ids, strict=True):
             definition = db.enemies[enemy_id].reward
             reward = roll_reward(
                 definition, rng, luck=self.loot_luck, switches=self.save.event_context.get_switch
@@ -2732,7 +2859,9 @@ class GameSessionRuntime:
                 for item_id, amount in extra.items():
                     items[item_id] = items.get(item_id, 0) + amount
                 reward = type(reward)(reward.currencies, reward.experience, items)
+            reward = self._scaled_reward(reward, member_id)
             applied.append(reward_runtime.apply(reward))
+        self._store_mastery()
         self._log(
             "battle_finished", data={"winning_sides": ("heroes",), "defeated_sides": ("enemies",)}
         )

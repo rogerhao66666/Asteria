@@ -396,7 +396,14 @@ class TargetResolution:
 
 class BattleTargetingRuntime:
     def __init__(
-        self, members, *, definitions=(), formations=None, is_active=None, is_targetable=None
+        self,
+        members,
+        *,
+        definitions=(),
+        formations=None,
+        is_active=None,
+        is_targetable=None,
+        candidate_filter=None,
     ):
         self.members = dict(members)
         self.definitions = {}
@@ -409,6 +416,8 @@ class BattleTargetingRuntime:
         self.formations = dict(formations or {})
         self.is_active = is_active or (lambda member: True)
         self.is_targetable = is_targetable or (lambda member: True)
+        # (actor id, candidate ids) -> candidate ids; e.g. a taunt rule. Not used by ALL targeting.
+        self.candidate_filter = candidate_filter
 
     def definition_for(self, ability_id):
         return self.definitions.get(str(ability_id))
@@ -483,7 +492,12 @@ class BattleTargetingRuntime:
             ):
                 continue
             result.append(candidate.member_id)
-        return tuple(sorted(result, key=self._candidate_sort_key))
+        ordered = tuple(sorted(result, key=self._candidate_sort_key))
+        if self.candidate_filter is not None and definition.selection_mode is not (
+            TargetSelectionMode.ALL
+        ):
+            ordered = tuple(self.candidate_filter(actor.member_id, ordered))
+        return ordered
 
     def resolve(self, actor_id, ability_id, requested_ids=(), *, rng=None):
         definition = self.definition_for(ability_id)
