@@ -162,7 +162,18 @@ class PlayableTestRuntime:
         options = list(PAUSE_OPTIONS)
         if getattr(self.project.rpg_database, "pet_species", None):  # a game with pets
             options.insert(2, ("pets", "Pets"))
+        db = self.project.rpg_database
+        extras = []
+        if self.game.message_settings is not None and self.game.message_settings.backlog_limit:
+            extras.append(("backlog", "Message Log"))
+        if db.music_tracks:
+            extras.append(("music", "Music Room"))
+        if db.credits_pages:
+            extras.append(("credits", "Credits"))
+        for entry in extras:  # in order, before Settings
+            options.insert(next(i for i, o in enumerate(options) if o[0] == "settings"), entry)
         self._pause_menu = MenuCursor(options)
+        self._extra_screen = None
         self._pets_screen = None
         self._game_over_menu = MenuCursor(GAME_OVER_OPTIONS)
         self._shop_screen = None
@@ -1403,8 +1414,9 @@ class PlayableTestRuntime:
         line = getattr(request, "line", None)
         if line is not None:
             if line.speaker:
-                self.text(line.speaker, 84, self.height - 218, size=24, color=(255, 220, 124))
-            self.text(line.text, 84, self.height - 184, size=22)
+                speaker = self.game.expand_message(line.speaker, plain=True)
+                self.text(speaker, 84, self.height - 218, size=24, color=(255, 220, 124))
+            self._draw_message(self.game.expand_message(line.text), 84, self.height - 184)
             self.text(
                 "Enter / E: continue",
                 self.width - 250,
@@ -1423,6 +1435,27 @@ class PlayableTestRuntime:
                 self.height - 184 + ((i - 1) // 3) * 26,
                 size=20,
             )
+
+    def _draw_message(self, text, x, y, *, size=22):
+        """Draw a message whose data codes are expanded: colour and size spans, icons as boxes,
+        ``\\n`` starts a new line."""
+        from asteria.presentation.message_codes import parse_message
+
+        left, top = x, y
+        for span in parse_message(text):
+            if span.icon is not None:
+                box = self.pg.Rect(left, top + 2, size - 4, size - 4)
+                self.pg.draw.rect(self.screen, span.color, box, 2, 3)
+                left += size
+                continue
+            for number, part in enumerate(span.text.split("\n")):
+                if number:
+                    left, top = x, top + size + 6
+                if part:
+                    rect = self.text(
+                        part, left, top, size=size + 6 * span.size_steps, color=span.color
+                    )
+                    left = rect.right
 
     def _dialogue_input(self, events):
         """Route keys to a waiting dialogue/choice. Returns True when one is open."""
@@ -2316,6 +2349,16 @@ class PlayableTestRuntime:
             self._ui_mode = "field"
         elif choice == "status":
             self.open_status_menu(back="pause")
+        elif choice in ("backlog", "music", "credits"):
+            from asteria.runtime import extras_screens
+
+            screen = {
+                "backlog": extras_screens.BacklogScreen,
+                "music": extras_screens.MusicRoomScreen,
+                "credits": extras_screens.CreditsScreen,
+            }[choice]
+            self._extra_screen = screen(self)
+            self._ui_mode = "extra"
         elif choice == "pets":
             from asteria.runtime.pets_screen import PetsScreen
 
@@ -3017,6 +3060,8 @@ class PlayableTestRuntime:
                     self.game.event_errors.append(exc)
             else:
                 self.audio.handle_world_request(request)
+                if request.name == "PLAY_BGM":
+                    self.game.note_music_heard(request.args.get("asset_id", ""))
         for cue in getattr(self._battle_presentation, "audio_cues", ()):
             self._sound(dict(cue.payload).get("asset_id"))
         if hasattr(self._battle_presentation, "audio_cues"):
@@ -3079,6 +3124,12 @@ class PlayableTestRuntime:
                 self._ui_mode = "field"
             else:
                 self._bag_screen.draw()
+        elif self._ui_mode == "extra":
+            self._extra_screen.handle(dt, events)
+            if self._extra_screen.closed:
+                self._ui_mode = "pause"
+            else:
+                self._extra_screen.draw()
         elif self._ui_mode == "pets":
             self._pets_screen.handle(dt, events)
             if self._pets_screen.closed:

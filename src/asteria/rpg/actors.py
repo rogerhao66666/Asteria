@@ -728,6 +728,10 @@ class RpgDatabase:
         self.disassembly_recipes = {}  # rpg.disassembly DisassemblyRecipe, by item id
         self.job_point_rules = {}  # rpg.job_points JobPointRules
         self.new_game_plus_rules = {}  # rpg.new_game_plus NewGamePlusRules
+        self.locale_tables = {}  # rpg.localization LocaleTable, by locale
+        self.message_settings = {}  # rpg.localization MessageSettings
+        self.music_tracks = {}  # rpg.extras MusicTrack
+        self.credits_pages = {}  # rpg.extras CreditsPage
         self.world_interactions = {}
         self.drop_tables = {}
         self.rarities = {}  # rpg.loot RarityDefinition; empty = loot.DEFAULT_RARITIES
@@ -1118,10 +1122,36 @@ class RpgDatabase:
             ("disassembly_recipes", self.disassembly_recipes),
             ("job_point_rules", self.job_point_rules),
             ("new_game_plus_rules", self.new_game_plus_rules),
+            ("locale_tables", self.locale_tables),
+            ("message_settings", self.message_settings),
+            ("music_tracks", self.music_tracks),
+            ("credits_pages", self.credits_pages),
         )
         return {
             name: [store[k].to_data() for k in sorted(store)] for name, store in stores if store
         }
+
+    def add_locale_table(self, value):
+        from .localization import LocaleTable
+
+        return self._add_keyed(self.locale_tables, value, LocaleTable, "locale", "locale table")
+
+    def add_message_settings(self, value):
+        from .localization import MessageSettings
+
+        return self._add_keyed(
+            self.message_settings, value, MessageSettings, "settings_id", "message settings"
+        )
+
+    def add_music_track(self, value):
+        from .extras import MusicTrack
+
+        return self._add_keyed(self.music_tracks, value, MusicTrack, "track_id", "music track")
+
+    def add_credits_page(self, value):
+        from .extras import CreditsPage
+
+        return self._add_keyed(self.credits_pages, value, CreditsPage, "page_id", "credits page")
 
     def add_durability_rules(self, value):
         from .durability import DurabilityRules
@@ -1850,4 +1880,15 @@ class RpgDatabase:
                 result.add_job_point_rules(JobPointRules.from_data(x))
             for x in data.get("new_game_plus_rules", ()):
                 result.add_new_game_plus_rules(NewGamePlusRules.from_data(x))
+            from .extras import CreditsPage, MusicTrack
+            from .localization import LocaleTable, MessageSettings
+
+            for x in data.get("locale_tables", ()):
+                result.add_locale_table(LocaleTable.from_data(x))
+            for x in data.get("message_settings", ()):
+                result.add_message_settings(MessageSettings.from_data(x))
+            for x in data.get("music_tracks", ()):
+                result.add_music_track(MusicTrack.from_data(x))
+            for x in data.get("credits_pages", ()):
+                result.add_credits_page(CreditsPage.from_data(x))
         return result

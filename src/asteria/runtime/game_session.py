@@ -9,6 +9,7 @@ from asteria.core.scene_transition import carry_persistent_entities
 from asteria.events import EventRunner, EventScheduler, SceneEventRuntime, WorldCommandRouter
 from asteria.events.timers import EventTimers
 from asteria.gameplay import AbilityRegistry, AbilityRuntime, GameplaySubject
+from asteria.presentation.message_codes import MessageContext, expand_message, plain_message
 from asteria.rpg import (
     ActorAbilityState,
     ActorProgressionState,
@@ -30,6 +31,7 @@ from asteria.rpg.economy import ShopRuntime
 from asteria.rpg.enemies import RewardDefinition
 from asteria.rpg.quests import QuestLog
 from asteria.rpg.targeting import TargetRelation
+from asteria.runtime.backlog import MessageBacklog
 from asteria.runtime.character_control import CharacterController2DComponent
 from asteria.runtime.input import InputSnapshot
 from asteria.runtime.interaction import InteractionController
@@ -120,6 +122,9 @@ class GameSessionRuntime:
         self._last_defeated = ()
         self.map_rules = None  # FieldMapRules, set when a tile field binds area rules
         self.timers = EventTimers(runtime_save.event_context)
+        self._localizer = None
+        self._last_logged_line = None
+        self.backlog = MessageBacklog(self._backlog_limit())
         self.battle_log = []
         self._log_sequence = 0
         self._logged_turn = None
@@ -1220,7 +1225,96 @@ class GameSessionRuntime:
         runner = self._dialogue_runner()
         if runner is None:
             return None
-        return runner.dialogue.dialogue or runner.dialogue.choice
+        request = runner.dialogue.dialogue or runner.dialogue.choice
+        line = getattr(request, "line", None)
+        if line is not None and line is not self._last_logged_line:
+            self._last_logged_line = line  # each line is logged once, when it first shows
+            self.backlog.add(
+                self.expand_message(line.speaker, plain=True),
+                self.expand_message(line.text, plain=True),
+            )
+        return request
+
+    # --- messages, translation and the message log ------------------------------------------
+    @property
+    def message_settings(self):
+        values = self.project.rpg_database.message_settings
+        return values[sorted(values)[0]] if values else None
+
+    def _backlog_limit(self):
+        settings = self.message_settings
+        return settings.backlog_limit if settings is not None else 0
+
+    LOCALE_VARIABLE = "locale.current"
+
+    @property
+    def localizer(self):
+        """The project's translations (``rpg.localization``) at the player's chosen locale."""
+        from asteria.rpg.localization import Localizer
+
+        db = self.project.rpg_database
+        settings = self.message_settings
+        chosen = self.save.event_context.get_variable(self.LOCALE_VARIABLE, "")
+        if self._localizer is None:
+            self._localizer = Localizer(
+                db.locale_tables.values(),
+                default_locale=settings.default_locale if settings else "",
+            )
+        self._localizer.locale = str(chosen or self._localizer.default_locale)
+        return self._localizer
+
+    def set_locale(self, locale):
+        if str(locale) not in self.localizer.locales():
+            raise GameSessionError(f"unknown locale: {locale}")
+        self.save.event_context.set_variable(self.LOCALE_VARIABLE, str(locale))
+        return str(locale)
+
+    def tr(self, key, default=None, **params):
+        return self.localizer.tr(key, default, **params)
+
+    def message_context(self):
+        """What ``\\V[..]``, ``\\N[..]``, ``\\G``, ``\\M[..]`` and ``\\T[..]`` read."""
+        db = self.project.rpg_database
+        state = self.save.rpg_state
+        settings = self.message_settings
+        context = self.save.event_context
+        currency = settings.currency_id if settings else "gold"
+
+        def variable(name):
+            value = context.get_variable(name)
+            return None if value is None else value
+
+        def party(index):
+            ids = state.party_active_actor_ids
+            actor = db.actors.get(ids[index - 1]) if 0 < index <= len(ids) else None
+            return None if actor is None else actor.display_name
+
+        def actor_name(actor_id):
+            actor = db.actors.get(actor_id)
+            return None if actor is None else actor.display_name
+
+        return MessageContext(
+            variable=variable,
+            switch=context.get_switch,
+            actor_name=actor_name,
+            party_name=party,
+            currency_label=(settings.currency_label if settings else "") or currency,
+            currency_amount=lambda: state.currencies.get(currency, 0.0),
+            macros=dict(settings.macros) if settings else None,
+            translate=self.localizer.lookup,
+        )
+
+    def expand_message(self, text, *, plain=False):
+        """A message with its data codes replaced; ``plain`` also drops the formatting codes."""
+        if plain:
+            return plain_message(text, self.message_context())
+        return expand_message(text, self.message_context())
+
+    def note_music_heard(self, asset_id):
+        """Playing a track opens it in the music room (``music.heard.<track id>``)."""
+        for track in self.project.rpg_database.music_tracks.values():
+            if track.asset_id == str(asset_id):
+                self.save.event_context.set_switch(f"music.heard.{track.track_id}", True)
 
     def acknowledge_dialogue(self):
         runner = self._dialogue_runner()

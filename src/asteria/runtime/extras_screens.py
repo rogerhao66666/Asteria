@@ -1,0 +1,169 @@
+"""Pause-menu extras: the message log, the music room and the credits.
+
+Each screen is made when opened; every frame ``handle(dt, events)`` then ``draw()``; ``closed``
+ends it. They read the session and the project's data and know no game.
+"""
+
+from __future__ import annotations
+
+MUTED, TITLE, GOOD = (150, 160, 180), (255, 220, 124), (130, 230, 150)
+
+
+class _Screen:
+    def __init__(self, runtime):
+        self.rt = runtime
+        self.index = 0
+        self.closed = False
+
+    @property
+    def game(self):
+        return self.rt.game
+
+    def _move(self, count):
+        inp = self.rt.input
+        if inp.just_pressed("cancel"):
+            self.closed = True
+        elif count:
+            if inp.just_pressed("move_up"):
+                self.index = (self.index - 1) % count
+            if inp.just_pressed("move_down"):
+                self.index = (self.index + 1) % count
+
+
+class BacklogScreen(_Screen):
+    """The lines read so far; opens on the newest, Up / Down scroll."""
+
+    PAGE = 8
+
+    def __init__(self, runtime):
+        super().__init__(runtime)
+        self.index = max(0, len(runtime.game.backlog) - 1)
+
+    def handle(self, dt=0.0, events=()):
+        self._move(len(self.game.backlog))
+
+    def visible(self):
+        entries = self.game.backlog.entries()
+        top = max(0, min(self.index - self.PAGE + 1, len(entries) - self.PAGE))
+        return top, entries[top : top + self.PAGE]
+
+    def draw(self):
+        rt = self.rt
+        rt.screen.fill((10, 12, 20))
+        rt.text("Message Log", 36, 22, size=34, color=TITLE)
+        rt.text("Up / Down: scroll   Esc: back", 36, 62, size=18, color=MUTED)
+        top, entries = self.visible()
+        if not entries:
+            rt.text("Nothing has been said yet.", 36, 110, size=22, color=MUTED)
+            return
+        y = 100
+        for offset, entry in enumerate(entries):
+            current = top + offset == self.index
+            color = (255, 255, 255) if current else (190, 196, 210)
+            if entry.speaker:
+                rt.text(entry.speaker, 36, y, size=22, color=TITLE)
+                y += 26
+            rt.text(entry.text, 60, y, size=22, color=color)
+            y += 38
+
+
+class MusicRoomScreen(_Screen):
+    """Tracks the player has heard (or that are always open); Enter plays, Esc closes."""
+
+    def __init__(self, runtime):
+        super().__init__(runtime)
+        self.playing = ""
+
+    def tracks(self):
+        tracks = sorted(
+            self.game.project.rpg_database.music_tracks.values(), key=lambda t: t.track_id
+        )
+        return [(t, self.unlocked(t)) for t in tracks]
+
+    def unlocked(self, track):
+        context = self.game.save.event_context
+        if not track.unlock_switch:
+            return True
+        return context.get_switch(track.unlock_switch) or context.get_switch(
+            f"music.heard.{track.track_id}"
+        )
+
+    def handle(self, dt=0.0, events=()):
+        rows = self.tracks()
+        self._move(len(rows))
+        inp = self.rt.input
+        if rows and (inp.just_pressed("confirm") or inp.just_pressed("interact")):
+            track = rows[min(self.index, len(rows) - 1)][0]
+            if self.unlocked(track):
+                self.rt.audio.play_music(track.asset_id, fade_in=0.3)
+                self.playing = track.track_id
+        if self.closed:
+            self.rt.audio.stop_music(fade_out=0.3)
+
+    def draw(self):
+        rt = self.rt
+        rt.screen.fill((10, 12, 20))
+        rt.text("Music Room", 36, 22, size=34, color=TITLE)
+        rt.text("Up / Down: choose   Enter: play   Esc: back", 36, 62, size=18, color=MUTED)
+        rows = self.tracks()
+        if not rows:
+            rt.text("There are no tracks.", 36, 110, size=22, color=MUTED)
+            return
+        for i, (track, _) in enumerate(rows):
+            open_ = self.unlocked(track)
+            y = 100 + i * 36
+            selected = i == min(self.index, len(rows) - 1)
+            name = track.name if open_ else "? ? ?"
+            color = (255, 255, 255) if selected else ((190, 196, 210) if open_ else (96, 102, 120))
+            rt.text(("> " if selected else "  ") + name, 36, y, size=26, color=color)
+            if track.track_id == self.playing:
+                rt.text("PLAYING", rt.width - 140, y + 4, size=20, color=GOOD)
+            elif open_ and track.note:
+                rt.text(track.note, rt.width - 360, y + 6, size=18, color=MUTED)
+
+
+class CreditsScreen(_Screen):
+    """The credits pages in order; Left / Right (or Enter) turn the page."""
+
+    def pages(self):
+        return sorted(
+            self.game.project.rpg_database.credits_pages.values(),
+            key=lambda p: (p.order, p.page_id),
+        )
+
+    def handle(self, dt=0.0, events=()):
+        inp = self.rt.input
+        pages = self.pages()
+        if inp.just_pressed("cancel"):
+            self.closed = True
+            return
+        if pages:
+            if inp.just_pressed("move_right") or inp.just_pressed("confirm"):
+                self.index = (self.index + 1) % len(pages)
+            if inp.just_pressed("move_left"):
+                self.index = (self.index - 1) % len(pages)
+
+    def draw(self):
+        rt = self.rt
+        rt.screen.fill((10, 12, 20))
+        pages = self.pages()
+        if not pages:
+            rt.text("Credits", 36, 22, size=34, color=TITLE)
+            return
+        page = pages[min(self.index, len(pages) - 1)]
+        rt.text(page.title or "Credits", rt.width / 2, 60, size=40, color=TITLE, center=True)
+        for row, line in enumerate(page.lines):
+            rt.text(
+                line, rt.width / 2, 130 + row * 30, size=24, color=(230, 232, 240), center=True
+            )
+        rt.text(
+            f"Left / Right: page   {self.index + 1}/{len(pages)}   Esc: back",
+            rt.width / 2,
+            rt.height - 36,
+            size=18,
+            color=MUTED,
+            center=True,
+        )
+
+
+__all__ = ["BacklogScreen", "CreditsScreen", "MusicRoomScreen"]
