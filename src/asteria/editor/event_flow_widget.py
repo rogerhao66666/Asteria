@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFormLayout,
+    QFrame,
     QGroupBox,
     QHBoxLayout,
     QInputDialog,
@@ -19,6 +20,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QPushButton,
+    QScrollArea,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -109,9 +111,14 @@ class EventFlowWidget(QWidget):
         self.cond_op = QComboBox()
         self.cond_op.addItems(list(COMPARATORS))
         self.cond_value = QLineEdit("0.5")
-        cond_row = QHBoxLayout()
-        for w in (self.cond_source, self.cond_name, self.cond_op, self.cond_value):
-            cond_row.addWidget(w)
+        cond_row = QFormLayout()
+        for label, field in (
+            ("Source", self.cond_source),
+            ("Name", self.cond_name),
+            ("Comparison", self.cond_op),
+            ("Value", self.cond_value),
+        ):
+            cond_row.addRow(label, field)
         add_cond, remove_cond = QPushButton("+ Condition"), QPushButton("− Condition")
         add_cond.clicked.connect(self.add_condition)
         remove_cond.clicked.connect(lambda: self.conditions.takeItem(self.conditions.currentRow()))
@@ -145,18 +152,24 @@ class EventFlowWidget(QWidget):
         new_program = QPushButton("New Program…")
         new_program.clicked.connect(self._new_program_clicked)
         top = QHBoxLayout()
-        top.addWidget(
-            QLabel("Programs are edited in the Event Program tab (entity events) or by script.")
-        )
+        hint = QLabel("Edit programs in Entity Events or Code.")
+        hint.setObjectName("MutedLabel")
+        hint.setWordWrap(True)
+        top.addWidget(hint, 1)
         top.addStretch(1)
         top.addWidget(new_program)
         from .responsive_form import ResponsiveColumns
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(12)
         layout.addLayout(top)
-        layout.addWidget(
-            ResponsiveColumns((common_box, battle_box), column_width=360), 1
-        )  # side by side if wide
+        panels = ResponsiveColumns((common_box, battle_box), column_width=420)
+        scroll = QScrollArea()
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(panels)
+        layout.addWidget(scroll, 1)
         layout.addWidget(self.status)
         self._condition_values = []
         self.refresh()
@@ -387,14 +400,20 @@ class SequenceEditorDialog(QDialog):
         self.error = QLabel("")
         self.error.setStyleSheet("color: #d9534f;")
         left = QVBoxLayout()
-        left.addWidget(QLabel("Tracks (run in parallel)"))
+        tracks_heading = QLabel("Tracks (run in parallel)")
+        tracks_heading.setProperty("presentationHeading", True)
+        tracks_heading.setWordWrap(True)
+        left.addWidget(tracks_heading)
         left.addWidget(self.track_list, 1)
         row = QHBoxLayout()
         row.addWidget(add_track)
         row.addWidget(remove_track)
         left.addLayout(row)
         right = QVBoxLayout()
-        right.addWidget(QLabel("Steps of the selected track (in order)"))
+        steps_heading = QLabel("Steps of the selected track (in order)")
+        steps_heading.setProperty("presentationHeading", True)
+        steps_heading.setWordWrap(True)
+        right.addWidget(steps_heading)
         right.addWidget(self.steps, 1)
         order = QHBoxLayout()
         for b in (up, down, remove_step):
@@ -420,6 +439,10 @@ class SequenceEditorDialog(QDialog):
         layout.addWidget(buttons)
         self._build_form(self.opcode.currentText())
         self._show_tracks()
+        from .presentation_layout import polish_presentation_page
+
+        polish_presentation_page(self)
+        self.resize(860, 700)
 
     def _show_tracks(self, select=0):
         self.track_list.blockSignals(True)

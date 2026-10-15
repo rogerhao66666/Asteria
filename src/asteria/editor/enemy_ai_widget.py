@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QLabel,
+    QLayout,
     QLineEdit,
     QListWidget,
     QListWidgetItem,
@@ -37,6 +38,7 @@ from asteria.rpg.enemy_ai import (
     TARGET_SELECTORS,
 )
 
+from .authoring_sidebar import authoring_sidebar
 from .enemy_ai_authoring import AIScenario, EnemyAIEditor, EnemyAIEditorError
 from .responsive_form import ResponsiveColumns
 from .ui_fit import fit_combo_boxes
@@ -182,15 +184,10 @@ class EnemyAIEditorWidget(QWidget):
         new_button, delete_button = QPushButton("New…"), QPushButton("Delete")
         new_button.clicked.connect(self._new_clicked)
         delete_button.clicked.connect(self.delete_ai)
-        left = QVBoxLayout()
-        left.addWidget(QLabel("Enemy AI"))
-        left.addWidget(self.ai_list, 1)
         row = QHBoxLayout()
         row.addWidget(new_button)
         row.addWidget(delete_button)
-        left.addLayout(row)
-        left_box = QWidget()
-        left_box.setLayout(left)
+        left_box = authoring_sidebar("Enemy AI", self.ai_list, footer=row)
 
         # -- overview ------------------------------------------------------------------
         self.actions_per_ready = QSpinBox()
@@ -223,6 +220,7 @@ class EnemyAIEditorWidget(QWidget):
         self.rules.horizontalHeader().setStretchLastSection(True)
         self.rules.horizontalHeader().setDefaultSectionSize(78)  # narrow windows: no side scroll
         self.rules.horizontalHeader().setMinimumSectionSize(48)
+        self.rules.resizeColumnsToContents()
         self.rules.itemSelectionChanged.connect(self._rule_selected)
         self.action_kind = QComboBox()
         self.action_kind.addItems(list(ACTION_KINDS))
@@ -310,9 +308,13 @@ class EnemyAIEditorWidget(QWidget):
         )
 
         self.tabs = QTabWidget()
+        self.tabs.setObjectName("EnemyAIRuleTabs")
+        self.tabs.tabBar().setObjectName("EnemyAIRuleTabBar")
+        self.tabs.tabBar().setDrawBase(True)
         self.tabs.addTab(rules_tab, "Decision Rules")
         self.tabs.addTab(phases_tab, "Boss Phases")
         center = QVBoxLayout()
+        center.setContentsMargins(0, 0, 0, 0)
         center.addWidget(overview)
         center.addWidget(self.tabs, 1)
         self.status = QLabel("")
@@ -329,6 +331,10 @@ class EnemyAIEditorWidget(QWidget):
         self.can_act.setChecked(True)
         self.can_act.toggled.connect(lambda _v: self.run_preview())
         self.resource_form = QFormLayout()
+        self.resource_form.setVerticalSpacing(10)
+        self.resource_form.setHorizontalSpacing(12)
+        self.resource_form.setRowWrapPolicy(QFormLayout.WrapLongRows)
+        self.resource_form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
         self.resource_inputs = {}
         self.decision = QListWidget()
         self.phase_label = QLabel("")
@@ -351,6 +357,7 @@ class EnemyAIEditorWidget(QWidget):
         cv = QVBoxLayout(checks)
         cv.addWidget(self.problem_list)
         right = QVBoxLayout()
+        right.setContentsMargins(0, 0, 0, 0)
         right.addWidget(preview, 2)
         right.addWidget(checks, 1)
         right_box = QWidget()
@@ -363,23 +370,58 @@ class EnemyAIEditorWidget(QWidget):
         split.setStretchFactor(1, 1)
         layout = QVBoxLayout(self)
         layout.addWidget(split)
+        for group in self.findChildren(QGroupBox):
+            self._inset_section_title(group)
         self.refresh()
+
+    @staticmethod
+    def _inset_section_title(group, *, scroll_contents=False):
+        title = group.title()
+        group.setTitle("")
+        group.setObjectName("EnemyAISectionCard")
+        body = QWidget()
+        body.setLayout(group.layout())
+        body.layout().setContentsMargins(8, 8, 8, 8)
+        body.layout().setSizeConstraint(QLayout.SetMinimumSize)
+        outer = QVBoxLayout(group)
+        outer.setSizeConstraint(QLayout.SetMinimumSize)
+        outer.setContentsMargins(10, 10, 10, 10)
+        outer.setSpacing(10)
+        heading = QLabel(title)
+        heading.setWordWrap(True)
+        heading.setObjectName("EnemyAISectionTitle")
+        outer.addWidget(heading)
+        if scroll_contents:
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setFrameShape(QFrame.NoFrame)
+            scroll.setViewportMargins(0, 0, 8, 0)
+            scroll.setWidget(body)
+            outer.addWidget(scroll, 1)
+        else:
+            outer.addWidget(body, 1)
 
     @staticmethod
     def _table_over_detail(table, box, conditions):
         """Table above its inspector in a splitter; the table always shows several rows."""
-        table.setMinimumHeight(150)
+        table.setMinimumHeight(100)
         # side by side when there is room, stacked when the window is narrow
         detail = ResponsiveColumns([box, conditions], column_width=300, max_columns=2)
-        scroll = QScrollArea()  # stacked, the panels need more height: scroll, never squeeze
+        scroll = QScrollArea()
+        scroll.setObjectName("EnemyAIDetailScroll")
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setViewportMargins(0, 0, 8, 0)
         scroll.setWidget(detail)
-        scroll.setMinimumHeight(160)
+        scroll.setMinimumHeight(280)
         split = QSplitter(Qt.Vertical)
+        split.setObjectName("EnemyAIRuleSplit")
+        split.setHandleWidth(10)
         split.addWidget(table)
         split.addWidget(scroll)
-        split.setStretchFactor(0, 1)
+        split.setSizes([140, 420])
+        split.setStretchFactor(0, 0)
+        split.setStretchFactor(1, 1)
         split.setChildrenCollapsible(False)
         return split
 
@@ -733,6 +775,9 @@ class EnemyAIEditorWidget(QWidget):
             spin.valueChanged.connect(lambda _v: self.run_preview())
             self.resource_inputs[rid] = (spin, maximum)
             self.resource_form.addRow(rid, spin)
+            # Measure after parenting so the inherited font and styled arrows are included.
+            spin.ensurePolished()
+            spin.setMinimumHeight(spin.sizeHint().height())
 
     def set_preview_resource(self, resource_id, amount):
         self.resource_inputs[resource_id][0].setValue(float(amount))

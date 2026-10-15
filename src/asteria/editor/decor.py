@@ -10,7 +10,7 @@ watches widgets as they appear and gives them an icon and a colour role from the
 * tab titles, and entries of combo boxes marked ``decorate=True`` (database categories), get the
   matching icon
 
-It only sets icons and the ``role`` property the theme styles; it never changes behaviour.
+Wheel input over numeric fields scrolls the surrounding content instead of editing values.
 
 ``compact`` keeps panels narrow so more columns fit on screen (``compact_widget``): combo boxes
 stop
@@ -168,6 +168,9 @@ SPIN_MIN_WIDTH = 64
 
 
 def compact_widget(widget):
+    if isinstance(widget, QGroupBox) and not widget.title() and not widget.isCheckable():
+        # Inset headings use layout padding; do not also reserve a native title row.
+        widget.setContentsMargins(0, 0, 0, 0)
     if isinstance(widget, QComboBox):
         if (
             widget.sizeAdjustPolicy() != QComboBox.AdjustToMinimumContentsLengthWithIcon
@@ -237,6 +240,9 @@ def _widen_popup(container):
 
 
 def _wrap_form(form):
+    if form.property("stackFields"):
+        form.setRowWrapPolicy(QFormLayout.WrapAllRows)
+        return
     # a label goes above its field only when the pane is too narrow for both side by side
     form.setRowWrapPolicy(QFormLayout.WrapLongRows)
     form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
@@ -303,6 +309,11 @@ def decorate(widget):
 class _Decorator(QObject):
     def eventFilter(self, obj, event):
         kind = event.type()
+        if kind == QEvent.Wheel and isinstance(obj, QAbstractSpinBox):
+            # An ignored wheel event propagates to the containing scroll area.
+            # Apply this even to focused controls so scrolling never edits data.
+            event.ignore()
+            return True
         if kind == QEvent.Show:
             if isinstance(obj, (QComboBox, QLabel, QGroupBox, QAbstractSpinBox)):
                 compact_widget(obj)

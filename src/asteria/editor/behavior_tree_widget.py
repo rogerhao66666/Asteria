@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QFormLayout,
+    QFrame,
     QGroupBox,
     QHBoxLayout,
     QInputDialog,
@@ -14,6 +15,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QPushButton,
+    QScrollArea,
     QSplitter,
     QTreeWidget,
     QTreeWidgetItem,
@@ -21,6 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .authoring_sidebar import authoring_sidebar
 from .behavior_tree_authoring import (
     KIND_GROUPS,
     PARAMS,
@@ -46,26 +49,33 @@ class BehaviorTreeEditorWidget(QWidget):
         new_button, delete_button = QPushButton("New…"), QPushButton("Delete")
         new_button.clicked.connect(self._new_clicked)
         delete_button.clicked.connect(self.delete_tree)
-        left = QVBoxLayout()
-        left.addWidget(QLabel("Behavior Trees"))
-        left.addWidget(self.tree_list, 1)
         row = QHBoxLayout()
         row.addWidget(new_button)
         row.addWidget(delete_button)
-        left.addLayout(row)
-        left_box = QWidget()
-        left_box.setLayout(left)
+        left_box = authoring_sidebar("Behavior Trees", self.tree_list, footer=row)
 
         self.nodes = QTreeWidget()
+        self.nodes.setObjectName("BehaviorTreeNodes")
         self.nodes.setHeaderLabels(["Node"])
+        self.nodes.setHeaderHidden(True)
+        self.nodes.setFrameShape(QFrame.NoFrame)
         self.nodes.itemSelectionChanged.connect(self._node_selected)
-        center = QVBoxLayout()
-        center.addWidget(
-            QLabel("Ticks top to bottom: sequence = all in order, selector = first that works")
+        center_box = QGroupBox()
+        center_box.setObjectName("EnemyAISectionCard")
+        center_box.setContentsMargins(0, 0, 0, 0)
+        center = QVBoxLayout(center_box)
+        center.setContentsMargins(10, 10, 10, 10)
+        center.setSpacing(10)
+        nodes_heading = QLabel("Node")
+        nodes_heading.setObjectName("EnemyAISectionTitle")
+        center.addWidget(nodes_heading)
+        nodes_hint = QLabel(
+            "Ticks top to bottom: sequence = all in order, selector = first that works"
         )
+        nodes_hint.setObjectName("MutedLabel")
+        nodes_hint.setWordWrap(True)
+        center.addWidget(nodes_hint)
         center.addWidget(self.nodes, 1)
-        center_box = QWidget()
-        center_box.setLayout(center)
 
         self.kind = QComboBox()
         self.add_kind = QComboBox()
@@ -88,8 +98,19 @@ class BehaviorTreeEditorWidget(QWidget):
         remove.clicked.connect(self.remove_node)
         up.clicked.connect(lambda: self.move_node(-1))
         down.clicked.connect(lambda: self.move_node(1))
-        node_box = QGroupBox("Selected Node")
-        nv = QVBoxLayout(node_box)
+        node_box = QGroupBox()
+        node_box.setObjectName("EnemyAISectionCard")
+        node_box.setMinimumHeight(320)
+        card_layout = QVBoxLayout(node_box)
+        card_layout.setContentsMargins(10, 10, 10, 10)
+        card_layout.setSpacing(10)
+        heading = QLabel("Selected Node")
+        heading.setObjectName("EnemyAISectionTitle")
+        card_layout.addWidget(heading)
+        node_content = QWidget()
+        nv = QVBoxLayout(node_content)
+        nv.setContentsMargins(8, 8, 8, 8)
+        nv.setSpacing(12)
         kind_row = QHBoxLayout()
         kind_row.addWidget(self.kind, 1)
         kind_row.addWidget(apply_kind)
@@ -104,12 +125,19 @@ class BehaviorTreeEditorWidget(QWidget):
         add_row.addWidget(self.add_kind, 1)
         add_row.addWidget(add_child)
         nv.addLayout(add_row)
+        nv.addStretch(1)
+        node_scroll = QScrollArea()
+        node_scroll.setWidgetResizable(True)
+        node_scroll.setFrameShape(QFrame.NoFrame)
+        node_scroll.setViewportMargins(0, 0, 8, 0)
+        node_scroll.setWidget(node_content)
+        card_layout.addWidget(node_scroll, 1)
         self.status = QLabel("")
         self.status.setWordWrap(True)
         right = QVBoxLayout()
-        right.addWidget(node_box)
+        right.setContentsMargins(0, 0, 0, 0)
+        right.addWidget(node_box, 1)
         right.addWidget(self.status)
-        right.addStretch(1)
         right_box = QWidget()
         right_box.setLayout(right)
         split = QSplitter()

@@ -43,6 +43,7 @@ class AnimationWidget(QWidget):
         self.status = QLabel("No animation selected")
         self.status.setObjectName("MutedLabel")
         layout.addWidget(self.status)
+        layout.addStretch(1)
         self.clip.currentTextChanged.connect(self.clipChanged.emit)
         self.play.clicked.connect(self.playToggled.emit)
         self.restart.clicked.connect(self.restartRequested.emit)

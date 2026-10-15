@@ -1,5 +1,5 @@
 try:
-    from PySide6.QtCore import Qt, Signal
+    from PySide6.QtCore import QEvent, QPoint, Qt, QTimer, Signal
     from PySide6.QtWidgets import (
         QCheckBox,
         QComboBox,
@@ -11,6 +11,8 @@ try:
         QLineEdit,
         QListWidget,
         QPushButton,
+        QScrollArea,
+        QSizePolicy,
         QSpinBox,
         QToolButton,
         QVBoxLayout,
@@ -39,9 +41,12 @@ class TilePaletteWidget(QWidget):
         if Qt is None:
             raise RuntimeError("PySide6 is required")
         super().__init__(parent)
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         self._tileset = None
         self._doodads = {}
         self._area_rule_set = None
+        self._dock_scroll_area = None
+        self._updating_area_rule_height = False
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setSpacing(6)
@@ -84,6 +89,8 @@ class TilePaletteWidget(QWidget):
         self.terrain_combo = QComboBox()
         self.terrain_combo.setToolTip("Terrains: tiles with a terrain id and mask:<n> tags")
         self.region_spin = QSpinBox()
+        self.region_spin.setObjectName("RegionIdSpin")
+        self.region_spin.setMinimumHeight(30)
         self.region_spin.setRange(0, 255)
         self.region_spin.setValue(1)
         self.region_erase = QCheckBox("Erase region")
@@ -100,16 +107,34 @@ class TilePaletteWidget(QWidget):
             row.addWidget(widget, 1)
             layout.addLayout(row)
 
-        self.region_rules = QGroupBox("Area Rule")
+        self.region_rules = QGroupBox()
+        self.region_rules.setObjectName("AreaRuleCard")
+        self.region_rules.setMinimumWidth(0)
+        self.region_rules.setMaximumHeight(360)
         region_layout = QVBoxLayout(self.region_rules)
         region_layout.setContentsMargins(8, 8, 8, 8)
+        region_layout.setSpacing(8)
+        region_title = QLabel("Area Rule")
+        region_title.setObjectName("AreaRuleTitle")
+        self.region_title = region_title
+        region_layout.addWidget(region_title)
+        region_content = QWidget()
+        region_content_layout = QVBoxLayout(region_content)
+        region_content_layout.setContentsMargins(0, 0, 0, 0)
+        region_content_layout.setSpacing(6)
         self.region_rule_status = QLabel("Create a map ruleset to edit region rules")
         self.region_rule_status.setObjectName("MutedLabel")
         self.region_rule_status.setWordWrap(True)
-        region_layout.addWidget(self.region_rule_status)
+        region_content_layout.addWidget(self.region_rule_status)
         self.region_rule_form = QWidget()
         form = QFormLayout(self.region_rule_form)
+        form.setProperty("stackFields", True)
+        form.setRowWrapPolicy(QFormLayout.WrapAllRows)
+        form.setVerticalSpacing(10)
+        form.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
         form.setContentsMargins(0, 0, 0, 0)
+        self.region_rule_form.setMinimumWidth(0)
+        self.region_rule_form.setMinimumHeight(0)
         self.damage_resource = QLineEdit()
         self.damage_per_second = self._rule_spin()
         self.can_kill = QCheckBox("Can defeat player")
@@ -139,18 +164,28 @@ class TilePaletteWidget(QWidget):
             ("Required Switch", self.switch),
         ):
             form.addRow(label, widget)
-        region_layout.addWidget(self.region_rule_form)
+        self.region_rule_fields_scroll = QScrollArea(self.region_rules)
+        self.region_rule_fields_scroll.setObjectName("AreaRuleFieldsScroll")
+        self.region_rule_fields_scroll.setWidgetResizable(True)
+        self.region_rule_fields_scroll.setFrameShape(QScrollArea.NoFrame)
+        self.region_rule_fields_scroll.setMinimumSize(0, 0)
+        self.region_rule_fields_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.region_rule_fields_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        region_content_layout.addWidget(self.region_rule_form)
+        self.region_rule_fields_scroll.setViewportMargins(0, 0, 8, 0)
+        self.region_rule_fields_scroll.setWidget(region_content)
+        region_layout.addWidget(self.region_rule_fields_scroll, 1)
         self.region_layer_label = QLabel("Region layer: regions")
         self.region_layer_label.setObjectName("MutedLabel")
-        region_layout.addWidget(self.region_layer_label)
-        actions = QHBoxLayout()
+        region_content_layout.addWidget(self.region_layer_label)
+        actions = QVBoxLayout()
         self.apply_region_rule = QPushButton("Apply Rule")
         self.remove_region_rule = QPushButton("Remove Rule")
         self.create_map_ruleset = QPushButton("Create Map Ruleset")
         actions.addWidget(self.apply_region_rule)
         actions.addWidget(self.remove_region_rule)
         actions.addWidget(self.create_map_ruleset)
-        region_layout.addLayout(actions)
+        region_content_layout.addLayout(actions)
         layout.addWidget(self.region_rules)
 
         self.layer_label = QLabel("Layer: —")
@@ -179,6 +214,35 @@ class TilePaletteWidget(QWidget):
         self.create_map_ruleset.clicked.connect(self.createMapRuleSetRequested.emit)
         self.doodad_combo.currentTextChanged.connect(self._doodad_changed)
         self.list.currentRowChanged.connect(self._row_changed)
+
+    def bind_dock_scroll_area(self, scroll_area):
+        """Keep the Area Rule frame within the visible portion of the Tiles dock."""
+        self._dock_scroll_area = scroll_area
+        scroll_area.viewport().installEventFilter(self)
+        scroll_area.verticalScrollBar().valueChanged.connect(self._update_area_rule_height)
+        QTimer.singleShot(0, self._update_area_rule_height)
+
+    def eventFilter(self, watched, event):
+        if (
+            watched is getattr(self._dock_scroll_area, "viewport", lambda: None)()
+            and event.type() == QEvent.Resize
+        ):
+            QTimer.singleShot(0, self._update_area_rule_height)
+        return super().eventFilter(watched, event)
+
+    def _update_area_rule_height(self, *_):
+        scroll_area = self._dock_scroll_area
+        if scroll_area is None or self._updating_area_rule_height:
+            return
+        viewport = scroll_area.viewport()
+        top = self.region_rules.mapTo(viewport, QPoint(0, 0)).y()
+        available = viewport.height() - max(0, top) - 24
+        maximum = max(200, min(360, available))
+        if self.region_rules.maximumHeight() == maximum:
+            return
+        self._updating_area_rule_height = True
+        self.region_rules.setMaximumHeight(maximum)
+        self._updating_area_rule_height = False
 
     def _set_mode(self, mode):
         mapping = {
@@ -225,14 +289,14 @@ class TilePaletteWidget(QWidget):
         self.remove_region_rule.setEnabled(enabled)
         self.create_map_ruleset.setVisible(not enabled)
         if not enabled:
-            self.region_rules.setTitle("Area Rule")
+            self.region_title.setText("Area Rule")
             self.region_rule_status.setText("Create a map ruleset to edit region rules")
             return
         region_id = self.region_spin.value()
         key = f"region:{region_id}"
         existing = ruleset.rule(key)
         rule = existing or AreaRule(key)
-        self.region_rules.setTitle(f"Area Rule · {key}")
+        self.region_title.setText(f"Area Rule · {key}")
         self.region_rule_status.setText(
             f"Ruleset: {ruleset.rules_id} · " + ("Existing rule" if existing else "No rule yet")
         )

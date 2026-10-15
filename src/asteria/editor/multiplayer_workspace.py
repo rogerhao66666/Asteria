@@ -331,6 +331,12 @@ class MultiplayerWorkspaceWidget(QWidget):
         self.session_name.setPlaceholderText("Session name")
         self.listen_address = QComboBox()
         self.listen_address.setEditable(True)
+        self.listen_address.setMinimumContentsLength(15)
+        self.listen_address.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.listen_address.ensurePolished()
+        self.listen_address.setMinimumWidth(
+            self.listen_address.fontMetrics().horizontalAdvance("255.255.255.255") + 64
+        )
         self.listen_address.addItems(["127.0.0.1", "0.0.0.0"])
         self.listen_address.setCurrentText("127.0.0.1")
         self.max_players = QSpinBox()

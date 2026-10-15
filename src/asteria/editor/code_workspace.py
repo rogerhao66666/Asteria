@@ -9,6 +9,7 @@ try:
     from PySide6.QtWidgets import (
         QComboBox,
         QCompleter,
+        QFrame,
         QHBoxLayout,
         QInputDialog,
         QLabel,
@@ -115,7 +116,6 @@ class CodeWorkspaceWidget(QWidget):
 
         self.quick_reference = QPlainTextEdit()
         self.quick_reference.setReadOnly(True)
-        self.quick_reference.setMaximumWidth(330)
         self.quick_reference.setFont(fixed)
         self.quick_reference.setPlainText(
             "ASTERIA AUTHORING API\n\n"
@@ -162,34 +162,56 @@ class CodeWorkspaceWidget(QWidget):
         self.run_shortcut.activated.connect(self._request_run)
 
         top = QHBoxLayout()
-        top.addWidget(self.path_label)
-        top.addWidget(self.script_list)
-        top.addStretch(1)
-        top.addWidget(self.new_button)
-        top.addWidget(self.reload_button)
-        top.addWidget(self.save_button)
-        top.addWidget(self.run_button)
+        top.addWidget(self.script_list, 1)
+        from .flow_layout import FlowLayout
+
+        actions = FlowLayout(spacing=8)
+        for button in (self.new_button, self.reload_button, self.save_button, self.run_button):
+            actions.addWidget(button)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 8, 10, 10)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(12)
         layout.addWidget(self.context_label)
         layout.addWidget(self.selection_label)
         layout.addLayout(top)
-        body = QHBoxLayout()
-        body.addWidget(self.editor, 1)
-        body.addWidget(self.quick_reference)
-        body_box = QWidget()
-        body_box.setLayout(body)
+        layout.addLayout(actions)
+        body_box = QSplitter()
+        editor_panel = self._panel(self.path_label, self.editor)
+        reference_panel = self._panel(QLabel("Authoring API"), self.quick_reference)
+        reference_panel.setMinimumWidth(220)
+        reference_panel.setMaximumWidth(360)
+        body_box.addWidget(editor_panel)
+        body_box.addWidget(reference_panel)
+        body_box.setStretchFactor(0, 4)
         results = QSplitter()
-        results.addWidget(self.output)
-        results.addWidget(self.frames)
+        results.addWidget(self._panel(QLabel("Output"), self.output))
+        results.addWidget(self._panel(QLabel("Traceback"), self.frames))
         results.setStretchFactor(0, 3)
         split = QSplitter(Qt.Vertical)
+        split.setChildrenCollapsible(False)
+        split.setHandleWidth(12)
         split.addWidget(body_box)
         split.addWidget(results)
         split.setStretchFactor(0, 4)
         layout.addWidget(split, 1)
         self.refresh_project_context()
+
+    @staticmethod
+    def _panel(heading, view):
+        panel = QFrame()
+        panel.setObjectName("AuthoringPreviewCard")
+        panel.setMinimumHeight(160)
+        layout = QVBoxLayout(panel)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(12)
+        heading.setProperty("presentationHeading", True)
+        heading.setWordWrap(True)
+        layout.addWidget(heading)
+        view.setProperty("authoringPanelContent", True)
+        view.setFrameShape(QFrame.NoFrame)
+        layout.addWidget(view, 1)
+        return panel
 
     def scripts_dir(self):
         if self.document.file_path is None:

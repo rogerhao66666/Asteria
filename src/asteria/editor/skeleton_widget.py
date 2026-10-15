@@ -1,18 +1,20 @@
 """A small dock that plays an imported 2D skeleton so a rig can be checked before use."""
 
 try:
-    from PySide6.QtCore import Qt, QTimer, Signal
+    from PySide6.QtCore import QEvent, Qt, QTimer, Signal
     from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
     from PySide6.QtWidgets import (
         QComboBox,
         QDoubleSpinBox,
         QFileDialog,
         QFormLayout,
+        QFrame,
         QGroupBox,
         QHBoxLayout,
         QLabel,
         QLineEdit,
         QPushButton,
+        QScrollArea,
         QSlider,
         QVBoxLayout,
         QWidget,
@@ -209,12 +211,41 @@ class SkeletonViewerWidget(QWidget):
         layout.addWidget(self.slider)
         self.timeline = _Timeline(self)
         layout.addWidget(self.timeline)
-        self._build_bone_editor(layout)
-        self._build_key_editor(layout)
+
+        controls = QWidget(self)
+        controls_layout = QVBoxLayout(controls)
+        controls_layout.setContentsMargins(0, 0, 0, 0)
+        controls_layout.setSpacing(layout.spacing())
+        self._build_bone_editor(controls_layout)
+        self._build_key_editor(controls_layout)
         self.status = QLabel("No rig loaded")
         self.status.setObjectName("MutedLabel")
         self.status.setWordWrap(True)
-        layout.addWidget(self.status)
+        controls_layout.addWidget(self.status)
+        self.controls_scroll = QScrollArea(self)
+        self.controls_scroll.setObjectName("SkeletonControlsScrollArea")
+        self.controls_scroll.setFrameShape(QFrame.NoFrame)
+        self.controls_scroll.setWidgetResizable(True)
+        self.controls_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.controls_scroll.setWidget(controls)
+        layout.addWidget(self.controls_scroll, 1)
+        for field in (
+            self.bone_combo,
+            self.bone_parent,
+            self.bone_x,
+            self.bone_y,
+            self.bone_rotation,
+            self.bone_scale_x,
+            self.bone_scale_y,
+            self.bone_length,
+            self.track_bone,
+            self.track_channel,
+            self.key_combo,
+            self.key_time,
+            self.key_value,
+            self.key_easing,
+        ):
+            field.installEventFilter(self)
         self._timer = QTimer(self)
         self._timer.setInterval(33)
         self._timer.timeout.connect(self._advance)
@@ -226,6 +257,39 @@ class SkeletonViewerWidget(QWidget):
             lambda on: self._timer.start() if on else self._timer.stop()
         )
         self.slider.valueChanged.connect(self._scrub)
+
+    def eventFilter(self, watched, event):
+        if (
+            event.type() == QEvent.Wheel
+            and isinstance(watched, QDoubleSpinBox)
+            and self._is_scroll_field(watched)
+        ):
+            # Scrolling the inspector must never edit a field, even while focused.
+            delta = event.pixelDelta().y() or event.angleDelta().y()
+            if delta:
+                bar = self.controls_scroll.verticalScrollBar()
+                bar.setValue(bar.value() - delta)
+            event.accept()
+            return True
+        return super().eventFilter(watched, event)
+
+    def _is_scroll_field(self, widget):
+        return widget in (
+            self.bone_combo,
+            self.bone_parent,
+            self.bone_x,
+            self.bone_y,
+            self.bone_rotation,
+            self.bone_scale_x,
+            self.bone_scale_y,
+            self.bone_length,
+            self.track_bone,
+            self.track_channel,
+            self.key_combo,
+            self.key_time,
+            self.key_value,
+            self.key_easing,
+        )
 
     def set_document(self, document):
         self.document = document

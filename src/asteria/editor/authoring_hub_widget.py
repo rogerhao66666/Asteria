@@ -1080,7 +1080,9 @@ class FamilyHostWidget(QWidget):
             self.child = None
         self.project_id = pid
         if project is None:
-            self.child = QLabel("Open a project to edit its data.")
+            from .project_empty_state import ProjectEmptyState
+
+            self.child = ProjectEmptyState(f"Open a project to edit {self.title.lower()}.")
         else:
             document = getattr(getattr(self.builder, "__self__", None), "document", None)
             self.child = AdapterFamilyWidget(self.title, self.builder(), document=document)

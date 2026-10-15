@@ -119,6 +119,8 @@ def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
     )  # Character Creator retired (CB15)
     assert window.workspace.page(WorkspaceMode.BATTLE) is window.battle_authoring
     assert window.workspace.page(WorkspaceMode.UI) is window.ui_workspace
+    assert window.project_tree.tree.objectName() == "ProjectHierarchyTree"
+    assert window.asset_list.objectName() == "AssetList"
     assert window.workspace.page(WorkspaceMode.EVENT) is window.events_workspace
     assert window.workspace.page(WorkspaceMode.MULTIPLAYER) is window.multiplayer_workspace
     assert [window.ui_workspace.tabText(i) for i in range(window.ui_workspace.count())] == [
@@ -132,7 +134,9 @@ def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
         "Battle Effects",
         "Particle Effects",
         "Controls",
+        "Skeleton",
     ]
+    assert window.ui_workspace.widget(window.ui_workspace.count() - 1) is window.skeleton_page
     assert [window.rpg_workspace.tabText(i) for i in range(window.rpg_workspace.count())] == [
         "Game Data",
         "Game Systems",

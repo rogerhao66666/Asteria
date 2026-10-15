@@ -14,6 +14,8 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QPushButton,
+    QScrollArea,
+    QSizePolicy,
     QSplitter,
     QTreeWidget,
     QTreeWidgetItem,
@@ -85,6 +87,7 @@ class DebuggerWidget(QWidget):
         top.addWidget(self.refresh_button)
 
         self.tree = QTreeWidget()
+        self.tree.setObjectName("DebuggerGameStateTable")
         self.tree.setHeaderLabels(["Game State", "Value"])
         self.tree.setColumnWidth(0, 220)
 
@@ -99,20 +102,45 @@ class DebuggerWidget(QWidget):
         self.result = QLabel("")
         self.result.setWordWrap(True)
         self.history = QListWidget()
-        actions = QGroupBox("Debug Actions")
+        actions = QGroupBox()
+        actions.setObjectName("DebugActionsCard")
+        actions.setMinimumSize(0, 0)
         box = QVBoxLayout(actions)
-        box.addWidget(self.command)
-        box.addLayout(self.args_form)
-        box.addWidget(run)
-        box.addWidget(self.result)
-        box.addWidget(QLabel("History"))
-        box.addWidget(self.history, 1)
+        box.setContentsMargins(10, 10, 10, 10)
+        box.setSpacing(8)
+        action_title = QLabel("Debug Actions")
+        action_title.setObjectName("DebugActionsTitle")
+        box.addWidget(action_title)
+        action_scroll = QScrollArea(actions)
+        action_scroll.setObjectName("DebugActionsScroll")
+        action_scroll.setWidgetResizable(True)
+        action_scroll.setFrameShape(QScrollArea.NoFrame)
+        action_scroll.setMinimumSize(0, 0)
+        action_scroll.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        action_content = QWidget()
+        action_content.setObjectName("DebugActionsContent")
+        content_box = QVBoxLayout(action_content)
+        content_box.setContentsMargins(0, 4, 4, 8)
+        content_box.setSpacing(8)
+        content_box.addWidget(self.command)
+        content_box.addLayout(self.args_form)
+        content_box.addWidget(run)
+        content_box.addWidget(self.result)
+        content_box.addWidget(QLabel("History"))
+        content_box.addWidget(self.history, 1)
+        action_scroll.setWidget(action_content)
+        box.addWidget(action_scroll, 1)
 
         split = QSplitter()
+        split.setObjectName("DebuggerSplit")
         split.addWidget(self.tree)
         split.addWidget(actions)
         split.setStretchFactor(0, 2)
+        split.setMinimumSize(0, 0)
+        split.setHandleWidth(8)
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 10, 10, 20)
+        layout.setSpacing(8)
         layout.addLayout(top)
         layout.addWidget(split, 1)
         self.timer = QTimer(self)

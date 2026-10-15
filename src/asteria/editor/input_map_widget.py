@@ -12,6 +12,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
     QInputDialog,
     QLabel,
@@ -25,6 +26,8 @@ from PySide6.QtWidgets import (
 
 from asteria.runtime.input_map import DEVICES, InputActionMap, InputBinding
 from asteria.runtime.input_rebinding import describe_binding
+
+from .authoring_sidebar import authoring_sidebar
 
 
 @dataclass(slots=True)
@@ -127,24 +130,28 @@ class InputMapWidget(QWidget):
         form.addRow("Device", self.device)
         form.addRow("Code", self.code)
         form.addRow("Direction (axes / hats)", self.direction)
-        left = QVBoxLayout()
-        left.addWidget(QLabel("Actions"))
-        left.addWidget(self.actions, 1)
         row = QHBoxLayout()
         row.addWidget(add_action)
         row.addWidget(remove_action)
-        left.addLayout(row)
+        left_panel = authoring_sidebar("Actions", self.actions, footer=row)
         right = QVBoxLayout()
-        right.addWidget(QLabel("Bindings"))
+        right.setContentsMargins(12, 12, 12, 12)
+        right.setSpacing(10)
+        heading = QLabel("Bindings")
+        heading.setObjectName("AuthoringSidebarTitle")
+        right.addWidget(heading)
         right.addWidget(self.bindings, 1)
         right.addLayout(form)
         brow = QHBoxLayout()
         brow.addWidget(add_binding)
         brow.addWidget(remove_binding)
         right.addLayout(brow)
+        right_panel = QFrame()
+        right_panel.setObjectName("AuthoringPreviewCard")
+        right_panel.setLayout(right)
         body = QHBoxLayout()
-        body.addLayout(left, 1)
-        body.addLayout(right, 2)
+        body.addWidget(left_panel, 1)
+        body.addWidget(right_panel, 2)
         layout = QVBoxLayout(self)
         layout.addLayout(body, 1)
         layout.addWidget(self.status)

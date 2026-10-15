@@ -175,6 +175,43 @@ def test_skeleton_widget_saves_and_reopens_native_project_json(app, tmp_path):
         loaded.close()
 
 
+def test_wheel_over_unfocused_skeleton_field_scrolls_panel_not_field(app):
+    from PySide6.QtCore import QPoint, QPointF, Qt
+    from PySide6.QtGui import QWheelEvent
+
+    from asteria.editor.skeleton_widget import SkeletonViewerWidget
+
+    widget = SkeletonViewerWidget()
+    widget.resize(520, 480)
+    widget.set_skeleton(sample_skeleton())
+    widget.show()
+    app.processEvents()
+    try:
+        field = widget.bone_x
+        field.clearFocus()
+        field.setValue(7.0)
+        bar = widget.controls_scroll.verticalScrollBar()
+        assert bar.maximum() > 0
+        bar.setValue(0)
+
+        event = QWheelEvent(
+            QPointF(8, 8),
+            QPointF(field.mapToGlobal(QPoint(8, 8))),
+            QPoint(),
+            QPoint(0, -120),
+            Qt.NoButton,
+            Qt.NoModifier,
+            Qt.ScrollPhase.ScrollUpdate,
+            False,
+        )
+        app.sendEvent(field, event)
+
+        assert field.value() == 7.0
+        assert bar.value() > 0
+    finally:
+        widget.close()
+
+
 def test_skeleton_preview_draws_slot_sprite_through_runtime_adapter(app, tmp_path):
     from PySide6.QtCore import QPoint
     from PySide6.QtGui import QColor, QImage, QPainter
@@ -246,3 +283,44 @@ def test_skeleton_widget_attaches_rig_as_one_undoable_scene_component(app):
         assert entity.try_get(SkeletonAnimation2DComponent) is component
     finally:
         widget.close()
+
+
+def test_skeleton_presentation_tab_floats_and_returns_to_its_tab(app):
+    from asteria.editor.shell import AsteriaEditorWindow
+    from asteria.editor.workspace import WorkspaceMode
+
+    window = AsteriaEditorWindow()
+    try:
+        window.resize(1280, 800)
+        window.show()
+        window.workspace.set_mode(WorkspaceMode.UI)
+        window.ui_workspace.setCurrentWidget(window.skeleton_page)
+        app.processEvents()
+
+        page = window.skeleton_page
+        assert page.isVisible()
+        assert page.height() <= window.ui_workspace.height()
+        viewer = window.skeleton_viewer
+        assert viewer.controls_scroll.verticalScrollBar().maximum() > 0
+        for field_name in ("bone_combo", "bone_name", "bone_x", "track_bone", "key_time"):
+            field = getattr(viewer, field_name)
+            assert field.height() >= field.minimumSizeHint().height()
+        title_bar = page.title_bar
+        assert title_bar.float_button.isVisible()
+
+        title_bar.float_button.click()
+        app.processEvents()
+        assert page.is_floating
+        assert page.viewer.parent() is page._dialog
+        assert page._dialog.isVisible()
+        assert title_bar.close_button.isVisible()
+
+        title_bar.close_button.click()
+        app.processEvents()
+        assert not page.is_floating
+        assert page.viewer.parent() is page
+        assert window.ui_workspace.currentWidget() is page
+    finally:
+        window.close()
+        window.deleteLater()
+        app.processEvents()

@@ -35,8 +35,19 @@ def _button_icon(kind):
 
 
 class DockTitleBar(QWidget):
-    def __init__(self, dock, icon_name, accent=None):
-        super().__init__(dock)
+    def __init__(
+        self,
+        dock,
+        icon_name,
+        accent=None,
+        *,
+        title=None,
+        float_action=None,
+        close_action=None,
+        show_close_button=True,
+        parent=None,
+    ):
+        super().__init__(dock or parent)
         self.setObjectName("DockTitleBar")
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.dock = dock
@@ -48,20 +59,25 @@ class DockTitleBar(QWidget):
         self.icon_label.setPixmap(
             pixmap(icon_name, 16, self.accent.name(), self.devicePixelRatioF() or 2.0)
         )
-        self.title = QLabel(dock.windowTitle())
+        self.title = QLabel(title or dock.windowTitle())
         self.title.setObjectName("DockTitle")
         layout.addWidget(self.icon_label)
         layout.addWidget(self.title, 1)
-        self.float_button = self._button("float", "Float / dock this panel", self._toggle_float)
+        float_action = float_action or self._toggle_float
+        self.float_button = self._button("float", "Float / dock this panel", float_action)
         self.close_button = self._button(
-            "close", "Close this panel (View ▸ Panels reopens it)", dock.close
+            "close",
+            "Close this panel (View ▸ Panels reopens it)",
+            close_action or (dock.close if dock is not None else lambda: None),
         )
+        self.close_button.setVisible(show_close_button)
         layout.addWidget(self.float_button)
         layout.addWidget(self.close_button)
-        dock.windowTitleChanged.connect(self.title.setText)
-        dock.setWindowIcon(
-            icon(icon_name, self.accent.name())
-        )  # shown on the dock's tab when tabified
+        if dock is not None:
+            dock.windowTitleChanged.connect(self.title.setText)
+            dock.setWindowIcon(
+                icon(icon_name, self.accent.name())
+            )  # shown on the dock's tab when tabified
 
     def _button(self, kind, tip, slot):
         button = QToolButton(self)
@@ -74,7 +90,8 @@ class DockTitleBar(QWidget):
         return button
 
     def _toggle_float(self):
-        self.dock.setFloating(not self.dock.isFloating())
+        if self.dock is not None:
+            self.dock.setFloating(not self.dock.isFloating())
 
     def paintEvent(self, event):
         super().paintEvent(event)

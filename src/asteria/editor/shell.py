@@ -60,11 +60,15 @@ try:
         QApplication,
         QDockWidget,
         QFileDialog,
+        QFrame,
         QInputDialog,
         QListWidget,
         QListWidgetItem,
         QMainWindow,
         QMessageBox,
+        QProxyStyle,
+        QScrollArea,
+        QStyle,
         QTabBar,
         QTextEdit,
         QToolBar,
@@ -75,6 +79,7 @@ except ImportError:
     QApplication = None
     QMainWindow = object
     Qt = None
+
 
 from asteria.authoring import run_authoring_script
 from asteria.core.ids import new_id
@@ -93,6 +98,7 @@ from .animation_widget import AnimationWidget
 from .authoring_context import animation_context, scene_authoring_source
 from .resource_resolver import EditorResourceError, resolve_project_resources
 from .skeleton_widget import SkeletonViewerWidget
+from .skeleton_workspace_page import SkeletonWorkspacePage
 from .theme import apply_asteria_theme
 from .tile_edit import (
     AddTileLayerCommand,
@@ -105,6 +111,48 @@ from .tile_layers_widget import TileLayersWidget
 from .tile_palette_widget import TilePaletteWidget
 from .viewport_widget import SceneViewportWidget
 from .widgets import InspectorWidget, ProjectTreeWidget, asset_icon_name
+
+if QApplication is not None:
+
+    class _CenteredDockTabStyle(QProxyStyle):
+        def styleHint(self, hint, option=None, widget=None, returnData=None):
+            if hint == QStyle.StyleHint.SH_TabBar_Alignment:
+                return int(Qt.AlignmentFlag.AlignHCenter)
+            return super().styleHint(hint, option, widget, returnData)
+
+
+def _dock_card(widget):
+    host = QWidget()
+    host.setObjectName("DockContentHost")
+    outer = QVBoxLayout(host)
+    outer.setContentsMargins(12, 12, 12, 16)
+    outer.setSpacing(0)
+    card = QFrame(host)
+    card.setObjectName("DockContentCard")
+    card.setAttribute(Qt.WA_StyledBackground, True)
+    layout = QVBoxLayout(card)
+    layout.setContentsMargins(1, 1, 1, 1)
+    layout.setSpacing(0)
+    area = scrollable(widget)
+    area.setProperty("dockContentSurface", True)
+    area.viewport().setProperty("dockContentSurface", True)
+    widget.setProperty("dockContentSurface", True)
+    area.setObjectName(f"{widget.metaObject().className()}Scroll")
+    area.setViewportMargins(0, 0, 0, 0)
+    area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+    layout.addWidget(area)
+    outer.addWidget(card)
+    return host
+
+
+def _dock_scrollable(widget):
+    return _dock_card(widget)
+
+
+def _scene_dock_scrollable(widget):
+    return _dock_card(widget)
+
 
 _WORKSPACE_ICON = {
     WorkspaceMode.SCENE: "scene",
@@ -130,6 +178,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.runtime_monitor.timeout.connect(self._poll_runtime_process)
         self.runtime_monitor.start()
         self.setWindowTitle("Asteria Editor")
+        self.setDocumentMode(True)
         self.resize(1280, 800)
         self.setMinimumSize(1000, 640)  # below this the panels squeeze text (audited sizes)
 
@@ -149,6 +198,9 @@ class AsteriaEditorWindow(QMainWindow):
         # (CB14).
         self.viewport.characterCellClicked.connect(self._place_character_at)
         self.rpg_workspace = ScrollingTabWidget(self)
+        self.rpg_workspace.setObjectName("DatabaseWorkspaceTabs")
+        self.rpg_workspace.tabBar().setObjectName("DatabaseWorkspaceTabBar")
+        self.rpg_workspace.tabBar().setDrawBase(True)
         self.rpg_workspace.addTab(self.rpg_authoring, "Game Data")
         from .game_systems_authoring import GameSystemsAuthoringController
         from .game_systems_widget import GameSystemsEditorWidget
@@ -184,6 +236,9 @@ class AsteriaEditorWindow(QMainWindow):
         )
 
         self.ui_workspace = ScrollingTabWidget(self)
+        self.ui_workspace.setObjectName("PresentationWorkspaceTabs")
+        self.ui_workspace.tabBar().setObjectName("PresentationWorkspaceTabBar")
+        self.ui_workspace.tabBar().setDrawBase(True)
         self.ui_workspace.addTab(self.presentation_authoring, "Battle Screen")
         self.ui_workspace.addTab(self.runtime_ui_authoring, "Menu Screens")
         self.ui_workspace.addTab(self.animation_widget, "Animation Preview")
@@ -224,6 +279,9 @@ class AsteriaEditorWindow(QMainWindow):
 
         self.game_flow_overview = GameFlowOverviewWidget(self.document, self)
         self.events_workspace = ScrollingTabWidget(self)
+        self.events_workspace.setObjectName("EventsWorkspaceTabs")
+        self.events_workspace.tabBar().setObjectName("EventsWorkspaceTabBar")
+        self.events_workspace.tabBar().setDrawBase(True)
         self.events_workspace.addTab(self.event_editor, "Entity Events")
         self.events_workspace.addTab(self.game_flow_overview, "Interaction Overview")
         from .event_flow_widget import EventFlowWidget
@@ -254,14 +312,16 @@ class AsteriaEditorWindow(QMainWindow):
         self.project_tree = ProjectTreeWidget(self.document)
         left = QDockWidget("Project", self)
         left.setObjectName("ProjectSceneDock")
-        left.setWidget(self.project_tree)
+        left.setWidget(_scene_dock_scrollable(self.project_tree))
         left.setMinimumWidth(264)  # the three tabs (Project, Tiles, Layers) show whole
         self.addDockWidget(Qt.LeftDockWidgetArea, left)
 
         self.tile_palette = TilePaletteWidget(self)
         palette_dock = QDockWidget("Tiles", self)
         palette_dock.setObjectName("TilePaletteDock")
-        palette_dock.setWidget(scrollable(self.tile_palette))
+        palette_scroll = _scene_dock_scrollable(self.tile_palette)
+        self.tile_palette.bind_dock_scroll_area(palette_scroll.findChild(QScrollArea))
+        palette_dock.setWidget(palette_scroll)
         self.addDockWidget(Qt.LeftDockWidgetArea, palette_dock)
         self.tabifyDockWidget(left, palette_dock)
         self.tile_palette.modeChanged.connect(self.viewport.set_tile_mode)
@@ -277,16 +337,16 @@ class AsteriaEditorWindow(QMainWindow):
             self, command_stack=self.document.commands, document=self.document
         )
         self.skeleton_viewer.changed.connect(self.refresh_all)
-        skeleton_dock = QDockWidget("Skeleton", self)
-        skeleton_dock.setObjectName("SkeletonDock")
-        skeleton_dock.setWidget(self.skeleton_viewer)
-        self.addDockWidget(Qt.LeftDockWidgetArea, skeleton_dock)
-        self.tabifyDockWidget(left, skeleton_dock)
+        self.skeleton_page = SkeletonWorkspacePage(self.skeleton_viewer, self)
+        skeleton_tab = self.ui_workspace.addTab(self.skeleton_page, "Skeleton")
+        self.ui_workspace.setTabIcon(skeleton_tab, workspace_icon("animation"))
+        self.ui_workspace.currentChanged.connect(lambda _index: self._polish_presentation_pages())
+        self._polish_presentation_pages()
 
         self.tile_layers = TileLayersWidget(self)
         layers_dock = QDockWidget("Layers", self)
         layers_dock.setObjectName("LayersDock")
-        layers_dock.setWidget(scrollable(self.tile_layers))
+        layers_dock.setWidget(_scene_dock_scrollable(self.tile_layers))
         self.addDockWidget(Qt.LeftDockWidgetArea, layers_dock)
         self.tabifyDockWidget(left, layers_dock)
         self.tile_layers.layerSelected.connect(self._select_tile_layer)
@@ -313,18 +373,19 @@ class AsteriaEditorWindow(QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, right)
 
         self.asset_list = QListWidget()
+        self.asset_list.setObjectName("AssetList")
         self.asset_list.setSelectionMode(QListWidget.ExtendedSelection)
         self.asset_list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.asset_list.customContextMenuRequested.connect(self._asset_context_menu)
         bottom = QDockWidget("Assets", self)
         bottom.setObjectName("AssetsDock")
-        bottom.setWidget(self.asset_list)
+        bottom.setWidget(_dock_card(self.asset_list))
         self.addDockWidget(Qt.BottomDockWidgetArea, bottom)
 
         console_panel = QWidget()
         console_panel.setObjectName("ConsolePanel")
         console_layout = QVBoxLayout(console_panel)
-        console_layout.setContentsMargins(10, 10, 10, 10)
+        console_layout.setContentsMargins(0, 0, 0, 0)
 
         self.console = QTextEdit()
         self.console.setObjectName("ConsoleOutput")
@@ -334,7 +395,7 @@ class AsteriaEditorWindow(QMainWindow):
 
         console = QDockWidget("Console", self)
         console.setObjectName("ConsoleDock")
-        console.setWidget(console_panel)
+        console.setWidget(_dock_card(console_panel))
         self.addDockWidget(Qt.BottomDockWidgetArea, console)
         self.tabifyDockWidget(bottom, console)
         from .debugger_widget import DebuggerWidget
@@ -342,7 +403,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.debugger_widget = DebuggerWidget(self)
         debugger_dock = QDockWidget("Debugger", self)
         debugger_dock.setObjectName("DebuggerDock")
-        debugger_dock.setWidget(scrollable(self.debugger_widget))
+        debugger_dock.setWidget(_dock_card(self.debugger_widget))
         self.addDockWidget(Qt.BottomDockWidgetArea, debugger_dock)
         self.tabifyDockWidget(bottom, debugger_dock)
         from .profiler_widget import ProfilerWidget
@@ -350,7 +411,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.profiler_widget = ProfilerWidget(lambda: self.debugger_widget.client, self)
         profiler_dock = QDockWidget("Profiler", self)
         profiler_dock.setObjectName("ProfilerDock")
-        profiler_dock.setWidget(scrollable(self.profiler_widget))
+        profiler_dock.setWidget(_dock_scrollable(self.profiler_widget))
         self.addDockWidget(Qt.BottomDockWidgetArea, profiler_dock)
         self.tabifyDockWidget(bottom, profiler_dock)
         from .problems_widget import ProblemsWidget
@@ -359,7 +420,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.problems_widget.navigate.connect(self.navigate_to_problem)
         self.problems_dock = QDockWidget("Problems", self)
         self.problems_dock.setObjectName("ProblemsDock")
-        self.problems_dock.setWidget(self.problems_widget)
+        self.problems_dock.setWidget(_dock_card(self.problems_widget))
         self.problems_widget.counted.connect(
             lambda n: self.problems_dock.setWindowTitle(f"Problems ({n})" if n else "Problems")
         )
@@ -383,7 +444,6 @@ class AsteriaEditorWindow(QMainWindow):
             left: ("project", "project"),
             palette_dock: ("tiles", "tiles"),
             layers_dock: ("layers", "layers"),
-            skeleton_dock: ("animation", "layers"),
             right: ("inspector", "inspector"),
             bottom: ("assets", "assets"),
             console: ("console", "console"),
@@ -418,9 +478,18 @@ class AsteriaEditorWindow(QMainWindow):
         bars = [bar for bar in self.findChildren(QTabBar) if bar.parent() is self]
         icons = {dock.windowTitle(): dock.windowIcon() for dock in self.findChildren(QDockWidget)}
         for bar in bars:
-            bar.setUsesScrollButtons(
-                True
-            )  # a dock's tab titles never set the dock's minimum width
+            bar.setDrawBase(False)
+            titles = {bar.tabText(index) for index in range(bar.count())}
+            if "Assets" in titles:
+                bar.setObjectName("BottomPanelDockTabs")
+            elif "Project" in titles:
+                bar.setObjectName("LeftSceneDockTabs")
+            if bar.objectName() in {"BottomPanelDockTabs", "LeftSceneDockTabs"}:
+                if not isinstance(bar.style(), _CenteredDockTabStyle):
+                    style = _CenteredDockTabStyle(bar.style())
+                    style.setParent(self)
+                    bar.setStyle(style)
+            bar.setUsesScrollButtons(bar.objectName() != "LeftSceneDockTabs")
             bar.setElideMode(Qt.ElideNone)
             for index in range(bar.count()):
                 if bar.tabText(index) in icons:
@@ -1495,6 +1564,15 @@ class AsteriaEditorWindow(QMainWindow):
             if editor is not None:
                 editor.refresh()
 
+    def _polish_presentation_pages(self):
+        from .presentation_layout import polish_presentation_page
+
+        for index in range(self.ui_workspace.count()):
+            polish_presentation_page(self.ui_workspace.widget(index))
+        for index in range(self.events_workspace.count()):
+            polish_presentation_page(self.events_workspace.widget(index))
+        polish_presentation_page(self.code_workspace)
+
     def refresh_all(self):
         project = getattr(self.document, "project", None)
         database = getattr(project, "rpg_database", None)
@@ -1524,6 +1602,7 @@ class AsteriaEditorWindow(QMainWindow):
             self.tile_palette.set_layer(self.viewport.tile_tools.active_layer)
         self._refresh_actions()
         self._refresh_title()
+        self._polish_presentation_pages()
 
     def set_project(self, project, file_path=None):
         if self.play_session is not None and self.play_session.active:
@@ -2491,6 +2570,7 @@ class AsteriaEditorWindow(QMainWindow):
     def save_layout(self):
         self.layout_settings.setValue("editor/geometry", self.saveGeometry())
         self.layout_settings.setValue("editor/dock_state", self.saveState(self.LAYOUT_VERSION))
+        self.layout_settings.setValue("editor/dock_mode", self.workspace.mode.value)
 
     # Panels a workspace starts without (it keeps whatever the user opens or closes afterwards).
     # The database, battle, presentation, event and code editors use the whole window, the way RPG
@@ -2504,7 +2584,6 @@ class AsteriaEditorWindow(QMainWindow):
         "ProblemsDock",
         "TilePaletteDock",
         "LayersDock",
-        "SkeletonDock",
     )
 
     def _switch_workspace_docks(self, mode):
@@ -2563,9 +2642,15 @@ class AsteriaEditorWindow(QMainWindow):
         self.layout_settings = settings
         geometry = settings.value("editor/geometry")
         state = settings.value("editor/dock_state")
+        saved_mode = settings.value("editor/dock_mode")
         if geometry is not None:
             self.restoreGeometry(geometry)
-        restored = state is not None and self.restoreState(state, self.LAYOUT_VERSION)
+        mode_matches = saved_mode == self.workspace.mode.value
+        restored = (
+            state is not None and mode_matches and self.restoreState(state, self.LAYOUT_VERSION)
+        )
+        if state is not None and not mode_matches:
+            self.restoreState(self._default_dock_state, self.LAYOUT_VERSION)
         self._layout_restored = bool(restored)
         self.hide_stale_dock_tab_bars()
         return restored

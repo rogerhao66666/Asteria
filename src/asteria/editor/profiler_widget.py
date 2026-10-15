@@ -10,6 +10,7 @@ from __future__ import annotations
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
     QCheckBox,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QListWidget,
@@ -46,23 +47,44 @@ class ProfilerWidget(QWidget):
         self.sections.setHorizontalHeaderLabels(
             ["Section", "Mean ms", "p95 ms", "Max ms", "Share of frame"]
         )
+        self.sections.setObjectName("ProfilerSectionsTable")
         self.sections.verticalHeader().hide()
         self.counters = QTableWidget(0, 3)
         self.counters.setHorizontalHeaderLabels(["Counter", "Last", "Max"])
+        self.counters.setObjectName("ProfilerCountersTable")
         self.counters.verticalHeader().hide()
         self.unsupported = QListWidget()
         self.unsupported.setMaximumHeight(70)
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(8)
         layout.addLayout(top)
         body = QHBoxLayout()
-        body.addWidget(self.sections, 3)
-        body.addWidget(self.counters, 2)
+        body.setContentsMargins(0, 0, 0, 0)
+        body.setSpacing(8)
+        body.addWidget(self._metric_card("Sections", self.sections), 3)
+        body.addWidget(self._metric_card("Counters", self.counters), 2)
         layout.addLayout(body, 1)
-        layout.addWidget(QLabel("Not measured on this backend"))
+        unsupported_title = QLabel("Not measured on this backend")
+        unsupported_title.setObjectName("ProfilerSectionTitle")
+        layout.addWidget(unsupported_title)
         layout.addWidget(self.unsupported)
         self.timer = QTimer(self)
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.refresh)
+
+    @staticmethod
+    def _metric_card(title, table):
+        card = QFrame()
+        card.setObjectName("ProfilerMetricCard")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(6)
+        heading = QLabel(title)
+        heading.setObjectName("ProfilerSectionTitle")
+        layout.addWidget(heading)
+        layout.addWidget(table, 1)
+        return card
 
     def _client(self):
         client = self.client_provider()

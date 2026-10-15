@@ -146,10 +146,9 @@ _TEMPLATE = Template(
 QMainWindow, QDialog { background: $base; color: $text; }
 QToolTip { background: $raised; color: $text; border: 1px solid $border_strong; padding: 5px 8px;
 border-radius: 5px; }
-
 /* -- docks -------------------------------------------------------------------------------------
 */
-QDockWidget { color: $text_dim; font-weight: 600; }
+QDockWidget { color: $text_dim; font-weight: 600; border: 0; }
 QDockWidget::title {
     background: $panel; border-bottom: 1px solid $border;
     padding: 7px 10px 7px 62px; text-align: left;
@@ -172,6 +171,7 @@ QDockWidget::close-button:hover, QDockWidget::float-button:hover { background: $
 QTabWidget::pane { border: 1px solid $border; border-radius: 8px; top: -1px; background: $panel;
 padding: 10px 12px; }
 QTabBar { background: transparent; }
+QMainWindow > QTabBar { background: $base; }
 QTabBar::tab {
     background: $panel; color: $text_dim;
     border: 0; border-left: 1px solid $border;
@@ -180,8 +180,144 @@ QTabBar::tab {
     min-width: 0; padding: 6px 11px; margin: 0;
 }
 QMainWindow > QTabBar::tab { min-width: 0; padding: 6px 8px; background: $base; }
+QTabBar#BottomPanelDockTabs, QTabBar#LeftSceneDockTabs { background: $base; }
+QTabBar#BottomPanelDockTabs::tab,
+QTabBar#LeftSceneDockTabs::tab {
+    background: $panel; color: $text_dim;
+    border-top: 1px solid $border_strong; border-right: 1px solid $border_strong;
+    border-bottom: 2px solid transparent; border-left: 0; border-radius: 0;
+    min-width: 0; padding: 6px 6px; margin: 0; font-weight: 700;
+}
+QTabBar#BottomPanelDockTabs::tab:first,
+QTabBar#LeftSceneDockTabs::tab:first { border-left: 1px solid $border_strong; }
+QTabBar#BottomPanelDockTabs::tab:selected,
+QTabBar#LeftSceneDockTabs::tab:selected {
+    background: $raised; color: $text;
+    border-top: 1px solid $border_strong; border-bottom: 2px solid $primary;
+}
+QTabBar#BottomPanelDockTabs::tab:hover:!selected,
+QTabBar#LeftSceneDockTabs::tab:hover:!selected {
+    background: $hover; color: $text;
+}
 QTabBar::tab:selected { background: $raised; color: $text; border-bottom: 2px solid $primary; }
 QTabBar::tab:hover:!selected { background: $hover; color: $text; }
+QTabWidget#DatabaseWorkspaceTabs::pane,
+QTabWidget#PresentationWorkspaceTabs::pane,
+QTabWidget#EventsWorkspaceTabs::pane {
+    border: 1px solid $border_strong; border-radius: 0; top: -1px; background: $panel;
+    border-bottom: 1px solid $border_strong; padding: 10px 12px;
+}
+QTabBar#DatabaseWorkspaceTabBar,
+QTabBar#PresentationWorkspaceTabBar,
+QTabBar#EventsWorkspaceTabBar { background: transparent; }
+QTabBar#DatabaseWorkspaceTabBar::tab,
+QTabBar#PresentationWorkspaceTabBar::tab,
+QTabBar#EventsWorkspaceTabBar::tab {
+    background: $panel; color: $text_dim;
+    border-top: 1px solid $border_strong; border-right: 1px solid $border_strong;
+    border-bottom: 1px solid $border_strong; border-left: 0; border-radius: 0;
+    min-width: 0; padding: 6px 9px; margin: 0; font-weight: 700;
+}
+QTabBar#DatabaseWorkspaceTabBar::tab:first,
+QTabBar#PresentationWorkspaceTabBar::tab:first,
+QTabBar#EventsWorkspaceTabBar::tab:first { border-left: 1px solid $border_strong; }
+QTabBar#DatabaseWorkspaceTabBar::tab:selected,
+QTabBar#PresentationWorkspaceTabBar::tab:selected,
+QTabBar#EventsWorkspaceTabBar::tab:selected {
+    background: $raised; color: $text;
+    border-top: 1px solid $border_strong;
+    border-bottom: 1px solid $primary;
+}
+QTabBar#DatabaseWorkspaceTabBar::tab:hover:!selected,
+QTabBar#PresentationWorkspaceTabBar::tab:hover:!selected,
+QTabBar#EventsWorkspaceTabBar::tab:hover:!selected { background: $hover; color: $text; }
+QTabWidget#EnemyAIRuleTabs::pane {
+    border: 1px solid $border_strong; border-radius: 0;
+    top: -1px; background: $panel; padding: 10px;
+}
+QTabBar#EnemyAIRuleTabBar::tab {
+    background: $panel; color: $text_dim; font-weight: 700;
+    border-top: 1px solid $border_strong; border-right: 1px solid $border_strong;
+    border-bottom: 1px solid $border_strong; border-left: 0;
+    border-radius: 0; margin: 0; padding: 6px 9px;
+}
+QTabBar#EnemyAIRuleTabBar::tab:first { border-left: 1px solid $border_strong; }
+QTabBar#EnemyAIRuleTabBar::tab:selected {
+    background: $raised; color: $text; border-bottom: 1px solid $primary;
+}
+QTabBar#EnemyAIRuleTabBar::tab:hover:!selected { background: $hover; color: $text; }
+QGroupBox#EnemyAISectionCard {
+    background: $panel; border: 1px solid $border_strong;
+    border-radius: 0; margin: 0; padding: 0;
+}
+QLabel#EnemyAISectionTitle { color: $text; font-weight: 700; }
+QFrame#AuthoringSidebarCard, QFrame#AuthoringPreviewCard {
+    background: $panel; border: 1px solid $border_strong; border-radius: 0;
+}
+QLabel#AuthoringSidebarTitle { color: $text; font-weight: 700; }
+QTreeWidget#BehaviorTreeNodes {
+    background: $list; border: 0; border-radius: 0;
+}
+QWidget[presentationPage="true"] QGroupBox[presentationSection="true"],
+QWidget[presentationSidebar="true"] {
+    background: $panel; border: 1px solid $border_strong;
+    border-radius: 0; margin: 0; padding: 0;
+}
+QLabel[presentationHeading="true"] { color: $text; font-weight: 700; }
+QWidget[presentationPage="true"] QWidget[authoringPanelContent="true"] {
+    background: $list; border: 0; border-radius: 0;
+}
+QWidget[presentationSidebar="true"] QListWidget {
+    background: $list; border: 0; border-radius: 0;
+}
+QWidget[presentationPage="true"] QTreeWidget,
+QWidget[presentationPage="true"] QTableWidget,
+QWidget[presentationPage="true"] QListWidget {
+    border: 1px solid $border_strong; border-radius: 0;
+}
+QWidget[presentationPage="true"] QWidget[presentationSidebar="true"] QListWidget {
+    border: 0;
+}
+QTabWidget[presentationInnerTabs="true"]::pane {
+    border: 1px solid $border_strong; border-radius: 0; top: -1px; padding: 10px;
+}
+QTabBar[presentationInnerTabs="true"]::tab {
+    background: $panel; color: $text_dim; font-weight: 700;
+    border-top: 1px solid $border_strong; border-right: 1px solid $border_strong;
+    border-bottom: 1px solid $border_strong; border-left: 0;
+    border-radius: 0; margin: 0; padding: 6px 9px;
+}
+QTabBar[presentationInnerTabs="true"]::tab:first {
+    border-left: 1px solid $border_strong;
+}
+QTabBar[presentationInnerTabs="true"]::tab:selected {
+    background: $raised; color: $text; border-bottom: 1px solid $primary;
+}
+QFrame#AuthoringSidebarCard QListWidget {
+    background: $list; border: 0; border-radius: 0;
+}
+QSplitter#EnemyAIRuleSplit::handle { background: $panel; }
+QScrollArea#EnemyAIDetailScroll,
+QScrollArea#EnemyAIDetailScroll > QWidget > QWidget {
+    background: $panel; border: 0;
+}
+QTabBar#DatabaseWorkspaceTabBar QToolButton#ScrollLeftButton,
+QTabBar#DatabaseWorkspaceTabBar QToolButton#ScrollRightButton,
+QTabBar#PresentationWorkspaceTabBar QToolButton#ScrollLeftButton,
+QTabBar#PresentationWorkspaceTabBar QToolButton#ScrollRightButton,
+QTabBar#EventsWorkspaceTabBar QToolButton#ScrollLeftButton,
+QTabBar#EventsWorkspaceTabBar QToolButton#ScrollRightButton {
+    color: $text; background: $panel; border: 1px solid $border_strong;
+    border-radius: 3px; padding: 0 2px;
+}
+QTabBar#DatabaseWorkspaceTabBar QToolButton#ScrollLeftButton:hover,
+QTabBar#DatabaseWorkspaceTabBar QToolButton#ScrollRightButton:hover,
+QTabBar#PresentationWorkspaceTabBar QToolButton#ScrollLeftButton:hover,
+QTabBar#PresentationWorkspaceTabBar QToolButton#ScrollRightButton:hover,
+QTabBar#EventsWorkspaceTabBar QToolButton#ScrollLeftButton:hover,
+QTabBar#EventsWorkspaceTabBar QToolButton#ScrollRightButton:hover {
+    background: $hover;
+}
 
 QLabel#MultiplayerServerStatus[status="running"],
 QLabel#MultiplayerConnectionStatus[status="connected"] { color: $success; font-weight: 600; }
@@ -198,6 +334,9 @@ QTreeWidget, QListWidget, QTableWidget, QTreeView, QListView, QTableView {
     background: $list; alternate-background-color: $list_alt;
     border: 1px solid $border; border-radius: 6px; outline: 0; color: $text;
 }
+QTreeWidget#ProjectHierarchyTree, QListWidget#AssetList {
+    border: 0; border-radius: 0;
+}
 QTreeWidget::item, QListWidget::item { min-height: 22px; padding: 1px 4px; }
 QTreeWidget::item:selected, QListWidget::item:selected, QTableWidget::item:selected {
     background: $selection; color: $selection_text;
@@ -211,10 +350,10 @@ QTableCornerButton::section { background: $header; border: 0; }
 
 /* -- console and text
 ---------------------------------------------------------------------------- */
-QWidget#ConsolePanel { background: $base; }
+QWidget#ConsolePanel { background: $raised; }
 QTextEdit#ConsoleOutput {
-    background: $list; color: $text;
-    border: 1px solid $border; border-radius: 6px;
+    background: $raised; color: $text;
+    border: 0; border-radius: 0;
     padding: 8px; selection-background-color: $selection;
 }
 QPlainTextEdit, QTextEdit { background: $input; color: $text; border: 1px solid $border;
@@ -245,6 +384,24 @@ QComboBox::drop-down {
     subcontrol-origin: padding; subcontrol-position: center right;
 }
 QComboBox { padding-right: 24px; }
+QComboBox QLineEdit, QComboBox QLineEdit:focus, QComboBox QLineEdit:hover {
+    background: transparent; border: 0; border-radius: 0; margin: 0; padding: 0;
+}
+QAbstractSpinBox { padding-right: 30px; min-height: 26px; }
+QAbstractSpinBox::up-button, QAbstractSpinBox::down-button {
+    subcontrol-origin: padding; width: 26px;
+    background: $raised; border: 0; border-left: 1px solid $border_strong;
+    margin: 0;
+}
+QAbstractSpinBox::up-button {
+    subcontrol-position: top right; border-top-right-radius: 5px;
+}
+QAbstractSpinBox::down-button {
+    subcontrol-position: bottom right; border-bottom-right-radius: 5px;
+}
+QAbstractSpinBox::up-button:hover, QAbstractSpinBox::down-button:hover {
+    background: $hover;
+}
 QComboBox QAbstractItemView {
     background: $raised; color: $text; border: 1px solid $border_strong;
     selection-background-color: $selection; selection-color: $selection_text; outline: 0;
@@ -286,8 +443,115 @@ QToolButton {
     background: transparent; border: 1px solid transparent; border-radius: 6px;
     padding: 5px 9px; color: $text_dim;
 }
+QToolButton[workspace] { font-weight: 700; }
 QToolButton:hover { background: $hover; color: $text; }
 QToolButton:checked { background: $selection; border-color: $primary; color: $selection_text; }
+
+QFrame#DockContentCard {
+    background: $raised; border: 1px solid $border_strong; border-radius: 0;
+}
+QWidget[dockContentSurface="true"] {
+    background: $raised; border: 0; border-radius: 0;
+}
+QFrame#ProfilerMetricCard {
+    background: $raised; border: 1px solid $border_strong; border-radius: 6px;
+}
+QLabel#ProfilerSectionTitle { color: $text_dim; font-weight: 700; padding: 2px 1px; }
+QTableWidget#ProfilerSectionsTable, QTableWidget#ProfilerCountersTable {
+    border: 1px solid $border_strong; border-radius: 0;
+}
+QGroupBox#DebugActionsCard {
+    background: $raised; border: 1px solid $border_strong;
+    border-radius: 0; margin: 0; padding: 0;
+}
+QLabel#DebugActionsTitle { color: $text_dim; font-weight: 700; }
+QTreeWidget#DebuggerGameStateTable {
+    border: 1px solid $border_strong; border-radius: 0;
+}
+QSplitter#DebuggerSplit, QSplitter#DebuggerSplit::handle,
+QScrollArea#DebugActionsScroll, QWidget#DebugActionsContent {
+    background: $raised;
+}
+/* Keep decorative groups flat; give every data view its own visible boundary. */
+QFrame#DockContentCard QTreeWidget,
+QFrame#DockContentCard QListWidget,
+QFrame#DockContentCard QTableWidget,
+QFrame#DockContentCard QTextEdit,
+QFrame#DockContentCard QGroupBox,
+QFrame#DockContentCard QFrame#ProfilerMetricCard {
+    background: $raised; border: 0; border-radius: 0;
+}
+QFrame#DockContentCard QScrollArea,
+QFrame#DockContentCard QScrollArea > QWidget > QWidget {
+    background: $raised; border: 0;
+}
+QFrame#DockContentCard QTreeWidget,
+QFrame#DockContentCard QListWidget,
+QFrame#DockContentCard QTableWidget,
+QFrame#DockContentCard QTextEdit {
+    background: $list; alternate-background-color: $list_alt; color: $text;
+    selection-background-color: $selection; selection-color: $selection_text;
+}
+QFrame#DockContentCard QTreeWidget > QWidget#qt_scrollarea_viewport,
+QFrame#DockContentCard QListWidget > QWidget#qt_scrollarea_viewport,
+QFrame#DockContentCard QTableWidget > QWidget#qt_scrollarea_viewport,
+QFrame#DockContentCard QTextEdit > QWidget#qt_scrollarea_viewport {
+    background: $list; color: $text;
+}
+QFrame#DockContentCard QHeaderView::section {
+    background: $panel; color: $text; font-weight: 700;
+    border: 0; border-right: 1px solid $border_strong;
+    border-bottom: 1px solid $border_strong;
+}
+QFrame#DockContentCard QHeaderView::section:last {
+    border-right: 0;
+}
+QFrame#DockContentCard QLabel#ProfilerSectionTitle,
+QFrame#DockContentCard QLabel#DebugActionsTitle {
+    background: transparent; color: $text; font-weight: 700;
+}
+QFrame#DockContentCard QTreeWidget,
+QFrame#DockContentCard QTreeView,
+QFrame#DockContentCard QListWidget,
+QFrame#DockContentCard QListView,
+QFrame#DockContentCard QTableWidget,
+QFrame#DockContentCard QTableView,
+QFrame#DockContentCard QTextEdit,
+QFrame#DockContentCard QPlainTextEdit,
+QFrame#DockContentCard QTreeWidget#DebuggerGameStateTable,
+QFrame#DockContentCard QTreeWidget#ProblemsTable,
+QFrame#DockContentCard QTableWidget#ProfilerSectionsTable,
+QFrame#DockContentCard QTableWidget#ProfilerCountersTable {
+    border: 1px solid $border_strong; border-radius: 0;
+}
+QFrame#DockContentCard QGroupBox#DebugActionsCard {
+    background: $raised; border: 1px solid $border_strong;
+    border-radius: 0; margin: 0; padding: 0;
+}
+QFrame#DockContentCard QGroupBox#AreaRuleCard {
+    background: $raised; border: 1px solid $border_strong;
+    border-radius: 0; margin: 0; padding: 0;
+}
+QLabel#AreaRuleTitle { color: $text; font-weight: 700; }
+QFrame#DockContentCard QGroupBox#AreaRuleCard,
+QGroupBox#AreaRuleCard QScrollArea,
+QGroupBox#AreaRuleCard QScrollArea > QWidget > QWidget,
+QGroupBox#AreaRuleCard QWidget#qt_scrollarea_viewport {
+    background: $panel;
+}
+QFrame#DockContentCard QTextEdit#ConsoleOutput {
+    border: 0; border-radius: 0;
+}
+QFrame#DockContentCard QTreeWidget#ProjectHierarchyTree {
+    border: 0; border-radius: 0;
+}
+QFrame#DockContentCard QTreeWidget#ProjectHierarchyTree QHeaderView::section {
+    border-right: 0;
+}
+QFrame#DockContentCard QTableWidget#ProfilerSectionsTable QHeaderView::section:last,
+QFrame#DockContentCard QTableWidget#ProfilerCountersTable QHeaderView::section:last {
+    border-right: 1px solid $border_strong;
+}
 
 /* -- layers panel
 -------------------------------------------------------------------------------- */
@@ -334,7 +598,7 @@ QToolButton#KindButton {
 QToolButton#KindButton:hover { background: $hover; color: $text; }
 QToolButton#KindButton:checked { background: $selection; border-color: $primary; color:
 $selection_text; }
-QFrame#PreviewFrame { background: $input; border: 1px solid $border; border-radius: 10px; }
+QFrame#PreviewFrame { background: $input; border: 0; border-radius: 0; }
 QLabel#ChipLabel { background: $hover; color: $text_dim; border-radius: 9px; padding: 2px 8px;
 font-size: 11px; }
 
@@ -446,6 +710,7 @@ def _branch_rules(palette):
         ("closed", ((6, 4), (10, 8), (6, 12))),
         ("open", ((4, 6), (8, 10), (12, 6))),
         ("combo", ((4, 6), (8, 10), (12, 6))),
+        ("spin-up", ((4, 10), (8, 6), (12, 10))),
     ):
         path = folder / f"branch-{kind}-{palette.text_dim.lstrip('#')}.png"
         if not path.exists():
@@ -462,7 +727,12 @@ def _branch_rules(palette):
             pm.save(str(path))
         paths[kind] = path.as_posix()
     closed, opened, combo = paths["closed"], paths["open"], paths["combo"]
+    spin_up = paths["spin-up"]
     return (
+        f"QAbstractSpinBox::up-arrow {{ image: url({spin_up});"
+        " width: 12px; height: 12px; }\n"
+        f"QAbstractSpinBox::down-arrow {{ image: url({combo});"
+        " width: 12px; height: 12px; }\n"
         f"QComboBox::down-arrow {{ image: url({combo}); width: 12px; height: 12px; }}\n"
         f"QTreeView::branch:has-children:closed {{ image: url({closed}); }}\n"
         f"QTreeView::branch:has-children:open {{ image: url({opened}); }}\n"

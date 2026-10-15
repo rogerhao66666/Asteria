@@ -41,7 +41,9 @@ class EventEditorWidget(QWidget):
         self._program_ids = []
 
         self.title = QLabel("Select an Entity to edit events")
-        self.title.setObjectName("SectionLabel")
+        self.title.setObjectName("AuthoringSidebarTitle")
+        self.title.setProperty("presentationHeading", True)
+        self.title.setWordWrap(True)
 
         self.binding_combo = QComboBox()
         self.binding_combo.currentIndexChanged.connect(self._binding_selected)
@@ -68,6 +70,7 @@ class EventEditorWidget(QWidget):
         condition_row = QHBoxLayout()
         self.conditions = QLabel("Conditions: Always")
         self.conditions.setObjectName("MutedLabel")
+        self.conditions.setWordWrap(True)
         add_condition = QPushButton("+ Condition")
         add_condition.clicked.connect(lambda: self.addConditionRequested.emit())
         condition_row.addWidget(self.conditions, 1)
@@ -105,11 +108,15 @@ class EventEditorWidget(QWidget):
         ordering.addWidget(delete)
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(12)
         layout.addWidget(self.title)
         layout.addLayout(header)
         layout.addLayout(form)
         layout.addLayout(condition_row)
-        layout.addWidget(QLabel("Commands"))
+        commands_heading = QLabel("Commands")
+        commands_heading.setProperty("presentationHeading", True)
+        layout.addWidget(commands_heading)
         layout.addWidget(self.commands, 1)
         layout.addLayout(buttons)
         layout.addLayout(ordering)

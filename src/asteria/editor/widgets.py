@@ -30,6 +30,7 @@ class _HierarchyTree(QTreeWidget if QT_AVAILABLE else object):
     def __init__(self, owner):
         super().__init__()
         self._owner = owner
+        self.setObjectName("ProjectHierarchyTree")
 
     def dropEvent(self, event):  # noqa: N802 - Qt API
         target = self.itemAt(event.position().toPoint())

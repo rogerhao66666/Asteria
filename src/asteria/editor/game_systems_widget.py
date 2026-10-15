@@ -34,7 +34,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .authoring_sidebar import authoring_sidebar
 from .game_systems_authoring import FORMS, KINDS, GameSystemsAuthoringError, new_row
+from .project_empty_state import ProjectEmptyState
 from .responsive_form import ResponsiveForm, ResponsiveSplit
 
 _BIG = 1_000_000_000
@@ -385,6 +387,10 @@ class GameSystemsEditorWidget(QWidget):
         super().__init__(parent)
         self.controller = controller
         self.kind_box = QComboBox()
+        # A bounded list popup stays below the picker instead of growing like a native menu.
+        self.kind_box.setStyleSheet("QComboBox { combobox-popup: 0; }")
+        self.kind_box.setMaxVisibleItems(10)
+        self.kind_box.view().setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         for kind in KINDS:
             self.kind_box.addItem(kind.label, kind.kind_id)
         self.kind_box.currentIndexChanged.connect(self.refresh)
@@ -409,16 +415,11 @@ class GameSystemsEditorWidget(QWidget):
             button = QPushButton(label)
             button.clicked.connect(slot)
             buttons.addWidget(button)
-        header = QHBoxLayout()
-        header.addWidget(QLabel("Game Systems"))
-        header.addStretch(1)
-        header.addWidget(self.kind_box)
         split = QSplitter()
-        split.addWidget(self.browser)
+        split.addWidget(authoring_sidebar("Game Systems", self.browser, header=self.kind_box))
         split.addWidget(self.scroll)
         split.setStretchFactor(1, 1)
         layout = QVBoxLayout(self)
-        layout.addLayout(header)
         layout.addWidget(split, 1)
         layout.addWidget(self.used_by)
         layout.addWidget(self.status)
@@ -441,7 +442,9 @@ class GameSystemsEditorWidget(QWidget):
         current = select or self.selected_id
         if self.controller.document.project is None:
             self.browser.clear()
-            self.scroll.setWidget(QLabel("Open a Project to edit game systems."))
+            self.scroll.setWidget(
+                ProjectEmptyState("Open a project to edit game systems and settings.")
+            )
             self.form = None
             return
         self.form = RecordForm(FORMS[self.kind_id], self.controller.references)

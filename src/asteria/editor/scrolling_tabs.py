@@ -13,8 +13,8 @@ not change.
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QScrollArea, QTabWidget
+from PySide6.QtCore import QEvent, Qt, QTimer
+from PySide6.QtWidgets import QFrame, QScrollArea, QTabWidget, QToolButton
 
 
 def scrollable(page, parent=None):
@@ -37,6 +37,50 @@ class ScrollingTabWidget(QTabWidget):
         self.setElideMode(Qt.ElideNone)  # full titles; the bar scrolls instead of truncating them
         self._page_of = {}  # scroll area -> page
         self._area_of = {}  # page -> scroll area
+        self.tabBar().installEventFilter(self)
+
+    def eventFilter(self, watched, event):
+        if watched is self.tabBar() and event.type() == QEvent.Resize:
+            QTimer.singleShot(0, self._align_scroll_buttons)
+        return super().eventFilter(watched, event)
+
+    def _align_scroll_buttons(self):
+        bar = self.tabBar()
+        buttons = {button.objectName(): button for button in bar.findChildren(QToolButton)}
+        left = buttons.get("ScrollLeftButton")
+        right = buttons.get("ScrollRightButton")
+        if left is None or right is None:
+            return
+
+        left.setArrowType(Qt.NoArrow)
+        left.setText("‹")
+        left.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        left.setToolTip("Show earlier tabs")
+        right.setArrowType(Qt.NoArrow)
+        right.setText("›")
+        right.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        right.setToolTip("Show later tabs")
+
+        button_width = min(left.width(), right.width(), bar.width() // 2)
+        if button_width <= 0:
+            return
+        left.setGeometry(
+            bar.width() - button_width * 2,
+            left.y(),
+            button_width,
+            left.height(),
+        )
+        right.setGeometry(
+            bar.width() - button_width,
+            right.y(),
+            button_width,
+            right.height(),
+        )
+        left.raise_()
+        right.raise_()
+
+    def _schedule_scroll_button_alignment(self):
+        QTimer.singleShot(0, self._align_scroll_buttons)
 
     def _wrap(self, page):
         area = scrollable(page, self)
@@ -45,10 +89,14 @@ class ScrollingTabWidget(QTabWidget):
         return area
 
     def addTab(self, page, *args):
-        return super().addTab(self._wrap(page), *args)
+        index = super().addTab(self._wrap(page), *args)
+        self._schedule_scroll_button_alignment()
+        return index
 
     def insertTab(self, index, page, *args):
-        return super().insertTab(index, self._wrap(page), *args)
+        result = super().insertTab(index, self._wrap(page), *args)
+        self._schedule_scroll_button_alignment()
+        return result
 
     def widget(self, index):
         area = super().widget(index)
@@ -70,3 +118,4 @@ class ScrollingTabWidget(QTabWidget):
         if page is not None:
             self._area_of.pop(page, None)
         super().removeTab(index)
+        self._schedule_scroll_button_alignment()

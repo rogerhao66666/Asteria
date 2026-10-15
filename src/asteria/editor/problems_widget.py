@@ -40,6 +40,7 @@ class ProblemsWidget(QWidget):
         top.addWidget(self.area)
         top.addWidget(refresh)
         self.tree = QTreeWidget()
+        self.tree.setObjectName("ProblemsTable")
         self.tree.setHeaderLabels(["", "Area", "Problem", "Location"])
         self.tree.setRootIsDecorated(False)
         self.tree.setColumnWidth(0, 28)

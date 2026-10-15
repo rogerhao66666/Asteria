@@ -59,3 +59,20 @@ def test_profiler_dock_shows_the_live_profile(runtime):
     detached = ProfilerWidget(lambda: None)
     assert detached.refresh() is None and "not attached" in detached.summary.text()
     client.close()
+
+
+def test_profiler_tables_are_inside_individually_framed_cards():
+    pytest.importorskip("PySide6")
+    from PySide6.QtWidgets import QApplication, QFrame
+
+    from asteria.editor.profiler_widget import ProfilerWidget
+
+    QApplication.instance() or QApplication([])
+    widget = ProfilerWidget(lambda: None)
+    try:
+        assert isinstance(widget.sections.parentWidget(), QFrame)
+        assert isinstance(widget.counters.parentWidget(), QFrame)
+        assert widget.sections.parentWidget().objectName() == "ProfilerMetricCard"
+        assert widget.counters.parentWidget().objectName() == "ProfilerMetricCard"
+    finally:
+        widget.close()
