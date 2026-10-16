@@ -85,3 +85,51 @@ VCWarlord）、武器 icon 放大；怪血量太高 → 45000 降為 24000、防
 ### 真實視窗穩定度
 `boss_trial_live_check.py` 先前偶發失敗，原因是驗證腳本用逐步扣血硬凑三階段、結果看運氣；已改成確定性流程
 （每看到一個階段就把 Boss 血量設到下一階段門檻）。改後連跑 6 次全 PASS。這只證明腳本穩定，不代表手感。
+
+
+---
+# B6–B9（2026-10-16，使用者要求「所有系統都要用上」後的擴充）
+
+## 1. Changed Files
+引擎：`rpg/reactions.py`（`reactor_tags`）、`rpg/battle.py`（`set_member_abilities`）、
+`rpg/battle_scheduler.py`（`sit_out_round`：失去開場的一方只讓出第一輪，不再被永久移出）、
+`rpg/battle_extensions.py`、`runtime/game_session.py`（反擊接進可玩路徑並寫進戰鬥記錄、敵人技能走逐下流程、
+`rearm`、`refine_rng`）、`runtime/world_command_handlers.py`（`EQUIP_ITEM`、`DISASSEMBLE`）。
+Demo：`trial_jobs.py`（6 個進階職業）、`trial_items.py`（調和、煉金站、拆解、商店、反擊、換武器）、
+`run_trial_smoke.py` 擴充、`scripts/boss_trial_menu_tour.py`、`boss_trial_stress.py`。
+測試：`test_reaction_gates`、`test_weapon_swap`、`test_opening_scheduler`，擴充 `test_gear_world_commands`。
+
+## 2. Requirement Coverage
+| 要求 | 狀態 |
+|---|---|
+| 多職業、強力職業 | 9 職業：騎士、決鬥者、秘法師＋武器大師、賢者、勇者、豪武匠（鑄造與武器強化）、盜賊、守護者；各有成長率、7–9 個技能、含互斥關鍵節點的技能樹與被動 |
+| 副職業切換 | 7 個訓練師 NPC（`SET_CLASSES`）；腳本每場換一個副職業 |
+| 各種機制的技能 | 多段、爆擊、即死、吸血、護盾、增益、迴避、驅散（移除 Boss 姿態）、鏡面反射、屬性附魔、戰鬥中精煉、以防禦力計算傷害、取得金幣、反擊姿態、BP 神技共 107 個技能 |
+| BP 放大招 | 6 個職業各有 BP 3 的神技，腳本與實機都用到 |
+| 換武器 | `EQUIP_ITEM`；戰鬥中「拔弓／拔匕首」技能換副手武器，可用技能立刻跟著變（腳本驗證） |
+| 裝備鑲嵌、升級 | 寶珠與卡片、成長圖、+N 精煉、套裝；NPC 與世界指令 |
+| 道具煉金、調和 | 煉金站（OPEN_CRAFTING，6 個配方）、戰鬥中調和（6 個配方，產物立即生效）、拆解、商店 |
+| 技能樹、能力點、職業點 | 9 張職業樹＋屬性樹共 106 節點；實機選單截圖（`tour_*.png`）、腳本分配 |
+| 反擊 | 英雄「反擊姿態」與 Boss 防禦姿態懲罰（`reactor_tags`），腳本命中 |
+| 壓力測試 | Boss＋8 隻小怪同場：腳本戰勝；Cocoa 實機 25 秒 1468 幀，平均 17.0 ms、p95 18.0 ms、最差 62 ms（58.7 fps） |
+
+## 3. Tests Executed
+全套 `pytest`、`ruff`、E501 全過。`run_trial_smoke.py`：9 場（8 個副職業＋壓力場），連跑多次無「未命中」。
+
+## 4. Integration Evidence
+`evidence/boss_trial/`：`results.json`（實機戰鬥流程）、`fx_*.png`＋`fx_results.json`（22 個技能各自特效）、
+`tour_*.png`（真實視窗的狀態／道具／裝備／技能、技能樹、背包、煉金、商店畫面）、`stress_*`。
+腳本摘要涵蓋：9 職業的技能都打過、14+ 種狀態、反擊、即死判定、調和、煉金、拆解、商店、精煉、鑲嵌、
+成長節點、換武器、三階段、姿態、召喚。
+
+## 5. Remaining Gaps
+- 技能樹畫面只顯示目前職業的樹（含 AP／JP），屬性樹沒有畫面；鑲嵌、精煉仍只能靠 NPC／指令。
+- 選單畫面是在真實視窗開啟，但技能樹／煉金／商店的開啟是程式呼叫，不是玩家按鍵（暫停選單的按鍵路徑只測了狀態頁）。
+- 職業解鎖沒有條件（訓練師直接給），技能槽規則沒有使用（技能樹授予的技能不受槽位限制）。
+- 即死對 Boss 只有「免疫時扣比例」；成功擊殺只在單元測試與小怪身上。
+- 敵人不再有頭上血條與名稱（照八方旅人），玩家看不到 Boss 血量；數值與手感仍需真人試玩。
+- 壓力場的英雄血量被設到 90 萬，只為測 AI 與繪圖負載，不代表可玩難度。
+- 戰鬥快照在「開場讓出」期間不會保存 `_sitting_out`（還原後該方會立刻行動）。
+
+## 6. Closure Status
+B6、B7、B9 的腳本化與實機證據齊備；B8 的畫面已在真實視窗截圖，但部分畫面的開啟用程式呼叫。均未達 A（缺真人試玩）。

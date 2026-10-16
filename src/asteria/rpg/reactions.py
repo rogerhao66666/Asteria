@@ -39,6 +39,8 @@ class ReactionDefinition:
     allow_self: bool = False
     max_per_chain: int = 1
     action_target_policy: str = "preserve"
+    # tags the reacting member itself must carry (a stance, a state); written only when set
+    reactor_tags: tuple[str, ...] = ()
 
     SCHEMA = "asteria.rpg.reaction_definition"
     VERSION = 1
@@ -58,7 +60,9 @@ class ReactionDefinition:
         allow_self=False,
         max_per_chain=1,
         action_target_policy="preserve",
+        reactor_tags=(),
     ):
+        object.__setattr__(self, "reactor_tags", _tags(reactor_tags))
         object.__setattr__(self, "reaction_id", _id(reaction_id, "reaction_id"))
         object.__setattr__(self, "trigger", _id(trigger, "trigger"))
         object.__setattr__(self, "reactor_selector", _id(reactor_selector, "reactor_selector"))
@@ -103,6 +107,7 @@ class ReactionDefinition:
             "allow_self": self.allow_self,
             "max_per_chain": self.max_per_chain,
             "action_target_policy": self.action_target_policy,
+            **({"reactor_tags": list(self.reactor_tags)} if self.reactor_tags else {}),
         }
 
     @classmethod
@@ -122,6 +127,7 @@ class ReactionDefinition:
             allow_self=data.get("allow_self", False),
             max_per_chain=data.get("max_per_chain", 1),
             action_target_policy=data.get("action_target_policy", "preserve"),
+            reactor_tags=data.get("reactor_tags", ()),
         )
 
 
@@ -276,6 +282,11 @@ class ReactionRuntime:
                     if not definition.allow_self and reactor_id == ev.source_id:
                         continue
                     if definition.require_can_act and not battle.can_act(reactor_id):
+                        continue
+                    if definition.reactor_tags and not all(
+                        battle.member(reactor_id).subject.tags.contains(t)
+                        for t in definition.reactor_tags
+                    ):
                         continue
                     key = (definition.reaction_id, reactor_id)
                     if counts.get(key, 0) >= definition.max_per_chain:

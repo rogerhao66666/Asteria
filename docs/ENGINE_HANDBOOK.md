@@ -255,6 +255,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | 角色 | `ClassDefinition.level_growth`（職業每級成長）、`points_per_level`（升級給任意名稱的點數） |
 | 世界指令 | `GRANT_EXPERIENCE`、`REFINE_EQUIPMENT`、`SOCKET_ITEM`、`UNSOCKET_ITEM`、`UPGRADE_EQUIPMENT` |
 | 戰鬥表現 | 版面 `hidden_zones`（該區域成員完全不畫 HUD，像八方旅人的敵人）、`move` 動作通道（`advance` 衝向目標、`return` 退回，停在目標體型邊緣）、精靈表中繼資料 `body_height`（血條與選單依本體高度擺） |
+| 反擊與戰鬥表現 | `ReactionDefinition.reactor_tags`（要求反應者自己帶標籤，如反擊姿態）；可玩戰鬥現在會觸發專案的反應並記入戰鬥記錄；敵人技能也走逐下流程（爆擊／即死／反應）；`EQUIP_ITEM`（戰鬥中換武器，技能跟著變）、`DISASSEMBLE`；失去開場（先制／偷襲）的一方在時間軸排程下只讓出第一輪 |
 | Demo | `reference_projects/boss_trial_demo/`：單一主角打 Boss，`run_trial_smoke.py` 腳本化驗證、`scripts/boss_trial_live_check.py` 真實視窗驗證 |
 
 ### 下一步的候選（沒有排序，要使用者決定）

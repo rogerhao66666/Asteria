@@ -251,17 +251,48 @@ def hero_and_boss_art(context):
     field_frame.resize(
         (round(field_frame.width * side), round(field_frame.height * side)), 0
     ).save(out_dir / "boss_field.png")
-    npc_sprite(out_dir / "npc_field.png")
+    import trial_content
+
+    npc_sprites(out_dir, trial_content.SERVICES)
     ninja_field_sheet().save(out_dir / "player_field_sheet.png")
 
 
-def npc_sprite(path):
-    """A town person for the field: the front pose of a Ninja Adventure character."""
+NPC_LOOKS = {  # who stands where: a Ninja Adventure character per service
+    "Smith": "Caveman",
+    "Awakener": "Monk",
+    "Jeweler": "Princess",
+    "Card Dealer": "OldMan",
+    "Mystic Teacher": "SorcererOrange",
+    "Duelist Teacher": "NinjaRed",
+    "Weapon Master Dojo": "Samurai",
+    "Sage's Tower": "OldMan",
+    "Hero's Shrine": "Knight",
+    "Forgemaster's Smithy": "Caveman",
+    "Rogue Guild": "NinjaBlue",
+    "Guardian Post": "Knight",
+    "Shrine": "Monk",
+    "Alchemist": "SorcererOrange",
+    "Merchant": "Villager",
+    "Breaker": "Hunter",
+    "Armory (Bow)": "Hunter",
+    "Armory (Dagger)": "Samurai",
+}
+
+
+def npc_sprites(folder, names):
+    """One field sprite per service: the front pose of its character, scaled."""
     from PIL import Image
 
-    base = PACK / "Character" / "Princess" / "SeparateAnim" / "Idle.png"
-    frame = Image.open(base).convert("RGBA").crop((0, 0, 16, 16))
-    frame.resize((48, 48), Image.NEAREST).save(path)
+    folder = Path(folder)
+    for name in names:
+        character = NPC_LOOKS.get(name, "Villager")
+        base = PACK / "Character" / character / "SeparateAnim" / "Idle.png"
+        frame = Image.open(base).convert("RGBA").crop((0, 0, 16, 16))
+        frame.resize((48, 48), Image.NEAREST).save(folder / f"npc_{_slug(name)}.png")
+
+
+def _slug(name):
+    return "".join(ch.lower() if ch.isalnum() else "_" for ch in name).strip("_")
 
 
 FX = Path(PACK).parents[0] / "FX"
@@ -386,7 +417,7 @@ def write_credits(root):
         "| `battle/fx_*.png` (19 skill effects) | "
         f"{ninja} - `FX/Elemental`, `FX/Magic`, `FX/Attack`, `FX/Smoke`, cropped and scaled | "
         f"Pixel-boy, AAA | {cc0} |",
-        "| `battle/npc_field.png` | "
+        "| `npc_*.png` | "
         f"{ninja} - `Actor/Character/Princess` front pose, scaled | Pixel-boy, AAA | {cc0} |",
         "| `icons/weapon_*.png` (8 weapon icons) | [Idylwild's Arsenal]"
         "(https://opengameart.org/node/171012) - copied unmodified, renamed | Idylwild | "

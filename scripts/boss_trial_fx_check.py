@@ -19,21 +19,28 @@ sys.path.insert(0, str(REPO / "scripts"))
 import boss_trial_live_check as live  # noqa: E402
 
 SKILLS = (
+    "arsenal_barrage",
+    "weapon_dance",
+    "dispel",
+    "mirror_veil",
+    "tri_blast",
+    "holy_blade",
+    "lightning_strike",
+    "hero_finale",
+    "temper",
+    "anvil_slam",
+    "hammer_combo",
+    "quick_refine",
+    "mug",
+    "backstab",
+    "poison_cloud",
+    "shield_wall",
+    "bulwark_charge",
+    "aegis",
     "fireball",
-    "frost_lance",
-    "thunder_chain",
-    "drain_touch",
-    "curse",
-    "arcane_barrier",
     "meteor_fall",
-    "attack_sword",
-    "cleave",
-    "flurry",
     "executioner",
-    "assassinate",
-    "arrow_rain",
-    "guard_stance",
-    "poison_edge",
+    "flurry",
 )
 
 
@@ -95,7 +102,7 @@ def main(argv=None):
     # the hero knows knight + duelist + mystic skills for this check (the trees are all open)
     smoke.prepare(game, facts, "mystic")
     allocation = game.save.rpg_state.progression_allocations[smoke.HERO]
-    for graph_id in ("duelist_tree",):
+    for graph_id in [g for g in allocation.definitions if g.endswith("_tree")]:
         for _ in range(8):
             for node in allocation.definitions[graph_id].nodes:
                 while allocation.rank(graph_id, node.node_id) < node.max_rank:
@@ -109,6 +116,8 @@ def main(argv=None):
     runtime._battle_presentation.begin()
     runtime._advance_to_hero_turn()
     boss = game.active_enemy_ids()[0]
+    tank = game.battle.member(boss).subject.resources  # the boss must outlive every test skill
+    tank.define("vitality", 10_000_000, current=10_000_000, replace=True)
     for ability_id in SKILLS:
         actor = hero_turn()
         if actor is None:
@@ -137,7 +146,7 @@ def main(argv=None):
     report = {"skills": seen, "screenshots": shots}
     (out / "fx_results.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2))
-    return 0 if len(done) >= 10 else 1
+    return 0 if len(done) >= 16 else 1
 
 
 if __name__ == "__main__":

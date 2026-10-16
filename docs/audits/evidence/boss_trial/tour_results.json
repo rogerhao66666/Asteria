@@ -1,0 +1,17 @@
+{
+  "screens": [
+    "tour_field.png",
+    "tour_status_status.png",
+    "tour_status_items.png",
+    "tour_status_equipment.png",
+    "tour_status_skills.png",
+    "tour_skill_tree.png",
+    "tour_skill_tree_2.png",
+    "tour_skill_tree_3.png",
+    "tour_skill_tree_4.png",
+    "tour_bag.png",
+    "tour_crafting.png",
+    "tour_shop.png"
+  ],
+  "facts": {}
+}

@@ -19,6 +19,8 @@ NEW = (
     "SOCKET_ITEM",
     "UNSOCKET_ITEM",
     "UPGRADE_EQUIPMENT",
+    "EQUIP_ITEM",
+    "DISASSEMBLE",
 )
 
 
@@ -64,3 +66,21 @@ def test_bad_arguments_are_reported():
     game, hero, item = _game()
     with pytest.raises(WorldCommandError):
         game.world_commands.dispatch(WorldCommand("REFINE_EQUIPMENT", {"actor_id": hero}))
+
+
+def test_disassemble_command_breaks_an_item_down():
+    from test_octopath_style_battle import _project
+    from test_session_events import _session
+
+    from asteria.rpg.disassembly import DisassemblyRecipe, DisassemblyYield
+
+    project = _project()
+    project.rpg_database.add_disassembly_recipe(
+        DisassemblyRecipe("healing_herb", (DisassemblyYield("fire_dust", 2, 2, 1.0),))
+    )
+    _, game = _session(project)
+    bag = game.save.rpg_state.inventory
+    bag.add("healing_herb", 1)
+    herbs, dust = bag.count("healing_herb"), bag.count("fire_dust")
+    game.world_commands.dispatch(WorldCommand("DISASSEMBLE", {"item_id": "healing_herb"}))
+    assert bag.count("healing_herb") == herbs - 1 and bag.count("fire_dust") == dust + 2

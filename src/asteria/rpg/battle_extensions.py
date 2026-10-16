@@ -559,7 +559,10 @@ class BattleExtensionRuntime:
         }
         removed = []
         for member_id in sorted(losing):
-            battle.turn_queue.remove_pending(member_id)
+            queue = battle.turn_queue
+            # a timeline scheduler keeps the member for later rounds; a plain queue only drops
+            # it from the round being played
+            getattr(queue, "sit_out_round", queue.remove_pending)(member_id)
             removed.append(member_id)
         return tuple(removed)
 

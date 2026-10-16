@@ -47,6 +47,8 @@ STANDARD_WORLD_COMMANDS = (
     "SOCKET_ITEM",
     "UNSOCKET_ITEM",
     "UPGRADE_EQUIPMENT",
+    "EQUIP_ITEM",
+    "DISASSEMBLE",
 )
 
 PRESENTATION_COMMANDS = (
@@ -97,6 +99,8 @@ WORLD_COMMAND_ARGUMENTS = {
     "SOCKET_ITEM": ("actor_id", "instance_id", "socket_id", "item_id"),
     "UNSOCKET_ITEM": ("actor_id", "instance_id", "socket_id"),
     "UPGRADE_EQUIPMENT": ("actor_id", "instance_id", "node_id"),
+    "EQUIP_ITEM": ("actor_id", "equipment_id", "slot_id", "index"),
+    "DISASSEMBLE": ("item_id",),
     "WALK_TO": ("entity", "x", "y", "speed"),
     "MOVE_ROUTE": ("entity", "route", "step", "speed"),
     "SHOW_BALLOON": ("entity", "balloon", "duration_ms"),
@@ -376,6 +380,16 @@ def register_standard_world_commands(router, session):
             str(_required(c, "node_id")),
         ),
     )
+    gear_command(
+        "EQUIP_ITEM",
+        lambda c: session.rearm(
+            str(_required(c, "actor_id")),
+            str(_required(c, "equipment_id")),
+            slot_id=c.args.get("slot_id") or None,
+            index=int(c.args.get("index", 0)),
+        ),
+    )
+    gear_command("DISASSEMBLE", lambda c: session.disassemble(str(_required(c, "item_id"))))
     gear_command(
         "UNSOCKET_ITEM",
         lambda c: session.unsocket_item(

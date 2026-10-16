@@ -101,6 +101,7 @@ class BattleScheduler:
         self._pending = []
         self._acted_this_round = set()
         self._charge_from = {}  # continuous mode: member id -> time its current charge began
+        self._sitting_out = set()  # continuous mode: members that lost the opening
         self._initialize()
 
     @property
@@ -254,6 +255,11 @@ class BattleScheduler:
         entry = self._pending.pop(0)
         self._time = max(self._time, entry.ready_time)
         self._acted_this_round.add(entry.member_id)
+        if self._sitting_out and entry.member_id not in self._sitting_out:
+            for waiting in sorted(self._sitting_out):  # the opening is over: they charge again
+                if waiting in self._members:
+                    self._schedule_continuous(self._members[waiting], from_time=self._time)
+            self._sitting_out.clear()
         if self.mode == BattleSchedulerMode.CONTINUOUS and entry.member_id in self._members:
             self._schedule_continuous(self._members[entry.member_id], from_time=self._time)
             if self._members and self._acted_this_round.issuperset(self._members):
@@ -296,6 +302,16 @@ class BattleScheduler:
             raise KeyError(member.member_id)
         self._members[member.member_id] = member
         # Existing ready time is preserved; new speed applies on next schedule.
+
+    def sit_out_round(self, member_id):
+        """Give up the coming turn (a lost opening) without leaving the battle: in the round
+        modes the member skips what is left of this round; on the timeline it is off until
+        another member has acted once, then it starts charging again."""
+        member_id = str(member_id)
+        self._pending = [x for x in self._pending if x.member_id != member_id]
+        if self.mode == BattleSchedulerMode.CONTINUOUS and member_id in self._members:
+            self._charge_from.pop(member_id, None)
+            self._sitting_out.add(member_id)
 
     def remove_pending(self, member_id):
         member_id = str(member_id)

@@ -27,49 +27,126 @@
         ]
       },
       "Smith": {
-        "sprite": "playable_assets/npc_field.png",
+        "sprite": "playable_assets/npc_smith.png",
         "size": [
           40,
           40
         ]
       },
       "Awakener": {
-        "sprite": "playable_assets/npc_field.png",
+        "sprite": "playable_assets/npc_awakener.png",
         "size": [
           40,
           40
         ]
       },
       "Jeweler": {
-        "sprite": "playable_assets/npc_field.png",
+        "sprite": "playable_assets/npc_jeweler.png",
         "size": [
           40,
           40
         ]
       },
       "Card Dealer": {
-        "sprite": "playable_assets/npc_field.png",
+        "sprite": "playable_assets/npc_card_dealer.png",
         "size": [
           40,
           40
         ]
       },
       "Mystic Teacher": {
-        "sprite": "playable_assets/npc_field.png",
+        "sprite": "playable_assets/npc_mystic_teacher.png",
         "size": [
           40,
           40
         ]
       },
       "Duelist Teacher": {
-        "sprite": "playable_assets/npc_field.png",
+        "sprite": "playable_assets/npc_duelist_teacher.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Weapon Master Dojo": {
+        "sprite": "playable_assets/npc_weapon_master_dojo.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Sage's Tower": {
+        "sprite": "playable_assets/npc_sage_s_tower.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Hero's Shrine": {
+        "sprite": "playable_assets/npc_hero_s_shrine.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Forgemaster's Smithy": {
+        "sprite": "playable_assets/npc_forgemaster_s_smithy.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Rogue Guild": {
+        "sprite": "playable_assets/npc_rogue_guild.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Guardian Post": {
+        "sprite": "playable_assets/npc_guardian_post.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Alchemist": {
+        "sprite": "playable_assets/npc_alchemist.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Merchant": {
+        "sprite": "playable_assets/npc_merchant.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Breaker": {
+        "sprite": "playable_assets/npc_breaker.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Armory (Bow)": {
+        "sprite": "playable_assets/npc_armory__bow.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Armory (Dagger)": {
+        "sprite": "playable_assets/npc_armory__dagger.png",
         "size": [
           40,
           40
         ]
       },
       "Shrine": {
-        "sprite": "playable_assets/npc_field.png",
+        "sprite": "playable_assets/npc_shrine.png",
         "size": [
           40,
           40
@@ -183,6 +260,147 @@
       },
       "donate_bp": {
         "label": "Focus Breath"
+      },
+      "arsenal_barrage": {
+        "label": "Arsenal Barrage"
+      },
+      "weapon_dance": {
+        "label": "Weapon Dance"
+      },
+      "disarm": {
+        "label": "Disarm"
+      },
+      "guard_break": {
+        "label": "Guard Break"
+      },
+      "sharpen": {
+        "label": "Sharpen"
+      },
+      "blade_storm": {
+        "label": "Blade Storm"
+      },
+      "draw_bow": {
+        "label": "Draw Bow"
+      },
+      "draw_dagger": {
+        "label": "Draw Dagger"
+      },
+      "edge_of_ages": {
+        "label": "Edge of Ages (Divine)"
+      },
+      "holy_light": {
+        "label": "Holy Light"
+      },
+      "dispel": {
+        "label": "Dispel"
+      },
+      "mirror_veil": {
+        "label": "Mirror Veil"
+      },
+      "tri_blast": {
+        "label": "Tri-Blast"
+      },
+      "purify": {
+        "label": "Purify"
+      },
+      "gaia_blessing": {
+        "label": "Gaia's Blessing"
+      },
+      "genesis": {
+        "label": "Genesis (Divine)"
+      },
+      "brave_slash": {
+        "label": "Brave Slash"
+      },
+      "rally_cry": {
+        "label": "Rally Cry"
+      },
+      "holy_blade": {
+        "label": "Holy Blade"
+      },
+      "second_wind": {
+        "label": "Second Wind"
+      },
+      "resolute": {
+        "label": "Resolute"
+      },
+      "lightning_strike": {
+        "label": "Lightning Strike"
+      },
+      "hero_finale": {
+        "label": "Hero's Finale (Divine)"
+      },
+      "temper": {
+        "label": "Temper"
+      },
+      "enchant_frost": {
+        "label": "Frost Temper"
+      },
+      "enchant_storm": {
+        "label": "Storm Temper"
+      },
+      "anvil_slam": {
+        "label": "Anvil Slam"
+      },
+      "hammer_combo": {
+        "label": "Hammer Combo"
+      },
+      "quick_refine": {
+        "label": "Quick Refine"
+      },
+      "masterwork": {
+        "label": "Masterwork (Divine)"
+      },
+      "mug": {
+        "label": "Mug"
+      },
+      "vanish": {
+        "label": "Vanish"
+      },
+      "backstab": {
+        "label": "Backstab"
+      },
+      "poison_cloud": {
+        "label": "Poison Cloud"
+      },
+      "smoke_bomb": {
+        "label": "Smoke Bomb"
+      },
+      "deathmark": {
+        "label": "Deathmark"
+      },
+      "shadow_feast": {
+        "label": "Shadow Feast (Divine)"
+      },
+      "shield_wall": {
+        "label": "Shield Wall"
+      },
+      "provoke": {
+        "label": "Provoke"
+      },
+      "retaliate": {
+        "label": "Retaliate"
+      },
+      "fortify": {
+        "label": "Fortify"
+      },
+      "bulwark_charge": {
+        "label": "Bulwark Charge"
+      },
+      "last_bastion": {
+        "label": "Last Bastion"
+      },
+      "counter_stance": {
+        "label": "Counter Stance"
+      },
+      "aegis": {
+        "label": "Aegis (Divine)"
+      },
+      "concoct": {
+        "label": "Concoct"
+      },
+      "counter_strike": {
+        "label": "Counter Strike"
       }
     },
     "enemy_layouts": {

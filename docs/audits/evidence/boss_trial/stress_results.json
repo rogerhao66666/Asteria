@@ -1,0 +1,11 @@
+{
+  "driver": "cocoa",
+  "enemies_at_start": 9,
+  "seconds": 25.1,
+  "frames": 1468,
+  "avg_ms": 17.03,
+  "p95_ms": 18.0,
+  "worst_ms": 62.15,
+  "fps": 58.7,
+  "battle_over": false
+}

@@ -29,6 +29,9 @@ WEAPONS = ("sword", "spear", "dagger", "axe", "bow", "staff")
 ELEMENTS = ("fire", "ice", "lightning", "light", "dark")
 
 
+ADVANCED_JOBS = ("weapon_master", "sage", "hero", "forgemaster", "rogue", "guardian")
+
+
 class Context:
     """What the build steps share."""
 
@@ -310,6 +313,25 @@ def rules_and_statuses(c):
     states["lifelink"] = StateDefinition(
         "lifelink", 3, modifiers=(mod("lifelink", "lifesteal", "add", 0.25),)
     )
+    states["mirror"] = StateDefinition("mirror", 3, contributed_tags=("reflect.magic",))
+    for element in ("fire", "ice", "lightning", "light"):  # a weapon infused with an element
+        states[f"enchant_{element}"] = StateDefinition(
+            f"enchant_{element}", 5, contributed_tags=(f"damage.{element}",)
+        )
+    states["power_down"] = StateDefinition(
+        "power_down",
+        3,
+        modifiers=(
+            mod("power_down", "power", "multiply", 0.6),
+            mod("pd2", "magic", "multiply", 0.6),
+        ),
+    )
+    states["stoneskin"] = StateDefinition(
+        "stoneskin", 3, modifiers=(mod("stoneskin", "defense", "multiply", 2.0),)
+    )
+    states["magic_up"] = StateDefinition(
+        "magic_up", 3, modifiers=(mod("magic_up", "magic", "multiply", 1.5),)
+    )
     for stance, tag in (("stance_bulwark", "stance.bulwark"), ("stance_fury", "stance.fury")):
         states[stance] = StateDefinition(stance, 99, contributed_tags=(tag,))
     policies = [
@@ -351,6 +373,19 @@ def rules_and_statuses(c):
         BattleStatePolicy("evasion_up", tick_trigger="rpg.battle.turn_ended"),
         BattleStatePolicy("focus", tick_trigger="rpg.battle.turn_ended"),
         BattleStatePolicy("lifelink", tick_trigger="rpg.battle.turn_ended"),
+        *(
+            BattleStatePolicy(name, tick_trigger="rpg.battle.turn_ended")
+            for name in (
+                "mirror",
+                "enchant_fire",
+                "enchant_ice",
+                "enchant_lightning",
+                "enchant_light",
+                "power_down",
+                "stoneskin",
+                "magic_up",
+            )
+        ),
         BattleStatePolicy("stance_bulwark"),
         BattleStatePolicy("stance_fury"),
     ]
@@ -1507,7 +1542,7 @@ def boss(c):
         (
             "w_summon",
             {
-                "weight": 1,
+                "weight": 8,
                 "conditions": [_cond("resource_ratio", resource_id=HP, op="<=", value=0.66)],
             },
         ),
@@ -1518,7 +1553,7 @@ def boss(c):
         ("w_drain", {"weight": 2}),
         ("w_cry", {"weight": 1}),
         ("w_roar", {"weight": 2}),
-        ("w_summon", {"weight": 1}),
+        ("w_summon", {"weight": 6}),
     ]
     seen, all_rules = set(), []
     for rule in rules(*opening, *ascent, *last):
@@ -1651,6 +1686,14 @@ def boss(c):
         members=(EncounterMember(c.boss_id, count=1, weight=1.0),),
         tags=("boss", "multi_phase"),
     )
+    db.encounters["swarm"] = EncounterDefinition(  # a crowd: the stress test for AI and drawing
+        "swarm",
+        members=(
+            EncounterMember(c.boss_id, count=1, weight=1.0),
+            EncounterMember("mender_wisp", count=8, weight=1.0),
+        ),
+        tags=("boss", "stress"),
+    )
 
 
 # -- the field: the boss and the people who prepare the hero --------------------------------------
@@ -1704,6 +1747,38 @@ SERVICES = {
         (14.0, -34.0),
         "Speed is a blade.",
         ("SET_CLASSES", {"actor_id": "hero_01", "class_ids": "knight,duelist"}),
+    ),
+    **{
+        name: (
+            (x, y),
+            line,
+            ("SET_CLASSES", {"actor_id": "hero_01", "class_ids": f"knight,{job}"}),
+        )
+        for name, x, y, line, job in (
+            ("Weapon Master Dojo", -44.0, 30.0, "Every weapon, one hand.", "weapon_master"),
+            ("Sage's Tower", -44.0, 6.0, "Wisdom of every element.", "sage"),
+            ("Hero's Shrine", -44.0, -18.0, "Only the brave may stand here.", "hero"),
+            ("Forgemaster's Smithy", 44.0, 30.0, "Temper the steel.", "forgemaster"),
+            ("Rogue Guild", 44.0, 6.0, "Take what is not nailed down.", "rogue"),
+            ("Guardian Post", 44.0, -18.0, "Hold the line.", "guardian"),
+        )
+    },
+    "Alchemist": (
+        (-26.0, 50.0),
+        "Combine what you carry.",
+        ("OPEN_CRAFTING", {"station": "alchemy"}),
+    ),
+    "Merchant": ((8.0, 50.0), "Take a look.", ("OPEN_SHOP", {"shop_id": "trial_shop"})),
+    "Breaker": ((24.0, 50.0), "I take things apart.", ("DISASSEMBLE", {"item_id": "ruby_item"})),
+    "Armory (Bow)": (
+        (40.0, 50.0),
+        "The bow, in your off hand.",
+        ("EQUIP_ITEM", {"actor_id": "hero_01", "equipment_id": "w_bow", "index": 1}),
+    ),
+    "Armory (Dagger)": (
+        (-44.0, 50.0),
+        "The dagger, in your off hand.",
+        ("EQUIP_ITEM", {"actor_id": "hero_01", "equipment_id": "w_dagger", "index": 1}),
     ),
     "Shrine": (
         (-4.0, 0.0),
@@ -1805,7 +1880,11 @@ def game_start(c):
     rpg["actor_snapshots"] = {}
     allocation = ProgressionAllocationRuntime(
         db.progression_graphs.values(),
-        balances={"ap": 40, "jp.knight": 70, "jp.duelist": 70, "jp.mystic": 70, "stat_points": 12},
+        balances={
+            "ap": 60,
+            "stat_points": 12,
+            **{f"jp.{j}": 70 for j in ("knight", "duelist", "mystic", *ADVANCED_JOBS)},
+        },
     )
     rpg["progression_allocations"] = {hero: allocation.to_data()}
     rpg["actor_progression"] = {
@@ -1816,7 +1895,7 @@ def game_start(c):
             "experience": 0.0,
             "points": {},
             "active_class_ids": ["knight", "duelist"],
-            "unlocked_class_ids": ["knight", "duelist", "mystic"],
+            "unlocked_class_ids": ["knight", "duelist", "mystic"],  # the rest: trainers
         }
     }
 
@@ -1846,7 +1925,14 @@ def game_start(c):
             },
         }
     }
+    import trial_items
+
     counts = {"healing_herb": 8, "ether_leaf": 5}
+    for bases, catalysts in trial_items.ALCHEMY.values():
+        for item_id in (*bases, *catalysts):
+            counts[item_id] = 8
+    for _name, (base, catalyst), _ability, _target in trial_items.CONCOCTIONS.values():
+        counts[base] = counts[catalyst] = max(counts.get(base, 0), 8)
     for item_id in db.items:
         if item_id.endswith("_item"):
             counts[item_id] = 3 if item_id.startswith("card") else 2
@@ -2094,7 +2180,8 @@ def write_manifest(c):
         "Astral Tyrant", {"sprite": "playable_assets/boss_field.png", "size": [96, 96]}
     )
     for name in SERVICES:
-        sprites[name] = {"sprite": "playable_assets/npc_field.png", "size": [40, 40]}
+        slug = "".join(ch.lower() if ch.isalnum() else "_" for ch in name).strip("_")
+        sprites[name] = {"sprite": f"playable_assets/npc_{slug}.png", "size": [40, 40]}
     order = [k for k in c.skill_names]
     manifest["battle"]["skills"] = {a: {"label": c.skill_names[a]} for a in order}
     manifest["battle"]["command_style"] = "root"

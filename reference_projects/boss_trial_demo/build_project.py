@@ -25,6 +25,8 @@ sys.path.insert(0, str(HERE))
 
 import trial_art as art  # noqa: E402
 import trial_content as content  # noqa: E402
+import trial_items as items  # noqa: E402
+import trial_jobs as jobs  # noqa: E402
 
 from asteria.editor import EditorDocument  # noqa: E402
 from asteria.project import Project  # noqa: E402
@@ -44,7 +46,10 @@ def main():
     content.gear(context)
     content.hero_jobs_and_trees(context)
     content.hero_skills(context)
+    jobs.advanced_jobs(context)
     content.boss(context)
+    items.items_and_alchemy(context)
+    items.counters(context)
     content.world(context)
     art.hero_and_boss_art(context)
     art.effect_assets(context)

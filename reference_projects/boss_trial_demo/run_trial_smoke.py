@@ -24,6 +24,16 @@ from asteria.project import Project  # noqa: E402
 from asteria.runtime.game_session import GameSessionRuntime  # noqa: E402
 
 HERO = "hero_01"
+SUB_JOBS = (
+    "duelist",
+    "mystic",
+    "weapon_master",
+    "sage",
+    "hero",
+    "forgemaster",
+    "rogue",
+    "guardian",
+)
 SW = "w_sunbrand:hero_01"
 
 
@@ -39,7 +49,7 @@ def world(game, name, **args):
 def prepare(game, facts, sub="duelist"):
     """Everything a player does before the fight."""
     allocation = game.save.rpg_state.progression_allocations[HERO]
-    for graph_id in ("knight_tree", "duelist_tree", "mystic_tree"):
+    for graph_id in [g for g in allocation.definitions if g.endswith("_tree")]:
         graph = allocation.definitions[graph_id]
         for _ in range(8):  # several passes: later nodes unlock after earlier ones
             for node in graph.nodes:
@@ -49,6 +59,14 @@ def prepare(game, facts, sub="duelist"):
                         facts["tree_ranks"] += 1
                     except ValueError:
                         break
+    game.open_shop("trial_shop")
+    game.buy("ruby_item", 1, shop_id="trial_shop")
+    facts["bought"] += 1
+    game.open_shop_id = None  # walk away from the counter: no shop window stays open
+    game.craft({"base": ["iron_ore"], "catalyst": ["fire_dust"]}, station="alchemy")
+    facts["crafted"] += 1
+    world(game, "DISASSEMBLE", item_id="ruby_item")
+    facts["disassembled"] += 1
     world(
         game,
         "GRANT_EXPERIENCE",
@@ -90,14 +108,19 @@ def prepare(game, facts, sub="duelist"):
         facts["job_changes"] += 1
 
 
-def fight(game, facts, acc, seed=7, max_rounds=200):
+def fight(game, facts, acc, seed=7, max_rounds=200, encounter="boss_room", crowd=False):
     rng = random.Random(seed)
-    game.start_encounter("boss_room")
+    game.start_encounter(encounter)
+    if crowd:  # nine foes at once outdamage any build: the point is the load, not the odds
+        for hero_id in game.active_hero_ids():
+            pool = game.battle.member(hero_id).subject.resources
+            pool.define("vitality", 900_000, current=900_000, replace=True)
     boss = game.active_enemy_ids()[0]
     facts["opening_" + game.opening] += 1
     seen_phases, seen_states, seen_tags = acc["phases"], acc["states"], acc["tags"]
     used = acc["used"]
     hp_trace = []
+    turn = 0
     for _ in range(max_rounds):
         actor, enemy_log = game.run_enemy_turns()
         for entry in game.drain_battle_log():
@@ -110,6 +133,8 @@ def fight(game, facts, acc, seed=7, max_rounds=200):
                     facts["check_" + tag] += 1
             if entry.kind == "kill":
                 facts["kill_" + ("immune" if entry.data["immune"] else "landed")] += 1
+            if entry.kind == "action" and entry.ability_id in ("counter_strike", "w_counter"):
+                facts["reaction_" + entry.ability_id] += 1
             if entry.kind == "action" and entry.member_id == boss:
                 used[entry.ability_id] += 1
         for member_id, member in game.battle.members.items():
@@ -128,9 +153,25 @@ def fight(game, facts, acc, seed=7, max_rounds=200):
         if actor is None or not game.active_enemy_ids():
             break
         build = game.battle.member(actor).ability_ids
+        turn += 1
+        if turn % 5 == 2 and "concoct" in build:  # mix a bomb in the middle of the fight
+            recipe = (
+                ("healing_herb", "fire_dust") if turn % 10 == 2 else ("fire_dust", "ice_crystal")
+            )
+            try:
+                game.concoct(
+                    actor, "concoct", {"base": [recipe[0]], "catalyst": [recipe[1]]}, (boss,)
+                )
+                facts["concocted"] += 1
+                game.end_turn()
+                continue
+            except Exception:  # noqa: BLE001 - out of ingredients
+                pass
         pool = [a for a in build if not game.ability_unavailable(actor, a)]
         rng.shuffle(pool)
         pool.sort(key=lambda a: used[a])  # variety: the least used skill first
+        killers = ("executioner", "assassinate", "deathmark")  # instant death must get its roll
+        pool.sort(key=lambda a: not (a in killers and used[a] == 0))
         guards = ("guard_stance", "rally", "shadow_step", "mend", "arcane_barrier", "bastion")
         resources = game.battle.member(actor).subject.resources
         low = resources.current("vitality") < 0.5 * resources.maximum("vitality")
@@ -142,6 +183,14 @@ def fight(game, facts, acc, seed=7, max_rounds=200):
             )
         )
         targets = (boss,) if boss in game.active_enemy_ids() else game.active_enemy_ids()[:1]
+        if crowd:  # a crowd: the weakest foe first, so the fight ends
+            alive = game.active_enemy_ids()
+            targets = (
+                min(
+                    alive,
+                    key=lambda e: game.battle.member(e).subject.resources.current("vitality"),
+                ),
+            )
         if resources.current("vitality") < 0.3 * resources.maximum("vitality"):
             for item_id in ("healing_herb", "ether_leaf"):
                 try:
@@ -166,6 +215,9 @@ def fight(game, facts, acc, seed=7, max_rounds=200):
             except Exception:  # noqa: BLE001 - an ability that cannot be used now is skipped
                 continue
             used[ability_id] += 1
+            if ability_id in ("draw_bow", "draw_dagger"):  # the weapon swap changed the skills
+                gained = "attack_bow" if ability_id == "draw_bow" else "attack_dagger"
+                facts["swapped_in_battle"] += int(gained in game.battle.member(actor).ability_ids)
             break
         game.end_turn()
     facts["victory"] += int(not game.active_enemy_ids())
@@ -182,6 +234,11 @@ def fight(game, facts, acc, seed=7, max_rounds=200):
 
 
 REQUIRED = (
+    "bought",
+    "crafted",
+    "disassembled",
+    "concocted",
+    "reaction_w_counter",
     "tree_ranks",
     "attribute_points",
     "refine_success",
@@ -206,16 +263,26 @@ def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     facts = Counter()
     acc = {"phases": set(), "states": set(), "tags": set(), "used": Counter()}
-    fights = int(argv[argv.index("--fights") + 1]) if "--fights" in argv else 6
+    fights = int(argv[argv.index("--fights") + 1]) if "--fights" in argv else len(SUB_JOBS)
     for seed in range(fights):
         project, game = load()
         game.save.rpg_state.currencies["gold"] = 40000.0
-        prepare(game, facts, "mystic" if seed % 2 else "duelist")
+        game.refine_rng = random.Random(seed)
+        prepare(game, facts, SUB_JOBS[seed % len(SUB_JOBS)])
         build = game.resolve_actor_build(HERO)
         facts["abilities_available"] = len(build.abilities)
         facts["class_growth_stat_power"] = int(build.stats.get("power"))
         fight(game, facts, acc, seed=seed)
         facts["fights"] += 1
+    # the crowd: one more fight against the boss and eight wisps (AI and drawing under load)
+    project, game = load()
+    game.refine_rng = random.Random(99)
+    prepare(game, facts, "sage")
+    crowd = Counter()
+    fight(game, crowd, acc, seed=99, max_rounds=400, encounter="swarm", crowd=True)
+    facts["swarm_enemies"] = 9
+    facts["swarm_actions"] = crowd["log_action"]
+    facts["swarm_victory"] = crowd["victory"]
     used = acc["used"]
     facts["hero_skills_used"] = len({a for a in used if not a.startswith("w_")})
     facts["boss_moves_used"] = len({a for a in used if a.startswith("w_")})
@@ -224,12 +291,21 @@ def main(argv=None):
     facts["boss_stances_seen"] = len([t for t in acc["tags"] if t.startswith("stance.")])
     facts["break_seen"] = int("state.broken" in acc["tags"])
     facts["summons"] = facts.get("log_summoned", 0)
+    allocation = game.save.rpg_state.progression_allocations[HERO]
+    trees = [g for g in allocation.definitions.values() if g.graph_id.endswith("_tree")]
+    for tree in trees:  # every job must have had a skill played
+        skills = {a for n in tree.nodes for r in n.rewards for a in r.granted_abilities}
+        if skills & set(used):
+            facts["jobs_with_skills_used"] += 1
+    facts["jobs_total"] = len(trees)
     width = max(len(k) for k in facts)
     for key in sorted(facts):
         print(f"{key:<{width}}  {facts[key]}")
     print("hero skills:", sorted(a for a in used if not a.startswith("w_")))
     print("boss moves:", sorted(a for a in used if a.startswith("w_")))
     missing = [k for k in REQUIRED if not facts.get(k)]
+    if facts["jobs_with_skills_used"] < facts["jobs_total"]:
+        missing.append("jobs_with_skills_used")
     if "--json" in argv:
         Path(argv[argv.index("--json") + 1]).write_text(
             json.dumps(dict(facts), indent=2, sort_keys=True) + "\n", encoding="utf-8"

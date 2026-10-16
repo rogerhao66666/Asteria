@@ -17,9 +17,11 @@
     "opening"
   ],
   "executed": {
-    "attack_sword": 5,
+    "attack_sword": 10,
     "flurry": 6,
-    "sunburst": 3
+    "sunburst": 3,
+    "w_combo": 6,
+    "w_mark": 1
   },
   "screenshots": [
     "trial_field.png",

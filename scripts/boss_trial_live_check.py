@@ -115,6 +115,11 @@ def main(argv=None):
     shot("trial_battle_menu.png")
 
     # an attack: the weapon's icon pops up over the hero while it swings
+    boss_id = game.active_enemy_ids()[0]
+    boss_pool = game.battle.member(boss_id).subject.resources
+    normal_max = boss_pool.maximum("vitality")
+    # the scripted skills must not end the fight: the boss soaks them, then goes back to normal
+    boss_pool.define("vitality", normal_max * 20, current=normal_max * 20, replace=True)
     attack = "attack_sword" if "attack_sword" in game.battle.member(actor).ability_ids else None
     select(actor, attack)
     if runtime.battle_commands.mode == "target":  # one foe: the engine may pick it for us
@@ -142,6 +147,7 @@ def main(argv=None):
                 shot(f"trial_{ability_id}_{index}.png")
         checks[f"{ability_id}_executed"] = ability_id in executed
 
+    boss_pool.define("vitality", normal_max, current=normal_max, replace=True)
     # play on with the first command of each menu until the boss changes phases, then win
     seen = set()
     boss = game.active_enemy_ids()[0] if game.active_enemy_ids() else None
@@ -160,9 +166,9 @@ def main(argv=None):
                 "vitality", max(hero.current("vitality"), 0.6 * hero.maximum("vitality"))
             )
             # deterministic: each phase seen puts the boss just under the next phase's threshold
-            thresholds = {1: 0.60, 2: 0.25}
+            thresholds = {0: 1.0, 1: 0.60, 2: 0.25}
             wanted = thresholds.get(len(seen), 0.0) * pool.maximum("vitality")
-            pool.set_current("vitality", min(pool.current("vitality"), max(wanted, 300.0)))
+            pool.set_current("vitality", max(wanted, 300.0))
         if not runtime._battle_presentation.busy() and runtime._battle_actor():
             if runtime.battle_commands.mode in ("ingredients", "target"):
                 press(pygame.K_RETURN, 0.05)

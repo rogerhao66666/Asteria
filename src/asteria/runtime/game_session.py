@@ -1358,7 +1358,8 @@ class GameSessionRuntime:
         funds = self.save.rpg_state.currencies
         if cost and funds.get(rules.currency, 0.0) < cost:
             raise GameSessionError(f"a refine costs {cost:g} {rules.currency}")
-        result = rules.attempt(item, self.battle.rng if self.mode == "battle" else None)
+        rng = getattr(self, "refine_rng", None)  # a test or replay may fix the rolls
+        result = rules.attempt(item, rng or (self.battle.rng if self.mode == "battle" else None))
         if cost:
             funds[rules.currency] = funds.get(rules.currency, 0.0) - cost
         if result.destroyed:
@@ -2027,14 +2028,17 @@ class GameSessionRuntime:
         self.save.rpg_state.inventory.add(items[0].equipment.equipment_id, 1)
         return items[0].equipment.equipment_id
 
-    def equip_definition(self, actor_id, equipment_id, *, slot_id=None, replace=True):
+    def equip_definition(self, actor_id, equipment_id, *, slot_id=None, replace=True, index=0):
+        """Equip ``equipment_id``; with ``replace`` the item at ``index`` of the slot goes first
+        (a second hand's weapon, say, while the first stays)."""
         actor_id = str(actor_id)
         equipment_id = str(equipment_id)
         definition = self.project.rpg_database.equipment[equipment_id]
         slot_id = str(slot_id or definition.slot)
         loadout = self.save.rpg_state.loadouts[actor_id]
-        if replace and loadout.equipped(slot_id):
-            loadout.unequip(slot_id, 0)
+        held = loadout.equipped(slot_id)
+        if replace and held:
+            loadout.unequip(slot_id, min(int(index), len(held) - 1))
         instance = EquippedItem(
             definition,
             instance_id=f"{equipment_id}:runtime:{actor_id}:{len(loadout.equipped()) + 1}",
@@ -2074,6 +2078,15 @@ class GameSessionRuntime:
     def _socket_item_for(self, attachment_id):
         items = self.project.rpg_database.items
         return next((x for x in items.values() if x.attachment_id == attachment_id), None)
+
+    def rearm(self, actor_id, equipment_id, *, slot_id=None, index=0):
+        """Swap a piece of equipment, in the field or mid-battle; a fighting member's abilities
+        follow what it now carries."""
+        instance = self.equip_definition(actor_id, equipment_id, slot_id=slot_id, index=index)
+        if self.mode == "battle" and str(actor_id) in self.battle.members:
+            build = self.resolve_actor_build(actor_id)
+            self.battle.set_member_abilities(actor_id, build.abilities)
+        return instance
 
     def socket_item(self, actor_id, instance_id, socket_id, item_id):
         """Spend a socketable bag item (card, gem, orb) into a socket of an equipped item. The
@@ -3168,6 +3181,33 @@ class GameSessionRuntime:
                 data={"immune": immune, "resource": resource},
             )
 
+    def _run_reactions(self, actor_id, ability_id, target_ids):
+        """Reactions of the project (counters, covers...) after an action; each one that ran is
+        logged like an action of its own, so the battle screen plays it."""
+        db = self.project.rpg_database
+        if not db.reactions or self.mode != "battle":
+            return ()
+        definition = self.battle.ability_runtime.registry.get(ability_id)
+        tags = tuple(definition.tags) if definition is not None else ()
+        chain = self.battle.resolve_reactions(
+            "rpg.battle.after_action", actor_id, tuple(target_ids), tags=tags
+        )
+        for request, result in zip(chain.requests, chain.action_results):
+            if request.ability_id is None:
+                continue
+            before = {t: 0.0 for t in request.target_ids}
+            self._log(
+                "action",
+                member_id=request.reactor_id,
+                ability_id=request.ability_id,
+                target_ids=tuple(request.target_ids),
+                outcomes=self._action_outcomes(
+                    request.reactor_id, request.ability_id, request.target_ids, None
+                ),
+            )
+            _ = before, result
+        return chain
+
     def _one_hit(self, actor_id, ability_id, targets, offensive, results):
         rules = self.rules
         if offensive:
@@ -3204,6 +3244,8 @@ class GameSessionRuntime:
                 )
                 if getattr(gauge, "thresholds", ()):
                     self._log("gauge", member_id=str(target_id), data=gauge)
+        if offensive:
+            self._run_reactions(actor_id, ability_id, targets)
         return targets
 
     def current_turn_actor(self):
@@ -3408,6 +3450,8 @@ class GameSessionRuntime:
         decision = self.battle.enemy_ai.decide(self.battle, ai_id, member_id, rng=self.battle.rng)
         if decision is None:
             return None
+        if decision.action_kind == "ability" and decision.payload.get("ability_id"):
+            return self._enemy_ability_turn(member_id, decision)
         before = self._knockout_values(decision.target_ids)
         result = self.battle.enemy_ai.execute_decision(self.battle, decision, rng=self.battle.rng)
         ability_id = (
@@ -3424,6 +3468,26 @@ class GameSessionRuntime:
             if self.battle is not None and getattr(result, "success", True):
                 definition = self.battle.ability_runtime.registry.get(ability_id)
                 self._after_ability(member_id, definition, tuple(decision.target_ids))
+        return result
+
+    def _enemy_ability_turn(self, member_id, decision):
+        """An enemy's ability goes through the same per-hit path as a hero's: every hit rolls
+        its own checks and instant-kill, and reactions answer it."""
+        ability_id = str(decision.payload["ability_id"])
+        targets = tuple(decision.target_ids)
+        offensive = self.ability_relation(ability_id) == TargetRelation.OPPONENT
+        results = self._repeat_action(member_id, ability_id, targets, offensive, 1)
+        result = results[-1] if results else None
+        ai = self.battle.enemy_ai
+        ai.set_memory(decision.actor_id, "last_rule_id", decision.rule_id)
+        ai.set_memory(
+            decision.actor_id,
+            "action_count",
+            int(ai.get_memory(decision.actor_id, "action_count", 0)) + 1,
+        )
+        if self.battle is not None and results:
+            definition = self.battle.ability_runtime.registry.get(ability_id)
+            self._after_ability(member_id, definition, targets)
         return result
 
     def active_enemy_ids(self):

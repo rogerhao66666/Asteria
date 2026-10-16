@@ -447,6 +447,14 @@ class BattleRuntime:
             member_id, state_id=state_id, targetable=targetable, reason=reason
         )
 
+    def set_member_abilities(self, member_id, ability_ids):
+        """Replace what ``member_id`` can use now (after re-arming): its stats and states stay."""
+        member = self.member(member_id)
+        object.__setattr__(
+            member, "ability_ids", tuple(dict.fromkeys(str(x) for x in ability_ids))
+        )
+        return member
+
     def remove_combatant(self, member_id, *, state_id="removed", reason=""):
         state = self.combatants.remove(member_id, state_id=state_id, reason=reason)
         self.turn_queue.remove_pending(member_id)

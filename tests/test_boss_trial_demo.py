@@ -23,5 +23,5 @@ def test_project_loads_with_the_expected_content():
 
 
 def test_scripted_playthrough_hits_every_system(capsys):
-    assert run_trial_smoke.main(["--fights", "6"]) == 0
+    assert run_trial_smoke.main([]) == 0
     assert "NOT HIT" not in capsys.readouterr().out
