@@ -42,6 +42,7 @@ class AreaRule:
     on_leave: str = ""
     on_step: str = ""
     switch: str = ""
+    battle_background: str = ""
 
     def __init__(
         self,
@@ -60,6 +61,7 @@ class AreaRule:
         on_leave="",
         on_step="",
         switch="",
+        battle_background="",
     ):
         key = _text(key)
         if not key.startswith(("region:", "tag:")) or key.endswith(":"):
@@ -83,6 +85,7 @@ class AreaRule:
         s(self, "on_leave", _text(on_leave))
         s(self, "on_step", _text(on_step))
         s(self, "switch", _text(switch))
+        s(self, "battle_background", _text(battle_background))
 
     def to_data(self):
         data = {"key": self.key}
@@ -101,6 +104,7 @@ class AreaRule:
             "on_leave",
             "on_step",
             "switch",
+            "battle_background",
         ):
             value = getattr(self, name)
             if value != getattr(defaults, name):
@@ -214,6 +218,10 @@ class MapRulesRuntime:
             if rule is not None and (not rule.switch or self.switches(rule.switch)):
                 found.append(rule)
         return tuple(found)
+
+    def battle_background(self, x, y):
+        """The battle background asset of the first area at the point that names one."""
+        return next((r.battle_background for r in self.rules_at(x, y) if r.battle_background), "")
 
     # -- restrictions --------------------------------------------------------------------------
     def blocked(self, group, x, y):

@@ -179,6 +179,8 @@ class PlayableTestRuntime:
             extras.append(("music", "Music Room"))
         if db.credits_pages:
             extras.append(("credits", "Credits"))
+        for entry in sorted(db.menu_entries.values(), key=lambda e: (e.order, e.entry_id)):
+            extras.append((f"entry:{entry.entry_id}", entry.label))
         for entry in extras:  # in order, before Settings
             options.insert(next(i for i, o in enumerate(options) if o[0] == "settings"), entry)
         self._pause_menu = MenuCursor(options)
@@ -2597,6 +2599,8 @@ class PlayableTestRuntime:
             }[choice]
             self._extra_screen = screen(self)
             self._ui_mode = "extra"
+        elif choice.startswith("entry:"):
+            self._run_menu_entry(choice[len("entry:") :])
         elif choice == "pets":
             from asteria.runtime.pets_screen import PetsScreen
 
@@ -2621,6 +2625,19 @@ class PlayableTestRuntime:
             self._restart_to_title()
         elif choice == "quit":
             self.running = False
+
+    def _run_menu_entry(self, entry_id):
+        """A project-defined pause entry: close the menu and queue its event program."""
+        entry = self.project.rpg_database.menu_entries.get(entry_id)
+        if entry is None:
+            return
+        context = self.game.save.event_context
+        if entry.visible_switch and not context.get_switch(entry.visible_switch):
+            return
+        if entry.enabled_switch and not context.get_switch(entry.enabled_switch):
+            return
+        self._ui_mode = "field"
+        self.game.pending_followups.append(entry.event_program_id)
 
     def _game_over_input(self):
         if not self._menu_step(self._game_over_menu):

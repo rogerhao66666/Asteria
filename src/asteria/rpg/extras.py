@@ -76,3 +76,62 @@ class CreditsPage:
             data.get("lines", ()),
             order=data.get("order", 0),
         )
+
+
+@dataclass(frozen=True, slots=True)
+class MenuEntry:
+    """A project-defined entry of the pause menu that runs an event program (a bestiary
+    shortcut, a common-event menu, a debug tool...). It shows while ``visible_switch`` is on
+    ("" = always) and can be chosen while ``enabled_switch`` is on ("" = always)."""
+
+    entry_id: str
+    label: str
+    event_program_id: str
+    visible_switch: str = ""
+    enabled_switch: str = ""
+    order: int = 0
+
+    def __init__(
+        self,
+        entry_id,
+        label="",
+        event_program_id="",
+        *,
+        visible_switch="",
+        enabled_switch="",
+        order=0,
+    ):
+        entry_id = _text(entry_id)
+        if not entry_id:
+            raise ValueError("entry_id is required")
+        program = _text(event_program_id)
+        if not program:
+            raise ValueError("event_program_id is required")
+        s = object.__setattr__
+        s(self, "entry_id", entry_id)
+        s(self, "label", _text(label) or entry_id)
+        s(self, "event_program_id", program)
+        s(self, "visible_switch", _text(visible_switch))
+        s(self, "enabled_switch", _text(enabled_switch))
+        s(self, "order", int(order))
+
+    def to_data(self):
+        return {
+            "entry_id": self.entry_id,
+            "label": self.label,
+            "event_program_id": self.event_program_id,
+            **({"visible_switch": self.visible_switch} if self.visible_switch else {}),
+            **({"enabled_switch": self.enabled_switch} if self.enabled_switch else {}),
+            **({"order": self.order} if self.order else {}),
+        }
+
+    @classmethod
+    def from_data(cls, data):
+        return cls(
+            data["entry_id"],
+            data.get("label", ""),
+            data["event_program_id"],
+            visible_switch=data.get("visible_switch", ""),
+            enabled_switch=data.get("enabled_switch", ""),
+            order=data.get("order", 0),
+        )

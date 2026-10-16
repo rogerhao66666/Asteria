@@ -732,6 +732,7 @@ class RpgDatabase:
         self.message_settings = {}  # rpg.localization MessageSettings
         self.music_tracks = {}  # rpg.extras MusicTrack
         self.credits_pages = {}  # rpg.extras CreditsPage
+        self.menu_entries = {}  # rpg.extras MenuEntry
         self.doodads = {}  # rpg.doodads DoodadDefinition
         self.world_interactions = {}
         self.drop_tables = {}
@@ -1127,6 +1128,7 @@ class RpgDatabase:
             ("message_settings", self.message_settings),
             ("music_tracks", self.music_tracks),
             ("credits_pages", self.credits_pages),
+            ("menu_entries", self.menu_entries),
             ("doodads", self.doodads),
         )
         return {
@@ -1154,6 +1156,11 @@ class RpgDatabase:
         from .extras import CreditsPage
 
         return self._add_keyed(self.credits_pages, value, CreditsPage, "page_id", "credits page")
+
+    def add_menu_entry(self, value):
+        from .extras import MenuEntry
+
+        return self._add_keyed(self.menu_entries, value, MenuEntry, "entry_id", "menu entry")
 
     def add_doodad(self, value):
         from .doodads import DoodadDefinition
@@ -1417,6 +1424,18 @@ class RpgDatabase:
             for faction_id in interaction.reputation:
                 if faction_id not in self.factions:
                     errors.append(f"{where} references unknown faction {faction_id}")
+        for species in self.pet_species.values():
+            for evolution in species.evolutions:
+                if evolution.to_species_id not in self.pet_species:
+                    errors.append(
+                        f"pet species {species.species_id} evolves into unknown species "
+                        f"{evolution.to_species_id}"
+                    )
+                if evolution.item_id and evolution.item_id not in self.items:
+                    errors.append(
+                        f"pet species {species.species_id} evolution needs unknown item "
+                        f"{evolution.item_id}"
+                    )
         for rule in self.capture_rules.values():
             if rule.enemy_id not in self.enemies:
                 errors.append(f"capture rule references unknown enemy {rule.enemy_id}")
@@ -1898,6 +1917,10 @@ class RpgDatabase:
                 result.add_music_track(MusicTrack.from_data(x))
             for x in data.get("credits_pages", ()):
                 result.add_credits_page(CreditsPage.from_data(x))
+            from .extras import MenuEntry
+
+            for x in data.get("menu_entries", ()):
+                result.add_menu_entry(MenuEntry.from_data(x))
             from .doodads import DoodadDefinition
 
             for x in data.get("doodads", ()):

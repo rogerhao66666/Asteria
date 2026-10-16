@@ -1875,3 +1875,32 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - 若後續加入配對，配對服務只交換短效 session code 與連線候選位址；先嘗試直連，失敗才由可自架 relay 轉送。不能把候選位址交換誤稱為完整 NAT 穿透，也不能把 relay 當成現有功能。
 - adapter module allowlist 只限制可載入的 Python 模組，並非安全沙箱。對不可信 adapter，後續方案應採獨立 OS process／container、版本化 JSON RPC、資源與時間限制，以及拒絕時 fail closed；未完成威脅模型與跨平台評估前不在引擎行程內任意執行第三方 adapter。
 - 本輪只記錄決策與限制，沒有實作 NAT traversal、配對服務、relay 或 adapter sandbox。
+
+
+## D31 — 寵物進階與 GAP_LIST 缺口（2026-10-16，使用者要求「全部都做」）
+
+**依據：** `docs/audits/GAP_LIST.md`（對照 YEP 258 個插件與 Godot；方法是關鍵字搜尋加讀碼，不是逐行比對）。
+
+| 項目 | 做法 | 位置 |
+|---|---|---|
+| 寵物進化／學技能／親密度 | 物種有 `evolutions`、`learnset`、`affinity_per_battle`、`max_affinity`；持有的寵物有 `affinity`。進化條件：等級、親密度、道具；`automatic` 者在勝利後自動進化。出現在 learnset 的技能必須學會才能用（`requires_pet` 之外再檢查）。暱稱、等級、親密度進化後保留 | `rpg/pets.py`、`runtime/game_session.py` |
+| 寵物戰鬥單位（可選） | 物種 `battle_unit: true` 時，出戰寵物以 `pet:<id>` 加入英雄方，數值取自該等級，資源取 `resources`（或 `max_<name>` 數值），技能取 `battle_abilities`。預設關閉 | `game_session._pet_member` |
+| Game Start 表單 | 場景、朝向、位置、隊伍、道具、貨幣、起始寵物；可復原；以整個專案驗證後才套用；未顯示的欄位保持原樣 | `editor/game_start_authoring.py`、`game_start_widget.py` |
+| 商店條件 | `ShopEntry.visible_when`、`price_rules`（開關／變數條件，買賣倍率可疊乘） | `rpg/economy.py`、`game_menus.py` |
+| 區域戰鬥背景 | `AreaRule.battle_background`：開戰時玩家所在區域指定的背景資產優先於 manifest | `rpg/map_rules.py`、`battle_presentation_adapters.py` |
+| 隊伍共用量表 | `BattleExtensionRules.shared_gauges`，`ResourceGain(shared=True, side=…)`；值存在 world counters `gauge.<id>`，戰鬥內外都可用 | `rpg/battle_extensions.py` |
+| 狀態分類 | 狀態用 `category.<名稱>` 貢獻標籤分類（無資料格式變更）；`StateRuntime.remove_category`、`session.dispel` | `gameplay/states.py` |
+| 自動戰鬥 | `auto_battle_choice`：有 `heal_tag` 且有人血量低於門檻時選治療，否則選消耗最高的可用技能 | `runtime/game_session.py` |
+| 暫停選單項目 | `MenuEntry`：標籤、事件程式、顯示／可用開關；只有專案定義才出現 | `rpg/extras.py`、`playable_test_runtime.py` |
+| 事件指令 | `MOVE_ROUTE`（相對步數路徑，完成開關 `walk.<id>.done`）、`SHOW_BALLOON`（以既有 popup 顯示符號） | `runtime/world_command_handlers.py` |
+
+**資料相容：** 所有新欄位沒設定就不寫入；舊專案與存檔照常載入。
+
+**驗證：** 新增 `tests/test_pets_advanced.py`（13 項）、`tests/test_game_start_authoring.py`（4 項）及商店、導航測試；完整測試 2678 passed。有 9 項失敗：其中 8 項在未修改的 HEAD 上同樣失敗（`test_editor_dock_tabs` 3、`test_project_templates` 3、`test_region_rules_panel`、`test_theme`），另有 `test_editor_shell_integration_154a::..._starts_without_project...` 也在 HEAD 失敗；`test_skeleton_editing` 的滾輪測試在完整套件中失敗一次、單獨執行兩次通過（疑似順序相依）。`ruff format`、`ruff check`（含 E501）通過。
+
+**沒做／限制：**
+- **沒有在 Cocoa 視窗驗證**新的 Game Start 分頁、Pets 畫面的親密度字樣、暫停選單項目。依使用者要求沒有改動既有的版面與字體；唯一的 UI 增加是 Database 工作區最後一個「Game Start」分頁、Game Systems 的幾個新表單欄位與一個新種類。
+- 事件複製／變形／生成、點擊觸發、事件圖示未做；A7、A9、A11–A14、A16、A17 未做。
+- 寵物戰鬥單位倒下不影響戰敗判定（英雄全倒才算）；自動戰鬥沒有編輯器介面。
+- 寵物學到的技能只做「是否可用」的閘門，沒有自動把技能加進選單。
+- 手把、實體鍵盤、聽感、WAN 仍需外部條件。

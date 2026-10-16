@@ -61,6 +61,24 @@ class PetsScreen:
         for event in events:
             if event.type == pg.KEYDOWN and event.key == pg.K_r:
                 self.renaming = pet.nickname
+            if event.type == pg.KEYDOWN and event.key == pg.K_e:
+                self._evolve(pet)
+
+    def _evolve(self, pet):
+        """E: evolve the pet if it qualifies (with a bag item when one is needed)."""
+        game = self.game
+        species = game.pet_species(pet)
+        if species is None:
+            return
+        inventory = game.save.rpg_state.inventory
+        for evolution in species.evolutions:
+            if evolution.item_id and inventory.count(evolution.item_id) < 1:
+                continue
+            if game.pet_evolution(pet.instance_id, item_id=evolution.item_id) is evolution:
+                game.evolve_pet(pet.instance_id, item_id=evolution.item_id)
+                self._say(f"{pet.name(species)} evolved!")
+                return
+        self._say("Not ready to evolve")
 
     def _typing(self, events):
         pg = self.rt.pg
@@ -118,7 +136,10 @@ class PetsScreen:
                 name = self.renaming + "_"
             rt.text(name, 112, y + 8, size=24, color=(255, 255, 255))
             kind = species.display_name if species else pet.species_id
-            rt.text(f"{kind}   Lv {pet.level}", 112, y + 36, size=18, color=MUTED)
+            line = f"{kind}   Lv {pet.level}"
+            if species is not None and pet.affinity:
+                line += f"   Bond {pet.affinity:g}"
+            rt.text(line, 112, y + 36, size=18, color=MUTED)
             if pet is active:
                 rt.text("ACTIVE", rect.right - 100, y + 10, size=20, color=GOOD)
             need = species.exp_to_next(pet.level) if species else 1.0

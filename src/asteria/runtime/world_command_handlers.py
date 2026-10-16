@@ -88,6 +88,8 @@ WORLD_COMMAND_ARGUMENTS = {
     "SHOW_POPUP": ("text", "entity", "duration_ms", "kind"),
     "SET_CLASSES": ("actor_id", "class_ids", "unlock"),
     "WALK_TO": ("entity", "x", "y", "speed"),
+    "MOVE_ROUTE": ("entity", "route", "step", "speed"),
+    "SHOW_BALLOON": ("entity", "balloon", "duration_ms"),
     "SET_BATTLE_WEATHER": ("kind", "intensity", "wind"),
     "SHOW_PICTURE": (
         "picture_id",
@@ -322,6 +324,30 @@ def register_standard_world_commands(router, session):
             raise WorldCommandError(f"WALK_TO: {exc}") from exc
 
     router.register("WALK_TO", walk_to)
+
+    def move_route(command):
+        try:
+            return session.move_route(
+                _required(command, "entity"),
+                str(_required(command, "route")),
+                step=_amount(command, "step", 32.0),
+                speed=_amount(command, "speed", 60.0),
+            )
+        except WorldCommandError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - a bad route is the program's mistake
+            raise WorldCommandError(f"MOVE_ROUTE: {exc}") from exc
+
+    def show_balloon(command):
+        session.show_balloon(
+            _required(command, "entity"),
+            str(command.args.get("balloon") or "exclamation"),
+            duration_ms=_amount(command, "duration_ms", 1000.0),
+        )
+        return True
+
+    router.register("MOVE_ROUTE", move_route)
+    router.register("SHOW_BALLOON", show_balloon)
 
     def set_battle_weather(command):
         try:

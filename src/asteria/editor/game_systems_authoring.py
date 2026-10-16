@@ -30,7 +30,7 @@ from asteria.rpg.doodads import DoodadDefinition
 from asteria.rpg.drop_tables import RARITIES, DropTable
 from asteria.rpg.durability import ON_BREAK, DurabilityRules
 from asteria.rpg.enemy_levels import EnemyLevelRules
-from asteria.rpg.extras import CreditsPage, MusicTrack
+from asteria.rpg.extras import CreditsPage, MenuEntry, MusicTrack
 from asteria.rpg.items import INVENTORY_OVERFLOW, InventoryRules
 from asteria.rpg.job_points import JobPointRules
 from asteria.rpg.localization import LocaleTable, MessageSettings
@@ -138,6 +138,20 @@ _DROP = (
     F("required_switch", "Required Switch", "text", default=""),
 )
 
+_PET_EVOLUTION = (
+    F("to_species_id", "Evolves Into", "ref", source="pet_species"),
+    F("min_level", "Needs Level", "int", default=0),
+    F("min_affinity", "Needs Affinity", "float", default=0.0),
+    F("item_id", "Needs Item (empty: none)", "optional_ref", source="items", default=""),
+    F("consume_item", "Spend The Item", "bool", default=True),
+    F("automatic", "Evolves By Itself After A Battle", "bool", default=True),
+)
+_PET_MOVE = (
+    F("ability_id", "Ability (usable only once learned)", "ref", source="abilities"),
+    F("level", "Learned At Level", "int", default=1),
+    F("min_affinity", "Needs Affinity", "float", default=0.0),
+)
+
 FORMS = {
     "pet_species": (
         F("species_id", "Species ID", "id"),
@@ -154,6 +168,19 @@ FORMS = {
             default=30.0,
         ),
         F("tags", "Tags", "string_list", default=()),
+        F("evolutions", "Evolutions", "table", fields=_PET_EVOLUTION, default=()),
+        F("learnset", "Learned Abilities", "table", fields=_PET_MOVE, default=()),
+        F("affinity_per_battle", "Affinity Gained Per Battle", "float", default=0.0),
+        F("max_affinity", "Highest Affinity", "float", default=100.0),
+        F("battle_unit", "Fights As Its Own Battle Unit", "bool", default=False),
+        F("resources", "Battle Resources (maximums, e.g. vitality)", "amounts", default={}),
+        F(
+            "battle_abilities",
+            "Abilities As A Battle Unit",
+            "ref_list",
+            source="abilities",
+            default=(),
+        ),
     ),
     "inventory_rules": (
         F("rules_id", "Rules ID", "id"),
@@ -246,6 +273,24 @@ FORMS = {
                 F("buy_prices", "Buy Price", "amounts", default={}),
                 F("sell_prices", "Sell Price", "amounts", default={}),
                 F("stock", "Limited Stock", "optional_int", default=None),
+                F(
+                    "visible_when",
+                    "Offered Only When (all hold)",
+                    "table",
+                    fields=_REQUIREMENT,
+                    default=(),
+                ),
+                F(
+                    "price_rules",
+                    "Price Rules",
+                    "table",
+                    fields=(
+                        F("conditions", "When (all hold)", "table", fields=_REQUIREMENT),
+                        F("buy_multiplier", "Buy Price x", "float", default=1.0),
+                        F("sell_multiplier", "Sell Price x", "float", default=1.0),
+                    ),
+                    default=(),
+                ),
             ),
         ),
     ),
@@ -350,6 +395,7 @@ _AREA_RULE = (
     F("on_leave", "Event on Leave", "optional_ref", source="event_programs", default=""),
     F("on_step", "Event on Each Step", "optional_ref", source="event_programs", default=""),
     F("switch", "Only While Switch Is On", "text", default=""),
+    F("battle_background", "Battle Background (asset id) For Fights Here", "text", default=""),
 )
 
 D26_FORMS = {
@@ -397,7 +443,15 @@ D26_FORMS = {
                 F("per_damage", "Per Point of Damage", "float", default=0.0),
                 F("per_max_hp", "Per Share of Victim Max", "float", default=0.0),
                 F("ability_tag", "Only Abilities Tagged", "text", default=""),
+                F("shared", "Fills A Party-Wide Gauge", "bool", default=False),
+                F("side", "Counts Only For Side", "text", default="heroes"),
             ),
+        ),
+        F(
+            "shared_gauges",
+            "Party-Wide Gauges (id and maximum, saved with the world)",
+            "amounts",
+            default={},
         ),
     ),
     "enemy_level_rules": (
@@ -534,6 +588,14 @@ D26_FORMS = {
         F("page_id", "Page ID", "id"),
         F("title", "Title", "text", default=""),
         F("lines", "Lines (one per line)", "multiline", default=""),
+        F("order", "Order", "int", default=0),
+    ),
+    "menu_entries": (
+        F("entry_id", "Entry ID", "id"),
+        F("label", "Menu Label", "text", default=""),
+        F("event_program_id", "Event Program", "ref", source="event_programs"),
+        F("visible_switch", "Shown While Switch Is On (empty: always)", "text", default=""),
+        F("enabled_switch", "Usable While Switch Is On (empty: always)", "text", default=""),
         F("order", "Order", "int", default=0),
     ),
     "doodads": (
@@ -691,6 +753,9 @@ def _templates():
         "message_settings": lambda key, c: MessageSettings(key),
         "music_tracks": lambda key, c: MusicTrack(key, key, "audio_asset"),
         "credits_pages": lambda key, c: CreditsPage(key, key),
+        "menu_entries": lambda key, c: MenuEntry(
+            key, key, next(iter(sorted(c.project.event_programs.ids())), "program")
+        ),
         "doodads": lambda key, c: DoodadDefinition(key, "sprite_sheet"),
     }
 
@@ -739,6 +804,7 @@ KINDS = (
     ),
     _Kind("music_tracks", "Music Room", "music_tracks", "track_id", MusicTrack),
     _Kind("credits_pages", "Credits", "credits_pages", "page_id", CreditsPage),
+    _Kind("menu_entries", "Pause Menu Entries", "menu_entries", "entry_id", MenuEntry),
     _Kind("doodads", "Doodads", "doodads", "doodad_id", DoodadDefinition),
 )
 _BY_ID = {k.kind_id: k for k in KINDS}

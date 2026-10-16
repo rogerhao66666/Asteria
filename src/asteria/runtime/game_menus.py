@@ -77,8 +77,9 @@ class ShopScreen:
         items = self.game.project.rpg_database.items
         state = self.game.save.rpg_state
         rows = []
-        for entry in shop.entries:
-            prices = entry.buy_prices if self.tab == "buy" else entry.sell_prices
+        shops = self.game.shops
+        for entry in shops.visible_entries(shop.shop_id):
+            prices = shops.prices(shop.shop_id, entry.item_id, self.tab)
             if not prices:
                 continue
             remaining = self.game.shops.remaining(shop.shop_id, entry.item_id)

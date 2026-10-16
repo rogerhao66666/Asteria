@@ -95,3 +95,37 @@ def test_field_update_advances_walkers(game):
     game.walk_to("runner", 140.0, 40.0, speed=50.0)
     game.field_update(1.0)
     assert npc.get(Transform).x == pytest.approx(90.0)
+
+
+def test_move_route_walks_relative_steps_and_flags_arrival(game):
+    npc = _add(game, "patrol", 100.0, 100.0)
+    game.world_commands.dispatch(
+        WorldCommand(
+            "MOVE_ROUTE",
+            {"entity": "patrol", "route": "right 2, down 1", "step": 10, "speed": 100},
+        )
+    )
+    assert npc.id in game.walkers
+    for _ in range(40):
+        game._advance_walkers(0.05)
+    transform = npc.get(Transform)
+    assert (transform.x, transform.y) == (120.0, 110.0)
+    assert game.save.event_context.get_switch(f"walk.{npc.id}.done")
+
+
+def test_move_route_rejects_an_unknown_direction(game):
+    from asteria.runtime.world_command_handlers import WorldCommandError
+
+    _add(game, "sailor", 10.0, 10.0)
+    with pytest.raises(WorldCommandError):
+        game.world_commands.dispatch(
+            WorldCommand("MOVE_ROUTE", {"entity": "sailor", "route": "north 2"})
+        )
+
+
+def test_show_balloon_posts_a_short_popup_over_the_entity(game):
+    _add(game, "talker", 10.0, 10.0)
+    game.world_commands.dispatch(
+        WorldCommand("SHOW_BALLOON", {"entity": "talker", "balloon": "question"})
+    )
+    assert any(p["text"] == "?" and p["kind"] == "balloon" for p in game.notices)

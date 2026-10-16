@@ -359,6 +359,29 @@ class StateRuntime:
     def get(self, state_id):
         return self._active.get(str(state_id))
 
+    CATEGORY_PREFIX = "category."
+
+    def in_category(self, category):
+        """Active states that carry the contributed tag ``category.<category>`` (a state's
+        categories are written as ordinary contributed tags: poison, curse, buff...)."""
+        tag = f"{self.CATEGORY_PREFIX}{str(category).strip().lower()}"
+        return tuple(
+            active
+            for active in self.active_states()
+            if tag in self.registry.require(active.state_id).contributed_tags
+        )
+
+    def remove_category(self, category, *, count=None):
+        """Remove active states of a category (oldest-listed first, at most ``count``);
+        returns the removed state ids. Their remove effects run."""
+        removed = []
+        for active in self.in_category(category):
+            if count is not None and len(removed) >= int(count):
+                break
+            if self.remove(active.state_id):
+                removed.append(active.state_id)
+        return tuple(removed)
+
     def apply(self, state_id, *, duration=None, source_id=None):
         definition = self.registry.require(state_id)
         applied_duration = definition.duration if duration is None else _duration(duration)

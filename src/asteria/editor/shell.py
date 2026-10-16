@@ -225,6 +225,14 @@ class AsteriaEditorWindow(QMainWindow):
         # D22 A9: attacks, projectiles, loot rarities and affixes with live previews
         self.combat_editor = CombatWorkspace(self.document, self)
         self.rpg_workspace.addTab(self.combat_editor, "Real-Time Combat")
+        from .game_start_authoring import GameStartAuthoringController
+        from .game_start_widget import GameStartEditorWidget
+
+        self.game_start_editor = GameStartEditorWidget(
+            GameStartAuthoringController(self.document), self
+        )
+        self.game_start_editor.changed.connect(self.refresh_all)
+        self.rpg_workspace.addTab(self.game_start_editor, "Game Start")
         self.battle_authoring = FamilyHostWidget(
             "Battle Rules", self.authoring_controllers.battle_categories, self
         )
@@ -1550,6 +1558,7 @@ class AsteriaEditorWindow(QMainWindow):
             return
         for name in (
             "game_systems_editor",
+            "game_start_editor",
             "enemy_ai_editor",
             "behavior_tree_editor",
             "animation_editor",

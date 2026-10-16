@@ -33,7 +33,7 @@ Game Data, Game Systems, Enemy AI, Behavior Trees and Real-Time Combat.
 | A pet species (stats, growth, experience) | Database > Game Systems > Pet Species | `stats`, `growth`, `exp_base`, `exp_per_battle` |
 | Which enemy can be captured as a pet | Database > Game Systems > Capture Rules | `Becomes Owned Pet`, `Pet Starts At Level` |
 | Where enemies stand and wander | Scene workspace | entities with Visible Encounter + Field AI |
-| The party, bag and pets you start with | the project's game start data | no form yet: change it from the Code workspace (`project.game_start`) |
+| The party, bag and pets you start with | the project's game start data | Database workspace > Game Start tab (scene, facing, position, party, bag, currencies, pets) |
 
 ## Try these first
 

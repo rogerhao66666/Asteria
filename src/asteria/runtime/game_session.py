@@ -116,6 +116,7 @@ class GameSessionRuntime:
         self.mode = "field"
         self.battle = None
         self.encounter_id = None
+        self.encounter_background = ""  # battle background asset of the area the fight began in
         self._enemy_ids = ()
         self._captured = set()
         self._pets_sent = set()
@@ -459,6 +460,54 @@ class GameSessionRuntime:
         self.walkers[entity.id] = PathFollower(path, float(speed))
         return path
 
+    ROUTE_DIRECTIONS = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
+    BALLOONS = {
+        "exclamation": "!",
+        "question": "?",
+        "heart": "<3",
+        "music": "~",
+        "anger": "#",
+        "silence": "...",
+        "idea": "*",
+        "sweat": ";",
+    }
+
+    def move_route(self, entity_key, route, *, step=32.0, speed=60.0):
+        """Walk an entity along a relative route such as ``"up 3, left 2"`` (steps of ``step``
+        pixels, in a straight line - no pathfinding). Arrival turns on the switch
+        ``walk.<entity id>.done`` like ``walk_to``. Returns the waypoints."""
+        from .navigation import PathFollower
+
+        entity = self._sequence_entity(entity_key)
+        transform = entity.get(Transform)
+        x, y, waypoints = transform.x, transform.y, []
+        for part in str(route).replace(";", ",").split(","):
+            words = part.split()
+            if not words:
+                continue
+            direction = self.ROUTE_DIRECTIONS.get(words[0].lower())
+            if direction is None:
+                raise GameSessionError(f"unknown route direction: {words[0]}")
+            try:
+                count = float(words[1]) if len(words) > 1 else 1.0
+            except ValueError as exc:
+                raise GameSessionError(f"bad route step count: {words[1]}") from exc
+            x += direction[0] * count * float(step)
+            y += direction[1] * count * float(step)
+            waypoints.append((x, y))
+        done = f"walk.{entity.id}.done"
+        if not waypoints:
+            self.save.event_context.set_switch(done, True)
+            return []
+        self.save.event_context.set_switch(done, False)
+        self.walkers[entity.id] = PathFollower(waypoints, float(speed))
+        return waypoints
+
+    def show_balloon(self, entity_key, balloon="exclamation", *, duration_ms=1000.0):
+        """A balloon over an entity (a short popup with the balloon's glyph)."""
+        glyph = self.BALLOONS.get(str(balloon).lower(), str(balloon))
+        self.notify(glyph, entity=entity_key, duration_ms=float(duration_ms), kind="balloon")
+
     def _advance_walkers(self, dt):
         for entity_id in tuple(self.walkers):
             entity = self.scene.get_entity(entity_id)
@@ -491,6 +540,15 @@ class GameSessionRuntime:
         self.map_rules = FieldMapRules(self, runtime)
         self._field_simulation.clear()  # enemy systems rebuild with the new restrictions
         return self.map_rules
+
+    def _area_battle_background(self):
+        """Battle background of the area under the player ("" when none names one)."""
+        if self.map_rules is None:
+            return ""
+        from asteria.core import Transform
+
+        transform = self.player.get(Transform)
+        return self.map_rules.runtime.battle_background(transform.x, transform.y)
 
     def damage_party(self, resource_id, amount, *, can_kill=False):
         """Floor-style damage to every active hero's saved resource; without ``can_kill`` a
@@ -1923,6 +1981,32 @@ class GameSessionRuntime:
                 extensions.mastery_uses[(member_id, ability_id)] = int(value)
         for member_id in self.battle.members:
             extensions.sync_mastery_tags(self.battle, member_id)
+        for gauge_id, _maximum in extensions.rules.shared_gauges:
+            key = f"{self.GAUGE_PREFIX}{gauge_id}"
+            extensions.shared[gauge_id] = float(self.world.counters.get(key, 0.0))
+        extensions.on_shared_change = self._store_shared_gauge
+
+    GAUGE_PREFIX = "gauge."
+
+    def _store_shared_gauge(self, gauge_id, value):
+        self.world.counters[f"{self.GAUGE_PREFIX}{gauge_id}"] = float(value)
+
+    def party_gauge(self, gauge_id):
+        """A party-wide gauge's value (saved with the world; works in and out of battle)."""
+        return float(self.world.counters.get(f"{self.GAUGE_PREFIX}{gauge_id}", 0.0))
+
+    def change_party_gauge(self, gauge_id, amount):
+        """Add / spend on a party-wide gauge, clamped to ``0..maximum``; returns the change."""
+        rules = self.extension_rules
+        maximum = dict(rules.shared_gauges).get(str(gauge_id)) if rules else None
+        if maximum is None:
+            raise GameSessionError(f"unknown party gauge {gauge_id}")
+        before = self.party_gauge(gauge_id)
+        after = max(0.0, min(maximum, before + float(amount)))
+        self._store_shared_gauge(str(gauge_id), after)
+        if self.battle is not None and self.battle.extensions is not None:
+            self.battle.extensions.shared[str(gauge_id)] = after
+        return after - before
 
     def _store_mastery(self):
         extensions = None if self.battle is None else self.battle.extensions
@@ -2029,6 +2113,94 @@ class GameSessionRuntime:
             initiative_stat="speed",
         )
 
+    def auto_battle_choice(self, actor_id, *, heal_tag="", heal_below=0.4):
+        """What an auto-battling hero would do now: ``(ability_id, target_ids)`` or ``None``.
+
+        With a ``heal_tag`` (a project's own tag), a usable ability carrying it is chosen when
+        an ally's health is below ``heal_below`` of its maximum; otherwise the most costly
+        usable ability (the strongest by convention), the first listed on ties. Nothing here is
+        a game rule: projects that want other behaviour use their own code or AI trees.
+        """
+        if self.mode != "battle":
+            raise GameSessionError("no active battle")
+        battle = self.battle
+        member = battle.member(actor_id)
+        resource = self.rules.knockout_resource_id
+        weak_ally = False
+        for ally in battle.parties[member.side].members:
+            if not battle.is_active(ally) or not resource:
+                continue
+            pool = ally.subject.resources
+            if resource in pool.to_data()["values"] and pool.maximum(resource) > 0:
+                weak_ally = (
+                    weak_ally or pool.current(resource) / pool.maximum(resource) < heal_below
+                )
+        usable = []
+        for ability_id in member.ability_ids:
+            definition = battle.ability_runtime.registry.get(ability_id)
+            if definition is None or self.ability_unavailable(actor_id, ability_id):
+                continue
+            if getattr(definition, "concoct_station", ""):
+                continue
+            targets = self.default_targets(actor_id, ability_id)
+            if not targets:
+                continue
+            cost = float(len(definition.costs))  # resource costs (formulas) count one each
+            cost += sum(float(v) for v in definition.battle_costs.values())
+            usable.append(
+                (ability_id, targets, cost, bool(heal_tag) and heal_tag in definition.tags)
+            )
+        if not usable:
+            return None
+        if weak_ally:
+            healing = [u for u in usable if u[3]]
+            if healing:
+                return healing[0][0], healing[0][1]
+        best = max(usable, key=lambda u: u[2])  # max keeps the first of equal costs
+        return best[0], best[1]
+
+    def auto_battle_act(self, actor_id, **options):
+        """Let ``actor_id`` take its turn by ``auto_battle_choice``; returns the result."""
+        choice = self.auto_battle_choice(actor_id, **options)
+        if choice is None:
+            return None
+        ability_id, targets = choice
+        return self.use_ability(actor_id, ability_id, targets)
+
+    def dispel(self, member_id, category, *, count=None):
+        """Remove states of a category (``category.<name>`` contributed tag) from a battle
+        member; returns the removed state ids."""
+        if self.battle is None:
+            raise GameSessionError("dispel needs a running battle")
+        states = self.battle.member(member_id).subject.states
+        removed = states.remove_category(category, count=count)
+        for state_id in removed:
+            self._log("state_dispelled", member_id=str(member_id), data={"state": state_id})
+        return removed
+
+    def _pet_member(self):
+        """The active pet as a hero-side battle unit when its species is a ``battle_unit``."""
+        pet = self.active_pet()
+        species = self.pet_species(pet) if pet is not None else None
+        if species is None or not species.battle_unit:
+            return None
+        from asteria.gameplay import ResourcePool, StatBlock, TagSet
+
+        stats = StatBlock(species.stats_at(pet.level))
+        resources = ResourcePool()
+        for name, maximum in species.resources_at(pet.level).items():
+            resources.define(name, maximum)
+        subject = self._battle_subject(stats, resources, TagSet(species.tags))
+        self._pets_sent.add(pet.instance_id)
+        return PartyMember(
+            f"pet:{pet.instance_id}",
+            "heroes",
+            subject,
+            ability_ids=species.battle_abilities,
+            initiative=stats.get("speed"),
+            initiative_stat="speed",
+        )
+
     def summon(
         self, *, enemy_id=None, actor_id=None, count=1, owner_id=None, join_current_round=True
     ):
@@ -2075,6 +2247,9 @@ class GameSessionRuntime:
         encounter = db.encounters[str(encounter_id)]
         active = self.save.rpg_state.party_active_actor_ids
         heroes = tuple(self._actor_member(x) for x in active)
+        pet_member = self._pet_member()
+        if pet_member is not None:
+            heroes += (pet_member,)
         enemies = []
         enemy_definition_ids = []
         serial = 0
@@ -2122,6 +2297,7 @@ class GameSessionRuntime:
             self.opening = extensions.roll_opening(random.Random(f"{encounter_id}:opening"))
             extensions.apply_opening(self.battle, self.opening, "heroes")
         self.encounter_id = str(encounter_id)
+        self.encounter_background = self._area_battle_background()
         self._enemy_ids = tuple(enemy_definition_ids)
         self._captured = set()
         self._pets_sent = set()
@@ -2385,6 +2561,9 @@ class GameSessionRuntime:
             if pet is None or wanted not in ("any", pet.species_id):
                 species = self.project.rpg_database.pet_species.get(wanted)
                 return "Needs " + (species.display_name if species else "a pet")
+        pet_move = self._pet_move_missing(ability_id)
+        if pet_move:
+            return pet_move
         items = self.save.rpg_state.inventory
         for item_id, count in (getattr(definition, "requires_items", None) or {}).items():
             if items.count(item_id) < count:
@@ -2560,6 +2739,61 @@ class GameSessionRuntime:
         values["pet_level"] = float(pet.level)
         return values
 
+    def _pet_move_missing(self, ability_id):
+        """An ability listed in the active pet's learnset needs the pet to have learned it."""
+        pet = self.active_pet()
+        species = self.pet_species(pet) if pet is not None else None
+        if species is None or not species.gated(ability_id):
+            return ""
+        if species.knows(ability_id, pet.level, pet.affinity):
+            return ""
+        return f"{pet.name(species)} has not learned this"
+
+    def pet_abilities(self, pet=None):
+        """Ability ids the pet (default: the active one) has learned from its species."""
+        pet = pet or self.active_pet()
+        species = self.pet_species(pet) if pet is not None else None
+        if species is None:
+            return ()
+        return species.known_abilities(pet.level, pet.affinity)
+
+    def pet_evolution(self, instance_id, *, item_id=""):
+        """The evolution a pet currently qualifies for, or ``None``."""
+        pet = self._pet(instance_id)
+        species = self.pet_species(pet)
+        return None if species is None else pet.evolution_for(species, item_id=item_id)
+
+    def evolve_pet(self, instance_id, *, item_id=""):
+        """Evolve a pet now (spending ``item_id`` when the evolution consumes it).
+
+        Returns the new species id, or raises when the pet does not qualify.
+        """
+        pet = self._pet(instance_id)
+        evolution = self.pet_evolution(instance_id, item_id=item_id)
+        if evolution is None:
+            raise GameSessionError(f"pet {instance_id} cannot evolve")
+        target = self.project.rpg_database.pet_species.get(evolution.to_species_id)
+        if target is None:
+            raise GameSessionError(f"unknown pet species {evolution.to_species_id}")
+        if evolution.item_id and evolution.consume_item:
+            inventory = self.save.rpg_state.inventory
+            if inventory.count(evolution.item_id) < 1:
+                raise GameSessionError(f"needs item {evolution.item_id}")
+            inventory.remove(evolution.item_id, 1)
+        before = pet.species_id
+        pet.evolve(evolution)
+        self._log(
+            "pet_evolved",
+            member_id=pet.instance_id,
+            data={"from": before, "to": pet.species_id, "level": pet.level},
+        )
+        return pet.species_id
+
+    def change_pet_affinity(self, instance_id, amount):
+        pet = self._pet(instance_id)
+        species = self.pet_species(pet)
+        return pet.add_affinity(species, amount) if species is not None else 0.0
+
     def _send_out_pet(self, actor_id, definition):
         """Before an ability that needs a pet: its stats become the user's ``pet_*`` stats, and
         the pet will share the win's experience."""
@@ -2580,11 +2814,16 @@ class GameSessionRuntime:
             if species is None:
                 continue
             gained = pet.gain(species, species.exp_per_battle)
+            if species.affinity_per_battle:
+                pet.add_affinity(species, species.affinity_per_battle)
             self._log(
                 "pet_experience",
                 member_id=pet.instance_id,
                 data={"gained": gained, "level": pet.level, "species": pet.species_id},
             )
+            evolution = pet.evolution_for(species)
+            if evolution is not None and evolution.automatic and not evolution.item_id:
+                self.evolve_pet(pet.instance_id)
         self._pets_sent = set()
 
     def _repeat_action(self, actor_id, ability_id, targets, offensive, repeats):
@@ -2916,6 +3155,17 @@ class GameSessionRuntime:
             inventory=state.inventory,
             currencies=state.currencies,
             stock=state.shop_stock,
+            condition=self._conditions_hold,
+        )
+
+    def _conditions_hold(self, conditions):
+        """Switch / variable conditions (``{"source", "name", "operator", "value"}``) all hold."""
+        from asteria.events.conditions import EventCondition
+
+        ctx = self.save.event_context
+        return all(
+            EventCondition(c["source"], c["name"], c["operator"], c["value"]).evaluate(ctx)
+            for c in conditions
         )
 
     @property

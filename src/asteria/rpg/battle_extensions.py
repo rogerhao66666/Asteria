@@ -89,9 +89,20 @@ class ResourceGain:
     per_damage: float = 0.0
     per_max_hp: float = 0.0
     ability_tag: str = ""
+    shared: bool = False
+    side: str = "heroes"
 
     def __init__(
-        self, event, resource, *, flat=0.0, per_damage=0.0, per_max_hp=0.0, ability_tag=""
+        self,
+        event,
+        resource,
+        *,
+        flat=0.0,
+        per_damage=0.0,
+        per_max_hp=0.0,
+        ability_tag="",
+        shared=False,
+        side="heroes",
     ):
         if event not in GAIN_EVENTS:
             raise ValueError(f"event must be one of {GAIN_EVENTS}")
@@ -107,6 +118,8 @@ class ResourceGain:
                 raise ValueError(f"{name} must be finite")
             s(self, name, float(value))
         s(self, "ability_tag", str(ability_tag or "").strip())
+        s(self, "shared", bool(shared))
+        s(self, "side", str(side or "heroes").strip() or "heroes")
 
     def amount(self, damage=0.0, victim_max=0.0):
         share = damage / victim_max if victim_max > 0 else 0.0
@@ -119,6 +132,10 @@ class ResourceGain:
                 data[name] = getattr(self, name)
         if self.ability_tag:
             data["ability_tag"] = self.ability_tag
+        if self.shared:
+            data["shared"] = True
+        if self.side != "heroes":
+            data["side"] = self.side
         return data
 
 
@@ -155,6 +172,7 @@ class BattleExtensionRules:
     steal_tables: tuple[StealTable, ...] = ()
     row_tag_prefix: str = ""
     gains: tuple[ResourceGain, ...] = ()
+    shared_gauges: tuple[tuple[str, float], ...] = ()
 
     def __init__(
         self,
@@ -172,6 +190,7 @@ class BattleExtensionRules:
         steal_tables=(),
         row_tag_prefix="",
         gains=(),
+        shared_gauges=None,
     ):
         s = object.__setattr__
         s(self, "rules_id", _id(rules_id, "rules_id"))
@@ -206,6 +225,13 @@ class BattleExtensionRules:
         if any(not isinstance(x, ResourceGain) for x in gains):
             raise TypeError("gains must be ResourceGain values")
         s(self, "gains", gains)
+        gauges = []
+        for gauge_id, maximum in dict(shared_gauges or {}).items():
+            maximum = float(maximum)
+            if not isfinite(maximum) or maximum <= 0:
+                raise ValueError("a shared gauge maximum must be finite and > 0")
+            gauges.append((_id(gauge_id, "gauge id"), maximum))
+        s(self, "shared_gauges", tuple(sorted(gauges)))
 
     def to_data(self):
         return {
@@ -234,6 +260,7 @@ class BattleExtensionRules:
             ],
             "row_tag_prefix": self.row_tag_prefix,
             **({"gains": [g.to_data() for g in self.gains]} if self.gains else {}),
+            **({"shared_gauges": dict(self.shared_gauges)} if self.shared_gauges else {}),
         }
 
     @classmethod
@@ -261,6 +288,7 @@ class BattleExtensionRules:
             ),
             row_tag_prefix=data.get("row_tag_prefix", ""),
             gains=tuple(ResourceGain(**x) for x in data.get("gains", ())),
+            shared_gauges=data.get("shared_gauges"),
         )
 
 
@@ -289,6 +317,8 @@ class BattleExtensionRuntime:
         self.stolen_from = set()  # (target id, table key)
         self.opening = "normal"
         self.gained = {}  # (member id, resource id) -> total gained through ResourceGain rules
+        self.shared = {}  # party-wide gauge id -> value (caller may preload from the save)
+        self.on_shared_change = None  # callback(gauge_id, value) after a change
         self._raw = {}
 
     # -- availability --------------------------------------------------------------------------
@@ -386,9 +416,36 @@ class BattleExtensionRuntime:
                     self.lifesteal_healed.get(actor.member_id, 0.0) + gained
                 )
 
+    # -- party-wide gauges ---------------------------------------------------------------------
+    def shared_maximum(self, gauge_id):
+        return dict(self.rules.shared_gauges).get(str(gauge_id))
+
+    def change_shared(self, gauge_id, amount):
+        """Add (or, negative, spend) on a party gauge; returns the change applied."""
+        maximum = self.shared_maximum(gauge_id)
+        if maximum is None:
+            raise KeyError(f"unknown shared gauge {gauge_id}")
+        before = self.shared.get(str(gauge_id), 0.0)
+        after = max(0.0, min(maximum, before + float(amount)))
+        self.shared[str(gauge_id)] = after
+        if after != before and self.on_shared_change is not None:
+            self.on_shared_change(str(gauge_id), after)
+        return after - before
+
     # -- resource gains ------------------------------------------------------------------------
     def _gain(self, battle, member_id, gain, damage=0.0, victim=None):
         resources = battle.battle_resources
+        if gain.shared:
+            if battle.member(member_id).side != gain.side:
+                return
+            top = 0.0
+            if victim is not None and self.rules.damage_resource:
+                pool = victim.subject.resources
+                if pool.contains(self.rules.damage_resource):
+                    top = pool.maximum(self.rules.damage_resource)
+            if self.shared_maximum(gain.resource) is not None:
+                self.change_shared(gain.resource, gain.amount(damage, top))
+            return
         try:
             resources.get(member_id, gain.resource)
         except KeyError:

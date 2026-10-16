@@ -291,7 +291,8 @@ class CanonicalBattleAdapter:
         self.visuals_enabled = bool(combatants)
         scene = BattlePresentationScene(
             f"battle.{game.encounter_id}",
-            self.host.manifest["battle"].get("background", "battle.background"),
+            getattr(game, "encounter_background", "")
+            or self.host.manifest["battle"].get("background", "battle.background"),
             combatants,
         )
         self.screen = BattleScreenRuntime(

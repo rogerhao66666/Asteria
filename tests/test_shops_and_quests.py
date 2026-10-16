@@ -326,3 +326,49 @@ def test_crafting_station_chance_quality_and_experience():
         outputs=[{"item_id": "y", "amount": 1}],
     )
     assert plain.to_data()["version"] == 1 and "station" not in plain.to_data()
+
+
+def test_conditional_prices_and_entries():
+    from asteria.rpg.economy import PriceRule, ShopRuntime
+
+    shop = ShopDefinition(
+        "bazaar",
+        "Bazaar",
+        [
+            ShopEntry(
+                "ether_leaf",
+                buy_prices={"gold": 100},
+                sell_prices={"gold": 40},
+                price_rules=[
+                    PriceRule(
+                        [{"source": "switch", "name": "festival"}],
+                        buy_multiplier=0.5,
+                        sell_multiplier=2.0,
+                    )
+                ],
+            ),
+            ShopEntry(
+                "rare_gem",
+                buy_prices={"gold": 10},
+                visible_when=[{"source": "switch", "name": "vip"}],
+            ),
+        ],
+    )
+    switches = {"festival": False, "vip": False}
+    holds = lambda conditions: all(switches[c["name"]] == c["value"] for c in conditions)  # noqa: E731
+    inventory, wallet = Inventory(), {"gold": 1000.0}
+    runtime = ShopRuntime({"bazaar": shop}, inventory=inventory, currencies=wallet, stock={})
+    runtime.condition = holds
+    assert runtime.prices("bazaar", "ether_leaf") == {"gold": 100}
+    assert [e.item_id for e in runtime.visible_entries("bazaar")] == ["ether_leaf"]
+    with pytest.raises(ShopError):
+        runtime.buy("bazaar", "rare_gem")
+    switches.update(festival=True, vip=True)
+    assert runtime.prices("bazaar", "ether_leaf") == {"gold": 50}
+    assert runtime.prices("bazaar", "ether_leaf", "sell") == {"gold": 80}
+    assert len(runtime.visible_entries("bazaar")) == 2
+    runtime.buy("bazaar", "ether_leaf", 2)
+    assert wallet["gold"] == 900
+    assert ShopDefinition.from_data(shop.to_data()).to_data() == shop.to_data()
+    plain = ShopEntry("x", buy_prices={"gold": 1}).to_data()
+    assert "visible_when" not in plain and "price_rules" not in plain
