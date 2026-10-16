@@ -38,6 +38,7 @@ from asteria.rpg.localization import LocaleTable, MessageSettings
 from asteria.rpg.map_rules import MapRuleSet
 from asteria.rpg.new_game_plus import CARRY, NewGamePlusRules
 from asteria.rpg.quests import OBJECTIVE_KINDS
+from asteria.rpg.refine import ON_FAIL, RefineRules
 from asteria.rpg.world_interactions import OPERATORS, VERBS, WorldInteraction
 from asteria.rpg.world_record import ACHIEVEMENT_KINDS
 
@@ -513,6 +514,24 @@ D26_FORMS = {
         F("repair_currency", "Repair Currency", "text", default=""),
         F("repair_cost_per_point", "Repair Cost per Point", "float", default=0.0),
     ),
+    "refine_rules": (
+        F("rules_id", "Rules ID", "id"),
+        F("max_level", "Maximum Refine Level (+N)", "int", default=10),
+        F(
+            "equipment_tags",
+            "Only Equipment With Any Tag (empty = all)",
+            "string_list",
+            default=(),
+        ),
+        F("bonuses", "Bonus per Level (stat = amount)", "amounts", default={}),
+        F("operation", "Bonus Operation", "choice", choices=("add", "multiply"), default="add"),
+        F("currency", "Cost Currency", "text", default=""),
+        F("base_cost", "Cost of the First Attempt", "float", default=0.0),
+        F("cost_growth", "Extra Cost per Level", "float", default=0.0),
+        F("success", "Success Chance per Level (0-1, comma separated)", "text", default="1.0"),
+        F("on_fail", "On Failure", "choice", choices=ON_FAIL, default="keep"),
+        F("safe_until", "Levels Below This Never Fail", "int", default=0),
+    ),
     "disassembly_recipes": (
         F("item_id", "Item / Equipment ID", "id"),
         F(
@@ -789,8 +808,22 @@ def _decode_shop(data):
     return data
 
 
+def _encode_refine(data):
+    data = dict(data)
+    data["success"] = ", ".join(f"{float(x):g}" for x in data.get("success", (1.0,)))
+    return data
+
+
+def _decode_refine(data):
+    data = dict(data)
+    text = str(data.get("success", "")).replace(";", ",")
+    data["success"] = [float(x) for x in text.split(",") if x.strip()] or [1.0]
+    return data
+
+
 # kind id -> (record data -> form data, form data -> record data)
 ADAPTERS = {
+    "refine_rules": (_encode_refine, _decode_refine),
     "shops": (_encode_shop, _decode_shop),
     "battle_extension_rules": (_encode_extension, _decode_extension),
     "enemy_level_rules": (_encode_levels, _decode_levels),
@@ -835,6 +868,7 @@ def _templates():
         "enemy_level_rules": lambda key, c: EnemyLevelRules(key),
         "map_rule_sets": lambda key, c: MapRuleSet(key),
         "durability_rules": lambda key, c: DurabilityRules(key),
+        "refine_rules": lambda key, c: RefineRules(key),
         "disassembly_recipes": lambda key, c: DisassemblyRecipe(key),
         "job_point_rules": lambda key, c: JobPointRules(key),
         "new_game_plus_rules": lambda key, c: NewGamePlusRules(key),
@@ -882,6 +916,7 @@ KINDS = (
     _Kind(
         "durability_rules", "Equipment Durability", "durability_rules", "rules_id", DurabilityRules
     ),
+    _Kind("refine_rules", "Weapon Refine (+N)", "refine_rules", "rules_id", RefineRules),
     _Kind(
         "disassembly_recipes", "Disassembly", "disassembly_recipes", "item_id", DisassemblyRecipe
     ),

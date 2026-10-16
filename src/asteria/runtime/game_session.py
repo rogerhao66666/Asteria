@@ -1338,6 +1338,38 @@ class GameSessionRuntime:
             funds[currency] = funds.get(currency, 0.0) - cost
         return points
 
+    @property
+    def refine_rules(self):
+        """Project weapon refine rules: the first by id, or ``None``."""
+        values = self.project.rpg_database.refine_rules
+        return values[sorted(values)[0]] if values else None
+
+    def refine_equipment(self, actor_id, instance_id):
+        """One refine attempt on an equipped item; the rules' price is paid win or lose."""
+        rules = self.refine_rules
+        if rules is None:
+            raise GameSessionError("the project defines no refine rules")
+        item = self._equipped(actor_id, instance_id)
+        if not rules.eligible(item):
+            raise GameSessionError(f"{instance_id} cannot be refined")
+        if item.refine_level >= rules.max_level:
+            raise GameSessionError(f"{instance_id} is at the maximum refine level")
+        cost = rules.cost(item.refine_level)
+        funds = self.save.rpg_state.currencies
+        if cost and funds.get(rules.currency, 0.0) < cost:
+            raise GameSessionError(f"a refine costs {cost:g} {rules.currency}")
+        result = rules.attempt(item, self.battle.rng if self.mode == "battle" else None)
+        if cost:
+            funds[rules.currency] = funds.get(rules.currency, 0.0) - cost
+        if result.destroyed:
+            loadout = self.save.rpg_state.loadouts[str(actor_id)]
+            for slot_id in loadout.slot_ids():
+                held = loadout.equipped(slot_id)
+                if item in held:
+                    loadout.unequip(slot_id, held.index(item))
+                    break
+        return result
+
     def rename_equipment(self, actor_id, instance_id, name):
         """Give an equipped item a nickname of the player's choice."""
         return self._equipped(actor_id, instance_id).rename(name)
@@ -1875,6 +1907,7 @@ class GameSessionRuntime:
         level_threshold=1000.0,
         ap_per_level=2.0,
         ability_points_per_level=1.0,
+        points_per_level=None,
     ):
         """Generic acceptance/runtime helper for actor-level progression.
 
@@ -1900,6 +1933,11 @@ class GameSessionRuntime:
             allocation = self.save.rpg_state.progression_allocations.get(actor_id)
             if allocation is not None and ap_per_level:
                 allocation.grant("ap", gained * float(ap_per_level))
+            for name, amount in dict(points_per_level or {}).items():  # any named balance
+                earned = gained * float(amount)
+                points[name] = points.get(name, 0.0) + earned
+                if allocation is not None and earned:
+                    allocation.grant(name, earned)
         self.save.rpg_state.actor_progression[actor_id] = ActorProgressionState(
             new_level,
             total,
@@ -2033,6 +2071,49 @@ class GameSessionRuntime:
         item.attach(str(socket_id), attachment)
         return attachment
 
+    def _socket_item_for(self, attachment_id):
+        items = self.project.rpg_database.items
+        return next((x for x in items.values() if x.attachment_id == attachment_id), None)
+
+    def socket_item(self, actor_id, instance_id, socket_id, item_id):
+        """Spend a socketable bag item (card, gem, orb) into a socket of an equipped item. The
+        attachment it replaces goes back to the bag unless its item is ``destroyed_on_removal``."""
+        db = self.project.rpg_database
+        definition = db.items.get(str(item_id))
+        if definition is None or not definition.attachment_id:
+            raise GameSessionError(f"{item_id} is not socketable")
+        bag = self.save.rpg_state.inventory
+        if bag.count(definition.item_id) < 1:
+            raise GameSessionError(f"the bag has no {definition.item_id}")
+        item = self._equipped(actor_id, instance_id)
+        old = item.attachments.get(str(socket_id))
+        try:
+            if old is not None:
+                item.detach(str(socket_id))
+            item.attach(str(socket_id), db.attachments[definition.attachment_id])
+        except (KeyError, ValueError) as error:
+            if old is not None:
+                item.attach(str(socket_id), old)
+            raise GameSessionError(str(error)) from error
+        bag.remove(definition.item_id, 1)
+        if old is not None:
+            self._return_socketed(old)
+        return db.attachments[definition.attachment_id]
+
+    def unsocket_item(self, actor_id, instance_id, socket_id):
+        """Take the attachment out of a socket; its item returns to the bag unless destroyed."""
+        item = self._equipped(actor_id, instance_id)
+        old = item.detach(str(socket_id))
+        if old is None:
+            raise GameSessionError(f"socket {socket_id} is empty")
+        self._return_socketed(old)
+        return old
+
+    def _return_socketed(self, attachment):
+        source = self._socket_item_for(attachment.attachment_id)
+        if source is not None and not source.destroyed_on_removal:
+            self.save.rpg_state.inventory.add(source.item_id, 1)
+
     def resolve_actor_build(self, actor_id):
         actor_id = str(actor_id)
         db = self.project.rpg_database
@@ -2072,8 +2153,10 @@ class GameSessionRuntime:
         snapshot = self.save.rpg_state.actor_snapshots.get(actor_id)
         if snapshot is not None:
             actor.restore(snapshot)
+        progress = self.save.rpg_state.actor_progression.get(actor_id)
         build = resolve_actor_build(
             actor,
+            level=1 if progress is None else int(progress.level),
             progression=self.save.rpg_state.progression,
             allocations=self.save.rpg_state.progression_allocations.get(actor_id),
             loadout=self.save.rpg_state.loadouts.get(actor_id),
@@ -3021,7 +3104,18 @@ class GameSessionRuntime:
             for (
                 hit
             ) in hits:  # each hit lands on its own: its damage types meet weaknesses and shields
-                added = [t for t in hit["tags"] if not actor_tags.contains(t)]
+                hit_tags = list(hit["tags"])
+                if offensive and hit.get("checks") and targets:
+                    rolled = self._roll_hit_checks(actor_id, hit["checks"], targets[0])
+                    hit_tags += rolled
+                    if rolled:  # a crit / evade the player should see and the log can count
+                        self._log(
+                            "hit_check",
+                            member_id=str(actor_id),
+                            target_ids=(str(targets[0]),),
+                            data={"tags": tuple(rolled)},
+                        )
+                added = [t for t in dict.fromkeys(hit_tags) if not actor_tags.contains(t)]
                 for tag in added:
                     actor_tags.add(tag)
                 self.battle.action_scale = hit["power"]
@@ -3031,9 +3125,48 @@ class GameSessionRuntime:
                     self.battle.action_scale = 1.0
                     for tag in added:
                         actor_tags.remove(tag)
+                if offensive and hit.get("kill"):
+                    self._apply_hit_kill(actor_id, hit["kill"], targets)
                 if not targets:
                     return tuple(results)
         return tuple(results)
+
+    def _roll_hit_checks(self, actor_id, check_ids, target_id):
+        """Outcome tags of a hit's checks, rolled once per hit against its first target (the
+        tags then meet the interaction rules like any other source tag)."""
+        battle = self.battle
+        source = battle.member(actor_id).subject
+        target = battle.member(target_id).subject
+        tags = []
+        for check_id in check_ids:
+            if check_id in battle.interactions.checks:
+                check = battle.interactions.check(check_id, source, target, rng=battle.rng)
+                tags.extend(check.outcome_tags)
+        return tags
+
+    def _apply_hit_kill(self, actor_id, kill, target_ids):
+        """Instant KO of a hit: ``chance`` to empty ``resource``; targets tagged immune take
+        ``immune_fraction`` of the resource maximum instead (default nothing)."""
+        resource = kill["resource"]
+        for target_id in target_ids:
+            member = self.battle.member(target_id)
+            if not self.battle.is_active(member):
+                continue
+            if self.battle.rng.random() >= kill["chance"]:
+                continue
+            pool = member.subject.resources
+            immune = any(member.subject.tags.contains(t) for t in kill.get("immune_tags", ()))
+            if immune:
+                loss = kill.get("immune_fraction", 0.0) * pool.maximum(resource)
+                pool.set_current(resource, max(0.0, pool.current(resource) - loss))
+            else:
+                pool.set_current(resource, 0.0)
+            self._log(
+                "kill",
+                member_id=str(actor_id),
+                target_ids=(str(target_id),),
+                data={"immune": immune, "resource": resource},
+            )
 
     def _one_hit(self, actor_id, ability_id, targets, offensive, results):
         rules = self.rules

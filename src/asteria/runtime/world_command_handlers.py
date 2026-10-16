@@ -42,6 +42,11 @@ STANDARD_WORLD_COMMANDS = (
     "SUMMON",
     "SHOW_POPUP",
     "SET_CLASSES",
+    "GRANT_EXPERIENCE",
+    "REFINE_EQUIPMENT",
+    "SOCKET_ITEM",
+    "UNSOCKET_ITEM",
+    "UPGRADE_EQUIPMENT",
 )
 
 PRESENTATION_COMMANDS = (
@@ -87,6 +92,11 @@ WORLD_COMMAND_ARGUMENTS = {
     "SUMMON": ("enemy_id", "actor_id", "count", "owner_id"),
     "SHOW_POPUP": ("text", "entity", "duration_ms", "kind"),
     "SET_CLASSES": ("actor_id", "class_ids", "unlock"),
+    "GRANT_EXPERIENCE": ("actor_id", "amount", "threshold", "points"),
+    "REFINE_EQUIPMENT": ("actor_id", "instance_id"),
+    "SOCKET_ITEM": ("actor_id", "instance_id", "socket_id", "item_id"),
+    "UNSOCKET_ITEM": ("actor_id", "instance_id", "socket_id"),
+    "UPGRADE_EQUIPMENT": ("actor_id", "instance_id", "node_id"),
     "WALK_TO": ("entity", "x", "y", "speed"),
     "MOVE_ROUTE": ("entity", "route", "step", "speed"),
     "SHOW_BALLOON": ("entity", "balloon", "duration_ms"),
@@ -315,6 +325,65 @@ def register_standard_world_commands(router, session):
         )
 
     router.register("SET_CLASSES", set_classes)
+
+    def gear_command(name, action):
+        def handler(command):
+            try:
+                return action(command)
+            except WorldCommandError:
+                raise
+            except Exception as exc:  # noqa: BLE001 - a bad actor or item is the program's mistake
+                raise WorldCommandError(f"{name}: {exc}") from exc
+
+        router.register(name, handler)
+
+    def grant_experience(command):
+        points = {}
+        raw = str(command.args.get("points") or "")
+        for part in raw.replace(";", ",").split(","):
+            key, _, amount = part.partition("=")
+            if key.strip():
+                points[key.strip()] = float(amount or 1)
+        extra = {"level_threshold": _amount(command, "threshold", 1000.0)}
+        return session.grant_actor_experience(
+            str(_required(command, "actor_id")),
+            _amount(command, "amount", 0),
+            points_per_level=points or None,
+            **extra,
+        )
+
+    gear_command("GRANT_EXPERIENCE", grant_experience)
+    gear_command(
+        "REFINE_EQUIPMENT",
+        lambda c: session.refine_equipment(
+            str(_required(c, "actor_id")), str(_required(c, "instance_id"))
+        ),
+    )
+    gear_command(
+        "SOCKET_ITEM",
+        lambda c: session.socket_item(
+            str(_required(c, "actor_id")),
+            str(_required(c, "instance_id")),
+            str(_required(c, "socket_id")),
+            str(_required(c, "item_id")),
+        ),
+    )
+    gear_command(
+        "UPGRADE_EQUIPMENT",
+        lambda c: session.upgrade_equipment(
+            str(_required(c, "actor_id")),
+            str(_required(c, "instance_id")),
+            str(_required(c, "node_id")),
+        ),
+    )
+    gear_command(
+        "UNSOCKET_ITEM",
+        lambda c: session.unsocket_item(
+            str(_required(c, "actor_id")),
+            str(_required(c, "instance_id")),
+            str(_required(c, "socket_id")),
+        ),
+    )
 
     def walk_to(command):
         try:

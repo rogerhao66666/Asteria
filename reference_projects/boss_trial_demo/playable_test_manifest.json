@@ -1,0 +1,237 @@
+{
+  "schema": "asteria.playable_test_content",
+  "version": 1,
+  "title": "Boss Trial Demo",
+  "field": {
+    "background": "playable_assets/field_map.png",
+    "player_sheet": "playable_assets/player_field_sheet.png",
+    "player_frame_size": [
+      64,
+      64
+    ],
+    "world_to_screen_scale": 3.0,
+    "player_start": [
+      38,
+      0
+    ],
+    "boss_world": [
+      48,
+      0
+    ],
+    "entity_sprites": {
+      "Vaelor": {
+        "sprite": "playable_assets/boss_field.png",
+        "size": [
+          96,
+          96
+        ]
+      },
+      "Smith": {
+        "sprite": "playable_assets/npc_field.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Awakener": {
+        "sprite": "playable_assets/npc_field.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Jeweler": {
+        "sprite": "playable_assets/npc_field.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Card Dealer": {
+        "sprite": "playable_assets/npc_field.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Mystic Teacher": {
+        "sprite": "playable_assets/npc_field.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Duelist Teacher": {
+        "sprite": "playable_assets/npc_field.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Shrine": {
+        "sprite": "playable_assets/npc_field.png",
+        "size": [
+          40,
+          40
+        ]
+      }
+    },
+    "player_render_width": 128,
+    "bgm": "field_theme"
+  },
+  "battle": {
+    "background": "playable_assets/battle_background.png",
+    "heroes": [
+      "playable_assets/hero_01_battle.png",
+      "playable_assets/hero_02_battle.png",
+      "playable_assets/hero_03_battle.png",
+      "playable_assets/hero_04_battle.png",
+      "playable_assets/hero_05_battle.png",
+      "playable_assets/hero_06_battle.png"
+    ],
+    "enemy_sprites": {
+      "astral_tyrant": "playable_assets/astral_tyrant_battle.png",
+      "mender_wisp": "playable_assets/mender_wisp_battle.png"
+    },
+    "skills": {
+      "attack_sword": {
+        "label": "Attack (sword)"
+      },
+      "attack_spear": {
+        "label": "Attack (spear)"
+      },
+      "attack_dagger": {
+        "label": "Attack (dagger)"
+      },
+      "attack_axe": {
+        "label": "Attack (axe)"
+      },
+      "attack_bow": {
+        "label": "Attack (bow)"
+      },
+      "attack_staff": {
+        "label": "Attack (staff)"
+      },
+      "shield_bash": {
+        "label": "Shield Bash"
+      },
+      "guard_stance": {
+        "label": "Guard Stance"
+      },
+      "cleave": {
+        "label": "Triple Cleave"
+      },
+      "rally": {
+        "label": "Rally"
+      },
+      "bloodletting": {
+        "label": "Bloodletting"
+      },
+      "vampiric_strike": {
+        "label": "Vampiric Strike"
+      },
+      "executioner": {
+        "label": "Executioner (Divine)"
+      },
+      "bastion": {
+        "label": "Bastion (Divine)"
+      },
+      "quick_slash": {
+        "label": "Quick Slash"
+      },
+      "flurry": {
+        "label": "Flurry"
+      },
+      "poison_edge": {
+        "label": "Venom Edge"
+      },
+      "shadow_step": {
+        "label": "Shadow Step"
+      },
+      "arrow_rain": {
+        "label": "Arrow Rain"
+      },
+      "assassinate": {
+        "label": "Assassinate"
+      },
+      "phantom_dance": {
+        "label": "Phantom Dance (Divine)"
+      },
+      "fireball": {
+        "label": "Fireball"
+      },
+      "frost_lance": {
+        "label": "Frost Lance"
+      },
+      "thunder_chain": {
+        "label": "Thunder Chain"
+      },
+      "mend": {
+        "label": "Mend"
+      },
+      "arcane_barrier": {
+        "label": "Arcane Barrier"
+      },
+      "drain_touch": {
+        "label": "Drain Touch"
+      },
+      "curse": {
+        "label": "Hex"
+      },
+      "meteor_fall": {
+        "label": "Meteor Fall (Divine)"
+      },
+      "donate_bp": {
+        "label": "Focus Breath"
+      }
+    },
+    "enemy_layouts": {
+      "astral_tyrant": {
+        "size": [
+          220,
+          220
+        ],
+        "position": [
+          650,
+          100
+        ],
+        "gauge": {
+          "resource": "stagger",
+          "label": "Shield"
+        }
+      }
+    },
+    "bgm": "battle_theme",
+    "victory_jingle": "victory",
+    "presentation": {
+      "adapter": "canonical"
+    },
+    "victory_aftermath": true,
+    "command_style": "root"
+  },
+  "controls": {
+    "title": "N New Game / L Load Player Save",
+    "move": "WASD / Arrow Keys",
+    "character_menu": "C",
+    "character_menu_actions": "Q/E actor, 1 secondary class, 2 skill tree, 3 passive, 4 weapon, 5 weapon upgrade, 6 accessory, 7 party/formation",
+    "interact": "E / Enter",
+    "battle_actions": "1-4 skill, B cycles generic Momentum boost",
+    "save": "F5 (in-game Player Save only)",
+    "quit": "Esc"
+  },
+  "progression_rewards": {
+    "experience": 1600,
+    "level_threshold": 1000,
+    "ap_per_level": 2,
+    "ability_points_per_level": 1
+  },
+  "audio": {
+    "field_theme": "playable_assets/audio/field_theme.ogg",
+    "battle_theme": "playable_assets/audio/battle_theme.ogg",
+    "hit": "playable_assets/audio/hit.wav",
+    "heal": "playable_assets/audio/heal.wav",
+    "confirm": "playable_assets/audio/confirm.wav",
+    "victory": "playable_assets/audio/victory.wav"
+  },
+  "dialogue_confirm_sfx": "confirm"
+}

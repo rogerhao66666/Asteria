@@ -90,6 +90,16 @@ def vfx_rect(placement, anchor_x, anchor_y, body_height, frame_width, frame_heig
     )
 
 
+def member_body_height(meta, frame_height, ratio):
+    """Logical height of a combatant's body: the sheet's ``body_height`` metadata (source pixels)
+    when it names one, else the frame height. Overhead bars and menus sit on this."""
+    try:
+        body = float((meta or {}).get("body_height") or 0.0)
+    except (TypeError, ValueError):
+        body = 0.0
+    return (body if body > 0 else float(frame_height)) / float(ratio)
+
+
 class BattleVisualError(ValueError):
     pass
 

@@ -1,0 +1,36 @@
+{
+  "skills": {
+    "fireball": "shown",
+    "frost_lance": "shown",
+    "thunder_chain": "shown",
+    "drain_touch": "shown",
+    "curse": "shown",
+    "arcane_barrier": "shown",
+    "meteor_fall": "shown",
+    "attack_sword": "shown",
+    "cleave": "shown",
+    "flurry": "shown",
+    "executioner": "shown",
+    "assassinate": "shown",
+    "arrow_rain": "shown",
+    "guard_stance": "shown",
+    "poison_edge": "shown"
+  },
+  "screenshots": [
+    "fx_fireball.png",
+    "fx_frost_lance.png",
+    "fx_thunder_chain.png",
+    "fx_drain_touch.png",
+    "fx_curse.png",
+    "fx_arcane_barrier.png",
+    "fx_meteor_fall.png",
+    "fx_attack_sword.png",
+    "fx_cleave.png",
+    "fx_flurry.png",
+    "fx_executioner.png",
+    "fx_assassinate.png",
+    "fx_arrow_rain.png",
+    "fx_guard_stance.png",
+    "fx_poison_edge.png"
+  ]
+}

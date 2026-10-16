@@ -393,3 +393,23 @@ def test_an_authored_state_machine_chooses_the_battle_clips(resource_root, monke
         )  # back to rest when finished
     finally:
         runtime.close()
+
+
+def test_hidden_zones_draw_no_hud_for_their_members(battle):
+    """Like Octopath: only the party has a panel; enemies show neither a bar nor a name."""
+    import dataclasses
+
+    runtime, adapter = battle
+    composer = adapter.screen.composer
+    composer.layout = dataclasses.replace(composer.layout, hidden_zones=("left",))
+    _, frame = _frame(adapter)
+    enemies = set(runtime.game.battle.parties["enemies"].ids())
+    heroes = set(runtime.game.battle.parties["heroes"].ids())
+    assert not [
+        t for t in frame.texts if t.member_id in enemies and not t.role.startswith("timeline")
+    ]
+    assert not [g for g in frame.gauges if g.member_id in enemies]
+    assert not [
+        p for p in frame.panels if p.member_id in enemies and not p.role.startswith("timeline")
+    ]
+    assert {g.member_id for g in frame.gauges} >= heroes  # the party keeps its HUD

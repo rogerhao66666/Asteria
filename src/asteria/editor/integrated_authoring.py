@@ -109,6 +109,8 @@ class IntegratedAuthoringControllers:
                 resource_bonuses=v.resource_bonuses,
                 granted_tags=v.granted_tags,
                 granted_abilities=v.granted_abilities,
+                level_growth=v.level_growth,
+                icon_id=v.icon_id,
             )
 
         def edit_passive(key, v):

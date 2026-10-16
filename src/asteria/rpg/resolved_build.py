@@ -109,6 +109,7 @@ def resolve_actor_build(
     loadout=None,
     passives=None,
     evolution_rules=(),
+    level=1,
 ):
     """Resolve every Phase-7B actor-build layer through one canonical path."""
     if not isinstance(actor_runtime, RpgActorRuntime):
@@ -256,11 +257,20 @@ def resolve_actor_build(
                 )
             )
 
+    for assignment in actor_runtime.class_assignments:
+        definition = actor_runtime.class_definitions[assignment.class_id]
+        for stat, rate in definition.level_growth.items():
+            contributions.append(
+                BuildContribution(
+                    "stat", stat, "class_growth", assignment.class_id, rate * max(0, level - 1)
+                )
+            )
     stats = actor_runtime.effective_stats(
         progression=progression,
         allocations=allocations,
         loadout=loadout,
         passives=passive_map,
+        level=level,
     )
     resources = _copy_resources(actor_runtime.resources)
     if allocation_contribution is not None:

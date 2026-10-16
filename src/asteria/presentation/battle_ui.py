@@ -45,6 +45,9 @@ class BattleUiLayoutProfile:
     # stage_front: how far in from each edge the front columns stand (fraction of the stage width).
     party_hud: str = "column"
     overhead_zones: tuple = ()
+    # hidden_zones: placement zones whose members get no HUD at all (no panel, bar or name),
+    # e.g. enemies in a game that never shows their health
+    hidden_zones: tuple = ()
     action_menu_placement: str = "bottom"
     stage_top: float = 0.0
     stage_front: float = 0.30
@@ -53,6 +56,7 @@ class BattleUiLayoutProfile:
         if self.virtual_width <= 0 or self.virtual_height <= 0:
             raise ValueError("virtual battle UI size must be positive")
         object.__setattr__(self, "overhead_zones", tuple(str(x) for x in self.overhead_zones))
+        object.__setattr__(self, "hidden_zones", tuple(str(x) for x in self.hidden_zones))
         if self.party_hud not in {"column", "bottom_row", "side_list"}:
             raise ValueError("party_hud must be 'column', 'bottom_row' or 'side_list'")
         if self.action_menu_placement not in {"bottom", "actor"}:
@@ -228,6 +232,7 @@ class BattleUiComposer:
                 side = legacy.get(member_id, "")
                 zone_by_member[member_id] = fallback_zone.get(side, self.party_layout.default_zone)
 
+        members = [m for m in members if zone_by_member[m.member_id] not in L.hidden_zones]
         overhead = [m for m in members if zone_by_member[m.member_id] in L.overhead_zones]
         if overhead:
             o_panels, o_texts, o_gauges = self._overhead_commands(overhead)

@@ -246,6 +246,17 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
 以上全部是資料驅動、沒設定就沒有影響；舊專案與存檔照常載入。
 
+### D36 新增（Boss Trial demo 帶出來的系統；報告 [`audits/BOSS_TRIAL_B2_B3_REPORT.md`](audits/BOSS_TRIAL_B2_B3_REPORT.md)）
+
+| 類別 | 內容 |
+|---|---|
+| 技能每一下（`hits`） | `checks`（逐下擲爆擊／迴避等檢查，效果由互動規則決定）、`kill`（即死：機率、免疫標籤、免疫時改扣最大值比例） |
+| 裝備 | `RefineRules`（+N 精煉：費用、各級成功率、失敗後果 keep／drop／break／destroy、安全級數）、可鑲嵌道具（`ItemDefinition.attachment_id`、`destroyed_on_removal`） |
+| 角色 | `ClassDefinition.level_growth`（職業每級成長）、`points_per_level`（升級給任意名稱的點數） |
+| 世界指令 | `GRANT_EXPERIENCE`、`REFINE_EQUIPMENT`、`SOCKET_ITEM`、`UNSOCKET_ITEM`、`UPGRADE_EQUIPMENT` |
+| 戰鬥表現 | 版面 `hidden_zones`（該區域成員完全不畫 HUD，像八方旅人的敵人）、`move` 動作通道（`advance` 衝向目標、`return` 退回，停在目標體型邊緣）、精靈表中繼資料 `body_height`（血條與選單依本體高度擺） |
+| Demo | `reference_projects/boss_trial_demo/`：單一主角打 Boss，`run_trial_smoke.py` 腳本化驗證、`scripts/boss_trial_live_check.py` 真實視窗驗證 |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 第三個範本（橫向平台動作、彈幕射擊）——使用者 2026-10-16 說先不用。

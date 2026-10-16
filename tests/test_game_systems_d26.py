@@ -24,6 +24,7 @@ from asteria.rpg.job_points import JobPointRules
 from asteria.rpg.localization import LocaleTable, MessageSettings
 from asteria.rpg.map_rules import AreaRule, MapRuleSet
 from asteria.rpg.new_game_plus import NewGamePlusRules
+from asteria.rpg.refine import RefineRules
 
 SHEET = "sheet"
 RICH = {
@@ -77,6 +78,18 @@ RICH = {
         on_break="destroy",
         repair_currency="gold",
         repair_cost_per_point=3,
+    ),
+    "refine_rules": RefineRules(
+        "plus",
+        max_level=7,
+        equipment_tags=["weapon"],
+        bonuses={"power": 3.0},
+        currency="gold",
+        base_cost=100,
+        cost_growth=25,
+        success=[1.0, 0.8, 0.5],
+        on_fail="drop",
+        safe_until=2,
     ),
     "disassembly_recipes": DisassemblyRecipe(
         "fire_bomb",

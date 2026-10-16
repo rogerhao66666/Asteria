@@ -350,7 +350,12 @@ class StructuredRecordEditor(QTreeWidget):
     # Entries a list field starts from when "Add Entry" is used on an empty list (any field may
     # have one).
     LIST_TEMPLATES = {
-        "hits": {"tags": [], "power": 1.0},
+        "hits": {
+            "tags": [],
+            "power": 1.0,
+            "checks": [""],  # outcome check ids rolled for this hit (crit, evade...)
+            "kill": {"chance": 0.0, "resource": "", "immune_tags": [], "immune_fraction": 0.0},
+        },
         "battle_resource_gains": {"to": "targets", "resource": "", "amount": 1.0},
         "commands": {"command": "", "args": {}},
         "apply_states": {"state": "", "to": "targets", "remove": False},

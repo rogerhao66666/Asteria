@@ -18,6 +18,28 @@ from .stats import ResourcePool, StatBlock
 from .tags import TagSet, normalize_tag
 
 
+def _clean_kill(value):
+    """Validate a hit's instant-KO block: chance, the resource to zero, optional immunity."""
+    value = dict(value)
+    unknown = set(value) - {"chance", "resource", "immune_tags", "immune_fraction"}
+    if unknown:
+        raise ValueError(f"unknown kill fields: {sorted(unknown)}")
+    chance = float(value.get("chance", 1.0))
+    fraction = float(value.get("immune_fraction", 0.0))
+    if not 0.0 <= chance <= 1.0 or not 0.0 <= fraction <= 1.0:
+        raise ValueError("kill chance and immune_fraction must be between 0 and 1")
+    resource = str(value.get("resource", "")).strip()
+    if not resource:
+        raise ValueError("kill needs a resource")
+    clean = {"chance": chance, "resource": resource}
+    tags = sorted({normalize_tag(t) for t in value.get("immune_tags", ())})
+    if tags:
+        clean["immune_tags"] = tags
+    if fraction:
+        clean["immune_fraction"] = fraction
+    return clean
+
+
 class AbilityTargetMode(str, Enum):
     SELF = "self"
     SELECTED = "selected"
@@ -314,15 +336,20 @@ class AbilityDefinition:
         clean_hits = []
         for hit in hits:
             hit = dict(hit)
-            unknown = set(hit) - {"tags", "power"}
+            unknown = set(hit) - {"tags", "power", "checks", "kill"}
             if unknown:
                 raise ValueError(f"unknown hit fields: {sorted(unknown)}")
-            clean_hits.append(
-                {
-                    "tags": sorted({normalize_tag(t) for t in hit.get("tags", ())}),
-                    "power": float(hit.get("power", 1.0)),
-                }
-            )
+            clean = {
+                "tags": sorted({normalize_tag(t) for t in hit.get("tags", ())}),
+                "power": float(hit.get("power", 1.0)),
+            }
+            checks = [str(c).strip() for c in hit.get("checks", ()) if str(c).strip()]
+            if checks:
+                clean["checks"] = checks
+            kill = dict(hit.get("kill") or {})
+            if kill and (kill.get("resource") or float(kill.get("chance", 1.0)) > 0):
+                clean["kill"] = _clean_kill(kill)  # a blank editor template stays out
+            clean_hits.append(clean)
         object.__setattr__(self, "hits", tuple(clean_hits))
         gains = []
         for gain in battle_resource_gains:

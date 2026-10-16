@@ -31,6 +31,7 @@ from asteria.rpg import BattleOutcome
 from asteria.runtime.battle_visuals import (
     BattleVisualError,
     BattleVisualResolver,
+    member_body_height,
     vfx_keyframe,
     vfx_placement,
     vfx_rect,
@@ -309,11 +310,7 @@ class CanonicalBattleAdapter:
         )
         self.screen.display_names = self._display_names(game)
         self.screen.animation.compositions = self._compositions(combatants)
-        self.screen.member_heights = {
-            v.member_id: self.resolver.sprite_sheet(v.sprite_sheet_asset_id).frames[0].height
-            / v.source_pixels_per_logical_pixel
-            for v in combatants
-        }
+        self.screen.member_heights = {v.member_id: self._body_height(v) for v in combatants}
         self.screen.coordinator.attach(game.battle.hooks)
         layout = self.screen.composer.layout
         scale = min(
@@ -466,6 +463,16 @@ class CanonicalBattleAdapter:
                 raise
         return None, False
 
+    def _body_height(self, visual):
+        sheet = self.resolver.sprite_sheet(visual.sprite_sheet_asset_id)
+        try:
+            meta = self.resolver.sheet_meta(visual.sprite_sheet_asset_id)
+        except Exception:  # noqa: BLE001 - a generated sheet without metadata
+            meta = {}
+        return member_body_height(
+            meta, sheet.frames[0].height, visual.source_pixels_per_logical_pixel
+        )
+
     def _silhouette(self, member_id, side):
         pg = self.host.pg
         image = pg.Surface((64, 96), pg.SRCALPHA)
@@ -538,10 +545,7 @@ class CanonicalBattleAdapter:
         added = [v for v in visuals if v.member_id not in shown]
         for visual in added:
             self.screen.add_combatant(visual)
-            self.screen.member_heights[visual.member_id] = (
-                self.resolver.sprite_sheet(visual.sprite_sheet_asset_id).frames[0].height
-                / visual.source_pixels_per_logical_pixel
-            )
+            self.screen.member_heights[visual.member_id] = self._body_height(visual)
         self.screen.display_names = self._display_names(game)
         self.screen.animation.compositions.update(self._compositions(added))
 
@@ -887,6 +891,32 @@ class CanonicalBattleAdapter:
                         start + beat.at,
                         lambda m=member, c=beat.cue, d=hold, p=payload: (
                             self.screen.animation.start_motion_fx(m, c, d, **p)
+                        ),
+                    )
+                continue
+            if (
+                beat.channel == "move"
+            ):  # step toward the first target ("advance") or back ("return")
+                payload = dict(beat.payload_dict())
+                members = (
+                    (entry.member_id,)
+                    if beat.member_id in (None, "@source")
+                    else (
+                        tuple(entry.target_ids)
+                        if beat.member_id == "@target"
+                        else (beat.member_id,)
+                    )
+                )
+                target = (
+                    entry.target_ids[0] if entry.target_ids and beat.cue == "advance" else None
+                )
+                for member in members:
+                    self._at(
+                        start + beat.at,
+                        lambda m=member, t=target, d=beat.duration, e=beat.easing, p=payload: (
+                            self.screen.animation.start_move(
+                                m, target_id=t, duration=d or 0.18, easing=e, **p
+                            )
                         ),
                     )
                 continue

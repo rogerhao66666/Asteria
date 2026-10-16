@@ -337,6 +337,9 @@ class BattlePresentationRuntime:
             MotionEchoes()
         )  # afterimages / trails (VFX-03), started by motion_fx timeline beats
         self._part_sheets = {}
+        # member id -> (start time, duration, from offset, to offset, easing): a body step
+        # toward a foe and back (the ``move`` motion channel); presentation only
+        self._moves = {}
         self._member_order = tuple(x.member_id for x in scene.combatants)
         self._resolve_clip_set = resolve_clip_set
         for visual in scene.combatants:
@@ -463,12 +466,64 @@ class BattlePresentationRuntime:
         for member_id in self._member_order:
             self._combatants[member_id].update(dt)
 
+    def move_offset(self, member_id):
+        """Where ``member_id`` is now relative to its anchor, in world units."""
+        move = self._moves.get(str(member_id))
+        if move is None:
+            return (0.0, 0.0)
+        start, duration, origin, goal, easing = move
+        progress = 1.0 if duration <= 0 else (self.time - start) / duration
+        k = easing_value(easing, progress)
+        return (origin[0] + (goal[0] - origin[0]) * k, origin[1] + (goal[1] - origin[1]) * k)
+
+    def start_move(
+        self,
+        member_id,
+        *,
+        target_id=None,
+        gap=None,
+        dx=None,
+        dy=None,
+        duration=0.18,
+        easing="ease_out",
+    ):
+        """Step ``member_id`` toward ``target_id`` (stopping ``gap`` units short of its anchor),
+        or by ``dx`` / ``dy``; with neither, step back to the anchor. Without a ``gap`` it stops
+        at the edge of the target's sprite."""
+        member_id = str(member_id)
+        origin = self.move_offset(member_id)
+        goal = (0.0, 0.0)
+        if target_id is not None:
+            mine = next(v for v in self.scene.combatants if v.member_id == member_id)
+            theirs = next(v for v in self.scene.combatants if v.member_id == str(target_id))
+            side = 1.0 if theirs.anchor.x >= mine.anchor.x else -1.0
+            if gap is None:  # stop at the edge of the foe's body, however big it is
+                frame = self._sprite_sheets[theirs.member_id].frames[0]
+                gap = frame.width / theirs.source_pixels_per_logical_pixel / 2 + 8.0
+            goal = (
+                theirs.anchor.x - side * float(gap) - mine.anchor.x,
+                (theirs.anchor.y - mine.anchor.y) * 0.6,
+            )
+        elif dx is not None or dy is not None:
+            goal = (float(dx or 0.0), float(dy or 0.0))
+        self._moves[member_id] = (self.time, max(0.0, float(duration)), origin, goal, easing)
+
     def build_frame(self, camera):
+        from dataclasses import replace
+
         draws = []
         for visual in self.scene.combatants:
             state = self._combatants[visual.member_id]
             if not state.visible:
                 continue
+            shift = self.move_offset(visual.member_id)
+            if shift != (0.0, 0.0):
+                visual = replace(
+                    visual,
+                    anchor=replace(
+                        visual.anchor, x=visual.anchor.x + shift[0], y=visual.anchor.y + shift[1]
+                    ),
+                )
             sheet = self._sprite_sheets[visual.member_id]
             aura_sheet = self._aura_sprite_sheets.get(visual.member_id)
             source_ratio = visual.source_pixels_per_logical_pixel

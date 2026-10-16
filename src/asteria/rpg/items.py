@@ -278,7 +278,16 @@ class ItemDefinition:
     battle_ability: str = (
         ""  # used in battle, the item runs this ability (its targets, rules and VFX)
     )
-    OPTIONAL_DATA = {"icon_id": "", "battle_ability": ""}
+    # socketable items (cards, gems, orbs): the attachment the item becomes when socketed, and
+    # whether taking it out again destroys it (default: it returns to the bag)
+    attachment_id: str = ""
+    destroyed_on_removal: bool = False
+    OPTIONAL_DATA = {
+        "icon_id": "",
+        "battle_ability": "",
+        "attachment_id": "",
+        "destroyed_on_removal": False,
+    }
 
     def __init__(
         self,
@@ -290,6 +299,8 @@ class ItemDefinition:
         use_effects=(),
         icon_id="",
         battle_ability="",
+        attachment_id="",
+        destroyed_on_removal=False,
     ):
         item_id = _id(item_id, "item_id")
         stack_limit = int(stack_limit)
@@ -305,6 +316,8 @@ class ItemDefinition:
         object.__setattr__(self, "use_effects", use_effects)
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
         object.__setattr__(self, "battle_ability", str(battle_ability or "").strip())
+        object.__setattr__(self, "attachment_id", str(attachment_id or "").strip())
+        object.__setattr__(self, "destroyed_on_removal", bool(destroyed_on_removal))
 
     def to_data(self):
         return {
@@ -317,6 +330,8 @@ class ItemDefinition:
             "use_effects": [x.to_data() for x in self.use_effects],
             **({"icon_id": self.icon_id} if self.icon_id else {}),
             **({"battle_ability": self.battle_ability} if self.battle_ability else {}),
+            **({"attachment_id": self.attachment_id} if self.attachment_id else {}),
+            **({"destroyed_on_removal": True} if self.destroyed_on_removal else {}),
         }
 
     @classmethod
@@ -336,6 +351,8 @@ class ItemDefinition:
             else [Effect.from_data(x) for x in data["use_effects"]],
             icon_id=data.get("icon_id", ""),
             battle_ability=data.get("battle_ability", ""),
+            attachment_id=data.get("attachment_id", ""),
+            destroyed_on_removal=bool(data.get("destroyed_on_removal", False)),
         )
 
 
@@ -525,6 +542,9 @@ class EquippedItem:
     durability: float | None = None
     max_durability: float = 0.0
     nickname: str = ""
+    # refinement (rpg.refine): the level and the modifiers it granted, saved with the instance
+    refine_level: int = 0
+    refine_modifiers: tuple = ()
 
     @property
     def broken(self):
@@ -573,6 +593,16 @@ class EquippedItem:
             ),
             **({"nickname": self.nickname} if self.nickname else {}),
             **(
+                {
+                    "refine": {
+                        "level": self.refine_level,
+                        "modifiers": [m.to_data() for m in self.refine_modifiers],
+                    }
+                }
+                if self.refine_level
+                else {}
+            ),
+            **(
                 {"rolled_affixes": [a.to_data() for a in self.rolled_affixes]}
                 if self.rolled_affixes
                 else {}
@@ -611,6 +641,10 @@ class EquippedItem:
             durability=data.get("durability"),
             max_durability=float(data.get("max_durability", 0.0)),
             nickname=str(data.get("nickname", "")),
+            refine_level=int(data.get("refine", {}).get("level", 0)),
+            refine_modifiers=tuple(
+                StatModifier.from_data(x) for x in data.get("refine", {}).get("modifiers", ())
+            ),
         )
         for socket_id, attachment_id in data["attachments"].items():
             if attachment_id not in attachments:
@@ -677,6 +711,7 @@ class EquippedItem:
             result.extend(contribution.modifiers)
         for socket_id in sorted(self.attachments):
             result.extend(self.attachments[socket_id].modifiers)
+        result.extend(self.refine_modifiers)
         return tuple(result)
 
     def abilities(self):

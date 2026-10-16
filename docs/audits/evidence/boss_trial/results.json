@@ -1,0 +1,45 @@
+{
+  "driver": "cocoa",
+  "status": "PASS",
+  "checks": {
+    "prepared": true,
+    "command_menu": true,
+    "attack_executed": true,
+    "flurry_executed": true,
+    "sunburst_executed": true,
+    "battle_won_by_keys": true,
+    "three_phases_seen": true
+  },
+  "failed": [],
+  "phases_seen": [
+    "ascent",
+    "last_stand",
+    "opening"
+  ],
+  "executed": {
+    "attack_sword": 5,
+    "flurry": 6,
+    "sunburst": 3
+  },
+  "screenshots": [
+    "trial_field.png",
+    "trial_battle_menu.png",
+    "trial_attack_0.png",
+    "trial_attack_1.png",
+    "trial_attack_2.png",
+    "trial_attack_3.png",
+    "trial_attack_4.png",
+    "trial_attack_5.png",
+    "trial_attack_6.png",
+    "trial_attack_7.png",
+    "trial_flurry_1.png",
+    "trial_flurry_3.png",
+    "trial_sunburst_1.png",
+    "trial_sunburst_3.png",
+    "trial_phase_opening.png",
+    "trial_phase_ascent.png",
+    "trial_phase_last_stand.png",
+    "trial_victory.png"
+  ],
+  "note": "Whether it plays well is for a person."
+}

@@ -60,6 +60,10 @@ class ClassDefinition:
     granted_abilities: tuple[str, ...] = ()
 
     icon_id: str = ""  # a project icon shown in menus; written only when set
+    # stat -> amount gained per actor level above 1 (a warrior's attack rises faster than a
+    # scholar's); written only when set
+    level_growth: dict[str, float] = field(default_factory=dict)
+    OPTIONAL_DATA = {"icon_id": "", "level_growth": {}}  # shown in the editor while empty
 
     def __init__(
         self,
@@ -71,6 +75,7 @@ class ClassDefinition:
         granted_tags=(),
         granted_abilities=(),
         icon_id="",
+        level_growth=None,
     ):
         class_id = _id(class_id, "class_id")
         object.__setattr__(self, "class_id", class_id)
@@ -88,6 +93,7 @@ class ClassDefinition:
             tuple(dict.fromkeys(_id(x, "ability_id") for x in granted_abilities)),
         )
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
+        object.__setattr__(self, "level_growth", _numbers(level_growth or {}, "stat"))
 
     def to_data(self):
         return {
@@ -100,6 +106,11 @@ class ClassDefinition:
             "granted_tags": list(self.granted_tags),
             "granted_abilities": list(self.granted_abilities),
             **({"icon_id": self.icon_id} if self.icon_id else {}),
+            **(
+                {"level_growth": dict(sorted(self.level_growth.items()))}
+                if self.level_growth
+                else {}
+            ),
         }
 
     @classmethod
@@ -114,6 +125,7 @@ class ClassDefinition:
             granted_tags=data["granted_tags"],
             granted_abilities=data["granted_abilities"],
             icon_id=data.get("icon_id", ""),
+            level_growth=data.get("level_growth"),
         )
 
 
@@ -498,10 +510,28 @@ class RpgActorRuntime:
                 abilities.extend(milestone.granted_abilities)
         return bonuses, tags, abilities
 
-    def effective_stats(self, *, progression=None, allocations=None, loadout=None, passives=None):
+    def level_growth_bonuses(self, level):
+        """Per-class growth gained by ``level`` (stat -> total), over the enabled classes."""
+        gained = max(0, int(level) - 1)
+        bonuses = {}
+        if not gained:
+            return bonuses
+        for assignment in self.class_assignments:
+            if not assignment.enabled:
+                continue
+            definition = self.class_definitions.get(assignment.class_id)
+            for stat, rate in (definition.level_growth if definition else {}).items():
+                bonuses[stat] = bonuses.get(stat, 0.0) + rate * gained
+        return bonuses
+
+    def effective_stats(
+        self, *, progression=None, allocations=None, loadout=None, passives=None, level=1
+    ):
         values = StatBlock.from_data(self.stats.to_data())
         bonuses, _, _ = self._progression_contributions(progression)
         for stat, value in bonuses.items():
+            values.add(stat, value)
+        for stat, value in self.level_growth_bonuses(level).items():
             values.add(stat, value)
         if allocations is not None:
             for stat, value in allocations.contribution().stat_bonuses.items():
@@ -731,6 +761,7 @@ class RpgDatabase:
         self.enemy_level_rules = {}  # rpg.enemy_levels EnemyLevelRules
         self.map_rule_sets = {}  # rpg.map_rules MapRuleSet
         self.durability_rules = {}  # rpg.durability DurabilityRules
+        self.refine_rules = {}  # rpg.refine RefineRules
         self.disassembly_recipes = {}  # rpg.disassembly DisassemblyRecipe, by item id
         self.job_point_rules = {}  # rpg.job_points JobPointRules
         self.new_game_plus_rules = {}  # rpg.new_game_plus NewGamePlusRules
@@ -1129,6 +1160,7 @@ class RpgDatabase:
     def _optional_rules_data(self):
         stores = (
             ("durability_rules", self.durability_rules),
+            ("refine_rules", self.refine_rules),
             ("disassembly_recipes", self.disassembly_recipes),
             ("job_point_rules", self.job_point_rules),
             ("new_game_plus_rules", self.new_game_plus_rules),
@@ -1201,6 +1233,11 @@ class RpgDatabase:
         return self._add_keyed(
             self.durability_rules, value, DurabilityRules, "rules_id", "durability rules"
         )
+
+    def add_refine_rules(self, value):
+        from .refine import RefineRules
+
+        return self._add_keyed(self.refine_rules, value, RefineRules, "rules_id", "refine rules")
 
     def add_disassembly_recipe(self, value):
         from .disassembly import DisassemblyRecipe
@@ -1928,6 +1965,10 @@ class RpgDatabase:
 
             for x in data.get("durability_rules", ()):
                 result.add_durability_rules(DurabilityRules.from_data(x))
+            from .refine import RefineRules
+
+            for x in data.get("refine_rules", ()):
+                result.add_refine_rules(RefineRules.from_data(x))
             for x in data.get("disassembly_recipes", ()):
                 result.add_disassembly_recipe(DisassemblyRecipe.from_data(x))
             for x in data.get("job_point_rules", ()):
