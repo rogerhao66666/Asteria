@@ -219,7 +219,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | --- | --- |
 | 圖示 | 暗黑 demo 的五個狀態圖示是程式畫的（`art.py` 的 `status_glyph`），技能圖示取自 CC0 資源包的相近圖；八方旅人的寵物沒有圖示（用縮寫）；沒有 AI 美術 |
 | 原生 kernel 要每台機器編譯一次 | `python -m asteria.kernels.build_native`；沒編譯會退回 numpy |
-| `CollisionWorld.from_scene` 沒有快取 | 要做場景層級的失效機制；目前不是瓶頸 |
+| `CollisionWorld.from_scene` 沒有快取 | 2026-10-16 量測：100／500／2000 個碰撞器建一次 0.05／0.22／0.85 ms，每幀約一次，不是瓶頸；失效模型（啟用狀態、增刪、換場景、移動）的風險大於收益，**決定不做** |
 | Enemy AI 的七欄規則表 | 窗口很窄時可橫向捲動（表格的正常行為） |
 | 手把與實體鍵盤、音訊聽感與延遲 | 需要真人；沒有自動化 |
 | 手感與平衡 | 數值是 demo 用的，需要有人實際玩過調整 |
@@ -233,12 +233,25 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
 戰鬥規則擴充（嘲諷、吸血、過度擊殺、次數限制、熟練度、先制、偷竊）、敵人等級與難度、ATB／CTB 量表與預測順序、勝利結算畫面、區域與地板規則（地板傷害、滑冰、腳步聲、限制通行、潛行）、事件計時器、裝備耐久與暱稱、拆解、職業點、新遊戲＋、訊息控制碼與翻譯、訊息記錄／音樂室／製作人員名單、地形自動鋪磚、格狀尋路與 `WALK_TO`、2D 骨骼動畫，以及多人連線的 TLS／token／網路模擬／度量。
 
+### D27–D33 新增的系統（細節見 DECISION_LOG；缺口對照表見 [`audits/GAP_LIST.md`](audits/GAP_LIST.md)）
+
+| 類別 | 內容 |
+|---|---|
+| 寵物（D31） | 進化（等級／親密度／道具，可自動或手動）、學技能（出現在 learnset 的技能必須學會才能用）、親密度、可選的戰鬥單位（`battle_unit`，以暱稱顯示、不決定勝負） |
+| 作者流程（D31） | Database > Game Start 表單（場景、隊伍、背包、貨幣、起始寵物）、暫停選單自訂項目（`MenuEntry`）、技能槽規則（`AbilityLoadoutRules`）與暫停選單「Skill Slots」畫面 |
+| 規則（D31–D32） | 商店條件顯示與價格規則、依區域的戰鬥背景、隊伍共用量表、狀態分類與 `dispel`、技能選單分類（`menu_category`）、自動戰鬥（manifest `battle.auto_key`）、演員變數 |
+| 事件（D31–D33） | `MOVE_ROUTE`、`SHOW_BALLOON`、`SPAWN_ENTITY`、`COPY_ENTITY`、`MORPH_ENTITY`、`SET_ENTITY_ICON`、點擊觸發（`Interaction2D.trigger = click`） |
+| 畫面（D32–D33） | 地圖視窗（manifest `field.hud.gold`／`quest_tracker`）、低血量姿勢（`battle.weak_below`）、狀態染色（`StateDefinition.tint`） |
+| 編輯器 | Game Start 分頁、新的 Game Systems 種類（Ability Slots、Pause Menu Entries）、種類下拉選單圖示、flag／paw／gauge 圖示 |
+
+以上全部是資料驅動、沒設定就沒有影響；舊專案與存檔照常載入。
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
-1. 第三個範本（橫向平台動作、彈幕射擊），證明系統的通用性。
-2. 專屬設計的技能圖示（不用 AI 生成）和八方旅人的寵物圖示。
-3. 寵物進化、學技能、親密度（如果要更像寶可夢）。
-4. Game start 資料（起始隊伍、背包、寵物）的編輯表單。
+1. 第三個範本（橫向平台動作、彈幕射擊）——使用者 2026-10-16 說先不用。
+2. Web 匯出——使用者 2026-10-16 說先不用；要先做依賴盤點。
+3. 專屬設計的技能圖示（不用 AI 生成）和八方旅人的寵物圖示。
+4. 自動戰鬥、低血量姿勢門檻的編輯器表單（現在用 manifest 鍵）。
 
 ---
 

@@ -1957,3 +1957,11 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **驗證：** 新測試加進 `tests/test_pets_advanced.py` 與 `tests/test_navigation_session.py`；Cocoa 真實視窗（SDL driver `cocoa`）截圖：`d33_battle_pet_unit_weak_pose.png`（寵物戰鬥單位以暱稱出現在隊伍與時間軸、低血量姿勢）、`d33_skill_slots_screen.png`（技能槽畫面）。
 
 **限制：** 事件圖示只驗證了資料與繪製呼叫，沒有在真實視窗用實際圖示素材看過；弱點姿勢只對產生出來的角色圖自動有，Octopath／Diablo 的自訂角色圖沒有 `weak` 片段所以不變；自動戰鬥沒有編輯器表單（用 manifest 鍵）。
+
+
+## D34 — 剩餘事項的決定與驗證（2026-10-16）
+
+- **`CollisionWorld.from_scene` 快取：決定不做。** 量測（`from_scene` 已走欄位儲存）：100／500／2000 個碰撞器每次 0.05／0.22／0.85 ms，每幀約一次。收益不到 1 ms，而快取要處理啟用狀態、增刪、換場景與移動的失效，風險較大。
+- **事件常駐圖示：** 真實 Cocoa 視窗（SDL driver `cocoa`）用 Diablo 專案的物品圖示（`bone_shard.png`）顯示在玩家頭上（`d34_entity_icon.png`）。同一次也確認 `_field_world_xy`（點擊觸發用的螢幕→世界轉換）與 `_field_screen_xy` 往返誤差為 0。
+- **手冊：** `ENGINE_HANDBOOK.md` 新增 D27–D33 的系統表，並把「下一步的候選」改成現況：第三個範本與 Web 匯出依使用者指示暫不做。
+- **仍未做：** 第三個範本、Web 匯出（使用者指示先不用）；自動戰鬥與低血量姿勢門檻的編輯器表單；專屬技能圖示與八方旅人寵物圖示。需要外部條件的項目（手把、聽感、WAN）不變。
