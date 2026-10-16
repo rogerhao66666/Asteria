@@ -673,7 +673,11 @@ class BattleUiComposer:
             ),
             default=0,
         )
-        wanted = min(width, max(88.0, min(150.0, chars * 3.8 + 2 * P.interaction_padding)))
+        # rows with an icon (a skill's ``icon_id``) start 8 layout units further right
+        icon_pad = 8.0 if any(e.icon_asset_id for e in menu.entries) else 0.0
+        wanted = min(
+            width, max(88.0, min(150.0, chars * 3.8 + 2 * P.interaction_padding + icon_pad))
+        )
         # Keep the menu between left/right HUD columns when there is room for it.
         hud_gap = L.virtual_width - 2 * (L.margin + L.hud_panel_width) - 2 * L.margin
         if hud_gap >= self.MIN_MENU_WIDTH:
@@ -861,9 +865,20 @@ class BattleUiComposer:
                     else ("action_entry" if entry.enabled else "action_disabled")
                 )
                 prefix = P.selected_prefix if selected else P.idle_prefix
+                label = entry.label
+                if icon_pad:  # the icon took room from the name: never run into the cost
+                    cost_room = (len(entry.cost_text) + 2) * 3.8 if entry.cost_text else 0.0
+                    fit = int((width - 2 * P.interaction_padding - icon_pad - cost_room) / 3.8)
+                    fit -= len(prefix)
+                    if fit >= 4 and len(label) > fit:
+                        label = label[: fit - 2].rstrip() + ".."
                 texts.append(
                     BattleUiText(
-                        prefix + entry.label, x + P.interaction_padding + 2, ty, role, "left"
+                        prefix + label,
+                        x + P.interaction_padding + 2 + icon_pad,
+                        ty,
+                        role,
+                        "left",
                     )
                 )
                 if entry.cost_text:
@@ -878,7 +893,14 @@ class BattleUiComposer:
                     )
                 if entry.icon_asset_id:
                     icons.append(
-                        BattleUiIcon(entry.icon_asset_id, x + 1, ty, "action", "", entry.label)
+                        BattleUiIcon(
+                            entry.icon_asset_id,
+                            x + P.interaction_padding - 4,
+                            ty - 1,
+                            "action",
+                            "",
+                            entry.label,
+                        )
                     )
                 ty += P.interaction_row_height
 

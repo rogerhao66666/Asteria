@@ -597,6 +597,46 @@ PET_RULES = (
 )
 
 
+def _monogram_letters(record_id):
+    words = [w for w in re.split(r"[^a-z0-9]+", str(record_id).lower()) if w]
+    if not words:
+        return "?"
+    if len(words) == 1:
+        return words[0][:2].capitalize()
+    return (words[0][0] + words[1][0]).upper()
+
+
+def _monogram_color(record_id):
+    """A steady, pleasant colour from the id (hue from a checksum, fixed saturation / value)."""
+    import colorsys
+
+    hue = (sum(ord(ch) * (i + 3) for i, ch in enumerate(str(record_id))) % 360) / 360.0
+    r, g, b = colorsys.hsv_to_rgb(hue, 0.55, 0.9)
+    return int(r * 255), int(g * 255), int(b * 255)
+
+
+def forge_monogram(record_id, size=32):
+    """A gem with the id's first letters, coloured from the id: the icon of a record no keyword
+    rule recognised, so every skill still gets its own distinct picture."""
+    import pygame
+
+    canvas = _Canvas(pygame)
+    base = _monogram_color(record_id)
+    canvas.poly([(32, 4), (56, 20), (56, 44), (32, 60), (8, 44), (8, 20)], base)
+    canvas.poly([(32, 4), (56, 20), (32, 30), (8, 20)], _shade(base, 1.25), None)
+    canvas.poly([(32, 30), (56, 20), (56, 44), (32, 60)], _shade(base, 0.75), None)
+    canvas.poly([(32, 4), (56, 20), (56, 44), (32, 60), (8, 44), (8, 20)], None, OUTLINE, 2.4)
+    if not pygame.font.get_init():
+        pygame.font.init()
+    font = pygame.font.Font(None, 30 * SUPERSAMPLE)
+    text = _monogram_letters(record_id)
+    for color, shift in (((20, 22, 32), 2), ((255, 255, 255), 0)):
+        image = font.render(text, True, color)
+        rect = image.get_rect(center=(32 * SUPERSAMPLE + shift, 33 * SUPERSAMPLE + shift))
+        canvas.surface.blit(image, rect)
+    return canvas.result(int(size))
+
+
 def kind_for(record_id, rules):
     text = str(record_id).lower()
     for pattern, kind in rules:
@@ -627,6 +667,18 @@ def write_icon(folder, kind, size=32):
     return name
 
 
+def write_monogram(folder, record_id, size=32):
+    """Write ``skill_mono_<id>.png`` under ``folder``; returns the file name."""
+    import pygame
+
+    folder = Path(folder)
+    folder.mkdir(parents=True, exist_ok=True)
+    safe = re.sub(r"[^a-z0-9_]+", "_", str(record_id).lower()).strip("_") or "x"
+    name = f"skill_mono_{safe}.png"
+    pygame.image.save(forge_monogram(record_id, size), str(folder / name))
+    return name
+
+
 def apply_to_project_file(
     project_file, *, icon_dir="playable_assets/icons", replace=False, keep=(), states=True
 ):
@@ -634,8 +686,9 @@ def apply_to_project_file(
 
     ``keep`` lists record ids whose icon is left alone, ``states=False`` skips the states.
     ``project_file`` is a ``project.asteria.json``; the PNGs go to ``<project folder>/<icon_dir>``
-    and a record gets ``icon_id = "<icon_dir>/skill_<kind>.png"``. Records that already have an
-    icon keep it unless ``replace``. Returns ``{"abilities": n, "states": n, "pets": n}``.
+    and a record gets ``icon_id = "<icon_dir>/skill_<kind>.png"``; a record no keyword matches
+    gets a monogram gem, ``skill_mono_<id>.png``. Records that already have an icon keep it
+    unless ``replace``. Returns ``{"abilities": n, "states": n, "pets": n}``.
     """
     path = Path(project_file)
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -646,9 +699,11 @@ def apply_to_project_file(
         if record.get(key) in keep or (record.get("icon_id") and not replace):
             return
         kind = kind_for(record.get(key, ""), rules)
-        if kind is None:
-            return
-        record["icon_id"] = f"{icon_dir}/{write_icon(folder, kind)}"
+        if kind is None:  # no keyword matched: a monogram gem of its own colour
+            name = write_monogram(folder, record.get(key, ""))
+        else:
+            name = write_icon(folder, kind)
+        record["icon_id"] = f"{icon_dir}/{name}"
         counts[bucket] += 1
 
     library = data.get("gameplay_library", {})

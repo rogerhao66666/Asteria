@@ -1978,3 +1978,15 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **驗證：** 新增 `tests/test_forged_icons.py`（每種圖示畫得出來且不是空白或實心方塊、id 對應、只改 icon 那幾行、兩個專案的圖示檔都存在且可被選單載入）與 `BattleOptions` 測試。Cocoa 真實視窗：八方旅人的 Pets 畫面顯示 Frosty 的 Frost Lynx 頭像、Diablo 的快捷列顯示新的拳頭與翻滾圖示、Battle Options 表單在 1600×1000 稽核缺陷 0（`d35_*.png`）。
 
 **限制：** 圖示是 32 px 的簡單像素風，不是美術師手繪；技能名稱沒有對上關鍵字的不會有圖示（沿用原本的縮寫）；八方旅人的戰鬥選單目前不顯示技能圖示（選單版面沒有改）；Diablo 多人副本專案沒有重建，仍用舊圖示。
+
+
+## D36 — 戰鬥選單顯示技能圖示、沒對上的 id 也有圖示（2026-10-16）
+
+| 項目 | 做法 | 位置 |
+|---|---|---|
+| 戰鬥選單圖示 | 技能（含武器普攻）與道具的 `icon_id` 帶進選單列（`BattleActionEntry.icon_asset_id`）；畫面端原本就有 `BattleUiIcon` 與 `resolve_icon` 掛鉤，但沒人接：現在由戰鬥畫面把專案的選單圖示載入並畫在每列左側。選單裡只要有一列有圖示，所有列的文字右移 8 個版面單位並預留位置；名稱太長會以「..」截短，不會碰到右側花費。**沒有任何圖示的選單版面完全不變** | `runtime/battle_commands.py`、`runtime/battle_presentation_adapters.py`、`presentation/battle_ui.py` |
+| 沒對上關鍵字的 id | `forge_monogram`：以 id 的前兩個字母加 id 雜湊出的顏色畫成寶石，同一個 id 永遠同一張、不同 id 不同色；`apply_to_project_file` 在關鍵字都不符時自動用它（`skill_mono_<id>.png`），所以每個技能、狀態、寵物都有自己的圖示 | `graphics/forged_icons.py` |
+
+**驗證：** `tests/test_forged_icons.py`（含寶石圖示穩定且互不相同、無關鍵字的紀錄拿到寶石）、`tests/test_pets_advanced.py`（選單列帶圖示、圖示可解析、解析失敗時回 `None`）。Cocoa 真實視窗：八方旅人的戰鬥選單 Attack／Skills 分頁顯示圖示，長名稱截短（`d36_octopath_battle_menu_icons.png`、`d36_monogram_icons.png`）。
+
+**限制：** 目前兩個 demo 的所有技能都對上關鍵字，所以還沒有專案實際用到寶石圖示；選單圖示固定畫 8 個版面單位寬（約 24 px），細長的武器圖示（法杖、匕首）看起來偏小。

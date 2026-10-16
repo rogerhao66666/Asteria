@@ -136,6 +136,7 @@ class BattleCommands:
                     ability_id,
                     self._name(ability_id),
                     category=category,
+                    icon_asset_id=getattr(definition, "icon_id", "") or None,
                     cost_text=self._cost_text(definition),
                     enabled=not reason,
                     disabled_reason=reason,
@@ -195,6 +196,7 @@ class BattleCommands:
                     ability_id,
                     self._name(ability_id),
                     category=category,
+                    icon_asset_id=getattr(definition, "icon_id", "") or None,
                     cost_text=self._cost_text(definition),
                     enabled=not reason,
                     disabled_reason=reason,
@@ -243,6 +245,7 @@ class BattleCommands:
                     item_id,
                     f"{item.display_name}",
                     category="Items",
+                    icon_asset_id=getattr(item, "icon_id", "") or None,
                     cost_text=f"x{count}",
                     order=len(rows),
                 )

@@ -485,3 +485,19 @@ def test_battle_options_in_the_project_override_the_manifest(demo):  # noqa: F81
     with pytest.raises(ValueError):
         BattleOptions("bad", weak_below=2)
     assert "auto_key" not in BattleOptions("plain").to_data()
+
+
+def test_battle_menu_rows_carry_the_skill_icons_and_the_menu_draws_them(demo):  # noqa: F811
+    from asteria.presentation.battle_action_menu import BattleActionEntry
+
+    runtime, game, commands = demo
+    hero = game.active_hero_ids()[0]
+    rows = commands.skill_rows(hero)
+    with_icon = [r for r in rows if r.icon_asset_id]
+    assert with_icon and all("skill_" in r.icon_asset_id for r in with_icon)
+    adapter = runtime._battle_presentation
+    assert adapter._ui_backend.resolve_icon is not None
+    assert adapter._resolve_icon(with_icon[0].icon_asset_id) is not None
+    assert adapter._resolve_icon("no/such/icon.png") is None
+    entry = BattleActionEntry("x", "Long skill name here", icon_asset_id="a.png", cost_text="9SP")
+    assert entry.to_data()["icon_asset_id"] == "a.png"

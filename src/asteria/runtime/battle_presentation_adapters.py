@@ -319,7 +319,10 @@ class CanonicalBattleAdapter:
         scale = min(
             self.host.width / layout.virtual_width, self.host.height / layout.virtual_height
         )
-        self._ui_backend = PygameBattleUiBackend(self.host.screen, scale=scale)
+        self._icon_px = max(8, round(8 * scale))  # menu icons are drawn 8 layout units wide
+        self._ui_backend = PygameBattleUiBackend(
+            self.host.screen, scale=scale, resolve_icon=self._resolve_icon
+        )
         self._ui_backend.vfx_drawer = self._draw_vfx
         self.renderer = BattleUiRenderer(self._ui_backend, self._theme())
         self.textures = PygameTextureDrawer(self.host, self.resolver, scale)
@@ -666,6 +669,15 @@ class CanonicalBattleAdapter:
             tints.pop(member_id, None)
         else:
             tints[member_id] = colour
+
+    def _resolve_icon(self, asset_id):
+        """A skill / item icon of the project (menu rows with an ``icon_id``), or ``None``."""
+        try:
+            return self.host.icon_image(asset_id, getattr(self, "_icon_px", 16))
+        except Exception as exc:  # pygame.error / a missing file: the row shows a plain box
+            if type(exc).__name__ not in ("error", "FileNotFoundError", "KeyError"):
+                raise
+            return None
 
     def _weak_fraction(self):
         """Health share below which a combatant shows its ``weak`` pose (the project's

@@ -51,6 +51,17 @@ def test_ids_map_to_sensible_kinds():
     assert all(kind in DRAWINGS for _, kind in ABILITY_RULES + STATE_RULES + PET_RULES)
 
 
+def test_monograms_are_distinct_and_steady():
+    from asteria.graphics.forged_icons import forge_monogram
+
+    a, b = forge_monogram("zzz_mystery", 32), forge_monogram("qux_enigma", 32)
+    assert a.get_size() == (32, 32)
+    pixels = lambda image: [tuple(image.get_at((x, y))) for x in range(32) for y in range(32)]  # noqa: E731
+    assert pixels(a) != pixels(b)
+    assert pixels(a) == pixels(forge_monogram("zzz_mystery", 32))
+    assert sum(1 for p in pixels(a) if p[3] > 0) > 200
+
+
 def test_apply_writes_png_files_and_only_touches_icon_lines(tmp_path):
     data = {
         "gameplay_library": {
@@ -66,13 +77,15 @@ def test_apply_writes_png_files_and_only_touches_icon_lines(tmp_path):
     path = tmp_path / "project.asteria.json"
     path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
     counts = apply_to_project_file(path, replace=True, keep=("potion",))
-    assert counts == {"abilities": 1, "states": 1, "pets": 1}  # "keeper" matches no rule
+    assert counts == {"abilities": 2, "states": 1, "pets": 1}  # "keeper" gets a monogram
     written = json.loads(path.read_text())
     abilities = {
         a["ability_id"]: a.get("icon_id") for a in written["gameplay_library"]["abilities"]
     }
     assert abilities["fireball"] == "playable_assets/icons/skill_fire.png"
     assert abilities["potion"] == "item.png"
+    assert abilities["keeper"] == "playable_assets/icons/skill_mono_keeper.png"
+    assert (tmp_path / abilities["keeper"]).is_file()
     assert (tmp_path / "playable_assets/icons/skill_fire.png").is_file()
     again = apply_to_project_file(path, replace=False)
     assert again == {"abilities": 0, "states": 0, "pets": 0}  # existing icons are kept
