@@ -167,3 +167,92 @@ class CreditsScreen(_Screen):
 
 
 __all__ = ["BacklogScreen", "CreditsScreen", "MusicRoomScreen"]
+
+
+class AbilitySlotsScreen(_Screen):
+    """Skill slots (``AbilityLoadoutRules``): the party member's learned abilities; Enter puts one
+    in a slot or takes it out, Left / Right change the member, Esc closes."""
+
+    def __init__(self, runtime):
+        super().__init__(runtime)
+        self.member = 0
+        self.message, self.message_left = "", 0.0
+
+    def actors(self):
+        return tuple(self.game.save.rpg_state.party_actor_ids)
+
+    def actor_id(self):
+        actors = self.actors()
+        return actors[self.member % len(actors)] if actors else None
+
+    def learned(self, actor_id):
+        return tuple(self.game._ability_state_of(actor_id).learned_abilities)
+
+    def handle(self, dt=0.0, events=()):
+        from asteria.runtime.game_session import GameSessionError
+
+        actor_id = self.actor_id()
+        learned = self.learned(actor_id) if actor_id else ()
+        self.message_left = max(0.0, self.message_left - dt)
+        self._move(len(learned))
+        inp = self.rt.input
+        actors = self.actors()
+        if actors and inp.just_pressed("move_left"):
+            self.member, self.index = (self.member - 1) % len(actors), 0
+        if actors and inp.just_pressed("move_right"):
+            self.member, self.index = (self.member + 1) % len(actors), 0
+        if not learned or not (inp.just_pressed("confirm") or inp.just_pressed("interact")):
+            return
+        ability_id = learned[self.index % len(learned)]
+        equipped, _capacity = self.game.ability_slots(actor_id)
+        try:
+            if ability_id in equipped:
+                self.game.unequip_ability(actor_id, ability_id)
+            else:
+                self.game.equip_ability(actor_id, ability_id)
+        except GameSessionError as exc:
+            self.message, self.message_left = str(exc), 2.5
+
+    def draw(self):
+        rt = self.rt
+        rt.screen.fill((10, 12, 20))
+        rt.text("Skill Slots", 36, 22, size=34, color=TITLE)
+        rt.text(
+            "Up / Down: choose   Enter: equip / remove   Left / Right: member   Esc: back",
+            36,
+            62,
+            size=18,
+            color=MUTED,
+        )
+        actor_id = self.actor_id()
+        if actor_id is None:
+            rt.text("No party members.", 36, 110, size=22, color=MUTED)
+            return
+        actor = self.game.project.rpg_database.actors.get(actor_id)
+        equipped, capacity = self.game.ability_slots(actor_id)
+        name = actor.display_name if actor is not None else actor_id
+        rt.text(
+            f"{name}   Slots {len(equipped)}/{capacity}", 36, 96, size=24, color=(255, 255, 255)
+        )
+        learned = self.learned(actor_id)
+        if not learned:
+            rt.text("Nothing learned yet.", 36, 140, size=22, color=MUTED)
+        library = self.game.project.gameplay_library.abilities
+        for row, ability_id in enumerate(learned):
+            definition = library.get(ability_id)
+            label = getattr(definition, "display_name", "") or ability_id.replace("_", " ").title()
+            on = ability_id in equipped
+            current = row == self.index % len(learned)
+            color = GOOD if on else ((255, 255, 255) if current else (190, 196, 210))
+            y = 140 + row * 32
+            rt.text(("> " if current else "  ") + label, 36, y, size=24, color=color)
+            rt.text("EQUIPPED" if on else "", rt.width - 200, y, size=20, color=GOOD)
+        if self.message_left > 0:
+            rt.text(
+                self.message,
+                rt.width / 2,
+                rt.height - 40,
+                size=20,
+                color=(255, 190, 160),
+                center=True,
+            )

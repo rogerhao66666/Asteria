@@ -1941,3 +1941,19 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - 技能槽、技能類型、點擊觸發、事件生成只有自動化測試，沒有在真實視窗操作過；技能槽沒有玩家用的畫面（只有 API 與資料編輯）。
 - 自動戰鬥沒有編輯器介面；寵物戰鬥單位倒下不影響戰敗判定。
 - 真人操作手感、手把、聽感、WAN 仍需外部條件。
+
+
+## D33 — 剩餘項目收尾（2026-10-16，使用者要求「剩下的幫我做好」）
+
+| 項目 | 做法 | 位置 |
+|---|---|---|
+| 低血量姿勢 | manifest `battle.weak_below`（0 = 關）；產生出來的戰鬥角色圖多一格 `weak`（較蒼白、下沉），生命比例低於門檻時用，回血就回到 idle；自訂的戰鬥視覺設定檔有 `weak` 狀態／片段才會用，沒有的維持原樣 | `runtime/battle_presentation_adapters.py`、`runtime/battle_visuals.py` |
+| 狀態染色 | `StateDefinition.tint`（`#rrggbb`，沒設不寫入）；帶有狀態的戰鬥角色以該色乘上貼圖，多個狀態相乘；`TextureDraw.tint` | `gameplay/states.py`、`runtime/draw.py`、`presentation/battle_runtime.py` |
+| 事件常駐圖示 | 世界指令 `SET_ENTITY_ICON`（空 `icon_id` 清除）；存為事件變數 `icon.<實體 id>`；地圖上畫在實體頭上 | `runtime/game_session.py`、`playable_test_runtime.py` |
+| 技能槽畫面 | 暫停選單「Skill Slots」（專案有 `AbilityLoadoutRules` 才出現）：選隊員、Enter 裝備／移除、顯示槽數；風格與其他暫停選單附加畫面一致 | `runtime/extras_screens.py` |
+| 自動戰鬥鍵 | manifest `battle.auto_key: true` 時 T 鍵讓目前角色依 `auto_battle_choice` 行動 | `runtime/battle_commands.py`、`playable_test_runtime.py` |
+| 寵物戰鬥單位 | 以寵物暱稱顯示（原本顯示 `pet:<id>`）；倒下或獨活不決定勝負（`BattleRuntime.outcome_exempt`，勝負判定與「隊伍存活數」條件都略過它） | `runtime/game_session.py`、`rpg/battle.py`、`rpg/battle_lifecycle.py` |
+
+**驗證：** 新測試加進 `tests/test_pets_advanced.py` 與 `tests/test_navigation_session.py`；Cocoa 真實視窗（SDL driver `cocoa`）截圖：`d33_battle_pet_unit_weak_pose.png`（寵物戰鬥單位以暱稱出現在隊伍與時間軸、低血量姿勢）、`d33_skill_slots_screen.png`（技能槽畫面）。
+
+**限制：** 事件圖示只驗證了資料與繪製呼叫，沒有在真實視窗用實際圖示素材看過；弱點姿勢只對產生出來的角色圖自動有，Octopath／Diablo 的自訂角色圖沒有 `weak` 片段所以不變；自動戰鬥沒有編輯器表單（用 manifest 鍵）。

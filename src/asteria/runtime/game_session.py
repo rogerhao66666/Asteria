@@ -601,6 +601,27 @@ class GameSessionRuntime:
         self.walkers[entity.id] = PathFollower(waypoints, float(speed))
         return waypoints
 
+    ENTITY_ICON_PREFIX = "icon."
+
+    def set_entity_icon(self, entity_key, icon_id=""):
+        """Keep an icon over an entity (a quest marker, a status of an NPC) until it is cleared
+        with an empty ``icon_id``; saved with the event variables as ``icon.<entity id>``."""
+        entity = self._sequence_entity(entity_key)
+        key = f"{self.ENTITY_ICON_PREFIX}{entity.id}"
+        self.save.event_context.set_variable(key, str(icon_id or ""))
+        return entity.id
+
+    def entity_icons(self):
+        """``{entity id: icon id}`` of the icons now shown in the present scene."""
+        prefix = self.ENTITY_ICON_PREFIX
+        icons = {}
+        for key, value in self.save.event_context.variables.items():
+            if key.startswith(prefix) and value:
+                entity = self.scene.get_entity(key[len(prefix) :])
+                if entity is not None:
+                    icons[entity.id] = str(value)
+        return icons
+
     def show_balloon(self, entity_key, balloon="exclamation", *, duration_ms=1000.0):
         """A balloon over an entity (a short popup with the balloon's glyph)."""
         glyph = self.BALLOONS.get(str(balloon).lower(), str(balloon))
@@ -2451,6 +2472,8 @@ class GameSessionRuntime:
             self._load_mastery(extensions)
             self.opening = extensions.roll_opening(random.Random(f"{encounter_id}:opening"))
             extensions.apply_opening(self.battle, self.opening, "heroes")
+        if pet_member is not None:  # a fallen pet unit never decides the fight
+            self.battle.outcome_exempt.add(pet_member.member_id)
         self.encounter_id = str(encounter_id)
         self.encounter_background = self._area_battle_background()
         self._enemy_ids = tuple(enemy_definition_ids)
@@ -2903,6 +2926,13 @@ class GameSessionRuntime:
         if species.knows(ability_id, pet.level, pet.affinity):
             return ""
         return f"{pet.name(species)} has not learned this"
+
+    def pet_name(self, instance_id):
+        """A pet's nickname (else its species' name) by instance id; ``""`` when unknown."""
+        pet = next(
+            (p for p in self.save.rpg_state.pets if p.instance_id == str(instance_id)), None
+        )
+        return "" if pet is None else pet.name(self.pet_species(pet))
 
     def pet_abilities(self, pet=None):
         """Ability ids the pet (default: the active one) has learned from its species."""

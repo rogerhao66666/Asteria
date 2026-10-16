@@ -175,6 +175,8 @@ class PlayableTestRuntime:
         extras = []
         if self.game.message_settings is not None and self.game.message_settings.backlog_limit:
             extras.append(("backlog", "Message Log"))
+        if db.ability_loadout_rules:
+            extras.append(("skill_slots", "Skill Slots"))
         if db.music_tracks:
             extras.append(("music", "Music Room"))
         if db.credits_pages:
@@ -1470,6 +1472,7 @@ class PlayableTestRuntime:
         self._draw_pictures()
         self._draw_event_timers()
         self._draw_field_windows()
+        self._draw_entity_icons()
         if self.game.cutscene_active:
             self._draw_dialogue()
             return
@@ -1556,6 +1559,19 @@ class PlayableTestRuntime:
             color = (255, 150, 140) if low else (245, 245, 250)
             self.panel((self.width - 118, 14 + row * 40, 104, 34))
             self.text(clock, self.width - 66, 31 + row * 40, size=30, color=color, center=True)
+
+    def _draw_entity_icons(self):
+        """Icons events keep over entities (``SET_ENTITY_ICON``), above their heads."""
+        from asteria.core import Transform
+
+        icons = self.game.entity_icons()
+        for entity_id, icon_id in icons.items():
+            entity = self.game.scene.get_entity(entity_id)
+            if entity is None or not entity.has(Transform):
+                continue
+            transform = entity.get(Transform)
+            x, y = self._field_screen_xy(transform.x, transform.y)
+            self._draw_icon(icon_id, round(x) - 11, round(y) - 64, 22)
 
     def _draw_field_windows(self):
         """Optional map windows (manifest ``field.hud``): ``gold`` shows the wallet and
@@ -2468,6 +2484,7 @@ class PlayableTestRuntime:
             pg.K_TAB: "category",
             pg.K_q: "boost_down",
             pg.K_r: "boost_up",
+            **({pg.K_t: "auto"} if self.manifest.get("battle", {}).get("auto_key") else {}),
         }
 
     def _make_victory_screen(self, applied, before, gained):
@@ -2642,13 +2659,14 @@ class PlayableTestRuntime:
             self._ui_mode = "field"
         elif choice == "status":
             self.open_status_menu(back="pause")
-        elif choice in ("backlog", "music", "credits"):
+        elif choice in ("backlog", "music", "credits", "skill_slots"):
             from asteria.runtime import extras_screens
 
             screen = {
                 "backlog": extras_screens.BacklogScreen,
                 "music": extras_screens.MusicRoomScreen,
                 "credits": extras_screens.CreditsScreen,
+                "skill_slots": extras_screens.AbilitySlotsScreen,
             }[choice]
             self._extra_screen = screen(self)
             self._ui_mode = "extra"

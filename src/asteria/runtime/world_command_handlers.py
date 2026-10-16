@@ -90,6 +90,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "WALK_TO": ("entity", "x", "y", "speed"),
     "MOVE_ROUTE": ("entity", "route", "step", "speed"),
     "SHOW_BALLOON": ("entity", "balloon", "duration_ms"),
+    "SET_ENTITY_ICON": ("entity", "icon_id"),
     "SPAWN_ENTITY": ("prefab_id", "x", "y", "name"),
     "COPY_ENTITY": ("entity", "x", "y", "name"),
     "MORPH_ENTITY": ("entity", "prefab_id"),
@@ -378,6 +379,16 @@ def register_standard_world_commands(router, session):
         "MORPH_ENTITY",
         entity_command("morph_entity", (("entity", "text"), ("prefab_id", "text"))),
     )
+
+    def set_entity_icon(command):
+        try:
+            return session.set_entity_icon(
+                _required(command, "entity"), str(command.args.get("icon_id") or "")
+            )
+        except Exception as exc:  # noqa: BLE001 - a bad entity is the program's mistake
+            raise WorldCommandError(f"SET_ENTITY_ICON: {exc}") from exc
+
+    router.register("SET_ENTITY_ICON", set_entity_icon)
     router.register("MOVE_ROUTE", move_route)
     router.register("SHOW_BALLOON", show_balloon)
 

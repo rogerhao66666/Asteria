@@ -104,7 +104,7 @@ def test_generated_combatants_animate_get_hit_and_fall(bare):
     clips = adapter.resolver.clip_set(sheet).clips
     assert [k.frame_index for k in clips["attack"].keyframes] == [1, 1, 0]
     assert [k.frame_index for k in clips["hit"].keyframes] == [2, 2, 0]
-    assert len(adapter.resolver.sprite_sheet(sheet).frames) == 4
+    assert len(adapter.resolver.sprite_sheet(sheet).frames) == 5  # idle, attack, hit, ko, weak
     image = adapter.resolver.generated_image(sheet)
     fw = adapter.resolver.sprite_sheet(sheet).frames[0].width
 

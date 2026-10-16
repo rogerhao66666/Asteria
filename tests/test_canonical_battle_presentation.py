@@ -172,6 +172,7 @@ def test_missing_visual_profile_gets_a_generated_combatant_not_the_legacy_screen
     assert boss.sprite_sheet_asset_id == "generated.combatant.astral_tyrant"
     assert fresh.resolver.generated_image(boss.sprite_sheet_asset_id) is not None
     assert set(fresh.resolver.clip_set(boss.sprite_sheet_asset_id).clips) == {
+        "weak",
         "idle",
         "attack",
         "hit",

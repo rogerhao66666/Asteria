@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from enum import Enum
 from math import isfinite
@@ -135,6 +136,8 @@ class StateDefinition:
     # shown in HUDs and menus; written to the data only when set
     display_name: str = ""
     icon_id: str = ""
+    # a colour (#rrggbb) the afflicted battler is tinted with while the state lasts
+    tint: str = ""
     NESTED_OPTIONAL = {"periodic": PeriodicEffect}  # list fields whose entries have OPTIONAL_DATA
 
     def __init__(
@@ -152,6 +155,7 @@ class StateDefinition:
         contributed_tags=(),
         display_name="",
         icon_id="",
+        tint="",
     ):
         state_id = str(state_id).strip()
         if not state_id:
@@ -189,6 +193,14 @@ class StateDefinition:
         object.__setattr__(self, "contributed_tags", contributed_tags)
         object.__setattr__(self, "display_name", str(display_name or "").strip())
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
+        tint = str(tint or "").strip().lower()
+        if tint and not re.fullmatch(r"#[0-9a-f]{6}", tint):
+            raise ValueError("tint must be a #rrggbb colour")
+        object.__setattr__(self, "tint", tint)
+
+    def tint_rgb(self):
+        """The tint as ``(r, g, b)``, or ``None``."""
+        return tuple(int(self.tint[i : i + 2], 16) for i in (1, 3, 5)) if self.tint else None
 
     def to_data(self):
         return {
@@ -206,6 +218,7 @@ class StateDefinition:
             "contributed_tags": list(self.contributed_tags),
             **({"display_name": self.display_name} if self.display_name else {}),
             **({"icon_id": self.icon_id} if self.icon_id else {}),
+            **({"tint": self.tint} if self.tint else {}),
         }
 
     @classmethod
@@ -231,7 +244,7 @@ class StateDefinition:
             expected = base | {"contributed_tags", "on_expire"}
         else:
             expected = set()
-        if set(data) - {"display_name", "icon_id"} != expected:
+        if set(data) - {"display_name", "icon_id", "tint"} != expected:
             raise ValueError("invalid state definition")
         if data["schema"] != "asteria.state_definition" or version not in {1, 2, 3}:
             raise ValueError("unsupported state definition")
@@ -248,6 +261,7 @@ class StateDefinition:
             contributed_tags=data.get("contributed_tags", ()),
             display_name=data.get("display_name", ""),
             icon_id=data.get("icon_id", ""),
+            tint=data.get("tint", ""),
         )
 
 

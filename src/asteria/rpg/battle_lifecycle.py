@@ -294,7 +294,9 @@ class BattleObjectiveCondition:
             actual = sum(
                 1
                 for m in battle.parties[self.subject_id].members
-                if m.member_id in battle.members and battle.is_active(m)
+                if m.member_id in battle.members
+                and m.member_id not in battle.outcome_exempt
+                and battle.is_active(m)
             )
         elif self.kind == "member_active":
             actual = battle.is_active(battle.member(self.subject_id))

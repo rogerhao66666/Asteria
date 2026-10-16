@@ -337,6 +337,7 @@ class BattleRuntime:
         if len({m.member_id for m in members}) != len(members):
             raise ValueError("duplicate battle member id")
         self.members = {m.member_id: m for m in members}
+        self.outcome_exempt = set()  # members whose survival does not keep their side alive
         self._base_is_active = self.is_active
         self.combatants = CombatantLifecycleRuntime(
             members, hooks=hooks, initial_active=self._base_is_active
@@ -1254,7 +1255,9 @@ class BattleRuntime:
             defeated = []
             for side, party in self.parties.items():
                 if any(
-                    member.member_id in self.members and self.is_active(member)
+                    member.member_id in self.members
+                    and member.member_id not in self.outcome_exempt
+                    and self.is_active(member)
                     for member in party.members
                 ):
                     active_sides.append(side)

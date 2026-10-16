@@ -313,3 +313,157 @@ def test_actor_variables_are_saved_with_the_event_variables(demo):  # noqa: F811
     assert game.save.event_context.get_variable(f"actor.{hero}.kills") == 3
     with pytest.raises(Exception):
         game.set_actor_variable("nobody", "kills", 1)
+
+
+def test_low_health_combatants_rest_in_a_weak_pose(demo):  # noqa: F811
+    from asteria.rpg.pets import PetSpeciesDefinition
+
+    runtime, game, _commands = demo
+    adapter = runtime._battle_presentation
+    base = game.project.rpg_database.pet_species["frost_lynx"]
+    game.project.rpg_database.pet_species["frost_lynx"] = PetSpeciesDefinition.from_data(
+        {**base.to_data(), "battle_unit": True, "resources": {"vitality": 100}}
+    )
+    member = game._pet_member()
+    game.battle.summon(member)
+    adapter._show_new_combatants(game)  # a pet has no authored profile: a generated sheet
+    animation = adapter.screen.animation.combatant(member.member_id)
+    pool = member.subject.resources
+
+    def role():
+        return getattr(animation.role, "value", animation.role)
+
+    adapter._sync_lifecycle()
+    assert role() == "idle"  # off unless the manifest asks
+    runtime.manifest["battle"]["weak_below"] = 0.5
+    pool.change("vitality", -80)
+    adapter._sync_lifecycle()
+    assert role() == "weak" and animation.clip_name == "weak"
+    pool.change("vitality", 80)
+    adapter._sync_lifecycle()
+    assert role() == "idle" and animation.clip_name == "idle"
+    # combatants whose authored profile has no weak clip are left alone
+    hero = game.active_hero_ids()[0]
+    pool_h = game.battle.member(hero).subject.resources
+    pool_h.change(game.rules.knockout_resource_id, -pool_h.current("vitality") * 0.9)
+    adapter._sync_lifecycle()
+    assert getattr(adapter.screen.animation.combatant(hero).role, "value", "idle") == "idle"
+
+
+def test_states_with_a_tint_colour_the_battler(demo):  # noqa: F811
+    from asteria.gameplay.states import StateDefinition
+
+    runtime, game, _commands = demo
+    adapter = runtime._battle_presentation
+    hero = game.active_hero_ids()[0]
+    states = game.battle.member(hero).subject.states
+    states.registry.register(StateDefinition("verdigris", 5, tint="#80ff80"))
+    adapter._sync_lifecycle()
+    assert hero not in adapter.screen.animation.state_tints
+    states.apply("verdigris")
+    adapter._sync_lifecycle()
+    assert adapter.screen.animation.state_tints[hero] == (0x80, 0xFF, 0x80)
+    from asteria.runtime import Camera2D
+
+    frame = adapter.screen.animation.build_frame(Camera2D(960, 540))
+    assert any(d.tint == (0x80, 0xFF, 0x80) for d in frame.combatant_draws)
+    states.remove("verdigris")
+    adapter._sync_lifecycle()
+    assert hero not in adapter.screen.animation.state_tints
+    plain = StateDefinition("plain", 5)
+    assert "tint" not in plain.to_data()
+    assert StateDefinition.from_data(StateDefinition("t", 5, tint="#102030").to_data()).tint
+    import pytest as _pytest
+
+    with _pytest.raises(ValueError):
+        StateDefinition("bad", 5, tint="green")
+
+
+def test_the_skill_slots_screen_equips_and_removes_abilities():
+    from pathlib import Path
+
+    from asteria.editor import EditorDocument
+    from asteria.project import Project
+    from asteria.rpg.ability_loadout import AbilityLoadoutRules
+    from asteria.runtime.extras_screens import AbilitySlotsScreen
+    from asteria.runtime.game_session import GameSessionRuntime
+
+    root = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    game = GameSessionRuntime(project, project.game_start.instantiate(project))
+    project.rpg_database.add_ability_loadout_rules(AbilityLoadoutRules("slots", 1))
+    hero = game.save.rpg_state.party_actor_ids[0]
+    known = set(game.resolve_actor_build(hero).abilities)
+    spare = [a for a in project.gameplay_library.abilities.ids() if a not in known][:2]
+    for ability_id in spare:
+        game.learn_ability(hero, ability_id)
+
+    class Input:
+        def __init__(self):
+            self.pressed = set()
+
+        def just_pressed(self, name):
+            return name in self.pressed
+
+    class Host:
+        def __init__(self):
+            self.game, self.input = game, Input()
+
+    host = Host()
+    screen = AbilitySlotsScreen(host)
+    host.input.pressed = {"confirm"}
+    screen.handle()
+    assert game.ability_slots(hero)[0] == (spare[0],)
+    host.input.pressed = {"move_down"}
+    screen.handle()
+    host.input.pressed = {"confirm"}
+    screen.handle()  # slots are full: a message, nothing changes
+    assert game.ability_slots(hero)[0] == (spare[0],) and screen.message
+    host.input.pressed = {"move_up"}
+    screen.handle()
+    host.input.pressed = {"confirm"}
+    screen.handle()  # the highlighted equipped ability is removed again
+    assert game.ability_slots(hero)[0] == ()
+
+
+def test_the_auto_key_plays_the_turn_through_the_menu_controller(demo):  # noqa: F811
+    _runtime, game, commands = demo
+    hero = game.active_hero_ids()[0]
+    commands.mode = "command"
+    assert commands.press("auto", hero) is True  # an action was taken: the host ends the turn
+    assert commands.mode in ("command", "root") and commands.pending is None
+
+
+def test_a_pet_unit_alone_does_not_keep_the_heroes_in_the_fight(demo):  # noqa: F811
+    from asteria.rpg.pets import PetSpeciesDefinition
+
+    _runtime, game, _commands = demo
+    base = game.project.rpg_database.pet_species["frost_lynx"]
+    game.project.rpg_database.pet_species["frost_lynx"] = PetSpeciesDefinition.from_data(
+        {**base.to_data(), "battle_unit": True, "resources": {"vitality": 100}}
+    )
+    game.finish_victory() if False else None
+    member = game._pet_member()
+    game.battle.summon(member)
+    game.battle.outcome_exempt.add(member.member_id)
+    for hero in game.active_hero_ids():
+        if not hero.startswith("pet:"):
+            game.battle.remove_combatant(hero, state_id="defeated", reason="test")
+    assert "heroes" in game.battle.resolve_outcome().defeated_sides
+
+
+def test_a_pet_unit_is_called_by_its_nickname_in_battle(demo):  # noqa: F811
+    from asteria.rpg.pets import PetSpeciesDefinition
+
+    runtime, game, commands = demo
+    base = game.project.rpg_database.pet_species["frost_lynx"]
+    game.project.rpg_database.pet_species["frost_lynx"] = PetSpeciesDefinition.from_data(
+        {**base.to_data(), "battle_unit": True, "resources": {"vitality": 100}}
+    )
+    pet = game.active_pet()
+    game.rename_pet(pet.instance_id, "Snowball")
+    member = game._pet_member()
+    game.battle.summon(member)
+    assert commands.display_name(member.member_id) == "Snowball"
+    names = runtime._battle_presentation._display_names(game)
+    assert names[member.member_id] == "Snowball"

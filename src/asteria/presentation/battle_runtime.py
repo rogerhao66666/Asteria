@@ -330,6 +330,7 @@ class BattlePresentationRuntime:
         # member id -> CharacterComposition (attachments / layers drawn with the body;
         # CMP-01/02/04)
         self.compositions = {}
+        self.state_tints = {}  # member id -> (r, g, b) from the battler's states
         from .motion_fx import MotionEchoes
 
         self.echoes = (
@@ -551,6 +552,7 @@ class BattlePresentationRuntime:
                 depth=visual.anchor.depth,
                 opacity=max(0.0, min(1.0, mix)),
                 flip_x=visual.anchor.facing.lower() == "left",
+                tint=self.state_tints.get(visual.member_id),
             )
             echo = self.echoes.by_key.get(visual.member_id)
             if echo is not None:

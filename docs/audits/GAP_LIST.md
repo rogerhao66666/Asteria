@@ -88,6 +88,6 @@
 | A14 技能獎勵、演員變數 | 技能獎勵**已具備**（`AbilityDefinition.commands` 可發獎勵）；演員變數完成（D32：`actor_variable`） |
 | A15 事件系統 | 完成（D31＋D32）：`MOVE_ROUTE`、`SHOW_BALLOON`、`SPAWN_ENTITY`、`COPY_ENTITY`、`MORPH_ENTITY`、點擊觸發（`Interaction2D.trigger = click`） |
 | A16 地圖視窗 | 完成（D32）：manifest `field.hud.gold`／`quest_tracker`，預設關閉 |
-| A17 戰鬥視覺（弱點姿勢、狀態特效、血條樣式等） | **未做**：純呈現的潤飾，沒有引擎能力缺口；目標游標與頭上血條已有 |
+| A17 戰鬥視覺 | 完成（D33）：低血量姿勢（manifest `battle.weak_below`）、狀態染色（`StateDefinition.tint`）；血條樣式由 HUD 呈現設定決定（已具備）；目標游標與頭上血條已有 |
 | A18 載具 | 不做 |
-| 事件圖示（IconsOnEvents） | 以 `SHOW_BALLOON` 涵蓋短暫圖示；常駐圖示未做 |
+| 事件圖示（IconsOnEvents） | 完成（D33）：`SET_ENTITY_ICON` 常駐圖示；短暫的用 `SHOW_BALLOON` |

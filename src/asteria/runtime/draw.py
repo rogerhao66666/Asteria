@@ -17,6 +17,7 @@ class TextureDraw:
     opacity: float = 1.0
     flip_x: bool = False
     rotation_deg: float = 0.0  # clockwise on screen, about the quad centre
+    tint: tuple | None = None  # (r, g, b) the texture is multiplied by, e.g. a state's colour
 
 
 def sprite_draw(

@@ -302,6 +302,8 @@ class BattleCommands:
         """The actor's or enemy's display name (several of one enemy are numbered)."""
         db = self.game.project.rpg_database
         key, _, number = str(member_id).partition(":")
+        if key == "pet" and self.game.pet_name(number):
+            return self.game.pet_name(number)
         record = db.actors.get(key) or db.enemies.get(key)
         name = getattr(record, "display_name", None) or key.replace("_", " ").title()
         same = [m for m in self.game.battle.members if m.split(":", 1)[0] == key]
@@ -390,6 +392,10 @@ class BattleCommands:
             if rows:
                 self.cursor = (self.cursor + (-1 if key == "up" else 1)) % len(rows)
             return False
+        if key == "auto" and self.mode in ("command", "root"):
+            # the manifest's auto key: this turn is played by ``auto_battle_choice``
+            self.reset()
+            return self.game.auto_battle_act(actor_id) is not None
         if key == "category" and self.mode == "command":
             cats = self.categories_for(actor_id)
             current = cats.index(self.category) if self.category in cats else -1

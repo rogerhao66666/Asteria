@@ -185,3 +185,21 @@ def test_a_click_triggered_interaction_starts_its_program_on_click(game):
     assert started and started[0].source_entity_id == npc.id
     interaction.trigger = "action"  # only click-triggered interactions answer clicks
     assert game.click_entity(104.0, 100.0) is None
+
+
+def test_an_event_can_keep_an_icon_over_an_entity(game):
+    npc = _add(game, "quest_giver", 40.0, 40.0)
+    assert game.entity_icons() == {}
+    game.world_commands.dispatch(
+        WorldCommand("SET_ENTITY_ICON", {"entity": "quest_giver", "icon_id": "icon.quest"})
+    )
+    assert game.entity_icons() == {npc.id: "icon.quest"}
+    assert game.save.event_context.get_variable(f"icon.{npc.id}") == "icon.quest"
+    game.world_commands.dispatch(WorldCommand("SET_ENTITY_ICON", {"entity": npc.id}))
+    assert game.entity_icons() == {}
+    from asteria.runtime.world_command_handlers import WorldCommandError
+
+    with pytest.raises(WorldCommandError):
+        game.world_commands.dispatch(
+            WorldCommand("SET_ENTITY_ICON", {"entity": "nobody", "icon_id": "x"})
+        )

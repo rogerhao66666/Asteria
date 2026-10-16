@@ -143,7 +143,8 @@ class BattleVisualResolver:
         )
 
         states = tuple(
-            BattleVisualStateDefinition(role, role) for role in ("idle", "attack", "hit", "ko")
+            BattleVisualStateDefinition(role, role)
+            for role in ("idle", "attack", "hit", "ko", "weak")
         )
         self._generated_profiles[str(member_key)] = BattleCombatantVisualProfile(
             str(member_key),

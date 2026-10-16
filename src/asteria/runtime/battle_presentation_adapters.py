@@ -130,6 +130,7 @@ class PygameTextureDrawer:
         opacity=1.0,
         blend="normal",
         rotation_deg=0.0,
+        tint=None,
     ):
         pg = self.host.pg
         image = self.surface(asset_id).subsurface(pg.Rect(*source))
@@ -138,6 +139,9 @@ class PygameTextureDrawer:
             image = pg.transform.scale(image, size)
         if flip_x:
             image = pg.transform.flip(image, True, False)
+        if tint:
+            image = image.copy()
+            image.fill((*tint, 255), special_flags=pg.BLEND_RGBA_MULT)
         position = (round(x * self.scale), round(y * self.scale))
         if rotation_deg:
             # pygame rotates counter-clockwise and grows the surface: keep the quad centre fixed
@@ -171,6 +175,7 @@ class PygameTextureDrawer:
                 flip_x=draw.flip_x,
                 opacity=draw.opacity,
                 rotation_deg=draw.rotation_deg,
+                tint=draw.tint,
             )
 
 
@@ -392,6 +397,9 @@ class CanonicalBattleAdapter:
             kinds[base] = kinds.get(base, 0) + 1
         for member_id in member_ids:
             base, _, index = member_id.partition(":")
+            if base == "pet" and game.pet_name(index):  # a pet unit: its nickname or species
+                names[member_id] = game.pet_name(index)
+                continue
             definition = db.actors.get(member_id) or db.enemies.get(base)
             name = getattr(definition, "display_name", "") or member_id
             if index and kinds[base] > 1:
@@ -470,7 +478,8 @@ class CanonicalBattleAdapter:
         return image
 
     def _combatant_sheet(self, image, *, flip):
-        """Four frames from one picture: idle, attack (lunge), hit (flash), ko (fallen, dark)."""
+        """Five frames from one picture: idle, attack (lunge), hit (flash), ko (fallen, dark),
+        weak (slumped, pale - shown at low health when the manifest sets battle.weak_below)."""
         pg = self.host.pg
         if flip:
             image = pg.transform.flip(image, True, False)
@@ -481,7 +490,7 @@ class CanonicalBattleAdapter:
             image = image.convert(32, pg.SRCALPHA)
         body = pg.transform.smoothscale(image, (width, height))
         fw, fh = width + 20, height + 8
-        sheet = pg.Surface((fw * 4, fh), pg.SRCALPHA)
+        sheet = pg.Surface((fw * 5, fh), pg.SRCALPHA)
         y = fh - height
         sheet.blit(body, (10, y))
         sheet.blit(body, (fw + 16, y - 3))  # lunge forward
@@ -496,7 +505,11 @@ class CanonicalBattleAdapter:
                 fallen, (max(1, int(fallen.get_width() * k)), max(1, int(fallen.get_height() * k)))
             )
         sheet.blit(fallen, (fw * 3 + (fw - fallen.get_width()) // 2, fh - fallen.get_height()))
+        weak = body.copy()  # worn out: slumped a little and paler
+        weak.fill((205, 190, 190, 255), special_flags=pg.BLEND_RGBA_MULT)
+        sheet.blit(weak, (fw * 4 + 10, y + 4))
         clips = {
+            "weak": {"frames": [4], "frame_duration": 0.5, "loop": True},
             "idle": {"frames": [0], "frame_duration": 0.5, "loop": True},
             "attack": {"frames": [1, 1, 0], "frame_duration": 0.1, "loop": False},
             "hit": {"frames": [2, 2, 0], "frame_duration": 0.1, "loop": False},
@@ -636,6 +649,51 @@ class CanonicalBattleAdapter:
         self._sync_lifecycle()
         self._release_due()
 
+    def _sync_state_tint(self, member_id, member):
+        """Battlers carrying a state with a ``tint`` are drawn in that colour (poison green,
+        frozen blue...); several tints multiply."""
+        states = getattr(member.subject, "states", None)
+        tints = self.screen.animation.state_tints
+        colour = None
+        if states is not None and states.has_active:
+            for active in states.active_states():
+                rgb = states.registry.require(active.state_id).tint_rgb()
+                if rgb is not None:
+                    colour = (
+                        rgb if colour is None else tuple(a * b // 255 for a, b in zip(colour, rgb))
+                    )
+        if colour is None:
+            tints.pop(member_id, None)
+        else:
+            tints[member_id] = colour
+
+    def _weak_fraction(self):
+        """Health share below which a combatant shows its ``weak`` pose (manifest
+        ``battle.weak_below``, 0 = never)."""
+        try:
+            return max(
+                0.0, min(1.0, float(self.host.manifest.get("battle", {}).get("weak_below", 0)))
+            )
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _sync_weak_pose(self, visual, member):
+        """Low-health combatants rest in their ``weak`` pose; it ends when they recover."""
+        limit = self._weak_fraction()
+        if limit <= 0 or not visual.clip_for("weak"):
+            return
+        resource = self.host.game.rules.knockout_resource_id
+        pool = member.subject.resources
+        if not resource or not pool.contains(resource) or pool.maximum(resource) <= 0:
+            return
+        weak = pool.current(resource) / pool.maximum(resource) <= limit
+        state = self.screen.animation.combatant(visual.member_id)
+        role = state.role.value if hasattr(state.role, "value") else str(state.role)
+        if weak and role == "idle":
+            state.set_role("weak", restart=False)
+        elif not weak and role == "weak":
+            state.set_role("idle", restart=False)
+
     def _sync_lifecycle(self):
         """Mirror Battle Core knock-outs / revivals onto combatant poses at the right beat.
 
@@ -651,6 +709,9 @@ class CanonicalBattleAdapter:
             if member is None:
                 continue
             active = battle.is_active(member)
+            if active:
+                self._sync_weak_pose(visual, member)
+            self._sync_state_tint(visual.member_id, member)
             shown_down = self._shown_down.get(visual.member_id, False)
             if not active and not shown_down:
                 self._shown_down[visual.member_id] = True
