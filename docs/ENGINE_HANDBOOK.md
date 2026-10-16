@@ -1,6 +1,6 @@
 # Asteria 引擎手冊（功能、範本、demo、規則、下一步）
 
-**更新：** 2026-10-14（D26）。這份是「目前到底有什麼」的單一入口；細節和決策理由在
+**更新：** 2026-10-16（D32；D27–D32 的內容看 DECISION_LOG 與 [`audits/GAP_LIST.md`](audits/GAP_LIST.md)）。這份是「目前到底有什麼」的單一入口；細節和決策理由在
 [`docs/audits/DECISION_LOG.md`](audits/DECISION_LOG.md)（D1 ～ D26），規格在
 [`ASTERIA_SPEC.md`](../ASTERIA_SPEC.md)。舊的 `README.md`、`START_HERE_MAC.md`、各 BATCH 文件是歷史紀錄，
 不代表現狀。
@@ -223,8 +223,8 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | Enemy AI 的七欄規則表 | 窗口很窄時可橫向捲動（表格的正常行為） |
 | 手把與實體鍵盤、音訊聽感與延遲 | 需要真人；沒有自動化 |
 | 手感與平衡 | 數值是 demo 用的，需要有人實際玩過調整 |
-| 寵物不是戰鬥單位 | 沒有自己的血量與回合，只提供數值給技能；寵物沒有進化、技能學習、親密度 |
-| 寵物的存檔與選單 | Pets 畫面只在專案有寵物物種時出現在暫停選單；起始寵物要改專案的 game start 資料（目前沒有表單） |
+| 寵物 | 預設不是戰鬥單位（物種可選 `battle_unit`）；已有進化、學技能、親密度（D31） |
+| 寵物的存檔與選單 | Pets 畫面只在專案有寵物物種時出現在暫停選單；起始寵物在 Database > Game Start 分頁設定 |
 | 多人連線 | 通用 TCP session／adapter、SQLite 原子掉落領取及完整角色存檔、可修改規則模板、獨立 Diablo 多人副本已完成四人原生驗收。Guest ID 為開發身分；伺服器重開保留角色並重建場次世界。公開網路部署、TLS、登入驗證與 WAN 品質驗收另行處理。見 [設計文件](audits/MULTIPLAYER_DESIGN.md)。 |
 
 接續工作與本機設定：[`NEXT_STEPS.md`](NEXT_STEPS.md)。

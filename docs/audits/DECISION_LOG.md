@@ -1912,3 +1912,32 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - **圖示：** 新增 `flag`（Game Start）、`paw`（寵物）、`gauge` 三個圖示，並讓 Game Systems 的種類下拉選單與其他資料庫分類下拉一樣顯示圖示；Revert 按鈕有圖示。
 - **Pets 畫面（真實視窗，SDL driver `cocoa`）：** 親密度「Bond 12」顯示於既有的一行內，沒有溢出；按 E 後寵物由 Frost Lynx 進化為 Ember Hound，暱稱與等級保留（`d31_pets_before_evolve.png`、`d31_pets_after_evolve.png`）。
 - **仍未驗證：** 真人操作手感；暫停選單的自訂項目與戰鬥單位寵物沒有在實機視窗跑過（只有自動化測試）。
+
+
+## D32 — GAP_LIST 收尾與測試修正（2026-10-16，使用者要求「全部用好、錯誤都修正」）
+
+**讀碼確認為已具備（不重做）：** A9 命中／迴避（`OutcomeCheckDefinition`）、A12 附魔與裝備成長、A13 技能學習（技能樹節點付職業點）、技能獎勵（`AbilityDefinition.commands`）。
+
+| 項目 | 做法 | 位置 |
+|---|---|---|
+| 技能類型 | `AbilityDefinition.menu_category`（沒設不寫入）；戰鬥指令選單多出該分類，Tab 循環，根選單多一列 | `gameplay/abilities.py`、`runtime/battle_commands.py` |
+| 技能槽 | `AbilityLoadoutRules`（槽數、`capacity_by_level`、受限來源、永遠可用）；角色 `equipped_abilities`；只有裝備的「學會」技能可用；`equip_ability`／`unequip_ability`／`ability_slots`。沒有規則時行為不變 | `rpg/ability_loadout.py`、`rpg/ability_build.py`、`runtime/game_session.py` |
+| 事件生成／複製／變形 | `SPAWN_ENTITY`、`COPY_ENTITY`、`MORPH_ENTITY`（世界指令；變形保留位置與名稱）| `runtime/game_session.py`、`world_command_handlers.py` |
+| 點擊觸發 | `Interaction2D.trigger` 多一個 `click`；地圖上滑鼠點擊範圍內實體就啟動其事件程式 | `runtime/components2d.py`、`playable_test_runtime.py` |
+| 地圖視窗 | manifest `field.hud.gold`／`quest_tracker`：左上角顯示錢包與進行中任務的目標；預設關閉 | `playable_test_runtime.py` |
+| 演員變數 | `actor_variable`／`set_actor_variable`（存在事件變數 `actor.<id>.<名稱>`）| `runtime/game_session.py` |
+| 編輯器 | Game Systems 新增 Ability Slots；商店條件改成單行文字欄位（`switch:name==true`；價格規則 `買 賣 | 條件;條件`，轉接器雙向無損）| `editor/game_systems_authoring.py` |
+
+**修正的問題：**
+- **滾輪蓋過數值欄位的 bug：** `decor._Decorator` 對數值欄位的滾輪事件 `ignore()` 後回傳 `True`，事件被過濾掉、不會傳給父層，滑鼠停在數值欄位上就捲不動面板。改成把事件轉給所在的捲動區。（`test_wheel_over_unfocused_skeleton_field_scrolls_panel_not_field` 在完整測試裡失敗就是這個原因。）
+- **多人輸入遺失：** 伺服器對 1/60 秒內的第二筆輸入回 `input rate exceeded`，客戶端沒重送，最新輸入就永遠沒到。客戶端橋接現在在被限流時延遲重送最新輸入（`INPUT_RESEND_DELAY`）；測試 12 次全過（修前約一半失敗）。
+- **過期測試（前一個 UI 整理 commit 之後沒跟上）：** `test_editor_dock_tabs`、`test_project_templates`、`test_region_rules_panel`、`test_theme`、`test_editor_shell_integration_154a` 改成對應現行（有意的）結構：卡片包住捲動區、範本多了 `basic_rpg` 與 `empty`、選單文字 `New Project…`、區域規則表單一律換行、分頁邊框逐邊繪製。
+- **編輯器稽核找出的版面缺陷：** 粒子效果的最小／最大值框被截斷（改為上下堆疊，並讓表單格子靠上對齊）、Ability Timelines 的 Length 欄位與 Enemy AI 的 Actions per turn 太窄（加最小寬度）。稽核腳本改成跳過被其他分頁蓋住的元件（原本把沒顯示的 Tiles 面板誤報為截斷），並新增 `scene_tiles` 面層。
+
+**驗證：** 完整測試 **2695 passed、0 failed**；`ruff format`、`ruff check`（含 E501）通過。編輯器稽核（真實 Cocoa 視窗，octopath／diablo 兩個專案，1600×1000、1280×800、1100×700）缺陷 0（唯一 1 項 Enemy AI 窄欄位已修正後重跑為 0）。地圖視窗與自訂暫停選單項目在真實視窗（SDL driver `cocoa`）截圖：`d32_field_hud.png`、`d32_pause_menu_entry.png`；`d32_ability_slots_editor.png`。
+
+**限制：**
+- A17（弱點姿勢、狀態特效、血條樣式）沒做；事件常駐圖示沒做。
+- 技能槽、技能類型、點擊觸發、事件生成只有自動化測試，沒有在真實視窗操作過；技能槽沒有玩家用的畫面（只有 API 與資料編輯）。
+- 自動戰鬥沒有編輯器介面；寵物戰鬥單位倒下不影響戰敗判定。
+- 真人操作手感、手把、聽感、WAN 仍需外部條件。

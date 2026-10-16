@@ -98,6 +98,8 @@ def defects_in(window):
     for widget in window.findChildren(QWidget):
         if not widget.isVisible() or widget.width() <= 0:
             continue
+        if widget.visibleRegion().isEmpty():  # behind another tab (a tabbed dock): not on screen
+            continue
         if isinstance(widget, QLabel) and not widget.wordWrap() and _single_line(widget.text()):
             need = _text_width(widget, widget.text())
             have = (
@@ -256,6 +258,17 @@ def surfaces(window):
                 )
         else:
             out.append((mode.value, lambda m=mode: window.workspace.set_mode(m)))
+            if mode is WorkspaceMode.SCENE:
+                # the Tiles dock is a tab behind Project: audit it shown, not as a hidden page
+                from PySide6.QtWidgets import QDockWidget
+
+                def tiles(m=mode):
+                    window.workspace.set_mode(m)
+                    dock = window.findChild(QDockWidget, "TilePaletteDock")
+                    if dock is not None:
+                        dock.raise_()
+
+                out.append(("scene_tiles", tiles))
     # every Game Systems kind and every database category (forms and tables differ per kind)
     from asteria.editor.workspace import WorkspaceMode as WM
 

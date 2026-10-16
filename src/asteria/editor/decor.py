@@ -26,7 +26,9 @@ import re
 from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtWidgets import (
     QAbstractButton,
+    QAbstractScrollArea,
     QAbstractSpinBox,
+    QApplication,
     QBoxLayout,
     QComboBox,
     QFormLayout,
@@ -317,9 +319,15 @@ class _Decorator(QObject):
     def eventFilter(self, obj, event):
         kind = event.type()
         if kind == QEvent.Wheel and isinstance(obj, QAbstractSpinBox):
-            # An ignored wheel event propagates to the containing scroll area.
-            # Apply this even to focused controls so scrolling never edits data.
-            event.ignore()
+            # Scrolling never edits a number: hand the wheel to the containing scroll area
+            # (a filter that swallows the event stops Qt passing it on to the parent itself).
+            area = obj.parentWidget()
+            while area is not None and not isinstance(area, QAbstractScrollArea):
+                area = area.parentWidget()
+            if area is not None:
+                QApplication.sendEvent(area.viewport(), event)
+            else:
+                event.ignore()
             return True
         if kind == QEvent.Show:
             if isinstance(obj, (QComboBox, QLabel, QGroupBox, QAbstractSpinBox)):

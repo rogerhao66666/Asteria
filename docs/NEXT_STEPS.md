@@ -1,7 +1,7 @@
 # 接續工作說明（給在本機繼續的人，也給下一個 session）
 
 **更新：** 2026-10-15。分支 `claude/confident-shannon-3ohnfj`。
-最新實作與限制：看 [`audits/DECISION_LOG.md`](audits/DECISION_LOG.md) 的 **D30**；先前基線見 D26，
+最新實作與限制：看 [`audits/DECISION_LOG.md`](audits/DECISION_LOG.md) 的 **D32**（缺口清單見 [`audits/GAP_LIST.md`](audits/GAP_LIST.md)）；先前見 D30；先前基線見 D26，
 多人連線看
 [`audits/MULTIPLAYER_DESIGN.md`](audits/MULTIPLAYER_DESIGN.md) §9，總覽看 [`ENGINE_HANDBOOK.md`](ENGINE_HANDBOOK.md)。
 

@@ -153,10 +153,10 @@ def _interaction2d_v1_to_v2(fields):
             "trigger",
             str,
             "action",
-            choices=("action", "touch"),
+            choices=("action", "touch", "click"),
             label="Trigger",
             tooltip="action: the interact button while in range; touch: walking into range "
-            "(doors, transfers).",
+            "(doors, transfers); click: a mouse click on it (within Range).",
         ),
     ),
 )

@@ -96,10 +96,11 @@ def test_database_presentation_and_event_tabs_use_cards_with_square_content_pane
         tab_styles = tab_rule.split("{", 1)[1]
         selected_styles = selected_rule.split("{", 1)[1]
         pane_styles = pane_rule.split("{", 1)[1]
-        assert "border: 1px solid" in tab_styles
+        assert "border-top: 1px solid" in tab_styles
+        assert "border-right: 1px solid" in tab_styles
         assert "border-bottom: 1px solid" in tab_styles
-        assert "border-bottom: 2px solid" in selected_styles
-        assert "border-radius: 4px" in tab_styles
+        assert "border-bottom: 1px solid" in selected_styles
+        assert "border-radius: 0" in tab_styles
         assert "border-radius: 0" in pane_styles
         assert "top: -1px" in pane_styles
         assert "border-bottom: 1px solid" in pane_styles

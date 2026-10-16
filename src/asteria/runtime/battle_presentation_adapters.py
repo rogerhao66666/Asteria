@@ -1000,7 +1000,10 @@ class CanonicalBattleAdapter:
         if commands.mode == "root":
             menu.show(rows, "Command", commands.cursor)
         elif commands.mode == "command":
-            everything = commands.skill_rows(actor) + commands.item_rows()
+            everything = commands.skill_rows(actor)
+            for name in commands.custom_categories(actor):  # a project's own menu groups
+                everything = everything + commands.skill_rows(actor, name)
+            everything = everything + commands.item_rows()
             if commands.style == "root":
                 everything = commands.attack_rows(actor) + everything
             menu.show(everything, commands.category, commands.cursor)

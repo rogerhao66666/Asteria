@@ -49,6 +49,29 @@ class BattleCommands:
     def categories(self):
         return ROOT_CATEGORIES if self.style == "root" else CATEGORIES
 
+    BUILT_IN = ("Attack", "Skills", "Items")
+
+    def custom_categories(self, actor_id):
+        """Menu groups the actor's abilities ask for with ``menu_category`` (first use order)."""
+        registry = self.game.battle.ability_runtime.registry
+        found = []
+        for ability_id in self.game.battle.member(actor_id).ability_ids:
+            definition = registry.get(ability_id)
+            name = getattr(definition, "menu_category", "") if definition is not None else ""
+            if name and name not in self.BUILT_IN and name not in found:
+                found.append(name)
+        return tuple(found)
+
+    def categories_for(self, actor_id):
+        """The command categories to cycle for this actor: the built-in ones, then the
+        project's own ``menu_category`` groups (before Items in the categories style)."""
+        base = self.categories
+        custom = self.custom_categories(actor_id)
+        if not custom:
+            return base
+        head = tuple(c for c in base if c != "Items")
+        return head + custom + (("Items",) if "Items" in base else ())
+
     def reset(self):
         self.mode = "root" if self.style == "root" else "command"
         self.category = self.categories[0] if self.style == "root" else CATEGORIES[0]
@@ -130,11 +153,12 @@ class BattleCommands:
         skills = [r for r in self.skill_rows(actor_id) if r.action_id not in ("boost",)]
         items = self.item_rows()
         rows = []
-        for category, count, hint in (
-            ("Attack", len(weapons), "Choose a weapon"),
-            ("Skills", len(skills), "Abilities, concoct, capture"),
-            ("Items", len(items), "Use an item from the bag"),
-        ):
+        groups = [("Attack", len(weapons), "Choose a weapon"), ("Skills", len(skills), "")]
+        groups[1] = ("Skills", len(skills), "Abilities, concoct, capture")
+        for name in self.custom_categories(actor_id):
+            groups.append((name, len(self.skill_rows(actor_id, name)), "Abilities"))
+        groups.append(("Items", len(items), "Use an item from the bag"))
+        for category, count, hint in groups:
             rows.append(
                 BattleActionEntry(
                     f"root:{category}",
@@ -149,7 +173,7 @@ class BattleCommands:
             )
         return rows
 
-    def skill_rows(self, actor_id):
+    def skill_rows(self, actor_id, category="Skills"):
         game, rows = self.game, []
         registry = game.battle.ability_runtime.registry
         known = game.battle.member(actor_id).ability_ids
@@ -163,12 +187,14 @@ class BattleCommands:
             definition = registry.get(ability_id)
             if definition is None:
                 continue
+            if (getattr(definition, "menu_category", "") or "Skills") != category:
+                continue
             reason = game.ability_unavailable(actor_id, ability_id)
             rows.append(
                 BattleActionEntry(
                     ability_id,
                     self._name(ability_id),
-                    category="Skills",
+                    category=category,
                     cost_text=self._cost_text(definition),
                     enabled=not reason,
                     disabled_reason=reason,
@@ -176,6 +202,8 @@ class BattleCommands:
                     order=len(rows),
                 )
             )
+        if category != "Skills":
+            return rows
         capture = game.capture_targets()
         if capture:
             best = max(chance for _, chance, _ in capture)
@@ -290,7 +318,9 @@ class BattleCommands:
             return self.root_rows(actor_id)
         if self.category == "Attack":
             return self.attack_rows(actor_id)
-        return self.skill_rows(actor_id) if self.category == "Skills" else self.item_rows()
+        if self.category == "Items":
+            return self.item_rows()
+        return self.skill_rows(actor_id, self.category)
 
     def entries(self, actor_id):
         rows = self.rows(actor_id)
@@ -361,8 +391,9 @@ class BattleCommands:
                 self.cursor = (self.cursor + (-1 if key == "up" else 1)) % len(rows)
             return False
         if key == "category" and self.mode == "command":
-            cats = self.categories
-            self.category = cats[(cats.index(self.category) + 1) % len(cats)]
+            cats = self.categories_for(actor_id)
+            current = cats.index(self.category) if self.category in cats else -1
+            self.category = cats[(current + 1) % len(cats)]
             self.cursor = 0
             return False
         if key in ("boost_down", "boost_up") and self.mode in ("command", "root"):
@@ -380,7 +411,9 @@ class BattleCommands:
             elif self.mode == "ingredients" and self.ingredients:
                 self.ingredients.popitem()
             elif self.mode == "command" and self.style == "root":
-                self.mode, self.cursor = "root", self.categories.index(self.category)
+                self.mode = "root"
+                names = [r.action_id.split(":", 1)[1] for r in self.root_rows(actor_id)]
+                self.cursor = names.index(self.category) if self.category in names else 0
                 return False
             elif self.mode == "root":
                 return False

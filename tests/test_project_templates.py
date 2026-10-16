@@ -12,11 +12,20 @@ from asteria.editor.project_templates import (
 
 
 def test_both_templates_are_installed_and_listed():
-    assert {t.template_id for t in available_templates()} == {"party_rpg", "action_rpg"}
+    assert {t.template_id for t in available_templates()} == {
+        "basic_rpg",
+        "party_rpg",
+        "action_rpg",
+        "empty",
+    }
 
 
 @pytest.mark.parametrize("template", [t.template_id for t in TEMPLATES])
 def test_a_template_is_copied_renamed_and_opens(template, tmp_path):
+    if template == "empty":  # no sample data: a bare project, nothing to compare with
+        path = create_from_template("empty", "My Game", tmp_path / "game")
+        assert json.loads(path.read_text())["name"] == "My Game"
+        return
     from asteria.editor import EditorDocument
     from asteria.project import Project
 
@@ -58,7 +67,7 @@ def test_the_editor_opens_a_new_project_from_a_template(tmp_path):
         assert window.document.file_path == path
         assert window.document.project.name == "Mine"
         assert any(s.name.startswith("Hollowbrook") for s in window.document.project.scenes())
-        assert window.new_template_action.text() == "New from Template…"
+        assert window.new_template_action.text() == "New Project…"
     finally:
         window.document.mark_saved()
         window.close()

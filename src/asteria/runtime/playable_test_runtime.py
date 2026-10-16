@@ -761,6 +761,18 @@ class PlayableTestRuntime:
             return view.world_to_screen(world_x, world_y)
         return self.field_camera.world_to_screen(world_x, world_y)
 
+    def _field_world_xy(self, screen_x, screen_y):
+        """The world point under a screen pixel (inverse of the field's affine view)."""
+        ox, oy = self._field_screen_xy(0.0, 0.0)
+        ax, ay = self._field_screen_xy(1.0, 0.0)
+        bx, by = self._field_screen_xy(0.0, 1.0)
+        a, c, b, d = ax - ox, ay - oy, bx - ox, by - oy  # screen = origin + x*(a, c) + y*(b, d)
+        det = a * d - b * c
+        if abs(det) < 1e-12:
+            return screen_x - ox, screen_y - oy
+        dx, dy = screen_x - ox, screen_y - oy
+        return (d * dx - b * dy) / det, (a * dy - c * dx) / det
+
     def _asset_source_path(self, asset_id, kind):
         record = self.project.assets.get(str(asset_id))
         if record is not None:
@@ -1457,6 +1469,7 @@ class PlayableTestRuntime:
         self._draw_popups()
         self._draw_pictures()
         self._draw_event_timers()
+        self._draw_field_windows()
         if self.game.cutscene_active:
             self._draw_dialogue()
             return
@@ -1543,6 +1556,44 @@ class PlayableTestRuntime:
             color = (255, 150, 140) if low else (245, 245, 250)
             self.panel((self.width - 118, 14 + row * 40, 104, 34))
             self.text(clock, self.width - 66, 31 + row * 40, size=30, color=color, center=True)
+
+    def _draw_field_windows(self):
+        """Optional map windows (manifest ``field.hud``): ``gold`` shows the wallet and
+        ``quest_tracker`` the active quests' objectives, stacked at the top left. Off unless the
+        project asks, so existing games look as they did."""
+        hud = self.manifest.get("field", {}).get("hud", {})
+        if not isinstance(hud, dict) or not (hud.get("gold") or hud.get("quest_tracker")):
+            return
+        lines = []
+        state = self.game.save.rpg_state
+        if hud.get("gold"):
+            wallet = "   ".join(f"{state.currencies[k]:g} {k}" for k in sorted(state.currencies))
+            if wallet:
+                lines.append((wallet, (255, 222, 150)))
+        if hud.get("quest_tracker"):
+            quests = self.project.rpg_database.quests
+            for quest_id, progress in sorted(state.quests.items()):
+                if progress.status != "active" or quest_id not in quests:
+                    continue
+                quest = quests[quest_id]
+                lines.append((quest.display_name, (245, 245, 250)))
+                for objective in quest.objectives:
+                    have = progress.counts.get(objective.objective_id, 0)
+                    done = have >= objective.required
+                    label = objective.description or objective.objective_id
+                    lines.append(
+                        (
+                            f"  {label}  {min(have, objective.required)}/{objective.required}",
+                            (170, 240, 170) if done else (200, 205, 220),
+                        )
+                    )
+        if not lines:
+            return
+        row_h = 22
+        width = min(420, max(160, 14 + 9 * max(len(text) for text, _ in lines)))
+        self.panel((14, 14, width, 12 + row_h * len(lines)))
+        for row, (text, color) in enumerate(lines):
+            self.text(text, 24, 20 + row * row_h, size=18, color=color)
 
     # -- popups (CMP-03: generic animated text above field characters) ----------------------------
     POPUP_COLORS = {"item": (170, 240, 170), "warning": (255, 170, 150), "info": (230, 232, 240)}
@@ -1716,6 +1767,8 @@ class PlayableTestRuntime:
         for event in events:  # clicking a picture that has an event
             if event.type == self.pg.MOUSEBUTTONDOWN and getattr(event, "button", 1) == 1:
                 if self._click_picture(*event.pos) is not None:
+                    return False
+                if self.game.click_entity(*self._field_world_xy(*event.pos)) is not None:
                     return False
         if self.game.cutscene_active:
             if self.game.cutscene_skippable and self.input.just_pressed("cancel"):

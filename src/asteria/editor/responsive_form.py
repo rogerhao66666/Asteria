@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QBoxLayout, QGridLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
 
@@ -87,7 +87,7 @@ class ResponsiveForm(QWidget):
                 self.grid.addWidget(widget, row, 0, 1, columns)
                 row += 1
                 continue
-            self.grid.addWidget(widget, row, col)
+            self.grid.addWidget(widget, row, col, Qt.AlignTop)  # neighbours line up at the top
             col += 1
             if col == columns:
                 row, col = row + 1, 0

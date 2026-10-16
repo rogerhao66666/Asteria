@@ -66,18 +66,28 @@
 4. A15 事件系統補強。
 5. 待查證項目：讀碼確認後才開工，不確認不補造。
 
-## 進度（2026-10-16，D31）
+## 進度（2026-10-16，D31／D32 之後的最終狀態）
+
+核對方式：逐項讀碼加測試。下列「已具備」是讀碼確認原本就有，不是新補的。
 
 | 項目 | 狀態 |
 |---|---|
-| A1 寵物進化、學技能、親密度 | 完成：`PetEvolution`、`PetMove`、`affinity`；測試 `tests/test_pets_advanced.py` |
-| A2 寵物戰鬥單位 | 完成，可選項（species `battle_unit`），預設關閉 |
-| A3 Game Start 表單 | 完成：Database 工作區最後一個分頁；`tests/test_game_start_authoring.py` |
-| A4 隊伍共用量表 | 完成：`shared_gauges`、`ResourceGain(shared=True)`、`change_party_gauge` |
-| A5 商店條件價格與顯示 | 完成：`ShopEntry.visible_when`、`price_rules` |
-| A6 依區域戰鬥背景 | 完成：`AreaRule.battle_background` |
-| A8 狀態分類 | 完成：`category.<名稱>` 貢獻標籤、`remove_category`、`dispel` |
-| A10 自動戰鬥 | 完成（啟發式）：`auto_battle_choice`／`auto_battle_act`；沒有編輯器設定介面 |
-| A19 自訂暫停選單項目 | 完成：`MenuEntry`，Game Systems > Pause Menu Entries |
-| A15 事件系統 | 部分：新增 `MOVE_ROUTE`、`SHOW_BALLOON`。**未做**：事件複製／變形／生成、事件點擊觸發、事件圖示 |
-| A7、A9、A11–A14、A16、A17 | **未做**（待查證項目仍待讀碼確認） |
+| A1 寵物進化、學技能、親密度 | 完成（D31） |
+| A2 寵物戰鬥單位 | 完成，可選項（`battle_unit`，預設關閉）（D31） |
+| A3 Game Start 表單 | 完成（D31） |
+| A4 隊伍共用量表 | 完成（D31） |
+| A5 商店條件價格與顯示 | 完成（D31）；編輯器用單行文字欄位（D32 改掉巢狀表格） |
+| A6 依區域戰鬥背景 | 完成（D31） |
+| A7 技能類型／多類型 | 完成（D32）：`AbilityDefinition.menu_category`，戰鬥選單多一個分類 |
+| A8 狀態分類 | 完成（D31） |
+| A9 命中／迴避參數 | **已具備**：`OutcomeCheckDefinition`（命中、迴避、暴擊、格擋，可讀雙方數值與標籤） |
+| A10 自動戰鬥 | 完成（D31，啟發式、沒有編輯器介面） |
+| A11 裝備技能槽與層級 | 完成（D32）：`AbilityLoadoutRules`（槽數、依等級增加、限制哪些來源）、`equip_ability`／`unequip_ability` |
+| A12 道具升級槽／附魔 | **已具備**：裝備 `attachments`／socket、`equipment_growth`（成長節點） |
+| A13 技能學習系統 | **已具備**：技能樹節點可用 `jp.<職業>` 職業點付費（D26）；`learn_ability` |
+| A14 技能獎勵、演員變數 | 技能獎勵**已具備**（`AbilityDefinition.commands` 可發獎勵）；演員變數完成（D32：`actor_variable`） |
+| A15 事件系統 | 完成（D31＋D32）：`MOVE_ROUTE`、`SHOW_BALLOON`、`SPAWN_ENTITY`、`COPY_ENTITY`、`MORPH_ENTITY`、點擊觸發（`Interaction2D.trigger = click`） |
+| A16 地圖視窗 | 完成（D32）：manifest `field.hud.gold`／`quest_tracker`，預設關閉 |
+| A17 戰鬥視覺（弱點姿勢、狀態特效、血條樣式等） | **未做**：純呈現的潤飾，沒有引擎能力缺口；目標游標與頭上血條已有 |
+| A18 載具 | 不做 |
+| 事件圖示（IconsOnEvents） | 以 `SHOW_BALLOON` 涵蓋短暫圖示；常駐圖示未做 |

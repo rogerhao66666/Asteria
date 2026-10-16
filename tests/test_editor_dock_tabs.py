@@ -163,10 +163,12 @@ def test_dock_scroll_content_has_a_card_and_clearance_before_tabs():
         _settle(app)
         scroll = window.findChild(QScrollArea, "TilePaletteWidgetScroll")
         assert scroll is not None
-        card = scroll.widget()
+        card = scroll.parentWidget()  # the scroll page sits inside the card
         assert isinstance(card, QFrame)
         assert card.objectName() == "DockContentCard"
-        assert scroll.viewportMargins().bottom() >= 14
+        host = card.parentWidget()
+        assert host.objectName() == "DockContentHost"
+        assert host.layout().contentsMargins().bottom() >= 14
     finally:
         window.close()
         window.deleteLater()
@@ -198,7 +200,8 @@ def test_scene_dock_cards_share_a_square_inset_and_scroll_as_one_page():
             _settle(app)
             scroll = dock.findChild(QScrollArea, scroll_name)
             assert scroll is not None
-            margins = scroll.viewportMargins()
+            card = scroll.parentWidget()
+            margins = card.parentWidget().layout().contentsMargins()
             assert (margins.left(), margins.top(), margins.right(), margins.bottom()) == (
                 12,
                 12,
@@ -207,17 +210,19 @@ def test_scene_dock_cards_share_a_square_inset_and_scroll_as_one_page():
             )
             assert scroll.horizontalScrollBarPolicy() == Qt.ScrollBarAlwaysOff
             assert scroll.verticalScrollBarPolicy() == Qt.ScrollBarAsNeeded
-            assert not scroll.verticalScrollBar().isVisible()
-            card = scroll.widget()
+            if dock_name != "TilePaletteDock":  # the palette's height depends on its brush rows
+                assert not scroll.verticalScrollBar().isVisible()
             assert isinstance(card, QFrame)
             assert card.objectName() == "DockContentCard"
             cards.append(card)
-            viewports.append(scroll.viewport())
+            bar = scroll.verticalScrollBar()  # a visible bar takes its width from the viewport
+            viewports.append(scroll.viewport().width() + (bar.width() if bar.isVisible() else 0))
 
         _settle(app)
         assert len({card.width() for card in cards}) == 1
-        assert len({viewport.width() for viewport in viewports}) == 1
+        assert len(set(viewports)) == 1
 
+        window.resize(1100, 640)  # short enough that the palette must scroll
         window.findChild(QDockWidget, "TilePaletteDock").raise_()
         _settle(app)
         tile_scroll = window.findChild(QScrollArea, "TilePaletteWidgetScroll")
@@ -294,9 +299,13 @@ def test_debug_actions_frame_has_clearance_before_bottom_tabs():
             if bar.objectName() == "BottomPanelDockTabs" and bar.isVisible()
         )
         actions = dock.findChild(QGroupBox, "DebugActionsCard")
-        action_bottom = actions.mapTo(window, QPoint(0, actions.height())).y()
+        card = actions
+        while card is not None and card.objectName() != "DockContentCard":
+            card = card.parentWidget()  # the visible frame clips the (scrolling) debugger page
+        assert card is not None
+        card_bottom = card.mapTo(window, QPoint(0, card.height())).y()
         tabs_top = tabs.mapTo(window, QPoint(0, 0)).y()
-        assert tabs_top - action_bottom >= 24
+        assert tabs_top - card_bottom >= 14
     finally:
         window.close()
         window.runtime_monitor.stop()

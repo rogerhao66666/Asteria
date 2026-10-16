@@ -159,15 +159,16 @@ def test_real_qt_shell_mounts_new_workspaces_when_qt_is_available():
 
 def test_real_qt_shell_starts_without_project_when_qt_is_available():
     pytest.importorskip("PySide6")
-    from PySide6.QtWidgets import QApplication, QLabel
+    from PySide6.QtWidgets import QApplication
 
+    from asteria.editor.project_empty_state import ProjectEmptyState
     from asteria.editor.shell import AsteriaEditorWindow
 
     app = QApplication.instance() or QApplication([])
     window = AsteriaEditorWindow()
-    assert isinstance(window.rpg_authoring.child, QLabel)
+    assert isinstance(window.rpg_authoring.child, ProjectEmptyState)
     window.refresh_all()
-    assert isinstance(window.rpg_authoring.child, QLabel)
+    assert isinstance(window.rpg_authoring.child, ProjectEmptyState)
     window.close()
     app.processEvents()
 

@@ -90,6 +90,9 @@ WORLD_COMMAND_ARGUMENTS = {
     "WALK_TO": ("entity", "x", "y", "speed"),
     "MOVE_ROUTE": ("entity", "route", "step", "speed"),
     "SHOW_BALLOON": ("entity", "balloon", "duration_ms"),
+    "SPAWN_ENTITY": ("prefab_id", "x", "y", "name"),
+    "COPY_ENTITY": ("entity", "x", "y", "name"),
+    "MORPH_ENTITY": ("entity", "prefab_id"),
     "SET_BATTLE_WEATHER": ("kind", "intensity", "wind"),
     "SHOW_PICTURE": (
         "picture_id",
@@ -346,6 +349,35 @@ def register_standard_world_commands(router, session):
         )
         return True
 
+    def entity_command(method, arguments):
+        def handler(command):
+            values = []
+            for name, kind in arguments:
+                if kind == "number":
+                    values.append(_amount(command, name, 0.0))
+                else:
+                    values.append(str(_required(command, name)))
+            try:
+                return getattr(session, method)(*values)
+            except WorldCommandError:
+                raise
+            except Exception as exc:  # noqa: BLE001 - a bad entity or prefab is the program's mistake
+                raise WorldCommandError(f"{command.name}: {exc}") from exc
+
+        return handler
+
+    router.register(
+        "SPAWN_ENTITY",
+        entity_command("spawn_prefab", (("prefab_id", "text"), ("x", "number"), ("y", "number"))),
+    )
+    router.register(
+        "COPY_ENTITY",
+        entity_command("copy_entity", (("entity", "text"), ("x", "number"), ("y", "number"))),
+    )
+    router.register(
+        "MORPH_ENTITY",
+        entity_command("morph_entity", (("entity", "text"), ("prefab_id", "text"))),
+    )
     router.register("MOVE_ROUTE", move_route)
     router.register("SHOW_BALLOON", show_balloon)
 

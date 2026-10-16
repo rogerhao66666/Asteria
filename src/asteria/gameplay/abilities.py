@@ -230,7 +230,11 @@ class AbilityDefinition:
     # a pet the user must own and send out: "any" (the active pet, whatever its species) or a
     # species id. The pet's stats are read in formulas as pet_<stat> and pet_level.
     requires_pet: str = ""
+    # the battle menu group the ability is listed under ("" = the default Skills group): a
+    # project's Magic / Special / Tech groups, each shown as one more command category
+    menu_category: str = ""
     OPTIONAL_DATA = {
+        "menu_category": "",
         "requires_pet": "",
         "requires_items": {},
         "display_name": "",
@@ -274,6 +278,7 @@ class AbilityDefinition:
         icon_id="",
         requires_items=None,
         requires_pet="",
+        menu_category="",
     ):
         ability_id = str(ability_id).strip()
         if not ability_id:
@@ -382,6 +387,7 @@ class AbilityDefinition:
             raise ValueError("requires_items needs item ids and counts >= 1")
         object.__setattr__(self, "requires_items", needs)
         object.__setattr__(self, "requires_pet", str(requires_pet or "").strip())
+        object.__setattr__(self, "menu_category", str(menu_category or "").strip())
 
     def to_data(self):
         return {
@@ -419,6 +425,7 @@ class AbilityDefinition:
             **({"icon_id": self.icon_id} if self.icon_id else {}),
             **({"requires_items": dict(self.requires_items)} if self.requires_items else {}),
             **({"requires_pet": self.requires_pet} if self.requires_pet else {}),
+            **({"menu_category": self.menu_category} if self.menu_category else {}),
         }
 
     @classmethod
@@ -464,6 +471,7 @@ class AbilityDefinition:
             icon_id=data.get("icon_id", ""),
             requires_items=data.get("requires_items"),
             requires_pet=data.get("requires_pet", ""),
+            menu_category=data.get("menu_category", ""),
         )
 
 

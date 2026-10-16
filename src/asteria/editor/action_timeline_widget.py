@@ -157,6 +157,7 @@ class ActionTimelineWidget(QWidget):
         self.duration = QDoubleSpinBox()
         self.duration.setRange(0.05, 30.0)
         self.duration.setDecimals(3)
+        self.duration.setMinimumWidth(96)  # "0.250" and the arrows must stay readable
         apply_duration = QPushButton("Set Length")
         apply_duration.clicked.connect(self.apply_duration)
         center = QVBoxLayout()

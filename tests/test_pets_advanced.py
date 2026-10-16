@@ -240,3 +240,76 @@ def test_project_menu_entries_queue_their_event_program(demo):  # noqa: F811
     assert "greet" in game.pending_followups
     data = game.project.rpg_database.to_data()
     assert data["menu_entries"][0]["entry_id"] == "hello"
+
+
+def test_abilities_can_name_their_own_menu_category(demo):  # noqa: F811
+    from asteria.gameplay.abilities import AbilityDefinition
+
+    _runtime, game, commands = demo
+    hero = game.active_hero_ids()[0]
+    skills = [r.action_id for r in commands.skill_rows(hero)]
+    assert commands.custom_categories(hero) == ()
+    chosen = next(a for a in skills if a not in ("boost", "capture"))
+    registry = game.battle.ability_runtime.registry
+    data = registry.get(chosen).to_data()
+    assert "menu_category" not in data  # nothing written unless set
+    registry._definitions[chosen] = AbilityDefinition.from_data({**data, "menu_category": "Magic"})
+    assert commands.custom_categories(hero) == ("Magic",)
+    assert chosen not in [r.action_id for r in commands.skill_rows(hero)]
+    assert [r.action_id for r in commands.skill_rows(hero, "Magic")] == [chosen]
+    assert "Magic" in commands.categories_for(hero)
+    assert commands.categories_for(hero)[-1] == "Items"
+    commands.mode, commands.category = "command", "Skills"
+    commands.press("category", hero)
+    assert commands.category == "Magic"
+    assert [r.action_id for r in commands.entries(hero)] == [chosen]
+
+
+def test_ability_slots_limit_learned_abilities_to_the_equipped_ones(demo):  # noqa: F811
+    from asteria.rpg.ability_loadout import AbilityLoadoutRules
+
+    _runtime, game, _commands = demo
+    hero = game.active_hero_ids()[0]
+    known = set(game.resolve_actor_build(hero).abilities)
+    spare = [a for a in game.project.gameplay_library.abilities.ids() if a not in known][:2]
+    assert len(spare) == 2
+    for ability_id in spare:
+        game.learn_ability(hero, ability_id)
+    assert set(spare) <= set(game.resolve_actor_build(hero).abilities)  # no rules: all usable
+    rules = AbilityLoadoutRules("slots", 1, capacity_by_level={"99": 2})
+    game.project.rpg_database.add_ability_loadout_rules(rules)
+    usable = set(game.resolve_actor_build(hero).abilities)
+    assert not set(spare) & usable  # learned but not equipped
+    assert game.ability_slots(hero) == ((), 1)
+    game.equip_ability(hero, spare[0])
+    assert spare[0] in game.resolve_actor_build(hero).abilities
+    with pytest.raises(Exception):
+        game.equip_ability(hero, spare[1])  # slots are full
+    game.unequip_ability(hero, spare[0])
+    assert spare[0] not in game.resolve_actor_build(hero).abilities
+    assert AbilityLoadoutRules.from_data(rules.to_data()) == rules
+    assert rules.capacity_at(98) == 1 and rules.capacity_at(99) == 2
+    assert game.project.rpg_database.to_data()["ability_loadout_rules"]
+
+
+def test_field_windows_are_off_unless_the_manifest_asks(demo):  # noqa: F811
+    runtime, game, _commands = demo
+    drawn = []
+    runtime.panel = lambda rect, *a, **k: drawn.append(rect)
+    runtime._draw_field_windows()
+    assert drawn == []
+    runtime.manifest.setdefault("field", {})["hud"] = {"gold": True, "quest_tracker": True}
+    game.save.rpg_state.currencies["gold"] = 120.0
+    runtime._draw_field_windows()
+    assert drawn and drawn[0][0] == 14
+
+
+def test_actor_variables_are_saved_with_the_event_variables(demo):  # noqa: F811
+    _runtime, game, _commands = demo
+    hero = game.active_hero_ids()[0]
+    assert game.actor_variable(hero, "kills") == 0
+    game.set_actor_variable(hero, "kills", 3)
+    assert game.actor_variable(hero, "kills") == 3
+    assert game.save.event_context.get_variable(f"actor.{hero}.kills") == 3
+    with pytest.raises(Exception):
+        game.set_actor_variable("nobody", "kills", 1)

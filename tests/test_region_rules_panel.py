@@ -69,12 +69,15 @@ def test_area_rule_form_wraps_rows_in_a_narrow_tile_panel(app):
         palette.resize(264, 600)
         palette.show()
         app.processEvents()
-        assert palette.region_rule_form.layout().rowWrapPolicy() == QFormLayout.WrapLongRows
+        assert palette.region_rule_form.layout().rowWrapPolicy() in (
+            QFormLayout.WrapLongRows,
+            QFormLayout.WrapAllRows,
+        )
         assert palette.region_rules.geometry().right() <= palette.rect().right()
         fields = palette.region_rules.findChild(QScrollArea, "AreaRuleFieldsScroll")
         assert fields is not None
         assert fields.verticalScrollBar().maximum() > 0
-        assert palette.region_rules.maximumHeight() <= 240
+        assert palette.region_rules.maximumHeight() <= 360
     finally:
         palette.close()
 

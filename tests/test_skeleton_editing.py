@@ -179,8 +179,10 @@ def test_wheel_over_unfocused_skeleton_field_scrolls_panel_not_field(app):
     from PySide6.QtCore import QPoint, QPointF, Qt
     from PySide6.QtGui import QWheelEvent
 
+    from asteria.editor.decor import install
     from asteria.editor.skeleton_widget import SkeletonViewerWidget
 
+    install(app)  # the app-wide filter that hands wheel input to the scroll area
     widget = SkeletonViewerWidget()
     widget.resize(520, 480)
     widget.set_skeleton(sample_skeleton())
@@ -191,6 +193,10 @@ def test_wheel_over_unfocused_skeleton_field_scrolls_panel_not_field(app):
         field.clearFocus()
         field.setValue(7.0)
         bar = widget.controls_scroll.verticalScrollBar()
+        for _ in range(50):  # let the layout settle: the page must be taller than its view
+            app.processEvents()
+            if bar.maximum() > 0:
+                break
         assert bar.maximum() > 0
         bar.setValue(0)
 
@@ -205,6 +211,7 @@ def test_wheel_over_unfocused_skeleton_field_scrolls_panel_not_field(app):
             False,
         )
         app.sendEvent(field, event)
+        app.processEvents()
 
         assert field.value() == 7.0
         assert bar.value() > 0

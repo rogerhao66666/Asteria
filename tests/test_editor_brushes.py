@@ -143,6 +143,7 @@ def test_clicking_in_doodad_mode_places_one_undoable_entity(app):
     press = QMouseEvent(
         QEvent.MouseButtonPress,
         QPointF(50, 60),
+        QPointF(50, 60),
         Qt.LeftButton,
         Qt.LeftButton,
         Qt.NoModifier,

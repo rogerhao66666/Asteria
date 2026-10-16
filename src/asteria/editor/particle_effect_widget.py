@@ -304,8 +304,9 @@ class ParticleEffectWidget(QWidget):
                 widget.toggled.connect(self._edited)
             elif isinstance(value, tuple):
                 widget = QWidget()
-                row = QHBoxLayout(widget)
+                row = QVBoxLayout(widget)  # stacked: each value keeps its whole width
                 row.setContentsMargins(0, 0, 0, 0)
+                row.setSpacing(4)
                 widget.parts = []
                 for name, part in zip(PAIR_NAMES[f.name], value, strict=True):
                     box = _spin(part)

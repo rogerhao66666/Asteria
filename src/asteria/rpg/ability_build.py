@@ -153,8 +153,17 @@ class ActorAbilityState:
     learned_abilities: tuple[str, ...] = ()
     active_passives: tuple[str, ...] = ()
     selected_evolutions: dict[str, str] = field(default_factory=dict)
+    equipped_abilities: tuple[str, ...] = ()  # the slots of rpg.ability_loadout rules
 
-    def __init__(self, *, learned_abilities=(), active_passives=(), selected_evolutions=None):
+    def __init__(
+        self,
+        *,
+        learned_abilities=(),
+        active_passives=(),
+        selected_evolutions=None,
+        equipped_abilities=(),
+    ):
+        self.equipped_abilities = _ids(equipped_abilities, "ability_id")
         self.learned_abilities = _ids(learned_abilities, "ability_id")
         self.active_passives = _ids(active_passives, "passive_id")
         selected = {}
@@ -171,6 +180,20 @@ class ActorAbilityState:
     def forget(self, ability_id):
         ability_id = str(ability_id)
         self.learned_abilities = tuple(x for x in self.learned_abilities if x != ability_id)
+        self.equipped_abilities = tuple(x for x in self.equipped_abilities if x != ability_id)
+
+    def equip_ability(self, ability_id, *, capacity=None):
+        ability_id = _id(ability_id, "ability_id")
+        if ability_id in self.equipped_abilities:
+            return ability_id
+        if capacity is not None and len(self.equipped_abilities) >= int(capacity):
+            raise ValueError("ability slots are full")
+        self.equipped_abilities = self.equipped_abilities + (ability_id,)
+        return ability_id
+
+    def unequip_ability(self, ability_id):
+        ability_id = str(ability_id)
+        self.equipped_abilities = tuple(x for x in self.equipped_abilities if x != ability_id)
 
     def equip_passive(self, passive_id, *, capacity=None):
         passive_id = _id(passive_id, "passive_id")
@@ -197,6 +220,11 @@ class ActorAbilityState:
             "learned_abilities": list(self.learned_abilities),
             "active_passives": list(self.active_passives),
             "selected_evolutions": dict(sorted(self.selected_evolutions.items())),
+            **(
+                {"equipped_abilities": list(self.equipped_abilities)}
+                if self.equipped_abilities
+                else {}
+            ),
         }
 
     @classmethod
@@ -207,6 +235,7 @@ class ActorAbilityState:
             learned_abilities=data["learned_abilities"],
             active_passives=data["active_passives"],
             selected_evolutions=data["selected_evolutions"],
+            equipped_abilities=data.get("equipped_abilities", ()),
         )
 
 

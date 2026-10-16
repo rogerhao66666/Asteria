@@ -205,6 +205,7 @@ class EnemyAIEditorWidget(QWidget):
         bind_row.addWidget(bind)
         overview = QGroupBox("Overview")
         form = QFormLayout(overview)
+        self.actions_per_ready.setMinimumWidth(88)  # keep the number readable in a narrow card
         form.addRow("Actions per turn", self.actions_per_ready)
         form.addRow("Starting phase", self.initial_phase)
         form.addRow("Used by", self.used_by)
@@ -286,6 +287,7 @@ class EnemyAIEditorWidget(QWidget):
         phase_form = QFormLayout(phase_box)
         phase_form.addRow("Priority", self.phase_priority)
         phase_form.addRow("Rules (none = all)", self.phase_rules)
+        self.phase_actions.setMinimumWidth(88)
         phase_form.addRow("Actions per turn", self.phase_actions)
         phase_form.addRow("On enter hook", self.enter_hook)
         phase_form.addRow("On exit hook", self.exit_hook)

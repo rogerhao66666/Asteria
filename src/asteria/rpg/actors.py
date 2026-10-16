@@ -733,6 +733,7 @@ class RpgDatabase:
         self.music_tracks = {}  # rpg.extras MusicTrack
         self.credits_pages = {}  # rpg.extras CreditsPage
         self.menu_entries = {}  # rpg.extras MenuEntry
+        self.ability_loadout_rules = {}  # rpg.ability_loadout AbilityLoadoutRules
         self.doodads = {}  # rpg.doodads DoodadDefinition
         self.world_interactions = {}
         self.drop_tables = {}
@@ -1129,6 +1130,7 @@ class RpgDatabase:
             ("music_tracks", self.music_tracks),
             ("credits_pages", self.credits_pages),
             ("menu_entries", self.menu_entries),
+            ("ability_loadout_rules", self.ability_loadout_rules),
             ("doodads", self.doodads),
         )
         return {
@@ -1156,6 +1158,17 @@ class RpgDatabase:
         from .extras import CreditsPage
 
         return self._add_keyed(self.credits_pages, value, CreditsPage, "page_id", "credits page")
+
+    def add_ability_loadout_rules(self, value):
+        from .ability_loadout import AbilityLoadoutRules
+
+        return self._add_keyed(
+            self.ability_loadout_rules,
+            value,
+            AbilityLoadoutRules,
+            "rules_id",
+            "ability loadout rules",
+        )
 
     def add_menu_entry(self, value):
         from .extras import MenuEntry
@@ -1917,6 +1930,10 @@ class RpgDatabase:
                 result.add_music_track(MusicTrack.from_data(x))
             for x in data.get("credits_pages", ()):
                 result.add_credits_page(CreditsPage.from_data(x))
+            from .ability_loadout import AbilityLoadoutRules
+
+            for x in data.get("ability_loadout_rules", ()):
+                result.add_ability_loadout_rules(AbilityLoadoutRules.from_data(x))
             from .extras import MenuEntry
 
             for x in data.get("menu_entries", ()):

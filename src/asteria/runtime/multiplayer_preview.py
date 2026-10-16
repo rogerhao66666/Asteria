@@ -22,6 +22,7 @@ from asteria.multiplayer.smoothing import SnapshotInterpolator
 PROFILE_SCHEMA = "asteria.multiplayer.profile"
 PROFILE_VERSION = 1
 INPUT_SEND_INTERVAL = 1 / 20
+INPUT_RESEND_DELAY = 1 / 30  # longer than the server's 1 / 60 s input window
 
 
 def load_runtime_multiplayer_profile(resource_root: str | Path) -> dict[str, Any] | None:
@@ -90,6 +91,7 @@ class MultiplayerPreviewBridge:
         self._acked_input_revision = -1
         self._lock = threading.RLock()
         self._last_input_at = 0.0
+        self._last_input_state = None  # the newest input sent, for a rate-limit resend
         self._pending_commands = {}
         self._command_results = []
         self.error = ""
@@ -183,6 +185,17 @@ class MultiplayerPreviewBridge:
                 with self._lock:
                     self._acked_input_sequence = max(self._acked_input_sequence, sequence)
                     self._acked_input_revision = self._revision
+            elif (
+                value.get("accepted") is False
+                and value.get("reason") == "input rate exceeded"
+                and isinstance(sequence, int)
+                and not isinstance(sequence, bool)
+            ):
+                # the server drops an input that follows another within its rate window; the
+                # newest input state must still arrive, so send it again once the window passed
+                timer = threading.Timer(INPUT_RESEND_DELAY, self._resend_input, args=(sequence,))
+                timer.daemon = True
+                timer.start()
             return
         if kind == "server_error":
             with self._lock:
@@ -296,7 +309,26 @@ class MultiplayerPreviewBridge:
         if isinstance(sequence, int) and not isinstance(sequence, bool):
             with self._lock:
                 self._last_input_sequence = max(self._last_input_sequence, sequence)
+                self._last_input_state = dict(input_state)
         return True
+
+    def _resend_input(self, rejected_sequence: int) -> None:
+        """Send the newest input again when it was the one the server rate-limited."""
+        with self._lock:
+            client = self._client
+            state = self._last_input_state
+            newest = self._last_input_sequence
+        if client is None or state is None or not client.connected:
+            return
+        if newest != rejected_sequence:  # a newer input already went out
+            return
+        try:
+            sequence = client.send_input(state)
+        except (MultiplayerClientError, TypeError, ValueError):
+            return
+        if isinstance(sequence, int) and not isinstance(sequence, bool):
+            with self._lock:
+                self._last_input_sequence = max(self._last_input_sequence, sequence)
 
     def send_command(self, command: str, payload=None):
         """Submit a game command through the connected authoritative server."""

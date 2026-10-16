@@ -460,6 +460,104 @@ class GameSessionRuntime:
         self.walkers[entity.id] = PathFollower(path, float(speed))
         return path
 
+    ACTOR_VARIABLE_PREFIX = "actor."
+
+    def actor_variable(self, actor_id, name, default=0):
+        """A per-actor variable (saved with the event variables as ``actor.<id>.<name>``)."""
+        key = f"{self.ACTOR_VARIABLE_PREFIX}{actor_id}.{name}"
+        return self.save.event_context.get_variable(key, default)
+
+    def set_actor_variable(self, actor_id, name, value):
+        if str(actor_id) not in self.project.rpg_database.actors:
+            raise GameSessionError(f"unknown actor: {actor_id}")
+        key = f"{self.ACTOR_VARIABLE_PREFIX}{actor_id}.{name}"
+        self.save.event_context.set_variable(key, value)
+        return value
+
+    def spawn_prefab(self, prefab_id, x, y, *, name=None):
+        """Create an entity from a project prefab at ``(x, y)`` in the present scene (an event
+        spawner); returns the new entity's id."""
+        from asteria.core.prefab import instantiate
+        from asteria.runtime.preview import build_preview_registry
+
+        if str(prefab_id) not in self.project.prefabs.ids():
+            raise GameSessionError(f"unknown prefab: {prefab_id}")
+        entity = instantiate(
+            self.project.prefabs, str(prefab_id), build_preview_registry(), name=name
+        )
+        if not entity.has(Transform):
+            entity.add_component(Transform())
+        transform = entity.get(Transform)
+        transform.x, transform.y = float(x), float(y)
+        self.scene.add_entity(entity)
+        return entity.id
+
+    def copy_entity(self, entity_key, x, y, *, name=None):
+        """A copy of a scene entity (every serialisable component) placed at ``(x, y)``."""
+        from asteria.core import Entity
+        from asteria.core.serialization import deserialize_component, serialize_component
+        from asteria.runtime.preview import build_preview_registry
+
+        source = self._sequence_entity(entity_key)
+        registry = build_preview_registry()
+        entity = Entity(name or source.name)
+        for component in source.components():
+            entity.add_component(deserialize_component(serialize_component(component), registry))
+        transform = entity.get(Transform)
+        transform.x, transform.y = float(x), float(y)
+        self.scene.add_entity(entity)
+        return entity.id
+
+    def morph_entity(self, entity_key, prefab_id):
+        """Replace an entity by a prefab instance standing where it stood (an event morph);
+        returns the new entity's id."""
+        source = self._sequence_entity(entity_key)
+        if source is self.player:
+            raise GameSessionError("the player entity cannot be morphed")
+        transform = source.get(Transform)
+        new_id = self.spawn_prefab(prefab_id, transform.x, transform.y, name=source.name)
+        self.scene.remove_entity(source)
+        return new_id
+
+    def click_entity(self, world_x, world_y):
+        """A mouse click in the field: the nearest entity whose interaction is ``click``-triggered
+        and whose ``range`` reaches the point starts its event program. Returns the trigger or
+        ``None``."""
+        from math import hypot
+
+        from asteria.core import world_position
+        from asteria.runtime.components2d import Interaction2DComponent
+        from asteria.runtime.interaction import InteractionTrigger
+
+        if self.mode != "field" or self.event_busy:
+            return None
+        best = None
+        for entity in self.scene.entities():
+            if entity is self.player or not entity.enabled:
+                continue
+            interaction = entity.try_get(Interaction2DComponent)
+            if (
+                interaction is None
+                or not interaction.enabled
+                or not interaction.event_program_id
+                or interaction.trigger != "click"
+                or not entity.has(Transform)
+            ):
+                continue
+            ex, ey = world_position(entity)
+            distance = hypot(ex - float(world_x), ey - float(world_y))
+            if distance <= interaction.range and (best is None or distance < best[0]):
+                best = (distance, entity, interaction)
+        if best is None:
+            return None
+        _distance, entity, interaction = best
+        trigger = InteractionTrigger(
+            entity.id, interaction.event_program_id, interaction.local_scope_id or entity.id
+        )
+        self.events.start_trigger(trigger, replace=True)
+        self.update_events(0.0)
+        return trigger
+
     ROUTE_DIRECTIONS = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
     BALLOONS = {
         "exclamation": "!",
@@ -1660,16 +1758,21 @@ class GameSessionRuntime:
         return actor_ids
 
     def _ability_state(self, actor_id):
-        snapshot = self.save.rpg_state.actor_snapshots[str(actor_id)]
+        snapshot = self.save.rpg_state.actor_snapshots.get(str(actor_id))
         return (
             ActorAbilityState()
-            if snapshot.ability_state is None
+            if snapshot is None or snapshot.ability_state is None
             else ActorAbilityState.from_data(snapshot.ability_state)
         )
 
     def _store_ability_state(self, actor_id, state):
         actor_id = str(actor_id)
-        old = self.save.rpg_state.actor_snapshots[actor_id]
+        old = self.save.rpg_state.actor_snapshots.get(actor_id)
+        if old is None:  # an actor that was never in a fight: snapshot its present build
+            build = self.resolve_actor_build(actor_id)
+            old = RpgActorSnapshot(
+                actor_id, build.stats.to_data(), build.resources.to_data(), build.tags.to_data()
+            )
         self.save.rpg_state.actor_snapshots[actor_id] = RpgActorSnapshot(
             old.actor_id, old.stats, old.resources, old.tags, state.to_data()
         )
@@ -1948,7 +2051,7 @@ class GameSessionRuntime:
         snapshot = self.save.rpg_state.actor_snapshots.get(actor_id)
         if snapshot is not None:
             actor.restore(snapshot)
-        return resolve_actor_build(
+        build = resolve_actor_build(
             actor,
             progression=self.save.rpg_state.progression,
             allocations=self.save.rpg_state.progression_allocations.get(actor_id),
@@ -1956,6 +2059,58 @@ class GameSessionRuntime:
             passives=db.passives,
             evolution_rules=db.ability_evolutions.values(),
         )
+        rules = self.ability_loadout_rules
+        if rules is not None:  # only equipped learned abilities stay usable
+            from dataclasses import replace
+
+            equipped = set(self._ability_state_of(actor_id).equipped_abilities)
+            build = replace(build, abilities=rules.usable(build.ability_grants, equipped))
+        return build
+
+    @property
+    def ability_loadout_rules(self):
+        """Project ability slot rules: the first by id, or ``None`` (no slot limit)."""
+        values = self.project.rpg_database.ability_loadout_rules
+        return values[sorted(values)[0]] if values else None
+
+    def _ability_state_of(self, actor_id):
+        snapshot = self.save.rpg_state.actor_snapshots.get(str(actor_id))
+        if snapshot is None or snapshot.ability_state is None:
+            return ActorAbilityState()
+        return ActorAbilityState.from_data(snapshot.ability_state)
+
+    def ability_slots(self, actor_id):
+        """``(equipped ability ids, capacity)`` of an actor under the slot rules."""
+        rules = self.ability_loadout_rules
+        level = 1
+        progress = self.save.rpg_state.actor_progression.get(str(actor_id))
+        if progress is not None:
+            level = int(progress.level)
+        capacity = rules.capacity_at(level) if rules is not None else 0
+        return self._ability_state_of(actor_id).equipped_abilities, capacity
+
+    def equip_ability(self, actor_id, ability_id):
+        """Put a learned ability in a slot (needs free capacity)."""
+        rules = self.ability_loadout_rules
+        if rules is None:
+            raise GameSessionError("the project has no ability slot rules")
+        ability_id = str(ability_id)
+        state = self._ability_state(actor_id)
+        if ability_id not in state.learned_abilities:
+            raise GameSessionError(f"{ability_id} is not learned")
+        _equipped, capacity = self.ability_slots(actor_id)
+        try:
+            state.equip_ability(ability_id, capacity=capacity)
+        except ValueError as exc:
+            raise GameSessionError(str(exc)) from exc
+        self._store_ability_state(actor_id, state)
+        return ability_id
+
+    def unequip_ability(self, actor_id, ability_id):
+        state = self._ability_state(actor_id)
+        state.unequip_ability(ability_id)
+        self._store_ability_state(actor_id, state)
+        return str(ability_id)
 
     def _battle_subject(self, stats, resources, tags):
         """A combatant subject that can hold battle states (break, buffs...) from the project's

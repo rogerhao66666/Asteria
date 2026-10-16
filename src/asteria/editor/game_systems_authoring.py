@@ -24,6 +24,7 @@ from asteria.rpg import (
     QuestObjective,
     ShopDefinition,
 )
+from asteria.rpg.ability_loadout import AbilityLoadoutRules
 from asteria.rpg.battle_extensions import GAIN_EVENTS, BattleExtensionRules
 from asteria.rpg.disassembly import DisassemblyRecipe
 from asteria.rpg.doodads import DoodadDefinition
@@ -584,6 +585,18 @@ D26_FORMS = {
         F("lines", "Lines (one per line)", "multiline", default=""),
         F("order", "Order", "int", default=0),
     ),
+    "ability_loadout_rules": (
+        F("rules_id", "Rules ID", "id"),
+        F("capacity", "Ability Slots", "int", default=4),
+        F("capacity_by_level", "Slots From Level (level and slots)", "amounts", default={}),
+        F(
+            "limited_sources",
+            "Limited Grant Sources (learned, class, equipment...)",
+            "string_list",
+            default=("learned",),
+        ),
+        F("always_usable", "Always Usable Abilities", "ref_list", source="abilities", default=()),
+    ),
     "menu_entries": (
         F("entry_id", "Entry ID", "id"),
         F("label", "Menu Label", "text", default=""),
@@ -816,6 +829,7 @@ def _templates():
         "message_settings": lambda key, c: MessageSettings(key),
         "music_tracks": lambda key, c: MusicTrack(key, key, "audio_asset"),
         "credits_pages": lambda key, c: CreditsPage(key, key),
+        "ability_loadout_rules": lambda key, c: AbilityLoadoutRules(key),
         "menu_entries": lambda key, c: MenuEntry(
             key, key, next(iter(sorted(c.project.event_programs.ids())), "program")
         ),
@@ -867,6 +881,13 @@ KINDS = (
     ),
     _Kind("music_tracks", "Music Room", "music_tracks", "track_id", MusicTrack),
     _Kind("credits_pages", "Credits", "credits_pages", "page_id", CreditsPage),
+    _Kind(
+        "ability_loadout_rules",
+        "Ability Slots",
+        "ability_loadout_rules",
+        "rules_id",
+        AbilityLoadoutRules,
+    ),
     _Kind("menu_entries", "Pause Menu Entries", "menu_entries", "entry_id", MenuEntry),
     _Kind("doodads", "Doodads", "doodads", "doodad_id", DoodadDefinition),
 )

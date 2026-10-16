@@ -129,3 +129,59 @@ def test_show_balloon_posts_a_short_popup_over_the_entity(game):
         WorldCommand("SHOW_BALLOON", {"entity": "talker", "balloon": "question"})
     )
     assert any(p["text"] == "?" and p["kind"] == "balloon" for p in game.notices)
+
+
+def test_events_can_spawn_copy_and_morph_entities(game):
+    from asteria.core.prefab import PrefabDefinition
+
+    transform = {"type": "asteria.Transform", "version": 1, "fields": {}}
+    game.project.prefabs.add(PrefabDefinition("slime", "Slime", (transform,)))
+    game.project.prefabs.add(
+        PrefabDefinition("gold_slime", "Gold Slime", (), base_prefab_id="slime")
+    )
+    prefab_ids = ("slime", "gold_slime")
+    spawned = game.world_commands.dispatch(
+        WorldCommand("SPAWN_ENTITY", {"prefab_id": prefab_ids[0], "x": 50, "y": 60})
+    )
+    entity = game.scene.get_entity(spawned)
+    assert entity is not None and (entity.get(Transform).x, entity.get(Transform).y) == (50, 60)
+    copy_id = game.world_commands.dispatch(
+        WorldCommand("COPY_ENTITY", {"entity": spawned, "x": 70, "y": 80})
+    )
+    copy = game.scene.get_entity(copy_id)
+    assert copy is not None and copy.id != spawned and copy.get(Transform).x == 70
+    other = prefab_ids[1] if len(prefab_ids) > 1 else prefab_ids[0]
+    morphed = game.world_commands.dispatch(
+        WorldCommand("MORPH_ENTITY", {"entity": copy_id, "prefab_id": other})
+    )
+    game.scene.update(0)
+    assert game.scene.get_entity(morphed).get(Transform).x == 70
+    from asteria.runtime.world_command_handlers import WorldCommandError
+
+    with pytest.raises(WorldCommandError):
+        game.world_commands.dispatch(
+            WorldCommand("SPAWN_ENTITY", {"prefab_id": "nope", "x": 0, "y": 0})
+        )
+    with pytest.raises(WorldCommandError):
+        game.world_commands.dispatch(
+            WorldCommand("MORPH_ENTITY", {"entity": "player", "prefab_id": other})
+        )
+
+
+def test_a_click_triggered_interaction_starts_its_program_on_click(game):
+    from asteria.runtime.components2d import Interaction2DComponent
+
+    npc = _add(game, "signpost", 100.0, 100.0)
+    interaction = npc.add_component(Interaction2DComponent())
+    interaction.event_program_id = "greet"
+    interaction.trigger = "click"
+    interaction.range = 12.0
+    started = []
+    game.events.start_trigger = lambda trigger, replace=False: started.append(trigger)
+    game.update_events = lambda dt=0.0: None
+    assert game.click_entity(300.0, 300.0) is None  # nothing near
+    trigger = game.click_entity(104.0, 100.0)
+    assert trigger is not None and trigger.event_program_id == "greet"
+    assert started and started[0].source_entity_id == npc.id
+    interaction.trigger = "action"  # only click-triggered interactions answer clicks
+    assert game.click_entity(104.0, 100.0) is None
