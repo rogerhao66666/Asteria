@@ -1407,6 +1407,7 @@
         "cooldown_seconds": 3.0,
         "costs": [],
         "effects": [],
+        "icon_id": "playable_assets/icons/skill_fist.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1429,6 +1430,7 @@
         "cooldown_seconds": 2.5,
         "costs": [],
         "effects": [],
+        "icon_id": "playable_assets/icons/skill_fist.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1451,6 +1453,7 @@
         "cooldown_seconds": 1.6,
         "costs": [],
         "effects": [],
+        "icon_id": "playable_assets/icons/skill_bow.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1473,6 +1476,7 @@
         "cooldown_seconds": 1.8,
         "costs": [],
         "effects": [],
+        "icon_id": "playable_assets/icons/skill_gaze.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1495,6 +1499,7 @@
         "cooldown_seconds": 3.0,
         "costs": [],
         "effects": [],
+        "icon_id": "playable_assets/icons/skill_fist.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1517,6 +1522,7 @@
         "cooldown_seconds": 3.5,
         "costs": [],
         "effects": [],
+        "icon_id": "playable_assets/icons/skill_arrows.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1558,7 +1564,7 @@
         ],
         "display_name": "Blink",
         "effects": [],
-        "icon_id": "playable_assets/icons/m_blink.png",
+        "icon_id": "playable_assets/icons/skill_blink.png",
         "interrupts_actions": true,
         "schema": "asteria.ability_definition",
         "tags": [],
@@ -1601,7 +1607,7 @@
         ],
         "display_name": "Firebolt",
         "effects": [],
-        "icon_id": "playable_assets/icons/m_bolt.png",
+        "icon_id": "playable_assets/icons/skill_bolt.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1643,7 +1649,7 @@
         ],
         "display_name": "Meteor",
         "effects": [],
-        "icon_id": "playable_assets/icons/m_meteor.png",
+        "icon_id": "playable_assets/icons/skill_meteor.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1685,7 +1691,7 @@
         ],
         "display_name": "Nova",
         "effects": [],
-        "icon_id": "playable_assets/icons/m_nova.png",
+        "icon_id": "playable_assets/icons/skill_nova.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1750,7 +1756,7 @@
         "costs": [],
         "display_name": "Punch",
         "effects": [],
-        "icon_id": "playable_assets/icons/punch.png",
+        "icon_id": "playable_assets/icons/skill_fist.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1792,7 +1798,7 @@
         ],
         "display_name": "Pierce",
         "effects": [],
-        "icon_id": "playable_assets/icons/r_pierce.png",
+        "icon_id": "playable_assets/icons/skill_spear.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1815,7 +1821,7 @@
         "costs": [],
         "display_name": "Shoot",
         "effects": [],
-        "icon_id": "playable_assets/icons/r_shot.png",
+        "icon_id": "playable_assets/icons/skill_bow.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1857,7 +1863,7 @@
         ],
         "display_name": "Tumble",
         "effects": [],
-        "icon_id": "playable_assets/icons/r_tumble.png",
+        "icon_id": "playable_assets/icons/skill_tumble.png",
         "interrupts_actions": true,
         "schema": "asteria.ability_definition",
         "tags": [],
@@ -1900,7 +1906,7 @@
         ],
         "display_name": "Volley",
         "effects": [],
-        "icon_id": "playable_assets/icons/r_volley.png",
+        "icon_id": "playable_assets/icons/skill_arrows.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1924,7 +1930,7 @@
         "costs": [],
         "display_name": "Roll",
         "effects": [],
-        "icon_id": "playable_assets/icons/roll.png",
+        "icon_id": "playable_assets/icons/skill_tumble.png",
         "interrupts_actions": true,
         "schema": "asteria.ability_definition",
         "tags": [],
@@ -1948,6 +1954,7 @@
         "cooldown_seconds": 1.2,
         "costs": [],
         "effects": [],
+        "icon_id": "playable_assets/icons/skill_slash.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -1970,6 +1977,7 @@
         "cooldown_seconds": 1.0,
         "costs": [],
         "effects": [],
+        "icon_id": "playable_assets/icons/skill_bite.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -2011,7 +2019,7 @@
         ],
         "display_name": "Leap",
         "effects": [],
-        "icon_id": "playable_assets/icons/w_leap.png",
+        "icon_id": "playable_assets/icons/skill_leap.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -2053,7 +2061,7 @@
         ],
         "display_name": "War Cry",
         "effects": [],
-        "icon_id": "playable_assets/icons/w_shout.png",
+        "icon_id": "playable_assets/icons/skill_shout.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -2076,7 +2084,7 @@
         "costs": [],
         "display_name": "Slash",
         "effects": [],
-        "icon_id": "playable_assets/icons/w_slash.png",
+        "icon_id": "playable_assets/icons/skill_slash.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -2118,7 +2126,7 @@
         ],
         "display_name": "Whirl",
         "effects": [],
-        "icon_id": "playable_assets/icons/w_whirl.png",
+        "icon_id": "playable_assets/icons/skill_whirl.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {
@@ -2141,6 +2149,7 @@
         "cooldown_seconds": 1.4,
         "costs": [],
         "effects": [],
+        "icon_id": "playable_assets/icons/skill_fist.png",
         "schema": "asteria.ability_definition",
         "tags": [],
         "targeting": {

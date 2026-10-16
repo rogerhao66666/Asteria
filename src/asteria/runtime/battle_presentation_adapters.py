@@ -668,12 +668,10 @@ class CanonicalBattleAdapter:
             tints[member_id] = colour
 
     def _weak_fraction(self):
-        """Health share below which a combatant shows its ``weak`` pose (manifest
-        ``battle.weak_below``, 0 = never)."""
+        """Health share below which a combatant shows its ``weak`` pose (the project's
+        ``BattleOptions``, else manifest ``battle.weak_below``; 0 = never)."""
         try:
-            return max(
-                0.0, min(1.0, float(self.host.manifest.get("battle", {}).get("weak_below", 0)))
-            )
+            return max(0.0, min(1.0, float(self.host.battle_option("weak_below"))))
         except (TypeError, ValueError):
             return 0.0
 

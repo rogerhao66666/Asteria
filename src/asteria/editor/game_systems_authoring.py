@@ -31,7 +31,7 @@ from asteria.rpg.doodads import DoodadDefinition
 from asteria.rpg.drop_tables import RARITIES, DropTable
 from asteria.rpg.durability import ON_BREAK, DurabilityRules
 from asteria.rpg.enemy_levels import EnemyLevelRules
-from asteria.rpg.extras import CreditsPage, MenuEntry, MusicTrack
+from asteria.rpg.extras import BattleOptions, CreditsPage, MenuEntry, MusicTrack
 from asteria.rpg.items import INVENTORY_OVERFLOW, InventoryRules
 from asteria.rpg.job_points import JobPointRules
 from asteria.rpg.localization import LocaleTable, MessageSettings
@@ -585,6 +585,11 @@ D26_FORMS = {
         F("lines", "Lines (one per line)", "multiline", default=""),
         F("order", "Order", "int", default=0),
     ),
+    "battle_options": (
+        F("options_id", "Options ID", "id"),
+        F("auto_key", "T Key Plays The Turn (auto-battle)", "bool", default=False),
+        F("weak_below", "Weak Pose Below Health (0-1, 0 = never)", "float", default=0.0),
+    ),
     "ability_loadout_rules": (
         F("rules_id", "Rules ID", "id"),
         F("capacity", "Ability Slots", "int", default=4),
@@ -829,6 +834,7 @@ def _templates():
         "message_settings": lambda key, c: MessageSettings(key),
         "music_tracks": lambda key, c: MusicTrack(key, key, "audio_asset"),
         "credits_pages": lambda key, c: CreditsPage(key, key),
+        "battle_options": lambda key, c: BattleOptions(key),
         "ability_loadout_rules": lambda key, c: AbilityLoadoutRules(key),
         "menu_entries": lambda key, c: MenuEntry(
             key, key, next(iter(sorted(c.project.event_programs.ids())), "program")
@@ -881,6 +887,7 @@ KINDS = (
     ),
     _Kind("music_tracks", "Music Room", "music_tracks", "track_id", MusicTrack),
     _Kind("credits_pages", "Credits", "credits_pages", "page_id", CreditsPage),
+    _Kind("battle_options", "Battle Options", "battle_options", "options_id", BattleOptions),
     _Kind(
         "ability_loadout_rules",
         "Ability Slots",

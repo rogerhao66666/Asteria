@@ -217,7 +217,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
 | 項目 | 狀態 |
 | --- | --- |
-| 圖示 | 暗黑 demo 的五個狀態圖示是程式畫的（`art.py` 的 `status_glyph`），技能圖示取自 CC0 資源包的相近圖；八方旅人的寵物沒有圖示（用縮寫）；沒有 AI 美術 |
+| 圖示 | 技能、狀態、寵物圖示是程式畫的原創圖示（`graphics/forged_icons.py`，D35），道具圖示取自 CC0 資源包；沒有 AI 美術 |
 | 原生 kernel 要每台機器編譯一次 | `python -m asteria.kernels.build_native`；沒編譯會退回 numpy |
 | `CollisionWorld.from_scene` 沒有快取 | 2026-10-16 量測：100／500／2000 個碰撞器建一次 0.05／0.22／0.85 ms，每幀約一次，不是瓶頸；失效模型（啟用狀態、增刪、換場景、移動）的風險大於收益，**決定不做** |
 | Enemy AI 的七欄規則表 | 窗口很窄時可橫向捲動（表格的正常行為） |
@@ -241,7 +241,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | 作者流程（D31） | Database > Game Start 表單（場景、隊伍、背包、貨幣、起始寵物）、暫停選單自訂項目（`MenuEntry`）、技能槽規則（`AbilityLoadoutRules`）與暫停選單「Skill Slots」畫面 |
 | 規則（D31–D32） | 商店條件顯示與價格規則、依區域的戰鬥背景、隊伍共用量表、狀態分類與 `dispel`、技能選單分類（`menu_category`）、自動戰鬥（manifest `battle.auto_key`）、演員變數 |
 | 事件（D31–D33） | `MOVE_ROUTE`、`SHOW_BALLOON`、`SPAWN_ENTITY`、`COPY_ENTITY`、`MORPH_ENTITY`、`SET_ENTITY_ICON`、點擊觸發（`Interaction2D.trigger = click`） |
-| 畫面（D32–D33） | 地圖視窗（manifest `field.hud.gold`／`quest_tracker`）、低血量姿勢（`battle.weak_below`）、狀態染色（`StateDefinition.tint`） |
+| 畫面（D32–D35） | 地圖視窗（manifest `field.hud.gold`／`quest_tracker`）、低血量姿勢與 T 鍵自動戰鬥（Game Systems > Battle Options）、狀態染色（`StateDefinition.tint`）、原創技能／狀態／寵物圖示 |
 | 編輯器 | Game Start 分頁、新的 Game Systems 種類（Ability Slots、Pause Menu Entries）、種類下拉選單圖示、flag／paw／gauge 圖示 |
 
 以上全部是資料驅動、沒設定就沒有影響；舊專案與存檔照常載入。
@@ -250,8 +250,8 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
 1. 第三個範本（橫向平台動作、彈幕射擊）——使用者 2026-10-16 說先不用。
 2. Web 匯出——使用者 2026-10-16 說先不用；要先做依賴盤點。
-3. 專屬設計的技能圖示（不用 AI 生成）和八方旅人的寵物圖示。
-4. 自動戰鬥、低血量姿勢門檻的編輯器表單（現在用 manifest 鍵）。
+3. 技能圖示換成美術師手繪（現在是程式畫的 32 px 原創圖示，D35）。
+4. 八方旅人的戰鬥選單顯示技能圖示（需要改選單版面，要使用者決定）。
 
 ---
 

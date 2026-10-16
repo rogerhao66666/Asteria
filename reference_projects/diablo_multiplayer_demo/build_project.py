@@ -1822,6 +1822,9 @@ def main():
     (HERE / "playable_test_manifest.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
+    from asteria.graphics.forged_icons import apply_to_project_file
+
+    apply_to_project_file(path, replace=True, keep=("potion",), states=False)  # original icons
     print(
         f"wrote {path.relative_to(REPO)}: {len(project.scenes())} scenes, "
         f"{len(project.gameplay_library.abilities.ids())} abilities, {len(db.classes)} classes, "

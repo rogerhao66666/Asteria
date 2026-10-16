@@ -1965,3 +1965,16 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - **事件常駐圖示：** 真實 Cocoa 視窗（SDL driver `cocoa`）用 Diablo 專案的物品圖示（`bone_shard.png`）顯示在玩家頭上（`d34_entity_icon.png`）。同一次也確認 `_field_world_xy`（點擊觸發用的螢幕→世界轉換）與 `_field_screen_xy` 往返誤差為 0。
 - **手冊：** `ENGINE_HANDBOOK.md` 新增 D27–D33 的系統表，並把「下一步的候選」改成現況：第三個範本與 Web 匯出依使用者指示暫不做。
 - **仍未做：** 第三個範本、Web 匯出（使用者指示先不用）；自動戰鬥與低血量姿勢門檻的編輯器表單；專屬技能圖示與八方旅人寵物圖示。需要外部條件的項目（手把、聽感、WAN）不變。
+
+
+## D35 — 戰鬥選項表單與原創圖示（2026-10-16）
+
+| 項目 | 做法 | 位置 |
+|---|---|---|
+| 戰鬥選項表單 | Game Systems > Battle Options（`BattleOptions`：T 鍵自動戰鬥、低血量姿勢門檻）；專案有這筆資料就以它為準，沒有才讀 manifest 的 `battle.auto_key`／`battle.weak_below`；沒設定不寫入 | `rpg/extras.py`、`editor/game_systems_authoring.py`、`playable_test_runtime.battle_option` |
+| 原創圖示 | `asteria.graphics.forged_icons`：44 種用程式畫的像素風圖示（武器、元素、治療、狀態、寵物頭像…），4 倍超取樣縮小；以 id 關鍵字對應種類；沒有任何第三方圖片、沒有 AI | `src/asteria/graphics/forged_icons.py`、`scripts/build_original_icons.py` |
+| 套用到專案 | Diablo：23 個技能換成原創圖示（藥水沿用道具圖示、狀態沿用既有程式畫的狀態符號）；八方旅人：62 個技能、6 個狀態、2 隻寵物（Frost Lynx、Ember Hound）新增圖示；圖檔在各專案 `playable_assets/icons/skill_*.png`，範本同步；兩個 `build_project.py` 重建後會再套用；CREDITS 註明原創 | `reference_projects/*`、`src/asteria/templates/*` |
+
+**驗證：** 新增 `tests/test_forged_icons.py`（每種圖示畫得出來且不是空白或實心方塊、id 對應、只改 icon 那幾行、兩個專案的圖示檔都存在且可被選單載入）與 `BattleOptions` 測試。Cocoa 真實視窗：八方旅人的 Pets 畫面顯示 Frosty 的 Frost Lynx 頭像、Diablo 的快捷列顯示新的拳頭與翻滾圖示、Battle Options 表單在 1600×1000 稽核缺陷 0（`d35_*.png`）。
+
+**限制：** 圖示是 32 px 的簡單像素風，不是美術師手繪；技能名稱沒有對上關鍵字的不會有圖示（沿用原本的縮寫）；八方旅人的戰鬥選單目前不顯示技能圖示（選單版面沒有改）；Diablo 多人副本專案沒有重建，仍用舊圖示。

@@ -492,7 +492,10 @@ def write_credits(root=HERE):
 * **Tiny Dungeon** by Kenney (www.kenney.nl) - weapon, shield and potion icons.
   https://kenney.nl/assets/tiny-dungeon
 
-The images in this folder are cut from those packs by `build_project.py` (cropped, recoloured
+The skill icons (`skill_*.png`) are original: drawn by code in `asteria.graphics.forged_icons`,
+no third-party art.
+
+The other images in this folder are cut from those packs by `build_project.py` (cropped, recoloured
 only by flipping, combined into sheets). No AI-generated art.
 """
     path = Path(root) / OUT / "CREDITS.md"

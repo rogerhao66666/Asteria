@@ -467,3 +467,21 @@ def test_a_pet_unit_is_called_by_its_nickname_in_battle(demo):  # noqa: F811
     assert commands.display_name(member.member_id) == "Snowball"
     names = runtime._battle_presentation._display_names(game)
     assert names[member.member_id] == "Snowball"
+
+
+def test_battle_options_in_the_project_override_the_manifest(demo):  # noqa: F811
+    from asteria.rpg.extras import BattleOptions
+
+    runtime, game, _commands = demo
+    runtime.manifest["battle"]["weak_below"] = 0.4
+    assert runtime.battle_option("weak_below") == 0.4 and not runtime.battle_option("auto_key")
+    game.project.rpg_database.add_battle_options(
+        BattleOptions("main", auto_key=True, weak_below=0.25)
+    )
+    assert runtime.battle_option("weak_below") == 0.25 and runtime.battle_option("auto_key")
+    assert runtime._battle_presentation._weak_fraction() == 0.25
+    assert runtime._COMMAND_KEYS[runtime.pg.K_t] == "auto"
+    assert BattleOptions.from_data(BattleOptions("x", weak_below=0.5).to_data()).weak_below == 0.5
+    with pytest.raises(ValueError):
+        BattleOptions("bad", weak_below=2)
+    assert "auto_key" not in BattleOptions("plain").to_data()

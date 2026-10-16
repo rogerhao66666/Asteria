@@ -1044,6 +1044,9 @@ def main():
     (HERE / "playable_test_manifest.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
+    from asteria.graphics.forged_icons import apply_to_project_file
+
+    apply_to_project_file(path, replace=True)  # original code-drawn skill / state / pet icons
     print(
         f"wrote {path.relative_to(REPO)}: {len(abilities.ids())} abilities, {len(db.classes)} "
         f"jobs, "
@@ -1457,6 +1460,16 @@ def add_monster_types(project, db, add):
         "AAA | "
         "[CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |\n"
     )
+    icon_row = (
+        "| `icons/skill_*.png` (skill, state and pet icons) | Original: drawn by code in "
+        "`src/asteria/graphics/forged_icons.py` (built by `scripts/build_original_icons.py`); "
+        "no third-party art | This repository | "
+        "[CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |\n"
+    )
+    if "skill_*.png" not in text:
+        i = text.index("\n## Licensing")
+        credits.write_text(text[:i].rstrip("\n") + "\n" + icon_row + text[i:], encoding="utf-8")
+        text = credits.read_text(encoding="utf-8")
     if "Octopath demo enemies" not in text:
         i = text.index("\n## Licensing")
         credits.write_text(text[:i].rstrip("\n") + "\n" + row + text[i:], encoding="utf-8")

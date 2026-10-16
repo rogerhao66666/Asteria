@@ -1560,6 +1560,14 @@ class PlayableTestRuntime:
             self.panel((self.width - 118, 14 + row * 40, 104, 34))
             self.text(clock, self.width - 66, 31 + row * 40, size=30, color=color, center=True)
 
+    def battle_option(self, name):
+        """A battle option: the project's ``BattleOptions`` record (first by id) when it has one,
+        else the manifest's ``battle.<name>``; ``False`` / ``0`` when neither says."""
+        values = self.project.rpg_database.battle_options
+        if values:
+            return getattr(values[sorted(values)[0]], name)
+        return self.manifest.get("battle", {}).get(name, 0)
+
     def _draw_entity_icons(self):
         """Icons events keep over entities (``SET_ENTITY_ICON``), above their heads."""
         from asteria.core import Transform
@@ -2484,7 +2492,7 @@ class PlayableTestRuntime:
             pg.K_TAB: "category",
             pg.K_q: "boost_down",
             pg.K_r: "boost_up",
-            **({pg.K_t: "auto"} if self.manifest.get("battle", {}).get("auto_key") else {}),
+            **({pg.K_t: "auto"} if self.battle_option("auto_key") else {}),
         }
 
     def _make_victory_screen(self, applied, before, gained):

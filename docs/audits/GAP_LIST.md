@@ -91,3 +91,5 @@
 | A17 戰鬥視覺 | 完成（D33）：低血量姿勢（manifest `battle.weak_below`）、狀態染色（`StateDefinition.tint`）；血條樣式由 HUD 呈現設定決定（已具備）；目標游標與頭上血條已有 |
 | A18 載具 | 不做 |
 | 事件圖示（IconsOnEvents） | 完成（D33）：`SET_ENTITY_ICON` 常駐圖示；短暫的用 `SHOW_BALLOON` |
+
+**D35：** 自動戰鬥與低血量姿勢門檻已有編輯器表單（Battle Options）；專屬技能圖示與八方旅人的寵物圖示完成（原創、程式繪製）。

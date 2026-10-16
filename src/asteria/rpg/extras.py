@@ -135,3 +135,42 @@ class MenuEntry:
             enabled_switch=data.get("enabled_switch", ""),
             order=data.get("order", 0),
         )
+
+
+@dataclass(frozen=True, slots=True)
+class BattleOptions:
+    """Small project-wide battle presentation options, editable in Game Systems:
+    ``auto_key`` lets the player press T to have the current hero act by the auto-battle rule;
+    ``weak_below`` is the health share (0..1) under which a combatant shows its ``weak`` pose
+    (0 = never)."""
+
+    options_id: str
+    auto_key: bool = False
+    weak_below: float = 0.0
+
+    def __init__(self, options_id, *, auto_key=False, weak_below=0.0):
+        options_id = _text(options_id)
+        if not options_id:
+            raise ValueError("options_id is required")
+        weak_below = float(weak_below)
+        if not 0.0 <= weak_below <= 1.0:
+            raise ValueError("weak_below must be between 0 and 1")
+        s = object.__setattr__
+        s(self, "options_id", options_id)
+        s(self, "auto_key", bool(auto_key))
+        s(self, "weak_below", weak_below)
+
+    def to_data(self):
+        return {
+            "options_id": self.options_id,
+            **({"auto_key": True} if self.auto_key else {}),
+            **({"weak_below": self.weak_below} if self.weak_below else {}),
+        }
+
+    @classmethod
+    def from_data(cls, data):
+        return cls(
+            data["options_id"],
+            auto_key=data.get("auto_key", False),
+            weak_below=data.get("weak_below", 0.0),
+        )
