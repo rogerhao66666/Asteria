@@ -60,12 +60,16 @@ BUTTON_RULES = (
     (r"^sequence\b", "timeline", ""),
     (r"^(settings|options)\b", "settings", ""),
     (r"^(search|find)\b", "search", ""),
+    (r"^revert\b", "reload", ""),
 )
 
 # (pattern on a tab / combo / tree label, icon); first match wins
 LABEL_RULES = (
     # workspace sub-tabs
     (r"^scene\b", "scene"),
+    (r"^game start$|^start\b", "flag"),
+    (r"^pets?\b|pet species", "paw"),
+    (r"gauge", "gauge"),
     (r"^game data$|database", "rpg"),
     (r"^game systems$", "settings"),
     (r"^enemy ai$|behavior|behaviour", "behavior_tree"),

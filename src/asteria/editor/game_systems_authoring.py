@@ -275,20 +275,14 @@ FORMS = {
                 F("stock", "Limited Stock", "optional_int", default=None),
                 F(
                     "visible_when",
-                    "Offered Only When (all hold)",
-                    "table",
-                    fields=_REQUIREMENT,
+                    "Offered Only When (one per line: switch:name==true)",
+                    "string_list",
                     default=(),
                 ),
                 F(
                     "price_rules",
-                    "Price Rules",
-                    "table",
-                    fields=(
-                        F("conditions", "When (all hold)", "table", fields=_REQUIREMENT),
-                        F("buy_multiplier", "Buy Price x", "float", default=1.0),
-                        F("sell_multiplier", "Sell Price x", "float", default=1.0),
-                    ),
+                    "Price Rules (one per line: buy x, sell x | conditions joined by ;)",
+                    "string_list",
                     default=(),
                 ),
             ),
@@ -701,8 +695,77 @@ def _decode_credits(data):
     return data
 
 
+def _condition_text(c):
+    value = c.get("value", True)
+    value = str(value).lower() if isinstance(value, bool) else value
+    return f"{c['source']}:{c['name']}{c.get('operator', '==')}{value}"
+
+
+def _condition_value(text):
+    text = str(text).strip()
+    if text.lower() in ("true", "false"):
+        return text.lower() == "true"
+    for kind in (int, float):
+        try:
+            return kind(text)
+        except ValueError:
+            pass
+    return text
+
+
+def _parse_condition(text):
+    from asteria.rpg.economy import _CONDITION_OPERATORS
+
+    text = str(text).strip()
+    source, _, rest = text.partition(":")
+    for operator in _CONDITION_OPERATORS:  # longest first: "<=" before "<"
+        name, found, value = rest.partition(operator)
+        if found and name.strip():
+            return {
+                "source": source.strip(),
+                "name": name.strip(),
+                "operator": operator,
+                "value": _condition_value(value) if value.strip() else True,
+            }
+    raise ValueError(f"condition must look like switch:name==true, got {text!r}")
+
+
+def _encode_shop(data):
+    data = copy.deepcopy(data)
+    for entry in data.get("entries", ()):
+        entry["visible_when"] = [_condition_text(c) for c in entry.get("visible_when", ())]
+        entry["price_rules"] = [
+            f"{r.get('buy_multiplier', 1.0):g} {r.get('sell_multiplier', 1.0):g} | "
+            + " ; ".join(_condition_text(c) for c in r.get("conditions", ()))
+            for r in entry.get("price_rules", ())
+        ]
+    return data
+
+
+def _decode_shop(data):
+    data = copy.deepcopy(data)
+    for entry in data.get("entries", ()):
+        entry["visible_when"] = [_parse_condition(t) for t in entry.get("visible_when", ())]
+        rules = []
+        for text in entry.get("price_rules", ()):
+            head, _, tail = str(text).partition("|")
+            numbers = head.split()
+            if len(numbers) != 2:
+                raise ValueError(f"price rule must start with 'buy sell |', got {text!r}")
+            rules.append(
+                {
+                    "buy_multiplier": float(numbers[0]),
+                    "sell_multiplier": float(numbers[1]),
+                    "conditions": [_parse_condition(t) for t in tail.split(";") if t.strip()],
+                }
+            )
+        entry["price_rules"] = rules
+    return data
+
+
 # kind id -> (record data -> form data, form data -> record data)
 ADAPTERS = {
+    "shops": (_encode_shop, _decode_shop),
     "battle_extension_rules": (_encode_extension, _decode_extension),
     "enemy_level_rules": (_encode_levels, _decode_levels),
     "locale_tables": (

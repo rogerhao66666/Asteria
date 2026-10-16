@@ -372,3 +372,40 @@ def test_conditional_prices_and_entries():
     assert ShopDefinition.from_data(shop.to_data()).to_data() == shop.to_data()
     plain = ShopEntry("x", buy_prices={"gold": 1}).to_data()
     assert "visible_when" not in plain and "price_rules" not in plain
+
+
+def test_shop_conditions_round_trip_through_the_flat_form():
+    from asteria.editor.game_systems_authoring import _decode_shop, _encode_shop
+
+    shop = ShopDefinition(
+        "bazaar",
+        "Bazaar",
+        [
+            ShopEntry(
+                "ether_leaf",
+                buy_prices={"gold": 10},
+                visible_when=[{"source": "variable", "name": "day", "operator": ">=", "value": 3}],
+                price_rules=[
+                    {
+                        "conditions": [
+                            {"source": "switch", "name": "festival"},
+                            {"source": "switch", "name": "vip", "value": False},
+                        ],
+                        "buy_multiplier": 0.5,
+                        "sell_multiplier": 2,
+                    }
+                ],
+            )
+        ],
+    )
+    form = _encode_shop(shop.to_data())
+    entry = form["entries"][0]
+    assert entry["visible_when"] == ["variable:day>=3"]
+    assert entry["price_rules"] == ["0.5 2 | switch:festival==true ; switch:vip==false"]
+    again = _decode_shop(form)["entries"][0]
+    assert again["visible_when"][0]["operator"] == ">="
+    assert [c["name"] for c in again["price_rules"][0]["conditions"]] == ["festival", "vip"]
+    assert again["price_rules"][0]["conditions"][1]["value"] is False
+    assert again["visible_when"][0]["value"] == 3
+    with pytest.raises(ValueError):
+        _decode_shop({"entries": [{"visible_when": ["nonsense"], "price_rules": []}]})

@@ -389,6 +389,7 @@ class GameSystemsEditorWidget(QWidget):
         self.kind_box = QComboBox()
         for kind in KINDS:
             self.kind_box.addItem(kind.label, kind.kind_id)
+        self.kind_box.setProperty("decorate", True)  # kind icons (decor.py), as the hub combos
         self.kind_box.currentIndexChanged.connect(self.refresh)
         self.browser = QListWidget()
         self.browser.setSelectionMode(QAbstractItemView.SingleSelection)

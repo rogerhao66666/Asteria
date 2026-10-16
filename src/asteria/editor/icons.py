@@ -559,7 +559,41 @@ def _dialogue(p, c):
     p.drawPath(path)
 
 
+def _flag(p, c):  # game start: a flag on a pole
+    p.drawLine(QPointF(6, 3.5), QPointF(6, 21))
+    path = QPainterPath(QPointF(6, 4.5))
+    path.cubicTo(QPointF(10, 2.5), QPointF(13, 7), QPointF(19, 5))
+    path.lineTo(19, 13)
+    path.cubicTo(QPointF(13, 15), QPointF(10, 10.5), QPointF(6, 12.5))
+    path.closeSubpath()
+    p.setBrush(_fill(c))
+    p.drawPath(path)
+
+
+def _paw(p, c):  # pets: a paw print
+    p.setBrush(_fill(c, 120))
+    for x, y in ((6.5, 10.5), (10, 6.5), (14, 6.5), (17.5, 10.5)):
+        p.drawEllipse(QPointF(x, y), 1.9, 2.4)
+    path = QPainterPath(QPointF(12, 11.5))
+    path.cubicTo(QPointF(7, 11.5), QPointF(5.5, 19), QPointF(12, 18.5))
+    path.cubicTo(QPointF(18.5, 19), QPointF(17, 11.5), QPointF(12, 11.5))
+    p.setBrush(_fill(c))
+    p.drawPath(path)
+
+
+def _gauge(p, c):  # shared gauges: a half dial with a needle
+    path = QPainterPath(QPointF(3.5, 17))
+    path.arcTo(QRectF(3.5, 5, 17, 24), 180, -180)
+    p.setBrush(_fill(c))
+    p.drawPath(path)
+    p.drawLine(QPointF(12, 17), QPointF(16.5, 10.5))
+    p.drawLine(QPointF(3.5, 17), QPointF(20.5, 17))
+
+
 DRAWINGS = {
+    "flag": _flag,
+    "paw": _paw,
+    "gauge": _gauge,
     "scene": _scene,
     "rpg": _rpg,
     "battle": _battle,
@@ -620,6 +654,9 @@ DRAWINGS = {
 
 # default colour per icon (an accent name or a hex colour)
 DEFAULT_COLOR = {
+    "flag": "#46b896",
+    "paw": "#dca545",
+    "gauge": "#e06a5c",
     "play": "success",
     "multiplayer": "multiplayer",
     "stop": "danger",

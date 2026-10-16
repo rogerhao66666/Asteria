@@ -1904,3 +1904,11 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - 寵物戰鬥單位倒下不影響戰敗判定（英雄全倒才算）；自動戰鬥沒有編輯器介面。
 - 寵物學到的技能只做「是否可用」的閘門，沒有自動把技能加進選單。
 - 手把、實體鍵盤、聽感、WAN 仍需外部條件。
+
+### D31 補記：Cocoa 實機驗證（2026-10-16）
+
+- **編輯器（真實 Cocoa 視窗，`scripts/editor_ui_audit.py`，octopath_demo）：** Game Start 分頁、Pet Species、Shops、Pause Menu Entries、Battle Extension Rules 在 1600×1000 與 1100×700 皆 0 缺陷（只有一般的頁面可捲動提示）。截圖：`d31_game_start_tab.png`、`d31_game_systems_icons.png`。
+- **發現並修正：** 商店表單原本把條件放在巢狀表格裡，造成 2 個過小控制項（在未修改的 HEAD 上為 0）。改成平的字串清單欄位（`switch:name==true`；價格規則 `買 賣 | 條件;條件`），以轉接器雙向無損轉換，缺陷歸零。
+- **圖示：** 新增 `flag`（Game Start）、`paw`（寵物）、`gauge` 三個圖示，並讓 Game Systems 的種類下拉選單與其他資料庫分類下拉一樣顯示圖示；Revert 按鈕有圖示。
+- **Pets 畫面（真實視窗，SDL driver `cocoa`）：** 親密度「Bond 12」顯示於既有的一行內，沒有溢出；按 E 後寵物由 Frost Lynx 進化為 Ember Hound，暱稱與等級保留（`d31_pets_before_evolve.png`、`d31_pets_after_evolve.png`）。
+- **仍未驗證：** 真人操作手感；暫停選單的自訂項目與戰鬥單位寵物沒有在實機視窗跑過（只有自動化測試）。

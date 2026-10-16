@@ -27,6 +27,9 @@ class ShopError(ValueError):
     pass
 
 
+_CONDITION_OPERATORS = ("==", "!=", "<=", ">=", "<", ">")  # two-character ones first
+
+
 def _conditions(raw):
     """Switch / variable conditions: ``{"source", "name", "operator", "value"}``."""
     result = []
