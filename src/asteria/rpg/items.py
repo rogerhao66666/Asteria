@@ -69,6 +69,8 @@ class AttachmentDefinition:
     triggers: tuple[GameplayTrigger, ...] = ()
     growth_id: str | None = None
 
+    icon_id: str = ""  # a project icon shown in menus; written only when set
+
     def __init__(
         self,
         attachment_id,
@@ -79,6 +81,7 @@ class AttachmentDefinition:
         granted_abilities=(),
         triggers=(),
         growth_id=None,
+        icon_id="",
     ):
         attachment_id = _id(attachment_id, "attachment_id")
         modifiers = tuple(modifiers)
@@ -100,6 +103,7 @@ class AttachmentDefinition:
         object.__setattr__(
             self, "growth_id", None if growth_id is None else _id(growth_id, "growth_id")
         )
+        object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def to_data(self):
         return {
@@ -112,6 +116,7 @@ class AttachmentDefinition:
             "granted_abilities": list(self.granted_abilities),
             "triggers": [x.to_data() for x in self.triggers],
             "growth_id": self.growth_id,
+            **({"icon_id": self.icon_id} if self.icon_id else {}),
         }
 
     @classmethod
@@ -127,6 +132,7 @@ class AttachmentDefinition:
             granted_abilities=data["granted_abilities"],
             triggers=[GameplayTrigger.from_data(x) for x in data["triggers"]],
             growth_id=data.get("growth_id") if version >= 2 else None,
+            icon_id=data.get("icon_id", ""),
         )
 
 

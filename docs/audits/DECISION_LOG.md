@@ -1990,3 +1990,27 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **驗證：** `tests/test_forged_icons.py`（含寶石圖示穩定且互不相同、無關鍵字的紀錄拿到寶石）、`tests/test_pets_advanced.py`（選單列帶圖示、圖示可解析、解析失敗時回 `None`）。Cocoa 真實視窗：八方旅人的戰鬥選單 Attack／Skills 分頁顯示圖示，長名稱截短（`d36_octopath_battle_menu_icons.png`、`d36_monogram_icons.png`）。
 
 **限制：** 目前兩個 demo 的所有技能都對上關鍵字，所以還沒有專案實際用到寶石圖示；選單圖示固定畫 8 個版面單位寬（約 24 px），細長的武器圖示（法杖、匕首）看起來偏小。
+
+
+## D37 — 場景開啟時角色置中（2026-10-16）
+
+編輯器開啟專案（或按 Reset View）時，如果場景沒有啟用中的遊戲攝影機，過去是把世界原點放在視窗左上附近，八方旅人的角色因此偏在一側。現在 `SceneViewportWidget.frame_initial()` 先用遊戲攝影機的範圍，沒有才呼叫 `frame_entities()`：把所有有位置的實體的外框中心放在視窗正中央，實體分布比視窗寬時縮小到放得下（最多放大 1.5 倍，單一實體維持 1 倍）。視窗改變大小時，如果使用者還沒有平移或縮放，視圖會跟著保持置中；平移過就不動它。
+
+**驗證：** `tests/test_viewport_framing.py`（開啟、縮放視窗、平移後按 Reset View、平移後視窗改變大小）；`tests/test_editor_shell_surface.py` 的 Reset View 期望改成「單一實體在視窗中央」。Cocoa 視窗截圖：`d37_scene_view_centered.png`（六個角色的外框中心與視窗中心差 < 3 px）。
+
+
+## D38 — 到處都能挑圖示（2026-10-16，使用者要求「寫這些東西時要提供可以選 icon 的位置」）
+
+| 項目 | 做法 | 位置 |
+|---|---|---|
+| 內建圖示庫 | 圖示 id 可寫 `forged:<種類>`（44 種：武器、元素、治療、狀態、寵物頭像…）或 `forged:mono:<字母>`（寶石字母圖示）；執行期與編輯器縮圖都能解析，不需要任何圖檔 | `runtime/menu_icons.py`、`editor/image_tools.py` |
+| 圖示挑選欄位 | 編輯器表單新增 `icon` 欄位：下拉選單（每項附縮圖）列出專案裡所有 `icons` 資料夾的圖檔、`icon` 資產與內建圖示庫，旁邊有預覽與「Browse…」（挑自己的 PNG：專案內的檔案原地使用，專案外的複製進 `icons/`，同一張不重複複製）；資料庫（技能、道具、裝備、狀態…）原本的 `icon_id` 欄位也換成同一個挑選器 | `editor/game_systems_widget.py`（`_IconPicker`）、`editor/image_tools.py`（`IconLibrary`）、`editor/authoring_hub_widget.py` |
+| 可以放圖示的紀錄 | 原有：道具、裝備、技能、狀態、寵物物種。**新增 `icon_id`（沒設不寫入，舊資料照常載入）：** 任務、派系、成就、商店、套裝、音樂、暫停選單項目、職業、寶珠／鑲嵌物（Attachment）、被動（Passive） | `rpg/quests.py`、`world_record.py`、`economy.py`、`equipment_sets.py`、`extras.py`、`actors.py`、`items.py`、`ability_build.py` |
+| 執行期顯示 | 暫停選單項目的圖示（有圖示時面板自動加寬）、任務記錄、成就列表、商店標題；戰鬥選單的技能／道具圖示（D36）。職業、寶珠、被動、派系、套裝、音樂目前只有資料與編輯器欄位，畫面還沒有地方顯示 | `runtime/playable_test_runtime.py` |
+| Game Systems 種類下拉選單 | 每個種類都有圖示（新增任務卷軸、旗幟、獎盃、寶箱、地球、地圖針、鐵鎚、循環、小樹、捕捉網、互動手形） | `editor/icons.py`、`editor/decor.py` |
+
+**驗證：** `tests/test_icon_fields.py`（每種紀錄往返與舊資料相容、內建圖示解析、挑選清單、匯入圖檔、表單欄位往返、每個種類有圖示、暫停選單與任務記錄真的畫出圖示）。Cocoa 真實視窗：編輯器的圖示挑選器（寵物物種、任務）、暫停選單與任務記錄的圖示（`d38_*.png`）；編輯器稽核（Cocoa 與 offscreen，1600×1000／1100×700）缺陷 0。
+
+**順帶修正：** 編輯器在大資料夾下列出圖檔會很慢，改成有深度、資料夾數與數量上限的走訪並略過隱藏／建置資料夾；`scripts/editor_ui_audit.py` 結束時直接離開（避免 Qt 在 macOS 結束時當機），且接受 `-ApplePersistenceIgnoreState YES`（macOS 在程式異常結束後會跳出「是否重新開啟視窗」的對話框，不加這個旗標，下一次啟動的 GUI 程式會停在對話框等人按）。
+
+**限制：** 職業、寶珠、被動、派系、套裝、音樂的圖示目前沒有執行期畫面可以顯示；挑選器是下拉選單加 Browse，不能直接打字輸入任意 id（用 Browse 或內建庫；手寫在資料裡的 id 會保留）。

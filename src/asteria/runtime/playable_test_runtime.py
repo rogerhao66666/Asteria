@@ -185,7 +185,10 @@ class PlayableTestRuntime:
             extras.append((f"entry:{entry.entry_id}", entry.label))
         for entry in extras:  # in order, before Settings
             options.insert(next(i for i, o in enumerate(options) if o[0] == "settings"), entry)
-        self._pause_menu = MenuCursor(options)
+        icons = {
+            f"entry:{e.entry_id}": e.icon_id for e in db.menu_entries.values() if e.icon_id
+        }  # project-defined entries may carry an icon
+        self._pause_menu = MenuCursor(options, icons)
         self._extra_screen = None
         self._pets_screen = None
         self._game_over_menu = MenuCursor(GAME_OVER_OPTIONS)
@@ -212,13 +215,17 @@ class PlayableTestRuntime:
     def icon_image(self, icon_id, size=24):
         """The menu icon ``icon_id`` (see ``menu_icons``) scaled to fit ``size`` pixels, or
         None."""
-        from .menu_icons import icon_source
+        from .menu_icons import forged_surface, icon_source
 
         cache = self._icon_cache
         key = (str(icon_id or ""), int(size))
         if key in cache:
             return cache[key]
         icon = None
+        built_in = forged_surface(icon_id, int(size))
+        if built_in is not None:  # a code-drawn icon of the engine's own library
+            cache[key] = built_in
+            return built_in
         source = icon_source(self.project, icon_id)
         if source is not None:
             uri, region = source
@@ -3003,8 +3010,13 @@ class PlayableTestRuntime:
     def _draw_list_screen(self, kind):
         self._draw_backdrop()
         self.panel((60, 40, self.width - 120, self.height - 80))
+        line_icons = []  # an icon per line (achievements may carry one)
         if kind == "achievements":
             rows = achievement_rows(self.game)
+            by_name = {
+                a.display_name: a.icon_id for a in self.project.rpg_database.achievements.values()
+            }
+            line_icons = [by_name.get(name, "") for name, _description, _unlocked in rows]
             done = sum(1 for r in rows if r[2])
             self.text(
                 f"Achievements  {done}/{len(rows)}",
@@ -3050,10 +3062,14 @@ class PlayableTestRuntime:
             self.text("Nothing here yet.", 90, 110, size=22, color=(170, 210, 240))
         self._list_scroll = min(self._list_scroll, max(0, len(lines) - 1))
         y = 104
-        for title, detail, color in lines[self._list_scroll :]:
+        shift = 30 if any(line_icons) else 0
+        for number, (title, detail, color) in enumerate(lines[self._list_scroll :]):
             if y > self.height - 110:
                 break
-            self.text(title, 90, y, size=22, color=color)
+            index = self._list_scroll + number
+            if index < len(line_icons) and line_icons[index]:
+                self._draw_icon(line_icons[index], 90, y - 2, 24)
+            self.text(title, 90 + shift, y, size=22, color=color)
             y += 24
             if detail:
                 self.text(detail, 120, y, size=17, color=(170, 210, 240))
@@ -3113,14 +3129,17 @@ class PlayableTestRuntime:
     def _draw_overlay_menu(self, title, cursor, base="field"):
         self._draw_backdrop(base)
         height = 90 + 34 * len(cursor.options)
-        x, y = self.width / 2 - 170, self.height / 2 - height / 2
-        self.panel((x, y, 340, height))
+        shift = 30 if cursor.icons else 0  # room for the rows' icons: the panel grows with it
+        x, y = self.width / 2 - 170 - shift / 2, self.height / 2 - height / 2
+        self.panel((x, y, 340 + shift, height))
         self.text(title, self.width / 2, y + 18, size=34, color=(255, 220, 124), center=True)
-        for i, (_, label) in enumerate(cursor.options):
+        for i, (option_id, label) in enumerate(cursor.options):
             selected = i == cursor.index
+            if option_id in cursor.icons:
+                self._draw_icon(cursor.icons[option_id], round(x + 36), round(y + 68 + i * 34), 26)
             self.text(
                 ("> " if selected else "   ") + label,
-                x + 40,
+                x + 40 + shift,
                 y + 70 + i * 34,
                 size=24,
                 color=(255, 226, 129) if selected else (235, 238, 245),
@@ -3151,7 +3170,16 @@ class PlayableTestRuntime:
         for row in rows:
             if y > self.height - 110:
                 break
-            self.text(f"{row.name}  [{row.status}]", 90, y, size=24, color=colors[row.status])
+            icon = self.project.rpg_database.quests[row.quest_id].icon_id
+            if icon:
+                self._draw_icon(icon, 90, y - 2, 24)
+            self.text(
+                f"{row.name}  [{row.status}]",
+                90 + (30 if icon else 0),
+                y,
+                size=24,
+                color=colors[row.status],
+            )
             y += 30
             for description, value, required, done in row.objectives:
                 self.text(
@@ -3173,7 +3201,16 @@ class PlayableTestRuntime:
         if screen is None or screen.shop is None:
             return
         self.panel((60, 40, self.width - 120, self.height - 80))
-        self.text(screen.shop.display_name, 90, 54, size=30, color=(255, 220, 124))
+        shop_icon = screen.shop.icon_id
+        if shop_icon:
+            self._draw_icon(shop_icon, 90, 50, 32)
+        self.text(
+            screen.shop.display_name,
+            90 + (40 if shop_icon else 0),
+            54,
+            size=30,
+            color=(255, 220, 124),
+        )
         for i, tab in enumerate(("buy", "sell")):
             self.text(
                 tab.title(),

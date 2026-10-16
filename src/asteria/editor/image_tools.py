@@ -172,11 +172,74 @@ class ImageFixDialog(QDialog):
         return self.applied
 
 
+_FORGED_ICONS = {}  # (icon id, size) -> QIcon: drawing the built-in library once is enough
+
+
+def forged_qicon(icon_id, size=32):
+    """A QIcon of a built-in (``forged:``) icon id, or ``None``."""
+    key = (str(icon_id), int(size))
+    if key not in _FORGED_ICONS:
+        _FORGED_ICONS[key] = _draw_forged_qicon(icon_id, size)
+    return _FORGED_ICONS[key]
+
+
+def _draw_forged_qicon(icon_id, size):
+    from PySide6.QtGui import QIcon, QImage, QPixmap
+
+    from asteria.runtime.menu_icons import forged_surface
+
+    surface = forged_surface(icon_id, size)
+    if surface is None:
+        return None
+    import pygame
+
+    data = pygame.image.tobytes(surface, "RGBA")
+    image = QImage(data, size, size, size * 4, QImage.Format_RGBA8888).copy()
+    return QIcon(QPixmap.fromImage(image))
+
+
+_SKIPPED_FOLDERS = {
+    "__pycache__",
+    "node_modules",
+    "venv",
+    "site-packages",
+    "build",
+    "dist",
+    "local_reference",
+}
+
+
+def _icon_files(root, limit=600, depth=4, folder_budget=1500):
+    """PNG files in folders named ``icons`` under ``root`` (a bounded walk: hidden and build
+    folders are skipped, so a project opened from a big folder still lists quickly)."""
+    import os
+
+    found = []
+    base_depth = len(Path(root).parts)
+    for visited, (folder, names, files) in enumerate(os.walk(root)):
+        if visited >= folder_budget:  # a very big folder: stop looking
+            break
+        names[:] = sorted(
+            n
+            for n in names
+            if not n.startswith(".")
+            and n not in _SKIPPED_FOLDERS
+            and len(Path(folder, n).parts) - base_depth <= depth
+        )
+        if Path(folder).name == "icons":
+            found.extend(Path(folder, f) for f in sorted(files) if f.lower().endswith(".png"))
+        if len(found) >= limit:
+            break
+    return found[:limit]
+
+
 def icon_choices(document):
-    """The project's icon assets as ``((asset id, QIcon or None), ...)`` for an ``icon_id`` field
-    (AST-07)."""
+    """Every icon an ``icon_id`` field can take, as ``((icon id, QIcon or None), ...)``: the
+    project's own picture files (any ``icons`` folder) and ``icon`` assets, then the engine's
+    built-in library (``forged:<kind>``)."""
     from PySide6.QtGui import QIcon
 
+    from asteria.graphics.forged_icons import DRAWINGS
     from asteria.runtime.menu_icons import icon_source
 
     project = getattr(document, "project", None)
@@ -184,7 +247,7 @@ def icon_choices(document):
         return ()
     root = project_root(document)
     sheets = {}
-    choices = []
+    choices, seen = [], set()
     for asset in sorted(project.assets.query(kind="icon"), key=lambda a: a.asset_id):
         uri, region = icon_source(project, asset.asset_id)
         path = Path(uri) if Path(uri).is_absolute() else root / uri
@@ -196,4 +259,64 @@ def icon_choices(document):
             cell = sheet.copy(*region) if region else sheet
             icon = QIcon(cell.scaled(32, 32, Qt.KeepAspectRatio, Qt.FastTransformation))
         choices.append((asset.asset_id, icon))
+        seen.add(asset.asset_id)
+    if root.is_dir():  # picture files in the project's icon folders
+        for path in _icon_files(root):
+            rel = path.relative_to(root).as_posix()
+            if rel in seen:
+                continue
+            seen.add(rel)
+            pixmap = QPixmap(str(path))
+            icon = None
+            if not pixmap.isNull():
+                icon = QIcon(pixmap.scaled(32, 32, Qt.KeepAspectRatio, Qt.FastTransformation))
+            choices.append((rel, icon))
+    for kind in sorted(DRAWINGS):
+        choices.append((f"forged:{kind}", forged_qicon(f"forged:{kind}")))
     return tuple(choices)
+
+
+class IconLibrary:
+    """The icons a project's ``icon_id`` fields can use: ``choices()`` for pickers and
+    ``import_file(path)`` to bring a picture of the author's own into the project."""
+
+    FOLDER = "icons"
+
+    def __init__(self, document):
+        self.document = document
+
+    CACHE_SECONDS = 3.0  # a form that builds several pickers asks for the list once
+
+    def choices(self):
+        import time
+
+        now = time.monotonic()
+        cached = getattr(self, "_cache", None)
+        if cached is not None and now - cached[0] < self.CACHE_SECONDS:
+            return cached[1]
+        choices = icon_choices(self.document)
+        self._cache = (now, choices)
+        return choices
+
+    def import_file(self, path):
+        """Use the picture at ``path`` as an icon: a file already inside the project keeps its
+        place; any other is copied to ``<project>/icons/``. Returns the ``icon_id`` (a path
+        relative to the project folder)."""
+        import shutil
+
+        source = Path(path).resolve()
+        root = project_root(self.document).resolve()
+        try:
+            return source.relative_to(root).as_posix()
+        except ValueError:
+            pass
+        folder = root / self.FOLDER
+        folder.mkdir(parents=True, exist_ok=True)
+        target = folder / source.name
+        counter = 2
+        while target.exists() and target.read_bytes() != source.read_bytes():
+            target = folder / f"{source.stem}_{counter}{source.suffix}"
+            counter += 1
+        if not target.exists():
+            shutil.copyfile(source, target)
+        return target.relative_to(root).as_posix()

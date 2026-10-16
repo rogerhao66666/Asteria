@@ -25,6 +25,8 @@ class PassiveDefinition:
     granted_abilities: tuple[str, ...] = ()
     triggers: tuple[GameplayTrigger, ...] = ()
 
+    icon_id: str = ""  # a project icon shown in menus; written only when set
+
     def __init__(
         self,
         passive_id,
@@ -34,6 +36,7 @@ class PassiveDefinition:
         modifiers=(),
         granted_abilities=(),
         triggers=(),
+        icon_id="",
     ):
         passive_id = _id(passive_id, "passive_id")
         modifiers = tuple(modifiers)
@@ -48,6 +51,7 @@ class PassiveDefinition:
         object.__setattr__(self, "modifiers", modifiers)
         object.__setattr__(self, "granted_abilities", _ids(granted_abilities, "ability_id"))
         object.__setattr__(self, "triggers", triggers)
+        object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def to_data(self):
         return {
@@ -59,6 +63,7 @@ class PassiveDefinition:
             "modifiers": [x.to_data() for x in self.modifiers],
             "granted_abilities": list(self.granted_abilities),
             "triggers": [x.to_data() for x in self.triggers],
+            **({"icon_id": self.icon_id} if self.icon_id else {}),
         }
 
     @classmethod
@@ -72,6 +77,7 @@ class PassiveDefinition:
             modifiers=[StatModifier.from_data(x) for x in data["modifiers"]],
             granted_abilities=data["granted_abilities"],
             triggers=[GameplayTrigger.from_data(x) for x in data["triggers"]],
+            icon_id=data.get("icon_id", ""),
         )
 
 

@@ -29,6 +29,8 @@ class FactionDefinition:
     initial: float
     ranks: tuple[tuple[float, str], ...]
 
+    icon_id: str = ""  # a project icon shown in menus; written only when set
+
     def __init__(
         self,
         faction_id,
@@ -38,6 +40,7 @@ class FactionDefinition:
         maximum=100.0,
         initial=0.0,
         ranks=(),
+        icon_id="",
     ):
         minimum, maximum, initial = float(minimum), float(maximum), float(initial)
         if not all(isfinite(x) for x in (minimum, maximum, initial)) or minimum > maximum:
@@ -51,6 +54,7 @@ class FactionDefinition:
         object.__setattr__(self, "maximum", maximum)
         object.__setattr__(self, "initial", initial)
         object.__setattr__(self, "ranks", ranks)
+        object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def rank(self, value):
         name = ""
@@ -69,6 +73,7 @@ class FactionDefinition:
             "maximum": self.maximum,
             "initial": self.initial,
             "ranks": [[t, n] for t, n in self.ranks],
+            **({"icon_id": self.icon_id} if self.icon_id else {}),
         }
 
     @classmethod
@@ -82,6 +87,7 @@ class FactionDefinition:
             maximum=data["maximum"],
             initial=data["initial"],
             ranks=data["ranks"],
+            icon_id=data.get("icon_id", ""),
         )
 
 
@@ -106,6 +112,8 @@ class AchievementDefinition:
     value: float
     hidden: bool
 
+    icon_id: str = ""  # a project icon shown in menus; written only when set
+
     def __init__(
         self,
         achievement_id,
@@ -116,6 +124,7 @@ class AchievementDefinition:
         target,
         value=1.0,
         hidden=False,
+        icon_id="",
     ):
         if kind not in ACHIEVEMENT_KINDS:
             raise ValueError(f"unknown achievement kind: {kind}")
@@ -129,6 +138,7 @@ class AchievementDefinition:
         object.__setattr__(self, "target", _id(target, "achievement target"))
         object.__setattr__(self, "value", value)
         object.__setattr__(self, "hidden", bool(hidden))
+        object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def to_data(self):
         return {
@@ -141,6 +151,7 @@ class AchievementDefinition:
             "target": self.target,
             "value": self.value,
             "hidden": self.hidden,
+            **({"icon_id": self.icon_id} if self.icon_id else {}),
         }
 
     @classmethod
@@ -155,6 +166,7 @@ class AchievementDefinition:
             target=data["target"],
             value=data["value"],
             hidden=data["hidden"],
+            icon_id=data.get("icon_id", ""),
         )
 
 

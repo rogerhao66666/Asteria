@@ -106,10 +106,11 @@ def test_the_shop_and_the_item_and_equipment_menus_draw_the_icons(runtime):
 
 def test_the_database_editor_offers_the_project_icons_and_applies_a_choice():
     pytest.importorskip("PySide6")
-    from PySide6.QtWidgets import QApplication, QComboBox
+    from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
     from asteria.editor.authoring_hub_widget import AdapterFamilyWidget
+    from asteria.editor.game_systems_widget import _IconPicker
     from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
 
     QApplication.instance() or QApplication([])
@@ -127,12 +128,11 @@ def test_the_database_editor_offers_the_project_icons_and_applies_a_choice():
         child = tree.topLevelItem(0).child(i)
         if child.data(0, 0x0100) == ("icon_id",):
             combo = tree.itemWidget(child, 1)
-    assert isinstance(combo, QComboBox) and combo.currentText() == "icon.ether_leaf"
-    assert (
-        combo.findText("icon.weapon_01") > 0
-        and not combo.itemIcon(combo.findText("icon.weapon_01")).isNull()
-    )
-    combo.setCurrentText("icon.moon_shard")
+    assert isinstance(combo, _IconPicker) and combo.text() == "icon.ether_leaf"
+    index = combo.combo.findData("icon.weapon_01")
+    assert index > 0 and not combo.combo.itemIcon(index).isNull()
+    assert combo.combo.findData("forged:fire") > 0  # the built-in library is offered too
+    combo.setText("icon.moon_shard")
     family.apply_selected()
     assert project.rpg_database.items["ether_leaf"].icon_id == "icon.moon_shard"
     document.undo()

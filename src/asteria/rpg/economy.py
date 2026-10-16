@@ -159,7 +159,9 @@ class ShopDefinition:
     display_name: str
     entries: tuple[ShopEntry, ...]
 
-    def __init__(self, shop_id, display_name=None, entries=()):
+    icon_id: str = ""  # a project icon shown in menus; written only when set
+
+    def __init__(self, shop_id, display_name=None, entries=(), *, icon_id=""):
         entries = tuple(entries)
         if any(not isinstance(x, ShopEntry) for x in entries):
             raise TypeError("entries must be ShopEntry values")
@@ -169,6 +171,7 @@ class ShopDefinition:
         object.__setattr__(self, "shop_id", _id(shop_id, "shop_id"))
         object.__setattr__(self, "display_name", str(display_name or shop_id))
         object.__setattr__(self, "entries", entries)
+        object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def entry(self, item_id):
         for entry in self.entries:
@@ -183,6 +186,7 @@ class ShopDefinition:
             "shop_id": self.shop_id,
             "display_name": self.display_name,
             "entries": [x.to_data() for x in self.entries],
+            **({"icon_id": self.icon_id} if self.icon_id else {}),
         }
 
     @classmethod
@@ -193,6 +197,7 @@ class ShopDefinition:
             data["shop_id"],
             data["display_name"],
             [ShopEntry.from_data(x) for x in data["entries"]],
+            icon_id=data.get("icon_id", ""),
         )
 
 

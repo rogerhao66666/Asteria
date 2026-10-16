@@ -64,7 +64,9 @@ class EquipmentSetDefinition:
     equipment_ids: tuple[str, ...]
     bonuses: tuple[EquipmentSetBonus, ...]
 
-    def __init__(self, set_id, display_name=None, *, equipment_ids=(), bonuses=()):
+    icon_id: str = ""  # a project icon shown in menus; written only when set
+
+    def __init__(self, set_id, display_name=None, *, equipment_ids=(), bonuses=(), icon_id=""):
         equipment_ids = tuple(dict.fromkeys(_id(x, "equipment id") for x in equipment_ids))
         bonuses = tuple(sorted(bonuses, key=lambda x: x.pieces))
         if any(not isinstance(x, EquipmentSetBonus) for x in bonuses):
@@ -77,6 +79,7 @@ class EquipmentSetDefinition:
         object.__setattr__(self, "display_name", str(display_name or set_id))
         object.__setattr__(self, "equipment_ids", equipment_ids)
         object.__setattr__(self, "bonuses", bonuses)
+        object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def pieces_equipped(self, equipment_ids):
         return len(set(self.equipment_ids) & set(equipment_ids))
@@ -93,6 +96,7 @@ class EquipmentSetDefinition:
             "display_name": self.display_name,
             "equipment_ids": list(self.equipment_ids),
             "bonuses": [x.to_data() for x in self.bonuses],
+            **({"icon_id": self.icon_id} if self.icon_id else {}),
         }
 
     @classmethod
@@ -104,4 +108,5 @@ class EquipmentSetDefinition:
             data["display_name"],
             equipment_ids=data["equipment_ids"],
             bonuses=[EquipmentSetBonus.from_data(x) for x in data["bonuses"]],
+            icon_id=data.get("icon_id", ""),
         )

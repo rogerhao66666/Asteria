@@ -590,6 +590,125 @@ def _gauge(p, c):  # shared gauges: a half dial with a needle
     p.drawLine(QPointF(3.5, 17), QPointF(20.5, 17))
 
 
+def _quest(p, c):  # a scroll with a mark
+    path = QPainterPath(QPointF(6, 4))
+    path.lineTo(18, 4)
+    path.lineTo(18, 18)
+    path.cubicTo(QPointF(18, 21), QPointF(14, 21), QPointF(14, 18))
+    path.lineTo(6, 18)
+    path.cubicTo(QPointF(3, 18), QPointF(3, 21), QPointF(6, 21))
+    path.lineTo(15, 21)
+    p.setBrush(_fill(c))
+    p.drawPath(path)
+    p.drawLine(QPointF(9, 8), QPointF(15, 8))
+    p.drawLine(QPointF(9, 12), QPointF(13, 12))
+
+
+def _banner(p, c):  # a hanging banner
+    p.drawLine(QPointF(5, 3.5), QPointF(19, 3.5))
+    path = _poly([(6, 4), (18, 4), (18, 19), (12, 15.5), (6, 19), (6, 4)])
+    p.setBrush(_fill(c))
+    p.drawPath(path)
+    p.drawLine(QPointF(9, 8), QPointF(15, 8))
+
+
+def _trophy(p, c):
+    path = QPainterPath(QPointF(7, 4))
+    path.lineTo(17, 4)
+    path.lineTo(16, 11)
+    path.cubicTo(QPointF(15.5, 14), QPointF(8.5, 14), QPointF(8, 11))
+    path.closeSubpath()
+    p.setBrush(_fill(c))
+    p.drawPath(path)
+    p.drawLine(QPointF(12, 14), QPointF(12, 18))
+    p.drawLine(QPointF(8, 20), QPointF(16, 20))
+    p.drawArc(QRectF(3, 5, 5, 5), 90 * 16, 180 * 16)
+    p.drawArc(QRectF(16, 5, 5, 5), -90 * 16, 180 * 16)
+
+
+def _chest(p, c):  # a treasure chest
+    _rounded(p, 3, 10, 18, 10, 2, c)
+    path = QPainterPath(QPointF(3, 10))
+    path.cubicTo(QPointF(3, 3), QPointF(21, 3), QPointF(21, 10))
+    p.setBrush(_fill(c, 110))
+    p.drawPath(path)
+    p.drawLine(QPointF(3, 12), QPointF(21, 12))
+    p.setBrush(QColor(c))
+    p.drawRect(QRectF(10.5, 11, 3, 4))
+
+
+def _globe(p, c):
+    p.drawEllipse(QPointF(12, 12), 9, 9)
+    p.drawEllipse(QPointF(12, 12), 4, 9)
+    p.drawLine(QPointF(3, 12), QPointF(21, 12))
+    p.drawArc(QRectF(5, 5, 14, 14), 30 * 16, 120 * 16)
+
+
+def _pin(p, c):  # a map pin
+    path = QPainterPath(QPointF(12, 21))
+    path.cubicTo(QPointF(4, 13), QPointF(4, 3), QPointF(12, 3))
+    path.cubicTo(QPointF(20, 3), QPointF(20, 13), QPointF(12, 21))
+    p.setBrush(_fill(c))
+    p.drawPath(path)
+    p.setBrush(QColor(c))
+    p.drawEllipse(QPointF(12, 10), 2.4, 2.4)
+
+
+def _hammer(p, c):
+    p.setPen(_pen(c, 2.4))
+    p.drawLine(QPointF(5, 20), QPointF(14, 11))
+    p.setPen(_pen(c))
+    p.setBrush(_fill(c))
+    p.drawPath(_poly([(11, 4), (20, 7), (18, 11), (14, 9.5), (11, 4)]))
+
+
+def _cycle(p, c):  # a refresh loop
+    p.drawArc(QRectF(4, 4, 16, 16), 30 * 16, 280 * 16)
+    p.setBrush(QColor(c))
+    p.drawPath(_poly([(19, 3), (20.5, 9.5), (14, 8.5), (19, 3)]))
+
+
+def _doodad(p, c):  # a small tree
+    p.setBrush(_fill(c))
+    p.drawEllipse(QPointF(12, 9), 6.5, 6)
+    p.drawLine(QPointF(12, 14), QPointF(12, 21))
+    p.drawLine(QPointF(9, 21), QPointF(15, 21))
+
+
+def _net(p, c):  # a capture net
+    p.drawEllipse(QPointF(10, 10), 6, 6)
+    for x in (7, 10, 13):
+        p.drawLine(QPointF(x, 5), QPointF(x, 15))
+    p.drawLine(QPointF(5, 8), QPointF(15, 8))
+    p.drawLine(QPointF(5, 12), QPointF(15, 12))
+    p.drawLine(QPointF(14.5, 14.5), QPointF(20, 20))
+
+
+def _hand_icon(p, c):  # an open hand (interactions)
+    path = _poly(
+        [
+            (6, 12),
+            (6, 7),
+            (8.5, 7),
+            (8.5, 11),
+            (9, 4),
+            (11.5, 4),
+            (11.5, 11),
+            (12.5, 5),
+            (15, 5),
+            (14.5, 12),
+            (17, 8),
+            (19, 9.5),
+            (16.5, 17),
+            (12, 20),
+            (8, 18.5),
+            (6, 12),
+        ]
+    )
+    p.setBrush(_fill(c))
+    p.drawPath(path)
+
+
 DRAWINGS = {
     "flag": _flag,
     "paw": _paw,
@@ -649,6 +768,17 @@ DRAWINGS = {
     "up": _chevron_up,
     "down": _chevron_down,
     "dialogue": _dialogue,
+    "quest": _quest,
+    "banner": _banner,
+    "trophy": _trophy,
+    "chest": _chest,
+    "globe": _globe,
+    "pin": _pin,
+    "hammer": _hammer,
+    "cycle": _cycle,
+    "doodad": _doodad,
+    "net": _net,
+    "interact": _hand_icon,
     "assets": _folder,
 }
 
@@ -697,6 +827,17 @@ DEFAULT_COLOR = {
     "up": "muted",
     "down": "muted",
     "dialogue": "events",
+    "quest": "#dca545",
+    "banner": "#e06a5c",
+    "trophy": "#dcb23e",
+    "chest": "#dca545",
+    "globe": "#4aa9dc",
+    "pin": "#46b896",
+    "hammer": "#e8894a",
+    "cycle": "#52b884",
+    "doodad": "#86bf58",
+    "net": "#9a84e0",
+    "interact": "#dca545",
     "warning": "warning",
 }
 

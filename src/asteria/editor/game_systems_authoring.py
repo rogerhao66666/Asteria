@@ -79,6 +79,7 @@ class FormField:
     """One editable field of a record.
 
     kinds: ``id``, ``text``, ``multiline``, ``int``, ``float``, ``bool``,
+    ``icon`` (a picture id picked from the project's icons or the built-in library),
     ``choice`` (``choices``), ``ref`` / ``ref_list`` (``source`` names a
     reference list, see :meth:`GameSystemsAuthoringController.references`),
     ``optional_ref`` (may be empty), ``optional_int`` (None allowed),
@@ -157,7 +158,7 @@ FORMS = {
     "pet_species": (
         F("species_id", "Species ID", "id"),
         F("display_name", "Name", "text", default=""),
-        F("icon_id", "Icon", "text", default=""),
+        F("icon_id", "Icon", "icon", default=""),
         F("stats", "Stats At Level 1 (read in formulas as pet_<stat>)", "amounts", default={}),
         F("growth", "Stat Growth Per Level", "amounts", default={}),
         F("max_level", "Highest Level", "int", default=50),
@@ -264,6 +265,7 @@ FORMS = {
     "shops": (
         F("shop_id", "Shop ID", "id"),
         F("display_name", "Name", "text"),
+        F("icon_id", "Icon", "icon", default=""),
         F(
             "entries",
             "Stock",
@@ -292,6 +294,7 @@ FORMS = {
     "quests": (
         F("quest_id", "Quest ID", "id"),
         F("display_name", "Name", "text"),
+        F("icon_id", "Icon", "icon", default=""),
         F("description", "Description", "multiline", default=""),
         F(
             "objectives",
@@ -314,6 +317,7 @@ FORMS = {
     "factions": (
         F("faction_id", "Faction ID", "id"),
         F("display_name", "Name", "text"),
+        F("icon_id", "Icon", "icon", default=""),
         F("minimum", "Minimum", "float", default=-100.0),
         F("maximum", "Maximum", "float", default=100.0),
         F("initial", "Initial", "float", default=0.0),
@@ -322,6 +326,7 @@ FORMS = {
     "achievements": (
         F("achievement_id", "Achievement ID", "id"),
         F("display_name", "Name", "text"),
+        F("icon_id", "Icon", "icon", default=""),
         F("description", "Description", "multiline", default=""),
         F("kind", "Condition", "choice", choices=ACHIEVEMENT_KINDS, default="switch"),
         F("target", "Target", "text"),
@@ -331,6 +336,7 @@ FORMS = {
     "equipment_sets": (
         F("set_id", "Set ID", "id"),
         F("display_name", "Name", "text"),
+        F("icon_id", "Icon", "icon", default=""),
         F("equipment_ids", "Equipment", "ref_list", source="equipment", default=()),
         F(
             "bonuses",
@@ -568,13 +574,14 @@ D26_FORMS = {
             default=(),
             fields=(
                 F("number", "Number", "text", default="1"),
-                F("icon_id", "Icon", "text", default=""),
+                F("icon_id", "Icon", "icon", default=""),
             ),
         ),
     ),
     "music_tracks": (
         F("track_id", "Track ID", "id"),
         F("name", "Name", "text", default=""),
+        F("icon_id", "Icon", "icon", default=""),
         F("asset_id", "Audio Asset", "text", default=""),
         F("unlock_switch", "Unlock Switch (blank = always open)", "text", default=""),
         F("note", "Note", "text", default=""),
@@ -605,6 +612,7 @@ D26_FORMS = {
     "menu_entries": (
         F("entry_id", "Entry ID", "id"),
         F("label", "Menu Label", "text", default=""),
+        F("icon_id", "Icon", "icon", default=""),
         F("event_program_id", "Event Program", "ref", source="event_programs"),
         F("visible_switch", "Shown While Switch Is On (empty: always)", "text", default=""),
         F("enabled_switch", "Usable While Switch Is On (empty: always)", "text", default=""),
@@ -986,6 +994,12 @@ class GameSystemsAuthoringController:
             return self.kind(kind_id).cls.from_data(data)
         except (KeyError, TypeError, ValueError) as exc:
             raise GameSystemsAuthoringError(f"invalid {kind_id} record: {exc}") from exc
+
+    @property
+    def icon_library(self):
+        from .image_tools import IconLibrary
+
+        return IconLibrary(self.document)
 
     def references(self, source):
         """Choices for ``ref`` / ``ref_list`` form fields."""

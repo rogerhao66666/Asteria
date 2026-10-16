@@ -33,9 +33,10 @@ def _price_text(prices):
 
 
 class MenuCursor:
-    def __init__(self, options):
+    def __init__(self, options, icons=None):
         self.options = tuple(options)
         self.index = 0
+        self.icons = dict(icons or {})  # option id -> icon id: rows that show a picture
 
     def move(self, delta):
         if self.options:

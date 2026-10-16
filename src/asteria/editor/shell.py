@@ -471,7 +471,7 @@ class AsteriaEditorWindow(QMainWindow):
         left.raise_()
         self._workspace_mode_changed(self.workspace.mode.value)
         self.refresh_all()
-        QTimer.singleShot(0, self.viewport.frame_game_camera)
+        QTimer.singleShot(0, self.viewport.frame_initial)
 
     def _schedule_dock_tab_cleanup(self, *_):
         QTimer.singleShot(0, self.hide_stale_dock_tab_bars)
@@ -1626,7 +1626,7 @@ class AsteriaEditorWindow(QMainWindow):
             self.set_tilemap_render_source(None)
         self.code_workspace.load_default_script()
         self.refresh_all()
-        QTimer.singleShot(0, self.viewport.frame_game_camera)
+        QTimer.singleShot(0, self.viewport.frame_initial)
 
     def refresh_asset_list(self):
         from .asset_thumbnails import ImageCache, asset_thumbnail, canonical_asset_thumbnail
@@ -2309,7 +2309,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.play_session = None
         self._load_playtest_profiles()
         self.refresh_all()
-        QTimer.singleShot(0, self.viewport.frame_game_camera)
+        QTimer.singleShot(0, self.viewport.frame_initial)
         return True
 
     def new_from_template(self, template_id, name, folder):
@@ -2322,7 +2322,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.play_session = None
         self._load_playtest_profiles()
         self.refresh_all()
-        QTimer.singleShot(0, self.viewport.frame_game_camera)
+        QTimer.singleShot(0, self.viewport.frame_initial)
         guide = Path(path).parent / "START_HERE.md"
         if guide.is_file():  # where every rule lives in this project
             self.console.setText(f"New project from a template.\n\n{guide.read_text()}")

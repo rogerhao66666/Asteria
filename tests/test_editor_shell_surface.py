@@ -94,11 +94,12 @@ def test_scene_viewport_arrow_navigation_and_reset():
     viewport.camera.zoom = 2
 
     viewport.reset_view()
+    # Reset View centres what the scene holds: its one entity sits at the view's middle
     assert (
         viewport.camera.pan_x,
         viewport.camera.pan_y,
         viewport.camera.zoom,
-    ) == (0, 0, 1)
+    ) == (viewport.width() / 2 - transform.x, viewport.height() / 2, 1)
     viewport.close()
 
 

@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -320,7 +321,9 @@ def main(argv=None):
     parser.add_argument(
         "--project", default=None, help="a project file instead of the reference project"
     )
-    args = parser.parse_args(argv)
+    args, _extra = parser.parse_known_args(
+        argv
+    )  # macOS flags such as -ApplePersistenceIgnoreState pass through
     out = Path(args.output)
     out.mkdir(parents=True, exist_ok=True)
     width, height = (int(v) for v in args.size.split("x"))
@@ -332,7 +335,10 @@ def main(argv=None):
     from asteria.editor.theme import apply_asteria_theme
     from asteria.project import Project
 
-    app = QApplication.instance() or QApplication([])
+    # macOS asks "reopen windows?" after an app quit unexpectedly; this run never waits for it
+    app = QApplication.instance() or QApplication(
+        ["editor_ui_audit", "-ApplePersistenceIgnoreState", "YES"]
+    )
     apply_asteria_theme(app, args.theme)
     project_file = Path(args.project) if args.project else PROJECT_FILE
     project = Project.load_json(project_file, EditorDocument().component_registry)
@@ -396,4 +402,8 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    code = main()
+    # Qt's teardown at interpreter exit can crash on macOS (and a crash report then stalls the
+    # process for minutes); the report is already written, so leave right away
+    sys.stdout.flush()
+    os._exit(code)

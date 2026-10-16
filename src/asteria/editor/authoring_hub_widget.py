@@ -244,6 +244,7 @@ class StructuredRecordEditor(QTreeWidget):
         # editable
         # drop-down of suggestions (any typed value is still accepted)
         self.field_choices = {}
+        self.icon_library = None  # an ``IconLibrary``: icon_id fields become icon pickers
         self.itemChanged.connect(lambda *_: self.changed.emit())
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._structure_menu)
@@ -307,9 +308,24 @@ class StructuredRecordEditor(QTreeWidget):
             item.setData(1, Qt.UserRole, deepcopy(value))
             item.setFlags(item.flags() | Qt.ItemIsEditable)
             key = path[-1] if path else None
-            if isinstance(key, str) and key in self.field_choices and isinstance(value, str):
+            if key == "icon_id" and isinstance(value, str) and self.icon_library is not None:
+                self._icon_widget(item, value)
+            elif isinstance(key, str) and key in self.field_choices and isinstance(value, str):
                 self._choice_widget(item, value, self.field_choices[key]())
         return item
+
+    def _icon_widget(self, item, value):
+        """An icon id field: the icon picker (project icons, built-in library, Browse…)."""
+        from PySide6.QtGui import QBrush
+
+        from .game_systems_widget import _IconPicker
+
+        picker = _IconPicker(self.icon_library)
+        picker.setText(value)
+        picker.changed.connect(lambda it=item, p=picker: it.setText(1, p.text()))
+        item.setForeground(1, QBrush(Qt.transparent))
+        self.setItemWidget(item, 1, picker)
+        return picker
 
     def _choice_widget(self, item, value, choices):
         from PySide6.QtGui import QBrush
@@ -683,6 +699,9 @@ class AdapterFamilyWidget(QWidget):
             from .image_tools import icon_choices
 
             self.editor.field_choices["icon_id"] = lambda: icon_choices(document)
+            from .image_tools import IconLibrary
+
+            self.editor.icon_library = IconLibrary(document)
         self.graph_view = SkillTreeGraphView()
         self.detail_stack = QStackedWidget()
         self.detail_stack.addWidget(self.editor)

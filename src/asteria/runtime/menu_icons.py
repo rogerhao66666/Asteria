@@ -13,6 +13,32 @@ Nothing is required: a record without an icon shows its name only.
 
 from __future__ import annotations
 
+FORGED_PREFIX = "forged:"  # the built-in, code-drawn icons: ``forged:fire``, ``forged:mono:Ab``
+
+
+def forged_spec(icon_id):
+    """``("kind", name)`` for a built-in icon id (``forged:<kind>``), ``("mono", text)`` for a
+    monogram (``forged:mono:<text>``), else ``None``."""
+    icon_id = str(icon_id or "").strip()
+    if not icon_id.startswith(FORGED_PREFIX):
+        return None
+    body = icon_id[len(FORGED_PREFIX) :]
+    if body.startswith("mono:"):
+        return ("mono", body[5:])
+    return ("kind", body)
+
+
+def forged_surface(icon_id, size):
+    """A pygame surface for a built-in icon id, or ``None`` for anything else / unknown kinds."""
+    spec = forged_spec(icon_id)
+    if spec is None:
+        return None
+    from asteria.graphics.forged_icons import DRAWINGS, forge, forge_monogram
+
+    if spec[0] == "mono":
+        return forge_monogram(spec[1] or "?", size)
+    return forge(spec[1], size) if spec[1] in DRAWINGS else None
+
 
 def icon_source(project, icon_id):
     """``(image path or uri, region or None)`` for ``icon_id``, or None when it names nothing."""

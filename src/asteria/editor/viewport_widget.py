@@ -1,7 +1,7 @@
 import os
 from math import floor
 
-from asteria.core import Transform
+from asteria.core import Transform, world_position
 from asteria.runtime import (
     Camera2DComponent,
     SkeletonAnimation2DComponent,
@@ -229,12 +229,48 @@ class SceneViewportWidget(QWidget):
         self.update()
 
     def reset_view(self):
-        if self.frame_game_camera():
+        if self.frame_initial():
             return
         self.camera.pan_x = 0.0
         self.camera.pan_y = 0.0
         self.camera.zoom = 1.0
         self.update()
+
+    def frame_initial(self):
+        """The view a scene opens with: the active game camera's frame, else every entity."""
+        return self.frame_game_camera() or self.frame_entities()
+
+    def frame_entities(self):
+        """Centre the view on all the scene's entities (zoomed out to fit when they spread wider
+        than the view, never zoomed in past 1.5x). False when the scene has none."""
+        scene = self.current_scene()
+        if scene is None:
+            return False
+        points = [world_position(e) for e in scene.entities() if e.try_get(Transform) is not None]
+        if not points:
+            return False
+        xs, ys = [p[0] for p in points], [p[1] for p in points]
+        span_x, span_y = max(xs) - min(xs), max(ys) - min(ys)
+        margin = 64.0
+        fit = min(
+            max(1.0, self.width() - margin * 2) / max(span_x, 1.0),
+            max(1.0, self.height() - margin * 2) / max(span_y, 1.0),
+        )
+        zoom = 1.0 if len(points) == 1 else min(1.5, fit)
+        self.camera.zoom = max(self.camera.min_zoom, min(self.camera.max_zoom, zoom))
+        self.camera.pan_x = self.width() / 2 - (min(xs) + max(xs)) / 2 * self.camera.zoom
+        self.camera.pan_y = self.height() / 2 - (min(ys) + max(ys)) / 2 * self.camera.zoom
+        self._framed = (self.camera.pan_x, self.camera.pan_y, self.camera.zoom, self.width())
+        self.update()
+        return True
+
+    def resizeEvent(self, event):  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        framed = getattr(self, "_framed", None)
+        if framed is not None and (
+            (self.camera.pan_x, self.camera.pan_y, self.camera.zoom) == framed[:3]
+        ):  # the view still shows what framing chose (nobody panned or zoomed): keep it centred
+            self.frame_entities()
 
     def frame_game_camera(self):
         scene = self.current_scene()

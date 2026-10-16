@@ -59,6 +59,8 @@ class ClassDefinition:
     granted_tags: tuple[str, ...] = ()
     granted_abilities: tuple[str, ...] = ()
 
+    icon_id: str = ""  # a project icon shown in menus; written only when set
+
     def __init__(
         self,
         class_id,
@@ -68,6 +70,7 @@ class ClassDefinition:
         resource_bonuses=None,
         granted_tags=(),
         granted_abilities=(),
+        icon_id="",
     ):
         class_id = _id(class_id, "class_id")
         object.__setattr__(self, "class_id", class_id)
@@ -84,6 +87,7 @@ class ClassDefinition:
             "granted_abilities",
             tuple(dict.fromkeys(_id(x, "ability_id") for x in granted_abilities)),
         )
+        object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def to_data(self):
         return {
@@ -95,6 +99,7 @@ class ClassDefinition:
             "resource_bonuses": dict(sorted(self.resource_bonuses.items())),
             "granted_tags": list(self.granted_tags),
             "granted_abilities": list(self.granted_abilities),
+            **({"icon_id": self.icon_id} if self.icon_id else {}),
         }
 
     @classmethod
@@ -108,6 +113,7 @@ class ClassDefinition:
             resource_bonuses=data["resource_bonuses"],
             granted_tags=data["granted_tags"],
             granted_abilities=data["granted_abilities"],
+            icon_id=data.get("icon_id", ""),
         )
 
 

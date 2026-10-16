@@ -19,8 +19,9 @@ class MusicTrack:
     asset_id: str
     unlock_switch: str = ""
     note: str = ""
+    icon_id: str = ""
 
-    def __init__(self, track_id, name, asset_id, *, unlock_switch="", note=""):
+    def __init__(self, track_id, name, asset_id, *, unlock_switch="", note="", icon_id=""):
         track_id, asset_id = _text(track_id), _text(asset_id)
         if not track_id or not asset_id:
             raise ValueError("a track needs an id and an audio asset")
@@ -29,9 +30,12 @@ class MusicTrack:
         object.__setattr__(self, "asset_id", asset_id)
         object.__setattr__(self, "unlock_switch", _text(unlock_switch))
         object.__setattr__(self, "note", _text(note))
+        object.__setattr__(self, "icon_id", _text(icon_id))
 
     def to_data(self):
         data = {"track_id": self.track_id, "name": self.name, "asset_id": self.asset_id}
+        if self.icon_id:
+            data["icon_id"] = self.icon_id
         if self.unlock_switch:
             data["unlock_switch"] = self.unlock_switch
         if self.note:
@@ -90,6 +94,7 @@ class MenuEntry:
     visible_switch: str = ""
     enabled_switch: str = ""
     order: int = 0
+    icon_id: str = ""
 
     def __init__(
         self,
@@ -100,6 +105,7 @@ class MenuEntry:
         visible_switch="",
         enabled_switch="",
         order=0,
+        icon_id="",
     ):
         entry_id = _text(entry_id)
         if not entry_id:
@@ -114,6 +120,7 @@ class MenuEntry:
         s(self, "visible_switch", _text(visible_switch))
         s(self, "enabled_switch", _text(enabled_switch))
         s(self, "order", int(order))
+        s(self, "icon_id", _text(icon_id))
 
     def to_data(self):
         return {
@@ -123,6 +130,7 @@ class MenuEntry:
             **({"visible_switch": self.visible_switch} if self.visible_switch else {}),
             **({"enabled_switch": self.enabled_switch} if self.enabled_switch else {}),
             **({"order": self.order} if self.order else {}),
+            **({"icon_id": self.icon_id} if self.icon_id else {}),
         }
 
     @classmethod
@@ -134,6 +142,7 @@ class MenuEntry:
             visible_switch=data.get("visible_switch", ""),
             enabled_switch=data.get("enabled_switch", ""),
             order=data.get("order", 0),
+            icon_id=data.get("icon_id", ""),
         )
 
 

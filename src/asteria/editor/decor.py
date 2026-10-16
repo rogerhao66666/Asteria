@@ -67,6 +67,22 @@ BUTTON_RULES = (
 
 # (pattern on a tab / combo / tree label, icon); first match wins
 LABEL_RULES = (
+    # game systems kinds
+    (r"^quests?$", "quest"),
+    (r"faction|reputation", "banner"),
+    (r"achievement", "trophy"),
+    (r"drop tables?", "chest"),
+    (r"translation|locale", "globe"),
+    (r"map areas?|region", "pin"),
+    (r"durab|disassembl", "hammer"),
+    (r"new game", "cycle"),
+    (r"message settings", "dialogue"),
+    (r"^credits", "list"),
+    (r"^battle options", "inspector"),
+    (r"^battle extras", "battle"),
+    (r"doodad", "doodad"),
+    (r"capture", "net"),
+    (r"world interactions?", "interact"),
     # workspace sub-tabs
     (r"^scene\b", "scene"),
     (r"^game start$|^start\b", "flag"),

@@ -89,6 +89,8 @@ class QuestDefinition:
     next_quest_ids: tuple[str, ...]
     auto_complete: bool
 
+    icon_id: str = ""  # a project icon shown in menus; written only when set
+
     def __init__(
         self,
         quest_id,
@@ -100,6 +102,7 @@ class QuestDefinition:
         reward=None,
         next_quest_ids=(),
         auto_complete=True,
+        icon_id="",
     ):
         objectives = tuple(objectives)
         if any(not isinstance(x, QuestObjective) for x in objectives):
@@ -121,6 +124,7 @@ class QuestDefinition:
         object.__setattr__(self, "reward", reward)
         object.__setattr__(self, "next_quest_ids", next_quest_ids)
         object.__setattr__(self, "auto_complete", bool(auto_complete))
+        object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def to_data(self):
         return {
@@ -134,6 +138,7 @@ class QuestDefinition:
             "reward": self.reward.to_data(),
             "next_quest_ids": list(self.next_quest_ids),
             "auto_complete": self.auto_complete,
+            **({"icon_id": self.icon_id} if self.icon_id else {}),
         }
 
     @classmethod
@@ -149,6 +154,7 @@ class QuestDefinition:
             reward=RewardDefinition.from_data(data["reward"]),
             next_quest_ids=data["next_quest_ids"],
             auto_complete=data["auto_complete"],
+            icon_id=data.get("icon_id", ""),
         )
 
 

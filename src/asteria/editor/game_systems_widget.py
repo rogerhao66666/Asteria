@@ -124,7 +124,7 @@ class _RefList(QListWidget):
 class _TableField(QGroupBox):
     """Master–detail editor for a list of nested records."""
 
-    def __init__(self, label, fields, references, parent=None):
+    def __init__(self, label, fields, references, parent=None, *, icons=None):
         super().__init__(label, parent)
         self.fields = fields
         self.rows = []
@@ -133,7 +133,7 @@ class _TableField(QGroupBox):
         self.list.setMinimumHeight(90)
         self.list.currentRowChanged.connect(self._select)
         self.detail = RecordForm(
-            fields, references, column_width=200
+            fields, references, column_width=200, icons=icons
         )  # nested rows: narrower columns
         self.detail.setEnabled(False)
         add, remove = QPushButton("Add"), QPushButton("Remove")
@@ -209,13 +209,96 @@ class _TableField(QGroupBox):
         return [copy.deepcopy(r) for r in self.rows]
 
 
+class _IconPicker(QWidget):
+    """An icon field: a list of the project's icons and the built-in library (each with its
+    picture), a preview and Browse… to bring in a picture file of one's own. Paths show as their
+    file name; the tooltip has the whole id."""
+
+    changed = Signal()
+
+    def __init__(self, library, parent=None):
+        super().__init__(parent)
+        self.library = library
+        row = QHBoxLayout(self)
+        row.setContentsMargins(0, 0, 0, 0)
+        self.preview = QLabel()
+        self.preview.setFixedSize(32, 32)
+        self.preview.setAlignment(Qt.AlignCenter)
+        self.combo = QComboBox()
+        self.combo.setMaxVisibleItems(12)
+        # a long list must not make Qt measure every entry each time the form is laid out
+        self.combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.combo.setMinimumContentsLength(14)
+        self.browse = QPushButton("Browse…")
+        self.browse.setToolTip("Use a picture file of your own as the icon")
+        self.browse.clicked.connect(self._browse)
+        row.addWidget(self.preview)
+        row.addWidget(self.combo, 1)
+        row.addWidget(self.browse)
+        self._fill()
+        self.combo.currentIndexChanged.connect(self._shown)
+
+    @staticmethod
+    def _label(icon_id):
+        return icon_id.rsplit("/", 1)[-1] if icon_id else "(none)"
+
+    def _add(self, icon_id, icon=None):
+        if icon is not None:
+            self.combo.addItem(icon, self._label(icon_id), icon_id)
+        else:
+            self.combo.addItem(self._label(icon_id), icon_id)
+        self.combo.setItemData(self.combo.count() - 1, icon_id, Qt.ToolTipRole)
+
+    def _fill(self):
+        self.combo.blockSignals(True)
+        self.combo.clear()
+        self._add("")
+        if self.library is not None:
+            for icon_id, icon in self.library.choices():
+                self._add(icon_id, icon)
+        self.combo.blockSignals(False)
+
+    def _shown(self, *_):
+        icon = self.combo.itemIcon(self.combo.currentIndex())
+        if icon is not None and not icon.isNull():
+            self.preview.setPixmap(icon.pixmap(32, 32))
+        else:
+            self.preview.clear()
+        self.combo.setToolTip(self.text())
+        self.changed.emit()
+
+    def _browse(self):
+        from PySide6.QtWidgets import QFileDialog
+
+        path, _ = QFileDialog.getOpenFileName(self, "Choose an icon", "", "Images (*.png)")
+        if path and self.library is not None:
+            icon_id = self.library.import_file(path)
+            self._fill()
+            self.setText(icon_id)
+
+    def text(self):
+        return str(self.combo.currentData() or "")
+
+    def setText(self, value):  # noqa: N802 - Qt-style
+        value = str(value or "").strip()
+        index = self.combo.findData(value)
+        if index < 0:  # an id the list does not know (hand-written data): keep it
+            self._add(value)
+            index = self.combo.count() - 1
+        self.combo.blockSignals(True)
+        self.combo.setCurrentIndex(index)
+        self.combo.blockSignals(False)
+        self._shown()
+
+
 class RecordForm(QWidget):
     """Widgets for one record described by a tuple of FormField specs."""
 
     changed = Signal()
 
-    def __init__(self, fields, references, parent=None, *, column_width=250):
+    def __init__(self, fields, references, parent=None, *, column_width=250, icons=None):
         super().__init__(parent)
+        self.icons = icons  # an ``IconLibrary`` for icon fields (None: a plain editable list)
         self.column_width = column_width
         self.fields = tuple(fields)
         self.references = references
@@ -269,6 +352,8 @@ class RecordForm(QWidget):
                 widget.addItem("")
             widget.addItems(list(self.references(f.source)))
             return widget
+        if f.kind == "icon":
+            return _IconPicker(self.icons)
         if f.kind == "optional_int":
             box = QWidget()
             row = QHBoxLayout(box)
@@ -293,18 +378,18 @@ class RecordForm(QWidget):
         if f.kind == "group":
             box = QGroupBox(f.label)
             layout = QVBoxLayout(box)
-            box.form = RecordForm(f.fields, self.references)
+            box.form = RecordForm(f.fields, self.references, icons=self.icons)
             layout.addWidget(box.form)
             return box
         if f.kind == "table":
-            return _TableField(f.label, f.fields, self.references)
+            return _TableField(f.label, f.fields, self.references, icons=self.icons)
         raise ValueError(f"unknown form field kind: {f.kind}")
 
     def set_data(self, data):
         self._original = copy.deepcopy(data)
         for f in self.fields:
             widget, value = self.widgets[f.key], data.get(f.key, f.default)
-            if f.kind in ("id", "text"):
+            if f.kind in ("id", "text", "icon"):
                 widget.setText("" if value is None else str(value))
             elif f.kind == "multiline":
                 widget.setPlainText(str(value or ""))
@@ -344,7 +429,7 @@ class RecordForm(QWidget):
         out = copy.deepcopy(self._original)
         for f in self.fields:
             widget = self.widgets[f.key]
-            if f.kind in ("id", "text"):
+            if f.kind in ("id", "text", "icon"):
                 out[f.key] = widget.text().strip()
             elif f.kind == "multiline":
                 out[f.key] = widget.toPlainText()
@@ -444,7 +529,9 @@ class GameSystemsEditorWidget(QWidget):
             )
             self.form = None
             return
-        self.form = RecordForm(FORMS[self.kind_id], self.controller.references)
+        self.form = RecordForm(
+            FORMS[self.kind_id], self.controller.references, icons=self.controller.icon_library
+        )
         self.scroll.setWidget(self.form)
         self.browser.blockSignals(True)
         self.browser.clear()
