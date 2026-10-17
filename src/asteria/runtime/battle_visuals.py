@@ -323,7 +323,8 @@ class BattleVisualResolver:
 
             large = [m for m in members if sizes[m][1] > smallest * 1.5 or apart(m)]
             regular = [m for m in members if m not in large]
-            columns = [regular[i : i + 3] for i in range(0, len(regular), 3)]
+            per_column = max(1, int(getattr(layout, "column_size", 3)))
+            columns = [regular[i : i + per_column] for i in range(0, len(regular), per_column)]
             if zone in tuple(getattr(layout, "front_large_zones", ())):
                 columns = [[m] for m in large] + columns  # toward the centre of the stage
             else:

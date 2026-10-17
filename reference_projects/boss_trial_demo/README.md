@@ -7,9 +7,12 @@
 ```bash
 .venv/bin/asteria-editor                                                    # File > Open 這個資料夾的 project.asteria.json
 .venv/bin/asteria-preview reference_projects/boss_trial_demo/project.asteria.json   # 直接玩
+.venv/bin/python reference_projects/boss_trial_demo/run_campaign.py       # 通關腳本:四張地圖、三個 Boss、四位隊友
 .venv/bin/python reference_projects/boss_trial_demo/run_trial_smoke.py      # 腳本化通關，列出每個系統打到幾次
 ```
 
+整個遊戲:Hearthfold(城鎮)→ Whispering Woods(森林)→ Catacombs(地下墓穴)→ Ember Throne(王座),
+`run_campaign.py` 從第一句話一路打到通關(逐項清單見 `docs/audits/BOSS_TRIAL_COVERAGE.md`)。
 走到畫面上的 NPC 前按 E：訓練師換副職業、鐵匠精煉、珠寶匠鑲嵌、煉金師合成、商人買賣、神殿給經驗與點數；
 走到 Vaelor 前按 E 開戰。戰鬥內：Attack／Skills／Items；Skills 裡有「Concoct」（調和）與各職業技能。
 

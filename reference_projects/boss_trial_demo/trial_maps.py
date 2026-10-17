@@ -602,6 +602,19 @@ def menu(speaker, prompt, options):
     return out
 
 
+def needs_quest(quest_id, status, steps, label="ready"):
+    """``steps`` when the quest has that status (``inactive`` until it was started)."""
+    from asteria.events.conditions import EventCondition
+
+    condition = EventCondition("rpg", f"quest:{quest_id}", "==", status, None).to_data()
+    return [
+        EventInstruction("JUMP_IF", {"condition": condition, "label": label}),
+        EventInstruction("END"),
+        EventInstruction("LABEL", {"name": label}),
+        *steps,
+    ]
+
+
 def when(name, steps_true, steps_false, *, source="switch"):
     """Run ``steps_true`` when the switch/variable ``name`` is on, else ``steps_false``."""
     from asteria.events.conditions import EventCondition

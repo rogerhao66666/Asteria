@@ -52,6 +52,9 @@ class BattleUiLayoutProfile:
     # front of the others, toward the centre of the stage, instead of behind them
     front_large_zones: tuple = ()
     action_menu_placement: str = "bottom"
+    # column_size: how many combatants of one side share a column of the stage before the next
+    # column starts behind them
+    column_size: int = 3
     # row_buttons: every row of a menu gets a panel of its own (roles button, button:selected,
     # button:disabled) so a skin can draw buttons; off = rows are plain text
     row_buttons: bool = False
@@ -66,6 +69,8 @@ class BattleUiLayoutProfile:
         object.__setattr__(
             self, "front_large_zones", tuple(str(x) for x in self.front_large_zones)
         )
+        if int(self.column_size) < 1:
+            raise ValueError("column_size must be >= 1")
         if self.party_hud not in {"column", "bottom_row", "side_list"}:
             raise ValueError("party_hud must be 'column', 'bottom_row' or 'side_list'")
         if self.action_menu_placement not in {"bottom", "actor"}:

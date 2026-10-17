@@ -41,3 +41,12 @@ def test_default_stop_is_the_edge_of_the_foes_sprite():
     runtime.update(0.2)
     # mimic's frame is 32 wide: half of it plus a small margin short of its anchor
     assert _hero_x(runtime) - start == pytest.approx((232 - (16 + 8)) - 72, abs=1.0)
+
+
+def test_a_move_toward_a_combatant_that_has_left_is_skipped_not_an_error():
+    runtime = _runtime()
+    start = _hero_x(runtime)
+    runtime.start_move("hero", target_id="nobody", duration=0.1)  # the foe was removed meanwhile
+    runtime.start_move("ghost", target_id="mimic", duration=0.1)  # the mover itself is gone
+    runtime.update(0.2)  # nothing moved, nothing raised
+    assert _hero_x(runtime) == pytest.approx(start, abs=0.01)

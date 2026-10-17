@@ -53,6 +53,12 @@ class Campaign:
     def note(self, text):
         self.log(f"  {text}")
 
+    def shot(self, name):
+        """A hook for a real-window run: it saves a picture at the milestones."""
+        if getattr(self, "on_shot", None) is not None:
+            self.frames(45 if name.startswith("battle_") else 12)  # a boss intro zoom settles
+            self.on_shot(name)
+
     # -- walking and talking ---------------------------------------------------------------
     def frames(self, count=3, dt=0.05):
         for _ in range(count):
@@ -77,6 +83,7 @@ class Campaign:
         assert self.game.scene.id != before, f"{door_name} did not lead anywhere"
         self.frames(2)
         self.facts["map_changes"] += 1
+        self.shot("map_" + self.scene_name().lower().replace(" ", "_"))
 
     def find(self, name):
         return next(e for e in self.game.scene.entities() if e.name == name)
@@ -132,11 +139,13 @@ class Campaign:
                 break
         assert self.game.mode == "battle", f"{name} did not start a fight"
         self.facts["fights"] += 1
+        self.shot_pending = f"battle_{self.game.encounter_id}"
         tags = self.game.battle.member(HERO).subject.tags
         for tag in tags.values():
             if tag.startswith("weather."):
                 self.facts["weather_" + tag.split(".", 1)[1]] += 1
         self.rt._advance_to_hero_turn()
+        self.shot(self.shot_pending)
 
     FIRST = (
         "call_spirit",
@@ -222,11 +231,12 @@ class Campaign:
         import pygame
 
         confirm = [pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN)]
-        for _ in range(600):
-            self.rt._frame(confirm, 0.1)
+        for _ in range(2000):  # the choreography of a long fight plays out first
+            self.rt._frame(confirm, 0.25)
             if not self.rt._victory and self.game.mode == "field":
                 break
-        assert self.game.mode == "field" and not self.rt._victory
+        state = (self.game.mode, self.rt._victory, self.game.encounter_id)
+        assert self.game.mode == "field" and not self.rt._victory, state
         self.facts["victories"] += 1
         self.heal_if_low()
 
@@ -318,15 +328,18 @@ class Campaign:
         self.talk("Innkeeper Marla", picks=(0,))
         self.facts["rests"] += 1
         self.allocate()
+        self.shot("town_ready")
         self.showman()
 
     def showman(self):
         """Showman Pip: every field command the story does not need, one menu entry each."""
         from asteria.core import Transform
 
-        for pick in range(9):
+        # every trick (0-9), the request (10-13: start, three tricks, bow, drop), the band (14)
+        for pick in (*range(10), 10, 11, 11, 11, 12, 13, 14):
             self.talk("Showman Pip", picks=(pick,))
             self.facts["field_tricks"] += 1
+        assert self.game.quest_log.status("q_show") == "completed"
         names = {e.name for e in self.game.scene.entities()}
         assert {"Lantern", "PipEcho"} <= names, names
         self.rt._frame([], 0.1)
@@ -442,6 +455,7 @@ class Campaign:
         self.touch("Vaelor")
         self.fight(limit=300)
         self.talk("Victory Banner")
+        self.shot("victory")
         assert game.save.event_context.get_switch("game.complete")
         self.facts["game_complete"] = 1
         self.go("Stairs Down")

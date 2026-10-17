@@ -477,14 +477,18 @@ def foes(c):
         )
     for encounter_id, members, tags in (
         ("woods_patrol", (("goblin_slinger", 2), ("goblin_berserker", 1)), ("woods",)),
-        ("woods_ambush", (("goblin_slinger", 3),), ("woods",)),
+        ("woods_ambush", (("goblin_slinger", 3),), ("woods", "scheduler:classic_rounds")),
         (
             "woods_boss",
             (("goblin_beast", 1), ("goblin_slinger", 2)),
             ("boss", "woods", "no_escape"),
         ),
         ("crypt_patrol", (("skeleton_grunt", 2), ("skeleton_hunter", 1)), ("crypt",)),
-        ("crypt_guard", (("skeleton_hunter", 2), ("skeleton_grunt", 1)), ("crypt",)),
+        (
+            "crypt_guard",
+            (("skeleton_hunter", 2), ("skeleton_grunt", 1)),
+            ("crypt", "scheduler:classic_rounds"),
+        ),
         (
             "crypt_boss",
             (("skeleton_ancient", 1), ("skeleton_hunter", 2)),

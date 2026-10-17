@@ -116,6 +116,33 @@ def systems(c):
                 reward=RewardDefinition(currencies={"gold": float(gold)}),
             )
         )
+    db.add_quest(
+        QuestDefinition(
+            "q_show",
+            "The Showman's Request",
+            description="Pip wants three tricks for the crowd, then a bow.",
+            objectives=(QuestObjective("tricks", "counter", required=3),),
+            reward=RewardDefinition(currencies={"gold": 300}),
+            auto_complete=False,
+        )
+    )
+    from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
+    from asteria.rpg.battle_scheduler import BattleSchedulerDefinition
+
+    c.library.add_timeline(
+        ActionTimeline(
+            "pip_hop",
+            [
+                ActionCue("up", 0.0, "movement", {"x": 0.0, "y": -1.0, "duration": 0.2}),
+                ActionCue("down", 0.2, "movement", {"x": 0.0, "y": 1.0, "duration": 0.2}),
+                ActionCue("end", 0.5, "gameplay_event", {"name": "end"}),
+            ],
+        )
+    )
+    # some fights take turns in rounds instead of on the speed timeline
+    db.battle_schedulers["classic_rounds"] = BattleSchedulerDefinition(
+        "classic_rounds", mode="round"
+    )
     db.achievements.clear()
     for achievement in (
         AchievementDefinition(
@@ -156,6 +183,14 @@ def systems(c):
             kind="reputation",
             target="wardens",
             value=25,
+        ),
+        AchievementDefinition(
+            "contractor",
+            "Contractor",
+            description="Take two contracts.",
+            kind="counter",
+            target="contracts",
+            value=2,
         ),
         AchievementDefinition(
             "quest_done",
@@ -617,6 +652,31 @@ def showman(builders, looks, places):
                 world("SET_PICTURE_FRAME", picture_id="slide", frame=0),
                 world("ERASE_PICTURE", picture_id="slide"),
             ],
+        ),
+        ("Hop", [world("PLAY_ACTION", entity=pip, timeline_id="pip_hop")]),
+        ("Take the request", [world("START_QUEST", quest_id="q_show")]),
+        (
+            "A trick for the crowd",
+            maps.needs_quest(
+                "q_show",
+                "active",
+                [world("ADVANCE_QUEST", quest_id="q_show", objective_id="tricks", amount=1)],
+                "adv",
+            ),
+        ),
+        (
+            "Take a bow",
+            maps.needs_quest(
+                "q_show", "active", [world("COMPLETE_QUEST", quest_id="q_show")], "bow"
+            ),
+        ),
+        (
+            "Drop the request",
+            maps.needs_quest("q_show", "active", [world("FAIL_QUEST", quest_id="q_show")], "drop"),
+        ),
+        (
+            "Hush the band",
+            [world("STOP_BGM", fade=0.3), world("PLAY_BGM", asset_id="town_theme", fade=0.3)],
         ),
         ("Bow out", []),
     ]

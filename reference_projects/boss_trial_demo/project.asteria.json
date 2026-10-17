@@ -24124,6 +24124,7 @@
       "ui_layout": {
         "adaptive": {
           "action_menu_placement": "actor",
+          "column_size": 2,
           "front_large_zones": [
             "right"
           ],
@@ -25282,8 +25283,32 @@
                 "value": 8
               },
               {
-                "text": "Bow out",
+                "text": "Hop",
                 "value": 9
+              },
+              {
+                "text": "Take the request",
+                "value": 10
+              },
+              {
+                "text": "A trick for the crowd",
+                "value": 11
+              },
+              {
+                "text": "Take a bow",
+                "value": 12
+              },
+              {
+                "text": "Drop the request",
+                "value": 13
+              },
+              {
+                "text": "Hush the band",
+                "value": 14
+              },
+              {
+                "text": "Bow out",
+                "value": 15
               }
             ],
             "prompt": "Showman Pip: Care for a trick?",
@@ -25418,6 +25443,84 @@
               "value": 9
             },
             "label": "opt9"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 10
+            },
+            "label": "opt10"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 11
+            },
+            "label": "opt11"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 12
+            },
+            "label": "opt12"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 13
+            },
+            "label": "opt13"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 14
+            },
+            "label": "opt14"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 15
+            },
+            "label": "opt15"
           },
           "opcode": "JUMP_IF"
         },
@@ -25701,6 +25804,202 @@
         {
           "args": {
             "name": "opt9"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "entity": "Showman Pip",
+              "timeline_id": "pip_hop"
+            },
+            "command": "PLAY_ACTION"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt10"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "quest_id": "q_show"
+            },
+            "command": "START_QUEST"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt11"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "quest:q_show",
+              "operator": "==",
+              "scope_id": null,
+              "source": "rpg",
+              "value": "active"
+            },
+            "label": "adv"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "adv"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "amount": 1,
+              "objective_id": "tricks",
+              "quest_id": "q_show"
+            },
+            "command": "ADVANCE_QUEST"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt12"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "quest:q_show",
+              "operator": "==",
+              "scope_id": null,
+              "source": "rpg",
+              "value": "active"
+            },
+            "label": "bow"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "bow"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "quest_id": "q_show"
+            },
+            "command": "COMPLETE_QUEST"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt13"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "quest:q_show",
+              "operator": "==",
+              "scope_id": null,
+              "source": "rpg",
+              "value": "active"
+            },
+            "label": "drop"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "drop"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "quest_id": "q_show"
+            },
+            "command": "FAIL_QUEST"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt14"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "fade": 0.3
+            },
+            "command": "STOP_BGM"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "asset_id": "town_theme",
+              "fade": 0.3
+            },
+            "command": "PLAY_BGM"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt15"
           },
           "opcode": "LABEL"
         },
@@ -43799,7 +44098,43 @@
         "version": 3
       }
     ],
-    "timelines": [],
+    "timelines": [
+      {
+        "cues": [
+          {
+            "cue_id": "up",
+            "kind": "movement",
+            "payload": {
+              "duration": 0.2,
+              "x": 0.0,
+              "y": -1.0
+            },
+            "time": 0.0
+          },
+          {
+            "cue_id": "down",
+            "kind": "movement",
+            "payload": {
+              "duration": 0.2,
+              "x": 0.0,
+              "y": 1.0
+            },
+            "time": 0.2
+          },
+          {
+            "cue_id": "end",
+            "kind": "gameplay_event",
+            "payload": {
+              "name": "end"
+            },
+            "time": 0.5
+          }
+        ],
+        "schema": "asteria.action_timeline",
+        "timeline_id": "pip_hop",
+        "version": 1
+      }
+    ],
     "triggers": [],
     "version": 3
   },
@@ -44173,6 +44508,17 @@
         "schema": "asteria.rpg.achievement",
         "target": "mender_wisp",
         "value": 10.0,
+        "version": 1
+      },
+      {
+        "achievement_id": "contractor",
+        "description": "Take two contracts.",
+        "display_name": "Contractor",
+        "hidden": false,
+        "kind": "counter",
+        "schema": "asteria.rpg.achievement",
+        "target": "contracts",
+        "value": 2.0,
         "version": 1
       },
       {
@@ -45502,6 +45848,14 @@
       }
     ],
     "battle_schedulers": [
+      {
+        "minimum_speed": 1.0,
+        "mode": "round",
+        "scheduler_id": "classic_rounds",
+        "schema": "asteria.rpg.battle_scheduler_definition",
+        "timeline_scale": 100.0,
+        "version": 1
+      },
       {
         "minimum_speed": 1.0,
         "mode": "continuous",
@@ -50732,7 +51086,8 @@
         ],
         "schema": "asteria.rpg.encounter",
         "tags": [
-          "crypt"
+          "crypt",
+          "scheduler:classic_rounds"
         ],
         "version": 1
       },
@@ -50788,6 +51143,7 @@
         ],
         "schema": "asteria.rpg.encounter",
         "tags": [
+          "scheduler:classic_rounds",
           "woods"
         ],
         "version": 1
@@ -62100,6 +62456,32 @@
         "reward": {
           "currencies": {
             "gold": 800.0
+          },
+          "experience": {},
+          "loot": []
+        },
+        "schema": "asteria.rpg.quest",
+        "version": 1
+      },
+      {
+        "auto_complete": false,
+        "description": "Pip wants three tricks for the crowd, then a bow.",
+        "display_name": "The Showman's Request",
+        "next_quest_ids": [],
+        "objectives": [
+          {
+            "description": "",
+            "kind": "counter",
+            "objective_id": "tricks",
+            "required": 3,
+            "target": ""
+          }
+        ],
+        "prerequisites": [],
+        "quest_id": "q_show",
+        "reward": {
+          "currencies": {
+            "gold": 300.0
           },
           "experience": {},
           "loot": []

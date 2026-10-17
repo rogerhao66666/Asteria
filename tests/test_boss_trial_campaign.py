@@ -52,7 +52,7 @@ def test_progress_came_from_play_not_from_a_fixture(played):
     assert state.equipment_bag or facts["victories"]  # fights dropped gear into the bag
     assert campaign.game.ensure_actor_progression("hero_01").level >= 9
     assert facts["weather_rain"] and facts["weather_dust"] and facts["foes_roamed"]
-    assert facts["field_tricks"] == 9 and facts["map_changes"] >= 12
+    assert facts["field_tricks"] == 17 and facts["map_changes"] >= 12
 
 
 def test_every_foe_has_a_drop_table_with_the_chances_its_weights_say(played):
@@ -82,3 +82,64 @@ def test_every_foe_has_a_drop_table_with_the_chances_its_weights_say(played):
     assert counts["w_axe"] / rolls == pytest.approx(1 / 12, abs=0.015)
     assert counts["nothing"] / rolls == pytest.approx(4 / 12, abs=0.02)
     assert campaign.game.save.rpg_state.equipment_bag, "the fights dropped no gear at all"
+
+
+def test_the_map_drawn_after_a_load_is_the_map_of_the_loaded_game(played):
+    """The campaign saves and loads in the woods; every later map must still be the right one."""
+    campaign, _facts = played
+    view = campaign.rt.tile_view
+    assert view is not None and view.session is campaign.game
+    assert view.scene_id == campaign.game.scene.id
+
+
+def test_four_heroes_stand_two_by_two_inside_the_stage(played):
+    campaign, _facts = played
+    game = campaign.game
+    game.start_encounter("woods_ambush")
+    campaign.rt._battle_presentation.begin()
+    visuals = {
+        v.member_id: v.anchor
+        for v in campaign.rt._battle_presentation.screen.scene.combatants
+        if v.member_id in ("hero_01", "hero_02", "hero_03", "hero_04")
+    }
+    assert len(visuals) == 4
+    columns = {}
+    for anchor in visuals.values():
+        columns.setdefault(round(anchor.x), []).append(anchor.y)
+    assert len(columns) == 2 and all(len(ys) == 2 for ys in columns.values())
+    for ys in columns.values():
+        assert abs(ys[0] - ys[1]) > 40  # nobody stands on a column mate
+    layout = campaign.rt._battle_presentation.screen.composer.layout
+    assert all(60 < a.y < layout.virtual_height for a in visuals.values())  # all on the stage
+    game.battle, game.mode, game.encounter_id = None, "field", None
+
+
+def test_the_bag_has_a_limit_of_kinds_and_says_what_did_not_fit(played):
+    from asteria.rpg import ItemDefinition
+
+    campaign, _facts = played
+    game = campaign.game
+    db = game.project.rpg_database
+    for index in range(60):
+        db.add_item(ItemDefinition(f"junk_{index}", f"Junk {index}"))
+    bag = game.save.rpg_state.inventory
+    for index in range(60):
+        bag.add(f"junk_{index}", 1)
+    kinds = [k for k, v in bag._counts.items() if v > 0]
+    assert len(kinds) <= 40 + 5  # the limit (key items do not count) plus what is exempt
+    assert bag.overflow  # what did not fit was reported
+
+
+def test_a_taunt_pulls_single_target_attacks_and_the_shared_gauge_fills(played):
+    campaign, _facts = played
+    game = campaign.game
+    game.start_encounter("woods_patrol")
+    game.battle.apply_state("taunt", "hero_02", "hero_02")
+    taunter = game.battle.member("hero_02").subject.tags.contains("state.taunt")
+    assert taunter and game.extension_rules.taunt_tag == "state.taunt"
+    assert game.party_gauge("unity") >= 0
+    game.change_party_gauge("unity", 100)
+    assert game.ability_unavailable("hero_01", "unity_strike") == ""
+    game.battle = None
+    game.mode = "field"
+    game.encounter_id = None

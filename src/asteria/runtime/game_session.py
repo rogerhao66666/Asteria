@@ -2643,6 +2643,9 @@ class GameSessionRuntime:
             registry.register(library.get(ability_id))
 
         scheduler = next(iter(db.battle_schedulers.values()), None)
+        for tag in encounter.tags:  # scheduler:<id> picks another turn scheduler
+            if tag.startswith("scheduler:") and tag[len("scheduler:") :] in db.battle_schedulers:
+                scheduler = db.battle_schedulers[tag[len("scheduler:") :]]
         self.battle = BattleRuntime(
             (Party("heroes", heroes), Party("enemies", tuple(enemies))),
             AbilityRuntime(registry),

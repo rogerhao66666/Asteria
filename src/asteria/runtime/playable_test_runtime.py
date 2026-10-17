@@ -796,6 +796,8 @@ class PlayableTestRuntime:
         if not known[1]:
             return None
         view = getattr(self, "_tile_view", None)
+        if view is not None and view.session is not self.game:
+            view = None  # a loaded save is a new session: the old view still holds the old one
         if view is None:
             view = self._tile_view = TileSceneView(
                 self.game, self.resource_root, self.width, self.height, self.pg

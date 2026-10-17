@@ -494,8 +494,12 @@ class BattlePresentationRuntime:
         origin = self.move_offset(member_id)
         goal = (0.0, 0.0)
         if target_id is not None:
-            mine = next(v for v in self.scene.combatants if v.member_id == member_id)
-            theirs = next(v for v in self.scene.combatants if v.member_id == str(target_id))
+            mine = next((v for v in self.scene.combatants if v.member_id == member_id), None)
+            theirs = next(
+                (v for v in self.scene.combatants if v.member_id == str(target_id)), None
+            )
+            if mine is None or theirs is None:
+                return  # someone left the fight meanwhile (removed, captured): nothing to show
             side = 1.0 if theirs.anchor.x >= mine.anchor.x else -1.0
             if gap is None:  # stop at the edge of the foe's body, however big it is
                 frame = self._sprite_sheets[theirs.member_id].frames[0]
