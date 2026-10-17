@@ -14,7 +14,8 @@ from __future__ import annotations
 
 from math import hypot
 
-NODE_W, NODE_H = 128, 44
+NODE_W, NODE_H = 148, 44
+ICON = 30  # a node's picture: the icon of the first ability it grants
 COLORS = {
     "learned": (64, 150, 96),
     "maxed": (196, 156, 62),
@@ -269,8 +270,20 @@ class SkillTreeScreen:
             pg.draw.rect(screen, border, rect, 3 if selected else 1, border_radius=8)
             rank = allocation.rank(graph.graph_id, node.node_id)
             text_color = (245, 245, 250) if status != "locked" else (150, 156, 172)
-            rt.text(node.display_name[:16], cx, cy - 12, size=18, color=text_color, center=True)
-            rt.text(f"{rank}/{node.max_rank}", cx, cy + 8, size=16, color=text_color, center=True)
+            shift = 0
+            if rt._draw_icon(self.node_icon(node), rect.x + 6, int(cy - ICON / 2), ICON):
+                shift = (ICON + 6) // 2
+            rt.text(
+                node.display_name[:14], cx + shift, cy - 12, size=18, color=text_color, center=True
+            )
+            rt.text(
+                f"{rank}/{node.max_rank}",
+                cx + shift,
+                cy + 8,
+                size=16,
+                color=text_color,
+                center=True,
+            )
         self._draw_details(graph, allocation)
         rt.text(
             "Arrows: choose   Enter: learn   O: next tree   C / Esc: back",
@@ -290,6 +303,21 @@ class SkillTreeScreen:
                 center=True,
             )
 
+    def node_icon(self, node):
+        """The node's own icon, else the first granted ability's icon, else ``""``."""
+        if node.icon_id:
+            return node.icon_id
+        abilities = self.rt.project.gameplay_library.abilities
+        for reward in node.rewards:
+            for ability_id in reward.granted_abilities:
+                try:
+                    icon = abilities.get(ability_id).icon_id
+                except KeyError:
+                    continue
+                if icon:
+                    return icon
+        return ""
+
     def _draw_details(self, graph, allocation):
         rt = self.rt
         node = graph.node(self.node_id) if self.node_id else None
@@ -299,7 +327,10 @@ class SkillTreeScreen:
             return
         labels = rt.manifest.get("battle", {}).get("skills", {})
         rank = allocation.rank(graph.graph_id, node.node_id)
-        rt.text(node.display_name, x + 16, y + 14, size=24, color=(255, 220, 124))
+        icon = rt._draw_icon(self.node_icon(node), x + 16, y + 10, 36)
+        rt.text(
+            node.display_name, x + (60 if icon else 16), y + 14, size=24, color=(255, 220, 124)
+        )
         status = self.status(graph, node)
         rt.text(
             f"Rank {rank}/{node.max_rank}   ·   {status}",

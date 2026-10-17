@@ -23739,6 +23739,7 @@
           "hud_row_height": 10.0,
           "margin": 8.0,
           "menu_over_stage": true,
+          "overhead_below": false,
           "overhead_zones": [
             "left"
           ],
@@ -51979,6 +51980,7 @@
           "dragon_revert"
         ],
         "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/f_dragon.png",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -51998,6 +52000,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/f_normal.png",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -53681,6 +53684,7 @@
         "attachment_id": "card_golem",
         "destroyed_on_removal": true,
         "display_name": "Golem Card",
+        "icon_id": "playable_assets/lucifer/icons/card_golem_item.png",
         "item_id": "card_golem_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
@@ -53692,6 +53696,7 @@
         "attachment_id": "card_slayer",
         "destroyed_on_removal": true,
         "display_name": "Slayer Card",
+        "icon_id": "playable_assets/lucifer/icons/card_slayer_item.png",
         "item_id": "card_slayer_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
@@ -53703,6 +53708,7 @@
         "attachment_id": "card_vampire",
         "destroyed_on_removal": true,
         "display_name": "Vampire Card",
+        "icon_id": "playable_assets/lucifer/icons/card_vampire_item.png",
         "item_id": "card_vampire_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
@@ -53714,6 +53720,7 @@
         "attachment_id": "card_wolf",
         "destroyed_on_removal": true,
         "display_name": "Wolf Card",
+        "icon_id": "playable_assets/lucifer/icons/card_wolf_item.png",
         "item_id": "card_wolf_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
@@ -53724,6 +53731,7 @@
       {
         "battle_ability": "draught_ether",
         "display_name": "Ether Draught",
+        "icon_id": "playable_assets/lucifer/icons/ether_draught.png",
         "item_id": "ether_draught",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -53748,6 +53756,7 @@
       {
         "battle_ability": "bomb_fire",
         "display_name": "Fire Bomb",
+        "icon_id": "playable_assets/lucifer/icons/fire_bomb.png",
         "item_id": "fire_bomb",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -53784,6 +53793,7 @@
       {
         "battle_ability": "bomb_ice",
         "display_name": "Frost Bomb",
+        "icon_id": "playable_assets/lucifer/icons/frost_bomb.png",
         "item_id": "frost_bomb",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -53820,6 +53830,7 @@
       {
         "battle_ability": "salve_heal",
         "display_name": "Healing Salve",
+        "icon_id": "playable_assets/lucifer/icons/healing_salve.png",
         "item_id": "healing_salve",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -53868,6 +53879,7 @@
       {
         "attachment_id": "onyx",
         "display_name": "Onyx",
+        "icon_id": "playable_assets/lucifer/icons/onyx_item.png",
         "item_id": "onyx_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
@@ -53890,6 +53902,7 @@
       {
         "battle_ability": "tonic_phoenix",
         "display_name": "Phoenix Tonic",
+        "icon_id": "playable_assets/lucifer/icons/phoenix_tonic.png",
         "item_id": "phoenix_tonic",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -53948,6 +53961,7 @@
       {
         "battle_ability": "flask_storm",
         "display_name": "Storm Flask",
+        "icon_id": "playable_assets/lucifer/icons/storm_flask.png",
         "item_id": "storm_flask",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54437,6 +54451,7 @@
             "any_prerequisites": [],
             "display_name": "Strength",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_attr_str.png",
             "max_rank": 30,
             "node_id": "attr_str",
             "prerequisites": [],
@@ -54842,6 +54857,7 @@
             "any_prerequisites": [],
             "display_name": "Vitality",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_attr_vit.png",
             "max_rank": 30,
             "node_id": "attr_vit",
             "prerequisites": [],
@@ -55307,6 +55323,7 @@
             "any_prerequisites": [],
             "display_name": "Dexterity",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_attr_dex.png",
             "max_rank": 30,
             "node_id": "attr_dex",
             "prerequisites": [],
@@ -55772,6 +55789,7 @@
             "any_prerequisites": [],
             "display_name": "Intellect",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_attr_int.png",
             "max_rank": 30,
             "node_id": "attr_int",
             "prerequisites": [],
@@ -56250,6 +56268,7 @@
             "any_prerequisites": [],
             "display_name": "Reflexes",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_d_reflex.png",
             "max_rank": 5,
             "node_id": "d_reflex",
             "prerequisites": [],
@@ -56462,6 +56481,7 @@
             "any_prerequisites": [],
             "display_name": "Keen Eye",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_d_eye.png",
             "max_rank": 1,
             "node_id": "d_eye",
             "prerequisites": [
@@ -56532,6 +56552,7 @@
             "any_prerequisites": [],
             "display_name": "Deadly Aim",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_d_crit.png",
             "max_rank": 5,
             "node_id": "d_crit",
             "prerequisites": [
@@ -56706,6 +56727,7 @@
             "any_prerequisites": [],
             "display_name": "Forgemaster Training",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_forgemaster_core.png",
             "max_rank": 5,
             "node_id": "forgemaster_core",
             "prerequisites": [],
@@ -57160,6 +57182,7 @@
             "any_prerequisites": [],
             "display_name": "Path of Might",
             "exclusive_group": "forgemaster_path",
+            "icon_id": "playable_assets/lucifer/icons/node_forgemaster_keyA.png",
             "max_rank": 1,
             "node_id": "forgemaster_keyA",
             "prerequisites": [
@@ -57197,6 +57220,7 @@
             "any_prerequisites": [],
             "display_name": "Path of Resilience",
             "exclusive_group": "forgemaster_path",
+            "icon_id": "playable_assets/lucifer/icons/node_forgemaster_keyB.png",
             "max_rank": 1,
             "node_id": "forgemaster_keyB",
             "prerequisites": [
@@ -57235,6 +57259,7 @@
             "any_prerequisites": [],
             "display_name": "Mastery",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_forgemaster_passive.png",
             "max_rank": 1,
             "node_id": "forgemaster_passive",
             "prerequisites": [
@@ -57281,6 +57306,7 @@
             "any_prerequisites": [],
             "display_name": "Guardian Training",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_guardian_core.png",
             "max_rank": 5,
             "node_id": "guardian_core",
             "prerequisites": [],
@@ -57773,6 +57799,7 @@
             "any_prerequisites": [],
             "display_name": "Path of Might",
             "exclusive_group": "guardian_path",
+            "icon_id": "playable_assets/lucifer/icons/node_guardian_keyA.png",
             "max_rank": 1,
             "node_id": "guardian_keyA",
             "prerequisites": [
@@ -57809,6 +57836,7 @@
             "any_prerequisites": [],
             "display_name": "Path of Resilience",
             "exclusive_group": "guardian_path",
+            "icon_id": "playable_assets/lucifer/icons/node_guardian_keyB.png",
             "max_rank": 1,
             "node_id": "guardian_keyB",
             "prerequisites": [
@@ -57847,6 +57875,7 @@
             "any_prerequisites": [],
             "display_name": "Mastery",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_guardian_passive.png",
             "max_rank": 1,
             "node_id": "guardian_passive",
             "prerequisites": [
@@ -57893,6 +57922,7 @@
             "any_prerequisites": [],
             "display_name": "Hero Training",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_hero_core.png",
             "max_rank": 5,
             "node_id": "hero_core",
             "prerequisites": [],
@@ -58471,6 +58501,7 @@
             "any_prerequisites": [],
             "display_name": "Path of Might",
             "exclusive_group": "hero_path",
+            "icon_id": "playable_assets/lucifer/icons/node_hero_keyA.png",
             "max_rank": 1,
             "node_id": "hero_keyA",
             "prerequisites": [
@@ -58512,6 +58543,7 @@
             "any_prerequisites": [],
             "display_name": "Path of Resilience",
             "exclusive_group": "hero_path",
+            "icon_id": "playable_assets/lucifer/icons/node_hero_keyB.png",
             "max_rank": 1,
             "node_id": "hero_keyB",
             "prerequisites": [
@@ -58550,6 +58582,7 @@
             "any_prerequisites": [],
             "display_name": "Mastery",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_hero_passive.png",
             "max_rank": 1,
             "node_id": "hero_passive",
             "prerequisites": [
@@ -58596,6 +58629,7 @@
             "any_prerequisites": [],
             "display_name": "Footing",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_k_footing.png",
             "max_rank": 5,
             "node_id": "k_footing",
             "prerequisites": [],
@@ -58775,6 +58809,7 @@
             "any_prerequisites": [],
             "display_name": "Toughness",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_k_tough.png",
             "max_rank": 5,
             "node_id": "k_tough",
             "prerequisites": [
@@ -58870,6 +58905,7 @@
             "any_prerequisites": [],
             "display_name": "Berserker",
             "exclusive_group": "k_path",
+            "icon_id": "playable_assets/lucifer/icons/node_k_berserker.png",
             "max_rank": 1,
             "node_id": "k_berserker",
             "prerequisites": [
@@ -58909,6 +58945,7 @@
             "any_prerequisites": [],
             "display_name": "Bulwark",
             "exclusive_group": "k_path",
+            "icon_id": "playable_assets/lucifer/icons/node_k_bulwark.png",
             "max_rank": 1,
             "node_id": "k_bulwark",
             "prerequisites": [
@@ -59180,6 +59217,7 @@
             "any_prerequisites": [],
             "display_name": "Study",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_m_study.png",
             "max_rank": 5,
             "node_id": "m_study",
             "prerequisites": [],
@@ -59490,6 +59528,7 @@
             "any_prerequisites": [],
             "display_name": "Arcane Focus",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_m_focus.png",
             "max_rank": 1,
             "node_id": "m_focus",
             "prerequisites": [
@@ -59611,6 +59650,7 @@
             "any_prerequisites": [],
             "display_name": "Rogue Training",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_rogue_core.png",
             "max_rank": 5,
             "node_id": "rogue_core",
             "prerequisites": [],
@@ -60151,6 +60191,7 @@
             "any_prerequisites": [],
             "display_name": "Path of Might",
             "exclusive_group": "rogue_path",
+            "icon_id": "playable_assets/lucifer/icons/node_rogue_keyA.png",
             "max_rank": 1,
             "node_id": "rogue_keyA",
             "prerequisites": [
@@ -60189,6 +60230,7 @@
             "any_prerequisites": [],
             "display_name": "Path of Resilience",
             "exclusive_group": "rogue_path",
+            "icon_id": "playable_assets/lucifer/icons/node_rogue_keyB.png",
             "max_rank": 1,
             "node_id": "rogue_keyB",
             "prerequisites": [
@@ -60227,6 +60269,7 @@
             "any_prerequisites": [],
             "display_name": "Mastery",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_rogue_passive.png",
             "max_rank": 1,
             "node_id": "rogue_passive",
             "prerequisites": [
@@ -60273,6 +60316,7 @@
             "any_prerequisites": [],
             "display_name": "Sage Training",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_sage_core.png",
             "max_rank": 5,
             "node_id": "sage_core",
             "prerequisites": [],
@@ -60803,6 +60847,7 @@
             "any_prerequisites": [],
             "display_name": "Path of Might",
             "exclusive_group": "sage_path",
+            "icon_id": "playable_assets/lucifer/icons/node_sage_keyA.png",
             "max_rank": 1,
             "node_id": "sage_keyA",
             "prerequisites": [
@@ -60840,6 +60885,7 @@
             "any_prerequisites": [],
             "display_name": "Path of Resilience",
             "exclusive_group": "sage_path",
+            "icon_id": "playable_assets/lucifer/icons/node_sage_keyB.png",
             "max_rank": 1,
             "node_id": "sage_keyB",
             "prerequisites": [
@@ -60878,6 +60924,7 @@
             "any_prerequisites": [],
             "display_name": "Mastery",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_sage_passive.png",
             "max_rank": 1,
             "node_id": "sage_passive",
             "prerequisites": [
@@ -60924,6 +60971,7 @@
             "any_prerequisites": [],
             "display_name": "Weapon Master Training",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_weapon_master_core.png",
             "max_rank": 5,
             "node_id": "weapon_master_core",
             "prerequisites": [],
@@ -61497,6 +61545,7 @@
             "any_prerequisites": [],
             "display_name": "Path of Might",
             "exclusive_group": "weapon_master_path",
+            "icon_id": "playable_assets/lucifer/icons/node_weapon_master_keyA.png",
             "max_rank": 1,
             "node_id": "weapon_master_keyA",
             "prerequisites": [
@@ -61535,6 +61584,7 @@
             "any_prerequisites": [],
             "display_name": "Path of Resilience",
             "exclusive_group": "weapon_master_path",
+            "icon_id": "playable_assets/lucifer/icons/node_weapon_master_keyB.png",
             "max_rank": 1,
             "node_id": "weapon_master_keyB",
             "prerequisites": [
@@ -61573,6 +61623,7 @@
             "any_prerequisites": [],
             "display_name": "Mastery",
             "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_weapon_master_passive.png",
             "max_rank": 1,
             "node_id": "weapon_master_passive",
             "prerequisites": [

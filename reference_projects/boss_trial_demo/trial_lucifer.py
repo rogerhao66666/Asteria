@@ -206,11 +206,24 @@ EQUIPMENT_ICONS = {  # equipment id: file under Equipment
     "a_warden_plate": "Chest/Png/Rare Plate Chestpiece.png",
     "a_warden_ring": "Misc/Png/Golden Enchanted Ring.png",
     "a_warden_charm": "Misc/Png/Rare Golden Gem Amulet.png",
+    "f_normal": "Misc/Png/Rare Explorers Gloves.png",  # bare-handed fighting
+    "f_dragon": "Misc/Png/Wizards Sparkle Ring.png",
 }
 ITEM_ICONS = {  # item id: file under Pickups
     "ruby_item": "Gems/Png/OrangeGem.png",
     "sapphire_item": "Gems/Png/BlueGem.png",
     "topaz_item": "Gems/Png/PinkGem.png",
+    "onyx_item": "Gems/Png/PinkGem.png",
+    "healing_salve": "Potions/Health/Png/SmallHealthPotion.png",
+    "phoenix_tonic": "Potions/Health/Png/BigHealthPotion.png",
+    "ether_draught": "Potions/Mana/Png/BigManaPotion.png",
+    "storm_flask": "Potions/Stamina/Png/BigStaminaPotion.png",
+    "fire_bomb": "Potions/Stamina/Png/SmallStaminaPotion.png",
+    "frost_bomb": "Potions/Mana/Png/SmallManaPotion.png",
+    "card_golem_item": "Gold/Png/PileOfGold.png",  # a monster card: shown as a pile of coins
+    "card_slayer_item": "Gold/Png/PileOfGold.png",
+    "card_vampire_item": "Gold/Png/PileOfGold.png",
+    "card_wolf_item": "Gold/Png/PileOfGold.png",
 }
 SKILL_ICON_GROUPS = {  # which Lucifer class icon set a skill draws from
     "warrior": (
@@ -284,7 +297,25 @@ def apply_icons(context):
         icon = copy(source, f"skill_{ability_id}.png")
         context.abilities._definitions[ability_id] = dataclasses.replace(definition, icon_id=icon)
         kept.append(ability_id)
+    _node_icons(db, pools, copy)
     return tuple(kept)
+
+
+def _node_icons(db, pools, copy):
+    """Tree nodes that grant no ability (training, keystones, masteries) get a class icon of
+    their own so every node of a skill tree has a picture."""
+    import dataclasses
+
+    groups = tuple(pools)
+    for index, (graph_id, graph) in enumerate(sorted(db.progression_graphs.items())):
+        pool = pools[groups[index % len(groups)]]
+        nodes = []
+        for number, node in enumerate(graph.nodes):
+            if not node.icon_id and not any(r.granted_abilities for r in node.rewards):
+                source = pool[(number * 5 + 3) % len(pool)]
+                node = dataclasses.replace(node, icon_id=copy(source, f"node_{node.node_id}.png"))
+            nodes.append(node)
+        db.progression_graphs[graph_id] = dataclasses.replace(graph, nodes=tuple(nodes))
 
 
 def apply_ui(context):

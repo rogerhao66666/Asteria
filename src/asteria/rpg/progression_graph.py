@@ -139,6 +139,7 @@ class ProgressionNodeDefinition:
     any_prerequisites: tuple[ProgressionNodeRequirement, ...] = ()
     exclusive_group: str | None = None
     tags: tuple[str, ...] = ()
+    icon_id: str = ""  # optional picture; empty = the icon of the first ability it grants
 
     def __init__(
         self,
@@ -152,6 +153,7 @@ class ProgressionNodeDefinition:
         any_prerequisites=(),
         exclusive_group=None,
         tags=(),
+        icon_id="",
     ):
         node_id = _id(node_id, "node_id")
         max_rank = int(max_rank)
@@ -198,6 +200,7 @@ class ProgressionNodeDefinition:
         object.__setattr__(self, "any_prerequisites", reqs(any_prerequisites))
         object.__setattr__(self, "exclusive_group", group)
         object.__setattr__(self, "tags", tuple(sorted({_id(x, "tag").lower() for x in tags})))
+        object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def cost_for_rank(self, rank):
         rank = int(rank)
@@ -212,7 +215,7 @@ class ProgressionNodeDefinition:
         return self.rewards[rank - 1]
 
     def to_data(self):
-        return {
+        data = {
             "schema": "asteria.rpg.progression_node",
             "version": 1,
             "node_id": self.node_id,
@@ -225,6 +228,9 @@ class ProgressionNodeDefinition:
             "exclusive_group": self.exclusive_group,
             "tags": list(self.tags),
         }
+        if self.icon_id:  # optional: older data stays byte-identical
+            data["icon_id"] = self.icon_id
+        return data
 
     @classmethod
     def from_data(cls, data):
@@ -242,7 +248,7 @@ class ProgressionNodeDefinition:
             "tags",
         }
         if (
-            set(data) != expected
+            set(data) - {"icon_id"} != expected
             or data.get("schema") != "asteria.rpg.progression_node"
             or data.get("version") != 1
         ):
@@ -259,6 +265,7 @@ class ProgressionNodeDefinition:
             ],
             exclusive_group=data["exclusive_group"],
             tags=data["tags"],
+            icon_id=data.get("icon_id", ""),
         )
 
 
