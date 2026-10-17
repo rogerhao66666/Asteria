@@ -165,11 +165,49 @@ def credits_rows(keys):
     ]
 
 
+def _arc_mask(frame):
+    """The pure-white pixels of a frame: the slash the pack bakes into its attack strips."""
+    from PIL import Image
+
+    r, g, b, a = frame.split()
+    bright = Image.merge("RGB", (r, g, b)).convert("L").point(lambda v: 255 if v >= 250 else 0)
+    from PIL import ImageChops
+
+    return ImageChops.multiply(bright, a)
+
+
+def _come_down(up, down):
+    """The Up strips swing from the bottom up (their slash arc lies under the feet); the arc of
+    the Down strip of the same frame, laid over the Up figure, makes the blow come down."""
+    from PIL import Image
+
+    frames = []
+    for figure, front in zip(up, down, strict=True):
+        clean = figure.copy()
+        clean.paste((0, 0, 0, 0), (0, 0), _arc_mask(figure))
+        arc = Image.new("RGBA", front.size, (255, 255, 255, 255))
+        arc.putalpha(_arc_mask(front))
+        clean.alpha_composite(arc)
+        frames.append(clean)
+    # the Up figure raises its sword AFTER the slash (it swings upward): show the raised sword
+    # first, then the slash, then the recovery
+    counts = [_arc_mask(f).histogram()[255] for f in down]
+    k = counts.index(max(counts))
+    if 0 < k < len(frames) - 2:
+        frames = [*frames[:k], *frames[k + 1 : -1], frames[k], frames[-1]]
+    return frames
+
+
 def _facing_strip(key, facing, anim):
     source, mirror = _source_facing(facing)
     folder = pack_dir(key) / source / "Png"
     hits = sorted(folder.glob(f"*{anim}.png"))
-    return _strip_frames(hits[0], mirror) if hits else []
+    frames = _strip_frames(hits[0], mirror) if hits else []
+    if facing == "Up" and anim.startswith("Attack") and frames:
+        down = _facing_strip(key, "Down", anim)
+        if len(down) == len(frames) and all(a.size == b.size for a, b in zip(frames, down)):
+            frames = _come_down(frames, down)
+    return frames
 
 
 def field_sheet(key, *, frame=64):

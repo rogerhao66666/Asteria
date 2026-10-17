@@ -114,3 +114,42 @@ def test_looking_right_uses_the_left_strips_turned_round():
     assert len(left) == len(right) > 0
     for a, b in zip(left, right, strict=True):  # every blow comes down, whichever way it faces
         assert ImageChops.difference(ImageOps.mirror(a), b).getbbox() is None
+
+
+def test_a_blow_facing_away_comes_down_too():
+    import sys
+
+    sys.path.insert(0, str(ROOT))
+    import trial_lucifer as lucifer
+    from PIL import ImageChops
+
+    def arc_frame(frames):
+        masks = [lucifer._arc_mask(f) for f in frames]
+        k = max(range(len(masks)), key=lambda i: masks[i].histogram()[255])
+        return k, masks[k]
+
+    down_k, down_arc = arc_frame(lucifer._facing_strip("warrior", "Down", "Attack01"))
+    up_k, up_arc = arc_frame(lucifer._facing_strip("warrior", "Up", "Attack01"))
+    # the Up strip swings from the bottom up in the pack: its figure now carries the Down arc,
+    # and its raised sword is shown before the slash instead of after it
+    assert ImageChops.difference(up_arc, down_arc).getbbox() is None
+    assert up_k > down_k
+
+
+def test_stable_ids_make_a_build_repeatable():
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    import stable_ids
+
+    from asteria.core import Entity, ids
+
+    original = ids.uuid4
+    try:
+        stable_ids.install("test-build")
+        first = [Entity("A").id, Entity("B").id]
+        stable_ids.install("test-build")
+        again = [Entity("A").id, Entity("B").id]
+    finally:
+        ids.uuid4 = original
+    assert first == again and first[0] != first[1]

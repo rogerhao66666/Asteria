@@ -869,15 +869,15 @@ def build_skills(looks):
 
 # damage of each build relative to the others (set by scripts/arpg_balance.py)
 BUILD_DAMAGE = {
-    "berserker": 0.26,
-    "guardian": 1.32,
-    "warlord": 1.65,
-    "marksman": 1.89,
-    "venomancer": 3.61,
-    "skirmisher": 0.65,
-    "pyromancer": 0.75,
-    "cryomancer": 1.05,
-    "stormcaller": 1.4,
+    "berserker": 0.63,
+    "guardian": 2.36,
+    "warlord": 2.81,
+    "marksman": 1.42,
+    "venomancer": 2.73,
+    "skirmisher": 0.37,
+    "pyromancer": 0.71,
+    "cryomancer": 0.96,
+    "stormcaller": 1.05,
 }
 
 

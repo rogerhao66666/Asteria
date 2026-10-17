@@ -5871,12 +5871,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.735,
+              "coefficient": 0.6719999999999999,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.05,
+              "coefficient": 0.96,
               "key": "cold_dmg",
               "source": "source_stat"
             },
@@ -5929,12 +5929,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.68,
+              "coefficient": 1.26,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.4,
+              "coefficient": 1.05,
               "key": "shock_dmg",
               "source": "source_stat"
             },
@@ -6045,12 +6045,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.35,
+              "coefficient": 1.278,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.75,
+              "coefficient": 0.71,
               "key": "fire_dmg",
               "source": "source_stat"
             },
@@ -6103,12 +6103,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.2000000000000002,
+              "coefficient": 1.136,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.8999999999999999,
+              "coefficient": 0.852,
               "key": "fire_dmg",
               "source": "source_stat"
             },
@@ -6161,12 +6161,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.75,
+              "coefficient": 0.71,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.75,
+              "coefficient": 0.71,
               "key": "fire_dmg",
               "source": "source_stat"
             },
@@ -6277,12 +6277,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.05,
+              "coefficient": 0.96,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.05,
+              "coefficient": 0.96,
               "key": "cold_dmg",
               "source": "source_stat"
             },
@@ -6335,12 +6335,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.47,
+              "coefficient": 1.3439999999999999,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.26,
+              "coefficient": 1.152,
               "key": "cold_dmg",
               "source": "source_stat"
             },
@@ -6393,12 +6393,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.26,
+              "coefficient": 1.152,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.05,
+              "coefficient": 0.96,
               "key": "cold_dmg",
               "source": "source_stat"
             },
@@ -6451,12 +6451,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.6000000000000001,
+              "coefficient": 0.568,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.75,
+              "coefficient": 0.71,
               "key": "fire_dmg",
               "source": "source_stat"
             },
@@ -6509,12 +6509,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 3.36,
+              "coefficient": 2.52,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.68,
+              "coefficient": 1.26,
               "key": "shock_dmg",
               "source": "source_stat"
             },
@@ -6625,12 +6625,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.8199999999999998,
+              "coefficient": 1.3650000000000002,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.4,
+              "coefficient": 1.05,
               "key": "shock_dmg",
               "source": "source_stat"
             },
@@ -6724,12 +6724,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 3.2129999999999996,
+              "coefficient": 2.4139999999999997,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.567,
+              "coefficient": 0.426,
               "key": "power",
               "source": "source_stat"
             },
@@ -6831,12 +6831,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 2.166,
+              "coefficient": 1.638,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 3.61,
+              "coefficient": 2.73,
               "key": "poison_dmg",
               "source": "source_stat"
             },
@@ -6884,12 +6884,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.45499999999999996,
+              "coefficient": 0.259,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.13,
+              "coefficient": 0.074,
               "key": "power",
               "source": "source_stat"
             },
@@ -6995,12 +6995,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 4.332,
+              "coefficient": 3.276,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 7.22,
+              "coefficient": 5.46,
               "key": "poison_dmg",
               "source": "source_stat"
             },
@@ -7053,12 +7053,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 3.249,
+              "coefficient": 2.457,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 3.61,
+              "coefficient": 2.73,
               "key": "poison_dmg",
               "source": "source_stat"
             },
@@ -7106,12 +7106,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 9.45,
+              "coefficient": 7.1,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.512,
+              "coefficient": 1.136,
               "key": "power",
               "source": "source_stat"
             },
@@ -7157,12 +7157,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.52,
+              "coefficient": 0.296,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.13,
+              "coefficient": 0.074,
               "key": "power",
               "source": "source_stat"
             },
@@ -7208,7 +7208,7 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.52,
+              "coefficient": 0.296,
               "key": "dexterity",
               "source": "source_stat"
             },
@@ -7254,12 +7254,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 6.425999999999999,
+              "coefficient": 4.827999999999999,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.945,
+              "coefficient": 0.71,
               "key": "power",
               "source": "source_stat"
             },
@@ -7310,12 +7310,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.805,
+              "coefficient": 1.365,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 4.332,
+              "coefficient": 3.276,
               "key": "poison_dmg",
               "source": "source_stat"
             },
@@ -7368,12 +7368,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 2.5269999999999997,
+              "coefficient": 1.9109999999999998,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 2.888,
+              "coefficient": 2.184,
               "key": "poison_dmg",
               "source": "source_stat"
             },
@@ -7513,7 +7513,7 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.815,
+              "coefficient": 3.091,
               "key": "power",
               "source": "source_stat"
             },
@@ -7605,7 +7605,7 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 2.4749999999999996,
+              "coefficient": 4.215,
               "key": "power",
               "source": "source_stat"
             },
@@ -7651,7 +7651,7 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.754,
+              "coefficient": 1.827,
               "key": "power",
               "source": "source_stat"
             },
@@ -7748,12 +7748,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.8479999999999999,
+              "coefficient": 3.304,
               "key": "power",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.792,
+              "coefficient": 1.416,
               "key": "defense",
               "source": "source_stat"
             },
@@ -7850,7 +7850,7 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.312,
+              "coefficient": 0.756,
               "key": "power",
               "source": "source_stat"
             },
@@ -7901,7 +7901,7 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.338,
+              "coefficient": 0.8190000000000001,
               "key": "power",
               "source": "source_stat"
             },
@@ -7947,12 +7947,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 2.9040000000000004,
+              "coefficient": 5.192,
               "key": "defense",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.792,
+              "coefficient": 1.416,
               "key": "power",
               "source": "source_stat"
             },
@@ -7998,12 +7998,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.056,
+              "coefficient": 1.888,
               "key": "power",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.056,
+              "coefficient": 1.888,
               "key": "defense",
               "source": "source_stat"
             },
@@ -8054,12 +8054,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.65,
+              "coefficient": 2.81,
               "key": "power",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.65,
+              "coefficient": 2.81,
               "key": "shock_dmg",
               "source": "source_stat"
             },

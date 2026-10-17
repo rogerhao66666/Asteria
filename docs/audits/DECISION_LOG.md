@@ -2039,3 +2039,11 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - **動作結尾**：攻擊、施法、受擊、跳躍的最後一格都是站姿，不會停在半空。
 - **卡頓**：Cocoa 實機 5000 幀平均 8.3 ms、最長 10.9 ms；唯一的停頓是第一次放粒子特效時載入 kernel（約 60 ms），改成進戰鬥時預先載入。
 - **向右的角色也由上往下揮**：包裝裡 Right 與 Up 的攻擊條帶是由下往上揮（弧形在腳下），Left 與 Down 才是由上往下。面向右的角色（站左邊的怪物、Diablo 面向右）改用「Left 條帶翻轉」（`trial_lucifer._source_facing`），所以每把劍都是劈下來；向上（背對鏡頭）只有 Up 條帶，維持原樣。
+
+**D39 再補充（同日，把清單上能修的都修了）：**
+- 向上（背對鏡頭）的揮擊：Up 條帶的斬擊弧在腳下（由下往上），改成蓋上 Down 條帶同一格的弧，並把舉劍的格子排到斬擊之前，整個動作變成舉劍、劈下、收招（`trial_lucifer._come_down`）。
+- 重建不再換 id：`scripts/stable_ids.py` 讓場景與實體 id 在每次 build 都一樣；Octopath 與 Boss Trial 的 build 結尾重跑兩次結果完全相同。complex_reference_rpg 本身**不能**從頭重建（它的戰鬥演出資料來自已刪掉的舊腳本），只能用 `scripts/reskin_reference_projects.py` 換皮，專案 id 不變。
+- `scripts/boss_trial_live_check.py` 在 Cocoa 實機通過（按鍵打贏三個階段）：原因是腳本在最後一階段還一直把 Boss 血量釘回去。
+- Diablo：弓、弩、魔杖的圖示在 Lucifer 沒有對應物，改成程式畫的（32×16、和裝備包同樣的外框，`lucifer_art.weapon_icon`）；鎮上的房子用地城圖集組成（紅屋頂、磚牆、門、窗，商店有條紋遮陽、鐵匠有爐火窗）；每個技能的動畫在每個職業的四個方向都有對應片段（有測試）；四人原生連線驗收 `scripts/validate_multiplayer_project.py` 通過。
+- 平衡：`scripts/arpg_balance.py --gear` 讓每個流派穿自己的武器、獨特裝與隨機稀有裝；九個流派在「無裝備／有裝備」輸出的幾何平均落在 400–640（坦克型流派的目標是平均的 75–85%），倍率在 `arpg_builds.BUILD_DAMAGE`。
+- 還沒做：受擊閃光是包裝本身的「受傷」動畫（白色、紅色剪影），沒改。

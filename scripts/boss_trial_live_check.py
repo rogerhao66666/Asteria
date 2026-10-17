@@ -150,6 +150,7 @@ def main(argv=None):
     boss_pool.define("vitality", normal_max, current=normal_max, replace=True)
     # play on with the first command of each menu until the boss changes phases, then win
     seen = set()
+    finishing = False
     boss = game.active_enemy_ids()[0] if game.active_enemy_ids() else None
     for _ in range(900):
         if runtime._victory or runtime._defeat or game.battle is None:
@@ -167,9 +168,10 @@ def main(argv=None):
             )
             # deterministic: each phase seen puts the boss just under the next phase's threshold
             thresholds = {0: 1.0, 1: 0.60, 2: 0.25}
-            if len(seen) < 3:  # the last phase is fought out: the boss may fall
+            if len(seen) < 3 or not finishing:
                 wanted = thresholds.get(len(seen), 0.0) * pool.maximum("vitality")
                 pool.set_current("vitality", max(wanted, 300.0))
+                finishing = len(seen) >= 3  # once in the last phase the boss is left to fall
         if not runtime._battle_presentation.busy() and runtime._battle_actor():
             if runtime.battle_commands.mode in ("ingredients", "target"):
                 press(pygame.K_RETURN, 0.05)

@@ -41,6 +41,9 @@ from asteria.project import Project  # noqa: E402
 
 
 def main():
+    import stable_ids
+
+    stable_ids.install("asteria-boss-trial")
     target = HERE / "playable_assets"
     if target.exists():
         shutil.rmtree(target)

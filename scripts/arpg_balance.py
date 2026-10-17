@@ -82,13 +82,75 @@ def _spend(game, class_id, branch):
                 continue
 
 
-def measure(class_id, branch, *, level, seconds, targets):
+# what each build wears when the check is run with gear: the weapon of its class and the unique
+# that pushes its stat; every other slot is a rare drop rolled at the hero's level
+BUILD_GEAR = {
+    "berserker": ("bloodreaver",),
+    "guardian": ("iron_mace", "ironbound_helm", "ironbound_plate", "ironbound_boots"),
+    "warlord": ("battle_axe", "gauntlets"),
+    "marksman": ("long_bow", "wyrm_amulet"),
+    "venomancer": ("viper_fang",),
+    "skirmisher": ("hunting_bow", "windrunner_boots"),
+    "pyromancer": ("yew_staff", "phoenix_circlet"),
+    "cryomancer": ("oak_staff", "glacier_ring"),
+    "stormcaller": ("tempest_staff", "storm_cowl", "storm_robe", "storm_gloves"),
+}
+RARE_SLOTS = ("helm", "armor", "gloves", "boots", "amulet", "ring")
+
+
+def _wear(game, branch, level):
+    import random
+
+    from asteria.rpg.loot import roll_equipment
+
+    db = game.project.rpg_database
+    rng = random.Random(branch)
+    state = game.save.rpg_state
+    made = 0
+
+    def put(equipment_id, rarity=None):
+        nonlocal made
+        made += 1
+        state.equipment_bag.append(
+            roll_equipment(
+                db.equipment[equipment_id],
+                rng,
+                item_level=level,
+                rarity_id=rarity,
+                rarities=db.loot_rarities(),
+                affixes=db.affixes,
+                instance_id=f"gear:{made}",
+            )
+        )
+        try:
+            game.equip_from_bag("hero", len(state.equipment_bag) - 1)
+        except Exception:  # noqa: BLE001 - a slot the hero's rules do not take
+            state.equipment_bag.pop()
+
+    named = BUILD_GEAR[branch]
+    slots = {db.equipment[i].slot for i in named}
+    for equipment_id in named:
+        put(equipment_id)
+    for slot in RARE_SLOTS:
+        if slot not in slots:
+            pool = sorted(
+                i
+                for i, e in db.equipment.items()
+                if e.slot == slot and "rarity:" not in " ".join(e.tags)
+            )
+            put(rng.choice(pool), "rare")
+    game.refresh_actor_combatants("hero")
+
+
+def measure(class_id, branch, *, level, seconds, targets, gear=False):
     runtime = _runtime()
     game = runtime.game
     game.set_classes("", [class_id])
     while game.save.rpg_state.actor_progression["hero"].level < level:
         game.grant_actor_experience("hero", 4000, **game.action_progression)
     _spend(game, class_id, branch)
+    if gear:
+        _wear(game, branch, level)
     ids = set(_dummies(game, targets, level))
     for _ in range(10):
         runtime._frame([], 1 / 60)
@@ -136,15 +198,16 @@ def main(argv=None):
     parser.add_argument("--level", type=int, default=10)
     parser.add_argument("--seconds", type=float, default=20.0)
     parser.add_argument("--json", default="")
+    parser.add_argument("--gear", action="store_true", help="wear the build's gear")
     args = parser.parse_args(argv)
     rows = {}
     for class_id, branches in builds.BRANCHES.items():
         for branch, title, *_ in branches:
             single, hits = measure(
-                class_id, branch, level=args.level, seconds=args.seconds, targets=1
+                class_id, branch, level=args.level, seconds=args.seconds, targets=1, gear=args.gear
             )
             cluster, _ = measure(
-                class_id, branch, level=args.level, seconds=args.seconds, targets=5
+                class_id, branch, level=args.level, seconds=args.seconds, targets=5, gear=args.gear
             )
             rating = (single * 0.5 + cluster * 0.5) * hits**0.5
             rows[f"{class_id}/{branch}"] = {

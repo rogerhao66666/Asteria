@@ -9595,7 +9595,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -9959,7 +9959,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack3",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -22184,7 +22184,7 @@
             }
           ],
           "enabled": true,
-          "id": "aa73bfc9-512e-4008-a01a-fcdefe35d864",
+          "id": "598c841b-39c4-5025-b5e0-5b10b2e3f76b",
           "name": "Gel Slime"
         },
         {
@@ -22226,7 +22226,7 @@
             }
           ],
           "enabled": true,
-          "id": "8499b1d0-37d0-43f9-a702-170594ba2f94",
+          "id": "f8a9be67-ba83-5250-b549-443ed7ceff6d",
           "name": "Bone Wraith"
         },
         {
@@ -22268,7 +22268,7 @@
             }
           ],
           "enabled": true,
-          "id": "6234d97c-bd3e-4fdc-bb77-c6bcc80e6e6e",
+          "id": "75d8e9ed-c506-5ef6-88f2-e56e132c22da",
           "name": "Mirror Gazer"
         },
         {
@@ -22310,7 +22310,7 @@
             }
           ],
           "enabled": true,
-          "id": "7aa9b165-d2de-4a0b-93e1-0de5bd2d3926",
+          "id": "49c0fbf7-3ebf-5190-866b-7235e8288931",
           "name": "Iron Samurai"
         }
       ],

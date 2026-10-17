@@ -135,6 +135,38 @@ def _put(atlas, name, surface, *, solid=False):
         atlas.solid.add(atlas.ids[name])
 
 
+def _house(kind):
+    """A 3 x 3 tile building from the Lucifer dungeon set: a red (or blue, or slate) roof, brick
+    walls, a door, lit windows; the shop has an awning, the forge a glowing furnace window."""
+    from PIL import Image, ImageDraw
+
+    sheet = Image.open(DUNGEON).convert("RGBA")
+    image = Image.new("RGBA", (48, 48), (0, 0, 0, 0))
+    roof = _crop(sheet, 20, 12)
+    if kind == "house2":
+        roof = _tinted(roof, (70, 100, 190))
+    elif kind == "forge":
+        roof = _crop(sheet, 30, 14)
+    for x in range(3):
+        image.alpha_composite(roof, (x * 16, 0))
+        for y in (1, 2):
+            image.alpha_composite(_crop(sheet, 9 + x, y), (x * 16, y * 16))
+    draw = ImageDraw.Draw(image)
+    draw.line((0, 15, 47, 15), fill=(60, 14, 14, 255))  # the eaves' shadow
+    draw.line((0, 0, 47, 0), fill=(150, 50, 50, 255) if kind != "forge" else (80, 70, 60, 255))
+    draw.rectangle((19, 33, 28, 47), fill=(40, 24, 14, 255))  # the door
+    draw.ellipse((19, 30, 28, 38), fill=(40, 24, 14, 255))
+    draw.point((26, 41), fill=(222, 180, 70, 255))
+    glow = (255, 150, 60, 255) if kind == "forge" else (255, 214, 120, 255)
+    for x in (5, 36):  # windows
+        draw.rectangle((x, 21, x + 6, 28), fill=glow, outline=(24, 16, 28, 255))
+    if kind == "shop":
+        for x in range(0, 48, 8):  # a striped awning over the wall
+            draw.rectangle((x, 16, x + 3, 19), fill=(230, 220, 200, 255))
+            draw.rectangle((x + 4, 16, x + 7, 19), fill=(170, 40, 40, 255))
+    return {(dx, dy): _surface(_crop(image, dx, dy)) for dy in range(3) for dx in range(3)}
+
+
 def overworld_atlas():
     """16 px tiles from the Lucifer exterior set: grass, cobbled paths, pines, rocks, crypts."""
     from PIL import Image
@@ -178,15 +210,8 @@ def overworld_atlas():
         ("log", (59, 2)),
     ):
         _put(a, name, cell(c, r))
-    crypt = sheet.crop((66 * 16, 0, 70 * 16, 4 * 16))
-    for name, tint in (
-        ("house", None),
-        ("house2", (90, 110, 160)),
-        ("shop", (170, 130, 70)),
-        ("forge", (190, 80, 60)),
-    ):
-        image = crypt if tint is None else _tinted(crypt, tint)
-        for (dx, dy), part in _scaled(image, 3).items():
+    for name in ("house", "house2", "shop", "forge"):
+        for (dx, dy), part in _house(name).items():
             _put(a, f"{name}.{dx}.{dy}", part)
     for dy in range(3):  # a tall grave cross
         for dx in range(2):
@@ -320,9 +345,51 @@ def gear_icons(reskin, project, files):
     for item_id, source in files.items():
         if item_id not in db.equipment:
             continue
-        shutil.copyfile(lucifer.EQUIPMENT / source, folder / f"equip_{item_id}.png")
+        if isinstance(source, tuple):  # drawn here: the Lucifer pack has no bow or wand
+            weapon_icon(source[1]).save(folder / f"equip_{item_id}.png")
+        else:
+            shutil.copyfile(lucifer.EQUIPMENT / source, folder / f"equip_{item_id}.png")
         icon = reskin._icon_asset(f"icon.{item_id}", f"{reskin.icon_dir}/equip_{item_id}.png")
         db.equipment[item_id] = dataclasses.replace(db.equipment[item_id], icon_id=icon)
+
+
+def weapon_icon(kind):
+    """A 32 x 16 weapon picture in the pack's size, lying like its swords (blade to the right):
+    ``bow``, ``longbow``, ``crossbow`` or ``wand``. Drawn here, outlined like the pack's own."""
+    from PIL import Image, ImageDraw
+
+    wood, light, steel = (116, 80, 48, 255), (176, 126, 74, 255), (196, 202, 212, 255)
+    string, gold, gem = (214, 210, 190, 255), (222, 180, 70, 255), (150, 110, 255, 255)
+    image = Image.new("RGBA", (32, 16), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    if kind in ("bow", "longbow"):
+        top, right = (0, 22) if kind == "longbow" else (1, 20)
+        draw.arc((4, top, right + 6, 15 - top), -85, 85, fill=wood, width=2)
+        draw.arc((5, top, right + 5, 15 - top), -80, 80, fill=light, width=1)
+        draw.line((right - 4, top + 1, right - 4, 14 - top), fill=string)
+        draw.line((6, 8, 29, 8), fill=wood)
+        draw.polygon([(28, 6), (31, 8), (28, 10)], fill=steel)
+    elif kind == "crossbow":
+        draw.rectangle((3, 7, 24, 9), fill=wood)
+        draw.line((3, 7, 24, 7), fill=light)
+        draw.arc((16, 0, 30, 15), -90, 90, fill=wood, width=2)
+        draw.line((23, 1, 23, 14), fill=string)
+        draw.line((10, 8, 28, 8), fill=steel)
+    else:  # wand
+        draw.line((4, 12, 22, 5), fill=wood, width=2)
+        draw.line((4, 11, 22, 4), fill=light)
+        draw.ellipse((21, 1, 28, 8), fill=gem)
+        draw.point((23, 3), fill=(255, 255, 255, 255))
+        draw.point((27, 1), fill=gold)
+    mask = image.getchannel("A")
+    outline = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    dark = Image.new("RGBA", image.size, (24, 16, 28, 255))
+    for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+        shifted = Image.new("L", image.size, 0)
+        shifted.paste(mask, (dx, dy))
+        outline.paste(dark, (0, 0), shifted)
+    outline.alpha_composite(image)
+    return outline
 
 
 def arrow(assets):

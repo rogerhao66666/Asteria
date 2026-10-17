@@ -336,3 +336,36 @@ def test_the_skill_tree_form_shows_each_nodes_icon_field():
     nodes[0]["icon_id"] = "playable_assets/lucifer/icons/skill_m_bolt.png"
     graph = category.decode({**category.encode(category.get("mage_tree")), "nodes": nodes})
     assert graph.nodes[0].icon_id.endswith("skill_m_bolt.png")
+
+
+def test_every_skill_animation_exists_for_every_facing_of_every_class_look():
+    import json
+
+    from asteria.runtime.actor_link import ClassAppearanceComponent
+
+    project = _project()
+    root = Path(__file__).resolve().parents[1] / "reference_projects" / "diablo_demo"
+    scene = _scene_with_player(project)
+    looks = scene.get(ClassAppearanceComponent).parsed()
+    assert set(looks) == {"warrior", "ranger", "mage"}
+    roles = {
+        cue.payload["clip"]
+        for timeline in project.gameplay_library.timelines.values()
+        for cue in timeline.cues
+        if cue.kind.value == "animation"
+    }
+    assert {"attack", "attack2", "attack3", "jump"} <= roles  # the strips are all in use
+    for class_id, (_sheet, clip_set) in looks.items():
+        record = project.assets.get(clip_set)
+        clips = json.loads((root / record.source_path).read_text(encoding="utf-8"))["clips"]
+        for role in roles:
+            for facing in ("down", "up", "left", "right"):
+                assert f"{role}_{facing}" in clips, (class_id, role, facing)
+
+
+def _scene_with_player(project):
+    for scene in project.scenes():
+        for entity in scene.entities():
+            if entity.name == "Player":
+                return entity
+    raise AssertionError("no player")
