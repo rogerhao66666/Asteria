@@ -43,9 +43,9 @@
 | 技能消耗（血、道具、金幣、BP） | Abilities 的 Costs / Item costs / Currency costs / Battle costs | Dark Pact、Molten Strike、Gilded Hammer、Pass the Torch |
 | BP 轉讓與補充 | Abilities 的 Battle resource gains | Pass the Torch、Rekindle、Mira 的 Boost Gift |
 | 同伴 | Game Data > Actors；Game Start 的隊伍 | Mira（牧師），與主角並肩 |
-| 掉落（稀有度、詞綴、機率） | Game Data > Drop Tables / Rarities / Affixes；敵人的 Reward | warlord_spoils、wisp_drops；掉落裝備會骰稀有度與詞綴 |
+| 掉落（稀有度、詞綴、機率） | Game Data > Drop Tables / Rarities / Affixes；敵人的 Reward | warlord_spoils、acolyte_drops；掉落裝備會骰稀有度與詞綴 |
 | 偷竊、使用次數、熟練度、戰鬥中得 BP | Game Systems > Battle Extras；技能 tag `action.steal` | Pilfer、終極技能每場一次、Dawn and Dusk 熟練 |
-| 寵物（捕捉、當單位戰鬥、進化） | Game Data > Pets / Capture Rules | Mender Wisp → Greater Wisp |
+| 寵物（捕捉、當單位戰鬥、進化） | Game Data > Pets / Capture Rules | Tame Slinger → War Slinger |
 | 召喚（玩家方） | 技能的 commands：SUMMON actor_id | Mira 的 Call Spirit |
 | 變身 | 裝備欄 form ＋狀態 | Dragon Form / Revert |
 | 技能進化 | Game Data > Ability Evolutions；Progression Tracks | Brave Slash → II（戰鬥經驗 rank 2） |

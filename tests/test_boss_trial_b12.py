@@ -95,9 +95,9 @@ def test_a_kill_and_a_wound_fill_boost_points():
     assert pool.current(HERO, BP) >= 1
 
 
-def test_a_wisp_can_be_captured_fights_as_a_unit_and_evolves():
-    game = _game("hero", "swarm")
-    wisp = next(e for e in game.active_enemy_ids() if not e.startswith(BOSS))
+def test_a_goblin_can_be_captured_fights_as_a_unit_and_evolves():
+    game = _game("hero", "woods_ambush")
+    wisp = next(e for e in game.active_enemy_ids() if e.startswith("goblin_slinger"))
     assert game.capture_chance(wisp) is not None
 
     class Lucky:
@@ -106,14 +106,14 @@ def test_a_wisp_can_be_captured_fights_as_a_unit_and_evolves():
 
     assert game.attempt_capture(HERO, wisp, rng=Lucky())
     pet = game.active_pet()
-    assert pet.species_id == "wisp" and pet.level == 2
+    assert pet.species_id == "slinger" and pet.level == 2
     _win(game)
     game.start_encounter("boss_room")
     unit = f"pet:{pet.instance_id}"
     assert unit in game.battle.members
-    assert {"wisp_bolt", "wisp_mend"} <= set(game.battle.member(unit).ability_ids)
+    assert {"pet_shot", "pet_bandage"} <= set(game.battle.member(unit).ability_ids)
     pet.level = 5
-    assert game.evolve_pet(pet.instance_id) == "greater_wisp"
+    assert game.evolve_pet(pet.instance_id) == "war_slinger"
 
 
 def test_quests_achievements_and_enemy_levels():
@@ -131,7 +131,7 @@ def test_quests_achievements_and_enemy_levels():
     game.refresh_achievements()
     unlocked = set(game.world.achievements)
     assert {"warlord_slayer", "quest_done"} <= unlocked
-    assert "wisp_hunter" not in unlocked  # ten wisps is more than one fight
+    assert "bone_hunter" not in unlocked  # ten wisps is more than one fight
     with pytest.raises(Exception):  # noqa: B017 - an unknown setting is refused
         game.set_difficulty("impossible")
 
@@ -143,7 +143,7 @@ def test_drop_chances_follow_the_tables_weights():
     tables = game.project.rpg_database.drop_tables
     rng, rolls, counts = random.Random(5), 20_000, Counter()
     for _ in range(rolls):
-        got = roll_drop_table(tables["wisp_drops"], rng)
+        got = roll_drop_table(tables["acolyte_drops"], rng)
         counts.update(got.keys() or ["nothing"])
     # weights 3 + 3 against 4 for nothing: 30% leaf, 30% herb, 40% nothing
     assert counts["ether_leaf"] / rolls == pytest.approx(0.3, abs=0.02)

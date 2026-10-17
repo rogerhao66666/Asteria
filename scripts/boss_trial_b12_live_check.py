@@ -2,8 +2,8 @@
 
     python scripts/boss_trial_b12_live_check.py OUTPUT_DIR
 
-A wisp is captured, fights as its own unit in the next battle, and the rogue's Pilfer steals
-from the boss through the real command menu. Screenshots and ``results.json`` land in OUTPUT_DIR.
+A goblin slinger is captured, fights as its own unit in the next battle, and Pilfer steals
+from the boss through the real command menu.
 """
 
 from __future__ import annotations
@@ -88,9 +88,9 @@ def main(argv=None):
     smoke.prepare(game, Counter(), "rogue")
     runtime._ui_mode = "field"
     pump(runtime, 0.4)
-    game.start_encounter("swarm")
+    game.start_encounter("woods_ambush")
     runtime._battle_presentation.begin()
-    wisp = next(e for e in game.active_enemy_ids() if not e.startswith("crimson"))
+    wisp = next(e for e in game.active_enemy_ids() if e.startswith("goblin_slinger"))
 
     class Lucky:
         def random(self):

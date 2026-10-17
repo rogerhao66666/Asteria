@@ -1649,7 +1649,7 @@ def boss(c):
     )
     db.enemies["mender_wisp"] = EnemyDefinition(
         "mender_wisp",
-        "Ember Wisp",
+        "Skeleton Acolyte",
         stats={"power": 40.0, "magic": 60.0, "defense": 30.0, "speed": 60.0},
         resources={HP: 4200.0, SHIELD: 2.0, SP: 999.0},
         tags=("enemy", "weak.ice", "weak.axe"),
@@ -2235,6 +2235,11 @@ def write_manifest(c):
         )
     )
     manifest["title"] = "Boss Trial Demo"
+    audio = getattr(c, "audio", None)
+    if audio:  # the Lucifer campaign has its own music
+        manifest["audio"].update(audio)
+        manifest["field"]["bgm"] = "town_theme"
+        manifest["battle"]["bgm"] = "battle_theme"
     manifest["battle"]["victory_aftermath"] = True
     sprites = manifest["field"]["entity_sprites"]
     sprites["Vaelor"] = sprites.pop(

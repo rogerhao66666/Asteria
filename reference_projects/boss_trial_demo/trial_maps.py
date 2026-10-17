@@ -288,12 +288,15 @@ class SceneBuilder:
             entity.add_component(_set(Collider2DComponent(), width=10, height=8))
         return entity
 
-    def door(self, name, xy, to_scene, to_xy, facing):
+    def door(self, name, xy, to_scene, to_xy, facing, weather=None, music=None):
         entity = self.entity(name, *xy)
+        arrive = [] if weather is None else [world("SET_BATTLE_WEATHER", kind=weather)]
+        if music:
+            arrive.append(world("PLAY_BGM", asset_id=music, fade=0.6))
         self.program(
             entity,
             f"door.{self.key}.{name.lower().replace(' ', '_')}",
-            [world("TRANSFER", scene_id=to_scene, x=to_xy[0], y=to_xy[1], facing=facing)],
+            [*arrive, world("TRANSFER", scene_id=to_scene, x=to_xy[0], y=to_xy[1], facing=facing)],
             trigger="touch",
             radius=14.0,
         )
@@ -422,7 +425,7 @@ def hearthfold(grid):
     return {
         "start": world_xy(22, 13),
         "to_woods": world_xy(w - 3, 13),
-        "plaza": [world_xy(x, y) for x in (14, 17, 28, 31) for y in (9, 12, 15, 18)],
+        "plaza": [world_xy(x, y) for y in (8, 10, 16, 18) for x in (13, 15, 17, 27, 29, 31)],
     }
 
 
@@ -590,7 +593,7 @@ def menu(speaker, prompt, options):
         out.append(EventInstruction("JUMP_IF", {"condition": condition, "label": f"opt{index}"}))
     out.append(EventInstruction("END"))
     for index, (_label, steps) in enumerate(options):
-        out.append(EventInstruction("LABEL", {"label": f"opt{index}"}))
+        out.append(EventInstruction("LABEL", {"name": f"opt{index}"}))
         out.extend(steps)
         out.append(EventInstruction("END"))
     return out
@@ -605,7 +608,7 @@ def when(name, steps_true, steps_false, *, source="switch"):
         EventInstruction("JUMP_IF", {"condition": condition, "label": "yes"}),
         *steps_false,
         EventInstruction("END"),
-        EventInstruction("LABEL", {"label": "yes"}),
+        EventInstruction("LABEL", {"name": "yes"}),
         *steps_true,
     ]
 
@@ -626,9 +629,9 @@ FOE_LOOKS = {
 NPC_FACES = ("warrior", "sorceress", "necromancer", "cultist")
 
 
-def build_world(c, services, story):
-    """Replace the reference field with the four Lucifer maps. ``services`` is
-    ``{name: (line, (command, args))}``, ``story`` a callable that adds the story programs."""
+def build_world(c, story):
+    """Replace the reference field with the four Lucifer maps; ``story(c, builders, looks,
+    places)`` adds the people, programs and rules of the game."""
     from asteria.runtime.game_start import GameStartDefinition
 
     project, root = c.project, c.root
@@ -668,25 +671,22 @@ def build_world(c, services, story):
     town, woods, crypt, throne = (builders[k] for k in ("town", "woods", "crypt", "throne"))
     hero = town.entity("Player", *places["town"]["start"])
     town.look(hero, *looks["warrior"])
-    # the town: every service of the earlier waves, spread over the plaza
-    plaza = list(places["town"]["plaza"])
-    for index, (name, (line, (command, args))) in enumerate(services.items()):
-        face = NPC_FACES[index % len(NPC_FACES)]
-        entity = town.npc(name, plaza[index % len(plaza)], looks[face])
-        town.program(
-            entity,
-            f"service_{index}",
-            [say(name, line), world(command, **args)],
-        )
     town.door(
         "Road East",
         places["town"]["to_woods"],
         woods.scene.id,
         places["woods"]["from_town"],
         "right",
+        "rain",
+        "woods_theme",
     )
     woods.door(
-        "Road West", places["woods"]["to_town"], town.scene.id, places["town"]["to_woods"], "left"
+        "Road West",
+        places["woods"]["to_town"],
+        town.scene.id,
+        places["town"]["to_woods"],
+        "leftnone",
+        "town_theme",
     )
     woods.door(
         "Crypt Door",
@@ -694,6 +694,8 @@ def build_world(c, services, story):
         crypt.scene.id,
         places["crypt"]["from_woods"],
         "right",
+        "none",
+        "crypt_theme",
     )
     crypt.door(
         "Stairs Up",
@@ -701,6 +703,8 @@ def build_world(c, services, story):
         woods.scene.id,
         places["woods"]["from_crypt"],
         "left",
+        "rain",
+        "woods_theme",
     )
     crypt.door(
         "Throne Door",
@@ -708,6 +712,8 @@ def build_world(c, services, story):
         throne.scene.id,
         places["throne"]["from_crypt"],
         "right",
+        "dust",
+        "throne_theme",
     )
     throne.door(
         "Stairs Down",
@@ -715,6 +721,8 @@ def build_world(c, services, story):
         crypt.scene.id,
         places["crypt"]["from_throne"],
         "left",
+        "none",
+        "crypt_theme",
     )
     patrols = {
         "woods": (
@@ -752,6 +760,15 @@ def build_world(c, services, story):
     throne.foe(
         "Vaelor", places["throne"]["boss"], looks["skeleton_king"], "boss_room", radius=24.0
     )
+    from PIL import Image
+
+    banner = Image.open(
+        lucifer.FREE_ASSETS / lucifer.UI_PACK / "Panels" / "Panels" / "SimplePanel02.png"
+    ).convert("RGBA")
+    places["pictures"] = {
+        "banner": assets.texture("banner", banner.resize((256, 256), 0), "Banner")
+    }
+    places["scenes"] = {key: builder.scene.id for key, builder in builders.items()}
     story(c, builders, looks, places)
     for builder in builders.values():
         builder.finish()

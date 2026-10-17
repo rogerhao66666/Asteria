@@ -32,6 +32,7 @@ import trial_items as items  # noqa: E402
 import trial_jobs as jobs  # noqa: E402
 import trial_lucifer as lucifer  # noqa: E402
 import trial_maps as maps  # noqa: E402
+import trial_story as story  # noqa: E402
 
 from asteria.editor import EditorDocument  # noqa: E402
 from asteria.project import Project  # noqa: E402
@@ -59,8 +60,8 @@ def main():
     b12.systems(context)
     cast.party(context)
     cast.foes(context)
-    services = {n: (line, cmd) for n, (_xy, line, cmd) in content.SERVICES.items()}
-    maps.build_world(context, services, lambda *args: None)
+    story.systems(context)
+    maps.build_world(context, story.programs)
     art.hero_and_boss_art(context)
     art.effect_assets(context)
     art.prune_unused_art(context)
@@ -69,6 +70,7 @@ def main():
     if lucifer.available():
         kept = (*kept, *lucifer.apply_icons(context))
         lucifer.apply_ui(context)
+        lucifer.apply_music(context)
     content.finalize_names(context)
     content.game_start(context)
     path = HERE / "project.asteria.json"

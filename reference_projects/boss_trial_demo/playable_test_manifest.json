@@ -154,7 +154,7 @@
       }
     },
     "player_render_width": 128,
-    "bgm": "field_theme"
+    "bgm": "town_theme"
   },
   "battle": {
     "background": "playable_assets/battle_background.png",
@@ -503,14 +503,14 @@
       "counter_strike": {
         "label": "Counter Strike"
       },
-      "wisp_bolt": {
-        "label": "Wisp Bolt"
+      "pet_shot": {
+        "label": "Sling Shot"
       },
-      "wisp_mend": {
-        "label": "Wisp Mend"
+      "pet_bandage": {
+        "label": "Bandage"
       },
-      "wisp_nova": {
-        "label": "Wisp Nova"
+      "pet_volley": {
+        "label": "Volley"
       },
       "brave_slash_ii": {
         "label": "Brave Slash II"
@@ -607,7 +607,11 @@
     "hit": "playable_assets/audio/hit.wav",
     "heal": "playable_assets/audio/heal.wav",
     "confirm": "playable_assets/audio/confirm.wav",
-    "victory": "playable_assets/audio/victory.wav"
+    "victory": "playable_assets/audio/victory.wav",
+    "town_theme": "playable_assets/audio/town_theme.ogg",
+    "woods_theme": "playable_assets/audio/woods_theme.ogg",
+    "crypt_theme": "playable_assets/audio/crypt_theme.ogg",
+    "throne_theme": "playable_assets/audio/throne_theme.ogg"
   },
   "dialogue_confirm_sfx": "confirm"
 }

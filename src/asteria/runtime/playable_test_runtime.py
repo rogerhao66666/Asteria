@@ -3629,6 +3629,9 @@ class PlayableTestRuntime:
                 self.audio.handle_world_request(request)
                 if request.name == "PLAY_BGM":
                     self.game.note_music_heard(request.args.get("asset_id", ""))
+                    self._bgm_override = request.args.get("asset_id", "")
+                elif request.name == "STOP_BGM":
+                    self._bgm_override = ""
         for cue in getattr(self._battle_presentation, "audio_cues", ()):
             self._sound(dict(cue.payload).get("asset_id"))
         if hasattr(self._battle_presentation, "audio_cues"):
@@ -3793,7 +3796,8 @@ class PlayableTestRuntime:
                 self._advance_to_hero_turn()
                 self._present_battle(dt)
             else:
-                self._music(self.manifest["field"].get("bgm"))
+                override = getattr(self, "_bgm_override", None)  # a story event chose the track
+                self._music(self.manifest["field"].get("bgm") if override is None else override)
                 self._draw_field(moving)
 
 

@@ -184,6 +184,7 @@ class GameSessionRuntime:
         self._build_scene_events()
         # WLD-02: saved NPC state (visibility, position, flags...) and the "npc" condition source
         runtime_save.event_context.providers["npc"] = self._npc_value
+        runtime_save.event_context.providers["rpg"] = self._rpg_value
         from asteria.runtime.npc_state import apply_npc_states
 
         apply_npc_states(self.scene, self.world, self.entity_facing)
@@ -1192,6 +1193,32 @@ class GameSessionRuntime:
             state["facing"] = self.entity_facing[entity.id]
         return state
 
+    def _rpg_value(self, name):
+        """The ``rpg`` condition source: ``level:<actor>``, ``item:<id>``, ``gold`` (any
+        currency: ``currency:<id>``), ``job:<actor>:<class>``, ``party:<actor>``,
+        ``reputation:<faction>`` and ``quest:<id>`` (its status)."""
+        kind, _, rest = str(name).partition(":")
+        state = self.save.rpg_state
+        if kind == "level":
+            return self.ensure_actor_progression(rest).level
+        if kind == "item":
+            return state.inventory.count(rest)
+        if kind == "gold":
+            return state.currencies.get("gold", 0.0)
+        if kind == "currency":
+            return state.currencies.get(rest, 0.0)
+        if kind == "job":
+            actor, _, class_id = rest.partition(":")
+            return class_id in self.ensure_actor_progression(actor).active_class_ids
+        if kind == "party":
+            return rest in state.party_actor_ids
+        if kind == "reputation":
+            return state.world.reputation.get(rest, 0.0)
+        if kind == "quest":
+            progress = state.quests.get(rest)
+            return "inactive" if progress is None else progress.status
+        raise ValueError(f"unknown rpg condition: {name}")
+
     def _npc_value(self, name):
         npc_id, _, key = str(name).partition(".")
         return self.world.npc_value(npc_id, key)
@@ -1838,6 +1865,23 @@ class GameSessionRuntime:
             if free is not None:
                 state.party_placements[actor_id] = free
         return actor_id
+
+    def rest_party(self):
+        """An inn or a camp: every roster member's resources go back to their maximum."""
+        from asteria.gameplay import ResourcePool
+
+        snapshots = self.save.rpg_state.actor_snapshots
+        for actor_id in self.save.rpg_state.party_actor_ids:
+            old = snapshots.get(actor_id)
+            if old is None:  # never fought: its next build is already full
+                continue
+            pool = ResourcePool.from_data(old.resources)
+            for name in tuple(pool.to_data()["values"]):
+                pool.set_current(name, pool.maximum(name))
+            snapshots[actor_id] = RpgActorSnapshot(
+                old.actor_id, old.stats, pool.to_data(), old.tags, old.ability_state
+            )
+        return tuple(self.save.rpg_state.party_actor_ids)
 
     def leave_party(self, actor_id):
         actor_id = str(actor_id)

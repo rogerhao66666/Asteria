@@ -346,3 +346,35 @@ def credits_extra():
         "ButtonBackground, PixelRpgFont-Regular.ttf, copied unmodified "
         f"| Foozle (Baldur) | {cc0} |",
     ]
+
+
+MUSIC = {  # manifest name: file of the CC0 Foozle music packs
+    "town_theme": "Foozle_M0002_Explorer_Chiptunes/foozlecc - Theme #1 (30s).ogg",
+    "woods_theme": "Foozle_M0002_Explorer_Chiptunes/foozlecc - Theme #2 (30s).ogg",
+    "crypt_theme": "Foozle_M0001_Eerie_Space_Music/track 2.ogg",
+    "battle_theme": "Foozle_M0002_Explorer_Chiptunes/foozlecc - Under Pressure Theme.ogg",
+    "throne_theme": "Foozle_M0002_Explorer_Chiptunes/foozlecc - Under Pressure Theme 2.ogg",
+}
+
+
+def apply_music(context):
+    """Copy the music into the project; the manifest names them (``context.audio``)."""
+    import shutil
+
+    folder = context.root / "playable_assets" / "audio"
+    folder.mkdir(parents=True, exist_ok=True)
+    context.audio = {}
+    for name, rel in MUSIC.items():
+        shutil.copyfile(FREE_ASSETS / rel, folder / f"{name}.ogg")
+        context.audio[name] = f"playable_assets/audio/{name}.ogg"
+
+
+def credits_music():
+    cc0 = "[CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/)"
+    return [
+        "| `audio/town_theme.ogg`, `woods_theme.ogg`, `battle_theme.ogg`, `throne_theme.ogg` | "
+        "Foozle Explorer Chiptunes (`Foozle_M0002`: Theme #1 / #2 (30s), Under Pressure 1-2),"
+        f" copied unmodified, renamed | Foozle | {cc0} |",
+        "| `audio/crypt_theme.ogg` | Foozle Eerie Space Music (`Foozle_M0001`: track 2), copied "
+        f"unmodified, renamed | Foozle | {cc0} |",
+    ]

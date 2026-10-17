@@ -504,6 +504,7 @@ def write_credits(root):
             ("warrior", "sorceress", "skeleton_grunt", "skeleton_king", "goblin_slinger")
         )
         rows += trial_lucifer.credits_extra()
+        rows += trial_lucifer.credits_music()
     rows.append(
         "| `battle/mender_wisp.png` (the boss's helper) | "
         f"{ninja} - `Actor/Monster/Flam`, cropped and scaled | Pixel-boy, AAA | {cc0} |"

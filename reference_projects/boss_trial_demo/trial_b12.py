@@ -71,12 +71,12 @@ def loot(c):
     )
     db.add_drop_table(
         DropTable(
-            "wisp_drops",
+            "acolyte_drops",
             entries=[DropEntry("ether_leaf", weight=3.0), DropEntry("healing_herb", weight=3.0)],
             nothing_weight=4.0,
         )
     )
-    for enemy_id, table in ((c.boss_id, "warlord_spoils"), ("mender_wisp", "wisp_drops")):
+    for enemy_id, table in ((c.boss_id, "warlord_spoils"), ("mender_wisp", "acolyte_drops")):
         enemy = db.enemies[enemy_id]
         db.enemies[enemy_id] = dataclasses.replace(
             enemy, reward=dataclasses.replace(enemy.reward, drop_table_id=table)
@@ -113,32 +113,32 @@ def extras(c):
 
 
 def pets(c):
-    """A wisp that can be captured, fights as its own unit, learns moves and evolves."""
+    """A goblin slinger that can be captured, fights as its own unit, learns moves and evolves."""
     db = c.db
     for ability_id, label, target, definition in (
         (
-            "wisp_bolt",
-            "Wisp Bolt",
+            "pet_shot",
+            "Sling Shot",
             "enemy",
             ability(
-                "wisp_bolt",
+                "pet_shot",
                 tags=("magic", "damage.light"),
                 effect=op(damage("magic", 9)),
                 hits=_hits(1.0, tags=("damage.light",)),
             ),
         ),
         (
-            "wisp_mend",
-            "Wisp Mend",
+            "pet_bandage",
+            "Bandage",
             "ally",
-            ability("wisp_mend", effect=op(healing(25)), allies=True),
+            ability("pet_bandage", effect=op(healing(25)), allies=True),
         ),
         (
-            "wisp_nova",
-            "Wisp Nova",
+            "pet_volley",
+            "Volley",
             "enemies",
             ability(
-                "wisp_nova",
+                "pet_volley",
                 tags=("magic", "damage.light"),
                 effect=op(damage("magic", 14)),
                 hits=_hits(1.0, tags=("damage.light",)),
@@ -149,33 +149,33 @@ def pets(c):
         c.add(definition, target)
         c.skill_names[ability_id] = label
         tc.FX_BY_ABILITY[ability_id] = ("boost", "spark")
-    db.pet_species["wisp"] = PetSpeciesDefinition(
-        "wisp",
-        "Mender Wisp",
+    db.pet_species["slinger"] = PetSpeciesDefinition(
+        "slinger",
+        "Tame Slinger",
         stats={"power": 14, "magic": 30, "defense": 10, "speed": 110},
         growth={"magic": 5, "defense": 2, "speed": 1},
         exp_per_battle=60,
         affinity_per_battle=10,
         battle_unit=True,
         resources={HP: 700},
-        battle_abilities=("wisp_bolt", "wisp_mend"),
-        learnset=(PetMove("wisp_nova", level=3),),
-        evolutions=(PetEvolution("greater_wisp", min_level=5),),
+        battle_abilities=("pet_shot", "pet_bandage"),
+        learnset=(PetMove("pet_volley", level=3),),
+        evolutions=(PetEvolution("war_slinger", min_level=5),),
         tags=("light",),
     )
-    db.pet_species["greater_wisp"] = PetSpeciesDefinition(
-        "greater_wisp",
-        "Greater Wisp",
+    db.pet_species["war_slinger"] = PetSpeciesDefinition(
+        "war_slinger",
+        "War Slinger",
         stats={"power": 20, "magic": 60, "defense": 20, "speed": 40},
         growth={"magic": 6, "defense": 2, "speed": 1},
         battle_unit=True,
         resources={HP: 1600},
-        battle_abilities=("wisp_bolt", "wisp_mend", "wisp_nova"),
+        battle_abilities=("pet_shot", "pet_bandage", "pet_volley"),
         tags=("light",),
     )
     db.capture_rules.clear()
     db.add_capture_rule(
-        CaptureRule("mender_wisp", pet_species_id="wisp", pet_level=2, base_chance=0.6)
+        CaptureRule("goblin_slinger", pet_species_id="slinger", pet_level=2, base_chance=0.6)
     )
 
 
@@ -196,9 +196,9 @@ def progress(c):
     )
     db.add_quest(
         QuestDefinition(
-            "wisp_hunt",
-            "Wisp Hunt",
-            description="Put down ten wisps.",
+            "bone_collector",
+            "Bone Collector",
+            description="Put down ten skeleton acolytes.",
             objectives=(
                 QuestObjective("wisps", "defeat_enemy", target="mender_wisp", required=10),
             ),
@@ -216,9 +216,9 @@ def progress(c):
             value=1,
         ),
         AchievementDefinition(
-            "wisp_hunter",
-            "Wisp Hunter",
-            description="Defeat ten wisps.",
+            "bone_hunter",
+            "Bone Hunter",
+            description="Defeat ten skeleton acolytes.",
             kind="defeated",
             target="mender_wisp",
             value=10,
