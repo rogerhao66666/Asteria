@@ -43,7 +43,7 @@ CLASSES = {
         stats={"power": 8, "magic": 8, "defense": 8, "speed": 6, "crit": 6, "evade": 4},
         res={HP: 300, SP: 60},
         grow={"power": 2.2, "magic": 2.2, "defense": 1.8, "speed": 0.8},
-        caps=("sword", "spear"),
+        caps=("sword", "spear", "dagger", "axe", "bow", "staff"),
         first="brave_slash",
     ),
     "forgemaster": dict(
@@ -863,9 +863,11 @@ def _tree(job, label, skills):
         elif index == 5:
             links["any"] = [ids[3], ids[4]]
             links["needs"] = [(core, 4)]
-        else:
+        elif index == 6:
             links["needs"] = [(core, 5), ids[5]]
             links["any"] = [f"{job}_keyA", f"{job}_keyB"]
+        else:  # the second wave: deeper down the same branches
+            links["needs"] = [(core, 5), ids[index - 3]]
         nodes.append(
             tc._node(
                 ids[index],
@@ -953,6 +955,10 @@ def advanced_jobs(c):
         c.add(definition, target)
         c.skill_names[ability_id] = label + (" (Divine)" if divine else "")
         by_job[job].append(ability_id)
+    import trial_b11
+
+    for job, more in trial_b11.expansion(c).items():  # the second wave of skills and ailments
+        by_job[job].extend(more)
     for job in JOB_IDS:
         db.add_progression_graph(_tree(job, CLASSES[job]["name"], by_job[job]))
     tc.FX_BY_ABILITY.update(FX)

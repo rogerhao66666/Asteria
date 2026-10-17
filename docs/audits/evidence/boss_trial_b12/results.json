@@ -1,0 +1,15 @@
+{
+  "driver": "cocoa",
+  "status": "PASS",
+  "checks": {
+    "wisp_captured": true,
+    "pet_fights_as_a_unit": true,
+    "stolen_through_the_menu": true,
+    "both_seen": true
+  },
+  "failed": [],
+  "screenshots": [
+    "b12_steal.png",
+    "b12_pet_turn.png"
+  ]
+}

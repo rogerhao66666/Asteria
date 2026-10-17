@@ -12,6 +12,7 @@ from PySide6.QtCore import QRect, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QDoubleSpinBox,
     QFormLayout,
     QGroupBox,
@@ -185,11 +186,45 @@ class AnimationEditorWidget(QWidget):
         sheet_form.addRow("Pivot (x, y)", pivot_row)
         sheet_form.addRow(apply_sheet)
 
+        # how the battle uses this sheet: the body's real height (menus and bars sit on it) and,
+        # when the sheet is a skill effect, where it appears on its target
+        self.body_height = QSpinBox()
+        self.body_height.setRange(0, 4096)
+        self.body_height.setSpecialValueText("whole frame")
+        self.body_height.setToolTip(
+            "Height of the character itself in the sheet's pixels. Health bars and command "
+            "menus sit on this instead of on the empty room in the frame."
+        )
+        self.vfx_on = QCheckBox("Used as an effect")
+        self.vfx_anchor = QComboBox()
+        self.vfx_anchor.addItems(["feet", "center", "head"])
+        self.vfx_x, self.vfx_y = QDoubleSpinBox(), QDoubleSpinBox()
+        for spin in (self.vfx_x, self.vfx_y):
+            spin.setRange(-512.0, 512.0)
+        self.vfx_scale = QDoubleSpinBox()
+        self.vfx_scale.setRange(0.05, 8.0)
+        self.vfx_scale.setSingleStep(0.1)
+        self.vfx_scale.setValue(0.6)
+        apply_use = QPushButton("Apply Battle Use")
+        apply_use.clicked.connect(self.apply_battle_use)
+        use_box = QGroupBox("Battle use")
+        use_form = QFormLayout(use_box)
+        offset_row = QHBoxLayout()
+        offset_row.addWidget(self.vfx_x)
+        offset_row.addWidget(self.vfx_y)
+        use_form.addRow("Body height", self.body_height)
+        use_form.addRow(self.vfx_on)
+        use_form.addRow("Appears at", self.vfx_anchor)
+        use_form.addRow("Offset (x, y)", offset_row)
+        use_form.addRow("Scale", self.vfx_scale)
+        use_form.addRow(apply_use)
+
         self.status = QLabel("")
         self.status.setWordWrap(True)
         right = QVBoxLayout()
         right.addWidget(clip_box)
         right.addWidget(sheet_box)
+        right.addWidget(use_box)
         right.addWidget(self.status)
         right.addStretch(1)
         right_box = QWidget()
@@ -272,6 +307,14 @@ class AnimationEditorWidget(QWidget):
         self.frame_h.setValue(data["frame_size"][1])
         self.pivot_x.setValue(data["pivot"][0])
         self.pivot_y.setValue(data["pivot"][1])
+        self.body_height.setValue(int(data["body_height"]))
+        placement = data["vfx"]
+        self.vfx_on.setChecked(placement is not None)
+        if placement is not None:
+            self.vfx_anchor.setCurrentText(placement["anchor"])
+            self.vfx_x.setValue(placement["offset"][0])
+            self.vfx_y.setValue(placement["offset"][1])
+            self.vfx_scale.setValue(placement["scale"])
         if names:
             self.clip_list.setCurrentRow(names.index(clip) if clip in names else 0)
         self._clip_changed(self.clip)
@@ -358,6 +401,27 @@ class AnimationEditorWidget(QWidget):
                 self.api.set_pivot(sheet, self.pivot_x.value(), self.pivot_y.value())
 
         ok = self._try(apply, f"Applied grid / pivot for {sheet}")
+        self.refresh(sheet, self.clip)
+        return ok
+
+    def apply_battle_use(self):
+        sheet = self.sheet
+        if not sheet:
+            return False
+
+        def apply():
+            self.api.set_body_height(sheet, self.body_height.value())
+            if self.vfx_on.isChecked():
+                self.api.set_vfx(
+                    sheet,
+                    self.vfx_anchor.currentText(),
+                    offset=(self.vfx_x.value(), self.vfx_y.value()),
+                    scale=self.vfx_scale.value(),
+                )
+            else:
+                self.api.set_vfx(sheet, None)
+
+        ok = self._try(apply, f"Applied battle use for {sheet}")
         self.refresh(sheet, self.clip)
         return ok
 

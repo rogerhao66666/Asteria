@@ -211,7 +211,17 @@ def fight(game, facts, acc, seed=7, max_rounds=200, encounter="boss_room", crowd
                 adds = [e for e in game.active_enemy_ids() if e != boss]
                 if adds and ability_id in ("executioner", "assassinate") and chosen:
                     chosen = (adds[0],)  # instant death works on the adds, not the boss
-                game.use_ability(actor, ability_id, chosen)
+                definition = game.battle.ability_runtime.registry.get(ability_id)
+                form = rng.choice(definition.forms)["form_id"] if definition.forms else None
+                game.use_ability(actor, ability_id, chosen, form=form)
+                facts["forms_cast"] += int(form is not None)
+                facts["goods_cost_skills"] += int(
+                    bool(definition.item_costs or definition.currency_costs)
+                )
+                facts["hp_cost_skills"] += int(
+                    any(c.resource == "vitality" for c in definition.costs)
+                )
+                facts["bp_gift_skills"] += int(bool(definition.battle_resource_gains))
             except Exception:  # noqa: BLE001 - an ability that cannot be used now is skipped
                 continue
             used[ability_id] += 1
@@ -256,6 +266,10 @@ REQUIRED = (
     "hero_skills_used",
     "boss_moves_used",
     "status_kinds_seen",
+    "forms_cast",
+    "goods_cost_skills",
+    "hp_cost_skills",
+    "bp_gift_skills",
 )
 
 

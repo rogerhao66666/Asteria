@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import random
 from dataclasses import dataclass, replace
 
@@ -132,6 +133,7 @@ class GameSessionRuntime:
         self._last_logged_line = None
         self.backlog = MessageBacklog(self._backlog_limit())
         self.battle_log = []
+        self._forced_cast = False  # a state picked this action's targets
         self._log_sequence = 0
         self._logged_turn = None
         # Event programs run here: one foreground runner for interactions plus
@@ -1788,6 +1790,9 @@ class GameSessionRuntime:
             raise GameSessionError("unknown classes: " + ", ".join(unknown))
         state = self.ensure_actor_progression(actor_id)
         if unlock:
+            for class_id in values:
+                if class_id not in state.unlocked_class_ids:
+                    self._check_class_unlock(state, self.project.rpg_database.classes[class_id])
             unlocked = tuple(dict.fromkeys(state.unlocked_class_ids + values))
             self.save.rpg_state.actor_progression[actor_id] = ActorProgressionState(
                 state.level,
@@ -1797,6 +1802,17 @@ class GameSessionRuntime:
                 active_class_ids=state.active_class_ids,
             )
         return self.set_active_classes(actor_id, values)
+
+    def _check_class_unlock(self, state, definition):
+        """A job with unlock rules stays closed until the actor's level and jobs are enough."""
+        if state.level < definition.unlock_level:
+            raise GameSessionError(
+                f"{definition.display_name} needs level {definition.unlock_level}"
+            )
+        missing = [c for c in definition.unlock_classes if c not in state.unlocked_class_ids]
+        if missing:
+            names = [self.project.rpg_database.classes[c].display_name for c in missing]
+            raise GameSessionError(f"{definition.display_name} needs the job " + ", ".join(names))
 
     def set_active_party(self, actor_ids, placements=None):
         actor_ids = tuple(dict.fromkeys(str(x) for x in actor_ids))
@@ -1909,8 +1925,12 @@ class GameSessionRuntime:
         ap_per_level=2.0,
         ability_points_per_level=1.0,
         points_per_level=None,
+        level_track="",
     ):
         """Generic acceptance/runtime helper for actor-level progression.
+
+        ``level_track`` names a progression track whose milestones are the experience totals of
+        each level (a curve the author draws); without it every ``level_threshold`` is a level.
 
         Projects choose the threshold and point vocabulary; the engine does not
         attach semantics to AP/ability_points beyond persisting named balances.
@@ -1924,6 +1944,11 @@ class GameSessionRuntime:
         total = state.experience + amount
         old_level = state.level
         new_level = max(old_level, int(total // threshold) + 1)
+        if level_track:
+            track = self.project.rpg_database.progression_tracks.get(str(level_track))
+            if track is None:
+                raise GameSessionError(f"unknown level track {level_track}")
+            new_level = max(old_level, track.rank_for(total))
         gained = max(0, new_level - old_level)
         points = dict(state.points)
         if gained:
@@ -2657,7 +2682,7 @@ class GameSessionRuntime:
         available = self.battle.battle_resources.current(actor_id, rules.boost_resource_id)
         return min(rules.boost_max_level, int(available // rules.boost_cost_per_level))
 
-    def use_ability(self, actor_id, ability_id, target_ids=None, *, boost_level=0):
+    def use_ability(self, actor_id, ability_id, target_ids=None, *, boost_level=0, form=None):
         """Run one player action through project rules: targeting, boost and hit gauges.
 
         Each boost level spends ``boost_cost_per_level`` of the boost resource
@@ -2689,6 +2714,7 @@ class GameSessionRuntime:
         if not targets:
             raise GameSessionError(f"{ability_id} has no valid targets")
         offensive = self.ability_relation(ability_id) == TargetRelation.OPPONENT
+        targets, forced = self._override_targets(actor_id, targets)
         battle_costs = dict(getattr(definition, "battle_costs", None) or {})
         if boost_level:  # boost and the ability's own battle costs come from the same gauges
             key = rules.boost_resource_id
@@ -2710,6 +2736,10 @@ class GameSessionRuntime:
                 boost_level * rules.boost_cost_per_level,
                 trigger="rpg.session.boost",
             )
+        chosen = self._resolve_form(actor_id, definition, form)
+        self._pay_spent_goods(definition)
+        if chosen is not None:
+            self._pay_form_costs(actor_id, chosen)
         timing = self.battle.action_timing.definition_for(ability_id)
         if (
             timing.windup > 0 and rules.action_timing == "timeline"
@@ -2722,18 +2752,118 @@ class GameSessionRuntime:
         ):
             repeats = 1  # one stronger action: interaction rules read the boost tags
         boost_tags = ("boost", f"boost.{boost_level}") if boost_level else ()
+        if chosen is not None:
+            boost_tags = (*boost_tags, *chosen.get("tags", ()))
         actor_tags = self.battle.member(actor_id).subject.tags
         added = [t for t in boost_tags if not actor_tags.contains(t)]
         for tag in added:
             actor_tags.add(tag)
+        self._forced_cast = forced
         try:
-            results = self._repeat_action(actor_id, ability_id, targets, offensive, repeats)
+            results = self._repeat_action(
+                actor_id,
+                ability_id,
+                targets,
+                offensive,
+                repeats,
+                power=float((chosen or {}).get("power", 1.0)),
+            )
         finally:
+            self._forced_cast = False
             for tag in added:
                 actor_tags.remove(tag)
         if any(getattr(r, "success", True) for r in results):
+            if chosen is not None and chosen.get("apply_states"):
+                definition = dataclasses.replace(
+                    definition,
+                    apply_states=(*definition.apply_states, *chosen["apply_states"]),
+                )
             self._after_ability(actor_id, definition, targets)
         return results
+
+    def _override_targets(self, actor_id, targets):
+        """Targets after the afflicted member's states have had their say (confusion, charm...):
+        ``(targets, forced)``; the same number of targets, picked at random from who the state
+        allows."""
+        member = self.battle.member(actor_id)
+        states = member.subject.states
+        if states is None or not targets:
+            return tuple(targets), False
+        policies = self.battle.battle_states.policies
+        rule = next(
+            (
+                policies[a.state_id].target_override
+                for a in states.active_states()
+                if a.state_id in policies and policies[a.state_id].target_override
+            ),
+            "",
+        )
+        if not rule:
+            return tuple(targets), False
+        alive = [m for m in self.battle.members.values() if self.battle.is_active(m)]
+        if rule == "random_opponent":
+            pool = [m.member_id for m in alive if m.side != member.side]
+        elif rule == "random_ally":
+            pool = [m.member_id for m in alive if m.side == member.side]
+        else:
+            pool = [m.member_id for m in alive]
+        if not pool:
+            return tuple(targets), False
+        rng = self.battle.rng
+        count = min(len(targets), len(pool))
+        return tuple(rng.sample(sorted(pool), count)), True
+
+    def _resolve_form(self, actor_id, definition, form):
+        """The casting form chosen for ``definition`` (the first when none is named), checked
+        against what the user can afford; ``None`` for a skill without forms."""
+        forms = tuple(getattr(definition, "forms", ()) or ())
+        if not forms:
+            if form not in (None, ""):
+                raise GameSessionError(f"{definition.ability_id} has no forms")
+            return None
+        if form in (None, ""):
+            chosen = forms[0]
+        else:
+            chosen = next((f for f in forms if f["form_id"] == str(form)), None)
+            if chosen is None:
+                raise GameSessionError(f"{definition.ability_id} has no form {form}")
+        reason = self.form_unavailable(actor_id, chosen)
+        if reason:
+            raise GameSessionError(f"{definition.ability_id}/{chosen['form_id']}: {reason}")
+        return chosen
+
+    def form_unavailable(self, actor_id, form):
+        """Why a form cannot be cast now ('' when it can): its extra costs against what the user
+        has."""
+        resources = self.battle.member(actor_id).subject.resources
+        for resource, amount in form.get("resource_costs", {}).items():
+            if not resources.contains(resource) or resources.current(resource) < amount:
+                return f"needs {amount:g} {resource}"
+        for resource, amount in form.get("battle_costs", {}).items():
+            have = self.battle.battle_resources.current(actor_id, resource)
+            if have < amount:
+                return f"needs {amount:g} {resource} ({have:g})"
+        return ""
+
+    def _pay_form_costs(self, actor_id, form):
+        resources = self.battle.member(actor_id).subject.resources
+        for resource, amount in form.get("resource_costs", {}).items():
+            resources.spend(resource, amount)
+        for resource, amount in form.get("battle_costs", {}).items():
+            self.battle.battle_resources.spend(
+                actor_id, resource, amount, trigger="rpg.session.form_cost"
+            )
+
+    def _pay_spent_goods(self, definition):
+        """Items and currency an ability spends, taken once per cast."""
+        if definition is None:
+            return
+        inventory = self.save.rpg_state.inventory
+        for item_id, count in (getattr(definition, "item_costs", None) or {}).items():
+            inventory.remove(item_id, count)
+        funds = self.save.rpg_state.currencies
+        for currency, amount in (getattr(definition, "currency_costs", None) or {}).items():
+            funds[currency] = funds.get(currency, 0.0) - amount
 
     def _after_ability(self, actor_id, definition, targets):
         """An ability's battle extras once it landed: battle resource gains (e.g. giving boost
@@ -2745,6 +2875,9 @@ class GameSessionRuntime:
             return
         battle = self.battle
         side = battle.member(actor_id).side
+        if "action.steal" in definition.tags:  # a skill that robs what it hits
+            for target_id in targets:
+                self.steal(actor_id, target_id)
         for gain in definition.battle_resource_gains:
             if gain["to"] == "self":
                 members = (actor_id,)
@@ -2829,6 +2962,11 @@ class GameSessionRuntime:
             have = battle.battle_resources.current(actor_id, resource_id)
             if have < amount:
                 return f"Needs {amount:g} {resource_id.replace('_', ' ')} (has {have:g})"
+        if (
+            battle.extensions is not None
+            and battle.extensions.uses_left(actor_id, ability_id) == 0
+        ):
+            return "No uses left this battle"
         wanted = getattr(definition, "requires_pet", "")
         if wanted:
             pet = self.active_pet()
@@ -2844,6 +2982,15 @@ class GameSessionRuntime:
                 record = self.project.rpg_database.items.get(item_id)
                 name = record.display_name if record is not None else item_id
                 return f"Needs {name}" + (f" x{count}" if count > 1 else "")
+        for item_id, count in (getattr(definition, "item_costs", None) or {}).items():
+            if items.count(item_id) < count:
+                record = self.project.rpg_database.items.get(item_id)
+                name = record.display_name if record is not None else item_id
+                return f"Needs {name}" + (f" x{count}" if count > 1 else "")
+        funds = self.save.rpg_state.currencies
+        for currency, amount in (getattr(definition, "currency_costs", None) or {}).items():
+            if funds.get(currency, 0.0) < amount:
+                return f"Needs {amount:g} {currency}"
         resources = member.subject.resources
         for cost in definition.costs:
             terms = cost.amount.terms
@@ -3107,7 +3254,7 @@ class GameSessionRuntime:
                 self.evolve_pet(pet.instance_id)
         self._pets_sent = set()
 
-    def _repeat_action(self, actor_id, ability_id, targets, offensive, repeats):
+    def _repeat_action(self, actor_id, ability_id, targets, offensive, repeats, power=1.0):
         definition = self.battle.ability_runtime.registry.get(ability_id)
         self._send_out_pet(actor_id, definition)
         hits = tuple(getattr(definition, "hits", ()) or ()) or ({"tags": [], "power": 1.0},)
@@ -3118,6 +3265,8 @@ class GameSessionRuntime:
                 hit
             ) in hits:  # each hit lands on its own: its damage types meet weaknesses and shields
                 hit_tags = list(hit["tags"])
+                follow = getattr(definition, "follow_tags", None) or {}
+                hit_tags += [to for have, to in follow.items() if actor_tags.contains(have)]
                 if offensive and hit.get("checks") and targets:
                     rolled = self._roll_hit_checks(actor_id, hit["checks"], targets[0])
                     hit_tags += rolled
@@ -3131,9 +3280,16 @@ class GameSessionRuntime:
                 added = [t for t in dict.fromkeys(hit_tags) if not actor_tags.contains(t)]
                 for tag in added:
                     actor_tags.add(tag)
-                self.battle.action_scale = hit["power"]
+                self.battle.action_scale = hit["power"] * power
                 try:
-                    targets = self._one_hit(actor_id, ability_id, targets, offensive, results)
+                    targets = self._one_hit(
+                        actor_id,
+                        ability_id,
+                        targets,
+                        offensive,
+                        results,
+                        waive_costs=bool(results),
+                    )
                 finally:
                     self.battle.action_scale = 1.0
                     for tag in added:
@@ -3208,14 +3364,14 @@ class GameSessionRuntime:
             _ = before, result
         return chain
 
-    def _one_hit(self, actor_id, ability_id, targets, offensive, results):
+    def _one_hit(self, actor_id, ability_id, targets, offensive, results, *, waive_costs=False):
         rules = self.rules
         if offensive:
             targets = tuple(t for t in targets if self.battle.is_active(self.battle.member(t)))
             if not targets:
                 return ()
         before = self._knockout_values(targets)
-        result = self.execute(actor_id, ability_id, targets)
+        result = self.execute(actor_id, ability_id, targets, waive_costs=waive_costs)
         results.append(result)
         outcomes = (
             self._action_outcomes(actor_id, ability_id, targets, before) if offensive else ()
@@ -3397,10 +3553,13 @@ class GameSessionRuntime:
             raise GameSessionError("no active battle")
         return self.battle.preview_action(BattleAction(actor_id, ability_id, tuple(target_ids)))
 
-    def execute(self, actor_id, ability_id, target_ids):
+    def execute(self, actor_id, ability_id, target_ids, *, waive_costs=False):
         if self.mode != "battle":
             raise GameSessionError("no active battle")
-        result = self.battle.execute(BattleAction(actor_id, ability_id, target_ids))
+        result = self.battle.execute(
+            BattleAction(actor_id, ability_id, target_ids, forced=self._forced_cast),
+            waive_costs=waive_costs,
+        )
         if self.rules.action_timing == "timeline":
             recovery = self.battle.action_timing.definition_for(ability_id).recovery
             self._turn_delay = max(
@@ -3476,7 +3635,11 @@ class GameSessionRuntime:
         ability_id = str(decision.payload["ability_id"])
         targets = tuple(decision.target_ids)
         offensive = self.ability_relation(ability_id) == TargetRelation.OPPONENT
-        results = self._repeat_action(member_id, ability_id, targets, offensive, 1)
+        targets, self._forced_cast = self._override_targets(member_id, targets)
+        try:
+            results = self._repeat_action(member_id, ability_id, targets, offensive, 1)
+        finally:
+            self._forced_cast = False
         result = results[-1] if results else None
         ai = self.battle.enemy_ai
         ai.set_memory(decision.actor_id, "last_rule_id", decision.rule_id)
@@ -3921,6 +4084,27 @@ class GameSessionRuntime:
             reward.items,
         )
 
+    def _roll_gear_drop(self, equipment_id, amount, member_id, rng):
+        """Drops that name equipment become rolled instances in the equipment bag."""
+        from asteria.rpg.loot import roll_equipment
+
+        db = self.project.rpg_database
+        bag = self.save.rpg_state.equipment_bag
+        level = self.enemy_levels.get(member_id) or 1
+        for _ in range(int(amount)):
+            serial = sum(1 for g in bag if g.equipment.equipment_id == equipment_id) + 1
+            bag.append(
+                roll_equipment(
+                    db.equipment[equipment_id],
+                    rng,
+                    item_level=level,
+                    rarities=db.rarities or None,
+                    affixes=db.affixes,
+                    luck=self.loot_luck,
+                    instance_id=f"{equipment_id}:drop{serial}",
+                )
+            )
+
     def finish_victory(self):
         if self.mode != "battle":
             raise GameSessionError("no active battle")
@@ -3963,6 +4147,9 @@ class GameSessionRuntime:
                 )
                 items = dict(reward.items)
                 for item_id, amount in extra.items():
+                    if item_id in db.equipment:  # gear is rolled (rarity, affixes), not counted
+                        self._roll_gear_drop(item_id, amount, member_id, rng)
+                        continue
                     items[item_id] = items.get(item_id, 0) + amount
                 reward = type(reward)(reward.currencies, reward.experience, items)
             reward = self._scaled_reward(reward, member_id)

@@ -94,3 +94,53 @@ def test_timeline_edits_are_undoable_and_drive_the_battle_choreography(document)
     document.undo()
     sequence = _resolver(document.project).motion_sequence("fire_arc")
     assert next(b.at for b in sequence.beats if b.beat_id == "impact") == 0.32
+
+
+def test_battle_use_fields_are_editable_undoable_and_validated(document):
+    """Body height (where bars and menus sit) and the effect placement of a sheet."""
+    api = AnimationAuthoringController(document)
+    data = api.data(SHEET)
+    assert data["body_height"] == 0 and data["vfx"] is None  # nothing set: whole frame, defaults
+    api.set_body_height(SHEET, 40)
+    assert api.data(SHEET)["body_height"] == 40
+    api.set_vfx(SHEET, anchor="head", offset=(2.0, -3.0), scale=0.8)
+    assert api.data(SHEET)["vfx"] == {"anchor": "head", "offset": [2.0, -3.0], "scale": 0.8}
+    from asteria.runtime.battle_visuals import member_body_height, vfx_placement
+
+    meta = document.project.assets.resolve(SHEET).meta()
+    assert member_body_height(meta, 64, 1.0) == 40.0
+    assert vfx_placement(meta)["anchor"] == "head"
+    api.set_vfx(SHEET, None)  # back to the defaults
+    api.set_body_height(SHEET, 0)
+    assert api.data(SHEET)["body_height"] == 0 and api.data(SHEET)["vfx"] is None
+    document.undo()
+    assert api.data(SHEET)["body_height"] == 40
+    with pytest.raises(AnimationAuthoringError):
+        api.set_body_height(SHEET, -4)
+    with pytest.raises(AnimationAuthoringError):
+        api.set_vfx(SHEET, anchor="sideways", offset=(0, 0), scale=1.0)
+    with pytest.raises(AnimationAuthoringError):
+        api.set_vfx(SHEET, anchor="head", offset=(0, 0), scale=0.0)
+
+
+def test_the_animation_editor_shows_and_applies_the_battle_use_fields(document):
+    pytest.importorskip("PySide6")
+    import os
+
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.animation_editor_widget import AnimationEditorWidget
+
+    QApplication.instance() or QApplication([])
+    widget = AnimationEditorWidget(document, resource_root=ROOT)
+    widget.sheet_list.setCurrentRow(widget.api.sheets().index(SHEET))
+    assert widget.body_height.value() == 0 and not widget.vfx_on.isChecked()
+    widget.body_height.setValue(30)
+    widget.vfx_on.setChecked(True)
+    widget.vfx_anchor.setCurrentText("feet")
+    widget.vfx_scale.setValue(1.5)
+    assert widget.apply_battle_use()
+    data = widget.api.data(SHEET)
+    assert data["body_height"] == 30 and data["vfx"]["anchor"] == "feet"
+    assert data["vfx"]["scale"] == 1.5

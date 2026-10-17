@@ -380,9 +380,10 @@ class BattleExtensionRuntime:
 
         return observe
 
-    def after_action(self, battle, action, snapshot, executed):
+    def after_action(self, battle, action, snapshot, executed, counted=True):
+        """``counted`` is false for the later hits of one cast: a cast is one use."""
         key = (action.actor_id, action.ability_id)
-        if executed:
+        if executed and counted:
             self.uses[key] = self.uses.get(key, 0) + 1
             self._count_mastery(battle, key)
         res = self.rules.damage_resource

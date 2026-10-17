@@ -313,11 +313,16 @@ class BattleVisualResolver:
             sizes = {m: logical_size(m) for m in members}
             smallest = min(h for _, h in sizes.values()) if sizes else 0.0
             # Large combatants (bosses) get their own column behind the others.
-            large = [m for m in members if sizes[m][1] > smallest * 1.5]
-            regular = [m for m in members if m not in large]
-            columns = [regular[i : i + 3] for i in range(0, len(regular), 3)] + [
-                [m] for m in large
+            # (a pet fighting as a unit always stands apart from the party's own column)
+            large = [
+                m for m in members if sizes[m][1] > smallest * 1.5 or str(m).startswith("pet:")
             ]
+            regular = [m for m in members if m not in large]
+            columns = [regular[i : i + 3] for i in range(0, len(regular), 3)]
+            if zone in tuple(getattr(layout, "front_large_zones", ())):
+                columns = [[m] for m in large] + columns  # toward the centre of the stage
+            else:
+                columns += [[m] for m in large]
             # Column centres: each column clears the previous one by the widest sprites.
             xs, x = [], front_x
             for index, column in enumerate(columns):

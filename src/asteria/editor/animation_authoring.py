@@ -76,6 +76,10 @@ class AnimationAuthoringController:
             "frame_size": list(meta.get("frame_size", (16, 16))),
             "pivot": list(meta.get("pivot", (0.5, 1.0))),
             "clips": copy.deepcopy(dict(meta.get("clips", {}))),
+            # battle use: the character's real height in the frame (0 = the whole frame) and
+            # where an effect sheet appears on its target (None = the engine defaults)
+            "body_height": float(meta.get("body_height", 0) or 0),
+            "vfx": copy.deepcopy(dict(meta["vfx"])) if meta.get("vfx") else None,
         }
 
     def image_path(self, asset_id):
@@ -153,6 +157,43 @@ class AnimationAuthoringController:
         data = self.data(asset_id)
         data["frame_size"] = [int(width), int(height)]
         return self._commit(asset_id, data, f"Frame size {asset_id}")
+
+    def set_body_height(self, asset_id, height):
+        """Source pixels of the character's body (health bars and menus sit on it); 0 clears."""
+        height = float(height)
+        if height < 0:
+            raise AnimationAuthoringError("body height cannot be negative")
+        before = self.asset(asset_id)
+        meta = dict(before.metadata)
+        if height:
+            meta["body_height"] = height
+        else:
+            meta.pop("body_height", None)
+        self._replace_meta(before, meta, f"Body height {asset_id}")
+        return self.data(asset_id)
+
+    def set_vfx(self, asset_id, anchor=None, *, offset=(0.0, 0.0), scale=0.6):
+        """Where this sheet shows when used as an effect; ``anchor=None`` clears the setting."""
+        before = self.asset(asset_id)
+        meta = dict(before.metadata)
+        if anchor is None:
+            meta.pop("vfx", None)
+        else:
+            if anchor not in ("feet", "center", "head"):
+                raise AnimationAuthoringError("anchor must be feet, center or head")
+            if float(scale) <= 0:
+                raise AnimationAuthoringError("effect scale must be > 0")
+            meta["vfx"] = {
+                "anchor": anchor,
+                "offset": [float(offset[0]), float(offset[1])],
+                "scale": float(scale),
+            }
+        self._replace_meta(before, meta, f"Effect placement {asset_id}")
+        return self.data(asset_id)
+
+    def _replace_meta(self, before, meta, label):
+        after = replace(before, metadata=tuple(sorted(meta.items())))
+        self.document.execute(_ReplaceAssetCommand(self.project.assets, before, after, label))
 
     def set_pivot(self, asset_id, x, y):
         data = self.data(asset_id)

@@ -496,10 +496,10 @@ def hit_log(demo):
     hits = []
     original = game._one_hit
 
-    def spy(actor_id, ability_id, targets, offensive, results):
+    def spy(actor_id, ability_id, targets, offensive, results, **kwargs):
         tags = game.battle.member(actor_id).subject.tags
         hits.append((ability_id, tuple(t for t in HIT_TAGS if tags.contains(t))))
-        return original(actor_id, ability_id, targets, offensive, results)
+        return original(actor_id, ability_id, targets, offensive, results, **kwargs)
 
     game._one_hit = spy
     return hits

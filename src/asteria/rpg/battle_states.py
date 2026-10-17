@@ -34,6 +34,9 @@ def _coeffs(values):
     return result
 
 
+TARGET_OVERRIDES = ("", "random_any", "random_opponent", "random_ally")
+
+
 @dataclass(frozen=True, slots=True)
 class BattleStatePolicy:
     """Battle-specific application/timing policy for a generic gameplay State.
@@ -61,8 +64,13 @@ class BattleStatePolicy:
     # interaction rules with these tags as action tags (e.g. "element.fire").
     # Empty (default): damage-over-time ignores interaction multipliers.
     interaction_tags: tuple[str, ...] = ()
+    # only abilities carrying one of these tags may be used (berserk: attacks only); empty = all
+    allowed_ability_tags: tuple[str, ...] = ()
+    # who the afflicted member's actions hit, whatever was chosen: "" (as aimed),
+    # "random_any" (confusion), "random_opponent", "random_ally" (charm)
+    target_override: str = ""
     # shown in the editor even when empty (left out of the saved data while empty)
-    OPTIONAL_DATA = {"interaction_tags": []}
+    OPTIONAL_DATA = {"interaction_tags": [], "allowed_ability_tags": [], "target_override": ""}
 
     SCHEMA = "asteria.rpg.battle_state_policy"
     VERSION = 1
@@ -85,7 +93,11 @@ class BattleStatePolicy:
         tick_amount=1.0,
         remove_triggers=(),
         interaction_tags=(),
+        allowed_ability_tags=(),
+        target_override="",
     ):
+        if target_override not in TARGET_OVERRIDES:
+            raise ValueError(f"target_override must be one of {TARGET_OVERRIDES}")
         minimum_chance = _number(minimum_chance, "minimum_chance")
         maximum_chance = _number(maximum_chance, "maximum_chance")
         if not 0 <= minimum_chance <= maximum_chance <= 1:
@@ -114,6 +126,8 @@ class BattleStatePolicy:
         object.__setattr__(self, "tick_amount", tick_amount)
         object.__setattr__(self, "remove_triggers", remove_triggers)
         object.__setattr__(self, "interaction_tags", _tags(interaction_tags))
+        object.__setattr__(self, "allowed_ability_tags", _tags(allowed_ability_tags))
+        object.__setattr__(self, "target_override", target_override)
 
     def to_data(self):
         return {
@@ -134,6 +148,12 @@ class BattleStatePolicy:
             "tick_amount": self.tick_amount,
             "remove_triggers": list(self.remove_triggers),
             **({"interaction_tags": list(self.interaction_tags)} if self.interaction_tags else {}),
+            **(
+                {"allowed_ability_tags": list(self.allowed_ability_tags)}
+                if self.allowed_ability_tags
+                else {}
+            ),
+            **({"target_override": self.target_override} if self.target_override else {}),
         }
 
     @classmethod
@@ -156,6 +176,8 @@ class BattleStatePolicy:
             tick_amount=data.get("tick_amount", 1),
             remove_triggers=data.get("remove_triggers", ()),
             interaction_tags=data.get("interaction_tags", ()),
+            allowed_ability_tags=data.get("allowed_ability_tags", ()),
+            target_override=data.get("target_override", ""),
         )
 
 
@@ -281,7 +303,14 @@ class BattleStateRuntime:
             policy = self.policies.get(active.state_id)
             if policy is None:
                 continue
-            if policy.prevent_action or ability_tags.intersection(policy.blocked_ability_tags):
+            outside = bool(policy.allowed_ability_tags) and not ability_tags.intersection(
+                policy.allowed_ability_tags
+            )
+            if (
+                policy.prevent_action
+                or outside
+                or ability_tags.intersection(policy.blocked_ability_tags)
+            ):
                 blocked.append(active.state_id)
         blocked = tuple(sorted(blocked))
         return AbilityAvailability(not blocked, blocked, "blocked_by_state" if blocked else "")

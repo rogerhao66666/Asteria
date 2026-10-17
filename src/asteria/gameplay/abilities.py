@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass
 from enum import Enum
 from math import isfinite
@@ -196,6 +197,47 @@ class AbilityEffect:
         return cls(data["mode"], Effect.from_data(data["effect"]))
 
 
+def _clean_forms(forms):
+    """Validate and normalise the casting forms of a skill."""
+    clean, seen = [], set()
+    for raw in forms or ():
+        raw = dict(raw)
+        unknown = set(raw) - {
+            "form_id",
+            "label",
+            "tags",
+            "power",
+            "resource_costs",
+            "battle_costs",
+            "apply_states",
+        }
+        if unknown:
+            raise ValueError(f"unknown form fields: {sorted(unknown)}")
+        form_id = str(raw.get("form_id", "")).strip()
+        if not form_id or form_id in seen:
+            raise ValueError("each form needs its own form_id")
+        seen.add(form_id)
+        power = float(raw.get("power", 1.0))
+        if not isfinite(power) or power <= 0:
+            raise ValueError("form power must be > 0")
+        entry = {"form_id": form_id, "label": str(raw.get("label") or form_id)}
+        tags = sorted({normalize_tag(t) for t in raw.get("tags", ()) if str(t).strip()})
+        if tags:
+            entry["tags"] = tags
+        if power != 1.0:
+            entry["power"] = power
+        for key in ("resource_costs", "battle_costs"):
+            costs = {str(k).strip(): float(v) for k, v in dict(raw.get(key) or {}).items()}
+            if any(not k or v < 0 or not isfinite(v) for k, v in costs.items()):
+                raise ValueError(f"form {key} needs resource ids and amounts >= 0")
+            if costs:
+                entry[key] = costs
+        if raw.get("apply_states"):
+            entry["apply_states"] = [dict(x) for x in raw["apply_states"]]
+        clean.append(entry)
+    return tuple(clean)
+
+
 @dataclass(frozen=True, slots=True)
 class AbilityDefinition:
     ability_id: str
@@ -249,6 +291,20 @@ class AbilityDefinition:
     # items the user must own (not spent) for the ability to be usable, {item id: count} - a
     # captured pet an action sends out, a key that opens a technique. Written only when set.
     requires_items: dict = None
+    # what a cast spends besides resources: items {item id: count} and currency {id: amount},
+    # taken once per cast (not per hit); the ability is unusable without them. Written only
+    # when set.
+    item_costs: dict = None
+    currency_costs: dict = None
+    # the damage type follows what the user carries: {tag the user has: tag the hits deal while
+    # it is there}, e.g. {"equip.sword": "weapon.sword", "equip.bow": "weapon.bow"} makes one
+    # skill hit as whichever weapon is wielded. Written only when set.
+    follow_tags: dict = None
+    # ways to cast the skill, chosen when it is used: [{"form_id", "label", "tags": [...] added
+    # to every hit, "power": strength factor, "resource_costs": {resource: amount} and
+    # "battle_costs": {resource: amount} on top of the skill's own, "apply_states": [...]}].
+    # Written only when set.
+    forms: tuple = ()
     # a pet the user must own and send out: "any" (the active pet, whatever its species) or a
     # species id. The pet's stats are read in formulas as pet_<stat> and pet_level.
     requires_pet: str = ""
@@ -259,6 +315,10 @@ class AbilityDefinition:
         "menu_category": "",
         "requires_pet": "",
         "requires_items": {},
+        "item_costs": {},
+        "currency_costs": {},
+        "follow_tags": {},
+        "forms": [],
         "display_name": "",
         "icon_id": "",
         "cooldown_turns": 0,
@@ -299,6 +359,10 @@ class AbilityDefinition:
         display_name="",
         icon_id="",
         requires_items=None,
+        item_costs=None,
+        currency_costs=None,
+        follow_tags=None,
+        forms=(),
         requires_pet="",
         menu_category="",
     ):
@@ -413,6 +477,16 @@ class AbilityDefinition:
         if any(not k or v < 1 for k, v in needs.items()):
             raise ValueError("requires_items needs item ids and counts >= 1")
         object.__setattr__(self, "requires_items", needs)
+        follow = {normalize_tag(k): normalize_tag(v) for k, v in dict(follow_tags or {}).items()}
+        object.__setattr__(self, "follow_tags", follow)
+        object.__setattr__(self, "forms", _clean_forms(forms))
+        for label, raw in (("item_costs", item_costs), ("currency_costs", currency_costs)):
+            spent = {str(k).strip(): float(v) for k, v in dict(raw or {}).items()}
+            if any(not k or v <= 0 or not isfinite(v) for k, v in spent.items()):
+                raise ValueError(f"{label} needs ids and amounts > 0")
+            if label == "item_costs":
+                spent = {k: int(v) for k, v in spent.items()}
+            object.__setattr__(self, label, spent)
         object.__setattr__(self, "requires_pet", str(requires_pet or "").strip())
         object.__setattr__(self, "menu_category", str(menu_category or "").strip())
 
@@ -451,6 +525,10 @@ class AbilityDefinition:
             **({"display_name": self.display_name} if self.display_name else {}),
             **({"icon_id": self.icon_id} if self.icon_id else {}),
             **({"requires_items": dict(self.requires_items)} if self.requires_items else {}),
+            **({"item_costs": dict(self.item_costs)} if self.item_costs else {}),
+            **({"follow_tags": dict(self.follow_tags)} if self.follow_tags else {}),
+            **({"forms": [copy.deepcopy(f) for f in self.forms]} if self.forms else {}),
+            **({"currency_costs": dict(self.currency_costs)} if self.currency_costs else {}),
             **({"requires_pet": self.requires_pet} if self.requires_pet else {}),
             **({"menu_category": self.menu_category} if self.menu_category else {}),
         }
@@ -497,6 +575,10 @@ class AbilityDefinition:
             display_name=data.get("display_name", ""),
             icon_id=data.get("icon_id", ""),
             requires_items=data.get("requires_items"),
+            item_costs=data.get("item_costs"),
+            follow_tags=data.get("follow_tags"),
+            forms=data.get("forms", ()),
+            currency_costs=data.get("currency_costs"),
             requires_pet=data.get("requires_pet", ""),
             menu_category=data.get("menu_category", ""),
         )
@@ -603,8 +685,15 @@ class AbilityRuntime:
         *,
         prepaid_costs=None,
         value_transform=None,
+        waive_costs=False,
+        skip_targeting=False,
     ):
         """Validate, pay costs and apply effects atomically.
+
+        ``skip_targeting`` accepts targets the ability's own rule would refuse (a state forced
+        them).
+        ``waive_costs`` runs the ability without charging its costs (the later hits of a
+        multi-hit action, whose cost was paid with the first).
 
         ``value_transform(target_id, operation, value)`` (optional) adjusts each
         operation value an effect applies to a selected target. It returns the
@@ -616,7 +705,7 @@ class AbilityRuntime:
         if any(not isinstance(x, AbilityTarget) for x in targets):
             raise TypeError("targets must be AbilityTarget values")
 
-        errors = list(definition.targeting.validate(source, targets))
+        errors = [] if skip_targeting else list(definition.targeting.validate(source, targets))
         condition_target = targets[0].subject if targets else None
         if not definition.conditions.evaluate(
             GameplayConditionContext(source.subject, condition_target)
@@ -625,7 +714,7 @@ class AbilityRuntime:
 
         evaluated_costs = []
         formula_context = _formula_context(source.subject, condition_target)
-        for cost in definition.costs:
+        for cost in () if waive_costs else definition.costs:
             try:
                 amount = float(cost.amount.evaluate(formula_context))
             except (KeyError, ValueError) as exc:

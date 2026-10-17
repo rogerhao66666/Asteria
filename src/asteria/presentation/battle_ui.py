@@ -48,6 +48,9 @@ class BattleUiLayoutProfile:
     # hidden_zones: placement zones whose members get no HUD at all (no panel, bar or name),
     # e.g. enemies in a game that never shows their health
     hidden_zones: tuple = ()
+    # front_large_zones: placement zones where oversized combatants (a summon, a mount) stand in
+    # front of the others, toward the centre of the stage, instead of behind them
+    front_large_zones: tuple = ()
     action_menu_placement: str = "bottom"
     stage_top: float = 0.0
     stage_front: float = 0.30
@@ -57,6 +60,9 @@ class BattleUiLayoutProfile:
             raise ValueError("virtual battle UI size must be positive")
         object.__setattr__(self, "overhead_zones", tuple(str(x) for x in self.overhead_zones))
         object.__setattr__(self, "hidden_zones", tuple(str(x) for x in self.hidden_zones))
+        object.__setattr__(
+            self, "front_large_zones", tuple(str(x) for x in self.front_large_zones)
+        )
         if self.party_hud not in {"column", "bottom_row", "side_list"}:
             raise ValueError("party_hud must be 'column', 'bottom_row' or 'side_list'")
         if self.action_menu_placement not in {"bottom", "actor"}:

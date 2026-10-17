@@ -241,8 +241,10 @@ class BattleAction:
     actor_id: str
     ability_id: str
     target_ids: tuple[str, ...]
+    forced: bool = False  # the targets were set by a state, not chosen: no targeting rules
 
-    def __init__(self, actor_id, ability_id, target_ids):
+    def __init__(self, actor_id, ability_id, target_ids, forced=False):
+        object.__setattr__(self, "forced", bool(forced))
         object.__setattr__(self, "actor_id", _id(actor_id, "actor_id"))
         object.__setattr__(self, "ability_id", _id(ability_id, "ability_id"))
         object.__setattr__(self, "target_ids", tuple(_id(x, "target_id") for x in target_ids))
@@ -570,7 +572,7 @@ class BattleRuntime:
     def resolve_targets(self, actor_id, ability_id, requested_ids=(), *, rng=None):
         return self.targeting.resolve(actor_id, ability_id, requested_ids, rng=rng)
 
-    def _validate_action(self, action, *, rng=None):
+    def _validate_action(self, action, *, rng=None, continuation=False):
         if not isinstance(action, BattleAction):
             raise TypeError("action must be BattleAction")
         actor = self.member(action.actor_id)
@@ -596,8 +598,12 @@ class BattleRuntime:
             left and (actor.member_id, action.ability_id) not in self._used_this_turn
         ):  # repeats in one turn (boost)
             raise ValueError(f"ability cooling down: {action.ability_id} ({left} turns)")
-        if self.extensions is not None:
+        if self.extensions is not None and not continuation:  # later hits of one cast: no re-check
             self.extensions.validate(self, action)
+        if action.forced:
+            for target_id in action.target_ids:
+                self.member(target_id)  # it must be somebody in this battle
+            return action
         target_resolution = self.resolve_targets(
             actor.member_id, action.ability_id, action.target_ids, rng=rng
         )
@@ -882,9 +888,9 @@ class BattleRuntime:
             tuple(record) if result.executed else (),
         )
 
-    def execute(self, action, *, rng=None, prepaid_costs=None):
+    def execute(self, action, *, rng=None, prepaid_costs=None, waive_costs=False):
         rng = self.rng if rng is None else rng
-        effective_action = self._validate_action(action, rng=rng)
+        effective_action = self._validate_action(action, rng=rng, continuation=waive_costs)
         actor = self.member(effective_action.actor_id)
         targets = [self.member(x) for x in effective_action.target_ids]
         emit_hook(
@@ -912,6 +918,8 @@ class BattleRuntime:
             source,
             target_values,
             prepaid_costs=prepaid_costs,
+            waive_costs=waive_costs,
+            skip_targeting=effective_action.forced,
             value_transform=transform,
         )
         wrapped = BattleActionResult(
@@ -920,7 +928,9 @@ class BattleRuntime:
         if result.executed:
             self._start_cooldown(actor.member_id, action.ability_id)
         if extensions is not None:
-            extensions.after_action(self, effective_action, snapshot, result.executed)
+            extensions.after_action(
+                self, effective_action, snapshot, result.executed, counted=not waive_costs
+            )
         emit_hook(
             self.hooks,
             "rpg.battle.after_action",

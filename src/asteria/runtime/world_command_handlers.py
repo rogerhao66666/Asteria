@@ -94,7 +94,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "SUMMON": ("enemy_id", "actor_id", "count", "owner_id"),
     "SHOW_POPUP": ("text", "entity", "duration_ms", "kind"),
     "SET_CLASSES": ("actor_id", "class_ids", "unlock"),
-    "GRANT_EXPERIENCE": ("actor_id", "amount", "threshold", "points"),
+    "GRANT_EXPERIENCE": ("actor_id", "amount", "threshold", "points", "level_track"),
     "REFINE_EQUIPMENT": ("actor_id", "instance_id"),
     "SOCKET_ITEM": ("actor_id", "instance_id", "socket_id", "item_id"),
     "UNSOCKET_ITEM": ("actor_id", "instance_id", "socket_id"),
@@ -348,7 +348,10 @@ def register_standard_world_commands(router, session):
             key, _, amount = part.partition("=")
             if key.strip():
                 points[key.strip()] = float(amount or 1)
-        extra = {"level_threshold": _amount(command, "threshold", 1000.0)}
+        extra = {
+            "level_threshold": _amount(command, "threshold", 1000.0),
+            "level_track": str(command.args.get("level_track") or ""),
+        }
         return session.grant_actor_experience(
             str(_required(command, "actor_id")),
             _amount(command, "amount", 0),

@@ -1787,8 +1787,8 @@ SERVICES = {
             "GRANT_EXPERIENCE",
             {
                 "actor_id": "hero_01",
-                "amount": 6000,
-                "threshold": 1000,
+                "amount": 12000,
+                "level_track": "level_curve",
                 "points": "stat_points=3,skill_points=1",
             },
         ),
@@ -1868,22 +1868,18 @@ def game_start(c):
     hero = c.hero_id
     data = project.game_start.to_data()
     rpg = data["rpg_state"]
-    rpg["party_active_actor_ids"] = [hero]
-    rpg["party_actor_ids"] = [hero]
-    placements = rpg.get("party_placements", {})
-    rpg["party_placements"] = (
-        {k: v for k, v in placements.items() if k == hero}
-        if isinstance(placements, dict)
-        else [p for p in placements if p.get("actor_id") == hero]
-    )
+    mira = "hero_02"
+    rpg["party_active_actor_ids"] = [hero, mira]
+    rpg["party_actor_ids"] = [hero, mira]
+    rpg["party_placements"] = {hero: "slot_1", mira: "slot_2"}
     rpg["progression"]["totals"] = {}
     rpg["actor_snapshots"] = {}
     allocation = ProgressionAllocationRuntime(
         db.progression_graphs.values(),
         balances={
-            "ap": 60,
+            "ap": 200,
             "stat_points": 12,
-            **{f"jp.{j}": 70 for j in ("knight", "duelist", "mystic", *ADVANCED_JOBS)},
+            **{f"jp.{j}": 130 for j in ("knight", "duelist", "mystic", *ADVANCED_JOBS)},
         },
     )
     rpg["progression_allocations"] = {hero: allocation.to_data()}
@@ -1896,15 +1892,24 @@ def game_start(c):
             "points": {},
             "active_class_ids": ["knight", "duelist"],
             "unlocked_class_ids": ["knight", "duelist", "mystic"],  # the rest: trainers
-        }
+        },
+        mira: {
+            "schema": "asteria.rpg.actor_progression_state",
+            "version": 1,
+            "level": 1,
+            "experience": 0.0,
+            "points": {},
+            "active_class_ids": ["cleric"],
+            "unlocked_class_ids": ["cleric"],
+        },
     }
 
-    def instance(equipment_id):
+    def instance(equipment_id, owner=hero):
         return {
             "attachments": {},
             "equipment_id": equipment_id,
             "growth": None,
-            "instance_id": f"{equipment_id}:{hero}",
+            "instance_id": f"{equipment_id}:{owner}",
             "schema": "asteria.rpg.equipment_instance",
             "version": 2,
         }
@@ -1923,7 +1928,21 @@ def game_start(c):
                 "armor": [instance("a_warden_plate")],
                 "accessory": [instance("a_warden_ring"), instance("a_warden_charm")],
             },
-        }
+        },
+        mira: {
+            "schema": "asteria.rpg.equipment_loadout",
+            "version": 1,
+            "slots": [
+                {"slot_id": "weapon", "capacity": 1, "accepted_tags": []},
+                {"slot_id": "armor", "capacity": 1, "accepted_tags": []},
+                {"slot_id": "accessory", "capacity": 1, "accepted_tags": []},
+            ],
+            "equipped": {
+                "weapon": [instance("w_staff", mira)],
+                "armor": [],
+                "accessory": [],
+            },
+        },
     }
     import trial_items
 
@@ -2147,6 +2166,7 @@ def presentation(c):
             stage_top=0.14,
             stage_front=0.16,
             hidden_zones=("left",),  # like Octopath: enemies show no name, bar or panel
+            front_large_zones=("right",),  # a summon stands left of the party, toward the foe
         ),
     )
     hud = sequences.require("hud", "adaptive")
@@ -2184,7 +2204,28 @@ def write_manifest(c):
         sprites[name] = {"sprite": f"playable_assets/npc_{slug}.png", "size": [40, 40]}
     order = [k for k in c.skill_names]
     manifest["battle"]["skills"] = {a: {"label": c.skill_names[a]} for a in order}
+    battle = manifest["battle"]
+    battle["heroes"] = ["playable_assets/hero_01_battle.png"] * 2
+    battle["enemy_sprites"] = {}
+    battle["enemy_layouts"] = {}
     manifest["battle"]["command_style"] = "root"
     (c.root / "playable_test_manifest.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
+
+
+def finalize_names(c):
+    """Every skill and status carries its player-facing name in the project data (editable in
+    the Database), not only in the playtest manifest."""
+    abilities = c.abilities._definitions
+    for ability_id, definition in list(abilities.items()):
+        if definition.display_name:
+            continue
+        name = c.skill_names.get(ability_id) or ability_id.replace("_", " ").title()
+        abilities[ability_id] = dataclasses.replace(definition, display_name=name)
+    states = c.library.states._definitions
+    for state_id, state in list(states.items()):
+        if not state.display_name:
+            states[state_id] = dataclasses.replace(
+                state, display_name=state_id.replace("_", " ").title()
+            )

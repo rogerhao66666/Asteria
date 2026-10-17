@@ -1,0 +1,17 @@
+{
+  "driver": "cocoa",
+  "status": "PASS",
+  "checks": {
+    "forms_menu_opens": true,
+    "form_cast_hit_the_boss": true,
+    "bp_given": true,
+    "both_turns_played": true
+  },
+  "failed": [],
+  "screenshots": [
+    "b11_forms_menu.png",
+    "b11_form_cast.png",
+    "b11_gift_target.png",
+    "b11_gift_done.png"
+  ]
+}

@@ -311,6 +311,7 @@ class CanonicalBattleAdapter:
         self.screen.display_names = self._display_names(game)
         self.screen.animation.compositions = self._compositions(combatants)
         self.screen.member_heights = {v.member_id: self._body_height(v) for v in combatants}
+        self._hide_unlisted_hud(combatants)
         self.screen.coordinator.attach(game.battle.hooks)
         layout = self.screen.composer.layout
         scale = min(
@@ -546,8 +547,16 @@ class CanonicalBattleAdapter:
         for visual in added:
             self.screen.add_combatant(visual)
             self.screen.member_heights[visual.member_id] = self._body_height(visual)
+        self._hide_unlisted_hud(added)
         self.screen.display_names = self._display_names(game)
         self.screen.animation.compositions.update(self._compositions(added))
+
+    def _hide_unlisted_hud(self, visuals):
+        """Members whose profile turns the HUD off get no party panel."""
+        for visual in visuals:
+            profile = self.resolver.profile_for(visual.member_id)
+            if profile is not None and not profile.hud_visible:
+                self.screen.hud_hidden.add(visual.member_id)
 
     def _register_fallback_visuals(self, sides, layout):
         """Every combatant without a combatant_visuals profile gets a generated one (no legacy

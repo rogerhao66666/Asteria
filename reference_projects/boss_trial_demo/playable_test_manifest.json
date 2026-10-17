@@ -160,16 +160,9 @@
     "background": "playable_assets/battle_background.png",
     "heroes": [
       "playable_assets/hero_01_battle.png",
-      "playable_assets/hero_02_battle.png",
-      "playable_assets/hero_03_battle.png",
-      "playable_assets/hero_04_battle.png",
-      "playable_assets/hero_05_battle.png",
-      "playable_assets/hero_06_battle.png"
+      "playable_assets/hero_01_battle.png"
     ],
-    "enemy_sprites": {
-      "astral_tyrant": "playable_assets/astral_tyrant_battle.png",
-      "mender_wisp": "playable_assets/mender_wisp_battle.png"
-    },
+    "enemy_sprites": {},
     "skills": {
       "attack_sword": {
         "label": "Attack (sword)"
@@ -396,29 +389,119 @@
       "aegis": {
         "label": "Aegis (Divine)"
       },
+      "versatile_strike": {
+        "label": "Versatile Strike"
+      },
+      "elemental_edge": {
+        "label": "Elemental Edge"
+      },
+      "cripple": {
+        "label": "Cripple"
+      },
+      "war_cry": {
+        "label": "War Cry"
+      },
+      "arcane_tome": {
+        "label": "Arcane Tome"
+      },
+      "hex": {
+        "label": "Hex"
+      },
+      "bewilder": {
+        "label": "Bewilder"
+      },
+      "blood_ether": {
+        "label": "Blood Ether"
+      },
+      "word_of_doom": {
+        "label": "Word of Doom (Divine)"
+      },
+      "dawn_and_dusk": {
+        "label": "Dawn and Dusk"
+      },
+      "dark_pact": {
+        "label": "Dark Pact"
+      },
+      "pass_the_torch": {
+        "label": "Pass the Torch"
+      },
+      "rekindle": {
+        "label": "Rekindle"
+      },
+      "twilight_judgment": {
+        "label": "Twilight Judgment (Divine)"
+      },
+      "molten_strike": {
+        "label": "Molten Strike"
+      },
+      "gilded_hammer": {
+        "label": "Gilded Hammer"
+      },
+      "armor_crush": {
+        "label": "Armor Crush"
+      },
+      "blinding_powder": {
+        "label": "Blinding Powder"
+      },
+      "charm": {
+        "label": "Charm"
+      },
+      "venom_edge": {
+        "label": "Venom Edge"
+      },
+      "pilfer": {
+        "label": "Pilfer"
+      },
+      "lullaby_dust": {
+        "label": "Lullaby Dust"
+      },
+      "bastion_aura": {
+        "label": "Bastion Aura"
+      },
+      "martyrs_gift": {
+        "label": "Martyr's Gift"
+      },
+      "maddening_howl": {
+        "label": "Maddening Howl"
+      },
+      "benediction": {
+        "label": "Benediction"
+      },
+      "purge": {
+        "label": "Purge"
+      },
+      "starlight": {
+        "label": "Starlight"
+      },
+      "lullaby": {
+        "label": "Lullaby"
+      },
+      "bp_gift": {
+        "label": "Boost Gift"
+      },
+      "second_breath": {
+        "label": "Second Breath"
+      },
+      "dawn_hymn": {
+        "label": "Dawn Hymn (Divine)"
+      },
       "concoct": {
         "label": "Concoct"
       },
       "counter_strike": {
         "label": "Counter Strike"
+      },
+      "wisp_bolt": {
+        "label": "Wisp Bolt"
+      },
+      "wisp_mend": {
+        "label": "Wisp Mend"
+      },
+      "wisp_nova": {
+        "label": "Wisp Nova"
       }
     },
-    "enemy_layouts": {
-      "astral_tyrant": {
-        "size": [
-          220,
-          220
-        ],
-        "position": [
-          650,
-          100
-        ],
-        "gauge": {
-          "resource": "stagger",
-          "label": "Shield"
-        }
-      }
-    },
+    "enemy_layouts": {},
     "bgm": "battle_theme",
     "victory_jingle": "victory",
     "presentation": {

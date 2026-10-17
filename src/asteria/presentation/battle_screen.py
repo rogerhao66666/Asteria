@@ -111,6 +111,8 @@ class BattleScreenRuntime:
         self.current_member_id: str | None = None
         self.display_names: dict[str, str] = {}
         self.member_heights: dict[str, float] = {}
+        # members whose combatant profile has hud_visible off (a summon, a pet): no party panel
+        self.hud_hidden: set[str] = set()
         self.time = 0.0
 
     def add_combatant(self, visual):
@@ -224,7 +226,7 @@ class BattleScreenRuntime:
         return self.composer.compose(
             view_camera,
             battle_frame,
-            hud_members=self.hud.members,
+            hud_members=tuple(m for m in self.hud.members if m.member_id not in self.hud_hidden),
             timeline=self.timeline.view,
             feedback=self.feedback,
             camera_feedback=camera_frame,

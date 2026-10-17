@@ -40,6 +40,7 @@ COLORS = {
     "screen_fx": "#f0d060",
     "timing": "#e06060",
     "motion_fx": "#60d0d0",
+    "move": "#a8e060",
 }
 
 

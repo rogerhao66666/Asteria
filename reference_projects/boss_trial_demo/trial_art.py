@@ -34,7 +34,19 @@ def _helpers():
     return module
 
 
-def _ninja_cells(name="NinjaGreen"):
+def _hue_shift(image, degrees):
+    """The same picture with every colour turned round the colour wheel (alpha untouched)."""
+    from PIL import Image
+
+    r, g, b, a = image.split()
+    h, sat, v = Image.merge("RGB", (r, g, b)).convert("HSV").split()
+    h = h.point(lambda x: (x + round(degrees / 360 * 256)) % 256)
+    out = Image.merge("HSV", (h, sat, v)).convert("RGB")
+    out.putalpha(a)
+    return out
+
+
+def _ninja_cells(name="NinjaGreen", hue=0):
     """The animated ninja's strips as ``{strip: [frame per row]}`` of its right-facing column."""
     from PIL import Image
 
@@ -42,6 +54,8 @@ def _ninja_cells(name="NinjaGreen"):
     out = {}
     for strip in ("Idle", "Attack", "Hit", "Dead", "Item", "Roll"):
         image = Image.open(base / f"{strip}.png").convert("RGBA")
+        if hue:
+            image = _hue_shift(image, hue)
         column = RIGHT if image.width >= 128 else 0
         out[strip] = [
             image.crop((column * 32, r * 32, column * 32 + 32, r * 32 + 32))
@@ -50,7 +64,7 @@ def _ninja_cells(name="NinjaGreen"):
     return out
 
 
-def ninja_sheet(scale=2, weapon="Katana"):
+def ninja_sheet(scale=2, weapon="Katana", hue=0):
     """NinjaGreen on 64 px canvases (the character is 32 px, bottom-centred; the room above and
     to the sides holds the weapon swing). The pack's weapon sheet is 4 x 4 cells of 64 px - one
     column per facing, one row per attack frame - centred on the character, so the katana and
@@ -59,7 +73,7 @@ def ninja_sheet(scale=2, weapon="Katana"):
     from PIL import Image
 
     h = _helpers()
-    cells = _ninja_cells()
+    cells = _ninja_cells(hue=hue)
     weapon_sheet = Image.open(PACK / "CharacterAnimated" / "Weapon" / f"{weapon}.png").convert(
         "RGBA"
     )
@@ -240,6 +254,9 @@ def hero_and_boss_art(context):
     hero_states = tuple(s for s in default_jrpg_visual_states() if s.state_id in roles)
     image, frame, clips = ninja_sheet()
     register(context.hero_id, image, frame, clips, ("hero",), 0.9, hero_states)
+    # Mira: the same animated ninja turned violet, same frame size so she stands in the same column
+    image, frame, clips = ninja_sheet(hue=-70)
+    register("hero_02", image, frame, clips, ("hero",), 0.9, hero_states)
     image, frame, clips, field_frame = samurai_sheet()
     boss_states = tuple(
         BattleVisualStateDefinition(r, r) for r in ("idle", "attack", "cast", "hit", "ko")
@@ -411,6 +428,9 @@ def write_credits(root):
         f"{ninja} - `Actor/CharacterAnimated/NinjaGreen` strips and the `Weapon/Katana` layer, "
         "frames arranged on 64 px canvases and scaled "
         f"(built by `reference_projects/boss_trial_demo/trial_art.py`) | Pixel-boy, AAA | {cc0} |",
+        "| `battle/hero_02.png` (Mira, the companion) | "
+        f"{ninja} - the same NinjaGreen strips with the hue turned and the `Weapon/Katana` layer "
+        f"(`_hue_shift` in `trial_art.py`) | Pixel-boy, AAA | {cc0} |",
         "| `battle/crimson_warlord.png`, `boss_field.png` (Boss Trial boss) | "
         f"{ninja} - `Actor/Boss/GiantRedSamurai` Idle / AttackRight / ChargeRight / Hit strips, "
         f"hit / KO frames darkened | Pixel-boy, AAA | {cc0} |",
@@ -418,13 +438,31 @@ def write_credits(root):
         f"{ninja} - `FX/Elemental`, `FX/Magic`, `FX/Attack`, `FX/Smoke`, cropped and scaled | "
         f"Pixel-boy, AAA | {cc0} |",
         "| `npc_*.png` | "
-        f"{ninja} - `Actor/Character/Princess` front pose, scaled | Pixel-boy, AAA | {cc0} |",
+        f"{ninja} - `Actor/Character/*` front poses (Caveman, Monk, Princess, OldMan, Samurai, "
+        f"Knight, Hunter, NinjaRed, NinjaBlue, SorcererOrange, Villager), scaled | "
+        f"Pixel-boy, AAA | {cc0} |",
         "| `icons/weapon_*.png` (8 weapon icons) | [Idylwild's Arsenal]"
         "(https://opengameart.org/node/171012) - copied unmodified, renamed | Idylwild | "
         f"{cc0} (author asks for no credit; none is required) |",
         "| `icons/skill_*.png` | Original: drawn by code in "
         "`src/asteria/graphics/forged_icons.py` | This repository | Same as the repository |",
     ]
+    # rows of the reference game whose files this demo no longer carries
+    stale = (
+        "| `hero_01_battle.png` … `hero_06_battle.png`",
+        "| `player_field_sheet.png` | [Ninja Adventure Asset Pack](https://pixel-boy.itch.io/ninja-adv",
+        "| `battle/hero_01.png` … `battle/hero_12.png`",
+    )
+    text = "\n".join(x for x in text.split("\n") if not x.startswith(stale))
+    rows.append(
+        "| `battle/mender_wisp.png` (the boss's helper) | "
+        f"{ninja} - `Actor/Monster/Flam`, cropped and scaled | Pixel-boy, AAA | {cc0} |"
+    )
+    rows.append(
+        "| `hero_01_battle.png`, `mender_wisp_battle.png` (pictures for the legacy playtest "
+        "fallback) | [Tiny Dungeon](https://kenney.nl/assets/tiny-dungeon) 1.0 tiles, scaled | "
+        f"Kenney (kenney.nl) | {cc0} |"
+    )
     marker = "\n## Licensing"
     new = [r for r in rows if r.split("|")[1].strip() not in text]
     if new:
@@ -432,3 +470,38 @@ def write_credits(root):
         credits.write_text(
             text[:i].rstrip("\n") + "\n" + "\n".join(new) + "\n" + text[i:], encoding="utf-8"
         )
+
+
+def prune_unused_art(context):
+    """The reference game's other heroes and monsters are not part of this demo: drop their
+    visuals, sheets and files so the project only holds what it uses."""
+    keep = {context.hero_id, "hero_02", context.boss_id, "mender_wisp", "pet"}
+    library = context.project.battle_presentation_library
+    # a captured wisp fights on the hero side: every pet unit (member ids "pet:...") is drawn
+    # with the "pet" profile, here the same sheet as the wild wisp; no side-list panel, that list
+    # is for the party's characters
+    wisp = library.require("combatant_visuals", "mender_wisp")
+    library.set(
+        "combatant_visuals",
+        "pet",
+        dataclasses.replace(
+            wisp,
+            profile_id="pet",
+            hud_visible=False,
+            # about the size of a character; pets stand in their own column (see front_large_zones)
+            transform=dataclasses.replace(wisp.transform, scale_x=0.55, scale_y=0.55),
+        ),
+    )
+    root = context.root / "playable_assets"
+    for profile_id in list(library.ids("combatant_visuals")):
+        if profile_id in keep:
+            continue
+        library.remove("combatant_visuals", profile_id)
+        try:
+            context.project.assets.remove(f"battle.combatant.{profile_id}")
+        except KeyError:
+            pass
+        for path in (root / "battle" / f"{profile_id}.png", root / f"{profile_id}_battle.png"):
+            path.unlink(missing_ok=True)
+    for index in range(2, 7):  # the reference game's other legacy hero pictures
+        (root / f"hero_{index:02d}_battle.png").unlink(missing_ok=True)

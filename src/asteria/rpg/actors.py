@@ -63,7 +63,16 @@ class ClassDefinition:
     # stat -> amount gained per actor level above 1 (a warrior's attack rises faster than a
     # scholar's); written only when set
     level_growth: dict[str, float] = field(default_factory=dict)
-    OPTIONAL_DATA = {"icon_id": "", "level_growth": {}}  # shown in the editor while empty
+    # what a job asks for before it can be taken: the actor's level and jobs it must already
+    # have unlocked; written only when set
+    unlock_level: int = 0
+    unlock_classes: tuple[str, ...] = ()
+    OPTIONAL_DATA = {
+        "icon_id": "",
+        "level_growth": {},
+        "unlock_level": 0,
+        "unlock_classes": [],
+    }  # shown in the editor while empty
 
     def __init__(
         self,
@@ -76,8 +85,18 @@ class ClassDefinition:
         granted_abilities=(),
         icon_id="",
         level_growth=None,
+        unlock_level=0,
+        unlock_classes=(),
     ):
         class_id = _id(class_id, "class_id")
+        if int(unlock_level) < 0:
+            raise ValueError("unlock_level must be >= 0")
+        object.__setattr__(self, "unlock_level", int(unlock_level))
+        object.__setattr__(
+            self,
+            "unlock_classes",
+            tuple(dict.fromkeys(_id(x, "class_id") for x in unlock_classes)),
+        )
         object.__setattr__(self, "class_id", class_id)
         object.__setattr__(self, "display_name", str(display_name or class_id))
         object.__setattr__(self, "stat_bonuses", _numbers(stat_bonuses or {}, "stat"))
@@ -111,6 +130,8 @@ class ClassDefinition:
                 if self.level_growth
                 else {}
             ),
+            **({"unlock_level": self.unlock_level} if self.unlock_level else {}),
+            **({"unlock_classes": list(self.unlock_classes)} if self.unlock_classes else {}),
         }
 
     @classmethod
@@ -126,6 +147,8 @@ class ClassDefinition:
             granted_abilities=data["granted_abilities"],
             icon_id=data.get("icon_id", ""),
             level_growth=data.get("level_growth"),
+            unlock_level=data.get("unlock_level", 0),
+            unlock_classes=data.get("unlock_classes", ()),
         )
 
 

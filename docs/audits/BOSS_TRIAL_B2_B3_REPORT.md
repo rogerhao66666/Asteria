@@ -133,3 +133,24 @@ Demo：`trial_jobs.py`（6 個進階職業）、`trial_items.py`（調和、煉�
 
 ## 6. Closure Status
 B6、B7、B9 的腳本化與實機證據齊備；B8 的畫面已在真實視窗截圖，但部分畫面的開啟用程式呼叫。均未達 A（缺真人試玩）。
+
+
+---
+# 編輯器可編輯性（使用者要求：demo 的每樣東西都要能用引擎編輯，才能當參考）
+
+做法：寫 `tests/test_boss_trial_editable.py`，把 demo 用編輯器自己的控制器打開，每個分類的每筆資料都
+「編碼、解碼、套用」一次，每個 Game Systems 表單都走一次「開表單、套用變更」，每個動作序列都過時間軸編輯器的檢查。
+
+發現並修掉的缺口：
+1. 時間軸編輯器拒絕 `move` 通道（衝向目標），demo 的 100 多個動作序列都會報「unknown channel」→ 加入 `move`
+   與 `advance`／`return` 的檢查，時間軸多一條顏色。
+2. 時間軸編輯器把粒子特效當成「不存在的特效」→ 已認得 `particle_effect` 資產。
+3. 精靈表的 `body_height`（本體高度）與特效位置（`vfx`）沒有任何編輯畫面 → Presentation > Sprite Animation 加
+   「Battle use」區（Body height、Used as an effect、Appears at、Offset、Scale），可復原。
+4. 技能與狀態的名稱原本只在預覽用的 manifest 裡 → 全部寫進專案資料的 `display_name`，Database 可改。
+5. demo 夾帶參考專案用不到的其他英雄與怪物（sheet、visual、檔案）→ 清掉，專案只留自己用的。
+6. 加 `reference_projects/boss_trial_demo/README.md`：每個系統在編輯器哪個工作區、哪個分頁、哪個種類改。
+
+仍不在編輯器裡的：`playable_test_manifest.json`（場上實體要畫哪張圖、背景、音樂、按鍵）。這是預覽用的檔案，
+引擎目前沒有它的編輯畫面（其他 demo 也一樣）；README 已說明。
+證據：編輯器稽核 `--project` 打開 demo 0 缺陷（`editor_sprite_animation_battle_use.png`）。

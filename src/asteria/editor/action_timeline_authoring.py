@@ -3,9 +3,9 @@
 Edits the battle presentation library's ``motion_sequences``: per-ability
 choreography of timed beats on the channels ``animation`` (cue = role),
 ``vfx`` (cue = sprite sheet asset), ``audio`` (cue = audio id), ``camera``,
-``screen_fx`` (cue = effect), ``timing`` (hit_stop) and ``motion_fx``
-(afterimage / trail). These are exactly the sequences the canonical battle
-screen plays. Changes are undoable document commands;
+``screen_fx`` (cue = effect), ``timing`` (hit_stop), ``motion_fx``
+(afterimage / trail) and ``move`` (the actor steps toward its target / back). These are
+exactly the sequences the canonical battle screen plays. Changes are undoable document commands;
 ``preview`` reports what has fired at a given time.
 """
 
@@ -15,8 +15,9 @@ from dataclasses import dataclass
 
 from asteria.presentation.battle_motion_sequence import BattleMotionBeat, BattleMotionSequence
 
-CHANNELS = ("animation", "vfx", "audio", "camera", "screen_fx", "timing", "motion_fx")
+CHANNELS = ("animation", "vfx", "audio", "camera", "screen_fx", "timing", "motion_fx", "move")
 TIMING_CUES = ("hit_stop",)
+MOVE_CUES = ("advance", "return")  # advance: to the first target; return: back to its place
 MOTION_FX_CUES = ("afterimage", "trail")  # payload: duration, interval, count, fade, lifetime
 ROLES = ("idle", "attack", "hit", "ko")
 TARGETS = ("@source", "@target")
@@ -85,8 +86,8 @@ class ActionTimelineController:
         return tuple(
             sorted(
                 a.asset_id
-                for a in self.document.project.assets.query(kind="sprite_sheet")
-                if "vfx" in a.tags
+                for a in self.document.project.assets.query()
+                if "vfx" in a.tags and a.kind in ("sprite_sheet", "particle_effect")
             )
         )
 
@@ -103,6 +104,8 @@ class ActionTimelineController:
                 found.append(f"{where}: timing cue must be one of {TIMING_CUES}")
             if beat.channel == "motion_fx" and beat.cue not in MOTION_FX_CUES:
                 found.append(f"{where}: motion_fx cue must be one of {MOTION_FX_CUES}")
+            if beat.channel == "move" and beat.cue not in MOVE_CUES:
+                found.append(f"{where}: move cue must be one of {MOVE_CUES}")
             if beat.channel == "vfx" and vfx and beat.cue not in vfx:
                 found.append(f"{where}: unknown VFX sheet {beat.cue}")
             if beat.member_id not in (None, *TARGETS):

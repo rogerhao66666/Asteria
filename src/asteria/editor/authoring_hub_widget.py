@@ -356,6 +356,15 @@ class StructuredRecordEditor(QTreeWidget):
             "checks": [""],  # outcome check ids rolled for this hit (crit, evade...)
             "kill": {"chance": 0.0, "resource": "", "immune_tags": [], "immune_fraction": 0.0},
         },
+        "forms": {  # a way to cast the skill: chosen from a list when it is used
+            "form_id": "new_form",
+            "label": "New Form",
+            "tags": [""],
+            "power": 1.0,
+            "resource_costs": {},
+            "battle_costs": {},
+            "apply_states": [],
+        },
         "battle_resource_gains": {"to": "targets", "resource": "", "amount": 1.0},
         "commands": {"command": "", "args": {}},
         "apply_states": {"state": "", "to": "targets", "remove": False},
@@ -704,6 +713,11 @@ class AdapterFamilyWidget(QWidget):
             from .image_tools import icon_choices
 
             self.editor.field_choices["icon_id"] = lambda: icon_choices(document)
+            from asteria.rpg.battle_states import TARGET_OVERRIDES
+
+            self.editor.field_choices["target_override"] = lambda: [
+                (value, None) for value in TARGET_OVERRIDES if value
+            ]
             from .image_tools import IconLibrary
 
             self.editor.icon_library = IconLibrary(document)

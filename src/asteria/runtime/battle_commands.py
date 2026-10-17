@@ -78,6 +78,7 @@ class BattleCommands:
         self.cursor = 0
         self.boost = 0
         self.pending = None  # ("ability" | "item" | "concoct", id)
+        self.form = None  # the casting form picked for a skill that has forms
         self.ingredients = {}
         self.message = ""
 
@@ -284,6 +285,27 @@ class BattleCommands:
                 )
         return rows
 
+    def form_rows(self, actor_id):
+        """The ways to cast the pending skill: its forms, each with its extra cost."""
+        definition = self._definition(self.pending[1])
+        rows = []
+        for form in definition.forms:
+            reason = self.game.form_unavailable(actor_id, form)
+            extra = [f"{v:g} {self._short(k)}" for k, v in form.get("resource_costs", {}).items()]
+            extra += [f"{v:g} {self._short(k)}" for k, v in form.get("battle_costs", {}).items()]
+            rows.append(
+                BattleActionEntry(
+                    form["form_id"],
+                    form["label"],
+                    category="Form",
+                    cost_text=", ".join(extra),
+                    enabled=not reason,
+                    disabled_reason=reason,
+                    order=len(rows),
+                )
+            )
+        return rows
+
     def target_rows(self, actor_id):
         game = self.game
         battle = game.battle
@@ -319,6 +341,8 @@ class BattleCommands:
             return self.target_rows(actor_id)
         if self.mode == "ingredients":
             return self.ingredient_rows()
+        if self.mode == "forms":
+            return self.form_rows(actor_id)
         if self.mode == "root":
             return self.root_rows(actor_id)
         if self.category == "Attack":
@@ -417,6 +441,10 @@ class BattleCommands:
             if self.mode == "target" and self.pending and self.pending[0] == "concoct":
                 self.ingredients.popitem() if self.ingredients else None
                 self.mode = "ingredients"
+            elif self.mode == "target" and self.form is not None:
+                self.mode, self.form = "forms", None
+            elif self.mode == "forms":
+                self.mode, self.pending, self.form = "command", None, None
             elif self.mode == "ingredients" and self.ingredients:
                 self.ingredients.popitem()
             elif self.mode == "command" and self.style == "root":
@@ -466,6 +494,15 @@ class BattleCommands:
                 return False
             else:
                 self.pending = ("ability", row.action_id)
+                if self._definition(row.action_id).forms:  # which form comes before the target
+                    self.mode, self.cursor, self.form = "forms", 0, None
+                    return False
+            return self._choose_target_or_act(actor_id)
+        if self.mode == "forms":
+            if not row.enabled:
+                self.message = row.disabled_reason
+                return False
+            self.form = row.action_id
             return self._choose_target_or_act(actor_id)
         if self.mode == "ingredients":
             step = self._steps()[len(self.ingredients)]
@@ -501,7 +538,7 @@ class BattleCommands:
             elif kind == "concoct":
                 game.concoct(actor_id, key, dict(self.ingredients), targets)
             else:
-                game.use_ability(actor_id, key, targets, boost_level=self.boost)
+                game.use_ability(actor_id, key, targets, boost_level=self.boost, form=self.form)
         except Exception as exc:  # shown in the menu footer; the turn is not used
             self.message = str(exc)
             self.mode, self.cursor = ("root" if self.style == "root" else "command"), 0

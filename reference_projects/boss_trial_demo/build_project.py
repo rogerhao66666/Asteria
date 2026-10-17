@@ -24,6 +24,8 @@ sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(HERE))
 
 import trial_art as art  # noqa: E402
+import trial_b11 as b11  # noqa: E402
+import trial_b12 as b12  # noqa: E402
 import trial_content as content  # noqa: E402
 import trial_items as items  # noqa: E402
 import trial_jobs as jobs  # noqa: E402
@@ -48,13 +50,17 @@ def main():
     content.hero_skills(context)
     jobs.advanced_jobs(context)
     content.boss(context)
+    b11.companion(context)
     items.items_and_alchemy(context)
     items.counters(context)
+    b12.systems(context)
     content.world(context)
     art.hero_and_boss_art(context)
     art.effect_assets(context)
+    art.prune_unused_art(context)
     content.presentation(context)
     kept = art.weapon_icons(context)
+    content.finalize_names(context)
     content.game_start(context)
     path = HERE / "project.asteria.json"
     project.save_json(path)
