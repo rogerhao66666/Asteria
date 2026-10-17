@@ -299,6 +299,8 @@ class BattleObjectiveCondition:
                 and battle.is_active(m)
             )
         elif self.kind == "member_active":
+            if self.subject_id not in battle.members:
+                return False  # a leader who is not in this fight cannot decide it
             actual = battle.is_active(battle.member(self.subject_id))
         elif self.kind == "round_index":
             actual = battle.turn_queue.round_index

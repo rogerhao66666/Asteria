@@ -9511,6 +9511,88 @@
           "recovery_at": null,
           "sequence_id": "strike"
         },
+        "beast_command": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.cut",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.26,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.cut",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
         "beast_howl": {
           "beats": [
             {
@@ -15424,6 +15506,108 @@
           "recovery_at": null,
           "sequence_id": "strike"
         },
+        "grave_whisper": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.2,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.spirit",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "flash",
+              "channel": "screen_fx",
+              "cue": "flash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "alpha",
+                  40
+                ],
+                [
+                  "duration",
+                  0.08
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  5
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.34,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.spirit",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.9,
+          "recovery_at": null,
+          "sequence_id": "fire_arc"
+        },
         "guard": {
           "beats": [
             {
@@ -21251,6 +21435,88 @@
           "recovery_at": null,
           "sequence_id": "meteor"
         },
+        "taunting_roar": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.circle",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.26,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.aura",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
         "temper": {
           "beats": [
             {
@@ -21731,6 +21997,174 @@
             },
             {
               "at": 0.6500000000000001,
+              "beat_id": "return",
+              "channel": "move",
+              "cue": "return",
+              "duration": 0.2,
+              "easing": "ease_in_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 1.1,
+          "recovery_at": null,
+          "sequence_id": "meteor"
+        },
+        "unity_strike": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "advance",
+              "channel": "move",
+              "cue": "advance",
+              "duration": 0.16,
+              "easing": "ease_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack3",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.33,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "fx.divine_burst",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.33,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.slash2",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.42000000000000004,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.spark",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.45,
+              "beat_id": "flash",
+              "channel": "screen_fx",
+              "cue": "flash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "alpha",
+                  80
+                ],
+                [
+                  "duration",
+                  0.08
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.45,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.45,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  9
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.45,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.51,
+              "beat_id": "fx2",
+              "channel": "vfx",
+              "cue": "battle.fx.slash2",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.6000000000000001,
+              "beat_id": "fx3",
+              "channel": "vfx",
+              "cue": "battle.fx.explosion",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.69,
+              "beat_id": "fx4",
+              "channel": "vfx",
+              "cue": "battle.fx.spark",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.74,
               "beat_id": "return",
               "channel": "move",
               "cue": "return",
@@ -24253,7 +24687,7 @@
         {
           "args": {
             "args": {
-              "kind": "town_theme"
+              "kind": "none"
             },
             "command": "SET_BATTLE_WEATHER"
           },
@@ -24262,7 +24696,17 @@
         {
           "args": {
             "args": {
-              "facing": "leftnone",
+              "asset_id": "town_theme",
+              "fade": 0.6
+            },
+            "command": "PLAY_BGM"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "facing": "left",
               "scene_id": "4ca2db1c-f03a-51a8-aac9-3f85718155ee",
               "x": 664.0,
               "y": 216.0
@@ -24796,6 +25240,483 @@
       "schema": "asteria.event_program",
       "version": 1
     },
+    "story.showman": {
+      "instructions": [
+        {
+          "args": {
+            "choices": [
+              {
+                "text": "Balloon",
+                "value": 0
+              },
+              {
+                "text": "Stroll",
+                "value": 1
+              },
+              {
+                "text": "Route",
+                "value": 2
+              },
+              {
+                "text": "Lantern",
+                "value": 3
+              },
+              {
+                "text": "Echo",
+                "value": 4
+              },
+              {
+                "text": "Badge",
+                "value": 5
+              },
+              {
+                "text": "Sparks",
+                "value": 6
+              },
+              {
+                "text": "Timer",
+                "value": 7
+              },
+              {
+                "text": "Slides",
+                "value": 8
+              },
+              {
+                "text": "Bow out",
+                "value": 9
+              }
+            ],
+            "prompt": "Showman Pip: Care for a trick?",
+            "variable_name": "menu"
+          },
+          "opcode": "CHOICE"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 0
+            },
+            "label": "opt0"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 1
+            },
+            "label": "opt1"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 2
+            },
+            "label": "opt2"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 3
+            },
+            "label": "opt3"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 4
+            },
+            "label": "opt4"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 5
+            },
+            "label": "opt5"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 6
+            },
+            "label": "opt6"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 7
+            },
+            "label": "opt7"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 8
+            },
+            "label": "opt8"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 9
+            },
+            "label": "opt9"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt0"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "balloon": "exclamation",
+              "duration_ms": 800,
+              "entity": "Showman Pip"
+            },
+            "command": "SHOW_BALLOON"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt1"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "entity": "Showman Pip",
+              "speed": 40,
+              "x": 330,
+              "y": 330
+            },
+            "command": "WALK_TO"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt2"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "entity": "Showman Pip",
+              "route": "right 2, down 1",
+              "speed": 40,
+              "step": 16
+            },
+            "command": "MOVE_ROUTE"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt3"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "name": "Lantern",
+              "prefab_id": "spirit_lantern",
+              "x": 300,
+              "y": 300
+            },
+            "command": "SPAWN_ENTITY"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt4"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "entity": "Showman Pip",
+              "name": "PipEcho",
+              "x": 360,
+              "y": 300
+            },
+            "command": "COPY_ENTITY"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "entity": "PipEcho",
+              "prefab_id": "bone_pile"
+            },
+            "command": "MORPH_ENTITY"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt5"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "entity": "Showman Pip",
+              "icon_id": "playable_assets/lucifer/icons/w_sunbrand.png"
+            },
+            "command": "SET_ENTITY_ICON"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt6"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "asset_id": "battle.fx.explosion",
+              "entity": "Showman Pip",
+              "scale": 1.0
+            },
+            "command": "PLAY_VFX"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt7"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "seconds": 30,
+              "show": false,
+              "timer_id": "pip"
+            },
+            "command": "TIMER_START"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "timer_id": "pip"
+            },
+            "command": "TIMER_PAUSE"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "timer_id": "pip"
+            },
+            "command": "TIMER_RESUME"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "seconds": 10,
+              "timer_id": "pip"
+            },
+            "command": "TIMER_ADD"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "timer_id": "pip"
+            },
+            "command": "TIMER_STOP"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt8"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "asset_id": "ef5dac6e-ff41-5420-a923-379ea64eb9a1",
+              "opacity": 0.8,
+              "picture_id": "slide",
+              "scale": 0.5,
+              "x": 1,
+              "y": 1
+            },
+            "command": "SHOW_PICTURE"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "duration": 0.3,
+              "picture_id": "slide",
+              "x": 40,
+              "y": 30
+            },
+            "command": "MOVE_PICTURE"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "frame": 0,
+              "picture_id": "slide"
+            },
+            "command": "SET_PICTURE_FRAME"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "picture_id": "slide"
+            },
+            "command": "ERASE_PICTURE"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt9"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "story.showman",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
     "story.vault": {
       "instructions": [
         {
@@ -25107,7 +26028,11 @@
         {
           "args": {
             "args": {
-              "color": "#000000",
+              "color": [
+                0,
+                0,
+                0
+              ],
               "duration": 0.4,
               "to": 1.0
             },
@@ -25129,7 +26054,11 @@
         {
           "args": {
             "args": {
-              "color": "#000000",
+              "color": [
+                0,
+                0,
+                0
+              ],
               "duration": 0.4,
               "to": 0.0
             },
@@ -27134,7 +28063,7 @@
       },
       "actor_snapshots": {},
       "currencies": {
-        "gold": 40000.0
+        "gold": 6000.0
       },
       "inventory": {
         "counts": {
@@ -27386,17 +28315,17 @@
             "weapon_master_tree": {}
           },
           "balances": {
-            "ap": 200.0,
-            "jp.duelist": 130.0,
-            "jp.forgemaster": 130.0,
-            "jp.guardian": 130.0,
-            "jp.hero": 130.0,
-            "jp.knight": 130.0,
-            "jp.mystic": 130.0,
-            "jp.rogue": 130.0,
-            "jp.sage": 130.0,
-            "jp.weapon_master": 130.0,
-            "stat_points": 12.0
+            "ap": 6.0,
+            "jp.duelist": 8.0,
+            "jp.forgemaster": 0.0,
+            "jp.guardian": 0.0,
+            "jp.hero": 0.0,
+            "jp.knight": 8.0,
+            "jp.mystic": 8.0,
+            "jp.rogue": 0.0,
+            "jp.sage": 0.0,
+            "jp.weapon_master": 0.0,
+            "stat_points": 0.0
           },
           "schema": "asteria.rpg.progression_allocation_runtime",
           "version": 1
@@ -29482,6 +30411,92 @@
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "beast_command",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Beast Command",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "beast_command.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -18.0,
+                        "key": "pet_power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "weapon.bow"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "weapon.bow"
+            ]
+          }
+        ],
+        "icon_id": "playable_assets/lucifer/icons/skill_beast_command.png",
+        "menu_category": "Beast",
+        "requires_pet": "any",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "pet",
+          "weapon.bow"
         ],
         "targeting": {
           "allow_self": false,
@@ -34384,6 +35399,112 @@
         "tags": [
           "ability",
           "weapon.dagger"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "grave_whisper",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 24.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "display_name": "Grave Whisper",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "grave_whisper.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -12.0,
+                        "key": "magic",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "damage.dark"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "damage.dark"
+            ]
+          }
+        ],
+        "icon_id": "playable_assets/lucifer/icons/skill_grave_whisper.png",
+        "menu_category": "Rites",
+        "requires_items": {
+          "ancient_thread": 1
+        },
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "damage.dark",
+          "magic"
         ],
         "targeting": {
           "allow_self": false,
@@ -39444,6 +40565,55 @@
         "version": 1
       },
       {
+        "ability_id": "taunting_roar",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "taunt",
+            "to": "self"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 12.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "display_name": "Taunting Roar",
+        "effects": [],
+        "icon_id": "playable_assets/lucifer/icons/skill_taunting_roar.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "temper",
         "apply_states": [
           {
@@ -39890,6 +41060,130 @@
           "ability",
           "divine",
           "magic",
+          "weapon.sword"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "unity_strike",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Unity Strike",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "unity_strike.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -18.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "gauge_costs": {
+          "unity": 100.0
+        },
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "damage.light",
+              "weapon.sword"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.2,
+            "tags": [
+              "damage.light",
+              "weapon.sword"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.4,
+            "tags": [
+              "damage.light",
+              "weapon.sword"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.6,
+            "tags": [
+              "damage.light",
+              "weapon.sword"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 2.0,
+            "tags": [
+              "damage.light",
+              "weapon.sword"
+            ]
+          }
+        ],
+        "icon_id": "playable_assets/lucifer/icons/skill_unity_strike.png",
+        "menu_category": "Limit",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "damage.light",
+          "divine",
           "weapon.sword"
         ],
         "targeting": {
@@ -42470,6 +43764,24 @@
       },
       {
         "contributed_tags": [
+          "state.taunt"
+        ],
+        "display_name": "Taunt",
+        "duration": 3.0,
+        "icon_id": "playable_assets/icons/skill_mono_taunt.png",
+        "max_stacks": 1,
+        "modifiers": [],
+        "on_apply": [],
+        "on_expire": [],
+        "on_remove": [],
+        "periodic": [],
+        "schema": "asteria.state_definition",
+        "stacking": "refresh",
+        "state_id": "taunt",
+        "version": 3
+      },
+      {
+        "contributed_tags": [
           "state.ward"
         ],
         "display_name": "Ward",
@@ -42685,7 +43997,100 @@
   "lifecycle_event_bindings": [],
   "name": "Asteria Boss Trial Demo",
   "prefabs": {
-    "prefabs": [],
+    "prefabs": [
+      {
+        "base_prefab_id": "",
+        "components": [
+          {
+            "fields": {
+              "parent_id": "",
+              "rotation": 0.0,
+              "scale_x": 1.0,
+              "scale_y": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "type": "asteria.Transform",
+            "version": 1
+          },
+          {
+            "fields": {
+              "depth": 0.0,
+              "elevation": 0.0,
+              "flip_x": false,
+              "frame_index": 0,
+              "layer": 0,
+              "opacity": 1.0,
+              "sprite_sheet_asset_id": "dbeeda0f-9e4b-5dec-9f6a-6c363a349e6c",
+              "visible": true
+            },
+            "type": "asteria.SpriteRenderer2D",
+            "version": 1
+          },
+          {
+            "fields": {
+              "clip_set_id": "ad977488-a4a8-5f8e-a599-de2c03b302a7",
+              "default_clip": "idle_down",
+              "playing": true,
+              "speed": 1.0
+            },
+            "type": "asteria.Animator2D",
+            "version": 1
+          }
+        ],
+        "name": "Bone Pile",
+        "prefab_id": "bone_pile",
+        "removed_components": [],
+        "schema": "asteria.prefab",
+        "version": 1
+      },
+      {
+        "base_prefab_id": "",
+        "components": [
+          {
+            "fields": {
+              "parent_id": "",
+              "rotation": 0.0,
+              "scale_x": 1.0,
+              "scale_y": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "type": "asteria.Transform",
+            "version": 1
+          },
+          {
+            "fields": {
+              "depth": 0.0,
+              "elevation": 0.0,
+              "flip_x": false,
+              "frame_index": 0,
+              "layer": 0,
+              "opacity": 1.0,
+              "sprite_sheet_asset_id": "cd9eee80-96de-5643-b468-6d13dbea36a1",
+              "visible": true
+            },
+            "type": "asteria.SpriteRenderer2D",
+            "version": 1
+          },
+          {
+            "fields": {
+              "clip_set_id": "fa3100e9-51ff-5b96-9c53-c8603ff92ec2",
+              "default_clip": "idle_down",
+              "playing": true,
+              "speed": 1.0
+            },
+            "type": "asteria.Animator2D",
+            "version": 1
+          }
+        ],
+        "name": "Spirit Lantern",
+        "prefab_id": "spirit_lantern",
+        "removed_components": [],
+        "schema": "asteria.prefab",
+        "version": 1
+      }
+    ],
     "schema": "asteria.prefab_library",
     "version": 1
   },
@@ -43874,6 +45279,18 @@
             "event": "taken",
             "per_max_hp": 3.0,
             "resource": "bp"
+          },
+          {
+            "event": "dealt",
+            "per_max_hp": 250.0,
+            "resource": "unity",
+            "shared": true
+          },
+          {
+            "event": "taken",
+            "per_max_hp": 150.0,
+            "resource": "unity",
+            "shared": true
           }
         ],
         "lifesteal_stat": "lifesteal",
@@ -43893,6 +45310,9 @@
         "row_tag_prefix": "",
         "rules_id": "trial",
         "schema": "asteria.rpg.battle_extension_rules",
+        "shared_gauges": {
+          "unity": 100.0
+        },
         "steal_tables": [
           {
             "entries": [
@@ -43914,6 +45334,28 @@
             "entries": [
               {
                 "amount": 1,
+                "chance": 1.0,
+                "item_id": "ancient_thread"
+              }
+            ],
+            "once": true,
+            "target_key": "skeleton_ancient"
+          },
+          {
+            "entries": [
+              {
+                "amount": 2,
+                "chance": 1.0,
+                "item_id": "iron_ore"
+              }
+            ],
+            "once": true,
+            "target_key": "goblin_beast"
+          },
+          {
+            "entries": [
+              {
+                "amount": 1,
                 "chance": 0.8,
                 "item_id": "ether_leaf"
               }
@@ -43923,7 +45365,7 @@
           }
         ],
         "surprise_chance": 0.05,
-        "taunt_tag": "",
+        "taunt_tag": "state.taunt",
         "use_limits": {
           "twilight_judgment": 1,
           "word_of_doom": 1
@@ -44800,6 +46242,24 @@
         "remove_triggers": [],
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
+        "state_id": "taunt",
+        "target_stat_terms": {},
+        "tick_amount": 1.0,
+        "tick_trigger": "rpg.battle.turn_ended",
+        "version": 1
+      },
+      {
+        "base_chance": 1.0,
+        "blocked_ability_tags": [],
+        "duration_multiplier": 1.0,
+        "duration_target_stat_terms": {},
+        "immune_target_tags": [],
+        "maximum_chance": 1.0,
+        "minimum_chance": 0.0,
+        "prevent_action": false,
+        "remove_triggers": [],
+        "schema": "asteria.rpg.battle_state_policy",
+        "source_stat_terms": {},
         "state_id": "ward",
         "target_stat_terms": {},
         "tick_amount": 1.0,
@@ -45226,6 +46686,23 @@
         "metric_conditions": [],
         "minimum_targets": 1,
         "relation": "ally",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "beast_command",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
         "required_slot_tags": [],
         "required_subject_tags": [],
         "schema": "asteria.rpg.battle_targeting_definition",
@@ -46289,6 +47766,23 @@
       },
       {
         "ability_id": "gob_stab",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "grave_whisper",
         "active_only": true,
         "adjacent_to_actor": false,
         "blocked_slot_tags": [],
@@ -47410,6 +48904,23 @@
         "version": 1
       },
       {
+        "ability_id": "taunting_roar",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "self",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "temper",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -47479,6 +48990,23 @@
       },
       {
         "ability_id": "twilight_judgment",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "unity_strike",
         "active_only": true,
         "adjacent_to_actor": false,
         "blocked_slot_tags": [],
@@ -47929,7 +49457,8 @@
           "blinding_powder",
           "pass_the_torch",
           "martyrs_gift",
-          "bloodletting"
+          "bloodletting",
+          "beast_command"
         ],
         "granted_tags": [
           "capability.weapon.dagger",
@@ -48083,7 +49612,9 @@
         "class_id": "knight",
         "display_name": "Knight",
         "granted_abilities": [
-          "shield_bash"
+          "shield_bash",
+          "unity_strike",
+          "taunting_roar"
         ],
         "granted_tags": [
           "capability.weapon.axe",
@@ -48140,7 +49671,8 @@
           "hex",
           "bewilder",
           "word_of_doom",
-          "call_spirit"
+          "call_spirit",
+          "grave_whisper"
         ],
         "granted_tags": [
           "capability.weapon.staff",
@@ -48795,6 +50327,268 @@
             "weight": 1.0
           },
           {
+            "item_id": "w_axe",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
+            "item_id": "w_spear",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
+            "item_id": "w_dagger",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
+            "item_id": "w_bow",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
+            "item_id": "a_warden_plate",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 0.5
+          },
+          {
+            "item_id": "a_warden_ring",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 0.5
+          },
+          {
+            "item_id": "a_warden_charm",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 0.5
+          }
+        ],
+        "guaranteed": [
+          {
+            "item_id": "ancient_thread",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
+            "item_id": "silver_ore",
+            "maximum": 3,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          }
+        ],
+        "luck_weight_bonus": 0.0,
+        "nothing_weight": 1.0,
+        "pity": [],
+        "rolls": 3,
+        "schema": "asteria.rpg.drop_table",
+        "table_id": "ancient_spoils",
+        "version": 1
+      },
+      {
+        "display_name": "",
+        "entries": [
+          {
+            "item_id": "w_sword",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
+            "item_id": "w_axe",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
+            "item_id": "w_spear",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
+            "item_id": "w_dagger",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
+            "item_id": "w_bow",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          }
+        ],
+        "guaranteed": [
+          {
+            "item_id": "ruby_item",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
+            "item_id": "iron_ore",
+            "maximum": 4,
+            "minimum": 2,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          }
+        ],
+        "luck_weight_bonus": 0.0,
+        "nothing_weight": 1.0,
+        "pity": [],
+        "rolls": 2,
+        "schema": "asteria.rpg.drop_table",
+        "table_id": "beast_spoils",
+        "version": 1
+      },
+      {
+        "display_name": "",
+        "entries": [
+          {
+            "item_id": "silver_ore",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 3.0
+          },
+          {
+            "item_id": "ice_crystal",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 2.0
+          },
+          {
+            "item_id": "w_spear",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
+            "item_id": "w_dagger",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
+            "item_id": "w_bow",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          }
+        ],
+        "guaranteed": [],
+        "luck_weight_bonus": 0.0,
+        "nothing_weight": 4.0,
+        "pity": [],
+        "rolls": 1,
+        "schema": "asteria.rpg.drop_table",
+        "table_id": "bone_loot",
+        "version": 1
+      },
+      {
+        "display_name": "",
+        "entries": [
+          {
+            "item_id": "healing_herb",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 3.0
+          },
+          {
+            "item_id": "iron_ore",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 3.0
+          },
+          {
+            "item_id": "w_sword",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
+            "item_id": "w_axe",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          }
+        ],
+        "guaranteed": [],
+        "luck_weight_bonus": 0.0,
+        "nothing_weight": 4.0,
+        "pity": [],
+        "rolls": 1,
+        "schema": "asteria.rpg.drop_table",
+        "table_id": "goblin_loot",
+        "version": 1
+      },
+      {
+        "display_name": "",
+        "entries": [
+          {
+            "item_id": "w_sword",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
             "item_id": "w_spear",
             "maximum": 1,
             "minimum": 1,
@@ -49132,6 +50926,7 @@
           "currencies": {
             "gold": 1500.0
           },
+          "drop_table_id": "beast_spoils",
           "experience": {
             "battle_experience": 150.0
           },
@@ -49171,6 +50966,7 @@
           "currencies": {
             "gold": 180.0
           },
+          "drop_table_id": "goblin_loot",
           "experience": {
             "battle_experience": 25.0
           },
@@ -49208,6 +51004,7 @@
           "currencies": {
             "gold": 120.0
           },
+          "drop_table_id": "goblin_loot",
           "experience": {
             "battle_experience": 20.0
           },
@@ -49282,6 +51079,7 @@
           "currencies": {
             "gold": 3200.0
           },
+          "drop_table_id": "ancient_spoils",
           "experience": {
             "battle_experience": 150.0
           },
@@ -49322,6 +51120,7 @@
           "currencies": {
             "gold": 160.0
           },
+          "drop_table_id": "bone_loot",
           "experience": {
             "battle_experience": 20.0
           },
@@ -49361,6 +51160,7 @@
           "currencies": {
             "gold": 200.0
           },
+          "drop_table_id": "bone_loot",
           "experience": {
             "battle_experience": 25.0
           },
@@ -60907,6 +62707,15 @@
           "local_scope_id": "story.inn",
           "program_id": "story.inn",
           "trigger": "action"
+        },
+        {
+          "binding_id": "story.showman.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "c67c0b6c-15f4-58ce-94fb-272a5088de3a",
+          "local_scope_id": "story.showman",
+          "program_id": "story.showman",
+          "trigger": "action"
         }
       ],
       "schema": "asteria.scene_event_bindings",
@@ -62515,6 +64324,79 @@
           "enabled": true,
           "id": "d6e04fa7-f76d-5d3e-8be9-52be24e5fe80",
           "name": "Innkeeper Marla"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 360.0,
+                "y": 312.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "4635051c-1444-5919-babc-aace395dad0b",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "d3f27aec-8365-5b46-9883-ebaa756cdb3a",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "height": 8.0,
+                "is_trigger": false,
+                "ladder": false,
+                "layer": 0,
+                "mask": 4294967295,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "one_way": false,
+                "radius": 8.0,
+                "shape": "box",
+                "width": 10.0
+              },
+              "type": "asteria.Collider2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "event_binding_id": "story.showman.binding",
+                "event_program_id": "story.showman",
+                "local_scope_id": "story.showman",
+                "range": 24.0,
+                "require_facing": true,
+                "trigger": "action"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "c67c0b6c-15f4-58ce-94fb-272a5088de3a",
+          "name": "Showman Pip"
         }
       ],
       "id": "4ca2db1c-f03a-51a8-aac9-3f85718155ee",
@@ -62999,8 +64881,8 @@
                 "rotation": 0.0,
                 "scale_x": 1.0,
                 "scale_y": 1.0,
-                "x": 552.0,
-                "y": 360.0
+                "x": 600.0,
+                "y": 232.0
               },
               "type": "asteria.Transform",
               "version": 1
@@ -63290,8 +65172,8 @@
                 "rotation": 0.0,
                 "scale_x": 1.0,
                 "scale_y": 1.0,
-                "x": 536.0,
-                "y": 392.0
+                "x": 504.0,
+                "y": 344.0
               },
               "type": "asteria.Transform",
               "version": 1

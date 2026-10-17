@@ -1884,9 +1884,10 @@ def game_start(c):
     allocation = ProgressionAllocationRuntime(
         db.progression_graphs.values(),
         balances={
-            "ap": 200,
-            "stat_points": 12,
-            **{f"jp.{j}": 130 for j in ("knight", "duelist", "mystic", *ADVANCED_JOBS)},
+            "ap": 6,
+            "stat_points": 0,
+            **{f"jp.{j}": 8 for j in ("knight", "duelist", "mystic")},
+            **{f"jp.{j}": 0 for j in ADVANCED_JOBS},
         },
     )
     rpg["progression_allocations"] = {hero: allocation.to_data()}
@@ -1967,7 +1968,7 @@ def game_start(c):
         if item_id.endswith("_item"):
             counts[item_id] = 3 if item_id.startswith("card") else 2
     rpg["inventory"]["counts"] = counts
-    rpg["currencies"] = {"gold": 40000.0}
+    rpg["currencies"] = {"gold": 6000.0}
     rpg["pets"], rpg["active_pet_id"] = [], None
     project.game_start = GameStartDefinition.from_data(data)
 

@@ -364,9 +364,9 @@ def warden(builders, looks, places):
         ("quest.q_patrol.active", [say("Warden Thessaly", "Four slingers, then come back.")]),
     ]
     first = [
-        world("SCREEN_FADE", to=1.0, duration=0.4, color="#000000"),
+        world("SCREEN_FADE", to=1.0, duration=0.4, color=[0, 0, 0]),
         world("CAMERA_FOCUS", entity="Warden Thessaly", zoom=1.4, blend=0.4),
-        world("SCREEN_FADE", to=0.0, duration=0.4, color="#000000"),
+        world("SCREEN_FADE", to=0.0, duration=0.4, color=[0, 0, 0]),
         *start("q_patrol", "Goblins hold the woods road. Thin out four slingers and I will pay."),
         world("PLAY_SE", asset_id="confirm"),
         world("GIVE_ITEM", item_id="healing_herb", quantity=3),
@@ -435,7 +435,7 @@ def woods(builders, looks, places):
             ],
         ),
     )
-    cache = scene.npc("Old Cache", maps.world_xy(33, 24), looks["necromancer"], solid=False)
+    cache = scene.npc("Old Cache", maps.world_xy(31, 21), looks["necromancer"], solid=False)
     scene.program(
         cache,
         "story.cache",
@@ -557,6 +557,71 @@ def throne(builders, looks, places):
             ],
             [say("Banner", "A tattered banner. The king still sits his throne.")],
         ),
+    )
+
+
+def showman(builders, looks, places):
+    """Showman Pip shows the field commands that nothing else in the campaign needs."""
+    town = builders["town"]
+    town.npc("Showman Pip", maps.world_xy(22, 19), looks["cultist"])
+    pip = "Showman Pip"
+    options = [
+        ("Balloon", [world("SHOW_BALLOON", entity=pip, balloon="exclamation", duration_ms=800)]),
+        ("Stroll", [world("WALK_TO", entity=pip, x=330, y=330, speed=40)]),
+        ("Route", [world("MOVE_ROUTE", entity=pip, route="right 2, down 1", step=16, speed=40)]),
+        (
+            "Lantern",
+            [world("SPAWN_ENTITY", prefab_id="spirit_lantern", x=300, y=300, name="Lantern")],
+        ),
+        (
+            "Echo",
+            [
+                world("COPY_ENTITY", entity=pip, x=360, y=300, name="PipEcho"),
+                world("MORPH_ENTITY", entity="PipEcho", prefab_id="bone_pile"),
+            ],
+        ),
+        (
+            "Badge",
+            [
+                world(
+                    "SET_ENTITY_ICON",
+                    entity=pip,
+                    icon_id="playable_assets/lucifer/icons/w_sunbrand.png",
+                )
+            ],
+        ),
+        ("Sparks", [world("PLAY_VFX", asset_id="battle.fx.explosion", entity=pip, scale=1.0)]),
+        (
+            "Timer",
+            [
+                world("TIMER_START", timer_id="pip", seconds=30, show=False),
+                world("TIMER_PAUSE", timer_id="pip"),
+                world("TIMER_RESUME", timer_id="pip"),
+                world("TIMER_ADD", timer_id="pip", seconds=10),
+                world("TIMER_STOP", timer_id="pip"),
+            ],
+        ),
+        (
+            "Slides",
+            [
+                world(
+                    "SHOW_PICTURE",
+                    picture_id="slide",
+                    asset_id=places["pictures"]["banner"],
+                    x=1,
+                    y=1,
+                    scale=0.5,
+                    opacity=0.8,
+                ),
+                world("MOVE_PICTURE", picture_id="slide", x=40, y=30, duration=0.3),
+                world("SET_PICTURE_FRAME", picture_id="slide", frame=0),
+                world("ERASE_PICTURE", picture_id="slide"),
+            ],
+        ),
+        ("Bow out", []),
+    ]
+    town.program(
+        town.find_entity(pip), "story.showman", maps.menu(pip, "Care for a trick?", options)
     )
 
 
@@ -812,5 +877,6 @@ def programs(c, builders, looks, places):
     woods(builders, looks, places)
     crypt(builders, looks, places)
     throne(builders, looks, places)
+    showman(builders, looks, places)
     foes_ai(builders)
     _ = Transform, tc

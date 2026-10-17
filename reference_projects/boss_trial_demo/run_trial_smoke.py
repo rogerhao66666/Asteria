@@ -49,6 +49,11 @@ def world(game, name, **args):
 def prepare(game, facts, sub="duelist"):
     """Everything a player does before the fight."""
     allocation = game.save.rpg_state.progression_allocations[HERO]
+    # the campaign earns these a little at a time; the scripted fights start with plenty
+    allocation.grant("ap", 200)
+    allocation.grant("stat_points", 12)
+    for job in ("knight", "duelist", "mystic", *SUB_JOBS):
+        allocation.grant(f"jp.{job}", 130)
     for graph_id in [g for g in allocation.definitions if g.endswith("_tree")]:
         graph = allocation.definitions[graph_id]
         for _ in range(8):  # several passes: later nodes unlock after earlier ones

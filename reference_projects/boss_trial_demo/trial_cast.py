@@ -415,6 +415,66 @@ def foes(c):
                 "tags": [],
             }
         )
+    from asteria.rpg.drop_tables import DropEntry, DropTable
+
+    gear = [DropEntry(g, weight=1.0) for g in ("w_sword", "w_axe", "w_spear", "w_dagger", "w_bow")]
+    tables = {
+        "goblin_loot": DropTable(
+            "goblin_loot",
+            entries=[
+                DropEntry("healing_herb", weight=3.0),
+                DropEntry("iron_ore", weight=3.0),
+                *gear[:2],
+            ],
+            nothing_weight=4.0,
+        ),
+        "bone_loot": DropTable(
+            "bone_loot",
+            entries=[
+                DropEntry("silver_ore", weight=3.0),
+                DropEntry("ice_crystal", weight=2.0),
+                *gear[2:],
+            ],
+            nothing_weight=4.0,
+        ),
+        "beast_spoils": DropTable(
+            "beast_spoils",
+            entries=gear,
+            rolls=2,
+            nothing_weight=1.0,
+            guaranteed=[DropEntry("ruby_item"), DropEntry("iron_ore", minimum=2, maximum=4)],
+        ),
+        "ancient_spoils": DropTable(
+            "ancient_spoils",
+            entries=[
+                *gear,
+                *(
+                    DropEntry(g, weight=0.5)
+                    for g in ("a_warden_plate", "a_warden_ring", "a_warden_charm")
+                ),
+            ],
+            rolls=3,
+            nothing_weight=1.0,
+            guaranteed=[
+                DropEntry("ancient_thread"),
+                DropEntry("silver_ore", minimum=1, maximum=3),
+            ],
+        ),
+    }
+    for table in tables.values():
+        db.add_drop_table(table)
+    for enemy_id, table in (
+        ("goblin_slinger", "goblin_loot"),
+        ("goblin_berserker", "goblin_loot"),
+        ("goblin_beast", "beast_spoils"),
+        ("skeleton_grunt", "bone_loot"),
+        ("skeleton_hunter", "bone_loot"),
+        ("skeleton_ancient", "ancient_spoils"),
+    ):
+        enemy = db.enemies[enemy_id]
+        db.enemies[enemy_id] = dataclasses.replace(
+            enemy, reward=dataclasses.replace(enemy.reward, drop_table_id=table)
+        )
     for encounter_id, members, tags in (
         ("woods_patrol", (("goblin_slinger", 2), ("goblin_berserker", 1)), ("woods",)),
         ("woods_ambush", (("goblin_slinger", 3),), ("woods",)),

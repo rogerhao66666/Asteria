@@ -2943,6 +2943,8 @@ class GameSessionRuntime:
         funds = self.save.rpg_state.currencies
         for currency, amount in (getattr(definition, "currency_costs", None) or {}).items():
             funds[currency] = funds.get(currency, 0.0) - amount
+        for gauge_id, amount in (getattr(definition, "gauge_costs", None) or {}).items():
+            self.change_party_gauge(gauge_id, -amount)
 
     def _after_ability(self, actor_id, definition, targets):
         """An ability's battle extras once it landed: battle resource gains (e.g. giving boost
@@ -3070,6 +3072,10 @@ class GameSessionRuntime:
         for currency, amount in (getattr(definition, "currency_costs", None) or {}).items():
             if funds.get(currency, 0.0) < amount:
                 return f"Needs {amount:g} {currency}"
+        for gauge_id, amount in (getattr(definition, "gauge_costs", None) or {}).items():
+            have = self.party_gauge(gauge_id)
+            if have < amount:
+                return f"Needs {amount:g} {gauge_id.replace('_', ' ')} (has {have:g})"
         resources = member.subject.resources
         for cost in definition.costs:
             terms = cost.amount.terms
@@ -3798,6 +3804,8 @@ class GameSessionRuntime:
             for tag in [t for t in tags.values() if t.startswith(self.WEATHER_TAG_PREFIX)]:
                 tags.remove(tag)
         for member in self.battle.parties["heroes"].members:
+            if member.member_id not in self.project.rpg_database.actors:
+                continue  # a pet unit is not an actor: its record is the owned pet
             old = self.save.rpg_state.actor_snapshots.get(member.member_id)
             ability_state = None if old is None else old.ability_state
             self.save.rpg_state.actor_snapshots[member.member_id] = RpgActorSnapshot(

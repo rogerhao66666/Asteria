@@ -296,6 +296,8 @@ class AbilityDefinition:
     # when set.
     item_costs: dict = None
     currency_costs: dict = None
+    # party-wide gauges a cast spends ({gauge id: amount}, see Battle Extras shared gauges)
+    gauge_costs: dict = None
     # the damage type follows what the user carries: {tag the user has: tag the hits deal while
     # it is there}, e.g. {"equip.sword": "weapon.sword", "equip.bow": "weapon.bow"} makes one
     # skill hit as whichever weapon is wielded. Written only when set.
@@ -317,6 +319,7 @@ class AbilityDefinition:
         "requires_items": {},
         "item_costs": {},
         "currency_costs": {},
+        "gauge_costs": {},
         "follow_tags": {},
         "forms": [],
         "display_name": "",
@@ -361,6 +364,7 @@ class AbilityDefinition:
         requires_items=None,
         item_costs=None,
         currency_costs=None,
+        gauge_costs=None,
         follow_tags=None,
         forms=(),
         requires_pet="",
@@ -487,6 +491,10 @@ class AbilityDefinition:
             if label == "item_costs":
                 spent = {k: int(v) for k, v in spent.items()}
             object.__setattr__(self, label, spent)
+        gauges = {str(k).strip(): float(v) for k, v in dict(gauge_costs or {}).items()}
+        if any(not k or v <= 0 or not isfinite(v) for k, v in gauges.items()):
+            raise ValueError("gauge_costs needs ids and amounts > 0")
+        object.__setattr__(self, "gauge_costs", gauges)
         object.__setattr__(self, "requires_pet", str(requires_pet or "").strip())
         object.__setattr__(self, "menu_category", str(menu_category or "").strip())
 
@@ -529,6 +537,7 @@ class AbilityDefinition:
             **({"follow_tags": dict(self.follow_tags)} if self.follow_tags else {}),
             **({"forms": [copy.deepcopy(f) for f in self.forms]} if self.forms else {}),
             **({"currency_costs": dict(self.currency_costs)} if self.currency_costs else {}),
+            **({"gauge_costs": dict(self.gauge_costs)} if self.gauge_costs else {}),
             **({"requires_pet": self.requires_pet} if self.requires_pet else {}),
             **({"menu_category": self.menu_category} if self.menu_category else {}),
         }
@@ -579,6 +588,7 @@ class AbilityDefinition:
             follow_tags=data.get("follow_tags"),
             forms=data.get("forms", ()),
             currency_costs=data.get("currency_costs"),
+            gauge_costs=data.get("gauge_costs"),
             requires_pet=data.get("requires_pet", ""),
             menu_category=data.get("menu_category", ""),
         )

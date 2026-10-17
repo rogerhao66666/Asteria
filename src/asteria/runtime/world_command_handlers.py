@@ -451,7 +451,7 @@ def register_standard_world_commands(router, session):
         )
         return True
 
-    def entity_command(method, arguments):
+    def entity_command(method, arguments, named=()):
         def handler(command):
             values = []
             for name, kind in arguments:
@@ -459,8 +459,9 @@ def register_standard_world_commands(router, session):
                     values.append(_amount(command, name, 0.0))
                 else:
                     values.append(str(_required(command, name)))
+            extra = {n: str(command.args[n]) for n in named if command.args.get(n)}
             try:
-                return getattr(session, method)(*values)
+                return getattr(session, method)(*values, **extra)
             except WorldCommandError:
                 raise
             except Exception as exc:  # noqa: BLE001 - a bad entity or prefab is the program's mistake
@@ -470,11 +471,19 @@ def register_standard_world_commands(router, session):
 
     router.register(
         "SPAWN_ENTITY",
-        entity_command("spawn_prefab", (("prefab_id", "text"), ("x", "number"), ("y", "number"))),
+        entity_command(
+            "spawn_prefab",
+            (("prefab_id", "text"), ("x", "number"), ("y", "number")),
+            named=("name",),
+        ),
     )
     router.register(
         "COPY_ENTITY",
-        entity_command("copy_entity", (("entity", "text"), ("x", "number"), ("y", "number"))),
+        entity_command(
+            "copy_entity",
+            (("entity", "text"), ("x", "number"), ("y", "number")),
+            named=("name",),
+        ),
     )
     router.register(
         "MORPH_ENTITY",

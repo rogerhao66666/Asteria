@@ -574,6 +574,18 @@
       },
       "anc_raise": {
         "label": "Raise the Fallen"
+      },
+      "taunting_roar": {
+        "label": "Taunting Roar"
+      },
+      "unity_strike": {
+        "label": "Unity Strike"
+      },
+      "grave_whisper": {
+        "label": "Grave Whisper"
+      },
+      "beast_command": {
+        "label": "Beast Command"
       }
     },
     "enemy_layouts": {},

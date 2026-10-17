@@ -95,6 +95,8 @@ def extras(c):
             StealTable(
                 c.boss_id, (StealEntry("ancient_thread", 1.0, 1), StealEntry("ruby_item", 0.5, 1))
             ),
+            StealTable("skeleton_ancient", (StealEntry("ancient_thread", 1.0, 1),)),
+            StealTable("goblin_beast", (StealEntry("iron_ore", 1.0, 2),)),
             StealTable("mender_wisp", (StealEntry("ether_leaf", 0.8, 1),), once=False),
         ),
         gains=(

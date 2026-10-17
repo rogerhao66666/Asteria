@@ -28,6 +28,7 @@ import trial_b11 as b11  # noqa: E402
 import trial_b12 as b12  # noqa: E402
 import trial_cast as cast  # noqa: E402
 import trial_content as content  # noqa: E402
+import trial_extras as extras  # noqa: E402
 import trial_items as items  # noqa: E402
 import trial_jobs as jobs  # noqa: E402
 import trial_lucifer as lucifer  # noqa: E402
@@ -60,6 +61,7 @@ def main():
     b12.systems(context)
     cast.party(context)
     cast.foes(context)
+    extras.systems(context)
     story.systems(context)
     maps.build_world(context, story.programs)
     art.hero_and_boss_art(context)

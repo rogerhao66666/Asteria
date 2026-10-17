@@ -120,6 +120,10 @@ def test_quests_achievements_and_enemy_levels():
     game = _game("hero")
     state = game.save.rpg_state
     log = game.quest_log
+    for quest_id in ("q_patrol", "q_beast", "q_crypt"):  # the chain before it
+        log.start(quest_id)
+        for objective in log._definition(quest_id).objectives:
+            log.record_defeat(objective.target, objective.required)
     log.start("slay_vaelor")
     state.inventory.add("healing_herb", 3)
     assert game.enemy_levels  # the boss and its wisps have levels
@@ -242,3 +246,43 @@ def test_the_swarm_can_be_fled_but_the_warlords_hall_cannot():
             break
         game.attempt_escape(HERO, rng=rng)
     assert game.mode == "field"
+
+
+def test_a_save_after_a_fight_with_a_pet_loads_again():
+    from asteria.runtime.game_save import GameRuntimeSave
+
+    project, game = smoke.load()
+    game.add_pet("slinger", level=2)
+    game.start_encounter("woods_ambush")
+    assert any(m.startswith("pet:") for m in game.battle.members)
+    _win(game)
+    game.sync_world_state()
+    restored = GameRuntimeSave.from_data(game.save.to_data(), project)
+    assert [p.species_id for p in restored.rpg_state.pets] == ["slinger"]
+    assert not any(k.startswith("pet:") for k in restored.rpg_state.actor_snapshots)
+
+
+def test_a_quest_finished_by_a_fight_is_completed_for_the_events_at_once():
+    game = _game("hero", "woods_ambush")
+    game.start_quest("q_patrol")
+    _win(game)  # three slingers
+    game.start_encounter("woods_patrol")
+    _win(game)  # two more: the contract asked for four
+    context = game.save.event_context
+    assert context.get_switch("quest.q_patrol.completed")
+    assert not context.get_switch("quest.q_patrol.active")
+
+
+def test_a_fight_can_end_when_its_leader_falls():
+    game = _game("hero", "woods_boss")
+    beast = next(e for e in game.active_enemy_ids() if e.startswith("goblin_beast"))
+    assert not game.battle.resolve_outcome().finished
+    game.battle.member(beast).subject.resources.set_current(HP, 0)
+    outcome = game.battle.resolve_outcome()
+    assert outcome.finished and "heroes" in outcome.winning_sides
+    assert "beast_down" in outcome.objective_ids  # the slingers beside him do not matter
+
+
+def test_a_fight_without_that_leader_is_not_ended_by_his_objective():
+    game = _game("hero", "crypt_patrol")
+    assert not game.battle.resolve_outcome().finished

@@ -310,6 +310,9 @@ class SceneBuilder:
         )
         return entity
 
+    def find_entity(self, name):
+        return next(e for e in self.scene.entities() if e.name == name)
+
     def finish(self):
         self.project.scene_event_bindings[self.scene.id] = self.programs
 
@@ -518,7 +521,7 @@ def whispering_woods(grid):
         "to_crypt": world_xy(w - 5, 10),
         "from_crypt": world_xy(w - 5, 11),
         "foes": [
-            world_xy(x, y) for x, y in ((10, 15), (18, 14), (24, 10), (32, 10), (34, 22), (44, 14))
+            world_xy(x, y) for x, y in ((10, 15), (18, 14), (24, 10), (32, 10), (37, 14), (44, 14))
         ],
         "boss": world_xy(48, 15),
         "healer": world_xy(8, 14),
@@ -685,7 +688,8 @@ def build_world(c, story):
         places["woods"]["to_town"],
         town.scene.id,
         places["town"]["to_woods"],
-        "leftnone",
+        "left",
+        "none",
         "town_theme",
     )
     woods.door(
@@ -760,6 +764,16 @@ def build_world(c, story):
     throne.foe(
         "Vaelor", places["throne"]["boss"], looks["skeleton_king"], "boss_room", radius=24.0
     )
+    from asteria.core.prefab import prefab_from_entity
+
+    for prefab_id, face in (("spirit_lantern", "necromancer"), ("bone_pile", "skeleton_grunt")):
+        template = Entity(
+            prefab_id.replace("_", " ").title(), entity_id=asset_id("prefab", prefab_id)
+        )
+        template.add_component(Transform(0, 0))
+        template.add_component(_set(SpriteRenderer2D(), sprite_sheet_asset_id=looks[face][0]))
+        template.add_component(_set(Animator2DComponent(), clip_set_id=looks[face][1]))
+        project.prefabs.add(prefab_from_entity(template, prefab_id))
     from PIL import Image
 
     banner = Image.open(
