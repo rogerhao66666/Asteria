@@ -102,38 +102,20 @@ def test_status_names_stand_on_the_head_and_effects_on_the_body(monkeypatch, enc
     runtime.close()
 
 
-def test_looking_right_uses_the_left_strips_turned_round():
-    import sys
-
-    sys.path.insert(0, str(ROOT))
-    import trial_lucifer as lucifer
-    from PIL import ImageChops, ImageOps
-
-    left = lucifer._facing_strip("warrior", "Left", "Attack01")
-    right = lucifer._facing_strip("warrior", "Right", "Attack01")
-    assert len(left) == len(right) > 0
-    for a, b in zip(left, right, strict=True):  # every blow comes down, whichever way it faces
-        assert ImageChops.difference(ImageOps.mirror(a), b).getbbox() is None
-
-
-def test_a_blow_facing_away_comes_down_too():
+def test_every_facing_uses_the_packs_own_strips():
     import sys
 
     sys.path.insert(0, str(ROOT))
     import trial_lucifer as lucifer
     from PIL import ImageChops
 
-    def arc_frame(frames):
-        masks = [lucifer._arc_mask(f) for f in frames]
-        k = max(range(len(masks)), key=lambda i: masks[i].histogram()[255])
-        return k, masks[k]
-
-    down_k, down_arc = arc_frame(lucifer._facing_strip("warrior", "Down", "Attack01"))
-    up_k, up_arc = arc_frame(lucifer._facing_strip("warrior", "Up", "Attack01"))
-    # the Up strip swings from the bottom up in the pack: its figure now carries the Down arc,
-    # and its raised sword is shown before the slash instead of after it
-    assert ImageChops.difference(up_arc, down_arc).getbbox() is None
-    assert up_k > down_k
+    for facing in ("Left", "Right", "Up", "Down"):
+        path = lucifer._find("warrior", "Attack01", facing)
+        own = lucifer._strip_frames(path)
+        used = lucifer._facing_strip("warrior", facing, "Attack01")
+        assert len(own) == len(used) > 0
+        for a, b in zip(own, used, strict=True):  # nothing patched, nothing reordered
+            assert ImageChops.difference(a, b).getbbox() is None
 
 
 def test_stable_ids_make_a_build_repeatable():
