@@ -2042,8 +2042,10 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 **D39 再補充（同日，把清單上能修的都修了）：**
 - 向上（背對鏡頭）的揮擊：包裝本身就有 Up 條帶，直接照用，不拼貼、不重排（曾經拿 Down 的弧蓋上去，使用者指出素材都有，已還原）。
-- 重建不再換 id：`scripts/stable_ids.py` 讓場景與實體 id 在每次 build 都一樣；Octopath 與 Boss Trial 的 build 結尾重跑兩次結果完全相同。complex_reference_rpg 本身**不能**從頭重建（它的戰鬥演出資料來自已刪掉的舊腳本），只能用 `scripts/reskin_reference_projects.py` 換皮，專案 id 不變。
+- 重建不再換 id：`scripts/stable_ids.py` 讓場景與實體 id 在每次 build 都一樣；Octopath 與 Boss Trial 的 build 結尾重跑兩次結果完全相同。complex_reference_rpg 現在可以從頭重建：`build_project.py` 結尾依序跑 `scripts/build_reference_presentation.py`（特效圖框、動作序列、側視版面與 HUD；原本由已刪掉的舊腳本做）和換皮；專案 id 沿用現有的。它的場景與實體 id 每次重建都是新的（沿用舊行為，已提交的存檔、試玩設定與黃金基準都綁著現有的 id），重建後要重跑 `build_saves.py`、更新試玩設定與 `scripts/update_golden_baselines.py`，所以已提交的版本沒有重建。
 - `scripts/boss_trial_live_check.py` 在 Cocoa 實機通過（按鍵打贏三個階段）：原因是腳本在最後一階段還一直把 Boss 血量釘回去。
 - Diablo：弓、弩、魔杖的圖示在 Lucifer 沒有對應物，改成程式畫的（32×16、和裝備包同樣的外框，`lucifer_art.weapon_icon`）；鎮上的房子用地城圖集組成（紅屋頂、磚牆、門、窗，商店有條紋遮陽、鐵匠有爐火窗）；每個技能的動畫在每個職業的四個方向都有對應片段（有測試）；四人原生連線驗收 `scripts/validate_multiplayer_project.py` 通過。
 - 平衡：`scripts/arpg_balance.py --gear` 讓每個流派穿自己的武器、獨特裝與隨機稀有裝；九個流派在「無裝備／有裝備」輸出的幾何平均落在 400–640（坦克型流派的目標是平均的 75–85%），倍率在 `arpg_builds.BUILD_DAMAGE`。
 - 還沒做：受擊閃光是包裝本身的「受傷」動畫（白色、紅色剪影），沒改。
+
+**D39 編輯器啟動（同日）：** 開啟編輯器預設會開 `~/Library/Application Support/Asteria/Projects/Basic RPG`，但這個資料夾只在第一次建立，範本改了它就過期（使用者看到的還是舊的 Ninja 美術）。現在 `ensure_starter_project` 會在資料夾旁記一個範本指紋：指紋變了而專案沒被改過就原地重建；被改過或沒有指紋（更早建立的）就整個移到 `Basic RPG (previous)` 再重建，不會丟東西。左邊面板每次開啟都固定停在 Project 頁(不記住上次的頁籤)。

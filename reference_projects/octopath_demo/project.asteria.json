@@ -3364,6 +3364,14 @@
               0.5,
               0.5
             ]
+          ],
+          [
+            "effects_pack",
+            "pixel_magic"
+          ],
+          [
+            "face_attacker",
+            true
           ]
         ],
         "source": {
@@ -3421,6 +3429,10 @@
               0.5,
               0.5
             ]
+          ],
+          [
+            "effects_pack",
+            "pixel_magic"
           ]
         ],
         "source": {
@@ -3478,6 +3490,10 @@
               0.5,
               0.5
             ]
+          ],
+          [
+            "effects_pack",
+            "pixel_magic"
           ]
         ],
         "source": {

@@ -135,9 +135,7 @@ client.send_command("advance_turn", {})
 while not incoming.empty():
     network_message = incoming.get()
     if network_message.get("type") == "game_update":
-        apply_authoritative_state(
-            network_message.get("state"), network_message.get("events", ())
-        )
+        apply_authoritative_state(network_message.get("state"), network_message.get("events", ()))
 
 client.close()
 ```

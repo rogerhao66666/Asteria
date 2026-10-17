@@ -2581,6 +2581,34 @@ class AsteriaEditorWindow(QMainWindow):
         self.layout_settings.setValue("editor/dock_state", self.saveState(self.LAYOUT_VERSION))
         self.layout_settings.setValue("editor/dock_mode", self.workspace.mode.value)
 
+    LEFT_TITLES = {
+        "Project": "ProjectSceneDock",
+        "Tiles": "TilePaletteDock",
+        "Layers": "LayersDock",
+    }
+
+    def _left_tab_bar(self):
+        for bar in self.findChildren(QTabBar):
+            titles = {bar.tabText(i) for i in range(bar.count())}
+            if bar.parent() is self and set(self.LEFT_TITLES) <= titles:
+                return bar
+        return None
+
+    def current_left_tab(self, default="ProjectSceneDock"):
+        """The object name of the left dock tab showing now (Project, Tiles or Layers)."""
+        bar = self._left_tab_bar()
+        if bar is None or bar.currentIndex() < 0:
+            return default
+        return self.LEFT_TITLES.get(bar.tabText(bar.currentIndex()), default)
+
+    def show_left_tab(self, name):
+        bar = self._left_tab_bar()
+        if bar is None or str(name) not in self.LEFT_TITLES.values():
+            return
+        for index in range(bar.count()):
+            if self.LEFT_TITLES.get(bar.tabText(index)) == str(name):
+                bar.setCurrentIndex(index)
+
     # Panels a workspace starts without (it keeps whatever the user opens or closes afterwards).
     # The database, battle, presentation, event and code editors use the whole window, the way RPG
     # Maker's database does; the Scene workspace keeps the Inspector and the bottom panels.
@@ -2661,8 +2689,73 @@ class AsteriaEditorWindow(QMainWindow):
         if state is not None and not mode_matches:
             self.restoreState(self._default_dock_state, self.LAYOUT_VERSION)
         self._layout_restored = bool(restored)
+        # the left panel always opens on Project, whichever tab the last session ended on
+        QTimer.singleShot(0, lambda: self.show_left_tab("ProjectSceneDock"))
         self.hide_stale_dock_tab_bars()
         return restored
+
+
+def starter_fingerprint():
+    """A short hash of what the Basic RPG starter is made from: when it changes, a starter made
+    earlier is out of date."""
+    import hashlib
+
+    from . import basic_rpg_map, basic_rpg_template, project_templates
+
+    digest = hashlib.sha256()
+    for template in project_templates.TEMPLATES:
+        if template.template_id in ("party_rpg", "action_rpg", "basic_rpg"):
+            for name in ("project.asteria.json", "playable_test_manifest.json"):
+                file = Path(template.source) / name
+                if file.exists():
+                    digest.update(file.read_bytes())
+    for module in (basic_rpg_map, basic_rpg_template):
+        digest.update(Path(module.__file__).read_bytes())
+    return digest.hexdigest()[:16]
+
+
+def ensure_starter_project(folder):
+    """The starter project's file in ``folder``, made if missing. A starter made from an older
+    template is replaced: untouched, it is rebuilt in place; edited (or of unknown age), it is
+    moved aside to ``<name> (previous)`` first, so nothing the user did is lost."""
+    import hashlib
+    import json
+    import shutil
+
+    from .project_templates import create_from_template
+
+    folder = Path(folder)
+    path = folder / "project.asteria.json"
+    stamp_file = folder / ".starter.json"
+    fingerprint = starter_fingerprint()
+    if path.exists():
+        try:
+            stamp = json.loads(stamp_file.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            stamp = {}
+        if stamp.get("fingerprint") == fingerprint:
+            return path
+        untouched = stamp.get("project_sha") == hashlib.sha256(path.read_bytes()).hexdigest()
+        if untouched:
+            shutil.rmtree(folder)
+        else:
+            aside = folder.with_name(f"{folder.name} (previous)")
+            number = 1
+            while aside.exists():
+                number += 1
+                aside = folder.with_name(f"{folder.name} (previous {number})")
+            folder.rename(aside)
+    create_from_template("basic_rpg", "Basic RPG", folder)
+    stamp_file.write_text(
+        json.dumps(
+            {
+                "fingerprint": fingerprint,
+                "project_sha": hashlib.sha256(path.read_bytes()).hexdigest(),
+            }
+        ),
+        encoding="utf-8",
+    )
+    return path
 
 
 def launch_editor(project=None):
@@ -2680,8 +2773,6 @@ def launch_editor(project=None):
     if project is None:
         from asteria.project import Project
 
-        from .project_templates import create_from_template
-
         # Keep the starter in writable user storage so edits survive editor restarts.
         folder = (
             Path(QStandardPaths.writableLocation(QStandardPaths.GenericDataLocation))
@@ -2689,9 +2780,7 @@ def launch_editor(project=None):
             / "Projects"
             / "Basic RPG"
         )
-        path = folder / "project.asteria.json"
-        if not path.exists():
-            create_from_template("basic_rpg", "Basic RPG", folder)
+        path = ensure_starter_project(folder)
         starter = Project.load_json(path, window.document.component_registry)
         window.set_project(starter, file_path=path)
     window.show()

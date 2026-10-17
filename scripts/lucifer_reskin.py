@@ -121,7 +121,11 @@ class Reskin:
         )
 
     def combatants(self, heroes, enemies):
-        ids = set(self.library.ids("combatant_visuals"))
+        """A sheet and a visual profile for every actor / enemy of the project that has a
+        character listed (a project without presentation data gets its profiles here)."""
+        ids = (
+            set(self.library.ids("combatant_visuals")) | set(self.db.actors) | set(self.db.enemies)
+        )
         for name, key in heroes.items():
             if name in ids:
                 self.combatant(name, key, hero=True)
@@ -309,7 +313,7 @@ class Reskin:
         folders = {"slash": "Wind", "flame": "Explosion", "explosion": "Explosion"}
         for asset in self.project.assets.query("sprite_sheet", tags={"vfx"}):
             key = asset.asset_id.rsplit(".", 1)[-1]
-            if key not in folders or "Foozle" in dict(asset.source.provenance).get("source", ""):
+            if key not in folders or "effects_pack" in dict(asset.metadata):
                 continue
             frames = lucifer.effect_frames(folders[key])
             count, side = len(frames), frames[0].width * 2
@@ -323,7 +327,7 @@ class Reskin:
                 name: {**clip, "frames": list(range(count))}
                 for name, clip in meta.get("clips", {}).items()
             }
-            meta.update(clips=clips, frame_size=[side, side])
+            meta.update(clips=clips, frame_size=[side, side], effects_pack="pixel_magic")
             if key == "slash":
                 meta["face_attacker"] = True
             self.project.assets.register(

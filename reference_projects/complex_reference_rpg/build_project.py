@@ -137,8 +137,18 @@ JOBS = (
 ACTORS = tuple((f"hero_{i:02d}", f"Hero {i:02d}") for i in range(1, 13))
 
 
+def _kept_id():
+    """The id the saved project already has: a rebuild keeps it, so saves, templates and the
+    projects built on this one still match."""
+    path = Path(__file__).resolve().parent / "project.asteria.json"
+    if path.exists():
+        return __import__("json").loads(path.read_text(encoding="utf-8")).get("id")
+    return None
+
+
 def build_project():
-    project = Project("Asteria Complex Reference RPG")
+    # (scene and entity ids are new on every build: a rebuild needs build_saves.py afterwards)
+    project = Project("Asteria Complex Reference RPG", project_id=_kept_id())
     db = project.rpg_database
 
     # --- Gameplay abilities ---
@@ -980,9 +990,11 @@ def write_project(output_dir):
 
 
 if __name__ == "__main__":
-    write_project(Path(__file__).resolve().parent)
-    # the Lucifer look (art, UI skin, icons) is applied on top of the generated project
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+    here = Path(__file__).resolve().parent
+    sys.path.insert(0, str(here.parents[1] / "scripts"))
+    write_project(here)
+    from build_reference_presentation import build as build_presentation
     from reskin_reference_projects import dress
 
-    dress(Path(__file__).resolve().parent)
+    build_presentation(here)  # effect sheets, motion sequences, side-view layout and HUD
+    dress(here)  # the Lucifer look: characters, art, UI skin, icons

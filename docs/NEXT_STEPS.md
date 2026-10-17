@@ -101,6 +101,6 @@ QT_QPA_PLATFORM=offscreen python -m pytest -q      # 本次：2637 passed、1 wa
 
 ## 4. 已經決定的事（不要重做）
 
-- 美術：維持現有 CC0 素材（Ninja Adventure、Kenney），不買也不再找。付費素材絕對不能進 repo。
+- 美術：現有 CC0 素材（Ninja Adventure、Kenney）。2026-10-16 起可以再找新素材，也可以用付費素材；**前提是授權允許重新散布**（CC0 或 CC-BY，寫進 CREDITS）。授權禁止重新散布的（例如現行版 Tiny Swords）仍不能進 repo。購買由使用者自己做。
 - 「Y 排序」不需要做：引擎已經用腳底 y 當 depth 排序精靈。
 - Godot 的剛體物理刻意不做（文件寫只做 AABB 和圓形）。

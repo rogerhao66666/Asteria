@@ -13,3 +13,4 @@ VSCODE_QUICK_GUIDE.md
 *.dylib
 *.so
 *.dll
+/local_reference/paid_assets/
