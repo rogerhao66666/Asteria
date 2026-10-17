@@ -36,7 +36,7 @@ class Tile:
 class Block:
     member_id: str
     tiles: list = field(default_factory=list)
-    caption: tuple | None = None  # text, x, y (state names under the tiles)
+    caption: tuple | None = None  # text, x, y (state names just above the head: bottom centre)
 
     def rect(self):
         if not self.tiles:
@@ -45,12 +45,15 @@ class Block:
         y0 = min(t.rect[1] for t in self.tiles)
         x1 = max(t.rect[0] + t.rect[2] for t in self.tiles)
         y1 = max(t.rect[1] + t.rect[3] for t in self.tiles)
-        if self.caption is not None:
-            text, cx, cy = self.caption
-            half = len(text) * 3.6  # the caption is centred under the tiles
-            x0, x1 = min(x0, cx - half), max(x1, cx + half)
-            y1 = max(y1, cy + 14)
         return (x0, y0, x1 - x0, y1 - y0)
+
+    def caption_rect(self):
+        """The rectangle the state names take above the head, or None."""
+        if self.caption is None:
+            return None
+        text, cx, cy = self.caption
+        half = len(text) * 3.6
+        return (cx - half, cy - 14, 2 * half, 14)
 
 
 def draw_glyph(pg, surface, kind, rect):
@@ -117,12 +120,13 @@ def draw_glyph(pg, surface, kind, rect):
         pg.draw.circle(surface, color, (round(cx), round(cy)), round(4 * u), 1)
 
 
-def extras_layout(game, box, scale, width, drop=0.0):
+def extras_layout(game, box, scale, width, drop=0.0, head_gap=None):
     """``[Block]`` for the enemies (shield + weaknesses + held state under their feet).
 
     ``box(member_id)`` is the adapter's ``(centre_x, top_y, feet_y)``; ``scale`` the window pixels
     per virtual pixel; ``width`` the window width (blocks stay inside it); ``drop`` pushes the
-    blocks further down (below an overhead name and bar that stand under the feet)."""
+    blocks further down (below an overhead name and bar that stand under the feet); the state
+    names stand ``head_gap`` pixels above the head (right on it by default)."""
     battle = game.battle
     shield = game.shield_resource()
     tile = max(15, round(5.4 * scale))
@@ -134,7 +138,7 @@ def extras_layout(game, box, scale, width, drop=0.0):
         where = box(member.member_id)
         if where is None:
             continue
-        x, _top, feet = where
+        x, top, feet = where
         y = feet + max(3, round(1.2 * scale)) + drop
         entries = []
         held = game.turn_prevented(member.member_id)
@@ -167,8 +171,9 @@ def extras_layout(game, box, scale, width, drop=0.0):
                 names.append(shown.replace("_", " "))
         if broken and "broken" in held:  # what Break does, in words
             names.insert(0, "Damage up - loses a turn")
-        if names and entries:
-            block.caption = (" ".join(names)[:30], x, y + tile + 2)
+        if names:
+            gap_above = 3 * scale if head_gap is None else head_gap
+            block.caption = (" ".join(names)[:30], x, top - gap_above)
         blocks.append(block)
     return blocks
 
@@ -233,4 +238,4 @@ def draw_blocks(rt, blocks, scale):
                     )
         if block.caption is not None:
             text, cx, cy = block.caption
-            rt.text(text, cx, cy, size=15, color=(220, 180, 255), anchor="midtop")
+            rt.text(text, cx, cy, size=15, color=(220, 180, 255), anchor="midbottom")

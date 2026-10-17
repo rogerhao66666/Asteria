@@ -611,6 +611,7 @@ def combat_content(project, looks, icons):
         library.add_ability(AbilityDefinition.from_data(data))
     LABELS.update(builds.register(library, looks))  # the skills of the three builds per class
     builds.add_effects(library, looks)  # spell and strike pictures on every skill
+    builds.assign_animations(library)  # the three attack strips and the jump, by skill
 
 
 LABELS = {
@@ -1446,18 +1447,15 @@ def make_art(assets):
         "drill": la.character(assets, "drill", "skeleton_ancient", "Ancient Drone", height=24),
         "golem": la.character(assets, "golem", "goblin_beast", "Beast Golem", height=40),
         **{f"fx_{k}": v for k, v in la.effect_sheets(assets).items()},
-        "arrow": art.item_icon(assets, "arrow", "FX/Projectile/Arrow.png", "Arrow"),
-        "fireball": art.item_icon(
-            assets, "fireball", "FX/Projectile/Fireball.png", "Fireball", (16, 16)
-        ),
-        "fireball_big": art.item_icon(
-            assets, "fireball_big", "FX/Projectile/Fireball.png", "Meteor", (16, 16), scale=2
-        ),
-        "orb": art.item_icon(assets, "orb", "FX/Projectile/EnergyBall.png", "Orb", (16, 16)),
-        "rock": art.item_icon(
-            assets, "rock", "FX/Projectile/SpriteSheetRock.png", "Rock", (16, 16)
-        ),
+        "arrow": la.arrow(assets),
     }
+    fx = {k: v for k, v in looks.items() if k.startswith("fx_")}
+    looks.update(  # shots and bolts are the Lucifer effect pictures
+        fireball=fx["fx_fire_ball"],
+        fireball_big=fx["fx_fire_ball"],
+        orb=fx["fx_bolt_ball"],
+        rock=fx["fx_rocks"],
+    )
     return looks
 
 
@@ -1512,7 +1510,9 @@ def main():
             key, layout["grid"].data(tileset, layout["size"]), key.capitalize()
         )
     db = project.rpg_database
-    icons = art.write_item_icons()
+    icons = dict.fromkeys(  # the real pictures are set by dress_in_lucifer
+        ("state_healing", "state_war_cry", "state_burning", "state_bleeding", "state_chilled"), ""
+    )
     combat_content(project, looks, icons)
     classes_and_trees(db)
     loot_content(db, icons)

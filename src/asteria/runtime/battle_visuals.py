@@ -361,11 +361,16 @@ class BattleVisualResolver:
                         slot = (bottom - top) / max(1, len(column))
                         y = top + slot * (row_index + 1) - 6.0 - slot * 0.3 * (column_index % 2)
                     else:
-                        y = top + (bottom - top) * (
-                            (row_index + 0.5 + 0.5 * column_index) / max(3, len(column) + 0.5)
-                        )
+                        step = (bottom - top) / max(3, len(column) + 0.5)
+                        if len(column) > 1:
+                            # room for the name and bar above and the chips below each one:
+                            # members of a column stand further apart while the stage allows
+                            body = self._body_logical(sheet_id, transform)
+                            reach = len(column) - 1 + 0.5 + 0.5 * column_index
+                            step = min(max(step, body + 30.0), (bottom - top) / reach)
+                        y = top + step * (row_index + 0.5 + 0.5 * column_index)
                     # Keep the whole sprite below the turn timeline (and its overhead bar).
-                    tall = self.sprite_sheet(sheet_id).frames[0].height * float(transform.scale_y)
+                    tall = self._body_logical(sheet_id, transform)
                     y = max(y, float(getattr(layout, "timeline_y", 7.0)) + 46.0 + tall)
                     anchor = BattleVisualAnchor(
                         x + transform.offset_x,
@@ -382,9 +387,20 @@ class BattleVisualResolver:
                             anchor,
                             animation_roles=roles,
                             source_pixels_per_logical_pixel=1.0 / float(transform.scale_x),
+                            art_facing=self.sheet_meta(sheet_id).get("facing", "right"),
                         )
                     )
         return tuple(visuals)
+
+    def _body_logical(self, sheet_id, transform):
+        """The standing figure's height in logical pixels (the sheet's ``body_height``, else the
+        whole frame)."""
+        frame = self.sprite_sheet(sheet_id).frames[0]
+        try:
+            meta = self.sheet_meta(sheet_id)
+        except Exception:  # noqa: BLE001 - a sheet without metadata
+            meta = {}
+        return member_body_height(meta, frame.height, 1.0 / float(transform.scale_y))
 
     # -- choreography ----------------------------------------------------------
     def motion_sequence(self, ability_id):

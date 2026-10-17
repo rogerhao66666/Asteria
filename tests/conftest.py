@@ -70,7 +70,7 @@ def resource_root(tmp_path):
         REFERENCE_PROJECT / "playable_assets" / "lucifer",
         tmp_path / "playable_assets" / "lucifer",
     )
-    for name in ("fx_heal.png", "item_icons.png"):  # the item / equipment menu icons (AST-07) too
+    for name in ("fx_heal.png",):
         shutil.copy(
             REFERENCE_PROJECT / "playable_assets" / name, tmp_path / "playable_assets" / name
         )

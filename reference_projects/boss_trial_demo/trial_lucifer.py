@@ -42,22 +42,34 @@ def pack_dir(key):
     return FREE_ASSETS / PACKS[key]
 
 
-def _strip_frames(path):
-    from PIL import Image
+def _strip_frames(path, mirror=False):
+    from PIL import Image, ImageOps
 
     image = Image.open(path).convert("RGBA")
     side = image.height
-    return [image.crop((i * side, 0, (i + 1) * side, side)) for i in range(image.width // side)]
+    frames = [image.crop((i * side, 0, (i + 1) * side, side)) for i in range(image.width // side)]
+    return [ImageOps.mirror(f) for f in frames] if mirror else frames
 
 
-def _find(key, anim):
-    folder = pack_dir(key) / "Right" / "Png"
+def _source_facing(facing):
+    """``(pack folder, mirror)`` for a facing. The pack's Right strips swing from the bottom up;
+    the Left ones swing from the top down, as a blow should. Looking right therefore uses the
+    Left strips turned round, so every sword comes down."""
+    return ("Left", True) if facing == "Right" else (facing, False)
+
+
+def _find(key, anim, facing="Right"):
+    folder = pack_dir(key) / facing / "Png"
     hits = sorted(folder.glob(f"*{anim}.png"))
     return hits[0] if hits else None
 
 
-def character_sheet(key, *, scale=2, cast="Attack02", transform="Jump"):
-    """One sheet for a Lucifer character: ``(image, (frame w, frame h), clips, body_height)``."""
+def character_sheet(key, *, scale=2, cast="Attack02", transform="Jump", facing="Right"):
+    """One sheet for a Lucifer character: ``(image, (frame w, frame h), clips, body_height)``.
+
+    ``facing`` picks the pack's Right or Left strips: they are drawn separately (the swing, the
+    weapon hand), not mirrors of each other, so a side that fights facing left uses ``"Left"`` art
+    (the sheet is then marked ``facing: left`` and is not turned round)."""
     from PIL import Image
 
     wanted = {
@@ -70,10 +82,13 @@ def character_sheet(key, *, scale=2, cast="Attack02", transform="Jump"):
         "ko": "Death",
         "transform": transform,
     }
+    source, mirror = _source_facing(facing)
     strips = {}
     for role, anim in wanted.items():
-        path = _find(key, anim) or _find(key, "Attack01" if role.startswith("attack") else "Idle")
-        strips[role] = _strip_frames(path)
+        path = _find(key, anim, source) or _find(
+            key, "Attack01" if role.startswith("attack") else "Idle", source
+        )
+        strips[role] = _strip_frames(path, mirror)
     cell = max(f.width for frames in strips.values() for f in frames)
 
     def placed(frame):
@@ -116,6 +131,10 @@ def character_sheet(key, *, scale=2, cast="Attack02", transform="Jump"):
     add("ko", "ko", duration=0.12, loop=False)
     add("revive", "ko", duration=0.1, loop=False, reverse=True)
     add("transform", "transform", duration=0.1, loop=False)
+    for role in ("attack", "attack2", "attack3", "cast", "hit", "transform"):
+        # a swing or a jump ends mid-air or mid-blow: the last frame is the standing pose, so
+        # the figure is back on its feet however long the rest of the action lasts
+        clips[role]["frames"] = [*clips[role]["frames"], clips["idle"]["frames"][0]]
     clips["guard"] = {"frames": [clips["idle"]["frames"][0]], "frame_duration": 0.3, "loop": True}
     clips["status"] = dict(clips["idle"])
     width, height = box[2] - box[0], box[3] - box[1]
@@ -128,6 +147,15 @@ def character_sheet(key, *, scale=2, cast="Attack02", transform="Jump"):
     return sheet, (width * scale, height * scale), clips, body
 
 
+def feet_pivot(image, frame):
+    """The vertical pivot (0..1 from the top) of the standing figure: the sheet's frames reach
+    below the idle pose (other animations lie lower), so bars and names placed from the feet
+    would sit on the figure; pivoting at the idle feet puts the anchor where the feet are."""
+    cell = image.crop((0, 0, frame[0], frame[1]))
+    box = cell.getchannel("A").getbbox()
+    return round(box[3] / frame[1], 4) if box else 1.0
+
+
 def credits_rows(keys):
     return [
         f"| `battle/*.png` ({', '.join(sorted(keys))}) | Foozle Lucifer character packs "
@@ -138,9 +166,10 @@ def credits_rows(keys):
 
 
 def _facing_strip(key, facing, anim):
-    folder = pack_dir(key) / facing / "Png"
+    source, mirror = _source_facing(facing)
+    folder = pack_dir(key) / source / "Png"
     hits = sorted(folder.glob(f"*{anim}.png"))
-    return _strip_frames(hits[0]) if hits else []
+    return _strip_frames(hits[0], mirror) if hits else []
 
 
 def field_sheet(key, *, frame=64):
@@ -331,9 +360,7 @@ def apply_ui(context):
     ui = FREE_ASSETS / UI_PACK
     files = {
         "panel_stone.png": ui / "Panels" / "Panels" / "SimplePanel01.png",
-        "panel_torn.png": ui / "Panels" / "Panels" / "SimplePanel02.png",
         "panel_wood.png": ui / "Panels" / "Panels" / "SimplePanel03.png",
-        "button_stone.png": ui / "Button Background" / "ButtonBackground.png",
         "font.ttf": ui / "Font" / "PixelRpgFont-Regular.ttf",
     }
     for name, source in files.items():
@@ -372,8 +399,8 @@ def credits_extra():
         "| `lucifer/icons/*.png` | Foozle Lucifer Equipment (`Foozle_2DS0005`), Lucifer Pickups "
         "(`Foozle_2DS0006`) and Lucifer RPG UI skill icons (`Foozle_UI_0002`), copied unmodified "
         f"| Foozle (Baldur) | {cc0} |",
-        "| `lucifer/ui/*` | Foozle Lucifer RPG UI (`Foozle_UI_0002`): SimplePanel01-03, "
-        "ButtonBackground, PixelRpgFont-Regular.ttf, copied unmodified "
+        "| `lucifer/ui/*` | Foozle Lucifer RPG UI (`Foozle_UI_0002`): SimplePanel01 and 03, "
+        "PixelRpgFont-Regular.ttf, copied unmodified "
         f"| Foozle (Baldur) | {cc0} |",
     ]
 
@@ -408,3 +435,22 @@ def credits_music():
         "| `audio/crypt_theme.ogg` | Foozle Eerie Space Music (`Foozle_M0001`: track 2), copied "
         f"unmodified, renamed | Foozle | {cc0} |",
     ]
+
+
+EFFECTS_PACK = FREE_ASSETS / "Foozle_2DE0001_Pixel_Magic_Effects"
+
+
+def effect_frames(folder, tint=None):
+    """The frames of one Pixel Magic Effects strip; a ``tint`` is ``(dark, bright)`` colours the
+    picture is recoloured with (its alpha stays)."""
+    from PIL import Image, ImageOps
+
+    frames = []
+    for path in sorted((EFFECTS_PACK / folder).glob("*.png")):
+        image = Image.open(path).convert("RGBA")
+        if tint is not None:
+            alpha = image.getchannel("A")
+            image = ImageOps.colorize(ImageOps.grayscale(image), tint[0], tint[1]).convert("RGBA")
+            image.putalpha(alpha)
+        frames.append(image)
+    return frames

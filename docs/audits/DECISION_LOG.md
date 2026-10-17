@@ -2029,3 +2029,13 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **驗證：** 全套測試 2944 項通過；`tests/test_arpg_builds.py` 涵蓋流派結構、關鍵天賦互斥、技能欄、詞條與稀有度、掉落、特效、技能樹視圖與編輯器欄位；`scripts/arpg_demo_live_check.py`、`scripts/reskin_live_check.py` 在 Cocoa 真實視窗跑過（60 fps）；`scripts/arpg_balance.py` 九個流派綜合分數在平均的 -12% 到 +20% 之間。
 
 **限制：** Diablo 的投射物與弓／魔杖圖示不是 Lucifer；鎮上的房子是上色的墓穴；平衡只比流派之間，沒有裝備也沒有真人；重建 Octopath／reference 會換新的專案 id（舊存檔對不上）。
+
+
+**D39 補充（同日，使用者看了 Cocoa 實機畫面後的修正）：**
+- **去掉舊美術**：Diablo 兩個 demo、Boss Trial、Octopath、reference、範本裡 Ninja Adventure、Kenney、Idylwild 的圖和產生它們的程式都移除了（`art.py` 的 ninja／kenney 函式、`trial_art.py` 的 ninja 程式、三支舊的 `scripts/build_reference_*`）；只留音效檔與 `tests/golden` 的固定測試素材。投射物與特效改用 Foozle Pixel Magic Effects，弓與法杖的圖示用 Lucifer 裝備圖代替，箭是程式畫的。`scripts/prune_orphan_assets.py` 刪掉沒人引用的素材檔，換皮與 Boss Trial 的 build 結尾都會跑。
+- **揮劍方向**：Foozle 的 Left 與 Right 攻擊動畫不是鏡像（Left 是由上往下揮，鏡像 Right 會變成由下往上）。隊伍站右邊面向左，所以用 Left 條帶，工作表標記 `facing: left`（`BattleCombatantVisual.art_facing`，不再翻轉）；怪物用 Right。
+- **三種攻擊條帶**：普通武器攻擊用第一條；施法、增益、獲得能力、輔助用第二條；大絕招與重擊（神聖技、多段、重砸、斧）用第三條；跳躍用 Jump。Diablo 的四方向角色也有 `attack2`／`attack3`／`jump`，每格依自己的大小放在共同的格子裡（原本不同大小的條帶被壓成同一大小而變形）。
+- **異常狀態與特效位置**：狀態名稱放在怪物頭正上方；技能特效以角色本體（不是整張圖框）為中心；斬擊類特效依攻擊方向翻轉（`face_attacker`）。圖框裡待機腳底以下還有別的動畫佔位，所以工作表的 pivot 設在待機的腳底，血條與名字不會蓋到自己。
+- **動作結尾**：攻擊、施法、受擊、跳躍的最後一格都是站姿，不會停在半空。
+- **卡頓**：Cocoa 實機 5000 幀平均 8.3 ms、最長 10.9 ms；唯一的停頓是第一次放粒子特效時載入 kernel（約 60 ms），改成進戰鬥時預先載入。
+- **向右的角色也由上往下揮**：包裝裡 Right 與 Up 的攻擊條帶是由下往上揮（弧形在腳下），Left 與 Down 才是由上往下。面向右的角色（站左邊的怪物、Diablo 面向右）改用「Left 條帶翻轉」（`trial_lucifer._source_facing`），所以每把劍都是劈下來；向上（背對鏡頭）只有 Up 條帶，維持原樣。

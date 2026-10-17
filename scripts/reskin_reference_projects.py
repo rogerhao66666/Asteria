@@ -15,6 +15,7 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "scripts"))
 
 from lucifer_reskin import Reskin  # noqa: E402
+from prune_orphan_assets import prune  # noqa: E402
 
 from asteria.editor import EditorDocument  # noqa: E402
 from asteria.project import Project  # noqa: E402
@@ -56,10 +57,46 @@ def dress(folder):
         legacy=[heroes[f"hero_{i:02d}"] for i in range(1, 7)],
     )
     project.save_json(path)
+    _drop_unused_icon_assets(project, path)
+    write_credits(folder)
+    prune(folder)  # the pictures the reskin replaced do not stay behind
+
+
+def _drop_unused_icon_assets(project, path):
+    """Icon pictures no record points at (the old atlas cells of gear this game never had)."""
+    text = path.read_text(encoding="utf-8")
+    unused = [
+        asset
+        for asset in project.assets.query("icon")
+        if text.count(f'"{asset.asset_id}"') <= 1  # only its own record names it
+    ]
+    for asset in unused:
+        project.assets.remove(asset.asset_id)
+    if unused:
+        project.save_json(path)
+
+
+def write_credits(folder):
+    """The credits of a dressed demo: the Lucifer art, the sounds it ships, the effect pictures
+    its build draws."""
     credits = folder / "playable_assets" / "CREDITS.md"
-    text = credits.read_text(encoding="utf-8") if credits.exists() else "# Credits\n"
-    if "## Lucifer art (CC0)" not in text:
-        credits.write_text(text.rstrip("\n") + "\n" + CREDITS, encoding="utf-8")
+    old = credits.read_text(encoding="utf-8") if credits.exists() else ""
+    rows = [line for line in old.split("\n") if line.startswith("| `audio/")]
+    if (folder / "playable_assets" / "fx_heal.png").exists():
+        rows.append(
+            "| `fx_heal.png` | Drawn procedurally by the build script | Asteria project | "
+            "Same as the repository |"
+        )
+    credits.write_text(
+        "# Playable assets - credits and licenses\n\n"
+        "| File(s) | Source | Author | License |\n|---|---|---|---|\n"
+        + "\n".join(rows)
+        + "\n"
+        + CREDITS
+        + "\n## Licensing\n\nEvery file here is CC0 1.0 or drawn by this repository's scripts. "
+        "No AI-generated art.\n",
+        encoding="utf-8",
+    )
 
 
 def main(argv=None):

@@ -1,7 +1,7 @@
 """Build the Boss Trial demo: one hero against one boss, using the engine's systems together.
 
 A stress and showcase project, all ordinary project data (no engine code knows this game):
-the hero fights as the animated NinjaGreen (Ninja Adventure, CC0) with three jobs, a deep
+the hero fights as the Lucifer Warrior (Foozle, CC0) with three jobs, a deep
 skill tree per job,
 level-up stat points, job points, per-class growth, sockets (cards / gems), weapon growth and
 +N refinement; the boss has phases, stances, summons, shields, statuses and counters.
@@ -22,6 +22,7 @@ REPO = HERE.parents[1]
 REFERENCE = REPO / "reference_projects" / "complex_reference_rpg"
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(REPO / "scripts"))
 
 import trial_art as art  # noqa: E402
 import trial_b11 as b11  # noqa: E402
@@ -69,16 +70,14 @@ def main():
     art.prune_unused_art(context)
     content.presentation(context)
     kept = art.weapon_icons(context)
-    if lucifer.available():
-        kept = (*kept, *lucifer.apply_icons(context))
-        lucifer.apply_ui(context)
-        lucifer.apply_music(context)
-        sys.path.insert(0, str(REPO / "scripts"))
-        import lucifer_reskin
+    kept = (*kept, *lucifer.apply_icons(context))
+    lucifer.apply_ui(context)
+    lucifer.apply_music(context)
+    import lucifer_reskin
 
-        lucifer_reskin.paint_background("exterior", (960, 540), road=False, dim=0.45).save(
-            HERE / "playable_assets" / "battle_background.png"
-        )
+    lucifer_reskin.paint_background("exterior", (960, 540), road=False, dim=0.45).save(
+        HERE / "playable_assets" / "battle_background.png"
+    )
     content.finalize_names(context)
     content.game_start(context)
     path = HERE / "project.asteria.json"
@@ -86,6 +85,9 @@ def main():
     Project.load_json(path, registry)  # it must load back
     content.write_manifest(context)
     art.write_credits(HERE)
+    from prune_orphan_assets import prune
+
+    prune(HERE)  # the copied reference files this demo does not use
     from asteria.graphics.forged_icons import apply_to_project_file
 
     apply_to_project_file(path, replace=True, keep=kept)

@@ -49,5 +49,5 @@ backdrops (`ParallaxBackground2D`); the camera looks ahead (`camera_look_ahead`)
 
 ## Art
 
-All CC0: Ninja Adventure (characters, monsters, top-down tiles), Kenney Pixel Platformer
-(side-view tiles and mine enemies) and Kenney Tiny Dungeon (weapon and potion icons). See `playable_assets/CREDITS.md`. No AI-generated art.
+All CC0: Foozle's Lucifer packs (characters, monsters, tiles, equipment and skill icons, UI), Pixel
+Magic Effects and RPG UI Set 1. See `playable_assets/CREDITS.md`. No AI-generated art.

@@ -646,8 +646,8 @@ def register(db, icons):
         db.add_drop_table(table)
 
 
-# the picture of every piece of gear: a file of the Lucifer equipment pack, or ("ninja", file)
-# where the pack has no such weapon (bows, wands)
+# the picture of every piece of gear: a file of the Lucifer equipment pack (it has no bows or
+# wands: curved blades and a rapier stand in for them)
 W, C, H, F, M = "Weapons/Png/", "Chest/Png/", "Head/Png/", "Feet/Png/", "Misc/Png/"
 ICON_FILES = {
     "short_sword": W + "Common Arming Sword.png",
@@ -656,12 +656,12 @@ ICON_FILES = {
     "battle_axe": W + "Mythic Battleaxe.png",
     "iron_mace": W + "Rare Explorers Hook.png",
     "spiked_maul": W + "Mythic Godhammer.png",
-    "hunting_bow": ("ninja", "Items/Weapons/Bow/Sprite.png"),
-    "long_bow": ("ninja", "Items/Weapons/Bow2/Sprite.png"),
-    "hand_crossbow": ("ninja", "Items/Weapons/Bow2/Sprite.png"),
+    "hunting_bow": W + "Rare Explorers Hook.png",
+    "long_bow": W + "Legendary Shamshir.png",
+    "hand_crossbow": W + "Legendary Shamshir.png",
     "oak_staff": W + "Wizards Pole.png",
     "yew_staff": W + "Mages Spire.png",
-    "crystal_wand": ("ninja", "Items/Weapons/MagicWand/Sprite.png"),
+    "crystal_wand": W + "Legendary Rapier .png",
     "leather_vest": C + "Rare Explorers Top.png",
     "studded_leather": C + "Common Gambeson.png",
     "chain_mail": C + "Common ChainMail Chestpiece.png",
@@ -695,7 +695,7 @@ ICON_FILES = {
     "gelatin_aegis": C + "Legendary Royal Chestpiece.png",
     "golem_heart": W + "Mages Spire.png",
     "bloodreaver": W + "Legendary Dane Axe.png",
-    "viper_fang": ("ninja", "Items/Weapons/Bow/Sprite.png"),
+    "viper_fang": W + "Rare Explorers Hook.png",
     "tempest_staff": W + "Wizards Pole.png",
     "phoenix_circlet": H + "Legendary Royal Helmet.png",
     "glacier_ring": M + "Silver Enchanted Ring.png",

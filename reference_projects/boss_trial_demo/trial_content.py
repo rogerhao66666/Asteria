@@ -2089,14 +2089,16 @@ HEAVY_WORDS = ("slam", "cleave", "crush", "hammer", "bash", "charge", "strike", 
 
 
 def _attack_clip(ability_id, definition):
-    """Which of a character's three attack animations a skill plays: the plain swing, the heavy
-    slash, or the many-armed spin / leap for multi-hit and divine skills."""
-    if "magic" in definition.tags and "divine" not in definition.tags:
-        return "attack"
+    """Which of a character's three attack animations a skill plays: the plain swing (a weapon
+    attack), the second strip for casting - spells, buffs, gaining an ability, healing and
+    support - and the third for the big finishers and the heavy blows (divine skills, many
+    hits, slams and axes)."""
     hits = len(definition.hits or ())
-    if hits >= 3 or "divine" in definition.tags:
+    if "divine" in definition.tags or hits >= 3:
         return "attack3"
     if "weapon.axe" in definition.tags or any(w in ability_id for w in HEAVY_WORDS):
+        return "attack3"
+    if ability_id in SELF_TARGETED or "magic" in definition.tags:
         return "attack2"
     return "attack"
 
@@ -2104,7 +2106,7 @@ def _attack_clip(ability_id, definition):
 def _apply_attack_clip(beats, ability_id, definition):
     """The user's animation beat plays the skill's own attack clip (Lucifer sheets have three)."""
     clip = _attack_clip(ability_id, definition)
-    if clip == "attack" or ability_id in SELF_TARGETED:
+    if clip == "attack":
         return beats
     return tuple(
         dataclasses.replace(b, cue=clip)

@@ -66,7 +66,7 @@ def test_placement_edits_are_undoable_and_validated(api):
         "blend": "add",
     }
     preview = api.preview("battle.fx.flame", 0.0)
-    assert preview.rect == (0.0, -12.0, 75 * 1.2, 90 * 1.2) and preview.keyframe == 0
+    assert preview.rect == (0.0, -12.0, 128 * 1.2, 128 * 1.2) and preview.keyframe == 0
     document.undo()
     assert api.placement("battle.fx.flame")["anchor"] == "center"
     for bad, match in (
@@ -173,7 +173,7 @@ def test_the_battle_renderer_draws_with_the_authored_placement(resource_root, mo
             clock += 0.02
         assert drawn, "the flame VFX was never drawn"
         width, height, kwargs = drawn[0]
-        assert (width, height) == pytest.approx((75 * 1.2, 90 * 1.2))
+        assert (width, height) == pytest.approx((128 * 1.2, 128 * 1.2))
         assert kwargs == {"opacity": 0.5, "blend": "add"}
     finally:
         runtime.close()
@@ -206,7 +206,7 @@ def test_vfx_tab_previews_applies_and_links_to_the_timeline_and_animation_editor
     widget.anchor.setCurrentText("head")
     widget.scale.setValue(1.0)
     rect = widget._render()  # unsaved form values preview immediately
-    assert rect == (0.0, -PREVIEW_BODY_HEIGHT, 75.0, 90.0)
+    assert rect == (0.0, -PREVIEW_BODY_HEIGHT, 128.0, 128.0)
     assert widget.api.placement("battle.fx.flame")["anchor"] == "center"
     assert widget.apply_placement() and widget.api.placement("battle.fx.flame")["anchor"] == "head"
     widget.scrub.setValue(500)

@@ -63,7 +63,9 @@ def measure_action_timing(repo, frame_times, *, ability_id="fire_arc", target="a
         screen = adapter.screen
         authored = {
             "attack_pose": next(
-                b.at for b in sequence.beats if b.channel == "animation" and b.cue == "attack"
+                b.at
+                for b in sequence.beats
+                if b.channel == "animation" and b.cue in ("attack", "attack2", "attack3")
             ),
             "effect": next(b.at for b in sequence.beats if b.channel == "vfx"),
             "hit_pose": next(
@@ -83,7 +85,7 @@ def measure_action_timing(repo, frame_times, *, ability_id="fire_arc", target="a
         def look():
             now = adapter._clock - start
             seen = {
-                "attack_pose": role(hero) == "attack",
+                "attack_pose": role(hero) in ("attack", "attack2", "attack3"),
                 "effect": any(v.payload.get("asset_id") for v in screen.feedback.vfx),
                 "hit_pose": role(target) == "hit",
                 "damage_number": any(v.target_id == target for v in screen.feedback.values),

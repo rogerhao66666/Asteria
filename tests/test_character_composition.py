@@ -151,7 +151,8 @@ def test_battle_draws_layers_behind_and_attachments_in_front_of_the_body(battle)
         assert order.index(behind[0]) < order.index(body) < order.index(front[0])
         charm = front[0]
         assert charm.width == pytest.approx(64 * 0.25 / hero.source_pixels_per_logical_pixel)
-        assert charm.flip_x == (hero.anchor.facing.lower() == "left")  # mirrors with the body
+        turned = (hero.anchor.facing.lower() == "left") != (hero.art_facing == "left")
+        assert charm.flip_x == turned  # mirrors with the body
     enemies = [v for v in adapter.screen.scene.combatants if v not in staged]
     assert enemies and all(
         v.member_id not in adapter.screen.animation.compositions for v in enemies

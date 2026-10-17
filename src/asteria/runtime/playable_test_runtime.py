@@ -2569,7 +2569,13 @@ class PlayableTestRuntime:
         ui_layout = getattr(composer, "layout", None)
         below = ui_layout is not None and getattr(ui_layout, "overhead_below", False)
         drop = 17.0 * scale if below and getattr(ui_layout, "overhead_zones", ()) else 0.0
-        blocks = extras_layout(game, box, scale, self.width, drop)
+        shown = [  # zones whose combatants float a name and bar over the head
+            z
+            for z in getattr(ui_layout, "overhead_zones", ())
+            if z not in getattr(ui_layout, "hidden_zones", ())
+        ]
+        head_gap = 24.0 * scale if shown and not below else None  # past that name and bar
+        blocks = extras_layout(game, box, scale, self.width, drop, head_gap)
         draw_blocks(self, blocks, scale)
         self.battle_extras_blocks = blocks  # what was drawn (tests check it for overlaps)
         bp = game.rules.boost_resource_id if game.rules.boost_enabled else ""

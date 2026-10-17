@@ -45,37 +45,55 @@ def _strip(key, facing, names):
     return []
 
 
+ACTIONS = {  # clip role: the Lucifer strips it may come from (first that exists), seconds total
+    "attack": (("Attack01", "Attack02", "Idle"), 0.3),
+    "attack2": (("Attack02", "Attack01", "Idle"), 0.4),
+    "attack3": (("Attack03", "Attack02", "Attack01", "Idle"), 0.5),
+    "jump": (("Jump", "Attack03", "Attack01", "Idle"), 0.5),
+}
+
+
 def character(assets, key, lucifer_key, name, *, height=26):
-    """A Lucifer character as one sheet: per facing the idle, walk and attack strips (scaled so
-    the standing figure is ``height`` px tall; the pivot stands at the feet)."""
+    """A Lucifer character as one sheet: per facing the idle and walk strips and the whole of the
+    attack strips (``attack``, ``attack2``, ``attack3``) and the jump, every frame kept at its
+    own size on one common cell (a strip's cell may be larger: arcs, a long weapon) and scaled so
+    the standing figure is ``height`` px tall; the pivot stands at the feet."""
     from PIL import Image
 
     strips = {}
     for facing in FOLDERS.values():
-        strips[facing] = {
+        roles = {
             "idle": _strip(lucifer_key, facing, ("Idle",)),
             "walk": _strip(lucifer_key, facing, ("Walk", "Run", "Idle")),
-            "attack": _strip(lucifer_key, facing, ("Attack01", "Attack02", "Idle")),
         }
+        for role, (names, _seconds) in ACTIONS.items():
+            roles[role] = _strip(lucifer_key, facing, names)
+        strips[facing] = roles
     stand = strips["Down"]["idle"][0]
     body = stand.getchannel("A").getbbox()
     scale = height / float(body[3] - body[1])
-    cell = stand.width
+    cell = max(f.width for roles in strips.values() for frames in roles.values() for f in frames)
     side = max(1, round(cell * scale))
+
+    def placed(frame):  # centred, standing on the cell's bottom edge, at its own size
+        out = Image.new("RGBA", (cell, cell), (0, 0, 0, 0))
+        out.alpha_composite(frame, ((cell - frame.width) // 2, cell - frame.height))
+        return out.resize((side, side), Image.NEAREST)
+
     frames, order = [], {}
     for direction, facing in FOLDERS.items():
-        for role in ("idle", "walk", "attack"):
+        for role in ("idle", "walk", *ACTIONS):
             indices = []
             for frame in strips[facing][role]:
-                image = frame.resize((side, side), Image.NEAREST)
                 indices.append(len(frames))
-                frames.append(image)
+                frames.append(placed(frame))
             order[(role, direction)] = indices
     sheet = Image.new("RGBA", (side * len(frames), side), (0, 0, 0, 0))
     for index, image in enumerate(frames):
         sheet.paste(image, (index * side, 0))
     rects = [(i * side, 0, side, side) for i in range(len(frames))]
-    sheet_id = assets.sheet(key, _surface(sheet), rects, name, pivot=(0.5, 0.92))
+    feet = frames[0].getchannel("A").getbbox()[3] / side  # where the standing figure's feet are
+    sheet_id = assets.sheet(key, _surface(sheet), rects, name, pivot=(0.5, feet))
     clips = {}
     for (role, direction), indices in order.items():
         if role == "idle":
@@ -83,7 +101,7 @@ def character(assets, key, lucifer_key, name, *, height=26):
         elif role == "walk":
             clips[f"walk_{direction}"] = (indices, 0.1, True)
         else:
-            clips[f"attack_{direction}"] = (indices, 0.3 / len(indices), False)
+            clips[f"{role}_{direction}"] = (indices, ACTIONS[role][1] / len(indices), False)
     return sheet_id, assets.clips(key, clips, name)
 
 
@@ -292,8 +310,7 @@ def gothic_ui(project, root):
 
 
 def gear_icons(reskin, project, files):
-    """One icon asset per piece of gear: a Lucifer equipment picture, or a Ninja Adventure one
-    for weapons the Lucifer pack lacks (bows, wands)."""
+    """One icon asset per piece of gear: a picture of the Lucifer equipment pack."""
     import dataclasses
     import shutil
 
@@ -303,10 +320,19 @@ def gear_icons(reskin, project, files):
     for item_id, source in files.items():
         if item_id not in db.equipment:
             continue
-        origin = art.NINJA / source[1] if isinstance(source, tuple) else lucifer.EQUIPMENT / source
-        shutil.copyfile(origin, folder / f"equip_{item_id}.png")
+        shutil.copyfile(lucifer.EQUIPMENT / source, folder / f"equip_{item_id}.png")
         icon = reskin._icon_asset(f"icon.{item_id}", f"{reskin.icon_dir}/equip_{item_id}.png")
         db.equipment[item_id] = dataclasses.replace(db.equipment[item_id], icon_id=icon)
+
+
+def arrow(assets):
+    """An arrow flying to the right (drawn here: shaft, steel head, red fletching)."""
+    pg = art.pygame
+    image = pg.Surface((16, 5), pg.SRCALPHA)
+    pg.draw.line(image, (120, 84, 52), (2, 2), (12, 2))
+    pg.draw.polygon(image, (190, 196, 205), [(11, 0), (15, 2), (11, 4)])
+    pg.draw.polygon(image, (200, 50, 50), [(0, 0), (3, 2), (0, 4)])
+    return assets.sheet("arrow", image, [(0, 0, 16, 5)], "Arrow")
 
 
 def node_icons(reskin, project):

@@ -1,37 +1,14 @@
-# Playable test assets — credits and licenses
-
-Built by `scripts/build_reference_playable_assets.py` from the free packs below
-(downloaded 2026-10-09, kept un-tracked in `local_reference/free_assets/`).
-These images are test/reference content for the Complex Reference RPG; they are
-not the official Asteria Starter Pack.
+# Playable assets - credits and licenses
 
 | File(s) | Source | Author | License |
 |---|---|---|---|
-| `field_map.png`, `battle_background.png` | [Tiny Town](https://kenney.nl/assets/tiny-town) 1.1 — tiles composed into scenes, scaled | Kenney (kenney.nl) | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
-| `audio/field_theme.ogg` ("9 - Quiet"), `audio/battle_theme.ogg` ("17 - Fight"), `audio/hit.wav` (Hit1), `audio/heal.wav` (Heal), `audio/confirm.wav` (Accept2), `audio/victory.wav` (Jingle LevelUp1) | [Ninja Adventure Asset Pack](https://pixel-boy.itch.io/ninja-adventure-asset-pack) — copied unmodified, renamed | Pixel-boy, AAA | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
-| `fx_strike.png`, `fx_fire.png`, `fx_heal.png`, `fx_meteor.png` | Drawn procedurally by the build script | Asteria project | Same as the repository |
-| `item_icons.png` (menu icons of the 16 items, 12 weapons and 8 accessories, 18×18 cells) | [Ninja Adventure Asset Pack](https://pixel-boy.itch.io/ninja-adventure-asset-pack) — `Items/` (Food, Object, Other, Potion, Resource, Scroll, Treasure, Weapons/*/Sprite.png), packed unscaled into one atlas (built by `scripts/build_reference_item_icons.py`) | Pixel-boy, AAA | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
-| `battle/fx_*.png` (19 skill effects) | [Ninja Adventure Asset Pack](https://pixel-boy.itch.io/ninja-adventure-asset-pack) - `FX/Elemental`, `FX/Magic`, `FX/Attack`, `FX/Smoke`, cropped and scaled | Pixel-boy, AAA | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
-| `npc_*.png` | [Ninja Adventure Asset Pack](https://pixel-boy.itch.io/ninja-adventure-asset-pack) - `Actor/Character/*` front poses (Caveman, Monk, Princess, OldMan, Samurai, Knight, Hunter, NinjaRed, NinjaBlue, SorcererOrange, Villager), scaled | Pixel-boy, AAA | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
-| `icons/weapon_*.png` (8 weapon icons) | [Idylwild's Arsenal](https://opengameart.org/node/171012) - copied unmodified, renamed | Idylwild | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) (author asks for no credit; none is required) |
-| `icons/skill_*.png` | Original: drawn by code in `src/asteria/graphics/forged_icons.py` | This repository | Same as the repository |
-| `battle/*.png` (goblin_slinger, skeleton_grunt, skeleton_king, sorceress, warrior) | Foozle Lucifer character packs (Foozle_2DC0014_Lucifer_Goblin_Slinger_Pixel_Art, Foozle_2DC0018_Lucifer_Skeleton_Grunt_Pixel_Art, Foozle_2DC0021_Lucifer_Skeleton_King_Pixel_Art, Foozle_2DC0011_Lucifer_Sorceress_Pixel_Art, Foozle_2DC0009_Lucifer_Warrior_Pixel_Art), strips arranged on one sheet per character and scaled (built by `trial_lucifer.py`) | Foozle (Baldur) | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
+| `battle/*.png` (cultist, goblin_beast, goblin_berserker, goblin_rider, goblin_slinger, necromancer, skeleton_ancient, skeleton_grunt, skeleton_hunter, skeleton_king, sorceress, warrior) | Foozle Lucifer character packs (Foozle_2DC0013_Lucifer_Cultist_Pixel_Art, Foozle_2DC0016_Lucifer_Goblin_Beast_Pixel_Art, Foozle_2DC0015_Lucifer_Goblin_Berserker_Pixel_Art, Foozle_2DC0017_Lucifer_Goblin_Rider_Pixel_Art, Foozle_2DC0014_Lucifer_Goblin_Slinger_Pixel_Art, Foozle_2DC0010_Lucifer_Necromancer_Pixel_Art, Foozle_2DC0020_Lucifer_Skeleton_Ancient_Pixel_Art, Foozle_2DC0018_Lucifer_Skeleton_Grunt_Pixel_Art, Foozle_2DC0019_Lucifer_Skeleton_Hunter_Pixel_Art, Foozle_2DC0021_Lucifer_Skeleton_King_Pixel_Art, Foozle_2DC0011_Lucifer_Sorceress_Pixel_Art, Foozle_2DC0009_Lucifer_Warrior_Pixel_Art), strips arranged on one sheet per character and scaled (built by `trial_lucifer.py`) | Foozle (Baldur) | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
 | `lucifer/icons/*.png` | Foozle Lucifer Equipment (`Foozle_2DS0005`), Lucifer Pickups (`Foozle_2DS0006`) and Lucifer RPG UI skill icons (`Foozle_UI_0002`), copied unmodified | Foozle (Baldur) | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
-| `lucifer/ui/*` | Foozle Lucifer RPG UI (`Foozle_UI_0002`): SimplePanel01-03, ButtonBackground, PixelRpgFont-Regular.ttf, copied unmodified | Foozle (Baldur) | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
+| `lucifer/ui/*` | Foozle Lucifer RPG UI (`Foozle_UI_0002`): SimplePanel01 and 03, PixelRpgFont-Regular.ttf, copied unmodified | Foozle (Baldur) | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
 | `audio/town_theme.ogg`, `woods_theme.ogg`, `battle_theme.ogg`, `throne_theme.ogg` | Foozle Explorer Chiptunes (`Foozle_M0002`: Theme #1 / #2 (30s), Under Pressure 1-2), copied unmodified, renamed | Foozle | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
 | `audio/crypt_theme.ogg` | Foozle Eerie Space Music (`Foozle_M0001`: track 2), copied unmodified, renamed | Foozle | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
-| `battle/mender_wisp.png` (the boss's helper) | [Ninja Adventure Asset Pack](https://pixel-boy.itch.io/ninja-adventure-asset-pack) - `Actor/Monster/Flam`, cropped and scaled | Pixel-boy, AAA | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
-| `hero_01_battle.png`, `mender_wisp_battle.png` (pictures for the legacy playtest fallback) | [Tiny Dungeon](https://kenney.nl/assets/tiny-dungeon) 1.0 tiles, scaled | Kenney (kenney.nl) | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
+| `battle/fx_*.png` (19 skill effects) | Foozle Pixel Magic Effects (`Foozle_2DE0001`): Explosion, Water Geyser, Molten Spear, Wind, Tornado, Portal strips, tinted and scaled | Foozle (lordfitoi) | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
 
 ## Licensing
 
-Every file here is CC0 1.0 or generated by this repository's scripts; no share-alike or attribution terms apply. (An earlier revision used the CC-BY-SA LPC soldier for the field player; it was replaced with a CC0 character.)
-
-## Lucifer art (CC0)
-
-Characters, enemies, equipment, pickups, tilesets and the RPG UI (panels, button, font, icons)
-are Foozle's Lucifer packs, CC0 1.0 (Readme.txt of each pack: free for all uses, attribution not
-required). Re-cut and arranged by `scripts/lucifer_reskin.py`; the packs: Lucifer Warrior,
-Necromancer, Sorceress, Cultist, Goblin Slinger / Berserker / Beast / Rider, Skeleton Grunt / Hunter
-/ Ancient / King, Equipment, Pickups, Exterior / Dungeon / Lava tilesets, RPG UI
-(<https://foozlecc.itch.io/>).
+Every file here is CC0 1.0. No AI-generated art.

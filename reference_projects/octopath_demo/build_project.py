@@ -31,6 +31,9 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 REFERENCE = REPO / "reference_projects" / "complex_reference_rpg"
 sys.path.insert(0, str(REPO / "src"))
+sys.path.insert(0, str(REPO / "reference_projects" / "boss_trial_demo"))
+
+import trial_lucifer as lucifer  # noqa: E402
 
 from asteria.editor import EditorDocument  # noqa: E402
 from asteria.gameplay import (  # noqa: E402
@@ -1024,7 +1027,7 @@ def main():
         "Astral Tyrant", {"sprite": "playable_assets/boss_field.png", "size": [96, 96]}
     )
     for name, (_enemy, _encounter, _xy, _behaviour) in FIELD_FOES.items():
-        wide = MONSTERS[_enemy][1].startswith("Boss/")
+        wide = MONSTERS[_enemy][1] == "skeleton_ancient"
         sprites[name] = {
             "sprite": f"playable_assets/field_{_enemy}.png",
             "size": [64, 32] if wide else [48, 48],
@@ -1044,9 +1047,6 @@ def main():
     (HERE / "playable_test_manifest.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
-    from asteria.graphics.forged_icons import apply_to_project_file
-
-    apply_to_project_file(path, replace=True)  # original code-drawn skill / state / pet icons
     print(
         f"wrote {path.relative_to(REPO)}: {len(abilities.ids())} abilities, {len(db.classes)} "
         f"jobs, "
@@ -1055,19 +1055,10 @@ def main():
 
 
 # -- more enemy types -----------------------------------------------------------------------------
-NINJA = (
-    REPO
-    / "local_reference"
-    / "free_assets"
-    / "ninja_adventure"
-    / "extracted"
-    / "Ninja Adventure - Asset Pack"
-    / "Actor"
-)
-MONSTERS = {  # enemy id: (name, art, hp, shields, tags, skills, speed)
+MONSTERS = {  # enemy id: (name, Lucifer character, hp, shields, tags, skills, speed)
     "gel_slime": (
         "Gel Slime",
-        "Monster/Slime/Slime.png",
+        "goblin_slinger",
         2400,
         2,
         ("weak.lightning", "weak.staff", "weak.dagger", "absorb.fire", "resist.sword"),
@@ -1076,7 +1067,7 @@ MONSTERS = {  # enemy id: (name, art, hp, shields, tags, skills, speed)
     ),
     "bone_wraith": (
         "Bone Wraith",
-        "Monster/Skull/SpriteSheet.png",
+        "skeleton_hunter",
         3600,
         4,
         ("weak.light", "weak.axe", "weak.fire", "resist.dagger", "immune.poison", "undead"),
@@ -1085,7 +1076,7 @@ MONSTERS = {  # enemy id: (name, art, hp, shields, tags, skills, speed)
     ),
     "pit_viper": (
         "Pit Viper",
-        "Monster/Snake/Snake.png",
+        "goblin_rider",
         2200,
         3,
         ("weak.sword", "weak.bow", "weak.ice"),
@@ -1094,7 +1085,7 @@ MONSTERS = {  # enemy id: (name, art, hp, shields, tags, skills, speed)
     ),
     "mirror_gazer": (
         "Mirror Gazer",
-        "Monster/Eye/Eye.png",
+        "necromancer",
         3000,
         3,
         ("weak.dagger", "weak.spear", "weak.bow", "reflect.magic", "immune.sleep"),
@@ -1103,7 +1094,7 @@ MONSTERS = {  # enemy id: (name, art, hp, shields, tags, skills, speed)
     ),
     "web_spinner": (
         "Web Spinner",
-        "Monster/SpiderRed/SpriteSheet.png",
+        "goblin_beast",
         2800,
         3,
         ("weak.fire", "weak.axe", "resist.ice"),
@@ -1112,7 +1103,7 @@ MONSTERS = {  # enemy id: (name, art, hp, shields, tags, skills, speed)
     ),
     "iron_samurai": (
         "Iron Samurai",
-        "Boss/GiantBlueSamurai",
+        "skeleton_ancient",
         14000,
         8,
         (
@@ -1141,83 +1132,6 @@ FIELD_FOES = {  # field entity: (enemy art shown, encounter, position, behaviour
     "Mirror Gazer": ("mirror_gazer", "gazer_nest", (110.0, -50.0), "idle"),
     "Iron Samurai": ("iron_samurai", "samurai_duel", (120.0, 22.0), "idle"),
 }
-
-
-def _strip(frames, scale):
-    from PIL import Image
-
-    w, h = frames[0].size
-    sheet = Image.new("RGBA", (w * scale * len(frames), h * scale), (0, 0, 0, 0))
-    for i, frame in enumerate(frames):
-        sheet.alpha_composite(
-            frame.resize((w * scale, h * scale), Image.NEAREST), (i * w * scale, 0)
-        )
-    return sheet
-
-
-def _flash(frame):
-    from PIL import Image
-
-    white = Image.new("RGBA", frame.size, (255, 255, 255, 255))
-    out = Image.new("RGBA", frame.size, (0, 0, 0, 0))
-    out.paste(white, (0, 0), frame.getchannel("A"))
-    return out
-
-
-def _darken(frame):
-    from PIL import ImageEnhance
-
-    return ImageEnhance.Brightness(frame).enhance(0.35)
-
-
-def monster_sheet(relative):
-    """Battle sheet from a 4 x 4 walk sheet (16 px): idle / attack from the walk, a flash for hit,
-    dark for KO."""
-    from PIL import Image
-
-    sheet = Image.open(NINJA / relative).convert("RGBA")
-    walk = [sheet.crop((48, r * 16, 64, r * 16 + 16)) for r in range(4)]  # the right-facing column
-    frames = walk + [_flash(walk[0]), _darken(walk[0])]
-    clips = {
-        "idle": {"frames": [0, 1, 2, 3], "frame_duration": 0.16, "loop": True},
-        "attack": {
-            "frames": [0, 1, 2, 3, 0],
-            "frame_duration": 0.07,
-            "loop": False,
-            "events": {"2": ["hit"]},
-        },
-        "hit": {"frames": [4, 0, 4, 0], "frame_duration": 0.07, "loop": False},
-        "ko": {"frames": [5], "frame_duration": 0.5, "loop": False},
-    }
-    return _strip(frames, 4), (64, 64), clips, walk[0]
-
-
-def giant_sheet(relative, cell=(96, 48)):
-    """Battle sheet from a boss's Idle / Hit strips (each frame ``cell`` px): idle, attack, hit, a
-    dark KO frame."""
-    from PIL import Image
-
-    base = NINJA / relative
-    w, h = cell
-    idle = Image.open(base / "Idle.png").convert("RGBA")
-    hit = Image.open(base / "Hit.png").convert("RGBA")
-    frames = [idle.crop((c * w, 0, c * w + w, h)) for c in range(idle.width // w)]
-    count = len(frames)
-    frames += [hit.crop((c * w, 0, c * w + w, h)) for c in range(min(3, hit.width // w))]
-    frames.append(_darken(frames[-1]))
-    n = len(frames)
-    clips = {
-        "idle": {"frames": list(range(count)), "frame_duration": 0.14, "loop": True},
-        "attack": {
-            "frames": [0, 2, 4, 4, 2, 0],
-            "frame_duration": 0.07,
-            "loop": False,
-            "events": {"2": ["hit"]},
-        },
-        "hit": {"frames": list(range(count, n - 1)), "frame_duration": 0.09, "loop": False},
-        "ko": {"frames": [n - 1], "frame_duration": 0.5, "loop": False},
-    }
-    return _strip(frames, 2), (w * 2, h * 2), clips, frames[0]
 
 
 def add_monster_types(project, db, add):
@@ -1352,14 +1266,9 @@ def add_monster_types(project, db, add):
     out.mkdir(parents=True, exist_ok=True)
     template_enemy = db.enemies["ember_hound"]
     for enemy_id, (name, art, hp, shields, tags, moves, speed) in MONSTERS.items():
-        image, frame, clips, field_frame = (
-            giant_sheet(art) if art.startswith("Boss/") else monster_sheet(art)
-        )
+        image, frame, clips, _body = lucifer.character_sheet(art)
         image.save(out / f"{enemy_id}.png")
-        side = 48 / max(field_frame.size)
-        field_frame.resize(
-            (round(field_frame.width * side), round(field_frame.height * side)), 0
-        ).save(HERE / "playable_assets" / f"field_{enemy_id}.png")
+        lucifer.npc_picture(art, size=48).save(HERE / "playable_assets" / f"field_{enemy_id}.png")
         asset_id = f"battle.combatant.{enemy_id}"
         project.assets.register(
             CanonicalAsset(
@@ -1368,14 +1277,14 @@ def add_monster_types(project, db, add):
                 AssetSource(
                     f"playable_assets/battle/{enemy_id}.png",
                     "project",
-                    (("license", "CC0 1.0"), ("source", "Ninja Adventure Asset Pack")),
+                    lucifer.SOURCE,
                 ),
                 tags=frozenset({"battle", "combatant", "enemy"}),
                 metadata=(("clips", clips), ("frame_size", list(frame)), ("pivot", [0.5, 1.0])),
             ),
             replace=True,
         )
-        scale = 0.8 if art.startswith("Boss/") else 0.5
+        scale = 0.55 if art == "skeleton_ancient" else 0.5
         library.set(
             "combatant_visuals",
             enemy_id,
@@ -1446,34 +1355,6 @@ def add_monster_types(project, db, add):
                 "tags": [],
             }
         )
-    credits = HERE / "playable_assets" / "CREDITS.md"
-    text = credits.read_text(encoding="utf-8")
-    row = (
-        "| `battle/gel_slime.png`, `bone_wraith.png`, `pit_viper.png`, `mirror_gazer.png`, "
-        "`web_spinner.png`, "
-        "`iron_samurai.png` and their `field_*.png` (Octopath demo enemies) | "
-        "[Ninja Adventure Asset Pack](https://pixel-boy.itch.io/ninja-adventure-asset-pack) — "
-        "Monster/Slime, "
-        "Skull, Snake, Eye, SpiderRed, Boss/GiantBlueSamurai; frames cropped and scaled, hit / "
-        "KO frames flashed / "
-        "darkened (built by `reference_projects/octopath_demo/build_project.py`) | Pixel-boy, "
-        "AAA | "
-        "[CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |\n"
-    )
-    icon_row = (
-        "| `icons/skill_*.png` (skill, state and pet icons) | Original: drawn by code in "
-        "`src/asteria/graphics/forged_icons.py` (built by `scripts/build_original_icons.py`); "
-        "no third-party art | This repository | "
-        "[CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |\n"
-    )
-    if "skill_*.png" not in text:
-        i = text.index("\n## Licensing")
-        credits.write_text(text[:i].rstrip("\n") + "\n" + icon_row + text[i:], encoding="utf-8")
-        text = credits.read_text(encoding="utf-8")
-    if "Octopath demo enemies" not in text:
-        i = text.index("\n## Licensing")
-        credits.write_text(text[:i].rstrip("\n") + "\n" + row + text[i:], encoding="utf-8")
-
     # the Skeleton Knight (the reference project's iron_guard art): armoured, slow, hits hard
     add(
         ability(

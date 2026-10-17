@@ -1230,3 +1230,75 @@ def add_effects(library, looks):
             continue
         cues = [*timeline.cues, *fx_cues(looks, ability_id)]
         library.timelines[timeline.timeline_id] = ActionTimeline(timeline.timeline_id, cues)
+
+
+# -- the body's animation ---------------------------------------------------------------------
+# which of the three attack strips (or the jump) each skill plays: a combo's hits and the skills
+# do not all swing the same way
+ANIMATION = {
+    # buffs and spells are cast: the second strip
+    **dict.fromkeys(
+        (
+            "w_slash2",
+            "w_shout",
+            "w_frenzy",
+            "w_fortify",
+            "w_bulwark",
+            "w_thunderclap",
+            "r_deadeye",
+            "r_volley",
+            "r_fan",
+            "r_venom_rain",
+            "r_toxic_cloud",
+            "m_bolt",
+            "m_fireball",
+            "m_frost_bolt",
+            "m_nova",
+            "m_flame_wave",
+            "m_ice_spike",
+            "m_chain_lightning",
+            "m_lightning_strike",
+            "m_overload",
+        ),
+        "attack2",
+    ),
+    # the finishers and the heavy blows: the third strip
+    **dict.fromkeys(
+        (
+            "w_slash3",
+            "w_whirl",
+            "w_execute",
+            "w_rampage",
+            "w_shield_bash",
+            "w_retribution",
+            "w_cleave",
+            "r_pierce",
+            "r_snipe",
+            "r_railshot",
+            "r_plague",
+            "r_rapid_fire",
+            "m_meteor",
+            "m_inferno",
+            "m_firestorm",
+            "m_blizzard",
+            "m_frozen_orb",
+            "m_thunderstorm",
+        ),
+        "attack3",
+    ),
+    **dict.fromkeys(("w_leap", "w_ground_slam", "w_earthquake"), "jump"),
+    **dict.fromkeys(("r_tumble", "r_caltrops", "r_shadow_step"), "jump"),
+    "m_blink": "jump",
+}
+
+
+def assign_animations(library):
+    """Point each listed skill's animation cue at its strip (one is added when it has none)."""
+    for ability_id, role in ANIMATION.items():
+        ability = library.abilities.get(ability_id)
+        timeline = library.timelines.get(ability.timeline_id) if ability is not None else None
+        if timeline is None:
+            continue
+        cues = [c for c in timeline.cues if c.kind.value != "animation"]
+        cues.append(ActionCue(f"anim_{role}", 0.0, "animation", {"clip": role}))
+        library.timelines[timeline.timeline_id] = ActionTimeline(timeline.timeline_id, cues)

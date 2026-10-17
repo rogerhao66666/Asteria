@@ -80,14 +80,21 @@ class Reskin:
     # -- combatants ------------------------------------------------------------------------
     def combatant(self, name, key, *, hero, scale=None, large=False):
         scale = (0.52 if hero else 0.5) if scale is None else scale
-        image, frame, clips, body = lucifer.character_sheet(key)
+        facing = "Left" if hero else "Right"  # the party fights facing left
+        image, frame, clips, body = lucifer.character_sheet(key, facing=facing)
         folder = self.root / "playable_assets" / "battle"
         folder.mkdir(parents=True, exist_ok=True)
         image.save(folder / f"{name}.png")
         asset_id = f"battle.combatant.{name}"
         tags = {"battle", "combatant", "hero" if hero else "enemy"}
-        metadata = [("clips", clips), ("frame_size", list(frame)), ("pivot", [0.5, 1.0])]
+        metadata = [
+            ("clips", clips),
+            ("frame_size", list(frame)),
+            ("pivot", [0.5, lucifer.feet_pivot(image, frame)]),
+        ]
         metadata.append(("body_height", body))
+        if hero:  # the Left strips already face left: the engine does not turn them round
+            metadata.append(("facing", "left"))
         self.project.assets.register(
             CanonicalAsset(
                 asset_id,
@@ -266,6 +273,70 @@ class Reskin:
             )
             self.db.pet_species[species_id] = dataclasses.replace(species, icon_id=icon)
 
+    HEAVY_WORDS = ("slam", "cleave", "crush", "hammer", "bash", "charge", "smash", "whirl")
+
+    def animations(self):
+        """Each skill's swing plays the strip that fits it: a plain blow the first attack strip,
+        a spell or a buff the second (cast), a finisher or heavy blow the third."""
+        abilities = self.project.gameplay_library.abilities
+        for key in self.library.ids("motion_sequences"):
+            if key not in abilities.ids():
+                continue
+            definition = abilities.get(key)
+            tags = set(definition.tags)
+            if "divine" in tags or len(definition.hits or ()) >= 3:
+                clip = "attack3"
+            elif any(word in key for word in self.HEAVY_WORDS):
+                clip = "attack3"
+            elif "magic" in tags or any(t.startswith("damage.") for t in tags):
+                clip = "attack2"
+            else:
+                continue
+            sequence = self.library.require("motion_sequences", key)
+            beats = tuple(
+                dataclasses.replace(b, cue=clip)
+                if b.channel == "animation" and b.cue == "attack" and b.member_id == "@source"
+                else b
+                for b in sequence.beats
+            )
+            self.library.set("motion_sequences", key, dataclasses.replace(sequence, beats=beats))
+
+    def effects(self):
+        """Battle effect strips drawn from the Foozle Pixel Magic Effects instead of any older
+        picture (same asset ids, so skills keep their effects)."""
+        from PIL import Image
+
+        folders = {"slash": "Wind", "flame": "Explosion", "explosion": "Explosion"}
+        for asset in self.project.assets.query("sprite_sheet", tags={"vfx"}):
+            key = asset.asset_id.rsplit(".", 1)[-1]
+            if key not in folders or "Foozle" in dict(asset.source.provenance).get("source", ""):
+                continue
+            frames = lucifer.effect_frames(folders[key])
+            count, side = len(frames), frames[0].width * 2
+            strip = Image.new("RGBA", (side * count, side), (0, 0, 0, 0))
+            for index, frame in enumerate(frames):
+                strip.alpha_composite(frame.resize((side, side), Image.NEAREST), (index * side, 0))
+            target = self.root / asset.source.uri
+            strip.save(target)
+            meta = dict(asset.metadata)
+            clips = {
+                name: {**clip, "frames": list(range(count))}
+                for name, clip in meta.get("clips", {}).items()
+            }
+            meta.update(clips=clips, frame_size=[side, side])
+            if key == "slash":
+                meta["face_attacker"] = True
+            self.project.assets.register(
+                CanonicalAsset(
+                    asset.asset_id,
+                    asset.kind,
+                    AssetSource(asset.source.uri, "project", SOURCE),
+                    tags=asset.tags,
+                    metadata=tuple(meta.items()),
+                ),
+                replace=True,
+            )
+
     def run(self, *, heroes, enemies, manifest_path, field_player="warrior", legacy=()):
         self.combatants(heroes, enemies)
         self.pictures(
@@ -277,6 +348,8 @@ class Reskin:
         self.backdrops()
         self.ui()
         self.icons()
+        self.effects()
+        self.animations()
 
 
 class _Context:

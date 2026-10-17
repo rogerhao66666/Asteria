@@ -11,7 +11,7 @@ from asteria.runtime.game_session import GameSessionRuntime
 from asteria.runtime.world_command_handlers import WORLD_COMMAND_ARGUMENTS, WorldCommandError
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
-IMAGE = "playable_assets/item_icons.png"
+IMAGE = "playable_assets/battle_background.png"
 
 
 def _project():
@@ -119,7 +119,7 @@ def test_a_mouse_click_on_a_picture_starts_its_event(monkeypatch):
         runtime._ui_mode = "field"
         runtime._field_input([click], 0.016)
         assert runtime.game.pending_followups == ["go"]
-        miss = runtime.pg.event.Event(runtime.pg.MOUSEBUTTONDOWN, pos=(900, 500), button=1)
+        miss = runtime.pg.event.Event(runtime.pg.MOUSEBUTTONDOWN, pos=(20, 20), button=1)
         runtime.game.pending_followups.clear()
         runtime._field_input([miss], 0.016)
         assert runtime.game.pending_followups == []

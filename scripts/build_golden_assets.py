@@ -3,8 +3,9 @@
     python scripts/build_golden_assets.py
 
 Deterministic and self-contained: images are cropped from CC0 sheets already
-committed in reference_projects/complex_reference_rpg/playable_assets (Ninja
-Adventure, Kenney) or drawn procedurally here. Asset documents are produced
+committed in reference_projects/complex_reference_rpg/playable_assets (Foozle Lucifer now; the
+committed fixtures were cut from the earlier Ninja Adventure / Kenney art) or drawn
+procedurally here. Asset documents are produced
 by the engine's own codecs, so they always match the canonical format.
 See tests/golden/README.md for when and how to rebuild.
 """

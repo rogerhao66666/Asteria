@@ -65,5 +65,5 @@
 
 ## 素材
 
-全部可再散布：Ninja Adventure（CC0）、Kenney（CC0）、Idylwild's Arsenal（CC0）、專案內程式畫的原創 icon。
+全部可再散布：Foozle 的 Lucifer 系列、Pixel Magic Effects 與音樂包（CC0），音效取自參考專案。
 出處見 `playable_assets/CREDITS.md` 與根目錄 `THIRD_PARTY_ASSETS.md`。

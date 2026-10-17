@@ -50,6 +50,12 @@ class CombatantOverlay:
         object.__setattr__(self, "offset", (float(self.offset[0]), float(self.offset[1])))
 
 
+def _mirrored(visual):
+    """Whether a combatant's pictures are turned round: it faces left while its art looks right
+    (or the other way about, for art drawn looking left)."""
+    return (visual.anchor.facing.lower() == "left") != (visual.art_facing == "left")
+
+
 def _role_name(role):
     if isinstance(role, BattleAnimationRole):
         return role.value
@@ -561,7 +567,7 @@ class BattlePresentationRuntime:
                             layer=-1,
                             depth=visual.anchor.depth,
                             opacity=max(0.0, min(1.0, 1.0 - mix)),
-                            flip_x=visual.anchor.facing.lower() == "left",
+                            flip_x=_mirrored(visual),
                         )
                     )
                 draws.append(
@@ -575,7 +581,7 @@ class BattlePresentationRuntime:
                         layer=0,
                         depth=visual.anchor.depth,
                         opacity=max(0.0, min(1.0, 1.0 - mix)),
-                        flip_x=visual.anchor.facing.lower() == "left",
+                        flip_x=_mirrored(visual),
                     )
                 )
 
@@ -597,7 +603,7 @@ class BattlePresentationRuntime:
                         layer=-1,
                         depth=visual.anchor.depth,
                         opacity=max(0.0, min(1.0, mix)),
-                        flip_x=visual.anchor.facing.lower() == "left",
+                        flip_x=_mirrored(visual),
                     )
                 )
             body = TextureDraw(
@@ -610,7 +616,7 @@ class BattlePresentationRuntime:
                 layer=0,
                 depth=visual.anchor.depth,
                 opacity=max(0.0, min(1.0, mix)),
-                flip_x=visual.anchor.facing.lower() == "left",
+                flip_x=_mirrored(visual),
                 tint=self.state_tints.get(visual.member_id),
             )
             echo = self.echoes.by_key.get(visual.member_id)
@@ -662,7 +668,7 @@ class BattlePresentationRuntime:
                         source[3] * camera.zoom,
                         layer=1,
                         depth=visual.anchor.depth,
-                        flip_x=visual.anchor.facing.lower() == "left",
+                        flip_x=_mirrored(visual),
                     )
                 )
         draws.sort(key=lambda d: (d.layer, d.depth, d.screen_y, d.screen_x))
@@ -687,7 +693,7 @@ class BattlePresentationRuntime:
         """Attachment / layer draws for a body frame; depth nudges keep back parts behind and front
         parts on top."""
         ratio = visual.source_pixels_per_logical_pixel
-        mirrored = visual.anchor.facing.lower() == "left"
+        mirrored = _mirrored(visual)
         out = []
         for order, part in enumerate(composition.parts(_role_name(state.role), state.frame_index)):
             sheet = self._part_sheet(part.asset_id)

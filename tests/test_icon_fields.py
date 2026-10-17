@@ -80,7 +80,7 @@ def test_the_choices_list_project_pictures_and_the_built_in_library(document):
     from asteria.editor.image_tools import icon_choices
 
     ids = [i for i, _ in icon_choices(document)]
-    assert any(i.startswith("playable_assets/icons/skill_") for i in ids)
+    assert any(i.startswith("playable_assets/lucifer/icons/skill_") for i in ids)
     assert "forged:fire" in ids and "forged:pet_lynx" in ids
     assert all(icon is not None for i, icon in icon_choices(document) if i.startswith("forged:"))
 

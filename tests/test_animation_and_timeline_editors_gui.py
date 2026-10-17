@@ -56,9 +56,10 @@ def test_animation_editor_builds_a_clip_by_clicking_frames_and_previews_it(windo
         editor.tick(0.05)
         shown.add(editor.current_frame())
     assert shown == {0, 2} and not editor.preview.pixmap().isNull()
+    pivot_y = editor.api.data(sheet)["pivot"][1]  # where the sheet puts its feet
     editor.pivot_x.setValue(0.4)
     assert editor.apply_sheet()
-    assert editor.api.data(sheet)["pivot"] == [0.4, 1.0]
+    assert editor.api.data(sheet)["pivot"] == pytest.approx([0.4, pivot_y], abs=1e-3)
     editor.frames.setText("0, 99")
     assert (
         not editor.apply_clip() and "outside" in editor.status.text()

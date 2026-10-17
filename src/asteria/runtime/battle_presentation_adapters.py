@@ -334,7 +334,31 @@ class CanonicalBattleAdapter:
         self._cursor = self._clock = self._last_impact = 0.0
         self._schedule = []
         self._shown_down = {}
+        self._warm_textures(combatants)
         self._start_boss_intro(game, layout)
+
+    def _warm_textures(self, combatants):
+        """Load every picture the fight can show now, not in the middle of an animation: the
+        combatants' sheets (long strips take a few frames to decode) and the effect sheets."""
+        from asteria import kernels
+
+        kernels.active()  # the particle kernels import on first use (about 60 ms)
+        uris = set()
+        for visual in combatants:
+            try:
+                uris.add(self.resolver.source_uri(visual.sprite_sheet_asset_id))
+            except (KeyError, BattleVisualError):
+                continue
+        for asset in self.host.game.project.assets.query("sprite_sheet", tags={"vfx"}):
+            try:
+                uris.add(self.resolver.source_uri(asset.asset_id))
+            except (KeyError, BattleVisualError):
+                continue
+        for uri in uris:
+            try:
+                self.host.load_image(uri)
+            except Exception:  # noqa: BLE001 - a missing picture is reported when it is drawn
+                continue
 
     # -- boss intro camera (CAM-02) ---------------------------------------------------------------
     BOSS_INTRO = {"zoom": 1.35, "blend": 0.5, "hold": 0.9}
@@ -1237,9 +1261,13 @@ class CanonicalBattleAdapter:
                 vfx_keyframe(effect.age, effect.duration, len(clip.keyframes))
             ].frame_index
         ]
-        body = self.resolver.sprite_sheet(visual.sprite_sheet_asset_id).frames[0]
-        height = body.height / visual.source_pixels_per_logical_pixel
-        placement = vfx_placement(self.resolver.sheet_meta(asset_id), payload)
+        height = self._body_height(visual)  # the figure, not the whole frame: effects land on it
+        meta = self.resolver.sheet_meta(asset_id)
+        placement = vfx_placement(meta, payload)
+        # a swing or a claw drawn travelling right turns round for a target standing on the left,
+        # where the blow comes from the right (``face_attacker`` on the sheet or in the beat)
+        face = payload.get("face_attacker", meta.get("face_attacker", False))
+        flip = bool(face) and getattr(visual.anchor, "facing", "") == "right"
         x, y, width, tall = vfx_rect(
             placement, visual.anchor.x, visual.anchor.y, height, frame.width, frame.height
         )
@@ -1251,6 +1279,7 @@ class CanonicalBattleAdapter:
             cy - tall / 2,
             width,
             tall,
+            **({"flip_x": True} if flip else {}),
             opacity=placement["opacity"],
             blend=placement["blend"],
         )
@@ -1262,8 +1291,7 @@ class CanonicalBattleAdapter:
         entry = systems.get(key)
         try:
             visual = self.screen.scene.visual_for(effect.member_id)
-            body = self.resolver.sprite_sheet(visual.sprite_sheet_asset_id).frames[0]
-            height = body.height / visual.source_pixels_per_logical_pixel
+            height = self._body_height(visual)
         except (KeyError, BattleVisualError, AttributeError, IndexError):
             return
         placement = vfx_placement({}, payload)

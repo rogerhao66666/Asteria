@@ -86,7 +86,7 @@ def test_skill_choreography_plays_animation_vfx_audio_camera_in_order(battle):
     while adapter.busy() and clock < 2.0:
         runtime._present_battle(0.02)
         clock += 0.02
-        if seen["attack"] is None and _role(screen.animation.combatant(hero)) == "attack":
+        if seen["attack"] is None and _role(screen.animation.combatant(hero)).startswith("attack"):
             seen["attack"] = clock
         if seen["vfx"] is None and any(
             v.payload.get("asset_id") == "battle.fx.flame" for v in screen.feedback.vfx

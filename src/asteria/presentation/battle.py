@@ -71,6 +71,7 @@ class BattleCombatantVisual:
     animation_roles: tuple[tuple[str, str], ...]
     aura_sprite_sheet_asset_id: str | None = None
     source_pixels_per_logical_pixel: float = 1.0
+    art_facing: str = "right"  # the way the sheet's pictures look; "left" art is not turned round
 
     def __init__(
         self,
@@ -81,6 +82,7 @@ class BattleCombatantVisual:
         animation_roles=None,
         aura_sprite_sheet_asset_id=None,
         source_pixels_per_logical_pixel=1.0,
+        art_facing="right",
     ):
         if not isinstance(anchor, BattleVisualAnchor):
             raise TypeError("anchor must be BattleVisualAnchor")
@@ -107,6 +109,9 @@ class BattleCombatantVisual:
         if not isfinite(source_ratio) or source_ratio <= 0:
             raise ValueError("source_pixels_per_logical_pixel must be finite and positive")
         object.__setattr__(self, "source_pixels_per_logical_pixel", source_ratio)
+        object.__setattr__(
+            self, "art_facing", "left" if str(art_facing).lower() == "left" else "right"
+        )
 
     def clip_for(self, role):
         return dict(self.animation_roles).get(str(role))
@@ -123,6 +128,8 @@ class BattleCombatantVisual:
             data["aura_sprite_sheet_asset_id"] = self.aura_sprite_sheet_asset_id
         if self.source_pixels_per_logical_pixel != 1.0:
             data["source_pixels_per_logical_pixel"] = self.source_pixels_per_logical_pixel
+        if self.art_facing != "right":
+            data["art_facing"] = self.art_facing
         return data
 
     @classmethod
@@ -135,6 +142,7 @@ class BattleCombatantVisual:
             data.get("animation_roles"),
             data.get("aura_sprite_sheet_asset_id"),
             data.get("source_pixels_per_logical_pixel", 1.0),
+            data.get("art_facing", "right"),
         )
 
 

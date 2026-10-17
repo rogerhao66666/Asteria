@@ -101,9 +101,9 @@ def main(argv=None):
     executed = []
     execute = game.execute
 
-    def counting_execute(actor_id, ability_id, target_ids):
+    def counting_execute(actor_id, ability_id, target_ids, **options):
         executed.append(ability_id)
-        return execute(actor_id, ability_id, target_ids)
+        return execute(actor_id, ability_id, target_ids, **options)
 
     game.execute = counting_execute
     game.start_encounter("boss_room")
@@ -167,8 +167,9 @@ def main(argv=None):
             )
             # deterministic: each phase seen puts the boss just under the next phase's threshold
             thresholds = {0: 1.0, 1: 0.60, 2: 0.25}
-            wanted = thresholds.get(len(seen), 0.0) * pool.maximum("vitality")
-            pool.set_current("vitality", max(wanted, 300.0))
+            if len(seen) < 3:  # the last phase is fought out: the boss may fall
+                wanted = thresholds.get(len(seen), 0.0) * pool.maximum("vitality")
+                pool.set_current("vitality", max(wanted, 300.0))
         if not runtime._battle_presentation.busy() and runtime._battle_actor():
             if runtime.battle_commands.mode in ("ingredients", "target"):
                 press(pygame.K_RETURN, 0.05)
@@ -177,6 +178,17 @@ def main(argv=None):
         else:
             pump(runtime, 0.05)
     checks["battle_won_by_keys"] = bool(runtime._victory)
+    print(
+        "boss hp",
+        None
+        if game.battle is None
+        else game.battle.member(boss).subject.resources.current("vitality"),
+        "victory",
+        runtime._victory,
+        "defeat",
+        runtime._defeat,
+        "iters done",
+    )
     checks["three_phases_seen"] = len(seen) >= 3
     pump(runtime, 0.8)
     shot("trial_victory.png")

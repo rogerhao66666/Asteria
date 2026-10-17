@@ -1166,102 +1166,6 @@
         "source_path": "playable_assets/arrow_sheet.json"
       },
       {
-        "id": "f2bad42f-16a8-5ca6-8973-a171b915d738",
-        "import_settings": {},
-        "importer": "diablo_demo",
-        "importer_version": 1,
-        "kind": "texture",
-        "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
-        },
-        "name": "Fireball",
-        "source_path": "playable_assets/fireball.png"
-      },
-      {
-        "id": "91a9dd3a-b79b-5c78-96c4-c43e51879df3",
-        "import_settings": {},
-        "importer": "diablo_demo",
-        "importer_version": 1,
-        "kind": "sprite_sheet",
-        "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
-        },
-        "name": "Fireball Sheet",
-        "source_path": "playable_assets/fireball_sheet.json"
-      },
-      {
-        "id": "0827bf89-6f0f-56a8-92cb-918b9674f3e4",
-        "import_settings": {},
-        "importer": "diablo_demo",
-        "importer_version": 1,
-        "kind": "texture",
-        "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
-        },
-        "name": "Meteor",
-        "source_path": "playable_assets/fireball_big.png"
-      },
-      {
-        "id": "c40a21f1-d90c-5986-b8e1-0d8c8d1b643c",
-        "import_settings": {},
-        "importer": "diablo_demo",
-        "importer_version": 1,
-        "kind": "sprite_sheet",
-        "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
-        },
-        "name": "Meteor Sheet",
-        "source_path": "playable_assets/fireball_big_sheet.json"
-      },
-      {
-        "id": "9718690d-89e0-5e83-a900-2e6cc0577e2a",
-        "import_settings": {},
-        "importer": "diablo_demo",
-        "importer_version": 1,
-        "kind": "texture",
-        "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
-        },
-        "name": "Orb",
-        "source_path": "playable_assets/orb.png"
-      },
-      {
-        "id": "713b013d-5692-5b2f-a66e-8c5535473059",
-        "import_settings": {},
-        "importer": "diablo_demo",
-        "importer_version": 1,
-        "kind": "sprite_sheet",
-        "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
-        },
-        "name": "Orb Sheet",
-        "source_path": "playable_assets/orb_sheet.json"
-      },
-      {
-        "id": "23cb9bc9-3018-59e5-8542-b929102f54db",
-        "import_settings": {},
-        "importer": "diablo_demo",
-        "importer_version": 1,
-        "kind": "texture",
-        "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
-        },
-        "name": "Rock",
-        "source_path": "playable_assets/rock.png"
-      },
-      {
-        "id": "da511bd8-9f2d-526b-9be2-a246230e97c6",
-        "import_settings": {},
-        "importer": "diablo_demo",
-        "importer_version": 1,
-        "kind": "sprite_sheet",
-        "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
-        },
-        "name": "Rock Sheet",
-        "source_path": "playable_assets/rock_sheet.json"
-      },
-      {
         "id": "46f940da-d284-5fe4-be8b-26f58462ea40",
         "import_settings": {},
         "importer": "diablo_demo",
@@ -8344,7 +8248,7 @@
         "projectile_id": "drone_bolt",
         "schema": "asteria.projectile",
         "speed": 170.0,
-        "sprite": "713b013d-5692-5b2f-a66e-8c5535473059",
+        "sprite": "f11b2ac9-f610-56e9-b24f-d543647b7c6c",
         "version": 1,
         "wall": "destroy",
         "wall_mask": 4294967295,
@@ -8366,7 +8270,7 @@
         "projectile_id": "eye_bolt",
         "schema": "asteria.projectile",
         "speed": 150.0,
-        "sprite": "713b013d-5692-5b2f-a66e-8c5535473059",
+        "sprite": "f11b2ac9-f610-56e9-b24f-d543647b7c6c",
         "version": 1,
         "wall": "destroy",
         "wall_mask": 4294967295,
@@ -8410,7 +8314,7 @@
         "projectile_id": "fire_bolt",
         "schema": "asteria.projectile",
         "speed": 240.0,
-        "sprite": "91a9dd3a-b79b-5c78-96c4-c43e51879df3",
+        "sprite": "d4b56e20-0322-5f05-85c2-317f4a7f8e87",
         "version": 1,
         "wall": "destroy",
         "wall_mask": 4294967295,
@@ -8564,7 +8468,7 @@
         "projectile_id": "meteor",
         "schema": "asteria.projectile",
         "speed": 150.0,
-        "sprite": "c40a21f1-d90c-5986-b8e1-0d8c8d1b643c",
+        "sprite": "d4b56e20-0322-5f05-85c2-317f4a7f8e87",
         "version": 1,
         "wall": "destroy",
         "wall_mask": 4294967295,
@@ -8674,7 +8578,7 @@
         "projectile_id": "rock",
         "schema": "asteria.projectile",
         "speed": 170.0,
-        "sprite": "da511bd8-9f2d-526b-9be2-a246230e97c6",
+        "sprite": "1d04be6e-81eb-5b6d-89fc-d1b1c7674e92",
         "version": 1,
         "wall": "destroy",
         "wall_mask": 4294967295,
@@ -9384,6 +9288,14 @@
       {
         "cues": [
           {
+            "cue_id": "anim_jump",
+            "kind": "animation",
+            "payload": {
+              "clip": "jump"
+            },
+            "time": 0.0
+          },
+          {
             "cue_id": "blink",
             "kind": "movement",
             "payload": {
@@ -9445,10 +9357,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -9601,10 +9513,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -9634,10 +9546,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -9666,10 +9578,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -9706,10 +9618,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -9748,10 +9660,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -9823,10 +9735,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -9855,10 +9767,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -9895,10 +9807,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -9929,10 +9841,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -10056,10 +9968,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -10104,10 +10016,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -10144,10 +10056,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -10193,10 +10105,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -10239,10 +10151,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -10484,10 +10396,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_jump",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "jump"
             },
             "time": 0.0
           },
@@ -10551,10 +10463,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -10597,10 +10509,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -10631,10 +10543,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -10685,10 +10597,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -10772,10 +10684,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -10826,10 +10738,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -10927,10 +10839,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_jump",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "jump"
             },
             "time": 0.0
           },
@@ -11041,10 +10953,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -11095,10 +11007,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -11193,6 +11105,14 @@
       {
         "cues": [
           {
+            "cue_id": "anim_jump",
+            "kind": "animation",
+            "payload": {
+              "clip": "jump"
+            },
+            "time": 0.0
+          },
+          {
             "cue_id": "iframes",
             "kind": "iframe",
             "payload": {
@@ -11253,10 +11173,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -11300,10 +11220,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -11432,10 +11352,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -11478,10 +11398,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -11527,10 +11447,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_jump",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "jump"
             },
             "time": 0.0
           },
@@ -11630,10 +11550,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -11699,10 +11619,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -11745,10 +11665,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -11791,10 +11711,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_jump",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "jump"
             },
             "time": 0.0
           },
@@ -11859,10 +11779,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack_0.0",
+            "cue_id": "anim_jump",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "jump"
             },
             "time": 0.0
           },
@@ -11927,10 +11847,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -12133,10 +12053,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -12212,10 +12132,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
@@ -12260,10 +12180,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -12441,10 +12361,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
+            "cue_id": "anim_attack2",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack2"
             },
             "time": 0.0
           },
@@ -12488,10 +12408,10 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack_0.0",
+            "cue_id": "anim_attack3",
             "kind": "animation",
             "payload": {
-              "clip": "attack"
+              "clip": "attack3"
             },
             "time": 0.0
           },
