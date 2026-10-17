@@ -212,6 +212,36 @@ class PlayableTestRuntime:
             self._image_scope[rel] = "battle" if in_battle else "field"
         return self._loaded[rel]
 
+    def skin_image(self, asset_id):
+        """A skin picture (nine-patch source) at its own size, or ``None`` when it is missing."""
+        from .menu_icons import icon_source
+
+        source = icon_source(self.project, asset_id)
+        if source is None:
+            return None
+        uri, region = source
+        try:
+            image = self.load_image(uri)
+            if region is not None:
+                image = image.subsurface(self.pg.Rect(region).clip(image.get_rect()))
+        except Exception as exc:  # noqa: BLE001 - pygame.error / a missing file: plain colours
+            if type(exc).__name__ not in ("error", "FileNotFoundError"):
+                raise
+            return None
+        return image
+
+    def skin_font(self, asset_id):
+        """The file path of the skin's font asset, or ``None`` (the built-in font)."""
+        from .menu_icons import icon_source
+
+        source = icon_source(self.project, asset_id) if asset_id else None
+        if source is None:
+            return None
+        try:
+            return str(self.path(source[0]))
+        except Exception:  # noqa: BLE001 - a font that is not there: the built-in one
+            return None
+
     def icon_image(self, icon_id, size=24):
         """The menu icon ``icon_id`` (see ``menu_icons``) scaled to fit ``size`` pixels, or
         None."""
@@ -631,7 +661,23 @@ class PlayableTestRuntime:
         self.screen.blit(surf, rect)
         return rect
 
+    def _skin_theme(self):
+        """The project's battle UI theme (its skin also frames the host's own menus)."""
+        library = self.project.battle_presentation_library
+        ids = library.ids("ui_theme")
+        return (
+            library.require("ui_theme", "default" if "default" in ids else ids[0]) if ids else None
+        )
+
     def panel(self, rect, fill=(13, 17, 28, 220), border=(124, 145, 190)):
+        theme = self._skin_theme()
+        skin = None if theme is None else theme.panel_skin("host:panel")
+        image = None if skin is None else self.skin_image(skin.asset_id)
+        if image is not None:
+            from asteria.presentation.ui_skin import draw_nine_patch
+
+            draw_nine_patch(self.pg, self.screen, image, tuple(int(v) for v in rect), skin)
+            return
         s = self.pg.Surface((rect[2], rect[3]), self.pg.SRCALPHA)
         s.fill(fill)
         self.screen.blit(s, (rect[0], rect[1]))

@@ -318,11 +318,17 @@ class CanonicalBattleAdapter:
             self.host.width / layout.virtual_width, self.host.height / layout.virtual_height
         )
         self._icon_px = max(8, round(8 * scale))  # menu icons are drawn 8 layout units wide
+        theme = self._theme()
         self._ui_backend = PygameBattleUiBackend(
-            self.host.screen, scale=scale, resolve_icon=self._resolve_icon
+            self.host.screen,
+            scale=scale,
+            resolve_icon=self._resolve_icon,
+            resolve_skin=self.host.skin_image,
+            font_name=self.host.skin_font(theme.font_asset_id),
+            font_scale=theme.font_scale,
         )
         self._ui_backend.vfx_drawer = self._draw_vfx
-        self.renderer = BattleUiRenderer(self._ui_backend, self._theme())
+        self.renderer = BattleUiRenderer(self._ui_backend, theme)
         self.textures = PygameTextureDrawer(self.host, self.resolver, scale)
         self.audio_cues.clear()
         self._cursor = self._clock = self._last_impact = 0.0

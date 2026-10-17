@@ -52,6 +52,9 @@ class BattleUiLayoutProfile:
     # front of the others, toward the centre of the stage, instead of behind them
     front_large_zones: tuple = ()
     action_menu_placement: str = "bottom"
+    # row_buttons: every row of a menu gets a panel of its own (roles button, button:selected,
+    # button:disabled) so a skin can draw buttons; off = rows are plain text
+    row_buttons: bool = False
     stage_top: float = 0.0
     stage_front: float = 0.30
 
@@ -870,6 +873,22 @@ class BattleUiComposer:
         else:
             for index, entry in enumerate(menu.entries):
                 selected = index == menu.cursor
+                if L.row_buttons:
+                    button = (
+                        "button:selected"
+                        if selected
+                        else ("button" if entry.enabled else "button:disabled")
+                    )
+                    panels.append(
+                        BattleUiPanel(
+                            f"button:{index}",
+                            x + P.interaction_padding - 3,
+                            ty - 2,
+                            width - 2 * (P.interaction_padding - 3),
+                            P.interaction_row_height,
+                            button,
+                        )
+                    )
                 role = (
                     "action_selected"
                     if selected

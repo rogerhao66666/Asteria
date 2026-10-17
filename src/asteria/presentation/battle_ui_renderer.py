@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .battle_ui import BattleUiFrame
+from .ui_skin import NinePatch, skin_for
 
 Color = tuple[int, int, int, int]
 
@@ -45,8 +46,26 @@ class BattleUiTheme:
     border_width: int = 1
     font_size: int = 10
     headline_font_size: int = 18
+    # skin (all optional): pictures for panels and buttons by role pattern, first match wins
+    # (``hud:*``, ``button:selected``, ``*``), and a font file; without them the colours above
+    # are used
+    panel_skins: tuple = ()
+    font_asset_id: str = ""
+    font_scale: float = 1.0
 
     def __post_init__(self):
+        skins = []
+        for pattern, patch in tuple(self.panel_skins):
+            if not isinstance(patch, NinePatch):
+                patch = NinePatch.from_data(patch)
+            if not str(pattern).strip():
+                raise ValueError("a panel skin needs a role pattern")
+            skins.append((str(pattern).strip(), patch))
+        object.__setattr__(self, "panel_skins", tuple(skins))
+        object.__setattr__(self, "font_asset_id", str(self.font_asset_id or "").strip())
+        if not float(self.font_scale) > 0:
+            raise ValueError("font_scale must be > 0")
+        object.__setattr__(self, "font_scale", float(self.font_scale))
         for field_name in (
             "panel_fill",
             "panel_border",
@@ -76,8 +95,16 @@ class BattleUiTheme:
         if self.font_size <= 0 or self.headline_font_size <= 0:
             raise ValueError("font sizes must be > 0")
 
+    def panel_skin(self, role):
+        """The nine-patch skin of a panel role, or ``None`` (plain colours)."""
+        return skin_for(self.panel_skins, role)
+
     def panel_style(self, role):
         role = str(role)
+        if role.startswith("button"):  # a row of a menu: only the selected one is lit by default
+            if role == "button:selected":
+                return (70, 62, 30, 150), (255, 206, 96, 220)
+            return (0, 0, 0, 0), (0, 0, 0, 0)
         if role == "result":
             return self.result_fill, self.result_border
         if role == "interaction:float":  # see-through list beside the acting member
@@ -178,6 +205,13 @@ class BattleUiTheme:
             "border_width": self.border_width,
             "font_size": self.font_size,
             "headline_font_size": self.headline_font_size,
+            **(
+                {"panel_skins": [[p, n.to_data()] for p, n in self.panel_skins]}
+                if self.panel_skins
+                else {}
+            ),
+            **({"font_asset_id": self.font_asset_id} if self.font_asset_id else {}),
+            **({"font_scale": self.font_scale} if self.font_scale != 1.0 else {}),
         }
 
     @classmethod
@@ -187,6 +221,9 @@ class BattleUiTheme:
         kwargs = dict(data)
         kwargs.pop("schema", None)
         kwargs.pop("version", None)
+        kwargs["panel_skins"] = tuple(
+            (p, NinePatch.from_data(n)) for p, n in kwargs.get("panel_skins", ())
+        )
         return cls(**kwargs)
 
 
@@ -212,9 +249,16 @@ class BattleUiRenderer:
 
         for panel in frame.panels:
             fill, border = t.panel_style(panel.role)
-            b.draw_panel(
-                panel, fill=fill, border=border, radius=t.panel_radius, border_width=t.border_width
-            )
+            style = {
+                "fill": fill,
+                "border": border,
+                "radius": t.panel_radius,
+                "border_width": t.border_width,
+            }
+            skin = t.panel_skin(panel.role)
+            if skin is not None:  # backends without skins never see the argument
+                style["skin"] = skin
+            b.draw_panel(panel, **style)
 
         for gauge in frame.gauges:
             fill = t.gauge_full if gauge.normalized >= 1.0 else t.gauge_fill

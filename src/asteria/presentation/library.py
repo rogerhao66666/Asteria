@@ -289,6 +289,8 @@ class BattlePresentationLibrary:
             data = asdict(value)
             if data.get("stage_front") == 0.30:  # optional: left out at its default
                 data.pop("stage_front")
+            if not data.get("row_buttons"):
+                data.pop("row_buttons", None)
             return data
         return self._plain(value)
 

@@ -132,7 +132,16 @@ class PygameBattleUiBackend:
     drawn crisply at a larger window size.
     """
 
-    def __init__(self, screen, *, resolve_icon=None, font_name=None, scale=1.0):
+    def __init__(
+        self,
+        screen,
+        *,
+        resolve_icon=None,
+        font_name=None,
+        scale=1.0,
+        resolve_skin=None,
+        font_scale=1.0,
+    ):
         try:
             import pygame
         except ImportError as exc:
@@ -140,6 +149,8 @@ class PygameBattleUiBackend:
         self.pg = pygame
         self.screen = screen
         self.resolve_icon = resolve_icon
+        self.resolve_skin = resolve_skin  # asset id -> the picture at its own size, or None
+        self.font_scale = float(font_scale)
         self.font_name = font_name
         self.scale = float(scale)
         if not self.scale > 0:
@@ -161,7 +172,7 @@ class PygameBattleUiBackend:
         return tuple(color[:3])
 
     def _font(self, size):
-        size = max(1, round(float(size) * self.scale))
+        size = max(1, round(float(size) * self.scale * self.font_scale))
         if size not in self._fonts:
             if not self.pg.font.get_init():
                 self.pg.font.init()
@@ -172,8 +183,15 @@ class PygameBattleUiBackend:
         if self.screen is None:
             raise RuntimeError("pygame battle UI screen is not configured")
 
-    def draw_panel(self, panel, *, fill, border, radius, border_width):
+    def draw_panel(self, panel, *, fill, border, radius, border_width, skin=None):
         rect = self._rect(panel.x, panel.y, panel.width, panel.height)
+        if skin is not None and self.resolve_skin is not None:
+            image = self.resolve_skin(skin.asset_id)
+            if image is not None:  # a picture-framed panel; a missing picture falls back below
+                from asteria.presentation.ui_skin import draw_nine_patch
+
+                draw_nine_patch(self.pg, self.screen, image, tuple(rect), skin, scale=self.scale)
+                return
         layer = self.pg.Surface(rect.size, self.pg.SRCALPHA)
         local = layer.get_rect()
         alpha = lambda c: (*self._rgb(c), int(c[3]) if len(c) > 3 else 255)  # noqa: E731
