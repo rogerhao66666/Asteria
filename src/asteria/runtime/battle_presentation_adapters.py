@@ -1093,8 +1093,7 @@ class CanonicalBattleAdapter:
         except KeyError:
             return None
         try:
-            body = self.resolver.sprite_sheet(visual.sprite_sheet_asset_id).frames[0]
-            height = body.height / visual.source_pixels_per_logical_pixel
+            height = self._body_height(visual)
         except (KeyError, BattleVisualError, AttributeError, IndexError):
             height = 32.0
         scale = self.textures.scale if self.textures is not None else 1.0

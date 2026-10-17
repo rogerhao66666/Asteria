@@ -317,15 +317,14 @@ def apply_ui(context):
             dataclasses.replace(
                 theme,
                 panel_skins=(
-                    ("button:selected", NinePatch(path("button_stone.png"), 3, 3, 3, 3, 1.0)),
-                    ("button*", NinePatch(path("button_stone.png"), 3, 3, 3, 3, 1.0)),
+                    # the command menu beside a character stays see-through: no skin for
+                    # "interaction:*" and the rows (their selected row is a soft highlight)
                     ("result", NinePatch(path("panel_wood.png"), 3, 3, 3, 3, 1.0)),
                     ("host:panel", NinePatch(path("panel_stone.png"), 3, 3, 3, 3, 2.0)),
                     ("hud:*", NinePatch(path("panel_stone.png"), 3, 3, 3, 3, 1.0)),
-                    ("interaction:*", NinePatch(path("panel_stone.png"), 3, 3, 3, 3, 1.0)),
                 ),
                 font_asset_id=path("font.ttf"),
-                font_scale=0.8,
+                font_scale=0.62,
             ),
         )
     for key in library.ids("ui_layout"):

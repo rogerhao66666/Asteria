@@ -264,6 +264,7 @@ def test_battle_images_are_released_after_the_battle(battle):
     runtime._present_battle(0.016)
     battle_images = [rel for rel, scope in runtime._image_scope.items() if scope == "battle"]
     assert any("battle/" in rel for rel in battle_images)
+    battle_images = [rel for rel in battle_images if "/lucifer/ui/" not in rel]  # skin: shared
     game = runtime.game
     for enemy in game.active_enemy_ids():
         game.battle.member(enemy).subject.resources.set_current(game.rules.knockout_resource_id, 0)

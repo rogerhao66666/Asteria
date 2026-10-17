@@ -2209,6 +2209,7 @@ def presentation(c):
             stage_front=0.16,
             hidden_zones=("left",),  # like Octopath: enemies show no name, bar or panel
             front_large_zones=("right",),  # a summon stands left of the party, toward the foe
+            menu_over_stage=True,  # the command menu stands beside the acting hero, see-through
             column_size=2,  # four heroes stand two by two: tall sprites do not fit four in a row
         ),
     )

@@ -55,6 +55,9 @@ class BattleUiLayoutProfile:
     # column_size: how many combatants of one side share a column of the stage before the next
     # column starts behind them
     column_size: int = 3
+    # menu_over_stage: the command menu stands right beside the acting member even when it
+    # overlaps others (it is drawn see-through); off = it keeps clear of every enemy
+    menu_over_stage: bool = False
     # row_buttons: every row of a menu gets a panel of its own (roles button, button:selected,
     # button:disabled) so a skin can draw buttons; off = rows are plain text
     row_buttons: bool = False
@@ -748,6 +751,8 @@ class BattleUiComposer:
                 if pos is None:
                     continue
                 if self._stands_right(visual.member_id) and visual.member_id != self._focus:
+                    continue
+                if L.menu_over_stage and visual.member_id != self._focus:
                     continue
                 body = float(self._member_heights.get(visual.member_id, 32.0))
                 half = max(body / 2, 24.0)

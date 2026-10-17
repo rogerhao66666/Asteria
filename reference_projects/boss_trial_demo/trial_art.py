@@ -264,12 +264,12 @@ def hero_and_boss_art(context):
             *extra,
         )
         for name, key, tags, scale, states in (
-            (context.hero_id, "warrior", ("hero",), 0.9, hero_states),
-            ("hero_02", "sorceress", ("hero",), 0.9, hero_states),
-            ("spirit_knight", "skeleton_grunt", ("hero", "summon"), 0.9, hero_states),
+            (context.hero_id, "warrior", ("hero",), 0.62, hero_states),
+            ("hero_02", "sorceress", ("hero",), 0.62, hero_states),
+            ("spirit_knight", "skeleton_grunt", ("hero", "summon"), 0.62, hero_states),
             (context.boss_id, "skeleton_king", ("enemy",), 1.15, enemy_states),
-            ("hero_03", "necromancer", ("hero",), 0.9, hero_states),
-            ("hero_04", "cultist", ("hero",), 0.9, hero_states),
+            ("hero_03", "necromancer", ("hero",), 0.62, hero_states),
+            ("hero_04", "cultist", ("hero",), 0.62, hero_states),
             ("mender_wisp", "skeleton_grunt", ("enemy",), 0.9, enemy_states),
             ("goblin_slinger", "goblin_slinger", ("enemy",), 0.9, enemy_states),
             ("goblin_berserker", "goblin_berserker", ("enemy",), 0.9, enemy_states),
@@ -555,7 +555,7 @@ def prune_unused_art(context):
             profile_id="pet",
             hud_visible=False,
             # about the size of a character; pets stand in their own column (see front_large_zones)
-            transform=dataclasses.replace(wisp.transform, scale_x=0.9, scale_y=0.9),
+            transform=dataclasses.replace(wisp.transform, scale_x=0.62, scale_y=0.62),
         ),
     )
     root = context.root / "playable_assets"

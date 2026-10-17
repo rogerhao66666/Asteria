@@ -66,6 +66,10 @@ def resource_root(tmp_path):
     shutil.copytree(
         REFERENCE_PROJECT / "playable_assets" / "battle", tmp_path / "playable_assets" / "battle"
     )
+    shutil.copytree(  # the Lucifer icons and UI skin the reference project names
+        REFERENCE_PROJECT / "playable_assets" / "lucifer",
+        tmp_path / "playable_assets" / "lucifer",
+    )
     for name in ("fx_heal.png", "item_icons.png"):  # the item / equipment menu icons (AST-07) too
         shutil.copy(
             REFERENCE_PROJECT / "playable_assets" / name, tmp_path / "playable_assets" / name

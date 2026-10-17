@@ -14,6 +14,9 @@ from asteria.core.migration import component_migration
 from asteria.core.serialization import deserialize_component
 from asteria.project_tools import export_game, load_project, package_game, upgrade_project
 
+OLD_PROJECT = (  # a project saved by an older build
+    Path(__file__).resolve().parents[1] / "AsteriaPhase7B_AbilityPassiveDemo.asteria.json"
+)
 REF = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
 
 
@@ -64,7 +67,7 @@ def test_old_component_versions_are_migrated_step_by_step():
 
 def test_upgrade_rewrites_an_old_project_at_the_current_version(tmp_path):
     path = tmp_path / "project.asteria.json"
-    shutil.copy(REF / "project.asteria.json", path)
+    shutil.copy(OLD_PROJECT, path)
     old_version = json.loads(path.read_text())["version"]
     assert old_version < 10
     assert upgrade_project(path) == (old_version, 11)
@@ -72,7 +75,7 @@ def test_upgrade_rewrites_an_old_project_at_the_current_version(tmp_path):
     assert (
         json.loads((tmp_path / "project.asteria.json.bak").read_text())["version"] == old_version
     )
-    assert load_project(path).name == load_project(REF / "project.asteria.json").name
+    assert load_project(path).name == load_project(OLD_PROJECT).name
 
 
 def test_export_copies_every_resource_and_license_notice(tmp_path):

@@ -174,12 +174,18 @@ def simplify_basic_rpg(folder):
     data["scene_event_bindings"] = {}
     data["lifecycle_event_bindings"] = []
     categories = data["battle_presentation_library"]["categories"]
+    old_visuals = categories["combatant_visuals"]
     categories["combatant_visuals"] = {
-        k: v
-        for k, v in categories["combatant_visuals"].items()
-        if k in (hero["actor_id"], "gel_slime", "bone_wraith")
+        k: v for k, v in old_visuals.items() if k in (hero["actor_id"], "gel_slime", "bone_wraith")
     }
+    for enemy in enemies:  # the one monster of the starter: the Lucifer Skeleton Ancient
+        enemy["display_name"] = "Skeleton Ancient"
+        categories["combatant_visuals"][enemy["enemy_id"]] = {
+            **old_visuals["iron_samurai"],
+            "profile_id": enemy["enemy_id"],
+        }
     path.write_text(json.dumps(data, indent=2) + "\n")
+    _skeleton_field_pictures(folder)
     manifest_path = folder / "playable_test_manifest.json"
     manifest = json.loads(manifest_path.read_text())
     manifest["title"] = data["name"]
@@ -208,3 +214,16 @@ def simplify_basic_rpg(folder):
         "There are no jobs to unlock, shields, boost points, pets or crafting dependencies.\n"
     )
     (folder / "README.md").write_text((folder / "START_HERE.md").read_text())
+
+
+def _skeleton_field_pictures(folder):
+    """Both field foes wear the Skeleton Ancient picture (the starter has one monster)."""
+    from PIL import Image
+
+    assets = folder / "playable_assets"
+    source = assets / "field_iron_samurai.png"
+    if not source.is_file():
+        return
+    picture = Image.open(source).convert("RGBA").resize((48, 48), Image.NEAREST)
+    for name in ("field_gel_slime.png", "field_bone_wraith.png"):
+        picture.save(assets / name)

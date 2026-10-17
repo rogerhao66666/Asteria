@@ -46,10 +46,18 @@ def test_icon_sources_atlas_cell_legacy_record_and_plain_path():
         e.icon_id for e in db.equipment.values()
     )
     uri, region = icon_source(project, db.items["ether_leaf"].icon_id)
-    assert uri == "playable_assets/item_icons.png" and region[2:] == (
-        18,
-        18,
-    )  # one cell of the atlas
+    assert uri.startswith("playable_assets/lucifer/icons/") and region is None  # a whole picture
+    from asteria.assets import AssetSource, CanonicalAsset
+
+    project.assets.register(  # one cell of an atlas
+        CanonicalAsset(
+            "icon.cell",
+            "icon",
+            AssetSource("playable_assets/atlas.png", "project", "test"),
+            metadata=(("region", [54, 0, 18, 18]),),
+        )
+    )
+    assert icon_source(project, "icon.cell") == ("playable_assets/atlas.png", (54, 0, 18, 18))
     assert icon_source(project, "playable_assets/fx_heal.png") == (
         "playable_assets/fx_heal.png",
         None,

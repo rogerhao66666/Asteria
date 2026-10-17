@@ -293,6 +293,8 @@ class BattlePresentationLibrary:
                 data.pop("row_buttons", None)
             if data.get("column_size") == 3:
                 data.pop("column_size")
+            if not data.get("menu_over_stage"):
+                data.pop("menu_over_stage", None)
             return data
         return self._plain(value)
 

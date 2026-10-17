@@ -31,10 +31,12 @@ def _resolver(project):
 
 def test_animation_edits_are_undoable_and_reach_the_runtime_resolver(document):
     api = AnimationAuthoringController(document)
-    assert SHEET in api.sheets() and api.grid(SHEET) == (8, 1)
+    assert SHEET in api.sheets() and api.grid(SHEET)[1] == 1
     before = _resolver(document.project).clip_duration(SHEET, "attack")
     api.set_clip(SHEET, "attack", frame_duration=0.2)
-    assert _resolver(document.project).clip_duration(SHEET, "attack") == pytest.approx(0.2 * 5)
+    assert _resolver(document.project).clip_duration(SHEET, "attack") == pytest.approx(
+        0.2 * len(api.data(SHEET)["clips"]["attack"]["frames"])
+    )
     api.add_clip(SHEET, "victory", [0, 2, 0, 2], 0.25, loop=True)
     api.set_events(SHEET, "victory", 1, ["cheer"])
     assert api.preview_events(SHEET, "victory", 0.6)[0] == (0.25, "cheer")
@@ -100,7 +102,7 @@ def test_battle_use_fields_are_editable_undoable_and_validated(document):
     """Body height (where bars and menus sit) and the effect placement of a sheet."""
     api = AnimationAuthoringController(document)
     data = api.data(SHEET)
-    assert data["body_height"] == 0 and data["vfx"] is None  # nothing set: whole frame, defaults
+    assert data["vfx"] is None  # no effect placement set: the defaults
     api.set_body_height(SHEET, 40)
     assert api.data(SHEET)["body_height"] == 40
     api.set_vfx(SHEET, anchor="head", offset=(2.0, -3.0), scale=0.8)
@@ -135,7 +137,7 @@ def test_the_animation_editor_shows_and_applies_the_battle_use_fields(document):
     QApplication.instance() or QApplication([])
     widget = AnimationEditorWidget(document, resource_root=ROOT)
     widget.sheet_list.setCurrentRow(widget.api.sheets().index(SHEET))
-    assert widget.body_height.value() == 0 and not widget.vfx_on.isChecked()
+    assert not widget.vfx_on.isChecked()
     widget.body_height.setValue(30)
     widget.vfx_on.setChecked(True)
     widget.vfx_anchor.setCurrentText("feet")

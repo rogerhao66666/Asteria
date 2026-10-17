@@ -73,6 +73,12 @@ def main():
         kept = (*kept, *lucifer.apply_icons(context))
         lucifer.apply_ui(context)
         lucifer.apply_music(context)
+        sys.path.insert(0, str(REPO / "scripts"))
+        import lucifer_reskin
+
+        lucifer_reskin.paint_background("exterior", (960, 540), road=False, dim=0.45).save(
+            HERE / "playable_assets" / "battle_background.png"
+        )
     content.finalize_names(context)
     content.game_start(context)
     path = HERE / "project.asteria.json"

@@ -98,6 +98,8 @@ def _problems(runtime, rec):
             if _hit(t, b):
                 found.add(("text/block", t[4], mid))
     for a, b in itertools.combinations(panels, 2):
+        if "action_menu" in (a[4], b[4]) and "button:" in a[4] + b[4]:
+            continue  # a menu button is drawn inside its own menu panel
         if _hit(a, b):
             found.add(("panel/panel", a[4], b[4]))
     for p in panels:

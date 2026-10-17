@@ -6343,8 +6343,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.9,
-            "scale_y": 0.9,
+            "scale_x": 0.62,
+            "scale_y": 0.62,
             "z_order": 0
           }
         },
@@ -6442,8 +6442,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.9,
-            "scale_y": 0.9,
+            "scale_x": 0.62,
+            "scale_y": 0.62,
             "z_order": 0
           }
         },
@@ -6541,8 +6541,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.9,
-            "scale_y": 0.9,
+            "scale_x": 0.62,
+            "scale_y": 0.62,
             "z_order": 0
           }
         },
@@ -6640,8 +6640,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.9,
-            "scale_y": 0.9,
+            "scale_x": 0.62,
+            "scale_y": 0.62,
             "z_order": 0
           }
         },
@@ -6782,8 +6782,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.9,
-            "scale_y": 0.9,
+            "scale_x": 0.62,
+            "scale_y": 0.62,
             "z_order": 0
           }
         },
@@ -7094,8 +7094,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.9,
-            "scale_y": 0.9,
+            "scale_x": 0.62,
+            "scale_y": 0.62,
             "z_order": 0
           }
         }
@@ -24134,6 +24134,7 @@
           "hud_panel_width": 108.0,
           "hud_row_height": 10.0,
           "margin": 8.0,
+          "menu_over_stage": true,
           "overhead_zones": [
             "left"
           ],
@@ -24176,7 +24177,7 @@
             255
           ],
           "font_asset_id": "playable_assets/lucifer/ui/font.ttf",
-          "font_scale": 0.8,
+          "font_scale": 0.62,
           "font_size": 10,
           "gauge_fill": [
             94,
@@ -24242,26 +24243,6 @@
           "panel_radius": 4,
           "panel_skins": [
             [
-              "button:selected",
-              {
-                "asset_id": "playable_assets/lucifer/ui/button_stone.png",
-                "bottom": 3,
-                "left": 3,
-                "right": 3,
-                "top": 3
-              }
-            ],
-            [
-              "button*",
-              {
-                "asset_id": "playable_assets/lucifer/ui/button_stone.png",
-                "bottom": 3,
-                "left": 3,
-                "right": 3,
-                "top": 3
-              }
-            ],
-            [
               "result",
               {
                 "asset_id": "playable_assets/lucifer/ui/panel_wood.png",
@@ -24284,16 +24265,6 @@
             ],
             [
               "hud:*",
-              {
-                "asset_id": "playable_assets/lucifer/ui/panel_stone.png",
-                "bottom": 3,
-                "left": 3,
-                "right": 3,
-                "top": 3
-              }
-            ],
-            [
-              "interaction:*",
               {
                 "asset_id": "playable_assets/lucifer/ui/panel_stone.png",
                 "bottom": 3,
@@ -54068,7 +54039,7 @@
     "items": [
       {
         "display_name": "Alchemy Salt",
-        "icon_id": "icon.alchemy_salt",
+        "icon_id": "playable_assets/lucifer/icons/item_alchemy_salt.png",
         "item_id": "alchemy_salt",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54080,7 +54051,7 @@
       },
       {
         "display_name": "Ancient Thread",
-        "icon_id": "icon.ancient_thread",
+        "icon_id": "playable_assets/lucifer/icons/item_ancient_thread.png",
         "item_id": "ancient_thread",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54092,7 +54063,7 @@
       },
       {
         "display_name": "Boss Emblem",
-        "icon_id": "icon.boss_emblem",
+        "icon_id": "playable_assets/lucifer/icons/item_boss_emblem.png",
         "item_id": "boss_emblem",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54160,7 +54131,7 @@
       },
       {
         "display_name": "Ether Leaf",
-        "icon_id": "icon.ether_leaf",
+        "icon_id": "playable_assets/lucifer/icons/item_ether_leaf.png",
         "item_id": "ether_leaf",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54184,7 +54155,7 @@
       },
       {
         "display_name": "Fire Dust",
-        "icon_id": "icon.fire_dust",
+        "icon_id": "playable_assets/lucifer/icons/item_fire_dust.png",
         "item_id": "fire_dust",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54196,7 +54167,7 @@
       },
       {
         "display_name": "Focus Stone",
-        "icon_id": "icon.focus_stone",
+        "icon_id": "playable_assets/lucifer/icons/item_focus_stone.png",
         "item_id": "focus_stone",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54220,7 +54191,7 @@
       },
       {
         "display_name": "Guardian Scale",
-        "icon_id": "icon.guardian_scale",
+        "icon_id": "playable_assets/lucifer/icons/item_guardian_scale.png",
         "item_id": "guardian_scale",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54232,7 +54203,7 @@
       },
       {
         "display_name": "Healing Herb",
-        "icon_id": "icon.healing_herb",
+        "icon_id": "playable_assets/lucifer/icons/item_healing_herb.png",
         "item_id": "healing_herb",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54256,7 +54227,7 @@
       },
       {
         "display_name": "Ice Crystal",
-        "icon_id": "icon.ice_crystal",
+        "icon_id": "playable_assets/lucifer/icons/item_ice_crystal.png",
         "item_id": "ice_crystal",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54268,7 +54239,7 @@
       },
       {
         "display_name": "Iron Ore",
-        "icon_id": "icon.iron_ore",
+        "icon_id": "playable_assets/lucifer/icons/item_iron_ore.png",
         "item_id": "iron_ore",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54280,7 +54251,7 @@
       },
       {
         "display_name": "Moon Shard",
-        "icon_id": "icon.moon_shard",
+        "icon_id": "playable_assets/lucifer/icons/item_moon_shard.png",
         "item_id": "moon_shard",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54302,7 +54273,7 @@
       },
       {
         "display_name": "Phoenix Seed",
-        "icon_id": "icon.phoenix_seed",
+        "icon_id": "playable_assets/lucifer/icons/item_phoenix_seed.png",
         "item_id": "phoenix_seed",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54348,7 +54319,7 @@
       },
       {
         "display_name": "Silver Ore",
-        "icon_id": "icon.silver_ore",
+        "icon_id": "playable_assets/lucifer/icons/item_silver_ore.png",
         "item_id": "silver_ore",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54360,7 +54331,7 @@
       },
       {
         "display_name": "Storm Core",
-        "icon_id": "icon.storm_core",
+        "icon_id": "playable_assets/lucifer/icons/item_storm_core.png",
         "item_id": "storm_core",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54395,7 +54366,7 @@
       },
       {
         "display_name": "Venom Sac",
-        "icon_id": "icon.venom_sac",
+        "icon_id": "playable_assets/lucifer/icons/item_venom_sac.png",
         "item_id": "venom_sac",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54407,7 +54378,7 @@
       },
       {
         "display_name": "Wisp Essence",
-        "icon_id": "icon.wisp_essence",
+        "icon_id": "playable_assets/lucifer/icons/item_wisp_essence.png",
         "item_id": "wisp_essence",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,

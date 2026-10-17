@@ -120,6 +120,50 @@ def renderable_text(pg, font, value, cache):
     )
 
 
+def render_with_fallback(pg, font, value, color, cache, fallback):
+    """``value`` drawn in ``font``; the characters it lacks (a pixel font often has no brackets or
+    percent sign) come from ``fallback(height)``, the built-in face, run by run."""
+    text = str(value)
+    if all(char.isspace() or char_in_font(pg, font, char, cache) for char in text):
+        return font.render(text, True, color)
+    runs = []
+    for char in text:
+        ok = char.isspace() or char_in_font(pg, font, char, cache)
+        if runs and runs[-1][0] == ok:
+            runs[-1][1] += char
+        else:
+            runs.append([ok, char])
+    height = font.get_height()
+    parts = []
+    for ok, chars in runs:
+        face = font if ok else fallback(height)
+        parts.append(
+            face.render(chars if ok else renderable_text(pg, face, chars, cache), True, color)
+        )
+    image = pg.Surface(
+        (sum(p.get_width() for p in parts), max(p.get_height() for p in parts)), pg.SRCALPHA
+    )
+    x = 0
+    for part in parts:
+        image.blit(part, (x, image.get_height() - part.get_height()))
+        x += part.get_width()
+    return image
+
+
+def char_in_font(pg, font, char, cache):
+    """Whether ``font`` draws ``char`` (any character, ASCII included: pixel fonts skip some)."""
+    key = (id(font), "has", char)
+    cached = cache.get(key)
+    if cached is None:
+
+        def pixels(value):
+            return pg.image.tobytes(font.render(value, True, (255, 255, 255)), "RGBA")
+
+        cached = pixels(char) != pixels("\ue000")
+        cache[key] = cached
+    return cached
+
+
 class PygameBattleUiBackend:
     """Concrete pygame-ce adapter for Asteria BattleUiFrame commands.
 
@@ -178,6 +222,12 @@ class PygameBattleUiBackend:
                 self.pg.font.init()
             self._fonts[size] = self.pg.font.Font(self.font_name, size)
         return self._fonts[size]
+
+    def _fallback_font(self, height):
+        key = ("fallback", height)
+        if key not in self._fonts:
+            self._fonts[key] = self.pg.font.Font(None, max(1, round(height * 0.9)))
+        return self._fonts[key]
 
     def begin_battle_ui(self, scene_id):
         if self.screen is None:
@@ -316,7 +366,12 @@ class PygameBattleUiBackend:
     def draw_text(self, text, *, color, size):
         font = self._font(size)
         font = font_for_text(self.pg, font, text.text, self._cjk_fonts, self._s(size))
-        image = font.render(self._renderable(font, text.text), True, self._rgb(color))
+        if self.font_name is None:
+            image = font.render(self._renderable(font, text.text), True, self._rgb(color))
+        else:  # a skin's own face: the built-in one fills in what it cannot draw
+            image = render_with_fallback(
+                self.pg, font, text.text, self._rgb(color), self._glyph_cache, self._fallback_font
+            )
         x, y = self._s(text.x), self._s(text.y)
         if text.align == "center":
             x -= image.get_width() // 2

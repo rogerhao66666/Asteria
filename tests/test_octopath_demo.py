@@ -861,6 +861,8 @@ def test_no_information_covers_other_information_on_the_battle_screen(encounter,
         names = list(panels)
         for i, a in enumerate(names):  # the party list, the turn bar and the menu are apart
             for b in names[i + 1 :]:
+                if "action_menu" in (a, b) and (a + b).count("button:"):
+                    continue  # a menu button sits inside its own menu panel
                 assert not _overlaps(panels[a], panels[b]), (encounter_id, step, a, b)
         for member_id, rect in members.items():
             idle_ally = (

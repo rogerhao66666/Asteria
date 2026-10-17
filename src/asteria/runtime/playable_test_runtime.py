@@ -242,9 +242,10 @@ class PlayableTestRuntime:
         if source is None:
             return None
         try:
-            return str(self.path(source[0]))
+            path = Path(self.path(source[0]))
         except Exception:  # noqa: BLE001 - a font that is not there: the built-in one
             return None
+        return str(path) if path.is_file() else None
 
     def icon_image(self, icon_id, size=24):
         """The menu icon ``icon_id`` (see ``menu_icons``) scaled to fit ``size`` pixels, or
