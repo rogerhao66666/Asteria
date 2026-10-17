@@ -7,6 +7,30 @@ import json
 import shutil
 from pathlib import Path
 
+# Boulder pieces of the overworld atlas (tiles 29-34 and 40-42). Each is a fragment of a bigger
+# rock, so on the grass they read as stray grey blocks; the starter map leaves them out.
+ROCK_TILES = frozenset({29, 30, 31, 32, 33, 34, 40, 41, 42})
+
+
+def remove_rocks(map_path):
+    """Clear the rock fragments (and any blocking tile under them) from a saved tile map."""
+    path = Path(map_path)
+    data = json.loads(path.read_text())
+    cleared = {}
+    for layer in data["layers"]:
+        for chunk in layer["chunks"]:
+            for index, tile in enumerate(chunk["tiles"]):
+                if tile in ROCK_TILES:
+                    chunk["tiles"][index] = -1
+                    cleared.setdefault((chunk["chunk_x"], chunk["chunk_y"]), set()).add(index)
+    for layer in data["layers"]:
+        if not layer.get("collision_enabled"):
+            continue
+        for chunk in layer["chunks"]:
+            for index in cleared.get((chunk["chunk_x"], chunk["chunk_y"]), ()):
+                chunk["tiles"][index] = -1
+    path.write_text(json.dumps(data, indent=2) + "\n")
+
 
 def add_editable_field(folder, source):
     folder, source = Path(folder), Path(source)
@@ -14,6 +38,7 @@ def add_editable_field(folder, source):
     project = json.loads(path.read_text())
     donor = json.loads((source / "project.asteria.json").read_text())
     shutil.copytree(source / "playable_assets", folder / "editable_map_assets")
+    remove_rocks(folder / "editable_map_assets" / "field_map.json")
     for asset in donor["assets"]["assets"]:
         asset["source_path"] = asset["source_path"].replace(
             "playable_assets/", "editable_map_assets/", 1

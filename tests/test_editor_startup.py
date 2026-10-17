@@ -85,3 +85,40 @@ def test_the_left_panel_always_opens_on_project(tmp_path):
         assert second.current_left_tab() == "ProjectSceneDock"  # not remembered
     finally:
         second.close()
+
+
+def test_the_starter_map_has_no_stray_rock_fragments(tmp_path):
+    import json
+
+    from asteria.editor.basic_rpg_map import ROCK_TILES
+    from asteria.editor.project_templates import create_from_template
+
+    folder = tmp_path / "Starter"
+    create_from_template("basic_rpg", "Basic RPG", folder)
+    data = json.loads((folder / "editable_map_assets" / "field_map.json").read_text())
+    used = {t for layer in data["layers"] for c in layer["chunks"] for t in c["tiles"]}
+    assert not used & ROCK_TILES
+
+
+def test_a_scene_opens_with_room_around_the_game_camera():
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.core import Entity, Scene, Transform
+    from asteria.editor import EditorDocument
+    from asteria.editor.viewport_widget import SceneViewportWidget
+    from asteria.project import Project
+    from asteria.runtime import Camera2DComponent
+
+    QApplication.instance() or QApplication([])
+    project = Project("Game")
+    scene = project.add_scene(Scene("Field"))
+    entity = scene.add_entity(Entity("Camera"))
+    entity.add_component(Transform(0, 0))
+    spec = entity.add_component(Camera2DComponent())
+    spec.width, spec.height = 480, 270
+    viewport = SceneViewportWidget(EditorDocument(project))
+    viewport.resize(1000, 600)
+    assert viewport.frame_game_camera()
+    tight = viewport.camera.zoom
+    assert viewport.frame_initial()
+    assert viewport.camera.zoom < tight * 0.7

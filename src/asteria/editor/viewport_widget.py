@@ -238,7 +238,50 @@ class SceneViewportWidget(QWidget):
 
     def frame_initial(self):
         """The view a scene opens with: the active game camera's frame, else every entity."""
-        return self.frame_game_camera() or self.frame_entities()
+        if self.frame_game_camera(context=0.4):
+            self._keep_map_in_view()
+            return True
+        return self.frame_entities()
+
+    def _map_rect(self):
+        """World rectangle the scene's tile map covers, or None without one."""
+        source = getattr(self, "render_source", None)
+        tilemap = getattr(source, "tilemap", None)
+        if tilemap is None:
+            return None
+        cells = [
+            (cx, cy)
+            for layer in tilemap.layers
+            for (cx, cy), chunk in layer.chunks.items()
+            if any(t >= 0 for t in chunk.tiles)
+        ]
+        if not cells:
+            return None
+        width, height = (
+            tilemap.chunk_width * tilemap.tile_width,
+            tilemap.chunk_height * (tilemap.tile_height),
+        )
+        left = source.origin_x + min(c[0] for c in cells) * width
+        top = source.origin_y + min(c[1] for c in cells) * height
+        right = source.origin_x + (max(c[0] for c in cells) + 1) * width
+        bottom = source.origin_y + (max(c[1] for c in cells) + 1) * height
+        return left, top, right, bottom
+
+    def _keep_map_in_view(self):
+        """Slide the opening view so it shows map, not the empty void beside it (where the map
+        is large enough to fill the view)."""
+        rect = self._map_rect()
+        if rect is None:
+            return
+        zoom = self.camera.zoom
+        for axis, size in (("pan_x", self.width()), ("pan_y", self.height())):
+            low, high = (rect[0], rect[2]) if axis == "pan_x" else (rect[1], rect[3])
+            if (high - low) * zoom < size:
+                continue
+            pan = getattr(self.camera, axis)
+            pan = min(-low * zoom, max(size - high * zoom, pan))
+            setattr(self.camera, axis, pan)
+        self.update()
 
     def frame_entities(self):
         """Centre the view on all the scene's entities (zoomed out to fit when they spread wider
@@ -272,7 +315,9 @@ class SceneViewportWidget(QWidget):
         ):  # the view still shows what framing chose (nobody panned or zoomed): keep it centred
             self.frame_entities()
 
-    def frame_game_camera(self):
+    def frame_game_camera(self, context=1.0):
+        """Fit the active game camera's frame; ``context`` < 1 leaves room around it (a scene
+        opens showing the frame at about that share of the view, the map around it visible)."""
         scene = self.current_scene()
         if scene is None:
             return False
@@ -298,6 +343,7 @@ class SceneViewportWidget(QWidget):
             max(1.0, self.width() - margin * 2) / world_width,
             max(1.0, self.height() - margin * 2) / world_height,
         )
+        fit_zoom *= max(0.1, float(context))
         self.camera.zoom = max(self.camera.min_zoom, min(self.camera.max_zoom, fit_zoom))
         center_x = world_x + world_width / 2
         center_y = world_y + world_height / 2
