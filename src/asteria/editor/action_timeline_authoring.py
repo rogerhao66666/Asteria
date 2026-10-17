@@ -82,6 +82,17 @@ class ActionTimelineController:
         return tuple(self.get(sequence_id).beats)
 
     # -- validation ------------------------------------------------------------------
+    def animation_cues(self):
+        """What an animation beat can play: the basic roles plus every visual state the
+        project's combatant profiles define (a character with three attacks, a transform)."""
+        cues = list(ROLES)
+        library = self.document.project.battle_presentation_library
+        for profile_id in library.ids("combatant_visuals"):
+            for state in library.require("combatant_visuals", profile_id).states:
+                if state.state_id not in cues:
+                    cues.append(state.state_id)
+        return tuple(cues)
+
     def known_vfx(self):
         return tuple(
             sorted(
@@ -98,8 +109,8 @@ class ActionTimelineController:
             where = f"{sequence.sequence_id}.{beat.beat_id}"
             if beat.channel not in CHANNELS:
                 found.append(f"{where}: unknown channel {beat.channel}")
-            if beat.channel == "animation" and beat.cue not in ROLES:
-                found.append(f"{where}: animation cue must be one of {ROLES}")
+            if beat.channel == "animation" and beat.cue not in self.animation_cues():
+                found.append(f"{where}: animation cue must be one of {self.animation_cues()}")
             if beat.channel == "timing" and beat.cue not in TIMING_CUES:
                 found.append(f"{where}: timing cue must be one of {TIMING_CUES}")
             if beat.channel == "motion_fx" and beat.cue not in MOTION_FX_CUES:

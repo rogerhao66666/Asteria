@@ -24,7 +24,6 @@ from PySide6.QtWidgets import (
 
 from .action_timeline_authoring import (
     CHANNELS,
-    ROLES,
     TARGETS,
     ActionTimelineController,
     ActionTimelineError,
@@ -284,7 +283,7 @@ class ActionTimelineWidget(QWidget):
 
     def _channel_changed(self, channel):
         suggestions = {
-            "animation": ROLES,
+            "animation": self.api.animation_cues(),
             "vfx": self.api.known_vfx(),
             "audio": ("hit", "heal", "confirm"),
             "camera": ("shake",),

@@ -2075,6 +2075,35 @@ MELEE_TAGS = tuple(f"weapon.{k}" for k in ("sword", "axe", "dagger", "spear"))
 MELEE_MOVES = {"w_combo", "w_charge", "w_poison"}
 
 
+HEAVY_WORDS = ("slam", "cleave", "crush", "hammer", "bash", "charge", "strike", "smash", "bulwark")
+
+
+def _attack_clip(ability_id, definition):
+    """Which of a character's three attack animations a skill plays: the plain swing, the heavy
+    slash, or the many-armed spin / leap for multi-hit and divine skills."""
+    if "magic" in definition.tags and "divine" not in definition.tags:
+        return "attack"
+    hits = len(definition.hits or ())
+    if hits >= 3 or "divine" in definition.tags:
+        return "attack3"
+    if "weapon.axe" in definition.tags or any(w in ability_id for w in HEAVY_WORDS):
+        return "attack2"
+    return "attack"
+
+
+def _apply_attack_clip(beats, ability_id, definition):
+    """The user's animation beat plays the skill's own attack clip (Lucifer sheets have three)."""
+    clip = _attack_clip(ability_id, definition)
+    if clip == "attack" or ability_id in SELF_TARGETED:
+        return beats
+    return tuple(
+        dataclasses.replace(b, cue=clip)
+        if b.channel == "animation" and b.cue == "attack" and b.member_id == "@source"
+        else b
+        for b in beats
+    )
+
+
 def _apply_lunge(beats, ability_id, definition):
     """Melee skills step up to the foe, strike and step back (the ``move`` channel)."""
     from asteria.presentation.battle_motion_sequence import BattleMotionBeat
@@ -2156,6 +2185,7 @@ def presentation(c):
             )
         beats = _apply_fx(beats, ability_id, definition, source)
         beats = _apply_lunge(beats, ability_id, definition)
+        beats = _apply_attack_clip(beats, ability_id, definition)
         sequences.set("motion_sequences", ability_id, dataclasses.replace(base, beats=beats))
     layout = sequences.require("ui_layout", "adaptive")
     sequences.set(

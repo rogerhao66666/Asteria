@@ -253,6 +253,34 @@ def hero_and_boss_art(context):
 
     roles = {"idle", "attack", "cast", "guard", "hit", "ko", "revive", "status", "transform"}
     hero_states = tuple(s for s in default_jrpg_visual_states() if s.state_id in roles)
+    import trial_content
+    import trial_lucifer as lucifer
+
+    if lucifer.available():
+        extra = tuple(BattleVisualStateDefinition(r, r) for r in lucifer.EXTRA_STATES)
+        hero_states = (*hero_states, *extra)
+        enemy_states = (
+            *(BattleVisualStateDefinition(r, r) for r in ("idle", "attack", "cast", "hit", "ko")),
+            *extra,
+        )
+        for name, key, tags, scale, states in (
+            (context.hero_id, "warrior", ("hero",), 0.9, hero_states),
+            ("hero_02", "sorceress", ("hero",), 0.9, hero_states),
+            ("spirit_knight", "skeleton_grunt", ("hero", "summon"), 0.9, hero_states),
+            (context.boss_id, "skeleton_king", ("enemy",), 1.15, enemy_states),
+            ("mender_wisp", "goblin_slinger", ("enemy",), 0.9, enemy_states),
+        ):
+            image, frame, clips, body = lucifer.character_sheet(key)
+            register(
+                name, image, frame, clips, tags, scale, states, body if "enemy" in tags else None
+            )
+        lucifer.field_sheet("warrior").save(out_dir / "player_field_sheet.png")
+        lucifer.npc_picture("skeleton_king", size=64).save(out_dir / "boss_field.png")
+        for name in trial_content.SERVICES:
+            lucifer.npc_picture(lucifer.NPC_CAST.get(name, "cultist")).save(
+                out_dir / f"npc_{_slug(name)}.png"
+            )
+        return
     image, frame, clips = ninja_sheet()
     register(context.hero_id, image, frame, clips, ("hero",), 0.9, hero_states)
     # Mira: the same animated ninja turned violet, same frame size so she stands in the same column
@@ -272,8 +300,6 @@ def hero_and_boss_art(context):
     field_frame.resize(
         (round(field_frame.width * side), round(field_frame.height * side)), 0
     ).save(out_dir / "boss_field.png")
-    import trial_content
-
     npc_sprites(out_dir, trial_content.SERVICES)
     ninja_field_sheet().save(out_dir / "player_field_sheet.png")
 
@@ -458,6 +484,18 @@ def write_credits(root):
         "| `battle/hero_01.png` … `battle/hero_12.png`",
     )
     text = "\n".join(x for x in text.split("\n") if not x.startswith(stale))
+    import trial_lucifer
+
+    if trial_lucifer.available():
+        rows = [
+            r
+            for r in rows
+            if not r.startswith("| `battle/hero_0") and not r.startswith("| `battle/crimson")
+        ]
+        rows += trial_lucifer.credits_rows(
+            ("warrior", "sorceress", "skeleton_grunt", "skeleton_king", "goblin_slinger")
+        )
+        rows += trial_lucifer.credits_extra()
     rows.append(
         "| `battle/mender_wisp.png` (the boss's helper) | "
         f"{ninja} - `Actor/Monster/Flam`, cropped and scaled | Pixel-boy, AAA | {cc0} |"
@@ -493,7 +531,7 @@ def prune_unused_art(context):
             profile_id="pet",
             hud_visible=False,
             # about the size of a character; pets stand in their own column (see front_large_zones)
-            transform=dataclasses.replace(wisp.transform, scale_x=0.55, scale_y=0.55),
+            transform=dataclasses.replace(wisp.transform, scale_x=0.9, scale_y=0.9),
         ),
     )
     root = context.root / "playable_assets"

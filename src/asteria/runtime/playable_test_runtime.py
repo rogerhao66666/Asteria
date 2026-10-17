@@ -234,7 +234,11 @@ class PlayableTestRuntime:
         """The file path of the skin's font asset, or ``None`` (the built-in font)."""
         from .menu_icons import icon_source
 
-        source = icon_source(self.project, asset_id) if asset_id else None
+        if not asset_id:
+            return None
+        source = icon_source(self.project, asset_id) or (
+            (str(asset_id), None) if str(asset_id).lower().endswith((".ttf", ".otf")) else None
+        )
         if source is None:
             return None
         try:

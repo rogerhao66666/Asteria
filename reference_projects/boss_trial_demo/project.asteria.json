@@ -11,87 +11,135 @@
             {
               "attack": {
                 "events": {
-                  "1": [
+                  "3": [
                     "hit"
                   ]
                 },
-                "frame_duration": 0.1,
+                "frame_duration": 0.085,
                 "frames": [
-                  4,
                   5,
                   6,
                   7,
-                  0
+                  8,
+                  9,
+                  10
+                ],
+                "loop": false
+              },
+              "attack2": {
+                "events": {
+                  "3": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.085,
+                "frames": [
+                  11,
+                  12,
+                  13,
+                  14,
+                  15,
+                  16
+                ],
+                "loop": false
+              },
+              "attack3": {
+                "events": {
+                  "3": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  17,
+                  18,
+                  19,
+                  20,
+                  21
                 ],
                 "loop": false
               },
               "cast": {
-                "frame_duration": 0.14,
+                "frame_duration": 0.1,
                 "frames": [
-                  12,
-                  13,
-                  13,
-                  12
+                  22,
+                  23,
+                  24,
+                  25,
+                  26,
+                  27
                 ],
                 "loop": false
               },
               "guard": {
                 "frame_duration": 0.3,
                 "frames": [
-                  12
+                  0
                 ],
                 "loop": true
               },
               "hit": {
                 "frame_duration": 0.08,
                 "frames": [
-                  8,
-                  9,
-                  8
+                  28,
+                  29,
+                  30,
+                  31
                 ],
                 "loop": false
               },
               "idle": {
-                "frame_duration": 0.2,
+                "frame_duration": 0.18,
                 "frames": [
                   0,
                   1,
                   2,
-                  3
+                  3,
+                  4
                 ],
                 "loop": true
               },
               "ko": {
-                "frame_duration": 0.5,
+                "frame_duration": 0.12,
                 "frames": [
-                  11
+                  32,
+                  33,
+                  34,
+                  35,
+                  36
                 ],
                 "loop": false
               },
               "revive": {
-                "frame_duration": 0.2,
+                "frame_duration": 0.1,
                 "frames": [
-                  11,
-                  10,
-                  0
+                  37,
+                  38,
+                  39,
+                  40,
+                  41
                 ],
                 "loop": false
               },
               "status": {
-                "frame_duration": 0.25,
+                "frame_duration": 0.18,
                 "frames": [
                   0,
-                  1
+                  1,
+                  2,
+                  3,
+                  4
                 ],
                 "loop": true
               },
               "transform": {
                 "frame_duration": 0.1,
                 "frames": [
-                  14,
-                  15,
-                  16,
-                  0
+                  42,
+                  43,
+                  44,
+                  45,
+                  46
                 ],
                 "loop": false
               }
@@ -100,8 +148,8 @@
           [
             "frame_size",
             [
-              76,
-              58
+              96,
+              86
             ]
           ],
           [
@@ -142,87 +190,149 @@
             {
               "attack": {
                 "events": {
-                  "1": [
+                  "3": [
                     "hit"
                   ]
                 },
-                "frame_duration": 0.1,
+                "frame_duration": 0.085,
                 "frames": [
-                  4,
-                  5,
                   6,
                   7,
-                  0
+                  8,
+                  9,
+                  10
+                ],
+                "loop": false
+              },
+              "attack2": {
+                "events": {
+                  "4": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.085,
+                "frames": [
+                  11,
+                  12,
+                  13,
+                  14,
+                  15,
+                  16,
+                  17
+                ],
+                "loop": false
+              },
+              "attack3": {
+                "events": {
+                  "4": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  18,
+                  19,
+                  20,
+                  21,
+                  22,
+                  23,
+                  24
                 ],
                 "loop": false
               },
               "cast": {
-                "frame_duration": 0.14,
+                "frame_duration": 0.1,
                 "frames": [
-                  12,
-                  13,
-                  13,
-                  12
+                  25,
+                  26,
+                  27,
+                  28,
+                  29,
+                  30,
+                  31
                 ],
                 "loop": false
               },
               "guard": {
                 "frame_duration": 0.3,
                 "frames": [
-                  12
+                  0
                 ],
                 "loop": true
               },
               "hit": {
                 "frame_duration": 0.08,
                 "frames": [
-                  8,
-                  9,
-                  8
+                  32,
+                  33,
+                  34,
+                  35
                 ],
                 "loop": false
               },
               "idle": {
-                "frame_duration": 0.2,
+                "frame_duration": 0.18,
                 "frames": [
                   0,
                   1,
                   2,
-                  3
+                  3,
+                  4,
+                  5
                 ],
                 "loop": true
               },
               "ko": {
-                "frame_duration": 0.5,
+                "frame_duration": 0.12,
                 "frames": [
-                  11
+                  36,
+                  37,
+                  38,
+                  39,
+                  40,
+                  41,
+                  42,
+                  43,
+                  44,
+                  45
                 ],
                 "loop": false
               },
               "revive": {
-                "frame_duration": 0.2,
+                "frame_duration": 0.1,
                 "frames": [
-                  11,
-                  10,
-                  0
+                  46,
+                  47,
+                  48,
+                  49,
+                  50,
+                  51,
+                  52,
+                  53,
+                  54,
+                  55
                 ],
                 "loop": false
               },
               "status": {
-                "frame_duration": 0.25,
+                "frame_duration": 0.18,
                 "frames": [
                   0,
-                  1
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
                 ],
                 "loop": true
               },
               "transform": {
                 "frame_duration": 0.1,
                 "frames": [
-                  14,
-                  15,
-                  16,
-                  0
+                  56,
+                  57,
+                  58,
+                  59
                 ],
                 "loop": false
               }
@@ -231,8 +341,8 @@
           [
             "frame_size",
             [
-              76,
-              58
+              84,
+              86
             ]
           ],
           [
@@ -273,44 +383,190 @@
             {
               "attack": {
                 "events": {
-                  "2": [
+                  "12": [
                     "hit"
                   ]
                 },
-                "frame_duration": 0.07,
+                "frame_duration": 0.085,
+                "frames": [
+                  6,
+                  7,
+                  8,
+                  9,
+                  10,
+                  11,
+                  12,
+                  13,
+                  14,
+                  15,
+                  16,
+                  17,
+                  18,
+                  19,
+                  20,
+                  21,
+                  22,
+                  23,
+                  24,
+                  25,
+                  26
+                ],
+                "loop": false
+              },
+              "attack2": {
+                "events": {
+                  "12": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.085,
+                "frames": [
+                  27,
+                  28,
+                  29,
+                  30,
+                  31,
+                  32,
+                  33,
+                  34,
+                  35,
+                  36,
+                  37,
+                  38,
+                  39,
+                  40,
+                  41,
+                  42,
+                  43,
+                  44,
+                  45,
+                  46,
+                  47
+                ],
+                "loop": false
+              },
+              "attack3": {
+                "events": {
+                  "12": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  48,
+                  49,
+                  50,
+                  51,
+                  52,
+                  53,
+                  54,
+                  55,
+                  56,
+                  57,
+                  58,
+                  59,
+                  60,
+                  61,
+                  62,
+                  63,
+                  64,
+                  65,
+                  66,
+                  67,
+                  68
+                ],
+                "loop": false
+              },
+              "cast": {
+                "frame_duration": 0.1,
+                "frames": [
+                  69,
+                  70,
+                  71,
+                  72,
+                  73,
+                  74
+                ],
+                "loop": false
+              },
+              "guard": {
+                "frame_duration": 0.3,
+                "frames": [
+                  0
+                ],
+                "loop": true
+              },
+              "hit": {
+                "frame_duration": 0.08,
+                "frames": [
+                  75,
+                  76,
+                  77,
+                  78
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.18,
                 "frames": [
                   0,
                   1,
                   2,
                   3,
-                  0
-                ],
-                "loop": false
-              },
-              "hit": {
-                "frame_duration": 0.07,
-                "frames": [
                   4,
-                  0,
-                  4,
-                  0
-                ],
-                "loop": false
-              },
-              "idle": {
-                "frame_duration": 0.16,
-                "frames": [
-                  0,
-                  1,
-                  2,
-                  3
+                  5
                 ],
                 "loop": true
               },
               "ko": {
-                "frame_duration": 0.5,
+                "frame_duration": 0.12,
                 "frames": [
+                  79,
+                  80,
+                  81,
+                  82,
+                  83,
+                  84,
+                  85,
+                  86,
+                  87
+                ],
+                "loop": false
+              },
+              "revive": {
+                "frame_duration": 0.1,
+                "frames": [
+                  88,
+                  89,
+                  90,
+                  91,
+                  92,
+                  93,
+                  94,
+                  95,
+                  96
+                ],
+                "loop": false
+              },
+              "status": {
+                "frame_duration": 0.18,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
                   5
+                ],
+                "loop": true
+              },
+              "transform": {
+                "frame_duration": 0.1,
+                "frames": [
+                  97,
+                  98,
+                  99,
+                  100
                 ],
                 "loop": false
               }
@@ -319,8 +575,8 @@
           [
             "frame_size",
             [
-              64,
-              64
+              96,
+              76
             ]
           ],
           [
@@ -329,6 +585,10 @@
               0.5,
               1.0
             ]
+          ],
+          [
+            "body_height",
+            60
           ]
         ],
         "source": {
@@ -1832,87 +2092,149 @@
             {
               "attack": {
                 "events": {
-                  "1": [
+                  "4": [
                     "hit"
                   ]
                 },
-                "frame_duration": 0.1,
+                "frame_duration": 0.085,
                 "frames": [
-                  4,
-                  5,
                   6,
                   7,
-                  0
+                  8,
+                  9,
+                  10,
+                  11,
+                  12,
+                  13
+                ],
+                "loop": false
+              },
+              "attack2": {
+                "events": {
+                  "4": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.085,
+                "frames": [
+                  14,
+                  15,
+                  16,
+                  17,
+                  18,
+                  19,
+                  20,
+                  21
+                ],
+                "loop": false
+              },
+              "attack3": {
+                "events": {
+                  "4": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  22,
+                  23,
+                  24,
+                  25,
+                  26,
+                  27,
+                  28,
+                  29
                 ],
                 "loop": false
               },
               "cast": {
-                "frame_duration": 0.14,
+                "frame_duration": 0.1,
                 "frames": [
-                  12,
-                  13,
-                  13,
-                  12
+                  30,
+                  31,
+                  32,
+                  33,
+                  34,
+                  35
                 ],
                 "loop": false
               },
               "guard": {
                 "frame_duration": 0.3,
                 "frames": [
-                  12
+                  0
                 ],
                 "loop": true
               },
               "hit": {
                 "frame_duration": 0.08,
                 "frames": [
-                  8,
-                  9,
-                  8
+                  36,
+                  37,
+                  38,
+                  39
                 ],
                 "loop": false
               },
               "idle": {
-                "frame_duration": 0.2,
+                "frame_duration": 0.18,
                 "frames": [
                   0,
                   1,
                   2,
-                  3
+                  3,
+                  4,
+                  5
                 ],
                 "loop": true
               },
               "ko": {
-                "frame_duration": 0.5,
+                "frame_duration": 0.12,
                 "frames": [
-                  11
+                  40,
+                  41,
+                  42,
+                  43,
+                  44,
+                  45,
+                  46,
+                  47
                 ],
                 "loop": false
               },
               "revive": {
-                "frame_duration": 0.2,
+                "frame_duration": 0.1,
                 "frames": [
-                  11,
-                  10,
-                  0
+                  48,
+                  49,
+                  50,
+                  51,
+                  52,
+                  53,
+                  54,
+                  55
                 ],
                 "loop": false
               },
               "status": {
-                "frame_duration": 0.25,
+                "frame_duration": 0.18,
                 "frames": [
                   0,
-                  1
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
                 ],
                 "loop": true
               },
               "transform": {
                 "frame_duration": 0.1,
                 "frames": [
-                  14,
-                  15,
-                  16,
-                  0
+                  56,
+                  57,
+                  58,
+                  59
                 ],
                 "loop": false
               }
@@ -1921,8 +2243,8 @@
           [
             "frame_size",
             [
-              76,
-              58
+              84,
+              86
             ]
           ],
           [
@@ -1964,43 +2286,92 @@
             {
               "attack": {
                 "events": {
-                  "2": [
+                  "6": [
                     "hit"
                   ]
                 },
-                "frame_duration": 0.09,
+                "frame_duration": 0.085,
                 "frames": [
                   6,
                   7,
                   8,
                   9,
-                  0
-                ],
-                "loop": false
-              },
-              "cast": {
-                "frame_duration": 0.1,
-                "frames": [
                   10,
                   11,
                   12,
-                  10,
-                  11,
-                  12
-                ],
-                "loop": false
-              },
-              "hit": {
-                "frame_duration": 0.09,
-                "frames": [
                   13,
                   14,
                   15
                 ],
                 "loop": false
               },
+              "attack2": {
+                "events": {
+                  "2": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.085,
+                "frames": [
+                  16,
+                  17,
+                  18,
+                  19
+                ],
+                "loop": false
+              },
+              "attack3": {
+                "events": {
+                  "7": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  20,
+                  21,
+                  22,
+                  23,
+                  24,
+                  25,
+                  26,
+                  27,
+                  28,
+                  29,
+                  30,
+                  31
+                ],
+                "loop": false
+              },
+              "cast": {
+                "frame_duration": 0.1,
+                "frames": [
+                  32,
+                  33,
+                  34,
+                  35
+                ],
+                "loop": false
+              },
+              "guard": {
+                "frame_duration": 0.3,
+                "frames": [
+                  0
+                ],
+                "loop": true
+              },
+              "hit": {
+                "frame_duration": 0.08,
+                "frames": [
+                  36,
+                  37,
+                  38,
+                  39
+                ],
+                "loop": false
+              },
               "idle": {
-                "frame_duration": 0.14,
+                "frame_duration": 0.18,
                 "frames": [
                   0,
                   1,
@@ -2012,9 +2383,64 @@
                 "loop": true
               },
               "ko": {
-                "frame_duration": 0.5,
+                "frame_duration": 0.12,
                 "frames": [
-                  16
+                  40,
+                  41,
+                  42,
+                  43,
+                  44,
+                  45,
+                  46,
+                  47,
+                  48,
+                  49,
+                  50,
+                  51,
+                  52
+                ],
+                "loop": false
+              },
+              "revive": {
+                "frame_duration": 0.1,
+                "frames": [
+                  53,
+                  54,
+                  55,
+                  56,
+                  57,
+                  58,
+                  59,
+                  60,
+                  61,
+                  62,
+                  63,
+                  64,
+                  65
+                ],
+                "loop": false
+              },
+              "status": {
+                "frame_duration": 0.18,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
+                ],
+                "loop": true
+              },
+              "transform": {
+                "frame_duration": 0.1,
+                "frames": [
+                  66,
+                  67,
+                  68,
+                  69,
+                  70,
+                  71
                 ],
                 "loop": false
               }
@@ -2023,8 +2449,8 @@
           [
             "frame_size",
             [
-              192,
-              192
+              140,
+              194
             ]
           ],
           [
@@ -2036,7 +2462,7 @@
           ],
           [
             "body_height",
-            78
+            66
           ]
         ],
         "source": {
@@ -3340,6 +3766,20 @@
               "persistent": false,
               "priority": 0,
               "state_id": "ko"
+            },
+            {
+              "clip_role": "attack2",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack2"
+            },
+            {
+              "clip_role": "attack3",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack3"
             }
           ],
           "transform": {
@@ -3347,8 +3787,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.9,
-            "scale_y": 0.9,
+            "scale_x": 1.15,
+            "scale_y": 1.15,
             "z_order": 0
           }
         },
@@ -3425,6 +3865,20 @@
               "persistent": false,
               "priority": 0,
               "state_id": "transform"
+            },
+            {
+              "clip_role": "attack2",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack2"
+            },
+            {
+              "clip_role": "attack3",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack3"
             }
           ],
           "transform": {
@@ -3510,6 +3964,20 @@
               "persistent": false,
               "priority": 0,
               "state_id": "transform"
+            },
+            {
+              "clip_role": "attack2",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack2"
+            },
+            {
+              "clip_role": "attack3",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack3"
             }
           ],
           "transform": {
@@ -3530,7 +3998,7 @@
             "small_portrait_asset_id": null
           },
           "battlefield_visible": true,
-          "hud_visible": true,
+          "hud_visible": false,
           "profile_id": "mender_wisp",
           "states": [
             {
@@ -3548,6 +4016,13 @@
               "state_id": "attack"
             },
             {
+              "clip_role": "cast",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "cast"
+            },
+            {
               "clip_role": "hit",
               "fallback_state_id": "idle",
               "persistent": false,
@@ -3560,6 +4035,20 @@
               "persistent": false,
               "priority": 0,
               "state_id": "ko"
+            },
+            {
+              "clip_role": "attack2",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack2"
+            },
+            {
+              "clip_role": "attack3",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack3"
             }
           ],
           "transform": {
@@ -3567,8 +4056,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.5,
-            "scale_y": 0.5,
+            "scale_x": 0.9,
+            "scale_y": 0.9,
             "z_order": 0
           }
         },
@@ -3598,6 +4087,13 @@
               "state_id": "attack"
             },
             {
+              "clip_role": "cast",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "cast"
+            },
+            {
               "clip_role": "hit",
               "fallback_state_id": "idle",
               "persistent": false,
@@ -3610,6 +4106,20 @@
               "persistent": false,
               "priority": 0,
               "state_id": "ko"
+            },
+            {
+              "clip_role": "attack2",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack2"
+            },
+            {
+              "clip_role": "attack3",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack3"
             }
           ],
           "transform": {
@@ -3617,8 +4127,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.55,
-            "scale_y": 0.55,
+            "scale_x": 0.9,
+            "scale_y": 0.9,
             "z_order": 0
           }
         },
@@ -3695,6 +4205,20 @@
               "persistent": false,
               "priority": 0,
               "state_id": "transform"
+            },
+            {
+              "clip_role": "attack2",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack2"
+            },
+            {
+              "clip_role": "attack3",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack3"
             }
           ],
           "transform": {
@@ -4074,7 +4598,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -4382,7 +4906,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -4475,7 +4999,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -4579,7 +5103,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -4705,7 +5229,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -4924,7 +5448,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -5890,7 +6414,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -6202,7 +6726,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -6466,7 +6990,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -7000,7 +7524,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -7339,7 +7863,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -7585,7 +8109,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -8059,7 +8583,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -8768,7 +9292,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -9340,7 +9864,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -9776,7 +10300,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -10275,7 +10799,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -10412,7 +10936,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -10895,7 +11419,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -11070,7 +11594,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -11225,7 +11749,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -11493,7 +12017,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -12120,7 +12644,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -12552,7 +13076,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -12840,7 +13364,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -13057,7 +13581,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -13418,7 +13942,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -14643,7 +15167,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -15042,7 +15566,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -15321,7 +15845,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -15649,7 +16173,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -16006,7 +16530,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -16159,7 +16683,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -16642,7 +17166,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -16799,7 +17323,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -17067,7 +17591,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -17160,7 +17684,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -17344,7 +17868,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -17437,7 +17961,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack2",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -17661,7 +18185,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -18359,7 +18883,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -18760,7 +19284,7 @@
               "at": 0.0,
               "beat_id": "swing",
               "channel": "animation",
-              "cue": "attack",
+              "cue": "attack3",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -19028,6 +19552,7 @@
           "party_hud": "side_list",
           "result_panel_height": 116.0,
           "result_panel_width": 196.0,
+          "row_buttons": true,
           "stage_front": 0.16,
           "stage_top": 0.14,
           "timeline_y": 7.0,
@@ -19062,6 +19587,8 @@
             105,
             255
           ],
+          "font_asset_id": "playable_assets/lucifer/ui/font.ttf",
+          "font_scale": 0.8,
           "font_size": 10,
           "gauge_fill": [
             94,
@@ -19125,6 +19652,69 @@
             236
           ],
           "panel_radius": 4,
+          "panel_skins": [
+            [
+              "button:selected",
+              {
+                "asset_id": "playable_assets/lucifer/ui/button_stone.png",
+                "bottom": 3,
+                "left": 3,
+                "right": 3,
+                "top": 3
+              }
+            ],
+            [
+              "button*",
+              {
+                "asset_id": "playable_assets/lucifer/ui/button_stone.png",
+                "bottom": 3,
+                "left": 3,
+                "right": 3,
+                "top": 3
+              }
+            ],
+            [
+              "result",
+              {
+                "asset_id": "playable_assets/lucifer/ui/panel_wood.png",
+                "bottom": 3,
+                "left": 3,
+                "right": 3,
+                "top": 3
+              }
+            ],
+            [
+              "host:panel",
+              {
+                "asset_id": "playable_assets/lucifer/ui/panel_stone.png",
+                "bottom": 3,
+                "left": 3,
+                "right": 3,
+                "scale": 2.0,
+                "top": 3
+              }
+            ],
+            [
+              "hud:*",
+              {
+                "asset_id": "playable_assets/lucifer/ui/panel_stone.png",
+                "bottom": 3,
+                "left": 3,
+                "right": 3,
+                "top": 3
+              }
+            ],
+            [
+              "interaction:*",
+              {
+                "asset_id": "playable_assets/lucifer/ui/panel_stone.png",
+                "bottom": 3,
+                "left": 3,
+                "right": 3,
+                "top": 3
+              }
+            ]
+          ],
           "result_border": [
             218,
             181,
@@ -20026,7 +20616,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_bite.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_add_bite.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -20087,7 +20677,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_heal.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_add_mend.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -20155,7 +20745,7 @@
         ],
         "display_name": "Aegis (Divine)",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_aegis.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_aegis.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -20258,7 +20848,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_fist.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_anvil_slam.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -20309,7 +20899,7 @@
         ],
         "display_name": "Arcane Barrier",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_arcane_barrier.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_arcane_barrier.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -20443,7 +21033,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_arcane_tome.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_arcane_tome.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -20509,7 +21099,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_shield.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_armor_break.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -20612,7 +21202,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_shield.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_armor_crush.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -20731,7 +21321,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_arrow_rain.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_arrow_rain.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -20865,7 +21455,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_nova.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_arsenal_barrage.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -21000,7 +21590,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_nova.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_arsenal_barrage_ii.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -21098,7 +21688,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_assassinate.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_assassinate.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -21626,7 +22216,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_dagger.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_backstab.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -21689,7 +22279,7 @@
         ],
         "display_name": "Bastion (Divine)",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_bastion.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_bastion.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -21745,7 +22335,7 @@
         ],
         "display_name": "Bastion Aura",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_bastion_aura.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_bastion_aura.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -21805,7 +22395,7 @@
         ],
         "display_name": "Benediction",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_benediction.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_benediction.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -21859,7 +22449,7 @@
         ],
         "display_name": "Bewilder",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_bewilder.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_bewilder.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -21988,7 +22578,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_nova.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_blade_storm.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -22043,7 +22633,7 @@
         ],
         "display_name": "Blinding Powder",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_blinding_powder.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_blinding_powder.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -22103,7 +22693,7 @@
             "mode": "self"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_blood_ether.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_blood_ether.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -22206,7 +22796,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_bloodletting.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_bloodletting.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -22274,7 +22864,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_bomb.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_bomb_fire.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -22343,7 +22933,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_bomb.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_bomb_ice.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -22387,7 +22977,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_whirl.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_boss_cleave.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -22448,7 +23038,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_nova.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_boss_nova.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -22497,7 +23087,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_shout.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_boss_roar.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -22547,7 +23137,7 @@
         ],
         "display_name": "Boost Gift",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_gift.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_bp_gift.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -22648,7 +23238,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_slash.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_brave_slash.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -22750,7 +23340,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_slash.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_brave_slash_ii.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -22848,7 +23438,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_leap.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_bulwark_charge.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -22909,7 +23499,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_burst_release.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_burst_release.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -22961,7 +23551,7 @@
         ],
         "display_name": "Call Spirit",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_call_spirit.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_call_spirit.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -23012,7 +23602,7 @@
         ],
         "display_name": "Charm",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_charm.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_charm.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -23123,7 +23713,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_whirl.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_cleave.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -23150,7 +23740,7 @@
         "costs": [],
         "display_name": "Concoct",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_flask.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_concoct.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -23205,7 +23795,7 @@
         ],
         "display_name": "Counter Stance",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_counter_stance.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_counter_stance.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -23277,7 +23867,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_slash.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_counter_strike.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -23380,7 +23970,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_cripple.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_cripple.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -23471,7 +24061,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_curse.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_curse.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -23598,7 +24188,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_dark_pact.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_dark_pact.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -23730,7 +24320,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_dawn_and_dusk.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_dawn_and_dusk.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -23818,7 +24408,7 @@
             "mode": "self"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_dawn_hymn.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_dawn_hymn.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -23916,7 +24506,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_deathmark.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_deathmark.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -24015,7 +24605,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_disarm.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_disarm.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -24111,7 +24701,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_dispel.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_dispel.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -24144,7 +24734,7 @@
         "costs": [],
         "display_name": "Focus Breath",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_gift.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_donate_bp.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -24204,7 +24794,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_slash.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_double_cut.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -24302,7 +24892,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_dragon_breath.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_dragon_breath.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -24397,7 +24987,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_dragon_claw.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_dragon_claw.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -24462,7 +25052,7 @@
         ],
         "display_name": "Dragon Form",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_dragon_form.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_dragon_form.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -24505,7 +25095,7 @@
         "costs": [],
         "display_name": "Revert",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_dragon_revert.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_dragon_revert.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -24613,7 +25203,7 @@
             "mode": "self"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_drain.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_drain_touch.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -24657,7 +25247,7 @@
             "mode": "self"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_draught_ether.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_draught_ether.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -24691,7 +25281,7 @@
         "costs": [],
         "display_name": "Draw Bow",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_bow.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_draw_bow.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -24725,7 +25315,7 @@
         "costs": [],
         "display_name": "Draw Dagger",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_dagger.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_draw_dagger.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -24853,7 +25443,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_edge_of_ages.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_edge_of_ages.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -24985,7 +25575,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_elemental_edge.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_elemental_edge.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -25045,7 +25635,7 @@
         ],
         "display_name": "Frost Temper",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_ice.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_enchant_frost.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -25104,7 +25694,7 @@
         ],
         "display_name": "Storm Temper",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_nova.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_enchant_storm.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -25210,7 +25800,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_slash.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_executioner.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -25272,7 +25862,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_fire.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_fire_arc.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -25359,7 +25949,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_fire.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_fireball.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -25446,7 +26036,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_fire.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_fireball_ii.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -25515,7 +26105,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_bomb.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_flask_storm.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -25645,7 +26235,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_flurry.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_flurry.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -25706,7 +26296,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_leap.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_focus_charge.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -25762,7 +26352,7 @@
         ],
         "display_name": "Fortify",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_fortify.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_fortify.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -25847,7 +26437,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_ice.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_frost_lance.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -25909,7 +26499,7 @@
         ],
         "display_name": "Gaia's Blessing",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_holy.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_gaia_blessing.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -26068,7 +26658,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_genesis.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_genesis.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -26162,7 +26752,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_gilded_hammer.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_gilded_hammer.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -26205,7 +26795,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_shield.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_guard.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -26308,7 +26898,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_shield.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_guard_break.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -26359,7 +26949,7 @@
         ],
         "display_name": "Guard Stance",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_shield.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_guard_stance.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -26479,7 +27069,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_hammer_combo.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_hammer_combo.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -26545,7 +27135,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_haste_song.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_haste_song.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -26606,7 +27196,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_heal.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_heal.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -26756,7 +27346,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_hero_finale.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_hero_finale.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -26866,7 +27456,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_hex.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_hex.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -26968,7 +27558,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_holy.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_holy_blade.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -27043,7 +27633,7 @@
             "mode": "self"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_holy.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_holy_light.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -27105,7 +27695,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_ice.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_ice_lance.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -27193,7 +27783,7 @@
             "mode": "self"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_last_bastion.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_last_bastion.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -27291,7 +27881,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_bolt.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_lightning_strike.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -27342,7 +27932,7 @@
         ],
         "display_name": "Lullaby",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_sleep.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_lullaby.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -27397,7 +27987,7 @@
         ],
         "display_name": "Lullaby Dust",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_sleep.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_lullaby_dust.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -27451,7 +28041,7 @@
         ],
         "display_name": "Maddening Howl",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_maddening_howl.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_maddening_howl.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -27531,7 +28121,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_gift.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_martyrs_gift.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -27666,7 +28256,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_masterwork.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_masterwork.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -27743,7 +28333,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_heal.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_mend.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -27803,7 +28393,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_meteor.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_meteor.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -27931,7 +28521,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_meteor.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_meteor_fall.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -27983,7 +28573,7 @@
         ],
         "display_name": "Mirror Veil",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_mirror_veil.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_mirror_veil.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -28075,7 +28665,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_slash.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_molten_strike.png",
         "item_costs": {
           "fire_dust": 1
         },
@@ -28189,7 +28779,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_mug.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_mug.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -28250,7 +28840,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_party_barrier.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_party_barrier.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -28285,7 +28875,7 @@
         "costs": [],
         "display_name": "Pass the Torch",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_pass_the_torch.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_pass_the_torch.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -28439,7 +29029,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_phantom_dance.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_phantom_dance.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -28483,7 +29073,7 @@
         ],
         "display_name": "Pilfer",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_pilfer.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_pilfer.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -28579,7 +29169,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_poison.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_poison_cloud.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -28674,7 +29264,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_poison.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_poison_edge.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -28765,7 +29355,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_provoke.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_provoke.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -28874,7 +29464,7 @@
         ],
         "display_name": "Purge",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_purge.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_purge.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -28948,7 +29538,7 @@
         ],
         "display_name": "Purify",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_purify.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_purify.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -29008,7 +29598,7 @@
         ],
         "display_name": "Quick Refine",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_quick_refine.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_quick_refine.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -29108,7 +29698,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_slash.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_quick_slash.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -29165,7 +29755,7 @@
         ],
         "display_name": "Rally",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_rally.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_rally.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -29225,7 +29815,7 @@
         ],
         "display_name": "Rally Cry",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_shout.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_rally_cry.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -29285,7 +29875,7 @@
         ],
         "display_name": "Rally Cry II",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_shout.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_rally_cry_ii.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -29342,7 +29932,7 @@
         ],
         "display_name": "Rekindle",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_rekindle.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_rekindle.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -29397,7 +29987,7 @@
         ],
         "display_name": "Resolute",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_resolute.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_resolute.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -29497,7 +30087,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_retaliate.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_retaliate.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -29558,7 +30148,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_revive.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_revive.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -29614,7 +30204,7 @@
             "mode": "self"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_heal.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_salve_heal.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -29664,7 +30254,7 @@
         ],
         "display_name": "Second Breath",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_second_breath.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_second_breath.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -29759,7 +30349,7 @@
             "mode": "self"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_second_wind.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_second_wind.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -29922,7 +30512,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_shadow_feast.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_shadow_feast.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -29980,7 +30570,7 @@
         ],
         "display_name": "Shadow Step",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_shadow_step.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_shadow_step.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -30035,7 +30625,7 @@
         ],
         "display_name": "Sharpen",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_sharpen.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_sharpen.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -30130,7 +30720,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_shield.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_shield_bash.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -30186,7 +30776,7 @@
         ],
         "display_name": "Shield Wall",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_shield.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_shield_wall.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -30251,7 +30841,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_slow_hex.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_slow_hex.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -30342,7 +30932,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_bomb.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_smoke_bomb.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -30426,7 +31016,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_whirl.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_spirit_cleave.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -30459,7 +31049,7 @@
         "costs": [],
         "display_name": "Spirit Ward",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_spirit_ward.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_spirit_ward.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -30559,7 +31149,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_holy.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_starlight.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -30621,7 +31211,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_nova.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_storm_chain.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -30665,7 +31255,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_slash.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_strike.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -30708,7 +31298,7 @@
         ],
         "display_name": "Summon Wisp",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_summon.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_summon_wisp.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -30821,7 +31411,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_sunburst.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_sunburst.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -30889,7 +31479,7 @@
         ],
         "display_name": "Temper",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_temper.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_temper.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -30990,7 +31580,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_bolt.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_thunder_chain.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -31054,7 +31644,7 @@
             "mode": "self"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_tonic_phoenix.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_tonic_phoenix.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -31161,7 +31751,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_tri_blast.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_tri_blast.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -31280,7 +31870,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_holy.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_twilight_judgment.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -31408,7 +31998,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_slash.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_vampiric_strike.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -31465,7 +32055,7 @@
         ],
         "display_name": "Vanish",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_vanish.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_vanish.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -31577,7 +32167,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_poison.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_venom_edge.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -31682,7 +32272,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_slash.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_versatile_strike.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -31759,7 +32349,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_leap.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_w_charge.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -31827,7 +32417,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_w_cinder.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_w_cinder.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -31915,7 +32505,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_w_combo.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_w_combo.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -31987,7 +32577,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_w_counter.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_w_counter.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -32029,7 +32619,7 @@
         "costs": [],
         "display_name": "W Cry",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_shout.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_w_cry.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -32119,7 +32709,7 @@
             "mode": "self"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_drain.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_w_drain.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -32218,7 +32808,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_w_eclipse.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_w_eclipse.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -32262,7 +32852,7 @@
         "costs": [],
         "display_name": "W Iron",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_mono_w_iron.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_w_iron.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -32339,7 +32929,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_w_mark.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_w_mark.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -32396,7 +32986,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_heal.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_w_mend.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -32486,7 +33076,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_poison.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_w_poison.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -32570,7 +33160,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/icons/skill_shout.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_w_roar.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -32605,7 +33195,7 @@
         "costs": [],
         "display_name": "W Summon",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_summon.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_w_summon.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -32660,7 +33250,7 @@
         ],
         "display_name": "War Cry",
         "effects": [],
-        "icon_id": "playable_assets/icons/skill_shout.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_war_cry.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -32790,7 +33380,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_weapon_dance.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_weapon_dance.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -32862,7 +33452,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_bolt.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_wisp_bolt.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -32919,7 +33509,7 @@
             "mode": "selected"
           }
         ],
-        "icon_id": "playable_assets/icons/skill_heal.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_wisp_mend.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -32991,7 +33581,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_nova.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_wisp_nova.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -33103,7 +33693,7 @@
             ]
           }
         ],
-        "icon_id": "playable_assets/icons/skill_mono_word_of_doom.png",
+        "icon_id": "playable_assets/lucifer/icons/skill_word_of_doom.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -33332,7 +33922,6 @@
         ],
         "display_name": "Charm",
         "duration": 3.0,
-        "icon_id": "playable_assets/icons/skill_mono_charm.png",
         "max_stacks": 1,
         "modifiers": [],
         "on_apply": [],
@@ -33368,7 +33957,6 @@
         ],
         "display_name": "Counter Stance",
         "duration": 4.0,
-        "icon_id": "playable_assets/icons/skill_mono_counter_stance.png",
         "max_stacks": 1,
         "modifiers": [],
         "on_apply": [],
@@ -33445,7 +34033,6 @@
         ],
         "display_name": "Dragon Form",
         "duration": 99.0,
-        "icon_id": "playable_assets/icons/skill_mono_dragon_form.png",
         "max_stacks": 1,
         "modifiers": [
           {
@@ -40566,6 +41153,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_warden_charm.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -40595,6 +41183,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_warden_plate.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -40624,6 +41213,7 @@
         "forbidden_capabilities": [],
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_warden_ring.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -40696,7 +41286,7 @@
           "attack_axe"
         ],
         "growth_id": null,
-        "icon_id": "playable_assets/icons/weapon_axe.png",
+        "icon_id": "playable_assets/lucifer/icons/w_axe.png",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -40740,7 +41330,7 @@
           "attack_dagger"
         ],
         "growth_id": null,
-        "icon_id": "playable_assets/icons/weapon_dagger.png",
+        "icon_id": "playable_assets/lucifer/icons/w_dagger.png",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -40762,7 +41352,7 @@
           "attack_spear"
         ],
         "growth_id": null,
-        "icon_id": "playable_assets/icons/weapon_spear.png",
+        "icon_id": "playable_assets/lucifer/icons/w_spear.png",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -40784,7 +41374,7 @@
           "attack_staff"
         ],
         "growth_id": null,
-        "icon_id": "playable_assets/icons/weapon_staff.png",
+        "icon_id": "playable_assets/lucifer/icons/w_staff.png",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -40807,7 +41397,7 @@
           "sunburst"
         ],
         "growth_id": "sunbrand_growth",
-        "icon_id": "playable_assets/icons/weapon_sunbrand.png",
+        "icon_id": "playable_assets/lucifer/icons/w_sunbrand.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -40863,7 +41453,7 @@
           "sunburst"
         ],
         "growth_id": null,
-        "icon_id": "playable_assets/icons/weapon_sunbrand_ex.png",
+        "icon_id": "playable_assets/lucifer/icons/w_sunbrand_ex.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -40927,7 +41517,7 @@
           "attack_sword"
         ],
         "growth_id": null,
-        "icon_id": "playable_assets/icons/weapon_sword.png",
+        "icon_id": "playable_assets/lucifer/icons/w_sword.png",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -42449,6 +43039,7 @@
       {
         "attachment_id": "ruby",
         "display_name": "Ruby",
+        "icon_id": "playable_assets/lucifer/icons/ruby_item.png",
         "item_id": "ruby_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
@@ -42459,6 +43050,7 @@
       {
         "attachment_id": "sapphire",
         "display_name": "Sapphire",
+        "icon_id": "playable_assets/lucifer/icons/sapphire_item.png",
         "item_id": "sapphire_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
@@ -42505,6 +43097,7 @@
       {
         "attachment_id": "topaz",
         "display_name": "Topaz",
+        "icon_id": "playable_assets/lucifer/icons/topaz_item.png",
         "item_id": "topaz_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
@@ -50793,7 +51386,7 @@
           "binding_id": "service_0_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "5b287d40-7a60-4321-95aa-cfe8c0a1c06e",
+          "entity_id": "79135ab8-21d3-44ca-b61d-abaf29948d87",
           "local_scope_id": "service_0",
           "program_id": "service_0",
           "trigger": "action"
@@ -50802,7 +51395,7 @@
           "binding_id": "service_1_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "f49b7027-055f-42fa-bdc6-1649e7b71a59",
+          "entity_id": "6d4d9ac1-79a7-49a0-bae7-13a0e5c26d0a",
           "local_scope_id": "service_1",
           "program_id": "service_1",
           "trigger": "action"
@@ -50811,7 +51404,7 @@
           "binding_id": "service_2_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "637c1b45-a96f-44ea-86fe-018fcee69225",
+          "entity_id": "1c43b93e-5bbb-4f9b-be2f-1d320eb9ff7b",
           "local_scope_id": "service_2",
           "program_id": "service_2",
           "trigger": "action"
@@ -50820,7 +51413,7 @@
           "binding_id": "service_3_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "487bc7c3-dadd-414a-9e13-1a24624889b2",
+          "entity_id": "9c54a8dd-e956-47f3-8c3b-24ffe653240c",
           "local_scope_id": "service_3",
           "program_id": "service_3",
           "trigger": "action"
@@ -50829,7 +51422,7 @@
           "binding_id": "service_4_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "611682ee-96bb-4217-8dd0-22c6a16a4935",
+          "entity_id": "d185c2f5-22d2-4805-9ddb-d0eb402df8c0",
           "local_scope_id": "service_4",
           "program_id": "service_4",
           "trigger": "action"
@@ -50838,7 +51431,7 @@
           "binding_id": "service_5_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "b8c6fb81-5c53-4040-88e2-efa54b7c23fc",
+          "entity_id": "e74e1653-1d4f-4a9a-a55b-c0aada1444e2",
           "local_scope_id": "service_5",
           "program_id": "service_5",
           "trigger": "action"
@@ -50847,7 +51440,7 @@
           "binding_id": "service_6_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "0d5fe80c-53cb-4716-a9bb-ac88745a4cfd",
+          "entity_id": "bc0d2a97-2813-42e4-b210-4981a8753ae9",
           "local_scope_id": "service_6",
           "program_id": "service_6",
           "trigger": "action"
@@ -50856,7 +51449,7 @@
           "binding_id": "service_7_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "6e7afcaf-5f5b-493c-8678-7d78a3628686",
+          "entity_id": "9b6df6cf-a94f-4494-a729-79d9ab032e81",
           "local_scope_id": "service_7",
           "program_id": "service_7",
           "trigger": "action"
@@ -50865,7 +51458,7 @@
           "binding_id": "service_8_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "d9db3362-5a9c-4171-a6c5-d364245c876b",
+          "entity_id": "f5d00fe0-6f62-4503-99cc-fa99d57a3379",
           "local_scope_id": "service_8",
           "program_id": "service_8",
           "trigger": "action"
@@ -50874,7 +51467,7 @@
           "binding_id": "service_9_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "15f064ec-6fd8-4a78-a0f2-742ad1da57dd",
+          "entity_id": "d00b0582-26de-4b1d-b031-418381a70b08",
           "local_scope_id": "service_9",
           "program_id": "service_9",
           "trigger": "action"
@@ -50883,7 +51476,7 @@
           "binding_id": "service_10_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "bcea70a0-efc4-448a-9db8-9d86e6412cef",
+          "entity_id": "74673942-4766-4a62-bd3a-912ee1ebcdf7",
           "local_scope_id": "service_10",
           "program_id": "service_10",
           "trigger": "action"
@@ -50892,7 +51485,7 @@
           "binding_id": "service_11_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "a75402f4-9bd1-4c25-92bf-6cb1fa631f49",
+          "entity_id": "b46555d3-c777-4336-892e-4f52e1ee9f7e",
           "local_scope_id": "service_11",
           "program_id": "service_11",
           "trigger": "action"
@@ -50901,7 +51494,7 @@
           "binding_id": "service_12_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "15d489eb-715e-4fb2-8bd3-f77fae0ed516",
+          "entity_id": "c52f8c8e-00d2-4474-9969-b65909b1d233",
           "local_scope_id": "service_12",
           "program_id": "service_12",
           "trigger": "action"
@@ -50910,7 +51503,7 @@
           "binding_id": "service_13_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "33d99883-19a7-4bb3-9776-431684f444a3",
+          "entity_id": "d214c77f-9bfb-46ad-92a4-9f216d063514",
           "local_scope_id": "service_13",
           "program_id": "service_13",
           "trigger": "action"
@@ -50919,7 +51512,7 @@
           "binding_id": "service_14_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "da8efed1-7343-4eba-9529-f9b1b08c6874",
+          "entity_id": "a6f10c8a-08ca-41a3-a50a-96bf7a1181ff",
           "local_scope_id": "service_14",
           "program_id": "service_14",
           "trigger": "action"
@@ -50928,7 +51521,7 @@
           "binding_id": "service_15_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "064f2e70-c867-4bb5-b9b3-a5855b026e61",
+          "entity_id": "071d23c6-9b32-46a1-ab27-ed8552530d4f",
           "local_scope_id": "service_15",
           "program_id": "service_15",
           "trigger": "action"
@@ -50937,7 +51530,7 @@
           "binding_id": "service_16_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "cb4ab018-bf66-4926-9473-dcc82a9b1a80",
+          "entity_id": "653cd06e-b8f6-4297-b957-4839b95a7a08",
           "local_scope_id": "service_16",
           "program_id": "service_16",
           "trigger": "action"
@@ -50946,7 +51539,7 @@
           "binding_id": "service_17_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "0b77a26e-6129-4f6f-8071-5a3ef660465e",
+          "entity_id": "c040f1d3-9b87-4d0a-a88e-21d7817c738d",
           "local_scope_id": "service_17",
           "program_id": "service_17",
           "trigger": "action"
@@ -51037,7 +51630,7 @@
             }
           ],
           "enabled": true,
-          "id": "5b287d40-7a60-4321-95aa-cfe8c0a1c06e",
+          "id": "79135ab8-21d3-44ca-b61d-abaf29948d87",
           "name": "Smith"
         },
         {
@@ -51068,7 +51661,7 @@
             }
           ],
           "enabled": true,
-          "id": "f49b7027-055f-42fa-bdc6-1649e7b71a59",
+          "id": "6d4d9ac1-79a7-49a0-bae7-13a0e5c26d0a",
           "name": "Awakener"
         },
         {
@@ -51099,7 +51692,7 @@
             }
           ],
           "enabled": true,
-          "id": "637c1b45-a96f-44ea-86fe-018fcee69225",
+          "id": "1c43b93e-5bbb-4f9b-be2f-1d320eb9ff7b",
           "name": "Jeweler"
         },
         {
@@ -51130,7 +51723,7 @@
             }
           ],
           "enabled": true,
-          "id": "487bc7c3-dadd-414a-9e13-1a24624889b2",
+          "id": "9c54a8dd-e956-47f3-8c3b-24ffe653240c",
           "name": "Card Dealer"
         },
         {
@@ -51161,7 +51754,7 @@
             }
           ],
           "enabled": true,
-          "id": "611682ee-96bb-4217-8dd0-22c6a16a4935",
+          "id": "d185c2f5-22d2-4805-9ddb-d0eb402df8c0",
           "name": "Mystic Teacher"
         },
         {
@@ -51192,7 +51785,7 @@
             }
           ],
           "enabled": true,
-          "id": "b8c6fb81-5c53-4040-88e2-efa54b7c23fc",
+          "id": "e74e1653-1d4f-4a9a-a55b-c0aada1444e2",
           "name": "Duelist Teacher"
         },
         {
@@ -51223,7 +51816,7 @@
             }
           ],
           "enabled": true,
-          "id": "0d5fe80c-53cb-4716-a9bb-ac88745a4cfd",
+          "id": "bc0d2a97-2813-42e4-b210-4981a8753ae9",
           "name": "Weapon Master Dojo"
         },
         {
@@ -51254,7 +51847,7 @@
             }
           ],
           "enabled": true,
-          "id": "6e7afcaf-5f5b-493c-8678-7d78a3628686",
+          "id": "9b6df6cf-a94f-4494-a729-79d9ab032e81",
           "name": "Sage's Tower"
         },
         {
@@ -51285,7 +51878,7 @@
             }
           ],
           "enabled": true,
-          "id": "d9db3362-5a9c-4171-a6c5-d364245c876b",
+          "id": "f5d00fe0-6f62-4503-99cc-fa99d57a3379",
           "name": "Hero's Shrine"
         },
         {
@@ -51316,7 +51909,7 @@
             }
           ],
           "enabled": true,
-          "id": "15f064ec-6fd8-4a78-a0f2-742ad1da57dd",
+          "id": "d00b0582-26de-4b1d-b031-418381a70b08",
           "name": "Forgemaster's Smithy"
         },
         {
@@ -51347,7 +51940,7 @@
             }
           ],
           "enabled": true,
-          "id": "bcea70a0-efc4-448a-9db8-9d86e6412cef",
+          "id": "74673942-4766-4a62-bd3a-912ee1ebcdf7",
           "name": "Rogue Guild"
         },
         {
@@ -51378,7 +51971,7 @@
             }
           ],
           "enabled": true,
-          "id": "a75402f4-9bd1-4c25-92bf-6cb1fa631f49",
+          "id": "b46555d3-c777-4336-892e-4f52e1ee9f7e",
           "name": "Guardian Post"
         },
         {
@@ -51409,7 +52002,7 @@
             }
           ],
           "enabled": true,
-          "id": "15d489eb-715e-4fb2-8bd3-f77fae0ed516",
+          "id": "c52f8c8e-00d2-4474-9969-b65909b1d233",
           "name": "Alchemist"
         },
         {
@@ -51440,7 +52033,7 @@
             }
           ],
           "enabled": true,
-          "id": "33d99883-19a7-4bb3-9776-431684f444a3",
+          "id": "d214c77f-9bfb-46ad-92a4-9f216d063514",
           "name": "Merchant"
         },
         {
@@ -51471,7 +52064,7 @@
             }
           ],
           "enabled": true,
-          "id": "da8efed1-7343-4eba-9529-f9b1b08c6874",
+          "id": "a6f10c8a-08ca-41a3-a50a-96bf7a1181ff",
           "name": "Breaker"
         },
         {
@@ -51502,7 +52095,7 @@
             }
           ],
           "enabled": true,
-          "id": "064f2e70-c867-4bb5-b9b3-a5855b026e61",
+          "id": "071d23c6-9b32-46a1-ab27-ed8552530d4f",
           "name": "Armory (Bow)"
         },
         {
@@ -51533,7 +52126,7 @@
             }
           ],
           "enabled": true,
-          "id": "cb4ab018-bf66-4926-9473-dcc82a9b1a80",
+          "id": "653cd06e-b8f6-4297-b957-4839b95a7a08",
           "name": "Armory (Dagger)"
         },
         {
@@ -51564,7 +52157,7 @@
             }
           ],
           "enabled": true,
-          "id": "0b77a26e-6129-4f6f-8071-5a3ef660465e",
+          "id": "c040f1d3-9b87-4d0a-a88e-21d7817c738d",
           "name": "Shrine"
         }
       ],

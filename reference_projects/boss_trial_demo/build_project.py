@@ -29,6 +29,7 @@ import trial_b12 as b12  # noqa: E402
 import trial_content as content  # noqa: E402
 import trial_items as items  # noqa: E402
 import trial_jobs as jobs  # noqa: E402
+import trial_lucifer as lucifer  # noqa: E402
 
 from asteria.editor import EditorDocument  # noqa: E402
 from asteria.project import Project  # noqa: E402
@@ -60,6 +61,9 @@ def main():
     art.prune_unused_art(context)
     content.presentation(context)
     kept = art.weapon_icons(context)
+    if lucifer.available():
+        kept = (*kept, *lucifer.apply_icons(context))
+        lucifer.apply_ui(context)
     content.finalize_names(context)
     content.game_start(context)
     path = HERE / "project.asteria.json"
