@@ -6578,8 +6578,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.62,
-            "scale_y": 0.62,
+            "scale_x": 0.52,
+            "scale_y": 0.52,
             "z_order": 0
           }
         },
@@ -6677,8 +6677,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.62,
-            "scale_y": 0.62,
+            "scale_x": 0.52,
+            "scale_y": 0.52,
             "z_order": 0
           }
         },
@@ -6776,8 +6776,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.62,
-            "scale_y": 0.62,
+            "scale_x": 0.52,
+            "scale_y": 0.52,
             "z_order": 0
           }
         },
@@ -6875,8 +6875,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.62,
-            "scale_y": 0.62,
+            "scale_x": 0.52,
+            "scale_y": 0.52,
             "z_order": 0
           }
         },
@@ -6974,8 +6974,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.62,
-            "scale_y": 0.62,
+            "scale_x": 0.52,
+            "scale_y": 0.52,
             "z_order": 0
           }
         },
@@ -7073,8 +7073,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.62,
-            "scale_y": 0.62,
+            "scale_x": 0.52,
+            "scale_y": 0.52,
             "z_order": 0
           }
         },
@@ -7172,8 +7172,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.62,
-            "scale_y": 0.62,
+            "scale_x": 0.52,
+            "scale_y": 0.52,
             "z_order": 0
           }
         },
@@ -7271,8 +7271,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.62,
-            "scale_y": 0.62,
+            "scale_x": 0.52,
+            "scale_y": 0.52,
             "z_order": 0
           }
         },
@@ -7370,8 +7370,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.62,
-            "scale_y": 0.62,
+            "scale_x": 0.52,
+            "scale_y": 0.52,
             "z_order": 0
           }
         },
@@ -7469,8 +7469,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.62,
-            "scale_y": 0.62,
+            "scale_x": 0.52,
+            "scale_y": 0.52,
             "z_order": 0
           }
         },
@@ -7568,8 +7568,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.62,
-            "scale_y": 0.62,
+            "scale_x": 0.52,
+            "scale_y": 0.52,
             "z_order": 0
           }
         },
@@ -7667,8 +7667,8 @@
             "anchor_y": 1.0,
             "offset_x": 0.0,
             "offset_y": 0.0,
-            "scale_x": 0.62,
-            "scale_y": 0.62,
+            "scale_x": 0.52,
+            "scale_y": 0.52,
             "z_order": 0
           }
         },
@@ -12993,6 +12993,7 @@
           "hud_panel_width": 108.0,
           "hud_row_height": 10.0,
           "margin": 8.0,
+          "menu_over_stage": true,
           "overhead_below": false,
           "overhead_zones": [
             "left"

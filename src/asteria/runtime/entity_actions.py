@@ -194,6 +194,11 @@ class EntityActionSystem(System):
                     if k in payload:
                         setattr(hitbox, k, float(payload[k]))
             run.hitbox_until = cue.time + float(payload.get("duration", 0.0))
+        elif kind == ActionCueKind.VFX:
+            # a picture effect in the world (the HUD draws it from the event): where it plays
+            # follows the aim of the action when the cue says ``aim``
+            if payload.get("aim") and run.aim is not None:
+                payload["direction"] = run.aim
         elif kind == ActionCueKind.IFRAME:
             if self.hitboxes is not None:
                 self.hitboxes.grant_invincibility(entity.id, float(payload.get("duration", 0.0)))

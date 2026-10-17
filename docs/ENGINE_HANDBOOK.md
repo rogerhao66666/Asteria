@@ -192,6 +192,9 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | `AbilityDefinition.requires_pet` | `gameplay/abilities.py` |
 | 資料庫新增 `pet_species`；存檔的 RPG 狀態新增選填的 `pets`、`active_pet_id`（沒有寵物就不寫入，不改版本） | `rpg/pets.py`、`rpg/actors.py`、`rpg/save_state.py` |
 | `ActionCombat` 綁定替代、`item:<id>` 消耗；`CombatantComponent.defeat_switch`；`ClassAppearance`；`ParallaxBackground2D` | `runtime/` |
+| `ActionCombat` 綁定 `slot:N`（技能欄第 N 格）、`vfx` 提示（世界裡的圖片特效：`effect` 精靈表 id、位移、縮放、`rotate`、`follow`）；技能欄規則 `AbilityLoadoutRules.limited_sources` 可含 `allocation`（技能樹給的技能），技能樹學到新技能會自動放進空格 | `runtime/action_combat.py`、`runtime/action_play.py`、`runtime/game_session.py` |
+| 技能樹節點選填 `icon_id`（沒設就用它給的第一個技能的圖示；空的不寫入） | `rpg/progression_graph.py` |
+| 戰鬥版面選填 `menu_over_stage`、`row_buttons`、`column_size`、`front_large_zones`、`overhead_below`（預設 True：敵人名稱與血條放腳下）、`stage_front_right`；`BattleUiTheme` 的 `panel_skins`、`font_asset_id`、`font_scale`（九宮格面板、字型）；編輯器的版面表單永遠列出全部欄位 | `presentation/battle_ui.py`、`presentation/library.py`、`editor/integrated_authoring.py` |
 
 另有一個修正：**道具的 `battle_ability` 現在也會套用狀態、資源增益和世界指令**（原本被忽略，Storm Flask 的
 降防禦從來沒生效）。
@@ -217,12 +220,12 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
 | 項目 | 狀態 |
 | --- | --- |
-| 圖示 | 技能、狀態、寵物圖示是程式畫的原創圖示（`graphics/forged_icons.py`，D35），道具圖示取自 CC0 資源包；沒有 AI 美術 |
+| 圖示與美術 | 所有 demo（Boss Trial、Octopath、reference、Diablo 兩個、party／basic／action 範本）的人物、怪物、地圖、UI、裝備與技能圖示都是 Foozle Lucifer（CC0）；例外：Diablo 的箭與投射物、弓和魔杖圖示來自 Ninja Adventure（Lucifer 沒有）。程式畫的原創圖示（`graphics/forged_icons.py`，D35）仍在引擎裡可選。沒有 AI 美術 |
 | 原生 kernel 要每台機器編譯一次 | `python -m asteria.kernels.build_native`；沒編譯會退回 numpy |
 | `CollisionWorld.from_scene` 沒有快取 | 2026-10-16 量測：100／500／2000 個碰撞器建一次 0.05／0.22／0.85 ms，每幀約一次，不是瓶頸；失效模型（啟用狀態、增刪、換場景、移動）的風險大於收益，**決定不做** |
 | Enemy AI 的七欄規則表 | 窗口很窄時可橫向捲動（表格的正常行為） |
 | 手把與實體鍵盤、音訊聽感與延遲 | 需要真人；沒有自動化 |
-| 手感與平衡 | 數值是 demo 用的，需要有人實際玩過調整 |
+| 手感與平衡 | 數值是 demo 用的，需要有人實際玩過調整。Diablo 的九個流派用 `scripts/arpg_balance.py` 對齊（同等級、同技能點下的輸出加存活的綜合分數，差距在 ±20% 內）；沒有裝備、沒有真人操作，只能比流派之間 |
 | 寵物 | 預設不是戰鬥單位（物種可選 `battle_unit`）；已有進化、學技能、親密度（D31） |
 | 寵物的存檔與選單 | Pets 畫面只在專案有寵物物種時出現在暫停選單；起始寵物在 Database > Game Start 分頁設定 |
 | 多人連線 | 通用 TCP session／adapter、SQLite 原子掉落領取及完整角色存檔、可修改規則模板、獨立 Diablo 多人副本已完成四人原生驗收。Guest ID 為開發身分；伺服器重開保留角色並重建場次世界。公開網路部署、TLS、登入驗證與 WAN 品質驗收另行處理。見 [設計文件](audits/MULTIPLAYER_DESIGN.md)。 |

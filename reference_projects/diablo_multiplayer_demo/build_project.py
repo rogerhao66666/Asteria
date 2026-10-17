@@ -610,6 +610,7 @@ def combat_content(project, looks, icons):
                 data["icon_id"] = icons[ability.ability_id]
         library.add_ability(AbilityDefinition.from_data(data))
     LABELS.update(builds.register(library, looks))  # the skills of the three builds per class
+    builds.add_effects(library, looks)  # spell and strike pictures on every skill
 
 
 LABELS = {
@@ -682,7 +683,7 @@ def classes_and_trees(db):
         AbilityLoadoutRules(
             "skill_slots",
             2,
-            capacity_by_level={3: 3, 5: 4},
+            capacity_by_level={3: 3, 5: 4, 8: 5, 12: 6},
             limited_sources=("allocation", "learned"),
         )
     )
@@ -1083,7 +1084,8 @@ def player(builder, xy, look, looks):
             ActionCombatComponent(),
             bindings=(
                 "attack=w_slash|r_shot|m_bolt|punch; dodge=roll; potion=potion; "
-                "skill_1=slot:1; skill_2=slot:2; skill_3=slot:3; skill_4=slot:4"
+                "skill_1=slot:1; skill_2=slot:2; skill_3=slot:3; skill_4=slot:4; "
+                "skill_5=slot:5; skill_6=slot:6"
             ),
             require_known=True,
             lock_mode="nearest",
@@ -1426,11 +1428,11 @@ def make_art(assets):
     looks = {
         "hero": la.character(assets, "hero", "warrior", "Wanderer"),
         "merchant": la.character(assets, "merchant", "sorceress", "Merchant"),
-        "smith": la.character(assets, "smith", "cultist", "Smith"),
+        "smith": la.character(assets, "smith", "warrior", "Smith"),
         "elder": la.character(assets, "elder", "necromancer", "Elder"),
         "villager": la.character(assets, "villager", "cultist", "Villager"),
         "trainer_warrior": la.character(assets, "trainer_warrior", "warrior", "Warrior"),
-        "trainer_ranger": la.character(assets, "trainer_ranger", "goblin_slinger", "Ranger"),
+        "trainer_ranger": la.character(assets, "trainer_ranger", "cultist", "Ranger"),
         "trainer_mage": la.character(assets, "trainer_mage", "sorceress", "Mage"),
         "slime": la.character(assets, "slime", "goblin_berserker", "Goblin", height=22),
         "eye": la.character(assets, "eye", "necromancer", "Watcher", height=24),
@@ -1443,6 +1445,7 @@ def make_art(assets):
         "bat": la.character(assets, "bat", "goblin_slinger", "Cave Imp", height=20),
         "drill": la.character(assets, "drill", "skeleton_ancient", "Ancient Drone", height=24),
         "golem": la.character(assets, "golem", "goblin_beast", "Beast Golem", height=40),
+        **{f"fx_{k}": v for k, v in la.effect_sheets(assets).items()},
         "arrow": art.item_icon(assets, "arrow", "FX/Projectile/Arrow.png", "Arrow"),
         "fireball": art.item_icon(
             assets, "fireball", "FX/Projectile/Fireball.png", "Fireball", (16, 16)

@@ -87,13 +87,13 @@ def _buff(state_id, name, seconds, mods, tag, *, heal=0):
 
 def states():
     return (
-        _dot("poisoned", "Poisoned", 5.0, 0.5, 4, "poisoned"),
+        _dot("poisoned", "Poisoned", 5.0, 0.5, 7, "poisoned"),
         _buff("shocked", "Shocked", 4.0, [("defense", "add", -5)], "shocked"),
         _buff(
             "frenzy", "Frenzy", 8.0, [("power", "multiply", 1.3), ("crit", "add", 10)], "frenzy"
         ),
-        _buff("fortify", "Fortify", 8.0, [("defense", "add", 14)], "fortify"),
-        _buff("bulwark", "Bulwark", 6.0, [("defense", "add", 10)], "bulwark", heal=10),
+        _buff("fortify", "Fortify", 8.0, [("defense", "add", 6)], "fortify"),
+        _buff("bulwark", "Bulwark", 6.0, [("defense", "add", 4)], "bulwark", heal=10),
         _buff(
             "deadeye", "Deadeye", 8.0, [("crit", "add", 25), ("dexterity", "add", 6)], "deadeye"
         ),
@@ -152,8 +152,9 @@ def _fire(ability_id, **kw):
 
 def build_skills(looks):
     """Every skill of the three class trees that is not already in the demo."""
-    arrow, orb = looks["arrow"], looks["orb"]
-    big_fire = looks["fireball_big"]
+    arrow = looks["arrow"]
+    big_fire = looks["fx_fire_ball"]
+    ice, bolt = looks["fx_ice_bolt"], looks["fx_bolt_ball"]
     skills = []
     add = skills.append
 
@@ -720,7 +721,7 @@ def build_skills(looks):
         [(0.1, {})],
         bolt,
         ProjectileDefinition(
-            "frost_bolt", attack_id="m_frost_bolt", speed=260, lifetime=1.2, sprite=orb
+            "frost_bolt", attack_id="m_frost_bolt", speed=260, lifetime=1.2, sprite=ice
         ),
         length=0.3,
         tags=magic,
@@ -740,7 +741,7 @@ def build_skills(looks):
         [(0.15, dict(count=3, spread=12))],
         spike,
         ProjectileDefinition(
-            "ice_spike", attack_id="m_ice_spike", speed=340, lifetime=0.9, pierce=-1, sprite=arrow
+            "ice_spike", attack_id="m_ice_spike", speed=340, lifetime=0.9, pierce=-1, sprite=ice
         ),
         length=0.45,
         tags=magic,
@@ -784,7 +785,7 @@ def build_skills(looks):
             width=34,
             height=34,
             pierce=-1,
-            sprite=orb,
+            sprite=ice,
         ),
         length=0.7,
         armor=0.7,
@@ -814,7 +815,7 @@ def build_skills(looks):
             homing_turn=420,
             homing_range=170,
             pierce=3,
-            sprite=orb,
+            sprite=bolt,
         ),
         length=0.35,
         tags=magic,
@@ -866,14 +867,46 @@ def build_skills(looks):
     return skills
 
 
+# damage of each build relative to the others (set by scripts/arpg_balance.py)
+BUILD_DAMAGE = {
+    "berserker": 0.26,
+    "guardian": 1.32,
+    "warlord": 1.65,
+    "marksman": 1.89,
+    "venomancer": 3.61,
+    "skirmisher": 0.65,
+    "pyromancer": 0.75,
+    "cryomancer": 1.05,
+    "stormcaller": 1.4,
+}
+
+
+def _build_of():
+    return {a: b[0] for branches in BRANCHES.values() for b in branches for a in b[2]}
+
+
+def _tuned(attack, factor):
+    """``attack`` with its stat-scaled damage terms multiplied by ``factor``."""
+    from dataclasses import replace
+
+    if factor == 1.0 or attack.damage is None:
+        return attack
+    terms = [
+        FormulaTerm(t.source, t.key, t.coefficient * factor) if t.source == "source_stat" else t
+        for t in attack.damage.terms
+    ]
+    return replace(attack, damage=ValueFormula(terms, minimum=1))
+
+
 def register(library, looks):
     """Add the states, attacks, projectiles, timelines and abilities; returns ``{id: name}``."""
     for state in states():
         library.add_state(state)
     labels = {}
+    build_of = _build_of()
     for skill in build_skills(looks):
         if skill.attack is not None:
-            library.add_attack(skill.attack)
+            library.add_attack(_tuned(skill.attack, BUILD_DAMAGE[build_of[skill.ability_id]]))
         if skill.projectile is not None:
             library.add_projectile(skill.projectile)
         library.add_timeline(ActionTimeline(skill.ability_id, skill.cues))
@@ -942,11 +975,11 @@ BRANCHES = {
             "Guardian",
             ["w_shield_bash", "w_fortify", "w_ground_slam", "w_retribution", "w_bulwark"],
             [
-                ("w_skin", "Iron Skin", 5, {"defense": 3}, None),
+                ("w_skin", "Iron Skin", 5, {"defense": 2}, None),
                 ("w_vigor", "Vigor", 3, {}, {"hp": 30}),
-                ("w_bastion", "Bastion", 3, {"defense": 5}, {"hp": 20}),
+                ("w_bastion", "Bastion", 3, {"defense": 2}, {"hp": 20}),
             ],
-            ("w_unbreakable", "Unbreakable", {"defense": 14}, {"hp": 80}),
+            ("w_unbreakable", "Unbreakable", {"defense": 8}, {"hp": 80}),
         ),
         (
             "warlord",
@@ -954,7 +987,7 @@ BRANCHES = {
             ["w_cleave", "w_leap", "w_shout", "w_thunderclap", "w_earthquake"],
             [
                 ("w_command", "Command", 5, {"power": 2, "defense": 1}, None),
-                ("w_mettle", "Mettle", 3, {"defense": 3}, {"mp": 10}),
+                ("w_mettle", "Mettle", 3, {"defense": 2}, {"mp": 10}),
                 ("w_storm", "Stormcalling", 5, {"shock_dmg": 3}, None),
             ],
             ("w_mantle", "Warlord's Mantle", {"power": 6, "defense": 6}, {"mp": 30}),
@@ -1114,3 +1147,86 @@ def add_trees(db, skill_names):
                 node_positions={n.node_id: p for n, p in nodes},
             )
         )
+
+
+# -- picture effects ------------------------------------------------------------------------------
+# ability id: [(effect, at, offset_x, offset_y, scale, flags)]; ``rotate`` turns the picture to
+# the aim, ``follow`` keeps it on the user, offsets run along the aim
+SKILL_FX = {
+    "w_slash1": [("wind", 0.06, 16, 0, 0.6, "rotate")],
+    "w_slash2": [("wind", 0.06, 16, 0, 0.6, "rotate")],
+    "w_slash3": [("blood_arc", 0.1, 20, 0, 0.9, "rotate")],
+    "w_whirl": [("wind", 0.05, 0, 0, 1.8, ""), ("wind", 0.25, 0, 0, 1.8, "")],
+    "w_leap": [("spike", 0.25, 12, 0, 1.1, "")],
+    "w_shout": [("gold_burst", 0.1, 0, 0, 1.2, "follow")],
+    "w_rend": [("blood_arc", 0.08, 16, 0, 0.7, "rotate")],
+    "w_frenzy": [("blood_arc", 0.1, 0, 0, 1.2, "follow")],
+    "w_execute": [("blood_arc", 0.18, 22, 0, 1.0, "rotate")],
+    "w_rampage": [("blood_arc", at, 18, 0, 0.8, "rotate") for at in (0.08, 0.28, 0.48)],
+    "w_shield_bash": [("gold_burst", 0.1, 18, 0, 0.5, "")],
+    "w_fortify": [("gold_burst", 0.1, 0, 0, 1.0, "follow")],
+    "w_ground_slam": [("spike", 0.4, 0, 0, 1.5, ""), ("rocks", 0.4, 0, 0, 1.5, "")],
+    "w_retribution": [("gold_burst", at, 0, 0, 1.8, "") for at in (0.15, 0.35)],
+    "w_bulwark": [("gold_burst", 0.1, 0, 0, 1.4, "follow")],
+    "w_cleave": [("wind", 0.08, 18, 0, 1.0, "rotate")],
+    "w_thunderclap": [("bolt_burst", 0.15, 0, 0, 2.0, "")],
+    "w_earthquake": [("spike", at, 0, 0, 2.0, "") for at in (0.2, 0.5, 0.8)],
+    "r_aimed": [("spark_arc", 0.2, 12, 0, 0.5, "rotate")],
+    "r_pierce": [("spark_arc", 0.25, 12, 0, 0.7, "rotate")],
+    "r_snipe": [("spark_arc", 0.55, 14, 0, 0.9, "rotate")],
+    "r_railshot": [("spark_arc", 0.7, 16, 0, 1.2, "rotate")],
+    "r_deadeye": [("gold_burst", 0.1, 0, 0, 1.0, "follow")],
+    "r_tumble": [("wind", 0.0, -8, 0, 0.8, "rotate")],
+    "r_caltrops": [("rocks", 0.2, 0, 0, 1.4, "")],
+    "r_toxic_cloud": [("poison_cloud", at, 30, 0, 1.3, "") for at in (0.2, 0.5, 0.8)],
+    "r_venom_rain": [("poison_cloud", 0.15, 40, 0, 0.9, "")],
+    "r_plague": [("poison_burst", 0.2, 0, 0, 2.6, "")],
+    "r_shadow_step": [
+        ("shadow_portal", 0.0, 0, 0, 0.9, ""),
+        ("shadow_portal", 0.15, 40, 0, 0.9, ""),
+    ],
+    "m_flame_wave": [("ember_arc", at, 24, 0, 1.1, "rotate") for at in (0.15, 0.3)],
+    "m_inferno": [("explosion", 0.1 + 0.2 * i, 0, 0, 1.8, "") for i in range(4)],
+    "m_nova": [("ice_burst", 0.08, 0, 0, 2.2, "")],
+    "m_blizzard": [("geyser", 0.1 + 0.2 * i, 36, (-1) ** i * 24, 1.4, "") for i in range(5)],
+    "m_blink": [("shadow_portal", 0.0, 0, 0, 0.9, ""), ("shadow_portal", 0.12, 70, 0, 0.9, "")],
+    "m_lightning_strike": [("bolt_strike", 0.3, 62, 0, 1.3, "")],
+    "m_thunderstorm": [
+        ("bolt_strike", 0.15 + 0.2 * i, x, y, 1.1, "")
+        for i, (x, y) in enumerate(((46, -30), (-46, -30), (46, 30), (-46, 30)))
+    ],
+    "m_overload": [("bolt_burst", 0.1, 0, 0, 1.4, "follow")],
+    "cyclops_smash": [("spike", 0.55, 16, 0, 1.6, "")],
+    "golem_slam": [("spike", 0.45, 12, 0, 1.8, "")],
+}
+
+
+def fx_cues(looks, ability_id):
+    """The ``vfx`` cues of one ability."""
+    cues = []
+    for index, (name, at, ox, oy, scale, flags) in enumerate(SKILL_FX.get(ability_id, ())):
+        payload = {
+            "effect": looks[f"fx_{name}"],
+            "offset_x": ox,
+            "offset_y": oy,
+            "scale": scale,
+            "frame_duration": 0.05,
+            "aim": True,
+        }
+        if "rotate" in flags:
+            payload["rotate"] = True
+        if "follow" in flags:
+            payload["follow"] = True
+        cues.append(ActionCue(f"vfx_{name}_{index}", at, "vfx", payload))
+    return cues
+
+
+def add_effects(library, looks):
+    """Give every ability that has effects its ``vfx`` cues (adds to the timeline)."""
+    for ability_id in SKILL_FX:
+        ability = library.abilities.get(ability_id)
+        timeline = library.timelines.get(ability.timeline_id) if ability is not None else None
+        if timeline is None:
+            continue
+        cues = [*timeline.cues, *fx_cues(looks, ability_id)]
+        library.timelines[timeline.timeline_id] = ActionTimeline(timeline.timeline_id, cues)

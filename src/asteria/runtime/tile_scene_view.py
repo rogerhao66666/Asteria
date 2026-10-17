@@ -350,6 +350,29 @@ class TileSceneView:
             else:
                 screen.blit(image, (round(shift), y))
 
+    def effect_frame_count(self, sheet_id):
+        """How many frames an effect sheet has (0 when it cannot be loaded)."""
+        try:
+            return len(self.resources.get(sheet_id, "sprite_sheet").frames)
+        except Exception:  # noqa: BLE001 - an unknown effect plays nothing
+            return 0
+
+    def effect_image(self, sheet_id, frame, scale=1.0, angle=0):
+        """One frame of an effect sheet at this zoom (times ``scale``), turned by ``angle``
+        degrees (steps of 15), or None."""
+        try:
+            image, _, _ = self._sprite(sheet_id, int(frame), self.camera.zoom * float(scale))
+        except Exception:  # noqa: BLE001
+            return None
+        angle = round(angle / 15) * 15
+        if not angle:
+            return image
+        key = ("effect-turned", sheet_id, int(frame), float(scale), angle, self.camera.zoom)
+        turned = self._frames.get(key)
+        if turned is None:
+            turned = self._frames[key] = self.pg.transform.rotate(image, angle)
+        return turned
+
     def projectile_image(self, definition, vx, vy):
         """A projectile's sprite (its ``sprite`` names a sprite sheet: frame 0) at this zoom,
         turned to its velocity when ``align_to_velocity``; None when it cannot be loaded."""

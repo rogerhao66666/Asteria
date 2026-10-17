@@ -614,6 +614,534 @@
         "source_path": "playable_assets/golem_clips.json"
       },
       {
+        "id": "fce88643-f053-57bc-bd7e-21150dafc24c",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "fire_ball",
+        "source_path": "playable_assets/fx_fire_ball.png"
+      },
+      {
+        "id": "d4b56e20-0322-5f05-85c2-317f4a7f8e87",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "fire_ball Sheet",
+        "source_path": "playable_assets/fx_fire_ball_sheet.json"
+      },
+      {
+        "id": "c27d8a91-0d71-5683-ab72-db4cda968162",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "explosion",
+        "source_path": "playable_assets/fx_explosion.png"
+      },
+      {
+        "id": "f89d6315-f0af-5852-abc1-f06def68ea06",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "explosion Sheet",
+        "source_path": "playable_assets/fx_explosion_sheet.json"
+      },
+      {
+        "id": "17208374-974d-5b96-bb30-e97417c788d4",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "spear",
+        "source_path": "playable_assets/fx_spear.png"
+      },
+      {
+        "id": "65b554ef-9bc1-5b11-a51f-8d8e175c1b1a",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "spear Sheet",
+        "source_path": "playable_assets/fx_spear_sheet.json"
+      },
+      {
+        "id": "b48112a3-b61b-551c-b289-049e0beeb965",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "water",
+        "source_path": "playable_assets/fx_water.png"
+      },
+      {
+        "id": "bd05d9de-b0b1-5b2a-9194-30c06cbf88af",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "water Sheet",
+        "source_path": "playable_assets/fx_water_sheet.json"
+      },
+      {
+        "id": "ca65e9a6-441f-5c30-98d2-76b7f87edc1d",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "geyser",
+        "source_path": "playable_assets/fx_geyser.png"
+      },
+      {
+        "id": "1fcf4310-a241-5053-82cb-716542727a7b",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "geyser Sheet",
+        "source_path": "playable_assets/fx_geyser_sheet.json"
+      },
+      {
+        "id": "bda4767d-2c7a-5219-807a-317119ea033f",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "wind",
+        "source_path": "playable_assets/fx_wind.png"
+      },
+      {
+        "id": "cda0e46b-9037-5ebd-b2dc-2d192fcd9672",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "wind Sheet",
+        "source_path": "playable_assets/fx_wind_sheet.json"
+      },
+      {
+        "id": "08198c80-3586-549e-a7a1-08de03729fbb",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "tornado",
+        "source_path": "playable_assets/fx_tornado.png"
+      },
+      {
+        "id": "f9ab0671-56f8-5458-b369-13fa2e7e342d",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "tornado Sheet",
+        "source_path": "playable_assets/fx_tornado_sheet.json"
+      },
+      {
+        "id": "d70729b6-a894-52b0-b3e1-211bcb30ba39",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "spike",
+        "source_path": "playable_assets/fx_spike.png"
+      },
+      {
+        "id": "869812bd-bf9f-5815-b480-52b9cf4cb286",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "spike Sheet",
+        "source_path": "playable_assets/fx_spike_sheet.json"
+      },
+      {
+        "id": "e5c4321b-fac1-51bc-b336-69938aef9d98",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "rocks",
+        "source_path": "playable_assets/fx_rocks.png"
+      },
+      {
+        "id": "1d04be6e-81eb-5b6d-89fc-d1b1c7674e92",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "rocks Sheet",
+        "source_path": "playable_assets/fx_rocks_sheet.json"
+      },
+      {
+        "id": "40792b28-e78f-55c8-b9a9-6f54d3a9b9a2",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "portal",
+        "source_path": "playable_assets/fx_portal.png"
+      },
+      {
+        "id": "8d8d18a4-2a0c-53f1-94d1-502157dd8e36",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "portal Sheet",
+        "source_path": "playable_assets/fx_portal_sheet.json"
+      },
+      {
+        "id": "d5f657cb-3200-5d3b-bfe0-80ea12309fd3",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "ice_bolt",
+        "source_path": "playable_assets/fx_ice_bolt.png"
+      },
+      {
+        "id": "c9764146-76d4-58ff-ab1a-b35dea10ac82",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "ice_bolt Sheet",
+        "source_path": "playable_assets/fx_ice_bolt_sheet.json"
+      },
+      {
+        "id": "24a5e0bd-e3f1-54a3-b0d4-41341359c742",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "ice_burst",
+        "source_path": "playable_assets/fx_ice_burst.png"
+      },
+      {
+        "id": "fc159e61-4ab6-5923-be3e-3fbf5abbfda0",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "ice_burst Sheet",
+        "source_path": "playable_assets/fx_ice_burst_sheet.json"
+      },
+      {
+        "id": "b5f1ab49-9bc9-5a8d-8aa1-a02c800829a1",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "bolt_ball",
+        "source_path": "playable_assets/fx_bolt_ball.png"
+      },
+      {
+        "id": "f11b2ac9-f610-56e9-b24f-d543647b7c6c",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "bolt_ball Sheet",
+        "source_path": "playable_assets/fx_bolt_ball_sheet.json"
+      },
+      {
+        "id": "46c2fa85-ade8-589d-ae0a-1e2f62de8e52",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "bolt_strike",
+        "source_path": "playable_assets/fx_bolt_strike.png"
+      },
+      {
+        "id": "174f9c0f-cffa-542c-b255-b092114c94bc",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "bolt_strike Sheet",
+        "source_path": "playable_assets/fx_bolt_strike_sheet.json"
+      },
+      {
+        "id": "c81f8bcd-de35-5a07-b2bf-8940f776a690",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "bolt_burst",
+        "source_path": "playable_assets/fx_bolt_burst.png"
+      },
+      {
+        "id": "aad78212-e3f6-5be5-8c40-f7de903c42ed",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "bolt_burst Sheet",
+        "source_path": "playable_assets/fx_bolt_burst_sheet.json"
+      },
+      {
+        "id": "0aaa30b2-854d-56df-9cf2-fdf0fc1b3d17",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "spark_arc",
+        "source_path": "playable_assets/fx_spark_arc.png"
+      },
+      {
+        "id": "dbbe5a78-ea96-532f-a6fc-74df01ff7f18",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "spark_arc Sheet",
+        "source_path": "playable_assets/fx_spark_arc_sheet.json"
+      },
+      {
+        "id": "80a7fa1b-4069-5221-89f9-66ad8feec8d9",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "ember_arc",
+        "source_path": "playable_assets/fx_ember_arc.png"
+      },
+      {
+        "id": "505ee81d-9408-540e-8c11-b1e9cd0c6c40",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "ember_arc Sheet",
+        "source_path": "playable_assets/fx_ember_arc_sheet.json"
+      },
+      {
+        "id": "d5619553-1e6e-5ada-bafb-9d5da17ce1d6",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "poison_cloud",
+        "source_path": "playable_assets/fx_poison_cloud.png"
+      },
+      {
+        "id": "a58a8059-bf7a-50bd-a5db-87d9975f9684",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "poison_cloud Sheet",
+        "source_path": "playable_assets/fx_poison_cloud_sheet.json"
+      },
+      {
+        "id": "979274e4-140c-51bb-9f23-f0b5f03088dd",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "poison_burst",
+        "source_path": "playable_assets/fx_poison_burst.png"
+      },
+      {
+        "id": "abb310b9-1c6c-5546-b25d-ded3ef7f54c9",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "poison_burst Sheet",
+        "source_path": "playable_assets/fx_poison_burst_sheet.json"
+      },
+      {
+        "id": "7a8aaf47-e388-54f6-8dce-ba29d16053f2",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "gold_burst",
+        "source_path": "playable_assets/fx_gold_burst.png"
+      },
+      {
+        "id": "b45649f1-20b5-5379-8d9d-4e4f7a59bea3",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "gold_burst Sheet",
+        "source_path": "playable_assets/fx_gold_burst_sheet.json"
+      },
+      {
+        "id": "0d5f57a7-5964-50bb-bbb9-6c3f6bb134d3",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "blood_arc",
+        "source_path": "playable_assets/fx_blood_arc.png"
+      },
+      {
+        "id": "42da1255-316d-5511-be7c-6c7036e1b869",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "blood_arc Sheet",
+        "source_path": "playable_assets/fx_blood_arc_sheet.json"
+      },
+      {
+        "id": "32f50c8c-fda0-50c0-bfad-d3f96f9f2997",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "shadow_portal",
+        "source_path": "playable_assets/fx_shadow_portal.png"
+      },
+      {
+        "id": "0f43a2fb-88e1-5afc-9ce1-99e8f246e8ca",
+        "import_settings": {},
+        "importer": "diablo_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "source": "reference_projects/diablo_demo/build_project.py"
+        },
+        "name": "shadow_portal Sheet",
+        "source_path": "playable_assets/fx_shadow_portal_sheet.json"
+      },
+      {
         "id": "fcc0d235-356b-5a3d-946c-1d23e6328c1c",
         "import_settings": {},
         "importer": "diablo_demo",
@@ -2272,20 +2800,22 @@
               "host:panel",
               {
                 "asset_id": "playable_assets/lucifer/ui/panel_gothic.png",
-                "bottom": 7,
-                "left": 7,
-                "right": 7,
-                "top": 7
+                "bottom": 22,
+                "left": 22,
+                "right": 22,
+                "scale": 0.5,
+                "top": 22
               }
             ],
             [
               "hud:*",
               {
                 "asset_id": "playable_assets/lucifer/ui/panel_gothic.png",
-                "bottom": 7,
-                "left": 7,
-                "right": 7,
-                "top": 7
+                "bottom": 22,
+                "left": 22,
+                "right": 22,
+                "scale": 0.5,
+                "top": 22
               }
             ]
           ],
@@ -5437,12 +5967,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.7,
+              "coefficient": 0.735,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.0,
+              "coefficient": 1.05,
               "key": "cold_dmg",
               "source": "source_stat"
             },
@@ -5495,12 +6025,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.2,
+              "coefficient": 1.68,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.0,
+              "coefficient": 1.4,
               "key": "shock_dmg",
               "source": "source_stat"
             },
@@ -5611,12 +6141,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.8,
+              "coefficient": 1.35,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.0,
+              "coefficient": 0.75,
               "key": "fire_dmg",
               "source": "source_stat"
             },
@@ -5669,12 +6199,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.6,
+              "coefficient": 1.2000000000000002,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.2,
+              "coefficient": 0.8999999999999999,
               "key": "fire_dmg",
               "source": "source_stat"
             },
@@ -5727,12 +6257,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.0,
+              "coefficient": 0.75,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.0,
+              "coefficient": 0.75,
               "key": "fire_dmg",
               "source": "source_stat"
             },
@@ -5843,12 +6373,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.0,
+              "coefficient": 1.05,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.0,
+              "coefficient": 1.05,
               "key": "cold_dmg",
               "source": "source_stat"
             },
@@ -5901,12 +6431,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.4,
+              "coefficient": 1.47,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.2,
+              "coefficient": 1.26,
               "key": "cold_dmg",
               "source": "source_stat"
             },
@@ -5959,12 +6489,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.2,
+              "coefficient": 1.26,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.0,
+              "coefficient": 1.05,
               "key": "cold_dmg",
               "source": "source_stat"
             },
@@ -6017,12 +6547,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.8,
+              "coefficient": 0.6000000000000001,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.0,
+              "coefficient": 0.75,
               "key": "fire_dmg",
               "source": "source_stat"
             },
@@ -6075,12 +6605,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 2.4,
+              "coefficient": 3.36,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.2,
+              "coefficient": 1.68,
               "key": "shock_dmg",
               "source": "source_stat"
             },
@@ -6191,12 +6721,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.3,
+              "coefficient": 1.8199999999999998,
               "key": "magic",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.0,
+              "coefficient": 1.4,
               "key": "shock_dmg",
               "source": "source_stat"
             },
@@ -6290,12 +6820,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.7,
+              "coefficient": 3.2129999999999996,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.3,
+              "coefficient": 0.567,
               "key": "power",
               "source": "source_stat"
             },
@@ -6397,12 +6927,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.6,
+              "coefficient": 2.166,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.0,
+              "coefficient": 3.61,
               "key": "poison_dmg",
               "source": "source_stat"
             },
@@ -6450,12 +6980,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.7,
+              "coefficient": 0.45499999999999996,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.2,
+              "coefficient": 0.13,
               "key": "power",
               "source": "source_stat"
             },
@@ -6561,12 +7091,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.2,
+              "coefficient": 4.332,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 2.0,
+              "coefficient": 7.22,
               "key": "poison_dmg",
               "source": "source_stat"
             },
@@ -6619,12 +7149,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.9,
+              "coefficient": 3.249,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.0,
+              "coefficient": 3.61,
               "key": "poison_dmg",
               "source": "source_stat"
             },
@@ -6672,12 +7202,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 5.0,
+              "coefficient": 9.45,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.8,
+              "coefficient": 1.512,
               "key": "power",
               "source": "source_stat"
             },
@@ -6723,12 +7253,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.8,
+              "coefficient": 0.52,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.2,
+              "coefficient": 0.13,
               "key": "power",
               "source": "source_stat"
             },
@@ -6774,7 +7304,7 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.8,
+              "coefficient": 0.52,
               "key": "dexterity",
               "source": "source_stat"
             },
@@ -6820,12 +7350,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 3.4,
+              "coefficient": 6.425999999999999,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.5,
+              "coefficient": 0.945,
               "key": "power",
               "source": "source_stat"
             },
@@ -6876,12 +7406,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.5,
+              "coefficient": 1.805,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.2,
+              "coefficient": 4.332,
               "key": "poison_dmg",
               "source": "source_stat"
             },
@@ -6934,12 +7464,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.7,
+              "coefficient": 2.5269999999999997,
               "key": "dexterity",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.8,
+              "coefficient": 2.888,
               "key": "poison_dmg",
               "source": "source_stat"
             },
@@ -7079,7 +7609,7 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.1,
+              "coefficient": 1.815,
               "key": "power",
               "source": "source_stat"
             },
@@ -7171,7 +7701,7 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.5,
+              "coefficient": 2.4749999999999996,
               "key": "power",
               "source": "source_stat"
             },
@@ -7217,7 +7747,7 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 2.9,
+              "coefficient": 0.754,
               "key": "power",
               "source": "source_stat"
             },
@@ -7314,12 +7844,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.4,
+              "coefficient": 1.8479999999999999,
               "key": "power",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.6,
+              "coefficient": 0.792,
               "key": "defense",
               "source": "source_stat"
             },
@@ -7416,7 +7946,7 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.2,
+              "coefficient": 0.312,
               "key": "power",
               "source": "source_stat"
             },
@@ -7467,7 +7997,7 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.3,
+              "coefficient": 0.338,
               "key": "power",
               "source": "source_stat"
             },
@@ -7513,12 +8043,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 2.2,
+              "coefficient": 2.9040000000000004,
               "key": "defense",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.6,
+              "coefficient": 0.792,
               "key": "power",
               "source": "source_stat"
             },
@@ -7564,12 +8094,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 0.8,
+              "coefficient": 1.056,
               "key": "power",
               "source": "source_stat"
             },
             {
-              "coefficient": 0.8,
+              "coefficient": 1.056,
               "key": "defense",
               "source": "source_stat"
             },
@@ -7620,12 +8150,12 @@
           "schema": "asteria.value_formula",
           "terms": [
             {
-              "coefficient": 1.0,
+              "coefficient": 1.65,
               "key": "power",
               "source": "source_stat"
             },
             {
-              "coefficient": 1.0,
+              "coefficient": 1.65,
               "key": "shock_dmg",
               "source": "source_stat"
             },
@@ -7902,7 +8432,7 @@
         "projectile_id": "fireball_shot",
         "schema": "asteria.projectile",
         "speed": 200.0,
-        "sprite": "c40a21f1-d90c-5986-b8e1-0d8c8d1b643c",
+        "sprite": "d4b56e20-0322-5f05-85c2-317f4a7f8e87",
         "version": 1,
         "wall": "destroy",
         "wall_mask": 4294967295,
@@ -7924,7 +8454,7 @@
         "projectile_id": "firestorm_meteor",
         "schema": "asteria.projectile",
         "speed": 160.0,
-        "sprite": "c40a21f1-d90c-5986-b8e1-0d8c8d1b643c",
+        "sprite": "d4b56e20-0322-5f05-85c2-317f4a7f8e87",
         "version": 1,
         "wall": "destroy",
         "wall_mask": 4294967295,
@@ -7946,7 +8476,7 @@
         "projectile_id": "frost_bolt",
         "schema": "asteria.projectile",
         "speed": 260.0,
-        "sprite": "713b013d-5692-5b2f-a66e-8c5535473059",
+        "sprite": "c9764146-76d4-58ff-ab1a-b35dea10ac82",
         "version": 1,
         "wall": "destroy",
         "wall_mask": 4294967295,
@@ -7968,7 +8498,7 @@
         "projectile_id": "frozen_orb",
         "schema": "asteria.projectile",
         "speed": 110.0,
-        "sprite": "713b013d-5692-5b2f-a66e-8c5535473059",
+        "sprite": "c9764146-76d4-58ff-ab1a-b35dea10ac82",
         "version": 1,
         "wall": "destroy",
         "wall_mask": 4294967295,
@@ -7990,7 +8520,7 @@
         "projectile_id": "ice_spike",
         "schema": "asteria.projectile",
         "speed": 340.0,
-        "sprite": "8ee7ba15-5539-53c0-9b01-b1cacb00ee2d",
+        "sprite": "c9764146-76d4-58ff-ab1a-b35dea10ac82",
         "version": 1,
         "wall": "destroy",
         "wall_mask": 4294967295,
@@ -8012,7 +8542,7 @@
         "projectile_id": "lightning_bolt",
         "schema": "asteria.projectile",
         "speed": 340.0,
-        "sprite": "713b013d-5692-5b2f-a66e-8c5535473059",
+        "sprite": "AttackDefinition(attack_id='m_frost_bolt', display_name='m_frost_bolt', damage=ValueFormula(terms=(FormulaTerm(source=<ValueSource.SOURCE_STAT: 'source_stat'>, key='magic', coefficient=1.0), FormulaTerm(source=<ValueSource.SOURCE_STAT: 'source_stat'>, key='cold_dmg', coefficient=1.0), FormulaTerm(source=<ValueSource.TARGET_STAT: 'target_stat'>, key='defense', coefficient=-0.2)), multipliers=(), minimum=1.0, maximum=None), damage_formula_id='', damage_resource='', tags=('element.ice',), poise_damage=0.0, hitstun=0.0, knockback=60.0, knockback_direction='away', knockback_angle=0.0, knockback_lift=0.0, hitstop=0.0, hitstop_scope='participants', target_iframes=0.0, max_targets=0, critical_chance=0.0, critical_chance_stat='', critical_multiplier=1.5, on_hit_event='', armor_break=0, knockdown=False, knockdown_time=0.0, apply_states=({'state': 'chilled', 'chance': 1.0},))",
         "version": 1,
         "wall": "destroy",
         "wall_mask": 4294967295,
@@ -8271,7 +8801,7 @@
             "priority": 0,
             "required_tags": [],
             "stat": "defense",
-            "value": 10.0
+            "value": 4.0
           }
         ],
         "on_apply": [],
@@ -8418,7 +8948,7 @@
             "priority": 0,
             "required_tags": [],
             "stat": "defense",
-            "value": 14.0
+            "value": 6.0
           }
         ],
         "on_apply": [],
@@ -8561,7 +9091,7 @@
                 {
                   "kind": "resource_delta",
                   "target": "hp",
-                  "value": -4.0
+                  "value": -7.0
                 }
               ],
               "required_tags": [],
@@ -8662,6 +9192,19 @@
               "hit_tag": "cyclops_smash",
               "offset_x": 10,
               "width": 64
+            },
+            "time": 0.55
+          },
+          {
+            "cue_id": "vfx_spike_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "869812bd-bf9f-5815-b480-52b9cf4cb286",
+              "frame_duration": 0.05,
+              "offset_x": 16,
+              "offset_y": 0,
+              "scale": 1.6
             },
             "time": 0.55
           },
@@ -8787,6 +9330,19 @@
             "time": 0.45
           },
           {
+            "cue_id": "vfx_spike_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "869812bd-bf9f-5815-b480-52b9cf4cb286",
+              "frame_duration": 0.05,
+              "offset_x": 12,
+              "offset_y": 0,
+              "scale": 1.8
+            },
+            "time": 0.45
+          },
+          {
             "cue_id": "golem_slam_end",
             "kind": "gameplay_event",
             "payload": {
@@ -8848,6 +9404,32 @@
             "time": 0.0
           },
           {
+            "cue_id": "vfx_shadow_portal_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "0f43a2fb-88e1-5afc-9ce1-99e8f246e8ca",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 0.9
+            },
+            "time": 0.0
+          },
+          {
+            "cue_id": "vfx_shadow_portal_1",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "0f43a2fb-88e1-5afc-9ce1-99e8f246e8ca",
+              "frame_duration": 0.05,
+              "offset_x": 70,
+              "offset_y": 0,
+              "scale": 0.9
+            },
+            "time": 0.12
+          },
+          {
             "cue_id": "m_blink_end",
             "kind": "gameplay_event",
             "payload": {
@@ -8891,6 +9473,19 @@
             "time": 0.1
           },
           {
+            "cue_id": "vfx_geyser_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "1fcf4310-a241-5053-82cb-716542727a7b",
+              "frame_duration": 0.05,
+              "offset_x": 36,
+              "offset_y": 24,
+              "scale": 1.4
+            },
+            "time": 0.1
+          },
+          {
             "cue_id": "m_blizzard_0.30000000000000004",
             "kind": "hitbox",
             "payload": {
@@ -8899,6 +9494,19 @@
               "hit_tag": "m_blizzard",
               "offset_x": 36,
               "width": 92
+            },
+            "time": 0.30000000000000004
+          },
+          {
+            "cue_id": "vfx_geyser_1",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "1fcf4310-a241-5053-82cb-716542727a7b",
+              "frame_duration": 0.05,
+              "offset_x": 36,
+              "offset_y": -24,
+              "scale": 1.4
             },
             "time": 0.30000000000000004
           },
@@ -8915,6 +9523,19 @@
             "time": 0.5
           },
           {
+            "cue_id": "vfx_geyser_2",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "1fcf4310-a241-5053-82cb-716542727a7b",
+              "frame_duration": 0.05,
+              "offset_x": 36,
+              "offset_y": 24,
+              "scale": 1.4
+            },
+            "time": 0.5
+          },
+          {
             "cue_id": "m_blizzard_0.7000000000000001",
             "kind": "hitbox",
             "payload": {
@@ -8927,6 +9548,19 @@
             "time": 0.7000000000000001
           },
           {
+            "cue_id": "vfx_geyser_3",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "1fcf4310-a241-5053-82cb-716542727a7b",
+              "frame_duration": 0.05,
+              "offset_x": 36,
+              "offset_y": -24,
+              "scale": 1.4
+            },
+            "time": 0.7000000000000001
+          },
+          {
             "cue_id": "m_blizzard_0.9",
             "kind": "hitbox",
             "payload": {
@@ -8935,6 +9569,19 @@
               "hit_tag": "m_blizzard",
               "offset_x": 36,
               "width": 92
+            },
+            "time": 0.9
+          },
+          {
+            "cue_id": "vfx_geyser_4",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "1fcf4310-a241-5053-82cb-716542727a7b",
+              "frame_duration": 0.05,
+              "offset_x": 36,
+              "offset_y": 24,
+              "scale": 1.4
             },
             "time": 0.9
           },
@@ -9121,6 +9768,20 @@
             "time": 0.15
           },
           {
+            "cue_id": "vfx_ember_arc_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "505ee81d-9408-540e-8c11-b1e9cd0c6c40",
+              "frame_duration": 0.05,
+              "offset_x": 24,
+              "offset_y": 0,
+              "rotate": true,
+              "scale": 1.1
+            },
+            "time": 0.15
+          },
+          {
             "cue_id": "m_flame_wave_0.3",
             "kind": "hitbox",
             "payload": {
@@ -9129,6 +9790,20 @@
               "hit_tag": "m_flame_wave",
               "offset_x": 22,
               "width": 56
+            },
+            "time": 0.3
+          },
+          {
+            "cue_id": "vfx_ember_arc_1",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "505ee81d-9408-540e-8c11-b1e9cd0c6c40",
+              "frame_duration": 0.05,
+              "offset_x": 24,
+              "offset_y": 0,
+              "rotate": true,
+              "scale": 1.1
             },
             "time": 0.3
           },
@@ -9281,6 +9956,19 @@
             "time": 0.1
           },
           {
+            "cue_id": "vfx_explosion_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "f89d6315-f0af-5852-abc1-f06def68ea06",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.8
+            },
+            "time": 0.1
+          },
+          {
             "cue_id": "m_inferno_0.30000000000000004",
             "kind": "hitbox",
             "payload": {
@@ -9288,6 +9976,19 @@
               "height": 78,
               "hit_tag": "m_inferno",
               "width": 78
+            },
+            "time": 0.30000000000000004
+          },
+          {
+            "cue_id": "vfx_explosion_1",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "f89d6315-f0af-5852-abc1-f06def68ea06",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.8
             },
             "time": 0.30000000000000004
           },
@@ -9303,6 +10004,19 @@
             "time": 0.5
           },
           {
+            "cue_id": "vfx_explosion_2",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "f89d6315-f0af-5852-abc1-f06def68ea06",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.8
+            },
+            "time": 0.5
+          },
+          {
             "cue_id": "m_inferno_0.7000000000000001",
             "kind": "hitbox",
             "payload": {
@@ -9310,6 +10024,19 @@
               "height": 78,
               "hit_tag": "m_inferno",
               "width": 78
+            },
+            "time": 0.7000000000000001
+          },
+          {
+            "cue_id": "vfx_explosion_3",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "f89d6315-f0af-5852-abc1-f06def68ea06",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.8
             },
             "time": 0.7000000000000001
           },
@@ -9345,6 +10072,19 @@
               "hit_tag": "m_lightning_strike",
               "offset_x": 62,
               "width": 46
+            },
+            "time": 0.3
+          },
+          {
+            "cue_id": "vfx_bolt_strike_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "174f9c0f-cffa-542c-b255-b092114c94bc",
+              "frame_duration": 0.05,
+              "offset_x": 62,
+              "offset_y": 0,
+              "scale": 1.3
             },
             "time": 0.3
           },
@@ -9425,6 +10165,19 @@
             "time": 0.08
           },
           {
+            "cue_id": "vfx_ice_burst_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "fc159e61-4ab6-5923-be3e-3fbf5abbfda0",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 2.2
+            },
+            "time": 0.08
+          },
+          {
             "cue_id": "m_nova_end",
             "kind": "gameplay_event",
             "payload": {
@@ -9453,6 +10206,20 @@
             "payload": {
               "apply_state": "overload",
               "name": "m_overload"
+            },
+            "time": 0.1
+          },
+          {
+            "cue_id": "vfx_bolt_burst_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "aad78212-e3f6-5be5-8c40-f7de903c42ed",
+              "follow": true,
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.4
             },
             "time": 0.1
           },
@@ -9501,6 +10268,19 @@
             "time": 0.15
           },
           {
+            "cue_id": "vfx_bolt_strike_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "174f9c0f-cffa-542c-b255-b092114c94bc",
+              "frame_duration": 0.05,
+              "offset_x": 46,
+              "offset_y": -30,
+              "scale": 1.1
+            },
+            "time": 0.15
+          },
+          {
             "cue_id": "m_thunderstorm_0.35",
             "kind": "hitbox",
             "payload": {
@@ -9510,6 +10290,19 @@
               "offset_x": -46,
               "offset_y": -30,
               "width": 52
+            },
+            "time": 0.35
+          },
+          {
+            "cue_id": "vfx_bolt_strike_1",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "174f9c0f-cffa-542c-b255-b092114c94bc",
+              "frame_duration": 0.05,
+              "offset_x": -46,
+              "offset_y": -30,
+              "scale": 1.1
             },
             "time": 0.35
           },
@@ -9527,6 +10320,19 @@
             "time": 0.55
           },
           {
+            "cue_id": "vfx_bolt_strike_2",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "174f9c0f-cffa-542c-b255-b092114c94bc",
+              "frame_duration": 0.05,
+              "offset_x": 46,
+              "offset_y": 30,
+              "scale": 1.1
+            },
+            "time": 0.55
+          },
+          {
             "cue_id": "m_thunderstorm_0.7500000000000001",
             "kind": "hitbox",
             "payload": {
@@ -9536,6 +10342,19 @@
               "offset_x": -46,
               "offset_y": 30,
               "width": 52
+            },
+            "time": 0.7500000000000001
+          },
+          {
+            "cue_id": "vfx_bolt_strike_3",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "174f9c0f-cffa-542c-b255-b092114c94bc",
+              "frame_duration": 0.05,
+              "offset_x": -46,
+              "offset_y": 30,
+              "scale": 1.1
             },
             "time": 0.7500000000000001
           },
@@ -9636,6 +10455,20 @@
             "time": 0.2
           },
           {
+            "cue_id": "vfx_spark_arc_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "dbbe5a78-ea96-532f-a6fc-74df01ff7f18",
+              "frame_duration": 0.05,
+              "offset_x": 12,
+              "offset_y": 0,
+              "rotate": true,
+              "scale": 0.5
+            },
+            "time": 0.2
+          },
+          {
             "cue_id": "r_aimed_end",
             "kind": "gameplay_event",
             "payload": {
@@ -9690,6 +10523,19 @@
             "time": 0.2
           },
           {
+            "cue_id": "vfx_rocks_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "1d04be6e-81eb-5b6d-89fc-d1b1c7674e92",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.4
+            },
+            "time": 0.2
+          },
+          {
             "cue_id": "r_caltrops_end",
             "kind": "gameplay_event",
             "payload": {
@@ -9718,6 +10564,20 @@
             "payload": {
               "apply_state": "deadeye",
               "name": "r_deadeye"
+            },
+            "time": 0.1
+          },
+          {
+            "cue_id": "vfx_gold_burst_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "b45649f1-20b5-5379-8d9d-4e4f7a59bea3",
+              "follow": true,
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.0
             },
             "time": 0.1
           },
@@ -9796,6 +10656,20 @@
             "time": 0.25
           },
           {
+            "cue_id": "vfx_spark_arc_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "dbbe5a78-ea96-532f-a6fc-74df01ff7f18",
+              "frame_duration": 0.05,
+              "offset_x": 12,
+              "offset_y": 0,
+              "rotate": true,
+              "scale": 0.7
+            },
+            "time": 0.25
+          },
+          {
             "cue_id": "r_pierce_end",
             "kind": "gameplay_event",
             "payload": {
@@ -9834,6 +10708,19 @@
               "height": 124,
               "hit_tag": "r_plague",
               "width": 124
+            },
+            "time": 0.2
+          },
+          {
+            "cue_id": "vfx_poison_burst_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "abb310b9-1c6c-5546-b25d-ded3ef7f54c9",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 2.6
             },
             "time": 0.2
           },
@@ -9906,6 +10793,20 @@
             "payload": {
               "aim": true,
               "projectile_id": "rail"
+            },
+            "time": 0.7
+          },
+          {
+            "cue_id": "vfx_spark_arc_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "dbbe5a78-ea96-532f-a6fc-74df01ff7f18",
+              "frame_duration": 0.05,
+              "offset_x": 16,
+              "offset_y": 0,
+              "rotate": true,
+              "scale": 1.2
             },
             "time": 0.7
           },
@@ -10054,6 +10955,32 @@
             "time": 0.0
           },
           {
+            "cue_id": "vfx_shadow_portal_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "0f43a2fb-88e1-5afc-9ce1-99e8f246e8ca",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 0.9
+            },
+            "time": 0.0
+          },
+          {
+            "cue_id": "vfx_shadow_portal_1",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "0f43a2fb-88e1-5afc-9ce1-99e8f246e8ca",
+              "frame_duration": 0.05,
+              "offset_x": 40,
+              "offset_y": 0,
+              "scale": 0.9
+            },
+            "time": 0.15
+          },
+          {
             "cue_id": "r_shadow_step_0.18",
             "kind": "projectile",
             "payload": {
@@ -10139,6 +11066,20 @@
             "time": 0.55
           },
           {
+            "cue_id": "vfx_spark_arc_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "dbbe5a78-ea96-532f-a6fc-74df01ff7f18",
+              "frame_duration": 0.05,
+              "offset_x": 14,
+              "offset_y": 0,
+              "rotate": true,
+              "scale": 0.9
+            },
+            "time": 0.55
+          },
+          {
             "cue_id": "r_snipe_end",
             "kind": "gameplay_event",
             "payload": {
@@ -10174,6 +11115,19 @@
             "time": 0.2
           },
           {
+            "cue_id": "vfx_poison_cloud_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "a58a8059-bf7a-50bd-a5db-87d9975f9684",
+              "frame_duration": 0.05,
+              "offset_x": 30,
+              "offset_y": 0,
+              "scale": 1.3
+            },
+            "time": 0.2
+          },
+          {
             "cue_id": "r_toxic_cloud_0.5",
             "kind": "hitbox",
             "payload": {
@@ -10186,6 +11140,19 @@
             "time": 0.5
           },
           {
+            "cue_id": "vfx_poison_cloud_1",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "a58a8059-bf7a-50bd-a5db-87d9975f9684",
+              "frame_duration": 0.05,
+              "offset_x": 30,
+              "offset_y": 0,
+              "scale": 1.3
+            },
+            "time": 0.5
+          },
+          {
             "cue_id": "r_toxic_cloud_0.8",
             "kind": "hitbox",
             "payload": {
@@ -10194,6 +11161,19 @@
               "hit_tag": "r_toxic_cloud",
               "offset_x": 30,
               "width": 64
+            },
+            "time": 0.8
+          },
+          {
+            "cue_id": "vfx_poison_cloud_2",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "a58a8059-bf7a-50bd-a5db-87d9975f9684",
+              "frame_duration": 0.05,
+              "offset_x": 30,
+              "offset_y": 0,
+              "scale": 1.3
             },
             "time": 0.8
           },
@@ -10229,6 +11209,20 @@
               "speed": 230,
               "x": -1,
               "y": 0
+            },
+            "time": 0.0
+          },
+          {
+            "cue_id": "vfx_wind_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "cda0e46b-9037-5ebd-b2dc-2d192fcd9672",
+              "frame_duration": 0.05,
+              "offset_x": -8,
+              "offset_y": 0,
+              "rotate": true,
+              "scale": 0.8
             },
             "time": 0.0
           },
@@ -10274,6 +11268,19 @@
               "count": 9,
               "projectile_id": "venom_arrow",
               "spread": 100
+            },
+            "time": 0.15
+          },
+          {
+            "cue_id": "vfx_poison_cloud_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "a58a8059-bf7a-50bd-a5db-87d9975f9684",
+              "frame_duration": 0.05,
+              "offset_x": 40,
+              "offset_y": 0,
+              "scale": 0.9
             },
             "time": 0.15
           },
@@ -10433,6 +11440,20 @@
             "time": 0.0
           },
           {
+            "cue_id": "vfx_gold_burst_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "b45649f1-20b5-5379-8d9d-4e4f7a59bea3",
+              "follow": true,
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.4
+            },
+            "time": 0.1
+          },
+          {
             "cue_id": "w_bulwark_cast",
             "kind": "gameplay_event",
             "payload": {
@@ -10463,6 +11484,20 @@
               "clip": "attack"
             },
             "time": 0.0
+          },
+          {
+            "cue_id": "vfx_wind_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "cda0e46b-9037-5ebd-b2dc-2d192fcd9672",
+              "frame_duration": 0.05,
+              "offset_x": 18,
+              "offset_y": 0,
+              "rotate": true,
+              "scale": 1.0
+            },
+            "time": 0.08
           },
           {
             "cue_id": "w_cleave_0.08",
@@ -10508,6 +11543,19 @@
             "time": 0.0
           },
           {
+            "cue_id": "vfx_spike_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "869812bd-bf9f-5815-b480-52b9cf4cb286",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 2.0
+            },
+            "time": 0.2
+          },
+          {
             "cue_id": "w_earthquake_0.2",
             "kind": "hitbox",
             "payload": {
@@ -10519,6 +11567,19 @@
             "time": 0.2
           },
           {
+            "cue_id": "vfx_spike_1",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "869812bd-bf9f-5815-b480-52b9cf4cb286",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 2.0
+            },
+            "time": 0.5
+          },
+          {
             "cue_id": "w_earthquake_0.5",
             "kind": "hitbox",
             "payload": {
@@ -10528,6 +11589,19 @@
               "width": 104
             },
             "time": 0.5
+          },
+          {
+            "cue_id": "vfx_spike_2",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "869812bd-bf9f-5815-b480-52b9cf4cb286",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 2.0
+            },
+            "time": 0.8
           },
           {
             "cue_id": "w_earthquake_0.8",
@@ -10584,6 +11658,20 @@
             "time": 0.1
           },
           {
+            "cue_id": "vfx_blood_arc_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "42da1255-316d-5511-be7c-6c7036e1b869",
+              "frame_duration": 0.05,
+              "offset_x": 22,
+              "offset_y": 0,
+              "rotate": true,
+              "scale": 1.0
+            },
+            "time": 0.18
+          },
+          {
             "cue_id": "w_execute_0.18",
             "kind": "hitbox",
             "payload": {
@@ -10619,6 +11707,20 @@
             "time": 0.0
           },
           {
+            "cue_id": "vfx_gold_burst_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "b45649f1-20b5-5379-8d9d-4e4f7a59bea3",
+              "follow": true,
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.0
+            },
+            "time": 0.1
+          },
+          {
             "cue_id": "w_fortify_cast",
             "kind": "gameplay_event",
             "payload": {
@@ -10649,6 +11751,20 @@
               "clip": "attack"
             },
             "time": 0.0
+          },
+          {
+            "cue_id": "vfx_blood_arc_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "42da1255-316d-5511-be7c-6c7036e1b869",
+              "follow": true,
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.2
+            },
+            "time": 0.1
           },
           {
             "cue_id": "w_frenzy_cast",
@@ -10689,6 +11805,32 @@
               "duration": 0.6
             },
             "time": 0.0
+          },
+          {
+            "cue_id": "vfx_rocks_1",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "1d04be6e-81eb-5b6d-89fc-d1b1c7674e92",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.5
+            },
+            "time": 0.4
+          },
+          {
+            "cue_id": "vfx_spike_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "869812bd-bf9f-5815-b480-52b9cf4cb286",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.5
+            },
+            "time": 0.4
           },
           {
             "cue_id": "w_ground_slam_0.4",
@@ -10743,6 +11885,19 @@
               "y": 0
             },
             "time": 0.0
+          },
+          {
+            "cue_id": "vfx_spike_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "869812bd-bf9f-5815-b480-52b9cf4cb286",
+              "frame_duration": 0.05,
+              "offset_x": 12,
+              "offset_y": 0,
+              "scale": 1.1
+            },
+            "time": 0.25
           },
           {
             "cue_id": "w_leap_0.25",
@@ -10800,6 +11955,20 @@
             "time": 0.0
           },
           {
+            "cue_id": "vfx_blood_arc_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "42da1255-316d-5511-be7c-6c7036e1b869",
+              "frame_duration": 0.05,
+              "offset_x": 18,
+              "offset_y": 0,
+              "rotate": true,
+              "scale": 0.8
+            },
+            "time": 0.08
+          },
+          {
             "cue_id": "w_rampage_0.08",
             "kind": "hitbox",
             "payload": {
@@ -10824,6 +11993,20 @@
             "time": 0.2
           },
           {
+            "cue_id": "vfx_blood_arc_1",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "42da1255-316d-5511-be7c-6c7036e1b869",
+              "frame_duration": 0.05,
+              "offset_x": 18,
+              "offset_y": 0,
+              "rotate": true,
+              "scale": 0.8
+            },
+            "time": 0.28
+          },
+          {
             "cue_id": "w_rampage_0.28",
             "kind": "hitbox",
             "payload": {
@@ -10846,6 +12029,20 @@
               "y": 0
             },
             "time": 0.4
+          },
+          {
+            "cue_id": "vfx_blood_arc_2",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "42da1255-316d-5511-be7c-6c7036e1b869",
+              "frame_duration": 0.05,
+              "offset_x": 18,
+              "offset_y": 0,
+              "rotate": true,
+              "scale": 0.8
+            },
+            "time": 0.48
           },
           {
             "cue_id": "w_rampage_0.48",
@@ -10895,6 +12092,20 @@
             "time": 0.0
           },
           {
+            "cue_id": "vfx_blood_arc_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "42da1255-316d-5511-be7c-6c7036e1b869",
+              "frame_duration": 0.05,
+              "offset_x": 16,
+              "offset_y": 0,
+              "rotate": true,
+              "scale": 0.7
+            },
+            "time": 0.08
+          },
+          {
             "cue_id": "w_rend_0.08",
             "kind": "hitbox",
             "payload": {
@@ -10938,6 +12149,19 @@
             "time": 0.0
           },
           {
+            "cue_id": "vfx_gold_burst_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "b45649f1-20b5-5379-8d9d-4e4f7a59bea3",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.8
+            },
+            "time": 0.15
+          },
+          {
             "cue_id": "w_retribution_0.15",
             "kind": "hitbox",
             "payload": {
@@ -10947,6 +12171,19 @@
               "width": 84
             },
             "time": 0.15
+          },
+          {
+            "cue_id": "vfx_gold_burst_1",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "b45649f1-20b5-5379-8d9d-4e4f7a59bea3",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.8
+            },
+            "time": 0.35
           },
           {
             "cue_id": "w_retribution_0.35",
@@ -10981,6 +12218,19 @@
               "clip": "attack"
             },
             "time": 0.0
+          },
+          {
+            "cue_id": "vfx_gold_burst_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "b45649f1-20b5-5379-8d9d-4e4f7a59bea3",
+              "frame_duration": 0.05,
+              "offset_x": 18,
+              "offset_y": 0,
+              "scale": 0.5
+            },
+            "time": 0.1
           },
           {
             "cue_id": "w_shield_bash_0.1",
@@ -11023,6 +12273,20 @@
             "payload": {
               "apply_state": "war_cry",
               "name": "war_cry"
+            },
+            "time": 0.1
+          },
+          {
+            "cue_id": "vfx_gold_burst_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "b45649f1-20b5-5379-8d9d-4e4f7a59bea3",
+              "follow": true,
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.2
             },
             "time": 0.1
           },
@@ -11185,6 +12449,19 @@
             "time": 0.0
           },
           {
+            "cue_id": "vfx_bolt_burst_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "aad78212-e3f6-5be5-8c40-f7de903c42ed",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 2.0
+            },
+            "time": 0.15
+          },
+          {
             "cue_id": "w_thunderclap_0.15",
             "kind": "hitbox",
             "payload": {
@@ -11227,6 +12504,19 @@
             "time": 0.0
           },
           {
+            "cue_id": "vfx_wind_0",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "cda0e46b-9037-5ebd-b2dc-2d192fcd9672",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.8
+            },
+            "time": 0.05
+          },
+          {
             "cue_id": "w_whirl_0.05",
             "kind": "hitbox",
             "payload": {
@@ -11238,6 +12528,19 @@
               "width": 56
             },
             "time": 0.05
+          },
+          {
+            "cue_id": "vfx_wind_1",
+            "kind": "vfx",
+            "payload": {
+              "aim": true,
+              "effect": "cda0e46b-9037-5ebd-b2dc-2d192fcd9672",
+              "frame_duration": 0.05,
+              "offset_x": 0,
+              "offset_y": 0,
+              "scale": 1.8
+            },
+            "time": 0.25
           },
           {
             "cue_id": "w_whirl_0.25",
@@ -11509,8 +12812,10 @@
       {
         "capacity": 2,
         "capacity_by_level": {
+          "12": 6,
           "3": 3,
-          "5": 4
+          "5": 4,
+          "8": 5
         },
         "limited_sources": [
           "allocation",
@@ -22356,7 +23661,7 @@
                 "granted_tags": [],
                 "resource_bonuses": {},
                 "stat_bonuses": {
-                  "defense": 3.0
+                  "defense": 2.0
                 },
                 "unlocked_passives": []
               },
@@ -22366,7 +23671,7 @@
                 "granted_tags": [],
                 "resource_bonuses": {},
                 "stat_bonuses": {
-                  "defense": 3.0
+                  "defense": 2.0
                 },
                 "unlocked_passives": []
               },
@@ -22376,7 +23681,7 @@
                 "granted_tags": [],
                 "resource_bonuses": {},
                 "stat_bonuses": {
-                  "defense": 3.0
+                  "defense": 2.0
                 },
                 "unlocked_passives": []
               },
@@ -22386,7 +23691,7 @@
                 "granted_tags": [],
                 "resource_bonuses": {},
                 "stat_bonuses": {
-                  "defense": 3.0
+                  "defense": 2.0
                 },
                 "unlocked_passives": []
               },
@@ -22396,7 +23701,7 @@
                 "granted_tags": [],
                 "resource_bonuses": {},
                 "stat_bonuses": {
-                  "defense": 3.0
+                  "defense": 2.0
                 },
                 "unlocked_passives": []
               }
@@ -22498,7 +23803,7 @@
                   "hp": 20.0
                 },
                 "stat_bonuses": {
-                  "defense": 5.0
+                  "defense": 2.0
                 },
                 "unlocked_passives": []
               },
@@ -22510,7 +23815,7 @@
                   "hp": 20.0
                 },
                 "stat_bonuses": {
-                  "defense": 5.0
+                  "defense": 2.0
                 },
                 "unlocked_passives": []
               },
@@ -22522,7 +23827,7 @@
                   "hp": 20.0
                 },
                 "stat_bonuses": {
-                  "defense": 5.0
+                  "defense": 2.0
                 },
                 "unlocked_passives": []
               }
@@ -22562,7 +23867,7 @@
                   "hp": 80.0
                 },
                 "stat_bonuses": {
-                  "defense": 14.0
+                  "defense": 8.0
                 },
                 "unlocked_passives": []
               }
@@ -22862,7 +24167,7 @@
                   "mp": 10.0
                 },
                 "stat_bonuses": {
-                  "defense": 3.0
+                  "defense": 2.0
                 },
                 "unlocked_passives": []
               },
@@ -22874,7 +24179,7 @@
                   "mp": 10.0
                 },
                 "stat_bonuses": {
-                  "defense": 3.0
+                  "defense": 2.0
                 },
                 "unlocked_passives": []
               },
@@ -22886,7 +24191,7 @@
                   "mp": 10.0
                 },
                 "stat_bonuses": {
-                  "defense": 3.0
+                  "defense": 2.0
                 },
                 "unlocked_passives": []
               }
@@ -23565,7 +24870,7 @@
             {
               "fields": {
                 "aim": "target_input_facing",
-                "bindings": "attack=w_slash|r_shot|m_bolt|punch; dodge=roll; potion=potion; skill_1=slot:1; skill_2=slot:2; skill_3=slot:3; skill_4=slot:4",
+                "bindings": "attack=w_slash|r_shot|m_bolt|punch; dodge=roll; potion=potion; skill_1=slot:1; skill_2=slot:2; skill_3=slot:3; skill_4=slot:4; skill_5=slot:5; skill_6=slot:6",
                 "buffer_time": 0.2,
                 "enabled": true,
                 "face_target": true,

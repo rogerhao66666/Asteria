@@ -79,7 +79,7 @@ class Reskin:
 
     # -- combatants ------------------------------------------------------------------------
     def combatant(self, name, key, *, hero, scale=None, large=False):
-        scale = (0.62 if hero else 0.5) if scale is None else scale
+        scale = (0.52 if hero else 0.5) if scale is None else scale
         image, frame, clips, body = lucifer.character_sheet(key)
         folder = self.root / "playable_assets" / "battle"
         folder.mkdir(parents=True, exist_ok=True)
@@ -165,7 +165,7 @@ class Reskin:
                 key,
                 dataclasses.replace(
                     layout,
-                    menu_over_stage=False,
+                    menu_over_stage=True,  # the command menu stands see-through beside the actor
                     stage_top=0.12,
                     overhead_below=False,  # enemies stand in dense columns: bars float above
                 ),

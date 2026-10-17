@@ -524,8 +524,9 @@ class BottomHud:
         # the controls, top centre, on a dark strip, fading out
         if self.hint_left > 0:
             alpha = min(1.0, self.hint_left / 2.0)
+            skills = f"Skills 1-{len(numbered)}" if len(numbered) > 1 else "Skill 1"
             text = (
-                "Move WASD   Attack J   Dodge K   Skills 1-4   Lock L   Pick up F   "
+                f"Move WASD   Attack J   Dodge K   {skills}   Lock L   Pick up F   "
                 "Bag B   Skill tree C   Pause Esc"
             )
             font = rt._fonts.get(17) or rt._fonts.setdefault(17, pg.font.Font(None, 17))

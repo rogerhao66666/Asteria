@@ -737,6 +737,8 @@ class ProjectDemoAdapter:
                     "skill_2",
                     "skill_3",
                     "skill_4",
+                    "skill_5",
+                    "skill_6",
                     "dodge",
                     "potion",
                 }:

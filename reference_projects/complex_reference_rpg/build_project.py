@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from asteria.core import Entity, Scene, Transform
@@ -980,3 +981,8 @@ def write_project(output_dir):
 
 if __name__ == "__main__":
     write_project(Path(__file__).resolve().parent)
+    # the Lucifer look (art, UI skin, icons) is applied on top of the generated project
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+    from reskin_reference_projects import dress
+
+    dress(Path(__file__).resolve().parent)

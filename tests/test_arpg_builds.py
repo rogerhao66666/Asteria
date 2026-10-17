@@ -276,3 +276,63 @@ def test_choosing_a_node_scrolls_it_into_view(demo):  # noqa: F811
     screen.reveal(graph)
     x, y = screen.node_point(graph, screen.node_id)
     assert left <= x <= left + width and top <= y <= top + height
+
+
+def test_a_skill_plays_its_picture_effects_in_the_world(demo):  # noqa: F811
+    game = demo.game
+    game.set_classes("", ["mage"])
+    game.allocate_progression("hero", "mage_tree", "m_flame_wave")
+    game.combat.state(game.player)  # the fighter exists
+    _frames(demo, 3)
+    game.combat.state(game.player).resources.set_current("mp", 60)
+    assert game.action_combat.use(game.player, "m_flame_wave") == "used"
+    _frames(demo, 12)
+    assert demo.action_hud.effects  # the flame arcs are playing
+    _frames(demo, 90)
+    assert demo.action_hud.effects == []  # and are gone when their frames are over
+
+
+def test_every_effect_cue_names_a_real_sheet():
+    project = _project()
+    for timeline in project.gameplay_library.timelines.values():
+        for cue in timeline.cues:
+            if cue.kind.value == "vfx":
+                sheet = project.assets.get(cue.payload["effect"])
+                assert sheet is not None and sheet.kind == "sprite_sheet", timeline.timeline_id
+
+
+# -- the editor reaches the new options -------------------------------------------------------
+def _category(project, group, name):
+    from asteria.editor import EditorDocument
+    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+
+    document = EditorDocument(project)
+    controllers = IntegratedAuthoringControllers(document)
+    categories = getattr(controllers, group)()
+    return document, next(c for c in categories if c.category_id == name)
+
+
+def test_the_layout_form_shows_every_option_even_at_its_default():
+    from asteria.presentation.battle_ui import BattleUiLayoutProfile
+
+    project = _project()
+    library = project.battle_presentation_library
+    library.set("ui_layout", "plain", BattleUiLayoutProfile())
+    _document, category = _category(project, "presentation_categories", "ui_layout")
+    data = category.encode(category.get("plain"))
+    for key in ("menu_over_stage", "row_buttons", "overhead_below", "stage_front_right"):
+        assert key in data, key
+    data["menu_over_stage"] = True
+    data["overhead_below"] = False
+    value = category.decode(data)
+    assert value.menu_over_stage and not value.overhead_below
+    assert value.stage_front_right is None  # equal to the front: no separate right side
+
+
+def test_the_skill_tree_form_shows_each_nodes_icon_field():
+    _document, category = _category(_project(), "rpg_categories", "graphs")
+    nodes = category.encode(category.get("mage_tree"))["nodes"]
+    assert all("icon_id" in node for node in nodes)
+    nodes[0]["icon_id"] = "playable_assets/lucifer/icons/skill_m_bolt.png"
+    graph = category.decode({**category.encode(category.get("mage_tree")), "nodes": nodes})
+    assert graph.nodes[0].icon_id.endswith("skill_m_bolt.png")

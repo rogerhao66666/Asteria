@@ -274,6 +274,24 @@ class BattlePresentationLibrary:
             recovery_at=data.get("recovery_at"),
         )
 
+    def encode_for_editor(self, category, value):
+        """Like ``_encode`` but with every field shown: the optional layout options (menu over
+        the stage, row buttons, bars under the feet, the right side's front) stay reachable in
+        the editor even while they hold their default."""
+        if category == "ui_layout":
+            data = asdict(value)
+            if data.get("stage_front_right") is None:
+                data["stage_front_right"] = data["stage_front"]
+            return data
+        return self._encode(category, value)
+
+    def decode_from_editor(self, category, data):
+        if category == "ui_layout":
+            data = dict(data)
+            if data.get("stage_front_right") == data.get("stage_front"):
+                data["stage_front_right"] = None
+        return self._decode(category, data)
+
     def _encode(self, category, value):
         if category == "combatant_visuals":
             return self._visual_to_data(value)

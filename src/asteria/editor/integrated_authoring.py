@@ -90,6 +90,13 @@ class IntegratedAuthoringControllers:
         def fd(cls):
             return lambda d: cls.from_data(d)
 
+        def graph_data(v):
+            """The tree as data with every node's picture field shown (``icon_id``)."""
+            data = v.to_data()
+            for node in data.get("nodes", ()):
+                node.setdefault("icon_id", "")
+            return data
+
         def edit_actor(key, v):
             return ac.edit_actor(
                 key,
@@ -213,7 +220,7 @@ class IntegratedAuthoringControllers:
                 lambda k: db.progression_graphs[k],
                 edit_graph,
                 pr.delete_graph,
-                td,
+                graph_data,
                 fd(ProgressionGraphDefinition),
                 None,
             ),
@@ -571,8 +578,8 @@ class IntegratedAuthoringControllers:
                     lambda key, cat=category: c.library.require(cat, key),
                     lambda key, value, cat=category: c.edit(cat, key, value),
                     lambda key, cat=category: c.delete(cat, key),
-                    lambda value, cat=category: c.library._encode(cat, value),
-                    lambda data, cat=category: c.library._decode(cat, data),
+                    lambda value, cat=category: c.library.encode_for_editor(cat, value),
+                    lambda data, cat=category: c.library.decode_from_editor(cat, data),
                     lambda old, new, cat=category: c.duplicate(cat, old, new),
                     lambda key, value, cat=category: c.create(cat, key, value),
                 )

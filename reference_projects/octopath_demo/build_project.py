@@ -1533,3 +1533,8 @@ def add_monster_types(project, db, add):
 
 if __name__ == "__main__":
     main()
+    # the Lucifer look (art, UI skin, icons) is applied on top of the generated project
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+    from reskin_reference_projects import dress
+
+    dress(Path(__file__).resolve().parent)

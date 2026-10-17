@@ -268,7 +268,7 @@ def gothic_ui(project, root):
         image.resize(size, Image.LANCZOS).save(folder / out)
         return f"playable_assets/lucifer/ui/{out}"
 
-    panel = shrink("Panel_1.png", "panel_gothic.png", divisor=4)
+    panel = shrink("Panel_1.png", "panel_gothic.png", divisor=3)
     shrink("Panel_2.png", "panel_gothic_wide.png", divisor=4)
     icons = {
         "coin": shrink("Coin.png", "icon_coin.png", side=32),
@@ -279,7 +279,7 @@ def gothic_ui(project, root):
     library = project.battle_presentation_library
     for key in library.ids("ui_theme"):
         theme = library.require("ui_theme", key)
-        skin = NinePatch(panel, 7, 7, 7, 7, 1.0)
+        skin = NinePatch(panel, 22, 22, 22, 22, 0.5)
         skins = tuple((role, patch) for role, patch in theme.panel_skins if role == "result")
         library.set(
             "ui_theme",
@@ -322,3 +322,62 @@ def node_icons(reskin, project):
         return f"{reskin.icon_dir}/{name}"
 
     lucifer._node_icons(project.rpg_database, pools, copy)
+
+
+# -- spell and strike effects (Foozle Pixel Magic Effects, CC0) ---------------------------------
+EFFECTS_PACK = lucifer.FREE_ASSETS / "Foozle_2DE0001_Pixel_Magic_Effects"
+# name: (folder, tint or None); a tint recolours the picture (white = bright, dark stays dark)
+EFFECTS = {
+    "fire_ball": ("Fire_Ball", None),
+    "explosion": ("Explosion", None),
+    "spear": ("Molten_Spear", None),
+    "water": ("Water", None),
+    "geyser": ("Water_Geyser", None),
+    "wind": ("Wind", None),
+    "tornado": ("Tornado", None),
+    "spike": ("Earth_Spike", None),
+    "rocks": ("Rocks", None),
+    "portal": ("Portal", None),
+    "ice_bolt": ("Water", ((20, 40, 90), (235, 250, 255))),
+    "ice_burst": ("Explosion", ((10, 40, 100), (200, 240, 255))),
+    "bolt_ball": ("Fire_Ball", ((40, 30, 110), (255, 250, 150))),
+    "bolt_strike": ("Molten_Spear", ((60, 50, 120), (255, 255, 170))),
+    "bolt_burst": ("Explosion", ((60, 50, 130), (255, 255, 180))),
+    "spark_arc": ("Wind", ((90, 70, 10), (255, 245, 120))),
+    "ember_arc": ("Wind", ((120, 30, 10), (255, 190, 90))),
+    "poison_cloud": ("Tornado", ((10, 60, 20), (170, 255, 120))),
+    "poison_burst": ("Explosion", ((10, 70, 20), (170, 255, 110))),
+    "gold_burst": ("Explosion", ((110, 70, 0), (255, 235, 140))),
+    "blood_arc": ("Wind", ((90, 0, 10), (255, 90, 90))),
+    "shadow_portal": ("Portal", ((20, 10, 50), (190, 150, 255))),
+}
+
+
+def _effect_frames(folder, tint):
+    from PIL import Image, ImageOps
+
+    frames = []
+    for path in sorted((EFFECTS_PACK / folder).glob("*.png")):
+        image = Image.open(path).convert("RGBA")
+        if tint is not None:
+            alpha = image.getchannel("A")
+            image = ImageOps.colorize(ImageOps.grayscale(image), tint[0], tint[1]).convert("RGBA")
+            image.putalpha(alpha)
+        frames.append(image)
+    return frames
+
+
+def effect_sheets(assets):
+    """One sprite sheet per effect (a strip of its frames): ``{name: sheet id}``."""
+    from PIL import Image
+
+    sheets = {}
+    for name, (folder, tint) in EFFECTS.items():
+        frames = _effect_frames(folder, tint)
+        side = frames[0].width
+        strip = Image.new("RGBA", (side * len(frames), side), (0, 0, 0, 0))
+        for index, frame in enumerate(frames):
+            strip.paste(frame, (index * side, 0))
+        rects = [(i * side, 0, side, side) for i in range(len(frames))]
+        sheets[name] = assets.sheet(f"fx_{name}", _surface(strip), rects, name, pivot=(0.5, 0.5))
+    return sheets

@@ -2014,3 +2014,18 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **順帶修正：** 編輯器在大資料夾下列出圖檔會很慢，改成有深度、資料夾數與數量上限的走訪並略過隱藏／建置資料夾；`scripts/editor_ui_audit.py` 結束時直接離開（避免 Qt 在 macOS 結束時當機），且接受 `-ApplePersistenceIgnoreState YES`（macOS 在程式異常結束後會跳出「是否重新開啟視窗」的對話框，不加這個旗標，下一次啟動的 GUI 程式會停在對話框等人按）。
 
 **限制：** 職業、寶珠、被動、派系、套裝、音樂的圖示目前沒有執行期畫面可以顯示；挑選器是下拉選單加 Browse，不能直接打字輸入任意 id（用 Browse 或內建庫；手寫在資料裡的 id 會保留）。
+
+
+## D39 — Lucifer 換皮、Diablo 流派與裝備詞條（2026-10-17，使用者要求「全部換成 Lucifer」「Diablo 最重要的是技能樹與裝備詞條」）
+
+**做了什麼：**
+- 換皮工具 `scripts/lucifer_reskin.py`、`scripts/reskin_reference_projects.py`：Octopath、reference RPG、party／basic 範本換成 Lucifer 人物、怪物、背景、UI 面板、字型與圖示；basic 起始範本的主角是 Warrior、怪物是 Skeleton Ancient。build 腳本結尾會自動套用。
+- 戰鬥畫面：怪物血條放腳下（`overhead_below`）、角色都站在草地上（`stage_top`）、指令選單在行動角色旁、半透明；選單會蓋住沒在行動的隊友（原本的邏輯，使用者確認這樣是對的），不會蓋住行動中的角色。
+- 戰鬥 UI 的像素字型缺很多 ASCII 字元（括號、百分比…），缺的字改用內建字型畫。
+- Diablo 兩個 demo：Lucifer 人物與地形、UI Set 1 面板、特效（Foozle Pixel Magic Effects）；每個職業三個流派（各 5 技能、3 被動、1 個互斥的關鍵天賦），共 36 個新技能與 7 種新狀態；元素與暴擊屬性（`crit`、`fire_dmg`、`cold_dmg`、`shock_dmg`、`poison_dmg`）；33 種基底、7 個部位、3 套套裝、10 件獨特裝、約 36 種詞條、六種稀有度、每種怪物的掉落表。
+- 引擎：技能欄綁定 `slot:N`、技能樹技能可進技能欄（自動放入空格，等級越高格數越多，最多 6 格）、`vfx` 提示、技能樹節點 `icon_id`；技能樹畫面可縮放（滾輪／+ −）、拖曳平移、點選、R 回到全貌，節點永遠不重疊。
+- 編輯器：版面表單顯示全部選填欄位，技能樹表單顯示每個節點的圖示欄。
+
+**驗證：** 全套測試 2944 項通過；`tests/test_arpg_builds.py` 涵蓋流派結構、關鍵天賦互斥、技能欄、詞條與稀有度、掉落、特效、技能樹視圖與編輯器欄位；`scripts/arpg_demo_live_check.py`、`scripts/reskin_live_check.py` 在 Cocoa 真實視窗跑過（60 fps）；`scripts/arpg_balance.py` 九個流派綜合分數在平均的 -12% 到 +20% 之間。
+
+**限制：** Diablo 的投射物與弓／魔杖圖示不是 Lucifer；鎮上的房子是上色的墓穴；平衡只比流派之間，沒有裝備也沒有真人；重建 Octopath／reference 會換新的專案 id（舊存檔對不上）。

@@ -17,6 +17,7 @@ the respawn countdown — all from engine state, nothing game-specific.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import atan2, degrees
 
 from asteria.core import Component, Field, Transform, component_schema, world_position
 
@@ -32,6 +33,8 @@ ARPG_ACTIONS = {
     "skill_2": (("key", "2"),),
     "skill_3": (("key", "3"),),
     "skill_4": (("key", "4"),),
+    "skill_5": (("key", "5"),),
+    "skill_6": (("key", "6"),),
     "potion": (("key", "q"),),
     "lock_on": (("key", "l"), ("key", "tab"), ("gamepad_button", "9")),
     "lock_switch": (("key", "o"),),
@@ -152,6 +155,7 @@ class ActionHud:
         self.floats: list[_Float] = []
         self.flash: dict[str, float] = {}
         self.banner = ("", 0.0)
+        self.effects: list[dict] = []  # picture effects playing in the world
 
     # -- events -----------------------------------------------------------------------------------
     def observe(self, game, dt):
@@ -163,6 +167,14 @@ class ActionHud:
         self.flash = {k: v - dt for k, v in self.flash.items() if v - dt > 0}
         text, left = self.banner
         self.banner = (text, max(0.0, left - dt))
+        self._spawn_effects(game)
+        for effect in self.effects:
+            effect["age"] += dt
+        self.effects = [
+            e
+            for e in self.effects
+            if e["age"] < (e["life"] or 5.0)  # life is set when drawn
+        ]
         for event in game.combat.events:
             if event.kind == "damage" and event.amount:
                 heal = event.amount < 0
@@ -204,6 +216,67 @@ class ActionHud:
         for result in game.progression_events:
             if result.get("levels_gained"):
                 self.banner = (f"Level {result['new_level']}!", 2.0)
+
+    def _spawn_effects(self, game):
+        """Start the ``vfx`` cues of this frame's actions (payload: ``effect`` sprite sheet id,
+        ``offset_x`` / ``offset_y`` in world units from the user - along the aim with ``aim``,
+        else along its facing - ``scale``, ``frame_duration``, ``rotate``, ``follow``)."""
+        from .character_control import CharacterController2DComponent, facing_vector
+
+        actions = getattr(game.action_combat, "actions", None)
+        for event in getattr(actions, "events", ()):
+            if event.kind != "vfx":
+                continue
+            payload = event.payload
+            entity = game.scene.get_entity(event.entity_id)
+            if entity is None or not payload.get("effect"):
+                continue
+            ux, uy = payload.get("direction") or (0.0, 0.0)
+            if not (ux or uy):
+                controller = entity.try_get(CharacterController2DComponent)
+                ux, uy = facing_vector(controller.facing) if controller is not None else (1.0, 0.0)
+            norm = (ux * ux + uy * uy) ** 0.5 or 1.0
+            ux, uy = ux / norm, uy / norm
+            ox, oy = float(payload.get("offset_x", 0.0)), float(payload.get("offset_y", 0.0))
+            x, y = world_position(entity)
+            self.effects.append(
+                {
+                    "sheet": str(payload["effect"]),
+                    "entity": entity.id if payload.get("follow") else "",
+                    "dx": ux * ox - uy * oy,
+                    "dy": uy * ox + ux * oy,
+                    "x": x + ux * ox - uy * oy,
+                    "y": y + uy * ox + ux * oy,
+                    "scale": float(payload.get("scale", 1.0)),
+                    "step": float(payload.get("frame_duration", 0.05)),
+                    "angle": (-degrees(atan2(uy, ux)) if payload.get("rotate") else 0.0),
+                    "age": 0.0,
+                    "life": 0.0,
+                    "frames": 0,
+                }
+            )
+
+    def _draw_effects(self, rt, tiles):
+        screen = rt.screen
+        game = rt.game
+        for effect in self.effects:
+            if tiles is not None and not effect["frames"]:
+                effect["frames"] = tiles.effect_frame_count(effect["sheet"])
+                effect["life"] = max(0.05, effect["frames"] * effect["step"])
+            if tiles is None or not effect["frames"]:
+                continue
+            frame = min(effect["frames"] - 1, int(effect["age"] / effect["step"]))
+            image = tiles.effect_image(effect["sheet"], frame, effect["scale"], effect["angle"])
+            if image is None:
+                continue
+            x, y = effect["x"], effect["y"]
+            if effect["entity"]:
+                entity = game.scene.get_entity(effect["entity"])
+                if entity is not None:
+                    ux, uy = world_position(entity)
+                    x, y = ux + effect["dx"], uy + effect["dy"]
+            sx, sy = rt._field_screen_xy(x, y)
+            screen.blit(image, (int(sx - image.get_width() / 2), int(sy - image.get_height() / 2)))
 
     # -- world layer ------------------------------------------------------------------------------
     @staticmethod
@@ -294,6 +367,7 @@ class ActionHud:
             speed = (view.vx * view.vx + view.vy * view.vy) ** 0.5 or 1.0
             tail = (int(sx - view.vx / speed * 4 * zoom), int(sy - view.vy / speed * 4 * zoom))
             pg.draw.line(screen, (255, 180, 80), tail, (int(sx), int(sy)), 2)
+        self._draw_effects(rt, tiles)
         target = game.scene.get_entity(self._lock_id(game)) if self._lock_id(game) else None
         if target is not None:
             sx, sy = rt._field_screen_xy(*world_position(target))
