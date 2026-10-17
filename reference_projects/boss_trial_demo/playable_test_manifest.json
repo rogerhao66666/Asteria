@@ -532,6 +532,48 @@
       },
       "dragon_revert": {
         "label": "Revert"
+      },
+      "gob_sling": {
+        "label": "Sling Stone"
+      },
+      "gob_stab": {
+        "label": "Stab"
+      },
+      "gob_chop": {
+        "label": "Chop"
+      },
+      "gob_rage": {
+        "label": "Rage"
+      },
+      "beast_maul": {
+        "label": "Maul"
+      },
+      "beast_howl": {
+        "label": "Howl"
+      },
+      "beast_pounce": {
+        "label": "Pounce"
+      },
+      "skel_slash": {
+        "label": "Bone Slash"
+      },
+      "skel_guard": {
+        "label": "Guard"
+      },
+      "skel_shot": {
+        "label": "Bone Arrow"
+      },
+      "anc_curse": {
+        "label": "Ancient Curse"
+      },
+      "anc_rain": {
+        "label": "Rain of Bone"
+      },
+      "anc_drain": {
+        "label": "Soul Drain"
+      },
+      "anc_raise": {
+        "label": "Raise the Fallen"
       }
     },
     "enemy_layouts": {},

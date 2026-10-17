@@ -181,19 +181,22 @@ def test_skills_evolve_as_the_party_wins_battles():
 
 
 def test_a_skill_calls_a_summon_that_fights_beside_the_party():
-    game = _game("hero")
+    _project, game = smoke.load()
+    smoke.prepare(game, Counter(), "hero")
+    game.join_party("hero_03")  # Vesper the necromancer joins in the story
+    game.start_encounter("boss_room")
     assert "spirit_knight" not in game.battle.members
-    game.battle.member("hero_02").subject.resources.set_current(SP, 380)
-    game.use_ability("hero_02", "call_spirit", None)
+    game.battle.member("hero_03").subject.resources.set_current(SP, 300)
+    game.use_ability("hero_03", "call_spirit", None)
     assert "spirit_knight" in game.battle.members
     assert {"spirit_cleave", "spirit_ward"} <= set(game.battle.member("spirit_knight").ability_ids)
     state = game.battle.combatants.state("spirit_knight")
-    assert state.summon_owner_id == "hero_02"
+    assert state.summon_owner_id == "hero_03"
     boss = game.active_enemy_ids()[0]
     game.use_ability("spirit_knight", "spirit_cleave", (boss,))
-    game.battle.member("hero_02").subject.resources.set_current(SP, 380)
+    game.battle.member("hero_03").subject.resources.set_current(SP, 300)
     with pytest.raises(Exception, match="already in the battle"):  # noqa: B017
-        game.use_ability("hero_02", "call_spirit", None)
+        game.use_ability("hero_03", "call_spirit", None)
 
 
 def test_a_transformation_changes_stats_tags_and_skills_and_can_be_undone():

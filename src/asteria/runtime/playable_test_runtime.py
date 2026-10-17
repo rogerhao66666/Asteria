@@ -1902,10 +1902,20 @@ class PlayableTestRuntime:
             blocked = CollisionWorld.from_scene(self.game.scene).blocking_query(
                 exclude={self.game.player.id}
             )
-            nx = max(-120.0, min(120.0, pt.x + dx / mag * speed * dt))
+            x_range, y_range = (-120.0, 120.0), (-52.0, 52.0)
+            if self.tile_view is not None:
+                # a tile map: its walls block and its edge bounds the walk, the pace is a walk
+                # across a screen in a few seconds
+                from asteria.runtime.collision import CombinedQuery
+
+                walls = self.game._tile_blocking.get(self.game.scene.id)
+                blocked = CombinedQuery(blocked, walls)
+                x0, y0, x1, y1 = self.tile_view.bounds
+                x_range, y_range, speed = (x0 + 6, x1 - 6), (y0 + 6, y1 - 2), 64.0
+            nx = max(x_range[0], min(x_range[1], pt.x + dx / mag * speed * dt))
             if not blocked.collides_world_point(nx, pt.y):
                 pt.x = nx
-            ny = max(-52.0, min(52.0, pt.y + dy / mag * speed * dt))
+            ny = max(y_range[0], min(y_range[1], pt.y + dy / mag * speed * dt))
             if not blocked.collides_world_point(pt.x, ny):
                 pt.y = ny
             self.game.save.player_position = (pt.x, pt.y)
@@ -1928,6 +1938,8 @@ class PlayableTestRuntime:
             self._quest_return = "field"
             self._ui_mode = "quests"
             return moving
+        if moving and not connected and self.game.mode == "field":
+            self.game.field_step({})  # doors and other triggers walked into
         # GameSessionRuntime interaction is edge-triggered. Emit release after press.
         if self.input.just_pressed("interact") and not connected:
             self.game.field_step({"interact": 1.0})

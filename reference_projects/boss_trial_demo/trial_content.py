@@ -1860,6 +1860,13 @@ def world(c):
 
 
 # -- start state ----------------------------------------------------------------------------------
+COMPANIONS = {  # who joins the hero: (job, weapon)
+    "hero_02": ("cleric", "w_staff"),
+    "hero_03": ("necromancer", "w_staff"),
+    "hero_04": ("cultist", "w_dagger"),
+}
+
+
 def game_start(c):
     from asteria.rpg import ProgressionAllocationRuntime
     from asteria.runtime.game_start import GameStartDefinition
@@ -1893,14 +1900,17 @@ def game_start(c):
             "active_class_ids": ["knight", "duelist"],
             "unlocked_class_ids": ["knight", "duelist", "mystic"],  # the rest: trainers
         },
-        mira: {
-            "schema": "asteria.rpg.actor_progression_state",
-            "version": 1,
-            "level": 1,
-            "experience": 0.0,
-            "points": {},
-            "active_class_ids": ["cleric"],
-            "unlocked_class_ids": ["cleric"],
+        **{
+            who: {
+                "schema": "asteria.rpg.actor_progression_state",
+                "version": 1,
+                "level": 1,
+                "experience": 0.0,
+                "points": {},
+                "active_class_ids": [job],
+                "unlocked_class_ids": [job],
+            }
+            for who, (job, _weapon) in COMPANIONS.items()
         },
     }
 
@@ -1931,19 +1941,18 @@ def game_start(c):
                 "form": [instance("f_normal")],
             },
         },
-        mira: {
-            "schema": "asteria.rpg.equipment_loadout",
-            "version": 1,
-            "slots": [
-                {"slot_id": "weapon", "capacity": 1, "accepted_tags": []},
-                {"slot_id": "armor", "capacity": 1, "accepted_tags": []},
-                {"slot_id": "accessory", "capacity": 1, "accepted_tags": []},
-            ],
-            "equipped": {
-                "weapon": [instance("w_staff", mira)],
-                "armor": [],
-                "accessory": [],
-            },
+        **{
+            who: {
+                "schema": "asteria.rpg.equipment_loadout",
+                "version": 1,
+                "slots": [
+                    {"slot_id": "weapon", "capacity": 1, "accepted_tags": []},
+                    {"slot_id": "armor", "capacity": 1, "accepted_tags": []},
+                    {"slot_id": "accessory", "capacity": 1, "accepted_tags": []},
+                ],
+                "equipped": {"weapon": [instance(weapon, who)], "armor": [], "accessory": []},
+            }
+            for who, (_job, weapon) in COMPANIONS.items()
         },
     }
     import trial_items

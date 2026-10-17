@@ -1,0 +1,8167 @@
+{
+  "sprite_sheet_asset_id": "b85dd2cd-a30d-5a7c-9932-985bfab02586",
+  "tile_height": 16,
+  "tile_width": 16,
+  "tiles": {
+    "0": {
+      "collision": "none",
+      "frame_index": 0,
+      "tags": [],
+      "terrain": null
+    },
+    "1": {
+      "collision": "none",
+      "frame_index": 1,
+      "tags": [],
+      "terrain": null
+    },
+    "10": {
+      "collision": "none",
+      "frame_index": 10,
+      "tags": [],
+      "terrain": null
+    },
+    "100": {
+      "collision": "none",
+      "frame_index": 100,
+      "tags": [],
+      "terrain": null
+    },
+    "1000": {
+      "collision": "none",
+      "frame_index": 1000,
+      "tags": [],
+      "terrain": null
+    },
+    "1001": {
+      "collision": "none",
+      "frame_index": 1001,
+      "tags": [],
+      "terrain": null
+    },
+    "1002": {
+      "collision": "none",
+      "frame_index": 1002,
+      "tags": [],
+      "terrain": null
+    },
+    "1003": {
+      "collision": "none",
+      "frame_index": 1003,
+      "tags": [],
+      "terrain": null
+    },
+    "1004": {
+      "collision": "none",
+      "frame_index": 1004,
+      "tags": [],
+      "terrain": null
+    },
+    "1005": {
+      "collision": "none",
+      "frame_index": 1005,
+      "tags": [],
+      "terrain": null
+    },
+    "1006": {
+      "collision": "none",
+      "frame_index": 1006,
+      "tags": [],
+      "terrain": null
+    },
+    "1007": {
+      "collision": "none",
+      "frame_index": 1007,
+      "tags": [],
+      "terrain": null
+    },
+    "1008": {
+      "collision": "none",
+      "frame_index": 1008,
+      "tags": [],
+      "terrain": null
+    },
+    "1009": {
+      "collision": "none",
+      "frame_index": 1009,
+      "tags": [],
+      "terrain": null
+    },
+    "101": {
+      "collision": "none",
+      "frame_index": 101,
+      "tags": [],
+      "terrain": null
+    },
+    "1010": {
+      "collision": "none",
+      "frame_index": 1010,
+      "tags": [],
+      "terrain": null
+    },
+    "1011": {
+      "collision": "none",
+      "frame_index": 1011,
+      "tags": [],
+      "terrain": null
+    },
+    "1012": {
+      "collision": "none",
+      "frame_index": 1012,
+      "tags": [],
+      "terrain": null
+    },
+    "1013": {
+      "collision": "none",
+      "frame_index": 1013,
+      "tags": [],
+      "terrain": null
+    },
+    "1014": {
+      "collision": "none",
+      "frame_index": 1014,
+      "tags": [],
+      "terrain": null
+    },
+    "1015": {
+      "collision": "none",
+      "frame_index": 1015,
+      "tags": [],
+      "terrain": null
+    },
+    "1016": {
+      "collision": "none",
+      "frame_index": 1016,
+      "tags": [],
+      "terrain": null
+    },
+    "1017": {
+      "collision": "none",
+      "frame_index": 1017,
+      "tags": [],
+      "terrain": null
+    },
+    "1018": {
+      "collision": "none",
+      "frame_index": 1018,
+      "tags": [],
+      "terrain": null
+    },
+    "1019": {
+      "collision": "none",
+      "frame_index": 1019,
+      "tags": [],
+      "terrain": null
+    },
+    "102": {
+      "collision": "none",
+      "frame_index": 102,
+      "tags": [],
+      "terrain": null
+    },
+    "1020": {
+      "collision": "none",
+      "frame_index": 1020,
+      "tags": [],
+      "terrain": null
+    },
+    "1021": {
+      "collision": "none",
+      "frame_index": 1021,
+      "tags": [],
+      "terrain": null
+    },
+    "1022": {
+      "collision": "none",
+      "frame_index": 1022,
+      "tags": [],
+      "terrain": null
+    },
+    "1023": {
+      "collision": "none",
+      "frame_index": 1023,
+      "tags": [],
+      "terrain": null
+    },
+    "1024": {
+      "collision": "none",
+      "frame_index": 1024,
+      "tags": [],
+      "terrain": null
+    },
+    "1025": {
+      "collision": "none",
+      "frame_index": 1025,
+      "tags": [],
+      "terrain": null
+    },
+    "1026": {
+      "collision": "none",
+      "frame_index": 1026,
+      "tags": [],
+      "terrain": null
+    },
+    "1027": {
+      "collision": "none",
+      "frame_index": 1027,
+      "tags": [],
+      "terrain": null
+    },
+    "1028": {
+      "collision": "none",
+      "frame_index": 1028,
+      "tags": [],
+      "terrain": null
+    },
+    "1029": {
+      "collision": "none",
+      "frame_index": 1029,
+      "tags": [],
+      "terrain": null
+    },
+    "103": {
+      "collision": "none",
+      "frame_index": 103,
+      "tags": [],
+      "terrain": null
+    },
+    "1030": {
+      "collision": "none",
+      "frame_index": 1030,
+      "tags": [],
+      "terrain": null
+    },
+    "1031": {
+      "collision": "none",
+      "frame_index": 1031,
+      "tags": [],
+      "terrain": null
+    },
+    "1032": {
+      "collision": "none",
+      "frame_index": 1032,
+      "tags": [],
+      "terrain": null
+    },
+    "1033": {
+      "collision": "none",
+      "frame_index": 1033,
+      "tags": [],
+      "terrain": null
+    },
+    "1034": {
+      "collision": "none",
+      "frame_index": 1034,
+      "tags": [],
+      "terrain": null
+    },
+    "1035": {
+      "collision": "none",
+      "frame_index": 1035,
+      "tags": [],
+      "terrain": null
+    },
+    "1036": {
+      "collision": "none",
+      "frame_index": 1036,
+      "tags": [],
+      "terrain": null
+    },
+    "1037": {
+      "collision": "none",
+      "frame_index": 1037,
+      "tags": [],
+      "terrain": null
+    },
+    "1038": {
+      "collision": "none",
+      "frame_index": 1038,
+      "tags": [],
+      "terrain": null
+    },
+    "1039": {
+      "collision": "none",
+      "frame_index": 1039,
+      "tags": [],
+      "terrain": null
+    },
+    "104": {
+      "collision": "none",
+      "frame_index": 104,
+      "tags": [],
+      "terrain": null
+    },
+    "1040": {
+      "collision": "none",
+      "frame_index": 1040,
+      "tags": [],
+      "terrain": null
+    },
+    "1041": {
+      "collision": "none",
+      "frame_index": 1041,
+      "tags": [],
+      "terrain": null
+    },
+    "1042": {
+      "collision": "none",
+      "frame_index": 1042,
+      "tags": [],
+      "terrain": null
+    },
+    "1043": {
+      "collision": "none",
+      "frame_index": 1043,
+      "tags": [],
+      "terrain": null
+    },
+    "1044": {
+      "collision": "none",
+      "frame_index": 1044,
+      "tags": [],
+      "terrain": null
+    },
+    "1045": {
+      "collision": "none",
+      "frame_index": 1045,
+      "tags": [],
+      "terrain": null
+    },
+    "1046": {
+      "collision": "none",
+      "frame_index": 1046,
+      "tags": [],
+      "terrain": null
+    },
+    "1047": {
+      "collision": "none",
+      "frame_index": 1047,
+      "tags": [],
+      "terrain": null
+    },
+    "1048": {
+      "collision": "none",
+      "frame_index": 1048,
+      "tags": [],
+      "terrain": null
+    },
+    "1049": {
+      "collision": "none",
+      "frame_index": 1049,
+      "tags": [],
+      "terrain": null
+    },
+    "105": {
+      "collision": "none",
+      "frame_index": 105,
+      "tags": [],
+      "terrain": null
+    },
+    "1050": {
+      "collision": "none",
+      "frame_index": 1050,
+      "tags": [],
+      "terrain": null
+    },
+    "1051": {
+      "collision": "none",
+      "frame_index": 1051,
+      "tags": [],
+      "terrain": null
+    },
+    "1052": {
+      "collision": "none",
+      "frame_index": 1052,
+      "tags": [],
+      "terrain": null
+    },
+    "1053": {
+      "collision": "none",
+      "frame_index": 1053,
+      "tags": [],
+      "terrain": null
+    },
+    "1054": {
+      "collision": "none",
+      "frame_index": 1054,
+      "tags": [],
+      "terrain": null
+    },
+    "1055": {
+      "collision": "none",
+      "frame_index": 1055,
+      "tags": [],
+      "terrain": null
+    },
+    "1056": {
+      "collision": "none",
+      "frame_index": 1056,
+      "tags": [],
+      "terrain": null
+    },
+    "1057": {
+      "collision": "none",
+      "frame_index": 1057,
+      "tags": [],
+      "terrain": null
+    },
+    "1058": {
+      "collision": "none",
+      "frame_index": 1058,
+      "tags": [],
+      "terrain": null
+    },
+    "1059": {
+      "collision": "none",
+      "frame_index": 1059,
+      "tags": [],
+      "terrain": null
+    },
+    "106": {
+      "collision": "none",
+      "frame_index": 106,
+      "tags": [],
+      "terrain": null
+    },
+    "1060": {
+      "collision": "none",
+      "frame_index": 1060,
+      "tags": [],
+      "terrain": null
+    },
+    "1061": {
+      "collision": "none",
+      "frame_index": 1061,
+      "tags": [],
+      "terrain": null
+    },
+    "1062": {
+      "collision": "none",
+      "frame_index": 1062,
+      "tags": [],
+      "terrain": null
+    },
+    "1063": {
+      "collision": "none",
+      "frame_index": 1063,
+      "tags": [],
+      "terrain": null
+    },
+    "1064": {
+      "collision": "none",
+      "frame_index": 1064,
+      "tags": [],
+      "terrain": null
+    },
+    "1065": {
+      "collision": "none",
+      "frame_index": 1065,
+      "tags": [],
+      "terrain": null
+    },
+    "1066": {
+      "collision": "none",
+      "frame_index": 1066,
+      "tags": [],
+      "terrain": null
+    },
+    "1067": {
+      "collision": "none",
+      "frame_index": 1067,
+      "tags": [],
+      "terrain": null
+    },
+    "1068": {
+      "collision": "none",
+      "frame_index": 1068,
+      "tags": [],
+      "terrain": null
+    },
+    "1069": {
+      "collision": "none",
+      "frame_index": 1069,
+      "tags": [],
+      "terrain": null
+    },
+    "107": {
+      "collision": "none",
+      "frame_index": 107,
+      "tags": [],
+      "terrain": null
+    },
+    "1070": {
+      "collision": "none",
+      "frame_index": 1070,
+      "tags": [],
+      "terrain": null
+    },
+    "1071": {
+      "collision": "none",
+      "frame_index": 1071,
+      "tags": [],
+      "terrain": null
+    },
+    "1072": {
+      "collision": "none",
+      "frame_index": 1072,
+      "tags": [],
+      "terrain": null
+    },
+    "1073": {
+      "collision": "none",
+      "frame_index": 1073,
+      "tags": [],
+      "terrain": null
+    },
+    "1074": {
+      "collision": "none",
+      "frame_index": 1074,
+      "tags": [],
+      "terrain": null
+    },
+    "1075": {
+      "collision": "none",
+      "frame_index": 1075,
+      "tags": [],
+      "terrain": null
+    },
+    "1076": {
+      "collision": "none",
+      "frame_index": 1076,
+      "tags": [],
+      "terrain": null
+    },
+    "1077": {
+      "collision": "none",
+      "frame_index": 1077,
+      "tags": [],
+      "terrain": null
+    },
+    "1078": {
+      "collision": "none",
+      "frame_index": 1078,
+      "tags": [],
+      "terrain": null
+    },
+    "1079": {
+      "collision": "none",
+      "frame_index": 1079,
+      "tags": [],
+      "terrain": null
+    },
+    "108": {
+      "collision": "none",
+      "frame_index": 108,
+      "tags": [],
+      "terrain": null
+    },
+    "1080": {
+      "collision": "none",
+      "frame_index": 1080,
+      "tags": [],
+      "terrain": null
+    },
+    "1081": {
+      "collision": "none",
+      "frame_index": 1081,
+      "tags": [],
+      "terrain": null
+    },
+    "1082": {
+      "collision": "none",
+      "frame_index": 1082,
+      "tags": [],
+      "terrain": null
+    },
+    "1083": {
+      "collision": "none",
+      "frame_index": 1083,
+      "tags": [],
+      "terrain": null
+    },
+    "1084": {
+      "collision": "none",
+      "frame_index": 1084,
+      "tags": [],
+      "terrain": null
+    },
+    "1085": {
+      "collision": "none",
+      "frame_index": 1085,
+      "tags": [],
+      "terrain": null
+    },
+    "1086": {
+      "collision": "none",
+      "frame_index": 1086,
+      "tags": [],
+      "terrain": null
+    },
+    "1087": {
+      "collision": "none",
+      "frame_index": 1087,
+      "tags": [],
+      "terrain": null
+    },
+    "1088": {
+      "collision": "none",
+      "frame_index": 1088,
+      "tags": [],
+      "terrain": null
+    },
+    "1089": {
+      "collision": "none",
+      "frame_index": 1089,
+      "tags": [],
+      "terrain": null
+    },
+    "109": {
+      "collision": "none",
+      "frame_index": 109,
+      "tags": [],
+      "terrain": null
+    },
+    "1090": {
+      "collision": "none",
+      "frame_index": 1090,
+      "tags": [],
+      "terrain": null
+    },
+    "1091": {
+      "collision": "none",
+      "frame_index": 1091,
+      "tags": [],
+      "terrain": null
+    },
+    "1092": {
+      "collision": "none",
+      "frame_index": 1092,
+      "tags": [],
+      "terrain": null
+    },
+    "1093": {
+      "collision": "none",
+      "frame_index": 1093,
+      "tags": [],
+      "terrain": null
+    },
+    "1094": {
+      "collision": "none",
+      "frame_index": 1094,
+      "tags": [],
+      "terrain": null
+    },
+    "1095": {
+      "collision": "none",
+      "frame_index": 1095,
+      "tags": [],
+      "terrain": null
+    },
+    "1096": {
+      "collision": "none",
+      "frame_index": 1096,
+      "tags": [],
+      "terrain": null
+    },
+    "1097": {
+      "collision": "none",
+      "frame_index": 1097,
+      "tags": [],
+      "terrain": null
+    },
+    "1098": {
+      "collision": "none",
+      "frame_index": 1098,
+      "tags": [],
+      "terrain": null
+    },
+    "1099": {
+      "collision": "none",
+      "frame_index": 1099,
+      "tags": [],
+      "terrain": null
+    },
+    "11": {
+      "collision": "none",
+      "frame_index": 11,
+      "tags": [],
+      "terrain": null
+    },
+    "110": {
+      "collision": "none",
+      "frame_index": 110,
+      "tags": [],
+      "terrain": null
+    },
+    "1100": {
+      "collision": "none",
+      "frame_index": 1100,
+      "tags": [],
+      "terrain": null
+    },
+    "1101": {
+      "collision": "none",
+      "frame_index": 1101,
+      "tags": [],
+      "terrain": null
+    },
+    "1102": {
+      "collision": "none",
+      "frame_index": 1102,
+      "tags": [],
+      "terrain": null
+    },
+    "1103": {
+      "collision": "none",
+      "frame_index": 1103,
+      "tags": [],
+      "terrain": null
+    },
+    "1104": {
+      "collision": "none",
+      "frame_index": 1104,
+      "tags": [],
+      "terrain": null
+    },
+    "1105": {
+      "collision": "none",
+      "frame_index": 1105,
+      "tags": [],
+      "terrain": null
+    },
+    "1106": {
+      "collision": "none",
+      "frame_index": 1106,
+      "tags": [],
+      "terrain": null
+    },
+    "1107": {
+      "collision": "none",
+      "frame_index": 1107,
+      "tags": [],
+      "terrain": null
+    },
+    "1108": {
+      "collision": "none",
+      "frame_index": 1108,
+      "tags": [],
+      "terrain": null
+    },
+    "1109": {
+      "collision": "none",
+      "frame_index": 1109,
+      "tags": [],
+      "terrain": null
+    },
+    "111": {
+      "collision": "none",
+      "frame_index": 111,
+      "tags": [],
+      "terrain": null
+    },
+    "1110": {
+      "collision": "none",
+      "frame_index": 1110,
+      "tags": [],
+      "terrain": null
+    },
+    "1111": {
+      "collision": "none",
+      "frame_index": 1111,
+      "tags": [],
+      "terrain": null
+    },
+    "1112": {
+      "collision": "none",
+      "frame_index": 1112,
+      "tags": [],
+      "terrain": null
+    },
+    "1113": {
+      "collision": "none",
+      "frame_index": 1113,
+      "tags": [],
+      "terrain": null
+    },
+    "1114": {
+      "collision": "none",
+      "frame_index": 1114,
+      "tags": [],
+      "terrain": null
+    },
+    "1115": {
+      "collision": "none",
+      "frame_index": 1115,
+      "tags": [],
+      "terrain": null
+    },
+    "1116": {
+      "collision": "none",
+      "frame_index": 1116,
+      "tags": [],
+      "terrain": null
+    },
+    "1117": {
+      "collision": "none",
+      "frame_index": 1117,
+      "tags": [],
+      "terrain": null
+    },
+    "1118": {
+      "collision": "none",
+      "frame_index": 1118,
+      "tags": [],
+      "terrain": null
+    },
+    "1119": {
+      "collision": "none",
+      "frame_index": 1119,
+      "tags": [],
+      "terrain": null
+    },
+    "112": {
+      "collision": "none",
+      "frame_index": 112,
+      "tags": [],
+      "terrain": null
+    },
+    "1120": {
+      "collision": "none",
+      "frame_index": 1120,
+      "tags": [],
+      "terrain": null
+    },
+    "1121": {
+      "collision": "none",
+      "frame_index": 1121,
+      "tags": [],
+      "terrain": null
+    },
+    "1122": {
+      "collision": "none",
+      "frame_index": 1122,
+      "tags": [],
+      "terrain": null
+    },
+    "1123": {
+      "collision": "none",
+      "frame_index": 1123,
+      "tags": [],
+      "terrain": null
+    },
+    "1124": {
+      "collision": "none",
+      "frame_index": 1124,
+      "tags": [],
+      "terrain": null
+    },
+    "1125": {
+      "collision": "none",
+      "frame_index": 1125,
+      "tags": [],
+      "terrain": null
+    },
+    "1126": {
+      "collision": "none",
+      "frame_index": 1126,
+      "tags": [],
+      "terrain": null
+    },
+    "1127": {
+      "collision": "none",
+      "frame_index": 1127,
+      "tags": [],
+      "terrain": null
+    },
+    "1128": {
+      "collision": "none",
+      "frame_index": 1128,
+      "tags": [],
+      "terrain": null
+    },
+    "1129": {
+      "collision": "none",
+      "frame_index": 1129,
+      "tags": [],
+      "terrain": null
+    },
+    "113": {
+      "collision": "none",
+      "frame_index": 113,
+      "tags": [],
+      "terrain": null
+    },
+    "1130": {
+      "collision": "none",
+      "frame_index": 1130,
+      "tags": [],
+      "terrain": null
+    },
+    "1131": {
+      "collision": "none",
+      "frame_index": 1131,
+      "tags": [],
+      "terrain": null
+    },
+    "1132": {
+      "collision": "none",
+      "frame_index": 1132,
+      "tags": [],
+      "terrain": null
+    },
+    "1133": {
+      "collision": "none",
+      "frame_index": 1133,
+      "tags": [],
+      "terrain": null
+    },
+    "1134": {
+      "collision": "none",
+      "frame_index": 1134,
+      "tags": [],
+      "terrain": null
+    },
+    "1135": {
+      "collision": "none",
+      "frame_index": 1135,
+      "tags": [],
+      "terrain": null
+    },
+    "1136": {
+      "collision": "none",
+      "frame_index": 1136,
+      "tags": [],
+      "terrain": null
+    },
+    "1137": {
+      "collision": "none",
+      "frame_index": 1137,
+      "tags": [],
+      "terrain": null
+    },
+    "1138": {
+      "collision": "none",
+      "frame_index": 1138,
+      "tags": [],
+      "terrain": null
+    },
+    "1139": {
+      "collision": "none",
+      "frame_index": 1139,
+      "tags": [],
+      "terrain": null
+    },
+    "114": {
+      "collision": "none",
+      "frame_index": 114,
+      "tags": [],
+      "terrain": null
+    },
+    "1140": {
+      "collision": "none",
+      "frame_index": 1140,
+      "tags": [],
+      "terrain": null
+    },
+    "1141": {
+      "collision": "none",
+      "frame_index": 1141,
+      "tags": [],
+      "terrain": null
+    },
+    "1142": {
+      "collision": "none",
+      "frame_index": 1142,
+      "tags": [],
+      "terrain": null
+    },
+    "1143": {
+      "collision": "none",
+      "frame_index": 1143,
+      "tags": [],
+      "terrain": null
+    },
+    "1144": {
+      "collision": "none",
+      "frame_index": 1144,
+      "tags": [],
+      "terrain": null
+    },
+    "1145": {
+      "collision": "none",
+      "frame_index": 1145,
+      "tags": [],
+      "terrain": null
+    },
+    "1146": {
+      "collision": "none",
+      "frame_index": 1146,
+      "tags": [],
+      "terrain": null
+    },
+    "1147": {
+      "collision": "none",
+      "frame_index": 1147,
+      "tags": [],
+      "terrain": null
+    },
+    "1148": {
+      "collision": "none",
+      "frame_index": 1148,
+      "tags": [],
+      "terrain": null
+    },
+    "1149": {
+      "collision": "none",
+      "frame_index": 1149,
+      "tags": [],
+      "terrain": null
+    },
+    "115": {
+      "collision": "none",
+      "frame_index": 115,
+      "tags": [],
+      "terrain": null
+    },
+    "1150": {
+      "collision": "none",
+      "frame_index": 1150,
+      "tags": [],
+      "terrain": null
+    },
+    "1151": {
+      "collision": "none",
+      "frame_index": 1151,
+      "tags": [],
+      "terrain": null
+    },
+    "1152": {
+      "collision": "none",
+      "frame_index": 1152,
+      "tags": [],
+      "terrain": null
+    },
+    "1153": {
+      "collision": "none",
+      "frame_index": 1153,
+      "tags": [],
+      "terrain": null
+    },
+    "1154": {
+      "collision": "none",
+      "frame_index": 1154,
+      "tags": [],
+      "terrain": null
+    },
+    "1155": {
+      "collision": "none",
+      "frame_index": 1155,
+      "tags": [],
+      "terrain": null
+    },
+    "1156": {
+      "collision": "none",
+      "frame_index": 1156,
+      "tags": [],
+      "terrain": null
+    },
+    "1157": {
+      "collision": "none",
+      "frame_index": 1157,
+      "tags": [],
+      "terrain": null
+    },
+    "1158": {
+      "collision": "none",
+      "frame_index": 1158,
+      "tags": [],
+      "terrain": null
+    },
+    "1159": {
+      "collision": "none",
+      "frame_index": 1159,
+      "tags": [],
+      "terrain": null
+    },
+    "116": {
+      "collision": "none",
+      "frame_index": 116,
+      "tags": [],
+      "terrain": null
+    },
+    "1160": {
+      "collision": "none",
+      "frame_index": 1160,
+      "tags": [],
+      "terrain": null
+    },
+    "1161": {
+      "collision": "none",
+      "frame_index": 1161,
+      "tags": [],
+      "terrain": null
+    },
+    "1162": {
+      "collision": "none",
+      "frame_index": 1162,
+      "tags": [],
+      "terrain": null
+    },
+    "1163": {
+      "collision": "none",
+      "frame_index": 1163,
+      "tags": [],
+      "terrain": null
+    },
+    "1164": {
+      "collision": "none",
+      "frame_index": 1164,
+      "tags": [],
+      "terrain": null
+    },
+    "1165": {
+      "collision": "none",
+      "frame_index": 1165,
+      "tags": [],
+      "terrain": null
+    },
+    "1166": {
+      "collision": "none",
+      "frame_index": 1166,
+      "tags": [],
+      "terrain": null
+    },
+    "1167": {
+      "collision": "none",
+      "frame_index": 1167,
+      "tags": [],
+      "terrain": null
+    },
+    "1168": {
+      "collision": "none",
+      "frame_index": 1168,
+      "tags": [],
+      "terrain": null
+    },
+    "1169": {
+      "collision": "none",
+      "frame_index": 1169,
+      "tags": [],
+      "terrain": null
+    },
+    "117": {
+      "collision": "none",
+      "frame_index": 117,
+      "tags": [],
+      "terrain": null
+    },
+    "1170": {
+      "collision": "none",
+      "frame_index": 1170,
+      "tags": [],
+      "terrain": null
+    },
+    "1171": {
+      "collision": "none",
+      "frame_index": 1171,
+      "tags": [],
+      "terrain": null
+    },
+    "1172": {
+      "collision": "none",
+      "frame_index": 1172,
+      "tags": [],
+      "terrain": null
+    },
+    "1173": {
+      "collision": "none",
+      "frame_index": 1173,
+      "tags": [],
+      "terrain": null
+    },
+    "1174": {
+      "collision": "none",
+      "frame_index": 1174,
+      "tags": [],
+      "terrain": null
+    },
+    "1175": {
+      "collision": "none",
+      "frame_index": 1175,
+      "tags": [],
+      "terrain": null
+    },
+    "1176": {
+      "collision": "none",
+      "frame_index": 1176,
+      "tags": [],
+      "terrain": null
+    },
+    "1177": {
+      "collision": "none",
+      "frame_index": 1177,
+      "tags": [],
+      "terrain": null
+    },
+    "1178": {
+      "collision": "none",
+      "frame_index": 1178,
+      "tags": [],
+      "terrain": null
+    },
+    "1179": {
+      "collision": "none",
+      "frame_index": 1179,
+      "tags": [],
+      "terrain": null
+    },
+    "118": {
+      "collision": "none",
+      "frame_index": 118,
+      "tags": [],
+      "terrain": null
+    },
+    "1180": {
+      "collision": "none",
+      "frame_index": 1180,
+      "tags": [],
+      "terrain": null
+    },
+    "1181": {
+      "collision": "none",
+      "frame_index": 1181,
+      "tags": [],
+      "terrain": null
+    },
+    "1182": {
+      "collision": "none",
+      "frame_index": 1182,
+      "tags": [],
+      "terrain": null
+    },
+    "1183": {
+      "collision": "none",
+      "frame_index": 1183,
+      "tags": [],
+      "terrain": null
+    },
+    "1184": {
+      "collision": "none",
+      "frame_index": 1184,
+      "tags": [],
+      "terrain": null
+    },
+    "1185": {
+      "collision": "none",
+      "frame_index": 1185,
+      "tags": [],
+      "terrain": null
+    },
+    "1186": {
+      "collision": "none",
+      "frame_index": 1186,
+      "tags": [],
+      "terrain": null
+    },
+    "1187": {
+      "collision": "none",
+      "frame_index": 1187,
+      "tags": [],
+      "terrain": null
+    },
+    "1188": {
+      "collision": "none",
+      "frame_index": 1188,
+      "tags": [],
+      "terrain": null
+    },
+    "1189": {
+      "collision": "none",
+      "frame_index": 1189,
+      "tags": [],
+      "terrain": null
+    },
+    "119": {
+      "collision": "none",
+      "frame_index": 119,
+      "tags": [],
+      "terrain": null
+    },
+    "1190": {
+      "collision": "none",
+      "frame_index": 1190,
+      "tags": [],
+      "terrain": null
+    },
+    "1191": {
+      "collision": "none",
+      "frame_index": 1191,
+      "tags": [],
+      "terrain": null
+    },
+    "1192": {
+      "collision": "none",
+      "frame_index": 1192,
+      "tags": [],
+      "terrain": null
+    },
+    "1193": {
+      "collision": "none",
+      "frame_index": 1193,
+      "tags": [],
+      "terrain": null
+    },
+    "1194": {
+      "collision": "none",
+      "frame_index": 1194,
+      "tags": [],
+      "terrain": null
+    },
+    "1195": {
+      "collision": "none",
+      "frame_index": 1195,
+      "tags": [],
+      "terrain": null
+    },
+    "1196": {
+      "collision": "none",
+      "frame_index": 1196,
+      "tags": [],
+      "terrain": null
+    },
+    "1197": {
+      "collision": "none",
+      "frame_index": 1197,
+      "tags": [],
+      "terrain": null
+    },
+    "1198": {
+      "collision": "none",
+      "frame_index": 1198,
+      "tags": [],
+      "terrain": null
+    },
+    "1199": {
+      "collision": "none",
+      "frame_index": 1199,
+      "tags": [],
+      "terrain": null
+    },
+    "12": {
+      "collision": "none",
+      "frame_index": 12,
+      "tags": [],
+      "terrain": null
+    },
+    "120": {
+      "collision": "none",
+      "frame_index": 120,
+      "tags": [],
+      "terrain": null
+    },
+    "1200": {
+      "collision": "none",
+      "frame_index": 1200,
+      "tags": [],
+      "terrain": null
+    },
+    "1201": {
+      "collision": "none",
+      "frame_index": 1201,
+      "tags": [],
+      "terrain": null
+    },
+    "1202": {
+      "collision": "none",
+      "frame_index": 1202,
+      "tags": [],
+      "terrain": null
+    },
+    "1203": {
+      "collision": "none",
+      "frame_index": 1203,
+      "tags": [],
+      "terrain": null
+    },
+    "1204": {
+      "collision": "none",
+      "frame_index": 1204,
+      "tags": [],
+      "terrain": null
+    },
+    "1205": {
+      "collision": "none",
+      "frame_index": 1205,
+      "tags": [],
+      "terrain": null
+    },
+    "1206": {
+      "collision": "none",
+      "frame_index": 1206,
+      "tags": [],
+      "terrain": null
+    },
+    "1207": {
+      "collision": "none",
+      "frame_index": 1207,
+      "tags": [],
+      "terrain": null
+    },
+    "1208": {
+      "collision": "none",
+      "frame_index": 1208,
+      "tags": [],
+      "terrain": null
+    },
+    "1209": {
+      "collision": "none",
+      "frame_index": 1209,
+      "tags": [],
+      "terrain": null
+    },
+    "121": {
+      "collision": "none",
+      "frame_index": 121,
+      "tags": [],
+      "terrain": null
+    },
+    "1210": {
+      "collision": "none",
+      "frame_index": 1210,
+      "tags": [],
+      "terrain": null
+    },
+    "1211": {
+      "collision": "none",
+      "frame_index": 1211,
+      "tags": [],
+      "terrain": null
+    },
+    "1212": {
+      "collision": "none",
+      "frame_index": 1212,
+      "tags": [],
+      "terrain": null
+    },
+    "1213": {
+      "collision": "none",
+      "frame_index": 1213,
+      "tags": [],
+      "terrain": null
+    },
+    "1214": {
+      "collision": "none",
+      "frame_index": 1214,
+      "tags": [],
+      "terrain": null
+    },
+    "1215": {
+      "collision": "none",
+      "frame_index": 1215,
+      "tags": [],
+      "terrain": null
+    },
+    "1216": {
+      "collision": "none",
+      "frame_index": 1216,
+      "tags": [],
+      "terrain": null
+    },
+    "1217": {
+      "collision": "none",
+      "frame_index": 1217,
+      "tags": [],
+      "terrain": null
+    },
+    "1218": {
+      "collision": "none",
+      "frame_index": 1218,
+      "tags": [],
+      "terrain": null
+    },
+    "1219": {
+      "collision": "none",
+      "frame_index": 1219,
+      "tags": [],
+      "terrain": null
+    },
+    "122": {
+      "collision": "none",
+      "frame_index": 122,
+      "tags": [],
+      "terrain": null
+    },
+    "1220": {
+      "collision": "none",
+      "frame_index": 1220,
+      "tags": [],
+      "terrain": null
+    },
+    "1221": {
+      "collision": "none",
+      "frame_index": 1221,
+      "tags": [],
+      "terrain": null
+    },
+    "1222": {
+      "collision": "none",
+      "frame_index": 1222,
+      "tags": [],
+      "terrain": null
+    },
+    "1223": {
+      "collision": "none",
+      "frame_index": 1223,
+      "tags": [],
+      "terrain": null
+    },
+    "1224": {
+      "collision": "none",
+      "frame_index": 1224,
+      "tags": [],
+      "terrain": null
+    },
+    "1225": {
+      "collision": "none",
+      "frame_index": 1225,
+      "tags": [],
+      "terrain": null
+    },
+    "1226": {
+      "collision": "none",
+      "frame_index": 1226,
+      "tags": [],
+      "terrain": null
+    },
+    "1227": {
+      "collision": "none",
+      "frame_index": 1227,
+      "tags": [],
+      "terrain": null
+    },
+    "1228": {
+      "collision": "none",
+      "frame_index": 1228,
+      "tags": [],
+      "terrain": null
+    },
+    "1229": {
+      "collision": "none",
+      "frame_index": 1229,
+      "tags": [],
+      "terrain": null
+    },
+    "123": {
+      "collision": "none",
+      "frame_index": 123,
+      "tags": [],
+      "terrain": null
+    },
+    "1230": {
+      "collision": "none",
+      "frame_index": 1230,
+      "tags": [],
+      "terrain": null
+    },
+    "1231": {
+      "collision": "none",
+      "frame_index": 1231,
+      "tags": [],
+      "terrain": null
+    },
+    "1232": {
+      "collision": "none",
+      "frame_index": 1232,
+      "tags": [],
+      "terrain": null
+    },
+    "1233": {
+      "collision": "none",
+      "frame_index": 1233,
+      "tags": [],
+      "terrain": null
+    },
+    "1234": {
+      "collision": "none",
+      "frame_index": 1234,
+      "tags": [],
+      "terrain": null
+    },
+    "1235": {
+      "collision": "none",
+      "frame_index": 1235,
+      "tags": [],
+      "terrain": null
+    },
+    "1236": {
+      "collision": "none",
+      "frame_index": 1236,
+      "tags": [],
+      "terrain": null
+    },
+    "1237": {
+      "collision": "none",
+      "frame_index": 1237,
+      "tags": [],
+      "terrain": null
+    },
+    "1238": {
+      "collision": "none",
+      "frame_index": 1238,
+      "tags": [],
+      "terrain": null
+    },
+    "1239": {
+      "collision": "none",
+      "frame_index": 1239,
+      "tags": [],
+      "terrain": null
+    },
+    "124": {
+      "collision": "none",
+      "frame_index": 124,
+      "tags": [],
+      "terrain": null
+    },
+    "1240": {
+      "collision": "none",
+      "frame_index": 1240,
+      "tags": [],
+      "terrain": null
+    },
+    "1241": {
+      "collision": "none",
+      "frame_index": 1241,
+      "tags": [],
+      "terrain": null
+    },
+    "1242": {
+      "collision": "none",
+      "frame_index": 1242,
+      "tags": [],
+      "terrain": null
+    },
+    "1243": {
+      "collision": "none",
+      "frame_index": 1243,
+      "tags": [],
+      "terrain": null
+    },
+    "1244": {
+      "collision": "none",
+      "frame_index": 1244,
+      "tags": [],
+      "terrain": null
+    },
+    "1245": {
+      "collision": "none",
+      "frame_index": 1245,
+      "tags": [],
+      "terrain": null
+    },
+    "1246": {
+      "collision": "none",
+      "frame_index": 1246,
+      "tags": [],
+      "terrain": null
+    },
+    "1247": {
+      "collision": "none",
+      "frame_index": 1247,
+      "tags": [],
+      "terrain": null
+    },
+    "1248": {
+      "collision": "none",
+      "frame_index": 1248,
+      "tags": [],
+      "terrain": null
+    },
+    "1249": {
+      "collision": "none",
+      "frame_index": 1249,
+      "tags": [],
+      "terrain": null
+    },
+    "125": {
+      "collision": "none",
+      "frame_index": 125,
+      "tags": [],
+      "terrain": null
+    },
+    "1250": {
+      "collision": "none",
+      "frame_index": 1250,
+      "tags": [],
+      "terrain": null
+    },
+    "1251": {
+      "collision": "none",
+      "frame_index": 1251,
+      "tags": [],
+      "terrain": null
+    },
+    "1252": {
+      "collision": "none",
+      "frame_index": 1252,
+      "tags": [],
+      "terrain": null
+    },
+    "1253": {
+      "collision": "none",
+      "frame_index": 1253,
+      "tags": [],
+      "terrain": null
+    },
+    "1254": {
+      "collision": "none",
+      "frame_index": 1254,
+      "tags": [],
+      "terrain": null
+    },
+    "1255": {
+      "collision": "none",
+      "frame_index": 1255,
+      "tags": [],
+      "terrain": null
+    },
+    "1256": {
+      "collision": "none",
+      "frame_index": 1256,
+      "tags": [],
+      "terrain": null
+    },
+    "1257": {
+      "collision": "none",
+      "frame_index": 1257,
+      "tags": [],
+      "terrain": null
+    },
+    "1258": {
+      "collision": "none",
+      "frame_index": 1258,
+      "tags": [],
+      "terrain": null
+    },
+    "1259": {
+      "collision": "none",
+      "frame_index": 1259,
+      "tags": [],
+      "terrain": null
+    },
+    "126": {
+      "collision": "none",
+      "frame_index": 126,
+      "tags": [],
+      "terrain": null
+    },
+    "1260": {
+      "collision": "none",
+      "frame_index": 1260,
+      "tags": [],
+      "terrain": null
+    },
+    "1261": {
+      "collision": "none",
+      "frame_index": 1261,
+      "tags": [],
+      "terrain": null
+    },
+    "1262": {
+      "collision": "none",
+      "frame_index": 1262,
+      "tags": [],
+      "terrain": null
+    },
+    "1263": {
+      "collision": "none",
+      "frame_index": 1263,
+      "tags": [],
+      "terrain": null
+    },
+    "1264": {
+      "collision": "none",
+      "frame_index": 1264,
+      "tags": [],
+      "terrain": null
+    },
+    "1265": {
+      "collision": "none",
+      "frame_index": 1265,
+      "tags": [],
+      "terrain": null
+    },
+    "1266": {
+      "collision": "none",
+      "frame_index": 1266,
+      "tags": [],
+      "terrain": null
+    },
+    "1267": {
+      "collision": "none",
+      "frame_index": 1267,
+      "tags": [],
+      "terrain": null
+    },
+    "1268": {
+      "collision": "none",
+      "frame_index": 1268,
+      "tags": [],
+      "terrain": null
+    },
+    "1269": {
+      "collision": "none",
+      "frame_index": 1269,
+      "tags": [],
+      "terrain": null
+    },
+    "127": {
+      "collision": "none",
+      "frame_index": 127,
+      "tags": [],
+      "terrain": null
+    },
+    "1270": {
+      "collision": "none",
+      "frame_index": 1270,
+      "tags": [],
+      "terrain": null
+    },
+    "1271": {
+      "collision": "none",
+      "frame_index": 1271,
+      "tags": [],
+      "terrain": null
+    },
+    "1272": {
+      "collision": "none",
+      "frame_index": 1272,
+      "tags": [],
+      "terrain": null
+    },
+    "1273": {
+      "collision": "none",
+      "frame_index": 1273,
+      "tags": [],
+      "terrain": null
+    },
+    "1274": {
+      "collision": "none",
+      "frame_index": 1274,
+      "tags": [],
+      "terrain": null
+    },
+    "1275": {
+      "collision": "none",
+      "frame_index": 1275,
+      "tags": [],
+      "terrain": null
+    },
+    "1276": {
+      "collision": "none",
+      "frame_index": 1276,
+      "tags": [],
+      "terrain": null
+    },
+    "1277": {
+      "collision": "none",
+      "frame_index": 1277,
+      "tags": [],
+      "terrain": null
+    },
+    "1278": {
+      "collision": "none",
+      "frame_index": 1278,
+      "tags": [],
+      "terrain": null
+    },
+    "1279": {
+      "collision": "none",
+      "frame_index": 1279,
+      "tags": [],
+      "terrain": null
+    },
+    "128": {
+      "collision": "none",
+      "frame_index": 128,
+      "tags": [],
+      "terrain": null
+    },
+    "1280": {
+      "collision": "solid",
+      "frame_index": 1280,
+      "tags": [],
+      "terrain": null
+    },
+    "1281": {
+      "collision": "none",
+      "frame_index": 1281,
+      "tags": [],
+      "terrain": null
+    },
+    "1282": {
+      "collision": "none",
+      "frame_index": 1282,
+      "tags": [],
+      "terrain": null
+    },
+    "1283": {
+      "collision": "none",
+      "frame_index": 1283,
+      "tags": [],
+      "terrain": null
+    },
+    "1284": {
+      "collision": "none",
+      "frame_index": 1284,
+      "tags": [],
+      "terrain": null
+    },
+    "1285": {
+      "collision": "none",
+      "frame_index": 1285,
+      "tags": [],
+      "terrain": null
+    },
+    "1286": {
+      "collision": "none",
+      "frame_index": 1286,
+      "tags": [],
+      "terrain": null
+    },
+    "1287": {
+      "collision": "none",
+      "frame_index": 1287,
+      "tags": [],
+      "terrain": null
+    },
+    "1288": {
+      "collision": "none",
+      "frame_index": 1288,
+      "tags": [],
+      "terrain": null
+    },
+    "1289": {
+      "collision": "none",
+      "frame_index": 1289,
+      "tags": [],
+      "terrain": null
+    },
+    "129": {
+      "collision": "none",
+      "frame_index": 129,
+      "tags": [],
+      "terrain": null
+    },
+    "1290": {
+      "collision": "none",
+      "frame_index": 1290,
+      "tags": [],
+      "terrain": null
+    },
+    "1291": {
+      "collision": "none",
+      "frame_index": 1291,
+      "tags": [],
+      "terrain": null
+    },
+    "1292": {
+      "collision": "none",
+      "frame_index": 1292,
+      "tags": [],
+      "terrain": null
+    },
+    "1293": {
+      "collision": "none",
+      "frame_index": 1293,
+      "tags": [],
+      "terrain": null
+    },
+    "1294": {
+      "collision": "none",
+      "frame_index": 1294,
+      "tags": [],
+      "terrain": null
+    },
+    "1295": {
+      "collision": "none",
+      "frame_index": 1295,
+      "tags": [],
+      "terrain": null
+    },
+    "1296": {
+      "collision": "none",
+      "frame_index": 1296,
+      "tags": [],
+      "terrain": null
+    },
+    "1297": {
+      "collision": "none",
+      "frame_index": 1297,
+      "tags": [],
+      "terrain": null
+    },
+    "1298": {
+      "collision": "none",
+      "frame_index": 1298,
+      "tags": [],
+      "terrain": null
+    },
+    "1299": {
+      "collision": "none",
+      "frame_index": 1299,
+      "tags": [],
+      "terrain": null
+    },
+    "13": {
+      "collision": "none",
+      "frame_index": 13,
+      "tags": [],
+      "terrain": null
+    },
+    "130": {
+      "collision": "none",
+      "frame_index": 130,
+      "tags": [],
+      "terrain": null
+    },
+    "1300": {
+      "collision": "none",
+      "frame_index": 1300,
+      "tags": [],
+      "terrain": null
+    },
+    "1301": {
+      "collision": "none",
+      "frame_index": 1301,
+      "tags": [],
+      "terrain": null
+    },
+    "1302": {
+      "collision": "none",
+      "frame_index": 1302,
+      "tags": [],
+      "terrain": null
+    },
+    "1303": {
+      "collision": "none",
+      "frame_index": 1303,
+      "tags": [],
+      "terrain": null
+    },
+    "1304": {
+      "collision": "none",
+      "frame_index": 1304,
+      "tags": [],
+      "terrain": null
+    },
+    "1305": {
+      "collision": "none",
+      "frame_index": 1305,
+      "tags": [],
+      "terrain": null
+    },
+    "1306": {
+      "collision": "none",
+      "frame_index": 1306,
+      "tags": [],
+      "terrain": null
+    },
+    "1307": {
+      "collision": "none",
+      "frame_index": 1307,
+      "tags": [],
+      "terrain": null
+    },
+    "1308": {
+      "collision": "none",
+      "frame_index": 1308,
+      "tags": [],
+      "terrain": null
+    },
+    "1309": {
+      "collision": "none",
+      "frame_index": 1309,
+      "tags": [],
+      "terrain": null
+    },
+    "131": {
+      "collision": "none",
+      "frame_index": 131,
+      "tags": [],
+      "terrain": null
+    },
+    "1310": {
+      "collision": "none",
+      "frame_index": 1310,
+      "tags": [],
+      "terrain": null
+    },
+    "1311": {
+      "collision": "none",
+      "frame_index": 1311,
+      "tags": [],
+      "terrain": null
+    },
+    "1312": {
+      "collision": "none",
+      "frame_index": 1312,
+      "tags": [],
+      "terrain": null
+    },
+    "1313": {
+      "collision": "none",
+      "frame_index": 1313,
+      "tags": [],
+      "terrain": null
+    },
+    "1314": {
+      "collision": "none",
+      "frame_index": 1314,
+      "tags": [],
+      "terrain": null
+    },
+    "1315": {
+      "collision": "none",
+      "frame_index": 1315,
+      "tags": [],
+      "terrain": null
+    },
+    "1316": {
+      "collision": "none",
+      "frame_index": 1316,
+      "tags": [],
+      "terrain": null
+    },
+    "1317": {
+      "collision": "none",
+      "frame_index": 1317,
+      "tags": [],
+      "terrain": null
+    },
+    "1318": {
+      "collision": "none",
+      "frame_index": 1318,
+      "tags": [],
+      "terrain": null
+    },
+    "1319": {
+      "collision": "none",
+      "frame_index": 1319,
+      "tags": [],
+      "terrain": null
+    },
+    "132": {
+      "collision": "none",
+      "frame_index": 132,
+      "tags": [],
+      "terrain": null
+    },
+    "1320": {
+      "collision": "none",
+      "frame_index": 1320,
+      "tags": [],
+      "terrain": null
+    },
+    "1321": {
+      "collision": "none",
+      "frame_index": 1321,
+      "tags": [],
+      "terrain": null
+    },
+    "1322": {
+      "collision": "none",
+      "frame_index": 1322,
+      "tags": [],
+      "terrain": null
+    },
+    "1323": {
+      "collision": "none",
+      "frame_index": 1323,
+      "tags": [],
+      "terrain": null
+    },
+    "1324": {
+      "collision": "none",
+      "frame_index": 1324,
+      "tags": [],
+      "terrain": null
+    },
+    "1325": {
+      "collision": "none",
+      "frame_index": 1325,
+      "tags": [],
+      "terrain": null
+    },
+    "1326": {
+      "collision": "none",
+      "frame_index": 1326,
+      "tags": [],
+      "terrain": null
+    },
+    "1327": {
+      "collision": "none",
+      "frame_index": 1327,
+      "tags": [],
+      "terrain": null
+    },
+    "1328": {
+      "collision": "none",
+      "frame_index": 1328,
+      "tags": [],
+      "terrain": null
+    },
+    "1329": {
+      "collision": "none",
+      "frame_index": 1329,
+      "tags": [],
+      "terrain": null
+    },
+    "133": {
+      "collision": "none",
+      "frame_index": 133,
+      "tags": [],
+      "terrain": null
+    },
+    "1330": {
+      "collision": "none",
+      "frame_index": 1330,
+      "tags": [],
+      "terrain": null
+    },
+    "1331": {
+      "collision": "none",
+      "frame_index": 1331,
+      "tags": [],
+      "terrain": null
+    },
+    "1332": {
+      "collision": "none",
+      "frame_index": 1332,
+      "tags": [],
+      "terrain": null
+    },
+    "1333": {
+      "collision": "none",
+      "frame_index": 1333,
+      "tags": [],
+      "terrain": null
+    },
+    "1334": {
+      "collision": "none",
+      "frame_index": 1334,
+      "tags": [],
+      "terrain": null
+    },
+    "1335": {
+      "collision": "none",
+      "frame_index": 1335,
+      "tags": [],
+      "terrain": null
+    },
+    "1336": {
+      "collision": "none",
+      "frame_index": 1336,
+      "tags": [],
+      "terrain": null
+    },
+    "1337": {
+      "collision": "none",
+      "frame_index": 1337,
+      "tags": [],
+      "terrain": null
+    },
+    "1338": {
+      "collision": "none",
+      "frame_index": 1338,
+      "tags": [],
+      "terrain": null
+    },
+    "1339": {
+      "collision": "none",
+      "frame_index": 1339,
+      "tags": [],
+      "terrain": null
+    },
+    "134": {
+      "collision": "none",
+      "frame_index": 134,
+      "tags": [],
+      "terrain": null
+    },
+    "1340": {
+      "collision": "none",
+      "frame_index": 1340,
+      "tags": [],
+      "terrain": null
+    },
+    "1341": {
+      "collision": "none",
+      "frame_index": 1341,
+      "tags": [],
+      "terrain": null
+    },
+    "1342": {
+      "collision": "none",
+      "frame_index": 1342,
+      "tags": [],
+      "terrain": null
+    },
+    "1343": {
+      "collision": "none",
+      "frame_index": 1343,
+      "tags": [],
+      "terrain": null
+    },
+    "1344": {
+      "collision": "none",
+      "frame_index": 1344,
+      "tags": [],
+      "terrain": null
+    },
+    "1345": {
+      "collision": "none",
+      "frame_index": 1345,
+      "tags": [],
+      "terrain": null
+    },
+    "1346": {
+      "collision": "none",
+      "frame_index": 1346,
+      "tags": [],
+      "terrain": null
+    },
+    "1347": {
+      "collision": "none",
+      "frame_index": 1347,
+      "tags": [],
+      "terrain": null
+    },
+    "1348": {
+      "collision": "none",
+      "frame_index": 1348,
+      "tags": [],
+      "terrain": null
+    },
+    "1349": {
+      "collision": "none",
+      "frame_index": 1349,
+      "tags": [],
+      "terrain": null
+    },
+    "135": {
+      "collision": "none",
+      "frame_index": 135,
+      "tags": [],
+      "terrain": null
+    },
+    "1350": {
+      "collision": "none",
+      "frame_index": 1350,
+      "tags": [],
+      "terrain": null
+    },
+    "1351": {
+      "collision": "none",
+      "frame_index": 1351,
+      "tags": [],
+      "terrain": null
+    },
+    "1352": {
+      "collision": "none",
+      "frame_index": 1352,
+      "tags": [],
+      "terrain": null
+    },
+    "1353": {
+      "collision": "none",
+      "frame_index": 1353,
+      "tags": [],
+      "terrain": null
+    },
+    "1354": {
+      "collision": "none",
+      "frame_index": 1354,
+      "tags": [],
+      "terrain": null
+    },
+    "1355": {
+      "collision": "none",
+      "frame_index": 1355,
+      "tags": [],
+      "terrain": null
+    },
+    "1356": {
+      "collision": "none",
+      "frame_index": 1356,
+      "tags": [],
+      "terrain": null
+    },
+    "1357": {
+      "collision": "none",
+      "frame_index": 1357,
+      "tags": [],
+      "terrain": null
+    },
+    "1358": {
+      "collision": "none",
+      "frame_index": 1358,
+      "tags": [],
+      "terrain": null
+    },
+    "1359": {
+      "collision": "none",
+      "frame_index": 1359,
+      "tags": [],
+      "terrain": null
+    },
+    "136": {
+      "collision": "none",
+      "frame_index": 136,
+      "tags": [],
+      "terrain": null
+    },
+    "137": {
+      "collision": "none",
+      "frame_index": 137,
+      "tags": [],
+      "terrain": null
+    },
+    "138": {
+      "collision": "none",
+      "frame_index": 138,
+      "tags": [],
+      "terrain": null
+    },
+    "139": {
+      "collision": "none",
+      "frame_index": 139,
+      "tags": [],
+      "terrain": null
+    },
+    "14": {
+      "collision": "none",
+      "frame_index": 14,
+      "tags": [],
+      "terrain": null
+    },
+    "140": {
+      "collision": "none",
+      "frame_index": 140,
+      "tags": [],
+      "terrain": null
+    },
+    "141": {
+      "collision": "none",
+      "frame_index": 141,
+      "tags": [],
+      "terrain": null
+    },
+    "142": {
+      "collision": "none",
+      "frame_index": 142,
+      "tags": [],
+      "terrain": null
+    },
+    "143": {
+      "collision": "none",
+      "frame_index": 143,
+      "tags": [],
+      "terrain": null
+    },
+    "144": {
+      "collision": "none",
+      "frame_index": 144,
+      "tags": [],
+      "terrain": null
+    },
+    "145": {
+      "collision": "none",
+      "frame_index": 145,
+      "tags": [],
+      "terrain": null
+    },
+    "146": {
+      "collision": "none",
+      "frame_index": 146,
+      "tags": [],
+      "terrain": null
+    },
+    "147": {
+      "collision": "none",
+      "frame_index": 147,
+      "tags": [],
+      "terrain": null
+    },
+    "148": {
+      "collision": "none",
+      "frame_index": 148,
+      "tags": [],
+      "terrain": null
+    },
+    "149": {
+      "collision": "none",
+      "frame_index": 149,
+      "tags": [],
+      "terrain": null
+    },
+    "15": {
+      "collision": "none",
+      "frame_index": 15,
+      "tags": [],
+      "terrain": null
+    },
+    "150": {
+      "collision": "none",
+      "frame_index": 150,
+      "tags": [],
+      "terrain": null
+    },
+    "151": {
+      "collision": "none",
+      "frame_index": 151,
+      "tags": [],
+      "terrain": null
+    },
+    "152": {
+      "collision": "none",
+      "frame_index": 152,
+      "tags": [],
+      "terrain": null
+    },
+    "153": {
+      "collision": "none",
+      "frame_index": 153,
+      "tags": [],
+      "terrain": null
+    },
+    "154": {
+      "collision": "none",
+      "frame_index": 154,
+      "tags": [],
+      "terrain": null
+    },
+    "155": {
+      "collision": "none",
+      "frame_index": 155,
+      "tags": [],
+      "terrain": null
+    },
+    "156": {
+      "collision": "none",
+      "frame_index": 156,
+      "tags": [],
+      "terrain": null
+    },
+    "157": {
+      "collision": "none",
+      "frame_index": 157,
+      "tags": [],
+      "terrain": null
+    },
+    "158": {
+      "collision": "none",
+      "frame_index": 158,
+      "tags": [],
+      "terrain": null
+    },
+    "159": {
+      "collision": "none",
+      "frame_index": 159,
+      "tags": [],
+      "terrain": null
+    },
+    "16": {
+      "collision": "none",
+      "frame_index": 16,
+      "tags": [],
+      "terrain": null
+    },
+    "160": {
+      "collision": "none",
+      "frame_index": 160,
+      "tags": [],
+      "terrain": null
+    },
+    "161": {
+      "collision": "none",
+      "frame_index": 161,
+      "tags": [],
+      "terrain": null
+    },
+    "162": {
+      "collision": "none",
+      "frame_index": 162,
+      "tags": [],
+      "terrain": null
+    },
+    "163": {
+      "collision": "none",
+      "frame_index": 163,
+      "tags": [],
+      "terrain": null
+    },
+    "164": {
+      "collision": "none",
+      "frame_index": 164,
+      "tags": [],
+      "terrain": null
+    },
+    "165": {
+      "collision": "none",
+      "frame_index": 165,
+      "tags": [],
+      "terrain": null
+    },
+    "166": {
+      "collision": "none",
+      "frame_index": 166,
+      "tags": [],
+      "terrain": null
+    },
+    "167": {
+      "collision": "none",
+      "frame_index": 167,
+      "tags": [],
+      "terrain": null
+    },
+    "168": {
+      "collision": "none",
+      "frame_index": 168,
+      "tags": [],
+      "terrain": null
+    },
+    "169": {
+      "collision": "none",
+      "frame_index": 169,
+      "tags": [],
+      "terrain": null
+    },
+    "17": {
+      "collision": "none",
+      "frame_index": 17,
+      "tags": [],
+      "terrain": null
+    },
+    "170": {
+      "collision": "none",
+      "frame_index": 170,
+      "tags": [],
+      "terrain": null
+    },
+    "171": {
+      "collision": "none",
+      "frame_index": 171,
+      "tags": [],
+      "terrain": null
+    },
+    "172": {
+      "collision": "none",
+      "frame_index": 172,
+      "tags": [],
+      "terrain": null
+    },
+    "173": {
+      "collision": "none",
+      "frame_index": 173,
+      "tags": [],
+      "terrain": null
+    },
+    "174": {
+      "collision": "none",
+      "frame_index": 174,
+      "tags": [],
+      "terrain": null
+    },
+    "175": {
+      "collision": "none",
+      "frame_index": 175,
+      "tags": [],
+      "terrain": null
+    },
+    "176": {
+      "collision": "none",
+      "frame_index": 176,
+      "tags": [],
+      "terrain": null
+    },
+    "177": {
+      "collision": "none",
+      "frame_index": 177,
+      "tags": [],
+      "terrain": null
+    },
+    "178": {
+      "collision": "none",
+      "frame_index": 178,
+      "tags": [],
+      "terrain": null
+    },
+    "179": {
+      "collision": "none",
+      "frame_index": 179,
+      "tags": [],
+      "terrain": null
+    },
+    "18": {
+      "collision": "none",
+      "frame_index": 18,
+      "tags": [],
+      "terrain": null
+    },
+    "180": {
+      "collision": "none",
+      "frame_index": 180,
+      "tags": [],
+      "terrain": null
+    },
+    "181": {
+      "collision": "none",
+      "frame_index": 181,
+      "tags": [],
+      "terrain": null
+    },
+    "182": {
+      "collision": "none",
+      "frame_index": 182,
+      "tags": [],
+      "terrain": null
+    },
+    "183": {
+      "collision": "none",
+      "frame_index": 183,
+      "tags": [],
+      "terrain": null
+    },
+    "184": {
+      "collision": "none",
+      "frame_index": 184,
+      "tags": [],
+      "terrain": null
+    },
+    "185": {
+      "collision": "none",
+      "frame_index": 185,
+      "tags": [],
+      "terrain": null
+    },
+    "186": {
+      "collision": "none",
+      "frame_index": 186,
+      "tags": [],
+      "terrain": null
+    },
+    "187": {
+      "collision": "none",
+      "frame_index": 187,
+      "tags": [],
+      "terrain": null
+    },
+    "188": {
+      "collision": "none",
+      "frame_index": 188,
+      "tags": [],
+      "terrain": null
+    },
+    "189": {
+      "collision": "none",
+      "frame_index": 189,
+      "tags": [],
+      "terrain": null
+    },
+    "19": {
+      "collision": "none",
+      "frame_index": 19,
+      "tags": [],
+      "terrain": null
+    },
+    "190": {
+      "collision": "none",
+      "frame_index": 190,
+      "tags": [],
+      "terrain": null
+    },
+    "191": {
+      "collision": "none",
+      "frame_index": 191,
+      "tags": [],
+      "terrain": null
+    },
+    "192": {
+      "collision": "none",
+      "frame_index": 192,
+      "tags": [],
+      "terrain": null
+    },
+    "193": {
+      "collision": "none",
+      "frame_index": 193,
+      "tags": [],
+      "terrain": null
+    },
+    "194": {
+      "collision": "none",
+      "frame_index": 194,
+      "tags": [],
+      "terrain": null
+    },
+    "195": {
+      "collision": "none",
+      "frame_index": 195,
+      "tags": [],
+      "terrain": null
+    },
+    "196": {
+      "collision": "none",
+      "frame_index": 196,
+      "tags": [],
+      "terrain": null
+    },
+    "197": {
+      "collision": "none",
+      "frame_index": 197,
+      "tags": [],
+      "terrain": null
+    },
+    "198": {
+      "collision": "none",
+      "frame_index": 198,
+      "tags": [],
+      "terrain": null
+    },
+    "199": {
+      "collision": "none",
+      "frame_index": 199,
+      "tags": [],
+      "terrain": null
+    },
+    "2": {
+      "collision": "none",
+      "frame_index": 2,
+      "tags": [],
+      "terrain": null
+    },
+    "20": {
+      "collision": "none",
+      "frame_index": 20,
+      "tags": [],
+      "terrain": null
+    },
+    "200": {
+      "collision": "none",
+      "frame_index": 200,
+      "tags": [],
+      "terrain": null
+    },
+    "201": {
+      "collision": "none",
+      "frame_index": 201,
+      "tags": [],
+      "terrain": null
+    },
+    "202": {
+      "collision": "none",
+      "frame_index": 202,
+      "tags": [],
+      "terrain": null
+    },
+    "203": {
+      "collision": "none",
+      "frame_index": 203,
+      "tags": [],
+      "terrain": null
+    },
+    "204": {
+      "collision": "none",
+      "frame_index": 204,
+      "tags": [],
+      "terrain": null
+    },
+    "205": {
+      "collision": "none",
+      "frame_index": 205,
+      "tags": [],
+      "terrain": null
+    },
+    "206": {
+      "collision": "none",
+      "frame_index": 206,
+      "tags": [],
+      "terrain": null
+    },
+    "207": {
+      "collision": "none",
+      "frame_index": 207,
+      "tags": [],
+      "terrain": null
+    },
+    "208": {
+      "collision": "none",
+      "frame_index": 208,
+      "tags": [],
+      "terrain": null
+    },
+    "209": {
+      "collision": "none",
+      "frame_index": 209,
+      "tags": [],
+      "terrain": null
+    },
+    "21": {
+      "collision": "none",
+      "frame_index": 21,
+      "tags": [],
+      "terrain": null
+    },
+    "210": {
+      "collision": "none",
+      "frame_index": 210,
+      "tags": [],
+      "terrain": null
+    },
+    "211": {
+      "collision": "none",
+      "frame_index": 211,
+      "tags": [],
+      "terrain": null
+    },
+    "212": {
+      "collision": "none",
+      "frame_index": 212,
+      "tags": [],
+      "terrain": null
+    },
+    "213": {
+      "collision": "none",
+      "frame_index": 213,
+      "tags": [],
+      "terrain": null
+    },
+    "214": {
+      "collision": "none",
+      "frame_index": 214,
+      "tags": [],
+      "terrain": null
+    },
+    "215": {
+      "collision": "none",
+      "frame_index": 215,
+      "tags": [],
+      "terrain": null
+    },
+    "216": {
+      "collision": "none",
+      "frame_index": 216,
+      "tags": [],
+      "terrain": null
+    },
+    "217": {
+      "collision": "none",
+      "frame_index": 217,
+      "tags": [],
+      "terrain": null
+    },
+    "218": {
+      "collision": "none",
+      "frame_index": 218,
+      "tags": [],
+      "terrain": null
+    },
+    "219": {
+      "collision": "none",
+      "frame_index": 219,
+      "tags": [],
+      "terrain": null
+    },
+    "22": {
+      "collision": "none",
+      "frame_index": 22,
+      "tags": [],
+      "terrain": null
+    },
+    "220": {
+      "collision": "none",
+      "frame_index": 220,
+      "tags": [],
+      "terrain": null
+    },
+    "221": {
+      "collision": "none",
+      "frame_index": 221,
+      "tags": [],
+      "terrain": null
+    },
+    "222": {
+      "collision": "none",
+      "frame_index": 222,
+      "tags": [],
+      "terrain": null
+    },
+    "223": {
+      "collision": "none",
+      "frame_index": 223,
+      "tags": [],
+      "terrain": null
+    },
+    "224": {
+      "collision": "none",
+      "frame_index": 224,
+      "tags": [],
+      "terrain": null
+    },
+    "225": {
+      "collision": "none",
+      "frame_index": 225,
+      "tags": [],
+      "terrain": null
+    },
+    "226": {
+      "collision": "none",
+      "frame_index": 226,
+      "tags": [],
+      "terrain": null
+    },
+    "227": {
+      "collision": "none",
+      "frame_index": 227,
+      "tags": [],
+      "terrain": null
+    },
+    "228": {
+      "collision": "none",
+      "frame_index": 228,
+      "tags": [],
+      "terrain": null
+    },
+    "229": {
+      "collision": "none",
+      "frame_index": 229,
+      "tags": [],
+      "terrain": null
+    },
+    "23": {
+      "collision": "none",
+      "frame_index": 23,
+      "tags": [],
+      "terrain": null
+    },
+    "230": {
+      "collision": "none",
+      "frame_index": 230,
+      "tags": [],
+      "terrain": null
+    },
+    "231": {
+      "collision": "none",
+      "frame_index": 231,
+      "tags": [],
+      "terrain": null
+    },
+    "232": {
+      "collision": "none",
+      "frame_index": 232,
+      "tags": [],
+      "terrain": null
+    },
+    "233": {
+      "collision": "none",
+      "frame_index": 233,
+      "tags": [],
+      "terrain": null
+    },
+    "234": {
+      "collision": "none",
+      "frame_index": 234,
+      "tags": [],
+      "terrain": null
+    },
+    "235": {
+      "collision": "none",
+      "frame_index": 235,
+      "tags": [],
+      "terrain": null
+    },
+    "236": {
+      "collision": "none",
+      "frame_index": 236,
+      "tags": [],
+      "terrain": null
+    },
+    "237": {
+      "collision": "none",
+      "frame_index": 237,
+      "tags": [],
+      "terrain": null
+    },
+    "238": {
+      "collision": "none",
+      "frame_index": 238,
+      "tags": [],
+      "terrain": null
+    },
+    "239": {
+      "collision": "none",
+      "frame_index": 239,
+      "tags": [],
+      "terrain": null
+    },
+    "24": {
+      "collision": "none",
+      "frame_index": 24,
+      "tags": [],
+      "terrain": null
+    },
+    "240": {
+      "collision": "none",
+      "frame_index": 240,
+      "tags": [],
+      "terrain": null
+    },
+    "241": {
+      "collision": "none",
+      "frame_index": 241,
+      "tags": [],
+      "terrain": null
+    },
+    "242": {
+      "collision": "none",
+      "frame_index": 242,
+      "tags": [],
+      "terrain": null
+    },
+    "243": {
+      "collision": "none",
+      "frame_index": 243,
+      "tags": [],
+      "terrain": null
+    },
+    "244": {
+      "collision": "none",
+      "frame_index": 244,
+      "tags": [],
+      "terrain": null
+    },
+    "245": {
+      "collision": "none",
+      "frame_index": 245,
+      "tags": [],
+      "terrain": null
+    },
+    "246": {
+      "collision": "none",
+      "frame_index": 246,
+      "tags": [],
+      "terrain": null
+    },
+    "247": {
+      "collision": "none",
+      "frame_index": 247,
+      "tags": [],
+      "terrain": null
+    },
+    "248": {
+      "collision": "none",
+      "frame_index": 248,
+      "tags": [],
+      "terrain": null
+    },
+    "249": {
+      "collision": "none",
+      "frame_index": 249,
+      "tags": [],
+      "terrain": null
+    },
+    "25": {
+      "collision": "none",
+      "frame_index": 25,
+      "tags": [],
+      "terrain": null
+    },
+    "250": {
+      "collision": "none",
+      "frame_index": 250,
+      "tags": [],
+      "terrain": null
+    },
+    "251": {
+      "collision": "none",
+      "frame_index": 251,
+      "tags": [],
+      "terrain": null
+    },
+    "252": {
+      "collision": "none",
+      "frame_index": 252,
+      "tags": [],
+      "terrain": null
+    },
+    "253": {
+      "collision": "none",
+      "frame_index": 253,
+      "tags": [],
+      "terrain": null
+    },
+    "254": {
+      "collision": "none",
+      "frame_index": 254,
+      "tags": [],
+      "terrain": null
+    },
+    "255": {
+      "collision": "none",
+      "frame_index": 255,
+      "tags": [],
+      "terrain": null
+    },
+    "256": {
+      "collision": "none",
+      "frame_index": 256,
+      "tags": [],
+      "terrain": null
+    },
+    "257": {
+      "collision": "none",
+      "frame_index": 257,
+      "tags": [],
+      "terrain": null
+    },
+    "258": {
+      "collision": "none",
+      "frame_index": 258,
+      "tags": [],
+      "terrain": null
+    },
+    "259": {
+      "collision": "none",
+      "frame_index": 259,
+      "tags": [],
+      "terrain": null
+    },
+    "26": {
+      "collision": "none",
+      "frame_index": 26,
+      "tags": [],
+      "terrain": null
+    },
+    "260": {
+      "collision": "none",
+      "frame_index": 260,
+      "tags": [],
+      "terrain": null
+    },
+    "261": {
+      "collision": "none",
+      "frame_index": 261,
+      "tags": [],
+      "terrain": null
+    },
+    "262": {
+      "collision": "none",
+      "frame_index": 262,
+      "tags": [],
+      "terrain": null
+    },
+    "263": {
+      "collision": "none",
+      "frame_index": 263,
+      "tags": [],
+      "terrain": null
+    },
+    "264": {
+      "collision": "none",
+      "frame_index": 264,
+      "tags": [],
+      "terrain": null
+    },
+    "265": {
+      "collision": "none",
+      "frame_index": 265,
+      "tags": [],
+      "terrain": null
+    },
+    "266": {
+      "collision": "none",
+      "frame_index": 266,
+      "tags": [],
+      "terrain": null
+    },
+    "267": {
+      "collision": "none",
+      "frame_index": 267,
+      "tags": [],
+      "terrain": null
+    },
+    "268": {
+      "collision": "none",
+      "frame_index": 268,
+      "tags": [],
+      "terrain": null
+    },
+    "269": {
+      "collision": "none",
+      "frame_index": 269,
+      "tags": [],
+      "terrain": null
+    },
+    "27": {
+      "collision": "none",
+      "frame_index": 27,
+      "tags": [],
+      "terrain": null
+    },
+    "270": {
+      "collision": "none",
+      "frame_index": 270,
+      "tags": [],
+      "terrain": null
+    },
+    "271": {
+      "collision": "none",
+      "frame_index": 271,
+      "tags": [],
+      "terrain": null
+    },
+    "272": {
+      "collision": "none",
+      "frame_index": 272,
+      "tags": [],
+      "terrain": null
+    },
+    "273": {
+      "collision": "none",
+      "frame_index": 273,
+      "tags": [],
+      "terrain": null
+    },
+    "274": {
+      "collision": "none",
+      "frame_index": 274,
+      "tags": [],
+      "terrain": null
+    },
+    "275": {
+      "collision": "none",
+      "frame_index": 275,
+      "tags": [],
+      "terrain": null
+    },
+    "276": {
+      "collision": "none",
+      "frame_index": 276,
+      "tags": [],
+      "terrain": null
+    },
+    "277": {
+      "collision": "none",
+      "frame_index": 277,
+      "tags": [],
+      "terrain": null
+    },
+    "278": {
+      "collision": "none",
+      "frame_index": 278,
+      "tags": [],
+      "terrain": null
+    },
+    "279": {
+      "collision": "none",
+      "frame_index": 279,
+      "tags": [],
+      "terrain": null
+    },
+    "28": {
+      "collision": "none",
+      "frame_index": 28,
+      "tags": [],
+      "terrain": null
+    },
+    "280": {
+      "collision": "none",
+      "frame_index": 280,
+      "tags": [],
+      "terrain": null
+    },
+    "281": {
+      "collision": "none",
+      "frame_index": 281,
+      "tags": [],
+      "terrain": null
+    },
+    "282": {
+      "collision": "none",
+      "frame_index": 282,
+      "tags": [],
+      "terrain": null
+    },
+    "283": {
+      "collision": "none",
+      "frame_index": 283,
+      "tags": [],
+      "terrain": null
+    },
+    "284": {
+      "collision": "none",
+      "frame_index": 284,
+      "tags": [],
+      "terrain": null
+    },
+    "285": {
+      "collision": "none",
+      "frame_index": 285,
+      "tags": [],
+      "terrain": null
+    },
+    "286": {
+      "collision": "none",
+      "frame_index": 286,
+      "tags": [],
+      "terrain": null
+    },
+    "287": {
+      "collision": "none",
+      "frame_index": 287,
+      "tags": [],
+      "terrain": null
+    },
+    "288": {
+      "collision": "none",
+      "frame_index": 288,
+      "tags": [],
+      "terrain": null
+    },
+    "289": {
+      "collision": "none",
+      "frame_index": 289,
+      "tags": [],
+      "terrain": null
+    },
+    "29": {
+      "collision": "none",
+      "frame_index": 29,
+      "tags": [],
+      "terrain": null
+    },
+    "290": {
+      "collision": "none",
+      "frame_index": 290,
+      "tags": [],
+      "terrain": null
+    },
+    "291": {
+      "collision": "none",
+      "frame_index": 291,
+      "tags": [],
+      "terrain": null
+    },
+    "292": {
+      "collision": "none",
+      "frame_index": 292,
+      "tags": [],
+      "terrain": null
+    },
+    "293": {
+      "collision": "none",
+      "frame_index": 293,
+      "tags": [],
+      "terrain": null
+    },
+    "294": {
+      "collision": "none",
+      "frame_index": 294,
+      "tags": [],
+      "terrain": null
+    },
+    "295": {
+      "collision": "none",
+      "frame_index": 295,
+      "tags": [],
+      "terrain": null
+    },
+    "296": {
+      "collision": "none",
+      "frame_index": 296,
+      "tags": [],
+      "terrain": null
+    },
+    "297": {
+      "collision": "none",
+      "frame_index": 297,
+      "tags": [],
+      "terrain": null
+    },
+    "298": {
+      "collision": "none",
+      "frame_index": 298,
+      "tags": [],
+      "terrain": null
+    },
+    "299": {
+      "collision": "none",
+      "frame_index": 299,
+      "tags": [],
+      "terrain": null
+    },
+    "3": {
+      "collision": "none",
+      "frame_index": 3,
+      "tags": [],
+      "terrain": null
+    },
+    "30": {
+      "collision": "none",
+      "frame_index": 30,
+      "tags": [],
+      "terrain": null
+    },
+    "300": {
+      "collision": "none",
+      "frame_index": 300,
+      "tags": [],
+      "terrain": null
+    },
+    "301": {
+      "collision": "none",
+      "frame_index": 301,
+      "tags": [],
+      "terrain": null
+    },
+    "302": {
+      "collision": "none",
+      "frame_index": 302,
+      "tags": [],
+      "terrain": null
+    },
+    "303": {
+      "collision": "none",
+      "frame_index": 303,
+      "tags": [],
+      "terrain": null
+    },
+    "304": {
+      "collision": "none",
+      "frame_index": 304,
+      "tags": [],
+      "terrain": null
+    },
+    "305": {
+      "collision": "none",
+      "frame_index": 305,
+      "tags": [],
+      "terrain": null
+    },
+    "306": {
+      "collision": "none",
+      "frame_index": 306,
+      "tags": [],
+      "terrain": null
+    },
+    "307": {
+      "collision": "none",
+      "frame_index": 307,
+      "tags": [],
+      "terrain": null
+    },
+    "308": {
+      "collision": "none",
+      "frame_index": 308,
+      "tags": [],
+      "terrain": null
+    },
+    "309": {
+      "collision": "none",
+      "frame_index": 309,
+      "tags": [],
+      "terrain": null
+    },
+    "31": {
+      "collision": "none",
+      "frame_index": 31,
+      "tags": [],
+      "terrain": null
+    },
+    "310": {
+      "collision": "none",
+      "frame_index": 310,
+      "tags": [],
+      "terrain": null
+    },
+    "311": {
+      "collision": "none",
+      "frame_index": 311,
+      "tags": [],
+      "terrain": null
+    },
+    "312": {
+      "collision": "none",
+      "frame_index": 312,
+      "tags": [],
+      "terrain": null
+    },
+    "313": {
+      "collision": "none",
+      "frame_index": 313,
+      "tags": [],
+      "terrain": null
+    },
+    "314": {
+      "collision": "none",
+      "frame_index": 314,
+      "tags": [],
+      "terrain": null
+    },
+    "315": {
+      "collision": "none",
+      "frame_index": 315,
+      "tags": [],
+      "terrain": null
+    },
+    "316": {
+      "collision": "none",
+      "frame_index": 316,
+      "tags": [],
+      "terrain": null
+    },
+    "317": {
+      "collision": "none",
+      "frame_index": 317,
+      "tags": [],
+      "terrain": null
+    },
+    "318": {
+      "collision": "none",
+      "frame_index": 318,
+      "tags": [],
+      "terrain": null
+    },
+    "319": {
+      "collision": "none",
+      "frame_index": 319,
+      "tags": [],
+      "terrain": null
+    },
+    "32": {
+      "collision": "none",
+      "frame_index": 32,
+      "tags": [],
+      "terrain": null
+    },
+    "320": {
+      "collision": "none",
+      "frame_index": 320,
+      "tags": [],
+      "terrain": null
+    },
+    "321": {
+      "collision": "none",
+      "frame_index": 321,
+      "tags": [],
+      "terrain": null
+    },
+    "322": {
+      "collision": "none",
+      "frame_index": 322,
+      "tags": [],
+      "terrain": null
+    },
+    "323": {
+      "collision": "none",
+      "frame_index": 323,
+      "tags": [],
+      "terrain": null
+    },
+    "324": {
+      "collision": "none",
+      "frame_index": 324,
+      "tags": [],
+      "terrain": null
+    },
+    "325": {
+      "collision": "none",
+      "frame_index": 325,
+      "tags": [],
+      "terrain": null
+    },
+    "326": {
+      "collision": "none",
+      "frame_index": 326,
+      "tags": [],
+      "terrain": null
+    },
+    "327": {
+      "collision": "none",
+      "frame_index": 327,
+      "tags": [],
+      "terrain": null
+    },
+    "328": {
+      "collision": "none",
+      "frame_index": 328,
+      "tags": [],
+      "terrain": null
+    },
+    "329": {
+      "collision": "none",
+      "frame_index": 329,
+      "tags": [],
+      "terrain": null
+    },
+    "33": {
+      "collision": "none",
+      "frame_index": 33,
+      "tags": [],
+      "terrain": null
+    },
+    "330": {
+      "collision": "none",
+      "frame_index": 330,
+      "tags": [],
+      "terrain": null
+    },
+    "331": {
+      "collision": "none",
+      "frame_index": 331,
+      "tags": [],
+      "terrain": null
+    },
+    "332": {
+      "collision": "none",
+      "frame_index": 332,
+      "tags": [],
+      "terrain": null
+    },
+    "333": {
+      "collision": "none",
+      "frame_index": 333,
+      "tags": [],
+      "terrain": null
+    },
+    "334": {
+      "collision": "none",
+      "frame_index": 334,
+      "tags": [],
+      "terrain": null
+    },
+    "335": {
+      "collision": "none",
+      "frame_index": 335,
+      "tags": [],
+      "terrain": null
+    },
+    "336": {
+      "collision": "none",
+      "frame_index": 336,
+      "tags": [],
+      "terrain": null
+    },
+    "337": {
+      "collision": "none",
+      "frame_index": 337,
+      "tags": [],
+      "terrain": null
+    },
+    "338": {
+      "collision": "none",
+      "frame_index": 338,
+      "tags": [],
+      "terrain": null
+    },
+    "339": {
+      "collision": "none",
+      "frame_index": 339,
+      "tags": [],
+      "terrain": null
+    },
+    "34": {
+      "collision": "none",
+      "frame_index": 34,
+      "tags": [],
+      "terrain": null
+    },
+    "340": {
+      "collision": "none",
+      "frame_index": 340,
+      "tags": [],
+      "terrain": null
+    },
+    "341": {
+      "collision": "none",
+      "frame_index": 341,
+      "tags": [],
+      "terrain": null
+    },
+    "342": {
+      "collision": "none",
+      "frame_index": 342,
+      "tags": [],
+      "terrain": null
+    },
+    "343": {
+      "collision": "none",
+      "frame_index": 343,
+      "tags": [],
+      "terrain": null
+    },
+    "344": {
+      "collision": "none",
+      "frame_index": 344,
+      "tags": [],
+      "terrain": null
+    },
+    "345": {
+      "collision": "none",
+      "frame_index": 345,
+      "tags": [],
+      "terrain": null
+    },
+    "346": {
+      "collision": "none",
+      "frame_index": 346,
+      "tags": [],
+      "terrain": null
+    },
+    "347": {
+      "collision": "none",
+      "frame_index": 347,
+      "tags": [],
+      "terrain": null
+    },
+    "348": {
+      "collision": "none",
+      "frame_index": 348,
+      "tags": [],
+      "terrain": null
+    },
+    "349": {
+      "collision": "none",
+      "frame_index": 349,
+      "tags": [],
+      "terrain": null
+    },
+    "35": {
+      "collision": "none",
+      "frame_index": 35,
+      "tags": [],
+      "terrain": null
+    },
+    "350": {
+      "collision": "none",
+      "frame_index": 350,
+      "tags": [],
+      "terrain": null
+    },
+    "351": {
+      "collision": "none",
+      "frame_index": 351,
+      "tags": [],
+      "terrain": null
+    },
+    "352": {
+      "collision": "none",
+      "frame_index": 352,
+      "tags": [],
+      "terrain": null
+    },
+    "353": {
+      "collision": "none",
+      "frame_index": 353,
+      "tags": [],
+      "terrain": null
+    },
+    "354": {
+      "collision": "none",
+      "frame_index": 354,
+      "tags": [],
+      "terrain": null
+    },
+    "355": {
+      "collision": "none",
+      "frame_index": 355,
+      "tags": [],
+      "terrain": null
+    },
+    "356": {
+      "collision": "none",
+      "frame_index": 356,
+      "tags": [],
+      "terrain": null
+    },
+    "357": {
+      "collision": "none",
+      "frame_index": 357,
+      "tags": [],
+      "terrain": null
+    },
+    "358": {
+      "collision": "none",
+      "frame_index": 358,
+      "tags": [],
+      "terrain": null
+    },
+    "359": {
+      "collision": "none",
+      "frame_index": 359,
+      "tags": [],
+      "terrain": null
+    },
+    "36": {
+      "collision": "none",
+      "frame_index": 36,
+      "tags": [],
+      "terrain": null
+    },
+    "360": {
+      "collision": "none",
+      "frame_index": 360,
+      "tags": [],
+      "terrain": null
+    },
+    "361": {
+      "collision": "none",
+      "frame_index": 361,
+      "tags": [],
+      "terrain": null
+    },
+    "362": {
+      "collision": "none",
+      "frame_index": 362,
+      "tags": [],
+      "terrain": null
+    },
+    "363": {
+      "collision": "none",
+      "frame_index": 363,
+      "tags": [],
+      "terrain": null
+    },
+    "364": {
+      "collision": "none",
+      "frame_index": 364,
+      "tags": [],
+      "terrain": null
+    },
+    "365": {
+      "collision": "none",
+      "frame_index": 365,
+      "tags": [],
+      "terrain": null
+    },
+    "366": {
+      "collision": "none",
+      "frame_index": 366,
+      "tags": [],
+      "terrain": null
+    },
+    "367": {
+      "collision": "none",
+      "frame_index": 367,
+      "tags": [],
+      "terrain": null
+    },
+    "368": {
+      "collision": "none",
+      "frame_index": 368,
+      "tags": [],
+      "terrain": null
+    },
+    "369": {
+      "collision": "none",
+      "frame_index": 369,
+      "tags": [],
+      "terrain": null
+    },
+    "37": {
+      "collision": "none",
+      "frame_index": 37,
+      "tags": [],
+      "terrain": null
+    },
+    "370": {
+      "collision": "none",
+      "frame_index": 370,
+      "tags": [],
+      "terrain": null
+    },
+    "371": {
+      "collision": "none",
+      "frame_index": 371,
+      "tags": [],
+      "terrain": null
+    },
+    "372": {
+      "collision": "none",
+      "frame_index": 372,
+      "tags": [],
+      "terrain": null
+    },
+    "373": {
+      "collision": "none",
+      "frame_index": 373,
+      "tags": [],
+      "terrain": null
+    },
+    "374": {
+      "collision": "none",
+      "frame_index": 374,
+      "tags": [],
+      "terrain": null
+    },
+    "375": {
+      "collision": "none",
+      "frame_index": 375,
+      "tags": [],
+      "terrain": null
+    },
+    "376": {
+      "collision": "none",
+      "frame_index": 376,
+      "tags": [],
+      "terrain": null
+    },
+    "377": {
+      "collision": "none",
+      "frame_index": 377,
+      "tags": [],
+      "terrain": null
+    },
+    "378": {
+      "collision": "none",
+      "frame_index": 378,
+      "tags": [],
+      "terrain": null
+    },
+    "379": {
+      "collision": "none",
+      "frame_index": 379,
+      "tags": [],
+      "terrain": null
+    },
+    "38": {
+      "collision": "none",
+      "frame_index": 38,
+      "tags": [],
+      "terrain": null
+    },
+    "380": {
+      "collision": "none",
+      "frame_index": 380,
+      "tags": [],
+      "terrain": null
+    },
+    "381": {
+      "collision": "none",
+      "frame_index": 381,
+      "tags": [],
+      "terrain": null
+    },
+    "382": {
+      "collision": "none",
+      "frame_index": 382,
+      "tags": [],
+      "terrain": null
+    },
+    "383": {
+      "collision": "none",
+      "frame_index": 383,
+      "tags": [],
+      "terrain": null
+    },
+    "384": {
+      "collision": "none",
+      "frame_index": 384,
+      "tags": [],
+      "terrain": null
+    },
+    "385": {
+      "collision": "none",
+      "frame_index": 385,
+      "tags": [],
+      "terrain": null
+    },
+    "386": {
+      "collision": "none",
+      "frame_index": 386,
+      "tags": [],
+      "terrain": null
+    },
+    "387": {
+      "collision": "none",
+      "frame_index": 387,
+      "tags": [],
+      "terrain": null
+    },
+    "388": {
+      "collision": "none",
+      "frame_index": 388,
+      "tags": [],
+      "terrain": null
+    },
+    "389": {
+      "collision": "none",
+      "frame_index": 389,
+      "tags": [],
+      "terrain": null
+    },
+    "39": {
+      "collision": "none",
+      "frame_index": 39,
+      "tags": [],
+      "terrain": null
+    },
+    "390": {
+      "collision": "none",
+      "frame_index": 390,
+      "tags": [],
+      "terrain": null
+    },
+    "391": {
+      "collision": "none",
+      "frame_index": 391,
+      "tags": [],
+      "terrain": null
+    },
+    "392": {
+      "collision": "none",
+      "frame_index": 392,
+      "tags": [],
+      "terrain": null
+    },
+    "393": {
+      "collision": "none",
+      "frame_index": 393,
+      "tags": [],
+      "terrain": null
+    },
+    "394": {
+      "collision": "none",
+      "frame_index": 394,
+      "tags": [],
+      "terrain": null
+    },
+    "395": {
+      "collision": "none",
+      "frame_index": 395,
+      "tags": [],
+      "terrain": null
+    },
+    "396": {
+      "collision": "none",
+      "frame_index": 396,
+      "tags": [],
+      "terrain": null
+    },
+    "397": {
+      "collision": "none",
+      "frame_index": 397,
+      "tags": [],
+      "terrain": null
+    },
+    "398": {
+      "collision": "none",
+      "frame_index": 398,
+      "tags": [],
+      "terrain": null
+    },
+    "399": {
+      "collision": "none",
+      "frame_index": 399,
+      "tags": [],
+      "terrain": null
+    },
+    "4": {
+      "collision": "none",
+      "frame_index": 4,
+      "tags": [],
+      "terrain": null
+    },
+    "40": {
+      "collision": "none",
+      "frame_index": 40,
+      "tags": [],
+      "terrain": null
+    },
+    "400": {
+      "collision": "none",
+      "frame_index": 400,
+      "tags": [],
+      "terrain": null
+    },
+    "401": {
+      "collision": "none",
+      "frame_index": 401,
+      "tags": [],
+      "terrain": null
+    },
+    "402": {
+      "collision": "none",
+      "frame_index": 402,
+      "tags": [],
+      "terrain": null
+    },
+    "403": {
+      "collision": "none",
+      "frame_index": 403,
+      "tags": [],
+      "terrain": null
+    },
+    "404": {
+      "collision": "none",
+      "frame_index": 404,
+      "tags": [],
+      "terrain": null
+    },
+    "405": {
+      "collision": "none",
+      "frame_index": 405,
+      "tags": [],
+      "terrain": null
+    },
+    "406": {
+      "collision": "none",
+      "frame_index": 406,
+      "tags": [],
+      "terrain": null
+    },
+    "407": {
+      "collision": "none",
+      "frame_index": 407,
+      "tags": [],
+      "terrain": null
+    },
+    "408": {
+      "collision": "none",
+      "frame_index": 408,
+      "tags": [],
+      "terrain": null
+    },
+    "409": {
+      "collision": "none",
+      "frame_index": 409,
+      "tags": [],
+      "terrain": null
+    },
+    "41": {
+      "collision": "none",
+      "frame_index": 41,
+      "tags": [],
+      "terrain": null
+    },
+    "410": {
+      "collision": "none",
+      "frame_index": 410,
+      "tags": [],
+      "terrain": null
+    },
+    "411": {
+      "collision": "none",
+      "frame_index": 411,
+      "tags": [],
+      "terrain": null
+    },
+    "412": {
+      "collision": "none",
+      "frame_index": 412,
+      "tags": [],
+      "terrain": null
+    },
+    "413": {
+      "collision": "none",
+      "frame_index": 413,
+      "tags": [],
+      "terrain": null
+    },
+    "414": {
+      "collision": "none",
+      "frame_index": 414,
+      "tags": [],
+      "terrain": null
+    },
+    "415": {
+      "collision": "none",
+      "frame_index": 415,
+      "tags": [],
+      "terrain": null
+    },
+    "416": {
+      "collision": "none",
+      "frame_index": 416,
+      "tags": [],
+      "terrain": null
+    },
+    "417": {
+      "collision": "none",
+      "frame_index": 417,
+      "tags": [],
+      "terrain": null
+    },
+    "418": {
+      "collision": "none",
+      "frame_index": 418,
+      "tags": [],
+      "terrain": null
+    },
+    "419": {
+      "collision": "none",
+      "frame_index": 419,
+      "tags": [],
+      "terrain": null
+    },
+    "42": {
+      "collision": "none",
+      "frame_index": 42,
+      "tags": [],
+      "terrain": null
+    },
+    "420": {
+      "collision": "none",
+      "frame_index": 420,
+      "tags": [],
+      "terrain": null
+    },
+    "421": {
+      "collision": "none",
+      "frame_index": 421,
+      "tags": [],
+      "terrain": null
+    },
+    "422": {
+      "collision": "none",
+      "frame_index": 422,
+      "tags": [],
+      "terrain": null
+    },
+    "423": {
+      "collision": "none",
+      "frame_index": 423,
+      "tags": [],
+      "terrain": null
+    },
+    "424": {
+      "collision": "none",
+      "frame_index": 424,
+      "tags": [],
+      "terrain": null
+    },
+    "425": {
+      "collision": "none",
+      "frame_index": 425,
+      "tags": [],
+      "terrain": null
+    },
+    "426": {
+      "collision": "none",
+      "frame_index": 426,
+      "tags": [],
+      "terrain": null
+    },
+    "427": {
+      "collision": "none",
+      "frame_index": 427,
+      "tags": [],
+      "terrain": null
+    },
+    "428": {
+      "collision": "none",
+      "frame_index": 428,
+      "tags": [],
+      "terrain": null
+    },
+    "429": {
+      "collision": "none",
+      "frame_index": 429,
+      "tags": [],
+      "terrain": null
+    },
+    "43": {
+      "collision": "none",
+      "frame_index": 43,
+      "tags": [],
+      "terrain": null
+    },
+    "430": {
+      "collision": "none",
+      "frame_index": 430,
+      "tags": [],
+      "terrain": null
+    },
+    "431": {
+      "collision": "none",
+      "frame_index": 431,
+      "tags": [],
+      "terrain": null
+    },
+    "432": {
+      "collision": "none",
+      "frame_index": 432,
+      "tags": [],
+      "terrain": null
+    },
+    "433": {
+      "collision": "none",
+      "frame_index": 433,
+      "tags": [],
+      "terrain": null
+    },
+    "434": {
+      "collision": "none",
+      "frame_index": 434,
+      "tags": [],
+      "terrain": null
+    },
+    "435": {
+      "collision": "none",
+      "frame_index": 435,
+      "tags": [],
+      "terrain": null
+    },
+    "436": {
+      "collision": "none",
+      "frame_index": 436,
+      "tags": [],
+      "terrain": null
+    },
+    "437": {
+      "collision": "none",
+      "frame_index": 437,
+      "tags": [],
+      "terrain": null
+    },
+    "438": {
+      "collision": "none",
+      "frame_index": 438,
+      "tags": [],
+      "terrain": null
+    },
+    "439": {
+      "collision": "none",
+      "frame_index": 439,
+      "tags": [],
+      "terrain": null
+    },
+    "44": {
+      "collision": "none",
+      "frame_index": 44,
+      "tags": [],
+      "terrain": null
+    },
+    "440": {
+      "collision": "none",
+      "frame_index": 440,
+      "tags": [],
+      "terrain": null
+    },
+    "441": {
+      "collision": "none",
+      "frame_index": 441,
+      "tags": [],
+      "terrain": null
+    },
+    "442": {
+      "collision": "none",
+      "frame_index": 442,
+      "tags": [],
+      "terrain": null
+    },
+    "443": {
+      "collision": "none",
+      "frame_index": 443,
+      "tags": [],
+      "terrain": null
+    },
+    "444": {
+      "collision": "none",
+      "frame_index": 444,
+      "tags": [],
+      "terrain": null
+    },
+    "445": {
+      "collision": "none",
+      "frame_index": 445,
+      "tags": [],
+      "terrain": null
+    },
+    "446": {
+      "collision": "none",
+      "frame_index": 446,
+      "tags": [],
+      "terrain": null
+    },
+    "447": {
+      "collision": "none",
+      "frame_index": 447,
+      "tags": [],
+      "terrain": null
+    },
+    "448": {
+      "collision": "none",
+      "frame_index": 448,
+      "tags": [],
+      "terrain": null
+    },
+    "449": {
+      "collision": "none",
+      "frame_index": 449,
+      "tags": [],
+      "terrain": null
+    },
+    "45": {
+      "collision": "none",
+      "frame_index": 45,
+      "tags": [],
+      "terrain": null
+    },
+    "450": {
+      "collision": "none",
+      "frame_index": 450,
+      "tags": [],
+      "terrain": null
+    },
+    "451": {
+      "collision": "none",
+      "frame_index": 451,
+      "tags": [],
+      "terrain": null
+    },
+    "452": {
+      "collision": "none",
+      "frame_index": 452,
+      "tags": [],
+      "terrain": null
+    },
+    "453": {
+      "collision": "none",
+      "frame_index": 453,
+      "tags": [],
+      "terrain": null
+    },
+    "454": {
+      "collision": "none",
+      "frame_index": 454,
+      "tags": [],
+      "terrain": null
+    },
+    "455": {
+      "collision": "none",
+      "frame_index": 455,
+      "tags": [],
+      "terrain": null
+    },
+    "456": {
+      "collision": "none",
+      "frame_index": 456,
+      "tags": [],
+      "terrain": null
+    },
+    "457": {
+      "collision": "none",
+      "frame_index": 457,
+      "tags": [],
+      "terrain": null
+    },
+    "458": {
+      "collision": "none",
+      "frame_index": 458,
+      "tags": [],
+      "terrain": null
+    },
+    "459": {
+      "collision": "none",
+      "frame_index": 459,
+      "tags": [],
+      "terrain": null
+    },
+    "46": {
+      "collision": "none",
+      "frame_index": 46,
+      "tags": [],
+      "terrain": null
+    },
+    "460": {
+      "collision": "none",
+      "frame_index": 460,
+      "tags": [],
+      "terrain": null
+    },
+    "461": {
+      "collision": "none",
+      "frame_index": 461,
+      "tags": [],
+      "terrain": null
+    },
+    "462": {
+      "collision": "none",
+      "frame_index": 462,
+      "tags": [],
+      "terrain": null
+    },
+    "463": {
+      "collision": "none",
+      "frame_index": 463,
+      "tags": [],
+      "terrain": null
+    },
+    "464": {
+      "collision": "none",
+      "frame_index": 464,
+      "tags": [],
+      "terrain": null
+    },
+    "465": {
+      "collision": "none",
+      "frame_index": 465,
+      "tags": [],
+      "terrain": null
+    },
+    "466": {
+      "collision": "none",
+      "frame_index": 466,
+      "tags": [],
+      "terrain": null
+    },
+    "467": {
+      "collision": "none",
+      "frame_index": 467,
+      "tags": [],
+      "terrain": null
+    },
+    "468": {
+      "collision": "none",
+      "frame_index": 468,
+      "tags": [],
+      "terrain": null
+    },
+    "469": {
+      "collision": "none",
+      "frame_index": 469,
+      "tags": [],
+      "terrain": null
+    },
+    "47": {
+      "collision": "none",
+      "frame_index": 47,
+      "tags": [],
+      "terrain": null
+    },
+    "470": {
+      "collision": "none",
+      "frame_index": 470,
+      "tags": [],
+      "terrain": null
+    },
+    "471": {
+      "collision": "none",
+      "frame_index": 471,
+      "tags": [],
+      "terrain": null
+    },
+    "472": {
+      "collision": "none",
+      "frame_index": 472,
+      "tags": [],
+      "terrain": null
+    },
+    "473": {
+      "collision": "none",
+      "frame_index": 473,
+      "tags": [],
+      "terrain": null
+    },
+    "474": {
+      "collision": "none",
+      "frame_index": 474,
+      "tags": [],
+      "terrain": null
+    },
+    "475": {
+      "collision": "none",
+      "frame_index": 475,
+      "tags": [],
+      "terrain": null
+    },
+    "476": {
+      "collision": "none",
+      "frame_index": 476,
+      "tags": [],
+      "terrain": null
+    },
+    "477": {
+      "collision": "none",
+      "frame_index": 477,
+      "tags": [],
+      "terrain": null
+    },
+    "478": {
+      "collision": "none",
+      "frame_index": 478,
+      "tags": [],
+      "terrain": null
+    },
+    "479": {
+      "collision": "none",
+      "frame_index": 479,
+      "tags": [],
+      "terrain": null
+    },
+    "48": {
+      "collision": "none",
+      "frame_index": 48,
+      "tags": [],
+      "terrain": null
+    },
+    "480": {
+      "collision": "none",
+      "frame_index": 480,
+      "tags": [],
+      "terrain": null
+    },
+    "481": {
+      "collision": "none",
+      "frame_index": 481,
+      "tags": [],
+      "terrain": null
+    },
+    "482": {
+      "collision": "none",
+      "frame_index": 482,
+      "tags": [],
+      "terrain": null
+    },
+    "483": {
+      "collision": "none",
+      "frame_index": 483,
+      "tags": [],
+      "terrain": null
+    },
+    "484": {
+      "collision": "none",
+      "frame_index": 484,
+      "tags": [],
+      "terrain": null
+    },
+    "485": {
+      "collision": "none",
+      "frame_index": 485,
+      "tags": [],
+      "terrain": null
+    },
+    "486": {
+      "collision": "none",
+      "frame_index": 486,
+      "tags": [],
+      "terrain": null
+    },
+    "487": {
+      "collision": "none",
+      "frame_index": 487,
+      "tags": [],
+      "terrain": null
+    },
+    "488": {
+      "collision": "none",
+      "frame_index": 488,
+      "tags": [],
+      "terrain": null
+    },
+    "489": {
+      "collision": "none",
+      "frame_index": 489,
+      "tags": [],
+      "terrain": null
+    },
+    "49": {
+      "collision": "none",
+      "frame_index": 49,
+      "tags": [],
+      "terrain": null
+    },
+    "490": {
+      "collision": "none",
+      "frame_index": 490,
+      "tags": [],
+      "terrain": null
+    },
+    "491": {
+      "collision": "none",
+      "frame_index": 491,
+      "tags": [],
+      "terrain": null
+    },
+    "492": {
+      "collision": "none",
+      "frame_index": 492,
+      "tags": [],
+      "terrain": null
+    },
+    "493": {
+      "collision": "none",
+      "frame_index": 493,
+      "tags": [],
+      "terrain": null
+    },
+    "494": {
+      "collision": "none",
+      "frame_index": 494,
+      "tags": [],
+      "terrain": null
+    },
+    "495": {
+      "collision": "none",
+      "frame_index": 495,
+      "tags": [],
+      "terrain": null
+    },
+    "496": {
+      "collision": "none",
+      "frame_index": 496,
+      "tags": [],
+      "terrain": null
+    },
+    "497": {
+      "collision": "none",
+      "frame_index": 497,
+      "tags": [],
+      "terrain": null
+    },
+    "498": {
+      "collision": "none",
+      "frame_index": 498,
+      "tags": [],
+      "terrain": null
+    },
+    "499": {
+      "collision": "none",
+      "frame_index": 499,
+      "tags": [],
+      "terrain": null
+    },
+    "5": {
+      "collision": "none",
+      "frame_index": 5,
+      "tags": [],
+      "terrain": null
+    },
+    "50": {
+      "collision": "none",
+      "frame_index": 50,
+      "tags": [],
+      "terrain": null
+    },
+    "500": {
+      "collision": "none",
+      "frame_index": 500,
+      "tags": [],
+      "terrain": null
+    },
+    "501": {
+      "collision": "none",
+      "frame_index": 501,
+      "tags": [],
+      "terrain": null
+    },
+    "502": {
+      "collision": "none",
+      "frame_index": 502,
+      "tags": [],
+      "terrain": null
+    },
+    "503": {
+      "collision": "none",
+      "frame_index": 503,
+      "tags": [],
+      "terrain": null
+    },
+    "504": {
+      "collision": "none",
+      "frame_index": 504,
+      "tags": [],
+      "terrain": null
+    },
+    "505": {
+      "collision": "none",
+      "frame_index": 505,
+      "tags": [],
+      "terrain": null
+    },
+    "506": {
+      "collision": "none",
+      "frame_index": 506,
+      "tags": [],
+      "terrain": null
+    },
+    "507": {
+      "collision": "none",
+      "frame_index": 507,
+      "tags": [],
+      "terrain": null
+    },
+    "508": {
+      "collision": "none",
+      "frame_index": 508,
+      "tags": [],
+      "terrain": null
+    },
+    "509": {
+      "collision": "none",
+      "frame_index": 509,
+      "tags": [],
+      "terrain": null
+    },
+    "51": {
+      "collision": "none",
+      "frame_index": 51,
+      "tags": [],
+      "terrain": null
+    },
+    "510": {
+      "collision": "none",
+      "frame_index": 510,
+      "tags": [],
+      "terrain": null
+    },
+    "511": {
+      "collision": "none",
+      "frame_index": 511,
+      "tags": [],
+      "terrain": null
+    },
+    "512": {
+      "collision": "none",
+      "frame_index": 512,
+      "tags": [],
+      "terrain": null
+    },
+    "513": {
+      "collision": "none",
+      "frame_index": 513,
+      "tags": [],
+      "terrain": null
+    },
+    "514": {
+      "collision": "none",
+      "frame_index": 514,
+      "tags": [],
+      "terrain": null
+    },
+    "515": {
+      "collision": "none",
+      "frame_index": 515,
+      "tags": [],
+      "terrain": null
+    },
+    "516": {
+      "collision": "none",
+      "frame_index": 516,
+      "tags": [],
+      "terrain": null
+    },
+    "517": {
+      "collision": "none",
+      "frame_index": 517,
+      "tags": [],
+      "terrain": null
+    },
+    "518": {
+      "collision": "none",
+      "frame_index": 518,
+      "tags": [],
+      "terrain": null
+    },
+    "519": {
+      "collision": "none",
+      "frame_index": 519,
+      "tags": [],
+      "terrain": null
+    },
+    "52": {
+      "collision": "none",
+      "frame_index": 52,
+      "tags": [],
+      "terrain": null
+    },
+    "520": {
+      "collision": "none",
+      "frame_index": 520,
+      "tags": [],
+      "terrain": null
+    },
+    "521": {
+      "collision": "none",
+      "frame_index": 521,
+      "tags": [],
+      "terrain": null
+    },
+    "522": {
+      "collision": "none",
+      "frame_index": 522,
+      "tags": [],
+      "terrain": null
+    },
+    "523": {
+      "collision": "none",
+      "frame_index": 523,
+      "tags": [],
+      "terrain": null
+    },
+    "524": {
+      "collision": "none",
+      "frame_index": 524,
+      "tags": [],
+      "terrain": null
+    },
+    "525": {
+      "collision": "none",
+      "frame_index": 525,
+      "tags": [],
+      "terrain": null
+    },
+    "526": {
+      "collision": "none",
+      "frame_index": 526,
+      "tags": [],
+      "terrain": null
+    },
+    "527": {
+      "collision": "none",
+      "frame_index": 527,
+      "tags": [],
+      "terrain": null
+    },
+    "528": {
+      "collision": "none",
+      "frame_index": 528,
+      "tags": [],
+      "terrain": null
+    },
+    "529": {
+      "collision": "none",
+      "frame_index": 529,
+      "tags": [],
+      "terrain": null
+    },
+    "53": {
+      "collision": "none",
+      "frame_index": 53,
+      "tags": [],
+      "terrain": null
+    },
+    "530": {
+      "collision": "none",
+      "frame_index": 530,
+      "tags": [],
+      "terrain": null
+    },
+    "531": {
+      "collision": "none",
+      "frame_index": 531,
+      "tags": [],
+      "terrain": null
+    },
+    "532": {
+      "collision": "none",
+      "frame_index": 532,
+      "tags": [],
+      "terrain": null
+    },
+    "533": {
+      "collision": "none",
+      "frame_index": 533,
+      "tags": [],
+      "terrain": null
+    },
+    "534": {
+      "collision": "none",
+      "frame_index": 534,
+      "tags": [],
+      "terrain": null
+    },
+    "535": {
+      "collision": "none",
+      "frame_index": 535,
+      "tags": [],
+      "terrain": null
+    },
+    "536": {
+      "collision": "none",
+      "frame_index": 536,
+      "tags": [],
+      "terrain": null
+    },
+    "537": {
+      "collision": "none",
+      "frame_index": 537,
+      "tags": [],
+      "terrain": null
+    },
+    "538": {
+      "collision": "none",
+      "frame_index": 538,
+      "tags": [],
+      "terrain": null
+    },
+    "539": {
+      "collision": "none",
+      "frame_index": 539,
+      "tags": [],
+      "terrain": null
+    },
+    "54": {
+      "collision": "none",
+      "frame_index": 54,
+      "tags": [],
+      "terrain": null
+    },
+    "540": {
+      "collision": "none",
+      "frame_index": 540,
+      "tags": [],
+      "terrain": null
+    },
+    "541": {
+      "collision": "none",
+      "frame_index": 541,
+      "tags": [],
+      "terrain": null
+    },
+    "542": {
+      "collision": "none",
+      "frame_index": 542,
+      "tags": [],
+      "terrain": null
+    },
+    "543": {
+      "collision": "none",
+      "frame_index": 543,
+      "tags": [],
+      "terrain": null
+    },
+    "544": {
+      "collision": "none",
+      "frame_index": 544,
+      "tags": [],
+      "terrain": null
+    },
+    "545": {
+      "collision": "none",
+      "frame_index": 545,
+      "tags": [],
+      "terrain": null
+    },
+    "546": {
+      "collision": "none",
+      "frame_index": 546,
+      "tags": [],
+      "terrain": null
+    },
+    "547": {
+      "collision": "none",
+      "frame_index": 547,
+      "tags": [],
+      "terrain": null
+    },
+    "548": {
+      "collision": "none",
+      "frame_index": 548,
+      "tags": [],
+      "terrain": null
+    },
+    "549": {
+      "collision": "none",
+      "frame_index": 549,
+      "tags": [],
+      "terrain": null
+    },
+    "55": {
+      "collision": "none",
+      "frame_index": 55,
+      "tags": [],
+      "terrain": null
+    },
+    "550": {
+      "collision": "none",
+      "frame_index": 550,
+      "tags": [],
+      "terrain": null
+    },
+    "551": {
+      "collision": "none",
+      "frame_index": 551,
+      "tags": [],
+      "terrain": null
+    },
+    "552": {
+      "collision": "none",
+      "frame_index": 552,
+      "tags": [],
+      "terrain": null
+    },
+    "553": {
+      "collision": "none",
+      "frame_index": 553,
+      "tags": [],
+      "terrain": null
+    },
+    "554": {
+      "collision": "none",
+      "frame_index": 554,
+      "tags": [],
+      "terrain": null
+    },
+    "555": {
+      "collision": "none",
+      "frame_index": 555,
+      "tags": [],
+      "terrain": null
+    },
+    "556": {
+      "collision": "none",
+      "frame_index": 556,
+      "tags": [],
+      "terrain": null
+    },
+    "557": {
+      "collision": "none",
+      "frame_index": 557,
+      "tags": [],
+      "terrain": null
+    },
+    "558": {
+      "collision": "none",
+      "frame_index": 558,
+      "tags": [],
+      "terrain": null
+    },
+    "559": {
+      "collision": "none",
+      "frame_index": 559,
+      "tags": [],
+      "terrain": null
+    },
+    "56": {
+      "collision": "none",
+      "frame_index": 56,
+      "tags": [],
+      "terrain": null
+    },
+    "560": {
+      "collision": "none",
+      "frame_index": 560,
+      "tags": [],
+      "terrain": null
+    },
+    "561": {
+      "collision": "none",
+      "frame_index": 561,
+      "tags": [],
+      "terrain": null
+    },
+    "562": {
+      "collision": "none",
+      "frame_index": 562,
+      "tags": [],
+      "terrain": null
+    },
+    "563": {
+      "collision": "none",
+      "frame_index": 563,
+      "tags": [],
+      "terrain": null
+    },
+    "564": {
+      "collision": "none",
+      "frame_index": 564,
+      "tags": [],
+      "terrain": null
+    },
+    "565": {
+      "collision": "none",
+      "frame_index": 565,
+      "tags": [],
+      "terrain": null
+    },
+    "566": {
+      "collision": "none",
+      "frame_index": 566,
+      "tags": [],
+      "terrain": null
+    },
+    "567": {
+      "collision": "none",
+      "frame_index": 567,
+      "tags": [],
+      "terrain": null
+    },
+    "568": {
+      "collision": "none",
+      "frame_index": 568,
+      "tags": [],
+      "terrain": null
+    },
+    "569": {
+      "collision": "none",
+      "frame_index": 569,
+      "tags": [],
+      "terrain": null
+    },
+    "57": {
+      "collision": "none",
+      "frame_index": 57,
+      "tags": [],
+      "terrain": null
+    },
+    "570": {
+      "collision": "none",
+      "frame_index": 570,
+      "tags": [],
+      "terrain": null
+    },
+    "571": {
+      "collision": "none",
+      "frame_index": 571,
+      "tags": [],
+      "terrain": null
+    },
+    "572": {
+      "collision": "none",
+      "frame_index": 572,
+      "tags": [],
+      "terrain": null
+    },
+    "573": {
+      "collision": "none",
+      "frame_index": 573,
+      "tags": [],
+      "terrain": null
+    },
+    "574": {
+      "collision": "none",
+      "frame_index": 574,
+      "tags": [],
+      "terrain": null
+    },
+    "575": {
+      "collision": "none",
+      "frame_index": 575,
+      "tags": [],
+      "terrain": null
+    },
+    "576": {
+      "collision": "none",
+      "frame_index": 576,
+      "tags": [],
+      "terrain": null
+    },
+    "577": {
+      "collision": "none",
+      "frame_index": 577,
+      "tags": [],
+      "terrain": null
+    },
+    "578": {
+      "collision": "none",
+      "frame_index": 578,
+      "tags": [],
+      "terrain": null
+    },
+    "579": {
+      "collision": "none",
+      "frame_index": 579,
+      "tags": [],
+      "terrain": null
+    },
+    "58": {
+      "collision": "none",
+      "frame_index": 58,
+      "tags": [],
+      "terrain": null
+    },
+    "580": {
+      "collision": "none",
+      "frame_index": 580,
+      "tags": [],
+      "terrain": null
+    },
+    "581": {
+      "collision": "none",
+      "frame_index": 581,
+      "tags": [],
+      "terrain": null
+    },
+    "582": {
+      "collision": "none",
+      "frame_index": 582,
+      "tags": [],
+      "terrain": null
+    },
+    "583": {
+      "collision": "none",
+      "frame_index": 583,
+      "tags": [],
+      "terrain": null
+    },
+    "584": {
+      "collision": "none",
+      "frame_index": 584,
+      "tags": [],
+      "terrain": null
+    },
+    "585": {
+      "collision": "none",
+      "frame_index": 585,
+      "tags": [],
+      "terrain": null
+    },
+    "586": {
+      "collision": "none",
+      "frame_index": 586,
+      "tags": [],
+      "terrain": null
+    },
+    "587": {
+      "collision": "none",
+      "frame_index": 587,
+      "tags": [],
+      "terrain": null
+    },
+    "588": {
+      "collision": "none",
+      "frame_index": 588,
+      "tags": [],
+      "terrain": null
+    },
+    "589": {
+      "collision": "none",
+      "frame_index": 589,
+      "tags": [],
+      "terrain": null
+    },
+    "59": {
+      "collision": "none",
+      "frame_index": 59,
+      "tags": [],
+      "terrain": null
+    },
+    "590": {
+      "collision": "none",
+      "frame_index": 590,
+      "tags": [],
+      "terrain": null
+    },
+    "591": {
+      "collision": "none",
+      "frame_index": 591,
+      "tags": [],
+      "terrain": null
+    },
+    "592": {
+      "collision": "none",
+      "frame_index": 592,
+      "tags": [],
+      "terrain": null
+    },
+    "593": {
+      "collision": "none",
+      "frame_index": 593,
+      "tags": [],
+      "terrain": null
+    },
+    "594": {
+      "collision": "none",
+      "frame_index": 594,
+      "tags": [],
+      "terrain": null
+    },
+    "595": {
+      "collision": "none",
+      "frame_index": 595,
+      "tags": [],
+      "terrain": null
+    },
+    "596": {
+      "collision": "none",
+      "frame_index": 596,
+      "tags": [],
+      "terrain": null
+    },
+    "597": {
+      "collision": "none",
+      "frame_index": 597,
+      "tags": [],
+      "terrain": null
+    },
+    "598": {
+      "collision": "none",
+      "frame_index": 598,
+      "tags": [],
+      "terrain": null
+    },
+    "599": {
+      "collision": "none",
+      "frame_index": 599,
+      "tags": [],
+      "terrain": null
+    },
+    "6": {
+      "collision": "none",
+      "frame_index": 6,
+      "tags": [],
+      "terrain": null
+    },
+    "60": {
+      "collision": "none",
+      "frame_index": 60,
+      "tags": [],
+      "terrain": null
+    },
+    "600": {
+      "collision": "none",
+      "frame_index": 600,
+      "tags": [],
+      "terrain": null
+    },
+    "601": {
+      "collision": "none",
+      "frame_index": 601,
+      "tags": [],
+      "terrain": null
+    },
+    "602": {
+      "collision": "none",
+      "frame_index": 602,
+      "tags": [],
+      "terrain": null
+    },
+    "603": {
+      "collision": "none",
+      "frame_index": 603,
+      "tags": [],
+      "terrain": null
+    },
+    "604": {
+      "collision": "none",
+      "frame_index": 604,
+      "tags": [],
+      "terrain": null
+    },
+    "605": {
+      "collision": "none",
+      "frame_index": 605,
+      "tags": [],
+      "terrain": null
+    },
+    "606": {
+      "collision": "none",
+      "frame_index": 606,
+      "tags": [],
+      "terrain": null
+    },
+    "607": {
+      "collision": "none",
+      "frame_index": 607,
+      "tags": [],
+      "terrain": null
+    },
+    "608": {
+      "collision": "none",
+      "frame_index": 608,
+      "tags": [],
+      "terrain": null
+    },
+    "609": {
+      "collision": "none",
+      "frame_index": 609,
+      "tags": [],
+      "terrain": null
+    },
+    "61": {
+      "collision": "none",
+      "frame_index": 61,
+      "tags": [],
+      "terrain": null
+    },
+    "610": {
+      "collision": "none",
+      "frame_index": 610,
+      "tags": [],
+      "terrain": null
+    },
+    "611": {
+      "collision": "none",
+      "frame_index": 611,
+      "tags": [],
+      "terrain": null
+    },
+    "612": {
+      "collision": "none",
+      "frame_index": 612,
+      "tags": [],
+      "terrain": null
+    },
+    "613": {
+      "collision": "none",
+      "frame_index": 613,
+      "tags": [],
+      "terrain": null
+    },
+    "614": {
+      "collision": "none",
+      "frame_index": 614,
+      "tags": [],
+      "terrain": null
+    },
+    "615": {
+      "collision": "none",
+      "frame_index": 615,
+      "tags": [],
+      "terrain": null
+    },
+    "616": {
+      "collision": "none",
+      "frame_index": 616,
+      "tags": [],
+      "terrain": null
+    },
+    "617": {
+      "collision": "none",
+      "frame_index": 617,
+      "tags": [],
+      "terrain": null
+    },
+    "618": {
+      "collision": "none",
+      "frame_index": 618,
+      "tags": [],
+      "terrain": null
+    },
+    "619": {
+      "collision": "none",
+      "frame_index": 619,
+      "tags": [],
+      "terrain": null
+    },
+    "62": {
+      "collision": "none",
+      "frame_index": 62,
+      "tags": [],
+      "terrain": null
+    },
+    "620": {
+      "collision": "none",
+      "frame_index": 620,
+      "tags": [],
+      "terrain": null
+    },
+    "621": {
+      "collision": "none",
+      "frame_index": 621,
+      "tags": [],
+      "terrain": null
+    },
+    "622": {
+      "collision": "none",
+      "frame_index": 622,
+      "tags": [],
+      "terrain": null
+    },
+    "623": {
+      "collision": "none",
+      "frame_index": 623,
+      "tags": [],
+      "terrain": null
+    },
+    "624": {
+      "collision": "none",
+      "frame_index": 624,
+      "tags": [],
+      "terrain": null
+    },
+    "625": {
+      "collision": "none",
+      "frame_index": 625,
+      "tags": [],
+      "terrain": null
+    },
+    "626": {
+      "collision": "none",
+      "frame_index": 626,
+      "tags": [],
+      "terrain": null
+    },
+    "627": {
+      "collision": "none",
+      "frame_index": 627,
+      "tags": [],
+      "terrain": null
+    },
+    "628": {
+      "collision": "none",
+      "frame_index": 628,
+      "tags": [],
+      "terrain": null
+    },
+    "629": {
+      "collision": "none",
+      "frame_index": 629,
+      "tags": [],
+      "terrain": null
+    },
+    "63": {
+      "collision": "none",
+      "frame_index": 63,
+      "tags": [],
+      "terrain": null
+    },
+    "630": {
+      "collision": "none",
+      "frame_index": 630,
+      "tags": [],
+      "terrain": null
+    },
+    "631": {
+      "collision": "none",
+      "frame_index": 631,
+      "tags": [],
+      "terrain": null
+    },
+    "632": {
+      "collision": "none",
+      "frame_index": 632,
+      "tags": [],
+      "terrain": null
+    },
+    "633": {
+      "collision": "none",
+      "frame_index": 633,
+      "tags": [],
+      "terrain": null
+    },
+    "634": {
+      "collision": "none",
+      "frame_index": 634,
+      "tags": [],
+      "terrain": null
+    },
+    "635": {
+      "collision": "none",
+      "frame_index": 635,
+      "tags": [],
+      "terrain": null
+    },
+    "636": {
+      "collision": "none",
+      "frame_index": 636,
+      "tags": [],
+      "terrain": null
+    },
+    "637": {
+      "collision": "none",
+      "frame_index": 637,
+      "tags": [],
+      "terrain": null
+    },
+    "638": {
+      "collision": "none",
+      "frame_index": 638,
+      "tags": [],
+      "terrain": null
+    },
+    "639": {
+      "collision": "none",
+      "frame_index": 639,
+      "tags": [],
+      "terrain": null
+    },
+    "64": {
+      "collision": "none",
+      "frame_index": 64,
+      "tags": [],
+      "terrain": null
+    },
+    "640": {
+      "collision": "none",
+      "frame_index": 640,
+      "tags": [],
+      "terrain": null
+    },
+    "641": {
+      "collision": "none",
+      "frame_index": 641,
+      "tags": [],
+      "terrain": null
+    },
+    "642": {
+      "collision": "none",
+      "frame_index": 642,
+      "tags": [],
+      "terrain": null
+    },
+    "643": {
+      "collision": "none",
+      "frame_index": 643,
+      "tags": [],
+      "terrain": null
+    },
+    "644": {
+      "collision": "none",
+      "frame_index": 644,
+      "tags": [],
+      "terrain": null
+    },
+    "645": {
+      "collision": "none",
+      "frame_index": 645,
+      "tags": [],
+      "terrain": null
+    },
+    "646": {
+      "collision": "none",
+      "frame_index": 646,
+      "tags": [],
+      "terrain": null
+    },
+    "647": {
+      "collision": "none",
+      "frame_index": 647,
+      "tags": [],
+      "terrain": null
+    },
+    "648": {
+      "collision": "none",
+      "frame_index": 648,
+      "tags": [],
+      "terrain": null
+    },
+    "649": {
+      "collision": "none",
+      "frame_index": 649,
+      "tags": [],
+      "terrain": null
+    },
+    "65": {
+      "collision": "none",
+      "frame_index": 65,
+      "tags": [],
+      "terrain": null
+    },
+    "650": {
+      "collision": "none",
+      "frame_index": 650,
+      "tags": [],
+      "terrain": null
+    },
+    "651": {
+      "collision": "none",
+      "frame_index": 651,
+      "tags": [],
+      "terrain": null
+    },
+    "652": {
+      "collision": "none",
+      "frame_index": 652,
+      "tags": [],
+      "terrain": null
+    },
+    "653": {
+      "collision": "none",
+      "frame_index": 653,
+      "tags": [],
+      "terrain": null
+    },
+    "654": {
+      "collision": "none",
+      "frame_index": 654,
+      "tags": [],
+      "terrain": null
+    },
+    "655": {
+      "collision": "none",
+      "frame_index": 655,
+      "tags": [],
+      "terrain": null
+    },
+    "656": {
+      "collision": "none",
+      "frame_index": 656,
+      "tags": [],
+      "terrain": null
+    },
+    "657": {
+      "collision": "none",
+      "frame_index": 657,
+      "tags": [],
+      "terrain": null
+    },
+    "658": {
+      "collision": "none",
+      "frame_index": 658,
+      "tags": [],
+      "terrain": null
+    },
+    "659": {
+      "collision": "none",
+      "frame_index": 659,
+      "tags": [],
+      "terrain": null
+    },
+    "66": {
+      "collision": "none",
+      "frame_index": 66,
+      "tags": [],
+      "terrain": null
+    },
+    "660": {
+      "collision": "none",
+      "frame_index": 660,
+      "tags": [],
+      "terrain": null
+    },
+    "661": {
+      "collision": "none",
+      "frame_index": 661,
+      "tags": [],
+      "terrain": null
+    },
+    "662": {
+      "collision": "none",
+      "frame_index": 662,
+      "tags": [],
+      "terrain": null
+    },
+    "663": {
+      "collision": "none",
+      "frame_index": 663,
+      "tags": [],
+      "terrain": null
+    },
+    "664": {
+      "collision": "none",
+      "frame_index": 664,
+      "tags": [],
+      "terrain": null
+    },
+    "665": {
+      "collision": "none",
+      "frame_index": 665,
+      "tags": [],
+      "terrain": null
+    },
+    "666": {
+      "collision": "none",
+      "frame_index": 666,
+      "tags": [],
+      "terrain": null
+    },
+    "667": {
+      "collision": "none",
+      "frame_index": 667,
+      "tags": [],
+      "terrain": null
+    },
+    "668": {
+      "collision": "none",
+      "frame_index": 668,
+      "tags": [],
+      "terrain": null
+    },
+    "669": {
+      "collision": "none",
+      "frame_index": 669,
+      "tags": [],
+      "terrain": null
+    },
+    "67": {
+      "collision": "none",
+      "frame_index": 67,
+      "tags": [],
+      "terrain": null
+    },
+    "670": {
+      "collision": "none",
+      "frame_index": 670,
+      "tags": [],
+      "terrain": null
+    },
+    "671": {
+      "collision": "none",
+      "frame_index": 671,
+      "tags": [],
+      "terrain": null
+    },
+    "672": {
+      "collision": "none",
+      "frame_index": 672,
+      "tags": [],
+      "terrain": null
+    },
+    "673": {
+      "collision": "none",
+      "frame_index": 673,
+      "tags": [],
+      "terrain": null
+    },
+    "674": {
+      "collision": "none",
+      "frame_index": 674,
+      "tags": [],
+      "terrain": null
+    },
+    "675": {
+      "collision": "none",
+      "frame_index": 675,
+      "tags": [],
+      "terrain": null
+    },
+    "676": {
+      "collision": "none",
+      "frame_index": 676,
+      "tags": [],
+      "terrain": null
+    },
+    "677": {
+      "collision": "none",
+      "frame_index": 677,
+      "tags": [],
+      "terrain": null
+    },
+    "678": {
+      "collision": "none",
+      "frame_index": 678,
+      "tags": [],
+      "terrain": null
+    },
+    "679": {
+      "collision": "none",
+      "frame_index": 679,
+      "tags": [],
+      "terrain": null
+    },
+    "68": {
+      "collision": "none",
+      "frame_index": 68,
+      "tags": [],
+      "terrain": null
+    },
+    "680": {
+      "collision": "none",
+      "frame_index": 680,
+      "tags": [],
+      "terrain": null
+    },
+    "681": {
+      "collision": "none",
+      "frame_index": 681,
+      "tags": [],
+      "terrain": null
+    },
+    "682": {
+      "collision": "none",
+      "frame_index": 682,
+      "tags": [],
+      "terrain": null
+    },
+    "683": {
+      "collision": "none",
+      "frame_index": 683,
+      "tags": [],
+      "terrain": null
+    },
+    "684": {
+      "collision": "none",
+      "frame_index": 684,
+      "tags": [],
+      "terrain": null
+    },
+    "685": {
+      "collision": "none",
+      "frame_index": 685,
+      "tags": [],
+      "terrain": null
+    },
+    "686": {
+      "collision": "none",
+      "frame_index": 686,
+      "tags": [],
+      "terrain": null
+    },
+    "687": {
+      "collision": "none",
+      "frame_index": 687,
+      "tags": [],
+      "terrain": null
+    },
+    "688": {
+      "collision": "none",
+      "frame_index": 688,
+      "tags": [],
+      "terrain": null
+    },
+    "689": {
+      "collision": "none",
+      "frame_index": 689,
+      "tags": [],
+      "terrain": null
+    },
+    "69": {
+      "collision": "none",
+      "frame_index": 69,
+      "tags": [],
+      "terrain": null
+    },
+    "690": {
+      "collision": "none",
+      "frame_index": 690,
+      "tags": [],
+      "terrain": null
+    },
+    "691": {
+      "collision": "none",
+      "frame_index": 691,
+      "tags": [],
+      "terrain": null
+    },
+    "692": {
+      "collision": "none",
+      "frame_index": 692,
+      "tags": [],
+      "terrain": null
+    },
+    "693": {
+      "collision": "none",
+      "frame_index": 693,
+      "tags": [],
+      "terrain": null
+    },
+    "694": {
+      "collision": "none",
+      "frame_index": 694,
+      "tags": [],
+      "terrain": null
+    },
+    "695": {
+      "collision": "none",
+      "frame_index": 695,
+      "tags": [],
+      "terrain": null
+    },
+    "696": {
+      "collision": "none",
+      "frame_index": 696,
+      "tags": [],
+      "terrain": null
+    },
+    "697": {
+      "collision": "none",
+      "frame_index": 697,
+      "tags": [],
+      "terrain": null
+    },
+    "698": {
+      "collision": "none",
+      "frame_index": 698,
+      "tags": [],
+      "terrain": null
+    },
+    "699": {
+      "collision": "none",
+      "frame_index": 699,
+      "tags": [],
+      "terrain": null
+    },
+    "7": {
+      "collision": "none",
+      "frame_index": 7,
+      "tags": [],
+      "terrain": null
+    },
+    "70": {
+      "collision": "none",
+      "frame_index": 70,
+      "tags": [],
+      "terrain": null
+    },
+    "700": {
+      "collision": "none",
+      "frame_index": 700,
+      "tags": [],
+      "terrain": null
+    },
+    "701": {
+      "collision": "none",
+      "frame_index": 701,
+      "tags": [],
+      "terrain": null
+    },
+    "702": {
+      "collision": "none",
+      "frame_index": 702,
+      "tags": [],
+      "terrain": null
+    },
+    "703": {
+      "collision": "none",
+      "frame_index": 703,
+      "tags": [],
+      "terrain": null
+    },
+    "704": {
+      "collision": "none",
+      "frame_index": 704,
+      "tags": [],
+      "terrain": null
+    },
+    "705": {
+      "collision": "none",
+      "frame_index": 705,
+      "tags": [],
+      "terrain": null
+    },
+    "706": {
+      "collision": "none",
+      "frame_index": 706,
+      "tags": [],
+      "terrain": null
+    },
+    "707": {
+      "collision": "none",
+      "frame_index": 707,
+      "tags": [],
+      "terrain": null
+    },
+    "708": {
+      "collision": "none",
+      "frame_index": 708,
+      "tags": [],
+      "terrain": null
+    },
+    "709": {
+      "collision": "none",
+      "frame_index": 709,
+      "tags": [],
+      "terrain": null
+    },
+    "71": {
+      "collision": "none",
+      "frame_index": 71,
+      "tags": [],
+      "terrain": null
+    },
+    "710": {
+      "collision": "none",
+      "frame_index": 710,
+      "tags": [],
+      "terrain": null
+    },
+    "711": {
+      "collision": "none",
+      "frame_index": 711,
+      "tags": [],
+      "terrain": null
+    },
+    "712": {
+      "collision": "none",
+      "frame_index": 712,
+      "tags": [],
+      "terrain": null
+    },
+    "713": {
+      "collision": "none",
+      "frame_index": 713,
+      "tags": [],
+      "terrain": null
+    },
+    "714": {
+      "collision": "none",
+      "frame_index": 714,
+      "tags": [],
+      "terrain": null
+    },
+    "715": {
+      "collision": "none",
+      "frame_index": 715,
+      "tags": [],
+      "terrain": null
+    },
+    "716": {
+      "collision": "none",
+      "frame_index": 716,
+      "tags": [],
+      "terrain": null
+    },
+    "717": {
+      "collision": "none",
+      "frame_index": 717,
+      "tags": [],
+      "terrain": null
+    },
+    "718": {
+      "collision": "none",
+      "frame_index": 718,
+      "tags": [],
+      "terrain": null
+    },
+    "719": {
+      "collision": "none",
+      "frame_index": 719,
+      "tags": [],
+      "terrain": null
+    },
+    "72": {
+      "collision": "none",
+      "frame_index": 72,
+      "tags": [],
+      "terrain": null
+    },
+    "720": {
+      "collision": "none",
+      "frame_index": 720,
+      "tags": [],
+      "terrain": null
+    },
+    "721": {
+      "collision": "none",
+      "frame_index": 721,
+      "tags": [],
+      "terrain": null
+    },
+    "722": {
+      "collision": "none",
+      "frame_index": 722,
+      "tags": [],
+      "terrain": null
+    },
+    "723": {
+      "collision": "none",
+      "frame_index": 723,
+      "tags": [],
+      "terrain": null
+    },
+    "724": {
+      "collision": "none",
+      "frame_index": 724,
+      "tags": [],
+      "terrain": null
+    },
+    "725": {
+      "collision": "none",
+      "frame_index": 725,
+      "tags": [],
+      "terrain": null
+    },
+    "726": {
+      "collision": "none",
+      "frame_index": 726,
+      "tags": [],
+      "terrain": null
+    },
+    "727": {
+      "collision": "none",
+      "frame_index": 727,
+      "tags": [],
+      "terrain": null
+    },
+    "728": {
+      "collision": "none",
+      "frame_index": 728,
+      "tags": [],
+      "terrain": null
+    },
+    "729": {
+      "collision": "none",
+      "frame_index": 729,
+      "tags": [],
+      "terrain": null
+    },
+    "73": {
+      "collision": "none",
+      "frame_index": 73,
+      "tags": [],
+      "terrain": null
+    },
+    "730": {
+      "collision": "none",
+      "frame_index": 730,
+      "tags": [],
+      "terrain": null
+    },
+    "731": {
+      "collision": "none",
+      "frame_index": 731,
+      "tags": [],
+      "terrain": null
+    },
+    "732": {
+      "collision": "none",
+      "frame_index": 732,
+      "tags": [],
+      "terrain": null
+    },
+    "733": {
+      "collision": "none",
+      "frame_index": 733,
+      "tags": [],
+      "terrain": null
+    },
+    "734": {
+      "collision": "none",
+      "frame_index": 734,
+      "tags": [],
+      "terrain": null
+    },
+    "735": {
+      "collision": "none",
+      "frame_index": 735,
+      "tags": [],
+      "terrain": null
+    },
+    "736": {
+      "collision": "none",
+      "frame_index": 736,
+      "tags": [],
+      "terrain": null
+    },
+    "737": {
+      "collision": "none",
+      "frame_index": 737,
+      "tags": [],
+      "terrain": null
+    },
+    "738": {
+      "collision": "none",
+      "frame_index": 738,
+      "tags": [],
+      "terrain": null
+    },
+    "739": {
+      "collision": "none",
+      "frame_index": 739,
+      "tags": [],
+      "terrain": null
+    },
+    "74": {
+      "collision": "none",
+      "frame_index": 74,
+      "tags": [],
+      "terrain": null
+    },
+    "740": {
+      "collision": "none",
+      "frame_index": 740,
+      "tags": [],
+      "terrain": null
+    },
+    "741": {
+      "collision": "none",
+      "frame_index": 741,
+      "tags": [],
+      "terrain": null
+    },
+    "742": {
+      "collision": "none",
+      "frame_index": 742,
+      "tags": [],
+      "terrain": null
+    },
+    "743": {
+      "collision": "none",
+      "frame_index": 743,
+      "tags": [],
+      "terrain": null
+    },
+    "744": {
+      "collision": "none",
+      "frame_index": 744,
+      "tags": [],
+      "terrain": null
+    },
+    "745": {
+      "collision": "none",
+      "frame_index": 745,
+      "tags": [],
+      "terrain": null
+    },
+    "746": {
+      "collision": "none",
+      "frame_index": 746,
+      "tags": [],
+      "terrain": null
+    },
+    "747": {
+      "collision": "none",
+      "frame_index": 747,
+      "tags": [],
+      "terrain": null
+    },
+    "748": {
+      "collision": "none",
+      "frame_index": 748,
+      "tags": [],
+      "terrain": null
+    },
+    "749": {
+      "collision": "none",
+      "frame_index": 749,
+      "tags": [],
+      "terrain": null
+    },
+    "75": {
+      "collision": "none",
+      "frame_index": 75,
+      "tags": [],
+      "terrain": null
+    },
+    "750": {
+      "collision": "none",
+      "frame_index": 750,
+      "tags": [],
+      "terrain": null
+    },
+    "751": {
+      "collision": "none",
+      "frame_index": 751,
+      "tags": [],
+      "terrain": null
+    },
+    "752": {
+      "collision": "none",
+      "frame_index": 752,
+      "tags": [],
+      "terrain": null
+    },
+    "753": {
+      "collision": "none",
+      "frame_index": 753,
+      "tags": [],
+      "terrain": null
+    },
+    "754": {
+      "collision": "none",
+      "frame_index": 754,
+      "tags": [],
+      "terrain": null
+    },
+    "755": {
+      "collision": "none",
+      "frame_index": 755,
+      "tags": [],
+      "terrain": null
+    },
+    "756": {
+      "collision": "none",
+      "frame_index": 756,
+      "tags": [],
+      "terrain": null
+    },
+    "757": {
+      "collision": "none",
+      "frame_index": 757,
+      "tags": [],
+      "terrain": null
+    },
+    "758": {
+      "collision": "none",
+      "frame_index": 758,
+      "tags": [],
+      "terrain": null
+    },
+    "759": {
+      "collision": "none",
+      "frame_index": 759,
+      "tags": [],
+      "terrain": null
+    },
+    "76": {
+      "collision": "none",
+      "frame_index": 76,
+      "tags": [],
+      "terrain": null
+    },
+    "760": {
+      "collision": "none",
+      "frame_index": 760,
+      "tags": [],
+      "terrain": null
+    },
+    "761": {
+      "collision": "none",
+      "frame_index": 761,
+      "tags": [],
+      "terrain": null
+    },
+    "762": {
+      "collision": "none",
+      "frame_index": 762,
+      "tags": [],
+      "terrain": null
+    },
+    "763": {
+      "collision": "none",
+      "frame_index": 763,
+      "tags": [],
+      "terrain": null
+    },
+    "764": {
+      "collision": "none",
+      "frame_index": 764,
+      "tags": [],
+      "terrain": null
+    },
+    "765": {
+      "collision": "none",
+      "frame_index": 765,
+      "tags": [],
+      "terrain": null
+    },
+    "766": {
+      "collision": "none",
+      "frame_index": 766,
+      "tags": [],
+      "terrain": null
+    },
+    "767": {
+      "collision": "none",
+      "frame_index": 767,
+      "tags": [],
+      "terrain": null
+    },
+    "768": {
+      "collision": "none",
+      "frame_index": 768,
+      "tags": [],
+      "terrain": null
+    },
+    "769": {
+      "collision": "none",
+      "frame_index": 769,
+      "tags": [],
+      "terrain": null
+    },
+    "77": {
+      "collision": "none",
+      "frame_index": 77,
+      "tags": [],
+      "terrain": null
+    },
+    "770": {
+      "collision": "none",
+      "frame_index": 770,
+      "tags": [],
+      "terrain": null
+    },
+    "771": {
+      "collision": "none",
+      "frame_index": 771,
+      "tags": [],
+      "terrain": null
+    },
+    "772": {
+      "collision": "none",
+      "frame_index": 772,
+      "tags": [],
+      "terrain": null
+    },
+    "773": {
+      "collision": "none",
+      "frame_index": 773,
+      "tags": [],
+      "terrain": null
+    },
+    "774": {
+      "collision": "none",
+      "frame_index": 774,
+      "tags": [],
+      "terrain": null
+    },
+    "775": {
+      "collision": "none",
+      "frame_index": 775,
+      "tags": [],
+      "terrain": null
+    },
+    "776": {
+      "collision": "none",
+      "frame_index": 776,
+      "tags": [],
+      "terrain": null
+    },
+    "777": {
+      "collision": "none",
+      "frame_index": 777,
+      "tags": [],
+      "terrain": null
+    },
+    "778": {
+      "collision": "none",
+      "frame_index": 778,
+      "tags": [],
+      "terrain": null
+    },
+    "779": {
+      "collision": "none",
+      "frame_index": 779,
+      "tags": [],
+      "terrain": null
+    },
+    "78": {
+      "collision": "none",
+      "frame_index": 78,
+      "tags": [],
+      "terrain": null
+    },
+    "780": {
+      "collision": "none",
+      "frame_index": 780,
+      "tags": [],
+      "terrain": null
+    },
+    "781": {
+      "collision": "none",
+      "frame_index": 781,
+      "tags": [],
+      "terrain": null
+    },
+    "782": {
+      "collision": "none",
+      "frame_index": 782,
+      "tags": [],
+      "terrain": null
+    },
+    "783": {
+      "collision": "none",
+      "frame_index": 783,
+      "tags": [],
+      "terrain": null
+    },
+    "784": {
+      "collision": "none",
+      "frame_index": 784,
+      "tags": [],
+      "terrain": null
+    },
+    "785": {
+      "collision": "none",
+      "frame_index": 785,
+      "tags": [],
+      "terrain": null
+    },
+    "786": {
+      "collision": "none",
+      "frame_index": 786,
+      "tags": [],
+      "terrain": null
+    },
+    "787": {
+      "collision": "none",
+      "frame_index": 787,
+      "tags": [],
+      "terrain": null
+    },
+    "788": {
+      "collision": "none",
+      "frame_index": 788,
+      "tags": [],
+      "terrain": null
+    },
+    "789": {
+      "collision": "none",
+      "frame_index": 789,
+      "tags": [],
+      "terrain": null
+    },
+    "79": {
+      "collision": "none",
+      "frame_index": 79,
+      "tags": [],
+      "terrain": null
+    },
+    "790": {
+      "collision": "none",
+      "frame_index": 790,
+      "tags": [],
+      "terrain": null
+    },
+    "791": {
+      "collision": "none",
+      "frame_index": 791,
+      "tags": [],
+      "terrain": null
+    },
+    "792": {
+      "collision": "none",
+      "frame_index": 792,
+      "tags": [],
+      "terrain": null
+    },
+    "793": {
+      "collision": "none",
+      "frame_index": 793,
+      "tags": [],
+      "terrain": null
+    },
+    "794": {
+      "collision": "none",
+      "frame_index": 794,
+      "tags": [],
+      "terrain": null
+    },
+    "795": {
+      "collision": "none",
+      "frame_index": 795,
+      "tags": [],
+      "terrain": null
+    },
+    "796": {
+      "collision": "none",
+      "frame_index": 796,
+      "tags": [],
+      "terrain": null
+    },
+    "797": {
+      "collision": "none",
+      "frame_index": 797,
+      "tags": [],
+      "terrain": null
+    },
+    "798": {
+      "collision": "none",
+      "frame_index": 798,
+      "tags": [],
+      "terrain": null
+    },
+    "799": {
+      "collision": "none",
+      "frame_index": 799,
+      "tags": [],
+      "terrain": null
+    },
+    "8": {
+      "collision": "none",
+      "frame_index": 8,
+      "tags": [],
+      "terrain": null
+    },
+    "80": {
+      "collision": "none",
+      "frame_index": 80,
+      "tags": [],
+      "terrain": null
+    },
+    "800": {
+      "collision": "none",
+      "frame_index": 800,
+      "tags": [],
+      "terrain": null
+    },
+    "801": {
+      "collision": "none",
+      "frame_index": 801,
+      "tags": [],
+      "terrain": null
+    },
+    "802": {
+      "collision": "none",
+      "frame_index": 802,
+      "tags": [],
+      "terrain": null
+    },
+    "803": {
+      "collision": "none",
+      "frame_index": 803,
+      "tags": [],
+      "terrain": null
+    },
+    "804": {
+      "collision": "none",
+      "frame_index": 804,
+      "tags": [],
+      "terrain": null
+    },
+    "805": {
+      "collision": "none",
+      "frame_index": 805,
+      "tags": [],
+      "terrain": null
+    },
+    "806": {
+      "collision": "none",
+      "frame_index": 806,
+      "tags": [],
+      "terrain": null
+    },
+    "807": {
+      "collision": "none",
+      "frame_index": 807,
+      "tags": [],
+      "terrain": null
+    },
+    "808": {
+      "collision": "none",
+      "frame_index": 808,
+      "tags": [],
+      "terrain": null
+    },
+    "809": {
+      "collision": "none",
+      "frame_index": 809,
+      "tags": [],
+      "terrain": null
+    },
+    "81": {
+      "collision": "none",
+      "frame_index": 81,
+      "tags": [],
+      "terrain": null
+    },
+    "810": {
+      "collision": "none",
+      "frame_index": 810,
+      "tags": [],
+      "terrain": null
+    },
+    "811": {
+      "collision": "none",
+      "frame_index": 811,
+      "tags": [],
+      "terrain": null
+    },
+    "812": {
+      "collision": "none",
+      "frame_index": 812,
+      "tags": [],
+      "terrain": null
+    },
+    "813": {
+      "collision": "none",
+      "frame_index": 813,
+      "tags": [],
+      "terrain": null
+    },
+    "814": {
+      "collision": "none",
+      "frame_index": 814,
+      "tags": [],
+      "terrain": null
+    },
+    "815": {
+      "collision": "none",
+      "frame_index": 815,
+      "tags": [],
+      "terrain": null
+    },
+    "816": {
+      "collision": "none",
+      "frame_index": 816,
+      "tags": [],
+      "terrain": null
+    },
+    "817": {
+      "collision": "none",
+      "frame_index": 817,
+      "tags": [],
+      "terrain": null
+    },
+    "818": {
+      "collision": "none",
+      "frame_index": 818,
+      "tags": [],
+      "terrain": null
+    },
+    "819": {
+      "collision": "none",
+      "frame_index": 819,
+      "tags": [],
+      "terrain": null
+    },
+    "82": {
+      "collision": "none",
+      "frame_index": 82,
+      "tags": [],
+      "terrain": null
+    },
+    "820": {
+      "collision": "none",
+      "frame_index": 820,
+      "tags": [],
+      "terrain": null
+    },
+    "821": {
+      "collision": "none",
+      "frame_index": 821,
+      "tags": [],
+      "terrain": null
+    },
+    "822": {
+      "collision": "none",
+      "frame_index": 822,
+      "tags": [],
+      "terrain": null
+    },
+    "823": {
+      "collision": "none",
+      "frame_index": 823,
+      "tags": [],
+      "terrain": null
+    },
+    "824": {
+      "collision": "none",
+      "frame_index": 824,
+      "tags": [],
+      "terrain": null
+    },
+    "825": {
+      "collision": "none",
+      "frame_index": 825,
+      "tags": [],
+      "terrain": null
+    },
+    "826": {
+      "collision": "none",
+      "frame_index": 826,
+      "tags": [],
+      "terrain": null
+    },
+    "827": {
+      "collision": "none",
+      "frame_index": 827,
+      "tags": [],
+      "terrain": null
+    },
+    "828": {
+      "collision": "none",
+      "frame_index": 828,
+      "tags": [],
+      "terrain": null
+    },
+    "829": {
+      "collision": "none",
+      "frame_index": 829,
+      "tags": [],
+      "terrain": null
+    },
+    "83": {
+      "collision": "none",
+      "frame_index": 83,
+      "tags": [],
+      "terrain": null
+    },
+    "830": {
+      "collision": "none",
+      "frame_index": 830,
+      "tags": [],
+      "terrain": null
+    },
+    "831": {
+      "collision": "none",
+      "frame_index": 831,
+      "tags": [],
+      "terrain": null
+    },
+    "832": {
+      "collision": "none",
+      "frame_index": 832,
+      "tags": [],
+      "terrain": null
+    },
+    "833": {
+      "collision": "none",
+      "frame_index": 833,
+      "tags": [],
+      "terrain": null
+    },
+    "834": {
+      "collision": "none",
+      "frame_index": 834,
+      "tags": [],
+      "terrain": null
+    },
+    "835": {
+      "collision": "none",
+      "frame_index": 835,
+      "tags": [],
+      "terrain": null
+    },
+    "836": {
+      "collision": "none",
+      "frame_index": 836,
+      "tags": [],
+      "terrain": null
+    },
+    "837": {
+      "collision": "none",
+      "frame_index": 837,
+      "tags": [],
+      "terrain": null
+    },
+    "838": {
+      "collision": "none",
+      "frame_index": 838,
+      "tags": [],
+      "terrain": null
+    },
+    "839": {
+      "collision": "none",
+      "frame_index": 839,
+      "tags": [],
+      "terrain": null
+    },
+    "84": {
+      "collision": "none",
+      "frame_index": 84,
+      "tags": [],
+      "terrain": null
+    },
+    "840": {
+      "collision": "none",
+      "frame_index": 840,
+      "tags": [],
+      "terrain": null
+    },
+    "841": {
+      "collision": "none",
+      "frame_index": 841,
+      "tags": [],
+      "terrain": null
+    },
+    "842": {
+      "collision": "none",
+      "frame_index": 842,
+      "tags": [],
+      "terrain": null
+    },
+    "843": {
+      "collision": "none",
+      "frame_index": 843,
+      "tags": [],
+      "terrain": null
+    },
+    "844": {
+      "collision": "none",
+      "frame_index": 844,
+      "tags": [],
+      "terrain": null
+    },
+    "845": {
+      "collision": "none",
+      "frame_index": 845,
+      "tags": [],
+      "terrain": null
+    },
+    "846": {
+      "collision": "none",
+      "frame_index": 846,
+      "tags": [],
+      "terrain": null
+    },
+    "847": {
+      "collision": "none",
+      "frame_index": 847,
+      "tags": [],
+      "terrain": null
+    },
+    "848": {
+      "collision": "none",
+      "frame_index": 848,
+      "tags": [],
+      "terrain": null
+    },
+    "849": {
+      "collision": "none",
+      "frame_index": 849,
+      "tags": [],
+      "terrain": null
+    },
+    "85": {
+      "collision": "none",
+      "frame_index": 85,
+      "tags": [],
+      "terrain": null
+    },
+    "850": {
+      "collision": "none",
+      "frame_index": 850,
+      "tags": [],
+      "terrain": null
+    },
+    "851": {
+      "collision": "none",
+      "frame_index": 851,
+      "tags": [],
+      "terrain": null
+    },
+    "852": {
+      "collision": "none",
+      "frame_index": 852,
+      "tags": [],
+      "terrain": null
+    },
+    "853": {
+      "collision": "none",
+      "frame_index": 853,
+      "tags": [],
+      "terrain": null
+    },
+    "854": {
+      "collision": "none",
+      "frame_index": 854,
+      "tags": [],
+      "terrain": null
+    },
+    "855": {
+      "collision": "none",
+      "frame_index": 855,
+      "tags": [],
+      "terrain": null
+    },
+    "856": {
+      "collision": "none",
+      "frame_index": 856,
+      "tags": [],
+      "terrain": null
+    },
+    "857": {
+      "collision": "none",
+      "frame_index": 857,
+      "tags": [],
+      "terrain": null
+    },
+    "858": {
+      "collision": "none",
+      "frame_index": 858,
+      "tags": [],
+      "terrain": null
+    },
+    "859": {
+      "collision": "none",
+      "frame_index": 859,
+      "tags": [],
+      "terrain": null
+    },
+    "86": {
+      "collision": "none",
+      "frame_index": 86,
+      "tags": [],
+      "terrain": null
+    },
+    "860": {
+      "collision": "none",
+      "frame_index": 860,
+      "tags": [],
+      "terrain": null
+    },
+    "861": {
+      "collision": "none",
+      "frame_index": 861,
+      "tags": [],
+      "terrain": null
+    },
+    "862": {
+      "collision": "none",
+      "frame_index": 862,
+      "tags": [],
+      "terrain": null
+    },
+    "863": {
+      "collision": "none",
+      "frame_index": 863,
+      "tags": [],
+      "terrain": null
+    },
+    "864": {
+      "collision": "none",
+      "frame_index": 864,
+      "tags": [],
+      "terrain": null
+    },
+    "865": {
+      "collision": "none",
+      "frame_index": 865,
+      "tags": [],
+      "terrain": null
+    },
+    "866": {
+      "collision": "none",
+      "frame_index": 866,
+      "tags": [],
+      "terrain": null
+    },
+    "867": {
+      "collision": "none",
+      "frame_index": 867,
+      "tags": [],
+      "terrain": null
+    },
+    "868": {
+      "collision": "none",
+      "frame_index": 868,
+      "tags": [],
+      "terrain": null
+    },
+    "869": {
+      "collision": "none",
+      "frame_index": 869,
+      "tags": [],
+      "terrain": null
+    },
+    "87": {
+      "collision": "none",
+      "frame_index": 87,
+      "tags": [],
+      "terrain": null
+    },
+    "870": {
+      "collision": "none",
+      "frame_index": 870,
+      "tags": [],
+      "terrain": null
+    },
+    "871": {
+      "collision": "none",
+      "frame_index": 871,
+      "tags": [],
+      "terrain": null
+    },
+    "872": {
+      "collision": "none",
+      "frame_index": 872,
+      "tags": [],
+      "terrain": null
+    },
+    "873": {
+      "collision": "none",
+      "frame_index": 873,
+      "tags": [],
+      "terrain": null
+    },
+    "874": {
+      "collision": "none",
+      "frame_index": 874,
+      "tags": [],
+      "terrain": null
+    },
+    "875": {
+      "collision": "none",
+      "frame_index": 875,
+      "tags": [],
+      "terrain": null
+    },
+    "876": {
+      "collision": "none",
+      "frame_index": 876,
+      "tags": [],
+      "terrain": null
+    },
+    "877": {
+      "collision": "none",
+      "frame_index": 877,
+      "tags": [],
+      "terrain": null
+    },
+    "878": {
+      "collision": "none",
+      "frame_index": 878,
+      "tags": [],
+      "terrain": null
+    },
+    "879": {
+      "collision": "none",
+      "frame_index": 879,
+      "tags": [],
+      "terrain": null
+    },
+    "88": {
+      "collision": "none",
+      "frame_index": 88,
+      "tags": [],
+      "terrain": null
+    },
+    "880": {
+      "collision": "none",
+      "frame_index": 880,
+      "tags": [],
+      "terrain": null
+    },
+    "881": {
+      "collision": "none",
+      "frame_index": 881,
+      "tags": [],
+      "terrain": null
+    },
+    "882": {
+      "collision": "none",
+      "frame_index": 882,
+      "tags": [],
+      "terrain": null
+    },
+    "883": {
+      "collision": "none",
+      "frame_index": 883,
+      "tags": [],
+      "terrain": null
+    },
+    "884": {
+      "collision": "none",
+      "frame_index": 884,
+      "tags": [],
+      "terrain": null
+    },
+    "885": {
+      "collision": "none",
+      "frame_index": 885,
+      "tags": [],
+      "terrain": null
+    },
+    "886": {
+      "collision": "none",
+      "frame_index": 886,
+      "tags": [],
+      "terrain": null
+    },
+    "887": {
+      "collision": "none",
+      "frame_index": 887,
+      "tags": [],
+      "terrain": null
+    },
+    "888": {
+      "collision": "none",
+      "frame_index": 888,
+      "tags": [],
+      "terrain": null
+    },
+    "889": {
+      "collision": "none",
+      "frame_index": 889,
+      "tags": [],
+      "terrain": null
+    },
+    "89": {
+      "collision": "none",
+      "frame_index": 89,
+      "tags": [],
+      "terrain": null
+    },
+    "890": {
+      "collision": "none",
+      "frame_index": 890,
+      "tags": [],
+      "terrain": null
+    },
+    "891": {
+      "collision": "none",
+      "frame_index": 891,
+      "tags": [],
+      "terrain": null
+    },
+    "892": {
+      "collision": "none",
+      "frame_index": 892,
+      "tags": [],
+      "terrain": null
+    },
+    "893": {
+      "collision": "none",
+      "frame_index": 893,
+      "tags": [],
+      "terrain": null
+    },
+    "894": {
+      "collision": "none",
+      "frame_index": 894,
+      "tags": [],
+      "terrain": null
+    },
+    "895": {
+      "collision": "none",
+      "frame_index": 895,
+      "tags": [],
+      "terrain": null
+    },
+    "896": {
+      "collision": "none",
+      "frame_index": 896,
+      "tags": [],
+      "terrain": null
+    },
+    "897": {
+      "collision": "none",
+      "frame_index": 897,
+      "tags": [],
+      "terrain": null
+    },
+    "898": {
+      "collision": "none",
+      "frame_index": 898,
+      "tags": [],
+      "terrain": null
+    },
+    "899": {
+      "collision": "none",
+      "frame_index": 899,
+      "tags": [],
+      "terrain": null
+    },
+    "9": {
+      "collision": "none",
+      "frame_index": 9,
+      "tags": [],
+      "terrain": null
+    },
+    "90": {
+      "collision": "none",
+      "frame_index": 90,
+      "tags": [],
+      "terrain": null
+    },
+    "900": {
+      "collision": "none",
+      "frame_index": 900,
+      "tags": [],
+      "terrain": null
+    },
+    "901": {
+      "collision": "none",
+      "frame_index": 901,
+      "tags": [],
+      "terrain": null
+    },
+    "902": {
+      "collision": "none",
+      "frame_index": 902,
+      "tags": [],
+      "terrain": null
+    },
+    "903": {
+      "collision": "none",
+      "frame_index": 903,
+      "tags": [],
+      "terrain": null
+    },
+    "904": {
+      "collision": "none",
+      "frame_index": 904,
+      "tags": [],
+      "terrain": null
+    },
+    "905": {
+      "collision": "none",
+      "frame_index": 905,
+      "tags": [],
+      "terrain": null
+    },
+    "906": {
+      "collision": "none",
+      "frame_index": 906,
+      "tags": [],
+      "terrain": null
+    },
+    "907": {
+      "collision": "none",
+      "frame_index": 907,
+      "tags": [],
+      "terrain": null
+    },
+    "908": {
+      "collision": "none",
+      "frame_index": 908,
+      "tags": [],
+      "terrain": null
+    },
+    "909": {
+      "collision": "none",
+      "frame_index": 909,
+      "tags": [],
+      "terrain": null
+    },
+    "91": {
+      "collision": "none",
+      "frame_index": 91,
+      "tags": [],
+      "terrain": null
+    },
+    "910": {
+      "collision": "none",
+      "frame_index": 910,
+      "tags": [],
+      "terrain": null
+    },
+    "911": {
+      "collision": "none",
+      "frame_index": 911,
+      "tags": [],
+      "terrain": null
+    },
+    "912": {
+      "collision": "none",
+      "frame_index": 912,
+      "tags": [],
+      "terrain": null
+    },
+    "913": {
+      "collision": "none",
+      "frame_index": 913,
+      "tags": [],
+      "terrain": null
+    },
+    "914": {
+      "collision": "none",
+      "frame_index": 914,
+      "tags": [],
+      "terrain": null
+    },
+    "915": {
+      "collision": "none",
+      "frame_index": 915,
+      "tags": [],
+      "terrain": null
+    },
+    "916": {
+      "collision": "none",
+      "frame_index": 916,
+      "tags": [],
+      "terrain": null
+    },
+    "917": {
+      "collision": "none",
+      "frame_index": 917,
+      "tags": [],
+      "terrain": null
+    },
+    "918": {
+      "collision": "none",
+      "frame_index": 918,
+      "tags": [],
+      "terrain": null
+    },
+    "919": {
+      "collision": "none",
+      "frame_index": 919,
+      "tags": [],
+      "terrain": null
+    },
+    "92": {
+      "collision": "none",
+      "frame_index": 92,
+      "tags": [],
+      "terrain": null
+    },
+    "920": {
+      "collision": "none",
+      "frame_index": 920,
+      "tags": [],
+      "terrain": null
+    },
+    "921": {
+      "collision": "none",
+      "frame_index": 921,
+      "tags": [],
+      "terrain": null
+    },
+    "922": {
+      "collision": "none",
+      "frame_index": 922,
+      "tags": [],
+      "terrain": null
+    },
+    "923": {
+      "collision": "none",
+      "frame_index": 923,
+      "tags": [],
+      "terrain": null
+    },
+    "924": {
+      "collision": "none",
+      "frame_index": 924,
+      "tags": [],
+      "terrain": null
+    },
+    "925": {
+      "collision": "none",
+      "frame_index": 925,
+      "tags": [],
+      "terrain": null
+    },
+    "926": {
+      "collision": "none",
+      "frame_index": 926,
+      "tags": [],
+      "terrain": null
+    },
+    "927": {
+      "collision": "none",
+      "frame_index": 927,
+      "tags": [],
+      "terrain": null
+    },
+    "928": {
+      "collision": "none",
+      "frame_index": 928,
+      "tags": [],
+      "terrain": null
+    },
+    "929": {
+      "collision": "none",
+      "frame_index": 929,
+      "tags": [],
+      "terrain": null
+    },
+    "93": {
+      "collision": "none",
+      "frame_index": 93,
+      "tags": [],
+      "terrain": null
+    },
+    "930": {
+      "collision": "none",
+      "frame_index": 930,
+      "tags": [],
+      "terrain": null
+    },
+    "931": {
+      "collision": "none",
+      "frame_index": 931,
+      "tags": [],
+      "terrain": null
+    },
+    "932": {
+      "collision": "none",
+      "frame_index": 932,
+      "tags": [],
+      "terrain": null
+    },
+    "933": {
+      "collision": "none",
+      "frame_index": 933,
+      "tags": [],
+      "terrain": null
+    },
+    "934": {
+      "collision": "none",
+      "frame_index": 934,
+      "tags": [],
+      "terrain": null
+    },
+    "935": {
+      "collision": "none",
+      "frame_index": 935,
+      "tags": [],
+      "terrain": null
+    },
+    "936": {
+      "collision": "none",
+      "frame_index": 936,
+      "tags": [],
+      "terrain": null
+    },
+    "937": {
+      "collision": "none",
+      "frame_index": 937,
+      "tags": [],
+      "terrain": null
+    },
+    "938": {
+      "collision": "none",
+      "frame_index": 938,
+      "tags": [],
+      "terrain": null
+    },
+    "939": {
+      "collision": "none",
+      "frame_index": 939,
+      "tags": [],
+      "terrain": null
+    },
+    "94": {
+      "collision": "none",
+      "frame_index": 94,
+      "tags": [],
+      "terrain": null
+    },
+    "940": {
+      "collision": "none",
+      "frame_index": 940,
+      "tags": [],
+      "terrain": null
+    },
+    "941": {
+      "collision": "none",
+      "frame_index": 941,
+      "tags": [],
+      "terrain": null
+    },
+    "942": {
+      "collision": "none",
+      "frame_index": 942,
+      "tags": [],
+      "terrain": null
+    },
+    "943": {
+      "collision": "none",
+      "frame_index": 943,
+      "tags": [],
+      "terrain": null
+    },
+    "944": {
+      "collision": "none",
+      "frame_index": 944,
+      "tags": [],
+      "terrain": null
+    },
+    "945": {
+      "collision": "none",
+      "frame_index": 945,
+      "tags": [],
+      "terrain": null
+    },
+    "946": {
+      "collision": "none",
+      "frame_index": 946,
+      "tags": [],
+      "terrain": null
+    },
+    "947": {
+      "collision": "none",
+      "frame_index": 947,
+      "tags": [],
+      "terrain": null
+    },
+    "948": {
+      "collision": "none",
+      "frame_index": 948,
+      "tags": [],
+      "terrain": null
+    },
+    "949": {
+      "collision": "none",
+      "frame_index": 949,
+      "tags": [],
+      "terrain": null
+    },
+    "95": {
+      "collision": "none",
+      "frame_index": 95,
+      "tags": [],
+      "terrain": null
+    },
+    "950": {
+      "collision": "none",
+      "frame_index": 950,
+      "tags": [],
+      "terrain": null
+    },
+    "951": {
+      "collision": "none",
+      "frame_index": 951,
+      "tags": [],
+      "terrain": null
+    },
+    "952": {
+      "collision": "none",
+      "frame_index": 952,
+      "tags": [],
+      "terrain": null
+    },
+    "953": {
+      "collision": "none",
+      "frame_index": 953,
+      "tags": [],
+      "terrain": null
+    },
+    "954": {
+      "collision": "none",
+      "frame_index": 954,
+      "tags": [],
+      "terrain": null
+    },
+    "955": {
+      "collision": "none",
+      "frame_index": 955,
+      "tags": [],
+      "terrain": null
+    },
+    "956": {
+      "collision": "none",
+      "frame_index": 956,
+      "tags": [],
+      "terrain": null
+    },
+    "957": {
+      "collision": "none",
+      "frame_index": 957,
+      "tags": [],
+      "terrain": null
+    },
+    "958": {
+      "collision": "none",
+      "frame_index": 958,
+      "tags": [],
+      "terrain": null
+    },
+    "959": {
+      "collision": "none",
+      "frame_index": 959,
+      "tags": [],
+      "terrain": null
+    },
+    "96": {
+      "collision": "none",
+      "frame_index": 96,
+      "tags": [],
+      "terrain": null
+    },
+    "960": {
+      "collision": "none",
+      "frame_index": 960,
+      "tags": [],
+      "terrain": null
+    },
+    "961": {
+      "collision": "none",
+      "frame_index": 961,
+      "tags": [],
+      "terrain": null
+    },
+    "962": {
+      "collision": "none",
+      "frame_index": 962,
+      "tags": [],
+      "terrain": null
+    },
+    "963": {
+      "collision": "none",
+      "frame_index": 963,
+      "tags": [],
+      "terrain": null
+    },
+    "964": {
+      "collision": "none",
+      "frame_index": 964,
+      "tags": [],
+      "terrain": null
+    },
+    "965": {
+      "collision": "none",
+      "frame_index": 965,
+      "tags": [],
+      "terrain": null
+    },
+    "966": {
+      "collision": "none",
+      "frame_index": 966,
+      "tags": [],
+      "terrain": null
+    },
+    "967": {
+      "collision": "none",
+      "frame_index": 967,
+      "tags": [],
+      "terrain": null
+    },
+    "968": {
+      "collision": "none",
+      "frame_index": 968,
+      "tags": [],
+      "terrain": null
+    },
+    "969": {
+      "collision": "none",
+      "frame_index": 969,
+      "tags": [],
+      "terrain": null
+    },
+    "97": {
+      "collision": "none",
+      "frame_index": 97,
+      "tags": [],
+      "terrain": null
+    },
+    "970": {
+      "collision": "none",
+      "frame_index": 970,
+      "tags": [],
+      "terrain": null
+    },
+    "971": {
+      "collision": "none",
+      "frame_index": 971,
+      "tags": [],
+      "terrain": null
+    },
+    "972": {
+      "collision": "none",
+      "frame_index": 972,
+      "tags": [],
+      "terrain": null
+    },
+    "973": {
+      "collision": "none",
+      "frame_index": 973,
+      "tags": [],
+      "terrain": null
+    },
+    "974": {
+      "collision": "none",
+      "frame_index": 974,
+      "tags": [],
+      "terrain": null
+    },
+    "975": {
+      "collision": "none",
+      "frame_index": 975,
+      "tags": [],
+      "terrain": null
+    },
+    "976": {
+      "collision": "none",
+      "frame_index": 976,
+      "tags": [],
+      "terrain": null
+    },
+    "977": {
+      "collision": "none",
+      "frame_index": 977,
+      "tags": [],
+      "terrain": null
+    },
+    "978": {
+      "collision": "none",
+      "frame_index": 978,
+      "tags": [],
+      "terrain": null
+    },
+    "979": {
+      "collision": "none",
+      "frame_index": 979,
+      "tags": [],
+      "terrain": null
+    },
+    "98": {
+      "collision": "none",
+      "frame_index": 98,
+      "tags": [],
+      "terrain": null
+    },
+    "980": {
+      "collision": "none",
+      "frame_index": 980,
+      "tags": [],
+      "terrain": null
+    },
+    "981": {
+      "collision": "none",
+      "frame_index": 981,
+      "tags": [],
+      "terrain": null
+    },
+    "982": {
+      "collision": "none",
+      "frame_index": 982,
+      "tags": [],
+      "terrain": null
+    },
+    "983": {
+      "collision": "none",
+      "frame_index": 983,
+      "tags": [],
+      "terrain": null
+    },
+    "984": {
+      "collision": "none",
+      "frame_index": 984,
+      "tags": [],
+      "terrain": null
+    },
+    "985": {
+      "collision": "none",
+      "frame_index": 985,
+      "tags": [],
+      "terrain": null
+    },
+    "986": {
+      "collision": "none",
+      "frame_index": 986,
+      "tags": [],
+      "terrain": null
+    },
+    "987": {
+      "collision": "none",
+      "frame_index": 987,
+      "tags": [],
+      "terrain": null
+    },
+    "988": {
+      "collision": "none",
+      "frame_index": 988,
+      "tags": [],
+      "terrain": null
+    },
+    "989": {
+      "collision": "none",
+      "frame_index": 989,
+      "tags": [],
+      "terrain": null
+    },
+    "99": {
+      "collision": "none",
+      "frame_index": 99,
+      "tags": [],
+      "terrain": null
+    },
+    "990": {
+      "collision": "none",
+      "frame_index": 990,
+      "tags": [],
+      "terrain": null
+    },
+    "991": {
+      "collision": "none",
+      "frame_index": 991,
+      "tags": [],
+      "terrain": null
+    },
+    "992": {
+      "collision": "none",
+      "frame_index": 992,
+      "tags": [],
+      "terrain": null
+    },
+    "993": {
+      "collision": "none",
+      "frame_index": 993,
+      "tags": [],
+      "terrain": null
+    },
+    "994": {
+      "collision": "none",
+      "frame_index": 994,
+      "tags": [],
+      "terrain": null
+    },
+    "995": {
+      "collision": "none",
+      "frame_index": 995,
+      "tags": [],
+      "terrain": null
+    },
+    "996": {
+      "collision": "none",
+      "frame_index": 996,
+      "tags": [],
+      "terrain": null
+    },
+    "997": {
+      "collision": "none",
+      "frame_index": 997,
+      "tags": [],
+      "terrain": null
+    },
+    "998": {
+      "collision": "none",
+      "frame_index": 998,
+      "tags": [],
+      "terrain": null
+    },
+    "999": {
+      "collision": "none",
+      "frame_index": 999,
+      "tags": [],
+      "terrain": null
+    }
+  }
+}

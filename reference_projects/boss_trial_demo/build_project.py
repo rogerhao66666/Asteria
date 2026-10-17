@@ -26,10 +26,12 @@ sys.path.insert(0, str(HERE))
 import trial_art as art  # noqa: E402
 import trial_b11 as b11  # noqa: E402
 import trial_b12 as b12  # noqa: E402
+import trial_cast as cast  # noqa: E402
 import trial_content as content  # noqa: E402
 import trial_items as items  # noqa: E402
 import trial_jobs as jobs  # noqa: E402
 import trial_lucifer as lucifer  # noqa: E402
+import trial_maps as maps  # noqa: E402
 
 from asteria.editor import EditorDocument  # noqa: E402
 from asteria.project import Project  # noqa: E402
@@ -55,7 +57,10 @@ def main():
     items.items_and_alchemy(context)
     items.counters(context)
     b12.systems(context)
-    content.world(context)
+    cast.party(context)
+    cast.foes(context)
+    services = {n: (line, cmd) for n, (_xy, line, cmd) in content.SERVICES.items()}
+    maps.build_world(context, services, lambda *args: None)
     art.hero_and_boss_art(context)
     art.effect_assets(context)
     art.prune_unused_art(context)

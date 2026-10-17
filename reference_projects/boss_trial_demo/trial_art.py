@@ -268,7 +268,15 @@ def hero_and_boss_art(context):
             ("hero_02", "sorceress", ("hero",), 0.9, hero_states),
             ("spirit_knight", "skeleton_grunt", ("hero", "summon"), 0.9, hero_states),
             (context.boss_id, "skeleton_king", ("enemy",), 1.15, enemy_states),
-            ("mender_wisp", "goblin_slinger", ("enemy",), 0.9, enemy_states),
+            ("hero_03", "necromancer", ("hero",), 0.9, hero_states),
+            ("hero_04", "cultist", ("hero",), 0.9, hero_states),
+            ("mender_wisp", "skeleton_grunt", ("enemy",), 0.9, enemy_states),
+            ("goblin_slinger", "goblin_slinger", ("enemy",), 0.9, enemy_states),
+            ("goblin_berserker", "goblin_berserker", ("enemy",), 0.9, enemy_states),
+            ("goblin_beast", "goblin_beast", ("enemy",), 1.1, enemy_states),
+            ("skeleton_grunt", "skeleton_grunt", ("enemy",), 0.9, enemy_states),
+            ("skeleton_hunter", "skeleton_hunter", ("enemy",), 0.9, enemy_states),
+            ("skeleton_ancient", "skeleton_ancient", ("enemy",), 1.1, enemy_states),
         ):
             image, frame, clips, body = lucifer.character_sheet(key)
             register(
@@ -517,12 +525,27 @@ def write_credits(root):
 def prune_unused_art(context):
     """The reference game's other heroes and monsters are not part of this demo: drop their
     visuals, sheets and files so the project only holds what it uses."""
-    keep = {context.hero_id, "hero_02", "spirit_knight", context.boss_id, "mender_wisp", "pet"}
+    keep = {
+        context.hero_id,
+        "hero_02",
+        "hero_03",
+        "hero_04",
+        "spirit_knight",
+        context.boss_id,
+        "mender_wisp",
+        "pet",
+        "goblin_slinger",
+        "goblin_berserker",
+        "goblin_beast",
+        "skeleton_grunt",
+        "skeleton_hunter",
+        "skeleton_ancient",
+    }
     library = context.project.battle_presentation_library
     # a captured wisp fights on the hero side: every pet unit (member ids "pet:...") is drawn
     # with the "pet" profile, here the same sheet as the wild wisp; no side-list panel, that list
     # is for the party's characters
-    wisp = library.require("combatant_visuals", "mender_wisp")
+    wisp = library.require("combatant_visuals", "goblin_slinger")
     library.set(
         "combatant_visuals",
         "pet",

@@ -1814,6 +1814,41 @@ class GameSessionRuntime:
             names = [self.project.rpg_database.classes[c].display_name for c in missing]
             raise GameSessionError(f"{definition.display_name} needs the job " + ", ".join(names))
 
+    def join_party(self, actor_id, *, active=True):
+        """A story event brings ``actor_id`` into the party: the roster, and the active party
+        (with the next free formation slot) while there is room."""
+        actor_id = str(actor_id)
+        db = self.project.rpg_database
+        if actor_id not in db.actors:
+            raise GameSessionError(f"unknown actor: {actor_id}")
+        state = self.save.rpg_state
+        if actor_id not in state.party_actor_ids:
+            state.party_actor_ids = (*state.party_actor_ids, actor_id)
+        self.ensure_actor_progression(actor_id)
+        if not active or actor_id in state.party_active_actor_ids:
+            return actor_id
+        setup = next(iter(db.party_setups.values()), None)
+        if setup is not None and len(state.party_active_actor_ids) >= setup.active_capacity:
+            return actor_id  # no room: it waits in the roster
+        state.party_active_actor_ids = (*state.party_active_actor_ids, actor_id)
+        formation = db.formations.get(setup.formation_id) if setup is not None else None
+        if formation is not None:
+            taken = set(state.party_placements.values())
+            free = next((s.slot_id for s in formation.slots if s.slot_id not in taken), None)
+            if free is not None:
+                state.party_placements[actor_id] = free
+        return actor_id
+
+    def leave_party(self, actor_id):
+        actor_id = str(actor_id)
+        state = self.save.rpg_state
+        state.party_actor_ids = tuple(a for a in state.party_actor_ids if a != actor_id)
+        state.party_active_actor_ids = tuple(
+            a for a in state.party_active_actor_ids if a != actor_id
+        )
+        state.party_placements.pop(actor_id, None)
+        return actor_id
+
     def set_active_party(self, actor_ids, placements=None):
         actor_ids = tuple(dict.fromkeys(str(x) for x in actor_ids))
         roster = set(self.save.rpg_state.party_actor_ids)
