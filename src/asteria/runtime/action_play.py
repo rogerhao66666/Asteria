@@ -32,6 +32,7 @@ ARPG_ACTIONS = {
     "skill_2": (("key", "2"),),
     "skill_3": (("key", "3"),),
     "skill_4": (("key", "4"),),
+    "potion": (("key", "q"),),
     "lock_on": (("key", "l"), ("key", "tab"), ("gamepad_button", "9")),
     "lock_switch": (("key", "o"),),
     "jump": (("key", "space"), ("gamepad_button", "0")),

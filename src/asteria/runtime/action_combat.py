@@ -42,6 +42,7 @@ from .character_control import (
     facing_vector,
 )
 
+SLOT_PREFIX = "slot:"  # a binding value "slot:2": the actor's second equipped skill
 ITEM_COST = "item:"  # an ability cost resource "item:<id>" spends inventory items
 AIM_MODES = ("target_input_facing", "input_facing", "facing")
 LOCK_MODES = ("off", "manual", "nearest")
@@ -161,6 +162,7 @@ class ActionCombatSystem(System):
         entity_snapshot_provider=None,
         known_abilities=None,
         inventory=None,
+        equipped_abilities=None,
     ):
         self.abilities = abilities  # AbilityRegistry (GameplayLibrary.abilities)
         self.timelines = timelines  # {timeline_id: ActionTimeline}
@@ -177,6 +179,9 @@ class ActionCombatSystem(System):
         # callable(entity) -> Inventory or None: ``item:<id>`` costs are paid from it (potions,
         # arrows, bombs)
         self.inventory = inventory
+        # callable(entity) -> the ability ids in the actor's skill slots (in slot order), or None:
+        # a binding value ``slot:2`` means the second one
+        self.equipped_abilities = equipped_abilities
         self.cooldowns: dict[tuple, float] = {}
         self.buffered: dict[str, tuple] = {}  # entity id -> (ability id, seconds left, aim)
         self.events: list[ActionCombatEvent] = []
@@ -494,6 +499,16 @@ class ActionCombatSystem(System):
         """The ability a binding value means for ``entity``: ``"a|b|c"`` -> the first alternative
         it knows (the first one when what it knows is not tracked); ``""`` when it knows none."""
         options = [x.strip() for x in str(value or "").split("|") if x.strip()]
+        resolved = []
+        for option in options:
+            if option.startswith(SLOT_PREFIX):  # the Nth skill slot of the actor
+                slots = self.equipped_abilities(entity) if self.equipped_abilities else ()
+                number = int(option[len(SLOT_PREFIX) :] or 0)
+                if slots is not None and 1 <= number <= len(slots):
+                    return slots[number - 1]
+                continue
+            resolved.append(option)
+        options = resolved
         if len(options) <= 1:
             return options[0] if options else ""
         known = self.known_abilities(entity) if self.known_abilities is not None else None

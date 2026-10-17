@@ -5,6 +5,8 @@ Which graphs are shown: those of the actor's active classes - a graph tagged ``c
 named ``<id>_tree`` - plus graphs tagged ``shared`` (every class sees them). When nothing matches,
 every graph the actor has is shown, so a classless game still gets its tree. Node positions are the
 graph's authored ``node_positions``; graphs without them are laid out by prerequisite depth.
+The view zooms (wheel, + / -), pans (drag, or by choosing a node) and fits (R); positions are
+spread just enough that no two nodes ever overlap, however long the tree is.
 
 Nothing here knows a game: costs, ranks, prerequisites and rewards all come from the graph data,
 and learning goes through ``GameSessionRuntime.allocate_progression`` (the fight refreshes).
@@ -15,6 +17,8 @@ from __future__ import annotations
 from math import hypot
 
 NODE_W, NODE_H = 148, 44
+GAP = 16  # the least space left between two nodes at zoom 1
+ZOOM_MIN, ZOOM_MAX = 0.3, 2.5
 ICON = 30  # a node's picture: the icon of the first ability it grants
 COLORS = {
     "learned": (64, 150, 96),
@@ -93,6 +97,10 @@ class SkillTreeScreen:
         self.node_id = None
         self.closed = False
         self.message, self.message_left = "", 0.0
+        self.zoom, self.origin = 1.0, [0.0, 0.0]  # screen position of the graph's (0, 0)
+        self._view_for = None  # the graph the view was fitted to
+        self._spread = {}  # graph id -> pixels per graph unit that keep nodes apart
+        self._drag = None
 
     # -- data ------------------------------------------------------------------------------------
     @property
@@ -131,6 +139,113 @@ class SkillTreeScreen:
         reasons = allocation.preview_allocate(graph.graph_id, node.node_id, 1).reasons
         # only short of points: it can be learned once more are earned
         return "available" if all(r.startswith("insufficient") for r in reasons) else "locked"
+
+    # -- the view --------------------------------------------------------------------------------
+    def area(self):
+        rt = self.rt
+        return (36, 100, rt.width - 36 - 330 - 24, rt.height - 100 - 64)
+
+    def spread(self, graph):
+        """Pixels per graph unit at zoom 1: the least that leaves every pair of nodes apart."""
+        cached = self._spread.get(graph.graph_id)
+        if cached is not None:
+            return cached
+        points = list(layout(graph).values())
+        factor = 1.0
+        for i, (ax, ay) in enumerate(points):
+            for bx, by in points[i + 1 :]:
+                dx, dy = abs(ax - bx), abs(ay - by)
+                need = min(
+                    (NODE_W + GAP) / dx if dx else float("inf"),
+                    (NODE_H + GAP) / dy if dy else float("inf"),
+                )
+                if need != float("inf"):
+                    factor = max(factor, need)
+        self._spread[graph.graph_id] = factor
+        return factor
+
+    def node_point(self, graph, node_id):
+        """The centre of a node on the screen."""
+        x, y = layout(graph)[node_id]
+        k = self.spread(graph) * self.zoom
+        return self.origin[0] + x * k, self.origin[1] + y * k
+
+    def fit(self, graph):
+        """Zoom and place the whole tree in the area (never larger than life)."""
+        positions = layout(graph)
+        k = self.spread(graph)
+        xs = [p[0] * k for p in positions.values()]
+        ys = [p[1] * k for p in positions.values()]
+        left, top, width, height = self.area()
+        span_x, span_y = max(xs) - min(xs) + NODE_W + 32, max(ys) - min(ys) + NODE_H + 32
+        self.zoom = max(ZOOM_MIN, min(1.0, width / span_x, height / span_y))
+        self.origin[0] = left + width / 2 - (min(xs) + max(xs)) / 2 * self.zoom
+        self.origin[1] = top + height / 2 - (min(ys) + max(ys)) / 2 * self.zoom
+        self._view_for = graph.graph_id
+
+    def zoom_by(self, factor, anchor=None):
+        left, top, width, height = self.area()
+        ax, ay = anchor or (left + width / 2, top + height / 2)
+        new = max(ZOOM_MIN, min(ZOOM_MAX, self.zoom * factor))
+        ratio = new / self.zoom
+        self.origin[0] = ax - (ax - self.origin[0]) * ratio
+        self.origin[1] = ay - (ay - self.origin[1]) * ratio
+        self.zoom = new
+
+    def reveal(self, graph):
+        """Scroll so the chosen node is inside the area."""
+        if self.node_id is None:
+            return
+        left, top, width, height = self.area()
+        x, y = self.node_point(graph, self.node_id)
+        half_w, half_h = NODE_W * self.zoom / 2 + 12, NODE_H * self.zoom / 2 + 12
+        if x - half_w < left:
+            self.origin[0] += left - (x - half_w)
+        elif x + half_w > left + width:
+            self.origin[0] -= (x + half_w) - (left + width)
+        if y - half_h < top:
+            self.origin[1] += top - (y - half_h)
+        elif y + half_h > top + height:
+            self.origin[1] -= (y + half_h) - (top + height)
+
+    def node_at(self, graph, point):
+        half_w, half_h = NODE_W * self.zoom / 2, NODE_H * self.zoom / 2
+        for node in graph.nodes:
+            x, y = self.node_point(graph, node.node_id)
+            if abs(point[0] - x) <= half_w and abs(point[1] - y) <= half_h:
+                return node.node_id
+        return None
+
+    def _events(self, graph, events):
+        pg = self.rt.pg
+        left, top, width, height = self.area()
+        inside = lambda p: left <= p[0] <= left + width and top <= p[1] <= top + height  # noqa: E731
+        for event in events:
+            if event.type == pg.MOUSEWHEEL:
+                self.zoom_by(1.12**event.y, pg.mouse.get_pos())
+            elif event.type == pg.KEYDOWN:
+                if event.key in (pg.K_EQUALS, pg.K_PLUS, pg.K_KP_PLUS):
+                    self.zoom_by(1.2)
+                elif event.key in (pg.K_MINUS, pg.K_KP_MINUS):
+                    self.zoom_by(1 / 1.2)
+                elif event.key == pg.K_r:
+                    self.fit(graph)
+            elif event.type == pg.MOUSEBUTTONDOWN and event.button in (1, 2, 3):
+                if inside(event.pos):
+                    self._drag = [event.pos, list(self.origin), False, event.button]
+            elif event.type == pg.MOUSEMOTION and self._drag is not None:
+                start, origin, moved, _button = self._drag
+                dx, dy = event.pos[0] - start[0], event.pos[1] - start[1]
+                if moved or abs(dx) + abs(dy) > 4:
+                    self._drag[2] = True
+                    self.origin[0], self.origin[1] = origin[0] + dx, origin[1] + dy
+            elif event.type == pg.MOUSEBUTTONUP and self._drag is not None:
+                moved, button = self._drag[2], self._drag[3]
+                self._drag = None
+                if not moved and button == 1:  # a click chooses a node
+                    hit = self.node_at(graph, event.pos)
+                    if hit is not None:
+                        self.node_id = hit
 
     # -- input -----------------------------------------------------------------------------------
     def _move(self, graph, dx, dy):
@@ -173,7 +288,7 @@ class SkillTreeScreen:
     def _say(self, text):
         self.message, self.message_left = text, 2.5
 
-    def handle(self, dt=0.0):
+    def handle(self, dt=0.0, events=()):
         inp = self.rt.input
         self.message_left = max(0.0, self.message_left - dt)
         graph = self.graph()
@@ -184,6 +299,10 @@ class SkillTreeScreen:
             return
         if self.node_id is None or self.node_id not in {n.node_id for n in graph.nodes}:
             self.node_id = graph.nodes[0].node_id
+        if self._view_for != graph.graph_id:
+            self.fit(graph)
+        self._events(graph, events)
+        before = self.node_id
         for action, (dx, dy) in (
             ("move_left", (-1, 0)),
             ("move_right", (1, 0)),
@@ -192,9 +311,12 @@ class SkillTreeScreen:
         ):
             if inp.just_pressed(action):
                 self._move(graph, dx, dy)
+        if self.node_id != before:
+            self.reveal(graph)
         if inp.just_pressed("lock_switch") and len(self.graphs()) > 1:
             self.graph_index += 1
             self.node_id = None
+            self._view_for = None
         if inp.just_pressed("confirm") or inp.just_pressed("interact"):
             self.learn()
 
@@ -240,53 +362,64 @@ class SkillTreeScreen:
                 size=18,
                 color=(170, 180, 200),
             )
-        positions = layout(graph)
-        area = (36, 100, rt.width - 36 - 330 - 24, rt.height - 100 - 64)
-        xs = [p[0] for p in positions.values()]
-        ys = [p[1] for p in positions.values()]
-        span_x, span_y = max(xs) - min(xs) or 1.0, max(ys) - min(ys) or 1.0
-        scale = min((area[2] - NODE_W) / span_x, (area[3] - NODE_H) / span_y, 1.4)
-        ox = area[0] + (area[2] - span_x * scale) / 2 - min(xs) * scale
-        oy = area[1] + (area[3] - span_y * scale) / 2 - min(ys) * scale
-
-        def centre(node_id):
-            x, y = positions[node_id]
-            return ox + x * scale, oy + y * scale
-
+        if self._view_for != graph.graph_id:
+            self.fit(graph)
+        area = pg.Rect(self.area())
+        zoom = self.zoom
+        node_w, node_h = NODE_W * zoom, NODE_H * zoom
+        previous_clip = screen.get_clip()
+        screen.set_clip(area)  # a long tree scrolls under the header and the details
         for node in graph.nodes:
-            cx, cy = centre(node.node_id)
+            cx, cy = self.node_point(graph, node.node_id)
             for req in node.prerequisites + node.any_prerequisites:
-                px, py = centre(req.node_id)
+                px, py = self.node_point(graph, req.node_id)
                 met = allocation.rank(graph.graph_id, req.node_id) >= req.minimum_rank
                 color = (150, 200, 160) if met else (80, 88, 110)
-                pg.draw.line(screen, color, (int(px), int(py)), (int(cx), int(cy)), 3)
+                pg.draw.line(
+                    screen, color, (int(px), int(py)), (int(cx), int(cy)), max(1, round(3 * zoom))
+                )
         for node in graph.nodes:
-            cx, cy = centre(node.node_id)
+            cx, cy = self.node_point(graph, node.node_id)
+            rect = pg.Rect(int(cx - node_w / 2), int(cy - node_h / 2), int(node_w), int(node_h))
+            if not rect.colliderect(area):
+                continue
             status = self.status(graph, node)
-            rect = pg.Rect(int(cx - NODE_W / 2), int(cy - NODE_H / 2), NODE_W, NODE_H)
-            pg.draw.rect(screen, COLORS[status], rect, border_radius=8)
+            pg.draw.rect(screen, COLORS[status], rect, border_radius=max(2, round(8 * zoom)))
             selected = node.node_id == self.node_id
             border = (255, 220, 124) if selected else (150, 160, 190)
-            pg.draw.rect(screen, border, rect, 3 if selected else 1, border_radius=8)
+            pg.draw.rect(
+                screen, border, rect, 3 if selected else 1, border_radius=max(2, round(8 * zoom))
+            )
             rank = allocation.rank(graph.graph_id, node.node_id)
             text_color = (245, 245, 250) if status != "locked" else (150, 156, 172)
+            icon_size = max(8, round(ICON * zoom))
             shift = 0
-            if rt._draw_icon(self.node_icon(node), rect.x + 6, int(cy - ICON / 2), ICON):
-                shift = (ICON + 6) // 2
-            rt.text(
-                node.display_name[:14], cx + shift, cy - 12, size=18, color=text_color, center=True
-            )
+            if rt._draw_icon(
+                self.node_icon(node), rect.x + round(6 * zoom), int(cy - icon_size / 2), icon_size
+            ):
+                shift = (icon_size + round(6 * zoom)) // 2
+            if zoom < 0.55:  # zoomed far out: pictures and ranks only
+                continue
+            room = node_w - shift * 2 - icon_size - 16 * zoom
+            name, size = node.display_name, max(10, round(18 * zoom))
+            while size > 9 and rt.text_width(name, size) > room:
+                size -= 1
+            while len(name) > 4 and rt.text_width(name, size) > room:
+                name = name[:-2].rstrip() + "."
+            rt.text(name, cx + shift, cy - 12 * zoom, size=size, color=text_color, center=True)
             rt.text(
                 f"{rank}/{node.max_rank}",
                 cx + shift,
-                cy + 8,
-                size=16,
+                cy + 8 * zoom,
+                size=max(11, round(16 * zoom)),
                 color=text_color,
                 center=True,
             )
+        screen.set_clip(previous_clip)
         self._draw_details(graph, allocation)
         rt.text(
-            "Arrows: choose   Enter: learn   O: next tree   C / Esc: back",
+            "Arrows: choose   Enter: learn   Wheel / + -: zoom   Drag: move   R: fit   "
+            "O: next tree   C: back",
             rt.width / 2,
             rt.height - 24,
             size=18,

@@ -70,7 +70,7 @@ def test_a_played_session_comes_back_exactly_after_save_and_load(monkeypatch, tm
     game = rt.game
     game.set_classes("", ["warrior"])
     game.grant_actor_experience("hero", 3200, **game.action_progression)
-    for node in ("w_whirl", "w_might", "w_might"):
+    for node in ("w_rend", "w_whirl", "w_might", "w_might"):
         game.allocate_progression("hero", "warrior_tree", node)
     game.allocate_progression("hero", "attributes", "a_str")
     # loot: a rolled drop is picked up, one piece is worn, the potion count changes

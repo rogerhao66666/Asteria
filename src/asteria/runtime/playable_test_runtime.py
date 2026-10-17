@@ -636,6 +636,13 @@ class PlayableTestRuntime:
         if self.pg.get_init():
             self.pg.quit()
 
+    def text_width(self, value, size=20):
+        """The width in pixels of ``value`` drawn at ``size`` (the face ``text`` uses)."""
+        f = self._fonts.get(int(size))
+        if f is None:
+            f = self._fonts[int(size)] = self.pg.font.Font(None, int(size))
+        return f.size(str(value))[0]
+
     def text(self, value, x, y, *, size=20, color=(245, 245, 250), center=False, anchor=None):
         """Draw text at ``(x, y)``: top-left by default, ``center=True`` centres it, ``anchor`` is
         any pygame rect attribute (``"midleft"``, ``"midright"``, ``"bottomright"``...) placed at
@@ -3717,7 +3724,7 @@ class PlayableTestRuntime:
             else:
                 self._pets_screen.draw()
         elif self._ui_mode == "skills":
-            self._skill_tree.handle(dt)
+            self._skill_tree.handle(dt, events)
             if self._skill_tree.closed:
                 self._ui_mode = "field"
             else:

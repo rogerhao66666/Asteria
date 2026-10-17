@@ -331,6 +331,7 @@ class GameSessionRuntime:
                 formulas=library.formulas,
                 snapshot_provider=lambda: self.field_input,
                 known_abilities=self._known_abilities,
+                equipped_abilities=self._equipped_abilities,
                 # the party's bag pays "item:<id>" costs of party members (potions, arrows)
                 inventory=lambda e: self.save.rpg_state.inventory if self._actor_of(e) else None,
             )
@@ -807,6 +808,13 @@ class GameSessionRuntime:
     def _known_abilities(self, entity):
         actor_id = self._actor_of(entity)
         return None if actor_id is None else set(self.resolve_actor_build(actor_id).abilities)
+
+    def _equipped_abilities(self, entity):
+        """The skill slots of an entity's actor (``slot:N``), or ``None`` without rules."""
+        actor_id = self._actor_of(entity)
+        if actor_id is None or self.ability_loadout_rules is None:
+            return None
+        return tuple(self.ability_slots(actor_id)[0])
 
     def refresh_combatant(self, entity):
         """Rebuild an entity's combat stats (after a level-up, a new class, a skill point, an
@@ -1949,7 +1957,14 @@ class GameSessionRuntime:
 
     def allocate_progression(self, actor_id, graph_id, node_id, count=1):
         allocation = self.save.rpg_state.progression_allocations[str(actor_id)]
+        before = set(self.slot_candidates(actor_id))
         result = allocation.allocate(str(graph_id), str(node_id), int(count))
+        for ability_id in self.slot_candidates(actor_id):  # a new skill takes a free slot
+            if ability_id not in before:
+                try:
+                    self.equip_ability(actor_id, ability_id)
+                except GameSessionError:
+                    break  # the slots are full: the player chooses in the Skill Slots screen
         self.refresh_actor_combatants(
             actor_id
         )  # a field combatant linked to the actor fights with the new ranks
@@ -2231,7 +2246,7 @@ class GameSessionRuntime:
         if source is not None and not source.destroyed_on_removal:
             self.save.rpg_state.inventory.add(source.item_id, 1)
 
-    def resolve_actor_build(self, actor_id):
+    def resolve_actor_build(self, actor_id, *, apply_slots=True):
         actor_id = str(actor_id)
         db = self.project.rpg_database
         base = db.actors[actor_id]
@@ -2281,7 +2296,7 @@ class GameSessionRuntime:
             evolution_rules=db.ability_evolutions.values(),
         )
         rules = self.ability_loadout_rules
-        if rules is not None:  # only equipped learned abilities stay usable
+        if rules is not None and apply_slots:  # only equipped slot-limited abilities stay usable
             from dataclasses import replace
 
             equipped = set(self._ability_state_of(actor_id).equipped_abilities)
@@ -2310,14 +2325,30 @@ class GameSessionRuntime:
         capacity = rules.capacity_at(level) if rules is not None else 0
         return self._ability_state_of(actor_id).equipped_abilities, capacity
 
+    def slot_candidates(self, actor_id):
+        """The abilities an actor may put in a skill slot: those granted by the rules' limited
+        sources (learned skills, skill-tree nodes...), in grant order."""
+        rules = self.ability_loadout_rules
+        if rules is None:
+            return ()
+        build = self.resolve_actor_build(actor_id, apply_slots=False)
+        limited = set(rules.limited_sources)
+        always = set(rules.always_usable)
+        found = []
+        for grant in build.ability_grants:
+            if grant.source_kind in limited and grant.ability_id not in always:
+                if grant.ability_id not in found:
+                    found.append(grant.ability_id)
+        return tuple(found)
+
     def equip_ability(self, actor_id, ability_id):
-        """Put a learned ability in a slot (needs free capacity)."""
+        """Put an ability of ``slot_candidates`` in a slot (needs free capacity)."""
         rules = self.ability_loadout_rules
         if rules is None:
             raise GameSessionError("the project has no ability slot rules")
         ability_id = str(ability_id)
         state = self._ability_state(actor_id)
-        if ability_id not in state.learned_abilities:
+        if ability_id not in self.slot_candidates(actor_id):
             raise GameSessionError(f"{ability_id} is not learned")
         _equipped, capacity = self.ability_slots(actor_id)
         try:

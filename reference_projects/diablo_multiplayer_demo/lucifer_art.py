@@ -1,0 +1,324 @@
+"""Foozle Lucifer art (CC0) for the ARPG demo: four-facing characters, the overworld and the
+dungeon tiles. Same shapes as ``art.py`` (sheets, clips named ``idle_/walk_/attack_<facing>``,
+tile atlases with the same cell names), so the maps and the content do not change.
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[2]
+for _path in (REPO / "scripts", REPO / "reference_projects" / "boss_trial_demo"):
+    if str(_path) not in sys.path:
+        sys.path.insert(0, str(_path))
+
+import art  # noqa: E402
+import trial_lucifer as lucifer  # noqa: E402
+
+FOLDERS = {"down": "Down", "up": "Up", "left": "Left", "right": "Right"}
+EXTERIOR = (
+    lucifer.FREE_ASSETS
+    / "Foozle_2DT0002_Lucifer_Exterior_Tileset_Pixel_Art"
+    / "Png"
+    / "OuterTileset.png"
+)
+DUNGEON = (
+    lucifer.FREE_ASSETS
+    / "Foozle_2DT0003_Lucifer_Dungeon_Tileset_Pixel_Art"
+    / "Png"
+    / "DungeonTileset.png"
+)
+
+
+def _surface(image):
+    """A pygame surface from a PIL image."""
+    image = image.convert("RGBA")
+    return art.pygame.image.frombytes(image.tobytes(), image.size, "RGBA")
+
+
+def _strip(key, facing, names):
+    for name in names:
+        frames = lucifer._facing_strip(key, facing, name)
+        if frames:
+            return frames
+    return []
+
+
+def character(assets, key, lucifer_key, name, *, height=26):
+    """A Lucifer character as one sheet: per facing the idle, walk and attack strips (scaled so
+    the standing figure is ``height`` px tall; the pivot stands at the feet)."""
+    from PIL import Image
+
+    strips = {}
+    for facing in FOLDERS.values():
+        strips[facing] = {
+            "idle": _strip(lucifer_key, facing, ("Idle",)),
+            "walk": _strip(lucifer_key, facing, ("Walk", "Run", "Idle")),
+            "attack": _strip(lucifer_key, facing, ("Attack01", "Attack02", "Idle")),
+        }
+    stand = strips["Down"]["idle"][0]
+    body = stand.getchannel("A").getbbox()
+    scale = height / float(body[3] - body[1])
+    cell = stand.width
+    side = max(1, round(cell * scale))
+    frames, order = [], {}
+    for direction, facing in FOLDERS.items():
+        for role in ("idle", "walk", "attack"):
+            indices = []
+            for frame in strips[facing][role]:
+                image = frame.resize((side, side), Image.NEAREST)
+                indices.append(len(frames))
+                frames.append(image)
+            order[(role, direction)] = indices
+    sheet = Image.new("RGBA", (side * len(frames), side), (0, 0, 0, 0))
+    for index, image in enumerate(frames):
+        sheet.paste(image, (index * side, 0))
+    rects = [(i * side, 0, side, side) for i in range(len(frames))]
+    sheet_id = assets.sheet(key, _surface(sheet), rects, name, pivot=(0.5, 0.92))
+    clips = {}
+    for (role, direction), indices in order.items():
+        if role == "idle":
+            clips[f"idle_{direction}"] = (indices, 0.18, True)
+        elif role == "walk":
+            clips[f"walk_{direction}"] = (indices, 0.1, True)
+        else:
+            clips[f"attack_{direction}"] = (indices, 0.3 / len(indices), False)
+    return sheet_id, assets.clips(key, clips, name)
+
+
+# -- tiles --------------------------------------------------------------------------------------
+def _crop(sheet, col, row, w=1, h=1, size=16):
+    return sheet.crop((col * size, row * size, (col + w) * size, (row + h) * size))
+
+
+def _scaled(image, cells, size=16):
+    """``image`` resized to ``cells`` x ``cells`` tiles, as a list of ``size`` px cell images."""
+    from PIL import Image
+
+    image = image.resize((cells * size, cells * size), Image.LANCZOS)
+    return {(dx, dy): _surface(_crop(image, dx, dy)) for dy in range(cells) for dx in range(cells)}
+
+
+def _tinted(image, rgb):
+    from PIL import Image
+
+    tint = Image.new("RGBA", image.size, (*rgb, 255))
+    out = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    out.alpha_composite(image)
+    shade = Image.blend(out, Image.composite(tint, out, out.getchannel("A")), 0.35)
+    return shade
+
+
+def _put(atlas, name, surface, *, solid=False):
+    atlas.ids[name] = len(atlas.cells)
+    atlas.cells.append(surface)
+    if solid:
+        atlas.solid.add(atlas.ids[name])
+
+
+def overworld_atlas():
+    """16 px tiles from the Lucifer exterior set: grass, cobbled paths, pines, rocks, crypts."""
+    from PIL import Image
+
+    sheet = Image.open(EXTERIOR).convert("RGBA")
+    a = art.Atlas(16)
+
+    def cell(col, row):
+        return _surface(_crop(sheet, col, row))
+
+    grass = [(5, 5), (11, 13), (13, 3), (13, 15)]
+    for name, (c, r) in zip(("grass", "grass1", "grass2", "grass3"), grass, strict=True):
+        _put(a, name, cell(c, r))
+    for name, (c, r) in zip(
+        ("grass_dark", "grass_dark1", "grass_dark2", "grass_dark3"), grass, strict=True
+    ):
+        _put(a, name, cell(c, r))
+    path = [(57, 0), (41, 4), (43, 4), (53, 0)]
+    for dy in range(3):  # a dirt patch: cobbles all over (no soft edge in the set)
+        for dx in range(3):
+            _put(a, f"dirt.{dx}.{dy}", cell(*path[(dx + dy * 3) % len(path)]))
+    pine = sheet.crop((76 * 16, 2 * 16, 80 * 16, 6 * 16))
+    for name in ("tree", "pine", "autumn"):
+        shade = pine if name != "autumn" else _tinted(pine, (150, 90, 40))
+        for (dx, dy), image in _scaled(shade, 2).items():
+            _put(a, f"{name}.{dx}.{dy}", image)
+    rocks = sheet.crop((70 * 16, 0, 72 * 16, 2 * 16))
+    for (dx, dy), image in _scaled(rocks, 2).items():
+        _put(a, f"boulder.{dx}.{dy}", image)
+    for name, (c, r) in (
+        ("bush", (70, 3)),
+        ("bush2", (71, 3)),
+        ("fern", (70, 4)),
+        ("flower_y", (13, 3)),  # no flowers in the set: plain grass variants
+        ("flower_s", (11, 13)),
+        ("flower_r", (13, 15)),
+        ("flower_w", (5, 5)),
+        ("rock", (70, 2)),
+        ("rock2", (71, 2)),
+        ("stump", (58, 2)),
+        ("log", (59, 2)),
+    ):
+        _put(a, name, cell(c, r))
+    crypt = sheet.crop((66 * 16, 0, 70 * 16, 4 * 16))
+    for name, tint in (
+        ("house", None),
+        ("house2", (90, 110, 160)),
+        ("shop", (170, 130, 70)),
+        ("forge", (190, 80, 60)),
+    ):
+        image = crypt if tint is None else _tinted(crypt, tint)
+        for (dx, dy), part in _scaled(image, 3).items():
+            _put(a, f"{name}.{dx}.{dy}", part)
+    for dy in range(3):  # a tall grave cross
+        for dx in range(2):
+            _put(a, f"statue.{dx}.{dy}", cell(62 + dx, dy))
+    for dy in range(2):  # a stretch of fence for the gate
+        for dx in range(3):
+            _put(a, f"torii.{dx}.{dy}", cell(60 + dx, 6 + dy))
+    for name, (c, r) in (("barrel", (60, 2)), ("crate", (61, 2)), ("pot", (58, 3))):
+        _put(a, name, cell(c, r))
+    a.blocker()
+    return a
+
+
+def dungeon_atlas():
+    """18 px tiles (Lucifer dungeon art enlarged from 16) for the side-view mine."""
+    from PIL import Image
+
+    sheet = Image.open(DUNGEON).convert("RGBA")
+    a = art.Atlas(18)
+
+    def cell(col, row):
+        image = _crop(sheet, col, row).resize((18, 18), Image.NEAREST)
+        return _surface(image)
+
+    # the stone floor: left edge / middle / right edge of the light slabs, bricks below
+    for name, (c, r) in (
+        ("top_l", (0, 10)),
+        ("top", (1, 10)),
+        ("top_r", (3, 10)),
+        ("dirt", (10, 1)),
+        ("dirt2", (11, 1)),
+        ("dirt3", (10, 2)),
+        ("dirt4", (11, 2)),
+        ("plank_l", (0, 9)),
+        ("plank", (1, 9)),
+        ("plank_r", (3, 9)),
+        ("slab", (30, 14)),
+        ("ladder", (18, 5)),
+        ("ladder_top", (18, 4)),
+        ("crate", (31, 14)),
+        ("crate2", (32, 14)),
+        ("spikes", (46, 8)),
+        ("door_top", (6, 0)),
+        ("door", (6, 1)),
+        ("coin", (35, 4)),
+        ("plant", (33, 4)),
+        ("sprout", (34, 4)),
+        ("mushroom", (36, 4)),
+        ("sign", (40, 4)),
+        ("key", (37, 4)),
+    ):
+        _put(a, name, cell(c, r))
+    a.blocker()
+    return a
+
+
+def mine_backdrops(assets):
+    """Two dark brick strips (Lucifer dungeon walls) for ``ParallaxBackground2D``."""
+    from PIL import Image
+
+    sheet = Image.open(DUNGEON).convert("RGBA")
+    wall = _crop(sheet, 10, 1, 2, 2)
+
+    def strip(key, tint, columns=8):
+        image = Image.new("RGBA", (24 * columns, 48), (0, 0, 0, 255))
+        tile = wall.resize((24, 24), Image.NEAREST)
+        for i in range(columns):
+            for r in range(2):
+                image.alpha_composite(tile, (i * 24, r * 24))
+        image = Image.blend(Image.new("RGBA", image.size, (*tint, 255)), image, 0.35)
+        return assets.texture(key, _surface(image), key.replace("_", " ").title())
+
+    return strip("mine_far", (30, 26, 44)), strip("mine_near", (18, 14, 28))
+
+
+UI_SET_1 = lucifer.FREE_ASSETS / "Foozle_UI_0001_RPG_Set_1"
+
+
+def gothic_ui(project, root):
+    """Foozle's RPG UI Set 1 (CC0): the dark ornate panel frames the HUD and the host menus, and
+    its coin, bag and chest paintings become item icons (shrunk to a pixel-friendly size)."""
+    import dataclasses
+
+    from PIL import Image
+
+    from asteria.presentation.ui_skin import NinePatch
+
+    folder = Path(root) / "playable_assets" / "lucifer" / "ui"
+    folder.mkdir(parents=True, exist_ok=True)
+
+    def shrink(name, out, divisor=None, side=None):
+        image = Image.open(UI_SET_1 / name).convert("RGBA")
+        if divisor:
+            size = (max(1, image.width // divisor), max(1, image.height // divisor))
+        else:
+            size = (side, side)
+        image.resize(size, Image.LANCZOS).save(folder / out)
+        return f"playable_assets/lucifer/ui/{out}"
+
+    panel = shrink("Panel_1.png", "panel_gothic.png", divisor=4)
+    shrink("Panel_2.png", "panel_gothic_wide.png", divisor=4)
+    icons = {
+        "coin": shrink("Coin.png", "icon_coin.png", side=32),
+        "coins": shrink("Coins.png", "icon_coins.png", side=32),
+        "bag": shrink("bag.png", "icon_bag.png", side=32),
+        "chest": shrink("Chest.png", "icon_chest.png", side=32),
+    }
+    library = project.battle_presentation_library
+    for key in library.ids("ui_theme"):
+        theme = library.require("ui_theme", key)
+        skin = NinePatch(panel, 7, 7, 7, 7, 1.0)
+        skins = tuple((role, patch) for role, patch in theme.panel_skins if role == "result")
+        library.set(
+            "ui_theme",
+            key,
+            dataclasses.replace(
+                theme, panel_skins=(*skins, ("host:panel", skin), ("hud:*", skin))
+            ),
+        )
+    return icons
+
+
+def gear_icons(reskin, project, files):
+    """One icon asset per piece of gear: a Lucifer equipment picture, or a Ninja Adventure one
+    for weapons the Lucifer pack lacks (bows, wands)."""
+    import dataclasses
+    import shutil
+
+    folder = Path(reskin.root) / reskin.icon_dir
+    folder.mkdir(parents=True, exist_ok=True)
+    db = project.rpg_database
+    for item_id, source in files.items():
+        if item_id not in db.equipment:
+            continue
+        origin = art.NINJA / source[1] if isinstance(source, tuple) else lucifer.EQUIPMENT / source
+        shutil.copyfile(origin, folder / f"equip_{item_id}.png")
+        icon = reskin._icon_asset(f"icon.{item_id}", f"{reskin.icon_dir}/equip_{item_id}.png")
+        db.equipment[item_id] = dataclasses.replace(db.equipment[item_id], icon_id=icon)
+
+
+def node_icons(reskin, project):
+    """A class icon for every skill-tree node that grants no ability (passives, keystones)."""
+    pools = {group: lucifer._skill_pool(group) for group in lucifer.SKILL_ICON_GROUPS}
+    folder = Path(reskin.root) / reskin.icon_dir
+    folder.mkdir(parents=True, exist_ok=True)
+
+    def copy(source, name):
+        import shutil
+
+        shutil.copyfile(source, folder / name)
+        return f"{reskin.icon_dir}/{name}"
+
+    lucifer._node_icons(project.rpg_database, pools, copy)

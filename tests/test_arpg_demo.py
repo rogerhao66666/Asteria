@@ -152,7 +152,7 @@ def test_a_trainer_changes_the_class_and_the_bindings_follow(demo):
     while game.event_busy:
         _key(demo, demo.pg.K_RETURN)
     assert game.save.rpg_state.actor_progression["hero"].active_class_ids == ("ranger",)
-    assert hud_slots()[:3] == ["r_shot", "roll", ""]  # skill_1 not learned yet
+    assert hud_slots()[:4] == ["r_shot", "roll", "potion", ""]  # skill_1 not learned yet
     assert game.action_combat.use(game.player, "w_slash") == "not_known"
 
 
@@ -173,12 +173,13 @@ def test_the_skill_tree_screen_learns_nodes_and_grants_skills(demo):
     assert actor_graphs(db, progression, allocation) == ["mage_tree", "attributes"]
     _key(demo, demo.pg.K_c)
     assert demo._ui_mode == "skills"
-    _key(demo, demo.pg.K_RETURN)  # the first node: Frost Nova
-    assert "m_nova" in game.resolve_actor_build("hero").abilities
-    _key(demo, demo.pg.K_DOWN)
-    _key(demo, demo.pg.K_RETURN)  # Meteor costs 2 AP; one is left
-    assert "m_meteor" not in game.resolve_actor_build("hero").abilities
-    assert "Cannot learn Meteor" in demo._skill_tree.message
+    _key(demo, demo.pg.K_RETURN)  # the first node: Flame Wave, which takes a free skill slot
+    assert "m_flame_wave" in game.resolve_actor_build("hero").abilities
+    assert game.ability_slots("hero")[0] == ("m_flame_wave",)
+    demo._skill_tree.node_id = "m_inferno"  # deep in the build: its prerequisites are missing
+    _key(demo, demo.pg.K_RETURN)
+    assert "m_inferno" not in game.resolve_actor_build("hero", apply_slots=False).abilities
+    assert "Cannot learn Inferno" in demo._skill_tree.message
     _key(demo, demo.pg.K_o)  # the shared Attributes tree
     assert demo._skill_tree.graph().graph_id == "attributes"
     _key(demo, demo.pg.K_c)
@@ -230,7 +231,8 @@ def test_whirlwind_reshapes_the_hitbox_only_while_it_lasts(demo):
 
     game = demo.game
     game.set_classes("", ["warrior"])
-    game.allocate_progression("hero", "warrior_tree", "w_whirl")
+    for node in ("w_rend", "w_whirl"):
+        game.allocate_progression("hero", "warrior_tree", node)
     hitbox = game.player.get(Hitbox2DComponent)
     before = (hitbox.width, hitbox.height, hitbox.offset_x)
     game.combat.state(game.player).resources.set_current("mp", 50)
@@ -244,11 +246,9 @@ def test_whirlwind_reshapes_the_hitbox_only_while_it_lasts(demo):
 def test_war_cry_puts_a_state_on_the_user(demo):
     game = demo.game
     game.set_classes("", ["warrior"])
-    for node in ("w_whirl", "w_leap"):
+    game.save.rpg_state.progression_allocations["hero"].grant("ap", 10)
+    for node in ("w_cleave", "w_command", "w_command", "w_shout"):
         game.allocate_progression("hero", "warrior_tree", node)
-    allocation = game.save.rpg_state.progression_allocations["hero"]
-    allocation.grant("ap", 2)
-    game.allocate_progression("hero", "warrior_tree", "w_shout")
     state = game.combat.state(game.player)
     power = game.combat.effective_stats(state).get("power")
     state.resources.set_current("mp", 50)
@@ -452,6 +452,7 @@ def test_the_bag_grid_compares_stats_equips_unequips_and_shows_the_set(demo):
     # up into the worn strip, Enter takes the sword off again
     _key(demo, demo.pg.K_UP)
     assert screen.in_worn
+    screen.worn_index = [slot for slot, _ in screen.worn_slots()].index("weapon")
     worn_before = len(game.save.rpg_state.loadouts["hero"].equipped())
     _key(demo, demo.pg.K_RETURN)
     assert len(game.save.rpg_state.loadouts["hero"].equipped()) == worn_before - 1

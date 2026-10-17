@@ -17,6 +17,7 @@ Play: ``python -m asteria.runtime.preview reference_projects/diablo_demo/project
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import shutil
 import sys
@@ -27,7 +28,10 @@ REPO = HERE.parents[1]
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(HERE))
 
+import arpg_builds as builds  # noqa: E402
+import arpg_loot as loot  # noqa: E402
 import art  # noqa: E402
+import lucifer_art as la  # noqa: E402
 import maps  # noqa: E402
 
 from asteria.core import Entity, Scene, Transform  # noqa: E402
@@ -51,10 +55,7 @@ from asteria.rpg import (  # noqa: E402
     ActorDefinition,
     ActorProgressionState,
     ClassDefinition,
-    EquipmentDefinition,
     EquipmentLoadout,
-    EquipmentSetBonus,
-    EquipmentSetDefinition,
     EquipmentSlotDefinition,
     Inventory,
     ItemDefinition,
@@ -66,15 +67,14 @@ from asteria.rpg import (  # noqa: E402
     ProgressionRuntime,
     RpgRuntimeState,
 )
+from asteria.rpg.ability_loadout import AbilityLoadoutRules  # noqa: E402
 from asteria.rpg.behavior_tree import BehaviorNode, BehaviorTree  # noqa: E402
 from asteria.rpg.composition import (  # noqa: E402
     CompositionOutput,
     CompositionRecipeDefinition,
     CompositionSelection,
 )
-from asteria.rpg.drop_tables import DropEntry, DropTable  # noqa: E402
 from asteria.rpg.economy import ShopDefinition, ShopEntry  # noqa: E402
-from asteria.rpg.loot import AffixDefinition, AffixModifier, RarityDefinition  # noqa: E402
 from asteria.runtime.action_combat import ActionCombatComponent  # noqa: E402
 from asteria.runtime.action_play import CombatSceneComponent  # noqa: E402
 from asteria.runtime.actor_link import (  # noqa: E402
@@ -267,13 +267,13 @@ def combat_content(project, looks, icons):
         ),
         AttackDefinition(
             "m_fire",
-            damage=scaled("magic", 1.1, defense=0.2),
+            damage=scaled("magic", 1.1, defense=0.2, extra={"fire_dmg": 1.0}),
             tags=["Element.Fire"],
             apply_states=[{"state": "burning", "chance": 0.35}],
         ),
         AttackDefinition(
             "m_frost",
-            damage=scaled("magic", 0.9, defense=0.2),
+            damage=scaled("magic", 0.9, defense=0.2, extra={"cold_dmg": 1.0}),
             tags=["Element.Ice"],
             knockback=200,
             hitstun=0.4,
@@ -281,7 +281,7 @@ def combat_content(project, looks, icons):
         ),
         AttackDefinition(
             "m_meteor",
-            damage=scaled("magic", 2.6, defense=0.2),
+            damage=scaled("magic", 2.6, defense=0.2, extra={"fire_dmg": 1.0}),
             tags=["Element.Fire"],
             knockback=240,
             knockdown=True,
@@ -607,6 +607,7 @@ def combat_content(project, looks, icons):
             if ability.ability_id in icons:
                 data["icon_id"] = icons[ability.ability_id]
         library.add_ability(AbilityDefinition.from_data(data))
+    LABELS.update(builds.register(library, looks))  # the skills of the three builds per class
 
 
 LABELS = {
@@ -675,114 +676,15 @@ def classes_and_trees(db):
             granted_abilities=("m_bolt",),
         )
     )
-    trees = {
-        "warrior": (
-            "Warrior Arts",
-            [
-                (node("w_whirl", "Whirlwind", abilities=("w_whirl",)), (0, 0)),
-                (node("w_might", "Might", ranks=5, stats={"power": 3}), (-180, 100)),
-                (
-                    node("w_leap", "Leap Strike", abilities=("w_leap",), needs=("w_whirl",)),
-                    (0, 100),
-                ),
-                (node("w_skin", "Iron Skin", ranks=5, stats={"defense": 3}), (180, 100)),
-                (
-                    node("w_shout", "War Cry", cost=2, abilities=("w_shout",), needs=("w_leap",)),
-                    (0, 200),
-                ),
-                (
-                    node(
-                        "w_rage",
-                        "Bloodlust",
-                        ranks=3,
-                        stats={"power": 5, "dexterity": 2},
-                        needs=("w_might",),
-                    ),
-                    (-180, 200),
-                ),
-                (
-                    node("w_vigor", "Vigor", ranks=3, resources={"hp": 30}, needs=("w_skin",)),
-                    (180, 200),
-                ),
-            ],
-        ),
-        "ranger": (
-            "Ranger Craft",
-            [
-                (node("r_volley", "Volley", abilities=("r_volley",)), (0, 0)),
-                (
-                    node("r_multi", "Multishot", ranks=2, cost=2, stats={"multishot": 1}),
-                    (-180, 100),
-                ),
-                (
-                    node(
-                        "r_pierce", "Piercing Shot", abilities=("r_pierce",), needs=("r_volley",)
-                    ),
-                    (0, 100),
-                ),
-                (node("r_eye", "Eagle Eye", ranks=5, stats={"dexterity": 3}), (180, 100)),
-                (
-                    node(
-                        "r_tumble", "Tumble", cost=2, abilities=("r_tumble",), needs=("r_pierce",)
-                    ),
-                    (0, 200),
-                ),
-                (
-                    node(
-                        "r_hunt",
-                        "Hunter",
-                        ranks=3,
-                        stats={"power": 3, "dexterity": 2},
-                        needs=("r_multi",),
-                    ),
-                    (-180, 200),
-                ),
-                (
-                    node("r_wind", "Second Wind", ranks=3, resources={"mp": 15}, needs=("r_eye",)),
-                    (180, 200),
-                ),
-            ],
-        ),
-        "mage": (
-            "Arcane Lore",
-            [
-                (node("m_nova", "Frost Nova", abilities=("m_nova",)), (0, 0)),
-                (node("m_focus", "Focus", ranks=5, stats={"magic": 3}), (-180, 100)),
-                (
-                    node("m_meteor", "Meteor", cost=2, abilities=("m_meteor",), needs=("m_nova",)),
-                    (0, 100),
-                ),
-                (node("m_mana", "Deep Mana", ranks=5, resources={"mp": 20}), (180, 100)),
-                (node("m_blink", "Blink", abilities=("m_blink",), needs=("m_meteor",)), (0, 200)),
-                (
-                    node("m_power", "Archmage", ranks=3, stats={"magic": 6}, needs=("m_focus",)),
-                    (-180, 200),
-                ),
-                (
-                    node(
-                        "m_ward",
-                        "Mana Shield",
-                        ranks=3,
-                        stats={"defense": 3},
-                        resources={"hp": 20},
-                        needs=("m_mana",),
-                    ),
-                    (180, 200),
-                ),
-            ],
-        ),
-    }
-    for class_id, (name, nodes) in trees.items():
-        db.add_progression_graph(
-            ProgressionGraphDefinition(
-                f"{class_id}_tree",
-                name,
-                nodes=[n for n, _ in nodes],
-                tags=(f"class:{class_id}",),
-                editor_view="graph",
-                node_positions={n.node_id: p for n, p in nodes},
-            )
+    db.add_ability_loadout_rules(  # skill slots: more of them as the hero levels up
+        AbilityLoadoutRules(
+            "skill_slots",
+            2,
+            capacity_by_level={3: 3, 5: 4},
+            limited_sources=("allocation", "learned"),
         )
+    )
+    builds.add_trees(db, LABELS)  # three builds per class, each a column of skills
     attributes = [
         (node("a_str", "Strength", ranks=10, stats={"power": 2}), (-240, 0)),
         (node("a_dex", "Dexterity", ranks=10, stats={"dexterity": 2}), (-80, 0)),
@@ -805,7 +707,14 @@ def classes_and_trees(db):
             HERO,
             "Wanderer",
             class_id="adventurer",
-            base_stats={"power": 10, "magic": 10, "defense": 4, "dexterity": 6, "multishot": 0},
+            base_stats={
+                "power": 10,
+                "magic": 10,
+                "defense": 4,
+                "dexterity": 6,
+                "multishot": 0,
+                **dict.fromkeys(builds.BUILD_STATS, 0),
+            },
             base_resources={
                 "hp": {"minimum": 0, "maximum": 120, "current": 120},
                 "mp": {"minimum": 0, "maximum": 40, "current": 40},
@@ -816,168 +725,8 @@ def classes_and_trees(db):
 
 
 # -- loot -----------------------------------------------------------------------------------------
-GEAR = {  # id: (name, slot, tags, modifiers)
-    "short_sword": ("Short Sword", "weapon", ("blade", "melee"), {"power": 4}),
-    "war_axe": ("War Axe", "weapon", ("axe", "melee"), {"power": 7, "dexterity": -1}),
-    "hunting_bow": ("Hunting Bow", "weapon", ("bow", "ranged"), {"dexterity": 5}),
-    "oak_staff": ("Oak Staff", "weapon", ("staff", "caster"), {"magic": 6}),
-    "leather_vest": ("Leather Vest", "armor", ("armor", "light"), {"defense": 4}),
-    "chain_mail": ("Chain Mail", "armor", ("armor", "heavy"), {"defense": 8, "dexterity": -1}),
-    "cloth_robe": ("Cloth Robe", "armor", ("armor", "light"), {"defense": 2, "magic": 3}),
-    "iron_helm": ("Iron Helm", "helm", ("helm",), {"defense": 3}),
-    "copper_ring": ("Copper Ring", "ring", ("ring", "jewelry"), {}),
-    # the Wanderer's set (three pieces) - always "set" rarity
-    "wanderer_hood": (
-        "Wanderer's Hood",
-        "helm",
-        ("helm", "rarity:set"),
-        {"defense": 3, "dexterity": 3},
-    ),
-    "wanderer_coat": (
-        "Wanderer's Coat",
-        "armor",
-        ("armor", "rarity:set"),
-        {"defense": 6, "power": 3},
-    ),
-    "wanderer_band": ("Wanderer's Band", "ring", ("ring", "rarity:set"), {"magic": 3, "power": 3}),
-    # uniques - fixed powers, always "unique" rarity
-    "cyclops_eye": (
-        "The Cyclops' Eye",
-        "ring",
-        ("ring", "rarity:unique"),
-        {"power": 6, "magic": 6, "dexterity": 6},
-    ),
-    "gelatin_aegis": (
-        "Gelatin Aegis",
-        "armor",
-        ("armor", "rarity:unique"),
-        {"defense": 14, "power": 4},
-    ),
-    "golem_heart": (
-        "Golem Heart",
-        "weapon",
-        ("staff", "rarity:unique"),
-        {"magic": 16, "defense": 4},
-    ),
-}
-
-
 def loot_content(db, icons):
-    for item_id, (name, slot, tags, stats) in GEAR.items():
-        db.add_equipment(
-            EquipmentDefinition(
-                item_id,
-                name,
-                slot=slot,
-                icon_id=icons.get(item_id, ""),
-                tags=tags,
-                modifiers=[StatModifier(f"{item_id}.{s}", s, "add", v) for s, v in stats.items()],
-            )
-        )
-    db.add_equipment_set(
-        EquipmentSetDefinition(
-            "wanderer",
-            "The Wanderer's Path",
-            equipment_ids=("wanderer_hood", "wanderer_coat", "wanderer_band"),
-            bonuses=(
-                EquipmentSetBonus(2, modifiers=[StatModifier("wanderer.2", "power", "add", 6)]),
-                EquipmentSetBonus(
-                    3,
-                    modifiers=[
-                        StatModifier("wanderer.3a", "dexterity", "add", 8),
-                        StatModifier("wanderer.3b", "magic", "add", 8),
-                    ],
-                ),
-            ),
-        )
-    )
-    for rarity in (
-        RarityDefinition("common", "Common", "#d8d8d8", 0, 0, 55.0, 0),
-        RarityDefinition("magic", "Magic", "#6c8cff", 1, 2, 30.0, 1, 1, 1),
-        RarityDefinition("rare", "Rare", "#ffe066", 3, 4, 12.0, 2, 2, 2),
-        RarityDefinition("legendary", "Legendary", "#ff8a30", 5, 6, 2.5, 3, 3, 3),
-        RarityDefinition("set", "Set", "#44dd66", 1, 1, 0.0, 4),  # only from set pieces
-        RarityDefinition("unique", "Unique", "#c8a46e", 0, 0, 0.0, 5),  # fixed powers
-    ):
-        db.add_rarity(rarity)
-    for affix in (
-        AffixDefinition(
-            "sharp",
-            "Sharp",
-            "prefix",
-            [AffixModifier("power", "add", 2, 5, integer=True, per_level=0.5)],
-            allowed_tags=["blade", "axe", "melee"],
-            group="power",
-        ),
-        AffixDefinition(
-            "brutal",
-            "Brutal",
-            "prefix",
-            [AffixModifier("power", "add", 4, 9, integer=True, per_level=0.6)],
-            group="power",
-            min_level=4,
-        ),
-        AffixDefinition(
-            "keen",
-            "Keen",
-            "prefix",
-            [AffixModifier("dexterity", "add", 2, 6, integer=True, per_level=0.5)],
-            group="dexterity",
-        ),
-        AffixDefinition(
-            "arcane",
-            "Arcane",
-            "prefix",
-            [AffixModifier("magic", "add", 3, 7, integer=True, per_level=0.6)],
-            group="magic",
-        ),
-        AffixDefinition(
-            "sturdy",
-            "Sturdy",
-            "prefix",
-            [AffixModifier("defense", "add", 2, 5, integer=True, per_level=0.4)],
-            allowed_tags=["armor", "helm"],
-            group="defense",
-        ),
-        AffixDefinition(
-            "of_the_bear",
-            "of the Bear",
-            "suffix",
-            [AffixModifier("defense", "add", 1, 4, integer=True)],
-            group="defense2",
-        ),
-        AffixDefinition(
-            "of_the_fox",
-            "of the Fox",
-            "suffix",
-            [AffixModifier("dexterity", "add", 1, 4, integer=True)],
-            group="dex2",
-        ),
-        AffixDefinition(
-            "of_the_owl",
-            "of the Owl",
-            "suffix",
-            [AffixModifier("magic", "add", 1, 4, integer=True)],
-            group="magic2",
-        ),
-        AffixDefinition(
-            "of_might",
-            "of Might",
-            "suffix",
-            [AffixModifier("power", "add", 1, 4, integer=True)],
-            group="power2",
-        ),
-        AffixDefinition(
-            "of_slaughter",
-            "of Slaughter",
-            "suffix",
-            [AffixModifier("power", "multiply", 1.05, 1.15)],
-            group="power3",
-            min_level=5,
-            rarities=["rare", "legendary"],
-        ),
-    ):
-        db.add_affix(affix)
+    loot.register(db, icons)  # gear, sets, rarities, affixes, drop tables
     for item_id, name in (
         ("potion", "Healing Potion"),
         ("slime_gel", "Slime Gel"),
@@ -986,59 +735,6 @@ def loot_content(db, icons):
         ("gear_scrap", "Gear Scrap"),
     ):
         db.add_item(ItemDefinition(item_id, name, stack_limit=99, icon_id=icons.get(item_id, "")))
-    common = [
-        DropEntry(g, weight=1)
-        for g in (
-            "short_sword",
-            "war_axe",
-            "hunting_bow",
-            "oak_staff",
-            "leather_vest",
-            "chain_mail",
-            "cloth_robe",
-            "iron_helm",
-            "copper_ring",
-        )
-    ]
-    sets = [DropEntry(g, weight=0.25) for g in ("wanderer_hood", "wanderer_coat", "wanderer_band")]
-    tables = (
-        DropTable(
-            "slime", entries=[DropEntry("slime_gel", weight=6), *common], nothing_weight=8, rolls=1
-        ),
-        DropTable("eye", entries=[DropEntry("eye_lens", weight=6), *common], nothing_weight=6),
-        DropTable(
-            "skull",
-            entries=[DropEntry("bone_shard", weight=4), *common, *sets],
-            rolls=2,
-            nothing_weight=3,
-        ),
-        DropTable(
-            "elite",
-            entries=[*common, *sets],
-            rolls=3,
-            guaranteed=[DropEntry("potion", minimum=1, maximum=2)],
-        ),
-        DropTable(
-            "cyclops",
-            entries=[*common, *sets],
-            rolls=4,
-            guaranteed=[DropEntry("cyclops_eye"), DropEntry("potion", minimum=2, maximum=3)],
-        ),
-        DropTable(
-            "walker", entries=[DropEntry("gear_scrap", weight=5), *common], nothing_weight=6
-        ),
-        DropTable(
-            "drone", entries=[DropEntry("gear_scrap", weight=5), *common, *sets], nothing_weight=4
-        ),
-        DropTable(
-            "golem",
-            entries=[*common, *sets],
-            rolls=4,
-            guaranteed=[DropEntry("golem_heart"), DropEntry("gelatin_aegis")],
-        ),
-    )
-    for table in tables:
-        db.add_drop_table(table)
     db.add_shop(
         ShopDefinition(
             "merchant",
@@ -1384,9 +1080,8 @@ def player(builder, xy, look, looks):
         _set(
             ActionCombatComponent(),
             bindings=(
-                "attack=w_slash|r_shot|m_bolt|punch; dodge=roll; "
-                "skill_1=w_whirl|r_volley|m_nova; skill_2=w_leap|r_pierce|m_meteor; "
-                "skill_3=w_shout|r_tumble|m_blink; skill_4=potion"
+                "attack=w_slash|r_shot|m_bolt|punch; dodge=roll; potion=potion; "
+                "skill_1=slot:1; skill_2=slot:2; skill_3=slot:3; skill_4=slot:4"
             ),
             require_known=True,
             lock_mode="nearest",
@@ -1689,10 +1384,7 @@ def build_scenes(project, looks, tilemaps, layouts, backdrops):
 def new_game(project, scene, hero):
     db = project.rpg_database
     loadout = EquipmentLoadout(
-        tuple(
-            EquipmentSlotDefinition(slot, capacity=1)
-            for slot in ("weapon", "armor", "helm", "ring")
-        )
+        tuple(EquipmentSlotDefinition(slot, capacity=1) for slot in loot.SLOTS)
     )
     inventory = Inventory()
     inventory.add("potion", 3)
@@ -1724,28 +1416,31 @@ def new_game(project, scene, hero):
     )
 
 
+PROJECT_ID = "09fb43ca-4bdc-4732-a3da-bee2d08c67ee"  # shared by both Diablo demos
+
+
 # -- art ------------------------------------------------------------------------------------------
 def make_art(assets):
     looks = {
-        "hero": art.ninja_character(assets, "hero", "NinjaBlue", "Wanderer"),
-        "merchant": art.ninja_character(assets, "merchant", "Woman", "Merchant"),
-        "smith": art.ninja_character(assets, "smith", "Caveman", "Smith"),
-        "elder": art.ninja_character(assets, "elder", "OldMan", "Elder"),
-        "villager": art.ninja_character(assets, "villager", "Villager", "Villager"),
-        "trainer_warrior": art.ninja_character(assets, "trainer_warrior", "Knight", "Warrior"),
-        "trainer_ranger": art.ninja_character(assets, "trainer_ranger", "Hunter", "Ranger"),
-        "trainer_mage": art.ninja_character(assets, "trainer_mage", "SorcererBlack", "Mage"),
-        "slime": art.ninja_monster(assets, "slime", "Slime/Slime.png", "Slime"),
-        "eye": art.ninja_monster(assets, "eye", "Eye/Eye.png", "Watcher"),
-        "skull": art.ninja_monster(assets, "skull", "Skull/SpriteSheet.png", "Skeleton"),
-        "skull_elite": art.ninja_monster(
-            assets, "skull_elite", "SkullBlue/SpriteSheet.png", "Bone Champion"
+        "hero": la.character(assets, "hero", "warrior", "Wanderer"),
+        "merchant": la.character(assets, "merchant", "sorceress", "Merchant"),
+        "smith": la.character(assets, "smith", "cultist", "Smith"),
+        "elder": la.character(assets, "elder", "necromancer", "Elder"),
+        "villager": la.character(assets, "villager", "cultist", "Villager"),
+        "trainer_warrior": la.character(assets, "trainer_warrior", "warrior", "Warrior"),
+        "trainer_ranger": la.character(assets, "trainer_ranger", "goblin_slinger", "Ranger"),
+        "trainer_mage": la.character(assets, "trainer_mage", "sorceress", "Mage"),
+        "slime": la.character(assets, "slime", "goblin_berserker", "Goblin", height=22),
+        "eye": la.character(assets, "eye", "necromancer", "Watcher", height=24),
+        "skull": la.character(assets, "skull", "skeleton_grunt", "Skeleton", height=26),
+        "skull_elite": la.character(
+            assets, "skull_elite", "skeleton_hunter", "Bone Champion", height=30
         ),
-        "cyclops": art.ninja_boss(assets, "cyclops", "DemonCyclop", "Cyclops"),
-        "walker": art.kenney_character(assets, "walker", ((0, 2), (1, 2)), "Crawler"),
-        "bat": art.kenney_character(assets, "bat", ((6, 2), (7, 2)), "Cave Bat"),
-        "drill": art.kenney_character(assets, "drill", ((6, 1), (7, 1)), "Drill Drone"),
-        "golem": art.kenney_character(assets, "golem", ((3, 2), (4, 2)), "Rust Golem", scale=2),
+        "cyclops": la.character(assets, "cyclops", "skeleton_king", "Skeleton King", height=64),
+        "walker": la.character(assets, "walker", "goblin_rider", "Crawler", height=22),
+        "bat": la.character(assets, "bat", "goblin_slinger", "Cave Imp", height=20),
+        "drill": la.character(assets, "drill", "skeleton_ancient", "Ancient Drone", height=24),
+        "golem": la.character(assets, "golem", "goblin_beast", "Beast Golem", height=40),
         "arrow": art.item_icon(assets, "arrow", "FX/Projectile/Arrow.png", "Arrow"),
         "fireball": art.item_icon(
             assets, "fireball", "FX/Projectile/Fireball.png", "Fireball", (16, 16)
@@ -1761,16 +1456,39 @@ def make_art(assets):
     return looks
 
 
+def dress_in_lucifer(project):
+    """The Lucifer UI skin and pixel font for the HUD and the host menus, and Lucifer icons for
+    every skill, state, item and piece of gear (the pictures written first are dropped)."""
+    import lucifer_reskin
+
+    from asteria.presentation.battle_ui_renderer import BattleUiTheme
+
+    library = project.battle_presentation_library
+    if "default" not in library.ids("ui_theme"):
+        library.set("ui_theme", "default", BattleUiTheme())
+    reskin = lucifer_reskin.Reskin(project, HERE)
+    reskin.ui()
+    reskin.icons()
+    la.node_icons(reskin, project)  # skill-tree nodes without a skill
+    la.gear_icons(reskin, project, loot.ICON_FILES)  # a picture for every piece of gear
+    gothic = la.gothic_ui(project, HERE)  # the ornate dark panels of Foozle's RPG UI Set 1
+    db = project.rpg_database
+    for item_id, picture in (("gear_scrap", "bag"), ("slime_gel", "coins")):
+        if item_id in db.items:
+            db.items[item_id] = dataclasses.replace(db.items[item_id], icon_id=gothic[picture])
+    shutil.rmtree(HERE / art.OUT / "icons", ignore_errors=True)
+
+
 def main():
     target = HERE / art.OUT
     if target.exists():
         shutil.rmtree(target)
-    project = Project("Asteria ARPG Demo")
+    project = Project("Asteria ARPG Demo", project_id=PROJECT_ID)
     assets = art.Assets(project)
     art.write_credits()
     looks = make_art(assets)
-    overworld = art.overworld_atlas()
-    dungeon_tiles = art.dungeon_atlas()
+    overworld = la.overworld_atlas()
+    dungeon_tiles = la.dungeon_atlas()
     overworld_id = assets.tileset(
         "overworld", overworld.surface(), 16, len(overworld.cells), "Overworld", overworld.solid
     )
@@ -1794,8 +1512,9 @@ def main():
     classes_and_trees(db)
     loot_content(db, icons)
     behaviour(db)
-    town, hero = build_scenes(project, looks, tilemaps, layouts, art.mine_backdrops(assets))
+    town, hero = build_scenes(project, looks, tilemaps, layouts, la.mine_backdrops(assets))
     new_game(project, town, hero)
+    dress_in_lucifer(project)
     art.title_image(HERE, layouts["field"], overworld)
     project.validate()
     path = HERE / "project.asteria.json"
@@ -1820,11 +1539,6 @@ def main():
     (HERE / "playable_test_manifest.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
-    from asteria.graphics.forged_icons import apply_to_project_file
-
-    apply_to_project_file(
-        path, replace=True, keep=("potion",), states=False
-    )  # original code-drawn skill / state / pet icons
     print(
         f"wrote {path.relative_to(REPO)}: {len(project.scenes())} scenes, "
         f"{len(project.gameplay_library.abilities.ids())} abilities, {len(db.classes)} classes, "

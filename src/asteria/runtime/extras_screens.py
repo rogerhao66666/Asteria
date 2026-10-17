@@ -186,7 +186,7 @@ class AbilitySlotsScreen(_Screen):
         return actors[self.member % len(actors)] if actors else None
 
     def learned(self, actor_id):
-        return tuple(self.game._ability_state_of(actor_id).learned_abilities)
+        return self.game.slot_candidates(actor_id)
 
     def handle(self, dt=0.0, events=()):
         from asteria.runtime.game_session import GameSessionError

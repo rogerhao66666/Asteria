@@ -76,8 +76,8 @@ class NetworkSkillTreeScreen(SkillTreeScreen):
         self._say("Learning requested from server")
         return True
 
-    def handle(self, dt=0.0):
-        super().handle(dt)
+    def handle(self, dt=0.0, events=()):
+        super().handle(dt, events)
         graph = self.graph()
         if self.closed or graph is None or self.node_id is None:
             return
