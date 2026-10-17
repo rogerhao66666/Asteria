@@ -145,7 +145,7 @@ class Reskin:
     def backdrops(self, *, field="exterior", battle="exterior"):
         assets = self.root / "playable_assets"
         paint_background(field, (960, 540), road=True).save(assets / "field_map.png")
-        paint_background(battle, (960, 540), road=False, dim=0.45).save(
+        paint_background(battle, (960, 540), road=False, dim=0.45, wall_rows=1).save(
             assets / "battle_background.png"
         )
 
@@ -160,10 +160,16 @@ class Reskin:
             self.library.set("ui_theme", key, dataclasses.replace(theme, font_scale=0.5))
         for key in self.library.ids("ui_layout"):
             layout = self.library.require("ui_layout", key)
-            if layout.menu_over_stage:
-                self.library.set(
-                    "ui_layout", key, dataclasses.replace(layout, menu_over_stage=False)
-                )
+            self.library.set(  # feet stay on the grass: the backdrop's wall is the top 9%
+                "ui_layout",
+                key,
+                dataclasses.replace(
+                    layout,
+                    menu_over_stage=False,
+                    stage_top=0.12,
+                    overhead_below=False,  # enemies stand in dense columns: bars float above
+                ),
+            )
 
     # -- icons ------------------------------------------------------------------------------
     def icons(self):
@@ -280,7 +286,7 @@ class _Context:
         self.project, self.root = project, Path(root)
 
 
-def paint_background(kind, size, *, road, dim=0.0):
+def paint_background(kind, size, *, road, dim=0.0, wall_rows=5):
     """A Lucifer-tile picture the size of a field map or a battle backdrop (drawn at 3x)."""
     import random
 
@@ -315,7 +321,7 @@ def paint_background(kind, size, *, road, dim=0.0):
     def tile(col, row):
         return sheet.crop((col * 16, row * 16, col * 16 + 16, row * 16 + 16))
 
-    horizon = 5 if not road else 0  # battle backdrops have a wall of trees / stone on top
+    horizon = wall_rows if not road else 0  # battle backdrops have a wall of trees / stone on top
     for y in range(0, height, 16):
         for x in range(0, width, 16):
             if y // 16 < horizon:

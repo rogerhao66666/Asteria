@@ -12993,6 +12993,7 @@
           "hud_panel_width": 108.0,
           "hud_row_height": 10.0,
           "margin": 8.0,
+          "overhead_below": false,
           "overhead_zones": [
             "left"
           ],
@@ -13001,7 +13002,7 @@
           "result_panel_width": 196.0,
           "row_buttons": true,
           "stage_front": 0.16,
-          "stage_top": 0.14,
+          "stage_top": 0.12,
           "timeline_y": 7.0,
           "virtual_height": 270,
           "virtual_width": 480

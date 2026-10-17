@@ -299,6 +299,8 @@ class BattleVisualResolver:
             zone = placement.get(side_id, "left")
             direction = 1 if zone == "left" else -1
             front = float(getattr(layout, "stage_front", 0.30))
+            if zone != "left" and getattr(layout, "stage_front_right", None) is not None:
+                front = float(layout.stage_front_right)
             front_x = left_edge + stage * front if zone == "left" else right_edge - stage * front
 
             def logical_size(member_id):

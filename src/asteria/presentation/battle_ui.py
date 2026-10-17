@@ -61,8 +61,14 @@ class BattleUiLayoutProfile:
     # row_buttons: every row of a menu gets a panel of its own (roles button, button:selected,
     # button:disabled) so a skin can draw buttons; off = rows are plain text
     row_buttons: bool = False
+    # overhead_below: an overhead name and bar sit under the sprite's feet (they never cover the
+    # body or the combatant behind); off = floating above the head
+    overhead_below: bool = True
     stage_top: float = 0.0
     stage_front: float = 0.30
+    # stage_front_right: the same for the side standing on the right (None = stage_front), so the
+    # party can stand nearer its edge while the foes stand nearer the middle
+    stage_front_right: float | None = None
 
     def __post_init__(self):
         if self.virtual_width <= 0 or self.virtual_height <= 0:
@@ -80,6 +86,8 @@ class BattleUiLayoutProfile:
             raise ValueError("action_menu_placement must be 'bottom' or 'actor'")
         if not 0.0 <= float(self.stage_top) < 1.0:
             raise ValueError("stage_top must be in [0, 1)")
+        if self.stage_front_right is not None and not 0.0 <= float(self.stage_front_right) <= 0.5:
+            raise ValueError("stage_front_right must be in [0, 0.5]")
         if not 0.0 <= float(self.stage_front) <= 0.5:
             raise ValueError("stage_front must be in [0, 0.5]")
         for name in (
@@ -529,13 +537,15 @@ class BattleUiComposer:
                 continue
             ax, ay = anchor
             top = ay - float(self._member_heights.get(member.member_id, 32.0))
+            below = self.layout.overhead_below
+            name_y, bar_y = (ay + 7, ay + 3) if below else (top - 15, top - 5)
             width = 44.0
             ranked = self._ranked_gauges(member, 1)
             texts.append(
                 BattleUiText(
                     self._fit(self._name(member.member_id), 14),
                     ax,
-                    top - 15,
+                    name_y,
                     "overhead_name",
                     "center",
                     member.member_id,
@@ -543,7 +553,7 @@ class BattleUiComposer:
             )
             if ranked:
                 gauges.append(
-                    self._bar(member.member_id, ranked[0], ax - width / 2, top - 5, width, 3.0)
+                    self._bar(member.member_id, ranked[0], ax - width / 2, bar_y, width, 3.0)
                 )
         return panels, texts, gauges
 

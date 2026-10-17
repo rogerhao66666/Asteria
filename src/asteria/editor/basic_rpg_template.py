@@ -183,7 +183,14 @@ def simplify_basic_rpg(folder):
         categories["combatant_visuals"][enemy["enemy_id"]] = {
             **old_visuals["iron_samurai"],
             "profile_id": enemy["enemy_id"],
+            "transform": {
+                **old_visuals["iron_samurai"]["transform"],
+                "scale_x": 0.9,
+                "scale_y": 0.9,
+            },
         }
+    for layout in categories["ui_layout"].values():  # foes near the middle, the hero at the edge
+        layout.update(stage_front=0.36, stage_front_right=0.1, overhead_below=True)
     path.write_text(json.dumps(data, indent=2) + "\n")
     _skeleton_field_pictures(folder)
     manifest_path = folder / "playable_test_manifest.json"

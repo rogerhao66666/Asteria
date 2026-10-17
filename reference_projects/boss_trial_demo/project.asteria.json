@@ -1834,17 +1834,7 @@
       {
         "asset_id": "icon.accessory_01",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              72,
-              54,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -1853,32 +1843,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_accessory_01.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.accessory_02",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              90,
-              54,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -1887,32 +1866,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_accessory_02.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.accessory_03",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              108,
-              54,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -1921,32 +1889,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_accessory_03.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.accessory_04",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              126,
-              54,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -1955,32 +1912,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_accessory_04.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.accessory_05",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              0,
-              72,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -1989,32 +1935,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_accessory_05.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.accessory_06",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              18,
-              72,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2023,32 +1958,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_accessory_06.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.accessory_07",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              36,
-              72,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2057,32 +1981,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_accessory_07.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.accessory_08",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              54,
-              72,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2091,32 +2004,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_accessory_08.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.alchemy_salt",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              0,
-              0,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2125,32 +2027,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_alchemy_salt.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.ancient_thread",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              18,
-              0,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2159,32 +2050,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_ancient_thread.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.boss_emblem",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              36,
-              0,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2193,32 +2073,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_boss_emblem.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.ether_leaf",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              54,
-              0,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2227,32 +2096,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_ether_leaf.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.fire_dust",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              72,
-              0,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2261,32 +2119,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_fire_dust.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.focus_stone",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              90,
-              0,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2295,32 +2142,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_focus_stone.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.guardian_scale",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              108,
-              0,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2329,32 +2165,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_guardian_scale.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.healing_herb",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              126,
-              0,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2363,32 +2188,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_healing_herb.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.ice_crystal",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              0,
-              18,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2397,32 +2211,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_ice_crystal.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.iron_ore",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              18,
-              18,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2431,32 +2234,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_iron_ore.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.moon_shard",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              36,
-              18,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2465,32 +2257,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_moon_shard.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.phoenix_seed",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              54,
-              18,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2499,32 +2280,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_phoenix_seed.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.silver_ore",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              72,
-              18,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2533,32 +2303,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_silver_ore.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.storm_core",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              90,
-              18,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2567,32 +2326,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_storm_core.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.venom_sac",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              108,
-              18,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2601,32 +2349,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_venom_sac.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.weapon_01",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              0,
-              36,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2635,32 +2372,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_weapon_01.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.weapon_02",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              18,
-              36,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2669,32 +2395,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_weapon_02.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.weapon_03",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              36,
-              36,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2703,32 +2418,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_weapon_03.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.weapon_04",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              54,
-              36,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2737,32 +2441,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_weapon_04.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.weapon_05",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              72,
-              36,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2771,32 +2464,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_weapon_05.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.weapon_06",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              90,
-              36,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2805,32 +2487,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_weapon_06.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.weapon_07",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              108,
-              36,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2839,32 +2510,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_weapon_07.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.weapon_08",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              126,
-              36,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2873,32 +2533,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_weapon_08.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.weapon_09",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              0,
-              54,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2907,32 +2556,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_weapon_09.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.weapon_10",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              18,
-              54,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2941,32 +2579,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_weapon_10.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.weapon_11",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              36,
-              54,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -2975,32 +2602,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_weapon_11.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.weapon_12",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              54,
-              54,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -3009,32 +2625,21 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/equip_weapon_12.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
       {
         "asset_id": "icon.wisp_essence",
         "kind": "icon",
-        "metadata": [
-          [
-            "region",
-            [
-              126,
-              18,
-              18,
-              18
-            ]
-          ]
-        ],
+        "metadata": [],
         "source": {
           "provenance": [
             [
@@ -3043,15 +2648,14 @@
             ],
             [
               "source",
-              "Ninja Adventure Asset Pack"
+              "Foozle Lucifer packs"
             ]
           ],
           "provider": "project",
-          "uri": "playable_assets/item_icons.png"
+          "uri": "playable_assets/lucifer/icons/item_wisp_essence.png"
         },
         "tags": [
-          "icon",
-          "menu"
+          "icon"
         ],
         "version": 1
       },
@@ -24143,7 +23747,7 @@
           "result_panel_width": 196.0,
           "row_buttons": true,
           "stage_front": 0.16,
-          "stage_top": 0.14,
+          "stage_top": 0.47,
           "timeline_y": 7.0,
           "virtual_height": 270,
           "virtual_width": 480
@@ -54039,7 +53643,7 @@
     "items": [
       {
         "display_name": "Alchemy Salt",
-        "icon_id": "playable_assets/lucifer/icons/item_alchemy_salt.png",
+        "icon_id": "icon.alchemy_salt",
         "item_id": "alchemy_salt",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54051,7 +53655,7 @@
       },
       {
         "display_name": "Ancient Thread",
-        "icon_id": "playable_assets/lucifer/icons/item_ancient_thread.png",
+        "icon_id": "icon.ancient_thread",
         "item_id": "ancient_thread",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54063,7 +53667,7 @@
       },
       {
         "display_name": "Boss Emblem",
-        "icon_id": "playable_assets/lucifer/icons/item_boss_emblem.png",
+        "icon_id": "icon.boss_emblem",
         "item_id": "boss_emblem",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54131,7 +53735,7 @@
       },
       {
         "display_name": "Ether Leaf",
-        "icon_id": "playable_assets/lucifer/icons/item_ether_leaf.png",
+        "icon_id": "icon.ether_leaf",
         "item_id": "ether_leaf",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54155,7 +53759,7 @@
       },
       {
         "display_name": "Fire Dust",
-        "icon_id": "playable_assets/lucifer/icons/item_fire_dust.png",
+        "icon_id": "icon.fire_dust",
         "item_id": "fire_dust",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54167,7 +53771,7 @@
       },
       {
         "display_name": "Focus Stone",
-        "icon_id": "playable_assets/lucifer/icons/item_focus_stone.png",
+        "icon_id": "icon.focus_stone",
         "item_id": "focus_stone",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54191,7 +53795,7 @@
       },
       {
         "display_name": "Guardian Scale",
-        "icon_id": "playable_assets/lucifer/icons/item_guardian_scale.png",
+        "icon_id": "icon.guardian_scale",
         "item_id": "guardian_scale",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54203,7 +53807,7 @@
       },
       {
         "display_name": "Healing Herb",
-        "icon_id": "playable_assets/lucifer/icons/item_healing_herb.png",
+        "icon_id": "icon.healing_herb",
         "item_id": "healing_herb",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54227,7 +53831,7 @@
       },
       {
         "display_name": "Ice Crystal",
-        "icon_id": "playable_assets/lucifer/icons/item_ice_crystal.png",
+        "icon_id": "icon.ice_crystal",
         "item_id": "ice_crystal",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54239,7 +53843,7 @@
       },
       {
         "display_name": "Iron Ore",
-        "icon_id": "playable_assets/lucifer/icons/item_iron_ore.png",
+        "icon_id": "icon.iron_ore",
         "item_id": "iron_ore",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54251,7 +53855,7 @@
       },
       {
         "display_name": "Moon Shard",
-        "icon_id": "playable_assets/lucifer/icons/item_moon_shard.png",
+        "icon_id": "icon.moon_shard",
         "item_id": "moon_shard",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54273,7 +53877,7 @@
       },
       {
         "display_name": "Phoenix Seed",
-        "icon_id": "playable_assets/lucifer/icons/item_phoenix_seed.png",
+        "icon_id": "icon.phoenix_seed",
         "item_id": "phoenix_seed",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54319,7 +53923,7 @@
       },
       {
         "display_name": "Silver Ore",
-        "icon_id": "playable_assets/lucifer/icons/item_silver_ore.png",
+        "icon_id": "icon.silver_ore",
         "item_id": "silver_ore",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54331,7 +53935,7 @@
       },
       {
         "display_name": "Storm Core",
-        "icon_id": "playable_assets/lucifer/icons/item_storm_core.png",
+        "icon_id": "icon.storm_core",
         "item_id": "storm_core",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54366,7 +53970,7 @@
       },
       {
         "display_name": "Venom Sac",
-        "icon_id": "playable_assets/lucifer/icons/item_venom_sac.png",
+        "icon_id": "icon.venom_sac",
         "item_id": "venom_sac",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,
@@ -54378,7 +53982,7 @@
       },
       {
         "display_name": "Wisp Essence",
-        "icon_id": "playable_assets/lucifer/icons/item_wisp_essence.png",
+        "icon_id": "icon.wisp_essence",
         "item_id": "wisp_essence",
         "schema": "asteria.rpg.item",
         "stack_limit": 99,

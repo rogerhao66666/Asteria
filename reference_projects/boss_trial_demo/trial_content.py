@@ -2205,7 +2205,7 @@ def presentation(c):
             layout,
             party_hud="side_list",
             hud_panel_width=108.0,
-            stage_top=0.14,
+            stage_top=0.47,  # feet stay on the grass: the backdrop's wall is the top 44%
             stage_front=0.16,
             hidden_zones=("left",),  # like Octopath: enemies show no name, bar or panel
             front_large_zones=("right",),  # a summon stands left of the party, toward the foe

@@ -293,6 +293,10 @@ class BattlePresentationLibrary:
                 data.pop("row_buttons", None)
             if data.get("column_size") == 3:
                 data.pop("column_size")
+            if data.get("stage_front_right") is None:
+                data.pop("stage_front_right", None)
+            if data.get("overhead_below", True):
+                data.pop("overhead_below", None)
             if not data.get("menu_over_stage"):
                 data.pop("menu_over_stage", None)
             return data

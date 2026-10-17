@@ -117,11 +117,12 @@ def draw_glyph(pg, surface, kind, rect):
         pg.draw.circle(surface, color, (round(cx), round(cy)), round(4 * u), 1)
 
 
-def extras_layout(game, box, scale, width):
+def extras_layout(game, box, scale, width, drop=0.0):
     """``[Block]`` for the enemies (shield + weaknesses + held state under their feet).
 
     ``box(member_id)`` is the adapter's ``(centre_x, top_y, feet_y)``; ``scale`` the window pixels
-    per virtual pixel; ``width`` the window width (blocks stay inside it)."""
+    per virtual pixel; ``width`` the window width (blocks stay inside it); ``drop`` pushes the
+    blocks further down (below an overhead name and bar that stand under the feet)."""
     battle = game.battle
     shield = game.shield_resource()
     tile = max(15, round(5.4 * scale))
@@ -134,7 +135,7 @@ def extras_layout(game, box, scale, width):
         if where is None:
             continue
         x, _top, feet = where
-        y = feet + max(3, round(1.2 * scale))
+        y = feet + max(3, round(1.2 * scale)) + drop
         entries = []
         held = game.turn_prevented(member.member_id)
         broken = bool(held)

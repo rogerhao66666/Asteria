@@ -2558,7 +2558,11 @@ class PlayableTestRuntime:
             return
         pg, battle = self.pg, game.battle
         scale = getattr(getattr(adapter, "textures", None), "scale", 3.0)
-        blocks = extras_layout(game, box, scale, self.width)
+        composer = getattr(getattr(adapter, "screen", None), "composer", None)
+        ui_layout = getattr(composer, "layout", None)
+        below = ui_layout is not None and getattr(ui_layout, "overhead_below", False)
+        drop = 17.0 * scale if below and getattr(ui_layout, "overhead_zones", ()) else 0.0
+        blocks = extras_layout(game, box, scale, self.width, drop)
         draw_blocks(self, blocks, scale)
         self.battle_extras_blocks = blocks  # what was drawn (tests check it for overlaps)
         bp = game.rules.boost_resource_id if game.rules.boost_enabled else ""
