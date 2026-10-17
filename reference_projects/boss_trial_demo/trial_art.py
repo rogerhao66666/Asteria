@@ -246,7 +246,8 @@ def hero_and_boss_art(context):
                 BattleVisualAssetSet(asset_id),
                 states,
                 BattleVisualTransform(scale_x=scale, scale_y=scale),
-                hud_visible="enemy" not in tags,  # like Octopath: no enemy health panel
+                hud_visible="enemy" not in tags
+                and "summon" not in tags,  # no panel for foes or summons
             ),
         )
 
@@ -257,6 +258,9 @@ def hero_and_boss_art(context):
     # Mira: the same animated ninja turned violet, same frame size so she stands in the same column
     image, frame, clips = ninja_sheet(hue=-70)
     register("hero_02", image, frame, clips, ("hero",), 0.9, hero_states)
+    # the spirit Mira calls: the same ninja in blue, with no party panel (it is a summon)
+    image, frame, clips = ninja_sheet(hue=150)
+    register("spirit_knight", image, frame, clips, ("hero", "summon"), 0.9, hero_states)
     image, frame, clips, field_frame = samurai_sheet()
     boss_states = tuple(
         BattleVisualStateDefinition(r, r) for r in ("idle", "attack", "cast", "hit", "ko")
@@ -475,7 +479,7 @@ def write_credits(root):
 def prune_unused_art(context):
     """The reference game's other heroes and monsters are not part of this demo: drop their
     visuals, sheets and files so the project only holds what it uses."""
-    keep = {context.hero_id, "hero_02", context.boss_id, "mender_wisp", "pet"}
+    keep = {context.hero_id, "hero_02", "spirit_knight", context.boss_id, "mender_wisp", "pet"}
     library = context.project.battle_presentation_library
     # a captured wisp fights on the hero side: every pet unit (member ids "pet:...") is drawn
     # with the "pet" profile, here the same sheet as the wild wisp; no side-list panel, that list

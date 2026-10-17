@@ -38,6 +38,21 @@
 | 版面（敵人不顯示血條、選單貼角色） | Presentation > Battle Screen > Battle UI Layout | `hidden_zones`、`action_menu_placement` |
 | 精靈表：動畫、本體高度、特效位置 | Presentation > Sprite Animation | 「Battle use」區的 Body height 與 Appears at |
 | NPC 與對話 | Scene（選實體）＋ Events | 每個服務一個事件程式 |
+| 失控狀態（混亂、魅惑、狂暴、即死倒數） | Battle > Battle Rules > Status Effects 的目標覆寫與可用技能標籤；狀態的到期效果 | confuse / charm / berserk / doom |
+| 一個技能多種施放（屬性、武器） | Abilities 的 Forms、Follow tags | Dawn and Dusk、Elemental Edge、Arcane Tome、Versatile Strike |
+| 技能消耗（血、道具、金幣、BP） | Abilities 的 Costs / Item costs / Currency costs / Battle costs | Dark Pact、Molten Strike、Gilded Hammer、Pass the Torch |
+| BP 轉讓與補充 | Abilities 的 Battle resource gains | Pass the Torch、Rekindle、Mira 的 Boost Gift |
+| 同伴 | Game Data > Actors；Game Start 的隊伍 | Mira（牧師），與主角並肩 |
+| 掉落（稀有度、詞綴、機率） | Game Data > Drop Tables / Rarities / Affixes；敵人的 Reward | warlord_spoils、wisp_drops；掉落裝備會骰稀有度與詞綴 |
+| 偷竊、使用次數、熟練度、戰鬥中得 BP | Game Systems > Battle Extras；技能 tag `action.steal` | Pilfer、終極技能每場一次、Dawn and Dusk 熟練 |
+| 寵物（捕捉、當單位戰鬥、進化） | Game Data > Pets / Capture Rules | Mender Wisp → Greater Wisp |
+| 召喚（玩家方） | 技能的 commands：SUMMON actor_id | Mira 的 Call Spirit |
+| 變身 | 裝備欄 form ＋狀態 | Dragon Form / Revert |
+| 技能進化 | Game Data > Ability Evolutions；Progression Tracks | Brave Slash → II（戰鬥經驗 rank 2） |
+| 任務、成就、敵人等級與難度 | Game Data > Quests / Achievements；Game Systems > Enemy Levels | Slay Vaelor、三種難度 |
+| 職業解鎖條件、非線性經驗曲線 | Classes 的 Unlock level / classes；Progression Tracks（level_track） | level_curve、各進階職業 |
+| 逃跑 | Battle > Escape Rules；Encounter 的 tag `no_escape` | 蟲群可逃，Boss 房不行 |
+| 工作坊畫面（精煉、鑲嵌、屬性點） | 測試主機的 Build 選單按 8 | R / S / X / A 鍵 |
 | 起始狀態（點數、背包、裝備） | Database > Game Start | |
 
 ## 不在專案檔裡的部分

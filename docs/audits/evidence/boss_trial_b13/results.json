@@ -1,0 +1,18 @@
+{
+  "driver": "cocoa",
+  "status": "PASS",
+  "checks": {
+    "workshop_opened": true,
+    "refine_tried": true,
+    "escape_row_listed": true,
+    "escaped_to_the_field": true,
+    "boss_hall_refuses": true
+  },
+  "failed": [],
+  "screenshots": [
+    "b13_workshop_open.png",
+    "b13_workshop_used.png",
+    "b13_escape_row.png",
+    "b13_after_escape.png"
+  ]
+}

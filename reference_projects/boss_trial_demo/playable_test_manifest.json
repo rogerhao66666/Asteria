@@ -428,6 +428,9 @@
       "rekindle": {
         "label": "Rekindle"
       },
+      "dragon_form": {
+        "label": "Dragon Form"
+      },
       "twilight_judgment": {
         "label": "Twilight Judgment (Divine)"
       },
@@ -464,6 +467,12 @@
       "maddening_howl": {
         "label": "Maddening Howl"
       },
+      "spirit_cleave": {
+        "label": "Spirit Cleave"
+      },
+      "spirit_ward": {
+        "label": "Spirit Ward"
+      },
       "benediction": {
         "label": "Benediction"
       },
@@ -485,6 +494,9 @@
       "dawn_hymn": {
         "label": "Dawn Hymn (Divine)"
       },
+      "call_spirit": {
+        "label": "Call Spirit"
+      },
       "concoct": {
         "label": "Concoct"
       },
@@ -499,6 +511,27 @@
       },
       "wisp_nova": {
         "label": "Wisp Nova"
+      },
+      "brave_slash_ii": {
+        "label": "Brave Slash II"
+      },
+      "rally_cry_ii": {
+        "label": "Rally Cry II"
+      },
+      "arsenal_barrage_ii": {
+        "label": "Arsenal Barrage II"
+      },
+      "fireball_ii": {
+        "label": "Fireball II"
+      },
+      "dragon_claw": {
+        "label": "Dragon Claw"
+      },
+      "dragon_breath": {
+        "label": "Dragon Breath"
+      },
+      "dragon_revert": {
+        "label": "Revert"
       }
     },
     "enemy_layouts": {},

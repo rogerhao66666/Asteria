@@ -12,6 +12,9 @@ import dataclasses
 
 import trial_content as tc
 
+from asteria.gameplay.states import StateDefinition
+from asteria.rpg import BattleStatePolicy, EquipmentDefinition
+from asteria.rpg.ability_build import AbilityEvolutionRule
 from asteria.rpg.battle_extensions import ResourceGain, StealEntry, StealTable
 from asteria.rpg.capture import CaptureRule
 from asteria.rpg.drop_tables import DropEntry, DropTable
@@ -273,9 +276,158 @@ def curves_and_unlocks(c):
         )
 
 
+EVOLUTIONS = (  # (source skill, evolved id, label, rank of the battle-experience track, power x)
+    ("brave_slash", "brave_slash_ii", "Brave Slash II", 2, 1.5),
+    ("rally_cry", "rally_cry_ii", "Rally Cry II", 2, 1.0),
+    ("arsenal_barrage", "arsenal_barrage_ii", "Arsenal Barrage II", 3, 1.6),
+    ("fireball", "fireball_ii", "Fireball II", 2, 1.5),
+)
+
+
+def evolutions(c):
+    """Skills that turn into stronger ones as the party fights: a track of battle experience,
+    its ranks, and an evolution rule per skill (Database > Game Data > Ability Evolutions)."""
+    db = c.db
+    db.progression_tracks["battle_experience"] = ProgressionTrackDefinition(
+        "battle_experience",
+        "Battle experience",
+        milestones=(
+            ProgressionMilestone(1, 0),
+            ProgressionMilestone(2, 100),
+            ProgressionMilestone(3, 300),
+        ),
+    )
+    for enemy_id, amount in ((c.boss_id, 150), ("mender_wisp", 25)):
+        enemy = db.enemies[enemy_id]
+        reward = enemy.reward
+        db.enemies[enemy_id] = dataclasses.replace(
+            enemy,
+            reward=dataclasses.replace(
+                reward, experience={**reward.experience, "battle_experience": float(amount)}
+            ),
+        )
+    abilities = c.abilities._definitions
+    for source, result, label, rank, factor in EVOLUTIONS:
+        base = abilities.get(source)
+        if base is None:
+            continue
+        hits = [{**h, "power": h.get("power", 1.0) * factor} for h in base.hits]
+        evolved = dataclasses.replace(
+            base, ability_id=result, hits=hits, display_name=label, tags=base.tags
+        )
+        abilities[result] = evolved
+        db.battle_targeting[result] = dataclasses.replace(
+            db.battle_targeting[source], ability_id=result
+        )
+        c.skill_names[result] = label
+        if source in tc.FX_BY_ABILITY:
+            tc.FX_BY_ABILITY[result] = tc.FX_BY_ABILITY[source]
+        if source in tc.SELF_TARGETED:
+            tc.SELF_TARGETED.add(result)
+        db.add_ability_evolution(
+            AbilityEvolutionRule(
+                f"evolve_{source}",
+                source,
+                result,
+                progression_track_id="battle_experience",
+                minimum_rank=rank,
+            )
+        )
+
+
+def transform(c):
+    """A transformation is a piece of equipment in its own slot: it adds stats, tags and skills
+    while worn, and wearing the plain one turns the hero back. Both are plain data."""
+    db = c.db
+    for ability_id, label, target, definition in (
+        (
+            "dragon_claw",
+            "Dragon Claw",
+            "enemy",
+            ability(
+                "dragon_claw",
+                tags=("damage.fire", "form.dragon"),
+                effect=op(damage("power", 18)),
+                hits=_hits(1.0, 1.0, 1.3, tags=("damage.fire",)),
+            ),
+        ),
+        (
+            "dragon_breath",
+            "Dragon Breath",
+            "enemies",
+            ability(
+                "dragon_breath",
+                tags=("magic", "damage.fire", "form.dragon"),
+                effect=op(damage("magic", 14)),
+                sp=30,
+                hits=_hits(1.0, tags=("damage.fire",)),
+                targets=9,
+                apply_states=[_state("burn")],
+            ),
+        ),
+        (
+            "dragon_revert",
+            "Revert",
+            "self",
+            ability(
+                "dragon_revert",
+                apply_states=[_state("dragon_form", "self", remove=True)],
+                commands=[
+                    {
+                        "command": "EQUIP_ITEM",
+                        "args": {
+                            "actor_id": "hero_01",
+                            "equipment_id": "f_normal",
+                            "slot_id": "form",
+                            "index": 0,
+                        },
+                    }
+                ],
+            ),
+        ),
+    ):
+        c.add(definition, target)
+        c.skill_names[ability_id] = label
+    # the form's stats and tag are a state: they change at once, in the middle of the fight
+    c.library.states._definitions["dragon_form"] = StateDefinition(
+        "dragon_form",
+        99,
+        modifiers=(
+            tc._modifier("power", 80, "dragon.power"),
+            tc._modifier("magic", 60, "dragon.magic"),
+            tc._modifier("defense", 60, "dragon.defense"),
+        ),
+        contributed_tags=("form.dragon",),
+    )
+    db.battle_state_policies["dragon_form"] = BattleStatePolicy("dragon_form")
+    db.add_equipment(EquipmentDefinition("f_normal", "Human Form", slot="form", tags=("form",)))
+    db.add_equipment(
+        EquipmentDefinition(
+            "f_dragon",
+            "Dragon Form",
+            slot="form",
+            tags=("form", "form.dragon"),
+            granted_abilities=("dragon_claw", "dragon_breath", "dragon_revert"),
+        )
+    )
+
+
+def escape(c):
+    """The swarm can be run from (the escape rule: speed helps); the warlord's hall cannot."""
+    db = c.db
+    for encounter_id, encounter in db.encounters.items():
+        if encounter_id == "boss_room":
+            db.encounters[encounter_id] = dataclasses.replace(
+                encounter, tags=(*encounter.tags, "no_escape")
+            )
+
+
 def systems(c):
     loot(c)
     extras(c)
     pets(c)
     progress(c)
     curves_and_unlocks(c)
+    evolutions(c)
+    transform(c)
+    escape(c)

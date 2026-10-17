@@ -160,6 +160,9 @@ class BattleCommands:
         for name in self.custom_categories(actor_id):
             groups.append((name, len(self.skill_rows(actor_id, name)), "Abilities"))
         groups.append(("Items", len(items), "Use an item from the bag"))
+        run = self.game.escape_chance()
+        if run is not None:
+            groups.append(("Escape", 1, f"{round(run * 100)}% to get away"))
         for category, count, hint in groups:
             rows.append(
                 BattleActionEntry(
@@ -465,6 +468,13 @@ class BattleCommands:
             if not row.enabled:
                 self.message = row.disabled_reason
                 return False
+            if row.action_id == "root:Escape":
+                reason = self.game.escape_unavailable()
+                if reason:
+                    self.message = reason
+                    return False
+                self.game.attempt_escape(actor_id)
+                return True  # a failed attempt still uses the turn
             self.mode, self.category, self.cursor = (
                 "command",
                 row.action_id.split(":", 1)[1],

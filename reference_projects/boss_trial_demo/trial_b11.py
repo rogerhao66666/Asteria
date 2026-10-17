@@ -26,6 +26,7 @@ WEAPON_TAGS = tuple(f"weapon.{k}" for k in tc.WEAPONS)
 FOLLOW_WEAPON = {f"equip.{k}": f"weapon.{k}" for k in tc.WEAPONS}  # one skill, any weapon
 COMPANION_ID = "hero_02"
 COMPANION_CLASS = "cleric"
+SPIRIT_ID = "spirit_knight"
 TICK = "rpg.battle.turn_ended"
 
 
@@ -298,6 +299,29 @@ def _skills(c):
             ),
         ),
         (
+            "dragon_form",
+            "Dragon Form",
+            "self",
+            a(
+                "dragon_form",
+                tags=("magic",),
+                sp=50,
+                battle_costs={BP: 1},
+                apply_states=[_state("dragon_form", "self")],
+                commands=[
+                    {
+                        "command": "EQUIP_ITEM",
+                        "args": {
+                            "actor_id": "hero_01",
+                            "equipment_id": "f_dragon",
+                            "slot_id": "form",
+                            "index": 0,
+                        },
+                    }
+                ],
+            ),
+        ),
+        (
             "twilight_judgment",
             "Twilight Judgment",
             "enemy",
@@ -489,8 +513,13 @@ FX = {
     "bp_gift": ("boost", "aura"),
     "second_breath": ("boost", "aura"),
     "dawn_hymn": ("aura", "boost", "shield"),
+    "call_spirit": ("circle", "boost"),
+    "dragon_form": ("fire", "explosion", "aura"),
+    "dragon_claw": ("clawd", "slash2"),
+    "dragon_breath": ("fire", "explosion"),
+    "dragon_revert": ("boost", "smoke"),
 }
-SELF = {"blood_ether", "rekindle", "second_breath"}
+SELF = {"blood_ether", "rekindle", "second_breath", "dragon_form", "dragon_revert"}
 
 
 def companion(c):
@@ -592,6 +621,49 @@ def companion(c):
             ),
         ),
     }
+    cleric_skills["call_spirit"] = (
+        "Call Spirit",
+        "self",
+        ability(
+            "call_spirit",
+            tags=("magic", "summon"),
+            sp=60,
+            commands=[
+                {"command": "SUMMON", "args": {"actor_id": SPIRIT_ID, "owner_id": "@actor"}}
+            ],
+        ),
+    )
+    spirit_skills = {
+        "spirit_cleave": (
+            "Spirit Cleave",
+            "enemy",
+            ability(
+                "spirit_cleave",
+                tags=("weapon.sword", "damage.light"),
+                effect=op(damage("power", 16)),
+                hits=_hits(1.0, 1.0, tags=("weapon.sword", "damage.light")),
+            ),
+        ),
+        "spirit_ward": (
+            "Spirit Ward",
+            "allies",
+            ability("spirit_ward", apply_states=[_state("ward", "allies")]),
+        ),
+    }
+    for ability_id, (label, target, definition) in spirit_skills.items():
+        c.add(definition, target)
+        c.skill_names[ability_id] = label
+        tc.FX_BY_ABILITY[ability_id] = ("slash", "spark") if "cleave" in ability_id else ("aura",)
+    db.add_class(
+        ClassDefinition(
+            "spirit",
+            "Spirit",
+            stat_bonuses={"power": 20, "defense": 10},
+            resource_bonuses={},
+            granted_tags=("class.spirit",),
+            granted_abilities=tuple(spirit_skills),
+        )
+    )
     for ability_id, (label, target, definition) in cleric_skills.items():
         c.add(definition, target)
         c.skill_names[ability_id] = label
@@ -633,6 +705,25 @@ def companion(c):
         },
         abilities=(),
     )
+    db.actors[SPIRIT_ID] = dataclasses.replace(
+        hero,
+        actor_id=SPIRIT_ID,
+        display_name="Spirit Knight",
+        class_assignments=(
+            ClassAssignment("spirit", assignment_id=f"{SPIRIT_ID}.main", role="main", priority=10),
+        ),
+        base_stats={
+            "power": 40.0,
+            "magic": 20.0,
+            "defense": 30.0,
+            "speed": 90.0,
+            "crit": 5.0,
+            "evade": 0.0,
+            "lifesteal": 0.0,
+        },
+        base_resources={HP: {"minimum": 0.0, "maximum": 2000.0, "current": 2000.0}},
+        abilities=(),
+    )
     party = db.party_setups["main_party"]
     ids = (*party.roster_actor_ids, COMPANION_ID)
     db.party_setups["main_party"] = dataclasses.replace(
@@ -645,7 +736,7 @@ def companion(c):
         ),
     )
     tc.FX_BY_ABILITY.update({k: FX[k] for k in cleric_skills})
-    tc.SELF_TARGETED.update({"second_breath"})
+    tc.SELF_TARGETED.update({"second_breath", "call_spirit"})
 
 
 def expansion(c):

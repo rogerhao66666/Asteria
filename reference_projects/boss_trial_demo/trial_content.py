@@ -1922,11 +1922,13 @@ def game_start(c):
                 {"slot_id": "weapon", "capacity": 2, "accepted_tags": []},
                 {"slot_id": "armor", "capacity": 1, "accepted_tags": []},
                 {"slot_id": "accessory", "capacity": 2, "accepted_tags": []},
+                {"slot_id": "form", "capacity": 1, "accepted_tags": []},
             ],
             "equipped": {
                 "weapon": [instance("w_sunbrand"), instance("w_dagger")],
                 "armor": [instance("a_warden_plate")],
                 "accessory": [instance("a_warden_ring"), instance("a_warden_charm")],
+                "form": [instance("f_normal")],
             },
         },
         mira: {

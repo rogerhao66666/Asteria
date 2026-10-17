@@ -3442,6 +3442,52 @@ class GameSessionRuntime:
             )
         )
 
+    # -- running away -----------------------------------------------------------------------
+    def _escape_rule(self):
+        rules = self.battle.escape_rules if self.battle is not None else {}
+        return rules[sorted(rules)[0]] if rules else None
+
+    def escape_unavailable(self):
+        """Why the party cannot run now ("" when it can): no rule, or an encounter tagged
+        ``no_escape`` (a boss)."""
+        if self.battle is None:
+            return "Not in battle"
+        if self._escape_rule() is None:
+            return "The project defines no escape rule"
+        encounter = self.project.rpg_database.encounters.get(self.encounter_id or "")
+        if encounter is not None and "no_escape" in encounter.tags:
+            return "This battle has no_escape: there is no running away"
+        return ""
+
+    def escape_chance(self):
+        from asteria.rpg.battle_lifecycle import resolve_escape_chance
+
+        rule = self._escape_rule()
+        return None if rule is None else resolve_escape_chance(rule, self.battle)
+
+    def attempt_escape(self, actor_id, *, rng=None):
+        """Try to run: on success the battle ends with no reward and the party is back on the
+        field; a failure only costs the turn."""
+        reason = self.escape_unavailable()
+        if reason:
+            raise GameSessionError("cannot escape: " + reason)
+        rule = self._escape_rule()
+        result = self.battle.attempt_escape(rule.rule_id, rng=rng or self.battle.rng)
+        self._log(
+            "escape",
+            member_id=str(actor_id),
+            data={"succeeded": result.succeeded, "chance": result.chance},
+        )
+        if result.succeeded:
+            self._write_battle_heroes_to_save()
+            self._log("battle_finished", data={"winning_sides": (), "defeated_sides": ()})
+            self.mode = "field"
+            self.battle = None
+            self.encounter_id = None
+            self._enemy_ids = ()
+            self.interaction.reset()
+        return result
+
     def end_turn(self):
         if self.mode != "battle":
             raise GameSessionError("no active battle")

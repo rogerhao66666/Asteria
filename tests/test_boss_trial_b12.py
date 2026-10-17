@@ -167,3 +167,75 @@ def test_advanced_jobs_wait_for_their_level_and_prerequisite_jobs():
     assert game.ensure_actor_progression(HERO).level == 9  # 150 * 8**2 = 9600 <= 12000
     assert game.set_classes(HERO, ["knight", "mystic"]) == ("knight", "mystic")
     assert game.set_classes(HERO, ["knight", "sage"]) == ("knight", "sage")
+
+
+def test_skills_evolve_as_the_party_wins_battles():
+    game = _game("hero")
+    build = lambda: set(game.resolve_actor_build(HERO).abilities)  # noqa: E731
+    assert "brave_slash" in build() and "brave_slash_ii" not in build()
+    _win(game)  # the boss pays 150 battle experience: rank 2 of the track
+    assert "brave_slash_ii" in build() and "brave_slash" not in build()
+    assert "arsenal_barrage_ii" not in build()  # that one waits for rank 3
+    game.start_encounter("boss_room")
+    assert "brave_slash_ii" in game.battle.member(HERO).ability_ids
+
+
+def test_a_skill_calls_a_summon_that_fights_beside_the_party():
+    game = _game("hero")
+    assert "spirit_knight" not in game.battle.members
+    game.battle.member("hero_02").subject.resources.set_current(SP, 380)
+    game.use_ability("hero_02", "call_spirit", None)
+    assert "spirit_knight" in game.battle.members
+    assert {"spirit_cleave", "spirit_ward"} <= set(game.battle.member("spirit_knight").ability_ids)
+    state = game.battle.combatants.state("spirit_knight")
+    assert state.summon_owner_id == "hero_02"
+    boss = game.active_enemy_ids()[0]
+    game.use_ability("spirit_knight", "spirit_cleave", (boss,))
+    game.battle.member("hero_02").subject.resources.set_current(SP, 380)
+    with pytest.raises(Exception, match="already in the battle"):  # noqa: B017
+        game.use_ability("hero_02", "call_spirit", None)
+
+
+def test_a_transformation_changes_stats_tags_and_skills_and_can_be_undone():
+    game = _game("hero")
+    boss = game.active_enemy_ids()[0]
+    boss_pool = game.battle.member(boss).subject.resources
+
+    def blow():
+        boss_pool.set_current(HP, 900000)
+        game.battle.member(HERO).subject.resources.set_current(SP, 280)
+        game.use_ability(HERO, "attack_sword", (boss,))
+        return 900000 - boss_pool.current(HP)
+
+    plain = [blow() for _ in range(6)]
+    assert "dragon_claw" not in game.battle.member(HERO).ability_ids
+    pool = game.battle.battle_resources
+    pool.change(HERO, BP, 2 - pool.current(HERO, BP))
+    game.use_ability(HERO, "dragon_form", None)
+    member = game.battle.member(HERO)
+    assert {"dragon_claw", "dragon_breath", "dragon_revert"} <= set(member.ability_ids)
+    assert member.subject.tags.contains("form.dragon")
+    dragon = [blow() for _ in range(6)]
+    assert sum(dragon) > sum(plain)  # the form hits harder
+    game.use_ability(HERO, "dragon_claw", (boss,))
+    game.use_ability(HERO, "dragon_revert", None)
+    member = game.battle.member(HERO)
+    assert "dragon_claw" not in member.ability_ids
+    assert not member.subject.tags.contains("form.dragon")
+
+
+def test_the_swarm_can_be_fled_but_the_warlords_hall_cannot():
+    from asteria.runtime.game_session import GameSessionError
+
+    game = _game("hero", "boss_room")
+    assert "no_escape" in game.escape_unavailable()
+    with pytest.raises(GameSessionError, match="cannot escape"):
+        game.attempt_escape(HERO)
+    game = _game("hero", "swarm")
+    assert game.escape_unavailable() == "" and 0 < game.escape_chance() <= 1
+    rng = random.Random(1)
+    for _ in range(50):
+        if game.mode != "battle":
+            break
+        game.attempt_escape(HERO, rng=rng)
+    assert game.mode == "field"

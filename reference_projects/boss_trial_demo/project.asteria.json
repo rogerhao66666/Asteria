@@ -1824,6 +1824,138 @@
         "version": 1
       },
       {
+        "asset_id": "battle.combatant.spirit_knight",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "1": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.1,
+                "frames": [
+                  4,
+                  5,
+                  6,
+                  7,
+                  0
+                ],
+                "loop": false
+              },
+              "cast": {
+                "frame_duration": 0.14,
+                "frames": [
+                  12,
+                  13,
+                  13,
+                  12
+                ],
+                "loop": false
+              },
+              "guard": {
+                "frame_duration": 0.3,
+                "frames": [
+                  12
+                ],
+                "loop": true
+              },
+              "hit": {
+                "frame_duration": 0.08,
+                "frames": [
+                  8,
+                  9,
+                  8
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.2,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.5,
+                "frames": [
+                  11
+                ],
+                "loop": false
+              },
+              "revive": {
+                "frame_duration": 0.2,
+                "frames": [
+                  11,
+                  10,
+                  0
+                ],
+                "loop": false
+              },
+              "status": {
+                "frame_duration": 0.25,
+                "frames": [
+                  0,
+                  1
+                ],
+                "loop": true
+              },
+              "transform": {
+                "frame_duration": 0.1,
+                "frames": [
+                  14,
+                  15,
+                  16,
+                  0
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              76,
+              58
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              1.0
+            ]
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Ninja Adventure Asset Pack"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/spirit_knight.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "hero",
+          "summon"
+        ],
+        "version": 1
+      },
+      {
         "asset_id": "battle.combatant.crimson_warlord",
         "kind": "sprite_sheet",
         "metadata": [
@@ -3489,6 +3621,91 @@
             "scale_y": 0.55,
             "z_order": 0
           }
+        },
+        "spirit_knight": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.spirit_knight",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": false,
+          "profile_id": "spirit_knight",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": true,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "cast",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "cast"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "guard",
+              "fallback_state_id": "idle",
+              "persistent": true,
+              "priority": 0,
+              "state_id": "guard"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": true,
+              "priority": 100,
+              "state_id": "ko"
+            },
+            {
+              "clip_role": "revive",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "revive"
+            },
+            {
+              "clip_role": "status",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "status"
+            },
+            {
+              "clip_role": "transform",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "transform"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.9,
+            "scale_y": 0.9,
+            "z_order": 0
+          }
         }
       },
       "director": {},
@@ -4346,6 +4563,132 @@
           "sequence_id": "strike"
         },
         "arsenal_barrage": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "advance",
+              "channel": "move",
+              "cue": "advance",
+              "duration": 0.16,
+              "easing": "ease_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.21,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.cut",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.3,
+              "beat_id": "fx2",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.39,
+              "beat_id": "fx3",
+              "channel": "vfx",
+              "cue": "battle.fx.cut",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.44,
+              "beat_id": "return",
+              "channel": "move",
+              "cue": "return",
+              "duration": 0.2,
+              "easing": "ease_in_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
+        "arsenal_barrage_ii": {
           "beats": [
             {
               "at": 0.0,
@@ -6536,6 +6879,110 @@
           "recovery_at": null,
           "sequence_id": "strike"
         },
+        "brave_slash_ii": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "advance",
+              "channel": "move",
+              "cue": "advance",
+              "duration": 0.16,
+              "easing": "ease_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.26,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.slash2",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.31,
+              "beat_id": "return",
+              "channel": "move",
+              "cue": "return",
+              "duration": 0.2,
+              "easing": "ease_in_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
         "bulwark_charge": {
           "beats": [
             {
@@ -6703,6 +7150,88 @@
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
+        "call_spirit": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.circle",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.26,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.boost",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@source",
               "payload": [],
               "target_id": null
             }
@@ -8131,6 +8660,365 @@
           "recovery_at": null,
           "sequence_id": "strike"
         },
+        "dragon_breath": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.2,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.fire",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "flash",
+              "channel": "screen_fx",
+              "cue": "flash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "alpha",
+                  40
+                ],
+                [
+                  "duration",
+                  0.08
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  5
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.34,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.explosion",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.9,
+          "recovery_at": null,
+          "sequence_id": "fire_arc"
+        },
+        "dragon_claw": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.clawd",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.26,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.slash2",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
+        "dragon_form": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.fire",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.26,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.explosion",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.4,
+              "beat_id": "fx2",
+              "channel": "vfx",
+              "cue": "battle.fx.aura",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
+        "dragon_revert": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.boost",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.26,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.smoke",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
         "drain_touch": {
           "beats": [
             {
@@ -9098,6 +9986,97 @@
           "sequence_id": "fire_arc"
         },
         "fireball": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.2,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.fire",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "flash",
+              "channel": "screen_fx",
+              "cue": "flash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "alpha",
+                  40
+                ],
+                [
+                  "duration",
+                  0.08
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  5
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.9,
+          "recovery_at": null,
+          "sequence_id": "fire_arc"
+        },
+        "fireball_ii": {
           "beats": [
             {
               "at": 0.0,
@@ -13401,6 +14380,88 @@
           "recovery_at": null,
           "sequence_id": "strike"
         },
+        "rally_cry_ii": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.aura",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.26,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.boost",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
         "rekindle": {
           "beats": [
             {
@@ -14561,6 +15622,181 @@
               "channel": "vfx",
               "cue": "battle.fx.circle",
               "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
+        "spirit_cleave": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "advance",
+              "channel": "move",
+              "cue": "advance",
+              "duration": 0.16,
+              "easing": "ease_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.26,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.spark",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.31,
+              "beat_id": "return",
+              "channel": "move",
+              "cue": "return",
+              "duration": 0.2,
+              "easing": "ease_in_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
+        "spirit_ward": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.aura",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
               "easing": "linear",
               "member_id": "@target",
               "payload": [],
@@ -18614,6 +19850,16 @@
                 "version": 2
               }
             ],
+            "form": [
+              {
+                "attachments": {},
+                "equipment_id": "f_normal",
+                "growth": null,
+                "instance_id": "f_normal:hero_01",
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2
+              }
+            ],
             "weapon": [
               {
                 "attachments": {},
@@ -18649,6 +19895,11 @@
               "accepted_tags": [],
               "capacity": 2,
               "slot_id": "accessory"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "form"
             }
           ],
           "version": 1
@@ -19609,6 +20860,141 @@
               "land"
             ],
             "power": 1.0,
+            "tags": [
+              "weapon.dagger"
+            ]
+          }
+        ],
+        "icon_id": "playable_assets/icons/skill_nova.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "weapon.dagger",
+          "weapon.sword"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "arsenal_barrage_ii",
+        "conditions": {
+          "conditions": [
+            {
+              "present": true,
+              "subject": "source",
+              "tag": "equip.sword",
+              "type": "tag"
+            },
+            {
+              "present": true,
+              "subject": "source",
+              "tag": "equip.dagger",
+              "type": "tag"
+            }
+          ],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 14.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "display_name": "Arsenal Barrage II",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "arsenal_barrage.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -9.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.6,
+            "tags": [
+              "weapon.sword"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.6,
+            "tags": [
+              "weapon.dagger"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.6,
+            "tags": [
+              "weapon.sword"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.6,
             "tags": [
               "weapon.dagger"
             ]
@@ -21278,6 +22664,108 @@
         "version": 1
       },
       {
+        "ability_id": "brave_slash_ii",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "focus",
+            "to": "self"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 8.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "display_name": "Brave Slash II",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "brave_slash.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -12.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit"
+            ],
+            "power": 1.5,
+            "tags": []
+          },
+          {
+            "checks": [
+              "crit"
+            ],
+            "power": 1.9500000000000002,
+            "tags": []
+          }
+        ],
+        "icon_id": "playable_assets/icons/skill_slash.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "weapon.sword"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "bulwark_charge",
         "apply_states": [
           {
@@ -21426,6 +22914,59 @@
         "tags": [
           "ability",
           "physical"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "call_spirit",
+        "commands": [
+          {
+            "args": {
+              "actor_id": "spirit_knight",
+              "owner_id": "@actor"
+            },
+            "command": "SUMMON"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 60.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "display_name": "Call Spirit",
+        "effects": [],
+        "icon_id": "playable_assets/icons/skill_mono_call_spirit.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "magic",
+          "summon"
         ],
         "targeting": {
           "allow_self": false,
@@ -22679,6 +24220,306 @@
         "version": 1
       },
       {
+        "ability_id": "dragon_breath",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "burn",
+            "to": "targets"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 30.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "display_name": "Dragon Breath",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "dragon_breath.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -14.0,
+                        "key": "magic",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "damage.fire"
+            ]
+          }
+        ],
+        "icon_id": "playable_assets/icons/skill_mono_dragon_breath.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "damage.fire",
+          "form.dragon",
+          "magic"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 9,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "dragon_claw",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Dragon Claw",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "dragon_claw.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -18.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "damage.fire"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "damage.fire"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.3,
+            "tags": [
+              "damage.fire"
+            ]
+          }
+        ],
+        "icon_id": "playable_assets/icons/skill_mono_dragon_claw.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "damage.fire",
+          "form.dragon"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "dragon_form",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "dragon_form",
+            "to": "self"
+          }
+        ],
+        "battle_costs": {
+          "bp": 1.0
+        },
+        "commands": [
+          {
+            "args": {
+              "actor_id": "hero_01",
+              "equipment_id": "f_dragon",
+              "index": 0,
+              "slot_id": "form"
+            },
+            "command": "EQUIP_ITEM"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 50.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "display_name": "Dragon Form",
+        "effects": [],
+        "icon_id": "playable_assets/icons/skill_mono_dragon_form.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "magic"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "dragon_revert",
+        "apply_states": [
+          {
+            "remove": true,
+            "state": "dragon_form",
+            "to": "self"
+          }
+        ],
+        "commands": [
+          {
+            "args": {
+              "actor_id": "hero_01",
+              "equipment_id": "f_normal",
+              "index": 0,
+              "slot_id": "form"
+            },
+            "command": "EQUIP_ITEM"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Revert",
+        "effects": [],
+        "icon_id": "playable_assets/icons/skill_mono_dragon_revert.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "drain_touch",
         "conditions": {
           "conditions": [],
@@ -23481,6 +25322,93 @@
           }
         ],
         "display_name": "Fireball",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "fireball.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -14.0,
+                        "key": "magic",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "icon_id": "playable_assets/icons/skill_fire.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "damage.fire",
+          "magic"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "fireball_ii",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "burn",
+            "to": "targets"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 10.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "display_name": "Fireball II",
         "effects": [
           {
             "effect": {
@@ -27312,6 +29240,66 @@
         "version": 1
       },
       {
+        "ability_id": "rally_cry_ii",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "attack_up",
+            "to": "self"
+          },
+          {
+            "remove": false,
+            "state": "haste",
+            "to": "self"
+          },
+          {
+            "remove": false,
+            "state": "regen",
+            "to": "self"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "cooldown_turns": 4,
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 16.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "display_name": "Rally Cry II",
+        "effects": [],
+        "icon_id": "playable_assets/icons/skill_shout.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "rekindle",
         "apply_states": [
           {
@@ -28355,6 +30343,123 @@
           }
         ],
         "icon_id": "playable_assets/icons/skill_bomb.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "spirit_cleave",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Spirit Cleave",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "spirit_cleave.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -16.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "damage.light",
+              "weapon.sword"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "damage.light",
+              "weapon.sword"
+            ]
+          }
+        ],
+        "icon_id": "playable_assets/icons/skill_whirl.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "damage.light",
+          "weapon.sword"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "spirit_ward",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "ward",
+            "to": "allies"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Spirit Ward",
+        "effects": [],
+        "icon_id": "playable_assets/icons/skill_mono_spirit_ward.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability"
@@ -31336,6 +33441,52 @@
       },
       {
         "contributed_tags": [
+          "form.dragon"
+        ],
+        "display_name": "Dragon Form",
+        "duration": 99.0,
+        "icon_id": "playable_assets/icons/skill_mono_dragon_form.png",
+        "max_stacks": 1,
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "dragon.power",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "power",
+            "value": 80.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "dragon.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 60.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "dragon.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 60.0
+          }
+        ],
+        "on_apply": [],
+        "on_expire": [],
+        "on_remove": [],
+        "periodic": [],
+        "schema": "asteria.state_definition",
+        "stacking": "refresh",
+        "state_id": "dragon_form",
+        "version": 3
+      },
+      {
+        "contributed_tags": [
           "damage.dark"
         ],
         "display_name": "Enchant Dark",
@@ -32141,7 +34292,52 @@
     "version": 1
   },
   "rpg_database": {
-    "ability_evolutions": [],
+    "ability_evolutions": [
+      {
+        "minimum_rank": 3,
+        "priority": 0,
+        "progression_track_id": "battle_experience",
+        "result_ability_id": "arsenal_barrage_ii",
+        "retain_source": false,
+        "rule_id": "evolve_arsenal_barrage",
+        "schema": "asteria.rpg.ability_evolution",
+        "source_ability_id": "arsenal_barrage",
+        "version": 1
+      },
+      {
+        "minimum_rank": 2,
+        "priority": 0,
+        "progression_track_id": "battle_experience",
+        "result_ability_id": "brave_slash_ii",
+        "retain_source": false,
+        "rule_id": "evolve_brave_slash",
+        "schema": "asteria.rpg.ability_evolution",
+        "source_ability_id": "brave_slash",
+        "version": 1
+      },
+      {
+        "minimum_rank": 2,
+        "priority": 0,
+        "progression_track_id": "battle_experience",
+        "result_ability_id": "fireball_ii",
+        "retain_source": false,
+        "rule_id": "evolve_fireball",
+        "schema": "asteria.rpg.ability_evolution",
+        "source_ability_id": "fireball",
+        "version": 1
+      },
+      {
+        "minimum_rank": 2,
+        "priority": 0,
+        "progression_track_id": "battle_experience",
+        "result_ability_id": "rally_cry_ii",
+        "retain_source": false,
+        "rule_id": "evolve_rally_cry",
+        "schema": "asteria.rpg.ability_evolution",
+        "source_ability_id": "rally_cry",
+        "version": 1
+      }
+    ],
     "achievements": [
       {
         "achievement_id": "quest_done",
@@ -32734,6 +34930,46 @@
           }
         ],
         "display_name": "Mira",
+        "schema": "asteria.rpg.actor",
+        "tags": [
+          "actor.playable",
+          "roster.01"
+        ],
+        "version": 2
+      },
+      {
+        "abilities": [],
+        "actor_id": "spirit_knight",
+        "base_resources": {
+          "vitality": {
+            "current": 2000.0,
+            "maximum": 2000.0,
+            "minimum": 0.0
+          }
+        },
+        "base_stats": {
+          "crit": 5.0,
+          "defense": 30.0,
+          "evade": 0.0,
+          "lifesteal": 0.0,
+          "magic": 20.0,
+          "power": 40.0,
+          "speed": 90.0
+        },
+        "class_assignments": [
+          {
+            "assignment_id": "spirit_knight.main",
+            "class_id": "spirit",
+            "enabled": true,
+            "priority": 10,
+            "progression_track_ids": [],
+            "role": "main",
+            "schema": "asteria.rpg.class_assignment",
+            "tags": [],
+            "version": 1
+          }
+        ],
+        "display_name": "Spirit Knight",
         "schema": "asteria.rpg.actor",
         "tags": [
           "actor.playable",
@@ -33498,6 +35734,24 @@
         "remove_triggers": [],
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
+        "state_id": "dragon_form",
+        "target_stat_terms": {},
+        "tick_amount": 1.0,
+        "tick_trigger": null,
+        "version": 1
+      },
+      {
+        "base_chance": 1.0,
+        "blocked_ability_tags": [],
+        "duration_multiplier": 1.0,
+        "duration_target_stat_terms": {},
+        "immune_target_tags": [],
+        "maximum_chance": 1.0,
+        "minimum_chance": 0.0,
+        "prevent_action": false,
+        "remove_triggers": [],
+        "schema": "asteria.rpg.battle_state_policy",
+        "source_stat_terms": {},
         "state_id": "enchant_dark",
         "target_stat_terms": {},
         "tick_amount": 1.0,
@@ -34135,6 +36389,23 @@
         "version": 1
       },
       {
+        "ability_id": "arsenal_barrage_ii",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "assassinate",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -34526,6 +36797,23 @@
         "version": 1
       },
       {
+        "ability_id": "brave_slash_ii",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "bulwark_charge",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -34552,6 +36840,23 @@
         "metric_conditions": [],
         "minimum_targets": 1,
         "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "call_spirit",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "self",
         "required_slot_tags": [],
         "required_subject_tags": [],
         "schema": "asteria.rpg.battle_targeting_definition",
@@ -34815,6 +37120,74 @@
         "version": 1
       },
       {
+        "ability_id": "dragon_breath",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 6,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "dragon_claw",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "dragon_form",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "self",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "dragon_revert",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "self",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "drain_touch",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -34986,6 +37359,23 @@
       },
       {
         "ability_id": "fireball",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "fireball_ii",
         "active_only": true,
         "adjacent_to_actor": false,
         "blocked_slot_tags": [],
@@ -35767,6 +38157,23 @@
         "version": 1
       },
       {
+        "ability_id": "rally_cry_ii",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "self",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "rekindle",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -35997,6 +38404,40 @@
         "metric_conditions": [],
         "minimum_targets": 1,
         "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "spirit_cleave",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "spirit_ward",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 6,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "ally",
         "required_slot_tags": [],
         "required_subject_tags": [],
         "schema": "asteria.rpg.battle_targeting_definition",
@@ -36592,7 +39033,8 @@
           "lullaby",
           "bp_gift",
           "second_breath",
-          "dawn_hymn"
+          "dawn_hymn",
+          "call_spirit"
         ],
         "granted_tags": [
           "capability.weapon.staff",
@@ -36853,6 +39295,24 @@
           "mystic"
         ],
         "unlock_level": 4,
+        "version": 1
+      },
+      {
+        "class_id": "spirit",
+        "display_name": "Spirit",
+        "granted_abilities": [
+          "spirit_cleave",
+          "spirit_ward"
+        ],
+        "granted_tags": [
+          "class.spirit"
+        ],
+        "resource_bonuses": {},
+        "schema": "asteria.rpg.class",
+        "stat_bonuses": {
+          "defense": 10.0,
+          "power": 20.0
+        },
         "version": 1
       },
       {
@@ -37509,7 +39969,8 @@
         "schema": "asteria.rpg.encounter",
         "tags": [
           "boss",
-          "multi_phase"
+          "multi_phase",
+          "no_escape"
         ],
         "version": 1
       },
@@ -37564,7 +40025,9 @@
             "gold": 6000.0
           },
           "drop_table_id": "warlord_spoils",
-          "experience": {},
+          "experience": {
+            "battle_experience": 150.0
+          },
           "loot": [
             {
               "chance": 1.0,
@@ -37624,7 +40087,9 @@
             "gold": 6000.0
           },
           "drop_table_id": "wisp_drops",
-          "experience": {},
+          "experience": {
+            "battle_experience": 25.0
+          },
           "loot": []
         },
         "schema": "asteria.rpg.enemy",
@@ -38177,6 +40642,47 @@
         "tags": [
           "accessory",
           "set.warden"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Dragon Form",
+        "equipment_id": "f_dragon",
+        "forbidden_capabilities": [],
+        "granted_abilities": [
+          "dragon_claw",
+          "dragon_breath",
+          "dragon_revert"
+        ],
+        "growth_id": null,
+        "modifiers": [],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "form",
+        "sockets": [],
+        "tags": [
+          "form",
+          "form.dragon"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Human Form",
+        "equipment_id": "f_normal",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "modifiers": [],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "form",
+        "sockets": [],
+        "tags": [
+          "form"
         ],
         "triggers": [],
         "version": 3
@@ -44431,10 +46937,10 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "Twilight Judgment",
+            "display_name": "Dragon Form",
             "exclusive_group": null,
             "max_rank": 1,
-            "node_id": "hero_twilight_judgment",
+            "node_id": "hero_dragon_form",
             "prerequisites": [
               {
                 "minimum_rank": 5,
@@ -44449,6 +46955,44 @@
               {
                 "ap": 2.0,
                 "jp.hero": 12.0
+              }
+            ],
+            "rewards": [
+              {
+                "granted_abilities": [
+                  "dragon_form"
+                ],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              }
+            ],
+            "schema": "asteria.rpg.progression_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "any_prerequisites": [],
+            "display_name": "Twilight Judgment",
+            "exclusive_group": null,
+            "max_rank": 1,
+            "node_id": "hero_twilight_judgment",
+            "prerequisites": [
+              {
+                "minimum_rank": 5,
+                "node_id": "hero_core"
+              },
+              {
+                "minimum_rank": 1,
+                "node_id": "hero_pass_the_torch"
+              }
+            ],
+            "rank_costs": [
+              {
+                "ap": 2.0,
+                "jp.hero": 13.0
               }
             ],
             "rewards": [
@@ -47612,6 +50156,35 @@
     ],
     "progression_tracks": [
       {
+        "display_name": "Battle experience",
+        "milestones": [
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 1,
+            "required_total": 0.0,
+            "stat_bonuses": {}
+          },
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 2,
+            "required_total": 100.0,
+            "stat_bonuses": {}
+          },
+          {
+            "granted_abilities": [],
+            "granted_tags": [],
+            "rank": 3,
+            "required_total": 300.0,
+            "stat_bonuses": {}
+          }
+        ],
+        "schema": "asteria.rpg.progression_track",
+        "track_id": "battle_experience",
+        "version": 1
+      },
+      {
         "display_name": "Level curve",
         "milestones": [
           {
@@ -48220,7 +50793,7 @@
           "binding_id": "service_0_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "fb892834-0cc7-4370-9b81-013bc17c486f",
+          "entity_id": "5b287d40-7a60-4321-95aa-cfe8c0a1c06e",
           "local_scope_id": "service_0",
           "program_id": "service_0",
           "trigger": "action"
@@ -48229,7 +50802,7 @@
           "binding_id": "service_1_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "1281c2b2-6896-4717-9937-19b9d927e6b6",
+          "entity_id": "f49b7027-055f-42fa-bdc6-1649e7b71a59",
           "local_scope_id": "service_1",
           "program_id": "service_1",
           "trigger": "action"
@@ -48238,7 +50811,7 @@
           "binding_id": "service_2_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "1c42c80e-de27-4c55-a3fb-668a74070061",
+          "entity_id": "637c1b45-a96f-44ea-86fe-018fcee69225",
           "local_scope_id": "service_2",
           "program_id": "service_2",
           "trigger": "action"
@@ -48247,7 +50820,7 @@
           "binding_id": "service_3_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "8a176a08-7ea3-4812-a5f5-41fcf6efb433",
+          "entity_id": "487bc7c3-dadd-414a-9e13-1a24624889b2",
           "local_scope_id": "service_3",
           "program_id": "service_3",
           "trigger": "action"
@@ -48256,7 +50829,7 @@
           "binding_id": "service_4_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "0df0ea11-dea6-4b25-99c0-0a7f7f1d012e",
+          "entity_id": "611682ee-96bb-4217-8dd0-22c6a16a4935",
           "local_scope_id": "service_4",
           "program_id": "service_4",
           "trigger": "action"
@@ -48265,7 +50838,7 @@
           "binding_id": "service_5_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "28d7e305-060b-43dc-824d-60df69062b75",
+          "entity_id": "b8c6fb81-5c53-4040-88e2-efa54b7c23fc",
           "local_scope_id": "service_5",
           "program_id": "service_5",
           "trigger": "action"
@@ -48274,7 +50847,7 @@
           "binding_id": "service_6_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "eb83228c-6d65-4b57-8178-42521131b2ae",
+          "entity_id": "0d5fe80c-53cb-4716-a9bb-ac88745a4cfd",
           "local_scope_id": "service_6",
           "program_id": "service_6",
           "trigger": "action"
@@ -48283,7 +50856,7 @@
           "binding_id": "service_7_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "5f1d70f6-bbaa-4a54-b4dc-f2896ba26da7",
+          "entity_id": "6e7afcaf-5f5b-493c-8678-7d78a3628686",
           "local_scope_id": "service_7",
           "program_id": "service_7",
           "trigger": "action"
@@ -48292,7 +50865,7 @@
           "binding_id": "service_8_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "2f2d16e4-7cac-4664-8a8e-3baef9ae15ef",
+          "entity_id": "d9db3362-5a9c-4171-a6c5-d364245c876b",
           "local_scope_id": "service_8",
           "program_id": "service_8",
           "trigger": "action"
@@ -48301,7 +50874,7 @@
           "binding_id": "service_9_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "b27f5800-74c8-4647-a366-2371930b01b1",
+          "entity_id": "15f064ec-6fd8-4a78-a0f2-742ad1da57dd",
           "local_scope_id": "service_9",
           "program_id": "service_9",
           "trigger": "action"
@@ -48310,7 +50883,7 @@
           "binding_id": "service_10_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "a93b86fd-ea90-4cd1-b00b-0b8d4d8ff19e",
+          "entity_id": "bcea70a0-efc4-448a-9db8-9d86e6412cef",
           "local_scope_id": "service_10",
           "program_id": "service_10",
           "trigger": "action"
@@ -48319,7 +50892,7 @@
           "binding_id": "service_11_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "5414571d-f13d-4b00-9157-468eb0b17686",
+          "entity_id": "a75402f4-9bd1-4c25-92bf-6cb1fa631f49",
           "local_scope_id": "service_11",
           "program_id": "service_11",
           "trigger": "action"
@@ -48328,7 +50901,7 @@
           "binding_id": "service_12_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "a223f86a-9d2a-445d-9d44-28e3d38e62d2",
+          "entity_id": "15d489eb-715e-4fb2-8bd3-f77fae0ed516",
           "local_scope_id": "service_12",
           "program_id": "service_12",
           "trigger": "action"
@@ -48337,7 +50910,7 @@
           "binding_id": "service_13_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "1ae1253e-fac2-42e6-8000-dee47de2d6b1",
+          "entity_id": "33d99883-19a7-4bb3-9776-431684f444a3",
           "local_scope_id": "service_13",
           "program_id": "service_13",
           "trigger": "action"
@@ -48346,7 +50919,7 @@
           "binding_id": "service_14_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "c48e7faf-ac0a-4a72-a56c-20e66e6acf1f",
+          "entity_id": "da8efed1-7343-4eba-9529-f9b1b08c6874",
           "local_scope_id": "service_14",
           "program_id": "service_14",
           "trigger": "action"
@@ -48355,7 +50928,7 @@
           "binding_id": "service_15_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "08fc26fa-e7a6-4994-8a11-c5e7f52e9517",
+          "entity_id": "064f2e70-c867-4bb5-b9b3-a5855b026e61",
           "local_scope_id": "service_15",
           "program_id": "service_15",
           "trigger": "action"
@@ -48364,7 +50937,7 @@
           "binding_id": "service_16_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "299d6b13-0833-4094-8331-4d0928da00c4",
+          "entity_id": "cb4ab018-bf66-4926-9473-dcc82a9b1a80",
           "local_scope_id": "service_16",
           "program_id": "service_16",
           "trigger": "action"
@@ -48373,7 +50946,7 @@
           "binding_id": "service_17_binding",
           "conditions": [],
           "enabled": true,
-          "entity_id": "85d1ac7d-59a1-4256-9785-d2038de8affe",
+          "entity_id": "0b77a26e-6129-4f6f-8071-5a3ef660465e",
           "local_scope_id": "service_17",
           "program_id": "service_17",
           "trigger": "action"
@@ -48464,7 +51037,7 @@
             }
           ],
           "enabled": true,
-          "id": "fb892834-0cc7-4370-9b81-013bc17c486f",
+          "id": "5b287d40-7a60-4321-95aa-cfe8c0a1c06e",
           "name": "Smith"
         },
         {
@@ -48495,7 +51068,7 @@
             }
           ],
           "enabled": true,
-          "id": "1281c2b2-6896-4717-9937-19b9d927e6b6",
+          "id": "f49b7027-055f-42fa-bdc6-1649e7b71a59",
           "name": "Awakener"
         },
         {
@@ -48526,7 +51099,7 @@
             }
           ],
           "enabled": true,
-          "id": "1c42c80e-de27-4c55-a3fb-668a74070061",
+          "id": "637c1b45-a96f-44ea-86fe-018fcee69225",
           "name": "Jeweler"
         },
         {
@@ -48557,7 +51130,7 @@
             }
           ],
           "enabled": true,
-          "id": "8a176a08-7ea3-4812-a5f5-41fcf6efb433",
+          "id": "487bc7c3-dadd-414a-9e13-1a24624889b2",
           "name": "Card Dealer"
         },
         {
@@ -48588,7 +51161,7 @@
             }
           ],
           "enabled": true,
-          "id": "0df0ea11-dea6-4b25-99c0-0a7f7f1d012e",
+          "id": "611682ee-96bb-4217-8dd0-22c6a16a4935",
           "name": "Mystic Teacher"
         },
         {
@@ -48619,7 +51192,7 @@
             }
           ],
           "enabled": true,
-          "id": "28d7e305-060b-43dc-824d-60df69062b75",
+          "id": "b8c6fb81-5c53-4040-88e2-efa54b7c23fc",
           "name": "Duelist Teacher"
         },
         {
@@ -48650,7 +51223,7 @@
             }
           ],
           "enabled": true,
-          "id": "eb83228c-6d65-4b57-8178-42521131b2ae",
+          "id": "0d5fe80c-53cb-4716-a9bb-ac88745a4cfd",
           "name": "Weapon Master Dojo"
         },
         {
@@ -48681,7 +51254,7 @@
             }
           ],
           "enabled": true,
-          "id": "5f1d70f6-bbaa-4a54-b4dc-f2896ba26da7",
+          "id": "6e7afcaf-5f5b-493c-8678-7d78a3628686",
           "name": "Sage's Tower"
         },
         {
@@ -48712,7 +51285,7 @@
             }
           ],
           "enabled": true,
-          "id": "2f2d16e4-7cac-4664-8a8e-3baef9ae15ef",
+          "id": "d9db3362-5a9c-4171-a6c5-d364245c876b",
           "name": "Hero's Shrine"
         },
         {
@@ -48743,7 +51316,7 @@
             }
           ],
           "enabled": true,
-          "id": "b27f5800-74c8-4647-a366-2371930b01b1",
+          "id": "15f064ec-6fd8-4a78-a0f2-742ad1da57dd",
           "name": "Forgemaster's Smithy"
         },
         {
@@ -48774,7 +51347,7 @@
             }
           ],
           "enabled": true,
-          "id": "a93b86fd-ea90-4cd1-b00b-0b8d4d8ff19e",
+          "id": "bcea70a0-efc4-448a-9db8-9d86e6412cef",
           "name": "Rogue Guild"
         },
         {
@@ -48805,7 +51378,7 @@
             }
           ],
           "enabled": true,
-          "id": "5414571d-f13d-4b00-9157-468eb0b17686",
+          "id": "a75402f4-9bd1-4c25-92bf-6cb1fa631f49",
           "name": "Guardian Post"
         },
         {
@@ -48836,7 +51409,7 @@
             }
           ],
           "enabled": true,
-          "id": "a223f86a-9d2a-445d-9d44-28e3d38e62d2",
+          "id": "15d489eb-715e-4fb2-8bd3-f77fae0ed516",
           "name": "Alchemist"
         },
         {
@@ -48867,7 +51440,7 @@
             }
           ],
           "enabled": true,
-          "id": "1ae1253e-fac2-42e6-8000-dee47de2d6b1",
+          "id": "33d99883-19a7-4bb3-9776-431684f444a3",
           "name": "Merchant"
         },
         {
@@ -48898,7 +51471,7 @@
             }
           ],
           "enabled": true,
-          "id": "c48e7faf-ac0a-4a72-a56c-20e66e6acf1f",
+          "id": "da8efed1-7343-4eba-9529-f9b1b08c6874",
           "name": "Breaker"
         },
         {
@@ -48929,7 +51502,7 @@
             }
           ],
           "enabled": true,
-          "id": "08fc26fa-e7a6-4994-8a11-c5e7f52e9517",
+          "id": "064f2e70-c867-4bb5-b9b3-a5855b026e61",
           "name": "Armory (Bow)"
         },
         {
@@ -48960,7 +51533,7 @@
             }
           ],
           "enabled": true,
-          "id": "299d6b13-0833-4094-8331-4d0928da00c4",
+          "id": "cb4ab018-bf66-4926-9473-dcc82a9b1a80",
           "name": "Armory (Dagger)"
         },
         {
@@ -48991,7 +51564,7 @@
             }
           ],
           "enabled": true,
-          "id": "85d1ac7d-59a1-4256-9785-d2038de8affe",
+          "id": "0b77a26e-6129-4f6f-8071-5a3ef660465e",
           "name": "Shrine"
         }
       ],
