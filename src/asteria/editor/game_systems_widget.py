@@ -349,8 +349,11 @@ class RecordForm(QWidget):
         if f.kind in ("ref", "optional_ref"):
             widget = QComboBox()
             if f.kind == "optional_ref":
-                widget.addItem("")
-            widget.addItems(list(self.references(f.source)))
+                widget.addItem(f.empty_label, "")
+            for entry in self.references(f.source):
+                # an entry is an id, or (id, name) to show a readable name for an opaque id
+                value, label = entry if isinstance(entry, tuple) else (entry, entry)
+                widget.addItem(str(label), str(value))
             return widget
         if f.kind == "icon":
             return _IconPicker(self.icons)
@@ -399,11 +402,16 @@ class RecordForm(QWidget):
                 widget.setValue(float(value or 0.0))
             elif f.kind == "bool":
                 widget.setChecked(bool(value))
-            elif f.kind in ("choice", "ref", "optional_ref"):
+            elif f.kind == "choice":
                 text = "" if value is None else str(value)
                 if widget.findText(text) < 0:
                     widget.addItem(text)
                 widget.setCurrentIndex(widget.findText(text))
+            elif f.kind in ("ref", "optional_ref"):
+                text = "" if value is None else str(value)
+                if widget.findData(text) < 0:  # a reference that no longer exists stays visible
+                    widget.addItem(f"{text} (missing)", text)
+                widget.setCurrentIndex(widget.findData(text))
             elif f.kind == "optional_int":
                 widget.check.setChecked(value is not None)
                 widget.spin.setEnabled(value is not None)
@@ -437,8 +445,11 @@ class RecordForm(QWidget):
                 out[f.key] = widget.value()
             elif f.kind == "bool":
                 out[f.key] = widget.isChecked()
-            elif f.kind in ("choice", "ref", "optional_ref"):
+            elif f.kind == "choice":
                 out[f.key] = widget.currentText()
+            elif f.kind in ("ref", "optional_ref"):
+                value = widget.currentData()
+                out[f.key] = widget.currentText() if value is None else str(value)
             elif f.kind == "optional_int":
                 out[f.key] = widget.spin.value() if widget.check.isChecked() else None
             elif f.kind == "ref_list":

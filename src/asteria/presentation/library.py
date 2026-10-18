@@ -317,6 +317,8 @@ class BattlePresentationLibrary:
                 data.pop("overhead_below", None)
             if data.get("overhead_bars", True):
                 data.pop("overhead_bars", None)
+            if not data.get("command_counts"):
+                data.pop("command_counts", None)
             if not data.get("menu_over_stage"):
                 data.pop("menu_over_stage", None)
             return data

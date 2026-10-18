@@ -83,7 +83,9 @@ class FormField:
     ``icon`` (a picture id picked from the project's icons or the built-in library),
     ``choice`` (``choices``), ``ref`` / ``ref_list`` (``source`` names a
     reference list, see :meth:`GameSystemsAuthoringController.references`),
-    ``optional_ref`` (may be empty), ``optional_int`` (None allowed),
+    ``optional_ref`` (may be empty; ``empty_label`` names that choice), ``optional_int`` (None
+    allowed). A reference list may hold ``(id, name)`` pairs: the form shows the name and keeps
+    the id,
     ``string_list``, ``amounts`` (``{key: number}``, keys from ``source`` when
     given), ``group`` (nested ``fields``), ``table`` (list of nested
     ``fields`` records), ``pairs`` (list of ``[number, text]``).
@@ -96,6 +98,7 @@ class FormField:
     choices: tuple = ()
     fields: tuple = ()
     default: object = None
+    empty_label: str = ""
 
 
 def F(key, label, kind, **values):  # noqa: N802 - short spec constructor

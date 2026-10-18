@@ -122,3 +122,39 @@ def test_a_scene_opens_with_room_around_the_game_camera():
     tight = viewport.camera.zoom
     assert viewport.frame_initial()
     assert viewport.camera.zoom < tight * 0.7
+
+
+def test_the_start_scene_is_picked_by_name_and_new_scenes_get_unique_names():
+    from asteria.core import Scene
+    from asteria.editor import EditorDocument
+    from asteria.editor.game_start_authoring import GameStartAuthoringController
+    from asteria.editor.scenes import build_add_scene_command
+    from asteria.project import Project
+
+    project = Project("Game")
+    first = project.add_scene(Scene("Town"))
+    document = EditorDocument(project)
+    controller = GameStartAuthoringController(document)
+    assert controller.references("scenes") == ((first.id, "Town"),)
+    names = []
+    for _ in range(3):
+        command = build_add_scene_command(project, "Scene")
+        command.redo()
+        names.append(command.scene.name)
+    assert names == ["Scene", "Scene 2", "Scene 3"]
+
+
+def test_a_reference_dropdown_shows_names_and_keeps_ids(tmp_path):
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.game_systems_authoring import F
+    from asteria.editor.game_systems_widget import RecordForm
+
+    QApplication.instance() or QApplication([])
+    field = F("scene_id", "Start Scene", "optional_ref", source="scenes", empty_label="(startup)")
+    form = RecordForm((field,), lambda source: (("id-1", "Town"), ("id-2", "Woods")))
+    form.set_data({"scene_id": "id-2"})
+    combo = form.widgets["scene_id"]
+    assert combo.currentText() == "Woods" and form.data()["scene_id"] == "id-2"
+    combo.setCurrentIndex(0)
+    assert combo.currentText() == "(startup)" and form.data()["scene_id"] == ""

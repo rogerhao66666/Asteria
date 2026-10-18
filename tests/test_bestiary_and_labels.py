@@ -113,3 +113,27 @@ def test_a_companion_waits_hidden_at_the_guild_until_met():
     apply_npc_states(town, game.world)
     assert by_name["Vesper"].enabled
     _ = pytest
+
+
+def test_top_level_commands_show_no_numbers_unless_the_layout_asks():
+    from dataclasses import replace
+
+    from asteria.presentation.battle_action_menu import BattleActionEntry, BattleActionMenuView
+    from asteria.presentation.battle_ui import BattleUiLayoutProfile
+
+    assert BattleUiLayoutProfile().command_counts is False  # the default: names alone
+    entries = (
+        BattleActionEntry("root:Attack", "Attack", category="Command", cost_text="3"),
+        BattleActionEntry("fire", "Fire", category="Skills", cost_text="4 SP"),
+    )
+    menu = BattleActionMenuView(("Command",), "Command", "", entries, 0, 1, 2, 0, 0)
+    from asteria.presentation.battle import BattlePresentationScene
+    from asteria.presentation.battle_ui import BattleUiComposer
+
+    composer = BattleUiComposer(BattlePresentationScene("s", "bg"))
+    _p, texts, _i = composer._action_menu_commands(menu)
+    shown = [t.text for t in texts]
+    assert "3" not in shown and "4 SP" in shown  # a skill's cost stays
+    composer.layout = replace(composer.layout, command_counts=True)
+    _p, texts, _i = composer._action_menu_commands(menu)
+    assert "3" in [t.text for t in texts]

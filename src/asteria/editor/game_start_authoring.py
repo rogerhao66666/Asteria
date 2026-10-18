@@ -22,7 +22,14 @@ _PET = (
     F("affinity", "Affinity", "float", default=0.0),
 )
 GAME_START_FORM: tuple[FormField, ...] = (
-    F("scene_id", "Start Scene (empty: project startup scene)", "text", default=""),
+    F(
+        "scene_id",
+        "Start Scene",
+        "optional_ref",
+        source="scenes",
+        default="",
+        empty_label="(the project's startup scene)",
+    ),
     F("player_facing", "Player Facing", "choice", choices=FACINGS, default="down"),
     F("position_x", "Start X (empty: spawn point)", "optional_int", default=None),
     F("position_y", "Start Y (empty: spawn point)", "optional_int", default=None),
@@ -65,6 +72,13 @@ class GameStartAuthoringController:
 
     def references(self, source):
         db = self.project.rpg_database
+        if source == "scenes":  # shown by name, kept by id; a repeated name gets a short id
+            scenes = list(self.project.scenes())
+            names = [s.name or "Untitled Scene" for s in scenes]
+            return tuple(
+                (s.id, n if names.count(n) == 1 else f"{n} ({s.id[:8]})")
+                for s, n in zip(scenes, names, strict=True)
+            )
         stores = {"items": db.items, "actors": db.actors, "pet_species": db.pet_species}
         return tuple(sorted(stores.get(source, {})))
 

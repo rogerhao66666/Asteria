@@ -11,6 +11,12 @@ def build_add_scene_command(project, name="Scene"):
     if project is None:
         raise SceneEditError("Project required")
     name = str(name).strip() or "Scene"
+    taken = {scene.name for scene in project.scenes()}
+    if name in taken:  # "Scene", "Scene 2", "Scene 3"...: every scene keeps a readable name
+        number = 2
+        while f"{name} {number}" in taken:
+            number += 1
+        name = f"{name} {number}"
     return AddSceneCommand(project, Scene(name))
 
 

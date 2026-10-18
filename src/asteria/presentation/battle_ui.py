@@ -65,6 +65,9 @@ class BattleUiLayoutProfile:
     # overhead_below: an overhead name and bar sit under the sprite's feet (they never cover the
     # body or the combatant behind); off = floating above the head
     overhead_below: bool = True
+    # command_counts: a top-level command shows a number beside it (how many choices it opens,
+    # Escape's chance); off = names alone
+    command_counts: bool = False
     # overhead_bars: an overhead member shows its top resource as a bar under the name; off = the
     # name alone (a game that keeps enemy health hidden)
     overhead_bars: bool = True
@@ -773,6 +776,16 @@ class BattleUiComposer:
         if not isinstance(menu, BattleActionMenuView):
             raise TypeError("action_menu must be BattleActionMenuView")
         L, P = self.layout, self.polish
+        if not L.command_counts and any(e.action_id.startswith("root:") for e in menu.entries):
+            from dataclasses import replace
+
+            menu = replace(  # the top-level commands show their names alone
+                menu,
+                entries=tuple(
+                    replace(e, cost_text="") if e.action_id.startswith("root:") else e
+                    for e in menu.entries
+                ),
+            )
         width = min(P.interaction_width, L.virtual_width - 2 * L.margin)
         # as wide as the longest row (name + cost) needs, so costs never run into names
         chars = max(
