@@ -291,6 +291,7 @@ def resolve_actor_build(
         loadout=loadout,
         passives=passive_map,
         evolution_rules=evolution_rules,
+        tags=tuple(tags.values()),  # rune tags from skill trees pick a skill's variant
     )
     for grant in ability_resolution.grants:
         contributions.append(

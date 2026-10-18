@@ -154,6 +154,7 @@ def fight(game, facts, acc, seed=7, max_rounds=200, encounter="boss_room", crowd
     used = acc["used"]
     hp_trace = []
     turn = 0
+    mixes = 0
     for _ in range(max_rounds):
         actor, enemy_log = game.run_enemy_turns()
         for entry in game.drain_battle_log():
@@ -187,7 +188,8 @@ def fight(game, facts, acc, seed=7, max_rounds=200, encounter="boss_room", crowd
             break
         build = game.battle.member(actor).ability_ids
         turn += 1
-        if turn % 5 == 2 and "concoct" in build:  # mix a bomb in the middle of the fight
+        if "concoct" in build and mixes < 2 and turn >= 2:  # mix bombs mid-fight (twice)
+            mixes += 1
             recipe = (
                 ("healing_herb", "fire_dust") if turn % 10 == 2 else ("fire_dust", "ice_crystal")
             )
@@ -204,7 +206,21 @@ def fight(game, facts, acc, seed=7, max_rounds=200, encounter="boss_room", crowd
         rng.shuffle(pool)
         pool.sort(key=lambda a: used[a])  # variety: the least used skill first
         killers = ("executioner", "assassinate", "deathmark")  # instant death must get its roll
-        pool.sort(key=lambda a: not (a in killers and used[a] == 0))
+        base = lambda a: a.split("__")[0]  # noqa: E731 - a rune variant counts as its skill
+        pool.sort(key=lambda a: not (base(a) in killers and used[a] == 0))
+        # skills whose system must show up at least once: forms, item / gold costs, lifesteal
+        special = (
+            "dawn_and_dusk",
+            "elemental_edge",
+            "arcane_tome",
+            "gilded_hammer",
+            "molten_strike",
+            "vampiric_strike",
+            "dark_pact",
+            "shadow_feast",
+            "blood_rite",
+        )
+        pool.sort(key=lambda a: not (base(a) in special and used[a] == 0))
         guards = ("guard_stance", "rally", "shadow_step", "mend", "arcane_barrier", "bastion")
         resources = game.battle.member(actor).subject.resources
         low = resources.current("vitality") < 0.5 * resources.maximum("vitality")
@@ -242,7 +258,7 @@ def fight(game, facts, acc, seed=7, max_rounds=200, encounter="boss_room", crowd
                 relation = game.ability_relation(ability_id)
                 chosen = targets if "OPPONENT" in str(relation).upper() else None
                 adds = [e for e in game.active_enemy_ids() if e != boss]
-                if adds and ability_id in ("executioner", "assassinate") and chosen:
+                if adds and base(ability_id) in ("executioner", "assassinate") and chosen:
                     chosen = (adds[0],)  # instant death works on the adds, not the boss
                 definition = game.battle.ability_runtime.registry.get(ability_id)
                 form = rng.choice(definition.forms)["form_id"] if definition.forms else None

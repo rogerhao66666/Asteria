@@ -555,6 +555,7 @@ class RpgProgressionAuthoringController:
             "minimum_rank",
             "priority",
             "retain_source",
+            "required_tags",
         }
         unknown = set(changes) - allowed
         if unknown:
@@ -575,6 +576,7 @@ class RpgProgressionAuthoringController:
             minimum_rank=changes.get("minimum_rank", old.minimum_rank),
             priority=changes.get("priority", old.priority),
             retain_source=changes.get("retain_source", old.retain_source),
+            required_tags=changes.get("required_tags", old.required_tags),
         )
         self._execute(
             _MappingCommand(

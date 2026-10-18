@@ -605,6 +605,168 @@
       "apostasy": {
         "label": "Apostasy"
       },
+      "shield_bash__ember": {
+        "label": "Shield Bash (Ember)"
+      },
+      "shield_bash__echo": {
+        "label": "Shield Bash (Echo)"
+      },
+      "shield_bash__siphon": {
+        "label": "Shield Bash (Siphon)"
+      },
+      "quick_slash__ember": {
+        "label": "Quick Slash (Ember)"
+      },
+      "quick_slash__echo": {
+        "label": "Quick Slash (Echo)"
+      },
+      "quick_slash__siphon": {
+        "label": "Quick Slash (Siphon)"
+      },
+      "frost_lance__ember": {
+        "label": "Frost Lance (Ember)"
+      },
+      "frost_lance__echo": {
+        "label": "Frost Lance (Echo)"
+      },
+      "frost_lance__siphon": {
+        "label": "Frost Lance (Siphon)"
+      },
+      "weapon_dance__ember": {
+        "label": "Weapon Dance (Ember)"
+      },
+      "weapon_dance__echo": {
+        "label": "Weapon Dance (Echo)"
+      },
+      "weapon_dance__siphon": {
+        "label": "Weapon Dance (Siphon)"
+      },
+      "holy_light__ember": {
+        "label": "Holy Light (Ember)"
+      },
+      "holy_light__echo": {
+        "label": "Holy Light (Echo)"
+      },
+      "holy_light__siphon": {
+        "label": "Holy Light (Siphon)"
+      },
+      "holy_blade__ember": {
+        "label": "Holy Blade (Ember)"
+      },
+      "holy_blade__echo": {
+        "label": "Holy Blade (Echo)"
+      },
+      "holy_blade__siphon": {
+        "label": "Holy Blade (Siphon)"
+      },
+      "temper__ember": {
+        "label": "Temper (Ember)"
+      },
+      "temper__echo": {
+        "label": "Temper (Echo)"
+      },
+      "temper__siphon": {
+        "label": "Temper (Siphon)"
+      },
+      "mug__ember": {
+        "label": "Mug (Ember)"
+      },
+      "mug__echo": {
+        "label": "Mug (Echo)"
+      },
+      "mug__siphon": {
+        "label": "Mug (Siphon)"
+      },
+      "shield_wall__ember": {
+        "label": "Shield Wall (Ember)"
+      },
+      "shield_wall__echo": {
+        "label": "Shield Wall (Echo)"
+      },
+      "shield_wall__siphon": {
+        "label": "Shield Wall (Siphon)"
+      },
+      "mend__ember": {
+        "label": "Mend (Ember)"
+      },
+      "mend__echo": {
+        "label": "Mend (Echo)"
+      },
+      "mend__siphon": {
+        "label": "Mend (Siphon)"
+      },
+      "holy_nova__ember": {
+        "label": "Holy Nova (Ember)"
+      },
+      "holy_nova__echo": {
+        "label": "Holy Nova (Echo)"
+      },
+      "holy_nova__siphon": {
+        "label": "Holy Nova (Siphon)"
+      },
+      "divine_aegis__ember": {
+        "label": "Divine Aegis (Ember)"
+      },
+      "divine_aegis__echo": {
+        "label": "Divine Aegis (Echo)"
+      },
+      "divine_aegis__siphon": {
+        "label": "Divine Aegis (Siphon)"
+      },
+      "curse__ember": {
+        "label": "Hex (Ember)"
+      },
+      "curse__echo": {
+        "label": "Hex (Echo)"
+      },
+      "curse__siphon": {
+        "label": "Hex (Siphon)"
+      },
+      "frost_nova__ember": {
+        "label": "Frost Nova (Ember)"
+      },
+      "frost_nova__echo": {
+        "label": "Frost Nova (Echo)"
+      },
+      "frost_nova__siphon": {
+        "label": "Frost Nova (Siphon)"
+      },
+      "death_coil__ember": {
+        "label": "Death Coil (Ember)"
+      },
+      "death_coil__echo": {
+        "label": "Death Coil (Echo)"
+      },
+      "death_coil__siphon": {
+        "label": "Death Coil (Siphon)"
+      },
+      "charm__ember": {
+        "label": "Charm (Ember)"
+      },
+      "charm__echo": {
+        "label": "Charm (Echo)"
+      },
+      "charm__siphon": {
+        "label": "Charm (Siphon)"
+      },
+      "fanatic_strike__ember": {
+        "label": "Fanatic Strike (Ember)"
+      },
+      "fanatic_strike__echo": {
+        "label": "Fanatic Strike (Echo)"
+      },
+      "fanatic_strike__siphon": {
+        "label": "Fanatic Strike (Siphon)"
+      },
+      "forbidden_rite__ember": {
+        "label": "Forbidden Rite (Ember)"
+      },
+      "forbidden_rite__echo": {
+        "label": "Forbidden Rite (Echo)"
+      },
+      "forbidden_rite__siphon": {
+        "label": "Forbidden Rite (Siphon)"
+      },
       "gob_sling": {
         "label": "Sling Stone"
       },

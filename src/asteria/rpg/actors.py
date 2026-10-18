@@ -639,6 +639,7 @@ class RpgActorRuntime:
         loadout=None,
         passives=None,
         evolution_rules=(),
+        tags=None,
     ):
         grants = []
 
@@ -687,7 +688,7 @@ class RpgActorRuntime:
         rules = tuple(evolution_rules)
         by_source = {}
         for rule in rules:
-            if not rule.matches(progression):
+            if not rule.matches(progression, tags):
                 continue
             by_source.setdefault(rule.source_ability_id, []).append(rule)
         for source in list(ordered):

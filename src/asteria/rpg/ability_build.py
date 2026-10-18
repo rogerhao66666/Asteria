@@ -90,6 +90,9 @@ class AbilityEvolutionRule:
     minimum_rank: int = 1
     priority: int = 0
     retain_source: bool = False
+    # required_tags: the actor must carry every one (a skill-tree "rune" node grants it), so a
+    # rune turns a skill into its variant
+    required_tags: tuple[str, ...] = ()
 
     def __init__(
         self,
@@ -101,6 +104,7 @@ class AbilityEvolutionRule:
         minimum_rank=1,
         priority=0,
         retain_source=False,
+        required_tags=(),
     ):
         object.__setattr__(self, "rule_id", _id(rule_id, "rule_id"))
         object.__setattr__(self, "source_ability_id", _id(source_ability_id, "source_ability_id"))
@@ -118,8 +122,13 @@ class AbilityEvolutionRule:
         object.__setattr__(self, "minimum_rank", minimum_rank)
         object.__setattr__(self, "priority", int(priority))
         object.__setattr__(self, "retain_source", bool(retain_source))
+        object.__setattr__(
+            self, "required_tags", tuple(str(t).strip() for t in required_tags if str(t).strip())
+        )
 
-    def matches(self, progression):
+    def matches(self, progression, tags=None):
+        if self.required_tags and not set(self.required_tags) <= set(tags or ()):
+            return False
         if self.progression_track_id is None:
             return True
         if progression is None or self.progression_track_id not in progression.definitions:
@@ -137,6 +146,7 @@ class AbilityEvolutionRule:
             "minimum_rank": self.minimum_rank,
             "priority": self.priority,
             "retain_source": self.retain_source,
+            "required_tags": list(self.required_tags),
         }
 
     @classmethod
@@ -151,6 +161,7 @@ class AbilityEvolutionRule:
             minimum_rank=data["minimum_rank"],
             priority=data["priority"],
             retain_source=data["retain_source"],
+            required_tags=data.get("required_tags", ()),
         )
 
 

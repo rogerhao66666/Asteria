@@ -154,6 +154,7 @@ class IntegratedAuthoringControllers:
                 minimum_rank=v.minimum_rank,
                 priority=v.priority,
                 retain_source=v.retain_source,
+                required_tags=v.required_tags,
             )
 
         categories = [

@@ -35,6 +35,20 @@ Weapon Master / Rogue, Mystic -> Sage. 19 jobs, a skill tree per job (212 nodes)
 job. The campaign makes all six advances; the smoke fights every companion in every tier (18 of
 18 jobs use their skills).
 
+## Skill trees (phase 2, 2026-10-18)
+
+554 tree nodes in four styles. **Atlas of Fate** (Path of Exile): a shared passive web every
+member walks with ability points (2 a level): six sectors (Might, Arcana, Bulwark, Swiftness,
+Precision, Vigor), each a gate, small nodes, two notables and a keystone that trades one strength
+for another; bridges join neighbours; drawn as a web (authored positions). **Specializations**
+(World of Warcraft): every job tree has three exclusive specs (Priest: Holy / Discipline /
+Shadow ...), each with two ranked talents and a capstone passive (54 spec passives). **Runes**
+(Diablo III): each job's rune skill takes Ember (fire + burn), Echo (twice the hits) or Siphon
+(heals the user); the rune node grants a tag and an evolution that needs the tag swaps the skill
+(54 rune skills; engine: `AbilityEvolutionRule.required_tags`). **Skill books** (MapleStory): a
+ten-rank book per job paid with skill points from levels (shrine, Job Master training). The
+campaign spends every member's points across all four; runes show up as the skills used.
+
 ## Battle screen
 
 Party HP down the right edge; the command menu always at the acting member's lower right, drawn

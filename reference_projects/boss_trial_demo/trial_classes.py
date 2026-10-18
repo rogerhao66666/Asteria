@@ -435,6 +435,7 @@ def job_hall_steps(say, world, menu):
                             actor_id=actor_id,
                             amount=4000,
                             level_track="level_curve",
+                            points="skill_points=2",  # skill books (phase 2)
                         ),
                         say("Job Master", f"{name} trains hard."),
                     ],
