@@ -724,11 +724,19 @@ def build_world(c, story):
         "crypt": catacombs(crypt_grid),
         "throne": ember_throne(throne_grid),
     }
+    import trial_home as home_lib
+
+    home_lib.clear_lot(town_grid)  # Aldric's house stands in the town's north-east corner
+    places["town"]["start"] = home_lib.front_door()  # the game starts at his own door
+    home_tiles, home_cols, home_floor, home_walls = home_lib.tileset(assets)
+    home_grid = Grid(home_cols, *home_lib.ROOM, 15)
+    places["home"] = home_lib.room(home_grid, home_floor, home_walls)
     maps = {
         "town": assets.tilemap("town", town_grid.data(ext, 16), "Hearthfold"),
         "woods": assets.tilemap("woods", woods_grid.data(ext, 16), "Whispering Woods"),
         "crypt": assets.tilemap("crypt", crypt_grid.data(dun, 16), "Catacombs"),
         "throne": assets.tilemap("throne", throne_grid.data(lav, 16), "Ember Throne"),
+        "home": assets.tilemap("home", home_grid.data(home_tiles, 16), "Aldric's House"),
     }
     looks = {  # NPC_FACES keys: townsfolk; "hero_<face>": the party members themselves
         key: character(
@@ -747,9 +755,11 @@ def build_world(c, story):
         "woods": SceneBuilder(project, "woods", "Whispering Woods"),
         "crypt": SceneBuilder(project, "crypt", "Catacombs"),
         "throne": SceneBuilder(project, "throne", "Ember Throne"),
+        "home": SceneBuilder(project, "home", "Aldric's House"),
     }
     for key, builder in builders.items():
         builder.setup(maps[key])
+    home_lib.furnish(assets, builders["town"], builders["home"], places["home"])
     town, woods, crypt, throne = (builders[k] for k in ("town", "woods", "crypt", "throne"))
     hero = town.entity("Player", *places["town"]["start"])
     town.look(hero, *looks["hero_warrior"])
@@ -849,13 +859,16 @@ def build_world(c, story):
     throne.foe("Acolyte Vigil", world_xy(17, 13), looks["skeleton_grunt"], "acolyte_vigil")
     from asteria.core.prefab import prefab_from_entity
 
-    for prefab_id, face in (("spirit_lantern", "necromancer"), ("bone_pile", "skeleton_hunter")):
+    import trial_people as people
+
+    lantern = people.look(assets, "look_npc_lantern", people.LANTERN, "Spirit Lantern")
+    for prefab_id, face in (("spirit_lantern", lantern), ("bone_pile", looks["skeleton_hunter"])):
         template = Entity(
             prefab_id.replace("_", " ").title(), entity_id=asset_id("prefab", prefab_id)
         )
         template.add_component(Transform(0, 0))
-        template.add_component(_set(SpriteRenderer2D(), sprite_sheet_asset_id=looks[face][0]))
-        template.add_component(_set(Animator2DComponent(), clip_set_id=looks[face][1]))
+        template.add_component(_set(SpriteRenderer2D(), sprite_sheet_asset_id=face[0]))
+        template.add_component(_set(Animator2DComponent(), clip_set_id=face[1]))
         project.prefabs.add(prefab_from_entity(template, prefab_id))
     from PIL import Image
 
@@ -867,6 +880,7 @@ def build_world(c, story):
     }
     places["scenes"] = {key: builder.scene.id for key, builder in builders.items()}
     story(c, builders, looks, places)
+    people.dress(assets, builders)  # every person wears a look of their own
     for builder in builders.values():
         builder.finish()
     project.startup_scene_id = town.scene.id

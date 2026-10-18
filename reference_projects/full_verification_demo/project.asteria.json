@@ -119,6 +119,45 @@
         "source_path": "playable_assets/lucifer/world/lava_tileset.json"
       },
       {
+        "id": "25d57fd2-5107-57c0-82bb-b63d076f19c8",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Aldric's House",
+        "source_path": "playable_assets/lucifer/world/home.png"
+      },
+      {
+        "id": "77cc735d-a446-5ff1-8d18-8eb5fec99b1a",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Aldric's House Sheet",
+        "source_path": "playable_assets/lucifer/world/home_sheet.json"
+      },
+      {
+        "id": "24b81494-063f-5071-abb4-84459ed57035",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "tileset",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Aldric's House Tileset",
+        "source_path": "playable_assets/lucifer/world/home_tileset.json"
+      },
+      {
         "id": "4bc80819-9cf6-56ff-a44b-95737c63b29f",
         "import_settings": {},
         "importer": "full_verification_demo",
@@ -169,6 +208,19 @@
         },
         "name": "Ember Throne Map",
         "source_path": "playable_assets/lucifer/world/throne_map.json"
+      },
+      {
+        "id": "abe228bb-c20d-5a47-af9f-890056593ca1",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "tilemap",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Aldric's House Map",
+        "source_path": "playable_assets/lucifer/world/home_map.json"
       },
       {
         "id": "97f92c5e-ee33-50a5-b6df-ac5d2f0e399d",
@@ -717,6 +769,123 @@
         "source_path": "playable_assets/lucifer/world/look_hero_cultist_clips.json"
       },
       {
+        "id": "2bb52260-0bba-5db2-b38a-5fa0b66d33fa",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "House",
+        "source_path": "playable_assets/lucifer/world/home_outside.png"
+      },
+      {
+        "id": "13ab121e-2dac-555b-b73a-ee1d74b5912c",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "House Sheet",
+        "source_path": "playable_assets/lucifer/world/home_outside_sheet.json"
+      },
+      {
+        "id": "4244d138-d1ce-5d80-9ac8-3f36b6ef425e",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "House Animations",
+        "source_path": "playable_assets/lucifer/world/home_outside_clips.json"
+      },
+      {
+        "id": "23aaadf8-c168-5e8a-acfe-6c8ac1b655f8",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Bed",
+        "source_path": "playable_assets/lucifer/world/home_bed.png"
+      },
+      {
+        "id": "b4caa4c2-627e-58aa-84dd-c004e7c4d6c4",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Bed Sheet",
+        "source_path": "playable_assets/lucifer/world/home_bed_sheet.json"
+      },
+      {
+        "id": "2ca1ff60-4a82-5bc3-acd3-f6fcf00f0ecf",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Bed Animations",
+        "source_path": "playable_assets/lucifer/world/home_bed_clips.json"
+      },
+      {
+        "id": "64771196-4343-5d34-99cd-c5b15b211c93",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Spirit Lantern",
+        "source_path": "playable_assets/lucifer/world/look_npc_lantern.png"
+      },
+      {
+        "id": "6884de47-dd91-5886-ad06-879b52db823d",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Spirit Lantern Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_lantern_sheet.json"
+      },
+      {
+        "id": "2ae3192a-b64b-528f-b9c3-c3efa9679eca",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Spirit Lantern Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_lantern_clips.json"
+      },
+      {
         "id": "ef5dac6e-ff41-5420-a923-379ea64eb9a1",
         "import_settings": {},
         "importer": "full_verification_demo",
@@ -728,6 +897,1176 @@
         },
         "name": "Banner",
         "source_path": "playable_assets/lucifer/world/banner.png"
+      },
+      {
+        "id": "5b8f7fc2-ce72-5dee-922c-48b0ded9de35",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Smith",
+        "source_path": "playable_assets/lucifer/world/look_npc_smith.png"
+      },
+      {
+        "id": "2134e74f-7ae5-5c01-8f1b-6c2ab827f64b",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Smith Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_smith_sheet.json"
+      },
+      {
+        "id": "d834c394-d407-56f3-a7b5-81ae683e3b7d",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Smith Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_smith_clips.json"
+      },
+      {
+        "id": "d8a9e9f0-d5f5-5fc7-bfbf-ff588811abd4",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Jeweler",
+        "source_path": "playable_assets/lucifer/world/look_npc_jeweler.png"
+      },
+      {
+        "id": "61d52c70-e0db-5608-a956-c887df0be4ec",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Jeweler Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_jeweler_sheet.json"
+      },
+      {
+        "id": "a3a0302c-f734-5869-a69c-a92e85a88866",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Jeweler Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_jeweler_clips.json"
+      },
+      {
+        "id": "d553e0a6-8470-5dbd-8f34-1fef6afcdc09",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Card Dealer",
+        "source_path": "playable_assets/lucifer/world/look_npc_card_dealer.png"
+      },
+      {
+        "id": "a6b9afd2-8453-5be6-8c7e-fffdbb22001a",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Card Dealer Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_card_dealer_sheet.json"
+      },
+      {
+        "id": "d0865cb4-4cef-5cd8-bf1f-11d435520ae0",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Card Dealer Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_card_dealer_clips.json"
+      },
+      {
+        "id": "2d08f35d-a8a8-5618-b1c9-d4251b877b66",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Alchemist",
+        "source_path": "playable_assets/lucifer/world/look_npc_alchemist.png"
+      },
+      {
+        "id": "cdff0d90-73d5-555b-94ac-baee55a9629e",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Alchemist Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_alchemist_sheet.json"
+      },
+      {
+        "id": "6d0bedb5-df77-5b02-a981-d73d4577796a",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Alchemist Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_alchemist_clips.json"
+      },
+      {
+        "id": "1c5fb8a4-3a8b-5114-94ed-d629e0ef0c13",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Merchant",
+        "source_path": "playable_assets/lucifer/world/look_npc_merchant.png"
+      },
+      {
+        "id": "d3ff3ac6-bb91-5006-b4a7-57ed02510f73",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Merchant Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_merchant_sheet.json"
+      },
+      {
+        "id": "c013dca0-b812-5ad2-87dd-6f9e659b0c9e",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Merchant Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_merchant_clips.json"
+      },
+      {
+        "id": "225ffc35-b03b-54ae-8875-7974c2e58d57",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Breaker",
+        "source_path": "playable_assets/lucifer/world/look_npc_breaker.png"
+      },
+      {
+        "id": "687d156d-5939-5543-8d58-40bbd18e77ec",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Breaker Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_breaker_sheet.json"
+      },
+      {
+        "id": "e012dec5-a84e-56c2-87ba-58510e359917",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Breaker Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_breaker_clips.json"
+      },
+      {
+        "id": "56d63d24-6805-574f-a51c-bd721405c2fc",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Armory",
+        "source_path": "playable_assets/lucifer/world/look_npc_armory.png"
+      },
+      {
+        "id": "0822cf5d-ce82-5be6-af89-552c702bcd65",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Armory Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_armory_sheet.json"
+      },
+      {
+        "id": "a0608b35-4302-507a-9348-f6e744669478",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Armory Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_armory_clips.json"
+      },
+      {
+        "id": "3a445523-a9c7-529d-a957-e57b0e7412b1",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Shrine",
+        "source_path": "playable_assets/lucifer/world/look_npc_shrine.png"
+      },
+      {
+        "id": "be65f089-56e6-50ef-8e9b-10ce3b33a659",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Shrine Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_shrine_sheet.json"
+      },
+      {
+        "id": "d9f74e32-97fb-5997-800c-845c9933df98",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Shrine Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_shrine_clips.json"
+      },
+      {
+        "id": "b2a0f269-9c52-5a2e-b29a-c0d56e02f3d8",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Mystic Teacher",
+        "source_path": "playable_assets/lucifer/world/look_npc_mystic_teacher.png"
+      },
+      {
+        "id": "1453034e-7413-562a-af28-b5b65bc4ef85",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Mystic Teacher Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_mystic_teacher_sheet.json"
+      },
+      {
+        "id": "d843dc77-4105-5dc9-885e-c0d4c463ce3f",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Mystic Teacher Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_mystic_teacher_clips.json"
+      },
+      {
+        "id": "7668acea-9a7f-55f5-932f-ffd4f8e55301",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Duelist Teacher",
+        "source_path": "playable_assets/lucifer/world/look_npc_duelist_teacher.png"
+      },
+      {
+        "id": "756b6f74-9dd8-5e4f-97c8-ee8b9b64a06a",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Duelist Teacher Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_duelist_teacher_sheet.json"
+      },
+      {
+        "id": "b9eabefa-f662-500b-bd08-0a7903f83d56",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Duelist Teacher Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_duelist_teacher_clips.json"
+      },
+      {
+        "id": "868f9ddd-b9f3-531c-89da-2cb556ce0239",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Weapon Master Dojo",
+        "source_path": "playable_assets/lucifer/world/look_npc_weapon_master_dojo.png"
+      },
+      {
+        "id": "4e2a4d81-3ef7-51ba-82d1-b945e787de97",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Weapon Master Dojo Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_weapon_master_dojo_sheet.json"
+      },
+      {
+        "id": "967ddadf-34fc-5c73-8378-05ae625f2e40",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Weapon Master Dojo Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_weapon_master_dojo_clips.json"
+      },
+      {
+        "id": "9226fe21-dd76-51a5-9d4f-7864e8886be2",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Sage's Tower",
+        "source_path": "playable_assets/lucifer/world/look_npc_sages_tower.png"
+      },
+      {
+        "id": "15047e51-6a9f-531a-8675-44057725a9b1",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Sage's Tower Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_sages_tower_sheet.json"
+      },
+      {
+        "id": "d5187da1-dd5f-5724-98b3-0edaf6542a22",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Sage's Tower Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_sages_tower_clips.json"
+      },
+      {
+        "id": "0e54c282-8314-50c2-bfea-20e84df0110b",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Hero's Shrine",
+        "source_path": "playable_assets/lucifer/world/look_npc_heros_shrine.png"
+      },
+      {
+        "id": "cb8374d1-2c19-546b-97c5-3bcb3e64ecc6",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Hero's Shrine Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_heros_shrine_sheet.json"
+      },
+      {
+        "id": "d78b0878-5e28-5824-b76c-bf554c4e05e9",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Hero's Shrine Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_heros_shrine_clips.json"
+      },
+      {
+        "id": "c8a71567-d4f5-53cb-8528-6945e740f263",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Forgemaster's Smithy",
+        "source_path": "playable_assets/lucifer/world/look_npc_forgemasters_smithy.png"
+      },
+      {
+        "id": "a2197629-8305-5dd2-90ab-aa213fa41975",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Forgemaster's Smithy Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_forgemasters_smithy_sheet.json"
+      },
+      {
+        "id": "41ea111f-b200-5217-9f14-d2f027072627",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Forgemaster's Smithy Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_forgemasters_smithy_clips.json"
+      },
+      {
+        "id": "8fbea2a5-fe82-5977-97ad-99025d1627e7",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Rogue Guild",
+        "source_path": "playable_assets/lucifer/world/look_npc_rogue_guild.png"
+      },
+      {
+        "id": "7bcc3ecc-8403-5afb-9d54-fb96ee4568fb",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Rogue Guild Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_rogue_guild_sheet.json"
+      },
+      {
+        "id": "1063644b-abaf-5c9b-afcb-bfb28bab78dc",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Rogue Guild Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_rogue_guild_clips.json"
+      },
+      {
+        "id": "68d59430-f38c-549f-873c-2938ef639c79",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Guardian Post",
+        "source_path": "playable_assets/lucifer/world/look_npc_guardian_post.png"
+      },
+      {
+        "id": "cf81c5c5-c38d-5697-96c1-ac6b02976bbb",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Guardian Post Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_guardian_post_sheet.json"
+      },
+      {
+        "id": "513fb248-e411-515f-98ee-4efafd6a5d5d",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Guardian Post Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_guardian_post_clips.json"
+      },
+      {
+        "id": "6c313bab-4aa4-5338-9215-1248d0f72ce1",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Guildmaster Orla",
+        "source_path": "playable_assets/lucifer/world/look_npc_guildmaster_orla.png"
+      },
+      {
+        "id": "85a6d914-012c-590c-9e2c-e9677136495c",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Guildmaster Orla Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_guildmaster_orla_sheet.json"
+      },
+      {
+        "id": "dc6f6d48-aef9-5909-8232-7343b2a2fc7e",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Guildmaster Orla Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_guildmaster_orla_clips.json"
+      },
+      {
+        "id": "f138665e-fbd4-51bd-895e-d788133a5ce8",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Job Master",
+        "source_path": "playable_assets/lucifer/world/look_npc_job_master.png"
+      },
+      {
+        "id": "810dbecb-1de0-5869-ac6d-af833606fde6",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Job Master Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_job_master_sheet.json"
+      },
+      {
+        "id": "5de1a352-3365-5aee-835c-3baa470300a1",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Job Master Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_job_master_clips.json"
+      },
+      {
+        "id": "a6a46734-238f-5453-a5bd-b80c2d6df4cc",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Outfitter",
+        "source_path": "playable_assets/lucifer/world/look_npc_outfitter.png"
+      },
+      {
+        "id": "100e6c0a-0729-5f76-b26d-6f30f54260b2",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Outfitter Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_outfitter_sheet.json"
+      },
+      {
+        "id": "1a8de15d-55a9-5d48-83ef-04d926752f34",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Outfitter Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_outfitter_clips.json"
+      },
+      {
+        "id": "341df605-1982-5c01-87b1-80aec7f23273",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Warden Thessaly",
+        "source_path": "playable_assets/lucifer/world/look_npc_warden_thessaly.png"
+      },
+      {
+        "id": "9c6aaa02-502a-51fc-9b85-49a1a62347a0",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Warden Thessaly Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_warden_thessaly_sheet.json"
+      },
+      {
+        "id": "a5bc95b8-a4cd-5807-9f86-9f7737f30eb8",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Warden Thessaly Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_warden_thessaly_clips.json"
+      },
+      {
+        "id": "8715a75d-196c-5297-8ec4-876c6b64279c",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Bounty Clerk",
+        "source_path": "playable_assets/lucifer/world/look_npc_bounty_clerk.png"
+      },
+      {
+        "id": "daff76a8-c499-5745-bad3-0a32d0dc99bf",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Bounty Clerk Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_bounty_clerk_sheet.json"
+      },
+      {
+        "id": "a5831d66-7e05-578a-ac9c-d91445f4b61c",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Bounty Clerk Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_bounty_clerk_clips.json"
+      },
+      {
+        "id": "b18ea0e3-38e3-5f30-ab11-a16ad436b289",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Innkeeper Marla",
+        "source_path": "playable_assets/lucifer/world/look_npc_innkeeper_marla.png"
+      },
+      {
+        "id": "53e39326-0a67-560c-a043-dc6712a8c019",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Innkeeper Marla Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_innkeeper_marla_sheet.json"
+      },
+      {
+        "id": "bd8c55ef-ac7d-5daf-8556-1f9320568205",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Innkeeper Marla Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_innkeeper_marla_clips.json"
+      },
+      {
+        "id": "b7ef8251-a624-570f-8f04-bfee76d56cf3",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Showman Pip",
+        "source_path": "playable_assets/lucifer/world/look_npc_showman_pip.png"
+      },
+      {
+        "id": "6b52d377-a8c9-5e9e-b49f-0465776cab6a",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Showman Pip Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_showman_pip_sheet.json"
+      },
+      {
+        "id": "89d5b949-f845-506d-ac30-9e05b1741e3a",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Showman Pip Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_showman_pip_clips.json"
+      },
+      {
+        "id": "ff5087f6-daa8-5b72-8780-db58e68f088a",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Old Master",
+        "source_path": "playable_assets/lucifer/world/look_npc_old_master.png"
+      },
+      {
+        "id": "bc17a1bb-40dd-582a-921a-5910ace9cdd2",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Old Master Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_old_master_sheet.json"
+      },
+      {
+        "id": "4c9e276a-b2b2-5c1b-bbef-789712cb22bd",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Old Master Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_old_master_clips.json"
+      },
+      {
+        "id": "2818bced-2a43-597c-a6cf-3b2bc83f3812",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Scholar Lin",
+        "source_path": "playable_assets/lucifer/world/look_npc_scholar_lin.png"
+      },
+      {
+        "id": "dce0b3bc-c246-5f6b-92dc-5260d3cd3866",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Scholar Lin Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_scholar_lin_sheet.json"
+      },
+      {
+        "id": "6e114f05-049d-5bcf-b000-ee0297ac4349",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Scholar Lin Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_scholar_lin_clips.json"
+      },
+      {
+        "id": "6a6b6399-be73-50af-9e47-2e9390077e71",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Hall of Heroes",
+        "source_path": "playable_assets/lucifer/world/look_npc_hall_of_heroes.png"
+      },
+      {
+        "id": "c5bc9a12-3da3-5bdf-af94-838662a40434",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Hall of Heroes Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_hall_of_heroes_sheet.json"
+      },
+      {
+        "id": "7a99ab0e-6430-521c-9ecf-2ae49e106c92",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Hall of Heroes Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_hall_of_heroes_clips.json"
+      },
+      {
+        "id": "3116814b-a476-5366-912a-5b3447673ab3",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Camp Scout",
+        "source_path": "playable_assets/lucifer/world/look_npc_camp_scout.png"
+      },
+      {
+        "id": "2dbbd8ba-9eca-5fb0-b917-41c3e6073daf",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Camp Scout Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_camp_scout_sheet.json"
+      },
+      {
+        "id": "ec772e14-1739-5127-a1d9-ee2fa482c079",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Camp Scout Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_camp_scout_clips.json"
+      },
+      {
+        "id": "9d16aec5-4a73-5b2d-8aa5-7abf683bbdaf",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Old Cache",
+        "source_path": "playable_assets/lucifer/world/look_npc_old_cache.png"
+      },
+      {
+        "id": "659bc884-971a-5e5a-84e4-20531f4ef984",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Old Cache Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_old_cache_sheet.json"
+      },
+      {
+        "id": "437bfa0d-741b-5e0d-b6b7-cf4bab9ffc9d",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Old Cache Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_old_cache_clips.json"
+      },
+      {
+        "id": "bfb768b0-b90a-5df7-8ab1-90ffb888987f",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Sealed Vault",
+        "source_path": "playable_assets/lucifer/world/look_npc_sealed_vault.png"
+      },
+      {
+        "id": "cc193316-b13b-5837-a43a-2df3b5addb2d",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Sealed Vault Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_sealed_vault_sheet.json"
+      },
+      {
+        "id": "e826342d-6872-57e2-99be-bd154d09cf68",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Sealed Vault Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_sealed_vault_clips.json"
+      },
+      {
+        "id": "18f0ed11-5967-5e1d-886c-117528ff4755",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Victory Banner",
+        "source_path": "playable_assets/lucifer/world/look_npc_victory_banner.png"
+      },
+      {
+        "id": "a984128f-1867-5ed2-838a-8c849394e671",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Victory Banner Sheet",
+        "source_path": "playable_assets/lucifer/world/look_npc_victory_banner_sheet.json"
+      },
+      {
+        "id": "f723a1e9-4753-5370-9a3b-060d4a302495",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Victory Banner Animations",
+        "source_path": "playable_assets/lucifer/world/look_npc_victory_banner_clips.json"
       },
       {
         "id": "74d5de58-f542-5243-863f-f63e34b33680",
@@ -32952,6 +34291,29 @@
       "schema": "asteria.event_program",
       "version": 1
     },
+    "door.home.front_door": {
+      "instructions": [
+        {
+          "args": {
+            "args": {
+              "facing": "down",
+              "scene_id": "4ca2db1c-f03a-51a8-aac9-3f85718155ee",
+              "x": 608.0,
+              "y": 122.0
+            },
+            "command": "TRANSFER"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "door.home.front_door",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
     "door.throne.stairs_down": {
       "instructions": [
         {
@@ -32998,6 +34360,29 @@
         }
       ],
       "name": "door.throne.stairs_down",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
+    "door.town.house_door": {
+      "instructions": [
+        {
+          "args": {
+            "args": {
+              "facing": "up",
+              "scene_id": "c9ab136c-890e-5246-bf89-c43ecfd071a5",
+              "x": 96.0,
+              "y": 120.0
+            },
+            "command": "TRANSFER"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "door.town.house_door",
       "schema": "asteria.event_program",
       "version": 1
     },
@@ -33150,6 +34535,131 @@
         }
       ],
       "name": "door.woods.road_west",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
+    "home.bed": {
+      "instructions": [
+        {
+          "args": {
+            "choices": [
+              {
+                "text": "Sleep",
+                "value": 0
+              },
+              {
+                "text": "Not now",
+                "value": 1
+              }
+            ],
+            "prompt": "Bed: A warm bed. Sleep until morning?",
+            "variable_name": "menu"
+          },
+          "opcode": "CHOICE"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 0
+            },
+            "label": "opt0"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 1
+            },
+            "label": "opt1"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt0"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "color": [
+                0,
+                0,
+                0
+              ],
+              "duration": 0.5,
+              "to": 1.0
+            },
+            "command": "SCREEN_FADE"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {},
+            "command": "REST_PARTY"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "color": [
+                0,
+                0,
+                0
+              ],
+              "duration": 0.5,
+              "to": 0.0
+            },
+            "command": "SCREEN_FADE"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "kind": "item",
+              "text": "You feel rested."
+            },
+            "command": "SHOW_POPUP"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt1"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "home.bed",
       "schema": "asteria.event_program",
       "version": 1
     },
@@ -64279,7 +65789,7 @@
               "frame_index": 0,
               "layer": 0,
               "opacity": 1.0,
-              "sprite_sheet_asset_id": "cd9eee80-96de-5643-b468-6d13dbea36a1",
+              "sprite_sheet_asset_id": "6884de47-dd91-5886-ad06-879b52db823d",
               "visible": true
             },
             "type": "asteria.SpriteRenderer2D",
@@ -64287,7 +65797,7 @@
           },
           {
             "fields": {
-              "clip_set_id": "fa3100e9-51ff-5b96-9c53-c8603ff92ec2",
+              "clip_set_id": "2ae3192a-b64b-528f-b9c3-c3efa9679eca",
               "default_clip": "idle_down",
               "playing": true,
               "speed": 1.0
@@ -112246,6 +113756,15 @@
     "4ca2db1c-f03a-51a8-aac9-3f85718155ee": {
       "bindings": [
         {
+          "binding_id": "door.town.house_door.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "ce4d8951-45ab-54b7-88e0-da25d06cdf65",
+          "local_scope_id": "door.town.house_door",
+          "program_id": "door.town.house_door",
+          "trigger": "action"
+        },
+        {
           "binding_id": "door.town.road_east.binding",
           "conditions": [],
           "enabled": true,
@@ -112584,6 +114103,30 @@
       ],
       "schema": "asteria.scene_event_bindings",
       "version": 1
+    },
+    "c9ab136c-890e-5246-bf89-c43ecfd071a5": {
+      "bindings": [
+        {
+          "binding_id": "door.home.front_door.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "b154f29e-b810-59d4-8327-011474f83991",
+          "local_scope_id": "door.home.front_door",
+          "program_id": "door.home.front_door",
+          "trigger": "action"
+        },
+        {
+          "binding_id": "home.bed.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "73364518-618f-5d63-9851-8e42ffd34c31",
+          "local_scope_id": "home.bed",
+          "program_id": "home.bed",
+          "trigger": "action"
+        }
+      ],
+      "schema": "asteria.scene_event_bindings",
+      "version": 1
     }
   },
   "scenes": [
@@ -112626,8 +114169,8 @@
                 "rotation": 0.0,
                 "scale_x": 1.0,
                 "scale_y": 1.0,
-                "x": 360.0,
-                "y": 216.0
+                "x": 608.0,
+                "y": 152.0
               },
               "type": "asteria.Transform",
               "version": 1
@@ -112670,8 +114213,82 @@
                 "rotation": 0.0,
                 "scale_x": 1.0,
                 "scale_y": 1.0,
-                "x": 360.0,
-                "y": 216.0
+                "x": 608.0,
+                "y": 112.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "13ab121e-2dac-555b-b73a-ee1d74b5912c",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "4244d138-d1ce-5d80-9ac8-3f36b6ef425e",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "9cf4478b-06f8-5843-a71d-e2490b54e926",
+          "name": "Aldric's House"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 608.0,
+                "y": 104.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "event_binding_id": "door.town.house_door.binding",
+                "event_program_id": "door.town.house_door",
+                "local_scope_id": "door.town.house_door",
+                "range": 14.0,
+                "require_facing": false,
+                "trigger": "touch"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "ce4d8951-45ab-54b7-88e0-da25d06cdf65",
+          "name": "House Door"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 608.0,
+                "y": 152.0
               },
               "type": "asteria.Transform",
               "version": 1
@@ -112844,7 +114461,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "ce39a915-5f47-5b1f-b9fe-7aca2c7f3291",
+                "sprite_sheet_asset_id": "2134e74f-7ae5-5c01-8f1b-6c2ab827f64b",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -112852,7 +114469,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "42c5b0c5-cb0d-52ee-b39f-29ab0ae1ec9d",
+                "clip_set_id": "d834c394-d407-56f3-a7b5-81ae683e3b7d",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -112917,7 +114534,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "a9d91b12-f236-5709-abbc-2de00051a12d",
+                "sprite_sheet_asset_id": "61d52c70-e0db-5608-a956-c887df0be4ec",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -112925,7 +114542,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "6119048e-e4fd-5d03-8707-b8f04cf17b42",
+                "clip_set_id": "a3a0302c-f734-5869-a69c-a92e85a88866",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -112990,7 +114607,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "cd9eee80-96de-5643-b468-6d13dbea36a1",
+                "sprite_sheet_asset_id": "a6b9afd2-8453-5be6-8c7e-fffdbb22001a",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -112998,7 +114615,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "fa3100e9-51ff-5b96-9c53-c8603ff92ec2",
+                "clip_set_id": "d0865cb4-4cef-5cd8-bf1f-11d435520ae0",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -113063,7 +114680,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "4635051c-1444-5919-babc-aace395dad0b",
+                "sprite_sheet_asset_id": "cdff0d90-73d5-555b-94ac-baee55a9629e",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -113071,7 +114688,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "d3f27aec-8365-5b46-9883-ebaa756cdb3a",
+                "clip_set_id": "6d0bedb5-df77-5b02-a981-d73d4577796a",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -113136,7 +114753,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "ce39a915-5f47-5b1f-b9fe-7aca2c7f3291",
+                "sprite_sheet_asset_id": "d3ff3ac6-bb91-5006-b4a7-57ed02510f73",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -113144,7 +114761,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "42c5b0c5-cb0d-52ee-b39f-29ab0ae1ec9d",
+                "clip_set_id": "c013dca0-b812-5ad2-87dd-6f9e659b0c9e",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -113209,7 +114826,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "a9d91b12-f236-5709-abbc-2de00051a12d",
+                "sprite_sheet_asset_id": "687d156d-5939-5543-8d58-40bbd18e77ec",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -113217,7 +114834,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "6119048e-e4fd-5d03-8707-b8f04cf17b42",
+                "clip_set_id": "e012dec5-a84e-56c2-87ba-58510e359917",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -113282,7 +114899,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "cd9eee80-96de-5643-b468-6d13dbea36a1",
+                "sprite_sheet_asset_id": "0822cf5d-ce82-5be6-af89-552c702bcd65",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -113290,7 +114907,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "fa3100e9-51ff-5b96-9c53-c8603ff92ec2",
+                "clip_set_id": "a0608b35-4302-507a-9348-f6e744669478",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -113355,7 +114972,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "4635051c-1444-5919-babc-aace395dad0b",
+                "sprite_sheet_asset_id": "be65f089-56e6-50ef-8e9b-10ce3b33a659",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -113363,7 +114980,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "d3f27aec-8365-5b46-9883-ebaa756cdb3a",
+                "clip_set_id": "d9f74e32-97fb-5997-800c-845c9933df98",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -113428,7 +115045,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "ce39a915-5f47-5b1f-b9fe-7aca2c7f3291",
+                "sprite_sheet_asset_id": "1453034e-7413-562a-af28-b5b65bc4ef85",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -113436,7 +115053,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "42c5b0c5-cb0d-52ee-b39f-29ab0ae1ec9d",
+                "clip_set_id": "d843dc77-4105-5dc9-885e-c0d4c463ce3f",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -113501,7 +115118,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "a9d91b12-f236-5709-abbc-2de00051a12d",
+                "sprite_sheet_asset_id": "756b6f74-9dd8-5e4f-97c8-ee8b9b64a06a",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -113509,7 +115126,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "6119048e-e4fd-5d03-8707-b8f04cf17b42",
+                "clip_set_id": "b9eabefa-f662-500b-bd08-0a7903f83d56",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -113574,7 +115191,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "cd9eee80-96de-5643-b468-6d13dbea36a1",
+                "sprite_sheet_asset_id": "4e2a4d81-3ef7-51ba-82d1-b945e787de97",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -113582,7 +115199,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "fa3100e9-51ff-5b96-9c53-c8603ff92ec2",
+                "clip_set_id": "967ddadf-34fc-5c73-8378-05ae625f2e40",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -113647,7 +115264,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "4635051c-1444-5919-babc-aace395dad0b",
+                "sprite_sheet_asset_id": "15047e51-6a9f-531a-8675-44057725a9b1",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -113655,7 +115272,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "d3f27aec-8365-5b46-9883-ebaa756cdb3a",
+                "clip_set_id": "d5187da1-dd5f-5724-98b3-0edaf6542a22",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -113720,7 +115337,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "ce39a915-5f47-5b1f-b9fe-7aca2c7f3291",
+                "sprite_sheet_asset_id": "cb8374d1-2c19-546b-97c5-3bcb3e64ecc6",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -113728,7 +115345,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "42c5b0c5-cb0d-52ee-b39f-29ab0ae1ec9d",
+                "clip_set_id": "d78b0878-5e28-5824-b76c-bf554c4e05e9",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -113793,7 +115410,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "a9d91b12-f236-5709-abbc-2de00051a12d",
+                "sprite_sheet_asset_id": "a2197629-8305-5dd2-90ab-aa213fa41975",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -113801,7 +115418,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "6119048e-e4fd-5d03-8707-b8f04cf17b42",
+                "clip_set_id": "41ea111f-b200-5217-9f14-d2f027072627",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -113866,7 +115483,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "cd9eee80-96de-5643-b468-6d13dbea36a1",
+                "sprite_sheet_asset_id": "7bcc3ecc-8403-5afb-9d54-fb96ee4568fb",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -113874,7 +115491,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "fa3100e9-51ff-5b96-9c53-c8603ff92ec2",
+                "clip_set_id": "1063644b-abaf-5c9b-afcb-bfb28bab78dc",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -113939,7 +115556,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "4635051c-1444-5919-babc-aace395dad0b",
+                "sprite_sheet_asset_id": "cf81c5c5-c38d-5697-96c1-ac6b02976bbb",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -113947,7 +115564,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "d3f27aec-8365-5b46-9883-ebaa756cdb3a",
+                "clip_set_id": "513fb248-e411-515f-98ee-4efafd6a5d5d",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -114255,7 +115872,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "ce39a915-5f47-5b1f-b9fe-7aca2c7f3291",
+                "sprite_sheet_asset_id": "85a6d914-012c-590c-9e2c-e9677136495c",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -114263,7 +115880,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "42c5b0c5-cb0d-52ee-b39f-29ab0ae1ec9d",
+                "clip_set_id": "dc6f6d48-aef9-5909-8232-7343b2a2fc7e",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -114328,7 +115945,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "cd9eee80-96de-5643-b468-6d13dbea36a1",
+                "sprite_sheet_asset_id": "810dbecb-1de0-5869-ac6d-af833606fde6",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -114336,7 +115953,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "fa3100e9-51ff-5b96-9c53-c8603ff92ec2",
+                "clip_set_id": "5de1a352-3365-5aee-835c-3baa470300a1",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -114401,7 +116018,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "a9d91b12-f236-5709-abbc-2de00051a12d",
+                "sprite_sheet_asset_id": "100e6c0a-0729-5f76-b26d-6f30f54260b2",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -114409,7 +116026,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "6119048e-e4fd-5d03-8707-b8f04cf17b42",
+                "clip_set_id": "1a8de15d-55a9-5d48-83ef-04d926752f34",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -114474,7 +116091,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "a9d91b12-f236-5709-abbc-2de00051a12d",
+                "sprite_sheet_asset_id": "9c6aaa02-502a-51fc-9b85-49a1a62347a0",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -114482,7 +116099,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "6119048e-e4fd-5d03-8707-b8f04cf17b42",
+                "clip_set_id": "a5bc95b8-a4cd-5807-9f86-9f7737f30eb8",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -114547,7 +116164,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "4635051c-1444-5919-babc-aace395dad0b",
+                "sprite_sheet_asset_id": "daff76a8-c499-5745-bad3-0a32d0dc99bf",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -114555,7 +116172,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "d3f27aec-8365-5b46-9883-ebaa756cdb3a",
+                "clip_set_id": "a5831d66-7e05-578a-ac9c-d91445f4b61c",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -114620,7 +116237,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "ce39a915-5f47-5b1f-b9fe-7aca2c7f3291",
+                "sprite_sheet_asset_id": "53e39326-0a67-560c-a043-dc6712a8c019",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -114628,7 +116245,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "42c5b0c5-cb0d-52ee-b39f-29ab0ae1ec9d",
+                "clip_set_id": "bd8c55ef-ac7d-5daf-8556-1f9320568205",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -114693,7 +116310,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "4635051c-1444-5919-babc-aace395dad0b",
+                "sprite_sheet_asset_id": "6b52d377-a8c9-5e9e-b49f-0465776cab6a",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -114701,7 +116318,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "d3f27aec-8365-5b46-9883-ebaa756cdb3a",
+                "clip_set_id": "89d5b949-f845-506d-ac30-9e05b1741e3a",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -114766,7 +116383,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "cd9eee80-96de-5643-b468-6d13dbea36a1",
+                "sprite_sheet_asset_id": "bc17a1bb-40dd-582a-921a-5910ace9cdd2",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -114774,7 +116391,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "fa3100e9-51ff-5b96-9c53-c8603ff92ec2",
+                "clip_set_id": "4c9e276a-b2b2-5c1b-bbef-789712cb22bd",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -114839,7 +116456,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "a9d91b12-f236-5709-abbc-2de00051a12d",
+                "sprite_sheet_asset_id": "dce0b3bc-c246-5f6b-92dc-5260d3cd3866",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -114847,7 +116464,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "6119048e-e4fd-5d03-8707-b8f04cf17b42",
+                "clip_set_id": "6e114f05-049d-5bcf-b000-ee0297ac4349",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -114912,7 +116529,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "ce39a915-5f47-5b1f-b9fe-7aca2c7f3291",
+                "sprite_sheet_asset_id": "c5bc9a12-3da3-5bdf-af94-838662a40434",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -114920,7 +116537,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "42c5b0c5-cb0d-52ee-b39f-29ab0ae1ec9d",
+                "clip_set_id": "7a99ab0e-6430-521c-9ecf-2ae49e106c92",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -115606,7 +117223,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "4635051c-1444-5919-babc-aace395dad0b",
+                "sprite_sheet_asset_id": "2dbbd8ba-9eca-5fb0-b917-41c3e6073daf",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -115614,7 +117231,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "d3f27aec-8365-5b46-9883-ebaa756cdb3a",
+                "clip_set_id": "ec772e14-1739-5127-a1d9-ee2fa482c079",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -115679,7 +117296,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "cd9eee80-96de-5643-b468-6d13dbea36a1",
+                "sprite_sheet_asset_id": "659bc884-971a-5e5a-84e4-20531f4ef984",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -115687,7 +117304,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "fa3100e9-51ff-5b96-9c53-c8603ff92ec2",
+                "clip_set_id": "437bfa0d-741b-5e0d-b6b7-cf4bab9ffc9d",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -116302,7 +117919,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "cd9eee80-96de-5643-b468-6d13dbea36a1",
+                "sprite_sheet_asset_id": "cc193316-b13b-5837-a43a-2df3b5addb2d",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -116310,7 +117927,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "fa3100e9-51ff-5b96-9c53-c8603ff92ec2",
+                "clip_set_id": "e826342d-6872-57e2-99be-bd154d09cf68",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -116603,7 +118220,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "ce39a915-5f47-5b1f-b9fe-7aca2c7f3291",
+                "sprite_sheet_asset_id": "a984128f-1867-5ed2-838a-8c849394e671",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -116611,7 +118228,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "42c5b0c5-cb0d-52ee-b39f-29ab0ae1ec9d",
+                "clip_set_id": "f723a1e9-4753-5370-9a3b-060d4a302495",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -116639,6 +118256,191 @@
       ],
       "id": "814b23c0-7d56-51e1-8476-9465d25ba2a7",
       "name": "Ember Throne",
+      "schema": "asteria.scene",
+      "version": 1
+    },
+    {
+      "entities": [
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": -40.0,
+                "y": -8.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "origin_x": 0.0,
+                "origin_y": 0.0,
+                "tilemap_asset_id": "abe228bb-c20d-5a47-af9f-890056593ca1",
+                "visible": true
+              },
+              "type": "asteria.TileMap2D",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "caff6030-3575-5ede-a3e4-97c617224a39",
+          "name": "Map"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 96.0,
+                "y": 120.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "active": true,
+                "bounds_enabled": false,
+                "bounds_max_x": 0.0,
+                "bounds_max_y": 0.0,
+                "bounds_min_x": 0.0,
+                "bounds_min_y": 0.0,
+                "deadzone_x": 0.0,
+                "deadzone_y": 0.0,
+                "follow_entity_id": "efea8692-514a-5234-9e78-ab78c657aeb4",
+                "group_entity_ids": "",
+                "group_padding": 32.0,
+                "height": 180,
+                "look_ahead_x": 0.0,
+                "look_ahead_y": 0.0,
+                "max_zoom": 2.0,
+                "min_zoom": 0.5,
+                "smoothing": 0.0,
+                "width": 320,
+                "zoom": 3.0
+              },
+              "type": "asteria.Camera2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "e97790fb-8819-5478-b663-71be761741bf",
+          "name": "Camera"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 96.0,
+                "y": 136.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "event_binding_id": "door.home.front_door.binding",
+                "event_program_id": "door.home.front_door",
+                "local_scope_id": "door.home.front_door",
+                "range": 14.0,
+                "require_facing": false,
+                "trigger": "touch"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "b154f29e-b810-59d4-8327-011474f83991",
+          "name": "Front Door"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 48.0,
+                "y": 80.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "b4caa4c2-627e-58aa-84dd-c004e7c4d6c4",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "2ca1ff60-4a82-5bc3-acd3-f6fcf00f0ecf",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "height": 40.0,
+                "is_trigger": false,
+                "ladder": false,
+                "layer": 0,
+                "mask": 4294967295,
+                "offset_x": 0.0,
+                "offset_y": -20.0,
+                "one_way": false,
+                "radius": 8.0,
+                "shape": "box",
+                "width": 28.0
+              },
+              "type": "asteria.Collider2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "event_binding_id": "home.bed.binding",
+                "event_program_id": "home.bed",
+                "local_scope_id": "home.bed",
+                "range": 30.0,
+                "require_facing": true,
+                "trigger": "action"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "73364518-618f-5d63-9851-8e42ffd34c31",
+          "name": "Bed"
+        }
+      ],
+      "id": "c9ab136c-890e-5246-bf89-c43ecfd071a5",
+      "name": "Aldric's House",
       "schema": "asteria.scene",
       "version": 1
     }

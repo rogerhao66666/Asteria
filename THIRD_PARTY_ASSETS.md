@@ -7,7 +7,7 @@ bundled license file.
 
 | Pack | Author | Source URL | License | Redistribution | Commercial use | Repository inclusion | Intended usage |
 |---|---|---|---|---|---|---|---|
-| Ninja Adventure – Asset Pack (89 MB) | Pixel-boy, AAA | https://pixel-boy.itch.io/ninja-adventure-asset-pack | CC0 1.0 (`LICENSE.txt`) | Allowed | Allowed | **In repo**: 6 audio files only (`playable_assets/audio/` of the reference demos); the pictures it gave the demos were replaced by Foozle Lucifer art (2026-10-17); rest local only | Asset Pipeline, animation, VFX, audio and runtime tests (the tests/golden fixtures were cut from it earlier) |
+| Ninja Adventure – Asset Pack (89 MB) | Pixel-boy, AAA | https://pixel-boy.itch.io/ninja-adventure-asset-pack | CC0 1.0 (`LICENSE.txt`) | Allowed | Allowed | **In repo**: 6 audio files (`playable_assets/audio/` of the reference demos) and, since 2026-10-19, the Full Verification demo's townsfolk, house, bed and room tiles (copied into its `playable_assets`, cut from `Actor/Character`, `Items` and `Backgrounds/Tilesets`); rest local only | Asset Pipeline, animation, VFX, audio and runtime tests (the tests/golden fixtures were cut from it earlier) |
 | Kenney Roguelike/RPG Pack | Kenney | https://kenney.nl/assets/roguelike-rpg-pack | CC0 1.0 | Allowed | Allowed | Local only | Tilemap / pipeline tests |
 | Kenney RPG Base | Kenney | https://kenney.nl/assets/rpg-base | CC0 1.0 | Allowed | Allowed | Local only | Tilemap / pipeline tests |
 | Kenney UI Pack | Kenney | https://kenney.nl/assets/ui-pack | CC0 1.0 | Allowed | Allowed | Local only | Battle/runtime UI tests |

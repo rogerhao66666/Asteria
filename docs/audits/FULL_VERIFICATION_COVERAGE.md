@@ -170,6 +170,16 @@ tree graph drew black text on the dark theme and no icons (it now draws a card p
 its icon, name, ranks and gift, coloured by kind, with arrows, and opens as the graph); a node
 without an icon shows its skill's or passive's.
 
+## Townsfolk and Aldric's house (2026-10-19)
+
+Every person on the maps wears a look of their own (`trial_people.CAST`): the hero and the three
+companions keep their Lucifer characters, the 28 others are distinct Ninja Adventure characters
+(CC0) at 1.5x, the shrines, plaque and banner are spirits and statues, the cache a bag, the vault
+a chest (`tests/test_town_people_and_home.py` fails if two share a picture). Aldric's house stands
+in Hearthfold's north-east corner; the game starts at its door. Inside, the bed's Sleep fades out,
+rests the party (`REST_PARTY`) and fades in; the campaign hurts the hero, sleeps and checks full
+health (`home_sleeps`).
+
 ## World commands (58)
 
 Used in the campaign or by Showman Pip's menu: TRANSFER, GIVE_ITEM, TAKE_ITEM, START_QUEST,

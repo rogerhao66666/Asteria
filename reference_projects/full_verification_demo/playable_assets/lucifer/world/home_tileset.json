@@ -1,0 +1,49 @@
+{
+  "sprite_sheet_asset_id": "77cc735d-a446-5ff1-8d18-8eb5fec99b1a",
+  "tile_height": 16,
+  "tile_width": 16,
+  "tiles": {
+    "0": {
+      "collision": "none",
+      "frame_index": 0,
+      "tags": [],
+      "terrain": null
+    },
+    "1": {
+      "collision": "none",
+      "frame_index": 1,
+      "tags": [],
+      "terrain": null
+    },
+    "2": {
+      "collision": "none",
+      "frame_index": 2,
+      "tags": [],
+      "terrain": null
+    },
+    "3": {
+      "collision": "solid",
+      "frame_index": 3,
+      "tags": [],
+      "terrain": null
+    },
+    "4": {
+      "collision": "solid",
+      "frame_index": 4,
+      "tags": [],
+      "terrain": null
+    },
+    "5": {
+      "collision": "solid",
+      "frame_index": 5,
+      "tags": [],
+      "terrain": null
+    },
+    "6": {
+      "collision": "solid",
+      "frame_index": 6,
+      "tags": [],
+      "terrain": null
+    }
+  }
+}

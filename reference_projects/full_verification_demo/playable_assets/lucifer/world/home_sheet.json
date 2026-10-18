@@ -1,0 +1,61 @@
+{
+  "frames": [
+    {
+      "height": 16,
+      "pivot_x": 0.0,
+      "pivot_y": 0.0,
+      "width": 16,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "height": 16,
+      "pivot_x": 0.0,
+      "pivot_y": 0.0,
+      "width": 16,
+      "x": 16,
+      "y": 0
+    },
+    {
+      "height": 16,
+      "pivot_x": 0.0,
+      "pivot_y": 0.0,
+      "width": 16,
+      "x": 32,
+      "y": 0
+    },
+    {
+      "height": 16,
+      "pivot_x": 0.0,
+      "pivot_y": 0.0,
+      "width": 16,
+      "x": 48,
+      "y": 0
+    },
+    {
+      "height": 16,
+      "pivot_x": 0.0,
+      "pivot_y": 0.0,
+      "width": 16,
+      "x": 64,
+      "y": 0
+    },
+    {
+      "height": 16,
+      "pivot_x": 0.0,
+      "pivot_y": 0.0,
+      "width": 16,
+      "x": 80,
+      "y": 0
+    },
+    {
+      "height": 16,
+      "pivot_x": 0.0,
+      "pivot_y": 0.0,
+      "width": 16,
+      "x": 96,
+      "y": 0
+    }
+  ],
+  "texture_asset_id": "25d57fd2-5107-57c0-82bb-b63d076f19c8"
+}

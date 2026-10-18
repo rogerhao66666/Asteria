@@ -448,6 +448,20 @@ class Campaign:
         assert game.localizer.locale == "en"
         self.facts["languages"] = len(game.localizer.locales())
 
+    def home(self):
+        """Aldric's house: walk in, sleep in the bed, wake up whole, walk out."""
+        game = self.game
+        game.damage_party("vitality", 900)
+        hurt = self.hp()
+        self.go("House Door")
+        assert self.scene_name() == "Aldric's House", self.scene_name()
+        self.talk("Bed", picks=(0,))  # Sleep
+        full = game.save.rpg_state.actor_snapshots[HERO].resources["values"]["vitality"]
+        assert self.hp() == full["maximum"] > hurt, (hurt, self.hp())
+        self.facts["home_sleeps"] += 1
+        self.go("Front Door")
+        assert self.scene_name() == "Hearthfold"
+
     def bog_and_glade(self):
         """The bog hurts and fights there stand in a bog; the glade rests the party."""
         import trial_world
@@ -656,6 +670,7 @@ class Campaign:
         self.shot("town_ready")
         self.learn_arts()  # slot-limited arts from the Old Master
         self.language()  # Scholar Lin: Traditional Chinese and back
+        self.home()  # a night in Aldric's own bed
         self.showman()
 
     def showman(self):
@@ -951,7 +966,7 @@ REQUIRED = (
     "used_elemental_weave", "arts_learned", "slots_full", "slots_grown",
     "used_art_rending_gale", "used_art_dawn_edge", "used_art_iron_vow",
     "translated_lines", "bog_damage", "area_backdrops", "glade_rests", "shadow_stealth",
-    "embers_burn", "embers_out", "music_unlocked", "new_game_plus",
+    "embers_burn", "embers_out", "music_unlocked", "new_game_plus", "home_sleeps",
 )  # fmt: skip
 
 
