@@ -115,7 +115,10 @@ class MusicRoomScreen(_Screen):
             selected = i == min(self.index, len(rows) - 1)
             name = track.name if open_ else "? ? ?"
             color = (255, 255, 255) if selected else ((190, 196, 210) if open_ else (96, 102, 120))
-            rt.text(("> " if selected else "  ") + name, 36, y, size=26, color=color)
+            rt.text(">" if selected else "", 22, y, size=26, color=color)
+            # an opened track shows its picture; a closed one keeps it secret
+            shown = open_ and rt._draw_icon(track.icon_id, 36, y - 3, 28)
+            rt.text(name, 72 if shown else 44, y, size=26, color=color)
             if track.track_id == self.playing:
                 rt.text("PLAYING", rt.width - 140, y + 4, size=20, color=GOOD)
             elif open_ and track.note:

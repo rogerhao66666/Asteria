@@ -1,4 +1,5 @@
-"""Battle presentation records the battle really uses (Boss Trial phase 5): Command Input Steps,
+"""Battle presentation records the battle really uses (Full Verification phase 5): Command Input
+Steps,
 Command Menu Pages, Side-View / Portrait staging, ability slots and a field strike that opens a
 fight preemptive."""
 
@@ -8,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "boss_trial_demo"
+DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 sys.path.insert(0, str(DEMO))
 
 import run_trial_smoke as smoke  # noqa: E402

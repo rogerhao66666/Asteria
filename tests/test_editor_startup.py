@@ -236,7 +236,7 @@ def test_every_party_demo_scene_has_a_camera_on_the_hero():
         "reference_projects/octopath_demo",
         "reference_projects/complex_reference_rpg",
         "src/asteria/templates/party_rpg",
-        "reference_projects/boss_trial_demo",
+        "reference_projects/full_verification_demo",
         "reference_projects/diablo_demo",
     ):
         data = json.loads((root / folder / "project.asteria.json").read_text())

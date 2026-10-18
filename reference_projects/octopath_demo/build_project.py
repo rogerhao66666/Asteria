@@ -32,7 +32,7 @@ REPO = HERE.parents[1]
 REFERENCE = REPO / "reference_projects" / "complex_reference_rpg"
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "scripts"))
-sys.path.insert(0, str(REPO / "reference_projects" / "boss_trial_demo"))
+sys.path.insert(0, str(REPO / "reference_projects" / "full_verification_demo"))
 
 import trial_lucifer as lucifer  # noqa: E402
 

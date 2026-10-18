@@ -11,7 +11,7 @@ from asteria.project import Project
 from asteria.rpg.refine import RefineRules
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "boss_trial_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 
 
 def _session():

@@ -11,7 +11,7 @@ from asteria.project import Project
 from asteria.runtime.game_menus import bestiary_rows
 from asteria.runtime.game_session import GameSessionRuntime
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "boss_trial_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 
 
 def _session():

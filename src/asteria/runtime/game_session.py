@@ -131,6 +131,8 @@ class GameSessionRuntime:
 
         self.touch = TouchTriggerController()
         self.struck_encounters = 0  # fights a field attack started (they open preemptive)
+        self.pending_new_game = None  # a New Game Plus save the host starts next frame
+        self.sight_scale = 1.0  # how far field foes see the player (map areas set it)
         self.touch.arm(self.scene, self.player)
         self.mode = "field"
         self.battle = None
@@ -367,6 +369,7 @@ class GameSessionRuntime:
                 combat=combat,
                 world=frame_world,
                 spawn=summon,
+                sight_scale=lambda: self.sight_scale,  # map areas (shadows) shorten it
             )
             from asteria.runtime.loot import LootSystem
 
@@ -1538,6 +1541,12 @@ class GameSessionRuntime:
         self.sync_world_state()
         fresh = self.project.game_start.instantiate(self.project)
         return carry_over(chosen, self.save, fresh)
+
+    def request_new_game_plus(self, rules_id=None):
+        """Ask the game host to start over in New Game Plus (an event's ``NEW_GAME_PLUS``): the
+        carried-over save waits in ``pending_new_game`` until the host adopts it."""
+        self.pending_new_game = self.new_game_plus(rules_id)
+        return self.pending_new_game
 
     @property
     def revealed_weaknesses(self):

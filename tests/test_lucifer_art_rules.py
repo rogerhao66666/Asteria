@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "boss_trial_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 
 
 def _project():
@@ -141,7 +141,7 @@ def test_stable_ids_make_a_build_repeatable():
 @pytest.mark.parametrize(
     "folder",
     [
-        "reference_projects/boss_trial_demo",
+        "reference_projects/full_verification_demo",
         "reference_projects/octopath_demo",
         "reference_projects/complex_reference_rpg",
         "src/asteria/templates/party_rpg",

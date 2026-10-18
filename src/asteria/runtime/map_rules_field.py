@@ -112,6 +112,7 @@ class FieldMapRules:
         scale = self.runtime.visibility(
             transform.x, transform.y, crouching=crouching, moving=moving
         )
+        self.session.sight_scale = scale  # behaviour-tree foes read it too
         for entity in self.session.scene.entities():
             spec = entity.try_get(FieldAIComponent)
             if spec is None:

@@ -161,6 +161,12 @@ class TileSceneView:
         self.bounds = (0.0, 0.0, float(columns * tw), float(rows * th))
         self.blocking = MapBlocking(TileMapQuery(self.tilemap), self.bounds)
         self.session.set_tile_blocking(self.blocking)
+        # the project's map areas (floor damage, regions, stealth...) read this map's tiles
+        from .map_rules_field import tile_area_keys
+
+        sets = self.session.project.rpg_database.map_rule_sets
+        layer = sets[sorted(sets)[0]].region_layer if sets else "regions"
+        self.session.bind_map_rules(tile_area_keys(self.tilemap, self.tileset, layer))
         self._texture_surface = self._texture(self.tile_sheet.texture.asset_id)
         self._frame_rects = {}
         self._chunk_cache = {}  # (group, chunk_x, chunk_y) -> Surface | None, least recent first

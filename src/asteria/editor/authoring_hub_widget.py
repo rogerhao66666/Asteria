@@ -592,69 +592,309 @@ class AuthoringHubWidget(QWidget):
         return True
 
 
-class SkillTreeGraphView(QGraphicsView):
-    """Functional no-icon graph view for canonical progression prerequisites."""
+# node cards of the skill tree graph: what a node gives decides its colour
+_NODE_KINDS = (
+    ("skill", "#4f8fe8", "Grants a skill"),
+    ("passive", "#a46be0", "Unlocks a passive"),
+    ("choice", "#e0954f", "One of an exclusive group"),
+    ("stats", "#4caf7d", "Stats / resources"),
+    ("other", "#7b8496", "Tags / capabilities"),
+)
+_NODE_W, _NODE_H, _ICON = 176.0, 64.0, 40
 
-    def __init__(self, parent=None):
+
+def _node_kind(node):
+    rewards = node.get("rewards", [])
+    if node.get("exclusive_group"):
+        return "choice"
+    if any(r.get("granted_abilities") for r in rewards):
+        return "skill"
+    if any(r.get("unlocked_passives") for r in rewards):
+        return "passive"
+    if any(r.get("stat_bonuses") or r.get("resource_bonuses") for r in rewards):
+        return "stats"
+    return "other"
+
+
+def _spread(positions, gap=16.0):
+    """Saved node positions scaled up just enough that no two cards overlap (a layout saved
+    for smaller cards, or packed by hand)."""
+    points = [(float(x), float(y)) for x, y in positions.values()]
+    scale = 1.0
+    for i, (ax, ay) in enumerate(points):
+        for bx, by in points[i + 1 :]:
+            dx, dy = abs(ax - bx), abs(ay - by)
+            need = min(
+                (_NODE_W + gap) / dx if dx else float("inf"),
+                (_NODE_H + gap) / dy if dy else float("inf"),
+            )
+            if need != float("inf"):
+                scale = max(scale, need)
+    return {k: [float(x) * scale, float(y) * scale] for k, (x, y) in positions.items()}
+
+
+def _pretty(key):
+    return str(key).replace("_", " ").title()
+
+
+class SkillTreeGraphView(QGraphicsView):
+    """A progression graph drawn as its players see the design: a card per node with its icon,
+    name, ranks and what it gives (coloured by kind), arrows from each prerequisite (dashed for
+    "any of"). Cards can be dragged (Save Graph Layout keeps them); Ctrl + wheel zooms."""
+
+    def __init__(self, parent=None, *, document=None):
         if not QT_AVAILABLE:
             raise RuntimeError("PySide6 is required")
         super().__init__(parent)
+        from PySide6.QtGui import QPainter
+
+        self.document = document
         self.scene_graph = QGraphicsScene(self)
         self.setScene(self.scene_graph)
+        self.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
+        self.setDragMode(QGraphicsView.ScrollHandDrag)
         self.node_items = {}
+        self._edges = []
+        self._zoom = 1.0
 
+    # -- names for what a node gives -------------------------------------------------------------
+    def _name(self, kind, key):
+        project = getattr(self.document, "project", None)
+        record = None
+        if project is not None:
+            if kind == "ability":
+                record = project.gameplay_library.abilities.get(key)
+            elif kind == "passive":
+                record = project.rpg_database.passives.get(key)
+        return (getattr(record, "display_name", "") or _pretty(key)) if key else ""
+
+    def _reward_icon(self, node):
+        """A node without its own icon shows the icon of the skill or passive it gives."""
+        project = getattr(self.document, "project", None)
+        if project is None:
+            return ""
+        for reward in node.get("rewards", []):
+            for ability_id in reward.get("granted_abilities", []):
+                record = project.gameplay_library.abilities.get(ability_id)
+                if getattr(record, "icon_id", ""):
+                    return record.icon_id
+            for passive_id in reward.get("unlocked_passives", []):
+                record = project.rpg_database.passives.get(passive_id)
+                if getattr(record, "icon_id", ""):
+                    return record.icon_id
+        return ""
+
+    def _summary(self, node):
+        rewards = node.get("rewards", [])
+        skills = [a for r in rewards for a in r.get("granted_abilities", [])]
+        passives = [p for r in rewards for p in r.get("unlocked_passives", [])]
+        if skills:
+            return self._name("ability", skills[0]) + (" +" if len(set(skills)) > 1 else "")
+        if passives:
+            return self._name("passive", passives[0])
+        stats = {}
+        for r in rewards:
+            bonuses = {**r.get("stat_bonuses", {}), **r.get("resource_bonuses", {})}
+            for key, value in bonuses.items():
+                stats[key] = stats.get(key, 0.0) + float(value)
+        return ", ".join(f"+{v:g} {_pretty(k)}" for k, v in list(stats.items())[:2])
+
+    def _tooltip(self, node):
+        lines = [f"<b>{node.get('display_name') or node['node_id']}</b> ({node['node_id']})"]
+        lines.append(f"Ranks: {node.get('max_rank', 1)}")
+        if node.get("exclusive_group"):
+            lines.append(f"Exclusive group: {node['exclusive_group']}")
+        costs = node.get("rank_costs", [])
+        if costs:
+            first = ", ".join(f"{v:g} {k}" for k, v in costs[0].items())
+            lines.append(f"Cost per rank: {first}")
+        need = [r["node_id"] for r in node.get("prerequisites", [])]
+        either = [r["node_id"] for r in node.get("any_prerequisites", [])]
+        if need:
+            lines.append("Needs: " + ", ".join(need))
+        if either:
+            lines.append("Needs one of: " + ", ".join(either))
+        rewards = node.get("rewards", [])
+        skills = sorted({a for r in rewards for a in r.get("granted_abilities", [])})
+        passives = sorted({p for r in rewards for p in r.get("unlocked_passives", [])})
+        if skills:
+            lines.append("Skills: " + ", ".join(self._name("ability", a) for a in skills))
+        if passives:
+            lines.append("Passives: " + ", ".join(self._name("passive", x) for x in passives))
+        summary = self._summary(node)
+        if summary and not skills and not passives:
+            lines.append("Gives (all ranks): " + summary)
+        return "<br>".join(lines)
+
+    # -- drawing ---------------------------------------------------------------------------------
     def set_graph_data(self, data):
-        self.scene_graph.clear()
+        from PySide6.QtGui import QBrush, QColor, QFont, QPen
+
+        self.scene_graph.clear()  # the old arrows go with it
         self.node_items = {}
+        self._edges = []
+        self._edge_items = []
         if not data:
             return
-        positions = data.get("node_positions", {})
+        positions = _spread(data.get("node_positions", {}))
         nodes = data.get("nodes", [])
-        # Deterministic fallback layout by prerequisite depth.
+        by_id = {n["node_id"]: n for n in nodes}
         depths = {}
 
-        def depth(node):
+        def depth(node, seen=()):
             nid = node["node_id"]
             if nid in depths:
                 return depths[nid]
-            req = node.get("prerequisites", []) + node.get("any_prerequisites", [])
-            depths[nid] = (
-                0
-                if not req
-                else 1
-                + max(
-                    (depth(next(x for x in nodes if x["node_id"] == r["node_id"])) for r in req),
-                    default=0,
-                )
-            )
+            req = [
+                by_id[r["node_id"]]
+                for r in node.get("prerequisites", []) + node.get("any_prerequisites", [])
+                if r["node_id"] in by_id and r["node_id"] not in seen
+            ]
+            depths[nid] = 0 if not req else 1 + max(depth(r, (*seen, nid)) for r in req)
             return depths[nid]
 
         rows = {}
+        colours = {k: c for k, c, _ in _NODE_KINDS}
+        name_font = QFont()
+        name_font.setBold(True)
+        small = QFont()
+        small.setPointSizeF(max(7.0, small.pointSizeF() - 2))
         for node in nodes:
             d = depth(node)
             idx = rows.get(d, 0)
             rows[d] = idx + 1
-            x, y = positions.get(node["node_id"], [d * 190, idx * 90])
-            rect = QGraphicsRectItem(0, 0, 150, 52)
-            rect.setFlag(QGraphicsRectItem.ItemIsMovable, True)
-            rect.setFlag(QGraphicsRectItem.ItemIsSelectable, True)
-            rect.setPos(float(x), float(y))
-            self.scene_graph.addItem(rect)
-            text = QGraphicsTextItem(node.get("display_name") or node["node_id"], rect)
-            text.setPos(8, 6)
-            self.node_items[node["node_id"]] = rect
-        # Lines intentionally follow current saved positions; refresh after dragging/saving.
+            x, y = positions.get(node["node_id"], [d * (_NODE_W + 70), idx * (_NODE_H + 22)])
+            colour = QColor(colours[_node_kind(node)])
+            card = QGraphicsRectItem(0, 0, _NODE_W, _NODE_H)
+            card.setFlag(QGraphicsRectItem.ItemIsMovable, True)
+            card.setFlag(QGraphicsRectItem.ItemIsSelectable, True)
+            card.setPos(float(x), float(y))
+            red, green, blue = colour.red(), colour.green(), colour.blue()
+            fill = QColor(red // 4 + 20, green // 4 + 22, blue // 4 + 28)  # a dark card
+            card.setBrush(QBrush(fill))
+            card.setPen(QPen(colour, 2.0))
+            card.setZValue(1)
+            card.setToolTip(self._tooltip(node))
+            self.scene_graph.addItem(card)
+            pixmap = None
+            icon_id = node.get("icon_id") or self._reward_icon(node)
+            if self.document is not None and icon_id:
+                from .image_tools import icon_pixmap
+
+                pixmap = icon_pixmap(self.document, icon_id, _ICON)
+            text_x = 8.0
+            if pixmap is not None:
+                from PySide6.QtWidgets import QGraphicsPixmapItem
+
+                icon = QGraphicsPixmapItem(pixmap)
+                icon.setParentItem(card)
+                icon.setPos(8, (_NODE_H - _ICON) / 2)
+                text_x = 8.0 + _ICON + 8.0
+            width = _NODE_W - text_x - 6
+            title = QGraphicsTextItem()
+            title.setParentItem(card)  # the card owns it (else it is collected)
+            title.setDefaultTextColor(QColor("#f2f4f8"))
+            title.setFont(name_font)
+            title.setPlainText(
+                self.fontMetrics().elidedText(
+                    node.get("display_name") or node["node_id"], Qt.ElideRight, int(width) - 8
+                )
+            )
+            title.setPos(text_x - 4, 4)
+            rank = QGraphicsTextItem()
+            rank.setParentItem(card)  # the card owns it (else it is collected)
+            rank.setDefaultTextColor(colour.lighter(150))
+            rank.setFont(small)
+            rank.setPlainText(f"Rank {node.get('max_rank', 1)}")
+            rank.setPos(text_x - 4, 24)
+            gives = QGraphicsTextItem()
+            gives.setParentItem(card)  # the card owns it (else it is collected)
+            gives.setDefaultTextColor(QColor("#b9c0cc"))
+            gives.setFont(small)
+            gives.setPlainText(
+                self.fontMetrics().elidedText(self._summary(node), Qt.ElideRight, int(width))
+            )
+            gives.setPos(text_x - 4, 40)
+            self.node_items[node["node_id"]] = card
         for node in nodes:
             target = self.node_items[node["node_id"]]
-            for req in node.get("prerequisites", []) + node.get("any_prerequisites", []):
-                source = self.node_items.get(req["node_id"])
-                if source is not None:
-                    a = source.sceneBoundingRect().center()
-                    b = target.sceneBoundingRect().center()
-                    self.scene_graph.addLine(a.x(), a.y(), b.x(), b.y())
+            for kind in ("prerequisites", "any_prerequisites"):
+                for req in node.get(kind, []):
+                    source = self.node_items.get(req["node_id"])
+                    if source is not None:
+                        self._edges.append((source, target, kind == "any_prerequisites"))
+        self._draw_edges()
         self.scene_graph.setSceneRect(
-            self.scene_graph.itemsBoundingRect().adjusted(-40, -40, 40, 40)
+            self.scene_graph.itemsBoundingRect().adjusted(-60, -60, 60, 60)
         )
+        self.fit()
+
+    def _draw_edges(self):
+        """Arrows from each prerequisite's right edge to the node's left edge (behind cards)."""
+        from math import atan2, cos, sin
+
+        from PySide6.QtCore import QPointF
+        from PySide6.QtGui import QBrush, QColor, QPainterPath, QPen, QPolygonF
+
+        for item in getattr(self, "_edge_items", ()):
+            self.scene_graph.removeItem(item)
+        self._edge_items = []
+        for source, target, either in self._edges:
+            a = source.sceneBoundingRect()
+            b = target.sceneBoundingRect()
+            start = QPointF(a.right(), a.center().y())
+            end = QPointF(b.left(), b.center().y())
+            if b.left() < a.right():  # a card placed left of its prerequisite
+                start, end = QPointF(a.center().x(), a.bottom()), QPointF(b.center().x(), b.top())
+            path = QPainterPath(start)
+            mid = (start.x() + end.x()) / 2
+            path.cubicTo(QPointF(mid, start.y()), QPointF(mid, end.y()), end)
+            pen = QPen(QColor("#d6a64f" if either else "#8fa3c0"), 2.0)
+            if either:
+                pen.setStyle(Qt.DashLine)
+            line = self.scene_graph.addPath(path, pen)
+            line.setZValue(0)
+            before = path.pointAtPercent(0.95)
+            angle = atan2(end.y() - before.y(), end.x() - before.x())
+            size, a1, a2 = 9.0, angle - 0.45, angle + 0.45
+            head = QPolygonF(
+                [
+                    end,
+                    QPointF(end.x() - size * cos(a1), end.y() - size * sin(a1)),
+                    QPointF(end.x() - size * cos(a2), end.y() - size * sin(a2)),
+                ]
+            )
+            arrow = self.scene_graph.addPolygon(head, QPen(pen.color()), QBrush(pen.color()))
+            arrow.setZValue(0)
+            self._edge_items += [line, arrow]
+
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+        if self.scene_graph.selectedItems():  # a card was dragged: the arrows follow it
+            self._draw_edges()
+
+    def fit(self):
+        if self.node_items:
+            self.resetTransform()
+            self.fitInView(self.scene_graph.sceneRect(), Qt.KeepAspectRatio)
+            scale = self.transform().m11()
+            if scale > 1.0:  # a small tree is not blown up
+                self.resetTransform()
+                scale = 1.0
+            elif scale < 0.35:  # a big web opens readable; scroll / zoom to see the rest
+                self.resetTransform()
+                self.scale(0.35, 0.35)
+                scale = 0.35
+            self._zoom = scale
+
+    def wheelEvent(self, event):
+        if event.modifiers() & Qt.ControlModifier:
+            factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
+            self._zoom = max(0.15, min(3.0, self._zoom * factor))
+            self.resetTransform()
+            self.scale(self._zoom, self._zoom)
+            return
+        super().wheelEvent(event)
 
     def positions(self):
         return {key: [item.pos().x(), item.pos().y()] for key, item in self.node_items.items()}
@@ -675,6 +915,7 @@ class AdapterFamilyWidget(QWidget):
         self.adapters = {x.category_id: x for x in adapters}
         self._ids = []
         self.last_error = None
+        self._list_chosen = False
 
         header = QHBoxLayout()
         heading = self.heading = QLabel(self.title)
@@ -721,7 +962,7 @@ class AdapterFamilyWidget(QWidget):
             from .image_tools import IconLibrary
 
             self.editor.icon_library = IconLibrary(document)
-        self.graph_view = SkillTreeGraphView()
+        self.graph_view = SkillTreeGraphView(document=document)
         self.detail_stack = QStackedWidget()
         self.detail_stack.addWidget(self.editor)
         self.detail_stack.addWidget(self.graph_view)
@@ -841,13 +1082,15 @@ class AdapterFamilyWidget(QWidget):
         self.editor.set_record(data)
         if self.category_id == "graphs":
             self.graph_view.set_graph_data(data)
-            if data.get("editor_view") == "graph":
+            if not self._list_chosen:  # a skill tree opens as its graph until List is asked for
                 self.detail_stack.setCurrentWidget(self.graph_view)
+                self.view_button.setText("List / Data View")
 
     def toggle_skill_tree_view(self):
         if self.category_id != "graphs":
             return False
         graph = self.detail_stack.currentWidget() is self.graph_view
+        self._list_chosen = graph  # the author asked for the fields
         self.detail_stack.setCurrentWidget(self.editor if graph else self.graph_view)
         self.view_button.setText("Graph View" if graph else "List / Data View")
         return True
@@ -1099,14 +1342,16 @@ class FamilyHostWidget(QWidget):
         self.builder = builder
         self.child = None
         self.project_id = None
+        self._project = None
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.rebuild()
 
     def rebuild(self):
         project = getattr(getattr(self.builder, "__self__", None), "project", None)
-        pid = getattr(project, "id", None)
-        if self.child is not None and pid == self.project_id:
+        # the project object itself: two files can share an id (a project copied from another)
+        pid = (id(project), getattr(project, "id", None))
+        if self.child is not None and pid == self.project_id and project is self._project:
             refresh = getattr(self.child, "refresh", None)
             if callable(refresh):
                 refresh()
@@ -1117,6 +1362,7 @@ class FamilyHostWidget(QWidget):
             self.child.deleteLater()
             self.child = None
         self.project_id = pid
+        self._project = project
         if project is None:
             from .project_empty_state import ProjectEmptyState
 

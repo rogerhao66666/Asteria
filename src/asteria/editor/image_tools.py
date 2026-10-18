@@ -233,6 +233,37 @@ def _icon_files(root, limit=600, depth=4, folder_budget=1500):
     return found[:limit]
 
 
+def icon_pixmap(document, icon_id, size=32):
+    """The picture an ``icon_id`` field names (an icon asset, a picture file of the project, or
+    a ``forged:`` icon) as a ``size`` QPixmap, or ``None``."""
+    from asteria.runtime.menu_icons import icon_source
+
+    icon_id = str(icon_id or "").strip()
+    if not icon_id:
+        return None
+    if icon_id.startswith("forged:"):
+        icon = forged_qicon(icon_id, size)
+        return None if icon is None else icon.pixmap(size, size)
+    project = getattr(document, "project", None)
+    root = project_root(document)
+    region = None
+    path = Path(icon_id) if Path(icon_id).is_absolute() else root / icon_id
+    if not path.is_file() and project is not None:  # an icon asset (maybe a sheet cell)
+        try:
+            uri, region = icon_source(project, icon_id)
+        except (KeyError, ValueError):
+            return None
+        path = Path(uri) if Path(uri).is_absolute() else root / uri
+    if not path.is_file():
+        return None
+    pixmap = QPixmap(str(path))
+    if pixmap.isNull():
+        return None
+    if region:
+        pixmap = pixmap.copy(*region)
+    return pixmap.scaled(size, size, Qt.KeepAspectRatio, Qt.FastTransformation)
+
+
 def icon_choices(document):
     """Every icon an ``icon_id`` field can take, as ``((icon id, QIcon or None), ...)``: the
     project's own picture files (any ``icons`` folder) and ``icon`` assets, then the engine's

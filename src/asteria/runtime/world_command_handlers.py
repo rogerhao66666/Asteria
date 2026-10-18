@@ -46,6 +46,8 @@ STANDARD_WORLD_COMMANDS = (
     "LEAVE_PARTY",
     "BATTLE_SEQUENCE",
     "LEARN_ABILITY",
+    "SET_LOCALE",
+    "NEW_GAME_PLUS",
     "REST_PARTY",
     "GRANT_EXPERIENCE",
     "REFINE_EQUIPMENT",
@@ -102,6 +104,8 @@ WORLD_COMMAND_ARGUMENTS = {
     "JOIN_PARTY": ("actor_id", "active"),
     "BATTLE_SEQUENCE": ("sequence_id", "actor_id", "target_id"),
     "LEARN_ABILITY": ("actor_id", "ability_id"),
+    "SET_LOCALE": ("locale",),
+    "NEW_GAME_PLUS": ("rules_id",),
     "LEAVE_PARTY": ("actor_id",),
     "REST_PARTY": (),
     "GRANT_EXPERIENCE": ("actor_id", "amount", "threshold", "points", "level_track"),
@@ -384,6 +388,11 @@ def register_standard_world_commands(router, session):
             str(_required(c, "actor_id")),
             active=str(c.args.get("active", "true")).lower() != "false",
         ),
+    )
+    gear_command("SET_LOCALE", lambda c: session.set_locale(str(_required(c, "locale"))))
+    gear_command(
+        "NEW_GAME_PLUS",
+        lambda c: session.request_new_game_plus(str(c.args.get("rules_id", "")) or None),
     )
     gear_command(
         "LEARN_ABILITY",

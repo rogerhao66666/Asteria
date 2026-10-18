@@ -44,7 +44,11 @@ class BehaviorTreeSystem(System):
         combat=None,
         world=None,
         spawn=None,
+        sight_scale=None,
     ):
+        # () -> how far foes see the player now (map areas: shadows, crouching); scales the
+        # player_within / player_beyond radii and a chase's lose_radius
+        self.sight_scale = sight_scale or (lambda: 1.0)
         self.trees = (
             trees  # mapping tree_id -> BehaviorTree (e.g. project.rpg_database.behavior_trees)
         )
@@ -246,17 +250,19 @@ class BehaviorTreeSystem(System):
             return result
         # conditions
         target = self._target(ctx)
+        sight = float(self.sight_scale())
         if kind == "player_within":
             return (
                 SUCCESS
                 if target is not None
-                and self._distance_to(ctx, target) <= float(p.get("radius", 64))
+                and self._distance_to(ctx, target) <= float(p.get("radius", 64)) * sight
                 else FAILURE
             )
         if kind == "player_beyond":
+            radius = float(p.get("radius", 64)) * sight
             return (
                 SUCCESS
-                if target is None or self._distance_to(ctx, target) > float(p.get("radius", 64))
+                if target is None or self._distance_to(ctx, target) > radius
                 else FAILURE
             )
         if kind == "home_within":
@@ -306,7 +312,7 @@ class BehaviorTreeSystem(System):
         if kind == "chase":
             lose = p.get("lose_radius")
             if target is None or (
-                lose is not None and self._distance_to(ctx, target) > float(lose)
+                lose is not None and self._distance_to(ctx, target) > float(lose) * sight
             ):
                 return FAILURE
             if self._distance_to(ctx, target) <= float(p.get("arrive", 4.0)):

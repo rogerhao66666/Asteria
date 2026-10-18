@@ -220,7 +220,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
 | 項目 | 狀態 |
 | --- | --- |
-| 圖示與美術 | 所有 demo（Boss Trial、Octopath、reference、Diablo 兩個、party／basic／action 範本）的人物、怪物、地圖、UI、裝備與技能圖示都是 Foozle Lucifer（CC0）；例外：Diablo 的箭與投射物、弓和魔杖圖示來自 Ninja Adventure（Lucifer 沒有）。程式畫的原創圖示（`graphics/forged_icons.py`，D35）仍在引擎裡可選。沒有 AI 美術 |
+| 圖示與美術 | 所有 demo（Full Verification、Octopath、reference、Diablo 兩個、party／basic／action 範本）的人物、怪物、地圖、UI、裝備與技能圖示都是 Foozle Lucifer（CC0）；例外：Diablo 的箭與投射物、弓和魔杖圖示來自 Ninja Adventure（Lucifer 沒有）。程式畫的原創圖示（`graphics/forged_icons.py`，D35）仍在引擎裡可選。沒有 AI 美術 |
 | 原生 kernel 要每台機器編譯一次 | `python -m asteria.kernels.build_native`；沒編譯會退回 numpy |
 | `CollisionWorld.from_scene` 沒有快取 | 2026-10-16 量測：100／500／2000 個碰撞器建一次 0.05／0.22／0.85 ms，每幀約一次，不是瓶頸；失效模型（啟用狀態、增刪、換場景、移動）的風險大於收益，**決定不做** |
 | Enemy AI 的七欄規則表 | 窗口很窄時可橫向捲動（表格的正常行為） |
@@ -249,7 +249,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
 以上全部是資料驅動、沒設定就沒有影響；舊專案與存檔照常載入。
 
-### D36 新增（Boss Trial demo 帶出來的系統；報告 [`audits/BOSS_TRIAL_B2_B3_REPORT.md`](audits/BOSS_TRIAL_B2_B3_REPORT.md)）
+### D36 新增（Full Verification demo 帶出來的系統；報告 [`audits/BOSS_TRIAL_B2_B3_REPORT.md`](audits/BOSS_TRIAL_B2_B3_REPORT.md)）
 
 | 類別 | 內容 |
 |---|---|
@@ -259,7 +259,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | 世界指令 | `GRANT_EXPERIENCE`、`REFINE_EQUIPMENT`、`SOCKET_ITEM`、`UNSOCKET_ITEM`、`UPGRADE_EQUIPMENT` |
 | 戰鬥表現 | 版面 `hidden_zones`（該區域成員完全不畫 HUD，像八方旅人的敵人）、`move` 動作通道（`advance` 衝向目標、`return` 退回，停在目標體型邊緣）、精靈表中繼資料 `body_height`（血條與選單依本體高度擺） |
 | 反擊與戰鬥表現 | `ReactionDefinition.reactor_tags`（要求反應者自己帶標籤，如反擊姿態）；可玩戰鬥現在會觸發專案的反應並記入戰鬥記錄；敵人技能也走逐下流程（爆擊／即死／反應）；`EQUIP_ITEM`（戰鬥中換武器，技能跟著變）、`DISASSEMBLE`；失去開場（先制／偷襲）的一方在時間軸排程下只讓出第一輪 |
-| Demo | `reference_projects/boss_trial_demo/`：單一主角打 Boss，`run_trial_smoke.py` 腳本化驗證、`scripts/boss_trial_live_check.py` 真實視窗驗證 |
+| Demo | `reference_projects/full_verification_demo/`：單一主角打 Boss，`run_trial_smoke.py` 腳本化驗證、`scripts/full_verification_live_check.py` 真實視窗驗證 |
 
 ### 下一步的候選（沒有排序，要使用者決定）
 

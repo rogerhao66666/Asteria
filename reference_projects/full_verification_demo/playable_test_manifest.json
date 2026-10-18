@@ -1,0 +1,908 @@
+{
+  "schema": "asteria.playable_test_content",
+  "version": 1,
+  "title": "Full Verification Demo",
+  "field": {
+    "background": "playable_assets/field_map.png",
+    "player_sheet": "playable_assets/player_field_sheet.png",
+    "player_frame_size": [
+      64,
+      64
+    ],
+    "world_to_screen_scale": 3.0,
+    "player_start": [
+      38,
+      0
+    ],
+    "boss_world": [
+      48,
+      0
+    ],
+    "entity_sprites": {
+      "Vaelor": {
+        "sprite": "playable_assets/boss_field.png",
+        "size": [
+          96,
+          96
+        ]
+      },
+      "Smith": {
+        "sprite": "playable_assets/npc_smith.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Awakener": {
+        "sprite": "playable_assets/npc_awakener.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Jeweler": {
+        "sprite": "playable_assets/npc_jeweler.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Card Dealer": {
+        "sprite": "playable_assets/npc_card_dealer.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Mystic Teacher": {
+        "sprite": "playable_assets/npc_mystic_teacher.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Duelist Teacher": {
+        "sprite": "playable_assets/npc_duelist_teacher.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Weapon Master Dojo": {
+        "sprite": "playable_assets/npc_weapon_master_dojo.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Sage's Tower": {
+        "sprite": "playable_assets/npc_sage_s_tower.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Hero's Shrine": {
+        "sprite": "playable_assets/npc_hero_s_shrine.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Forgemaster's Smithy": {
+        "sprite": "playable_assets/npc_forgemaster_s_smithy.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Rogue Guild": {
+        "sprite": "playable_assets/npc_rogue_guild.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Guardian Post": {
+        "sprite": "playable_assets/npc_guardian_post.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Alchemist": {
+        "sprite": "playable_assets/npc_alchemist.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Merchant": {
+        "sprite": "playable_assets/npc_merchant.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Breaker": {
+        "sprite": "playable_assets/npc_breaker.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Armory (Bow)": {
+        "sprite": "playable_assets/npc_armory__bow.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Armory (Dagger)": {
+        "sprite": "playable_assets/npc_armory__dagger.png",
+        "size": [
+          40,
+          40
+        ]
+      },
+      "Shrine": {
+        "sprite": "playable_assets/npc_shrine.png",
+        "size": [
+          40,
+          40
+        ]
+      }
+    },
+    "player_render_width": 128,
+    "bgm": "town_theme"
+  },
+  "battle": {
+    "background": "playable_assets/battle_background.png",
+    "heroes": [
+      "playable_assets/hero_01_battle.png",
+      "playable_assets/hero_01_battle.png"
+    ],
+    "enemy_sprites": {},
+    "skills": {
+      "attack_sword": {
+        "label": "Attack (sword)"
+      },
+      "attack_spear": {
+        "label": "Attack (spear)"
+      },
+      "attack_dagger": {
+        "label": "Attack (dagger)"
+      },
+      "attack_axe": {
+        "label": "Attack (axe)"
+      },
+      "attack_bow": {
+        "label": "Attack (bow)"
+      },
+      "attack_staff": {
+        "label": "Attack (staff)"
+      },
+      "shield_bash": {
+        "label": "Shield Bash"
+      },
+      "guard_stance": {
+        "label": "Guard Stance"
+      },
+      "cleave": {
+        "label": "Triple Cleave"
+      },
+      "rally": {
+        "label": "Rally"
+      },
+      "bloodletting": {
+        "label": "Bloodletting"
+      },
+      "vampiric_strike": {
+        "label": "Vampiric Strike"
+      },
+      "executioner": {
+        "label": "Executioner (Divine)"
+      },
+      "bastion": {
+        "label": "Bastion (Divine)"
+      },
+      "quick_slash": {
+        "label": "Quick Slash"
+      },
+      "flurry": {
+        "label": "Flurry"
+      },
+      "poison_edge": {
+        "label": "Venom Edge"
+      },
+      "shadow_step": {
+        "label": "Shadow Step"
+      },
+      "arrow_rain": {
+        "label": "Arrow Rain"
+      },
+      "assassinate": {
+        "label": "Assassinate"
+      },
+      "phantom_dance": {
+        "label": "Phantom Dance (Divine)"
+      },
+      "fireball": {
+        "label": "Fireball"
+      },
+      "frost_lance": {
+        "label": "Frost Lance"
+      },
+      "thunder_chain": {
+        "label": "Thunder Chain"
+      },
+      "mend": {
+        "label": "Mend"
+      },
+      "arcane_barrier": {
+        "label": "Arcane Barrier"
+      },
+      "drain_touch": {
+        "label": "Drain Touch"
+      },
+      "curse": {
+        "label": "Hex"
+      },
+      "meteor_fall": {
+        "label": "Meteor Fall (Divine)"
+      },
+      "donate_bp": {
+        "label": "Focus Breath"
+      },
+      "arsenal_barrage": {
+        "label": "Arsenal Barrage"
+      },
+      "weapon_dance": {
+        "label": "Weapon Dance"
+      },
+      "disarm": {
+        "label": "Disarm"
+      },
+      "guard_break": {
+        "label": "Guard Break"
+      },
+      "sharpen": {
+        "label": "Sharpen"
+      },
+      "blade_storm": {
+        "label": "Blade Storm"
+      },
+      "draw_bow": {
+        "label": "Draw Bow"
+      },
+      "draw_dagger": {
+        "label": "Draw Dagger"
+      },
+      "edge_of_ages": {
+        "label": "Edge of Ages (Divine)"
+      },
+      "holy_light": {
+        "label": "Holy Light"
+      },
+      "dispel": {
+        "label": "Dispel"
+      },
+      "mirror_veil": {
+        "label": "Mirror Veil"
+      },
+      "tri_blast": {
+        "label": "Tri-Blast"
+      },
+      "purify": {
+        "label": "Purify"
+      },
+      "gaia_blessing": {
+        "label": "Gaia's Blessing"
+      },
+      "genesis": {
+        "label": "Genesis (Divine)"
+      },
+      "brave_slash": {
+        "label": "Brave Slash"
+      },
+      "rally_cry": {
+        "label": "Rally Cry"
+      },
+      "holy_blade": {
+        "label": "Holy Blade"
+      },
+      "second_wind": {
+        "label": "Second Wind"
+      },
+      "resolute": {
+        "label": "Resolute"
+      },
+      "lightning_strike": {
+        "label": "Lightning Strike"
+      },
+      "hero_finale": {
+        "label": "Hero's Finale (Divine)"
+      },
+      "temper": {
+        "label": "Temper"
+      },
+      "enchant_frost": {
+        "label": "Frost Temper"
+      },
+      "enchant_storm": {
+        "label": "Storm Temper"
+      },
+      "anvil_slam": {
+        "label": "Anvil Slam"
+      },
+      "hammer_combo": {
+        "label": "Hammer Combo"
+      },
+      "quick_refine": {
+        "label": "Quick Refine"
+      },
+      "masterwork": {
+        "label": "Masterwork (Divine)"
+      },
+      "mug": {
+        "label": "Mug"
+      },
+      "vanish": {
+        "label": "Vanish"
+      },
+      "backstab": {
+        "label": "Backstab"
+      },
+      "poison_cloud": {
+        "label": "Poison Cloud"
+      },
+      "smoke_bomb": {
+        "label": "Smoke Bomb"
+      },
+      "deathmark": {
+        "label": "Deathmark"
+      },
+      "shadow_feast": {
+        "label": "Shadow Feast (Divine)"
+      },
+      "shield_wall": {
+        "label": "Shield Wall"
+      },
+      "provoke": {
+        "label": "Provoke"
+      },
+      "retaliate": {
+        "label": "Retaliate"
+      },
+      "fortify": {
+        "label": "Fortify"
+      },
+      "bulwark_charge": {
+        "label": "Bulwark Charge"
+      },
+      "last_bastion": {
+        "label": "Last Bastion"
+      },
+      "counter_stance": {
+        "label": "Counter Stance"
+      },
+      "aegis": {
+        "label": "Aegis (Divine)"
+      },
+      "versatile_strike": {
+        "label": "Versatile Strike"
+      },
+      "elemental_edge": {
+        "label": "Elemental Edge"
+      },
+      "cripple": {
+        "label": "Cripple"
+      },
+      "war_cry": {
+        "label": "War Cry"
+      },
+      "arcane_tome": {
+        "label": "Arcane Tome"
+      },
+      "hex": {
+        "label": "Hex"
+      },
+      "bewilder": {
+        "label": "Bewilder"
+      },
+      "blood_ether": {
+        "label": "Blood Ether"
+      },
+      "word_of_doom": {
+        "label": "Word of Doom (Divine)"
+      },
+      "dawn_and_dusk": {
+        "label": "Dawn and Dusk"
+      },
+      "dark_pact": {
+        "label": "Dark Pact"
+      },
+      "pass_the_torch": {
+        "label": "Pass the Torch"
+      },
+      "rekindle": {
+        "label": "Rekindle"
+      },
+      "dragon_form": {
+        "label": "Dragon Form"
+      },
+      "twilight_judgment": {
+        "label": "Twilight Judgment (Divine)"
+      },
+      "molten_strike": {
+        "label": "Molten Strike"
+      },
+      "gilded_hammer": {
+        "label": "Gilded Hammer"
+      },
+      "armor_crush": {
+        "label": "Armor Crush"
+      },
+      "blinding_powder": {
+        "label": "Blinding Powder"
+      },
+      "charm": {
+        "label": "Charm"
+      },
+      "venom_edge": {
+        "label": "Venom Edge"
+      },
+      "pilfer": {
+        "label": "Pilfer"
+      },
+      "lullaby_dust": {
+        "label": "Lullaby Dust"
+      },
+      "bastion_aura": {
+        "label": "Bastion Aura"
+      },
+      "martyrs_gift": {
+        "label": "Martyr's Gift"
+      },
+      "maddening_howl": {
+        "label": "Maddening Howl"
+      },
+      "spirit_cleave": {
+        "label": "Spirit Cleave"
+      },
+      "spirit_ward": {
+        "label": "Spirit Ward"
+      },
+      "benediction": {
+        "label": "Benediction"
+      },
+      "purge": {
+        "label": "Purge"
+      },
+      "starlight": {
+        "label": "Starlight"
+      },
+      "lullaby": {
+        "label": "Lullaby"
+      },
+      "bp_gift": {
+        "label": "Boost Gift"
+      },
+      "second_breath": {
+        "label": "Second Breath"
+      },
+      "dawn_hymn": {
+        "label": "Dawn Hymn (Divine)"
+      },
+      "call_spirit": {
+        "label": "Call Spirit"
+      },
+      "concoct": {
+        "label": "Concoct"
+      },
+      "counter_strike": {
+        "label": "Counter Strike"
+      },
+      "pet_shot": {
+        "label": "Sling Shot"
+      },
+      "pet_bandage": {
+        "label": "Bandage"
+      },
+      "pet_volley": {
+        "label": "Volley"
+      },
+      "brave_slash_ii": {
+        "label": "Brave Slash II"
+      },
+      "rally_cry_ii": {
+        "label": "Rally Cry II"
+      },
+      "arsenal_barrage_ii": {
+        "label": "Arsenal Barrage II"
+      },
+      "fireball_ii": {
+        "label": "Fireball II"
+      },
+      "dragon_claw": {
+        "label": "Dragon Claw"
+      },
+      "dragon_breath": {
+        "label": "Dragon Breath"
+      },
+      "dragon_revert": {
+        "label": "Revert"
+      },
+      "holy_nova": {
+        "label": "Holy Nova"
+      },
+      "sanctuary": {
+        "label": "Sanctuary"
+      },
+      "smite": {
+        "label": "Smite"
+      },
+      "blessing": {
+        "label": "Blessing"
+      },
+      "divine_aegis": {
+        "label": "Divine Aegis"
+      },
+      "holy_judgment": {
+        "label": "Holy Judgment"
+      },
+      "mass_cure": {
+        "label": "Mass Cure"
+      },
+      "grace_of_dawn": {
+        "label": "Grace of Dawn"
+      },
+      "frost_nova": {
+        "label": "Frost Nova"
+      },
+      "soul_siphon": {
+        "label": "Soul Siphon"
+      },
+      "bone_armor": {
+        "label": "Bone Armor"
+      },
+      "plague": {
+        "label": "Plague"
+      },
+      "death_coil": {
+        "label": "Death Coil"
+      },
+      "dread_aura": {
+        "label": "Dread Aura"
+      },
+      "soul_harvest": {
+        "label": "Soul Harvest"
+      },
+      "unholy_pact": {
+        "label": "Unholy Pact"
+      },
+      "fanatic_strike": {
+        "label": "Fanatic Strike"
+      },
+      "blood_rite": {
+        "label": "Blood Rite"
+      },
+      "fervor": {
+        "label": "Fervor"
+      },
+      "brand": {
+        "label": "Brand"
+      },
+      "forbidden_rite": {
+        "label": "Forbidden Rite"
+      },
+      "hex_storm": {
+        "label": "Hex Storm"
+      },
+      "martyrdom": {
+        "label": "Martyrdom"
+      },
+      "apostasy": {
+        "label": "Apostasy"
+      },
+      "shield_bash__ember": {
+        "label": "Shield Bash (Ember)"
+      },
+      "shield_bash__echo": {
+        "label": "Shield Bash (Echo)"
+      },
+      "shield_bash__siphon": {
+        "label": "Shield Bash (Siphon)"
+      },
+      "quick_slash__ember": {
+        "label": "Quick Slash (Ember)"
+      },
+      "quick_slash__echo": {
+        "label": "Quick Slash (Echo)"
+      },
+      "quick_slash__siphon": {
+        "label": "Quick Slash (Siphon)"
+      },
+      "frost_lance__ember": {
+        "label": "Frost Lance (Ember)"
+      },
+      "frost_lance__echo": {
+        "label": "Frost Lance (Echo)"
+      },
+      "frost_lance__siphon": {
+        "label": "Frost Lance (Siphon)"
+      },
+      "weapon_dance__ember": {
+        "label": "Weapon Dance (Ember)"
+      },
+      "weapon_dance__echo": {
+        "label": "Weapon Dance (Echo)"
+      },
+      "weapon_dance__siphon": {
+        "label": "Weapon Dance (Siphon)"
+      },
+      "holy_light__ember": {
+        "label": "Holy Light (Ember)"
+      },
+      "holy_light__echo": {
+        "label": "Holy Light (Echo)"
+      },
+      "holy_light__siphon": {
+        "label": "Holy Light (Siphon)"
+      },
+      "holy_blade__ember": {
+        "label": "Holy Blade (Ember)"
+      },
+      "holy_blade__echo": {
+        "label": "Holy Blade (Echo)"
+      },
+      "holy_blade__siphon": {
+        "label": "Holy Blade (Siphon)"
+      },
+      "temper__ember": {
+        "label": "Temper (Ember)"
+      },
+      "temper__echo": {
+        "label": "Temper (Echo)"
+      },
+      "temper__siphon": {
+        "label": "Temper (Siphon)"
+      },
+      "mug__ember": {
+        "label": "Mug (Ember)"
+      },
+      "mug__echo": {
+        "label": "Mug (Echo)"
+      },
+      "mug__siphon": {
+        "label": "Mug (Siphon)"
+      },
+      "shield_wall__ember": {
+        "label": "Shield Wall (Ember)"
+      },
+      "shield_wall__echo": {
+        "label": "Shield Wall (Echo)"
+      },
+      "shield_wall__siphon": {
+        "label": "Shield Wall (Siphon)"
+      },
+      "mend__ember": {
+        "label": "Mend (Ember)"
+      },
+      "mend__echo": {
+        "label": "Mend (Echo)"
+      },
+      "mend__siphon": {
+        "label": "Mend (Siphon)"
+      },
+      "holy_nova__ember": {
+        "label": "Holy Nova (Ember)"
+      },
+      "holy_nova__echo": {
+        "label": "Holy Nova (Echo)"
+      },
+      "holy_nova__siphon": {
+        "label": "Holy Nova (Siphon)"
+      },
+      "divine_aegis__ember": {
+        "label": "Divine Aegis (Ember)"
+      },
+      "divine_aegis__echo": {
+        "label": "Divine Aegis (Echo)"
+      },
+      "divine_aegis__siphon": {
+        "label": "Divine Aegis (Siphon)"
+      },
+      "curse__ember": {
+        "label": "Hex (Ember)"
+      },
+      "curse__echo": {
+        "label": "Hex (Echo)"
+      },
+      "curse__siphon": {
+        "label": "Hex (Siphon)"
+      },
+      "frost_nova__ember": {
+        "label": "Frost Nova (Ember)"
+      },
+      "frost_nova__echo": {
+        "label": "Frost Nova (Echo)"
+      },
+      "frost_nova__siphon": {
+        "label": "Frost Nova (Siphon)"
+      },
+      "death_coil__ember": {
+        "label": "Death Coil (Ember)"
+      },
+      "death_coil__echo": {
+        "label": "Death Coil (Echo)"
+      },
+      "death_coil__siphon": {
+        "label": "Death Coil (Siphon)"
+      },
+      "charm__ember": {
+        "label": "Charm (Ember)"
+      },
+      "charm__echo": {
+        "label": "Charm (Echo)"
+      },
+      "charm__siphon": {
+        "label": "Charm (Siphon)"
+      },
+      "fanatic_strike__ember": {
+        "label": "Fanatic Strike (Ember)"
+      },
+      "fanatic_strike__echo": {
+        "label": "Fanatic Strike (Echo)"
+      },
+      "fanatic_strike__siphon": {
+        "label": "Fanatic Strike (Siphon)"
+      },
+      "forbidden_rite__ember": {
+        "label": "Forbidden Rite (Ember)"
+      },
+      "forbidden_rite__echo": {
+        "label": "Forbidden Rite (Echo)"
+      },
+      "forbidden_rite__siphon": {
+        "label": "Forbidden Rite (Siphon)"
+      },
+      "gob_sling": {
+        "label": "Sling Stone"
+      },
+      "gob_stab": {
+        "label": "Stab"
+      },
+      "gob_rage": {
+        "label": "Rage"
+      },
+      "beast_maul": {
+        "label": "Maul"
+      },
+      "beast_howl": {
+        "label": "Howl"
+      },
+      "beast_pounce": {
+        "label": "Pounce"
+      },
+      "skel_slash": {
+        "label": "Bone Slash"
+      },
+      "skel_guard": {
+        "label": "Guard"
+      },
+      "skel_shot": {
+        "label": "Bone Arrow"
+      },
+      "anc_curse": {
+        "label": "Ancient Curse"
+      },
+      "anc_rain": {
+        "label": "Rain of Bone"
+      },
+      "anc_drain": {
+        "label": "Soul Drain"
+      },
+      "anc_raise": {
+        "label": "Raise the Fallen"
+      },
+      "vial_poison": {
+        "label": "Poison Vial"
+      },
+      "bomb_smoke": {
+        "label": "Smoke Bomb"
+      },
+      "water_holy": {
+        "label": "Holy Water"
+      },
+      "momentum_strike": {
+        "label": "Momentum Strike"
+      },
+      "soul_burst": {
+        "label": "Soul Burst"
+      },
+      "party_rush": {
+        "label": "Party Rush"
+      },
+      "rush_blow": {
+        "label": "Rush Blow"
+      },
+      "intercept": {
+        "label": "Intercept"
+      },
+      "chase_strike": {
+        "label": "Chase Strike"
+      },
+      "elemental_weave": {
+        "label": "Elemental Weave"
+      },
+      "art_rending_gale": {
+        "label": "Rending Gale"
+      },
+      "art_whirlwind": {
+        "label": "Whirlwind"
+      },
+      "art_dawn_edge": {
+        "label": "Dawn Edge"
+      },
+      "art_iron_vow": {
+        "label": "Iron Vow"
+      },
+      "field_slash": {
+        "label": "Field Slash"
+      },
+      "sling_throw": {
+        "label": "Sling Stone"
+      },
+      "taunting_roar": {
+        "label": "Taunting Roar"
+      },
+      "unity_strike": {
+        "label": "Unity Strike"
+      },
+      "grave_whisper": {
+        "label": "Grave Whisper"
+      },
+      "beast_command": {
+        "label": "Beast Command"
+      }
+    },
+    "enemy_layouts": {},
+    "bgm": "battle_theme",
+    "victory_jingle": "victory",
+    "presentation": {
+      "adapter": "canonical"
+    },
+    "victory_aftermath": true,
+    "command_style": "root"
+  },
+  "controls": {
+    "title": "N New Game / L Load Player Save",
+    "move": "WASD / Arrow Keys",
+    "character_menu": "C",
+    "character_menu_actions": "Q/E actor, 1 secondary class, 2 skill tree, 3 passive, 4 weapon, 5 weapon upgrade, 6 accessory, 7 party/formation",
+    "interact": "E / Enter",
+    "battle_actions": "1-4 skill, B cycles generic Momentum boost",
+    "save": "F5 (in-game Player Save only)",
+    "quit": "Esc"
+  },
+  "progression_rewards": {
+    "experience": 1600,
+    "level_threshold": 1000,
+    "ap_per_level": 2,
+    "ability_points_per_level": 1
+  },
+  "audio": {
+    "field_theme": "playable_assets/audio/field_theme.ogg",
+    "battle_theme": "playable_assets/audio/battle_theme.ogg",
+    "hit": "playable_assets/audio/hit.wav",
+    "heal": "playable_assets/audio/heal.wav",
+    "confirm": "playable_assets/audio/confirm.wav",
+    "victory": "playable_assets/audio/victory.wav",
+    "town_theme": "playable_assets/audio/town_theme.ogg",
+    "woods_theme": "playable_assets/audio/woods_theme.ogg",
+    "crypt_theme": "playable_assets/audio/crypt_theme.ogg",
+    "throne_theme": "playable_assets/audio/throne_theme.ogg"
+  },
+  "dialogue_confirm_sfx": "confirm"
+}

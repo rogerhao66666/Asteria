@@ -203,7 +203,10 @@ class PlayableTestRuntime:
         self._crafting_screen = None
         self._list_scroll = 0
         self.settings = GameSettings.load(self._settings_path())
-        self._settings_menu = MenuCursor(GameSettings.OPTIONS)
+        settings_options = list(GameSettings.OPTIONS)
+        if len(self.game.localizer.locales()) > 1:  # a translated game: the player picks one
+            settings_options.insert(-2, ("language", "Language"))
+        self._settings_menu = MenuCursor(settings_options)
 
     def path(self, rel):
         return self.resource_root / str(rel)
@@ -2141,6 +2144,20 @@ class PlayableTestRuntime:
         self.message_until = self.pg.time.get_ticks() + 1800
         return True
 
+    def _adopt_new_game_plus(self):
+        """An event asked for New Game Plus: play on in the carried-over save from the start."""
+        fresh = getattr(self.game, "pending_new_game", None)
+        if fresh is None:
+            return False
+        self.game.pending_new_game = None
+        self.save = fresh
+        self.game = GameSessionRuntime(self.project, fresh)
+        self._victory = self._defeat = False
+        self._ui_mode = "field"
+        self.message = "New Game+"
+        self.message_until = self.pg.time.get_ticks() + 2400
+        return True
+
     def _menu_actor_ids(self):
         return tuple(self.save.rpg_state.party_actor_ids)
 
@@ -3085,8 +3102,14 @@ class PlayableTestRuntime:
         delta = (1 if self.input.just_pressed("move_right") else 0) - (
             1 if self.input.just_pressed("move_left") else 0
         )
-        if self.input.just_pressed("confirm") and key == "show_battle_log":
+        if self.input.just_pressed("confirm") and key in ("show_battle_log", "language"):
             delta = 1
+        if delta and key == "language":
+            locales = self.game.localizer.locales()
+            current = self.game.localizer.locale
+            index = locales.index(current) if current in locales else 0
+            self.game.set_locale(locales[(index + delta) % len(locales)])
+            return
         if delta:
             self.settings.adjust(key, delta)
             self.settings.apply(self.audio)
@@ -3377,11 +3400,17 @@ class PlayableTestRuntime:
             lines.append("Drops: none seen yet")
         return "\n".join(lines)
 
+    def _language_name(self):
+        """The chosen locale as its own table calls it (``language.name``), else its code."""
+        localizer = self.game.localizer
+        return localizer.tr("language.name", localizer.locale)
+
     def _draw_settings(self):
         self._draw_backdrop()
         cursor = self._settings_menu
-        x, y = self.width / 2 - 220, self.height / 2 - 130
-        self.panel((x, y, 440, 260))
+        tall = max(260, 120 + len(cursor.options) * 38)  # every row inside the panel
+        x, y = self.width / 2 - 220, self.height / 2 - tall / 2
+        self.panel((x, y, 440, tall))
         self.text("Settings", self.width / 2, y + 18, size=34, color=(255, 220, 124), center=True)
         for i, (key, label) in enumerate(cursor.options):
             selected = i == cursor.index
@@ -3393,7 +3422,7 @@ class PlayableTestRuntime:
                 size=24,
                 color=color,
             )
-            value = self.settings.value_text(key)
+            value = self._language_name() if key == "language" else self.settings.value_text(key)
             if value:
                 self.text(
                     f"< {value} >" if selected else value,
@@ -3405,7 +3434,7 @@ class PlayableTestRuntime:
         self.text(
             "Left/Right: change   Esc: save and back",
             self.width / 2,
-            y + 236,
+            y + tall - 24,
             size=16,
             color=(170, 210, 240),
             center=True,
@@ -3667,6 +3696,7 @@ class PlayableTestRuntime:
         """Process one frame of input, event programs and drawing (no flip)."""
         self._frame_dt = float(dt)
         self._clock_seconds += float(dt)
+        self._adopt_new_game_plus()
         self._update_resource_scope()
         self._update_popups(float(dt))
         if self.debug_server is not None:
