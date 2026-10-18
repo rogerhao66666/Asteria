@@ -46,7 +46,16 @@ except ImportError:
     Signal = None
 
 
+def shown_combat_boxes(boxes, *, hit_and_hurt=False):
+    """The boxes the scene view draws: what blocks always, hit / hurt boxes only when asked."""
+    return tuple(b for b in boxes if hit_and_hurt or b.kind not in ("hurtbox", "hitbox"))
+
+
 class SceneViewportWidget(QWidget):
+    # hit / hurt boxes (where a real-time attack reaches, where a body can be hit) are a debug
+    # view: off unless View > Show Hit && Hurt Boxes turns them on
+    show_combat_boxes = False
+
     if Signal is not None:
         characterCellClicked = Signal(tuple)
         # rows of tile ids picked off the map with the right mouse button (the eyedropper)
@@ -577,7 +586,8 @@ class SceneViewportWidget(QWidget):
             "hurtbox": (QColor(92, 181, 122, 210), QColor(92, 181, 122, 30), Qt.SolidLine),
             "hitbox": (QColor(222, 91, 91, 230), QColor(222, 91, 91, 45), Qt.DashLine),
         }
-        for box in build_combat_boxes(self.current_scene(), self.camera):
+        boxes = build_combat_boxes(self.current_scene(), self.camera)
+        for box in shown_combat_boxes(boxes, hit_and_hurt=self.show_combat_boxes):
             line, fill, style = styles[box.kind]
             painter.setPen(QPen(line, 1.5, style))
             painter.setBrush(QBrush(fill))

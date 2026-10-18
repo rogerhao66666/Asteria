@@ -925,6 +925,11 @@ class AsteriaEditorWindow(QMainWindow):
         self.reset_view_action.triggered.connect(self.viewport.reset_view)
         view_menu = self.view_menu = self.menuBar().addMenu("&View")
         view_menu.addAction(self.reset_view_action)
+        # attack reach and hit areas of real-time combat: a debug view, off by default
+        self.combat_boxes_action = QAction("Show Hit && Hurt Boxes", self, checkable=True)
+        self.combat_boxes_action.setChecked(self.viewport.show_combat_boxes)
+        self.combat_boxes_action.toggled.connect(self.set_combat_boxes_visible)
+        view_menu.addAction(self.combat_boxes_action)
         panels_menu = view_menu.addMenu("Panels")  # reopen a closed dock
         for dock in self.findChildren(QDockWidget):
             panels_menu.addAction(dock.toggleViewAction())
@@ -2595,6 +2600,10 @@ class AsteriaEditorWindow(QMainWindow):
         None  # a QSettings; set by launch_editor so tests never touch the user's layout
     )
     LAYOUT_VERSION = 1
+
+    def set_combat_boxes_visible(self, visible):
+        self.viewport.show_combat_boxes = bool(visible)
+        self.viewport.update()
 
     def save_layout(self):
         self.layout_settings.setValue("editor/geometry", self.saveGeometry())
