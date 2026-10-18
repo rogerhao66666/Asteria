@@ -58,8 +58,7 @@ def hero_and_boss_art(context):
                 BattleVisualAssetSet(asset_id),
                 states,
                 BattleVisualTransform(scale_x=scale, scale_y=scale),
-                hud_visible="enemy" not in tags
-                and "summon" not in tags,  # no panel for foes or summons
+                hud_visible="summon" not in tags,  # foes carry a name and bar; summons no panel
             ),
         )
 

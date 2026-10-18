@@ -2049,3 +2049,5 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - 還沒做：受擊閃光是包裝本身的「受傷」動畫（白色、紅色剪影），沒改。
 
 **D39 編輯器啟動（同日）：** 開啟編輯器預設會開 `~/Library/Application Support/Asteria/Projects/Basic RPG`，但這個資料夾只在第一次建立，範本改了它就過期（使用者看到的還是舊的 Ninja 美術）。現在 `ensure_starter_project` 會在資料夾旁記一個範本指紋：指紋變了而專案沒被改過就原地重建；被改過或沒有指紋（更早建立的）就整個移到 `Basic RPG (previous)` 再重建，不會丟東西。左邊面板每次開啟都固定停在 Project 頁(不記住上次的頁籤)。
+
+**D39 戰鬥 UI 統一（同日）：** 所有回合制 demo 與範本（Boss Trial、Octopath、complex reference、party 範本、Basic RPG 起始專案）都用八方旅人版面：隊伍 HP 一人一格排在右邊緣（`party_hud=side_list`）、指令選單貼在行動角色旁（`action_menu_placement=actor`）且透明、怪物名字與血條在頭上。選單只可能蓋到「非行動中的隊友」，不會蓋到行動角色或任何怪物（`menu_over_stage` 不再讓選單蓋怪物）。Boss Trial 的怪物不再隱藏血條，Basic RPG 起始專案不再覆寫站位與怪物縮放。`tests/test_lucifer_art_rules.py::test_every_turn_based_demo_uses_the_octopath_battle_ui` 守住這組設定。

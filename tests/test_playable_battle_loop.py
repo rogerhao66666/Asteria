@@ -323,13 +323,13 @@ def test_canonical_hud_panels_do_not_overlap_and_menu_sits_between_columns(
 ):
     runtime, layout, frame = _canonical_frame(resource_root, monkeypatch)
     try:
-        # Reference staging (D15): party HUD as one bottom row, enemies show overhead bars.
+        # Octopath staging: one HUD panel per hero down the right edge, enemies show overhead bars.
         hud = [p for p in frame.panels if p.panel_id.startswith("hud:")]
         heroes = list(runtime.game.battle.parties["heroes"].ids())
         assert sorted(p.member_id for p in hud) == sorted(heroes)
         assert not any(_overlaps(a, b) for i, a in enumerate(hud) for b in hud[i + 1 :])
         assert all(p.y >= 0 and p.y + p.height <= layout.virtual_height for p in hud)
-        assert len({p.y for p in hud}) == 1  # one row
+        assert len({p.x for p in hud}) == 1  # one column
         overhead = {t.member_id for t in frame.texts if t.role == "overhead_name"}
         assert overhead == set(runtime.game.battle.parties["enemies"].ids())
         menu = next((p for p in frame.panels if p.panel_id == "action_menu"), None)

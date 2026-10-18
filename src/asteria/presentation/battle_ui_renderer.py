@@ -108,7 +108,7 @@ class BattleUiTheme:
         if role == "result":
             return self.result_fill, self.result_border
         if role == "interaction:float":  # see-through list beside the acting member
-            return (10, 14, 26, 150), (130, 140, 170, 210)
+            return (10, 14, 26, 105), (130, 140, 170, 190)
         if role == "hud:side":
             return (12, 16, 28, 120), (96, 108, 140, 160)
         if role == "hud:side:focus":

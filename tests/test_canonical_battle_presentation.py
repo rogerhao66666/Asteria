@@ -210,13 +210,13 @@ def _frame(adapter):
 def test_combatants_stand_on_the_ground_below_the_backdrop(battle):
     _, adapter = battle
     layout = adapter.screen.composer.layout
-    assert layout.party_hud == "bottom_row" and layout.stage_top > 0
-    hud_top = layout.virtual_height - layout.margin - 24.0
+    assert layout.party_hud == "side_list" and layout.stage_top > 0
+    floor = layout.virtual_height - layout.margin
     for visual in adapter.screen.scene.combatants:
-        assert layout.virtual_height * layout.stage_top <= visual.anchor.y <= hud_top
+        assert layout.virtual_height * layout.stage_top <= visual.anchor.y <= floor
 
 
-def test_enemy_hp_floats_over_enemies_and_party_hp_sits_in_a_bottom_row(battle):
+def test_enemy_hp_floats_over_enemies_and_party_hp_stands_down_the_right_edge(battle):
     runtime, adapter = battle
     layout, frame = _frame(adapter)
     enemies = set(runtime.game.battle.parties["enemies"].ids())
@@ -232,19 +232,22 @@ def test_enemy_hp_floats_over_enemies_and_party_hp_sits_in_a_bottom_row(battle):
             overhead[enemy].y < visual.anchor.y - adapter.screen.member_heights[enemy]
         )  # above the head
     hud = [p for p in frame.panels if p.panel_id.startswith("hud:")]
-    assert {p.member_id for p in hud} == heroes and len({p.y for p in hud}) == 1
+    assert {p.member_id for p in hud} == heroes and len({p.x for p in hud}) == 1  # one column
+    assert min(p.x for p in hud) > layout.virtual_width / 2  # on the party's (right) side
 
 
 def test_commands_show_only_on_a_heroes_turn_and_never_cover_the_party(battle):
     runtime, adapter = battle
     layout, frame = _frame(adapter)
     menu = next(p for p in frame.panels if p.panel_id == "action_menu")  # idle: hero waiting
-    camera_x = [
-        v.anchor.x
-        for v in adapter.screen.scene.combatants
-        if v.member_id in runtime.game.battle.parties["heroes"].ids()
-    ]
-    assert menu.x + menu.width <= min(camera_x) - 8  # left of the whole party
+    assert menu.role == "interaction:float"  # see-through, Octopath style
+    actor = adapter.screen.scene.visual_for(runtime._battle_actor())
+    assert menu.x + menu.width <= actor.anchor.x  # beside the acting hero, never over it
+    for enemy in runtime.game.battle.parties["enemies"].ids():  # and never over a foe
+        spot = adapter.screen.scene.visual_for(enemy).anchor
+        assert not (
+            menu.x <= spot.x <= menu.x + menu.width and menu.y <= spot.y <= menu.y + menu.height
+        )
     _use(runtime, "strike")
     runtime._present_battle(0.016)
     assert adapter.busy()

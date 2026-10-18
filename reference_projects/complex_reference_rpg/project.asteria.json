@@ -6464,7 +6464,7 @@
           "overhead_zones": [
             "left"
           ],
-          "party_hud": "bottom_row",
+          "party_hud": "side_list",
           "result_panel_height": 116.0,
           "result_panel_width": 196.0,
           "row_buttons": true,

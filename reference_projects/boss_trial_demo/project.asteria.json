@@ -5787,7 +5787,7 @@
             "small_portrait_asset_id": null
           },
           "battlefield_visible": true,
-          "hud_visible": false,
+          "hud_visible": true,
           "profile_id": "crimson_warlord",
           "states": [
             {
@@ -5858,7 +5858,7 @@
             "small_portrait_asset_id": null
           },
           "battlefield_visible": true,
-          "hud_visible": false,
+          "hud_visible": true,
           "profile_id": "goblin_beast",
           "states": [
             {
@@ -5929,7 +5929,7 @@
             "small_portrait_asset_id": null
           },
           "battlefield_visible": true,
-          "hud_visible": false,
+          "hud_visible": true,
           "profile_id": "goblin_berserker",
           "states": [
             {
@@ -6000,7 +6000,7 @@
             "small_portrait_asset_id": null
           },
           "battlefield_visible": true,
-          "hud_visible": false,
+          "hud_visible": true,
           "profile_id": "goblin_slinger",
           "states": [
             {
@@ -6467,7 +6467,7 @@
             "small_portrait_asset_id": null
           },
           "battlefield_visible": true,
-          "hud_visible": false,
+          "hud_visible": true,
           "profile_id": "mender_wisp",
           "states": [
             {
@@ -6609,7 +6609,7 @@
             "small_portrait_asset_id": null
           },
           "battlefield_visible": true,
-          "hud_visible": false,
+          "hud_visible": true,
           "profile_id": "skeleton_ancient",
           "states": [
             {
@@ -6680,7 +6680,7 @@
             "small_portrait_asset_id": null
           },
           "battlefield_visible": true,
-          "hud_visible": false,
+          "hud_visible": true,
           "profile_id": "skeleton_grunt",
           "states": [
             {
@@ -6751,7 +6751,7 @@
             "small_portrait_asset_id": null
           },
           "battlefield_visible": true,
-          "hud_visible": false,
+          "hud_visible": true,
           "profile_id": "skeleton_hunter",
           "states": [
             {
@@ -23942,9 +23942,7 @@
           "front_large_zones": [
             "right"
           ],
-          "hidden_zones": [
-            "left"
-          ],
+          "hidden_zones": [],
           "hud_panel_width": 108.0,
           "hud_row_height": 10.0,
           "margin": 8.0,

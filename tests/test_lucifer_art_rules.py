@@ -98,7 +98,8 @@ def test_status_names_stand_on_the_head_and_effects_on_the_body(monkeypatch, enc
         adapter._body_height(adapter.screen.scene.visual_for(boss)) * adapter.textures.scale
     )  # the box is the figure, not the whole frame
     caption = next(b.caption for b in runtime.battle_extras_blocks if b.member_id == boss)
-    assert caption is not None and 0 < top - caption[2] < 30  # right over the head
+    # over the head: above the foe's name and bar, which sit right on it
+    assert caption is not None and 0 < top - caption[2] < 60
     runtime.close()
 
 
@@ -135,3 +136,29 @@ def test_stable_ids_make_a_build_repeatable():
     finally:
         ids.uuid4 = original
     assert first == again and first[0] != first[1]
+
+
+@pytest.mark.parametrize(
+    "folder",
+    [
+        "reference_projects/boss_trial_demo",
+        "reference_projects/octopath_demo",
+        "reference_projects/complex_reference_rpg",
+        "src/asteria/templates/party_rpg",
+    ],
+)
+def test_every_turn_based_demo_uses_the_octopath_battle_ui(folder):
+    import json
+
+    path = Path(__file__).resolve().parents[1] / folder / "project.asteria.json"
+    data = json.loads(path.read_text())["battle_presentation_library"]["categories"]
+    layout = data["ui_layout"]["adaptive"]
+    assert layout["party_hud"] == "side_list"  # a panel per hero down the right edge
+    assert layout["action_menu_placement"] == "actor" and layout["menu_over_stage"]
+    assert layout["overhead_zones"] == ["left"] and not layout["hidden_zones"]
+    assert not layout["overhead_below"]
+    assert all(
+        v["hud_visible"]
+        for k, v in data["combatant_visuals"].items()
+        if k not in ("pet", "spirit_knight")
+    )  # summons have no panel
