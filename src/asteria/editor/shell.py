@@ -479,10 +479,10 @@ class AsteriaEditorWindow(QMainWindow):
         left.raise_()
         self._workspace_mode_changed(self.workspace.mode.value)
         self.refresh_all()
-        QTimer.singleShot(0, self.viewport.frame_initial)
+        QTimer.singleShot(0, self.viewport, self.viewport.frame_initial)
 
     def _schedule_dock_tab_cleanup(self, *_):
-        QTimer.singleShot(0, self.hide_stale_dock_tab_bars)
+        QTimer.singleShot(0, self, self.hide_stale_dock_tab_bars)
 
     def hide_stale_dock_tab_bars(self):
         """Drop dock tab bars Qt left behind.
@@ -502,7 +502,10 @@ class AsteriaEditorWindow(QMainWindow):
                 bar.setObjectName("LeftSceneDockTabs")
             if bar.objectName() in {"BottomPanelDockTabs", "LeftSceneDockTabs"}:
                 if not isinstance(bar.style(), _CenteredDockTabStyle):
-                    style = _CenteredDockTabStyle(bar.style())
+                    # a QProxyStyle owns the style it wraps: give it its own base, made from
+                    # the application style's name. Wrapping the shared application style
+                    # deleted it with the window, and QApplication then crashed on exit.
+                    style = _CenteredDockTabStyle(QApplication.style().name())
                     style.setParent(self)
                     bar.setStyle(style)
             bar.setUsesScrollButtons(bar.objectName() != "LeftSceneDockTabs")
@@ -1643,7 +1646,7 @@ class AsteriaEditorWindow(QMainWindow):
             self.set_tilemap_render_source(None)
         self.code_workspace.load_default_script()
         self.refresh_all()
-        QTimer.singleShot(0, self.viewport.frame_initial)
+        QTimer.singleShot(0, self.viewport, self.viewport.frame_initial)
 
     def refresh_asset_list(self):
         from .asset_thumbnails import ImageCache, asset_thumbnail, canonical_asset_thumbnail
@@ -2326,7 +2329,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.play_session = None
         self._load_playtest_profiles()
         self.refresh_all()
-        QTimer.singleShot(0, self.viewport.frame_initial)
+        QTimer.singleShot(0, self.viewport, self.viewport.frame_initial)
         return True
 
     def new_from_template(self, template_id, name, folder):
@@ -2339,7 +2342,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.play_session = None
         self._load_playtest_profiles()
         self.refresh_all()
-        QTimer.singleShot(0, self.viewport.frame_initial)
+        QTimer.singleShot(0, self.viewport, self.viewport.frame_initial)
         guide = Path(path).parent / "START_HERE.md"
         if guide.is_file():  # where every rule lives in this project
             self.console.setText(f"New project from a template.\n\n{guide.read_text()}")
@@ -2670,11 +2673,11 @@ class AsteriaEditorWindow(QMainWindow):
             # the left panel opens on Project: once the docks are laid out (a restored layout
             # picks its own tab while the window first appears), and again after a moment
             for delay in (0, 250):
-                QTimer.singleShot(delay, lambda: self.show_left_tab("ProjectSceneDock"))
+                QTimer.singleShot(delay, self, lambda: self.show_left_tab("ProjectSceneDock"))
             if (
                 not self._layout_restored
             ):  # dock sizes only apply once the window has its real size
-                QTimer.singleShot(0, self._apply_default_dock_sizes)
+                QTimer.singleShot(0, self, self._apply_default_dock_sizes)
 
     def set_theme(self, name):
         """Switch the editor palette live and remember it."""
@@ -2711,7 +2714,7 @@ class AsteriaEditorWindow(QMainWindow):
             self.restoreState(self._default_dock_state, self.LAYOUT_VERSION)
         self._layout_restored = bool(restored)
         # the left panel always opens on Project, whichever tab the last session ended on
-        QTimer.singleShot(0, lambda: self.show_left_tab("ProjectSceneDock"))
+        QTimer.singleShot(0, self, lambda: self.show_left_tab("ProjectSceneDock"))
         self.hide_stale_dock_tab_bars()
         return restored
 

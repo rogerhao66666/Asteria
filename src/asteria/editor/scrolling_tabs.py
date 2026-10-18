@@ -41,7 +41,8 @@ class ScrollingTabWidget(QTabWidget):
 
     def eventFilter(self, watched, event):
         if watched is self.tabBar() and event.type() == QEvent.Resize:
-            QTimer.singleShot(0, self._align_scroll_buttons)
+            # with ``self`` as the context the call is dropped once the widget is gone
+            QTimer.singleShot(0, self, self._align_scroll_buttons)
         return super().eventFilter(watched, event)
 
     def _align_scroll_buttons(self):
@@ -80,7 +81,7 @@ class ScrollingTabWidget(QTabWidget):
         right.raise_()
 
     def _schedule_scroll_button_alignment(self):
-        QTimer.singleShot(0, self._align_scroll_buttons)
+        QTimer.singleShot(0, self, self._align_scroll_buttons)
 
     def _wrap(self, page):
         area = scrollable(page, self)

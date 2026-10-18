@@ -838,7 +838,7 @@ class MultiplayerWorkspaceWidget(QWidget):
             return False
         self.stop_server_button.setEnabled(False)
         self._server_process.terminate()
-        QTimer.singleShot(1500, self._kill_local_server_if_running)
+        QTimer.singleShot(1500, self, self._kill_local_server_if_running)
         return True
 
     def _kill_local_server_if_running(self):

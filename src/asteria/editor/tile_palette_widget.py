@@ -392,14 +392,14 @@ class TilePaletteWidget(QWidget):
         self._dock_scroll_area = scroll_area
         scroll_area.viewport().installEventFilter(self)
         scroll_area.verticalScrollBar().valueChanged.connect(self._update_area_rule_height)
-        QTimer.singleShot(0, self._update_area_rule_height)
+        QTimer.singleShot(0, self, self._update_area_rule_height)
 
     def eventFilter(self, watched, event):
         if (
             watched is getattr(self._dock_scroll_area, "viewport", lambda: None)()
             and event.type() == QEvent.Resize
         ):
-            QTimer.singleShot(0, self._update_area_rule_height)
+            QTimer.singleShot(0, self, self._update_area_rule_height)
         return super().eventFilter(watched, event)
 
     def _update_area_rule_height(self, *_):
