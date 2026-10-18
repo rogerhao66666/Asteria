@@ -120,13 +120,15 @@ def draw_glyph(pg, surface, kind, rect):
         pg.draw.circle(surface, color, (round(cx), round(cy)), round(4 * u), 1)
 
 
-def extras_layout(game, box, scale, width, drop=0.0, head_gap=None):
+def extras_layout(game, box, scale, width, drop=0.0, head_gap=None, caption_at=None):
     """``[Block]`` for the enemies (shield + weaknesses + held state under their feet).
 
     ``box(member_id)`` is the adapter's ``(centre_x, top_y, feet_y)``; ``scale`` the window pixels
     per virtual pixel; ``width`` the window width (blocks stay inside it); ``drop`` pushes the
     blocks further down (below an overhead name and bar that stand under the feet); the state
-    names stand ``head_gap`` pixels above the head (right on it by default)."""
+    names stand ``head_gap`` pixels above the head (right on it by default), or at
+    ``caption_at[member_id]`` = ``(centre_x, bottom_y)`` (the space an overhead label kept for
+    them, over the name)."""
     battle = game.battle
     shield = game.shield_resource()
     tile = max(15, round(5.4 * scale))
@@ -173,7 +175,9 @@ def extras_layout(game, box, scale, width, drop=0.0, head_gap=None):
             names.insert(0, "Damage up - loses a turn")
         if names:
             gap_above = 3 * scale if head_gap is None else head_gap
-            block.caption = (" ".join(names)[:30], x, top - gap_above)
+            at = (caption_at or {}).get(member.member_id)
+            cx, cy = at if at is not None else (x, top - gap_above)
+            block.caption = (" ".join(names)[:30], cx, cy)
         blocks.append(block)
     return blocks
 

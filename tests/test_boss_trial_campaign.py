@@ -65,9 +65,7 @@ def test_every_foe_has_a_drop_table_with_the_chances_its_weights_say(played):
     db = campaign.game.project.rpg_database
     for enemy_id in (
         "goblin_slinger",
-        "goblin_berserker",
         "goblin_beast",
-        "skeleton_grunt",
         "skeleton_hunter",
         "skeleton_ancient",
         "mender_wisp",

@@ -65,6 +65,9 @@ class BattleUiLayoutProfile:
     # overhead_below: an overhead name and bar sit under the sprite's feet (they never cover the
     # body or the combatant behind); off = floating above the head
     overhead_below: bool = True
+    # overhead_bars: an overhead member shows its top resource as a bar under the name; off = the
+    # name alone (a game that keeps enemy health hidden)
+    overhead_bars: bool = True
     stage_top: float = 0.0
     stage_front: float = 0.30
     # stage_front_right: the same for the side standing on the right (None = stage_front), so the
@@ -83,8 +86,10 @@ class BattleUiLayoutProfile:
             raise ValueError("column_size must be >= 1")
         if self.party_hud not in {"column", "bottom_row", "side_list"}:
             raise ValueError("party_hud must be 'column', 'bottom_row' or 'side_list'")
-        if self.action_menu_placement not in {"bottom", "actor"}:
-            raise ValueError("action_menu_placement must be 'bottom' or 'actor'")
+        if self.action_menu_placement not in {"bottom", "actor", "actor_bottom_right"}:
+            raise ValueError(
+                "action_menu_placement must be 'bottom', 'actor' or 'actor_bottom_right'"
+            )
         if not 0.0 <= float(self.stage_top) < 1.0:
             raise ValueError("stage_top must be in [0, 1)")
         if self.stage_front_right is not None and not 0.0 <= float(self.stage_front_right) <= 0.5:
@@ -201,6 +206,7 @@ class BattleUiComposer:
         self._member_heights = {}
         self._camera = None
         self._focus = None
+        self.overhead_labels = {}  # member_id: (x, y, w, h) of its overhead label, last frame
 
     def _name(self, member_id):
         return self._display_names.get(str(member_id), str(member_id))
@@ -528,33 +534,103 @@ class BattleUiComposer:
             gauge.icon_asset_id,
         )
 
+    # room an overhead label keeps: a line of state names (drawn by the runtime) over the name
+    OVERHEAD_CAPTION = 8.0
+    OVERHEAD_CHAR = 4.4  # virtual width of one character of a name
+
+    def _combatant_boxes(self):
+        """``member_id: (x, y, w, h)`` of every combatant's figure on screen (virtual pixels),
+        with the strip under the feet where shield and weakness tiles stand."""
+        boxes = {}
+        for visual in self.scene.combatants:
+            pos = (
+                None
+                if self._camera is None
+                else self._anchor_screen(self._camera, visual.member_id)
+            )
+            if pos is None:
+                continue
+            body = float(self._member_heights.get(visual.member_id, 32.0))
+            half = max(8.0, body * 0.32)
+            boxes[visual.member_id] = (pos[0] - half, pos[1] - body, 2 * half, body + 9.0)
+        return boxes
+
     def _overhead_commands(self, members):
-        """Name and top-priority bar floating over each member's sprite (enemy-style HUD)."""
+        """Name (and, with ``overhead_bars``, the top-priority bar) over each member's sprite.
+        A label never covers another combatant, another label or the turn bar: it moves up until
+        it is clear, else below the feet row. ``overhead_labels`` keeps where each one went."""
         panels, texts, gauges = [], [], []
+        L = self.layout
         camera = self._camera
+        boxes = self._combatant_boxes()
+        placed = []
+        self.overhead_labels = {}
+
+        def free(rect, own):
+            x, y, w, h = rect
+            if y < L.timeline_y + 24.0 or y + h > L.virtual_height:
+                return False
+            others = [b for k, b in boxes.items() if k != own] + placed
+            return all(
+                x + w <= bx or bx + bw <= x or y + h <= by or by + bh <= y
+                for bx, by, bw, bh in others
+            )
+
         for member in members:
             anchor = None if camera is None else self._anchor_screen(camera, member.member_id)
             if anchor is None:
                 continue
             ax, ay = anchor
             top = ay - float(self._member_heights.get(member.member_id, 32.0))
-            below = self.layout.overhead_below
-            name_y, bar_y = (ay + 7, ay + 3) if below else (top - 15, top - 5)
-            width = 44.0
-            ranked = self._ranked_gauges(member, 1)
+            name = self._fit(self._name(member.member_id), 14)
+            ranked = self._ranked_gauges(member, 1) if L.overhead_bars else ()
+            states = " ".join(str(st.label or st.state_id) for st in member.statuses)[:30]
+            width = max(
+                44.0 if ranked else 0.0,
+                len(name) * self.OVERHEAD_CHAR + 4.0,
+                len(states) * 1.9,  # the state names over it (small type)
+            )
+            height = self.OVERHEAD_CAPTION + 9.0 + (5.0 if ranked else 0.0)
+            home_x = ax - width / 2
+            # (y, cost): over the head first, a little higher, else under the feet row (close to
+            # its owner beats far above someone else's head)
+            below = [(ay + 10.0 + i * 3.0, 24.0 + i * 3.0) for i in range(8)]
+            if L.overhead_below:
+                ys = [(cy, cost - 24.0) for cy, cost in below]
+            else:
+                base = top - height - 1.0
+                ys = [(base - i * 3.0, i * 3.0) for i in range(30)] + below
+            shifts = [0.0]
+            reach = max(width, 36.0)  # a short name still steps clear of a whole figure
+            for step in (0.35, 0.7, 1.05, 1.4):
+                shifts += [-step * reach, step * reach]
+            tries = sorted(
+                ((cy, home_x + dx, cost + 1.2 * abs(dx)) for cy, cost in ys for dx in shifts),
+                key=lambda t: t[2],
+            )
+            right = L.virtual_width - L.margin - width
+
+            def clamp(cx, right=right):
+                return max(L.margin, min(right, cx))
+
+            y, x = next(
+                (
+                    (cy, clamp(cx))
+                    for cy, cx, _cost in tries
+                    if free((clamp(cx), cy, width, height), member.member_id)
+                ),
+                (ys[0][0], clamp(home_x)),
+            )
+            placed.append((x, y, width, height))
+            name_y = y + self.OVERHEAD_CAPTION
+            self.overhead_labels[member.member_id] = (x, y, width, height)
+            cx = x + width / 2
             texts.append(
-                BattleUiText(
-                    self._fit(self._name(member.member_id), 14),
-                    ax,
-                    name_y,
-                    "overhead_name",
-                    "center",
-                    member.member_id,
-                )
+                BattleUiText(name, cx, name_y, "overhead_name", "center", member.member_id)
             )
             if ranked:
                 gauges.append(
-                    self._bar(member.member_id, ranked[0], ax - width / 2, bar_y, width, 3.0)
+                    self._bar(member.member_id, ranked[0], cx - 22.0, name_y + 10.0, 44.0, 3.0)
                 )
         return panels, texts, gauges
 
@@ -768,6 +844,10 @@ class BattleUiComposer:
                 half = max(body / 2, 24.0)
                 boxes.append((pos[0] - half, pos[1] - body - 22.0, 2 * half, body + 22.0 + 30.0))
                 boxed.append(visual)
+                label = self.overhead_labels.get(visual.member_id)
+                if label is not None:  # a name that moved up to stay clear stays uncovered
+                    boxes.append(label)
+                    boxed.append(visual)
 
             def clear(cx, cy, w):
                 return all(
@@ -862,6 +942,27 @@ class BattleUiComposer:
                 - height
             )
             y = max(L.timeline_y + 28.0, min(limit, ay - body / 2 - height / 2))
+        if (
+            L.action_menu_placement == "actor_bottom_right"
+            and self._focus is not None
+            and self._camera is not None
+        ):
+            spot = self._anchor_screen(self._camera, self._focus)
+            if spot is not None:
+                # always at the acting member's lower right, touching the figure, so it is
+                # plain who acts; it may cover others (even a HUD panel when there is no room)
+                body = float(self._member_heights.get(self._focus, 32.0))
+                width = min(width, wanted)
+                half = max(8.0, body * 0.32)
+                x = spot[0] + half + 2.0
+                room = L.virtual_width - 2.0 - x
+                if room >= 80.0:  # narrower rather than over the one who acts
+                    width = min(width, room)
+                else:  # no room on the right at all: the lower left instead
+                    x = spot[0] - half - 2.0 - width
+                y = spot[1] - body * 0.5
+                x = max(L.margin, min(L.virtual_width - 2.0 - width, x))
+                y = max(L.timeline_y + 24.0, min(L.virtual_height - 2.0 - height, y))
         role = "interaction:float" if L.party_hud == "side_list" else "interaction:action_menu"
         panels.append(BattleUiPanel("action_menu", x, y, width, height, role))
 

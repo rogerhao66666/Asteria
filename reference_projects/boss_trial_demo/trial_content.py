@@ -1875,10 +1875,10 @@ def game_start(c):
     hero = c.hero_id
     data = project.game_start.to_data()
     rpg = data["rpg_state"]
-    mira = "hero_02"
-    rpg["party_active_actor_ids"] = [hero, mira]
-    rpg["party_actor_ids"] = [hero, mira]
-    rpg["party_placements"] = {hero: "slot_1", mira: "slot_2"}
+    # the hero sets out alone: Mira, Vesper and Cael are hired at the guild in Hearthfold
+    rpg["party_active_actor_ids"] = [hero]
+    rpg["party_actor_ids"] = [hero]
+    rpg["party_placements"] = {hero: "slot_1"}
     rpg["progression"]["totals"] = {}
     rpg["actor_snapshots"] = {}
     allocation = ProgressionAllocationRuntime(
@@ -2206,10 +2206,12 @@ def presentation(c):
         dataclasses.replace(
             layout,
             party_hud="side_list",
+            action_menu_placement="actor_bottom_right",  # the menu touches whoever acts
             hud_panel_width=108.0,
             stage_top=0.47,  # feet stay on the grass: the backdrop's wall is the top 44%
             stage_front=0.16,
-            hidden_zones=(),  # foes show their name and bar over the head, as in every demo
+            hidden_zones=(),  # foes show their name over the head, as in every demo
+            overhead_bars=False,  # their health stays hidden (the bestiary tells it)
             front_large_zones=("right",),  # a summon stands left of the party, toward the foe
             menu_over_stage=True,  # the command menu stands beside the acting hero, see-through
             column_size=2,  # four heroes stand two by two: tall sprites do not fit four in a row

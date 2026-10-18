@@ -183,8 +183,9 @@ class Grid:
         return tilemap_to_data(tilemap)
 
 
-def character(assets, key, lucifer_key, name):
-    """A Lucifer character for the field: idle and walk clips for the four facings."""
+def character(assets, key, lucifer_key, name, *, townsfolk=False):
+    """A Lucifer character for the field: idle and walk clips for the four facings;
+    ``townsfolk`` draws it in plain colours (people in town never wear a party member's look)."""
     from PIL import Image
 
     strips = {}
@@ -193,6 +194,9 @@ def character(assets, key, lucifer_key, name):
         walk = lucifer._facing_strip(lucifer_key, folder, "Walk") or lucifer._facing_strip(
             lucifer_key, folder, "Run"
         )
+        if townsfolk:
+            idle = [lucifer.villager(f) for f in idle]
+            walk = [lucifer.villager(f) for f in walk] if walk else walk
         strips[facing] = (idle, walk or idle)
     cell = max(f.width for pair in strips.values() for frames in pair for f in frames)
     frames, clips, images = [], {}, []
@@ -420,13 +424,16 @@ def hearthfold(grid):
     grid.block(0, 15, 1, h)
     grid.block(w - 1, 0, w, 11)
     grid.block(w - 1, 16, w, h)
-    clear = [box(2, 10, w - 1, 16), box(19, 1, 26, h - 1), box(11, 6, 34, 21)]
+    guild = box(3, 6, 11, 10)  # the adventurers' guild: where companions wait to be hired
+    clear = [box(2, 10, w - 1, 16), box(19, 1, 26, h - 1), box(11, 6, 34, 21), guild]
     scatter(grid, grid.rng, ("tree",), 14, 2, 2, w - 2, h - 2, clear)
     scatter(
         grid, grid.rng, ("grave", "grave_cross", "rock", "bush"), 10, 2, 2, w - 2, h - 2, clear
     )
     return {
         "start": world_xy(22, 13),
+        "guild": [world_xy(x, 8) for x in (5, 7, 9)],  # Mira, Vesper, Cael
+        "guild_board": world_xy(7, 6),
         "to_woods": world_xy(w - 3, 13),
         "plaza": [world_xy(x, y) for y in (8, 10, 16, 18) for x in (13, 15, 17, 27, 29, 31)],
     }
@@ -521,7 +528,8 @@ def whispering_woods(grid):
         "to_crypt": world_xy(w - 5, 10),
         "from_crypt": world_xy(w - 5, 11),
         "foes": [
-            world_xy(x, y) for x, y in ((10, 15), (18, 14), (24, 10), (32, 10), (37, 14), (44, 14))
+            world_xy(x, y)
+            for x, y in ((10, 15), (24, 10), (37, 14))  # few foes: the bosses count
         ],
         "boss": world_xy(48, 15),
         "healer": world_xy(8, 14),
@@ -549,9 +557,7 @@ def catacombs(grid):
         "to_woods": world_xy(2, 15),
         "to_throne": world_xy(54, 16),
         "from_throne": world_xy(53, 16),
-        "foes": [
-            world_xy(x, y) for x, y in ((12, 15), (20, 13), (20, 17), (27, 15), (35, 12), (35, 18))
-        ],
+        "foes": [world_xy(x, y) for x, y in ((12, 15), (27, 15))],
         "boss": world_xy(50, 16),
         "camp": world_xy(22, 28),
     }
@@ -635,9 +641,7 @@ def set_switch(name, value=True):
 
 FOE_LOOKS = {
     "goblin_slinger": "goblin_slinger",
-    "goblin_berserker": "goblin_berserker",
     "goblin_beast": "goblin_beast",
-    "skeleton_grunt": "skeleton_grunt",
     "skeleton_hunter": "skeleton_hunter",
     "skeleton_ancient": "skeleton_ancient",
     "skeleton_king": "skeleton_king",
@@ -672,10 +676,18 @@ def build_world(c, story):
         "crypt": assets.tilemap("crypt", crypt_grid.data(dun, 16), "Catacombs"),
         "throne": assets.tilemap("throne", throne_grid.data(lav, 16), "Ember Throne"),
     }
-    looks = {
-        key: character(assets, f"look_{key}", key, key.replace("_", " ").title())
+    looks = {  # NPC_FACES keys: townsfolk; "hero_<face>": the party members themselves
+        key: character(
+            assets, f"look_{key}", key, key.replace("_", " ").title(), townsfolk=key in NPC_FACES
+        )
         for key in (*NPC_FACES, *FOE_LOOKS.values())
     }
+    looks.update(
+        {
+            f"hero_{key}": character(assets, f"look_hero_{key}", key, key.title())
+            for key in NPC_FACES
+        }
+    )
     builders = {
         "town": SceneBuilder(project, "town", "Hearthfold"),
         "woods": SceneBuilder(project, "woods", "Whispering Woods"),
@@ -686,7 +698,7 @@ def build_world(c, story):
         builder.setup(maps[key])
     town, woods, crypt, throne = (builders[k] for k in ("town", "woods", "crypt", "throne"))
     hero = town.entity("Player", *places["town"]["start"])
-    town.look(hero, *looks["warrior"])
+    town.look(hero, *looks["hero_warrior"])
     town.door(
         "Road East",
         places["town"]["to_woods"],
@@ -745,13 +757,13 @@ def build_world(c, story):
         "woods": (
             woods,
             "woods",
-            ("goblin_slinger", "goblin_berserker"),
+            ("goblin_slinger",),
             ("woods_patrol", "woods_ambush"),
         ),
         "crypt": (
             crypt,
             "crypt",
-            ("skeleton_grunt", "skeleton_hunter"),
+            ("skeleton_hunter",),
             ("crypt_patrol", "crypt_guard"),
         ),
     }
@@ -779,7 +791,7 @@ def build_world(c, story):
     )
     from asteria.core.prefab import prefab_from_entity
 
-    for prefab_id, face in (("spirit_lantern", "necromancer"), ("bone_pile", "skeleton_grunt")):
+    for prefab_id, face in (("spirit_lantern", "necromancer"), ("bone_pile", "skeleton_hunter")):
         template = Entity(
             prefab_id.replace("_", " ").title(), entity_id=asset_id("prefab", prefab_id)
         )

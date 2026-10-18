@@ -25,12 +25,20 @@ NPC_KEYS = ("visible", "alive", "mood", "stage")
         Field(
             "npc_id", str, "", tooltip="Stable NPC id; its state is saved across scenes and loads."
         ),
+        Field(
+            "starts_hidden",
+            bool,
+            False,
+            tooltip="Not shown until an event makes it visible (SET_NPC visible true), e.g. "
+            "a companion who arrives later.",
+        ),
     ),
 )
 class NpcIdentity2DComponent(Component):
     def __init__(self):
         super().__init__()
         self.npc_id = ""
+        self.starts_hidden = False
 
 
 def npc_entities(scene):
@@ -48,6 +56,8 @@ def apply_npc_states(scene, world, facing=None):
     applied = []
     for npc_id, entity in npc_entities(scene).items():
         state = world.npcs.get(npc_id)
+        if state is None and entity.get(NpcIdentity2DComponent).starts_hidden:
+            state = {"visible": False}  # until an event shows it
         if state is None:
             continue
         here = state.get("scene_id") in (None, scene.id)

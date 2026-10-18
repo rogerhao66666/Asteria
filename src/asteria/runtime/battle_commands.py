@@ -164,12 +164,16 @@ class BattleCommands:
         if run is not None:
             groups.append(("Escape", 1, f"{round(run * 100)}% to get away"))
         for category, count, hint in groups:
+            # the number beside a command: how many choices it opens; Escape shows its chance
+            shown = (
+                f"{round(run * 100)}%" if category == "Escape" else (str(count) if count else "")
+            )
             rows.append(
                 BattleActionEntry(
                     f"root:{category}",
                     category,
                     category="Command",
-                    cost_text=str(count) if count else "",
+                    cost_text=shown,
                     enabled=count > 0,
                     disabled_reason="Nothing to use" if not count else "",
                     detail=hint,

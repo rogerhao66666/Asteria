@@ -12504,13 +12504,14 @@
       "sideview_templates": {},
       "ui_layout": {
         "adaptive": {
-          "action_menu_placement": "actor",
+          "action_menu_placement": "actor_bottom_right",
           "front_large_zones": [],
           "hidden_zones": [],
           "hud_panel_width": 108.0,
           "hud_row_height": 10.0,
           "margin": 8.0,
           "menu_over_stage": true,
+          "overhead_bars": false,
           "overhead_below": false,
           "overhead_zones": [
             "left"

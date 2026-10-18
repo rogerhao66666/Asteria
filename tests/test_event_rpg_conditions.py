@@ -27,6 +27,8 @@ def test_rpg_conditions_read_the_party_state():
     assert _holds(game, "item:healing_herb", ">=", 1)
     assert not _holds(game, "item:phoenix_seed", ">=", 99)
     assert _holds(game, "gold", ">=", 100)
+    assert not _holds(game, "party:hero_02")  # the hero starts alone
+    game.join_party("hero_02")
     assert _holds(game, "party:hero_02") and not _holds(game, "party:hero_03")
     game.join_party("hero_03")
     assert _holds(game, "party:hero_03")

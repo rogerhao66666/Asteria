@@ -13,6 +13,7 @@ from asteria.events.world_commands import WorldCommand  # noqa: E402
 
 def test_resting_restores_health_and_technique_of_the_whole_roster():
     _project, game = smoke.load()
+    game.join_party("hero_02")  # Mira, hired at the guild
     game.start_encounter("boss_room")
     for member_id in game.active_hero_ids():
         pool = game.battle.member(member_id).subject.resources

@@ -315,6 +315,8 @@ class BattlePresentationLibrary:
                 data.pop("stage_front_right", None)
             if data.get("overhead_below", True):
                 data.pop("overhead_below", None)
+            if data.get("overhead_bars", True):
+                data.pop("overhead_bars", None)
             if not data.get("menu_over_stage"):
                 data.pop("menu_over_stage", None)
             return data

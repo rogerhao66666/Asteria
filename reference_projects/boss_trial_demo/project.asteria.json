@@ -366,45 +366,6 @@
         "source_path": "playable_assets/lucifer/world/look_goblin_slinger_clips.json"
       },
       {
-        "id": "2076d4dc-8f96-54dd-91ef-04dc74fbbf3a",
-        "import_settings": {},
-        "importer": "boss_trial_demo",
-        "importer_version": 1,
-        "kind": "texture",
-        "metadata": {
-          "license": "CC0 1.0",
-          "source": "reference_projects/boss_trial_demo/trial_maps.py"
-        },
-        "name": "Goblin Berserker",
-        "source_path": "playable_assets/lucifer/world/look_goblin_berserker.png"
-      },
-      {
-        "id": "fb264e56-91a5-5365-8b5f-fca43551334f",
-        "import_settings": {},
-        "importer": "boss_trial_demo",
-        "importer_version": 1,
-        "kind": "sprite_sheet",
-        "metadata": {
-          "license": "CC0 1.0",
-          "source": "reference_projects/boss_trial_demo/trial_maps.py"
-        },
-        "name": "Goblin Berserker Sheet",
-        "source_path": "playable_assets/lucifer/world/look_goblin_berserker_sheet.json"
-      },
-      {
-        "id": "e949a981-a3f0-5e2f-b888-f17b0a6fd04d",
-        "import_settings": {},
-        "importer": "boss_trial_demo",
-        "importer_version": 1,
-        "kind": "animation",
-        "metadata": {
-          "license": "CC0 1.0",
-          "source": "reference_projects/boss_trial_demo/trial_maps.py"
-        },
-        "name": "Goblin Berserker Animations",
-        "source_path": "playable_assets/lucifer/world/look_goblin_berserker_clips.json"
-      },
-      {
         "id": "83e61433-1ada-5545-85ad-fe50747b8f2c",
         "import_settings": {},
         "importer": "boss_trial_demo",
@@ -442,45 +403,6 @@
         },
         "name": "Goblin Beast Animations",
         "source_path": "playable_assets/lucifer/world/look_goblin_beast_clips.json"
-      },
-      {
-        "id": "9f5b4c1a-9b5e-5120-810d-16acee4c3849",
-        "import_settings": {},
-        "importer": "boss_trial_demo",
-        "importer_version": 1,
-        "kind": "texture",
-        "metadata": {
-          "license": "CC0 1.0",
-          "source": "reference_projects/boss_trial_demo/trial_maps.py"
-        },
-        "name": "Skeleton Grunt",
-        "source_path": "playable_assets/lucifer/world/look_skeleton_grunt.png"
-      },
-      {
-        "id": "dbeeda0f-9e4b-5dec-9f6a-6c363a349e6c",
-        "import_settings": {},
-        "importer": "boss_trial_demo",
-        "importer_version": 1,
-        "kind": "sprite_sheet",
-        "metadata": {
-          "license": "CC0 1.0",
-          "source": "reference_projects/boss_trial_demo/trial_maps.py"
-        },
-        "name": "Skeleton Grunt Sheet",
-        "source_path": "playable_assets/lucifer/world/look_skeleton_grunt_sheet.json"
-      },
-      {
-        "id": "ad977488-a4a8-5f8e-a599-de2c03b302a7",
-        "import_settings": {},
-        "importer": "boss_trial_demo",
-        "importer_version": 1,
-        "kind": "animation",
-        "metadata": {
-          "license": "CC0 1.0",
-          "source": "reference_projects/boss_trial_demo/trial_maps.py"
-        },
-        "name": "Skeleton Grunt Animations",
-        "source_path": "playable_assets/lucifer/world/look_skeleton_grunt_clips.json"
       },
       {
         "id": "be6d9eaa-4217-5acc-b9c3-bc73bebc5482",
@@ -598,6 +520,162 @@
         },
         "name": "Skeleton King Animations",
         "source_path": "playable_assets/lucifer/world/look_skeleton_king_clips.json"
+      },
+      {
+        "id": "9aa0ae09-ffe0-5074-93d7-94744b34e142",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Warrior",
+        "source_path": "playable_assets/lucifer/world/look_hero_warrior.png"
+      },
+      {
+        "id": "dc2fa5f9-b3aa-51d7-9e8c-2976243c98dd",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Warrior Sheet",
+        "source_path": "playable_assets/lucifer/world/look_hero_warrior_sheet.json"
+      },
+      {
+        "id": "adc12d9a-4d9f-5f78-9de8-54c1d5eda4f7",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Warrior Animations",
+        "source_path": "playable_assets/lucifer/world/look_hero_warrior_clips.json"
+      },
+      {
+        "id": "c25302be-3094-56e7-8d92-e530a02e2fe1",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Sorceress",
+        "source_path": "playable_assets/lucifer/world/look_hero_sorceress.png"
+      },
+      {
+        "id": "7630c2bf-0c46-5805-be67-6af3c949e256",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Sorceress Sheet",
+        "source_path": "playable_assets/lucifer/world/look_hero_sorceress_sheet.json"
+      },
+      {
+        "id": "53af82d5-616d-5990-87cc-c9518dbcacd1",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Sorceress Animations",
+        "source_path": "playable_assets/lucifer/world/look_hero_sorceress_clips.json"
+      },
+      {
+        "id": "7ee4958f-72bf-5513-a56f-235ec8b82411",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Necromancer",
+        "source_path": "playable_assets/lucifer/world/look_hero_necromancer.png"
+      },
+      {
+        "id": "e1def9f3-61e3-532e-b289-0aa8b79e6a29",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Necromancer Sheet",
+        "source_path": "playable_assets/lucifer/world/look_hero_necromancer_sheet.json"
+      },
+      {
+        "id": "1c5f2bc7-a279-55ec-89ab-1e5b73ed83ff",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Necromancer Animations",
+        "source_path": "playable_assets/lucifer/world/look_hero_necromancer_clips.json"
+      },
+      {
+        "id": "96dbeea0-69ab-5140-a002-d7c8c1f17acd",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Cultist",
+        "source_path": "playable_assets/lucifer/world/look_hero_cultist.png"
+      },
+      {
+        "id": "3fcb7ad1-f528-5126-b054-389e1aa170ed",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Cultist Sheet",
+        "source_path": "playable_assets/lucifer/world/look_hero_cultist_sheet.json"
+      },
+      {
+        "id": "b56c1a4b-b424-5763-b978-5b344ac2cdd9",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Cultist Animations",
+        "source_path": "playable_assets/lucifer/world/look_hero_cultist_clips.json"
       },
       {
         "id": "ef5dac6e-ff41-5420-a923-379ea64eb9a1",
@@ -2725,60 +2803,52 @@
             {
               "attack": {
                 "events": {
-                  "4": [
+                  "3": [
                     "hit"
                   ]
                 },
                 "frame_duration": 0.085,
                 "frames": [
+                  5,
                   6,
                   7,
                   8,
                   9,
                   10,
-                  11,
-                  12,
-                  13,
                   0
                 ],
                 "loop": false
               },
               "attack2": {
                 "events": {
-                  "4": [
+                  "3": [
                     "hit"
                   ]
                 },
                 "frame_duration": 0.085,
                 "frames": [
+                  11,
+                  12,
+                  13,
                   14,
                   15,
-                  16,
-                  17,
-                  18,
-                  19,
-                  20,
-                  21,
                   0
                 ],
                 "loop": false
               },
               "attack3": {
                 "events": {
-                  "4": [
+                  "3": [
                     "hit"
                   ]
                 },
                 "frame_duration": 0.08,
                 "frames": [
-                  22,
-                  23,
-                  24,
-                  25,
-                  26,
-                  27,
-                  28,
-                  29,
+                  16,
+                  17,
+                  18,
+                  19,
+                  20,
                   0
                 ],
                 "loop": false
@@ -2786,12 +2856,11 @@
               "cast": {
                 "frame_duration": 0.1,
                 "frames": [
-                  30,
-                  31,
-                  32,
-                  33,
-                  34,
-                  35,
+                  21,
+                  22,
+                  23,
+                  24,
+                  25,
                   0
                 ],
                 "loop": false
@@ -2806,10 +2875,10 @@
               "hit": {
                 "frame_duration": 0.08,
                 "frames": [
-                  36,
-                  37,
-                  38,
-                  39,
+                  26,
+                  27,
+                  28,
+                  29,
                   0
                 ],
                 "loop": false
@@ -2821,13 +2890,28 @@
                   1,
                   2,
                   3,
-                  4,
-                  5
+                  4
                 ],
                 "loop": true
               },
               "ko": {
                 "frame_duration": 0.12,
+                "frames": [
+                  30,
+                  31,
+                  32,
+                  33,
+                  34,
+                  35,
+                  36,
+                  37,
+                  38,
+                  39
+                ],
+                "loop": false
+              },
+              "revive": {
+                "frame_duration": 0.1,
                 "frames": [
                   40,
                   41,
@@ -2836,21 +2920,9 @@
                   44,
                   45,
                   46,
-                  47
-                ],
-                "loop": false
-              },
-              "revive": {
-                "frame_duration": 0.1,
-                "frames": [
+                  47,
                   48,
-                  49,
-                  50,
-                  51,
-                  52,
-                  53,
-                  54,
-                  55
+                  49
                 ],
                 "loop": false
               },
@@ -2861,18 +2933,18 @@
                   1,
                   2,
                   3,
-                  4,
-                  5
+                  4
                 ],
                 "loop": true
               },
               "transform": {
                 "frame_duration": 0.1,
                 "frames": [
-                  56,
-                  57,
-                  58,
-                  59,
+                  50,
+                  51,
+                  52,
+                  53,
+                  54,
                   0
                 ],
                 "loop": false
@@ -2882,15 +2954,15 @@
           [
             "frame_size",
             [
-              76,
-              88
+              160,
+              134
             ]
           ],
           [
             "pivot",
             [
               0.5,
-              0.9091
+              0.9254
             ]
           ],
           [
@@ -3380,217 +3452,6 @@
         "version": 1
       },
       {
-        "asset_id": "battle.combatant.goblin_berserker",
-        "kind": "sprite_sheet",
-        "metadata": [
-          [
-            "clips",
-            {
-              "attack": {
-                "events": {
-                  "6": [
-                    "hit"
-                  ]
-                },
-                "frame_duration": 0.085,
-                "frames": [
-                  6,
-                  7,
-                  8,
-                  9,
-                  10,
-                  11,
-                  12,
-                  13,
-                  14,
-                  15,
-                  0
-                ],
-                "loop": false
-              },
-              "attack2": {
-                "events": {
-                  "6": [
-                    "hit"
-                  ]
-                },
-                "frame_duration": 0.085,
-                "frames": [
-                  16,
-                  17,
-                  18,
-                  19,
-                  20,
-                  21,
-                  22,
-                  23,
-                  24,
-                  25,
-                  0
-                ],
-                "loop": false
-              },
-              "attack3": {
-                "events": {
-                  "6": [
-                    "hit"
-                  ]
-                },
-                "frame_duration": 0.08,
-                "frames": [
-                  26,
-                  27,
-                  28,
-                  29,
-                  30,
-                  31,
-                  32,
-                  33,
-                  34,
-                  35,
-                  0
-                ],
-                "loop": false
-              },
-              "cast": {
-                "frame_duration": 0.1,
-                "frames": [
-                  36,
-                  37,
-                  38,
-                  39,
-                  40,
-                  41,
-                  0
-                ],
-                "loop": false
-              },
-              "guard": {
-                "frame_duration": 0.3,
-                "frames": [
-                  0
-                ],
-                "loop": true
-              },
-              "hit": {
-                "frame_duration": 0.08,
-                "frames": [
-                  42,
-                  43,
-                  44,
-                  45,
-                  0
-                ],
-                "loop": false
-              },
-              "idle": {
-                "frame_duration": 0.18,
-                "frames": [
-                  0,
-                  1,
-                  2,
-                  3,
-                  4,
-                  5
-                ],
-                "loop": true
-              },
-              "ko": {
-                "frame_duration": 0.12,
-                "frames": [
-                  46,
-                  47,
-                  48,
-                  49,
-                  50,
-                  51,
-                  52,
-                  53,
-                  54
-                ],
-                "loop": false
-              },
-              "revive": {
-                "frame_duration": 0.1,
-                "frames": [
-                  55,
-                  56,
-                  57,
-                  58,
-                  59,
-                  60,
-                  61,
-                  62,
-                  63
-                ],
-                "loop": false
-              },
-              "status": {
-                "frame_duration": 0.18,
-                "frames": [
-                  0,
-                  1,
-                  2,
-                  3,
-                  4,
-                  5
-                ],
-                "loop": true
-              },
-              "transform": {
-                "frame_duration": 0.1,
-                "frames": [
-                  64,
-                  65,
-                  66,
-                  67,
-                  0
-                ],
-                "loop": false
-              }
-            }
-          ],
-          [
-            "frame_size",
-            [
-              84,
-              72
-            ]
-          ],
-          [
-            "pivot",
-            [
-              0.5,
-              0.9722
-            ]
-          ],
-          [
-            "body_height",
-            56
-          ]
-        ],
-        "source": {
-          "provenance": [
-            [
-              "license",
-              "CC0 1.0"
-            ],
-            [
-              "source",
-              "Foozle Lucifer packs"
-            ]
-          ],
-          "provider": "project",
-          "uri": "playable_assets/battle/goblin_berserker.png"
-        },
-        "tags": [
-          "battle",
-          "combatant",
-          "enemy"
-        ],
-        "version": 1
-      },
-      {
         "asset_id": "battle.combatant.goblin_beast",
         "kind": "sprite_sheet",
         "metadata": [
@@ -3799,209 +3660,6 @@
           ],
           "provider": "project",
           "uri": "playable_assets/battle/goblin_beast.png"
-        },
-        "tags": [
-          "battle",
-          "combatant",
-          "enemy"
-        ],
-        "version": 1
-      },
-      {
-        "asset_id": "battle.combatant.skeleton_grunt",
-        "kind": "sprite_sheet",
-        "metadata": [
-          [
-            "clips",
-            {
-              "attack": {
-                "events": {
-                  "4": [
-                    "hit"
-                  ]
-                },
-                "frame_duration": 0.085,
-                "frames": [
-                  6,
-                  7,
-                  8,
-                  9,
-                  10,
-                  11,
-                  12,
-                  13,
-                  0
-                ],
-                "loop": false
-              },
-              "attack2": {
-                "events": {
-                  "4": [
-                    "hit"
-                  ]
-                },
-                "frame_duration": 0.085,
-                "frames": [
-                  14,
-                  15,
-                  16,
-                  17,
-                  18,
-                  19,
-                  20,
-                  21,
-                  0
-                ],
-                "loop": false
-              },
-              "attack3": {
-                "events": {
-                  "4": [
-                    "hit"
-                  ]
-                },
-                "frame_duration": 0.08,
-                "frames": [
-                  22,
-                  23,
-                  24,
-                  25,
-                  26,
-                  27,
-                  28,
-                  29,
-                  0
-                ],
-                "loop": false
-              },
-              "cast": {
-                "frame_duration": 0.1,
-                "frames": [
-                  30,
-                  31,
-                  32,
-                  33,
-                  34,
-                  35,
-                  0
-                ],
-                "loop": false
-              },
-              "guard": {
-                "frame_duration": 0.3,
-                "frames": [
-                  0
-                ],
-                "loop": true
-              },
-              "hit": {
-                "frame_duration": 0.08,
-                "frames": [
-                  36,
-                  37,
-                  38,
-                  39,
-                  0
-                ],
-                "loop": false
-              },
-              "idle": {
-                "frame_duration": 0.18,
-                "frames": [
-                  0,
-                  1,
-                  2,
-                  3,
-                  4,
-                  5
-                ],
-                "loop": true
-              },
-              "ko": {
-                "frame_duration": 0.12,
-                "frames": [
-                  40,
-                  41,
-                  42,
-                  43,
-                  44,
-                  45,
-                  46,
-                  47
-                ],
-                "loop": false
-              },
-              "revive": {
-                "frame_duration": 0.1,
-                "frames": [
-                  48,
-                  49,
-                  50,
-                  51,
-                  52,
-                  53,
-                  54,
-                  55
-                ],
-                "loop": false
-              },
-              "status": {
-                "frame_duration": 0.18,
-                "frames": [
-                  0,
-                  1,
-                  2,
-                  3,
-                  4,
-                  5
-                ],
-                "loop": true
-              },
-              "transform": {
-                "frame_duration": 0.1,
-                "frames": [
-                  56,
-                  57,
-                  58,
-                  59,
-                  0
-                ],
-                "loop": false
-              }
-            }
-          ],
-          [
-            "frame_size",
-            [
-              84,
-              86
-            ]
-          ],
-          [
-            "pivot",
-            [
-              0.5,
-              0.9302
-            ]
-          ],
-          [
-            "body_height",
-            58
-          ]
-        ],
-        "source": {
-          "provenance": [
-            [
-              "license",
-              "CC0 1.0"
-            ],
-            [
-              "source",
-              "Foozle Lucifer packs"
-            ]
-          ],
-          "provider": "project",
-          "uri": "playable_assets/battle/skeleton_grunt.png"
         },
         "tags": [
           "battle",
@@ -5921,77 +5579,6 @@
             "z_order": 0
           }
         },
-        "goblin_berserker": {
-          "assets": {
-            "battlefield_asset_id": "battle.combatant.goblin_berserker",
-            "icon_asset_id": null,
-            "portrait_asset_id": null,
-            "small_portrait_asset_id": null
-          },
-          "battlefield_visible": true,
-          "hud_visible": true,
-          "profile_id": "goblin_berserker",
-          "states": [
-            {
-              "clip_role": "idle",
-              "fallback_state_id": "idle",
-              "persistent": false,
-              "priority": 0,
-              "state_id": "idle"
-            },
-            {
-              "clip_role": "attack",
-              "fallback_state_id": "idle",
-              "persistent": false,
-              "priority": 0,
-              "state_id": "attack"
-            },
-            {
-              "clip_role": "cast",
-              "fallback_state_id": "idle",
-              "persistent": false,
-              "priority": 0,
-              "state_id": "cast"
-            },
-            {
-              "clip_role": "hit",
-              "fallback_state_id": "idle",
-              "persistent": false,
-              "priority": 0,
-              "state_id": "hit"
-            },
-            {
-              "clip_role": "ko",
-              "fallback_state_id": "idle",
-              "persistent": false,
-              "priority": 0,
-              "state_id": "ko"
-            },
-            {
-              "clip_role": "attack2",
-              "fallback_state_id": "idle",
-              "persistent": false,
-              "priority": 0,
-              "state_id": "attack2"
-            },
-            {
-              "clip_role": "attack3",
-              "fallback_state_id": "idle",
-              "persistent": false,
-              "priority": 0,
-              "state_id": "attack3"
-            }
-          ],
-          "transform": {
-            "anchor_x": 0.5,
-            "anchor_y": 1.0,
-            "offset_x": 0.0,
-            "offset_y": 0.0,
-            "scale_x": 0.9,
-            "scale_y": 0.9,
-            "z_order": 0
-          }
-        },
         "goblin_slinger": {
           "assets": {
             "battlefield_asset_id": "battle.combatant.goblin_slinger",
@@ -6669,77 +6256,6 @@
             "offset_y": 0.0,
             "scale_x": 1.1,
             "scale_y": 1.1,
-            "z_order": 0
-          }
-        },
-        "skeleton_grunt": {
-          "assets": {
-            "battlefield_asset_id": "battle.combatant.skeleton_grunt",
-            "icon_asset_id": null,
-            "portrait_asset_id": null,
-            "small_portrait_asset_id": null
-          },
-          "battlefield_visible": true,
-          "hud_visible": true,
-          "profile_id": "skeleton_grunt",
-          "states": [
-            {
-              "clip_role": "idle",
-              "fallback_state_id": "idle",
-              "persistent": false,
-              "priority": 0,
-              "state_id": "idle"
-            },
-            {
-              "clip_role": "attack",
-              "fallback_state_id": "idle",
-              "persistent": false,
-              "priority": 0,
-              "state_id": "attack"
-            },
-            {
-              "clip_role": "cast",
-              "fallback_state_id": "idle",
-              "persistent": false,
-              "priority": 0,
-              "state_id": "cast"
-            },
-            {
-              "clip_role": "hit",
-              "fallback_state_id": "idle",
-              "persistent": false,
-              "priority": 0,
-              "state_id": "hit"
-            },
-            {
-              "clip_role": "ko",
-              "fallback_state_id": "idle",
-              "persistent": false,
-              "priority": 0,
-              "state_id": "ko"
-            },
-            {
-              "clip_role": "attack2",
-              "fallback_state_id": "idle",
-              "persistent": false,
-              "priority": 0,
-              "state_id": "attack2"
-            },
-            {
-              "clip_role": "attack3",
-              "fallback_state_id": "idle",
-              "persistent": false,
-              "priority": 0,
-              "state_id": "attack3"
-            }
-          ],
-          "transform": {
-            "anchor_x": 0.5,
-            "anchor_y": 1.0,
-            "offset_x": 0.0,
-            "offset_y": 0.0,
-            "scale_x": 0.9,
-            "scale_y": 0.9,
             "z_order": 0
           }
         },
@@ -14967,99 +14483,6 @@
             },
             {
               "at": 0.31,
-              "beat_id": "return",
-              "channel": "move",
-              "cue": "return",
-              "duration": 0.2,
-              "easing": "ease_in_out",
-              "member_id": "@source",
-              "payload": [],
-              "target_id": null
-            }
-          ],
-          "duration": 0.7,
-          "recovery_at": null,
-          "sequence_id": "strike"
-        },
-        "gob_chop": {
-          "beats": [
-            {
-              "at": 0.0,
-              "beat_id": "advance",
-              "channel": "move",
-              "cue": "advance",
-              "duration": 0.16,
-              "easing": "ease_out",
-              "member_id": "@source",
-              "payload": [],
-              "target_id": null
-            },
-            {
-              "at": 0.0,
-              "beat_id": "swing",
-              "channel": "animation",
-              "cue": "attack3",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@source",
-              "payload": [],
-              "target_id": null
-            },
-            {
-              "at": 0.12,
-              "beat_id": "fx0",
-              "channel": "vfx",
-              "cue": "battle.fx.slash",
-              "duration": 0.4,
-              "easing": "linear",
-              "member_id": "@target",
-              "payload": [],
-              "target_id": null
-            },
-            {
-              "at": 0.24,
-              "beat_id": "impact",
-              "channel": "animation",
-              "cue": "hit",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@target",
-              "payload": [],
-              "target_id": null
-            },
-            {
-              "at": 0.24,
-              "beat_id": "shake",
-              "channel": "camera",
-              "cue": "shake",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@target",
-              "payload": [
-                [
-                  "amplitude",
-                  4
-                ],
-                [
-                  "duration",
-                  0.18
-                ]
-              ],
-              "target_id": null
-            },
-            {
-              "at": 0.24,
-              "beat_id": "sound",
-              "channel": "audio",
-              "cue": "hit",
-              "duration": 0.0,
-              "easing": "linear",
-              "member_id": "@target",
-              "payload": [],
-              "target_id": null
-            },
-            {
-              "at": 0.29,
               "beat_id": "return",
               "channel": "move",
               "cue": "return",
@@ -23937,7 +23360,7 @@
       "sideview_templates": {},
       "ui_layout": {
         "adaptive": {
-          "action_menu_placement": "actor",
+          "action_menu_placement": "actor_bottom_right",
           "column_size": 2,
           "front_large_zones": [
             "right"
@@ -23947,6 +23370,7 @@
           "hud_row_height": 10.0,
           "margin": 8.0,
           "menu_over_stage": true,
+          "overhead_bars": false,
           "overhead_below": false,
           "overhead_zones": [
             "left"
@@ -24630,26 +24054,13 @@
         {
           "args": {
             "condition": {
-              "name": "recruited.cael",
-              "operator": "==",
-              "scope_id": null,
-              "source": "switch",
-              "value": true
-            },
-            "label": "case0"
-          },
-          "opcode": "JUMP_IF"
-        },
-        {
-          "args": {
-            "condition": {
               "name": "encounter.crypt_boss.defeated",
               "operator": "==",
               "scope_id": null,
               "source": "switch",
               "value": true
             },
-            "label": "case1"
+            "label": "case0"
           },
           "opcode": "JUMP_IF"
         },
@@ -24673,24 +24084,74 @@
         {
           "args": {
             "speaker": "Cael",
-            "text": "Where you go, I follow. Mind the king's guard."
+            "text": "The Ancient falls. I served it once. I will wait for you at the guild."
           },
           "opcode": "DIALOGUE"
+        },
+        {
+          "args": {
+            "args": {
+              "key": "visible",
+              "npc": "cael_wild",
+              "value": false
+            },
+            "command": "SET_NPC"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "key": "visible",
+              "npc": "cael_guild",
+              "value": true
+            },
+            "command": "SET_NPC"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "kind": "item",
+              "text": "Cael heads for the guild."
+            },
+            "command": "SHOW_POPUP"
+          },
+          "opcode": "WORLD"
         },
         {
           "args": {},
           "opcode": "END"
         },
         {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "story.cael",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
+    "story.cael.guild": {
+      "instructions": [
+        {
           "args": {
-            "name": "case1"
+            "condition": {
+              "name": "recruited.cael",
+              "operator": "==",
+              "scope_id": null,
+              "source": "switch",
+              "value": true
+            },
+            "label": "case0"
           },
-          "opcode": "LABEL"
+          "opcode": "JUMP_IF"
         },
         {
           "args": {
             "speaker": "Cael",
-            "text": "The Ancient falls. I served it once. Take me with you."
+            "text": "Ready when you are."
           },
           "opcode": "DIALOGUE"
         },
@@ -24753,11 +24214,28 @@
           "opcode": "END"
         },
         {
+          "args": {
+            "name": "case0"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "speaker": "Cael",
+            "text": "Where you go, I follow. Mind the king's guard."
+          },
+          "opcode": "DIALOGUE"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
           "args": {},
           "opcode": "END"
         }
       ],
-      "name": "story.cael",
+      "name": "story.cael.guild",
       "schema": "asteria.event_program",
       "version": 1
     },
@@ -24862,6 +24340,214 @@
       "schema": "asteria.event_program",
       "version": 1
     },
+    "story.guildmaster": {
+      "instructions": [
+        {
+          "args": {
+            "choices": [
+              {
+                "text": "Mira waits here",
+                "value": 0
+              },
+              {
+                "text": "Vesper waits here",
+                "value": 1
+              },
+              {
+                "text": "Cael waits here",
+                "value": 2
+              },
+              {
+                "text": "Nothing",
+                "value": 3
+              }
+            ],
+            "prompt": "Guildmaster Orla: Companions wait here until you hire them. Anything else?",
+            "variable_name": "menu"
+          },
+          "opcode": "CHOICE"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 0
+            },
+            "label": "opt0"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 1
+            },
+            "label": "opt1"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 2
+            },
+            "label": "opt2"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 3
+            },
+            "label": "opt3"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt0"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "actor_id": "hero_02"
+            },
+            "command": "LEAVE_PARTY"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "name": "recruited.mira",
+            "value": false
+          },
+          "opcode": "SET_SWITCH"
+        },
+        {
+          "args": {
+            "speaker": "Guildmaster Orla",
+            "text": "Mira will wait at the guild until you call."
+          },
+          "opcode": "DIALOGUE"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt1"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "actor_id": "hero_03"
+            },
+            "command": "LEAVE_PARTY"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "name": "recruited.vesper",
+            "value": false
+          },
+          "opcode": "SET_SWITCH"
+        },
+        {
+          "args": {
+            "speaker": "Guildmaster Orla",
+            "text": "Vesper will wait at the guild until you call."
+          },
+          "opcode": "DIALOGUE"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt2"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "actor_id": "hero_04"
+            },
+            "command": "LEAVE_PARTY"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "name": "recruited.cael",
+            "value": false
+          },
+          "opcode": "SET_SWITCH"
+        },
+        {
+          "args": {
+            "speaker": "Guildmaster Orla",
+            "text": "Cael will wait at the guild until you call."
+          },
+          "opcode": "DIALOGUE"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt3"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "speaker": "Guildmaster Orla",
+            "text": "Good hunting."
+          },
+          "opcode": "DIALOGUE"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "story.guildmaster",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
     "story.inn": {
       "instructions": [
         {
@@ -24961,6 +24647,94 @@
         }
       ],
       "name": "story.inn",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
+    "story.mira.guild": {
+      "instructions": [
+        {
+          "args": {
+            "condition": {
+              "name": "recruited.mira",
+              "operator": "==",
+              "scope_id": null,
+              "source": "switch",
+              "value": true
+            },
+            "label": "case0"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "speaker": "Mira",
+            "text": "Ready when you are."
+          },
+          "opcode": "DIALOGUE"
+        },
+        {
+          "args": {
+            "args": {
+              "actor_id": "hero_02"
+            },
+            "command": "JOIN_PARTY"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "amount": 10,
+              "subject_id": "mira"
+            },
+            "command": "CHANGE_RELATIONSHIP"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "name": "recruited.mira",
+            "value": true
+          },
+          "opcode": "SET_SWITCH"
+        },
+        {
+          "args": {
+            "args": {
+              "kind": "item",
+              "text": "Mira joins the party!"
+            },
+            "command": "SHOW_POPUP"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "case0"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "speaker": "Mira",
+            "text": "Stay close and I will keep you standing."
+          },
+          "opcode": "DIALOGUE"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "story.mira.guild",
       "schema": "asteria.event_program",
       "version": 1
     },
@@ -25866,26 +25640,13 @@
         {
           "args": {
             "condition": {
-              "name": "recruited.vesper",
-              "operator": "==",
-              "scope_id": null,
-              "source": "switch",
-              "value": true
-            },
-            "label": "case0"
-          },
-          "opcode": "JUMP_IF"
-        },
-        {
-          "args": {
-            "condition": {
               "name": "encounter.woods_boss.defeated",
               "operator": "==",
               "scope_id": null,
               "source": "switch",
               "value": true
             },
-            "label": "case1"
+            "label": "case0"
           },
           "opcode": "JUMP_IF"
         },
@@ -25909,24 +25670,74 @@
         {
           "args": {
             "speaker": "Vesper",
-            "text": "Lead on. The dead talk, and I listen."
+            "text": "You broke the beast. The dead below will want you next. Find me at the guild."
           },
           "opcode": "DIALOGUE"
+        },
+        {
+          "args": {
+            "args": {
+              "key": "visible",
+              "npc": "vesper_wild",
+              "value": false
+            },
+            "command": "SET_NPC"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "key": "visible",
+              "npc": "vesper_guild",
+              "value": true
+            },
+            "command": "SET_NPC"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "kind": "item",
+              "text": "Vesper heads for the guild."
+            },
+            "command": "SHOW_POPUP"
+          },
+          "opcode": "WORLD"
         },
         {
           "args": {},
           "opcode": "END"
         },
         {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "story.vesper",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
+    "story.vesper.guild": {
+      "instructions": [
+        {
           "args": {
-            "name": "case1"
+            "condition": {
+              "name": "recruited.vesper",
+              "operator": "==",
+              "scope_id": null,
+              "source": "switch",
+              "value": true
+            },
+            "label": "case0"
           },
-          "opcode": "LABEL"
+          "opcode": "JUMP_IF"
         },
         {
           "args": {
             "speaker": "Vesper",
-            "text": "You broke the beast. The dead below will want you next. Let me come."
+            "text": "Ready when you are."
           },
           "opcode": "DIALOGUE"
         },
@@ -25953,22 +25764,10 @@
           "args": {
             "args": {
               "key": "mood",
-              "npc": "Vesper",
+              "npc": "vesper_guild",
               "value": "loyal"
             },
             "command": "SET_NPC"
-          },
-          "opcode": "WORLD"
-        },
-        {
-          "args": {
-            "args": {
-              "npc": "Vesper",
-              "scene_id": "4ca2db1c-f03a-51a8-aac9-3f85718155ee",
-              "x": 200,
-              "y": 60
-            },
-            "command": "MOVE_NPC"
           },
           "opcode": "WORLD"
         },
@@ -25994,11 +25793,28 @@
           "opcode": "END"
         },
         {
+          "args": {
+            "name": "case0"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "speaker": "Vesper",
+            "text": "Lead on. The dead talk, and I listen."
+          },
+          "opcode": "DIALOGUE"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
           "args": {},
           "opcode": "END"
         }
       ],
-      "name": "story.vesper",
+      "name": "story.vesper.guild",
       "schema": "asteria.event_program",
       "version": 1
     },
@@ -28366,16 +28182,13 @@
         }
       },
       "party_active_actor_ids": [
-        "hero_01",
-        "hero_02"
+        "hero_01"
       ],
       "party_actor_ids": [
-        "hero_01",
-        "hero_02"
+        "hero_01"
       ],
       "party_placements": {
-        "hero_01": "slot_1",
-        "hero_02": "slot_2"
+        "hero_01": "slot_1"
       },
       "pets": [],
       "progression": {
@@ -28887,7 +28700,7 @@
           {
             "args": {
               "count": 2,
-              "enemy_id": "skeleton_grunt",
+              "enemy_id": "skeleton_hunter",
               "owner_id": "@actor"
             },
             "command": "SUMMON"
@@ -35206,79 +35019,6 @@
           }
         ],
         "icon_id": "playable_assets/lucifer/icons/skill_gilded_hammer.png",
-        "schema": "asteria.ability_definition",
-        "tags": [
-          "ability",
-          "weapon.axe"
-        ],
-        "targeting": {
-          "allow_self": false,
-          "blocked_tags": [],
-          "maximum_targets": 1,
-          "minimum_targets": 1,
-          "required_tags": []
-        },
-        "version": 1
-      },
-      {
-        "ability_id": "gob_chop",
-        "conditions": {
-          "conditions": [],
-          "mode": "all",
-          "type": "group"
-        },
-        "costs": [],
-        "display_name": "Chop",
-        "effects": [
-          {
-            "effect": {
-              "blocked_tags": [],
-              "effect_id": "gob_chop.effect",
-              "operations": [
-                {
-                  "kind": "resource_delta",
-                  "target": "vitality",
-                  "value": {
-                    "maximum": -1.0,
-                    "minimum": null,
-                    "multipliers": [],
-                    "schema": "asteria.value_formula",
-                    "terms": [
-                      {
-                        "coefficient": -11.0,
-                        "key": "power",
-                        "source": "source_stat"
-                      },
-                      {
-                        "coefficient": 6.0,
-                        "key": "defense",
-                        "source": "target_stat"
-                      }
-                    ],
-                    "version": 1
-                  }
-                }
-              ],
-              "required_tags": [],
-              "schema": "asteria.effect",
-              "version": 1
-            },
-            "mode": "selected"
-          }
-        ],
-        "hits": [
-          {
-            "checks": [
-              "crit",
-              "land"
-            ],
-            "power": 1.0,
-            "tags": [
-              "weapon.axe"
-            ]
-          }
-        ],
-        "icon_id": "playable_assets/lucifer/icons/skill_gob_chop.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -44140,7 +43880,7 @@
               "frame_index": 0,
               "layer": 0,
               "opacity": 1.0,
-              "sprite_sheet_asset_id": "dbeeda0f-9e4b-5dec-9f6a-6c363a349e6c",
+              "sprite_sheet_asset_id": "a077ae02-97bb-585a-9616-4adb06e42612",
               "visible": true
             },
             "type": "asteria.SpriteRenderer2D",
@@ -44148,7 +43888,7 @@
           },
           {
             "fields": {
-              "clip_set_id": "ad977488-a4a8-5f8e-a599-de2c03b302a7",
+              "clip_set_id": "6d332832-7bd1-5ef4-9218-2d9f022ed8cd",
               "default_clip": "idle_down",
               "playing": true,
               "speed": 1.0
@@ -45036,7 +44776,7 @@
             "version": 1
           }
         ],
-        "display_name": "Spirit Knight",
+        "display_name": "Spirit Rider",
         "schema": "asteria.rpg.actor",
         "tags": [
           "actor.playable",
@@ -47836,23 +47576,6 @@
       },
       {
         "ability_id": "gilded_hammer",
-        "active_only": true,
-        "adjacent_to_actor": false,
-        "blocked_slot_tags": [],
-        "blocked_subject_tags": [],
-        "maximum_targets": 1,
-        "metric_conditions": [],
-        "minimum_targets": 1,
-        "relation": "opponent",
-        "required_slot_tags": [],
-        "required_subject_tags": [],
-        "schema": "asteria.rpg.battle_targeting_definition",
-        "selection_count": null,
-        "selection_mode": "manual",
-        "version": 1
-      },
-      {
-        "ability_id": "gob_chop",
         "active_only": true,
         "adjacent_to_actor": false,
         "blocked_slot_tags": [],
@@ -50858,13 +50581,8 @@
         "encounter_id": "crypt_guard",
         "members": [
           {
-            "count": 2,
+            "count": 3,
             "enemy_id": "skeleton_hunter",
-            "weight": 1.0
-          },
-          {
-            "count": 1,
-            "enemy_id": "skeleton_grunt",
             "weight": 1.0
           }
         ],
@@ -50880,11 +50598,6 @@
         "members": [
           {
             "count": 2,
-            "enemy_id": "skeleton_grunt",
-            "weight": 1.0
-          },
-          {
-            "count": 1,
             "enemy_id": "skeleton_hunter",
             "weight": 1.0
           }
@@ -50960,11 +50673,6 @@
           {
             "count": 2,
             "enemy_id": "goblin_slinger",
-            "weight": 1.0
-          },
-          {
-            "count": 1,
-            "enemy_id": "goblin_berserker",
             "weight": 1.0
           }
         ],
@@ -51092,46 +50800,9 @@
       },
       {
         "abilities": [
-          "gob_chop",
-          "gob_rage"
-        ],
-        "display_name": "Goblin Berserker",
-        "enemy_id": "goblin_berserker",
-        "resources": {
-          "shield": 2.0,
-          "technique": 999.0,
-          "vitality": 2600.0
-        },
-        "reward": {
-          "currencies": {
-            "gold": 180.0
-          },
-          "drop_table_id": "goblin_loot",
-          "experience": {
-            "battle_experience": 25.0
-          },
-          "loot": []
-        },
-        "schema": "asteria.rpg.enemy",
-        "stats": {
-          "crit": 5.0,
-          "defense": 30.0,
-          "evade": 3.0,
-          "magic": 10.0,
-          "power": 64.0,
-          "speed": 52.0
-        },
-        "tags": [
-          "enemy",
-          "resist.axe",
-          "weak.ice"
-        ],
-        "version": 1
-      },
-      {
-        "abilities": [
           "gob_sling",
-          "gob_stab"
+          "gob_stab",
+          "gob_rage"
         ],
         "display_name": "Goblin Slinger",
         "enemy_id": "goblin_slinger",
@@ -51246,48 +50917,9 @@
       },
       {
         "abilities": [
+          "skel_shot",
           "skel_slash",
           "skel_guard"
-        ],
-        "display_name": "Skeleton Grunt",
-        "enemy_id": "skeleton_grunt",
-        "resources": {
-          "shield": 2.0,
-          "technique": 999.0,
-          "vitality": 2200.0
-        },
-        "reward": {
-          "currencies": {
-            "gold": 160.0
-          },
-          "drop_table_id": "bone_loot",
-          "experience": {
-            "battle_experience": 20.0
-          },
-          "loot": []
-        },
-        "schema": "asteria.rpg.enemy",
-        "stats": {
-          "crit": 5.0,
-          "defense": 40.0,
-          "evade": 3.0,
-          "magic": 10.0,
-          "power": 58.0,
-          "speed": 50.0
-        },
-        "tags": [
-          "absorb.dark",
-          "enemy",
-          "resist.dagger",
-          "weak.axe",
-          "weak.light"
-        ],
-        "version": 1
-      },
-      {
-        "abilities": [
-          "skel_shot",
-          "skel_slash"
         ],
         "display_name": "Skeleton Hunter",
         "enemy_id": "skeleton_hunter",
@@ -51734,44 +51366,6 @@
       },
       {
         "actions_per_ready": 1,
-        "ai_id": "goblin_berserker_ai",
-        "initial_phase_id": null,
-        "phases": [],
-        "rules": [
-          {
-            "action_kind": "ability",
-            "conditions": [],
-            "payload": {
-              "ability_id": "gob_chop"
-            },
-            "priority": 0,
-            "rule_id": "goblin_berserker.gob_chop",
-            "schema": "asteria.rpg.ai_decision_rule",
-            "tags": [],
-            "target_selector": "first_opponent",
-            "version": 1,
-            "weight": 3.0
-          },
-          {
-            "action_kind": "ability",
-            "conditions": [],
-            "payload": {
-              "ability_id": "gob_rage"
-            },
-            "priority": 0,
-            "rule_id": "goblin_berserker.gob_rage",
-            "schema": "asteria.rpg.ai_decision_rule",
-            "tags": [],
-            "target_selector": "self",
-            "version": 1,
-            "weight": 2.5
-          }
-        ],
-        "schema": "asteria.rpg.enemy_ai_definition",
-        "version": 1
-      },
-      {
-        "actions_per_ready": 1,
         "ai_id": "goblin_slinger_ai",
         "initial_phase_id": null,
         "phases": [],
@@ -51803,6 +51397,20 @@
             "target_selector": "first_opponent",
             "version": 1,
             "weight": 2.5
+          },
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "gob_rage"
+            },
+            "priority": 0,
+            "rule_id": "goblin_slinger.gob_rage",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "self",
+            "version": 1,
+            "weight": 2.0
           }
         ],
         "schema": "asteria.rpg.enemy_ai_definition",
@@ -51876,44 +51484,6 @@
       },
       {
         "actions_per_ready": 1,
-        "ai_id": "skeleton_grunt_ai",
-        "initial_phase_id": null,
-        "phases": [],
-        "rules": [
-          {
-            "action_kind": "ability",
-            "conditions": [],
-            "payload": {
-              "ability_id": "skel_slash"
-            },
-            "priority": 0,
-            "rule_id": "skeleton_grunt.skel_slash",
-            "schema": "asteria.rpg.ai_decision_rule",
-            "tags": [],
-            "target_selector": "first_opponent",
-            "version": 1,
-            "weight": 3.0
-          },
-          {
-            "action_kind": "ability",
-            "conditions": [],
-            "payload": {
-              "ability_id": "skel_guard"
-            },
-            "priority": 0,
-            "rule_id": "skeleton_grunt.skel_guard",
-            "schema": "asteria.rpg.ai_decision_rule",
-            "tags": [],
-            "target_selector": "self",
-            "version": 1,
-            "weight": 2.5
-          }
-        ],
-        "schema": "asteria.rpg.enemy_ai_definition",
-        "version": 1
-      },
-      {
-        "actions_per_ready": 1,
         "ai_id": "skeleton_hunter_ai",
         "initial_phase_id": null,
         "phases": [],
@@ -51945,6 +51515,20 @@
             "target_selector": "first_opponent",
             "version": 1,
             "weight": 2.5
+          },
+          {
+            "action_kind": "ability",
+            "conditions": [],
+            "payload": {
+              "ability_id": "skel_guard"
+            },
+            "priority": 0,
+            "rule_id": "skeleton_hunter.skel_guard",
+            "schema": "asteria.rpg.ai_decision_rule",
+            "tags": [],
+            "target_selector": "self",
+            "version": 1,
+            "weight": 2.0
           }
         ],
         "schema": "asteria.rpg.enemy_ai_definition",
@@ -52005,13 +51589,6 @@
         "version": 1
       },
       {
-        "ai_id": "goblin_berserker_ai",
-        "enemy_id": "goblin_berserker",
-        "schema": "asteria.rpg.enemy_behavior_binding",
-        "tags": [],
-        "version": 1
-      },
-      {
         "ai_id": "goblin_slinger_ai",
         "enemy_id": "goblin_slinger",
         "schema": "asteria.rpg.enemy_behavior_binding",
@@ -52028,13 +51605,6 @@
       {
         "ai_id": "skeleton_ancient_ai",
         "enemy_id": "skeleton_ancient",
-        "schema": "asteria.rpg.enemy_behavior_binding",
-        "tags": [],
-        "version": 1
-      },
-      {
-        "ai_id": "skeleton_grunt_ai",
-        "enemy_id": "skeleton_grunt",
         "schema": "asteria.rpg.enemy_behavior_binding",
         "tags": [],
         "version": 1
@@ -62897,6 +62467,42 @@
           "trigger": "action"
         },
         {
+          "binding_id": "story.mira.guild.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "dd2c3fb0-3755-5d1a-be05-2f8a49c2fd9a",
+          "local_scope_id": "story.mira.guild",
+          "program_id": "story.mira.guild",
+          "trigger": "action"
+        },
+        {
+          "binding_id": "story.vesper.guild.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "8e27c704-6fd4-521d-9e53-14f5ebcf00ec",
+          "local_scope_id": "story.vesper.guild",
+          "program_id": "story.vesper.guild",
+          "trigger": "action"
+        },
+        {
+          "binding_id": "story.cael.guild.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "09f3e597-9f58-5f98-8316-5ee73d23996e",
+          "local_scope_id": "story.cael.guild",
+          "program_id": "story.cael.guild",
+          "trigger": "action"
+        },
+        {
+          "binding_id": "story.guildmaster.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "81ec542b-9fae-5926-94d8-9f1cf5e6fd56",
+          "local_scope_id": "story.guildmaster",
+          "program_id": "story.guildmaster",
+          "trigger": "action"
+        },
+        {
           "binding_id": "story.warden.binding",
           "conditions": [],
           "enabled": true,
@@ -63101,7 +62707,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "ce39a915-5f47-5b1f-b9fe-7aca2c7f3291",
+                "sprite_sheet_asset_id": "dc2fa5f9-b3aa-51d7-9e8c-2976243c98dd",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -63109,7 +62715,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "42c5b0c5-cb0d-52ee-b39f-29ab0ae1ec9d",
+                "clip_set_id": "adc12d9a-4d9f-5f78-9de8-54c1d5eda4f7",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -64329,6 +63935,322 @@
                 "rotation": 0.0,
                 "scale_x": 1.0,
                 "scale_y": 1.0,
+                "x": 88.0,
+                "y": 136.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "7630c2bf-0c46-5805-be67-6af3c949e256",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "53af82d5-616d-5990-87cc-c9518dbcacd1",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "height": 8.0,
+                "is_trigger": false,
+                "ladder": false,
+                "layer": 0,
+                "mask": 4294967295,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "one_way": false,
+                "radius": 8.0,
+                "shape": "box",
+                "width": 10.0
+              },
+              "type": "asteria.Collider2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "npc_id": "mira_guild",
+                "starts_hidden": false
+              },
+              "type": "asteria.NpcIdentity2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "event_binding_id": "story.mira.guild.binding",
+                "event_program_id": "story.mira.guild",
+                "local_scope_id": "story.mira.guild",
+                "range": 24.0,
+                "require_facing": true,
+                "trigger": "action"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "dd2c3fb0-3755-5d1a-be05-2f8a49c2fd9a",
+          "name": "Mira"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 120.0,
+                "y": 136.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "e1def9f3-61e3-532e-b289-0aa8b79e6a29",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "1c5f2bc7-a279-55ec-89ab-1e5b73ed83ff",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "height": 8.0,
+                "is_trigger": false,
+                "ladder": false,
+                "layer": 0,
+                "mask": 4294967295,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "one_way": false,
+                "radius": 8.0,
+                "shape": "box",
+                "width": 10.0
+              },
+              "type": "asteria.Collider2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "npc_id": "vesper_guild",
+                "starts_hidden": true
+              },
+              "type": "asteria.NpcIdentity2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "event_binding_id": "story.vesper.guild.binding",
+                "event_program_id": "story.vesper.guild",
+                "local_scope_id": "story.vesper.guild",
+                "range": 24.0,
+                "require_facing": true,
+                "trigger": "action"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "8e27c704-6fd4-521d-9e53-14f5ebcf00ec",
+          "name": "Vesper"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 152.0,
+                "y": 136.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "3fcb7ad1-f528-5126-b054-389e1aa170ed",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "b56c1a4b-b424-5763-b978-5b344ac2cdd9",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "height": 8.0,
+                "is_trigger": false,
+                "ladder": false,
+                "layer": 0,
+                "mask": 4294967295,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "one_way": false,
+                "radius": 8.0,
+                "shape": "box",
+                "width": 10.0
+              },
+              "type": "asteria.Collider2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "npc_id": "cael_guild",
+                "starts_hidden": true
+              },
+              "type": "asteria.NpcIdentity2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "event_binding_id": "story.cael.guild.binding",
+                "event_program_id": "story.cael.guild",
+                "local_scope_id": "story.cael.guild",
+                "range": 24.0,
+                "require_facing": true,
+                "trigger": "action"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "09f3e597-9f58-5f98-8316-5ee73d23996e",
+          "name": "Cael"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 120.0,
+                "y": 104.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "ce39a915-5f47-5b1f-b9fe-7aca2c7f3291",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "42c5b0c5-cb0d-52ee-b39f-29ab0ae1ec9d",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "height": 8.0,
+                "is_trigger": false,
+                "ladder": false,
+                "layer": 0,
+                "mask": 4294967295,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "one_way": false,
+                "radius": 8.0,
+                "shape": "box",
+                "width": 10.0
+              },
+              "type": "asteria.Collider2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "event_binding_id": "story.guildmaster.binding",
+                "event_program_id": "story.guildmaster",
+                "local_scope_id": "story.guildmaster",
+                "range": 24.0,
+                "require_facing": true,
+                "trigger": "action"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "81ec542b-9fae-5926-94d8-9f1cf5e6fd56",
+          "name": "Guildmaster Orla"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
                 "x": 344.0,
                 "y": 88.0
               },
@@ -64847,89 +64769,6 @@
                 "rotation": 0.0,
                 "scale_x": 1.0,
                 "scale_y": 1.0,
-                "x": 296.0,
-                "y": 232.0
-              },
-              "type": "asteria.Transform",
-              "version": 1
-            },
-            {
-              "fields": {
-                "depth": 0.0,
-                "elevation": 0.0,
-                "flip_x": false,
-                "frame_index": 0,
-                "layer": 0,
-                "opacity": 1.0,
-                "sprite_sheet_asset_id": "fb264e56-91a5-5365-8b5f-fca43551334f",
-                "visible": true
-              },
-              "type": "asteria.SpriteRenderer2D",
-              "version": 1
-            },
-            {
-              "fields": {
-                "clip_set_id": "e949a981-a3f0-5e2f-b888-f17b0a6fd04d",
-                "default_clip": "idle_down",
-                "playing": true,
-                "speed": 1.0
-              },
-              "type": "asteria.Animator2D",
-              "version": 1
-            },
-            {
-              "fields": {
-                "encounter_id": "woods_ambush",
-                "remove_on_start": true,
-                "touch_radius": 14.0
-              },
-              "type": "asteria.VisibleEncounter",
-              "version": 1
-            },
-            {
-              "fields": {
-                "climb_speed": 60.0,
-                "coyote_time": 0.0,
-                "drop_through": false,
-                "enabled": true,
-                "facing": "down",
-                "gravity": 600.0,
-                "half_height": 6.0,
-                "half_width": 5.0,
-                "jump_buffer": 0.0,
-                "jump_cut": 1.0,
-                "jump_speed": 220.0,
-                "knockback_decay": 10.0,
-                "mask": 4294967295,
-                "max_fall_speed": 400.0,
-                "mode": "topdown",
-                "speed": 22.0
-              },
-              "type": "asteria.CharacterController2D",
-              "version": 3
-            },
-            {
-              "fields": {
-                "driver": "behavior_tree",
-                "enabled": true,
-                "tree_id": "foe_patrol"
-              },
-              "type": "asteria.AIController2D",
-              "version": 1
-            }
-          ],
-          "enabled": true,
-          "id": "aaf7eb5b-f04b-5298-a1fe-6ea19117b485",
-          "name": "Goblin Berserker 2"
-        },
-        {
-          "components": [
-            {
-              "fields": {
-                "parent_id": "",
-                "rotation": 0.0,
-                "scale_x": 1.0,
-                "scale_y": 1.0,
                 "x": 392.0,
                 "y": 168.0
               },
@@ -64962,89 +64801,6 @@
             },
             {
               "fields": {
-                "encounter_id": "woods_patrol",
-                "remove_on_start": true,
-                "touch_radius": 14.0
-              },
-              "type": "asteria.VisibleEncounter",
-              "version": 1
-            },
-            {
-              "fields": {
-                "climb_speed": 60.0,
-                "coyote_time": 0.0,
-                "drop_through": false,
-                "enabled": true,
-                "facing": "down",
-                "gravity": 600.0,
-                "half_height": 6.0,
-                "half_width": 5.0,
-                "jump_buffer": 0.0,
-                "jump_cut": 1.0,
-                "jump_speed": 220.0,
-                "knockback_decay": 10.0,
-                "mask": 4294967295,
-                "max_fall_speed": 400.0,
-                "mode": "topdown",
-                "speed": 22.0
-              },
-              "type": "asteria.CharacterController2D",
-              "version": 3
-            },
-            {
-              "fields": {
-                "driver": "behavior_tree",
-                "enabled": true,
-                "tree_id": "foe_patrol"
-              },
-              "type": "asteria.AIController2D",
-              "version": 1
-            }
-          ],
-          "enabled": true,
-          "id": "6f6ab2d5-fa8f-587c-b9d8-a978bfe9f385",
-          "name": "Goblin Slinger 3"
-        },
-        {
-          "components": [
-            {
-              "fields": {
-                "parent_id": "",
-                "rotation": 0.0,
-                "scale_x": 1.0,
-                "scale_y": 1.0,
-                "x": 520.0,
-                "y": 168.0
-              },
-              "type": "asteria.Transform",
-              "version": 1
-            },
-            {
-              "fields": {
-                "depth": 0.0,
-                "elevation": 0.0,
-                "flip_x": false,
-                "frame_index": 0,
-                "layer": 0,
-                "opacity": 1.0,
-                "sprite_sheet_asset_id": "fb264e56-91a5-5365-8b5f-fca43551334f",
-                "visible": true
-              },
-              "type": "asteria.SpriteRenderer2D",
-              "version": 1
-            },
-            {
-              "fields": {
-                "clip_set_id": "e949a981-a3f0-5e2f-b888-f17b0a6fd04d",
-                "default_clip": "idle_down",
-                "playing": true,
-                "speed": 1.0
-              },
-              "type": "asteria.Animator2D",
-              "version": 1
-            },
-            {
-              "fields": {
                 "encounter_id": "woods_ambush",
                 "remove_on_start": true,
                 "touch_radius": 14.0
@@ -65085,8 +64841,8 @@
             }
           ],
           "enabled": true,
-          "id": "7de3f786-a336-5aac-b65d-f65876df1f33",
-          "name": "Goblin Berserker 4"
+          "id": "4901d7cb-2f93-503b-89be-9f38bb4270c7",
+          "name": "Goblin Slinger 2"
         },
         {
           "components": [
@@ -65168,91 +64924,8 @@
             }
           ],
           "enabled": true,
-          "id": "d700dafa-b9dd-5dde-928a-1d6647982b79",
-          "name": "Goblin Slinger 5"
-        },
-        {
-          "components": [
-            {
-              "fields": {
-                "parent_id": "",
-                "rotation": 0.0,
-                "scale_x": 1.0,
-                "scale_y": 1.0,
-                "x": 712.0,
-                "y": 232.0
-              },
-              "type": "asteria.Transform",
-              "version": 1
-            },
-            {
-              "fields": {
-                "depth": 0.0,
-                "elevation": 0.0,
-                "flip_x": false,
-                "frame_index": 0,
-                "layer": 0,
-                "opacity": 1.0,
-                "sprite_sheet_asset_id": "fb264e56-91a5-5365-8b5f-fca43551334f",
-                "visible": true
-              },
-              "type": "asteria.SpriteRenderer2D",
-              "version": 1
-            },
-            {
-              "fields": {
-                "clip_set_id": "e949a981-a3f0-5e2f-b888-f17b0a6fd04d",
-                "default_clip": "idle_down",
-                "playing": true,
-                "speed": 1.0
-              },
-              "type": "asteria.Animator2D",
-              "version": 1
-            },
-            {
-              "fields": {
-                "encounter_id": "woods_ambush",
-                "remove_on_start": true,
-                "touch_radius": 14.0
-              },
-              "type": "asteria.VisibleEncounter",
-              "version": 1
-            },
-            {
-              "fields": {
-                "climb_speed": 60.0,
-                "coyote_time": 0.0,
-                "drop_through": false,
-                "enabled": true,
-                "facing": "down",
-                "gravity": 600.0,
-                "half_height": 6.0,
-                "half_width": 5.0,
-                "jump_buffer": 0.0,
-                "jump_cut": 1.0,
-                "jump_speed": 220.0,
-                "knockback_decay": 10.0,
-                "mask": 4294967295,
-                "max_fall_speed": 400.0,
-                "mode": "topdown",
-                "speed": 22.0
-              },
-              "type": "asteria.CharacterController2D",
-              "version": 3
-            },
-            {
-              "fields": {
-                "driver": "behavior_tree",
-                "enabled": true,
-                "tree_id": "foe_patrol"
-              },
-              "type": "asteria.AIController2D",
-              "version": 1
-            }
-          ],
-          "enabled": true,
-          "id": "8ac91a66-bec0-5b86-b8c3-ab167b93efaf",
-          "name": "Goblin Berserker 6"
+          "id": "6f6ab2d5-fa8f-587c-b9d8-a978bfe9f385",
+          "name": "Goblin Slinger 3"
         },
         {
           "components": [
@@ -65456,7 +65129,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "cd9eee80-96de-5643-b468-6d13dbea36a1",
+                "sprite_sheet_asset_id": "e1def9f3-61e3-532e-b289-0aa8b79e6a29",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -65464,7 +65137,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "fa3100e9-51ff-5b96-9c53-c8603ff92ec2",
+                "clip_set_id": "1c5f2bc7-a279-55ec-89ab-1e5b73ed83ff",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -65489,6 +65162,14 @@
               },
               "type": "asteria.Collider2D",
               "version": 3
+            },
+            {
+              "fields": {
+                "npc_id": "vesper_wild",
+                "starts_hidden": false
+              },
+              "type": "asteria.NpcIdentity2D",
+              "version": 1
             },
             {
               "fields": {
@@ -65672,89 +65353,6 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "dbeeda0f-9e4b-5dec-9f6a-6c363a349e6c",
-                "visible": true
-              },
-              "type": "asteria.SpriteRenderer2D",
-              "version": 1
-            },
-            {
-              "fields": {
-                "clip_set_id": "ad977488-a4a8-5f8e-a599-de2c03b302a7",
-                "default_clip": "idle_down",
-                "playing": true,
-                "speed": 1.0
-              },
-              "type": "asteria.Animator2D",
-              "version": 1
-            },
-            {
-              "fields": {
-                "encounter_id": "crypt_patrol",
-                "remove_on_start": true,
-                "touch_radius": 14.0
-              },
-              "type": "asteria.VisibleEncounter",
-              "version": 1
-            },
-            {
-              "fields": {
-                "climb_speed": 60.0,
-                "coyote_time": 0.0,
-                "drop_through": false,
-                "enabled": true,
-                "facing": "down",
-                "gravity": 600.0,
-                "half_height": 6.0,
-                "half_width": 5.0,
-                "jump_buffer": 0.0,
-                "jump_cut": 1.0,
-                "jump_speed": 220.0,
-                "knockback_decay": 10.0,
-                "mask": 4294967295,
-                "max_fall_speed": 400.0,
-                "mode": "topdown",
-                "speed": 22.0
-              },
-              "type": "asteria.CharacterController2D",
-              "version": 3
-            },
-            {
-              "fields": {
-                "driver": "behavior_tree",
-                "enabled": true,
-                "tree_id": "foe_patrol"
-              },
-              "type": "asteria.AIController2D",
-              "version": 1
-            }
-          ],
-          "enabled": true,
-          "id": "9e7700c9-1fd3-50ee-82ab-2035184a9348",
-          "name": "Skeleton Grunt 1"
-        },
-        {
-          "components": [
-            {
-              "fields": {
-                "parent_id": "",
-                "rotation": 0.0,
-                "scale_x": 1.0,
-                "scale_y": 1.0,
-                "x": 328.0,
-                "y": 216.0
-              },
-              "type": "asteria.Transform",
-              "version": 1
-            },
-            {
-              "fields": {
-                "depth": 0.0,
-                "elevation": 0.0,
-                "flip_x": false,
-                "frame_index": 0,
-                "layer": 0,
-                "opacity": 1.0,
                 "sprite_sheet_asset_id": "a077ae02-97bb-585a-9616-4adb06e42612",
                 "visible": true
               },
@@ -65773,89 +65371,6 @@
             },
             {
               "fields": {
-                "encounter_id": "crypt_guard",
-                "remove_on_start": true,
-                "touch_radius": 14.0
-              },
-              "type": "asteria.VisibleEncounter",
-              "version": 1
-            },
-            {
-              "fields": {
-                "climb_speed": 60.0,
-                "coyote_time": 0.0,
-                "drop_through": false,
-                "enabled": true,
-                "facing": "down",
-                "gravity": 600.0,
-                "half_height": 6.0,
-                "half_width": 5.0,
-                "jump_buffer": 0.0,
-                "jump_cut": 1.0,
-                "jump_speed": 220.0,
-                "knockback_decay": 10.0,
-                "mask": 4294967295,
-                "max_fall_speed": 400.0,
-                "mode": "topdown",
-                "speed": 22.0
-              },
-              "type": "asteria.CharacterController2D",
-              "version": 3
-            },
-            {
-              "fields": {
-                "driver": "behavior_tree",
-                "enabled": true,
-                "tree_id": "foe_patrol"
-              },
-              "type": "asteria.AIController2D",
-              "version": 1
-            }
-          ],
-          "enabled": true,
-          "id": "5c7e803f-8aa3-551d-907f-487e15d55b6f",
-          "name": "Skeleton Hunter 2"
-        },
-        {
-          "components": [
-            {
-              "fields": {
-                "parent_id": "",
-                "rotation": 0.0,
-                "scale_x": 1.0,
-                "scale_y": 1.0,
-                "x": 328.0,
-                "y": 280.0
-              },
-              "type": "asteria.Transform",
-              "version": 1
-            },
-            {
-              "fields": {
-                "depth": 0.0,
-                "elevation": 0.0,
-                "flip_x": false,
-                "frame_index": 0,
-                "layer": 0,
-                "opacity": 1.0,
-                "sprite_sheet_asset_id": "dbeeda0f-9e4b-5dec-9f6a-6c363a349e6c",
-                "visible": true
-              },
-              "type": "asteria.SpriteRenderer2D",
-              "version": 1
-            },
-            {
-              "fields": {
-                "clip_set_id": "ad977488-a4a8-5f8e-a599-de2c03b302a7",
-                "default_clip": "idle_down",
-                "playing": true,
-                "speed": 1.0
-              },
-              "type": "asteria.Animator2D",
-              "version": 1
-            },
-            {
-              "fields": {
                 "encounter_id": "crypt_patrol",
                 "remove_on_start": true,
                 "touch_radius": 14.0
@@ -65896,8 +65411,8 @@
             }
           ],
           "enabled": true,
-          "id": "c94f7295-1458-5e83-a6e7-293a5faf965e",
-          "name": "Skeleton Grunt 3"
+          "id": "47fb6747-e5ff-59f1-b687-6cb63a053856",
+          "name": "Skeleton Hunter 1"
         },
         {
           "components": [
@@ -65979,174 +65494,8 @@
             }
           ],
           "enabled": true,
-          "id": "f482d3e7-6e4f-5246-866d-6ec5fdc17387",
-          "name": "Skeleton Hunter 4"
-        },
-        {
-          "components": [
-            {
-              "fields": {
-                "parent_id": "",
-                "rotation": 0.0,
-                "scale_x": 1.0,
-                "scale_y": 1.0,
-                "x": 568.0,
-                "y": 200.0
-              },
-              "type": "asteria.Transform",
-              "version": 1
-            },
-            {
-              "fields": {
-                "depth": 0.0,
-                "elevation": 0.0,
-                "flip_x": false,
-                "frame_index": 0,
-                "layer": 0,
-                "opacity": 1.0,
-                "sprite_sheet_asset_id": "dbeeda0f-9e4b-5dec-9f6a-6c363a349e6c",
-                "visible": true
-              },
-              "type": "asteria.SpriteRenderer2D",
-              "version": 1
-            },
-            {
-              "fields": {
-                "clip_set_id": "ad977488-a4a8-5f8e-a599-de2c03b302a7",
-                "default_clip": "idle_down",
-                "playing": true,
-                "speed": 1.0
-              },
-              "type": "asteria.Animator2D",
-              "version": 1
-            },
-            {
-              "fields": {
-                "encounter_id": "crypt_patrol",
-                "remove_on_start": true,
-                "touch_radius": 14.0
-              },
-              "type": "asteria.VisibleEncounter",
-              "version": 1
-            },
-            {
-              "fields": {
-                "climb_speed": 60.0,
-                "coyote_time": 0.0,
-                "drop_through": false,
-                "enabled": true,
-                "facing": "down",
-                "gravity": 600.0,
-                "half_height": 6.0,
-                "half_width": 5.0,
-                "jump_buffer": 0.0,
-                "jump_cut": 1.0,
-                "jump_speed": 220.0,
-                "knockback_decay": 10.0,
-                "mask": 4294967295,
-                "max_fall_speed": 400.0,
-                "mode": "topdown",
-                "speed": 22.0
-              },
-              "type": "asteria.CharacterController2D",
-              "version": 3
-            },
-            {
-              "fields": {
-                "driver": "behavior_tree",
-                "enabled": true,
-                "tree_id": "foe_patrol"
-              },
-              "type": "asteria.AIController2D",
-              "version": 1
-            }
-          ],
-          "enabled": true,
-          "id": "46c6b1a6-5847-5b63-af26-f6a87eabf034",
-          "name": "Skeleton Grunt 5"
-        },
-        {
-          "components": [
-            {
-              "fields": {
-                "parent_id": "",
-                "rotation": 0.0,
-                "scale_x": 1.0,
-                "scale_y": 1.0,
-                "x": 568.0,
-                "y": 296.0
-              },
-              "type": "asteria.Transform",
-              "version": 1
-            },
-            {
-              "fields": {
-                "depth": 0.0,
-                "elevation": 0.0,
-                "flip_x": false,
-                "frame_index": 0,
-                "layer": 0,
-                "opacity": 1.0,
-                "sprite_sheet_asset_id": "a077ae02-97bb-585a-9616-4adb06e42612",
-                "visible": true
-              },
-              "type": "asteria.SpriteRenderer2D",
-              "version": 1
-            },
-            {
-              "fields": {
-                "clip_set_id": "6d332832-7bd1-5ef4-9218-2d9f022ed8cd",
-                "default_clip": "idle_down",
-                "playing": true,
-                "speed": 1.0
-              },
-              "type": "asteria.Animator2D",
-              "version": 1
-            },
-            {
-              "fields": {
-                "encounter_id": "crypt_guard",
-                "remove_on_start": true,
-                "touch_radius": 14.0
-              },
-              "type": "asteria.VisibleEncounter",
-              "version": 1
-            },
-            {
-              "fields": {
-                "climb_speed": 60.0,
-                "coyote_time": 0.0,
-                "drop_through": false,
-                "enabled": true,
-                "facing": "down",
-                "gravity": 600.0,
-                "half_height": 6.0,
-                "half_width": 5.0,
-                "jump_buffer": 0.0,
-                "jump_cut": 1.0,
-                "jump_speed": 220.0,
-                "knockback_decay": 10.0,
-                "mask": 4294967295,
-                "max_fall_speed": 400.0,
-                "mode": "topdown",
-                "speed": 22.0
-              },
-              "type": "asteria.CharacterController2D",
-              "version": 3
-            },
-            {
-              "fields": {
-                "driver": "behavior_tree",
-                "enabled": true,
-                "tree_id": "foe_patrol"
-              },
-              "type": "asteria.AIController2D",
-              "version": 1
-            }
-          ],
-          "enabled": true,
-          "id": "0b8d8851-dd31-5765-85fc-81ed5a06e952",
-          "name": "Skeleton Hunter 6"
+          "id": "5c7e803f-8aa3-551d-907f-487e15d55b6f",
+          "name": "Skeleton Hunter 2"
         },
         {
           "components": [
@@ -66222,7 +65571,7 @@
                 "frame_index": 0,
                 "layer": 0,
                 "opacity": 1.0,
-                "sprite_sheet_asset_id": "4635051c-1444-5919-babc-aace395dad0b",
+                "sprite_sheet_asset_id": "3fcb7ad1-f528-5126-b054-389e1aa170ed",
                 "visible": true
               },
               "type": "asteria.SpriteRenderer2D",
@@ -66230,7 +65579,7 @@
             },
             {
               "fields": {
-                "clip_set_id": "d3f27aec-8365-5b46-9883-ebaa756cdb3a",
+                "clip_set_id": "b56c1a4b-b424-5763-b978-5b344ac2cdd9",
                 "default_clip": "idle_down",
                 "playing": true,
                 "speed": 1.0
@@ -66255,6 +65604,14 @@
               },
               "type": "asteria.Collider2D",
               "version": 3
+            },
+            {
+              "fields": {
+                "npc_id": "cael_wild",
+                "starts_hidden": false
+              },
+              "type": "asteria.NpcIdentity2D",
+              "version": 1
             },
             {
               "fields": {

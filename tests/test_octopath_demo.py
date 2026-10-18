@@ -859,27 +859,26 @@ def test_no_information_covers_other_information_on_the_battle_screen(encounter,
         panels, members, blocks = _screen_rects(runtime)
         assert any(k.startswith("hud:") for k in panels) and "timeline" in panels
         names = list(panels)
-        for i, a in enumerate(names):  # the party list, the turn bar and the menu are apart
+        for i, a in enumerate(names):  # the party list and the turn bar are apart
             for b in names[i + 1 :]:
-                if "action_menu" in (a, b) and (a + b).count("button:"):
-                    continue  # a menu button sits inside its own menu panel
+                if {a, b} & {"action_menu"} or (a + b).count("button:"):
+                    continue  # the command menu is the top layer by the acting member
                 assert not _overlaps(panels[a], panels[b]), (encounter_id, step, a, b)
         for member_id, rect in members.items():
-            idle_ally = (
-                runtime._battle_presentation.screen.composer._stands_right(member_id)
-                and member_id != hero
-            )
             for name, panel in panels.items():
-                if idle_ally and name == "action_menu":  # the menu may cover other party members
+                if name == "action_menu":  # the menu may cover others; never the one who acts
+                    if member_id == hero:
+                        assert not _overlaps(rect, panel), (encounter_id, step, member_id, name)
                     continue
-                if name == "timeline" or name.startswith("hud:") or name == "action_menu":
+                if name == "timeline" or name.startswith("hud:"):
                     assert not _overlaps(rect, panel), (encounter_id, step, member_id, name)
         for member_id, block in blocks.items():
             for other_id, rect in members.items():
                 if other_id != member_id:  # a block under its own sprite is where it belongs
                     assert not _overlaps(block, rect), (encounter_id, step, member_id, other_id)
             for name, panel in panels.items():
-                assert not _overlaps(block, panel), (encounter_id, step, member_id, name)
+                if name != "action_menu" and not name.startswith("button:"):
+                    assert not _overlaps(block, panel), (encounter_id, step, member_id, name)
             for other_id, other in blocks.items():
                 if other_id != member_id:
                     assert not _overlaps(block, other), (encounter_id, step, member_id, other_id)

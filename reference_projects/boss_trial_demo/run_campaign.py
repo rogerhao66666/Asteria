@@ -98,6 +98,7 @@ class Campaign:
         player.x, player.y = point.x, point.y + 14
         self.game.set_player_facing("up")
         picks = list(picks)
+        self.game.field_step({"interact": 0.0})  # a key held before (a real press) goes up first
         self.game.field_step({"interact": 1.0})
         self.resolve(picks)
         self.rt._ui_mode = "field"  # a shop or a crafting window was opened for the script's calls
@@ -277,10 +278,13 @@ class Campaign:
     def town(self):
         game = self.game
         self.note("Hearthfold: the Warden, the clerk, the shrine, the job teachers")
-        assert self.scene_name() == "Hearthfold" and set(game.save.rpg_state.party_actor_ids) == {
-            HERO,
-            "hero_02",
-        }
+        assert self.scene_name() == "Hearthfold"
+        assert list(game.save.rpg_state.party_actor_ids) == [HERO]  # the hero sets out alone
+        self.recruit("Mira", "hero_02")  # the guild: Mira is there from the start
+        self.talk("Guildmaster Orla", picks=(0,))  # she waits at the guild again...
+        assert "hero_02" not in game.save.rpg_state.party_actor_ids
+        self.facts["partings"] += 1
+        self.recruit("Mira", "hero_02")  # ...and comes back when asked
         self.talk("Warden Thessaly")
         assert game.world.reputation.get("wardens", 0) == 0
         assert game.quest_log.status("q_patrol") == "active"
@@ -345,6 +349,12 @@ class Campaign:
         self.rt._frame([], 0.1)
         _ = Transform
 
+    def recruit(self, name, actor_id):
+        """Talk to a companion waiting at the guild: they join the party."""
+        self.talk(name)
+        assert actor_id in self.game.save.rpg_state.party_active_actor_ids, name
+        self.facts["recruits"] += 1
+
     def sunbrand(self):
         return self.game.save.rpg_state.loadouts[HERO].equipped("weapon")[0]
 
@@ -361,6 +371,9 @@ class Campaign:
         self.go("Road East")
         assert self.scene_name() == "Whispering Woods"
         assert game.battle_weather() is not None and game.battle_weather()[0] == "rain"
+        self.talk("Camp Scout")  # before the goblins start roaming toward the road
+        self.talk("Old Cache")
+        self.facts["interactions"] += 1
         slinger_3 = self.find("Goblin Slinger 3")
         from asteria.core import Transform
 
@@ -372,9 +385,6 @@ class Campaign:
         player.x, player.y = home
         now = (slinger_3.get(Transform).x, slinger_3.get(Transform).y)
         self.facts["foes_roamed"] = int(now != start)
-        self.talk("Camp Scout")
-        self.talk("Old Cache")
-        self.facts["interactions"] += 1
         # the first group: run away from it
         self.touch("Goblin Slinger 1")
         assert game.escape_unavailable() == ""
@@ -384,7 +394,7 @@ class Campaign:
         self.rt._turn_actor = None
         self.facts["escapes"] += 1
         # an ambush of slingers: tame one, then win
-        self.touch("Goblin Berserker 2")
+        self.touch("Goblin Slinger 2")
         slinger = next(e for e in game.active_enemy_ids() if e.startswith("goblin_slinger"))
         assert game.attempt_capture(HERO, slinger, rng=self.lucky())
         self.facts["tamed"] += 1
@@ -410,10 +420,9 @@ class Campaign:
         self.touch("Goblin Beast")
         assert "no_escape" in game.escape_unavailable()
         self.fight()
-        self.talk("Vesper")
-        assert "hero_03" in game.save.rpg_state.party_active_actor_ids
-        self.facts["recruits"] += 1
-        self.report("q_beast", "q_crypt")
+        self.talk("Vesper")  # she will wait at the guild in town
+        assert "hero_03" not in game.save.rpg_state.party_active_actor_ids
+        self.report("q_beast", "q_crypt", hire=("Vesper", "hero_03"))
 
     def crypt(self):
         game = self.game
@@ -421,7 +430,7 @@ class Campaign:
         self.go("Crypt Door")
         assert self.scene_name() == "Catacombs"
         self.talk("Sealed Vault")
-        for name in ("Skeleton Grunt 1", "Skeleton Hunter 2"):
+        for name in ("Skeleton Hunter 1", "Skeleton Hunter 2"):
             self.touch(name)
             self.fight()
         game.set_classes(HERO, ["knight", "rogue"])  # a thief's pick for the sealed vault
@@ -436,13 +445,11 @@ class Campaign:
             self.facts["steals"] += 1
             self.rt._after_hero_action()
         self.fight()
-        self.talk("Cael")
-        assert "hero_04" in game.save.rpg_state.party_active_actor_ids
-        self.facts["recruits"] += 1
+        self.talk("Cael")  # he will wait at the guild in town
         self.talk("Sealed Vault")
         self.facts["interactions"] += 1
         self.go("Stairs Up")
-        self.report("q_crypt", "slay_vaelor", from_woods=True)
+        self.report("q_crypt", "slay_vaelor", from_woods=True, hire=("Cael", "hero_04"))
         self.go("Crypt Door")
 
     def throne(self):
@@ -464,12 +471,13 @@ class Campaign:
         self.talk("Warden Thessaly")
         assert self.game.quest_log.status("slay_vaelor") == "completed"
 
-    def report(self, done, started, *, from_woods=False):
-        """Back to the Warden in town: the finished contract is paid, the next one starts."""
-        if not from_woods:
-            self.go("Road West")
-        else:
-            self.go("Road West")
+    def report(self, done, started, *, from_woods=False, hire=None):
+        """Back to the Warden in town: the finished contract is paid, the next one starts;
+        ``hire`` = (name, actor id) of a companion waiting at the guild."""
+        _ = from_woods
+        self.go("Road West")
+        if hire is not None:
+            self.recruit(*hire)
         self.talk("Warden Thessaly")
         game = self.game
         assert game.quest_log.status(done) == "completed", (done, game.quest_log.status(done))
@@ -530,7 +538,7 @@ class Campaign:
 REQUIRED = (
     "levels", "tree_ranks", "job_changes", "sockets", "refine_level", "crafted", "bought",
     "disassembled", "rests", "map_changes", "fights", "victories", "skills_cast", "escapes",
-    "tamed", "pet_evolved", "recruits", "save_load", "game_complete",
+    "tamed", "pet_evolved", "recruits", "partings", "save_load", "game_complete",
 )  # fmt: skip
 
 

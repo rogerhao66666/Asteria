@@ -1,8 +1,8 @@
 """The cast of the Boss Trial campaign: two more party members and the foes of each area.
 
-Woods: goblins (Slinger, Berserker) and the Goblin Beast. Catacombs: skeletons (Grunt, Hunter) and
-the Skeleton Ancient. Throne: the Skeleton King (Vaelor) and the acolytes he calls. All data on the
-same records the earlier waves use.
+Few foes, three bosses: Goblin Slingers and the Goblin Beast in the woods, Skeleton Hunters and the
+Skeleton Ancient in the catacombs, the Skeleton King (Vaelor) and the acolytes he calls on the
+throne. All data on the same records the earlier waves use.
 """
 
 from __future__ import annotations
@@ -119,21 +119,9 @@ FOES = {
         24,
         56,
         ("weak.sword",),
-        ("gob_sling", "gob_stab"),
+        ("gob_sling", "gob_stab", "gob_rage"),
         120,
         20,
-    ),
-    "goblin_berserker": (
-        "Goblin Berserker",
-        2600,
-        64,
-        10,
-        30,
-        52,
-        ("weak.ice", "resist.axe"),
-        ("gob_chop", "gob_rage"),
-        180,
-        25,
     ),
     "goblin_beast": (
         "Goblin Beast",
@@ -147,18 +135,6 @@ FOES = {
         1500,
         150,
     ),
-    "skeleton_grunt": (
-        "Skeleton Grunt",
-        2200,
-        58,
-        10,
-        40,
-        50,
-        ("weak.axe", "weak.light", "resist.dagger", "absorb.dark"),
-        ("skel_slash", "skel_guard"),
-        160,
-        20,
-    ),
     "skeleton_hunter": (
         "Skeleton Hunter",
         1800,
@@ -167,7 +143,7 @@ FOES = {
         30,
         62,
         ("weak.light", "resist.dagger"),
-        ("skel_shot", "skel_slash"),
+        ("skel_shot", "skel_slash", "skel_guard"),
         200,
         25,
     ),
@@ -206,15 +182,6 @@ def foes(c):
                 effect=op(damage("power", 6)),
                 hits=_hits(1.0, 1.0, tags=("weapon.dagger",)),
                 apply_states=[_state("bleed")],
-            ),
-            "enemy",
-        ),
-        "gob_chop": (
-            ability(
-                "gob_chop",
-                tags=("weapon.axe",),
-                effect=op(damage("power", 11)),
-                hits=_hits(1.0, tags=("weapon.axe",)),
             ),
             "enemy",
         ),
@@ -304,7 +271,7 @@ def foes(c):
                 commands=[
                     {
                         "command": "SUMMON",
-                        "args": {"enemy_id": "skeleton_grunt", "count": 2, "owner_id": "@actor"},
+                        "args": {"enemy_id": "skeleton_hunter", "count": 2, "owner_id": "@actor"},
                     }
                 ],
             ),
@@ -314,7 +281,6 @@ def foes(c):
     names = {
         "gob_sling": "Sling Stone",
         "gob_stab": "Stab",
-        "gob_chop": "Chop",
         "gob_rage": "Rage",
         "beast_maul": "Maul",
         "beast_howl": "Howl",
@@ -334,7 +300,6 @@ def foes(c):
         {
             "gob_sling": ("cut",),
             "gob_stab": ("cut", "cut"),
-            "gob_chop": ("slash",),
             "gob_rage": ("aura",),
             "beast_maul": ("clawd", "clawd", "claw"),
             "beast_howl": ("circle", "aura"),
@@ -465,9 +430,7 @@ def foes(c):
         db.add_drop_table(table)
     for enemy_id, table in (
         ("goblin_slinger", "goblin_loot"),
-        ("goblin_berserker", "goblin_loot"),
         ("goblin_beast", "beast_spoils"),
-        ("skeleton_grunt", "bone_loot"),
         ("skeleton_hunter", "bone_loot"),
         ("skeleton_ancient", "ancient_spoils"),
     ):
@@ -476,17 +439,17 @@ def foes(c):
             enemy, reward=dataclasses.replace(enemy.reward, drop_table_id=table)
         )
     for encounter_id, members, tags in (
-        ("woods_patrol", (("goblin_slinger", 2), ("goblin_berserker", 1)), ("woods",)),
+        ("woods_patrol", (("goblin_slinger", 2),), ("woods",)),
         ("woods_ambush", (("goblin_slinger", 3),), ("woods", "scheduler:classic_rounds")),
         (
             "woods_boss",
             (("goblin_beast", 1), ("goblin_slinger", 2)),
             ("boss", "woods", "no_escape"),
         ),
-        ("crypt_patrol", (("skeleton_grunt", 2), ("skeleton_hunter", 1)), ("crypt",)),
+        ("crypt_patrol", (("skeleton_hunter", 2),), ("crypt",)),
         (
             "crypt_guard",
-            (("skeleton_hunter", 2), ("skeleton_grunt", 1)),
+            (("skeleton_hunter", 3),),
             ("crypt", "scheduler:classic_rounds"),
         ),
         (

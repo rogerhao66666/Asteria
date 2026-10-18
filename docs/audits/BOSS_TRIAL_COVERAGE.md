@@ -14,6 +14,24 @@ How it is verified:
 * The earlier batches keep their own tests (`test_boss_trial_b11.py`, `_b12.py`, `_editable.py`,
   `_workshop.py`) and real-window scripts (`boss_trial_b11/b12/b13_live_check.py`).
 
+## Cast (2026-10-18)
+
+The hero (Aldric, Lucifer Warrior) sets out alone. Three companions are hired at the adventurers'
+guild in Hearthfold, each with art no one else wears: Mira (Sorceress) waits there from the start,
+Vesper (Necromancer) and Cael (Cultist) walk there once met after the woods and catacomb bosses.
+Guildmaster Orla sends a companion back to wait (LEAVE_PARTY) and they can be hired again.
+Townsfolk wear the same figures in plain sepia colours, so none looks like a party member. The
+summon (Spirit Rider) is the Lucifer Goblin Rider. Foes: three bosses (Goblin Beast, Skeleton
+Ancient, Vaelor the Skeleton King) plus three kinds of minion (Goblin Slinger, which can be tamed;
+Skeleton Hunter; Vaelor's Skeleton Acolyte), three foes in the woods and two in the catacombs.
+
+## Battle screen
+
+Party HP down the right edge; the command menu always at the acting member's lower right, drawn
+over anything else; foes show a name over the head (never covering another combatant or name) and
+no health bar. The bestiary (pause menu) unlocks a foe's weaknesses and health after the first kill
+and lists only the drops that really fell.
+
 ## Whole-game flow (not one fight)
 
 | What | Where it happens in the campaign |
@@ -25,7 +43,7 @@ How it is verified:
 | Equipment (off-hand weapon, rolled drops in the bag) | Armory menu; boss drop tables roll rarity and affixes |
 | Alchemy and concoction | Alchemist station; concoct skill in battle |
 | Capture, pet unit, pet evolution | Goblin Slinger tamed in the woods; evolves to War Slinger; fights beside the party |
-| Quests, shops, story events | Warden chain (4 quests), bounty clerk, shop, inn, recruits Vesper and Cael |
+| Quests, shops, story events | Warden chain (4 quests), bounty clerk, shop, inn, the guild (hire Mira, Vesper, Cael; send one back and hire again) |
 | Save and load in the middle | `save_and_reload` in the woods; party, level, quests, pets must be unchanged |
 
 ## The empty database categories

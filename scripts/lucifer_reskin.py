@@ -177,9 +177,10 @@ class Reskin:
                 dataclasses.replace(
                     layout,
                     party_hud="side_list",  # Octopath: a panel per hero down the right edge
-                    action_menu_placement="actor",
+                    action_menu_placement="actor_bottom_right",  # right by who acts
                     menu_over_stage=True,  # the command menu stands see-through beside the actor
-                    overhead_zones=("left",),  # foes carry their name and bar over the head
+                    overhead_zones=("left",),  # foes carry their name over the head
+                    overhead_bars=False,  # their health stays hidden (the bestiary tells it)
                     hidden_zones=(),
                     row_buttons=True,
                     stage_top=0.12,

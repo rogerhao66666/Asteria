@@ -75,15 +75,13 @@ def hero_and_boss_art(context):
     for name, key, tags, scale, states in (
         (context.hero_id, "warrior", ("hero",), 0.62, hero_states),
         ("hero_02", "sorceress", ("hero",), 0.62, hero_states),
-        ("spirit_knight", "skeleton_grunt", ("hero", "summon"), 0.62, hero_states),
+        ("spirit_knight", "goblin_rider", ("hero", "summon"), 0.62, hero_states),
         (context.boss_id, "skeleton_king", ("enemy",), 1.15, enemy_states),
         ("hero_03", "necromancer", ("hero",), 0.62, hero_states),
         ("hero_04", "cultist", ("hero",), 0.62, hero_states),
         ("mender_wisp", "skeleton_grunt", ("enemy",), 0.9, enemy_states),
         ("goblin_slinger", "goblin_slinger", ("enemy",), 0.9, enemy_states),
-        ("goblin_berserker", "goblin_berserker", ("enemy",), 0.9, enemy_states),
         ("goblin_beast", "goblin_beast", ("enemy",), 1.1, enemy_states),
-        ("skeleton_grunt", "skeleton_grunt", ("enemy",), 0.9, enemy_states),
         ("skeleton_hunter", "skeleton_hunter", ("enemy",), 0.9, enemy_states),
         ("skeleton_ancient", "skeleton_ancient", ("enemy",), 1.1, enemy_states),
     ):
@@ -236,9 +234,7 @@ def prune_unused_art(context):
         "mender_wisp",
         "pet",
         "goblin_slinger",
-        "goblin_berserker",
         "goblin_beast",
-        "skeleton_grunt",
         "skeleton_hunter",
         "skeleton_ancient",
     }

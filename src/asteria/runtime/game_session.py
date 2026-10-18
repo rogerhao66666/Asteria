@@ -4316,9 +4316,12 @@ class GameSessionRuntime:
                 for item_id, amount in extra.items():
                     if item_id in db.equipment:  # gear is rolled (rarity, affixes), not counted
                         self._roll_gear_drop(item_id, amount, member_id, rng)
+                        self.world.note_enemy(enemy_id, f"drop:{item_id}", amount)
                         continue
                     items[item_id] = items.get(item_id, 0) + amount
                 reward = type(reward)(reward.currencies, reward.experience, items)
+            for item_id, amount in reward.items.items():  # the bestiary lists what really fell
+                self.world.note_enemy(enemy_id, f"drop:{item_id}", amount)
             reward = self._scaled_reward(reward, member_id)
             applied.append(reward_runtime.apply(reward))
         self._store_mastery()

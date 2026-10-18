@@ -21,7 +21,7 @@ def test_the_party_uses_left_strips_and_the_foes_right_ones():
     meta = lambda name: dict(project.assets.resolve(f"battle.combatant.{name}").metadata)  # noqa: E731
     for hero in ("hero_01", "hero_02", "hero_03", "hero_04"):
         assert meta(hero).get("facing") == "left", hero
-    for foe in ("crimson_warlord", "skeleton_grunt", "goblin_beast"):
+    for foe in ("crimson_warlord", "skeleton_hunter", "goblin_beast"):
         assert "facing" not in meta(foe), foe
 
 
@@ -154,9 +154,9 @@ def test_every_turn_based_demo_uses_the_octopath_battle_ui(folder):
     data = json.loads(path.read_text())["battle_presentation_library"]["categories"]
     layout = data["ui_layout"]["adaptive"]
     assert layout["party_hud"] == "side_list"  # a panel per hero down the right edge
-    assert layout["action_menu_placement"] == "actor" and layout["menu_over_stage"]
+    assert layout["action_menu_placement"] == "actor_bottom_right"  # touching who acts
+    assert layout["overhead_bars"] is False  # foe health stays hidden (the bestiary tells it)
     assert layout["overhead_zones"] == ["left"] and not layout["hidden_zones"]
-    assert not layout["overhead_below"]
     assert all(
         v["hud_visible"]
         for k, v in data["combatant_visuals"].items()

@@ -708,7 +708,7 @@ def companion(c):
     db.actors[SPIRIT_ID] = dataclasses.replace(
         hero,
         actor_id=SPIRIT_ID,
-        display_name="Spirit Knight",
+        display_name="Spirit Rider",
         class_assignments=(
             ClassAssignment("spirit", assignment_id=f"{SPIRIT_ID}.main", role="main", priority=10),
         ),
@@ -729,7 +729,7 @@ def companion(c):
     db.party_setups["main_party"] = dataclasses.replace(
         party,
         roster_actor_ids=ids,
-        active_actor_ids=ids,
+        active_actor_ids=ids,  # the formation; the saved party (game start) is the hero alone
         placements=(
             *party.placements,
             dataclasses.replace(party.placements[0], actor_id=COMPANION_ID, slot_id="slot_2"),

@@ -479,67 +479,158 @@ def woods(builders, looks, places):
             world("INTERACT", interaction_id="search_cache"),
         ],
     )
-    vesper = scene.npc("Vesper", places["woods"]["camp"], looks["necromancer"])
+    wild_companion(
+        scene,
+        "Vesper",
+        "vesper",
+        places["woods"]["camp"],
+        looks["hero_necromancer"],
+        met=(
+            "encounter.woods_boss.defeated",
+            "You broke the beast. The dead below will want you next. Find me at the guild.",
+        ),
+        waiting="The beast keeps the camp. Break it and we talk.",
+    )
+
+
+def _identity(entity, npc_id, *, hidden=False):
+    from asteria.runtime.npc_state import NpcIdentity2DComponent
+
+    component = NpcIdentity2DComponent()
+    component.npc_id, component.starts_hidden = npc_id, hidden
+    entity.add_component(component)
+    return entity
+
+
+def wild_companion(scene, name, key, xy, look, *, met, waiting):
+    """A companion met in the wild: once ``met`` = (switch, line) holds, they leave for the
+    adventurers' guild in Hearthfold (their guild double appears there)."""
+    entity = _identity(scene.npc(name, xy, look), f"{key}_wild")
+    switch, line = met
     scene.program(
-        vesper,
-        "story.vesper",
+        entity,
+        f"story.{key}",
         chain(
             [
-                ("recruited.vesper", [say("Vesper", "Lead on. The dead talk, and I listen.")]),
                 (
-                    "encounter.woods_boss.defeated",
+                    switch,
                     [
-                        say(
-                            "Vesper",
-                            "You broke the beast. The dead below will want you next. Let me come.",
-                        ),
-                        world("JOIN_PARTY", actor_id="hero_03"),
-                        world("CHANGE_RELATIONSHIP", subject_id="vesper", amount=10),
-                        world("SET_NPC", npc="Vesper", key="mood", value="loyal"),
-                        world(
-                            "MOVE_NPC",
-                            npc="Vesper",
-                            scene_id=places["scenes"]["town"],
-                            x=200,
-                            y=60,
-                        ),
-                        set_switch("recruited.vesper"),
-                        world("SHOW_POPUP", text="Vesper joins the party!", kind="item"),
+                        say(name, line),
+                        world("SET_NPC", npc=f"{key}_wild", key="visible", value=False),
+                        world("SET_NPC", npc=f"{key}_guild", key="visible", value=True),
+                        world("SHOW_POPUP", text=f"{name} heads for the guild.", kind="item"),
                     ],
-                ),
+                )
             ],
-            [say("Vesper", "The beast keeps the camp. Break it and we talk.")],
+            [say(name, waiting)],
+        ),
+    )
+    return entity
+
+
+def guild_companion(town, name, key, actor_id, xy, look, *, joined, hidden, extra=()):
+    """A companion waiting at the guild: talk to them and they join the party."""
+    entity = _identity(town.npc(name, xy, look), f"{key}_guild", hidden=hidden)
+    town.program(
+        entity,
+        f"story.{key}.guild",
+        chain(
+            [(f"recruited.{key}", [say(name, joined)])],
+            [
+                say(name, "Ready when you are."),
+                world("JOIN_PARTY", actor_id=actor_id),
+                world("CHANGE_RELATIONSHIP", subject_id=key, amount=10),
+                *extra,
+                set_switch(f"recruited.{key}"),
+                world("SHOW_POPUP", text=f"{name} joins the party!", kind="item"),
+            ],
+        ),
+    )
+    return entity
+
+
+def guild(builders, looks, places):
+    """The adventurers' guild in Hearthfold, where companions are hired: Mira waits here from
+    the start, Vesper and Cael once met in the wild; the Guildmaster sends one back to wait
+    (LEAVE_PARTY) and they can be hired again."""
+    town = builders["town"]
+    spots = places["town"]["guild"]
+    guild_companion(
+        town,
+        "Mira",
+        "mira",
+        "hero_02",
+        spots[0],
+        looks["hero_sorceress"],
+        joined="Stay close and I will keep you standing.",
+        hidden=False,
+    )
+    guild_companion(
+        town,
+        "Vesper",
+        "vesper",
+        "hero_03",
+        spots[1],
+        looks["hero_necromancer"],
+        joined="Lead on. The dead talk, and I listen.",
+        hidden=True,
+        extra=[world("SET_NPC", npc="vesper_guild", key="mood", value="loyal")],
+    )
+    guild_companion(
+        town,
+        "Cael",
+        "cael",
+        "hero_04",
+        spots[2],
+        looks["hero_cultist"],
+        joined="Where you go, I follow. Mind the king's guard.",
+        hidden=True,
+        extra=[
+            world("LEARN_RECIPE", recipe_id="storm_flask"),
+            world("TIMER_STOP", timer_id="crypt_run"),
+        ],
+    )
+    master = town.npc("Guildmaster Orla", places["town"]["guild_board"], looks["warrior"])
+
+    def part(name, actor_id, key):
+        return (
+            f"{name} waits here",
+            [
+                world("LEAVE_PARTY", actor_id=actor_id),
+                set_switch(f"recruited.{key}", False),
+                say("Guildmaster Orla", f"{name} will wait at the guild until you call."),
+            ],
+        )
+
+    town.program(
+        master,
+        "story.guildmaster",
+        maps.menu(
+            "Guildmaster Orla",
+            "Companions wait here until you hire them. Anything else?",
+            [
+                part("Mira", "hero_02", "mira"),
+                part("Vesper", "hero_03", "vesper"),
+                part("Cael", "hero_04", "cael"),
+                ("Nothing", [say("Guildmaster Orla", "Good hunting.")]),
+            ],
         ),
     )
 
 
 def crypt(builders, looks, places):
     scene = builders["crypt"]
-    cael = scene.npc("Cael", places["crypt"]["camp"], looks["cultist"])
-    scene.program(
-        cael,
-        "story.cael",
-        chain(
-            [
-                (
-                    "recruited.cael",
-                    [say("Cael", "Where you go, I follow. Mind the king's guard.")],
-                ),
-                (
-                    "encounter.crypt_boss.defeated",
-                    [
-                        say("Cael", "The Ancient falls. I served it once. Take me with you."),
-                        world("JOIN_PARTY", actor_id="hero_04"),
-                        world("CHANGE_RELATIONSHIP", subject_id="cael", amount=10),
-                        world("LEARN_RECIPE", recipe_id="storm_flask"),
-                        world("TIMER_STOP", timer_id="crypt_run"),
-                        set_switch("recruited.cael"),
-                        world("SHOW_POPUP", text="Cael joins the party!", kind="item"),
-                    ],
-                ),
-            ],
-            [say("Cael", "The Ancient holds the hall below. I cannot pass it alone.")],
+    wild_companion(
+        scene,
+        "Cael",
+        "cael",
+        places["crypt"]["camp"],
+        looks["hero_cultist"],
+        met=(
+            "encounter.crypt_boss.defeated",
+            "The Ancient falls. I served it once. I will wait for you at the guild.",
         ),
+        waiting="The Ancient holds the hall below. I cannot pass it alone.",
     )
     vault = scene.npc("Sealed Vault", maps.world_xy(12, 17), looks["necromancer"], solid=False)
     scene.program(
@@ -933,6 +1024,7 @@ def town_people(builders, looks, places):
 def programs(c, builders, looks, places):
     """Hook for ``trial_maps.build_world``: the people and doors of the story."""
     town_people(builders, looks, places)
+    guild(builders, looks, places)
     warden(builders, looks, places)
     woods(builders, looks, places)
     crypt(builders, looks, places)

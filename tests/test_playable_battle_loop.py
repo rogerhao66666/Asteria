@@ -318,9 +318,7 @@ def _overlaps(a, b):
     )
 
 
-def test_canonical_hud_panels_do_not_overlap_and_menu_sits_between_columns(
-    resource_root, monkeypatch
-):
+def test_canonical_hud_panels_do_not_overlap(resource_root, monkeypatch):
     runtime, layout, frame = _canonical_frame(resource_root, monkeypatch)
     try:
         # Octopath staging: one HUD panel per hero down the right edge, enemies show overhead bars.
@@ -332,9 +330,7 @@ def test_canonical_hud_panels_do_not_overlap_and_menu_sits_between_columns(
         assert len({p.x for p in hud}) == 1  # one column
         overhead = {t.member_id for t in frame.texts if t.role == "overhead_name"}
         assert overhead == set(runtime.game.battle.parties["enemies"].ids())
-        menu = next((p for p in frame.panels if p.panel_id == "action_menu"), None)
-        if menu is not None:
-            assert not any(_overlaps(menu, p) for p in hud)
+        # the command menu stands by whoever acts and may cover a HUD panel (it is drawn last)
     finally:
         runtime.close()
 

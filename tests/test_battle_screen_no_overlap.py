@@ -84,6 +84,10 @@ def _problems(runtime, rec):
                 sprites[member.member_id] = (box[0] - 18, box[1], 36, box[2] - box[1])
     blocks = {b.member_id: b.rect() for b in runtime.battle_extras_blocks if b.rect()}
     found = set()
+    # the command menu is the top layer and stands by whoever acts: it may cover anything else
+    # (the user's rule); only the rest must stay apart
+    texts = [t for t in texts if not str(t[6]).startswith(("action", "workflow"))]
+    panels = [p for p in panels if p[4] != "action_menu" and not str(p[4]).startswith("button:")]
     for a, b in itertools.combinations(texts, 2):
         if _hit(a, b):
             found.add(("text/text", a[4], b[4]))

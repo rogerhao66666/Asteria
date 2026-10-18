@@ -48,6 +48,8 @@ def world(game, name, **args):
 
 def prepare(game, facts, sub="duelist"):
     """Everything a player does before the fight."""
+    if "hero_02" not in game.save.rpg_state.party_actor_ids:  # hire Mira at the guild
+        world(game, "JOIN_PARTY", actor_id="hero_02")
     allocation = game.save.rpg_state.progression_allocations[HERO]
     # the campaign earns these a little at a time; the scripted fights start with plenty
     allocation.grant("ap", 200)

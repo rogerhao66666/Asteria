@@ -267,20 +267,34 @@ def achievement_rows(game):
 
 
 def bestiary_rows(game):
-    """``(name, seen, defeated, captured, tags)`` per enemy; unseen enemies show as ???."""
+    """``(name, seen, defeated, captured, tags, resources, drops)`` per enemy. Unseen enemies
+    show as ???; weaknesses / resistances (``tags``) and resources (``(resource_id, amount)``)
+    unlock once one has been defeated; ``drops`` lists only what has really dropped
+    (``(display name, times)``)."""
+    db = game.project.rpg_database
     rows = []
-    for enemy_id, enemy in sorted(game.project.rpg_database.enemies.items()):
+    for enemy_id, enemy in sorted(db.enemies.items()):
         entry = game.world.bestiary.get(enemy_id)
         if not entry or not entry.get("seen"):
-            rows.append(("???", 0, 0, 0, ()))
+            rows.append(("???", 0, 0, 0, (), (), ()))
             continue
+        known = entry.get("defeated", 0) > 0
+        drops = []
+        for key, times in sorted(entry.items()):
+            if not key.startswith("drop:") or times <= 0:
+                continue
+            item_id = key[5:]
+            record = db.items.get(item_id) or db.equipment.get(item_id)
+            drops.append((getattr(record, "display_name", "") or item_id, times))
         rows.append(
             (
                 enemy.display_name,
                 entry.get("seen", 0),
                 entry.get("defeated", 0),
                 entry.get("captured", 0),
-                tuple(t for t in getattr(enemy, "tags", ()) if "." in t),
+                tuple(t for t in getattr(enemy, "tags", ()) if "." in t) if known else (),
+                tuple(sorted(enemy.resources.items())) if known else (),
+                tuple(drops),
             )
         )
     return tuple(rows)

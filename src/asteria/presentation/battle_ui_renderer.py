@@ -108,7 +108,7 @@ class BattleUiTheme:
         if role == "result":
             return self.result_fill, self.result_border
         if role == "interaction:float":  # see-through list beside the acting member
-            return (10, 14, 26, 105), (130, 140, 170, 190)
+            return (10, 14, 26, 200), (150, 160, 190, 230)
         if role == "hud:side":
             return (12, 16, 28, 120), (96, 108, 140, 160)
         if role == "hud:side:focus":
@@ -247,31 +247,40 @@ class BattleUiRenderer:
         t = self.theme
         b.begin_battle_ui(frame.scene_id)
 
-        for panel in frame.panels:
-            fill, border = t.panel_style(panel.role)
+        def on_top(role):  # the command menu and its rows are drawn last, over any HUD
+            role = str(role)
+            return role.startswith(("interaction:", "button", "action", "workflow_"))
+
+        def panel(item):
+            fill, border = t.panel_style(item.role)
             style = {
                 "fill": fill,
                 "border": border,
                 "radius": t.panel_radius,
                 "border_width": t.border_width,
             }
-            skin = t.panel_skin(panel.role)
+            skin = t.panel_skin(item.role)
             if skin is not None:  # backends without skins never see the argument
                 style["skin"] = skin
-            b.draw_panel(panel, **style)
+            b.draw_panel(item, **style)
 
-        for gauge in frame.gauges:
-            fill = t.gauge_full if gauge.normalized >= 1.0 else t.gauge_fill
-            b.draw_gauge(gauge, track=t.gauge_track, fill=fill)
-
-        for icon in frame.icons:
-            b.draw_icon(icon)
-
-        for marker in frame.markers:
-            b.draw_marker(marker, color=t.target_primary if marker.primary else t.target)
-
-        for text in frame.texts:
-            b.draw_text(text, color=t.text_color(text.role), size=t.text_size(text.role))
+        for layer in (False, True):
+            for item in frame.panels:
+                if on_top(item.role) == layer:
+                    panel(item)
+            if not layer:
+                for gauge in frame.gauges:
+                    fill = t.gauge_full if gauge.normalized >= 1.0 else t.gauge_fill
+                    b.draw_gauge(gauge, track=t.gauge_track, fill=fill)
+            for icon in frame.icons:
+                if on_top(icon.role) == layer:
+                    b.draw_icon(icon)
+            if not layer:
+                for marker in frame.markers:
+                    b.draw_marker(marker, color=t.target_primary if marker.primary else t.target)
+            for text in frame.texts:
+                if on_top(text.role) == layer:
+                    b.draw_text(text, color=t.text_color(text.role), size=t.text_size(text.role))
 
         for effect in frame.vfx:
             b.draw_vfx(effect)

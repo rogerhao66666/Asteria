@@ -216,7 +216,7 @@ def test_combatants_stand_on_the_ground_below_the_backdrop(battle):
         assert layout.virtual_height * layout.stage_top <= visual.anchor.y <= floor
 
 
-def test_enemy_hp_floats_over_enemies_and_party_hp_stands_down_the_right_edge(battle):
+def test_enemy_names_float_over_enemies_and_party_hp_stands_down_the_right_edge(battle):
     runtime, adapter = battle
     layout, frame = _frame(adapter)
     enemies = set(runtime.game.battle.parties["enemies"].ids())
@@ -224,7 +224,7 @@ def test_enemy_hp_floats_over_enemies_and_party_hp_stands_down_the_right_edge(ba
     overhead = {t.member_id: t for t in frame.texts if t.role == "overhead_name"}
     assert set(overhead) == enemies
     bars = {(g.member_id, g.resource_id) for g in frame.gauges}
-    assert all((enemy, "vitality") in bars for enemy in enemies)  # HP over each enemy
+    assert not any(enemy == m for m, _r in bars for enemy in enemies)  # foe health is hidden
     assert all((hero, "vitality") in bars for hero in heroes)  # HP in each party cell
     for enemy in enemies:
         visual = adapter.screen.scene.visual_for(enemy)
@@ -242,12 +242,9 @@ def test_commands_show_only_on_a_heroes_turn_and_never_cover_the_party(battle):
     menu = next(p for p in frame.panels if p.panel_id == "action_menu")  # idle: hero waiting
     assert menu.role == "interaction:float"  # see-through, Octopath style
     actor = adapter.screen.scene.visual_for(runtime._battle_actor())
-    assert menu.x + menu.width <= actor.anchor.x  # beside the acting hero, never over it
-    for enemy in runtime.game.battle.parties["enemies"].ids():  # and never over a foe
-        spot = adapter.screen.scene.visual_for(enemy).anchor
-        assert not (
-            menu.x <= spot.x <= menu.x + menu.width and menu.y <= spot.y <= menu.y + menu.height
-        )
+    if layout.action_menu_placement == "actor_bottom_right":  # touching whoever acts
+        assert actor.anchor.x < menu.x <= actor.anchor.x + 40
+        assert menu.y >= actor.anchor.y - adapter.screen.member_heights[actor.member_id]
     _use(runtime, "strike")
     runtime._present_battle(0.016)
     assert adapter.busy()

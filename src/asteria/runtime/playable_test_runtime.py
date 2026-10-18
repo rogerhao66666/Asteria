@@ -2575,7 +2575,12 @@ class PlayableTestRuntime:
             if z not in getattr(ui_layout, "hidden_zones", ())
         ]
         head_gap = 24.0 * scale if shown and not below else None  # past that name and bar
-        blocks = extras_layout(game, box, scale, self.width, drop, head_gap)
+        labels = getattr(composer, "overhead_labels", None) or {}
+        caption_at = {  # state names fill the line each overhead label kept over the name
+            member_id: ((x + w / 2) * scale, (y + 8.0) * scale)
+            for member_id, (x, y, w, _h) in labels.items()
+        }
+        blocks = extras_layout(game, box, scale, self.width, drop, head_gap, caption_at)
         draw_blocks(self, blocks, scale)
         self.battle_extras_blocks = blocks  # what was drawn (tests check it for overlaps)
         bp = game.rules.boost_resource_id if game.rules.boost_enabled else ""
@@ -3262,17 +3267,9 @@ class PlayableTestRuntime:
                 center=True,
             )
             lines = [
-                (
-                    name,
-                    (
-                        ""
-                        if not s
-                        else f"seen {s}   defeated {d}   captured {c}"
-                        + (f"   {', '.join(tags)}" if tags else "")
-                    ),
-                    (235, 238, 245) if s else (150, 155, 175),
-                )
-                for name, s, d, c, tags in rows
+                (name, self._bestiary_detail(row), (235, 238, 245) if row[1] else (150, 155, 175))
+                for row in rows
+                for name in (row[0],)
             ]
         if not lines:
             self.text("Nothing here yet.", 90, 110, size=22, color=(170, 210, 240))
@@ -3287,9 +3284,9 @@ class PlayableTestRuntime:
                 self._draw_icon(line_icons[index], 90, y - 2, 24)
             self.text(title, 90 + shift, y, size=22, color=color)
             y += 24
-            if detail:
-                self.text(detail, 120, y, size=17, color=(170, 210, 240))
-                y += 24
+            for part in detail.split("\n") if detail else ():
+                self.text(part, 120, y, size=17, color=(170, 210, 240))
+                y += 22
             y += 6
         self.text(
             "Up/Down: scroll   Enter / Esc: back",
@@ -3298,6 +3295,39 @@ class PlayableTestRuntime:
             size=18,
             color=(170, 210, 240),
         )
+
+    def _resource_labels(self):
+        """Resource id -> the short label the battle HUD gives it (``vitality`` -> ``HP``)."""
+        labels = {}
+        library = getattr(self.project, "battle_presentation_library", None)
+        for key in library.ids("hud") if library is not None else ():
+            for style in getattr(library.require("hud", key), "resources", ()):
+                labels.setdefault(style.resource_id, style.label or style.resource_id)
+        return labels
+
+    def _bestiary_detail(self, row):
+        """The lines under a bestiary entry: counts; weaknesses and resources once one fell;
+        the drops that really fell."""
+        _name, seen, defeated, captured, tags, resources, drops = row
+        if not seen:
+            return ""
+        lines = [f"seen {seen}   defeated {defeated}   captured {captured}"]
+        if defeated:
+            labels = self._resource_labels()
+            known = [f"{labels.get(r, r)} {v:,.0f}" for r, v in resources]
+            groups = {}
+            for tag in tags:
+                kind, _, what = tag.partition(".")
+                groups.setdefault(kind, []).append(what.replace("_", " "))
+            known += [f"{kind}: {', '.join(names)}" for kind, names in sorted(groups.items())]
+            lines.append("   ".join(known) or "nothing special")
+        else:
+            lines.append("Defeat one to learn its weaknesses and health.")
+        if drops:
+            lines.append("Drops: " + ", ".join(f"{n} x{t}" for n, t in drops))
+        else:
+            lines.append("Drops: none seen yet")
+        return "\n".join(lines)
 
     def _draw_settings(self):
         self._draw_backdrop()

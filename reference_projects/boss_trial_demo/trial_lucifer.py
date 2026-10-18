@@ -190,12 +190,26 @@ def npc_picture(key, *, size=48):
     """The front (facing down) idle pose of a character, for NPCs standing in the field."""
     from PIL import Image
 
-    cell = _facing_strip(key, "Down", "Idle")[0]
+    cell = villager(_facing_strip(key, "Down", "Idle")[0])
     box = cell.getchannel("A").getbbox() or (0, 0, *cell.size)
     cell = cell.crop(box)
     out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     out.alpha_composite(cell, ((size - cell.width) // 2, size - cell.height))
     return out
+
+
+def villager(image):
+    """The same figure in plain townsfolk colours (a sepia duotone), so a person in town never
+    looks like one of the party's characters."""
+    from PIL import ImageOps
+
+    rgba = image.convert("RGBA")
+    alpha = rgba.getchannel("A")
+    tone = ImageOps.colorize(
+        ImageOps.grayscale(rgba), black=(38, 30, 26), white=(222, 204, 168), mid=(128, 104, 80)
+    ).convert("RGBA")
+    tone.putalpha(alpha)
+    return tone
 
 
 NPC_CAST = {  # who stands where in the field
