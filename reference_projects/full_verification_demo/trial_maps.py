@@ -28,6 +28,7 @@ HIDDEN = ("collision", "regions")  # layers the player never sees
 # map areas (the hidden Regions layer; tile id = region id, see trial_stage.areas)
 BOG, GLADE, SHADOW, EMBERS = 1, 2, 3, 4
 AREA_TILES = {}  # "bog" / "shadow" / "embers" -> tile ids added to the tilesets
+HOME_LOT = (36, 4, 40, 7)  # Aldric's house on the town map, in tiles (x0, y0, x1, y1)
 DIRECTIONS = ("down", "up", "left", "right")
 OUT = "playable_assets/lucifer/world"
 
@@ -162,7 +163,9 @@ class Grid:
         for y in range(y0, y1):
             for x in range(x0, x1):
                 self.put("regions", x, y, region_id)
-                if ground and (x, y) not in self.layers["collision"]:
+                # walls keep their look; under a tree or a bush the floor still changes
+                wall = (x, y) in self.layers["collision"] and (x, y) not in self.layers["objects"]
+                if ground and not wall:
                     self.put("ground", x, y, self.rng.choice(ground))
 
     def block(self, x0, y0, x1, y1):
@@ -405,11 +408,11 @@ def paint_ground(grid, kinds, x0, y0, x1, y1, weights=None):
 EXTERIOR_PROPS = {
     "tree": (76, 2, 4, 4, (3,)),
     "grave": (58, 0, 2, 2, (1,)),
-    "grave_cross": (62, 0, 2, 3, (2,)),
+    "grave_cross": (62, 0, 2, 2, (1,)),  # row 2 is the top of the broken cross below
     "crypt": (66, 0, 4, 4, (3,)),
     "rocks": (70, 2, 6, 2, (1,)),
     "rock": (70, 0, 2, 2, (1,)),
-    "bush": (70, 3, 2, 3, (2,)),
+    "bush": (70, 4, 2, 2, (1,)),  # the pine bush (row 3 is the rock pile's bottom)
     "fence": (60, 6, 6, 2, (1,)),
 }
 
@@ -467,7 +470,9 @@ def hearthfold(grid):
     grid.block(w - 1, 0, w, 11)
     grid.block(w - 1, 16, w, h)
     guild = box(3, 6, 11, 10)  # the adventurers' guild: where companions wait to be hired
-    clear = [box(2, 10, w - 1, 16), box(19, 1, 26, h - 1), box(11, 6, 34, 21), guild]
+    x0, y0, x1, y1 = HOME_LOT  # Aldric's house and the path from its door down to the road
+    home = box(x0 - 1, y0 - 1, x1 + 1, 11)
+    clear = [box(2, 10, w - 1, 16), box(19, 1, 26, h - 1), box(11, 6, 34, 21), guild, home]
     scatter(grid, grid.rng, ("tree",), 14, 2, 2, w - 2, h - 2, clear)
     scatter(
         grid, grid.rng, ("grave", "grave_cross", "rock", "bush"), 10, 2, 2, w - 2, h - 2, clear

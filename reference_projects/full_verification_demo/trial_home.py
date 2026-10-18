@@ -11,7 +11,7 @@ import trial_maps as maps
 import trial_people as people
 
 TILES = people.NINJA / "Backgrounds" / "Tilesets"
-LOT = (36, 4, 40, 7)  # the house's tiles on the town map (x0, y0, x1, y1)
+LOT = maps.HOME_LOT  # the house's tiles on the town map (no prop is scattered on it)
 ROOM = (12, 9)  # the room's size in tiles
 FLOOR = [(1, 13), (2, 13), (6, 13)]  # TilesetInteriorFloor: warm stone
 WALL = [(12, 13), (13, 13), (16, 13)]  # TilesetInteriorFloor: dark brick
@@ -25,13 +25,9 @@ def front_door():
 
 
 def clear_lot(grid):
-    """Make room for the house on the town map: no trees, its walls block, a path to the road."""
+    """The house's walls block and a path leads to the road (the town keeps the lot free of
+    trees and rocks when it scatters them, so nothing is cut in half here)."""
     x0, y0, x1, y1 = LOT
-    for layer in ("objects", "above", "decor"):
-        for x in range(x0 - 1, x1 + 1):
-            for y in range(y0 - 1, y1 + 4):
-                grid.layers[layer].pop((x, y), None)
-                grid.layers["collision"].pop((x, y), None)
     grid.block(x0, y0, x1, y1 - 1)  # the roof and the upper wall
     grid.block(x0, y1 - 1, x0 + 1, y1)  # the lower wall left and right of the door
     grid.block(x1 - 1, y1 - 1, x1, y1)
