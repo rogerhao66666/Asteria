@@ -33,6 +33,12 @@ def test_opening_a_project_centres_its_entities_and_reset_view_does_too():
         project = Project.load_json(
             ROOT / "project.asteria.json", window.document.component_registry
         )
+        from asteria.runtime.components2d import Camera2DComponent
+
+        for scene in project.scenes():  # a scene with no game camera frames its entities
+            for entity in list(scene.entities()):
+                if entity.try_get(Camera2DComponent) is not None:
+                    scene.remove_entity(entity)
         window.set_project(project)
         for _ in range(30):
             app.processEvents()

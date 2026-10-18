@@ -9,7 +9,12 @@ from asteria.runtime.audio_mixer import AudioMixer
 from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
 from asteria.runtime.battle_visuals import vfx_rect
 from asteria.runtime.collision import CollisionWorld
-from asteria.runtime.field_camera import CAMERA_COMMANDS, FieldCameraError, FieldViewCamera
+from asteria.runtime.field_camera import (
+    CAMERA_COMMANDS,
+    FieldCameraError,
+    FieldViewCamera,
+    scene_camera_follow,
+)
 from asteria.runtime.field_presentation import (
     FIELD_EFFECT_COMMANDS,
     FieldEffectError,
@@ -708,11 +713,16 @@ class PlayableTestRuntime:
         camera = getattr(self, "_field_camera", None)
         if camera is None:
             scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0))
+            follow = self.manifest["field"].get("camera", {}).get("follow")
+            from asteria.runtime.tile_scene_view import TileSceneView
+
+            scene = self.game.scene
+            if not follow and not TileSceneView.available(scene):
+                # a picture field follows the scene's own Camera entity, as authored in the
+                # editor (a tile scene has a camera of its own)
+                follow = scene_camera_follow(scene, self.width / scale)
             camera = self._field_camera = FieldViewCamera(
-                self.width,
-                self.height,
-                scale,
-                follow=self.manifest["field"].get("camera", {}).get("follow"),
+                self.width, self.height, scale, follow=follow
             )
         return camera
 

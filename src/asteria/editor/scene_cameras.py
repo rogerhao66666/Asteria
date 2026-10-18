@@ -36,6 +36,30 @@ def _arrivals(data):
     return found
 
 
+def add_missing_cameras(data, *, width=320, height=180):
+    """Give every scene without a Camera2D entity one (named "Camera"), active, at the default
+    size; ``center`` then aims it at the player. Returns how many were added."""
+    import uuid
+
+    from asteria.core import Entity, Transform
+    from asteria.core.serialization import serialize_entity
+    from asteria.runtime.components2d import Camera2DComponent
+
+    added = 0
+    for scene in data.get("scenes", ()):
+        entities = scene.setdefault("entities", [])
+        if any(c["type"] == "asteria.Camera2D" for e in entities for c in e.get("components", ())):
+            continue
+        entity_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"asteria-camera:{scene['id']}"))
+        entity = Entity("Camera", entity_id=entity_id)
+        entity.add_component(Transform(0.0, 0.0))
+        camera = entity.add_component(Camera2DComponent())
+        camera.width, camera.height = int(width), int(height)
+        entities.append(serialize_entity(entity))
+        added += 1
+    return added
+
+
 def center(data):
     """Edit project data in place; returns how many cameras were moved or re-aimed."""
     start = data.get("game_start") or {}

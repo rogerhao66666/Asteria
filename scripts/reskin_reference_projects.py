@@ -60,6 +60,9 @@ def dress(folder):
     _drop_unused_icon_assets(project, path)
     write_credits(folder)
     prune(folder)  # the pictures the reskin replaced do not stay behind
+    from center_cameras import center_file
+
+    center_file(folder, add=True)  # a Camera entity per scene, on the hero
 
 
 def _drop_unused_icon_assets(project, path):

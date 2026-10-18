@@ -1,6 +1,8 @@
-"""The editor starts on a current starter project and on the left tab it was left on."""
+"""The editor starts on a current starter project with the left panel on Project; Game Start
+reads by name; scene cameras sit on the hero."""
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -209,3 +211,44 @@ def test_cameras_follow_the_player_and_the_players_place_is_the_start():
     ]
     assert data["game_start"]["player_position"] is None  # the Player's own place is the start
     assert center(data) == 0  # nothing left to do
+
+
+def test_a_picture_field_follows_the_scene_camera_as_authored():
+    from asteria.core import Entity, Scene, Transform
+    from asteria.runtime.components2d import Camera2DComponent
+    from asteria.runtime.field_camera import scene_camera_follow
+
+    scene = Scene("Field")
+    hero = scene.add_entity(Entity("Player"))
+    hero.add_component(Transform(0, 0))
+    assert scene_camera_follow(scene, 320.0) is None  # no camera: the fixed whole-map view
+    camera = scene.add_entity(Entity("Camera")).add_component(Camera2DComponent())
+    camera.follow_entity_id = hero.id
+    assert scene_camera_follow(scene, 320.0)["zoom"] == 1.0  # as wide as the map: no zoom
+    camera.width, camera.smoothing = 160, 4.0
+    follow = scene_camera_follow(scene, 320.0)
+    assert follow["zoom"] == 2.0 and follow["smoothing"] == 4.0  # half as wide: zoomed in
+
+
+def test_every_party_demo_scene_has_a_camera_on_the_hero():
+    root = Path(__file__).resolve().parents[1]
+    for folder in (
+        "reference_projects/octopath_demo",
+        "reference_projects/complex_reference_rpg",
+        "src/asteria/templates/party_rpg",
+        "reference_projects/boss_trial_demo",
+        "reference_projects/diablo_demo",
+    ):
+        data = json.loads((root / folder / "project.asteria.json").read_text())
+        player = data["game_start"]["player_entity_id"]
+        for scene in data["scenes"]:
+            cameras = [
+                c["fields"]
+                for e in scene["entities"]
+                for c in e["components"]
+                if c["type"] == "asteria.Camera2D"
+            ]
+            assert cameras and all(c["follow_entity_id"] == player for c in cameras), (
+                folder,
+                scene["name"],
+            )

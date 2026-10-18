@@ -12790,10 +12790,7 @@
     },
     "player_entity_id": "698c1327-c30a-4340-a45c-8673a9313f9d",
     "player_facing": "right",
-    "player_position": [
-      0.0,
-      0.0
-    ],
+    "player_position": null,
     "rpg_state": {
       "active_pet_id": "frost_lynx#1",
       "actor_progression": {
@@ -22329,6 +22326,50 @@
           "enabled": true,
           "id": "49c0fbf7-3ebf-5190-866b-7235e8288931",
           "name": "Iron Samurai"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 0.0,
+                "y": 0.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "active": true,
+                "bounds_enabled": false,
+                "bounds_max_x": 0.0,
+                "bounds_max_y": 0.0,
+                "bounds_min_x": 0.0,
+                "bounds_min_y": 0.0,
+                "deadzone_x": 0.0,
+                "deadzone_y": 0.0,
+                "follow_entity_id": "698c1327-c30a-4340-a45c-8673a9313f9d",
+                "group_entity_ids": "",
+                "group_padding": 32.0,
+                "height": 180,
+                "look_ahead_x": 0.0,
+                "look_ahead_y": 0.0,
+                "max_zoom": 2.0,
+                "min_zoom": 0.5,
+                "smoothing": 0.0,
+                "width": 320,
+                "zoom": 1.0
+              },
+              "type": "asteria.Camera2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "9199dc12-cfe7-5825-a5de-374cbc7c9654",
+          "name": "Camera"
         }
       ],
       "id": "2175c138-7eed-4ab6-91c7-0b912611c1a0",

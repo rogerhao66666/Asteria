@@ -26,6 +26,26 @@ class FieldCameraError(ValueError):
     pass
 
 
+def scene_camera_follow(scene, view_width):
+    """Follow settings from the scene's active Camera2D entity that follows someone, or None.
+    ``view_width`` is how many world units the whole map view spans: a camera that wide (at its
+    zoom) shows the whole map; a narrower one zooms in on whoever it follows."""
+    from .components2d import Camera2DComponent
+
+    for entity in () if scene is None else scene.entities():
+        spec = entity.try_get(Camera2DComponent)
+        if spec is None or not spec.active or not spec.follow_entity_id:
+            continue
+        seen = max(1.0, float(spec.width) / max(0.01, float(spec.zoom)))
+        return {
+            "zoom": max(1.0, float(view_width) / seen),
+            "smoothing": float(spec.smoothing),
+            "deadzone": (float(spec.deadzone_x), float(spec.deadzone_y)),
+            "look_ahead": (float(spec.look_ahead_x), float(spec.look_ahead_y)),
+        }
+    return None
+
+
 class FieldViewCamera:
     def __init__(self, width, height, scale, *, anchor_offset_y=65.0, max_zoom=3.0, follow=None):
         self.width, self.height, self.scale = float(width), float(height), float(scale)
