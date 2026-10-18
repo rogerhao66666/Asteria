@@ -31,8 +31,20 @@ GAME_START_FORM: tuple[FormField, ...] = (
         empty_label="(the project's startup scene)",
     ),
     F("player_facing", "Player Facing", "choice", choices=FACINGS, default="down"),
-    F("position_x", "Start X (empty: spawn point)", "optional_int", default=None),
-    F("position_y", "Start Y (empty: spawn point)", "optional_int", default=None),
+    F(
+        "position_x",
+        "Start X (unticked: the scene's spawn point)",
+        "optional_int",
+        default=None,
+        toggle_label="Set position",
+    ),
+    F(
+        "position_y",
+        "Start Y (unticked: the scene's spawn point)",
+        "optional_int",
+        default=None,
+        toggle_label="Set position",
+    ),
     F("party_actor_ids", "Party", "ref_list", source="actors", default=()),
     F("items", "Starting Items", "amounts", source="items", default={}),
     F("currencies", "Starting Currencies", "amounts", default={}),
@@ -78,6 +90,11 @@ class GameStartAuthoringController:
             return tuple(
                 (s.id, n if names.count(n) == 1 else f"{n} ({s.id[:8]})")
                 for s, n in zip(scenes, names, strict=True)
+            )
+        if source == "actors":  # the party list shows each member's name, keeps the id
+            return tuple(
+                (actor_id, f"{db.actors[actor_id].display_name or actor_id} ({actor_id})")
+                for actor_id in sorted(db.actors)
             )
         stores = {"items": db.items, "actors": db.actors, "pet_species": db.pet_species}
         return tuple(sorted(stores.get(source, {})))

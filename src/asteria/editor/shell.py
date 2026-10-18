@@ -2650,6 +2650,10 @@ class AsteriaEditorWindow(QMainWindow):
         super().showEvent(event)
         if not getattr(self, "_shown_once", False):
             self._shown_once = True
+            # the left panel opens on Project: once the docks are laid out (a restored layout
+            # picks its own tab while the window first appears), and again after a moment
+            for delay in (0, 250):
+                QTimer.singleShot(delay, lambda: self.show_left_tab("ProjectSceneDock"))
             if (
                 not self._layout_restored
             ):  # dock sizes only apply once the window has its real size

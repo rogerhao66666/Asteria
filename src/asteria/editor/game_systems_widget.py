@@ -90,32 +90,38 @@ class _KeyValueTable(QWidget):
 
 
 class _RefList(QListWidget):
-    """Checkable list of references; keeps the authored order of checked entries."""
+    """Checkable list of references; keeps the authored order of checked entries. A choice is an
+    id, or ``(id, name)``: the list shows the name and keeps the id."""
 
     def __init__(self, choices, parent=None):
         super().__init__(parent)
-        self.choices = tuple(choices)
+        pairs = [c if isinstance(c, tuple) else (c, c) for c in choices]
+        self.choices = tuple(str(value) for value, _ in pairs)
+        self.labels = {str(value): str(label) for value, label in pairs}
         self.setMinimumHeight(70)
 
     def set_values(self, values):
         self.clear()
-        values = list(values)
+        values = [str(v) for v in values]
         for choice in list(dict.fromkeys(values + list(self.choices))):
-            item = QListWidgetItem(choice)
+            item = QListWidgetItem(self.labels.get(choice, f"{choice} (missing)"))
+            item.setData(Qt.UserRole, choice)
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             item.setCheckState(Qt.Checked if choice in values else Qt.Unchecked)
             self.addItem(item)
 
+    def _value(self, index):
+        value = self.item(index).data(Qt.UserRole)
+        return self.item(index).text() if value is None else str(value)
+
     def values(self):
         return [
-            self.item(i).text()
-            for i in range(self.count())
-            if self.item(i).checkState() == Qt.Checked
+            self._value(i) for i in range(self.count()) if self.item(i).checkState() == Qt.Checked
         ]
 
     def set_checked(self, value, checked=True):
         for i in range(self.count()):
-            if self.item(i).text() == value:
+            if self._value(i) == value:
                 self.item(i).setCheckState(Qt.Checked if checked else Qt.Unchecked)
                 return True
         return False
@@ -361,7 +367,7 @@ class RecordForm(QWidget):
             box = QWidget()
             row = QHBoxLayout(box)
             row.setContentsMargins(0, 0, 0, 0)
-            box.check = QCheckBox("Limited")
+            box.check = QCheckBox(f.toggle_label)
             box.spin = QSpinBox()
             box.spin.setRange(0, _BIG)
             box.check.toggled.connect(box.spin.setEnabled)

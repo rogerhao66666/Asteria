@@ -99,6 +99,7 @@ class FormField:
     fields: tuple = ()
     default: object = None
     empty_label: str = ""
+    toggle_label: str = "Limited"  # the check box of an ``optional_int``
 
 
 def F(key, label, kind, **values):  # noqa: N802 - short spec constructor

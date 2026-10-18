@@ -158,3 +158,20 @@ def test_a_reference_dropdown_shows_names_and_keeps_ids(tmp_path):
     assert combo.currentText() == "Woods" and form.data()["scene_id"] == "id-2"
     combo.setCurrentIndex(0)
     assert combo.currentText() == "(startup)" and form.data()["scene_id"] == ""
+
+
+def test_the_party_list_shows_names_and_the_position_toggle_says_what_it_does():
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.game_start_authoring import GAME_START_FORM
+    from asteria.editor.game_systems_widget import RecordForm
+
+    QApplication.instance() or QApplication([])
+    refs = {"actors": (("hero_01", "Aldric (hero_01)"), ("hero_02", "Mira (hero_02)"))}
+    fields = [f for f in GAME_START_FORM if f.key in ("party_actor_ids", "position_x")]
+    form = RecordForm(tuple(fields), lambda source: refs.get(source, ()))
+    form.set_data({"party_actor_ids": ["hero_02"], "position_x": 5})
+    party = form.widgets["party_actor_ids"]
+    assert [party.item(i).text() for i in range(party.count())][0] == "Mira (hero_02)"
+    assert form.data()["party_actor_ids"] == ["hero_02"]
+    assert form.widgets["position_x"].check.text() == "Set position"
