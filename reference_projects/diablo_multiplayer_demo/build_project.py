@@ -1544,6 +1544,10 @@ def main():
     (HERE / "playable_test_manifest.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
+    sys.path.insert(0, str(REPO / "scripts"))
+    from center_cameras import center_file
+
+    center_file(HERE)  # every scene's camera on the hero; the Player's place is the start
     print(
         f"wrote {path.relative_to(REPO)}: {len(project.scenes())} scenes, "
         f"{len(project.gameplay_library.abilities.ids())} abilities, {len(db.classes)} classes, "

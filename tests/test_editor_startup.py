@@ -175,3 +175,37 @@ def test_the_party_list_shows_names_and_the_position_toggle_says_what_it_does():
     assert [party.item(i).text() for i in range(party.count())][0] == "Mira (hero_02)"
     assert form.data()["party_actor_ids"] == ["hero_02"]
     assert form.widgets["position_x"].check.text() == "Set position"
+
+
+def test_cameras_follow_the_player_and_the_players_place_is_the_start():
+    from asteria.editor.scene_cameras import center
+
+    def entity(eid, x, y, camera=False):
+        components = [{"type": "asteria.Transform", "fields": {"x": x, "y": y}}]
+        if camera:
+            components.append({"type": "asteria.Camera2D", "fields": {"follow_entity_id": ""}})
+        return {"id": eid, "components": components}
+
+    data = {
+        "game_start": {"scene_id": "a", "player_entity_id": "p", "player_position": [5.0, 6.0]},
+        "scenes": [
+            {"id": "a", "entities": [entity("p", 5.0, 6.0), entity("cam", -40.0, 24.0, True)]},
+            {"id": "b", "entities": [entity("cam2", 0.0, 0.0, True)]},
+        ],
+        "event_programs": {
+            "door": {
+                "instructions": [
+                    {"args": {"command": "TRANSFER", "args": {"scene_id": "b", "x": 70, "y": 80}}}
+                ]
+            }
+        },
+    }
+    assert center(data) == 2
+    cams = [s["entities"][-1] for s in data["scenes"]]
+    assert [c["components"][1]["fields"]["follow_entity_id"] for c in cams] == ["p", "p"]
+    assert [tuple(c["components"][0]["fields"].values()) for c in cams] == [
+        (5.0, 6.0),
+        (70.0, 80.0),
+    ]
+    assert data["game_start"]["player_position"] is None  # the Player's own place is the start
+    assert center(data) == 0  # nothing left to do

@@ -3172,10 +3172,7 @@
     "event_context": null,
     "player_entity_id": "d326da1a-d134-5a33-be64-69bc4813ce8d",
     "player_facing": "down",
-    "player_position": [
-      312.0,
-      200.0
-    ],
+    "player_position": null,
     "rpg_state": {
       "actor_progression": {
         "hero": {
@@ -24571,8 +24568,8 @@
                 "rotation": 0.0,
                 "scale_x": 1.0,
                 "scale_y": 1.0,
-                "x": -40.0,
-                "y": 24.0
+                "x": 312.0,
+                "y": 200.0
               },
               "type": "asteria.Transform",
               "version": 1
@@ -24587,7 +24584,7 @@
                 "bounds_min_y": 0.0,
                 "deadzone_x": 0.0,
                 "deadzone_y": 0.0,
-                "follow_entity_id": "",
+                "follow_entity_id": "d326da1a-d134-5a33-be64-69bc4813ce8d",
                 "group_entity_ids": "",
                 "group_padding": 32.0,
                 "height": 180,
@@ -25551,8 +25548,8 @@
                 "rotation": 0.0,
                 "scale_x": 1.0,
                 "scale_y": 1.0,
-                "x": -40.0,
-                "y": 24.0
+                "x": 1048.0,
+                "y": 512.0
               },
               "type": "asteria.Transform",
               "version": 1
@@ -25567,7 +25564,7 @@
                 "bounds_min_y": 0.0,
                 "deadzone_x": 0.0,
                 "deadzone_y": 0.0,
-                "follow_entity_id": "",
+                "follow_entity_id": "d326da1a-d134-5a33-be64-69bc4813ce8d",
                 "group_entity_ids": "",
                 "group_padding": 32.0,
                 "height": 180,
@@ -28488,8 +28485,8 @@
                 "rotation": 0.0,
                 "scale_x": 1.0,
                 "scale_y": 1.0,
-                "x": -40.0,
-                "y": 24.0
+                "x": 81.0,
+                "y": 262.0
               },
               "type": "asteria.Transform",
               "version": 1
@@ -28504,7 +28501,7 @@
                 "bounds_min_y": 0.0,
                 "deadzone_x": 0.0,
                 "deadzone_y": 0.0,
-                "follow_entity_id": "",
+                "follow_entity_id": "d326da1a-d134-5a33-be64-69bc4813ce8d",
                 "group_entity_ids": "",
                 "group_padding": 32.0,
                 "height": 180,

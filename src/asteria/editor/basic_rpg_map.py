@@ -108,6 +108,9 @@ def add_editable_field(folder, source):
         player_position=[64.0, 232.0],
         player_facing="right",
     )
+    from .scene_cameras import center
+
+    center(project)  # the camera on the hero; the Player's place is the start
     path.write_text(json.dumps(project, indent=2) + "\n")
     manifest_path = folder / "playable_test_manifest.json"
     manifest = json.loads(manifest_path.read_text())

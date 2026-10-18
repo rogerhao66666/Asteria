@@ -27897,10 +27897,7 @@
     },
     "player_entity_id": "efea8692-514a-5234-9e78-ab78c657aeb4",
     "player_facing": "down",
-    "player_position": [
-      360.0,
-      216.0
-    ],
+    "player_position": null,
     "rpg_state": {
       "active_pet_id": null,
       "actor_progression": {
@@ -62649,8 +62646,8 @@
                 "rotation": 0.0,
                 "scale_x": 1.0,
                 "scale_y": 1.0,
-                "x": -40.0,
-                "y": 24.0
+                "x": 360.0,
+                "y": 216.0
               },
               "type": "asteria.Transform",
               "version": 1
@@ -62665,7 +62662,7 @@
                 "bounds_min_y": 0.0,
                 "deadzone_x": 0.0,
                 "deadzone_y": 0.0,
-                "follow_entity_id": "",
+                "follow_entity_id": "efea8692-514a-5234-9e78-ab78c657aeb4",
                 "group_entity_ids": "",
                 "group_padding": 32.0,
                 "height": 180,
@@ -62722,6 +62719,24 @@
               },
               "type": "asteria.Animator2D",
               "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "height": 8.0,
+                "is_trigger": false,
+                "ladder": false,
+                "layer": 0,
+                "mask": 4294967295,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "one_way": false,
+                "radius": 8.0,
+                "shape": "box",
+                "width": 10.0
+              },
+              "type": "asteria.Collider2D",
+              "version": 3
             }
           ],
           "enabled": true,
@@ -64580,8 +64595,8 @@
                 "rotation": 0.0,
                 "scale_x": 1.0,
                 "scale_y": 1.0,
-                "x": -40.0,
-                "y": 24.0
+                "x": 888.0,
+                "y": 184.0
               },
               "type": "asteria.Transform",
               "version": 1
@@ -64596,7 +64611,7 @@
                 "bounds_min_y": 0.0,
                 "deadzone_x": 0.0,
                 "deadzone_y": 0.0,
-                "follow_entity_id": "",
+                "follow_entity_id": "efea8692-514a-5234-9e78-ab78c657aeb4",
                 "group_entity_ids": "",
                 "group_padding": 32.0,
                 "height": 180,
@@ -65233,8 +65248,8 @@
                 "rotation": 0.0,
                 "scale_x": 1.0,
                 "scale_y": 1.0,
-                "x": -40.0,
-                "y": 24.0
+                "x": 856.0,
+                "y": 264.0
               },
               "type": "asteria.Transform",
               "version": 1
@@ -65249,7 +65264,7 @@
                 "bounds_min_y": 0.0,
                 "deadzone_x": 0.0,
                 "deadzone_y": 0.0,
-                "follow_entity_id": "",
+                "follow_entity_id": "efea8692-514a-5234-9e78-ab78c657aeb4",
                 "group_entity_ids": "",
                 "group_padding": 32.0,
                 "height": 180,
@@ -65730,8 +65745,8 @@
                 "rotation": 0.0,
                 "scale_x": 1.0,
                 "scale_y": 1.0,
-                "x": -40.0,
-                "y": 24.0
+                "x": 72.0,
+                "y": 216.0
               },
               "type": "asteria.Transform",
               "version": 1
@@ -65746,7 +65761,7 @@
                 "bounds_min_y": 0.0,
                 "deadzone_x": 0.0,
                 "deadzone_y": 0.0,
-                "follow_entity_id": "",
+                "follow_entity_id": "efea8692-514a-5234-9e78-ab78c657aeb4",
                 "group_entity_ids": "",
                 "group_padding": 32.0,
                 "height": 180,

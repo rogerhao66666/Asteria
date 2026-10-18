@@ -699,6 +699,8 @@ def build_world(c, story):
     town, woods, crypt, throne = (builders[k] for k in ("town", "woods", "crypt", "throne"))
     hero = town.entity("Player", *places["town"]["start"])
     town.look(hero, *looks["hero_warrior"])
+    # the same feet box as every other character: it shows (and blocks) where the hero stands
+    hero.add_component(_set(Collider2DComponent(), width=10, height=8))
     town.door(
         "Road East",
         places["town"]["to_woods"],

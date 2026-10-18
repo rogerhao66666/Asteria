@@ -94,6 +94,9 @@ def main():
     from asteria.graphics.forged_icons import apply_to_project_file
 
     apply_to_project_file(path, replace=True, keep=kept)
+    from center_cameras import center_file
+
+    center_file(HERE)  # every scene's camera on the hero; the Player's place is the start
     db = project.rpg_database
     print(
         f"wrote {path.relative_to(REPO)}: {len(project.gameplay_library.abilities.ids())} "
