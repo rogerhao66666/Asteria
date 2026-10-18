@@ -27,7 +27,7 @@ from .qt_texture_renderer import QtTextureCache, paint_texture_draws
 from .scene_render import build_scene_texture_draws, resolve_texture_source
 from .tile_edit import (
     TileEditError,
-    build_paint_command,
+    build_assign_command,
     flood_fill_cells,
     line_cells,
     rectangle_cells,
@@ -49,6 +49,10 @@ except ImportError:
 class SceneViewportWidget(QWidget):
     if Signal is not None:
         characterCellClicked = Signal(tuple)
+        # rows of tile ids picked off the map with the right mouse button (the eyedropper)
+        tilesPicked = Signal(object)
+        # a tool key (B / G / R / E / S, [ and ]) pressed over the map
+        toolKeyPressed = Signal(str)
 
     def __init__(self, document, parent=None):
         if Qt is None:
@@ -220,10 +224,78 @@ class SceneViewportWidget(QWidget):
             new_cells = (cell,)
         else:
             new_cells = line_cells(*self._last_tile_cell, *cell)
+        added = []
         for c in new_cells:
             if c not in self._tile_stroke_cells:
                 self._tile_stroke_cells.append(c)
+                added.append(c)
         self._last_tile_cell = cell
+        self._paint_live(added)
+
+    def _paint_live(self, cells):
+        """Paint / Erase show on the map while the mouse is still down; the stroke becomes one
+        undo step when it is let go (``_undo_live`` first puts the cells back)."""
+        tools, source = self.tile_tools, self.render_source
+        if not cells or source is None or tools.active_layer is None:
+            return
+        if tools.mode not in {"paint", "erase"}:
+            return
+        from .tile_edit import SetTileCommand, tile_at
+
+        try:
+            wanted = tools.assignments(cells, origin=self._tile_stroke_cells[0])
+        except ValueError:
+            return
+        live = self.__dict__.setdefault("_live_tiles", {})
+        for (x, y), tile_id in wanted.items():
+            if x < 0 or y < 0:
+                continue
+            if (x, y) not in live:
+                live[(x, y)] = tile_at(source.tilemap, tools.active_layer, x, y)
+            SetTileCommand(source.tilemap, tools.active_layer, x, y, int(tile_id)).redo()
+
+    def _undo_live(self):
+        from .tile_edit import SetTileCommand
+
+        live = self.__dict__.pop("_live_tiles", {})
+        source, layer = self.render_source, self.tile_tools.active_layer
+        if source is None or layer is None:
+            return
+        for (x, y), old in live.items():
+            if layer in source.tilemap.layers:
+                SetTileCommand(source.tilemap, layer, x, y, int(old)).redo()
+
+    def _pick_tiles(self, start, end):
+        """The eyedropper: the tiles of the active layer (else the topmost one that has a tile)
+        between two cells become the brush."""
+        from asteria.graphics import EMPTY_TILE
+
+        from .tile_edit import tile_at
+
+        source = self.render_source
+        if source is None or start is None or end is None:
+            return None
+        layers = list(source.tilemap.ordered_layers())[::-1]
+        active = self.tile_tools.active_layer
+        x0, x1 = sorted((start[0], end[0]))
+        y0, y1 = sorted((start[1], end[1]))
+
+        def pick(x, y):
+            if active is not None and tile_at(source.tilemap, active, x, y) != EMPTY_TILE:
+                return tile_at(source.tilemap, active, x, y)
+            for layer in layers:
+                tile = tile_at(source.tilemap, layer, x, y)
+                if tile != EMPTY_TILE:
+                    return tile
+            return EMPTY_TILE
+
+        rows = tuple(tuple(pick(x, y) for x in range(x0, x1 + 1)) for y in range(y0, y1 + 1))
+        if all(t == EMPTY_TILE for row in rows for t in row):
+            return None
+        self.tile_tools.set_stamp(rows)
+        if Signal is not None:
+            self.tilesPicked.emit(rows)
+        return rows
 
     def refresh(self):
         self.update()
@@ -377,7 +449,26 @@ class SceneViewportWidget(QWidget):
             raise ValueError("No movable Transform components")
         return transaction
 
+    TOOL_KEYS = (
+        {
+            Qt.Key_B: "paint",
+            Qt.Key_G: "fill",
+            Qt.Key_R: "rectangle",
+            Qt.Key_E: "erase",
+            Qt.Key_S: "select",
+            Qt.Key_BracketLeft: "smaller",
+            Qt.Key_BracketRight: "bigger",
+        }
+        if Qt is not None
+        else {}
+    )
+
     def keyPressEvent(self, event):
+        tool = self.TOOL_KEYS.get(event.key())
+        if tool and not event.modifiers() & ~Qt.KeypadModifier and self.render_source is not None:
+            self.toolKeyPressed.emit(tool)  # the Tiles panel switches tool / brush size
+            event.accept()
+            return
         selected = self._selected_entities()
         if selected:
             step = 10.0 if event.modifiers() & Qt.ShiftModifier else 1.0
@@ -602,6 +693,15 @@ class SceneViewportWidget(QWidget):
 
     def mousePressEvent(self, event):
         if (
+            event.button() == Qt.RightButton
+            and self.render_source is not None
+            and self.tile_tools.mode in {"paint", "erase", "fill", "rectangle"}
+        ):
+            # right button: the eyedropper (drag for a block of tiles)
+            self._pick_start = self._screen_to_tile(event.position().x(), event.position().y())
+            event.accept()
+            return
+        if (
             event.button() == Qt.LeftButton
             and self.tile_tools.mode == "doodad"
             and not event.modifiers() & Qt.AltModifier
@@ -636,12 +736,11 @@ class SceneViewportWidget(QWidget):
                 cells = flood_fill_cells(
                     self.render_source.tilemap, self.tile_tools.active_layer, *cell
                 )
-                self.document.execute(
-                    build_paint_command(
+                self.document.execute(  # a stamp repeats from the clicked cell
+                    build_assign_command(
                         self.render_source.tilemap,
                         self.tile_tools.active_layer,
-                        cells,
-                        self.tile_tools.effective_tile_id,
+                        self.tile_tools.assignments(cells, origin=cell),
                     )
                 )
             except (TileEditError, ValueError):
@@ -738,6 +837,15 @@ class SceneViewportWidget(QWidget):
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
+        if event.button() == Qt.RightButton and getattr(self, "_pick_start", None) is not None:
+            end = self._screen_to_tile(event.position().x(), event.position().y())
+            self._pick_tiles(self._pick_start, end)
+            self._pick_start = None
+            if self.tile_tools.mode == "erase" and Signal is not None:
+                self.toolKeyPressed.emit("paint")  # a picked tile is for painting
+            self.update()
+            event.accept()
+            return
         if self._panning:
             self._panning = False
             self._last_pos = None
@@ -752,12 +860,12 @@ class SceneViewportWidget(QWidget):
             end = self._screen_to_tile(event.position().x(), event.position().y())
             try:
                 cells = rectangle_cells(*self._tile_rect_start, *end)
-                self.document.execute(
-                    build_paint_command(
+                corner = (min(c[0] for c in cells), min(c[1] for c in cells))
+                self.document.execute(  # a stamp repeats from the rectangle's corner
+                    build_assign_command(
                         self.render_source.tilemap,
                         self.tile_tools.active_layer,
-                        cells,
-                        self.tile_tools.effective_tile_id,
+                        self.tile_tools.assignments(cells, origin=corner),
                     )
                 )
             except (TileEditError, ValueError):
@@ -774,6 +882,7 @@ class SceneViewportWidget(QWidget):
             and self._tile_stroke_cells
             and self.render_source is not None
         ):
+            self._undo_live()  # the live preview goes; the stroke comes back as one undo step
             try:
                 command = self.tile_tools.build_command(
                     self.render_source.tilemap, self._tile_stroke_cells

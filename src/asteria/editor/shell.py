@@ -334,6 +334,14 @@ class AsteriaEditorWindow(QMainWindow):
         self.tabifyDockWidget(left, palette_dock)
         self.tile_palette.modeChanged.connect(self.viewport.set_tile_mode)
         self.tile_palette.tileSelected.connect(self.viewport.set_selected_tile)
+        self.tile_palette.stampSelected.connect(
+            lambda rows: self.viewport.tile_tools.set_stamp(rows)
+        )
+        self.tile_palette.brushSizeChanged.connect(
+            lambda size: setattr(self.viewport.tile_tools, "brush_size", int(size))
+        )
+        self.viewport.tilesPicked.connect(self.tile_palette.show_picked)
+        self.viewport.toolKeyPressed.connect(self.tile_palette.handle_tool_key)
         self.tile_palette.terrainChanged.connect(self.viewport.set_terrain)
         self.tile_palette.regionChanged.connect(self.viewport.set_region)
         self.tile_palette.areaRuleChanged.connect(self._set_region_rule)
@@ -1503,7 +1511,16 @@ class AsteriaEditorWindow(QMainWindow):
 
     def set_tilemap_render_source(self, source):
         self.viewport.set_render_source(source)
-        self.tile_palette.set_tileset(source.tileset if source is not None else None)
+        texture = None
+        if source is not None:
+            from .scene_render import resolve_texture_source
+
+            texture = resolve_texture_source(self.document, source.sprite_sheet.texture.asset_id)
+        self.tile_palette.set_tileset(
+            source.tileset if source is not None else None,
+            source.sprite_sheet if source is not None else None,
+            texture,
+        )
         layer = self.viewport.tile_tools.active_layer if source is not None else None
         self.tile_palette.set_layer(layer)
         self.tile_layers.set_tilemap(source.tilemap if source is not None else None, layer)

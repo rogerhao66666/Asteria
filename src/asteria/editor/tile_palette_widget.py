@@ -9,7 +9,6 @@ try:
         QHBoxLayout,
         QLabel,
         QLineEdit,
-        QListWidget,
         QPushButton,
         QScrollArea,
         QSizePolicy,
@@ -26,9 +25,162 @@ except ImportError:
 from .tile_palette import build_tile_palette, terrain_ids
 
 
+class TileGrid(QWidget):
+    """The tileset as a picture, laid out the way its atlas is: click a tile, or drag over a
+    block of tiles to paint with the whole block (a stamp)."""
+
+    if Signal is not None:
+        blockSelected = Signal(object)  # rows of tile ids
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setObjectName("TilePaletteGrid")
+        self.setMouseTracking(False)
+        self._image = None
+        self._cells = {}  # (col, row) -> tile id
+        self._frames = {}  # (col, row) -> the tile's picture rect in the texture
+        self._columns = self._rows = 0
+        self._tile_size = (16, 16)
+        self._selection = None  # (c0, r0, c1, r1)
+        self._drag = None
+        self.setMinimumHeight(60)
+
+    def set_source(self, tileset, sprite_sheet=None, texture_path=None):
+        from PySide6.QtGui import QImage
+
+        self._cells, self._frames, self._selection = {}, {}, None
+        self._image = None
+        if tileset is None:
+            self._columns = self._rows = 0
+            self.updateGeometry()
+            self.update()
+            return
+        tw, th = int(tileset.tile_width), int(tileset.tile_height)
+        self._tile_size = (tw, th)
+        frames = list(getattr(sprite_sheet, "frames", None) or ())
+        for item in build_tile_palette(tileset):
+            if 0 <= item.frame_index < len(frames):
+                frame = frames[item.frame_index]
+                cell = (int(frame.x) // tw, int(frame.y) // th)
+                self._frames.setdefault(
+                    cell, (int(frame.x), int(frame.y), int(frame.width), int(frame.height))
+                )
+            else:  # no picture known: tiles in id order, eight to a row
+                cell = (len(self._cells) % 8, len(self._cells) // 8)
+            self._cells.setdefault(cell, item.tile_id)
+        self._columns = max((c for c, _ in self._cells), default=-1) + 1
+        self._rows = max((r for _, r in self._cells), default=-1) + 1
+        if texture_path is not None:
+            image = QImage(str(texture_path))
+            self._image = None if image.isNull() else image
+        self._fit()
+        self.update()
+
+    def _cell_px(self):
+        width = max(1, self.width())
+        return max(12, min(48, width // max(1, self._columns)))
+
+    def _fit(self):
+        self.setMinimumHeight(max(60, self._rows * self._cell_px()))
+
+    def resizeEvent(self, event):  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        self._fit()
+
+    def _cell_at(self, pos):
+        size = self._cell_px()
+        col, row = int(pos.x()) // size, int(pos.y()) // size
+        if 0 <= col < self._columns and 0 <= row < self._rows:
+            return col, row
+        return None
+
+    def select_tile(self, tile_id, rows=None):
+        """Highlight a picked tile (or the block ``rows`` when it is laid out that way)."""
+        where = [cell for cell, t in self._cells.items() if t == tile_id]
+        if not where:
+            self._selection = None
+        else:
+            c, r = min(where)
+            h = len(rows) if rows else 1
+            w = len(rows[0]) if rows else 1
+            block = (
+                all(
+                    self._cells.get((c + x, r + y)) == rows[y][x]
+                    for y in range(h)
+                    for x in range(w)
+                )
+                if rows
+                else True
+            )
+            self._selection = (c, r, c + w - 1, r + h - 1) if block else (c, r, c, r)
+        self.update()
+
+    def mousePressEvent(self, event):  # noqa: N802 - Qt API
+        cell = self._cell_at(event.position())
+        if cell is None:
+            return
+        self._drag = cell
+        self._selection = (*cell, *cell)
+        self.update()
+
+    def mouseMoveEvent(self, event):  # noqa: N802 - Qt API
+        if self._drag is None:
+            return
+        cell = self._cell_at(event.position()) or self._drag
+        self._selection = (*self._drag, *cell)
+        self.update()
+
+    def mouseReleaseEvent(self, event):  # noqa: N802 - Qt API
+        if self._drag is None or self._selection is None:
+            return
+        self._drag = None
+        c0, r0, c1, r1 = self._selection
+        c0, c1 = sorted((c0, c1))
+        r0, r1 = sorted((r0, r1))
+        self._selection = (c0, r0, c1, r1)
+        from asteria.graphics import EMPTY_TILE
+
+        rows = tuple(
+            tuple(self._cells.get((c, r), EMPTY_TILE) for c in range(c0, c1 + 1))
+            for r in range(r0, r1 + 1)
+        )
+        if any(t != EMPTY_TILE for row in rows for t in row) and Signal is not None:
+            self.blockSelected.emit(rows)
+        self.update()
+
+    def paintEvent(self, event):  # noqa: N802 - Qt API
+        from PySide6.QtCore import QRect
+        from PySide6.QtGui import QColor, QPainter, QPen
+
+        painter = QPainter(self)
+        painter.fillRect(self.rect(), QColor(28, 30, 38))
+        size = self._cell_px()
+        for (col, row), _tile in self._cells.items():
+            target = QRect(col * size, row * size, size, size)
+            frame = self._frames.get((col, row))
+            if self._image is not None and frame is not None:
+                painter.drawImage(target, self._image, QRect(*frame))
+            else:
+                painter.fillRect(target.adjusted(1, 1, -1, -1), QColor(70, 76, 92))
+        painter.setPen(QPen(QColor(255, 255, 255, 28), 1))
+        for col in range(self._columns + 1):
+            painter.drawLine(col * size, 0, col * size, self._rows * size)
+        for row in range(self._rows + 1):
+            painter.drawLine(0, row * size, self._columns * size, row * size)
+        if self._selection is not None:
+            c0, r0, c1, r1 = self._selection
+            c0, c1 = sorted((c0, c1))
+            r0, r1 = sorted((r0, r1))
+            painter.setPen(QPen(QColor(255, 206, 96), 2))
+            painter.drawRect(c0 * size, r0 * size, (c1 - c0 + 1) * size, (r1 - r0 + 1) * size)
+        painter.end()
+
+
 class TilePaletteWidget(QWidget):
     if Signal is not None:
         tileSelected = Signal(int)
+        stampSelected = Signal(object)  # rows of tile ids (one row of one: a single tile)
+        brushSizeChanged = Signal(int)
         modeChanged = Signal(str)
         terrainChanged = Signal(str)
         regionChanged = Signal(int, bool)
@@ -187,14 +339,33 @@ class TilePaletteWidget(QWidget):
         actions.addWidget(self.create_map_ruleset)
         region_content_layout.addLayout(actions)
         layout.addWidget(self.region_rules)
+        layout.addSpacing(24)  # the last card keeps clear of the dock's tabs
 
         self.layer_label = QLabel("Layer: —")
         self.layer_label.setObjectName("MutedLabel")
-        layout.addWidget(self.layer_label)
+        brush_row = QHBoxLayout()
+        brush_row.addWidget(self.layer_label, 1)
+        brush_row.addWidget(QLabel("Brush"))
+        self.brush_spin = QSpinBox()
+        self.brush_spin.setObjectName("BrushSizeSpin")
+        self.brush_spin.setRange(1, 9)
+        self.brush_spin.setSuffix(" × tiles")
+        self.brush_spin.setToolTip(
+            "Paint / Erase brush width in tiles ([ and ] change it). "
+            "Drag over several tiles below to paint with the whole block."
+        )
+        brush_row.addWidget(self.brush_spin)
+        # right under the tool buttons: the brush and the tileset picture come first
+        layout.insertLayout(2, brush_row)
+        self.tool_hint = QLabel(
+            "B Paint · G Fill · R Rectangle · E Erase · S Select · right-click: pick from map"
+        )
+        self.tool_hint.setObjectName("MutedLabel")
+        self.tool_hint.setWordWrap(True)
+        layout.insertWidget(3, self.tool_hint)
 
-        self.list = QListWidget()
-        self.list.setObjectName("TilePaletteList")
-        layout.addWidget(self.list, 1)
+        self.grid = TileGrid()
+        layout.insertWidget(4, self.grid)
 
         self.select_button.clicked.connect(lambda: self._set_mode("select"))
         self.paint_button.clicked.connect(lambda: self._set_mode("paint"))
@@ -213,7 +384,8 @@ class TilePaletteWidget(QWidget):
         )
         self.create_map_ruleset.clicked.connect(self.createMapRuleSetRequested.emit)
         self.doodad_combo.currentTextChanged.connect(self._doodad_changed)
-        self.list.currentRowChanged.connect(self._row_changed)
+        self.grid.blockSelected.connect(self._block_selected)
+        self.brush_spin.valueChanged.connect(self.brushSizeChanged.emit)
 
     def bind_dock_scroll_area(self, scroll_area):
         """Keep the Area Rule frame within the visible portion of the Tiles dock."""
@@ -365,16 +537,29 @@ class TilePaletteWidget(QWidget):
         self.doodad_combo.blockSignals(False)
         self.doodadChanged.emit(self._doodads.get(self.doodad_combo.currentText()))
 
-    def _row_changed(self, row):
-        if self._tileset is None or row < 0:
-            return
-        items = build_tile_palette(self._tileset)
-        if row < len(items):
-            self.tileSelected.emit(items[row].tile_id)
+    def _block_selected(self, rows):
+        self.tileSelected.emit(int(rows[0][0]))
+        self.stampSelected.emit(rows)
+        if self.select_button.isChecked() or self.region_button.isChecked():
+            self._set_mode("paint")  # picking a tile means painting with it
 
-    def set_tileset(self, tileset):
+    def show_picked(self, rows):
+        """The eyedropper took ``rows`` off the map: highlight them here."""
+        self.grid.select_tile(int(rows[0][0]), rows)
+        self.tileSelected.emit(int(rows[0][0]))
+
+    def handle_tool_key(self, name):
+        """A tool key pressed over the map: B / G / R / E / S switch tools, [ ] the brush."""
+        if name == "smaller":
+            self.brush_spin.setValue(self.brush_spin.value() - 1)
+        elif name == "bigger":
+            self.brush_spin.setValue(self.brush_spin.value() + 1)
+        else:
+            self._set_mode(name)
+
+    def set_tileset(self, tileset, sprite_sheet=None, texture_path=None):
         self._tileset = tileset
-        self.list.clear()
+        self.grid.set_source(tileset, sprite_sheet, texture_path)
         self.terrain_combo.blockSignals(True)
         self.terrain_combo.clear()
         if tileset is not None:
@@ -383,14 +568,6 @@ class TilePaletteWidget(QWidget):
         self.terrainChanged.emit(self.terrain_combo.currentText())
         if tileset is None:
             return
-        for item in build_tile_palette(tileset):
-            suffix = []
-            if item.terrain:
-                suffix.append(item.terrain)
-            if item.collision != "none":
-                suffix.append(item.collision)
-            meta = f"  · {' / '.join(suffix)}" if suffix else ""
-            self.list.addItem(f"Tile {item.tile_id}{meta}")
 
     def set_layer(self, layer):
         self.layer_label.setText(f"Layer: {layer.name}" if layer is not None else "Layer: —")

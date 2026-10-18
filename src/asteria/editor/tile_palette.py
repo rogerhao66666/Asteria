@@ -48,6 +48,47 @@ class TileToolState:
     region_layer_name: str = "regions"
     region_erase: bool = False
     doodad: object | None = None
+    # stamp: rows of tile ids picked as a block in the palette (None: the one selected tile);
+    # brush_size: the side of the square a single tile paints or erases (1 = one cell)
+    stamp: tuple | None = None
+    brush_size: int = 1
+
+    def set_stamp(self, rows):
+        """Pick a block of tiles (rows of tile ids) as the brush; one tile is a plain pick."""
+        rows = tuple(tuple(int(t) for t in row) for row in rows or () if row)
+        if not rows:
+            self.stamp = None
+            return
+        self.selected_tile_id = rows[0][0]
+        self.stamp = rows if (len(rows) > 1 or len(rows[0]) > 1) else None
+
+    def assignments(self, cells, origin=None):
+        """``{cell: tile_id}`` a Paint / Erase / Fill / Rectangle puts on ``cells``. A stamp
+        repeats as a pattern anchored at ``origin`` (the first cell), so dragging lays it
+        seamlessly; a single tile (or Erase) covers a ``brush_size`` square around each cell."""
+        cells = [(int(x), int(y)) for x, y in cells]
+        if not cells:
+            return {}
+        ox, oy = origin if origin is not None else cells[0]
+        stamp = self.stamp if self.mode != "erase" else None
+        out = {}
+        if stamp:
+            h, w = len(stamp), len(stamp[0])
+            spread = self.mode in {"paint"}  # a brush stroke lays the whole block at each cell
+            for x, y in cells:
+                for dy in range(h if spread else 1):
+                    for dx in range(w if spread else 1):
+                        cx, cy = x + dx, y + dy
+                        out[(cx, cy)] = stamp[(cy - oy) % h][(cx - ox) % w]
+            return out
+        tile = self.effective_tile_id
+        size = max(1, int(self.brush_size)) if self.mode in {"paint", "erase"} else 1
+        lo = -((size - 1) // 2)
+        for x, y in cells:
+            for dy in range(lo, lo + size):
+                for dx in range(lo, lo + size):
+                    out[(x + dx, y + dy)] = tile
+        return out
 
     def set_mode(self, mode):
         if mode not in MODES:
@@ -73,6 +114,10 @@ class TileToolState:
             return build_region_command(
                 tilemap, self.region_layer_name, cells, self.region_id, erase=self.region_erase
             )
+        from .tile_edit import build_assign_command
+
+        if self.mode in {"paint", "erase", "fill", "rectangle"}:
+            return build_assign_command(tilemap, self.active_layer, self.assignments(cells))
         return build_paint_command(tilemap, self.active_layer, cells, self.effective_tile_id)
 
     @property
