@@ -207,7 +207,8 @@ def fight(game, facts, acc, seed=7, max_rounds=200, encounter="boss_room", crowd
         pool.sort(key=lambda a: used[a])  # variety: the least used skill first
         killers = ("executioner", "assassinate", "deathmark")  # instant death must get its roll
         base = lambda a: a.split("__")[0]  # noqa: E731 - a rune variant counts as its skill
-        pool.sort(key=lambda a: not (base(a) in killers and used[a] == 0))
+        hunting = facts["kill_immune"] == 0  # until the boss has shrugged one off
+        pool.sort(key=lambda a: not (base(a) in killers and (used[a] == 0 or hunting)))
         # skills whose system must show up at least once: forms, item / gold costs, lifesteal
         special = (
             "dawn_and_dusk",
@@ -258,7 +259,8 @@ def fight(game, facts, acc, seed=7, max_rounds=200, encounter="boss_room", crowd
                 relation = game.ability_relation(ability_id)
                 chosen = targets if "OPPONENT" in str(relation).upper() else None
                 adds = [e for e in game.active_enemy_ids() if e != boss]
-                if adds and base(ability_id) in ("executioner", "assassinate") and chosen:
+                aimed = base(ability_id) in ("executioner", "assassinate") and not hunting
+                if adds and aimed and chosen:
                     chosen = (adds[0],)  # instant death works on the adds, not the boss
                 definition = game.battle.ability_runtime.registry.get(ability_id)
                 form = rng.choice(definition.forms)["form_id"] if definition.forms else None

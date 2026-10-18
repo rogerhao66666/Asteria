@@ -444,6 +444,45 @@
         "source_path": "playable_assets/lucifer/world/look_skeleton_hunter_clips.json"
       },
       {
+        "id": "9f5b4c1a-9b5e-5120-810d-16acee4c3849",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Skeleton Grunt",
+        "source_path": "playable_assets/lucifer/world/look_skeleton_grunt.png"
+      },
+      {
+        "id": "dbeeda0f-9e4b-5dec-9f6a-6c363a349e6c",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Skeleton Grunt Sheet",
+        "source_path": "playable_assets/lucifer/world/look_skeleton_grunt_sheet.json"
+      },
+      {
+        "id": "ad977488-a4a8-5f8e-a599-de2c03b302a7",
+        "import_settings": {},
+        "importer": "boss_trial_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/boss_trial_demo/trial_maps.py"
+        },
+        "name": "Skeleton Grunt Animations",
+        "source_path": "playable_assets/lucifer/world/look_skeleton_grunt_clips.json"
+      },
+      {
         "id": "6d26e827-8ef9-540e-bb38-399d0caaed97",
         "import_settings": {},
         "importer": "boss_trial_demo",
@@ -3277,6 +3316,209 @@
           ],
           "provider": "project",
           "uri": "playable_assets/battle/crimson_warlord.png"
+        },
+        "tags": [
+          "battle",
+          "combatant",
+          "enemy"
+        ],
+        "version": 1
+      },
+      {
+        "asset_id": "battle.combatant.vigil_acolyte",
+        "kind": "sprite_sheet",
+        "metadata": [
+          [
+            "clips",
+            {
+              "attack": {
+                "events": {
+                  "4": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.085,
+                "frames": [
+                  6,
+                  7,
+                  8,
+                  9,
+                  10,
+                  11,
+                  12,
+                  13,
+                  0
+                ],
+                "loop": false
+              },
+              "attack2": {
+                "events": {
+                  "4": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.085,
+                "frames": [
+                  14,
+                  15,
+                  16,
+                  17,
+                  18,
+                  19,
+                  20,
+                  21,
+                  0
+                ],
+                "loop": false
+              },
+              "attack3": {
+                "events": {
+                  "4": [
+                    "hit"
+                  ]
+                },
+                "frame_duration": 0.08,
+                "frames": [
+                  22,
+                  23,
+                  24,
+                  25,
+                  26,
+                  27,
+                  28,
+                  29,
+                  0
+                ],
+                "loop": false
+              },
+              "cast": {
+                "frame_duration": 0.1,
+                "frames": [
+                  30,
+                  31,
+                  32,
+                  33,
+                  34,
+                  35,
+                  0
+                ],
+                "loop": false
+              },
+              "guard": {
+                "frame_duration": 0.3,
+                "frames": [
+                  0
+                ],
+                "loop": true
+              },
+              "hit": {
+                "frame_duration": 0.08,
+                "frames": [
+                  36,
+                  37,
+                  38,
+                  39,
+                  0
+                ],
+                "loop": false
+              },
+              "idle": {
+                "frame_duration": 0.18,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
+                ],
+                "loop": true
+              },
+              "ko": {
+                "frame_duration": 0.12,
+                "frames": [
+                  40,
+                  41,
+                  42,
+                  43,
+                  44,
+                  45,
+                  46,
+                  47
+                ],
+                "loop": false
+              },
+              "revive": {
+                "frame_duration": 0.1,
+                "frames": [
+                  48,
+                  49,
+                  50,
+                  51,
+                  52,
+                  53,
+                  54,
+                  55
+                ],
+                "loop": false
+              },
+              "status": {
+                "frame_duration": 0.18,
+                "frames": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
+                ],
+                "loop": true
+              },
+              "transform": {
+                "frame_duration": 0.1,
+                "frames": [
+                  56,
+                  57,
+                  58,
+                  59,
+                  0
+                ],
+                "loop": false
+              }
+            }
+          ],
+          [
+            "frame_size",
+            [
+              84,
+              86
+            ]
+          ],
+          [
+            "pivot",
+            [
+              0.5,
+              0.9302
+            ]
+          ],
+          [
+            "body_height",
+            58
+          ]
+        ],
+        "source": {
+          "provenance": [
+            [
+              "license",
+              "CC0 1.0"
+            ],
+            [
+              "source",
+              "Foozle Lucifer packs"
+            ]
+          ],
+          "provider": "project",
+          "uri": "playable_assets/battle/vigil_acolyte.png"
         },
         "tags": [
           "battle",
@@ -6550,6 +6792,77 @@
             "offset_y": 0.0,
             "scale_x": 0.62,
             "scale_y": 0.62,
+            "z_order": 0
+          }
+        },
+        "vigil_acolyte": {
+          "assets": {
+            "battlefield_asset_id": "battle.combatant.vigil_acolyte",
+            "icon_asset_id": null,
+            "portrait_asset_id": null,
+            "small_portrait_asset_id": null
+          },
+          "battlefield_visible": true,
+          "hud_visible": true,
+          "profile_id": "vigil_acolyte",
+          "states": [
+            {
+              "clip_role": "idle",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "idle"
+            },
+            {
+              "clip_role": "attack",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack"
+            },
+            {
+              "clip_role": "cast",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "cast"
+            },
+            {
+              "clip_role": "hit",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "hit"
+            },
+            {
+              "clip_role": "ko",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "ko"
+            },
+            {
+              "clip_role": "attack2",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack2"
+            },
+            {
+              "clip_role": "attack3",
+              "fallback_state_id": "idle",
+              "persistent": false,
+              "priority": 0,
+              "state_id": "attack3"
+            }
+          ],
+          "transform": {
+            "anchor_x": 0.5,
+            "anchor_y": 1.0,
+            "offset_x": 0.0,
+            "offset_y": 0.0,
+            "scale_x": 0.9,
+            "scale_y": 0.9,
             "z_order": 0
           }
         }
@@ -11741,6 +12054,99 @@
               "duration": 0.4,
               "easing": "linear",
               "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
+        "chase_strike": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "advance",
+              "channel": "move",
+              "cue": "advance",
+              "duration": 0.16,
+              "easing": "ease_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack3",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.cut",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.29,
+              "beat_id": "return",
+              "channel": "move",
+              "cue": "return",
+              "duration": 0.2,
+              "easing": "ease_in_out",
+              "member_id": "@source",
               "payload": [],
               "target_id": null
             }
@@ -20490,6 +20896,77 @@
           "recovery_at": null,
           "sequence_id": "fire_arc"
         },
+        "intercept": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.shield",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
         "last_bastion": {
           "beats": [
             {
@@ -21968,6 +22445,110 @@
           "recovery_at": null,
           "sequence_id": "strike"
         },
+        "momentum_strike": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "advance",
+              "channel": "move",
+              "cue": "advance",
+              "duration": 0.16,
+              "easing": "ease_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack3",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.slash2",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.26,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.cutx",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.31,
+              "beat_id": "return",
+              "channel": "move",
+              "cue": "return",
+              "duration": 0.2,
+              "easing": "ease_in_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
         "mug": {
           "beats": [
             {
@@ -22403,6 +22984,77 @@
               "channel": "vfx",
               "cue": "battle.fx.slash",
               "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
+        "party_rush": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.circ",
+              "duration": 0.4,
               "easing": "linear",
               "member_id": "@target",
               "payload": [],
@@ -24626,6 +25278,77 @@
           "recovery_at": null,
           "sequence_id": "strike"
         },
+        "rush_blow": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
         "salve_heal": {
           "beats": [
             {
@@ -26378,6 +27101,97 @@
           "duration": 0.7,
           "recovery_at": null,
           "sequence_id": "strike"
+        },
+        "soul_burst": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack2",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.2,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.spirit",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "flash",
+              "channel": "screen_fx",
+              "cue": "flash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "alpha",
+                  40
+                ],
+                [
+                  "duration",
+                  0.08
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  5
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.9,
+          "recovery_at": null,
+          "sequence_id": "fire_arc"
         },
         "soul_harvest": {
           "beats": [
@@ -37708,7 +38522,8 @@
         "hits": [
           {
             "checks": [
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": [
@@ -37874,7 +38689,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": [
@@ -37884,7 +38700,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": [
@@ -37894,7 +38711,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.2,
             "tags": [
@@ -37904,7 +38722,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.4,
             "tags": [
@@ -39832,7 +40651,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": [
@@ -39842,7 +40662,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": [
@@ -39852,7 +40673,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.4,
             "tags": [
@@ -39932,7 +40754,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.6,
             "tags": [
@@ -41746,6 +42569,80 @@
         "tags": [
           "ability",
           "magic"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "chase_strike",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Chase Strike",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "chase_strike.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -8.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "weapon.dagger"
+            ]
+          }
+        ],
+        "icon_id": "playable_assets/lucifer/icons/skill_chase_strike.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "follow_up",
+          "weapon.dagger"
         ],
         "targeting": {
           "allow_self": false,
@@ -47928,7 +48825,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": [
@@ -48008,7 +48906,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": [
@@ -48018,7 +48917,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": [
@@ -50354,6 +51254,38 @@
         "version": 1
       },
       {
+        "ability_id": "intercept",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "ward",
+            "to": "targets"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Intercept",
+        "effects": [],
+        "icon_id": "playable_assets/lucifer/icons/skill_intercept.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "support"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "last_bastion",
         "apply_states": [
           {
@@ -51747,6 +52679,93 @@
         "version": 1
       },
       {
+        "ability_id": "momentum_strike",
+        "battle_costs": {
+          "momentum": 3.0
+        },
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Momentum Strike",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "momentum_strike.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -26.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "weapon.sword"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.5,
+            "tags": [
+              "weapon.sword"
+            ]
+          }
+        ],
+        "icon_id": "playable_assets/lucifer/icons/skill_momentum_strike.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "finisher",
+          "weapon.sword"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "mug",
         "commands": [
           {
@@ -52302,6 +53321,44 @@
           "allow_self": true,
           "blocked_tags": [],
           "maximum_targets": 6,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "party_rush",
+        "battle_costs": {
+          "momentum": 2.0
+        },
+        "commands": [
+          {
+            "args": {
+              "actor_id": "@actor",
+              "sequence_id": "party_rush",
+              "target_id": "@target"
+            },
+            "command": "BATTLE_SEQUENCE"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Party Rush",
+        "effects": [],
+        "icon_id": "playable_assets/lucifer/icons/skill_party_rush.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "combo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
           "minimum_targets": 1,
           "required_tags": []
         },
@@ -54289,6 +55346,78 @@
         "version": 1
       },
       {
+        "ability_id": "rush_blow",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Rush Blow",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "rush_blow.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -9.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": []
+          }
+        ],
+        "icon_id": "playable_assets/lucifer/icons/skill_rush_blow.png",
+        "menu_category": "Combo",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "combo"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "salve_heal",
         "conditions": {
           "conditions": [],
@@ -55599,7 +56728,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": [
@@ -55672,7 +56802,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": [
@@ -55938,6 +57069,94 @@
           "allow_self": false,
           "blocked_tags": [],
           "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "soul_burst",
+        "battle_costs": {
+          "soul": 3.0
+        },
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Soul Burst",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "soul_burst.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -14.0,
+                        "key": "magic",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "damage.dark"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.2,
+            "tags": [
+              "damage.dark"
+            ]
+          }
+        ],
+        "icon_id": "playable_assets/lucifer/icons/skill_soul_burst.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "damage.dark",
+          "finisher",
+          "magic"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 6,
           "minimum_targets": 1,
           "required_tags": []
         },
@@ -58135,7 +59354,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": []
@@ -58275,7 +59495,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": []
@@ -58283,7 +59504,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": []
@@ -58291,7 +59513,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.4,
             "tags": []
@@ -58361,7 +59584,8 @@
         "hits": [
           {
             "checks": [
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": [
@@ -58573,28 +59797,32 @@
         "hits": [
           {
             "checks": [
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": []
           },
           {
             "checks": [
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.4,
             "tags": []
           },
           {
             "checks": [
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.8,
             "tags": []
           },
           {
             "checks": [
-              "land"
+              "land",
+              "block"
             ],
             "power": 2.4,
             "tags": []
@@ -58707,7 +59935,8 @@
         "hits": [
           {
             "checks": [
-              "land"
+              "land",
+              "block"
             ],
             "kill": {
               "chance": 0.15,
@@ -58854,7 +60083,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": []
@@ -58862,7 +60092,8 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": []
@@ -58939,14 +60170,16 @@
         "hits": [
           {
             "checks": [
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": []
           },
           {
             "checks": [
-              "land"
+              "land",
+              "block"
             ],
             "power": 1.0,
             "tags": []
@@ -62116,6 +63349,56 @@
         ],
         "tags": [],
         "version": 1
+      },
+      {
+        "interruption_policy": "skip_step",
+        "max_participants": 4,
+        "min_participants": 2,
+        "participant_policy": "all_available",
+        "schema": "asteria.rpg.action_sequence_definition",
+        "sequence_id": "party_rush",
+        "steps": [
+          {
+            "ability_id": "rush_blow",
+            "delay": 0.0,
+            "emitted_tags": [],
+            "participant_index": 0,
+            "repeat": 1,
+            "required_previous_tags": [],
+            "target_policy": "inherit"
+          },
+          {
+            "ability_id": "rush_blow",
+            "delay": 0.1,
+            "emitted_tags": [],
+            "participant_index": 1,
+            "repeat": 1,
+            "required_previous_tags": [],
+            "target_policy": "inherit"
+          },
+          {
+            "ability_id": "rush_blow",
+            "delay": 0.2,
+            "emitted_tags": [],
+            "participant_index": 2,
+            "repeat": 1,
+            "required_previous_tags": [],
+            "target_policy": "inherit"
+          },
+          {
+            "ability_id": "rush_blow",
+            "delay": 0.30000000000000004,
+            "emitted_tags": [],
+            "participant_index": 3,
+            "repeat": 1,
+            "required_previous_tags": [],
+            "target_policy": "inherit"
+          }
+        ],
+        "tags": [
+          "combo"
+        ],
+        "version": 1
       }
     ],
     "action_timings": [
@@ -62208,6 +63491,17 @@
         "version": 1
       },
       {
+        "ability_id": "death_coil",
+        "cast_time": 0.5,
+        "interrupt_threshold": 0.0,
+        "interruptible": true,
+        "priority": 0,
+        "recovery": 0.2,
+        "schema": "asteria.rpg.action_timing_definition",
+        "startup": 0.1,
+        "version": 1
+      },
+      {
         "ability_id": "dispel",
         "cast_time": 0.0,
         "interrupt_threshold": 0.0,
@@ -62252,6 +63546,28 @@
         "version": 1
       },
       {
+        "ability_id": "forbidden_rite",
+        "cast_time": 0.5,
+        "interrupt_threshold": 0.0,
+        "interruptible": true,
+        "priority": 0,
+        "recovery": 0.2,
+        "schema": "asteria.rpg.action_timing_definition",
+        "startup": 0.1,
+        "version": 1
+      },
+      {
+        "ability_id": "frost_nova",
+        "cast_time": 0.3,
+        "interrupt_threshold": 0.0,
+        "interruptible": true,
+        "priority": 0,
+        "recovery": 0.15,
+        "schema": "asteria.rpg.action_timing_definition",
+        "startup": 0.1,
+        "version": 1
+      },
+      {
         "ability_id": "guard",
         "cast_time": 0.0,
         "interrupt_threshold": 0.0,
@@ -62285,12 +63601,34 @@
         "version": 1
       },
       {
+        "ability_id": "holy_judgment",
+        "cast_time": 0.6,
+        "interrupt_threshold": 0.0,
+        "interruptible": true,
+        "priority": 0,
+        "recovery": 0.2,
+        "schema": "asteria.rpg.action_timing_definition",
+        "startup": 0.1,
+        "version": 1
+      },
+      {
         "ability_id": "ice_lance",
         "cast_time": 0.0,
         "interrupt_threshold": 0.0,
         "interruptible": true,
         "priority": 0,
         "recovery": 0.15,
+        "schema": "asteria.rpg.action_timing_definition",
+        "startup": 0.1,
+        "version": 1
+      },
+      {
+        "ability_id": "mass_cure",
+        "cast_time": 0.4,
+        "interrupt_threshold": 0.0,
+        "interruptible": true,
+        "priority": 0,
+        "recovery": 0.2,
         "schema": "asteria.rpg.action_timing_definition",
         "startup": 0.1,
         "version": 1
@@ -62346,6 +63684,17 @@
         "interruptible": true,
         "priority": 0,
         "recovery": 0.15,
+        "schema": "asteria.rpg.action_timing_definition",
+        "startup": 0.1,
+        "version": 1
+      },
+      {
+        "ability_id": "soul_harvest",
+        "cast_time": 0.6,
+        "interrupt_threshold": 0.0,
+        "interruptible": true,
+        "priority": 0,
+        "recovery": 0.25,
         "schema": "asteria.rpg.action_timing_definition",
         "startup": 0.1,
         "version": 1
@@ -62442,6 +63791,13 @@
         "version": 1
       },
       {
+        "ability_id": "death_coil",
+        "cost_commit": "start",
+        "interrupt_cost": "keep",
+        "schema": "asteria.rpg.action_transaction_policy",
+        "version": 1
+      },
+      {
         "ability_id": "dispel",
         "cost_commit": "resolution",
         "interrupt_cost": "refund",
@@ -62470,6 +63826,20 @@
         "version": 1
       },
       {
+        "ability_id": "forbidden_rite",
+        "cost_commit": "start",
+        "interrupt_cost": "keep",
+        "schema": "asteria.rpg.action_transaction_policy",
+        "version": 1
+      },
+      {
+        "ability_id": "frost_nova",
+        "cost_commit": "start",
+        "interrupt_cost": "keep",
+        "schema": "asteria.rpg.action_transaction_policy",
+        "version": 1
+      },
+      {
         "ability_id": "guard",
         "cost_commit": "resolution",
         "interrupt_cost": "refund",
@@ -62491,9 +63861,23 @@
         "version": 1
       },
       {
+        "ability_id": "holy_judgment",
+        "cost_commit": "start",
+        "interrupt_cost": "keep",
+        "schema": "asteria.rpg.action_transaction_policy",
+        "version": 1
+      },
+      {
         "ability_id": "ice_lance",
         "cost_commit": "resolution",
         "interrupt_cost": "refund",
+        "schema": "asteria.rpg.action_transaction_policy",
+        "version": 1
+      },
+      {
+        "ability_id": "mass_cure",
+        "cost_commit": "start",
+        "interrupt_cost": "keep",
         "schema": "asteria.rpg.action_transaction_policy",
         "version": 1
       },
@@ -62533,6 +63917,13 @@
         "version": 1
       },
       {
+        "ability_id": "soul_harvest",
+        "cost_commit": "start",
+        "interrupt_cost": "keep",
+        "schema": "asteria.rpg.action_transaction_policy",
+        "version": 1
+      },
+      {
         "ability_id": "storm_chain",
         "cost_commit": "resolution",
         "interrupt_cost": "refund",
@@ -62558,7 +63949,11 @@
       {
         "abilities": [
           "concoct",
-          "counter_strike"
+          "counter_strike",
+          "momentum_strike",
+          "party_rush",
+          "rush_blow",
+          "intercept"
         ],
         "actor_id": "hero_01",
         "base_resources": {
@@ -62610,12 +64005,15 @@
         "schema": "asteria.rpg.actor",
         "tags": [
           "actor.playable",
-          "roster.01"
+          "roster.01",
+          "trait.cover"
         ],
         "version": 2
       },
       {
-        "abilities": [],
+        "abilities": [
+          "rush_blow"
+        ],
         "actor_id": "hero_02",
         "base_resources": {
           "technique": {
@@ -62671,7 +64069,10 @@
         "version": 2
       },
       {
-        "abilities": [],
+        "abilities": [
+          "soul_burst",
+          "rush_blow"
+        ],
         "actor_id": "hero_03",
         "base_resources": {
           "technique": {
@@ -62727,7 +64128,10 @@
         "version": 2
       },
       {
-        "abilities": [],
+        "abilities": [
+          "rush_blow",
+          "chase_strike"
+        ],
         "actor_id": "hero_04",
         "base_resources": {
           "technique": {
@@ -62778,7 +64182,8 @@
         "schema": "asteria.rpg.actor",
         "tags": [
           "actor.playable",
-          "roster.01"
+          "roster.01",
+          "trait.follow_up"
         ],
         "version": 2
       },
@@ -63984,6 +65389,41 @@
         "winning_sides": [
           "heroes"
         ]
+      },
+      {
+        "defeated_sides": [
+          "enemies"
+        ],
+        "failure_conditions": [],
+        "failure_defeated_sides": [
+          "heroes"
+        ],
+        "failure_mode": "any",
+        "failure_winning_sides": [
+          "enemies"
+        ],
+        "objective_id": "vigil_survive",
+        "priority": 6,
+        "schema": "asteria.rpg.battle_objective_definition",
+        "success_conditions": [
+          {
+            "kind": "round_index",
+            "operator": ">=",
+            "subject_id": "round",
+            "value": 8.0
+          },
+          {
+            "kind": "side_active_count",
+            "operator": ">=",
+            "subject_id": "heroes",
+            "value": 1.0
+          }
+        ],
+        "success_mode": "all",
+        "version": 1,
+        "winning_sides": [
+          "heroes"
+        ]
       }
     ],
     "battle_options": [
@@ -64012,6 +65452,23 @@
         "version": 1
       },
       {
+        "end_mode": "reset_to_start",
+        "maximum": 10.0,
+        "minimum": 0.0,
+        "overflow_limit": null,
+        "resource_id": "momentum",
+        "rules": [
+          {
+            "amount": 1.0,
+            "trigger": "rpg.battle.turn_ended"
+          }
+        ],
+        "schema": "asteria.rpg.battle_resource",
+        "start_mode": "fixed",
+        "start_value": 0.0,
+        "version": 1
+      },
+      {
         "end_mode": "persist",
         "maximum": 1.0,
         "minimum": 0.0,
@@ -64022,6 +65479,23 @@
         "start_mode": "maximum",
         "start_value": null,
         "subject_maximum": true,
+        "version": 1
+      },
+      {
+        "end_mode": "reset_to_start",
+        "maximum": 6.0,
+        "minimum": 0.0,
+        "overflow_limit": null,
+        "resource_id": "soul",
+        "rules": [
+          {
+            "amount": 1.0,
+            "trigger": "rpg.battle.round_started"
+          }
+        ],
+        "schema": "asteria.rpg.battle_resource",
+        "start_mode": "fixed",
+        "start_value": 0.0,
         "version": 1
       }
     ],
@@ -64041,6 +65515,14 @@
         "schema": "asteria.rpg.battle_scheduler_definition",
         "timeline_scale": 100.0,
         "version": 1
+      },
+      {
+        "minimum_speed": 1.0,
+        "mode": "continuous",
+        "scheduler_id": "swift_timeline",
+        "schema": "asteria.rpg.battle_scheduler_definition",
+        "timeline_scale": 60.0,
+        "version": 1
       }
     ],
     "battle_session_rules": [
@@ -64051,6 +65533,17 @@
         "hit_trigger": "battle.hit",
         "knockout_resource_id": "vitality",
         "rules_id": "trial",
+        "schema": "asteria.rpg.battle_session_rules",
+        "shield_resource_id": "shield",
+        "version": 1
+      },
+      {
+        "boost_cost_per_level": 1.0,
+        "boost_max_level": 5,
+        "boost_resource_id": "bp",
+        "hit_trigger": "battle.hit",
+        "knockout_resource_id": "vitality",
+        "rules_id": "vigil_gauntlet",
         "schema": "asteria.rpg.battle_session_rules",
         "shield_resource_id": "shield",
         "version": 1
@@ -65753,6 +67246,23 @@
         "version": 1
       },
       {
+        "ability_id": "chase_strike",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "cleave",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -67351,6 +68861,23 @@
         "version": 1
       },
       {
+        "ability_id": "intercept",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "ally",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "last_bastion",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -67640,6 +69167,23 @@
         "version": 1
       },
       {
+        "ability_id": "momentum_strike",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "mug",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -67717,6 +69261,23 @@
         "metric_conditions": [],
         "minimum_targets": 1,
         "relation": "ally",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "party_rush",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
         "required_slot_tags": [],
         "required_subject_tags": [],
         "schema": "asteria.rpg.battle_targeting_definition",
@@ -68133,6 +69694,23 @@
         "version": 1
       },
       {
+        "ability_id": "rush_blow",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "salve_heal",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -68479,6 +70057,23 @@
         "blocked_slot_tags": [],
         "blocked_subject_tags": [],
         "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "soul_burst",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 6,
         "metric_conditions": [],
         "minimum_targets": 1,
         "relation": "opponent",
@@ -71376,6 +72971,25 @@
     ],
     "encounters": [
       {
+        "encounter_id": "acolyte_vigil",
+        "members": [
+          {
+            "count": 3,
+            "enemy_id": "vigil_acolyte",
+            "weight": 1.0
+          }
+        ],
+        "schema": "asteria.rpg.encounter",
+        "tags": [
+          "no_escape",
+          "objective:vigil_survive",
+          "rules:vigil_gauntlet",
+          "scheduler:classic_rounds",
+          "throne"
+        ],
+        "version": 1
+      },
+      {
         "encounter_id": "boss_room",
         "members": [
           {
@@ -71426,6 +73040,7 @@
         "schema": "asteria.rpg.encounter",
         "tags": [
           "crypt",
+          "escape:crypt_escape",
           "scheduler:classic_rounds"
         ],
         "version": 1
@@ -71441,7 +73056,9 @@
         ],
         "schema": "asteria.rpg.encounter",
         "tags": [
-          "crypt"
+          "crypt",
+          "escape:crypt_escape",
+          "scheduler:swift_timeline"
         ],
         "version": 1
       },
@@ -71477,6 +73094,7 @@
         ],
         "schema": "asteria.rpg.encounter",
         "tags": [
+          "escape:woods_escape",
           "scheduler:classic_rounds",
           "woods"
         ],
@@ -71515,6 +73133,7 @@
         ],
         "schema": "asteria.rpg.encounter",
         "tags": [
+          "escape:woods_escape",
           "woods"
         ],
         "version": 1
@@ -71788,6 +73407,46 @@
           "enemy",
           "resist.dagger",
           "weak.light"
+        ],
+        "version": 1
+      },
+      {
+        "abilities": [
+          "w_mend",
+          "w_cinder"
+        ],
+        "display_name": "Vigil Acolyte",
+        "enemy_id": "vigil_acolyte",
+        "resources": {
+          "shield": 2.0,
+          "technique": 999.0,
+          "vitality": 60000.0
+        },
+        "reward": {
+          "currencies": {
+            "gold": 6000.0
+          },
+          "drop_table_id": "acolyte_drops",
+          "experience": {
+            "battle_experience": 25.0
+          },
+          "loot": []
+        },
+        "schema": "asteria.rpg.enemy",
+        "stats": {
+          "defense": 30.0,
+          "magic": 60.0,
+          "power": 40.0,
+          "speed": 60.0
+        },
+        "tags": [
+          "boss",
+          "enemy",
+          "immune.doom",
+          "immune.kill",
+          "vigil.warded",
+          "weak.axe",
+          "weak.ice"
         ],
         "version": 1
       }
@@ -72449,6 +74108,13 @@
       {
         "ai_id": "skeleton_hunter_ai",
         "enemy_id": "skeleton_hunter",
+        "schema": "asteria.rpg.enemy_behavior_binding",
+        "tags": [],
+        "version": 1
+      },
+      {
+        "ai_id": "wisp_ai",
+        "enemy_id": "vigil_acolyte",
         "schema": "asteria.rpg.enemy_behavior_binding",
         "tags": [],
         "version": 1
@@ -75392,12 +77058,38 @@
     ],
     "escape_rules": [
       {
+        "base_chance": 0.25,
+        "maximum_chance": 1.0,
+        "minimum_chance": 0.0,
+        "opponent_scale": 0.0,
+        "opponent_stat": null,
+        "rule_id": "crypt_escape",
+        "schema": "asteria.rpg.battle_escape_rule",
+        "side": "heroes",
+        "source_scale": 0.002,
+        "source_stat": "speed",
+        "version": 1
+      },
+      {
         "base_chance": 0.45,
         "maximum_chance": 1.0,
         "minimum_chance": 0.0,
         "opponent_scale": 0.0,
         "opponent_stat": null,
         "rule_id": "standard_escape",
+        "schema": "asteria.rpg.battle_escape_rule",
+        "side": "heroes",
+        "source_scale": 0.002,
+        "source_stat": "speed",
+        "version": 1
+      },
+      {
+        "base_chance": 0.8,
+        "maximum_chance": 1.0,
+        "minimum_chance": 0.0,
+        "opponent_scale": 0.0,
+        "opponent_stat": null,
+        "rule_id": "woods_escape",
         "schema": "asteria.rpg.battle_escape_rule",
         "side": "heroes",
         "source_scale": 0.002,
@@ -75564,6 +77256,45 @@
           }
         ],
         "version": 1
+      },
+      {
+        "composition_id": "overdrive",
+        "impacts": [
+          {
+            "blocked_outcome_tags": [],
+            "delta": 1.0,
+            "impact_id": "crit_charges",
+            "priority": 0,
+            "recipient": "source",
+            "required_outcome_tags_all": [
+              "outcome.crit"
+            ],
+            "required_outcome_tags_any": [],
+            "resource_id": "momentum",
+            "schema": "asteria.rpg.gauge_impact_rule",
+            "trigger": "battle.hit",
+            "value_scale": 0.0,
+            "version": 1
+          }
+        ],
+        "schema": "asteria.rpg.gauge_composition",
+        "thresholds": [
+          {
+            "comparison": "at_or_above",
+            "emit_trigger": "battle.overdrive",
+            "include_cast_in_shift": false,
+            "priority": 0,
+            "reset_to": 0.0,
+            "resource_id": "momentum",
+            "schema": "asteria.rpg.gauge_threshold_rule",
+            "state_id": "attack_up",
+            "threshold": 10.0,
+            "threshold_id": "overdrive",
+            "timeline_shift": 0.0,
+            "version": 1
+          }
+        ],
+        "version": 1
       }
     ],
     "interaction_rules": [
@@ -75586,6 +77317,26 @@
         "target_tags_all": [
           "absorb.dark"
         ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.5,
+        "outcome_tags": [],
+        "priority": 4,
+        "rule_id": "blocked_half",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "outcome.block"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [],
         "target_tags_any": [],
         "version": 1
       },
@@ -76184,6 +77935,26 @@
         "target_stat_terms": {},
         "target_tags_all": [
           "resist.sword"
+        ],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.0,
+        "outcome_tags": [],
+        "priority": 10,
+        "rule_id": "vigil_ward",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "vigil.warded"
         ],
         "target_tags_any": [],
         "version": 1
@@ -77119,6 +78890,24 @@
       }
     ],
     "outcome_checks": [
+      {
+        "base_chance": 0.05,
+        "check_id": "block",
+        "failure_tags": [],
+        "maximum_chance": 0.5,
+        "minimum_chance": 0.0,
+        "required_source_tags": [],
+        "required_target_tags": [],
+        "schema": "asteria.rpg.outcome_check",
+        "source_stat_terms": {},
+        "success_tags": [
+          "outcome.block"
+        ],
+        "target_stat_terms": {
+          "defense": 0.002
+        },
+        "version": 1
+      },
       {
         "base_chance": 0.05,
         "check_id": "crit",
@@ -107733,6 +109522,54 @@
         "version": 1
       },
       {
+        "ability_id": "intercept",
+        "action_target_policy": "preserve",
+        "allow_self": false,
+        "blocked_tags": [
+          "combo",
+          "follow_up",
+          "magic",
+          "support"
+        ],
+        "max_per_chain": 1,
+        "priority": 0,
+        "reaction_id": "cover",
+        "reactor_selector": "allies_of_targets_except_targets",
+        "reactor_tags": [
+          "trait.cover"
+        ],
+        "require_can_act": true,
+        "required_tags": [],
+        "schema": "asteria.rpg.reaction_definition",
+        "target_selector": "event_targets",
+        "trigger": "rpg.battle.after_action",
+        "version": 1
+      },
+      {
+        "ability_id": "chase_strike",
+        "action_target_policy": "preserve",
+        "allow_self": false,
+        "blocked_tags": [
+          "combo",
+          "follow_up",
+          "magic",
+          "support"
+        ],
+        "max_per_chain": 1,
+        "priority": 0,
+        "reaction_id": "follow_up",
+        "reactor_selector": "allies_of_source_except_source",
+        "reactor_tags": [
+          "trait.follow_up"
+        ],
+        "require_can_act": true,
+        "required_tags": [],
+        "schema": "asteria.rpg.reaction_definition",
+        "target_selector": "event_targets",
+        "trigger": "rpg.battle.after_action",
+        "version": 1
+      },
+      {
         "ability_id": "counter_strike",
         "action_target_policy": "preserve",
         "allow_self": false,
@@ -112003,6 +113840,58 @@
           "enabled": true,
           "id": "fba725a4-8d18-5135-9f3a-c7aa79297af5",
           "name": "Vaelor"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 280.0,
+                "y": 216.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "dbeeda0f-9e4b-5dec-9f6a-6c363a349e6c",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "ad977488-a4a8-5f8e-a599-de2c03b302a7",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "encounter_id": "acolyte_vigil",
+                "remove_on_start": true,
+                "touch_radius": 14.0
+              },
+              "type": "asteria.VisibleEncounter",
+              "version": 1
+            }
+          ],
+          "enabled": true,
+          "id": "b8c196fc-5f75-5bcf-8f7b-d3dbad717427",
+          "name": "Acolyte Vigil"
         },
         {
           "components": [

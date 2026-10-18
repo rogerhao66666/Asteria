@@ -815,6 +815,24 @@
       "water_holy": {
         "label": "Holy Water"
       },
+      "momentum_strike": {
+        "label": "Momentum Strike"
+      },
+      "soul_burst": {
+        "label": "Soul Burst"
+      },
+      "party_rush": {
+        "label": "Party Rush"
+      },
+      "rush_blow": {
+        "label": "Rush Blow"
+      },
+      "intercept": {
+        "label": "Intercept"
+      },
+      "chase_strike": {
+        "label": "Chase Strike"
+      },
       "taunting_roar": {
         "label": "Taunting Roar"
       },

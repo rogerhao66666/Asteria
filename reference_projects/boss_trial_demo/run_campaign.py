@@ -26,6 +26,29 @@ SW = "w_sunbrand:hero_01"
 
 
 class Campaign:
+    TRACKED = ("party_rush", "rush_blow", "intercept", "chase_strike")  # from the battle log
+    PICKED = ("momentum_strike", "soul_burst")  # counted when the party uses them
+
+    def _watch(self):
+        """Count what really happened in fights (covers, follow-ups, combos, blocked blows)."""
+        from asteria.runtime.game_session import GameSessionRuntime
+
+        if getattr(GameSessionRuntime, "_campaign_watch", False):
+            return
+        original = GameSessionRuntime._log
+        facts = self.facts
+
+        def counting(session, kind, **values):
+            entry = original(session, kind, **values)
+            if kind == "action" and entry.ability_id in self.TRACKED:
+                facts[f"used_{entry.ability_id}"] += 1
+            if kind == "hit_check" and "outcome.block" in str(entry.data):
+                facts["blocked_blows"] += 1  # a defender's Block halved a blow
+            return entry
+
+        GameSessionRuntime._log = counting
+        GameSessionRuntime._campaign_watch = True
+
     def __init__(self, rt=None, seed=5, log=print):
         from asteria.editor import EditorDocument
         from asteria.project import Project
@@ -43,6 +66,7 @@ class Campaign:
         self.game.refine_rng = random.Random(seed)
         self.rng = random.Random(seed)
         self.facts = Counter()
+        self._watch()
         self.used = Counter()
         self.log = log
 
@@ -71,6 +95,7 @@ class Campaign:
         """Walk onto a door: the scene changes."""
         from asteria.core import Transform
 
+        self.resolve()  # an event still queued (a battle's tally) finishes first
         door = next(e for e in self.game.scene.entities() if e.name == door_name)
         point = door.get(Transform)
         player = self.game.player.get(Transform)
@@ -150,6 +175,9 @@ class Campaign:
         self.shot(self.shot_pending)
 
     FIRST = (
+        "momentum_strike",
+        "soul_burst",
+        "party_rush",
         "call_spirit",
         "dragon_form",
         "pass_the_torch",
@@ -164,7 +192,11 @@ class Campaign:
         """The next skill of ``actor``: heal the weak, else the least used skill that works."""
         game = self.game
         build = game.battle.member(actor).ability_ids
-        pool = [a for a in build if not game.ability_unavailable(actor, a) and a != "concoct"]
+        pool = [
+            a
+            for a in build
+            if not game.ability_unavailable(actor, a) and a not in ("concoct", "rush_blow")
+        ]
         self.rng.shuffle(pool)
         pool.sort(key=lambda a: (self.used[a], a not in self.FIRST))
         pool.sort(key=lambda a: not (a in self.FIRST and self.used[a] == 0))
@@ -172,6 +204,12 @@ class Campaign:
         low = resources.current("vitality") < 0.4 * resources.maximum("vitality")
         guards = ("mend", "second_wind", "benediction", "purge", "shield_wall", "fortify")
         pool.sort(key=lambda a: (a in guards) != low)
+        if not self.facts["used_momentum_strike"] and "party_rush" in pool:
+            pool.remove("party_rush")  # Momentum is saved for the strike first
+        for finisher in ("soul_burst", "momentum_strike"):  # a finisher goes as soon as it can
+            if finisher in pool and not low:
+                pool.remove(finisher)
+                pool.insert(0, finisher)
         return pool
 
     def act(self, actor):
@@ -201,6 +239,8 @@ class Campaign:
                 continue
             self.used[ability_id] += 1
             self.facts["skills_cast"] += 1
+            if ability_id in self.PICKED:
+                self.facts[f"used_{ability_id}"] += 1
             return ability_id
         return None
 
@@ -539,6 +579,10 @@ class Campaign:
         self.go("Crypt Door")
         self.go("Throne Door")
         assert self.scene_name() == "Ember Throne"
+        self.touch("Acolyte Vigil")  # hold out eight rounds (round turns, gauntlet rules)
+        assert game.rules.rules_id == "vigil_gauntlet", game.rules.rules_id
+        self.fight(limit=300)
+        self.facts["vigil_survived"] += 1
         self.touch("Vaelor")
         self.fight(limit=300)
         self.talk("Victory Banner")
@@ -624,7 +668,9 @@ REQUIRED = (
     "disassembled", "rests", "map_changes", "fights", "victories", "skills_cast", "escapes",
     "tamed", "pet_evolved", "recruits", "partings", "save_load", "game_complete",
     "job_advances", "trainings", "sets_worn", "gems_fused", "cards_socketed", "enchants",
-    "armor_refines", "protected_refines",
+    "armor_refines", "protected_refines", "vigil_survived", "used_party_rush",
+    "used_rush_blow", "used_momentum_strike", "used_soul_burst", "used_intercept",
+    "used_chase_strike", "blocked_blows",
 )  # fmt: skip
 
 

@@ -44,6 +44,7 @@ STANDARD_WORLD_COMMANDS = (
     "SET_CLASSES",
     "JOIN_PARTY",
     "LEAVE_PARTY",
+    "BATTLE_SEQUENCE",
     "REST_PARTY",
     "GRANT_EXPERIENCE",
     "REFINE_EQUIPMENT",
@@ -98,6 +99,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "SHOW_POPUP": ("text", "entity", "duration_ms", "kind"),
     "SET_CLASSES": ("actor_id", "class_ids", "unlock"),
     "JOIN_PARTY": ("actor_id", "active"),
+    "BATTLE_SEQUENCE": ("sequence_id", "actor_id", "target_id"),
     "LEAVE_PARTY": ("actor_id",),
     "REST_PARTY": (),
     "GRANT_EXPERIENCE": ("actor_id", "amount", "threshold", "points", "level_track"),
@@ -366,6 +368,14 @@ def register_standard_world_commands(router, session):
         )
 
     gear_command("GRANT_EXPERIENCE", grant_experience)
+    gear_command(
+        "BATTLE_SEQUENCE",
+        lambda c: session.battle_sequence(
+            str(_required(c, "sequence_id")),
+            str(_required(c, "actor_id")),
+            str(c.args.get("target_id", "")),
+        ),
+    )
     gear_command(
         "JOIN_PARTY",
         lambda c: session.join_party(

@@ -2716,7 +2716,7 @@ class GameSessionRuntime:
             outcome_checks=db.outcome_checks.values(),
             state_policies=db.battle_state_policies.values(),
             targeting_definitions=db.battle_targeting.values(),
-            objective_definitions=db.battle_objectives.values(),
+            objective_definitions=self._encounter_objectives(encounter),
             escape_rules=db.escape_rules.values(),
             scheduler_definition=scheduler,
             action_timing_definitions=db.action_timings.values(),
@@ -2789,9 +2789,44 @@ class GameSessionRuntime:
 
     @property
     def rules(self):
-        """Project battle session rules; the first by id, or inert defaults."""
+        """Project battle session rules: the ones a ``rules:<id>`` tag of the running
+        encounter names, else the first by id, or inert defaults."""
         values = self.project.rpg_database.battle_session_rules
+        if self.battle is not None and values:
+            chosen = self._encounter_choice("rules", values)
+            if chosen is not None:
+                return chosen
         return values[sorted(values)[0]] if values else BattleSessionRules("default")
+
+    def battle_sequence(self, sequence_id, actor_id, target_id=""):
+        """Run an action sequence (a combo): ``actor_id`` leads, the other active party
+        members fill the remaining participant places in party order."""
+        if self.battle is None:
+            raise GameSessionError("no active battle")
+        definitions = self.battle.action_sequences.definitions
+        if sequence_id not in definitions:
+            raise GameSessionError(f"unknown action sequence {sequence_id}")
+        side = self.battle.member(actor_id).side
+        others = [
+            m.member_id
+            for m in self.battle.parties[side].members
+            if m.member_id != actor_id and self.battle.is_active(m)
+        ]
+        limit = max(1, int(definitions[sequence_id].max_participants))
+        participants = (actor_id, *others)[:limit]
+        targets = (target_id,) if target_id else ()
+        plan, results, failures = self.battle.execute_sequence(sequence_id, participants, targets)
+        for step, _result in results:  # each blow is logged like an action, so it plays
+            self._log(
+                "action",
+                member_id=step.actor_id,
+                ability_id=step.ability_id,
+                target_ids=tuple(step.target_ids),
+                outcomes=self._action_outcomes(
+                    step.actor_id, step.ability_id, step.target_ids, None
+                ),
+            )
+        return plan, results, failures
 
     def _is_conscious(self, member):
         resource = self.rules.knockout_resource_id
@@ -3591,10 +3626,38 @@ class GameSessionRuntime:
             )
         )
 
+    def _encounter_objectives(self, encounter):
+        """The objectives of a fight: every objective no encounter names, plus the ones this
+        encounter names with an ``objective:<id>`` tag (named objectives belong to the
+        encounters that name them, e.g. "survive four rounds")."""
+        db = self.project.rpg_database
+        scoped = {
+            tag[len("objective:") :]
+            for other in db.encounters.values()
+            for tag in other.tags
+            if tag.startswith("objective:")
+        }
+        own = {tag[len("objective:") :] for tag in encounter.tags if tag.startswith("objective:")}
+        return tuple(
+            o
+            for o in db.battle_objectives.values()
+            if o.objective_id not in scoped or o.objective_id in own
+        )
+
+    def _encounter_choice(self, prefix, options):
+        """The record an ``<prefix>:<id>`` tag of the running encounter names, else None."""
+        encounter = self.project.rpg_database.encounters.get(self.encounter_id or "")
+        for tag in () if encounter is None else encounter.tags:
+            if tag.startswith(f"{prefix}:") and tag[len(prefix) + 1 :] in options:
+                return options[tag[len(prefix) + 1 :]]
+        return None
+
     # -- running away -----------------------------------------------------------------------
     def _escape_rule(self):
+        """The escape rule an ``escape:<id>`` encounter tag names, else the first by id."""
         rules = self.battle.escape_rules if self.battle is not None else {}
-        return rules[sorted(rules)[0]] if rules else None
+        chosen = self._encounter_choice("escape", rules) if rules else None
+        return chosen or (rules[sorted(rules)[0]] if rules else None)
 
     def escape_unavailable(self):
         """Why the party cannot run now ("" when it can): no rule, or an encounter tagged
@@ -3642,7 +3705,28 @@ class GameSessionRuntime:
             raise GameSessionError("no active battle")
         self._logged_turn = None
         delay, self._turn_delay = getattr(self, "_turn_delay", 0.0), 0.0
-        return self.battle.advance_turn(recovery=delay)
+        result = self.battle.advance_turn(recovery=delay)
+        self.settle_objectives()
+        return result
+
+    def settle_objectives(self):
+        """Let the battle's objectives decide the fight: when one succeeds or fails (a leader
+        fell, a vigil was held, a ward broke), the side it defeats is knocked out, so the usual
+        victory / defeat follows. Returns the deciding outcome, or None."""
+        if self.battle is None:
+            return None
+        outcome = self.battle.resolve_outcome()
+        if not outcome.finished or not outcome.objective_ids:
+            return None
+        resource = self.rules.knockout_resource_id
+        for side in outcome.defeated_sides:
+            party = self.battle.parties.get(side)
+            for member in () if party is None else party.members:
+                if resource and self.battle.is_active(member):
+                    pool = member.subject.resources
+                    if resource in pool.to_data()["values"]:
+                        pool.set_current(resource, 0.0)
+        return outcome
 
     def enemy_act(self, member_id):
         """One enemy action: its bound AI, else its first ability on default targets."""

@@ -643,6 +643,7 @@ FOE_LOOKS = {
     "goblin_slinger": "goblin_slinger",
     "goblin_beast": "goblin_beast",
     "skeleton_hunter": "skeleton_hunter",
+    "skeleton_grunt": "skeleton_grunt",  # Vaelor's acolytes (the vigil)
     "skeleton_ancient": "skeleton_ancient",
     "skeleton_king": "skeleton_king",
 }
@@ -791,6 +792,7 @@ def build_world(c, story):
     throne.foe(
         "Vaelor", places["throne"]["boss"], looks["skeleton_king"], "boss_room", radius=24.0
     )
+    throne.foe("Acolyte Vigil", world_xy(17, 13), looks["skeleton_grunt"], "acolyte_vigil")
     from asteria.core.prefab import prefab_from_entity
 
     for prefab_id, face in (("spirit_lantern", "necromancer"), ("bone_pile", "skeleton_hunter")):

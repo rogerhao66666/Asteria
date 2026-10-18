@@ -27,6 +27,7 @@ sys.path.insert(0, str(REPO / "scripts"))
 import trial_art as art  # noqa: E402
 import trial_b11 as b11  # noqa: E402
 import trial_b12 as b12  # noqa: E402
+import trial_battle as battle_rules  # noqa: E402
 import trial_cast as cast  # noqa: E402
 import trial_classes as classes  # noqa: E402
 import trial_content as content  # noqa: E402
@@ -73,6 +74,7 @@ def main():
     trees.trees(context)  # the shared web, specs, runes and skill books
     cast.foes(context)
     gear_plus.forge(context)  # more gear, sets, gems, cards, refining, crafting
+    battle_rules.rules(context)  # every Battle category designed and used
     extras.systems(context)
     story.systems(context)
     maps.build_world(context, story.programs)

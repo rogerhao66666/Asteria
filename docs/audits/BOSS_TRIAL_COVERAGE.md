@@ -105,7 +105,28 @@ and lists only the drops that really fell.
 | Escape | Woods fights can be fled, boss halls carry `no_escape` |
 | Ability fields | `requires_items` (Grave Whisper), `requires_pet` (Beast Command), `menu_category` (Limit, Beast, Rites), `gauge_costs`, forms, follow tags, item / currency / battle costs |
 
-## World commands (54)
+## Battle categories (phase 4, 2026-10-18)
+
+| Battle-tab category | Where the campaign uses it |
+|---|---|
+| Battle Resources | `momentum` (+1 a turn, max 10) pays Momentum Strike and Party Rush; `soul` (+1 a round, max 6) pays Soul Burst |
+| Outcome Checks | `block` on every foe blow; a blocked hit takes half (`blocked_half`), 10 blocks in the run |
+| Turn Schedulers | `swift_timeline` (continuous) in the crypt patrol, `classic_rounds` for the vigil |
+| Action Timing / Transactions | Long casts (Holy Judgment, Mass Cure, Death Coil, Soul Harvest, Forbidden Rite, Frost Nova) |
+| Sequences | `party_rush`: the actor leads, the party follows with Rush Blow (world command `BATTLE_SEQUENCE`) |
+| Gauge Compositions | `overdrive`: crits add momentum; at 10 the striker gains Attack Up and it resets |
+| Reactions | `cover` (Aldric intercepts a blow at an ally), `follow_up` (Cael's Chase Strike) |
+| Objectives / Escape / Session Rules | Acolyte Vigil at the throne: survive 8 rounds (`objective:vigil_survive`), its own `rules:vigil_gauntlet`; `escape:woods_escape` / `crypt_escape` rates |
+
+Engine gaps this phase found and fixed: objectives never ended a fight (the session now settles
+them each turn), sequences could not be reached from an ability, only the first escape / session
+rule was ever used (encounters now pick one by tag), and a follow-up aimed at a foe the first blow
+already felled crashed the battle (the reaction is now skipped as `no_target`).
+
+Balance note: by the throne Aldric (Lv 22) has power 3147 and one-shots about 98k HP; the web,
+specs, books, gear and refining stack. The vigil foes are warded so the 8 rounds really happen.
+
+## World commands (55)
 
 Used in the campaign or by Showman Pip's menu: TRANSFER, GIVE_ITEM, TAKE_ITEM, START_QUEST,
 ADVANCE_QUEST, COMPLETE_QUEST, FAIL_QUEST, CHANGE_REPUTATION, CHANGE_RELATIONSHIP, ADD_COUNTER,
@@ -115,7 +136,7 @@ SHOW_BALLOON, SET_ENTITY_ICON, SPAWN_ENTITY, COPY_ENTITY, MORPH_ENTITY, SET_BATT
 SHOW_PICTURE, MOVE_PICTURE, SET_PICTURE_FRAME, ERASE_PICTURE, TIMER_START / STOP / PAUSE /
 RESUME / ADD, plus the earlier ones (OPEN_SHOP, OPEN_CRAFTING, SET_CLASSES, GRANT_EXPERIENCE,
 REFINE / SOCKET / UPGRADE_EQUIPMENT, EQUIP_ITEM, DISASSEMBLE, SUMMON) and the new JOIN_PARTY,
-LEAVE_PARTY, REST_PARTY.
+LEAVE_PARTY, REST_PARTY, BATTLE_SEQUENCE.
 
 ## Scenes and events
 

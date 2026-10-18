@@ -325,6 +325,13 @@ class ReactionRuntime:
             if definition.require_can_act and not battle.can_act(request.reactor_id):
                 suppressed.append(f"inactive:{request.reactor_id}")
                 continue
+            if request.ability_id is not None and request.target_ids:
+                check = battle.resolve_targets(
+                    request.reactor_id, request.ability_id, request.target_ids, rng=rng
+                )
+                if not check.valid:  # the blow it answers already felled its target
+                    suppressed.append(f"no_target:{request.reactor_id}")
+                    continue
             counts[key] = counts.get(key, 0) + 1
             executed.append(request)
             emit_hook(
