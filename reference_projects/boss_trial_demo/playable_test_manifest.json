@@ -806,6 +806,15 @@
       "anc_raise": {
         "label": "Raise the Fallen"
       },
+      "vial_poison": {
+        "label": "Poison Vial"
+      },
+      "bomb_smoke": {
+        "label": "Smoke Bomb"
+      },
+      "water_holy": {
+        "label": "Holy Water"
+      },
       "taunting_roar": {
         "label": "Taunting Roar"
       },

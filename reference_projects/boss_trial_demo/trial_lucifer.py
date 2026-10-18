@@ -300,6 +300,16 @@ def _skill_pool(group):
     return files
 
 
+def first_frame(path):
+    """The first square frame of a picture that is an animation strip (the pickups)."""
+    from PIL import Image
+
+    image = Image.open(path).convert("RGBA")
+    if image.width > image.height:
+        image = image.crop((0, 0, image.height, image.height))
+    return image
+
+
 def apply_icons(context):
     """Lucifer icons for gear, gems and skills (a skill takes the next picture of its class's
     set, in alphabetical order of skills, so the assignment is stable). Returns the ability ids
@@ -322,8 +332,9 @@ def apply_icons(context):
                 db.equipment[equipment_id], icon_id=icon
             )
     for item_id, rel in ITEM_ICONS.items():
-        if item_id in db.items:
-            icon = copy(PICKUPS / rel, f"{item_id}.png")
+        if item_id in db.items:  # the pickups are animation strips: their first frame
+            first_frame(PICKUPS / rel).save(folder / f"{item_id}.png")
+            icon = f"playable_assets/lucifer/icons/{item_id}.png"
             db.items[item_id] = dataclasses.replace(db.items[item_id], icon_id=icon)
     pools = {g: _skill_pool(g) for g in SKILL_ICON_GROUPS}
     cursor = dict.fromkeys(pools, 0)

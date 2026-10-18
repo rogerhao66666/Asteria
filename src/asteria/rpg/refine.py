@@ -34,7 +34,7 @@ def _non_negative(value, label):
 
 @dataclass(frozen=True, slots=True)
 class RefineResult:
-    outcome: str  # "success" | "failure"
+    outcome: str  # "success" | "failure" | "protected" (a protection item kept the level)
     old_level: int
     new_level: int
     cost: float
@@ -57,6 +57,10 @@ class RefineRules:
     success: tuple[float, ...] = (1.0,)
     on_fail: str = "keep"
     safe_until: int = 0
+    # materials: items every attempt uses up (``{item_id: count}``, ores, catalysts...);
+    # protect_item: an item that, used on an attempt, keeps the level when the roll fails
+    materials: tuple[tuple[str, int], ...] = ()
+    protect_item: str = ""
 
     def __init__(
         self,
@@ -72,6 +76,8 @@ class RefineRules:
         success=(1.0,),
         on_fail="keep",
         safe_until=0,
+        materials=None,
+        protect_item="",
     ):
         s = object.__setattr__
         s(self, "rules_id", _text(rules_id) or _fail("rules_id is required"))
@@ -96,6 +102,11 @@ class RefineRules:
             raise ValueError(f"on_fail must be one of {ON_FAIL}")
         s(self, "on_fail", on_fail)
         s(self, "safe_until", max(0, int(safe_until)))
+        needs = [(_text(k), int(v)) for k, v in dict(materials or {}).items() if _text(k)]
+        if any(v < 1 for _, v in needs):
+            raise ValueError("material counts must be >= 1")
+        s(self, "materials", tuple(sorted(needs)))
+        s(self, "protect_item", _text(protect_item))
 
     def eligible(self, item):
         if not self.equipment_tags:
@@ -161,6 +172,8 @@ class RefineRules:
             "success": list(self.success),
             "on_fail": self.on_fail,
             "safe_until": self.safe_until,
+            "materials": dict(self.materials),
+            "protect_item": self.protect_item,
         }
 
     @classmethod
@@ -179,4 +192,6 @@ class RefineRules:
             success=data.get("success", (1.0,)),
             on_fail=data.get("on_fail", "keep"),
             safe_until=data.get("safe_until", 0),
+            materials=data.get("materials"),
+            protect_item=data.get("protect_item", ""),
         )

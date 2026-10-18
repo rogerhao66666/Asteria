@@ -130,6 +130,7 @@ class IntegratedAuthoringControllers:
                 modifiers=v.modifiers,
                 granted_abilities=v.granted_abilities,
                 triggers=v.triggers,
+                icon_id=v.icon_id,
             )
 
         def edit_track(key, v):

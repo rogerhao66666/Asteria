@@ -49,6 +49,21 @@ Shadow ...), each with two ranked talents and a capstone passive (54 spec passiv
 ten-rank book per job paid with skill points from levels (shrine, Job Master training). The
 campaign spends every member's points across all four; runes show up as the skills used.
 
+## Gear and crafting (phase 3, 2026-10-18)
+
+40 pieces of equipment: a second tier of every weapon (two gem sockets, a card socket), heavy /
+light / cloth armour in two tiers (a card socket), six accessories (a gem socket) and a set per
+companion (Vestments of Dawn, Regalia of the Grave, Raiment of the Zealot: 2- and 3-piece
+bonuses) whose weapon enchants (Kindle opens a card socket, three Stars, a Light / Shadow path,
+Masterwork). Seven gems, each fused into a flawless one at the alchemy station; ten cards, one
+per foe (bosses always drop theirs, minions rarely). Refining +N for weapons and armour uses
+ores and a Blessed Scroll keeps the level on a failure (engine: `RefineRules.materials`,
+`protect_item`; gear commands take `slot:<slot>`). Six more affixes, three more concoctions,
+gem recipes and disassembly. Every record has an icon (Lucifer equipment and pickups, tinted
+when reused; cards show their monster). The campaign dresses all three companions, fuses three
+gems, sockets two boss cards, enchants three weapons and refines armour nine times (three
+protected).
+
 ## Battle screen
 
 Party HP down the right edge; the command menu always at the acting member's lower right, drawn

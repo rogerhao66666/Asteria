@@ -31,6 +31,8 @@ import trial_cast as cast  # noqa: E402
 import trial_classes as classes  # noqa: E402
 import trial_content as content  # noqa: E402
 import trial_extras as extras  # noqa: E402
+import trial_gear as gear_plus  # noqa: E402
+import trial_icons as icons  # noqa: E402
 import trial_items as items  # noqa: E402
 import trial_jobs as jobs  # noqa: E402
 import trial_lucifer as lucifer  # noqa: E402
@@ -70,6 +72,7 @@ def main():
     classes.jobs(context)  # three-tier job lines and sub jobs for the companions
     trees.trees(context)  # the shared web, specs, runes and skill books
     cast.foes(context)
+    gear_plus.forge(context)  # more gear, sets, gems, cards, refining, crafting
     extras.systems(context)
     story.systems(context)
     maps.build_world(context, story.programs)
@@ -80,6 +83,7 @@ def main():
     systems.fill(context)  # the editor's remaining sections, each used by the game
     kept = art.weapon_icons(context)
     kept = (*kept, *lucifer.apply_icons(context))
+    icons.apply_all(context)  # gear, items, gems, cards, jobs, passives, states
     lucifer.apply_ui(context)
     lucifer.apply_music(context)
     import lucifer_reskin

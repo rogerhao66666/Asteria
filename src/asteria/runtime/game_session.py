@@ -1354,8 +1354,16 @@ class GameSessionRuntime:
                 self.wear_equipment(target.member_id, "hit")
 
     def _equipped(self, actor_id, instance_id):
+        """An equipped item by instance id, or ``slot:<slot id>`` for what the slot holds (an
+        event that does not know the id: "refine the armour Mira wears")."""
         loadout = self.save.rpg_state.loadouts[str(actor_id)]
-        item = next((x for x in loadout.equipped() if x.instance_id == str(instance_id)), None)
+        text = str(instance_id)
+        if text.startswith("slot:"):
+            held = loadout.equipped(text[5:]) if text[5:] in loadout.slot_ids() else ()
+            if not held:
+                raise GameSessionError(f"{actor_id} wears nothing in {text[5:]}")
+            return held[0]
+        item = next((x for x in loadout.equipped() if x.instance_id == text), None)
         if item is None:
             raise GameSessionError(f"{instance_id} is not equipped by {actor_id}")
         return item
@@ -1381,14 +1389,28 @@ class GameSessionRuntime:
         values = self.project.rpg_database.refine_rules
         return values[sorted(values)[0]] if values else None
 
-    def refine_equipment(self, actor_id, instance_id):
-        """One refine attempt on an equipped item; the rules' price is paid win or lose."""
-        rules = self.refine_rules
-        if rules is None:
+    def refine_rules_for(self, item):
+        """The first refine rules (by id) that take ``item`` (weapons, armour... by tag)."""
+        values = self.project.rpg_database.refine_rules
+        return next((values[k] for k in sorted(values) if values[k].eligible(item)), None)
+
+    def refine_equipment(self, actor_id, instance_id, *, protect=False):
+        """One refine attempt on an equipped item; the rules' price and materials are paid win
+        or lose. ``protect`` uses up the rules' protection item: a failure then keeps the
+        level."""
+        if self.refine_rules is None:
             raise GameSessionError("the project defines no refine rules")
         item = self._equipped(actor_id, instance_id)
-        if not rules.eligible(item):
+        rules = self.refine_rules_for(item)
+        if rules is None:
             raise GameSessionError(f"{instance_id} cannot be refined")
+        bag = self.save.rpg_state.inventory
+        for item_id, count in rules.materials:
+            if bag.count(item_id) < count:
+                raise GameSessionError(f"a refine needs {count} {item_id}")
+        protected = bool(protect and rules.protect_item)
+        if protected and bag.count(rules.protect_item) < 1:
+            raise GameSessionError(f"no {rules.protect_item} to protect the refine")
         if item.refine_level >= rules.max_level:
             raise GameSessionError(f"{instance_id} is at the maximum refine level")
         cost = rules.cost(item.refine_level)
@@ -1396,9 +1418,17 @@ class GameSessionRuntime:
         if cost and funds.get(rules.currency, 0.0) < cost:
             raise GameSessionError(f"a refine costs {cost:g} {rules.currency}")
         rng = getattr(self, "refine_rng", None)  # a test or replay may fix the rolls
+        before = item.refine_level
         result = rules.attempt(item, rng or (self.battle.rng if self.mode == "battle" else None))
         if cost:
             funds[rules.currency] = funds.get(rules.currency, 0.0) - cost
+        for item_id, count in rules.materials:
+            bag.remove(item_id, count)
+        if protected:
+            bag.remove(rules.protect_item, 1)
+            if result.outcome == "failure":  # the scroll holds the level
+                rules.apply_level(item, before)
+                result = type(result)("protected", before, before, result.cost, False)
         if result.destroyed:
             loadout = self.save.rpg_state.loadouts[str(actor_id)]
             for slot_id in loadout.slot_ids():
@@ -2176,10 +2206,10 @@ class GameSessionRuntime:
         return instance
 
     def upgrade_equipment(self, actor_id, instance_id, node_id):
-        loadout = self.save.rpg_state.loadouts[str(actor_id)]
-        item = next((x for x in loadout.equipped() if x.instance_id == str(instance_id)), None)
-        if item is None:
-            raise KeyError(instance_id)
+        try:
+            item = self._equipped(actor_id, instance_id)  # an id, or slot:<slot id>
+        except GameSessionError as error:
+            raise KeyError(instance_id) from error
         growth = item.ensure_growth(self.project.rpg_database.equipment_growth)
         return growth.unlock(str(node_id))
 

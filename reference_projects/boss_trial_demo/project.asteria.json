@@ -10408,6 +10408,77 @@
           "recovery_at": null,
           "sequence_id": "fire_arc"
         },
+        "bomb_smoke": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack2",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
         "bone_armor": {
           "beats": [
             {
@@ -28579,6 +28650,97 @@
           "recovery_at": null,
           "sequence_id": "strike"
         },
+        "vial_poison": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack2",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.2,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.spirit",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "flash",
+              "channel": "screen_fx",
+              "cue": "flash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "alpha",
+                  40
+                ],
+                [
+                  "duration",
+                  0.08
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  5
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.32,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.9,
+          "recovery_at": null,
+          "sequence_id": "fire_arc"
+        },
         "w_charge": {
           "beats": [
             {
@@ -29779,6 +29941,77 @@
               "channel": "vfx",
               "cue": "battle.fx.boost",
               "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
+        "water_holy": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
               "easing": "linear",
               "member_id": "@target",
               "payload": [],
@@ -33355,6 +33588,265 @@
       "schema": "asteria.event_program",
       "version": 1
     },
+    "story.outfitter": {
+      "instructions": [
+        {
+          "args": {
+            "choices": [
+              {
+                "text": "Mira: Vestments of Dawn",
+                "value": 0
+              },
+              {
+                "text": "Vesper: Regalia of the Grave",
+                "value": 1
+              },
+              {
+                "text": "Cael: Raiment of the Zealot",
+                "value": 2
+              },
+              {
+                "text": "Leave",
+                "value": 3
+              }
+            ],
+            "prompt": "Outfitter: Whom shall I dress?",
+            "variable_name": "menu"
+          },
+          "opcode": "CHOICE"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 0
+            },
+            "label": "opt0"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 1
+            },
+            "label": "opt1"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 2
+            },
+            "label": "opt2"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 3
+            },
+            "label": "opt3"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt0"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "actor_id": "hero_02",
+              "equipment_id": "w_saint_staff",
+              "index": 0
+            },
+            "command": "EQUIP_ITEM"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "actor_id": "hero_02",
+              "equipment_id": "a_dawn_robe",
+              "index": 0
+            },
+            "command": "EQUIP_ITEM"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "actor_id": "hero_02",
+              "equipment_id": "a_holy_symbol",
+              "index": 0
+            },
+            "command": "EQUIP_ITEM"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "speaker": "Outfitter",
+            "text": "Mira wears the Vestments of Dawn."
+          },
+          "opcode": "DIALOGUE"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt1"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "actor_id": "hero_03",
+              "equipment_id": "w_bone_scepter",
+              "index": 0
+            },
+            "command": "EQUIP_ITEM"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "actor_id": "hero_03",
+              "equipment_id": "a_grave_shroud",
+              "index": 0
+            },
+            "command": "EQUIP_ITEM"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "actor_id": "hero_03",
+              "equipment_id": "a_phylactery",
+              "index": 0
+            },
+            "command": "EQUIP_ITEM"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "speaker": "Outfitter",
+            "text": "Vesper wears the Regalia of the Grave."
+          },
+          "opcode": "DIALOGUE"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt2"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "actor_id": "hero_04",
+              "equipment_id": "w_ritual_kris",
+              "index": 0
+            },
+            "command": "EQUIP_ITEM"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "actor_id": "hero_04",
+              "equipment_id": "a_zealot_mail",
+              "index": 0
+            },
+            "command": "EQUIP_ITEM"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "actor_id": "hero_04",
+              "equipment_id": "a_blood_amulet",
+              "index": 0
+            },
+            "command": "EQUIP_ITEM"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "speaker": "Outfitter",
+            "text": "Cael wears the Raiment of the Zealot."
+          },
+          "opcode": "DIALOGUE"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt3"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "speaker": "Outfitter",
+            "text": "Come back in one piece."
+          },
+          "opcode": "DIALOGUE"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "story.outfitter",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
     "story.scout": {
       "instructions": [
         {
@@ -36587,13 +37079,29 @@
       "inventory": {
         "counts": {
           "alchemy_salt": 8,
+          "amethyst_item": 2,
           "ancient_thread": 8,
+          "card_acolyte_item": 3,
+          "card_ancient_item": 3,
+          "card_beast_item": 3,
           "card_golem_item": 3,
+          "card_hunter_item": 3,
           "card_slayer_item": 3,
+          "card_slinger_item": 3,
+          "card_vaelor_item": 3,
           "card_vampire_item": 3,
           "card_wolf_item": 3,
+          "diamond_item": 2,
+          "emerald_item": 2,
           "ether_leaf": 8,
           "fire_dust": 8,
+          "flawless_amethyst_item": 2,
+          "flawless_diamond_item": 2,
+          "flawless_emerald_item": 2,
+          "flawless_onyx_item": 2,
+          "flawless_ruby_item": 2,
+          "flawless_sapphire_item": 2,
+          "flawless_topaz_item": 2,
           "focus_stone": 8,
           "guardian_scale": 8,
           "healing_herb": 8,
@@ -40150,6 +40658,74 @@
         "tags": [
           "ability",
           "damage.ice",
+          "magic"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "bomb_smoke",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "blind",
+            "to": "targets"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Smoke Bomb",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "bomb_smoke.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -4.0,
+                        "key": "magic",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "icon_id": "playable_assets/lucifer/icons/skill_bomb_smoke.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
           "magic"
         ],
         "targeting": {
@@ -57429,6 +58005,80 @@
         "version": 1
       },
       {
+        "ability_id": "vial_poison",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "poison",
+            "to": "targets"
+          },
+          {
+            "remove": false,
+            "state": "power_down",
+            "to": "targets"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Poison Vial",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "vial_poison.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -8.0,
+                        "key": "magic",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "icon_id": "playable_assets/lucifer/icons/skill_vial_poison.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "damage.dark",
+          "magic"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "w_charge",
         "apply_states": [
           {
@@ -58407,6 +59057,68 @@
         "version": 1
       },
       {
+        "ability_id": "water_holy",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "ward",
+            "to": "self"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [],
+        "display_name": "Holy Water",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "water_holy.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": null,
+                    "minimum": 1.0,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": 30.0,
+                        "key": "magic",
+                        "source": "source_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "self"
+          }
+        ],
+        "icon_id": "playable_assets/lucifer/icons/skill_water_holy.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "weapon_dance",
         "conditions": {
           "conditions": [],
@@ -59344,6 +60056,7 @@
         ],
         "display_name": "Charm",
         "duration": 3.0,
+        "icon_id": "playable_assets/lucifer/icons/state_charm.png",
         "max_stacks": 1,
         "modifiers": [],
         "on_apply": [],
@@ -59379,6 +60092,7 @@
         ],
         "display_name": "Counter Stance",
         "duration": 4.0,
+        "icon_id": "playable_assets/lucifer/icons/state_counter_stance.png",
         "max_stacks": 1,
         "modifiers": [],
         "on_apply": [],
@@ -59455,6 +60169,7 @@
         ],
         "display_name": "Dragon Form",
         "duration": 99.0,
+        "icon_id": "playable_assets/lucifer/icons/state_dragon_form.png",
         "max_stacks": 1,
         "modifiers": [
           {
@@ -62134,6 +62849,54 @@
         "weight": 1.0
       },
       {
+        "affix_id": "blazing",
+        "allowed_tags": [],
+        "display_name": "Blazing",
+        "group": "power.extra",
+        "max_level": 0,
+        "min_level": 1,
+        "modifiers": [
+          {
+            "integer": true,
+            "maximum": 12.0,
+            "minimum": 5.0,
+            "operation": "add",
+            "per_level": 0.0,
+            "stat": "power"
+          }
+        ],
+        "position": "prefix",
+        "rarities": [],
+        "schema": "asteria.rpg.affix",
+        "slots": [],
+        "version": 1,
+        "weight": 1.0
+      },
+      {
+        "affix_id": "deadly",
+        "allowed_tags": [],
+        "display_name": "Deadly",
+        "group": "crit.extra",
+        "max_level": 0,
+        "min_level": 1,
+        "modifiers": [
+          {
+            "integer": true,
+            "maximum": 6.0,
+            "minimum": 2.0,
+            "operation": "add",
+            "per_level": 0.0,
+            "stat": "crit"
+          }
+        ],
+        "position": "prefix",
+        "rarities": [],
+        "schema": "asteria.rpg.affix",
+        "slots": [],
+        "version": 1,
+        "weight": 1.0
+      },
+      {
         "affix_id": "keen_edge",
         "allowed_tags": [],
         "display_name": "Keen",
@@ -62151,6 +62914,54 @@
           }
         ],
         "position": "prefix",
+        "rarities": [],
+        "schema": "asteria.rpg.affix",
+        "slots": [],
+        "version": 1,
+        "weight": 1.0
+      },
+      {
+        "affix_id": "of_haste",
+        "allowed_tags": [],
+        "display_name": "of Haste",
+        "group": "speed.extra",
+        "max_level": 0,
+        "min_level": 1,
+        "modifiers": [
+          {
+            "integer": true,
+            "maximum": 6.0,
+            "minimum": 2.0,
+            "operation": "add",
+            "per_level": 0.0,
+            "stat": "speed"
+          }
+        ],
+        "position": "suffix",
+        "rarities": [],
+        "schema": "asteria.rpg.affix",
+        "slots": [],
+        "version": 1,
+        "weight": 1.0
+      },
+      {
+        "affix_id": "of_the_bear",
+        "allowed_tags": [],
+        "display_name": "of the Bear",
+        "group": "defense.extra",
+        "max_level": 0,
+        "min_level": 1,
+        "modifiers": [
+          {
+            "integer": true,
+            "maximum": 10.0,
+            "minimum": 4.0,
+            "operation": "add",
+            "per_level": 0.0,
+            "stat": "defense"
+          }
+        ],
+        "position": "suffix",
         "rarities": [],
         "schema": "asteria.rpg.affix",
         "slots": [],
@@ -62196,6 +63007,30 @@
             "operation": "add",
             "per_level": 0.3,
             "stat": "crit"
+          }
+        ],
+        "position": "suffix",
+        "rarities": [],
+        "schema": "asteria.rpg.affix",
+        "slots": [],
+        "version": 1,
+        "weight": 1.0
+      },
+      {
+        "affix_id": "of_wisdom",
+        "allowed_tags": [],
+        "display_name": "of Wisdom",
+        "group": "magic.extra",
+        "max_level": 0,
+        "min_level": 1,
+        "modifiers": [
+          {
+            "integer": true,
+            "maximum": 10.0,
+            "minimum": 4.0,
+            "operation": "add",
+            "per_level": 0.0,
+            "stat": "magic"
           }
         ],
         "position": "suffix",
@@ -62252,14 +63087,154 @@
         "slots": [],
         "version": 1,
         "weight": 1.0
+      },
+      {
+        "affix_id": "vampiric",
+        "allowed_tags": [],
+        "display_name": "Vampiric",
+        "group": "lifesteal.extra",
+        "max_level": 0,
+        "min_level": 1,
+        "modifiers": [
+          {
+            "integer": false,
+            "maximum": 0.05,
+            "minimum": 0.02,
+            "operation": "add",
+            "per_level": 0.0,
+            "stat": "lifesteal"
+          }
+        ],
+        "position": "prefix",
+        "rarities": [],
+        "schema": "asteria.rpg.affix",
+        "slots": [],
+        "version": 1,
+        "weight": 1.0
       }
     ],
     "attachments": [
+      {
+        "attachment_id": "amethyst",
+        "display_name": "Amethyst",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/amethyst.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "amethyst.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 7.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "amethyst.crit",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "crit",
+            "value": 4.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "gem"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "card_acolyte",
+        "display_name": "Acolyte Card",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/card_acolyte.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "card_acolyte.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 8.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "card_acolyte.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 8.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "card"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "card_ancient",
+        "display_name": "Ancient Card",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/card_ancient.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "card_ancient.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 22.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "absorb.dark",
+          "card"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "card_beast",
+        "display_name": "Beast Card",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/card_beast.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "card_beast.power",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "power",
+            "value": 20.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "card"
+        ],
+        "triggers": [],
+        "version": 2
+      },
       {
         "attachment_id": "card_golem",
         "display_name": "Golem Card",
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/card_golem.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -62280,10 +63255,35 @@
         "version": 2
       },
       {
+        "attachment_id": "card_hunter",
+        "display_name": "Hunter Card",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/card_hunter.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "card_hunter.crit",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "crit",
+            "value": 12.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "card"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
         "attachment_id": "card_slayer",
         "display_name": "Slayer Card",
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/card_slayer.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -62303,10 +63303,77 @@
         "version": 2
       },
       {
+        "attachment_id": "card_slinger",
+        "display_name": "Slinger Card",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/card_slinger.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "card_slinger.speed",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "speed",
+            "value": 8.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "card_slinger.crit",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "crit",
+            "value": 6.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "card"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "card_vaelor",
+        "display_name": "Vaelor Card",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/card_vaelor.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "card_vaelor.power",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "power",
+            "value": 18.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "card_vaelor.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 18.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "card"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
         "attachment_id": "card_vampire",
         "display_name": "Vampire Card",
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/card_vampire.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -62330,6 +63397,7 @@
         "display_name": "Wolf Card",
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/card_wolf.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -62358,10 +63426,263 @@
         "version": 2
       },
       {
+        "attachment_id": "diamond",
+        "display_name": "Diamond",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/diamond.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "diamond.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 12.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "gem"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "emerald",
+        "display_name": "Emerald",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/emerald.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "emerald.speed",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "speed",
+            "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "emerald.evade",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "evade",
+            "value": 6.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "gem"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "flawless_amethyst",
+        "display_name": "Flawless Amethyst",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/flawless_amethyst.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "flawless_amethyst.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 14.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "flawless_amethyst.crit",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "crit",
+            "value": 8.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "gem"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "flawless_diamond",
+        "display_name": "Flawless Diamond",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/flawless_diamond.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "flawless_diamond.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 24.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "gem"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "flawless_emerald",
+        "display_name": "Flawless Emerald",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/flawless_emerald.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "flawless_emerald.speed",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "speed",
+            "value": 12.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "flawless_emerald.evade",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "evade",
+            "value": 12.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "gem"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "flawless_onyx",
+        "display_name": "Flawless Onyx",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/flawless_onyx.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "flawless_onyx.lifesteal",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "lifesteal",
+            "value": 0.12
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "gem"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "flawless_ruby",
+        "display_name": "Flawless Ruby",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/flawless_ruby.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "flawless_ruby.power",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "power",
+            "value": 18.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "gem"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "flawless_sapphire",
+        "display_name": "Flawless Sapphire",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/flawless_sapphire.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "flawless_sapphire.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 18.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "gem"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "flawless_topaz",
+        "display_name": "Flawless Topaz",
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/flawless_topaz.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "flawless_topaz.speed",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "speed",
+            "value": 12.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "flawless_topaz.crit",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "crit",
+            "value": 12.0
+          }
+        ],
+        "schema": "asteria.rpg.attachment",
+        "tags": [
+          "gem"
+        ],
+        "triggers": [],
+        "version": 2
+      },
+      {
         "attachment_id": "onyx",
         "display_name": "Onyx",
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/onyx.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -62385,6 +63706,7 @@
         "display_name": "Ruby",
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/ruby.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -62408,6 +63730,7 @@
         "display_name": "Sapphire",
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/sapphire.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -62431,6 +63754,7 @@
         "display_name": "Topaz",
         "granted_abilities": [],
         "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/topaz.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -64141,6 +65465,23 @@
       },
       {
         "ability_id": "bomb_ice",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "bomb_smoke",
         "active_only": true,
         "adjacent_to_actor": false,
         "blocked_slot_tags": [],
@@ -67557,6 +68898,23 @@
         "version": 1
       },
       {
+        "ability_id": "vial_poison",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "w_charge",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -67795,6 +69153,23 @@
         "version": 1
       },
       {
+        "ability_id": "water_holy",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "self",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "weapon_dance",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -67942,6 +69317,7 @@
           "capability.weapon.staff",
           "class.bishop"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_bishop.png",
         "level_growth": {
           "defense": 1.2,
           "magic": 3.4
@@ -67978,6 +69354,7 @@
           "capability.weapon.staff",
           "class.cleric"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_cleric.png",
         "level_growth": {
           "defense": 1.6,
           "magic": 2.8,
@@ -68010,6 +69387,7 @@
           "capability.weapon.dagger",
           "class.cultist"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_cultist.png",
         "level_growth": {
           "evade": 0.1,
           "power": 1.6,
@@ -68037,6 +69415,7 @@
           "capability.weapon.sword",
           "class.death_lord"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_death_lord.png",
         "level_growth": {
           "magic": 3.6,
           "power": 1.0
@@ -68068,6 +69447,7 @@
           "capability.weapon.sword",
           "class.duelist"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_duelist.png",
         "level_growth": {
           "crit": 0.15,
           "power": 1.8,
@@ -68095,6 +69475,7 @@
           "capability.weapon.sword",
           "class.forgemaster"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_forgemaster.png",
         "level_growth": {
           "defense": 2.0,
           "power": 3.0
@@ -68125,6 +69506,7 @@
           "capability.weapon.sword",
           "class.guardian"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_guardian.png",
         "level_growth": {
           "defense": 3.4,
           "power": 1.2
@@ -68154,6 +69536,7 @@
           "capability.weapon.staff",
           "class.heretic"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_heretic.png",
         "level_growth": {
           "magic": 2.0,
           "power": 2.8
@@ -68189,6 +69572,7 @@
           "capability.weapon.sword",
           "class.hero"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_hero.png",
         "level_growth": {
           "defense": 1.8,
           "magic": 2.2,
@@ -68229,6 +69613,7 @@
           "capability.weapon.sword",
           "class.knight"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_knight.png",
         "level_growth": {
           "defense": 2.6,
           "power": 3.4,
@@ -68254,6 +69639,7 @@
           "capability.weapon.staff",
           "class.lich"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_lich.png",
         "level_growth": {
           "magic": 3.0
         },
@@ -68282,6 +69668,7 @@
           "capability.weapon.staff",
           "class.mystic"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_mystic.png",
         "level_growth": {
           "defense": 0.8,
           "magic": 3.6,
@@ -68312,6 +69699,7 @@
           "capability.weapon.staff",
           "class.necromancer"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_necromancer.png",
         "level_growth": {
           "defense": 1.0,
           "magic": 3.0,
@@ -68338,6 +69726,7 @@
           "capability.weapon.staff",
           "class.priest"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_priest.png",
         "level_growth": {
           "magic": 2.6
         },
@@ -68366,6 +69755,7 @@
           "capability.weapon.dagger",
           "class.rogue"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_rogue.png",
         "level_growth": {
           "crit": 0.2,
           "evade": 0.15,
@@ -68398,6 +69788,7 @@
           "capability.weapon.staff",
           "class.sage"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_sage.png",
         "level_growth": {
           "defense": 1.2,
           "magic": 3.2
@@ -68426,6 +69817,7 @@
         "granted_tags": [
           "class.spirit"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_spirit.png",
         "resource_bonuses": {},
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
@@ -68449,6 +69841,7 @@
           "capability.weapon.sword",
           "class.weapon_master"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_weapon_master.png",
         "level_growth": {
           "crit": 0.12,
           "power": 2.6,
@@ -68480,6 +69873,7 @@
           "capability.weapon.dagger",
           "class.zealot"
         ],
+        "icon_id": "playable_assets/lucifer/icons/job_zealot.png",
         "level_growth": {
           "power": 2.4,
           "speed": 1.0
@@ -68501,6 +69895,39 @@
       }
     ],
     "composition_recipes": [
+      {
+        "display_name": "Craft amethyst_item",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "amethyst_item"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "craft_amethyst_item",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "moon_shard"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "ice_crystal"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 1.0,
+        "tags": [],
+        "version": 2
+      },
       {
         "display_name": "Craft card_golem_item",
         "experience": {},
@@ -68558,6 +69985,72 @@
           {
             "item_ids": [
               "focus_stone"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 1.0,
+        "tags": [],
+        "version": 2
+      },
+      {
+        "display_name": "Craft diamond_item",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "diamond_item"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "craft_diamond_item",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "guardian_scale"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "silver_ore"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 1.0,
+        "tags": [],
+        "version": 2
+      },
+      {
+        "display_name": "Craft emerald_item",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "emerald_item"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "craft_emerald_item",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "silver_ore"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "ether_leaf"
             ],
             "step_id": "catalyst"
           }
@@ -68799,6 +70292,237 @@
         "version": 2
       },
       {
+        "display_name": "Fuse Amethyst",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "flawless_amethyst_item"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "fuse_amethyst",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "amethyst_item"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "amethyst_item"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 1.0,
+        "tags": [],
+        "version": 2
+      },
+      {
+        "display_name": "Fuse Diamond",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "flawless_diamond_item"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "fuse_diamond",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "diamond_item"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "diamond_item"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 1.0,
+        "tags": [],
+        "version": 2
+      },
+      {
+        "display_name": "Fuse Emerald",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "flawless_emerald_item"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "fuse_emerald",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "emerald_item"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "emerald_item"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 1.0,
+        "tags": [],
+        "version": 2
+      },
+      {
+        "display_name": "Fuse Onyx",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "flawless_onyx_item"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "fuse_onyx",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "onyx_item"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "onyx_item"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 1.0,
+        "tags": [],
+        "version": 2
+      },
+      {
+        "display_name": "Fuse Ruby",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "flawless_ruby_item"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "fuse_ruby",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "ruby_item"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "ruby_item"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 1.0,
+        "tags": [],
+        "version": 2
+      },
+      {
+        "display_name": "Fuse Sapphire",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "flawless_sapphire_item"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "fuse_sapphire",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "sapphire_item"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "sapphire_item"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 1.0,
+        "tags": [],
+        "version": 2
+      },
+      {
+        "display_name": "Fuse Topaz",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "flawless_topaz_item"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "fuse_topaz",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "topaz_item"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "topaz_item"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 1.0,
+        "tags": [],
+        "version": 2
+      },
+      {
         "display_name": "Healing Salve",
         "experience": {},
         "failure_outputs": [],
@@ -68832,6 +70556,39 @@
         "version": 2
       },
       {
+        "display_name": "Holy Water",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "holy_water"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "holy_water",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "ether_leaf"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "moon_shard"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "concoct",
+        "success_chance": 1.0,
+        "tags": [],
+        "version": 2
+      },
+      {
         "display_name": "Phoenix Tonic",
         "experience": {},
         "failure_outputs": [],
@@ -68855,6 +70612,72 @@
           {
             "item_ids": [
               "healing_herb"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "concoct",
+        "success_chance": 1.0,
+        "tags": [],
+        "version": 2
+      },
+      {
+        "display_name": "Poison Vial",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "poison_vial"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "poison_vial",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "healing_herb"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "alchemy_salt"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "concoct",
+        "success_chance": 1.0,
+        "tags": [],
+        "version": 2
+      },
+      {
+        "display_name": "Smoke Bomb",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "smoke_bomb"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "smoke_bomb",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "fire_dust"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "alchemy_salt"
             ],
             "step_id": "catalyst"
           }
@@ -68929,6 +70752,25 @@
       {
         "fee": 0.0,
         "fee_currency": "",
+        "item_id": "amethyst_item",
+        "yields": [
+          {
+            "chance": 1.0,
+            "item_id": "moon_shard",
+            "maximum": 1,
+            "minimum": 1
+          },
+          {
+            "chance": 1.0,
+            "item_id": "ice_crystal",
+            "maximum": 1,
+            "minimum": 1
+          }
+        ]
+      },
+      {
+        "fee": 0.0,
+        "fee_currency": "",
         "item_id": "card_wolf_item",
         "yields": [
           {
@@ -68940,6 +70782,44 @@
           {
             "chance": 1.0,
             "item_id": "focus_stone",
+            "maximum": 1,
+            "minimum": 1
+          }
+        ]
+      },
+      {
+        "fee": 0.0,
+        "fee_currency": "",
+        "item_id": "diamond_item",
+        "yields": [
+          {
+            "chance": 1.0,
+            "item_id": "guardian_scale",
+            "maximum": 1,
+            "minimum": 1
+          },
+          {
+            "chance": 1.0,
+            "item_id": "silver_ore",
+            "maximum": 1,
+            "minimum": 1
+          }
+        ]
+      },
+      {
+        "fee": 0.0,
+        "fee_currency": "",
+        "item_id": "emerald_item",
+        "yields": [
+          {
+            "chance": 1.0,
+            "item_id": "silver_ore",
+            "maximum": 1,
+            "minimum": 1
+          },
+          {
+            "chance": 1.0,
+            "item_id": "ether_leaf",
             "maximum": 1,
             "minimum": 1
           }
@@ -69001,6 +70881,25 @@
             "minimum": 1
           }
         ]
+      },
+      {
+        "fee": 0.0,
+        "fee_currency": "",
+        "item_id": "topaz_item",
+        "yields": [
+          {
+            "chance": 1.0,
+            "item_id": "moon_shard",
+            "maximum": 1,
+            "minimum": 1
+          },
+          {
+            "chance": 1.0,
+            "item_id": "ether_leaf",
+            "maximum": 1,
+            "minimum": 1
+          }
+        ]
       }
     ],
     "doodads": [
@@ -69055,6 +70954,14 @@
             "rarity": "common",
             "required_switch": "",
             "weight": 3.0
+          },
+          {
+            "item_id": "card_acolyte_item",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 0.3
           }
         ],
         "guaranteed": [],
@@ -69150,6 +71057,14 @@
             "rarity": "common",
             "required_switch": "",
             "weight": 1.0
+          },
+          {
+            "item_id": "card_ancient_item",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
           }
         ],
         "luck_weight_bonus": 0.0,
@@ -69220,6 +71135,14 @@
             "rarity": "common",
             "required_switch": "",
             "weight": 1.0
+          },
+          {
+            "item_id": "card_beast_item",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
           }
         ],
         "luck_weight_bonus": 0.0,
@@ -69272,6 +71195,14 @@
             "rarity": "common",
             "required_switch": "",
             "weight": 1.0
+          },
+          {
+            "item_id": "card_hunter_item",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 0.3
           }
         ],
         "guaranteed": [],
@@ -69317,6 +71248,14 @@
             "rarity": "common",
             "required_switch": "",
             "weight": 1.0
+          },
+          {
+            "item_id": "card_slinger_item",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 0.3
           }
         ],
         "guaranteed": [],
@@ -69384,6 +71323,14 @@
           {
             "item_id": "healing_herb",
             "maximum": 3,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
+          },
+          {
+            "item_id": "card_vaelor_item",
+            "maximum": 1,
             "minimum": 1,
             "rarity": "common",
             "required_switch": "",
@@ -70549,6 +72496,765 @@
     "equipment": [
       {
         "any_capabilities": [],
+        "display_name": "Blood Amulet",
+        "equipment_id": "a_blood_amulet",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_blood_amulet.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_blood_amulet.power",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "power",
+            "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_blood_amulet.crit",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "crit",
+            "value": 6.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "accessory",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "accessory",
+          "set.zealot"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Chain Mail",
+        "equipment_id": "a_chain_mail",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_chain_mail.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_chain_mail.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 20.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "armor",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "armor.heavy"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Dawn Robe",
+        "equipment_id": "a_dawn_robe",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_dawn_robe.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_dawn_robe.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 14.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_dawn_robe.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 18.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "armor",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "armor.cloth",
+          "set.dawn"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Feather Charm",
+        "equipment_id": "a_feather_charm",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_feather_charm.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_feather_charm.speed",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "speed",
+            "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_feather_charm.evade",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "evade",
+            "value": 4.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "accessory",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "accessory"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Grave Shroud",
+        "equipment_id": "a_grave_shroud",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_grave_shroud.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_grave_shroud.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 16.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_grave_shroud.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 14.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "armor",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "armor.cloth",
+          "set.grave"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Hawk Eye",
+        "equipment_id": "a_hawk_eye",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_hawk_eye.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_hawk_eye.crit",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "crit",
+            "value": 8.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "accessory",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "accessory"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Holy Symbol",
+        "equipment_id": "a_holy_symbol",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_holy_symbol.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_holy_symbol.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 12.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_holy_symbol.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 6.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "accessory",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "accessory",
+          "set.dawn"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Iron Ring",
+        "equipment_id": "a_iron_ring",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_iron_ring.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_iron_ring.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 6.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "accessory",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "accessory"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Knight's Plate",
+        "equipment_id": "a_knight_plate",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_knight_plate.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_knight_plate.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 34.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_knight_plate.power",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "power",
+            "value": 6.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "armor",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "armor.heavy"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Leather Vest",
+        "equipment_id": "a_leather_vest",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_leather_vest.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_leather_vest.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_leather_vest.evade",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "evade",
+            "value": 4.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "armor",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "armor.light"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Life Amulet",
+        "equipment_id": "a_life_amulet",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_life_amulet.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_life_amulet.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 4.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_life_amulet.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 4.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "accessory",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "accessory"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Linen Robe",
+        "equipment_id": "a_linen_robe",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_linen_robe.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_linen_robe.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_linen_robe.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 8.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "armor",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "armor.cloth"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Moon Pendant",
+        "equipment_id": "a_moon_pendant",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_moon_pendant.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_moon_pendant.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 10.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "accessory",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "accessory"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Phylactery",
+        "equipment_id": "a_phylactery",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_phylactery.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_phylactery.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 14.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_phylactery.crit",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "crit",
+            "value": 4.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "accessory",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "accessory",
+          "set.grave"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Ruby Ring",
+        "equipment_id": "a_ruby_ring",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_ruby_ring.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_ruby_ring.power",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "power",
+            "value": 8.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "accessory",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "accessory"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Shadow Garb",
+        "equipment_id": "a_shadow_garb",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_shadow_garb.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_shadow_garb.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 18.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_shadow_garb.evade",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "evade",
+            "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_shadow_garb.speed",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "speed",
+            "value": 4.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "armor",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "armor.light"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Silk Robe",
+        "equipment_id": "a_silk_robe",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_silk_robe.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_silk_robe.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 12.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_silk_robe.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 16.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "armor",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "armor.cloth"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
         "display_name": "Warden Charm",
         "equipment_id": "a_warden_charm",
         "forbidden_capabilities": [],
@@ -70639,6 +73345,54 @@
       },
       {
         "any_capabilities": [],
+        "display_name": "Zealot Mail",
+        "equipment_id": "a_zealot_mail",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/a_zealot_mail.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_zealot_mail.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 20.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_zealot_mail.speed",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "speed",
+            "value": 6.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "armor",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "armor.light",
+          "set.zealot"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
         "display_name": "Dragon Form",
         "equipment_id": "f_dragon",
         "forbidden_capabilities": [],
@@ -70682,6 +73436,61 @@
       },
       {
         "any_capabilities": [],
+        "display_name": "Ash Staff",
+        "equipment_id": "w_ash_staff",
+        "forbidden_capabilities": [],
+        "granted_abilities": [
+          "attack_staff"
+        ],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/w_ash_staff.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_ash_staff.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 32.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          },
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g2"
+          },
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "equip.staff",
+          "tier.2",
+          "weapon"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
         "display_name": "Hand Axe",
         "equipment_id": "w_axe",
         "forbidden_capabilities": [],
@@ -70704,6 +73513,62 @@
       },
       {
         "any_capabilities": [],
+        "display_name": "Bone Scepter",
+        "equipment_id": "w_bone_scepter",
+        "forbidden_capabilities": [],
+        "granted_abilities": [
+          "attack_staff"
+        ],
+        "growth_id": "w_bone_scepter_growth",
+        "icon_id": "playable_assets/lucifer/icons/w_bone_scepter.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_bone_scepter.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 40.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          },
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g2"
+          },
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": true,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "equip.staff",
+          "set.grave",
+          "unique",
+          "weapon"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
         "display_name": "Hunter's Bow",
         "equipment_id": "w_bow",
         "forbidden_capabilities": [],
@@ -70711,6 +73576,7 @@
           "attack_bow"
         ],
         "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/w_bow.png",
         "modifiers": [],
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -70740,6 +73606,328 @@
         "sockets": [],
         "tags": [
           "equip.dagger",
+          "weapon"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Dragoon Lance",
+        "equipment_id": "w_dragoon_lance",
+        "forbidden_capabilities": [],
+        "granted_abilities": [
+          "attack_spear"
+        ],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/w_dragoon_lance.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_dragoon_lance.power",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "power",
+            "value": 34.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_dragoon_lance.crit",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "crit",
+            "value": 4.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          },
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g2"
+          },
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "equip.spear",
+          "tier.2",
+          "weapon"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Kris",
+        "equipment_id": "w_kris",
+        "forbidden_capabilities": [],
+        "granted_abilities": [
+          "attack_dagger"
+        ],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/w_kris.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_kris.power",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "power",
+            "value": 22.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_kris.speed",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "speed",
+            "value": 8.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_kris.crit",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "crit",
+            "value": 6.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          },
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g2"
+          },
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "equip.dagger",
+          "tier.2",
+          "weapon"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Longbow",
+        "equipment_id": "w_longbow",
+        "forbidden_capabilities": [],
+        "granted_abilities": [
+          "attack_bow"
+        ],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/w_longbow.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_longbow.power",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "power",
+            "value": 28.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_longbow.crit",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "crit",
+            "value": 8.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          },
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g2"
+          },
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "equip.bow",
+          "tier.2",
+          "weapon"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Ritual Kris",
+        "equipment_id": "w_ritual_kris",
+        "forbidden_capabilities": [],
+        "granted_abilities": [
+          "attack_dagger"
+        ],
+        "growth_id": "w_ritual_kris_growth",
+        "icon_id": "playable_assets/lucifer/icons/w_ritual_kris.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_ritual_kris.power",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "power",
+            "value": 30.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_ritual_kris.crit",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "crit",
+            "value": 8.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          },
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g2"
+          },
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": true,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "equip.dagger",
+          "set.zealot",
+          "unique",
+          "weapon"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Saint's Staff",
+        "equipment_id": "w_saint_staff",
+        "forbidden_capabilities": [],
+        "granted_abilities": [
+          "attack_staff"
+        ],
+        "growth_id": "w_saint_staff_growth",
+        "icon_id": "playable_assets/lucifer/icons/w_saint_staff.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_saint_staff.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 36.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          },
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g2"
+          },
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": true,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "equip.staff",
+          "set.dawn",
+          "unique",
           "weapon"
         ],
         "triggers": [],
@@ -70784,6 +73972,61 @@
         "sockets": [],
         "tags": [
           "equip.staff",
+          "weapon"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Steel Sword",
+        "equipment_id": "w_steel_sword",
+        "forbidden_capabilities": [],
+        "granted_abilities": [
+          "attack_sword"
+        ],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/w_steel_sword.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_steel_sword.power",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "power",
+            "value": 30.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          },
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g2"
+          },
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "equip.sword",
+          "tier.2",
           "weapon"
         ],
         "triggers": [],
@@ -70927,6 +74170,61 @@
         "sockets": [],
         "tags": [
           "equip.sword",
+          "weapon"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "War Axe",
+        "equipment_id": "w_war_axe",
+        "forbidden_capabilities": [],
+        "granted_abilities": [
+          "attack_axe"
+        ],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/w_war_axe.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_war_axe.power",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "power",
+            "value": 40.0
+          }
+        ],
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          },
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g2"
+          },
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "equip.axe",
+          "tier.2",
           "weapon"
         ],
         "triggers": [],
@@ -71153,9 +74451,834 @@
         "schema": "asteria.rpg.equipment_growth",
         "tags": [],
         "version": 1
+      },
+      {
+        "display_name": "w_bone_scepter Enchant",
+        "growth_id": "w_bone_scepter_growth",
+        "nodes": [
+          {
+            "auto_unlock": false,
+            "display_name": "Kindle",
+            "exclusive_group": null,
+            "max_rank": 1,
+            "node_id": "kindle",
+            "prerequisites": [],
+            "rank_requirements": [
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "grave.k",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "magic",
+                    "value": 8.0
+                  }
+                ],
+                "unlocked_sockets": [
+                  "c1"
+                ]
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "auto_unlock": false,
+            "display_name": "Star Force",
+            "exclusive_group": null,
+            "max_rank": 3,
+            "node_id": "star",
+            "prerequisites": [
+              [
+                "kindle",
+                1
+              ]
+            ],
+            "rank_requirements": [
+              {},
+              {},
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "grave.s1",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "magic",
+                    "value": 6.0
+                  }
+                ],
+                "unlocked_sockets": []
+              },
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "grave.s2",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "magic",
+                    "value": 6.0
+                  }
+                ],
+                "unlocked_sockets": []
+              },
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "grave.s3",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "magic",
+                    "value": 6.0
+                  }
+                ],
+                "unlocked_sockets": []
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "auto_unlock": false,
+            "display_name": "Path of Light",
+            "exclusive_group": "path",
+            "max_rank": 1,
+            "node_id": "light_path",
+            "prerequisites": [
+              [
+                "kindle",
+                1
+              ]
+            ],
+            "rank_requirements": [
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [
+                  "damage.light"
+                ],
+                "granted_triggers": [],
+                "modifiers": [],
+                "unlocked_sockets": []
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "auto_unlock": false,
+            "display_name": "Path of Shadow",
+            "exclusive_group": "path",
+            "max_rank": 1,
+            "node_id": "shadow_path",
+            "prerequisites": [
+              [
+                "kindle",
+                1
+              ]
+            ],
+            "rank_requirements": [
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [
+                  "damage.dark"
+                ],
+                "granted_triggers": [],
+                "modifiers": [],
+                "unlocked_sockets": []
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "auto_unlock": false,
+            "display_name": "Masterwork",
+            "exclusive_group": null,
+            "max_rank": 1,
+            "node_id": "masterwork",
+            "prerequisites": [
+              [
+                "star",
+                3
+              ]
+            ],
+            "rank_requirements": [
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "grave.m",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "magic",
+                    "value": 20.0
+                  },
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "grave.mc",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "crit",
+                    "value": 6.0
+                  }
+                ],
+                "unlocked_sockets": []
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          }
+        ],
+        "schema": "asteria.rpg.equipment_growth",
+        "tags": [],
+        "version": 1
+      },
+      {
+        "display_name": "w_ritual_kris Enchant",
+        "growth_id": "w_ritual_kris_growth",
+        "nodes": [
+          {
+            "auto_unlock": false,
+            "display_name": "Kindle",
+            "exclusive_group": null,
+            "max_rank": 1,
+            "node_id": "kindle",
+            "prerequisites": [],
+            "rank_requirements": [
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "zealot.k",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "power",
+                    "value": 8.0
+                  }
+                ],
+                "unlocked_sockets": [
+                  "c1"
+                ]
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "auto_unlock": false,
+            "display_name": "Star Force",
+            "exclusive_group": null,
+            "max_rank": 3,
+            "node_id": "star",
+            "prerequisites": [
+              [
+                "kindle",
+                1
+              ]
+            ],
+            "rank_requirements": [
+              {},
+              {},
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "zealot.s1",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "power",
+                    "value": 6.0
+                  }
+                ],
+                "unlocked_sockets": []
+              },
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "zealot.s2",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "power",
+                    "value": 6.0
+                  }
+                ],
+                "unlocked_sockets": []
+              },
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "zealot.s3",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "power",
+                    "value": 6.0
+                  }
+                ],
+                "unlocked_sockets": []
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "auto_unlock": false,
+            "display_name": "Path of Light",
+            "exclusive_group": "path",
+            "max_rank": 1,
+            "node_id": "light_path",
+            "prerequisites": [
+              [
+                "kindle",
+                1
+              ]
+            ],
+            "rank_requirements": [
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [
+                  "damage.light"
+                ],
+                "granted_triggers": [],
+                "modifiers": [],
+                "unlocked_sockets": []
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "auto_unlock": false,
+            "display_name": "Path of Shadow",
+            "exclusive_group": "path",
+            "max_rank": 1,
+            "node_id": "shadow_path",
+            "prerequisites": [
+              [
+                "kindle",
+                1
+              ]
+            ],
+            "rank_requirements": [
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [
+                  "damage.dark"
+                ],
+                "granted_triggers": [],
+                "modifiers": [],
+                "unlocked_sockets": []
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "auto_unlock": false,
+            "display_name": "Masterwork",
+            "exclusive_group": null,
+            "max_rank": 1,
+            "node_id": "masterwork",
+            "prerequisites": [
+              [
+                "star",
+                3
+              ]
+            ],
+            "rank_requirements": [
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "zealot.m",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "power",
+                    "value": 20.0
+                  },
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "zealot.mc",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "crit",
+                    "value": 6.0
+                  }
+                ],
+                "unlocked_sockets": []
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          }
+        ],
+        "schema": "asteria.rpg.equipment_growth",
+        "tags": [],
+        "version": 1
+      },
+      {
+        "display_name": "w_saint_staff Enchant",
+        "growth_id": "w_saint_staff_growth",
+        "nodes": [
+          {
+            "auto_unlock": false,
+            "display_name": "Kindle",
+            "exclusive_group": null,
+            "max_rank": 1,
+            "node_id": "kindle",
+            "prerequisites": [],
+            "rank_requirements": [
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "dawn.k",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "magic",
+                    "value": 8.0
+                  }
+                ],
+                "unlocked_sockets": [
+                  "c1"
+                ]
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "auto_unlock": false,
+            "display_name": "Star Force",
+            "exclusive_group": null,
+            "max_rank": 3,
+            "node_id": "star",
+            "prerequisites": [
+              [
+                "kindle",
+                1
+              ]
+            ],
+            "rank_requirements": [
+              {},
+              {},
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "dawn.s1",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "magic",
+                    "value": 6.0
+                  }
+                ],
+                "unlocked_sockets": []
+              },
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "dawn.s2",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "magic",
+                    "value": 6.0
+                  }
+                ],
+                "unlocked_sockets": []
+              },
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "dawn.s3",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "magic",
+                    "value": 6.0
+                  }
+                ],
+                "unlocked_sockets": []
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "auto_unlock": false,
+            "display_name": "Path of Light",
+            "exclusive_group": "path",
+            "max_rank": 1,
+            "node_id": "light_path",
+            "prerequisites": [
+              [
+                "kindle",
+                1
+              ]
+            ],
+            "rank_requirements": [
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [
+                  "damage.light"
+                ],
+                "granted_triggers": [],
+                "modifiers": [],
+                "unlocked_sockets": []
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "auto_unlock": false,
+            "display_name": "Path of Shadow",
+            "exclusive_group": "path",
+            "max_rank": 1,
+            "node_id": "shadow_path",
+            "prerequisites": [
+              [
+                "kindle",
+                1
+              ]
+            ],
+            "rank_requirements": [
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [
+                  "damage.dark"
+                ],
+                "granted_triggers": [],
+                "modifiers": [],
+                "unlocked_sockets": []
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "auto_unlock": false,
+            "display_name": "Masterwork",
+            "exclusive_group": null,
+            "max_rank": 1,
+            "node_id": "masterwork",
+            "prerequisites": [
+              [
+                "star",
+                3
+              ]
+            ],
+            "rank_requirements": [
+              {}
+            ],
+            "rewards": [
+              {
+                "evolution_equipment_id": null,
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "granted_triggers": [],
+                "modifiers": [
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "dawn.m",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "magic",
+                    "value": 20.0
+                  },
+                  {
+                    "blocked_tags": [],
+                    "modifier_id": "dawn.mc",
+                    "operation": "add",
+                    "priority": 0,
+                    "required_tags": [],
+                    "stat": "crit",
+                    "value": 6.0
+                  }
+                ],
+                "unlocked_sockets": []
+              }
+            ],
+            "schema": "asteria.rpg.equipment_growth_node",
+            "tags": [],
+            "version": 1
+          }
+        ],
+        "schema": "asteria.rpg.equipment_growth",
+        "tags": [],
+        "version": 1
       }
     ],
     "equipment_sets": [
+      {
+        "bonuses": [
+          {
+            "granted_abilities": [],
+            "modifiers": [
+              {
+                "blocked_tags": [],
+                "modifier_id": "dawn.set2.magic",
+                "operation": "add",
+                "priority": 0,
+                "required_tags": [],
+                "stat": "magic",
+                "value": 20.0
+              }
+            ],
+            "pieces": 2,
+            "tags": []
+          },
+          {
+            "granted_abilities": [],
+            "modifiers": [
+              {
+                "blocked_tags": [],
+                "modifier_id": "dawn.set3.magic",
+                "operation": "add",
+                "priority": 0,
+                "required_tags": [],
+                "stat": "magic",
+                "value": 30.0
+              },
+              {
+                "blocked_tags": [],
+                "modifier_id": "dawn.set3.defense",
+                "operation": "add",
+                "priority": 0,
+                "required_tags": [],
+                "stat": "defense",
+                "value": 20.0
+              }
+            ],
+            "pieces": 3,
+            "tags": []
+          }
+        ],
+        "display_name": "Vestments of Dawn",
+        "equipment_ids": [
+          "w_saint_staff",
+          "a_dawn_robe",
+          "a_holy_symbol"
+        ],
+        "schema": "asteria.rpg.equipment_set",
+        "set_id": "dawn",
+        "version": 1
+      },
+      {
+        "bonuses": [
+          {
+            "granted_abilities": [],
+            "modifiers": [
+              {
+                "blocked_tags": [],
+                "modifier_id": "grave.set2.magic",
+                "operation": "add",
+                "priority": 0,
+                "required_tags": [],
+                "stat": "magic",
+                "value": 24.0
+              }
+            ],
+            "pieces": 2,
+            "tags": []
+          },
+          {
+            "granted_abilities": [],
+            "modifiers": [
+              {
+                "blocked_tags": [],
+                "modifier_id": "grave.set3.magic",
+                "operation": "add",
+                "priority": 0,
+                "required_tags": [],
+                "stat": "magic",
+                "value": 34.0
+              },
+              {
+                "blocked_tags": [],
+                "modifier_id": "grave.set3.crit",
+                "operation": "add",
+                "priority": 0,
+                "required_tags": [],
+                "stat": "crit",
+                "value": 8.0
+              }
+            ],
+            "pieces": 3,
+            "tags": []
+          }
+        ],
+        "display_name": "Regalia of the Grave",
+        "equipment_ids": [
+          "w_bone_scepter",
+          "a_grave_shroud",
+          "a_phylactery"
+        ],
+        "schema": "asteria.rpg.equipment_set",
+        "set_id": "grave",
+        "version": 1
+      },
       {
         "bonuses": [
           {
@@ -71210,6 +75333,60 @@
         ],
         "schema": "asteria.rpg.equipment_set",
         "set_id": "warden",
+        "version": 1
+      },
+      {
+        "bonuses": [
+          {
+            "granted_abilities": [],
+            "modifiers": [
+              {
+                "blocked_tags": [],
+                "modifier_id": "zealot.set2.power",
+                "operation": "add",
+                "priority": 0,
+                "required_tags": [],
+                "stat": "power",
+                "value": 20.0
+              }
+            ],
+            "pieces": 2,
+            "tags": []
+          },
+          {
+            "granted_abilities": [],
+            "modifiers": [
+              {
+                "blocked_tags": [],
+                "modifier_id": "zealot.set3.power",
+                "operation": "add",
+                "priority": 0,
+                "required_tags": [],
+                "stat": "power",
+                "value": 30.0
+              },
+              {
+                "blocked_tags": [],
+                "modifier_id": "zealot.set3.speed",
+                "operation": "add",
+                "priority": 0,
+                "required_tags": [],
+                "stat": "speed",
+                "value": 10.0
+              }
+            ],
+            "pieces": 3,
+            "tags": []
+          }
+        ],
+        "display_name": "Raiment of the Zealot",
+        "equipment_ids": [
+          "w_ritual_kris",
+          "a_zealot_mail",
+          "a_blood_amulet"
+        ],
+        "schema": "asteria.rpg.equipment_set",
+        "set_id": "zealot",
         "version": 1
       }
     ],
@@ -72324,6 +76501,17 @@
         "version": 2
       },
       {
+        "attachment_id": "amethyst",
+        "display_name": "Amethyst",
+        "icon_id": "playable_assets/lucifer/icons/amethyst.png",
+        "item_id": "amethyst_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
         "display_name": "Ancient Thread",
         "icon_id": "icon.ancient_thread",
         "item_id": "ancient_thread",
@@ -72332,6 +76520,16 @@
         "tags": [
           "material"
         ],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "display_name": "Blessed Scroll",
+        "icon_id": "playable_assets/lucifer/icons/blessed_scroll.png",
+        "item_id": "blessed_scroll",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
         "use_effects": [],
         "version": 2
       },
@@ -72348,11 +76546,59 @@
         "version": 2
       },
       {
+        "attachment_id": "card_acolyte",
+        "destroyed_on_removal": true,
+        "display_name": "Acolyte Card",
+        "icon_id": "playable_assets/lucifer/icons/card_acolyte.png",
+        "item_id": "card_acolyte_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "card_ancient",
+        "destroyed_on_removal": true,
+        "display_name": "Ancient Card",
+        "icon_id": "playable_assets/lucifer/icons/card_ancient.png",
+        "item_id": "card_ancient_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "card_beast",
+        "destroyed_on_removal": true,
+        "display_name": "Beast Card",
+        "icon_id": "playable_assets/lucifer/icons/card_beast.png",
+        "item_id": "card_beast_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
         "attachment_id": "card_golem",
         "destroyed_on_removal": true,
         "display_name": "Golem Card",
-        "icon_id": "playable_assets/lucifer/icons/card_golem_item.png",
+        "icon_id": "playable_assets/lucifer/icons/card_golem.png",
         "item_id": "card_golem_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "card_hunter",
+        "destroyed_on_removal": true,
+        "display_name": "Hunter Card",
+        "icon_id": "playable_assets/lucifer/icons/card_hunter.png",
+        "item_id": "card_hunter_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
         "tags": [],
@@ -72363,8 +76609,32 @@
         "attachment_id": "card_slayer",
         "destroyed_on_removal": true,
         "display_name": "Slayer Card",
-        "icon_id": "playable_assets/lucifer/icons/card_slayer_item.png",
+        "icon_id": "playable_assets/lucifer/icons/card_slayer.png",
         "item_id": "card_slayer_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "card_slinger",
+        "destroyed_on_removal": true,
+        "display_name": "Slinger Card",
+        "icon_id": "playable_assets/lucifer/icons/card_slinger.png",
+        "item_id": "card_slinger_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "card_vaelor",
+        "destroyed_on_removal": true,
+        "display_name": "Vaelor Card",
+        "icon_id": "playable_assets/lucifer/icons/card_vaelor.png",
+        "item_id": "card_vaelor_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
         "tags": [],
@@ -72375,7 +76645,7 @@
         "attachment_id": "card_vampire",
         "destroyed_on_removal": true,
         "display_name": "Vampire Card",
-        "icon_id": "playable_assets/lucifer/icons/card_vampire_item.png",
+        "icon_id": "playable_assets/lucifer/icons/card_vampire.png",
         "item_id": "card_vampire_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
@@ -72387,8 +76657,30 @@
         "attachment_id": "card_wolf",
         "destroyed_on_removal": true,
         "display_name": "Wolf Card",
-        "icon_id": "playable_assets/lucifer/icons/card_wolf_item.png",
+        "icon_id": "playable_assets/lucifer/icons/card_wolf.png",
         "item_id": "card_wolf_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "diamond",
+        "display_name": "Diamond",
+        "icon_id": "playable_assets/lucifer/icons/diamond.png",
+        "item_id": "diamond_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "emerald",
+        "display_name": "Emerald",
+        "icon_id": "playable_assets/lucifer/icons/emerald.png",
+        "item_id": "emerald_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
         "tags": [],
@@ -72442,6 +76734,83 @@
         "tags": [
           "material"
         ],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "flawless_amethyst",
+        "display_name": "Flawless Amethyst",
+        "icon_id": "playable_assets/lucifer/icons/flawless_amethyst.png",
+        "item_id": "flawless_amethyst_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "flawless_diamond",
+        "display_name": "Flawless Diamond",
+        "icon_id": "playable_assets/lucifer/icons/flawless_diamond.png",
+        "item_id": "flawless_diamond_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "flawless_emerald",
+        "display_name": "Flawless Emerald",
+        "icon_id": "playable_assets/lucifer/icons/flawless_emerald.png",
+        "item_id": "flawless_emerald_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "flawless_onyx",
+        "display_name": "Flawless Onyx",
+        "icon_id": "playable_assets/lucifer/icons/flawless_onyx.png",
+        "item_id": "flawless_onyx_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "flawless_ruby",
+        "display_name": "Flawless Ruby",
+        "icon_id": "playable_assets/lucifer/icons/flawless_ruby.png",
+        "item_id": "flawless_ruby_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "flawless_sapphire",
+        "display_name": "Flawless Sapphire",
+        "icon_id": "playable_assets/lucifer/icons/flawless_sapphire.png",
+        "item_id": "flawless_sapphire_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "attachment_id": "flawless_topaz",
+        "display_name": "Flawless Topaz",
+        "icon_id": "playable_assets/lucifer/icons/flawless_topaz.png",
+        "item_id": "flawless_topaz_item",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 20,
+        "tags": [],
         "use_effects": [],
         "version": 2
       },
@@ -72508,6 +76877,19 @@
         "version": 2
       },
       {
+        "battle_ability": "water_holy",
+        "display_name": "Holy Water",
+        "icon_id": "playable_assets/lucifer/icons/holy_water.png",
+        "item_id": "holy_water",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 99,
+        "tags": [
+          "concoction"
+        ],
+        "use_effects": [],
+        "version": 2
+      },
+      {
         "display_name": "Ice Crystal",
         "icon_id": "icon.ice_crystal",
         "item_id": "ice_crystal",
@@ -72546,7 +76928,7 @@
       {
         "attachment_id": "onyx",
         "display_name": "Onyx",
-        "icon_id": "playable_assets/lucifer/icons/onyx_item.png",
+        "icon_id": "playable_assets/lucifer/icons/onyx.png",
         "item_id": "onyx_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
@@ -72580,9 +76962,22 @@
         "version": 2
       },
       {
+        "battle_ability": "vial_poison",
+        "display_name": "Poison Vial",
+        "icon_id": "playable_assets/lucifer/icons/poison_vial.png",
+        "item_id": "poison_vial",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 99,
+        "tags": [
+          "concoction"
+        ],
+        "use_effects": [],
+        "version": 2
+      },
+      {
         "attachment_id": "ruby",
         "display_name": "Ruby",
-        "icon_id": "playable_assets/lucifer/icons/ruby_item.png",
+        "icon_id": "playable_assets/lucifer/icons/ruby.png",
         "item_id": "ruby_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
@@ -72593,7 +76988,7 @@
       {
         "attachment_id": "sapphire",
         "display_name": "Sapphire",
-        "icon_id": "playable_assets/lucifer/icons/sapphire_item.png",
+        "icon_id": "playable_assets/lucifer/icons/sapphire.png",
         "item_id": "sapphire_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
@@ -72609,6 +77004,19 @@
         "stack_limit": 99,
         "tags": [
           "material"
+        ],
+        "use_effects": [],
+        "version": 2
+      },
+      {
+        "battle_ability": "bomb_smoke",
+        "display_name": "Smoke Bomb",
+        "icon_id": "playable_assets/lucifer/icons/smoke_bomb.png",
+        "item_id": "smoke_bomb",
+        "schema": "asteria.rpg.item",
+        "stack_limit": 99,
+        "tags": [
+          "concoction"
         ],
         "use_effects": [],
         "version": 2
@@ -72641,7 +77049,7 @@
       {
         "attachment_id": "topaz",
         "display_name": "Topaz",
-        "icon_id": "playable_assets/lucifer/icons/topaz_item.png",
+        "icon_id": "playable_assets/lucifer/icons/topaz.png",
         "item_id": "topaz_item",
         "schema": "asteria.rpg.item",
         "stack_limit": 20,
@@ -72809,6 +77217,7 @@
       {
         "display_name": "Arcane Focus",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_arcane_focus.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -72829,6 +77238,7 @@
       {
         "display_name": "Arms Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_arms_mastery.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -72858,6 +77268,7 @@
       {
         "display_name": "Grace Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_bishop_grace_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -72878,6 +77289,7 @@
       {
         "display_name": "Judgment Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_bishop_judgment_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -72907,6 +77319,7 @@
       {
         "display_name": "Sanctity Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_bishop_sanctity_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -72927,6 +77340,7 @@
       {
         "display_name": "Faith Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_cleric_faith_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -72947,6 +77361,7 @@
       {
         "display_name": "Mercy Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_cleric_mercy_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -72967,6 +77382,7 @@
       {
         "display_name": "Radiance Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_cleric_radiance_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -72996,6 +77412,7 @@
       {
         "display_name": "Frenzy Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_cultist_frenzy_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73025,6 +77442,7 @@
       {
         "display_name": "Ritual Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_cultist_ritual_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73045,6 +77463,7 @@
       {
         "display_name": "Shadows Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_cultist_shadows_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73074,6 +77493,7 @@
       {
         "display_name": "Dominion Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_death_lord_dominion_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73103,6 +77523,7 @@
       {
         "display_name": "Dread Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_death_lord_dread_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73132,6 +77553,7 @@
       {
         "display_name": "Harvest Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_death_lord_harvest_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73152,6 +77574,7 @@
       {
         "display_name": "Devotion",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_devotion.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73181,6 +77604,7 @@
       {
         "display_name": "Dominion",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_dominion.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73210,6 +77634,7 @@
       {
         "display_name": "Blades Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_duelist_blades_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73239,6 +77664,7 @@
       {
         "display_name": "Footwork Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_duelist_footwork_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73268,6 +77694,7 @@
       {
         "display_name": "Precision Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_duelist_precision_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73297,6 +77724,7 @@
       {
         "display_name": "Fervent Soul",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_fervent_soul.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73326,6 +77754,7 @@
       {
         "display_name": "Forbidden Lore",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_forbidden_lore.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73355,6 +77784,7 @@
       {
         "display_name": "Forge Fire",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_forge_fire.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73375,6 +77805,7 @@
       {
         "display_name": "Anvil Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_forgemaster_anvil_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73395,6 +77826,7 @@
       {
         "display_name": "Craft Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_forgemaster_craft_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73415,6 +77847,7 @@
       {
         "display_name": "Flame Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_forgemaster_flame_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73444,6 +77877,7 @@
       {
         "display_name": "Grave Chill",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_grave_chill.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73464,6 +77898,7 @@
       {
         "display_name": "Bulwark Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_guardian_bulwark_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73484,6 +77919,7 @@
       {
         "display_name": "Retaliation Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_guardian_retaliation_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73513,6 +77949,7 @@
       {
         "display_name": "Sentinel Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_guardian_sentinel_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73533,6 +77970,7 @@
       {
         "display_name": "Blasphemy Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_heretic_blasphemy_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73562,6 +78000,7 @@
       {
         "display_name": "Hex Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_heretic_hex_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73591,6 +78030,7 @@
       {
         "display_name": "Martyr Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_heretic_martyr_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73611,6 +78051,7 @@
       {
         "display_name": "Champion Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_hero_champion_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73631,6 +78072,7 @@
       {
         "display_name": "Legend Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_hero_legend_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73651,6 +78093,7 @@
       {
         "display_name": "Paragon Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_hero_paragon_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73680,6 +78123,7 @@
       {
         "display_name": "Hero's Heart",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_heros_heart.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73718,6 +78162,7 @@
       {
         "display_name": "Iron Wall",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_iron_wall.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73738,6 +78183,7 @@
       {
         "display_name": "Iron Will",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_iron_will.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73758,6 +78204,7 @@
       {
         "display_name": "Keen Eye",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_keen_eye.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73778,6 +78225,7 @@
       {
         "display_name": "Protection Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_knight_protection_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73798,6 +78246,7 @@
       {
         "display_name": "Retribution Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_knight_retribution_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73827,6 +78276,7 @@
       {
         "display_name": "Valor Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_knight_valor_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73847,6 +78297,7 @@
       {
         "display_name": "Frost Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_lich_frost_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73876,6 +78327,7 @@
       {
         "display_name": "Phylactery Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_lich_phylactery_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73896,6 +78348,7 @@
       {
         "display_name": "Plague Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_lich_plague_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73925,6 +78378,7 @@
       {
         "display_name": "Arcana Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_mystic_arcana_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73954,6 +78408,7 @@
       {
         "display_name": "Flow Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_mystic_flow_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73974,6 +78429,7 @@
       {
         "display_name": "Wards Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_mystic_wards_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -73994,6 +78450,7 @@
       {
         "display_name": "Blood Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_necromancer_blood_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74014,6 +78471,7 @@
       {
         "display_name": "Bone Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_necromancer_bone_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74043,6 +78501,7 @@
       {
         "display_name": "Unholy Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_necromancer_unholy_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74072,6 +78531,7 @@
       {
         "display_name": "Phylactery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_phylactery.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74101,6 +78561,7 @@
       {
         "display_name": "Discipline Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_priest_discipline_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74130,6 +78591,7 @@
       {
         "display_name": "Holy Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_priest_holy_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74150,6 +78612,7 @@
       {
         "display_name": "Shadow Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_priest_shadow_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74179,6 +78642,7 @@
       {
         "display_name": "Assassination Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_rogue_assassination_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74208,6 +78672,7 @@
       {
         "display_name": "Outlaw Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_rogue_outlaw_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74237,6 +78702,7 @@
       {
         "display_name": "Subtlety Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_rogue_subtlety_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74266,6 +78732,7 @@
       {
         "display_name": "Elements Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_sage_elements_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74295,6 +78762,7 @@
       {
         "display_name": "Insight Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_sage_insight_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74324,6 +78792,7 @@
       {
         "display_name": "Wisdom Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_sage_wisdom_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74344,6 +78813,7 @@
       {
         "display_name": "Sage's Calm",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_sages_calm.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74373,6 +78843,7 @@
       {
         "display_name": "Saint's Grace",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_saints_grace.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74402,6 +78873,7 @@
       {
         "display_name": "Serenity",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_serenity.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74422,6 +78894,7 @@
       {
         "display_name": "Cutpurse's Luck",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_shadow_step_passive.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74451,6 +78924,7 @@
       {
         "display_name": "Vampirism",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_vampirism.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74471,6 +78945,7 @@
       {
         "display_name": "Arms Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_weapon_master_arms_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74500,6 +78975,7 @@
       {
         "display_name": "Arsenal Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_weapon_master_arsenal_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74529,6 +79005,7 @@
       {
         "display_name": "Fury Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_weapon_master_fury_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74558,6 +79035,7 @@
       {
         "display_name": "Zeal",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_zeal.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74587,6 +79065,7 @@
       {
         "display_name": "Brand Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_zealot_brand_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74616,6 +79095,7 @@
       {
         "display_name": "Crusade Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_zealot_crusade_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -74636,6 +79116,7 @@
       {
         "display_name": "Fervor Mastery",
         "granted_abilities": [],
+        "icon_id": "playable_assets/lucifer/icons/passive_zealot_fervor_capstone.png",
         "modifiers": [
           {
             "blocked_tags": [],
@@ -103283,9 +107764,13 @@
         "equipment_tags": [
           "weapon"
         ],
+        "materials": {
+          "iron_ore": 1
+        },
         "max_level": 10,
         "on_fail": "drop",
         "operation": "add",
+        "protect_item": "blessed_scroll",
         "rules_id": "plus",
         "safe_until": 3,
         "schema": "asteria.rpg.refine_rules",
@@ -103299,6 +107784,40 @@
           0.5,
           0.4,
           0.3,
+          0.2
+        ],
+        "version": 1
+      },
+      {
+        "base_cost": 150.0,
+        "bonuses": {
+          "defense": 4.0
+        },
+        "cost_growth": 120.0,
+        "currency": "gold",
+        "equipment_tags": [
+          "armor"
+        ],
+        "materials": {
+          "silver_ore": 1
+        },
+        "max_level": 10,
+        "on_fail": "drop",
+        "operation": "add",
+        "protect_item": "blessed_scroll",
+        "rules_id": "plus_armor",
+        "safe_until": 2,
+        "schema": "asteria.rpg.refine_rules",
+        "success": [
+          1.0,
+          1.0,
+          0.9,
+          0.7,
+          0.6,
+          0.5,
+          0.4,
+          0.3,
+          0.25,
           0.2
         ],
         "version": 1
@@ -103406,6 +107925,76 @@
             "item_id": "card_wolf_item",
             "sell_prices": {
               "gold": 300.0
+            },
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 300.0
+            },
+            "item_id": "blessed_scroll",
+            "sell_prices": {
+              "gold": 75.0
+            },
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 450.0
+            },
+            "item_id": "emerald_item",
+            "sell_prices": {
+              "gold": 112.0
+            },
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 450.0
+            },
+            "item_id": "amethyst_item",
+            "sell_prices": {
+              "gold": 112.0
+            },
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 450.0
+            },
+            "item_id": "diamond_item",
+            "sell_prices": {
+              "gold": 112.0
+            },
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 60.0
+            },
+            "item_id": "alchemy_salt",
+            "sell_prices": {
+              "gold": 15.0
+            },
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 90.0
+            },
+            "item_id": "moon_shard",
+            "sell_prices": {
+              "gold": 22.0
+            },
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 120.0
+            },
+            "item_id": "guardian_scale",
+            "sell_prices": {
+              "gold": 30.0
             },
             "stock": null
           }
@@ -103740,6 +108329,15 @@
           "entity_id": "09f3e597-9f58-5f98-8316-5ee73d23996e",
           "local_scope_id": "story.cael.guild",
           "program_id": "story.cael.guild",
+          "trigger": "action"
+        },
+        {
+          "binding_id": "story.outfitter.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "07e26e32-316e-5a05-8f16-b7809dccf3eb",
+          "local_scope_id": "story.outfitter",
+          "program_id": "story.outfitter",
           "trigger": "action"
         },
         {
@@ -105591,6 +110189,79 @@
           "enabled": true,
           "id": "ec73cb9b-6dbf-5ea7-a192-587b9403f69e",
           "name": "Job Master"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 72.0,
+                "y": 104.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "a9d91b12-f236-5709-abbc-2de00051a12d",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "6119048e-e4fd-5d03-8707-b8f04cf17b42",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "height": 8.0,
+                "is_trigger": false,
+                "ladder": false,
+                "layer": 0,
+                "mask": 4294967295,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "one_way": false,
+                "radius": 8.0,
+                "shape": "box",
+                "width": 10.0
+              },
+              "type": "asteria.Collider2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "event_binding_id": "story.outfitter.binding",
+                "event_program_id": "story.outfitter",
+                "local_scope_id": "story.outfitter",
+                "range": 24.0,
+                "require_facing": true,
+                "trigger": "action"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "07e26e32-316e-5a05-8f16-b7809dccf3eb",
+          "name": "Outfitter"
         },
         {
           "components": [

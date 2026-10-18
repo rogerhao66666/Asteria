@@ -535,6 +535,14 @@ D26_FORMS = {
         F("success", "Success Chance per Level (0-1, comma separated)", "text", default="1.0"),
         F("on_fail", "On Failure", "choice", choices=ON_FAIL, default="keep"),
         F("safe_until", "Levels Below This Never Fail", "int", default=0),
+        F("materials", "Materials Used per Attempt", "amounts", source="items", default={}),
+        F(
+            "protect_item",
+            "Protection Item (keeps the level on a failure)",
+            "optional_ref",
+            source="items",
+            default="",
+        ),
     ),
     "disassembly_recipes": (
         F("item_id", "Item / Equipment ID", "id"),

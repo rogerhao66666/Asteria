@@ -101,7 +101,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "LEAVE_PARTY": ("actor_id",),
     "REST_PARTY": (),
     "GRANT_EXPERIENCE": ("actor_id", "amount", "threshold", "points", "level_track"),
-    "REFINE_EQUIPMENT": ("actor_id", "instance_id"),
+    "REFINE_EQUIPMENT": ("actor_id", "instance_id", "protect"),
     "SOCKET_ITEM": ("actor_id", "instance_id", "socket_id", "item_id"),
     "UNSOCKET_ITEM": ("actor_id", "instance_id", "socket_id"),
     "UPGRADE_EQUIPMENT": ("actor_id", "instance_id", "node_id"),
@@ -378,7 +378,9 @@ def register_standard_world_commands(router, session):
     gear_command(
         "REFINE_EQUIPMENT",
         lambda c: session.refine_equipment(
-            str(_required(c, "actor_id")), str(_required(c, "instance_id"))
+            str(_required(c, "actor_id")),
+            str(_required(c, "instance_id")),
+            protect=str(c.args.get("protect", "")).lower() in ("1", "true", "yes"),
         ),
     )
     gear_command(

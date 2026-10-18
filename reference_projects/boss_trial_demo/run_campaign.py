@@ -305,6 +305,7 @@ class Campaign:
         self.facts["partings"] += 1
         self.recruit("Mira", "hero_02")  # ...and comes back when asked
         self.advance("hero_02", "priest", 1, 5)  # Cleric -> Priest at the Job Hall
+        self.outfit("hero_02")
         self.talk("Warden Thessaly")
         assert game.world.reputation.get("wardens", 0) == 0
         assert game.quest_log.status("q_patrol") == "active"
@@ -374,6 +375,55 @@ class Campaign:
         self.talk(name)
         assert actor_id in self.game.save.rpg_state.party_active_actor_ids, name
         self.facts["recruits"] += 1
+
+    OUTFIT = {"hero_02": (0, "dawn"), "hero_03": (1, "grave"), "hero_04": (2, "zealot")}
+
+    def outfit(self, actor_id, *, card=None):
+        """At the Outfitter and the workshop: the companion's set, a fused gem and a card in its
+        sockets, an enchant on its set weapon, a protected refine of its armour."""
+        game = self.game
+        pick, set_id = self.OUTFIT[actor_id]
+        self.talk("Outfitter", picks=(pick,))
+        loadout = game.save.rpg_state.loadouts[actor_id]
+        worn = {x.equipment.equipment_id for x in loadout.equipped()}
+        pieces = [e for e in game.project.rpg_database.equipment_sets[set_id].equipment_ids]
+        assert set(pieces) <= worn, (actor_id, worn)
+        active = {(set_, bonus.pieces) for set_, bonus in loadout.active_set_bonuses()}
+        assert (set_id, 3) in active, ("no 3-piece set bonus", actor_id, active)
+        self.facts["sets_worn"] += 1
+        # fuse two gems into a flawless one and set it in the weapon
+        gem = {"hero_02": "topaz", "hero_03": "amethyst", "hero_04": "ruby"}[actor_id]
+        state = game.save.rpg_state
+        state.currencies["gold"] = state.currencies.get("gold", 0.0)
+        while state.inventory.count(f"{gem}_item") < 2:
+            if gem == "amethyst":
+                game.craft(
+                    {"base": ["moon_shard"], "catalyst": ["ice_crystal"]}, station="alchemy"
+                )
+            else:
+                game.open_shop("trial_shop")
+                game.buy(f"{gem}_item", 1, shop_id="trial_shop")
+                game.open_shop_id = None
+        game.craft({"base": [f"{gem}_item"], "catalyst": [f"{gem}_item"]}, station="alchemy")
+        self.facts["gems_fused"] += 1
+        game.socket_item(actor_id, "slot:weapon", "g1", f"flawless_{gem}_item")
+        if card is not None:  # a boss card goes into the armour
+            assert state.inventory.count(card) >= 1, f"{card} did not drop"
+            game.socket_item(actor_id, "slot:armor", "c1", card)
+            self.facts["cards_socketed"] += 1
+        game.upgrade_equipment(actor_id, "slot:weapon", "kindle")  # opens the card socket
+        game.upgrade_equipment(actor_id, "slot:weapon", "star")
+        self.facts["enchants"] += 1
+        game.open_shop("trial_shop")
+        game.buy("blessed_scroll", 1, shop_id="trial_shop")
+        game.buy("silver_ore", 3, shop_id="trial_shop")
+        game.open_shop_id = None
+        for protect in (False, False, True):
+            result = game.refine_equipment(actor_id, "slot:armor", protect=protect)
+            self.facts["armor_refines"] += 1
+            self.facts["protected_refines"] += int(protect)
+            _ = result
+        game.refresh_actor_combatants(actor_id)
 
     def sunbrand(self):
         return self.game.save.rpg_state.loadouts[HERO].equipped("weapon")[0]
@@ -510,6 +560,8 @@ class Campaign:
             self.recruit(*hire)
             job = {"hero_03": "lich", "hero_04": "zealot"}[hire[1]]
             self.advance(hire[1], job, 1, 5)
+            card = {"hero_03": "card_beast_item", "hero_04": "card_ancient_item"}[hire[1]]
+            self.outfit(hire[1], card=card)
         self.talk("Warden Thessaly")
         game = self.game
         assert game.quest_log.status(done) == "completed", (done, game.quest_log.status(done))
@@ -571,7 +623,8 @@ REQUIRED = (
     "levels", "tree_ranks", "job_changes", "sockets", "refine_level", "crafted", "bought",
     "disassembled", "rests", "map_changes", "fights", "victories", "skills_cast", "escapes",
     "tamed", "pet_evolved", "recruits", "partings", "save_load", "game_complete",
-    "job_advances", "trainings",
+    "job_advances", "trainings", "sets_worn", "gems_fused", "cards_socketed", "enchants",
+    "armor_refines", "protected_refines",
 )  # fmt: skip
 
 

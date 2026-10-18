@@ -275,6 +275,7 @@ class RpgProgressionAuthoringController:
         modifiers=None,
         granted_abilities=None,
         triggers=None,
+        icon_id=None,
     ):
         key = str(passive_id)
         old = self.database.passives.get(key)
@@ -291,6 +292,7 @@ class RpgProgressionAuthoringController:
                 else self._check_abilities(granted_abilities)
             ),
             triggers=old.triggers if triggers is None else triggers,
+            icon_id=old.icon_id if icon_id is None else icon_id,
         )
         self._execute(
             _MappingCommand(self.database.passives, key, value, old, f"Edit Passive {key}")

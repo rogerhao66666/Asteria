@@ -594,6 +594,10 @@ def guild(builders, looks, places):
     import trial_classes
 
     hall = town.npc("Job Master", maps.world_xy(10, 8), looks["necromancer"])
+    import trial_gear
+
+    outfitter = town.npc("Outfitter", maps.world_xy(4, 6), looks["sorceress"])
+    town.program(outfitter, "story.outfitter", trial_gear.outfitter_steps(say, world, maps.menu))
     town.program(hall, "story.job_hall", trial_classes.job_hall_steps(say, world, maps.menu))
 
     def part(name, actor_id, key):
