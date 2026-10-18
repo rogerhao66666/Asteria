@@ -5754,7 +5754,105 @@
           "wrap_cursor": true
         }
       },
-      "action_workflows": {},
+      "action_workflows": {
+        "elemental_weave": {
+          "confirmation_label": "Weave",
+          "label": "Elemental Weave",
+          "schema": "asteria.battle_action_workflow_definition",
+          "steps": [
+            {
+              "allow_back": true,
+              "label": "Element",
+              "maximum_selections": 1,
+              "minimum_selections": 1,
+              "optional": false,
+              "options": [
+                {
+                  "detail": "",
+                  "disabled_reason": "",
+                  "enabled": true,
+                  "icon_asset_id": null,
+                  "label": "Fire",
+                  "option_id": "fire",
+                  "payload": {},
+                  "tags": [
+                    "damage.fire"
+                  ]
+                },
+                {
+                  "detail": "",
+                  "disabled_reason": "",
+                  "enabled": true,
+                  "icon_asset_id": null,
+                  "label": "Frost",
+                  "option_id": "frost",
+                  "payload": {},
+                  "tags": [
+                    "damage.ice"
+                  ]
+                },
+                {
+                  "detail": "",
+                  "disabled_reason": "",
+                  "enabled": true,
+                  "icon_asset_id": null,
+                  "label": "Storm",
+                  "option_id": "storm",
+                  "payload": {},
+                  "tags": [
+                    "damage.lightning"
+                  ]
+                }
+              ],
+              "selection_mode": "single",
+              "step_id": "element"
+            },
+            {
+              "allow_back": true,
+              "label": "Focus",
+              "maximum_selections": 2,
+              "minimum_selections": 0,
+              "optional": true,
+              "options": [
+                {
+                  "detail": "x1.5 power",
+                  "disabled_reason": "",
+                  "enabled": true,
+                  "icon_asset_id": null,
+                  "label": "Overcharge",
+                  "option_id": "overcharge",
+                  "payload": {
+                    "power": 1.5,
+                    "resource_costs": {
+                      "technique": 12
+                    }
+                  },
+                  "tags": []
+                },
+                {
+                  "detail": "x1.25 power",
+                  "disabled_reason": "",
+                  "enabled": true,
+                  "icon_asset_id": null,
+                  "label": "Echo",
+                  "option_id": "echo",
+                  "payload": {
+                    "battle_costs": {
+                      "soul": 1
+                    },
+                    "power": 1.25
+                  },
+                  "tags": []
+                }
+              ],
+              "selection_mode": "multiple",
+              "step_id": "focus"
+            }
+          ],
+          "version": 1,
+          "workflow_id": "elemental_weave"
+        }
+      },
       "animation_timing": {
         "adaptive": {
           "default_playback_rate": 1.0,
@@ -6984,7 +7082,86 @@
           "version": 1
         }
       },
-      "interaction": {},
+      "interaction": {
+        "trial_commands": {
+          "layers": [
+            {
+              "contextual": false,
+              "label": "Fight",
+              "layer_id": "Attack",
+              "order": 0,
+              "role": "command",
+              "visible": true
+            },
+            {
+              "contextual": false,
+              "label": "Skills",
+              "layer_id": "Skills",
+              "order": 1,
+              "role": "command",
+              "visible": true
+            },
+            {
+              "contextual": false,
+              "label": "Arts",
+              "layer_id": "Arts",
+              "order": 2,
+              "role": "command",
+              "visible": true
+            },
+            {
+              "contextual": false,
+              "label": "Limit",
+              "layer_id": "Limit",
+              "order": 3,
+              "role": "command",
+              "visible": true
+            },
+            {
+              "contextual": false,
+              "label": "Combos",
+              "layer_id": "Combo",
+              "order": 4,
+              "role": "command",
+              "visible": true
+            },
+            {
+              "contextual": false,
+              "label": "Rites",
+              "layer_id": "Rites",
+              "order": 5,
+              "role": "command",
+              "visible": true
+            },
+            {
+              "contextual": false,
+              "label": "Beast",
+              "layer_id": "Beast",
+              "order": 6,
+              "role": "command",
+              "visible": true
+            },
+            {
+              "contextual": false,
+              "label": "Bag",
+              "layer_id": "Items",
+              "order": 7,
+              "role": "command",
+              "visible": true
+            },
+            {
+              "contextual": false,
+              "label": "Run",
+              "layer_id": "Escape",
+              "order": 8,
+              "role": "command",
+              "visible": true
+            }
+          ],
+          "max_primary_layers": 6,
+          "page_size": 6
+        }
+      },
       "layering": {
         "adaptive": {
           "channels": [
@@ -8536,6 +8713,345 @@
             },
             {
               "at": 0.44,
+              "beat_id": "return",
+              "channel": "move",
+              "cue": "return",
+              "duration": 0.2,
+              "easing": "ease_in_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
+        "art_dawn_edge": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.spirit",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
+        "art_iron_vow": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.shield",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
+        "art_rending_gale": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "advance",
+              "channel": "move",
+              "cue": "advance",
+              "duration": 0.16,
+              "easing": "ease_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.slash2",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.26,
+              "beat_id": "fx1",
+              "channel": "vfx",
+              "cue": "battle.fx.cutx",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.31,
+              "beat_id": "return",
+              "channel": "move",
+              "cue": "return",
+              "duration": 0.2,
+              "easing": "ease_in_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
+        "art_whirlwind": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "advance",
+              "channel": "move",
+              "cue": "advance",
+              "duration": 0.16,
+              "easing": "ease_out",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.circ",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.29,
               "beat_id": "return",
               "channel": "move",
               "cue": "return",
@@ -15391,6 +15907,77 @@
           "recovery_at": null,
           "sequence_id": "strike"
         },
+        "elemental_weave": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack2",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx0",
+              "channel": "vfx",
+              "cue": "battle.fx.spirit",
+              "duration": 0.4,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
         "enchant_frost": {
           "beats": [
             {
@@ -16080,6 +16667,77 @@
               "beat_id": "swing",
               "channel": "animation",
               "cue": "attack2",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
+        "field_slash": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
               "duration": 0.0,
               "easing": "linear",
               "member_id": "@source",
@@ -26858,6 +27516,77 @@
           "recovery_at": null,
           "sequence_id": "strike"
         },
+        "sling_throw": {
+          "beats": [
+            {
+              "at": 0.0,
+              "beat_id": "swing",
+              "channel": "animation",
+              "cue": "attack",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@source",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.12,
+              "beat_id": "fx",
+              "channel": "vfx",
+              "cue": "battle.fx.slash",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "impact",
+              "channel": "animation",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "shake",
+              "channel": "camera",
+              "cue": "shake",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [
+                [
+                  "amplitude",
+                  4
+                ],
+                [
+                  "duration",
+                  0.18
+                ]
+              ],
+              "target_id": null
+            },
+            {
+              "at": 0.24,
+              "beat_id": "sound",
+              "channel": "audio",
+              "cue": "hit",
+              "duration": 0.0,
+              "easing": "linear",
+              "member_id": "@target",
+              "payload": [],
+              "target_id": null
+            }
+          ],
+          "duration": 0.7,
+          "recovery_at": null,
+          "sequence_id": "strike"
+        },
         "slow_hex": {
           "beats": [
             {
@@ -31435,7 +32164,25 @@
           "version": 1
         }
       },
-      "portrait_templates": {},
+      "portrait_templates": {
+        "vigil_portrait": {
+          "battlefield_hud_zone_id": "hud.battlefield",
+          "battlefield_zone": {
+            "depth_start": 0.2,
+            "depth_step": 0.01,
+            "facing": "right",
+            "x": 56.0,
+            "x_step": 88.0,
+            "y_start": 214.0,
+            "y_step": 0.0,
+            "zone_id": "vigil.line"
+          },
+          "hide_portrait_party_bodies": true,
+          "max_visible_battlefield_members": null,
+          "portrait_hud_zone_id": "hud.party",
+          "template_id": "vigil_portrait"
+        }
+      },
       "results": {
         "default": {
           "complete_label": "Battle Complete",
@@ -31551,11 +32298,40 @@
           }
         }
       },
-      "sideview_templates": {},
+      "sideview_templates": {
+        "crypt_ranks": {
+          "battlefield_center_x": 160.0,
+          "left_hud_zone_id": "hud.left",
+          "left_zone": {
+            "depth_start": 0.2,
+            "depth_step": 0.01,
+            "facing": "right",
+            "x": 150.0,
+            "x_step": -34.0,
+            "y_start": 236.0,
+            "y_step": -40.0,
+            "zone_id": "ranks.foes"
+          },
+          "max_visible_per_zone": null,
+          "right_hud_zone_id": "hud.right",
+          "right_zone": {
+            "depth_start": 0.2,
+            "depth_step": 0.01,
+            "facing": "left",
+            "x": 236.0,
+            "x_step": 22.0,
+            "y_start": 120.0,
+            "y_step": 34.0,
+            "zone_id": "ranks.party"
+          },
+          "template_id": "crypt_ranks"
+        }
+      },
       "ui_layout": {
         "adaptive": {
           "action_menu_placement": "actor_bottom_right",
           "column_size": 2,
+          "command_pages": "trial_commands",
           "front_large_zones": [
             "right"
           ],
@@ -34399,6 +35175,134 @@
         }
       ],
       "name": "story.mira.guild",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
+    "story.old_master": {
+      "instructions": [
+        {
+          "args": {
+            "choices": [
+              {
+                "text": "Learn the arts",
+                "value": 0
+              },
+              {
+                "text": "Not now",
+                "value": 1
+              }
+            ],
+            "prompt": "Old Master: Four arts, Aldric. Your slots hold only so many at once.",
+            "variable_name": "menu"
+          },
+          "opcode": "CHOICE"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 0
+            },
+            "label": "opt0"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {
+            "condition": {
+              "name": "menu",
+              "operator": "==",
+              "scope_id": null,
+              "source": "variable",
+              "value": 1
+            },
+            "label": "opt1"
+          },
+          "opcode": "JUMP_IF"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt0"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {
+            "args": {
+              "ability_id": "art_rending_gale",
+              "actor_id": "hero_01"
+            },
+            "command": "LEARN_ABILITY"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "ability_id": "art_whirlwind",
+              "actor_id": "hero_01"
+            },
+            "command": "LEARN_ABILITY"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "ability_id": "art_dawn_edge",
+              "actor_id": "hero_01"
+            },
+            "command": "LEARN_ABILITY"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "ability_id": "art_iron_vow",
+              "actor_id": "hero_01"
+            },
+            "command": "LEARN_ABILITY"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {
+            "args": {
+              "kind": "item",
+              "text": "Learned four secret arts"
+            },
+            "command": "SHOW_POPUP"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {
+            "name": "opt1"
+          },
+          "opcode": "LABEL"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "story.old_master",
       "schema": "asteria.event_program",
       "version": 1
     },
@@ -39730,6 +40634,343 @@
           "allow_self": false,
           "blocked_tags": [],
           "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "art_dawn_edge",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 12.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "display_name": "Dawn Edge",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "art_dawn_edge.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -15.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "damage.light"
+            ]
+          }
+        ],
+        "icon_id": "playable_assets/lucifer/icons/skill_art_dawn_edge.png",
+        "menu_category": "Arts",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "damage.light"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "art_iron_vow",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "ward",
+            "to": "self"
+          }
+        ],
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 6.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "display_name": "Iron Vow",
+        "effects": [],
+        "icon_id": "playable_assets/lucifer/icons/skill_art_iron_vow.png",
+        "menu_category": "Arts",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "support"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "art_rending_gale",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 10.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "display_name": "Rending Gale",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "art_rending_gale.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -18.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 0.6,
+            "tags": [
+              "weapon.sword"
+            ]
+          },
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 0.6,
+            "tags": [
+              "weapon.sword"
+            ]
+          }
+        ],
+        "icon_id": "playable_assets/lucifer/icons/skill_art_rending_gale.png",
+        "menu_category": "Arts",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "weapon.sword"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
+        "ability_id": "art_whirlwind",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 14.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "display_name": "Whirlwind",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "art_whirlwind.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -10.0,
+                        "key": "power",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": [
+              "weapon.sword"
+            ]
+          }
+        ],
+        "icon_id": "playable_assets/lucifer/icons/skill_art_whirlwind.png",
+        "menu_category": "Arts",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "weapon.sword"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 6,
           "minimum_targets": 1,
           "required_tags": []
         },
@@ -45760,6 +47001,96 @@
         "version": 1
       },
       {
+        "ability_id": "elemental_weave",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "costs": [
+          {
+            "amount": {
+              "maximum": null,
+              "minimum": null,
+              "multipliers": [],
+              "schema": "asteria.value_formula",
+              "terms": [
+                {
+                  "coefficient": 8.0,
+                  "key": "",
+                  "source": "constant"
+                }
+              ],
+              "version": 1
+            },
+            "resource": "technique"
+          }
+        ],
+        "display_name": "Elemental Weave",
+        "effects": [
+          {
+            "effect": {
+              "blocked_tags": [],
+              "effect_id": "elemental_weave.effect",
+              "operations": [
+                {
+                  "kind": "resource_delta",
+                  "target": "vitality",
+                  "value": {
+                    "maximum": -1.0,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -12.0,
+                        "key": "magic",
+                        "source": "source_stat"
+                      },
+                      {
+                        "coefficient": 6.0,
+                        "key": "defense",
+                        "source": "target_stat"
+                      }
+                    ],
+                    "version": 1
+                  }
+                }
+              ],
+              "required_tags": [],
+              "schema": "asteria.effect",
+              "version": 1
+            },
+            "mode": "selected"
+          }
+        ],
+        "hits": [
+          {
+            "checks": [
+              "crit",
+              "land"
+            ],
+            "power": 1.0,
+            "tags": []
+          }
+        ],
+        "icon_id": "playable_assets/lucifer/icons/skill_elemental_weave.png",
+        "input_workflow": "elemental_weave",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability",
+          "magic"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "version": 1
+      },
+      {
         "ability_id": "enchant_frost",
         "apply_states": [
           {
@@ -46524,6 +47855,32 @@
           "minimum_targets": 1,
           "required_tags": []
         },
+        "version": 1
+      },
+      {
+        "ability_id": "field_slash",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "cooldown_seconds": 0.4,
+        "costs": [],
+        "display_name": "Field Slash",
+        "effects": [],
+        "icon_id": "playable_assets/lucifer/icons/skill_field_slash.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "timeline_id": "field_slash",
         "version": 1
       },
       {
@@ -56827,6 +58184,32 @@
         "version": 1
       },
       {
+        "ability_id": "sling_throw",
+        "conditions": {
+          "conditions": [],
+          "mode": "all",
+          "type": "group"
+        },
+        "cooldown_seconds": 1.2,
+        "costs": [],
+        "display_name": "Sling Stone",
+        "effects": [],
+        "icon_id": "playable_assets/lucifer/icons/skill_sling_throw.png",
+        "schema": "asteria.ability_definition",
+        "tags": [
+          "ability"
+        ],
+        "targeting": {
+          "allow_self": false,
+          "blocked_tags": [],
+          "maximum_targets": 1,
+          "minimum_targets": 1,
+          "required_tags": []
+        },
+        "timeline_id": "sling_throw",
+        "version": 1
+      },
+      {
         "ability_id": "slow_hex",
         "conditions": {
           "conditions": [],
@@ -61078,9 +62461,89 @@
         "version": 1
       }
     ],
-    "attacks": [],
+    "attacks": [
+      {
+        "apply_states": [],
+        "armor_break": 0,
+        "attack_id": "field_slash",
+        "critical_chance": 0.0,
+        "critical_chance_stat": "",
+        "critical_multiplier": 1.5,
+        "damage": null,
+        "damage_formula_id": "",
+        "damage_resource": "",
+        "display_name": "Field Slash",
+        "hitstop": 0.0,
+        "hitstop_scope": "participants",
+        "hitstun": 0.0,
+        "knockback": 0.0,
+        "knockback_angle": 0.0,
+        "knockback_direction": "away",
+        "knockback_lift": 0.0,
+        "knockdown": false,
+        "knockdown_time": 0.0,
+        "max_targets": 0,
+        "on_hit_event": "",
+        "poise_damage": 0.0,
+        "schema": "asteria.attack",
+        "tags": [],
+        "target_iframes": 0.0,
+        "version": 1
+      },
+      {
+        "apply_states": [],
+        "armor_break": 0,
+        "attack_id": "stone_hit",
+        "critical_chance": 0.0,
+        "critical_chance_stat": "",
+        "critical_multiplier": 1.5,
+        "damage": null,
+        "damage_formula_id": "",
+        "damage_resource": "",
+        "display_name": "Sling Stone",
+        "hitstop": 0.0,
+        "hitstop_scope": "participants",
+        "hitstun": 0.0,
+        "knockback": 0.0,
+        "knockback_angle": 0.0,
+        "knockback_direction": "away",
+        "knockback_lift": 0.0,
+        "knockdown": false,
+        "knockdown_time": 0.0,
+        "max_targets": 0,
+        "on_hit_event": "",
+        "poise_damage": 0.0,
+        "schema": "asteria.attack",
+        "tags": [],
+        "target_iframes": 0.0,
+        "version": 1
+      }
+    ],
     "formulas": {},
-    "projectiles": [],
+    "projectiles": [
+      {
+        "align_to_velocity": true,
+        "attack_id": "stone_hit",
+        "bounce_limit": 0,
+        "clip": "",
+        "display_name": "Sling Stone",
+        "gravity": 0.0,
+        "height": 6.0,
+        "homing_range": 160.0,
+        "homing_turn": 0.0,
+        "lifetime": 0.7,
+        "on_end_event": "",
+        "pierce": 0,
+        "projectile_id": "sling_stone",
+        "schema": "asteria.projectile",
+        "speed": 220.0,
+        "sprite": "",
+        "version": 1,
+        "wall": "destroy",
+        "wall_mask": 4294967295,
+        "width": 6.0
+      }
+    ],
     "schema": "asteria.gameplay_library",
     "states": [
       {
@@ -62068,6 +63531,32 @@
       {
         "cues": [
           {
+            "cue_id": "swing",
+            "kind": "hitbox",
+            "payload": {
+              "duration": 0.18,
+              "height": 16.0,
+              "hit_tag": "field_slash",
+              "width": 22.0
+            },
+            "time": 0.05
+          },
+          {
+            "cue_id": "end",
+            "kind": "gameplay_event",
+            "payload": {
+              "name": "end"
+            },
+            "time": 0.35
+          }
+        ],
+        "schema": "asteria.action_timeline",
+        "timeline_id": "field_slash",
+        "version": 1
+      },
+      {
+        "cues": [
+          {
             "cue_id": "up",
             "kind": "movement",
             "payload": {
@@ -62098,6 +63587,29 @@
         ],
         "schema": "asteria.action_timeline",
         "timeline_id": "pip_hop",
+        "version": 1
+      },
+      {
+        "cues": [
+          {
+            "cue_id": "throw",
+            "kind": "projectile",
+            "payload": {
+              "projectile_id": "sling_stone"
+            },
+            "time": 0.1
+          },
+          {
+            "cue_id": "end",
+            "kind": "gameplay_event",
+            "payload": {
+              "name": "end"
+            },
+            "time": 0.4
+          }
+        ],
+        "schema": "asteria.action_timeline",
+        "timeline_id": "sling_throw",
         "version": 1
       }
     ],
@@ -63238,6 +64750,21 @@
         "version": 1
       }
     ],
+    "ability_loadout_rules": [
+      {
+        "capacity": 2,
+        "capacity_by_level": {
+          "10": 3,
+          "18": 4
+        },
+        "limited_sources": [
+          "learned"
+        ],
+        "rules_id": "trial_slots",
+        "schema": "asteria.rpg.ability_loadout_rules",
+        "version": 1
+      }
+    ],
     "achievements": [
       {
         "achievement_id": "ancient_laid_to_rest",
@@ -64071,7 +65598,8 @@
       {
         "abilities": [
           "soul_burst",
-          "rush_blow"
+          "rush_blow",
+          "elemental_weave"
         ],
         "actor_id": "hero_03",
         "base_resources": {
@@ -66566,6 +68094,74 @@
         "version": 1
       },
       {
+        "ability_id": "art_dawn_edge",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "art_iron_vow",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "self",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "art_rending_gale",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "art_whirlwind",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 6,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
         "ability_id": "assassinate",
         "active_only": true,
         "adjacent_to_actor": false,
@@ -67859,6 +69455,23 @@
       },
       {
         "ability_id": "elemental_edge",
+        "active_only": true,
+        "adjacent_to_actor": false,
+        "blocked_slot_tags": [],
+        "blocked_subject_tags": [],
+        "maximum_targets": 1,
+        "metric_conditions": [],
+        "minimum_targets": 1,
+        "relation": "opponent",
+        "required_slot_tags": [],
+        "required_subject_tags": [],
+        "schema": "asteria.rpg.battle_targeting_definition",
+        "selection_count": null,
+        "selection_mode": "manual",
+        "version": 1
+      },
+      {
+        "ability_id": "elemental_weave",
         "active_only": true,
         "adjacent_to_actor": false,
         "blocked_slot_tags": [],
@@ -72985,6 +74598,7 @@
           "objective:vigil_survive",
           "rules:vigil_gauntlet",
           "scheduler:classic_rounds",
+          "stage:vigil_portrait",
           "throne"
         ],
         "version": 1
@@ -73041,7 +74655,8 @@
         "tags": [
           "crypt",
           "escape:crypt_escape",
-          "scheduler:classic_rounds"
+          "scheduler:classic_rounds",
+          "stage:crypt_ranks"
         ],
         "version": 1
       },
@@ -110230,6 +111845,15 @@
           "local_scope_id": "story.showman",
           "program_id": "story.showman",
           "trigger": "action"
+        },
+        {
+          "binding_id": "story.old_master.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "87394c41-f33a-57e5-bbb5-98b8c6f8921a",
+          "local_scope_id": "story.old_master",
+          "program_id": "story.old_master",
+          "trigger": "action"
         }
       ],
       "schema": "asteria.scene_event_bindings",
@@ -110432,6 +112056,74 @@
                 "width": 10.0
               },
               "type": "asteria.Collider2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "aim": "facing",
+                "bindings": "attack=field_slash; skill_1=sling_throw",
+                "buffer_time": 0.2,
+                "enabled": true,
+                "face_target": false,
+                "lock_action": "lock_on",
+                "lock_mode": "off",
+                "lock_range": 220.0,
+                "lock_switch_action": "lock_switch",
+                "require_known": false
+              },
+              "type": "asteria.ActionCombat",
+              "version": 1
+            },
+            {
+              "fields": {
+                "active": false,
+                "enabled": true,
+                "follow_facing": true,
+                "height": 16.0,
+                "hit_tag": "",
+                "offset_x": 12.0,
+                "offset_y": 0.0,
+                "rehit_interval": 0.0,
+                "team": "hero",
+                "width": 22.0
+              },
+              "type": "asteria.Hitbox2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "follow_facing": false,
+                "height": 12.0,
+                "invincible": false,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "team": "hero",
+                "width": 10.0
+              },
+              "type": "asteria.Hurtbox2D",
+              "version": 2
+            },
+            {
+              "fields": {
+                "climb_speed": 60.0,
+                "coyote_time": 0.0,
+                "drop_through": false,
+                "enabled": true,
+                "facing": "down",
+                "gravity": 600.0,
+                "half_height": 4.0,
+                "half_width": 5.0,
+                "jump_buffer": 0.0,
+                "jump_cut": 1.0,
+                "jump_speed": 220.0,
+                "knockback_decay": 10.0,
+                "mask": 4294967295,
+                "max_fall_speed": 400.0,
+                "mode": "topdown",
+                "speed": 0.0
+              },
+              "type": "asteria.CharacterController2D",
               "version": 3
             }
           ],
@@ -112400,6 +114092,79 @@
                 "rotation": 0.0,
                 "scale_x": 1.0,
                 "scale_y": 1.0,
+                "x": 424.0,
+                "y": 312.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "cd9eee80-96de-5643-b468-6d13dbea36a1",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "fa3100e9-51ff-5b96-9c53-c8603ff92ec2",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "height": 8.0,
+                "is_trigger": false,
+                "ladder": false,
+                "layer": 0,
+                "mask": 4294967295,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "one_way": false,
+                "radius": 8.0,
+                "shape": "box",
+                "width": 10.0
+              },
+              "type": "asteria.Collider2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "event_binding_id": "story.old_master.binding",
+                "event_program_id": "story.old_master",
+                "local_scope_id": "story.old_master",
+                "range": 24.0,
+                "require_facing": true,
+                "trigger": "action"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "87394c41-f33a-57e5-bbb5-98b8c6f8921a",
+          "name": "Old Master"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
                 "x": 40.0,
                 "y": 384.0
               },
@@ -112712,6 +114477,7 @@
               "fields": {
                 "encounter_id": "woods_patrol",
                 "remove_on_start": true,
+                "struck_opening": "preemptive",
                 "touch_radius": 14.0
               },
               "type": "asteria.VisibleEncounter",
@@ -112747,6 +114513,20 @@
               },
               "type": "asteria.AIController2D",
               "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "follow_facing": false,
+                "height": 16.0,
+                "invincible": false,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "team": "foe",
+                "width": 14.0
+              },
+              "type": "asteria.Hurtbox2D",
+              "version": 2
             }
           ],
           "enabled": true,
@@ -112795,6 +114575,7 @@
               "fields": {
                 "encounter_id": "woods_ambush",
                 "remove_on_start": true,
+                "struck_opening": "preemptive",
                 "touch_radius": 14.0
               },
               "type": "asteria.VisibleEncounter",
@@ -112830,6 +114611,20 @@
               },
               "type": "asteria.AIController2D",
               "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "follow_facing": false,
+                "height": 16.0,
+                "invincible": false,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "team": "foe",
+                "width": 14.0
+              },
+              "type": "asteria.Hurtbox2D",
+              "version": 2
             }
           ],
           "enabled": true,
@@ -112878,6 +114673,7 @@
               "fields": {
                 "encounter_id": "woods_patrol",
                 "remove_on_start": true,
+                "struck_opening": "preemptive",
                 "touch_radius": 14.0
               },
               "type": "asteria.VisibleEncounter",
@@ -112913,6 +114709,20 @@
               },
               "type": "asteria.AIController2D",
               "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "follow_facing": false,
+                "height": 16.0,
+                "invincible": false,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "team": "foe",
+                "width": 14.0
+              },
+              "type": "asteria.Hurtbox2D",
+              "version": 2
             }
           ],
           "enabled": true,
@@ -112961,10 +114771,25 @@
               "fields": {
                 "encounter_id": "woods_boss",
                 "remove_on_start": true,
+                "struck_opening": "preemptive",
                 "touch_radius": 22.0
               },
               "type": "asteria.VisibleEncounter",
               "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "follow_facing": false,
+                "height": 16.0,
+                "invincible": false,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "team": "foe",
+                "width": 14.0
+              },
+              "type": "asteria.Hurtbox2D",
+              "version": 2
             }
           ],
           "enabled": true,
@@ -113365,6 +115190,7 @@
               "fields": {
                 "encounter_id": "crypt_patrol",
                 "remove_on_start": true,
+                "struck_opening": "preemptive",
                 "touch_radius": 14.0
               },
               "type": "asteria.VisibleEncounter",
@@ -113400,6 +115226,20 @@
               },
               "type": "asteria.AIController2D",
               "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "follow_facing": false,
+                "height": 16.0,
+                "invincible": false,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "team": "foe",
+                "width": 14.0
+              },
+              "type": "asteria.Hurtbox2D",
+              "version": 2
             }
           ],
           "enabled": true,
@@ -113448,6 +115288,7 @@
               "fields": {
                 "encounter_id": "crypt_guard",
                 "remove_on_start": true,
+                "struck_opening": "preemptive",
                 "touch_radius": 14.0
               },
               "type": "asteria.VisibleEncounter",
@@ -113483,6 +115324,20 @@
               },
               "type": "asteria.AIController2D",
               "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "follow_facing": false,
+                "height": 16.0,
+                "invincible": false,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "team": "foe",
+                "width": 14.0
+              },
+              "type": "asteria.Hurtbox2D",
+              "version": 2
             }
           ],
           "enabled": true,
@@ -113531,10 +115386,25 @@
               "fields": {
                 "encounter_id": "crypt_boss",
                 "remove_on_start": true,
+                "struck_opening": "preemptive",
                 "touch_radius": 22.0
               },
               "type": "asteria.VisibleEncounter",
               "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "follow_facing": false,
+                "height": 16.0,
+                "invincible": false,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "team": "foe",
+                "width": 14.0
+              },
+              "type": "asteria.Hurtbox2D",
+              "version": 2
             }
           ],
           "enabled": true,
@@ -113831,10 +115701,25 @@
               "fields": {
                 "encounter_id": "boss_room",
                 "remove_on_start": true,
+                "struck_opening": "preemptive",
                 "touch_radius": 24.0
               },
               "type": "asteria.VisibleEncounter",
               "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "follow_facing": false,
+                "height": 16.0,
+                "invincible": false,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "team": "foe",
+                "width": 14.0
+              },
+              "type": "asteria.Hurtbox2D",
+              "version": 2
             }
           ],
           "enabled": true,
@@ -113883,10 +115768,25 @@
               "fields": {
                 "encounter_id": "acolyte_vigil",
                 "remove_on_start": true,
+                "struck_opening": "preemptive",
                 "touch_radius": 14.0
               },
               "type": "asteria.VisibleEncounter",
               "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "follow_facing": false,
+                "height": 16.0,
+                "invincible": false,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "team": "foe",
+                "width": 14.0
+              },
+              "type": "asteria.Hurtbox2D",
+              "version": 2
             }
           ],
           "enabled": true,

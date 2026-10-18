@@ -76,6 +76,14 @@ class AbilityLoadoutRules:
                 kept.append(ability_id)
         return tuple(kept)
 
+    def filter(self, abilities, grants, equipped):
+        """``abilities`` (a build's final list: evolutions already replaced their bases) without
+        the slot-limited ones that are not equipped. An ability some unlimited source also grants
+        stays."""
+        allowed = set(self.usable(grants, equipped))
+        limited = {g.ability_id for g in grants} - allowed
+        return tuple(a for a in abilities if a not in limited)
+
     def to_data(self):
         return {
             "schema": "asteria.rpg.ability_loadout_rules",

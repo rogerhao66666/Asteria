@@ -126,7 +126,30 @@ already felled crashed the battle (the reaction is now skipped as `no_target`).
 Balance note: by the throne Aldric (Lv 22) has power 3147 and one-shots about 98k HP; the web,
 specs, books, gear and refining stack. The vigil foes are warded so the 8 rounds really happen.
 
-## World commands (55)
+## Presentation, slots and field strikes (phase 5, 2026-10-18)
+
+| Category | Where the campaign uses it |
+|---|---|
+| Side-View Positions | `crypt_ranks`: the catacomb guards stand in a staggered rank against the party's (`stage:crypt_ranks` on `crypt_guard`) |
+| Portrait Party Layout | `vigil_portrait`: the Acolytes' Vigil keeps the party in its HUD (bodies hidden), the acolytes in one line |
+| Command Menu Pages | `trial_commands` (named by the layout's `command_pages`): Fight, Skills, Arts, Limit, Combos, then a More page with Rites, Beast, Bag, Run; six rows a page |
+| Command Input Steps | `elemental_weave`: Vesper picks an element, then up to two focuses (Overcharge x1.5 for 12 SP, Echo x1.25 for 1 Soul) through the real command menu |
+| Ability Slots | `trial_slots`: the Old Master teaches four arts (`LEARN_ABILITY`); two slots, three from level 10, four from level 18; a full slot refuses, an unset art is not usable |
+| Attacks / Projectiles | `field_slash` (J) and `sling_throw` (1, the `sling_stone` projectile): hitting a foe in view first opens its fight preemptive |
+
+Engine gaps this phase found and fixed: the four presentation categories had no runtime reader
+(the layout now names `stage_template` / `command_pages`, encounters pick staging with
+`stage:<id>`, abilities name `input_workflow`, workflow steps carry their `options`, combatant
+visuals can hide their body); staging zones gained `x_step`; turn-based maps could not use field
+attacks (a player with ActionCombat bindings now strikes there, shots are drawn, and
+`VisibleEncounter.struck_opening` starts the fight); `start_encounter(opening=)`; no world
+command taught a skill (`LEARN_ABILITY`). Skill effects drifted off their target: a swipe sheet
+draws its picture in one side of each frame and the battle centred the frame, so a slash landed
+up to ~20 world pixels beside the foe. VFX now centre the clip's drawn picture on the member
+(placement `align`: `content`, or `frame` for the old rule; editable in the VFX tool, the
+preview follows it).
+
+## World commands (56)
 
 Used in the campaign or by Showman Pip's menu: TRANSFER, GIVE_ITEM, TAKE_ITEM, START_QUEST,
 ADVANCE_QUEST, COMPLETE_QUEST, FAIL_QUEST, CHANGE_REPUTATION, CHANGE_RELATIONSHIP, ADD_COUNTER,
@@ -136,7 +159,7 @@ SHOW_BALLOON, SET_ENTITY_ICON, SPAWN_ENTITY, COPY_ENTITY, MORPH_ENTITY, SET_BATT
 SHOW_PICTURE, MOVE_PICTURE, SET_PICTURE_FRAME, ERASE_PICTURE, TIMER_START / STOP / PAUSE /
 RESUME / ADD, plus the earlier ones (OPEN_SHOP, OPEN_CRAFTING, SET_CLASSES, GRANT_EXPERIENCE,
 REFINE / SOCKET / UPGRADE_EQUIPMENT, EQUIP_ITEM, DISASSEMBLE, SUMMON) and the new JOIN_PARTY,
-LEAVE_PARTY, REST_PARTY, BATTLE_SEQUENCE.
+LEAVE_PARTY, REST_PARTY, BATTLE_SEQUENCE, LEARN_ABILITY.
 
 ## Scenes and events
 

@@ -313,8 +313,13 @@ class AbilityDefinition:
     # the battle menu group the ability is listed under ("" = the default Skills group): a
     # project's Magic / Special / Tech groups, each shown as one more command category
     menu_category: str = ""
+    # the Command Input Steps workflow the player walks before it is used (a step per choice;
+    # each chosen option adds its tags to every hit, its "power" payload scales them and its
+    # "resource_costs" / "battle_costs" payloads are paid on top). Written only when set.
+    input_workflow: str = ""
     OPTIONAL_DATA = {
         "menu_category": "",
+        "input_workflow": "",
         "requires_pet": "",
         "requires_items": {},
         "item_costs": {},
@@ -369,6 +374,7 @@ class AbilityDefinition:
         forms=(),
         requires_pet="",
         menu_category="",
+        input_workflow="",
     ):
         ability_id = str(ability_id).strip()
         if not ability_id:
@@ -497,6 +503,7 @@ class AbilityDefinition:
         object.__setattr__(self, "gauge_costs", gauges)
         object.__setattr__(self, "requires_pet", str(requires_pet or "").strip())
         object.__setattr__(self, "menu_category", str(menu_category or "").strip())
+        object.__setattr__(self, "input_workflow", str(input_workflow or "").strip())
 
     def to_data(self):
         return {
@@ -540,6 +547,7 @@ class AbilityDefinition:
             **({"gauge_costs": dict(self.gauge_costs)} if self.gauge_costs else {}),
             **({"requires_pet": self.requires_pet} if self.requires_pet else {}),
             **({"menu_category": self.menu_category} if self.menu_category else {}),
+            **({"input_workflow": self.input_workflow} if self.input_workflow else {}),
         }
 
     @classmethod
@@ -591,6 +599,7 @@ class AbilityDefinition:
             gauge_costs=data.get("gauge_costs"),
             requires_pet=data.get("requires_pet", ""),
             menu_category=data.get("menu_category", ""),
+            input_workflow=data.get("input_workflow", ""),
         )
 
 

@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from asteria.runtime.battle_visuals import VFX_ANCHORS, VFX_BLENDS, vfx_rect
+from asteria.runtime.battle_visuals import VFX_ALIGNS, VFX_ANCHORS, VFX_BLENDS, vfx_rect
 
 from .vfx_authoring import PREVIEW_BODY_HEIGHT, VFXAuthoringController, VFXAuthoringError
 
@@ -141,7 +141,9 @@ class VFXEditorWidget(QWidget):
         self.opacity.setSingleStep(0.05)
         self.blend = QComboBox()
         self.blend.addItems(list(VFX_BLENDS))
-        for widget in (self.anchor, self.blend):
+        self.align = QComboBox()  # content: the drawn picture lands on the member
+        self.align.addItems(list(VFX_ALIGNS))
+        for widget in (self.anchor, self.blend, self.align):
             widget.currentTextChanged.connect(lambda _t: self._render())
         for widget in (self.offset_x, self.offset_y, self.scale, self.opacity):
             widget.valueChanged.connect(lambda _v: self._render())
@@ -157,6 +159,7 @@ class VFXEditorWidget(QWidget):
         form.addRow("Scale", self.scale)
         form.addRow("Opacity", self.opacity)
         form.addRow("Blend", self.blend)
+        form.addRow("Centre on (picture / frame)", self.align)
         form.addRow(apply_button)
         self.info = QLabel("")
         self.info.setWordWrap(True)
@@ -226,11 +229,20 @@ class VFXEditorWidget(QWidget):
             self.stage.show_frame(None, None, None, None)
             return
         placement = self.api.placement(asset_id)
-        widgets = (self.anchor, self.blend, self.offset_x, self.offset_y, self.scale, self.opacity)
+        widgets = (
+            self.anchor,
+            self.blend,
+            self.align,
+            self.offset_x,
+            self.offset_y,
+            self.scale,
+            self.opacity,
+        )
         for w in widgets:
             w.blockSignals(True)
         self.anchor.setCurrentText(placement["anchor"])
         self.blend.setCurrentText(placement["blend"])
+        self.align.setCurrentText(placement["align"])
         self.offset_x.setValue(placement["offset"][0])
         self.offset_y.setValue(placement["offset"][1])
         self.scale.setValue(placement["scale"])
@@ -256,6 +268,7 @@ class VFXEditorWidget(QWidget):
             "scale": self.scale.value(),
             "opacity": self.opacity.value(),
             "blend": self.blend.currentText(),
+            "align": self.align.currentText(),
         }
 
     def _pixmap(self, asset_id):

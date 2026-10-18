@@ -419,6 +419,14 @@ class SpawnSystem(System):
         ),
         Field("touch_radius", float, 12.0, minimum=0.0),
         Field("remove_on_start", bool, True),
+        Field(
+            "struck_opening",
+            str,
+            "preemptive",
+            choices=("", "preemptive", "normal", "surprise"),
+            tooltip="How the fight opens when the player's field attack or shot hits this "
+            "entity first ('' = a hit does not start the encounter).",
+        ),
     ),
 )
 class VisibleEncounterComponent(Component):
@@ -427,6 +435,7 @@ class VisibleEncounterComponent(Component):
         self.encounter_id = ""
         self.touch_radius = 12.0
         self.remove_on_start = True
+        self.struck_opening = "preemptive"
 
 
 def touched_encounter(scene, player):

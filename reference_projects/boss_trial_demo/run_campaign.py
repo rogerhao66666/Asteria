@@ -27,7 +27,15 @@ SW = "w_sunbrand:hero_01"
 
 class Campaign:
     TRACKED = ("party_rush", "rush_blow", "intercept", "chase_strike")  # from the battle log
-    PICKED = ("momentum_strike", "soul_burst")  # counted when the party uses them
+    PICKED = (  # counted when the party uses them
+        "momentum_strike",
+        "soul_burst",
+        "elemental_weave",
+        "art_rending_gale",
+        "art_whirlwind",
+        "art_dawn_edge",
+        "art_iron_vow",
+    )
 
     def _watch(self):
         """Count what really happened in fights (covers, follow-ups, combos, blocked blows)."""
@@ -186,6 +194,11 @@ class Campaign:
         "twilight_judgment",
         "word_of_doom",
         "pilfer",
+        "elemental_weave",
+        "art_rending_gale",
+        "art_whirlwind",
+        "art_dawn_edge",
+        "art_iron_vow",
     )
 
     def pick(self, actor):
@@ -267,6 +280,141 @@ class Campaign:
                 break
         assert self.rt._victory, "the battle was not won"
         self.dismiss()
+
+    def strike(self, name, ability_id, distance):
+        """Swing or sling at a foe in view from ``distance`` to its left: the hit starts its fight
+        preemptive (the foe gives up the first round)."""
+        from asteria.core import Transform
+
+        game = self.game
+        self.resolve()
+        foe = self.find(name).get(Transform)
+        player = game.player.get(Transform)
+        player.x, player.y = foe.x - distance, foe.y
+        game.set_player_facing("right")
+        before = game.struck_encounters
+        result = game.action_combat.use(game.player, ability_id)
+        assert result in (None, "used", "combo") or result is True, result
+        for _ in range(30):
+            self.rt._frame([], 0.03)
+            if game.mode == "battle":
+                break
+        assert game.mode == "battle" and game.struck_encounters == before + 1, name
+        assert game.opening == "preemptive", game.opening
+        self.facts[f"field_{ability_id}"] += 1
+        self.facts["fights"] += 1
+        self.rt._advance_to_hero_turn()
+        self.shot(f"battle_{game.encounter_id}_struck")
+
+    def menu_choose(self, actor, action_id):
+        """Press through the battle command menu to the row ``action_id`` (opening the More
+        page when the command waits there) and confirm it."""
+        commands = self.rt.battle_commands
+        for _ in range(2):
+            ids = [r.action_id for r in commands.entries(actor)]
+            if action_id in ids:
+                commands.cursor = ids.index(action_id)
+                return commands.press("confirm", actor)
+            if "root:More" not in ids:
+                break
+            commands.cursor = ids.index("root:More")
+            commands.press("confirm", actor)
+            self.facts["command_more_page"] += 1
+        raise AssertionError(f"{action_id} is not in the menu: {ids}")
+
+    def turn_of(self, actor_id, limit=40):
+        """Play the others' turns until ``actor_id`` acts."""
+        for _ in range(limit):
+            actor = self.rt._battle_actor()
+            if actor is None:
+                self.rt._advance_to_hero_turn()
+                continue
+            if actor == actor_id:
+                return actor
+            if self.act(actor) is None:
+                self.game.end_turn()
+                self.rt._advance_to_hero_turn()
+            else:
+                self.rt._after_hero_action()
+        raise AssertionError(f"{actor_id} never got a turn")
+
+    def menus(self):
+        """The command pages and the weave's input steps, through the real command menu."""
+        game = self.game
+        commands = self.rt.battle_commands
+        hero = self.turn_of(HERO)
+        commands.reset()
+        labels = {r.action_id: r.label for r in commands.entries(hero)}
+        assert labels.get("root:Attack") == "Fight", labels
+        self.menu_choose(hero, "root:Escape")  # on the More page; running is not taken here
+        if game.mode != "battle":
+            raise AssertionError("ran away by mistake")
+        commands.reset()
+        if self.menu_choose(hero, "root:Attack") is False:
+            ids = [r.action_id for r in commands.entries(hero)]
+            self.menu_choose(hero, ids[0])
+            if commands.mode == "target":
+                self.menu_choose(hero, commands.entries(hero)[0].action_id)
+        self.rt._after_hero_action()
+        vesper = self.turn_of("hero_03")
+        commands.reset()
+        self.menu_choose(vesper, "root:Skills")
+        self.menu_choose(vesper, "elemental_weave")
+        assert commands.mode == "steps", commands.mode
+        self.menu_choose(vesper, "storm")
+        self.menu_choose(vesper, "overcharge")
+        acted = self.menu_choose(vesper, "step:done")
+        if not acted and commands.mode == "target":
+            acted = self.menu_choose(vesper, commands.entries(vesper)[0].action_id)
+        assert acted, commands.message
+        self.facts["weave_steps"] += 1
+        self.facts["used_elemental_weave"] += 1
+        self.rt._after_hero_action()
+
+    def staged(self, kind):
+        """The fight stands by its staging record (the adapter's combatant anchors)."""
+        screen = self.rt._battle_presentation.screen
+        visuals = {v.member_id: v for v in screen.scene.combatants}
+        heroes = [v for k, v in visuals.items() if k.startswith("hero_")]
+        if kind == "portrait":
+            assert heroes and all(v.body_hidden for v in heroes), "party bodies are drawn"
+        else:
+            xs = sorted(round(v.anchor.x) for v in heroes)
+            assert xs and xs[0] == 236 and len(set(xs)) == len(xs), xs
+        self.facts[f"staged_{kind}"] += 1
+
+    def learn_arts(self):
+        """The Old Master teaches four arts; two slots hold them at first."""
+        from asteria.runtime.game_session import GameSessionError
+
+        game = self.game
+        self.talk("Old Master", picks=(0,))
+        arts = ("art_rending_gale", "art_whirlwind", "art_dawn_edge", "art_iron_vow")
+        assert set(arts) <= set(game.slot_candidates(HERO)), game.slot_candidates(HERO)
+        _equipped, capacity = game.ability_slots(HERO)
+        for art in arts[:capacity]:
+            game.equip_ability(HERO, art)
+        try:
+            game.equip_ability(HERO, arts[capacity])
+        except GameSessionError:
+            self.facts["slots_full"] += 1
+        build = game.resolve_actor_build(HERO).abilities
+        assert arts[0] in build and arts[capacity] not in build, build
+        self.facts["arts_learned"] = len(arts)
+
+    def reslot(self):
+        """At a higher level the slots grow: every art is set, one swapped out and back."""
+        game = self.game
+        arts = ("art_rending_gale", "art_whirlwind", "art_dawn_edge", "art_iron_vow")
+        equipped, capacity = game.ability_slots(HERO)
+        assert capacity == 4, capacity
+        for art in arts:
+            if art not in game.ability_slots(HERO)[0]:
+                game.equip_ability(HERO, art)
+        game.unequip_ability(HERO, "art_whirlwind")
+        assert "art_whirlwind" not in game.resolve_actor_build(HERO).abilities
+        game.equip_ability(HERO, "art_whirlwind")
+        self.facts["slots_grown"] += 1
 
     def dismiss(self):
         """The victory screen: confirm until the field is back."""
@@ -394,6 +542,7 @@ class Campaign:
         self.facts["rests"] += 1
         self.allocate()
         self.shot("town_ready")
+        self.learn_arts()  # slot-limited arts from the Old Master
         self.showman()
 
     def showman(self):
@@ -509,7 +658,7 @@ class Campaign:
         assert game.attempt_capture(HERO, slinger, rng=self.lucky())
         self.facts["tamed"] += 1
         self.fight()
-        self.touch("Goblin Slinger 3")
+        self.strike("Goblin Slinger 3", "field_slash", 16)
         self.fight()
         pet = game.active_pet()
         assert pet is not None and pet.species_id == "slinger"
@@ -540,9 +689,12 @@ class Campaign:
         self.go("Crypt Door")
         assert self.scene_name() == "Catacombs"
         self.talk("Sealed Vault")
-        for name in ("Skeleton Hunter 1", "Skeleton Hunter 2"):
-            self.touch(name)
-            self.fight()
+        self.strike("Skeleton Hunter 1", "sling_throw", 56)  # a stone from afar
+        self.fight()
+        self.touch("Skeleton Hunter 2")  # the guards stand in their rank (side-view template)
+        self.staged("sideview")
+        self.menus()
+        self.fight()
         game.set_classes(HERO, ["knight", "rogue"])  # a thief's pick for the sealed vault
         self.facts["job_changes"] += 1
         self.touch("Skeleton Ancient")
@@ -579,8 +731,10 @@ class Campaign:
         self.go("Crypt Door")
         self.go("Throne Door")
         assert self.scene_name() == "Ember Throne"
+        self.reslot()
         self.touch("Acolyte Vigil")  # hold out eight rounds (round turns, gauntlet rules)
         assert game.rules.rules_id == "vigil_gauntlet", game.rules.rules_id
+        self.staged("portrait")  # the party only in its HUD
         self.fight(limit=300)
         self.facts["vigil_survived"] += 1
         self.touch("Vaelor")
@@ -670,7 +824,10 @@ REQUIRED = (
     "job_advances", "trainings", "sets_worn", "gems_fused", "cards_socketed", "enchants",
     "armor_refines", "protected_refines", "vigil_survived", "used_party_rush",
     "used_rush_blow", "used_momentum_strike", "used_soul_burst", "used_intercept",
-    "used_chase_strike", "blocked_blows",
+    "used_chase_strike", "blocked_blows", "field_field_slash", "field_sling_throw",
+    "staged_sideview", "staged_portrait", "command_more_page", "weave_steps",
+    "used_elemental_weave", "arts_learned", "slots_full", "slots_grown",
+    "used_art_rending_gale", "used_art_dawn_edge", "used_art_iron_vow",
 )  # fmt: skip
 
 

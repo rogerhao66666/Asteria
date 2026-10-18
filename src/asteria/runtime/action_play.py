@@ -287,6 +287,31 @@ class ActionHud:
         x1, _ = rt._field_screen_xy(1.0, 0.0)
         return abs(x1 - x0) or 1.0
 
+    def draw_projectiles(self, rt):
+        """The shots in flight: each projectile's sprite turned to where it flies, else a spark
+        with a tail (a turn-based field's thrown stones use this too)."""
+        tiles = getattr(rt, "tile_view", None)
+        game, pg, screen = rt.game, rt.pg, rt.screen
+        zoom = self._unit(rt)
+        definitions = game.project.gameplay_library.projectiles
+        for view in game.projectiles.views():
+            sx, sy = rt._field_screen_xy(view.x, view.y)
+            definition = definitions.get(view.projectile_id)
+            image = (
+                tiles.projectile_image(definition, view.vx, view.vy)
+                if tiles is not None and definition is not None and definition.sprite
+                else None
+            )
+            if image is not None:  # the projectile's own sprite, turned to where it flies
+                screen.blit(
+                    image, (int(sx - image.get_width() / 2), int(sy - image.get_height() / 2))
+                )
+                continue
+            pg.draw.circle(screen, (255, 230, 140), (int(sx), int(sy)), max(3, int(1.5 * zoom)))
+            speed = (view.vx * view.vx + view.vy * view.vy) ** 0.5 or 1.0
+            tail = (int(sx - view.vx / speed * 4 * zoom), int(sy - view.vy / speed * 4 * zoom))
+            pg.draw.line(screen, (255, 180, 80), tail, (int(sx), int(sy)), 2)
+
     def draw_world(self, rt):
         tiles = getattr(rt, "tile_view", None)
         game, pg, screen = rt.game, rt.pg, rt.screen
@@ -349,24 +374,7 @@ class ActionHud:
                 size = 15
                 row_w = min(len(pips), 6) * (size + 2) - 2
                 draw_status_pips(rt, sx - row_w / 2, sy - 11 * zoom - size - 4, pips, size=size)
-        definitions = game.project.gameplay_library.projectiles
-        for view in game.projectiles.views():
-            sx, sy = rt._field_screen_xy(view.x, view.y)
-            definition = definitions.get(view.projectile_id)
-            image = (
-                tiles.projectile_image(definition, view.vx, view.vy)
-                if tiles is not None and definition is not None and definition.sprite
-                else None
-            )
-            if image is not None:  # the projectile's own sprite, turned to where it flies
-                screen.blit(
-                    image, (int(sx - image.get_width() / 2), int(sy - image.get_height() / 2))
-                )
-                continue
-            pg.draw.circle(screen, (255, 230, 140), (int(sx), int(sy)), max(3, int(1.5 * zoom)))
-            speed = (view.vx * view.vx + view.vy * view.vy) ** 0.5 or 1.0
-            tail = (int(sx - view.vx / speed * 4 * zoom), int(sy - view.vy / speed * 4 * zoom))
-            pg.draw.line(screen, (255, 180, 80), tail, (int(sx), int(sy)), 2)
+        self.draw_projectiles(rt)
         self._draw_effects(rt, tiles)
         target = game.scene.get_entity(self._lock_id(game)) if self._lock_id(game) else None
         if target is not None:

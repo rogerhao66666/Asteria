@@ -72,6 +72,9 @@ class BattleCombatantVisual:
     aura_sprite_sheet_asset_id: str | None = None
     source_pixels_per_logical_pixel: float = 1.0
     art_facing: str = "right"  # the way the sheet's pictures look; "left" art is not turned round
+    # the body is not drawn (a Portrait Party Layout keeps the party in its HUD); its anchor
+    # still places hit effects and numbers
+    body_hidden: bool = False
 
     def __init__(
         self,
@@ -83,6 +86,7 @@ class BattleCombatantVisual:
         aura_sprite_sheet_asset_id=None,
         source_pixels_per_logical_pixel=1.0,
         art_facing="right",
+        body_hidden=False,
     ):
         if not isinstance(anchor, BattleVisualAnchor):
             raise TypeError("anchor must be BattleVisualAnchor")
@@ -112,6 +116,7 @@ class BattleCombatantVisual:
         object.__setattr__(
             self, "art_facing", "left" if str(art_facing).lower() == "left" else "right"
         )
+        object.__setattr__(self, "body_hidden", bool(body_hidden))
 
     def clip_for(self, role):
         return dict(self.animation_roles).get(str(role))
@@ -130,6 +135,8 @@ class BattleCombatantVisual:
             data["source_pixels_per_logical_pixel"] = self.source_pixels_per_logical_pixel
         if self.art_facing != "right":
             data["art_facing"] = self.art_facing
+        if self.body_hidden:
+            data["body_hidden"] = True
         return data
 
     @classmethod
@@ -143,6 +150,7 @@ class BattleCombatantVisual:
             data.get("aura_sprite_sheet_asset_id"),
             data.get("source_pixels_per_logical_pixel", 1.0),
             data.get("art_facing", "right"),
+            data.get("body_hidden", False),
         )
 
 

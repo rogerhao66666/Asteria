@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import trial_content as tc
 import trial_maps as maps
+import trial_stage as stage
 
 from asteria.core import Transform
 from asteria.events.conditions import EventCondition
@@ -1038,5 +1039,7 @@ def programs(c, builders, looks, places):
     crypt(builders, looks, places)
     throne(builders, looks, places)
     showman(builders, looks, places)
+    stage.old_master(builders, looks, maps)
     foes_ai(builders)
+    stage.arm_the_field(builders)
     _ = Transform, tc

@@ -16,10 +16,12 @@ from pathlib import Path
 
 from asteria.assets.canonical import AssetSource, CanonicalAsset
 from asteria.runtime.battle_visuals import (
+    VFX_ALIGNS,
     VFX_ANCHORS,
     VFX_BLENDS,
     VFX_DEFAULTS,
     vfx_keyframe,
+    vfx_content_center,
     vfx_placement,
     vfx_rect,
 )
@@ -121,6 +123,8 @@ class VFXAuthoringController:
             raise VFXAuthoringError(f"anchor must be one of {VFX_ANCHORS}")
         if "blend" in changes and changes["blend"] not in VFX_BLENDS:
             raise VFXAuthoringError(f"blend must be one of {VFX_BLENDS}")
+        if "align" in changes and changes["align"] not in VFX_ALIGNS:
+            raise VFXAuthoringError(f"align must be one of {VFX_ALIGNS}")
         if "scale" in changes and not float(changes["scale"]) > 0:
             raise VFXAuthoringError("scale must be greater than 0")
         if "opacity" in changes and not 0.0 <= float(changes["opacity"]) <= 1.0:
@@ -239,7 +243,24 @@ class VFXAuthoringController:
             found.append(f"{asset_id}: unknown anchor {raw.get('anchor')}")
         if raw.get("blend", "normal") not in VFX_BLENDS:
             found.append(f"{asset_id}: unknown blend {raw.get('blend')}")
+        if raw.get("align", "content") not in VFX_ALIGNS:
+            found.append(f"{asset_id}: unknown align {raw.get('align')}")
         return found
+
+    def content_center(self, asset_id, frames, fw, fh, columns):
+        """Where the clip's picture sits in its frames (the battle centres it on the member)."""
+        from PIL import Image
+
+        path = self.animation.image_path(asset_id)
+        if not path.is_file():
+            return 0.0, 0.0
+        boxes = []
+        with Image.open(path) as image:
+            image = image.convert("RGBA")
+            for index in frames:
+                x, y = (int(index) % columns) * fw, (int(index) // columns) * fh
+                boxes.append(image.crop((x, y, x + fw, y + fh)).getbbox())
+        return vfx_content_center(boxes, fw, fh)
 
     def preview(self, asset_id, age, *, duration=None):
         """What the battle draws ``age`` seconds into the effect, relative to a member's feet at
@@ -255,5 +276,6 @@ class VFXAuthoringController:
         columns = max(1, (self.animation.image_size(asset_id) or (fw, fh))[0] // fw)
         source = ((frame_index % columns) * fw, (frame_index // columns) * fh, fw, fh)
         placement = self.placement(asset_id)
-        rect = vfx_rect(placement, 0.0, 0.0, PREVIEW_BODY_HEIGHT, fw, fh)
+        content = self.content_center(asset_id, clip["frames"], fw, fh, columns)
+        rect = vfx_rect(placement, 0.0, 0.0, PREVIEW_BODY_HEIGHT, fw, fh, content)
         return VFXPreview(keyframe, frame_index, source, rect, placement, duration)

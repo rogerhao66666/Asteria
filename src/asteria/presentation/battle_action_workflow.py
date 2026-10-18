@@ -79,9 +79,19 @@ class BattleWorkflowStep:
     maximum_selections: int = 1
     optional: bool = False
     allow_back: bool = True
+    # the choices the step offers when the project authors them (an ability's Command Input
+    # Steps); a controller may also supply its own at run time
+    options: tuple = ()
 
     def __post_init__(self):
         _id(self.step_id, "step_id")
+        options = tuple(
+            x if isinstance(x, BattleWorkflowOption) else BattleWorkflowOption.from_data(x)
+            for x in self.options
+        )
+        if len({x.option_id for x in options}) != len(options):
+            raise ValueError("duplicate workflow option_id")
+        object.__setattr__(self, "options", options)
         _id(self.label, "label")
         if self.selection_mode not in {"single", "multiple"}:
             raise ValueError("unsupported workflow selection_mode")
@@ -101,6 +111,7 @@ class BattleWorkflowStep:
             "maximum_selections": self.maximum_selections,
             "optional": self.optional,
             "allow_back": self.allow_back,
+            **({"options": [x.to_data() for x in self.options]} if self.options else {}),
         }
 
     @classmethod

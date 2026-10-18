@@ -75,6 +75,23 @@ class BattleLogEntry:
     data: object = None
 
 
+def _merge_casts(first, second):
+    """One casting form made of two (a skill's form and its input-step choices): tags joined,
+    power multiplied, costs added, states joined."""
+    if first is None:
+        return dict(second)
+    merged = dict(first)
+    merged["tags"] = [*first.get("tags", ()), *second.get("tags", ())]
+    merged["power"] = float(first.get("power", 1.0)) * float(second.get("power", 1.0))
+    for key in ("resource_costs", "battle_costs"):
+        costs = dict(first.get(key, {}))
+        for resource, amount in second.get(key, {}).items():
+            costs[resource] = costs.get(resource, 0.0) + float(amount)
+        merged[key] = costs
+    merged["apply_states"] = [*first.get("apply_states", ()), *second.get("apply_states", ())]
+    return merged
+
+
 class GameSessionRuntime:
     """Generic Project + GameRuntimeSave integration runtime.
 
@@ -113,6 +130,7 @@ class GameSessionRuntime:
         from .interaction import TouchTriggerController
 
         self.touch = TouchTriggerController()
+        self.struck_encounters = 0  # fights a field attack started (they open preemptive)
         self.touch.arm(self.scene, self.player)
         self.mode = "field"
         self.battle = None
@@ -757,7 +775,33 @@ class GameSessionRuntime:
         if action:
             # action scenes fight in real time: touching an enemy is not a turn-based encounter
             return None
+        struck = self._struck_encounter(systems)
+        if struck:
+            return struck
         return self.check_visible_encounter()
+
+    def _struck_encounter(self, systems):
+        """A field foe (VisibleEncounterComponent) hit first by the player's attack or shot
+        starts its fight with the component's ``struck_opening``."""
+        from asteria.runtime.field_ai import VisibleEncounterComponent
+
+        if self.mode != "field" or self.event_busy:
+            return None
+        attacks = self.project.gameplay_library.attacks
+        hits = (*systems["hits"].events, *systems["projectiles"].hit_events)
+        for hit in hits:
+            if hit.attacker_id != self.player.id or attacks.get(hit.hit_tag) is None:
+                continue
+            entity = self.scene.get_entity(hit.target_id)
+            spec = None if entity is None else entity.try_get(VisibleEncounterComponent)
+            if spec is None or not spec.encounter_id or not spec.struck_opening:
+                continue
+            if spec.remove_on_start:
+                self.scene.remove_entity(entity)
+            self.start_encounter(spec.encounter_id, opening=spec.struck_opening)
+            self.struck_encounters += 1
+            return spec.encounter_id
+        return None
 
     @property
     def behavior_trees(self):
@@ -2330,7 +2374,8 @@ class GameSessionRuntime:
             from dataclasses import replace
 
             equipped = set(self._ability_state_of(actor_id).equipped_abilities)
-            build = replace(build, abilities=rules.usable(build.ability_grants, equipped))
+            usable = rules.filter(build.abilities, build.ability_grants, equipped)
+            build = replace(build, abilities=usable)
         return build
 
     @property
@@ -2677,7 +2722,9 @@ class GameSessionRuntime:
             self._log("summoned", member_id=member.member_id, data={"owner_id": owner_id})
         return tuple(added)
 
-    def start_encounter(self, encounter_id):
+    def start_encounter(self, encounter_id, *, opening=None):
+        """Begin a turn-based fight; ``opening`` (preemptive / normal / surprise) replaces the
+        rolled one (a field strike that hit the foe first)."""
         if self.mode != "field":
             raise GameSessionError("encounter already active")
         db = self.project.rpg_database
@@ -2735,7 +2782,14 @@ class GameSessionRuntime:
         if extensions is not None:
             self._load_mastery(extensions)
             self.opening = extensions.roll_opening(random.Random(f"{encounter_id}:opening"))
+        if opening:
+            self.opening = str(opening)
+        if extensions is not None:
             extensions.apply_opening(self.battle, self.opening, "heroes")
+        else:
+            from asteria.rpg.battle_extensions import apply_opening
+
+            apply_opening(self.battle, self.opening, "heroes")
         if pet_member is not None:  # a fallen pet unit never decides the fight
             self.battle.outcome_exempt.add(pet_member.member_id)
         self.encounter_id = str(encounter_id)
@@ -2860,12 +2914,15 @@ class GameSessionRuntime:
         available = self.battle.battle_resources.current(actor_id, rules.boost_resource_id)
         return min(rules.boost_max_level, int(available // rules.boost_cost_per_level))
 
-    def use_ability(self, actor_id, ability_id, target_ids=None, *, boost_level=0, form=None):
+    def use_ability(
+        self, actor_id, ability_id, target_ids=None, *, boost_level=0, form=None, choices=None
+    ):
         """Run one player action through project rules: targeting, boost and hit gauges.
 
         Each boost level spends ``boost_cost_per_level`` of the boost resource
-        and repeats the action once more. Every action against opponents emits
-        ``hit_trigger`` into all project gauge compositions.
+        and repeats the action once more. ``choices`` (``{step_id: [option_id, ...]}``) answer the
+        ability's Command Input Steps (its first options when left out). Every action against
+        opponents emits ``hit_trigger`` into all project gauge compositions.
         """
         if self.mode != "battle":
             raise GameSessionError("no active battle")
@@ -2915,6 +2972,12 @@ class GameSessionRuntime:
                 trigger="rpg.session.boost",
             )
         chosen = self._resolve_form(actor_id, definition, form)
+        picked = self._resolve_choices(actor_id, definition, choices)
+        if picked is not None:
+            chosen = _merge_casts(chosen, picked)
+            reason = self.form_unavailable(actor_id, chosen)
+            if reason:
+                raise GameSessionError(f"{ability_id}: {reason}")
         self._pay_spent_goods(definition)
         if chosen is not None:
             self._pay_form_costs(actor_id, chosen)
@@ -3009,6 +3072,53 @@ class GameSessionRuntime:
         if reason:
             raise GameSessionError(f"{definition.ability_id}/{chosen['form_id']}: {reason}")
         return chosen
+
+    def input_workflow(self, ability_id):
+        """The Command Input Steps record an ability asks the player to walk, else None."""
+        definition = self.battle.ability_runtime.registry.get(ability_id) if self.battle else None
+        name = getattr(definition, "input_workflow", "") if definition is not None else ""
+        library = self.project.battle_presentation_library
+        if not name or name not in library.ids("action_workflows"):
+            return None
+        return library.require("action_workflows", name)
+
+    def _resolve_choices(self, actor_id, definition, choices):
+        """What the chosen options of the ability's input steps add to the cast (tags, power,
+        costs) as one form-like dict; ``None`` for an ability without input steps."""
+        workflow = self.input_workflow(definition.ability_id) if definition is not None else None
+        if workflow is None:
+            if choices:
+                raise GameSessionError(f"{definition.ability_id} has no input steps")
+            return None
+        choices = {str(k): [str(x) for x in v] for k, v in dict(choices or {}).items()}
+        picked = []
+        for step in workflow.steps:
+            by_id = {o.option_id: o for o in step.options if o.enabled}
+            ids = choices.get(step.step_id)
+            if ids is None:  # left out: the first options the step needs
+                ids = list(by_id)[: step.minimum_selections]
+            if not step.minimum_selections <= len(ids) <= step.maximum_selections:
+                raise GameSessionError(
+                    f"{definition.ability_id}/{step.step_id}: choose "
+                    f"{step.minimum_selections}-{step.maximum_selections}"
+                )
+            for option_id in ids:
+                if option_id not in by_id:
+                    raise GameSessionError(f"{step.step_id} has no option {option_id}")
+                picked.append(by_id[option_id])
+        cast = {"form_id": workflow.workflow_id, "tags": [], "power": 1.0}
+        for option in picked:
+            payload = dict(option.payload)
+            cast = _merge_casts(
+                cast,
+                {
+                    "tags": list(option.tags),
+                    "power": float(payload.get("power", 1.0)),
+                    "resource_costs": dict(payload.get("resource_costs", {})),
+                    "battle_costs": dict(payload.get("battle_costs", {})),
+                },
+            )
+        return cast
 
     def form_unavailable(self, actor_id, form):
         """Why a form cannot be cast now ('' when it can): its extra costs against what the user
@@ -3644,13 +3754,15 @@ class GameSessionRuntime:
             if o.objective_id not in scoped or o.objective_id in own
         )
 
-    def _encounter_choice(self, prefix, options):
+    def encounter_choice(self, prefix, options):
         """The record an ``<prefix>:<id>`` tag of the running encounter names, else None."""
         encounter = self.project.rpg_database.encounters.get(self.encounter_id or "")
         for tag in () if encounter is None else encounter.tags:
             if tag.startswith(f"{prefix}:") and tag[len(prefix) + 1 :] in options:
                 return options[tag[len(prefix) + 1 :]]
         return None
+
+    _encounter_choice = encounter_choice
 
     # -- running away -----------------------------------------------------------------------
     def _escape_rule(self):

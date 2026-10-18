@@ -19,6 +19,8 @@ class BattleSideviewZone:
     facing: str
     depth_start: float = 0.0
     depth_step: float = 0.01
+    # each next member also stands this far along x (a staggered rank instead of a column)
+    x_step: float = 0.0
 
     def __post_init__(self):
         _id(self.zone_id, "zone_id")
@@ -103,7 +105,7 @@ class BattleSideviewTemplateRuntime:
                     BattleSideviewPlacement(
                         member_id,
                         zone.zone_id,
-                        float(zone.x),
+                        float(zone.x + index * zone.x_step),
                         float(zone.y_start + index * zone.y_step),
                         zone.facing,
                         float(zone.depth_start + index * zone.depth_step),

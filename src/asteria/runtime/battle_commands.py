@@ -12,6 +12,8 @@ menu:
   the boost
   level; a row that cannot be used now is shown disabled with the reason (``ability_unavailable``).
 * **ingredients** - a concoct ability asks for one item per recipe step of its station.
+* **steps** - an ability with Command Input Steps (``input_workflow``) asks each step's
+  options in turn (a multiple-choice step toggles and ends on *Done*).
 * **target** - Up / Down pick the target among the valid candidates (self-only and all-target
   actions skip
   this); Enter acts, Esc goes back one step.
@@ -39,10 +41,14 @@ def _constant(formula):
 
 
 class BattleCommands:
-    def __init__(self, game, *, labels=None, style="categories"):
+    def __init__(self, game, *, labels=None, style="categories", pages=None):
         self.game = game
         self.labels = dict(labels or {})  # ability id -> {"label": ...} (manifest skills)
         self.style = "root" if style == "root" else "categories"
+        # Command Menu Pages (BattleInteractionProfile): its layers order, rename and hide the
+        # top-level commands (layer_id = the command); past max_primary_layers they move to a
+        # More page
+        self.pages = pages
         self.reset()
 
     @property
@@ -70,7 +76,24 @@ class BattleCommands:
         if not custom:
             return base
         head = tuple(c for c in base if c != "Items")
-        return head + custom + (("Items",) if "Items" in base else ())
+        return self._paged(head + custom + (("Items",) if "Items" in base else ()))
+
+    def _layer(self, name):
+        layers = getattr(self.pages, "layers", ()) if self.pages is not None else ()
+        return next((x for x in layers if x.layer_id == name), None)
+
+    def _paged(self, names):
+        """Command names in the order the Command Menu Pages give (unlisted ones after, as they
+        came), without the hidden or contextual ones."""
+        if self.pages is None:
+            return tuple(names)
+        kept = []
+        for index, name in enumerate(names):
+            layer = self._layer(name)
+            if layer is not None and (not layer.visible or layer.contextual):
+                continue
+            kept.append(((0, layer.order) if layer is not None else (1, index), name))
+        return tuple(name for _, name in sorted(kept, key=lambda x: x[0]))
 
     def reset(self):
         self.mode = "root" if self.style == "root" else "command"
@@ -81,6 +104,8 @@ class BattleCommands:
         self.form = None  # the casting form picked for a skill that has forms
         self.ingredients = {}
         self.message = ""
+        self.more = False  # the root list shows the commands past max_primary_layers
+        self.choices = {}  # step id -> chosen option ids (Command Input Steps)
 
     # -- what the menu shows ----------------------------------------------------------------------
     def _name(self, ability_id):
@@ -163,15 +188,26 @@ class BattleCommands:
         run = self.game.escape_chance()
         if run is not None:
             groups.append(("Escape", 1, f"{round(run * 100)}% to get away"))
+        if self.pages is not None:
+            by_name = {g[0]: g for g in groups}
+            groups = [by_name[name] for name in self._paged(by_name)]
+            top = self.pages.max_primary_layers
+            if len(groups) > top:  # the rest wait on a More page
+                if self.more:
+                    groups = groups[top - 1 :] + [("Back", 1, "The first commands")]
+                else:
+                    rest = len(groups) - (top - 1)
+                    groups = groups[: top - 1] + [("More", rest, "More commands")]
         for category, count, hint in groups:
             # the number beside a command: how many choices it opens; Escape shows its chance
             shown = (
                 f"{round(run * 100)}%" if category == "Escape" else (str(count) if count else "")
             )
+            layer = self._layer(category)
             rows.append(
                 BattleActionEntry(
                     f"root:{category}",
-                    category,
+                    layer.label if layer is not None else category,
                     category="Command",
                     cost_text=shown,
                     enabled=count > 0,
@@ -313,6 +349,100 @@ class BattleCommands:
             )
         return rows
 
+    def _workflow(self):
+        if not self.pending or self.pending[0] != "ability":
+            return None
+        return self.game.input_workflow(self.pending[1])
+
+    def _step(self):
+        workflow = self._workflow()
+        done = [x for x in workflow.steps if x.step_id in self.choices]
+        return workflow.steps[len(done)] if len(done) < len(workflow.steps) else None
+
+    def step_rows(self, actor_id):
+        """The options of the current input step (each with its extra cost); a step that takes
+        several ends on a *Done* row once enough are picked."""
+        step = self._step()
+        picked = self.choices.get(f"~{step.step_id}", [])
+        rows = []
+        for option in step.options:
+            payload = dict(option.payload)
+            extra = {
+                "resource_costs": payload.get("resource_costs", {}),
+                "battle_costs": payload.get("battle_costs", {}),
+            }
+            reason = option.disabled_reason if not option.enabled else ""
+            reason = reason or self.game.form_unavailable(actor_id, extra)
+            costs = [f"{v:g}{self._short(k)}" for k, v in extra["resource_costs"].items()]
+            costs += [f"{v:g}{self._short(k)}" for k, v in extra["battle_costs"].items()]
+            mark = "* " if option.option_id in picked else ""
+            rows.append(
+                BattleActionEntry(
+                    option.option_id,
+                    mark + option.label,
+                    category=step.label,
+                    icon_asset_id=option.icon_asset_id,
+                    cost_text=" ".join(costs),
+                    enabled=not reason,
+                    disabled_reason=reason,
+                    detail=option.detail,
+                    order=len(rows),
+                )
+            )
+        if step.selection_mode == "multiple":
+            enough = len(picked) >= step.minimum_selections
+            rows.append(
+                BattleActionEntry(
+                    "step:done",
+                    self._workflow().confirmation_label,
+                    category=step.label,
+                    cost_text=f"{len(picked)}/{step.maximum_selections}",
+                    enabled=enough,
+                    disabled_reason="" if enough else f"Pick {step.minimum_selections}",
+                    order=len(rows),
+                )
+            )
+        return rows
+
+    def _choose_step(self, actor_id, row):
+        """A step's option picked: a single step moves on, a multiple one toggles until Done."""
+        step = self._step()
+        key = f"~{step.step_id}"  # the picks of a step still open
+        picked = self.choices.setdefault(key, [])
+        if row.action_id != "step:done":
+            if not row.enabled:
+                self.message = row.disabled_reason
+                return False
+            if row.action_id in picked:
+                picked.remove(row.action_id)
+            elif len(picked) < step.maximum_selections:
+                picked.append(row.action_id)
+            if step.selection_mode == "multiple":
+                return False
+        elif not row.enabled:
+            self.message = row.disabled_reason
+            return False
+        self.choices[step.step_id] = self.choices.pop(key)
+        self.cursor = 0
+        if self._step() is not None:
+            return False
+        if self._definition(self.pending[1]).forms:
+            self.mode, self.form = "forms", None
+            return False
+        return self._choose_target_or_act(actor_id)
+
+    def _step_back(self):
+        """Esc in the steps: undo the last finished step, or leave for the command list."""
+        open_key = next((k for k in self.choices if k.startswith("~")), None)
+        if open_key is not None:
+            self.choices.pop(open_key)
+        done = [k for k in self.choices if not k.startswith("~")]
+        if done and open_key is None:
+            self.choices.pop(done[-1])
+        elif not done:
+            self.mode, self.pending, self.choices = "command", None, {}
+        self.cursor = 0
+
     def target_rows(self, actor_id):
         game = self.game
         battle = game.battle
@@ -348,6 +478,8 @@ class BattleCommands:
             return self.target_rows(actor_id)
         if self.mode == "ingredients":
             return self.ingredient_rows()
+        if self.mode == "steps":
+            return self.step_rows(actor_id)
         if self.mode == "forms":
             return self.form_rows(actor_id)
         if self.mode == "root":
@@ -445,6 +577,16 @@ class BattleCommands:
             self.boost = max(0, min(top, self.boost + (1 if key == "right" else -1)))
             return False
         if key == "cancel":
+            if self.mode == "steps":
+                self._step_back()
+                return False
+            if self.mode in ("target", "forms") and self._workflow() is not None and (
+                self.mode == "forms" or self.form is None
+            ):  # back into the last input step
+                self.mode, self.form = "steps", None
+                self.choices.pop(next(reversed(self.choices)), None) if self.choices else None
+                self.cursor = 0
+                return False
             if self.mode == "target" and self.pending and self.pending[0] == "concoct":
                 self.ingredients.popitem() if self.ingredients else None
                 self.mode = "ingredients"
@@ -460,6 +602,7 @@ class BattleCommands:
                 self.cursor = names.index(self.category) if self.category in names else 0
                 return False
             elif self.mode == "root":
+                self.more = False  # back from the More page
                 return False
             else:
                 self.mode, self.pending, self.ingredients = "command", None, {}
@@ -471,6 +614,9 @@ class BattleCommands:
         if self.mode == "root":
             if not row.enabled:
                 self.message = row.disabled_reason
+                return False
+            if row.action_id in ("root:More", "root:Back"):
+                self.more, self.cursor = row.action_id == "root:More", 0
                 return False
             if row.action_id == "root:Escape":
                 reason = self.game.escape_unavailable()
@@ -508,6 +654,9 @@ class BattleCommands:
                 return False
             else:
                 self.pending = ("ability", row.action_id)
+                if self._workflow() is not None:  # its input steps come first
+                    self.mode, self.cursor, self.choices = "steps", 0, {}
+                    return False
                 if self._definition(row.action_id).forms:  # which form comes before the target
                     self.mode, self.cursor, self.form = "forms", 0, None
                     return False
@@ -518,6 +667,8 @@ class BattleCommands:
                 return False
             self.form = row.action_id
             return self._choose_target_or_act(actor_id)
+        if self.mode == "steps":
+            return self._choose_step(actor_id, row)
         if self.mode == "ingredients":
             step = self._steps()[len(self.ingredients)]
             self.ingredients[step] = [row.action_id]
@@ -552,11 +703,18 @@ class BattleCommands:
             elif kind == "concoct":
                 game.concoct(actor_id, key, dict(self.ingredients), targets)
             else:
-                game.use_ability(actor_id, key, targets, boost_level=self.boost, form=self.form)
+                game.use_ability(
+                    actor_id,
+                    key,
+                    targets,
+                    boost_level=self.boost,
+                    form=self.form,
+                    choices=self.choices or None,
+                )
         except Exception as exc:  # shown in the menu footer; the turn is not used
             self.message = str(exc)
             self.mode, self.cursor = ("root" if self.style == "root" else "command"), 0
-            self.pending, self.ingredients = None, {}
+            self.pending, self.ingredients, self.choices = None, {}, {}
             return False
         self.reset()
         return True

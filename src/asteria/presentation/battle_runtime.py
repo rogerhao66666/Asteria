@@ -524,7 +524,7 @@ class BattlePresentationRuntime:
         draws = []
         for visual in self.scene.combatants:
             state = self._combatants[visual.member_id]
-            if not state.visible:
+            if not state.visible or visual.body_hidden:
                 continue
             shift = self.move_offset(visual.member_id)
             if shift != (0.0, 0.0):

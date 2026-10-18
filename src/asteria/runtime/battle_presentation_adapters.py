@@ -32,6 +32,7 @@ from asteria.runtime.battle_visuals import (
     BattleVisualError,
     BattleVisualResolver,
     member_body_height,
+    vfx_content_center,
     vfx_keyframe,
     vfx_placement,
     vfx_rect,
@@ -45,6 +46,9 @@ CHANNEL_KINDS = {
     "camera": ActionCueKind.CAMERA,
     "screen_fx": ActionCueKind.SCREEN_FX,
 }
+
+# the session's player side: a Portrait Party Layout keeps it in the HUD
+PARTY_SIDES = ("heroes",)
 
 PRESENTATION_PROFILE_CATEGORIES = {
     "feedback_profile": "feedback",
@@ -254,6 +258,24 @@ class CanonicalBattleAdapter:
     def _theme(self):
         return self._profile("ui_theme")
 
+    def _command_pages(self):
+        """The Command Menu Pages record the layout's ``command_pages`` names, else None."""
+        library = self.host.project.battle_presentation_library
+        name = getattr(getattr(self, "_layout", None), "command_pages", "")
+        return library.require("interaction", name) if name in library.ids("interaction") else None
+
+    def _stage_template(self, game, layout):
+        """The staging record this fight stands by: the encounter's ``stage:<id>`` tag, else the
+        layout's ``stage_template`` (a Side-View Positions or Portrait Party Layout id)."""
+        library = self.host.project.battle_presentation_library
+        options = {}
+        for category in ("portrait_templates", "sideview_templates"):
+            for key in library.ids(category):
+                options[key] = library.require(category, key)
+        chosen = game.encounter_choice("stage", options) if options else None
+        name = getattr(layout, "stage_template", "")
+        return chosen or options.get(name)
+
     def begin(self):
         from asteria.platform.pygame_battle_ui import PygameBattleUiBackend
 
@@ -287,7 +309,13 @@ class CanonicalBattleAdapter:
         )
         if not missing:
             try:
-                combatants = self.resolver.combatant_visuals(sides, self.placement_by_side, layout)
+                combatants = self.resolver.combatant_visuals(
+                    sides,
+                    self.placement_by_side,
+                    layout,
+                    self._stage_template(game, layout),
+                    PARTY_SIDES,
+                )
             except (BattleVisualError, OSError) as exc:
                 self.fallback_reason = str(exc)
             except Exception as exc:  # pygame.error for unreadable images
@@ -572,7 +600,13 @@ class CanonicalBattleAdapter:
         if not any(new.values()):
             return
         self._register_fallback_visuals(new, self._layout)
-        visuals = self.resolver.combatant_visuals(sides, self.placement_by_side, self._layout)
+        visuals = self.resolver.combatant_visuals(
+            sides,
+            self.placement_by_side,
+            self._layout,
+            self._stage_template(game, self._layout),
+            PARTY_SIDES,
+        )
         added = [v for v in visuals if v.member_id not in shown]
         for visual in added:
             self.screen.add_combatant(visual)
@@ -1131,6 +1165,12 @@ class CanonicalBattleAdapter:
             from dataclasses import replace
 
             menu.policy = replace(menu.policy, include_all_category=False)
+        pages = self._command_pages()
+        commands.pages = pages
+        if pages is not None and menu.policy.page_size != pages.page_size:
+            from dataclasses import replace
+
+            menu.policy = replace(menu.policy, page_size=pages.page_size)
         if actor is None:
             menu.show((), "Skills", 0)
             feedback.target_ids, feedback.primary_target_id = (), None
@@ -1268,8 +1308,11 @@ class CanonicalBattleAdapter:
         # where the blow comes from the right (``face_attacker`` on the sheet or in the beat)
         face = payload.get("face_attacker", meta.get("face_attacker", False))
         flip = bool(face) and getattr(visual.anchor, "facing", "") == "right"
+        content = self._vfx_content(asset_id, sheet, clip)
+        if flip:
+            content = (-content[0], content[1])
         x, y, width, tall = vfx_rect(
-            placement, visual.anchor.x, visual.anchor.y, height, frame.width, frame.height
+            placement, visual.anchor.x, visual.anchor.y, height, frame.width, frame.height, content
         )
         cx, cy = self._view_camera.world_to_screen(x, y)
         self.textures.blit_region(
@@ -1283,6 +1326,31 @@ class CanonicalBattleAdapter:
             opacity=placement["opacity"],
             blend=placement["blend"],
         )
+
+    def _vfx_content(self, asset_id, sheet, clip):
+        """Where the clip's picture sits inside its frames (``vfx_content_center``), measured
+        once per sheet from the drawn pixels."""
+        cache = self.__dict__.setdefault("_vfx_content_cache", {})
+        if asset_id not in cache:
+            boxes = []
+            try:
+                resolver = self.resolver
+                image = (  # a sheet drawn in memory (generated effects) has no file
+                    resolver.generated_image(asset_id)
+                    if resolver.is_generated(asset_id)
+                    else self.host.load_image(resolver.source_uri(asset_id))
+                )
+                for keyframe in clip.keyframes:
+                    f = sheet.frames[keyframe.frame_index]
+                    rect = image.subsurface((f.x, f.y, f.width, f.height)).get_bounding_rect()
+                    if rect.width and rect.height:
+                        boxes.append((rect.left, rect.top, rect.right, rect.bottom))
+            except Exception as exc:  # pygame.error / a frame outside the image
+                if type(exc).__name__ not in ("error", "ValueError", "FileNotFoundError"):
+                    raise
+            first = sheet.frames[0]
+            cache[asset_id] = vfx_content_center(boxes, first.width, first.height)
+        return cache[asset_id]
 
     def _draw_particle_cue(self, effect, definition, payload):
         systems = self._cue_particles

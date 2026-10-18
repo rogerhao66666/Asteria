@@ -76,6 +76,12 @@ class BattleUiLayoutProfile:
     # stage_front_right: the same for the side standing on the right (None = stage_front), so the
     # party can stand nearer its edge while the foes stand nearer the middle
     stage_front_right: float | None = None
+    # stage_template: a Side-View Positions or Portrait Party Layout record the combatants stand
+    # by ("" = the automatic columns); an encounter's ``stage:<id>`` tag picks one for its fight
+    stage_template: str = ""
+    # command_pages: the Command Menu Pages record that orders, renames and hides the top-level
+    # commands and sets how many rows one page of a list shows ("" = every command and row)
+    command_pages: str = ""
 
     def __post_init__(self):
         if self.virtual_width <= 0 or self.virtual_height <= 0:

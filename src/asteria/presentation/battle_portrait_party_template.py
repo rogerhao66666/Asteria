@@ -19,6 +19,8 @@ class BattlePortraitPartyZone:
     facing: str = "left"
     depth_start: float = 0.0
     depth_step: float = 0.01
+    # each next member also stands this far along x (a staggered rank instead of a column)
+    x_step: float = 0.0
 
     def __post_init__(self):
         _id(self.zone_id, "zone_id")
@@ -115,7 +117,7 @@ class BattlePortraitPartyTemplateRuntime:
                     hud_visible=True,
                     battlefield_zone_id=zone.zone_id,
                     hud_zone_id=self.profile.battlefield_hud_zone_id,
-                    x=float(zone.x),
+                    x=float(zone.x + index * zone.x_step),
                     y=float(zone.y_start + index * zone.y_step),
                     facing=zone.facing,
                     depth=float(zone.depth_start + index * zone.depth_step),

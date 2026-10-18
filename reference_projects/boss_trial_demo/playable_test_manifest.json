@@ -833,6 +833,27 @@
       "chase_strike": {
         "label": "Chase Strike"
       },
+      "elemental_weave": {
+        "label": "Elemental Weave"
+      },
+      "art_rending_gale": {
+        "label": "Rending Gale"
+      },
+      "art_whirlwind": {
+        "label": "Whirlwind"
+      },
+      "art_dawn_edge": {
+        "label": "Dawn Edge"
+      },
+      "art_iron_vow": {
+        "label": "Iron Vow"
+      },
+      "field_slash": {
+        "label": "Field Slash"
+      },
+      "sling_throw": {
+        "label": "Sling Stone"
+      },
       "taunting_roar": {
         "label": "Taunting Roar"
       },

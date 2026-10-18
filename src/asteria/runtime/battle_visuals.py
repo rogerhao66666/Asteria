@@ -15,7 +15,9 @@ Data contract (all canonical project data, no runtime code per project):
   ``vfx``) play their ``play`` clip and may carry ``vfx`` placement
   metadata (EDT-08): ``anchor`` (``feet`` / ``center`` / ``head`` of the
   member), ``offset`` ``[x, y]`` in world pixels, ``scale``, ``opacity``
-  (0..1) and ``blend`` (``normal`` / ``add``). A beat payload may override
+  (0..1), ``blend`` (``normal`` / ``add``) and ``align`` (``content``: the
+  picture drawn across the clip's frames is centred on the anchor, wherever it
+  sits inside the frame; ``frame``: the frame's middle is). A beat payload may override
   any of them. ``vfx_rect`` is the single placement rule used by the
   battle renderer and the editor preview.
 
@@ -44,12 +46,14 @@ SPRITE_SHEET_KIND = "sprite_sheet"
 DEFAULT_SEQUENCE_ID = "default_action"
 VFX_ANCHORS = ("feet", "center", "head")
 VFX_BLENDS = ("normal", "add")
+VFX_ALIGNS = ("content", "frame")
 VFX_DEFAULTS = {
     "anchor": "center",
     "offset": [0.0, 0.0],
     "scale": 0.6,
     "opacity": 1.0,
     "blend": "normal",
+    "align": "content",
 }
 
 
@@ -67,7 +71,23 @@ def vfx_placement(meta, overrides=None):
         placement["anchor"] = VFX_DEFAULTS["anchor"]
     if placement["blend"] not in VFX_BLENDS:
         placement["blend"] = VFX_DEFAULTS["blend"]
+    if placement["align"] not in VFX_ALIGNS:
+        placement["align"] = VFX_DEFAULTS["align"]
     return placement
+
+
+def vfx_content_center(boxes, frame_width, frame_height):
+    """Where a clip's picture sits in its frames: the middle of the union of the frames' drawn
+    boxes ``(x0, y0, x1, y1)`` minus the frame's middle, in source pixels (a swipe drawn in the
+    right half of its frames gives a positive x)."""
+    boxes = [b for b in boxes if b is not None]
+    if not boxes:
+        return 0.0, 0.0
+    x0 = min(b[0] for b in boxes)
+    y0 = min(b[1] for b in boxes)
+    x1 = max(b[2] for b in boxes)
+    y1 = max(b[3] for b in boxes)
+    return (x0 + x1) / 2 - frame_width / 2, (y0 + y1) / 2 - frame_height / 2
 
 
 def vfx_keyframe(age, duration, keyframe_count):
@@ -77,14 +97,21 @@ def vfx_keyframe(age, duration, keyframe_count):
     return int(progress * int(keyframe_count))
 
 
-def vfx_rect(placement, anchor_x, anchor_y, body_height, frame_width, frame_height):
+def vfx_rect(
+    placement, anchor_x, anchor_y, body_height, frame_width, frame_height, content=(0.0, 0.0)
+):
     """World-space ``(centre_x, centre_y, width, height)`` of a VFX frame on a member standing at
-    the anchor."""
+    the anchor. ``content`` (``vfx_content_center``, mirrored with the frame) moves the frame
+    so its picture, not its middle, lands on the anchor when the placement aligns by content."""
     lift = {"feet": 0.0, "center": 0.5, "head": 1.0}[placement["anchor"]] * body_height
-    width, height = frame_width * placement["scale"], frame_height * placement["scale"]
+    scale = placement["scale"]
+    width, height = frame_width * scale, frame_height * scale
+    shift_x = shift_y = 0.0
+    if placement.get("align", "content") == "content":
+        shift_x, shift_y = content[0] * scale, content[1] * scale
     return (
-        anchor_x + placement["offset"][0],
-        anchor_y - lift + placement["offset"][1],
+        anchor_x + placement["offset"][0] - shift_x,
+        anchor_y - lift + placement["offset"][1] - shift_y,
         width,
         height,
     )
@@ -257,7 +284,7 @@ class BattleVisualResolver:
     def missing_profiles(self, member_ids):
         return tuple(m for m in member_ids if self.profile_for(m) is None)
 
-    def combatant_visuals(self, sides, placement, layout):
+    def combatant_visuals(self, sides, placement, layout, template=None, party_sides=()):
         """``sides``: ``{side_id: [member_id, ...]}``; ``placement``: ``{side_id:
         "left"|"right"}``.
 
@@ -265,6 +292,9 @@ class BattleVisualResolver:
         ``layout`` (BattleUiLayoutProfile), above the action menu: up to three
         per column, the first column nearest the centre, the second staggered
         behind it. Members on the right face left.
+
+        ``template`` (a Side-View Positions or Portrait Party Layout record) then moves them to
+        its zones; ``party_sides`` are the sides a portrait layout keeps in the HUD.
         """
         width = float(getattr(layout, "virtual_width", 320))
         height = float(getattr(layout, "virtual_height", 180))
@@ -390,7 +420,68 @@ class BattleVisualResolver:
                             art_facing=self.sheet_meta(sheet_id).get("facing", "right"),
                         )
                     )
+        if template is not None:
+            visuals = self._staged(visuals, sides, placement, template, party_sides)
         return tuple(visuals)
+
+    def _staged(self, visuals, sides, placement, template, party_sides):
+        """``visuals`` moved to the zones of an authored staging template: a side-view one
+        stands each side in its left / right zone; a portrait one keeps the party in the HUD
+        (bodies hidden when it says so) and lines the others up in its battlefield zone. Members
+        past a zone's cap keep their place but are not drawn."""
+        from dataclasses import replace
+
+        from asteria.presentation.battle_portrait_party_template import (
+            BattlePortraitPartyTemplateRuntime,
+        )
+        from asteria.presentation.battle_sideview_template import BattleSideviewTemplateRuntime
+
+        shown = {v.member_id for v in visuals}
+        ordered = {s: [m for m in members if m in shown] for s, members in sides.items()}
+        if hasattr(template, "left_zone"):
+            result = BattleSideviewTemplateRuntime(template).resolve(
+                left_member_ids=[
+                    m
+                    for s, ms in ordered.items()
+                    if placement.get(s, "left") == "left"
+                    for m in ms
+                ],
+                right_member_ids=[
+                    m
+                    for s, ms in ordered.items()
+                    if placement.get(s, "left") != "left"
+                    for m in ms
+                ],
+            )
+        else:
+            party = [m for s, ms in ordered.items() if s in party_sides for m in ms]
+            result = BattlePortraitPartyTemplateRuntime(template).resolve(
+                portrait_party_ids=party,
+                battlefield_member_ids=[
+                    m for s, ms in ordered.items() if s not in party_sides for m in ms
+                ],
+            )
+        spots = {p.member_id: p for p in result.placements}
+        moved = []
+        for visual in visuals:
+            spot = spots.get(visual.member_id)
+            if spot is None:
+                moved.append(visual)
+                continue
+            hidden = not getattr(spot, "battlefield_visible", getattr(spot, "visible", True))
+            if spot.x is None:  # a portrait party member: where it stood, maybe not drawn
+                moved.append(replace(visual, body_hidden=hidden))
+                continue
+            transform = self.profile_for(visual.member_id).transform
+            anchor = replace(
+                visual.anchor,
+                x=spot.x + transform.offset_x,
+                y=spot.y + transform.offset_y,
+                facing=spot.facing,
+                depth=spot.y + spot.depth,
+            )
+            moved.append(replace(visual, anchor=anchor, body_hidden=hidden))
+        return moved
 
     def _body_logical(self, sheet_id, transform):
         """The standing figure's height in logical pixels (the sheet's ``body_height``, else the

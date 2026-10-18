@@ -139,6 +139,27 @@ class ResourceGain:
         return data
 
 
+def apply_opening(battle, opening, player_side):
+    """The side that loses ``opening`` gives up its turns in the first round (the ids)."""
+    if opening not in OPENINGS:
+        raise ValueError(f"opening must be one of {OPENINGS}")
+    if opening == "normal":
+        return ()
+    losing = {
+        m.member_id
+        for m in battle.members.values()
+        if (m.side != player_side) == (opening == "preemptive")
+    }
+    removed = []
+    for member_id in sorted(losing):
+        queue = battle.turn_queue
+        # a timeline scheduler keeps the member for later rounds; a plain queue only drops
+        # it from the round being played
+        getattr(queue, "sit_out_round", queue.remove_pending)(member_id)
+        removed.append(member_id)
+    return tuple(removed)
+
+
 @dataclass(frozen=True, slots=True)
 class BattleExtensionRules:
     """Which optional battle rules a project switches on, by resource / stat / tag id.
@@ -548,24 +569,9 @@ class BattleExtensionRuntime:
 
     def apply_opening(self, battle, opening, player_side):
         """The side that loses the opening gives up its turns in the first round."""
-        if opening not in OPENINGS:
-            raise ValueError(f"opening must be one of {OPENINGS}")
+        removed = apply_opening(battle, opening, player_side)
         self.opening = opening
-        if opening == "normal":
-            return ()
-        losing = {
-            m.member_id
-            for m in battle.members.values()
-            if (m.side != player_side) == (opening == "preemptive")
-        }
-        removed = []
-        for member_id in sorted(losing):
-            queue = battle.turn_queue
-            # a timeline scheduler keeps the member for later rounds; a plain queue only drops
-            # it from the round being played
-            getattr(queue, "sit_out_round", queue.remove_pending)(member_id)
-            removed.append(member_id)
-        return tuple(removed)
+        return removed
 
     # -- rows ----------------------------------------------------------------------------------
     def sync_row_tags(self, battle):

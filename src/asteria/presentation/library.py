@@ -283,6 +283,11 @@ class BattlePresentationLibrary:
             if data.get("stage_front_right") is None:
                 data["stage_front_right"] = data["stage_front"]
             return data
+        if category == "action_workflows":  # every step shows its options list, even empty
+            data = self._encode(category, value)
+            for step in data.get("steps", ()):
+                step.setdefault("options", [])
+            return data
         return self._encode(category, value)
 
     def decode_from_editor(self, category, data):
@@ -321,6 +326,9 @@ class BattlePresentationLibrary:
                 data.pop("command_counts", None)
             if not data.get("menu_over_stage"):
                 data.pop("menu_over_stage", None)
+            for key in ("stage_template", "command_pages"):
+                if not data.get(key):
+                    data.pop(key, None)
             return data
         return self._plain(value)
 

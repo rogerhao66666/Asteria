@@ -38,6 +38,7 @@ import trial_items as items  # noqa: E402
 import trial_jobs as jobs  # noqa: E402
 import trial_lucifer as lucifer  # noqa: E402
 import trial_maps as maps  # noqa: E402
+import trial_stage as stage  # noqa: E402
 import trial_story as story  # noqa: E402
 import trial_systems as systems  # noqa: E402
 import trial_trees as trees  # noqa: E402
@@ -75,6 +76,7 @@ def main():
     cast.foes(context)
     gear_plus.forge(context)  # more gear, sets, gems, cards, refining, crafting
     battle_rules.rules(context)  # every Battle category designed and used
+    stage.abilities(context)  # input steps, slot-limited arts, field strikes
     extras.systems(context)
     story.systems(context)
     maps.build_world(context, story.programs)
@@ -82,6 +84,7 @@ def main():
     art.effect_assets(context)
     art.prune_unused_art(context)
     content.presentation(context)
+    stage.presentation(context)  # staging templates, command pages, input steps
     systems.fill(context)  # the editor's remaining sections, each used by the game
     kept = art.weapon_icons(context)
     kept = (*kept, *lucifer.apply_icons(context))

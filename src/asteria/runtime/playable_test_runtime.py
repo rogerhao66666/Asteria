@@ -734,6 +734,24 @@ class PlayableTestRuntime:
             effects = self._field_effects = FieldEffects()
         return effects
 
+    def _field_vfx_content(self, asset_id, sheet, frames, fw, fh, columns):
+        """Where a field VFX clip's picture sits inside its frames (source pixels), once."""
+        from asteria.runtime.battle_visuals import vfx_content_center
+
+        cache = self.__dict__.setdefault("_field_vfx_content_cache", {})
+        if asset_id not in cache:
+            boxes = []
+            for index in frames:
+                area = ((index % columns) * fw, (index // columns) * fh, fw, fh)
+                try:
+                    rect = sheet.subsurface(area).get_bounding_rect()
+                except ValueError:  # a frame outside the sheet
+                    continue
+                if rect.width and rect.height:
+                    boxes.append((rect.left, rect.top, rect.right, rect.bottom))
+            cache[asset_id] = vfx_content_center(boxes, fw, fh)
+        return cache[asset_id]
+
     def _draw_field_effects(self):
         scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0))
         tiles = self.tile_view
@@ -757,8 +775,15 @@ class PlayableTestRuntime:
                 ax, ay = t.x, t.y
             else:
                 ax, ay = effect.x, effect.y
+            cx, cy = self._field_vfx_content(effect.asset_id, sheet, frames, fw, fh, columns)
             x, y, w, h = vfx_rect(
-                effect.placement, ax, ay, FIELD_BODY_HEIGHT, fw / scale, fh / scale
+                effect.placement,
+                ax,
+                ay,
+                FIELD_BODY_HEIGHT,
+                fw / scale,
+                fh / scale,
+                (cx / scale, cy / scale),
             )
             sx, sy = to_screen(x, y)
             size = (max(1, round(w * pixels)), max(1, round(h * pixels)))
@@ -1544,6 +1569,8 @@ class PlayableTestRuntime:
         self._draw_multiplayer_world()
         if self.game.action_scene:
             self.action_hud.draw_world(self)
+        elif self._field_abilities():  # field strikes in a turn-based game: its thrown shots
+            self.action_hud.draw_projectiles(self)
         self._draw_field_effects()
         self._draw_popups()
         self._draw_pictures()
@@ -1944,6 +1971,10 @@ class PlayableTestRuntime:
             else:
                 self.game.set_player_facing("down" if dy > 0 else "up")
             self._field_step += 1
+        if not connected:  # a player with ActionCombat bindings strikes and shoots here too
+            self.game.set_field_input(
+                dict(self.input.current.actions) if self._field_abilities() else None
+            )
 
         if self.input.just_pressed("menu"):
             self._ui_mode = "build"
@@ -1966,6 +1997,13 @@ class PlayableTestRuntime:
             if self.game.mode == "field":
                 self.game.field_step({"interact": 0.0})
         return moving
+
+    def _field_abilities(self):
+        """The player carries ActionCombat bindings (a field attack in a turn-based game)."""
+        from asteria.runtime.action_combat import ActionCombatComponent
+
+        combat = self.game.player.try_get(ActionCombatComponent)
+        return combat is not None and combat.enabled and bool(combat.bindings.strip())
 
     # -- action scenes (ASTERIA_SPEC §20; D22 A8) -------------------------------------------------
     @property

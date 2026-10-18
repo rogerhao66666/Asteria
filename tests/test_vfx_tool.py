@@ -11,7 +11,13 @@ from asteria.editor.vfx_authoring import (
     VFXAuthoringError,
 )
 from asteria.project import Project
-from asteria.runtime.battle_visuals import VFX_DEFAULTS, vfx_keyframe, vfx_placement, vfx_rect
+from asteria.runtime.battle_visuals import (
+    VFX_DEFAULTS,
+    vfx_content_center,
+    vfx_keyframe,
+    vfx_placement,
+    vfx_rect,
+)
 
 REF = Path(__file__).parents[1] / "reference_projects/complex_reference_rpg/project.asteria.json"
 
@@ -64,9 +70,15 @@ def test_placement_edits_are_undoable_and_validated(api):
         "scale": 1.2,
         "opacity": 0.8,
         "blend": "add",
+        "align": "content",
     }
     preview = api.preview("battle.fx.flame", 0.0)
-    assert preview.rect == (0.0, -12.0, 128 * 1.2, 128 * 1.2) and preview.keyframe == 0
+    frames = api.animation.data("battle.fx.flame")["clips"]["play"]["frames"]
+    columns = max(1, api.animation.image_size("battle.fx.flame")[0] // 128)
+    content = api.content_center("battle.fx.flame", frames, 128, 128, columns)
+    expected = vfx_rect(api.placement("battle.fx.flame"), 0.0, 0.0, 96.0, 128, 128, content)
+    assert preview.rect == expected and preview.rect[2:] == (128 * 1.2, 128 * 1.2)
+    assert preview.keyframe == 0
     document.undo()
     assert api.placement("battle.fx.flame")["anchor"] == "center"
     for bad, match in (
@@ -86,7 +98,25 @@ def test_preview_follows_the_runtime_frame_rule(api):
     for age in (0.0, duration * 0.5, duration * 0.99):
         expected = frames[vfx_keyframe(age, duration, len(frames))]
         assert api.preview("battle.fx.explosion", age).frame_index == expected
-    assert api.preview("battle.fx.explosion", 0.0).rect[1] == -PREVIEW_BODY_HEIGHT * 0.5
+    # the explosion's picture (not its frame's middle) is centred on the member
+    data = api.animation.data("battle.fx.explosion")
+    fw, fh = data["frame_size"]
+    columns = max(1, api.animation.image_size("battle.fx.explosion")[0] // fw)
+    _, dy = api.content_center("battle.fx.explosion", frames, fw, fh, columns)
+    scale = api.placement("battle.fx.explosion")["scale"]
+    rect = api.preview("battle.fx.explosion", 0.0).rect
+    assert rect[1] == -PREVIEW_BODY_HEIGHT * 0.5 - dy * scale
+
+
+def test_an_off_centre_picture_lands_on_the_member():
+    """A swipe drawn in the right half of its frames is moved left so it hits the member."""
+    assert vfx_content_center([(80, 60, 120, 70), (70, 58, 128, 72)], 128, 128) == (35.0, 1.0)
+    assert vfx_content_center([None], 64, 64) == (0.0, 0.0)
+    placement = vfx_placement({"vfx": {"scale": 0.5}})
+    x, y, _, _ = vfx_rect(placement, 100, 200, 80, 128, 128, (35.0, 1.0))
+    assert (x, y) == (100 - 17.5, 200 - 40 - 0.5)
+    framed = vfx_placement({"vfx": {"scale": 0.5, "align": "frame"}})
+    assert vfx_rect(framed, 100, 200, 80, 128, 128, (35.0, 1.0))[:2] == (100, 160)
 
 
 def _tmp_api(tmp_path):
