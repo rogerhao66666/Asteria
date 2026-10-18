@@ -487,7 +487,7 @@ def woods(builders, looks, places):
         looks["hero_necromancer"],
         met=(
             "encounter.woods_boss.defeated",
-            "You broke the beast. The dead below will want you next. Find me at the guild.",
+            "You broke the beast. The dead below will want you next. Find me at \\M[GUILD].",
         ),
         waiting="The beast keeps the camp. Break it and we talk.",
     )
@@ -591,6 +591,10 @@ def guild(builders, looks, places):
         ],
     )
     master = town.npc("Guildmaster Orla", places["town"]["guild_board"], looks["warrior"])
+    import trial_classes
+
+    hall = town.npc("Job Master", maps.world_xy(10, 8), looks["necromancer"])
+    town.program(hall, "story.job_hall", trial_classes.job_hall_steps(say, world, maps.menu))
 
     def part(name, actor_id, key):
         return (
@@ -628,7 +632,7 @@ def crypt(builders, looks, places):
         looks["hero_cultist"],
         met=(
             "encounter.crypt_boss.defeated",
-            "The Ancient falls. I served it once. I will wait for you at the guild.",
+            "The Ancient falls. I served it once. I will wait for you at \\M[GUILD].",
         ),
         waiting="The Ancient holds the hall below. I cannot pass it alone.",
     )

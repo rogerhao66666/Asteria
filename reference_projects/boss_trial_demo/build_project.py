@@ -28,6 +28,7 @@ import trial_art as art  # noqa: E402
 import trial_b11 as b11  # noqa: E402
 import trial_b12 as b12  # noqa: E402
 import trial_cast as cast  # noqa: E402
+import trial_classes as classes  # noqa: E402
 import trial_content as content  # noqa: E402
 import trial_extras as extras  # noqa: E402
 import trial_items as items  # noqa: E402
@@ -35,6 +36,7 @@ import trial_jobs as jobs  # noqa: E402
 import trial_lucifer as lucifer  # noqa: E402
 import trial_maps as maps  # noqa: E402
 import trial_story as story  # noqa: E402
+import trial_systems as systems  # noqa: E402
 
 from asteria.editor import EditorDocument  # noqa: E402
 from asteria.project import Project  # noqa: E402
@@ -64,6 +66,7 @@ def main():
     items.counters(context)
     b12.systems(context)
     cast.party(context)
+    classes.jobs(context)  # three-tier job lines and sub jobs for the companions
     cast.foes(context)
     extras.systems(context)
     story.systems(context)
@@ -72,6 +75,7 @@ def main():
     art.effect_assets(context)
     art.prune_unused_art(context)
     content.presentation(context)
+    systems.fill(context)  # the editor's remaining sections, each used by the game
     kept = art.weapon_icons(context)
     kept = (*kept, *lucifer.apply_icons(context))
     lucifer.apply_ui(context)

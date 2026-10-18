@@ -25,6 +25,16 @@ summon (Spirit Rider) is the Lucifer Goblin Rider. Foes: three bosses (Goblin Be
 Ancient, Vaelor the Skeleton King) plus three kinds of minion (Goblin Slinger, which can be tamed;
 Skeleton Hunter; Vaelor's Skeleton Acolyte), three foes in the woods and two in the catacombs.
 
+## Jobs (phase 1, 2026-10-18)
+
+Every party member has a main job and a sub job. The companions walk three-tier lines
+(MapleStory style), advanced and trained at the Job Master in Hearthfold: Mira Cleric -> Priest
+(Lv 5) -> Bishop (Lv 10), sub Mystic; Vesper Necromancer -> Lich -> Death Lord, sub Knight; Cael
+Cultist -> Zealot -> Heretic, sub Duelist. Aldric keeps Knight -> Guardian -> Hero, Duelist ->
+Weapon Master / Rogue, Mystic -> Sage. 19 jobs, a skill tree per job (212 nodes), job points per
+job. The campaign makes all six advances; the smoke fights every companion in every tier (18 of
+18 jobs use their skills).
+
 ## Battle screen
 
 Party HP down the right edge; the command menu always at the acting member's lower right, drawn

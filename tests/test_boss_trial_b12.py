@@ -177,9 +177,9 @@ def test_skills_evolve_as_the_party_wins_battles():
     game = _game("hero")
     build = lambda: set(game.resolve_actor_build(HERO).abilities)  # noqa: E731
     assert "brave_slash" in build() and "brave_slash_ii" not in build()
-    _win(game)  # the boss pays 150 battle experience: rank 2 of the track
+    assert "arsenal_barrage_ii" not in build()  # that one waits for rank 3 of the track
+    _win(game)  # the boss pays battle experience (more with the whole party hired)
     assert "brave_slash_ii" in build() and "brave_slash" not in build()
-    assert "arsenal_barrage_ii" not in build()  # that one waits for rank 3
     game.start_encounter("boss_room")
     assert "brave_slash_ii" in game.battle.member(HERO).ability_ids
 

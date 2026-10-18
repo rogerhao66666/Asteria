@@ -77,7 +77,7 @@ def _tags_dealt(game):
 
 def test_the_companion_stands_beside_the_hero():
     game = _game()
-    assert set(game.active_hero_ids()) == {HERO, MIRA}
+    assert {HERO, MIRA} <= set(game.active_hero_ids())  # (the whole party is hired)
     assert {"mend", "purge", "bp_gift", "second_breath", "dawn_hymn"} <= set(
         game.battle.member(MIRA).ability_ids
     )

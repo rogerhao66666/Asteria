@@ -92,6 +92,7 @@ class Campaign:
         """Stand in front of ``name`` facing it and press the interact key; answer the menu."""
         from asteria.core import Transform
 
+        self.resolve()  # a line still open (a battle event's) is read first
         entity = self.find(name)
         point = entity.get(Transform)
         player = self.game.player.get(Transform)
@@ -254,9 +255,11 @@ class Campaign:
                 return
 
     # -- the stages ------------------------------------------------------------------------
-    def allocate(self):
-        """Spend every skill, job and attribute point the hero has (as a player would)."""
-        allocation = self.game.save.rpg_state.progression_allocations[HERO]
+    def allocate(self, actor_id=HERO):
+        """Spend every skill, job and attribute point ``actor_id`` has (as a player would)."""
+        allocation = self.game.save.rpg_state.progression_allocations.get(actor_id)
+        if allocation is None:
+            return 0
         spent = 0
         for graph_id in [g for g in allocation.definitions]:
             graph = allocation.definitions[graph_id]
@@ -269,8 +272,24 @@ class Campaign:
                             break
                         spent += 1
         self.facts["tree_ranks"] += spent
-        self.game.refresh_actor_combatants(HERO)
+        self.game.refresh_actor_combatants(actor_id)
         return spent
+
+    HALL = {"hero_02": 0, "hero_04": 6, "hero_03": 3}  # Job Hall menu: advance, advance, train
+
+    def advance(self, actor_id, job, tier, level):
+        """At the Job Hall: train ``actor_id`` up to ``level``, then take ``job`` (tier 1 or 2)."""
+        base = self.HALL[actor_id]
+        for _ in range(8):
+            if self.game.ensure_actor_progression(actor_id).level >= level:
+                break
+            self.talk("Job Master", picks=(base + 2,))
+            self.facts["trainings"] += 1
+        self.talk("Job Master", picks=(base + tier - 1,))
+        active = self.game.ensure_actor_progression(actor_id).active_class_ids
+        assert job in active and len(active) == 2, (actor_id, active)  # main job + sub job
+        self.facts["job_advances"] += 1
+        self.allocate(actor_id)
 
     def level(self):
         return self.game.ensure_actor_progression(HERO).level
@@ -285,6 +304,7 @@ class Campaign:
         assert "hero_02" not in game.save.rpg_state.party_actor_ids
         self.facts["partings"] += 1
         self.recruit("Mira", "hero_02")  # ...and comes back when asked
+        self.advance("hero_02", "priest", 1, 5)  # Cleric -> Priest at the Job Hall
         self.talk("Warden Thessaly")
         assert game.world.reputation.get("wardens", 0) == 0
         assert game.quest_log.status("q_patrol") == "active"
@@ -457,6 +477,16 @@ class Campaign:
         self.note("Ember Throne: the full party against Vaelor")
         game.set_classes(HERO, ["knight", "hero"])
         self.facts["job_changes"] += 1
+        self.go("Stairs Up")  # back to town: every companion takes the third job of their line
+        self.go("Road West")
+        for actor_id, job in (
+            ("hero_02", "bishop"),
+            ("hero_03", "death_lord"),
+            ("hero_04", "heretic"),
+        ):
+            self.advance(actor_id, job, 2, 10)
+        self.go("Road East")
+        self.go("Crypt Door")
         self.go("Throne Door")
         assert self.scene_name() == "Ember Throne"
         self.touch("Vaelor")
@@ -478,6 +508,8 @@ class Campaign:
         self.go("Road West")
         if hire is not None:
             self.recruit(*hire)
+            job = {"hero_03": "lich", "hero_04": "zealot"}[hire[1]]
+            self.advance(hire[1], job, 1, 5)
         self.talk("Warden Thessaly")
         game = self.game
         assert game.quest_log.status(done) == "completed", (done, game.quest_log.status(done))
@@ -539,6 +571,7 @@ REQUIRED = (
     "levels", "tree_ranks", "job_changes", "sockets", "refine_level", "crafted", "bought",
     "disassembled", "rests", "map_changes", "fights", "victories", "skills_cast", "escapes",
     "tamed", "pet_evolved", "recruits", "partings", "save_load", "game_complete",
+    "job_advances", "trainings",
 )  # fmt: skip
 
 

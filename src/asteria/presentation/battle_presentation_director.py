@@ -180,21 +180,20 @@ class BattlePresentationDirector:
                     direction,
                 )
             )
-        self._pending.sort(key=lambda x: (x.release_time, -x.direction.priority, x.event.sequence))
+        self._pending.sort(key=lambda x: x.event.sequence)
         return self.release_ready()
 
     def release_ready(self):
+        """Release due events in sequence order: a delayed event holds back the events after
+        it (every downstream runtime takes events in increasing sequence order), so a delay
+        never lets a later event overtake an earlier one."""
         released = []
-        remaining = []
-        for item in self._pending:
-            if item.release_time <= self.time + 1e-12:
-                released.append(item.event)
-                self.active_beat = item.direction.beat
-                if item.direction.hold > self.hold_remaining:
-                    self.hold_remaining = item.direction.hold
-            else:
-                remaining.append(item)
-        self._pending = remaining
+        while self._pending and self._pending[0].release_time <= self.time + 1e-12:
+            item = self._pending.pop(0)
+            released.append(item.event)
+            self.active_beat = item.direction.beat
+            if item.direction.hold > self.hold_remaining:
+                self.hold_remaining = item.direction.hold
         return tuple(released)
 
     def update(self, dt):

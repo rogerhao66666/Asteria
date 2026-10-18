@@ -533,6 +533,78 @@
       "dragon_revert": {
         "label": "Revert"
       },
+      "holy_nova": {
+        "label": "Holy Nova"
+      },
+      "sanctuary": {
+        "label": "Sanctuary"
+      },
+      "smite": {
+        "label": "Smite"
+      },
+      "blessing": {
+        "label": "Blessing"
+      },
+      "divine_aegis": {
+        "label": "Divine Aegis"
+      },
+      "holy_judgment": {
+        "label": "Holy Judgment"
+      },
+      "mass_cure": {
+        "label": "Mass Cure"
+      },
+      "grace_of_dawn": {
+        "label": "Grace of Dawn"
+      },
+      "frost_nova": {
+        "label": "Frost Nova"
+      },
+      "soul_siphon": {
+        "label": "Soul Siphon"
+      },
+      "bone_armor": {
+        "label": "Bone Armor"
+      },
+      "plague": {
+        "label": "Plague"
+      },
+      "death_coil": {
+        "label": "Death Coil"
+      },
+      "dread_aura": {
+        "label": "Dread Aura"
+      },
+      "soul_harvest": {
+        "label": "Soul Harvest"
+      },
+      "unholy_pact": {
+        "label": "Unholy Pact"
+      },
+      "fanatic_strike": {
+        "label": "Fanatic Strike"
+      },
+      "blood_rite": {
+        "label": "Blood Rite"
+      },
+      "fervor": {
+        "label": "Fervor"
+      },
+      "brand": {
+        "label": "Brand"
+      },
+      "forbidden_rite": {
+        "label": "Forbidden Rite"
+      },
+      "hex_storm": {
+        "label": "Hex Storm"
+      },
+      "martyrdom": {
+        "label": "Martyrdom"
+      },
+      "apostasy": {
+        "label": "Apostasy"
+      },
       "gob_sling": {
         "label": "Sling Stone"
       },

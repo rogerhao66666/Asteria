@@ -46,10 +46,36 @@ def world(game, name, **args):
     return game.world_commands.dispatch(WorldCommand(name, args))
 
 
-def prepare(game, facts, sub="duelist"):
-    """Everything a player does before the fight."""
+def prepare(game, facts, sub="duelist", tier=0):
+    """Everything a player does before the fight. ``tier`` (0-2): which job of their line each
+    companion fights in (every job of every line gets a turn across the fights)."""
+    import trial_classes
+
     if "hero_02" not in game.save.rpg_state.party_actor_ids:  # hire Mira at the guild
         world(game, "JOIN_PARTY", actor_id="hero_02")
+    for actor_id, (_name, line, companion_sub) in trial_classes.LINES.items():
+        if actor_id not in game.save.rpg_state.party_actor_ids:
+            world(game, "JOIN_PARTY", actor_id=actor_id)
+        import dataclasses
+
+        state = game.ensure_actor_progression(actor_id)  # level 12, without touching the party's
+        game.save.rpg_state.actor_progression[actor_id] = dataclasses.replace(state, level=12)
+        for job in line[: tier + 1]:  # walk the line up to the tier: each job asks for the last
+            game.set_classes(actor_id, [job, companion_sub])
+        own = game.save.rpg_state.progression_allocations[actor_id]
+        own.grant("ap", 40)
+        for job in line:
+            own.grant(f"jp.{job}", 60)
+        for graph_id in [g for g in own.definitions if g.endswith("_tree")]:
+            graph = own.definitions[graph_id]
+            for _ in range(6):
+                for node in graph.nodes:
+                    while own.rank(graph_id, node.node_id) < node.max_rank:
+                        try:
+                            own.allocate(graph_id, node.node_id)
+                        except ValueError:
+                            break
+        game.refresh_actor_combatants(actor_id)
     allocation = game.save.rpg_state.progression_allocations[HERO]
     # the campaign earns these a little at a time; the scripted fights start with plenty
     allocation.grant("ap", 200)
@@ -289,7 +315,7 @@ def main(argv=None):
         project, game = load()
         game.save.rpg_state.currencies["gold"] = 40000.0
         game.refine_rng = random.Random(seed)
-        prepare(game, facts, SUB_JOBS[seed % len(SUB_JOBS)])
+        prepare(game, facts, SUB_JOBS[seed % len(SUB_JOBS)], tier=seed % 3)
         build = game.resolve_actor_build(HERO)
         facts["abilities_available"] = len(build.abilities)
         facts["class_growth_stat_power"] = int(build.stats.get("power"))
@@ -314,6 +340,7 @@ def main(argv=None):
     facts["summons"] = facts.get("log_summoned", 0)
     allocation = game.save.rpg_state.progression_allocations[HERO]
     trees = [g for g in allocation.definitions.values() if g.graph_id.endswith("_tree")]
+    trees = [t for t in trees if t.graph_id != "spirit_tree"]
     for tree in trees:  # every job must have had a skill played
         skills = {a for n in tree.nodes for r in n.rewards for a in r.granted_abilities}
         if skills & set(used):

@@ -1867,6 +1867,12 @@ COMPANIONS = {  # who joins the hero: (job, weapon)
 }
 
 
+def _sub(actor_id):
+    import trial_classes
+
+    return trial_classes.LINES[actor_id][2]
+
+
 def game_start(c):
     from asteria.rpg import ProgressionAllocationRuntime
     from asteria.runtime.game_start import GameStartDefinition
@@ -1891,6 +1897,13 @@ def game_start(c):
         },
     )
     rpg["progression_allocations"] = {hero: allocation.to_data()}
+    import trial_classes
+
+    for who, (_name, line, _unused) in trial_classes.LINES.items():  # each companion's own points
+        rpg["progression_allocations"][who] = ProgressionAllocationRuntime(
+            db.progression_graphs.values(),
+            balances={"ap": 2, **{f"jp.{job}": 4 if job == line[0] else 0 for job in line}},
+        ).to_data()
     rpg["actor_progression"] = {
         hero: {
             "schema": "asteria.rpg.actor_progression_state",
@@ -1908,8 +1921,8 @@ def game_start(c):
                 "level": 1,
                 "experience": 0.0,
                 "points": {},
-                "active_class_ids": [job],
-                "unlocked_class_ids": [job],
+                "active_class_ids": [job, _sub(who)],  # a main job and a sub job
+                "unlocked_class_ids": [job, _sub(who)],
             }
             for who, (job, _weapon) in COMPANIONS.items()
         },
