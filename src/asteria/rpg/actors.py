@@ -813,6 +813,7 @@ class RpgDatabase:
         self.refine_rules = {}  # rpg.refine RefineRules
         self.disassembly_recipes = {}  # rpg.disassembly DisassemblyRecipe, by item id
         self.job_point_rules = {}  # rpg.job_points JobPointRules
+        self.derived_stats = {}  # rpg.derived_stats DerivedStatRule, by stat id
         self.new_game_plus_rules = {}  # rpg.new_game_plus NewGamePlusRules
         self.locale_tables = {}  # rpg.localization LocaleTable, by locale
         self.message_settings = {}  # rpg.localization MessageSettings
@@ -1212,6 +1213,7 @@ class RpgDatabase:
             ("refine_rules", self.refine_rules),
             ("disassembly_recipes", self.disassembly_recipes),
             ("job_point_rules", self.job_point_rules),
+            ("derived_stats", self.derived_stats),
             ("new_game_plus_rules", self.new_game_plus_rules),
             ("locale_tables", self.locale_tables),
             ("message_settings", self.message_settings),
@@ -1300,6 +1302,13 @@ class RpgDatabase:
 
         return self._add_keyed(
             self.job_point_rules, value, JobPointRules, "rules_id", "job point rules"
+        )
+
+    def add_derived_stat(self, value):
+        from .derived_stats import DerivedStatRule
+
+        return self._add_keyed(
+            self.derived_stats, value, DerivedStatRule, "stat_id", "derived stat"
         )
 
     def add_new_game_plus_rules(self, value):
@@ -2022,6 +2031,10 @@ class RpgDatabase:
                 result.add_disassembly_recipe(DisassemblyRecipe.from_data(x))
             for x in data.get("job_point_rules", ()):
                 result.add_job_point_rules(JobPointRules.from_data(x))
+            from .derived_stats import DerivedStatRule
+
+            for x in data.get("derived_stats", ()):
+                result.add_derived_stat(DerivedStatRule.from_data(x))
             for x in data.get("new_game_plus_rules", ()):
                 result.add_new_game_plus_rules(NewGamePlusRules.from_data(x))
             from .extras import CreditsPage, MusicTrack

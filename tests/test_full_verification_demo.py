@@ -17,8 +17,9 @@ def test_project_loads_with_the_expected_content():
     assert sum(len(g.nodes) for g in db.progression_graphs.values()) >= 35
     assert db.refine_rules and db.durability_rules and db.equipment_sets
     assert set(db.enemies) >= {"crimson_warlord", "mender_wisp"}
-    assert db.classes["knight"].level_growth["power"] > db.classes["mystic"].level_growth.get(
-        "power", 0
+    # jobs grow attributes: a knight's STR faster than a mystic's
+    assert db.classes["knight"].level_growth["str"] > db.classes["mystic"].level_growth.get(
+        "str", 0
     )
     assert game.resolve_actor_build(run_trial_smoke.HERO).abilities
 

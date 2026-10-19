@@ -66,9 +66,15 @@ class InteractionRule:
     disposition: InteractionDisposition = InteractionDisposition.NORMAL
     outcome_tags: tuple[str, ...] = ()
     priority: int = 0
+    # the multiplier grows with stats: multiplier + sum(coefficient x stat), never below 0 - a
+    # critical blow x(2 + 0.01 x crit_damage), fire x(1 + 0.01 x fire_attack - 0.01 x
+    # fire_resist); written only when set
+    multiplier_source_terms: dict[str, float] = None
+    multiplier_target_terms: dict[str, float] = None
 
     SCHEMA = "asteria.rpg.interaction_rule"
     VERSION = 1
+    OPTIONAL_DATA = {"multiplier_source_terms": {}, "multiplier_target_terms": {}}
 
     def __init__(
         self,
@@ -87,6 +93,8 @@ class InteractionRule:
         disposition=InteractionDisposition.NORMAL,
         outcome_tags=(),
         priority=0,
+        multiplier_source_terms=None,
+        multiplier_target_terms=None,
     ):
         multiplier = _number(multiplier, "multiplier")
         if multiplier < 0:
@@ -109,6 +117,18 @@ class InteractionRule:
         object.__setattr__(self, "disposition", InteractionDisposition(disposition))
         object.__setattr__(self, "outcome_tags", _tags(outcome_tags))
         object.__setattr__(self, "priority", int(priority))
+        for key, terms in (
+            ("multiplier_source_terms", multiplier_source_terms),
+            ("multiplier_target_terms", multiplier_target_terms),
+        ):
+            object.__setattr__(self, key, _coefficients(terms, "multiplier stat"))
+
+    def effective_multiplier(self, source_stat, target_stat):
+        """The multiplier with its stat terms (``*_stat(name)`` reads a stat, 0 if absent)."""
+        value = self.multiplier
+        value += sum(source_stat(k) * c for k, c in self.multiplier_source_terms.items())
+        value += sum(target_stat(k) * c for k, c in self.multiplier_target_terms.items())
+        return max(0.0, value)
 
     def matches(self, source_tags, target_tags):
         source_tags = set(source_tags)
@@ -145,6 +165,7 @@ class InteractionRule:
             "disposition": self.disposition.value,
             "outcome_tags": list(self.outcome_tags),
             "priority": self.priority,
+            **{k: dict(getattr(self, k)) for k in self.OPTIONAL_DATA if getattr(self, k)},
         }
 
     @classmethod
@@ -166,6 +187,8 @@ class InteractionRule:
             disposition=data.get("disposition", "normal"),
             outcome_tags=data.get("outcome_tags", ()),
             priority=data.get("priority", 0),
+            multiplier_source_terms=data.get("multiplier_source_terms"),
+            multiplier_target_terms=data.get("multiplier_target_terms"),
         )
 
 
@@ -350,7 +373,9 @@ class InteractionResolver:
             value += rule.flat_delta
             value += sum(self._stat(source, k) * c for k, c in rule.source_stat_terms.items())
             value += sum(self._stat(target, k) * c for k, c in rule.target_stat_terms.items())
-            value *= rule.multiplier
+            value *= rule.effective_multiplier(
+                lambda k: self._stat(source, k), lambda k: self._stat(target, k)
+            )
             value = max(0.0, value)
             trace.append((rule.rule_id, before, value))
             outcome_tags.update(rule.outcome_tags)

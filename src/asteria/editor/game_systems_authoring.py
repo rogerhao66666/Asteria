@@ -26,6 +26,7 @@ from asteria.rpg import (
 )
 from asteria.rpg.ability_loadout import AbilityLoadoutRules
 from asteria.rpg.battle_extensions import GAIN_EVENTS, BattleExtensionRules
+from asteria.rpg.derived_stats import DerivedStatRule
 from asteria.rpg.disassembly import DisassemblyRecipe
 from asteria.rpg.doodads import DoodadDefinition
 from asteria.rpg.drop_tables import RARITIES, DropTable
@@ -575,6 +576,23 @@ D26_FORMS = {
         F("per_enemy", "Points per Defeated Enemy", "float", default=0.0),
         F("secondary", "Share for Each Extra Class (0–1)", "float", default=0.5),
     ),
+    "derived_stats": (
+        F("stat_id", "Stat (the one computed)", "id"),
+        F("display_name", "Name", "text", default=""),
+        F("terms", "Read From (stat: coefficient)", "amounts", default={}),
+        F("base", "Base Amount", "float", default=0.0),
+        F("minimum", "Never Below", "float", default=0.0),
+        F("maximum", "At Most (0 = no cap)", "float", default=0.0),
+        F(
+            "applies_to",
+            "Used By",
+            "choice",
+            choices=("actors", "enemies", "all"),
+            default="actors",
+        ),
+        F("order", "Order (lower runs first)", "int", default=0),
+        F("description", "Description", "multiline", default=""),
+    ),
     "new_game_plus_rules": (
         F("rules_id", "Rules ID", "id"),
         F("carry", "Carried Over", "ref_list", source="carry_parts", default=()),
@@ -890,6 +908,7 @@ def _templates():
         "refine_rules": lambda key, c: RefineRules(key),
         "disassembly_recipes": lambda key, c: DisassemblyRecipe(key),
         "job_point_rules": lambda key, c: JobPointRules(key),
+        "derived_stats": lambda key, c: DerivedStatRule(key),
         "new_game_plus_rules": lambda key, c: NewGamePlusRules(key),
         "locale_tables": lambda key, c: LocaleTable(key),
         "message_settings": lambda key, c: MessageSettings(key),
@@ -940,6 +959,13 @@ KINDS = (
         "disassembly_recipes", "Disassembly", "disassembly_recipes", "item_id", DisassemblyRecipe
     ),
     _Kind("job_point_rules", "Job Points", "job_point_rules", "rules_id", JobPointRules),
+    _Kind(
+        "derived_stats",
+        "Stat Formulas (derived stats)",
+        "derived_stats",
+        "stat_id",
+        DerivedStatRule,
+    ),
     _Kind(
         "new_game_plus_rules", "New Game Plus", "new_game_plus_rules", "rules_id", NewGamePlusRules
     ),

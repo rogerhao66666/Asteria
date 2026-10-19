@@ -24,7 +24,7 @@ def test_aldric_is_a_brave_with_an_archmage_sub_job():
     weapons = {t for t in db.classes["brave"].granted_tags if t.startswith("capability.weapon.")}
     assert weapons == {f"capability.weapon.{w}" for w in brave.WEAPONS}  # every weapon
     growth = db.classes["brave"].level_growth
-    assert growth["power"] > 0 and growth["magic"] > 0  # power and magic grow together
+    assert growth["str"] > 0 and growth["int"] > 0  # STR and INT (power and magic) together
     library = game.project.gameplay_library.abilities
     for element in brave.ELEMENTS:  # every element: a bolt and a storm
         for kind in ("bolt", "storm"):
@@ -66,6 +66,7 @@ def test_the_demon_ring_takes_cards_gems_and_charms_and_strikes_five_times():
     before = game.resolve_actor_build(smoke.HERO).stats.get("power")
     game.save.rpg_state.inventory.add("charm_lion_item", 1)
     game.socket_item(smoke.HERO, worn.instance_id, "h1", "charm_lion_item")
+    # the Lion Charm gives STR +15: power += 2 x STR
     assert game.resolve_actor_build(smoke.HERO).stats.get("power") == before + 30
 
 
@@ -85,7 +86,8 @@ def test_battle_mechanics_are_felt():
     game = _game()
     db = game.project.rpg_database
     assert db.interaction_rules["weak_fire"].multiplier == 1.8
-    assert db.interaction_rules["crit_x"].multiplier == 2.5
+    crit = db.interaction_rules["crit_x"]  # x(2 + 1% x critical damage)
+    assert crit.multiplier == 2.0 and crit.multiplier_source_terms == {"crit_damage": 0.01}
     warlord = db.enemies["crimson_warlord"]
     weak = [t for t in warlord.tags if t.startswith("weak.")]
     assert len(weak) >= 8 and warlord.resources["shield"] >= 30  # many weaknesses, thick shield

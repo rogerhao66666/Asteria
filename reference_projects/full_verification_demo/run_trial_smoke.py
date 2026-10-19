@@ -145,8 +145,6 @@ def prepare(game, facts, sub="duelist", tier=0):
 
 def fight(game, facts, acc, seed=7, max_rounds=200, encounter="boss_room", crowd=False):
     rng = random.Random(seed)
-    # the smoke covers the boss's mechanics, not the odds: Normal (the campaign plays Legend)
-    game.set_difficulty("normal")
     game.start_encounter(encounter)
     if crowd:  # nine foes at once outdamage any build: the point is the load, not the odds
         for hero_id in game.active_hero_ids():

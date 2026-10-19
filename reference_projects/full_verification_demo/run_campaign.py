@@ -643,7 +643,18 @@ class Campaign:
                     except ValueError:
                         break
                     spent += 1
-        for graph_id in [g for g in allocation.definitions]:
+        plan = self.BUILDS.get(actor_id, ("attr_str", "attr_dex", "attr_int", "attr_luk"))
+        if "attributes" in allocation.definitions:  # STR / DEX / INT / LUK by the build, in turn
+            stuck = 0
+            while stuck < len(plan):
+                stuck = 0
+                for node_id in plan:
+                    try:
+                        allocation.allocate("attributes", node_id)
+                        spent += 1
+                    except ValueError:
+                        stuck += 1
+        for graph_id in [g for g in allocation.definitions if g != "attributes"]:
             graph = allocation.definitions[graph_id]
             for _ in range(8):
                 for node in graph.nodes:
@@ -657,6 +668,12 @@ class Campaign:
         self.game.refresh_actor_combatants(actor_id)
         return spent
 
+    BUILDS = {  # attribute points, in turn: a player's build per hero
+        "hero_01": ("attr_str", "attr_int", "attr_str", "attr_int", "attr_luk", "attr_vit"),
+        "hero_02": ("attr_int", "attr_int", "attr_luk", "attr_vit"),
+        "hero_03": ("attr_int", "attr_int", "attr_vit", "attr_luk"),
+        "hero_04": ("attr_dex", "attr_luk", "attr_str", "attr_dex"),
+    }
     HALL = {"hero_02": 0, "hero_04": 6, "hero_03": 3}  # Job Hall menu: advance, advance, train
 
     def advance(self, actor_id, job, tier, level):

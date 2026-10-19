@@ -82,6 +82,7 @@ LABEL_RULES = (
     (r"^battle extras", "battle"),
     (r"doodad", "doodad"),
     (r"capture", "net"),
+    (r"stat formula|derived stat", "gauge"),
     (r"world interactions?", "interact"),
     # workspace sub-tabs
     (r"^scene\b", "scene"),

@@ -372,8 +372,8 @@ def vigil(c):
                 "maximum_chance": 1.0,
                 "source_stat": "speed",
                 "source_scale": 0.002,
-                "opponent_stat": None,
-                "opponent_scale": 0.0,
+                "opponent_stat": "speed",  # the party's speed against the foes'
+                "opponent_scale": 0.002,  # subtracted: their average speed
             }
         )
     base = db.battle_session_rules["trial"]

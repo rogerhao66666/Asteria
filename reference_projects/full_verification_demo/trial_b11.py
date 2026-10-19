@@ -19,6 +19,7 @@ from asteria.gameplay.formulas import FormulaTerm, ValueFormula
 from asteria.gameplay.modifiers import StatModifier
 from asteria.gameplay.states import StateDefinition
 from asteria.rpg import BattleStatePolicy, ClassDefinition
+from asteria.rpg.interactions import OutcomeCheckDefinition
 
 HP, SP, BP = tc.HP, tc.SP, tc.BP
 ability, op, damage, healing = tc.ability, tc.op, tc.damage, tc.healing
@@ -92,10 +93,13 @@ def new_states(c):
             "doom", base_chance=0.8, tick_trigger=TICK, immune_target_tags=("boss",)
         ),
     )
-    # a blinded attacker misses (the "land" check reads the attacker's accuracy)
+    # a blinded attacker misses half its blows (the "blinded" check; no accuracy stat)
     put(
-        StateDefinition("blind", 3, modifiers=(mod("blind", "accuracy", "add", -70.0),)),
+        StateDefinition("blind", 3, contributed_tags=("status.blind",)),
         BattleStatePolicy("blind", base_chance=0.85, tick_trigger=TICK),
+    )
+    db.outcome_checks["blinded"] = OutcomeCheckDefinition(
+        "blinded", 0.5, required_source_tags=("status.blind",), success_tags=("outcome.evade",)
     )
     for state_id, stat, how, value in (
         ("slow", "speed", "multiply", 0.5),
@@ -115,11 +119,6 @@ def new_states(c):
     put(
         StateDefinition("enchant_dark", 5, contributed_tags=("damage.dark",)),
         BattleStatePolicy("enchant_dark", tick_trigger=TICK),
-    )
-    # the attacker's accuracy: a plain stat (0 unless a state moves it)
-    land = db.outcome_checks["land"]
-    db.outcome_checks["land"] = dataclasses.replace(
-        land, source_stat_terms={**land.source_stat_terms, "accuracy": 0.01}
     )
 
 

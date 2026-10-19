@@ -30,6 +30,7 @@ import trial_art as art  # noqa: E402
 import trial_b11 as b11  # noqa: E402
 import trial_b12 as b12  # noqa: E402
 import trial_brave as brave  # noqa: E402
+import trial_stats as stats  # noqa: E402
 import trial_battle as battle_rules  # noqa: E402
 import trial_cast as cast  # noqa: E402
 import trial_classes as classes  # noqa: E402
@@ -97,6 +98,7 @@ def main():
     stage.presentation(context)  # staging templates, command pages, input steps
     systems.fill(context)  # the editor's remaining sections, each used by the game
     brave.mechanics(context)  # weakness, crit, break, guard, dodge, states that are felt
+    stats.stats(context)  # STR/DEX/INT/LUK, stat formulas, accuracy, elements, descriptions
     kept = art.weapon_icons(context)
     kept = (*kept, *lucifer.apply_icons(context))
     icons.apply_all(context)  # gear, items, gems, cards, jobs, passives, states

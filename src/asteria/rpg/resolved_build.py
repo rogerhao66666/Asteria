@@ -110,8 +110,11 @@ def resolve_actor_build(
     passives=None,
     evolution_rules=(),
     level=1,
+    derived_stats=(),
 ):
-    """Resolve every Phase-7B actor-build layer through one canonical path."""
+    """Resolve every Phase-7B actor-build layer through one canonical path.
+
+    ``derived_stats`` (DerivedStatRule) run last: attack from Strength, evasion from Luck..."""
     if not isinstance(actor_runtime, RpgActorRuntime):
         raise TypeError("actor_runtime must be RpgActorRuntime")
 
@@ -272,6 +275,10 @@ def resolve_actor_build(
         passives=passive_map,
         level=level,
     )
+    from .derived_stats import apply_derived_stats
+
+    for stat, amount in apply_derived_stats(stats, derived_stats, side="actors"):
+        contributions.append(BuildContribution("stat", stat, "derived", stat, amount))
     resources = _copy_resources(actor_runtime.resources)
     for resource_id, amount in actor_runtime.level_resource_growth(level).items():
         _apply_resource_bonus(resources, resource_id, amount)
@@ -348,4 +355,5 @@ def resolve_actor_from_state(actor_id, database, runtime_state):
         loadout=runtime_state.loadouts.get(actor_id),
         passives=database.passives,
         evolution_rules=database.ability_evolutions.values(),
+        derived_stats=database.derived_stats.values(),
     )

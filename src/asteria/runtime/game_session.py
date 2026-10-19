@@ -716,15 +716,15 @@ class GameSessionRuntime:
         state = self.save.rpg_state
         for actor_id in state.party_active_actor_ids:
             snapshot = state.actor_snapshots.get(actor_id)
-            if snapshot is None:  # not fought yet: start from the actor's present build
+            if snapshot is None:  # not fought yet: start from the actor's base
                 if actor_id not in self.project.rpg_database.actors:
                     continue
-                build = self.resolve_actor_build(actor_id)
+                base = self._actor_runtime(actor_id)
                 snapshot = RpgActorSnapshot(
                     actor_id,
-                    build.stats.to_data(),
-                    build.resources.to_data(),
-                    build.tags.to_data(),
+                    base.stats.to_data(),
+                    base.resources.to_data(),
+                    base.tags.to_data(),
                     None,
                 )
             resources = ResourcePool.from_data(snapshot.resources)
@@ -2101,10 +2101,10 @@ class GameSessionRuntime:
     def _store_ability_state(self, actor_id, state):
         actor_id = str(actor_id)
         old = self.save.rpg_state.actor_snapshots.get(actor_id)
-        if old is None:  # an actor that was never in a fight: snapshot its present build
-            build = self.resolve_actor_build(actor_id)
+        if old is None:  # an actor that was never in a fight: snapshot its base
+            base = self._actor_runtime(actor_id)
             old = RpgActorSnapshot(
-                actor_id, build.stats.to_data(), build.resources.to_data(), build.tags.to_data()
+                actor_id, base.stats.to_data(), base.resources.to_data(), base.tags.to_data()
             )
         self.save.rpg_state.actor_snapshots[actor_id] = RpgActorSnapshot(
             old.actor_id, old.stats, old.resources, old.tags, state.to_data()
@@ -2425,6 +2425,33 @@ class GameSessionRuntime:
     def resolve_actor_build(self, actor_id, *, apply_slots=True):
         actor_id = str(actor_id)
         db = self.project.rpg_database
+        actor = self._actor_runtime(actor_id)
+        progress = self.save.rpg_state.actor_progression.get(actor_id)
+        build = resolve_actor_build(
+            actor,
+            level=1 if progress is None else int(progress.level),
+            progression=self.save.rpg_state.progression,
+            allocations=self.save.rpg_state.progression_allocations.get(actor_id),
+            loadout=self.save.rpg_state.loadouts.get(actor_id),
+            passives=db.passives,
+            evolution_rules=db.ability_evolutions.values(),
+            derived_stats=db.derived_stats.values(),
+        )
+        rules = self.ability_loadout_rules
+        if rules is not None and apply_slots:  # only equipped slot-limited abilities stay usable
+            from dataclasses import replace
+
+            equipped = set(self._ability_state_of(actor_id).equipped_abilities)
+            usable = rules.filter(build.abilities, build.ability_grants, equipped)
+            build = replace(build, abilities=usable)
+        return build
+
+    def _actor_runtime(self, actor_id):
+        """The actor before any build layer: its definition, its active jobs' base bonuses and
+        what its snapshot keeps (resources spent, learned abilities). Level growth, trees, gear,
+        passives and stat formulas come on top in ``resolve_actor_build``."""
+        actor_id = str(actor_id)
+        db = self.project.rpg_database
         base = db.actors[actor_id]
         progress = self.save.rpg_state.actor_progression.get(actor_id)
         definition = base
@@ -2461,24 +2488,7 @@ class GameSessionRuntime:
         snapshot = self.save.rpg_state.actor_snapshots.get(actor_id)
         if snapshot is not None:
             actor.restore(snapshot)
-        progress = self.save.rpg_state.actor_progression.get(actor_id)
-        build = resolve_actor_build(
-            actor,
-            level=1 if progress is None else int(progress.level),
-            progression=self.save.rpg_state.progression,
-            allocations=self.save.rpg_state.progression_allocations.get(actor_id),
-            loadout=self.save.rpg_state.loadouts.get(actor_id),
-            passives=db.passives,
-            evolution_rules=db.ability_evolutions.values(),
-        )
-        rules = self.ability_loadout_rules
-        if rules is not None and apply_slots:  # only equipped slot-limited abilities stay usable
-            from dataclasses import replace
-
-            equipped = set(self._ability_state_of(actor_id).equipped_abilities)
-            usable = rules.filter(build.abilities, build.ability_grants, equipped)
-            build = replace(build, abilities=usable)
-        return build
+        return actor
 
     @property
     def ability_loadout_rules(self):
@@ -2685,6 +2695,10 @@ class GameSessionRuntime:
         runtime = definition.instantiate()
         subject = self._battle_subject(runtime.stats, runtime.resources, runtime.tags)
         level = self._scale_enemy(subject, f"{enemy_id}:{index}")
+        from asteria.rpg.derived_stats import apply_derived_stats
+
+        derived = self.project.rpg_database.derived_stats.values()
+        apply_derived_stats(subject.stats, derived, side="enemies")  # after its level
         speed = subject.stats.get("speed")
         if level:
             self.enemy_levels[f"{enemy_id}:{index}"] = level
@@ -3664,7 +3678,12 @@ class GameSessionRuntime:
                 follow = getattr(definition, "follow_tags", None) or {}
                 hit_tags += [to for have, to in follow.items() if actor_tags.contains(have)]
                 if offensive and hit.get("checks") and targets:
-                    rolled = self._roll_hit_checks(actor_id, hit["checks"], targets[0])
+                    rolled = self._roll_hit_checks(
+                        actor_id,
+                        hit["checks"],
+                        targets[0],
+                        action_tags=(*definition.tags, *hit_tags),
+                    )
                     hit_tags += rolled
                     if rolled:  # a crit / evade the player should see and the log can count
                         self._log(
@@ -3696,16 +3715,19 @@ class GameSessionRuntime:
                     return tuple(results)
         return tuple(results)
 
-    def _roll_hit_checks(self, actor_id, check_ids, target_id):
+    def _roll_hit_checks(self, actor_id, check_ids, target_id, *, action_tags=()):
         """Outcome tags of a hit's checks, rolled once per hit against its first target (the
-        tags then meet the interaction rules like any other source tag)."""
+        tags then meet the interaction rules like any other source tag). The skill's and the
+        hit's tags count as the source's, so a check can ask for (or refuse) ``magic``."""
         battle = self.battle
         source = battle.member(actor_id).subject
         target = battle.member(target_id).subject
         tags = []
         for check_id in check_ids:
             if check_id in battle.interactions.checks:
-                check = battle.interactions.check(check_id, source, target, rng=battle.rng)
+                check = battle.interactions.check(
+                    check_id, source, target, action_tags=action_tags, rng=battle.rng
+                )
                 tags.extend(check.outcome_tags)
         return tags
 
@@ -3812,7 +3834,11 @@ class GameSessionRuntime:
         actor = (
             self.battle.next_actor()
         )  # members who cannot act (asleep, broken...) are skipped there
-        if actor is None:
+        # a round where everyone left is stunned, asleep or broken passes (their states tick
+        # down as they are skipped); try further rounds instead of stalling the battle
+        for _ in range(self.MAX_IDLE_ROUNDS):
+            if actor is not None:
+                break
             self.battle.start_next_round()
             actor = self.battle.next_actor()
         if actor is None:
@@ -4170,10 +4196,13 @@ class GameSessionRuntime:
                 continue  # a pet unit is not an actor: its record is the owned pet
             old = self.save.rpg_state.actor_snapshots.get(member.member_id)
             ability_state = None if old is None else old.ability_state
+            # keep the base, not the battle's build: the next build adds level growth, trees,
+            # gear, passives and stat formulas again (storing them compounded every fight)
+            base = self._actor_runtime(member.member_id)
             self.save.rpg_state.actor_snapshots[member.member_id] = RpgActorSnapshot(
                 member.member_id,
-                member.subject.stats.to_data(),
-                member.subject.resources.to_data(),
+                base.stats.to_data(),
+                _base_relative(member.subject.resources, base.resources).to_data(),
                 member.subject.tags.to_data(),
                 ability_state,
             )
@@ -4515,6 +4544,7 @@ class GameSessionRuntime:
 
     LOOT_LUCK_VARIABLE = "loot.luck"
     DIFFICULTY_VARIABLE = "difficulty.setting"
+    MAX_IDLE_ROUNDS = 20  # rounds in a row in which nobody can act before giving up
 
     @property
     def loot_luck(self):
@@ -4716,3 +4746,20 @@ def describe_condition(condition):
     if isinstance(condition, NumericCondition):
         return f"{condition.key} {condition.operator} {condition.value:g}"
     return "conditions"
+
+
+def _base_relative(battle_pool, base_pool):
+    """``base_pool`` with each resource's current value as the battle left it, less what the
+    build added on top (the build adds it back): a hero who ended on 900 / 1,000 health whose
+    gear gave 400 of it is stored as 500 / 600."""
+    from asteria.gameplay import ResourcePool
+
+    pool = ResourcePool.from_data(base_pool.to_data())
+    for name in tuple(pool.to_data()["values"]):
+        if not battle_pool.contains(name):
+            continue
+        bonus = battle_pool.maximum(name) - pool.maximum(name)
+        value = pool.get(name)
+        current = min(value.maximum, max(value.minimum, battle_pool.current(name) - bonus))
+        pool.set_current(name, current)
+    return pool

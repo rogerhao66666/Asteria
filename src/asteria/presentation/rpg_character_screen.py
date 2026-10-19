@@ -112,9 +112,12 @@ class CharacterScreenProfile:
     equipment_labels: tuple[tuple[str, str], ...] = ()
     ability_labels: tuple[tuple[str, str], ...] = ()
     progression_labels: tuple[tuple[str, str], ...] = ()
+    # stats listed first, in this order (the rest follow by name); written only when set
+    stat_order: tuple[str, ...] = ()
 
     SCHEMA = "asteria.character_screen_profile"
     VERSION = 1
+    OPTIONAL_DATA = {"stat_order": []}
 
     def __init__(
         self,
@@ -128,7 +131,11 @@ class CharacterScreenProfile:
         equipment_labels=None,
         ability_labels=None,
         progression_labels=None,
+        stat_order=(),
     ):
+        object.__setattr__(
+            self, "stat_order", tuple(dict.fromkeys(str(x).strip() for x in stat_order if x))
+        )
         section_order = tuple(
             dict.fromkeys(str(x).strip() for x in section_order if str(x).strip())
         )
@@ -154,6 +161,12 @@ class CharacterScreenProfile:
     def _lookup(self, pairs, key, fallback=None):
         key = str(key)
         return dict(pairs).get(key, key if fallback is None else fallback)
+
+    def ordered_stats(self, names):
+        """``names`` with the profile's ``stat_order`` first, then the rest by name."""
+        names = set(names)
+        first = [x for x in self.stat_order if x in names]
+        return (*first, *sorted(names - set(first)))
 
     def stat_label(self, key):
         return self._lookup(self.stat_labels, key)
@@ -189,6 +202,7 @@ class CharacterScreenProfile:
             "equipment_labels": dict(self.equipment_labels),
             "ability_labels": dict(self.ability_labels),
             "progression_labels": dict(self.progression_labels),
+            **({"stat_order": list(self.stat_order)} if self.stat_order else {}),
         }
 
     @classmethod
@@ -205,6 +219,7 @@ class CharacterScreenProfile:
             equipment_labels=data.get("equipment_labels", {}),
             ability_labels=data.get("ability_labels", {}),
             progression_labels=data.get("progression_labels", {}),
+            stat_order=data.get("stat_order", ()),
         )
 
 
@@ -253,7 +268,7 @@ class CharacterScreenRuntime:
                 label=self.profile.stat_label(name),
                 value=float(resolved_build.stats.get(name)),
             )
-            for name in sorted(resolved_build.stats.names())
+            for name in self.profile.ordered_stats(resolved_build.stats.names())
         )
 
         resources = []

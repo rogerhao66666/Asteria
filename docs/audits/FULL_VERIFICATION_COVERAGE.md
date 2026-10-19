@@ -220,28 +220,29 @@ States; Enemies; Jobs; Battle Presentation > Feedback):
 | What | Design |
 |---|---|
 | Weakness / resistance | x1.8 / x0.4 (were x1.3 / x0.5); every weakness hit chips the shield |
-| Critical blows | x2.5 (was x1.75); chance 5% + 0.3% per crit point, at most 65% (Aldric was at 100%) |
-| Evasion | 0.3% per evade point and a blow lands at least 30% of the time (Aldric's 200 evade made every foe miss: they dealt 0 damage); foes have accuracy 15-45 |
+| Critical blows | see the stats section below (5% + 0.3% x crit, x(2 + 1% x critical damage)) |
+| Evasion | see the stats section below (accuracy against evasion) |
 | Bosses | Many weaknesses behind thick shields: Goblin Beast 16 (seven weaknesses), Ancient Skeleton 24 (nine), Crimson Warlord 36 (ten) - a weak *critical* blow chips two. Broken: x2.5 damage taken and three turns lost |
 | Guard / dodge | Foes with `trait.guard` guard 30% of the party's blows (x0.3); `trait.dodge` foes dodge 20-35% (by speed). Neither while broken, stunned, asleep or frozen (the new blocked tags on Chance Checks) |
 | Foe states | Their blows leave bleed, blind, burn, poison + silence, magic down, stun, defence down, power down |
 | Damage over time | Poison 3% / burn 4% / bleed 5% of the holder's maximum health a turn; regen gives 4% back (state ticks can use formulas now) |
-| Foes | Minions health x6, power and magic x2, speed x1.3; bosses health x8, power x2.1, speed x1.45; the Warlord (heals, summons, stuns) health x4.5 and power x1.6; Pounce / Charge / Maul softened (no one-blow KOs); level growth power 8%, speed 3% a level; Legend difficulty by default (x1.6, three levels above the party) |
+| Foes | Retuned in the stats section below, after the compounding-stats fix |
 | Party health | Every job gains maximum health per level (Brave 160, Guardian 150, Knight 130, Archmage 70, most 80) - before, health never grew with level |
 | On screen | WEAK, CRITICAL, GUARD, MISS, BLOCK, BREAK!, OVERDRIVE, ABSORB, REFLECT labels on the hits (the feedback profile was empty) |
 
-Measured on the scripted campaign (rounds, the lowest any hero fell to):
+Measured on the scripted campaign (rounds, the lowest any hero fell to) - before the stats
+rework below found that hero stats compounded after every fight; see there for today's numbers:
 
 | Fight | Before | Now |
 |---|---|---|
 | Woods boss | 4 rounds, party untouched (every foe blow missed) | 4 rounds, party at 95% |
-| Crypt guard | 2 rounds, untouched | 5 rounds, down to 63% |
-| Crypt boss | 1 round | 8 rounds, down to 89% |
-| Ember vigil | 8 rounds (held), 85% | 8 rounds, down to 52% |
-| Crimson Warlord | 2 rounds, down to 5% | 11 rounds, two heroes knocked out |
+| Crypt guard | 2 rounds, untouched | 5 rounds, down to 79% |
+| Crypt boss | 1 round | 4 rounds, down to 83% |
+| Ember vigil | 8 rounds (held), 85% | 8 rounds (held), 99% |
+| Crimson Warlord | 2 rounds, down to 5% | 7 rounds, down to 43% |
 
-New campaign facts: `guarded_blows` 20, `dodged_blows` 38, `critical_blows` 56, `breaks` 3
-(`boss_breaks` 2), `status_ticks` 52. The scripted player now heals when it is low or (half the
+New campaign facts: `guarded_blows` 15, `dodged_blows` 51, `critical_blows` 51, `breaks` 4
+(`boss_breaks` 2), `status_ticks` 31. The scripted player now heals when it is low or (half the
 time) when an ally is. The smoke covers the boss's mechanics on Normal (the campaign plays
 Legend).
 
@@ -250,6 +251,43 @@ form); state ticks and apply / remove / expire effects get a formula context (th
 `OutcomeCheckDefinition.blocked_source_tags` / `blocked_target_tags`; `Battle.apply_state` and
 `Battle.resolve_targets` use the battle's seeded dice (they used Python's unseeded global
 random, so status hits differed on every run).
+
+## Stats with written formulas: STR / DEX / INT / LUK, accuracy, elements (2026-10-19)
+
+`trial_stats.py`. Every number is project data the editor shows.
+
+| What | Design | In the editor |
+|---|---|---|
+| Attributes | STR, DEX, INT, LUK (and VIT for health, Twin Arts for STR + INT) from stat points in the Attributes tree, which every hero's tree screen now shows; each actor starts with its own, every job grows them (the jobs' old attack growth became attribute growth) | Game Data > Skill Trees, Jobs |
+| Formulas | power += 2 STR + 0.5 DEX; magic += 2 INT + 0.5 LUK; defense += 1 STR + 0.5 DEX; magic_defense += 1 INT + 0.5 LUK + 0.5 defense; accuracy += 1 DEX + 0.5 LUK; evade += 0.5 DEX + 1 LUK; crit += 0.5 LUK + 0.2 DEX; crit_damage += 0.3 LUK + 0.1 STR; speed += 0.3 DEX | Game Systems > Stat Formulas |
+| Hit | 95% + 0.3% x attacker accuracy - 0.3% x target evasion, 30% to 100%; Blind: half the blows miss | Battle > Chance Checks |
+| Critical | 5% + 0.3% x crit, at most 65%; damage x(2 + 1% x crit_damage) | Chance Checks, Damage Interactions |
+| Block | defence-based, x0.5, physical blows only (spells are not blocked) | Chance Checks |
+| Physical / magic | a blow's user stat picks the defence: power against defense, magic against magic_defense | Abilities |
+| Elements | `<element>_attack` / `<element>_resist` for all seven: x(1 + 1% x attack - 1% x the target's resistance), on top of weakness x1.8 / resistance x0.4 | Damage Interactions (`element_*`) |
+| Gear | element attack on weapons, rings, gems; resistances and magic defence on robes, armour, amulets, cards; accuracy and critical damage on accessories and cards; the Lion / Owl / Falcon / Viper / Serpent charms give STR / INT / DEX / LUK | Equipment, Attachments |
+| Foes | magic defence (0.5 to 1.5 x their defence), accuracy, element attack and resistance (negative = takes more) | Enemies |
+| Skill text | every skill says Physical, Magic or Physical + Magic, its element or Non-elemental, then hits, targets, states, drains (for example "Physical + Magic / Light: 2 hits, inflicts Defence Down"); shown in a help box over the battle menu | Abilities > Description |
+| More effects | Defence Down, Bleed, Power Down, Slow, Freeze, Stun, Blind, Silence on the party's skills; Armour Up, Regen, Haste, Mirror, Focus on the user; SP drain on the dark spells | Abilities |
+| Status screen | the stats named and ordered: attributes, attack and defence, accuracy, evasion, criticals, speed, element attack / resistance | Presentation > Character Screen (`stat_order`) |
+
+Engine changes on the way: `DerivedStatRule` (rpg_database.derived_stats, run last in every
+build; enemies too when set to); `InteractionRule.multiplier_source_terms` /
+`multiplier_target_terms`; `AbilityDefinition.description`; hit checks see the skill's and the
+hit's tags (a check can refuse `magic`); `CharacterScreenProfile.stat_order`; the tree screen
+names stats as the status screen does.
+
+Bugs found and fixed: a battle saved the heroes' *finished* stats and health as their base, so
+every build added level growth, trees, gear and passives again - stats compounded after every
+fight (Aldric's power had climbed to 5,431 at the end; 770 honestly). Snapshots now keep the
+base, and health is stored without the build's bonus. A round where nobody can act (all
+stunned, the boss broken) no longer stalls the battle, and a foe that dies on its own turn
+(poison, burn) now ends the fight in victory. The escape chance weighs the foes' speed too.
+
+Balance on the honest numbers (scripted campaign, rounds, the lowest any hero fell to): woods
+boss 9 rounds, 66%; crypt boss 11 rounds, 53%; the vigil (held) 8 rounds, 19%; the Crimson
+Warlord 16 rounds, two heroes knocked out. Facts: `guarded_blows` 40, `dodged_blows` 70,
+`critical_blows` 39, `breaks` 3, `status_ticks` 78, `blocked_blows` 47.
 
 ## World commands (58)
 

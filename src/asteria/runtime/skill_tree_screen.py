@@ -74,18 +74,33 @@ def layout(graph):
     return positions
 
 
-def describe_reward(reward, labels):
+def describe_reward(reward, labels, names=None):
+    """Reward lines; ``names`` maps stat / resource ids to the project's names (STR, HP)."""
+    names = names or {}
     parts = []
     for stat, value in sorted(reward.stat_bonuses.items()):
-        parts.append(f"{stat} +{value:g}")
+        parts.append(f"{names.get(stat, stat)} +{value:g}")
     for name, value in sorted(reward.resource_bonuses.items()):
-        parts.append(f"max {name} +{value:g}")
+        parts.append(f"max {names.get(name, name)} +{value:g}")
     for ability in reward.granted_abilities:
         parts.append("Skill: " + (labels.get(ability, {}).get("label") or ability))
     for passive in reward.unlocked_passives:
         parts.append(f"Passive: {passive}")
     parts += [f"Tag: {t}" for t in reward.granted_tags]
     return parts
+
+
+def stat_names(project):
+    """Stat and resource names from the project's first character screen profile."""
+    library = project.battle_presentation_library
+    try:
+        ids = library.ids("rpg_character_screen")
+    except (KeyError, ValueError):
+        return {}
+    if not ids:
+        return {}
+    profile = library.require("rpg_character_screen", ids[0])
+    return {**dict(profile.resource_labels), **dict(profile.stat_labels)}
 
 
 class SkillTreeScreen:
@@ -459,6 +474,7 @@ class SkillTreeScreen:
         if node is None:
             return
         labels = rt.manifest.get("battle", {}).get("skills", {})
+        names = stat_names(rt.game.project)
         rank = allocation.rank(graph.graph_id, node.node_id)
         icon = rt._draw_icon(self.node_icon(node), x + 16, y + 10, 36)
         rt.text(
@@ -480,7 +496,7 @@ class SkillTreeScreen:
             row += 28
             rt.text("Next rank gives:", x + 16, row, size=18, color=(140, 230, 170))
             row += 24
-            for line in describe_reward(node.reward_for_rank(rank + 1), labels)[:6]:
+            for line in describe_reward(node.reward_for_rank(rank + 1), labels, names)[:6]:
                 rt.text("  " + line, x + 16, row, size=18)
                 row += 22
         if rank:
@@ -489,7 +505,7 @@ class SkillTreeScreen:
             row += 24
             totals = {}
             for r in range(1, rank + 1):
-                for line in describe_reward(node.reward_for_rank(r), labels):
+                for line in describe_reward(node.reward_for_rank(r), labels, names):
                     totals[line] = totals.get(line, 0) + 1
             for line in list(totals)[:5]:
                 rt.text("  " + line, x + 16, row, size=18)

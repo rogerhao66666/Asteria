@@ -166,6 +166,7 @@ class BattleCommands:
                     cost_text=self._cost_text(definition),
                     enabled=not reason,
                     disabled_reason=reason,
+                    detail=getattr(definition, "description", ""),
                     order=len(rows),
                 )
             )
@@ -244,7 +245,11 @@ class BattleCommands:
                     cost_text=self._cost_text(definition),
                     enabled=not reason,
                     disabled_reason=reason,
-                    detail="Pick ingredients" if definition.concoct_station else "",
+                    detail=(
+                        "Pick ingredients"
+                        if definition.concoct_station
+                        else getattr(definition, "description", "")
+                    ),
                     order=len(rows),
                 )
             )

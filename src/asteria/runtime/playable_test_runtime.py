@@ -2577,6 +2577,39 @@ class PlayableTestRuntime:
     def _battle_actor(self):
         return None if self.game.battle is None else self._turn_actor
 
+    def _finish_battle_victory(self):
+        """Every foe is down: rewards, levels, the victory screen and jingle."""
+        try:
+            before = self.game.capture_hero_state()
+            applied = self.game.finish_victory()
+            self._victory_summary = []
+            rewards = self.manifest.get("progression_rewards", {})
+            gained = {}
+            for hero_id in self.save.rpg_state.party_active_actor_ids:
+                gained[hero_id] = rewards.get("experience", 1600)
+                info = self.game.grant_actor_experience(
+                    hero_id,
+                    rewards.get("experience", 1600),
+                    level_threshold=rewards.get("level_threshold", 1000),
+                    ap_per_level=rewards.get("ap_per_level", 2),
+                    ability_points_per_level=rewards.get("ability_points_per_level", 1),
+                )
+                self._victory_summary.append(
+                    f"{hero_id}: Lv {info['old_level']}→{info['new_level']} "
+                    f"+{info['levels_gained'] * 2:g} AP +{info['levels_gained']:g} ability pts"
+                )
+            self._victory_screen = None
+            if self.manifest.get("battle", {}).get("victory_aftermath"):
+                self._victory_screen = self._make_victory_screen(applied, before, gained)
+            self._victory = True
+            # The jingle waits for the presentation to finish showing the final blows.
+            self._victory_audio_pending = (
+                True  # played by _present_battle once the screen is idle
+            )
+            self._last_action_name = "Victory — rewards + progression applied"
+        except Exception as exc:
+            self._last_action_name = f"Victory finalize failed: {exc}"
+
     def _advance_to_hero_turn(self):
         """Let the battle scheduler run enemy turns until a hero must act."""
         hero, log = self.game.run_enemy_turns()
@@ -2590,6 +2623,8 @@ class PlayableTestRuntime:
         self._boost_level = 0
         if not self.game.active_hero_ids():
             self._defeat = True
+        elif not self.game.active_enemy_ids() and not self._victory:
+            self._finish_battle_victory()  # the last foe fell on its own turn (poison, burn...)
 
     @property
     def battle_commands(self):
@@ -2786,36 +2821,7 @@ class PlayableTestRuntime:
             return
         self.game.end_turn()
         if not self.game.active_enemy_ids():
-            try:
-                before = self.game.capture_hero_state()
-                applied = self.game.finish_victory()
-                self._victory_summary = []
-                rewards = self.manifest.get("progression_rewards", {})
-                gained = {}
-                for hero_id in self.save.rpg_state.party_active_actor_ids:
-                    gained[hero_id] = rewards.get("experience", 1600)
-                    info = self.game.grant_actor_experience(
-                        hero_id,
-                        rewards.get("experience", 1600),
-                        level_threshold=rewards.get("level_threshold", 1000),
-                        ap_per_level=rewards.get("ap_per_level", 2),
-                        ability_points_per_level=rewards.get("ability_points_per_level", 1),
-                    )
-                    self._victory_summary.append(
-                        f"{hero_id}: Lv {info['old_level']}→{info['new_level']} "
-                        f"+{info['levels_gained'] * 2:g} AP +{info['levels_gained']:g} ability pts"
-                    )
-                self._victory_screen = None
-                if self.manifest.get("battle", {}).get("victory_aftermath"):
-                    self._victory_screen = self._make_victory_screen(applied, before, gained)
-                self._victory = True
-                # The jingle waits for the presentation to finish showing the final blows.
-                self._victory_audio_pending = (
-                    True  # played by _present_battle once the screen is idle
-                )
-                self._last_action_name = "Victory — rewards + progression applied"
-            except Exception as exc:
-                self._last_action_name = f"Victory finalize failed: {exc}"
+            self._finish_battle_victory()
             return
         self._advance_to_hero_turn()
 

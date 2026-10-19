@@ -16,11 +16,11 @@ elements and much stronger foes.
 * **Demon Ring**: a ring weapon with power and magic, seven sockets (three cards, two gems, two
   charms - six new charm attachments) whose attack strikes five times. It waits in the family
   chest in Aldric's house.
-* **Foes**: every foe is far stronger (FOE_SCALE: minions health x6 and power x2, bosses
-  health x8 and power x2.1, the Crimson Warlord its own row), grows faster with its level and
-  meets the party on Legend difficulty (strength x1.6, three levels above).
-* **Mechanics that are felt** (``mechanics``): weaknesses x1.8, resistances x0.4, critical blows
-  x2.5 with crit and evade soft-capped; bosses carry seven to ten weaknesses behind shields of
+* **Foes**: every foe is stronger (FOE_SCALE: a row for minions, one for bosses, rows of their
+  own for some), grows faster with its level and meets the party on Legend difficulty
+  (strength x1.35, three levels above).
+* **Mechanics that are felt** (``mechanics``): weaknesses x1.8, resistances x0.4 (critical
+  blows, accuracy and evasion: trial_stats); bosses carry seven to ten weaknesses behind shields of
   16 / 24 / 36 (a weak critical blow chips two) and a Break leaves them x2.5 and three turns
   out; some foes guard (x0.3) or dodge, but not while broken, stunned, asleep or frozen; foe
   blows leave bleed, blind, poison, silence, stun and more; poison, burn and bleed take 3-5% of
@@ -62,12 +62,16 @@ ELEMENTS = {  # element: (name, bolt, storm, fx, status the storm leaves)
     "earth": ("Earth", "Stone Bolt", "Earthquake", ("explosion", "smoke"), "power_down"),
 }
 FOE_SCALE = {  # every foe's stats x these; a boss uses its own row
-    "stats": {"power": 2.0, "magic": 2.0, "defense": 1.4, "speed": 1.3},
-    "boss": {"power": 2.1, "magic": 2.1, "defense": 1.5, "speed": 1.45},
-    HP: 6.0,  # health x this; a boss x "boss health" (or its own entry here)
-    "boss health": 8.0,
-    "crimson_warlord": 4.5,  # the last boss heals and summons: less health, as long a fight
-    "crimson_warlord stats": {"power": 1.6, "magic": 1.6, "defense": 1.5, "speed": 1.3},
+    "stats": {"power": 1.4, "magic": 1.4, "defense": 1.2, "speed": 1.0},
+    "boss": {"power": 1.5, "magic": 1.5, "defense": 1.3, "speed": 1.1},
+    HP: 2.0,  # health x this; a boss x "boss health" (or its own entry here)
+    "boss health": 2.0,
+    "goblin_beast": 3.0,  # the first boss: no summons, so more health
+    "skeleton_ancient": 3.5,
+    "skeleton_ancient stats": {"power": 1.5, "magic": 2.2, "defense": 1.3, "speed": 1.1},
+    "crimson_warlord": 1.5,  # the last boss heals and summons: less health, as long a fight
+    "crimson_warlord stats": {"power": 0.9, "magic": 0.9, "defense": 1.2, "speed": 1.0},
+    "mender_wisp": 0.8,  # the warlord's summons: they heal it, so they fall quickly
 }
 NEW_WEAKNESS = {  # foe: tags for the new elements
     "goblin_slinger": ("weak.wind",),
@@ -759,10 +763,10 @@ def family_chest(assets, home, maps):
 
 # -- the foes ------------------------------------------------------------------------------
 LEVELS = {  # how a foe grows with its level (it meets the party's level), per level above 1
-    "stats": {"power": 0.08, "magic": 0.08, "defense": 0.04, "speed": 0.03},
+    "stats": {"power": 0.06, "magic": 0.06, "defense": 0.04, "speed": 0.015},
     HP: 0.10,
 }
-LEGEND = (1.6, 1.3, 3)  # the default difficulty: strength, rewards, levels above the party
+LEGEND = (1.35, 1.3, 3)  # the default difficulty: strength, rewards, levels above the party
 
 
 def foes(c):
@@ -797,29 +801,26 @@ def foes(c):
 
 
 # -- battle mechanics that are felt -----------------------------------------------------------
-MULTIPLIERS = {"weak": 1.8, "resist": 0.4, "crit_x": 2.5, "broken": 2.5}
+MULTIPLIERS = {"weak": 1.8, "resist": 0.4, "broken": 2.5}
 BROKEN_TURNS = 3  # a broken foe loses this many turns
-FOES = {  # foe: (shield, extra weaknesses, traits, accuracy)
-    "goblin_slinger": (4, ("weak.bow",), ("trait.dodge",), 15),
-    "skeleton_hunter": (5, ("weak.axe",), ("trait.guard", "trait.dodge"), 20),
-    "mender_wisp": (4, ("weak.light",), ("trait.dodge",), 15),
+FOES = {  # foe: (shield, extra weaknesses, traits)
+    "goblin_slinger": (4, ("weak.bow",), ("trait.dodge",)),
+    "skeleton_hunter": (5, ("weak.axe",), ("trait.guard", "trait.dodge")),
+    "mender_wisp": (4, ("weak.light",), ("trait.dodge",)),
     "goblin_beast": (
         16,
         ("weak.sword", "weak.fire", "weak.wind", "weak.bow", "weak.ring"),
         ("trait.guard",),
-        30,
     ),
     "skeleton_ancient": (
         24,
         ("weak.axe", "weak.spear", "weak.earth", "weak.staff", "weak.lightning", "weak.ring"),
         ("trait.guard",),
-        35,
     ),
     "crimson_warlord": (
         36,
         ("weak.light", "weak.spear", "weak.bow", "weak.staff", "weak.ring", "weak.dark"),
         ("trait.guard", "trait.dodge"),
-        45,
     ),
 }
 FOE_STATUS = {  # foe skill: the states its blow leaves
@@ -870,21 +871,13 @@ def mechanics(c):
         kind = rule_id.split("_", 1)[0]
         if kind in ("weak", "resist") and rule.target_tags_all[0].startswith(kind + "."):
             rules[rule_id] = dataclasses.replace(rule, multiplier=MULTIPLIERS[kind])
-    for rule_id in ("crit_x", "broken"):
+    for rule_id in ("broken",):
         rules[rule_id] = dataclasses.replace(rules[rule_id], multiplier=MULTIPLIERS[rule_id])
     rules["guarded"] = InteractionRule(
         "guarded", source_tags_all=("outcome.guard",), multiplier=0.3, priority=4
     )
     checks = db.outcome_checks
-    checks["crit"] = dataclasses.replace(
-        checks["crit"], source_stat_terms={"crit": 0.003}, maximum_chance=0.65
-    )
-    land = checks["land"]
-    checks["land"] = dataclasses.replace(
-        land,
-        target_stat_terms={**land.target_stat_terms, "evade": -0.003},
-        minimum_chance=0.3,
-    )
+    # the hit and critical checks and critical damage: trial_stats (accuracy, evasion)
     checks["foe_guard"] = OutcomeCheckDefinition(
         "foe_guard",
         0.3,
@@ -943,27 +936,28 @@ def _break_rules(c, impact_type):
 
 def _foe_traits(c):
     db = c.db
-    for enemy_id, (shield, weak, traits, accuracy) in FOES.items():
+    for enemy_id, (shield, weak, traits) in FOES.items():
         enemy = db.enemies[enemy_id]
         resists = {t.replace("weak.", "resist.") for t in weak}
         tags = [t for t in enemy.tags if t not in resists]
         db.enemies[enemy_id] = dataclasses.replace(
             enemy,
             resources={**enemy.resources, tc.SHIELD: float(shield)},
-            stats={**enemy.stats, "accuracy": float(accuracy)},
             tags=tuple(dict.fromkeys((*tags, *weak, *traits))),
         )
 
 
 def _hit_checks(c, library):
-    """Every party blow can be guarded or dodged by a foe with the trait."""
+    """A blinded attacker can miss any blow; every party blow can also be guarded or dodged by
+    a foe with the trait."""
     foe_skills = {a for e in c.db.enemies.values() for a in e.abilities}
     definitions = library._definitions
     for ability_id, definition in list(definitions.items()):
-        if ability_id in foe_skills or not definition.hits:
+        if not definition.hits:
             continue
+        extra = ["blinded"] if ability_id in foe_skills else ["blinded", "foe_guard", "foe_dodge"]
         hits = tuple(
-            {**h, "checks": [*dict.fromkeys([*h.get("checks", []), "foe_guard", "foe_dodge"])]}
+            {**h, "checks": [*dict.fromkeys([*h.get("checks", []), *extra])]}
             for h in definition.hits
         )
         definitions[ability_id] = dataclasses.replace(definition, hits=hits)

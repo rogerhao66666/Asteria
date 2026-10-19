@@ -1087,9 +1087,16 @@ class BattleUiComposer:
                 if not selected.enabled and selected.disabled_reason:
                     footer = selected.disabled_reason
                     footer_role = "action_disabled_reason"
+                room = width - 2 * P.interaction_padding - (14.0 if menu.page_count > 1 else 0)
+                fit = max(4, int(room // 4.4))
+                skill_text = footer_role == "action_detail" and selected.category != "Command"
+                if footer and len(footer) > fit and skill_text:
+                    # a skill's whole description: a help box over the menu, words wrapped
+                    help_panels, help_texts = self._help_box(footer, x, y, width, role)
+                    panels += help_panels
+                    texts += help_texts
+                    footer = ""
                 if footer:
-                    room = width - 2 * P.interaction_padding - (14.0 if menu.page_count > 1 else 0)
-                    fit = max(4, int(room // 4.4))
                     if len(footer) > fit:  # never wider than the menu
                         footer = footer[: fit - 2].rstrip() + ".."
                     texts.append(
@@ -1113,6 +1120,39 @@ class BattleUiComposer:
                 )
             )
         return panels, texts, icons
+
+    def _help_box(self, text, menu_x, menu_y, menu_width, role):
+        """A panel over the action menu holding ``text`` word-wrapped (three lines at most),
+        its right edge on the menu's."""
+        L, P = self.layout, self.polish
+        width = min(L.virtual_width - 2 * L.margin, max(menu_width * 1.7, menu_width + 60.0))
+        per_line = max(8, int((width - 2 * P.interaction_padding) // 3.4))
+        lines, line = [], ""
+        for word in text.split():
+            if line and len(line) + 1 + len(word) > per_line:
+                lines.append(line)
+                line = word
+            else:
+                line = f"{line} {word}".strip()
+        lines.append(line)
+        if len(lines) > 3:
+            lines = lines[:3]
+            lines[2] = lines[2][: per_line - 2].rstrip() + ".."
+        height = 2 * P.interaction_padding + len(lines) * P.interaction_header_height
+        x = max(L.margin, min(menu_x + menu_width - width, L.virtual_width - L.margin - width))
+        y = max(L.margin, menu_y - height - 3.0)
+        panels = [BattleUiPanel("action_help", x, y, width, height, role)]
+        texts = [
+            BattleUiText(
+                value,
+                x + P.interaction_padding,
+                y + P.interaction_padding + i * P.interaction_header_height,
+                "action_detail",
+                "left",
+            )
+            for i, value in enumerate(lines)
+        ]
+        return panels, texts
 
     def _workflow_commands(self, workflow):
         panels, texts, icons = [], [], []

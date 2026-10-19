@@ -288,6 +288,8 @@ class AbilityDefinition:
     # shown on action bars and menus; written to the data only when set
     display_name: str = ""
     icon_id: str = ""
+    # what the player reads in menus: kind (physical / magic / element), what it does
+    description: str = ""
     # items the user must own (not spent) for the ability to be usable, {item id: count} - a
     # captured pet an action sends out, a key that opens a technique. Written only when set.
     requires_items: dict = None
@@ -329,6 +331,7 @@ class AbilityDefinition:
         "forms": [],
         "display_name": "",
         "icon_id": "",
+        "description": "",
         "cooldown_turns": 0,
         "battle_costs": {},
         "hits": [],
@@ -366,6 +369,7 @@ class AbilityDefinition:
         cooldown_formula=None,
         display_name="",
         icon_id="",
+        description="",
         requires_items=None,
         item_costs=None,
         currency_costs=None,
@@ -483,6 +487,7 @@ class AbilityDefinition:
         object.__setattr__(self, "cooldown_formula", cooldown_formula)
         object.__setattr__(self, "display_name", str(display_name or "").strip())
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
+        object.__setattr__(self, "description", str(description or "").strip())
         needs = {str(k).strip(): int(v) for k, v in dict(requires_items or {}).items()}
         if any(not k or v < 1 for k, v in needs.items()):
             raise ValueError("requires_items needs item ids and counts >= 1")
@@ -539,6 +544,7 @@ class AbilityDefinition:
             ),
             **({"display_name": self.display_name} if self.display_name else {}),
             **({"icon_id": self.icon_id} if self.icon_id else {}),
+            **({"description": self.description} if self.description else {}),
             **({"requires_items": dict(self.requires_items)} if self.requires_items else {}),
             **({"item_costs": dict(self.item_costs)} if self.item_costs else {}),
             **({"follow_tags": dict(self.follow_tags)} if self.follow_tags else {}),
@@ -591,6 +597,7 @@ class AbilityDefinition:
             ),
             display_name=data.get("display_name", ""),
             icon_id=data.get("icon_id", ""),
+            description=data.get("description", ""),
             requires_items=data.get("requires_items"),
             item_costs=data.get("item_costs"),
             follow_tags=data.get("follow_tags"),
