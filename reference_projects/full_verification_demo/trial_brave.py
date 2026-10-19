@@ -12,7 +12,7 @@ elements and much stronger foes.
   Oaths, then (trial_trees) three specs with talents and capstones, three runes on Valiant Slash
   and a skill book. The Archmage tree has seven elemental schools (school, Bolt, Storm,
   Attunement: that element x1.25), Prismatic Cataclysm behind the schools, three exclusive
-  Paths, specs, runes on Fire Bolt and a book. Attributes gain Twin Arts (power and magic).
+  Paths, specs, runes on Fire Bolt and a book.
 * **Demon Ring**: a ring weapon with power and magic, seven sockets (three cards, two gems, two
   charms - six new charm attachments) whose attack strikes five times. It waits in the family
   chest in Aldric's house.
@@ -372,7 +372,6 @@ def jobs(c):
         ("arcane", "Arcane", "sp", "magic"),
         ("elementalist", "Elementalist", "magic", "speed"),
     )
-    twin_arts(c)
     actor = db.actors["hero_01"]
     db.actors["hero_01"] = dataclasses.replace(
         actor,
@@ -668,15 +667,6 @@ def archmage_tree():
     )
     return ProgressionGraphDefinition(
         "archmage_tree", "Archmage", nodes=tuple(nodes), tags=("job.archmage",)
-    )
-
-
-def twin_arts(c):
-    """Attributes gain Twin Arts: power and magic from one point (the Brave fights with both)."""
-    graph = c.db.progression_graphs["attributes"]
-    twin_node = node("attr_twin", "Twin Arts", 30, {"stat_points": 1}, _bonus(power=1, magic=1))
-    c.db.progression_graphs["attributes"] = dataclasses.replace(
-        graph, nodes=(*graph.nodes, twin_node)
     )
 
 

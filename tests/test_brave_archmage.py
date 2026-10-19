@@ -47,8 +47,8 @@ def test_the_two_trees_are_built_in_every_style():
             assert f"arch_{part}" in arch, part
     assert {"arch_prismatic", "archmage_spec_destruction", "archmage_book"} <= arch
     assert len(brave_nodes) >= 35 and len(arch) >= 50
-    twin = {n.node_id for n in db.progression_graphs["attributes"].nodes}
-    assert "attr_twin" in twin
+    attributes = {n.node_id for n in db.progression_graphs["attributes"].nodes}
+    assert attributes == {f"attr_{a}" for a in ("str", "dex", "int", "luk", "vit")}
 
 
 def test_the_demon_ring_takes_cards_gems_and_charms_and_strikes_five_times():

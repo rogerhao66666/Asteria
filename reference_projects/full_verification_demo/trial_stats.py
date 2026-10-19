@@ -7,7 +7,7 @@ stats), Battle > Chance Checks (accuracy, critical) and Interactions (critical d
 attack / resistance), the Attributes tree, the jobs' level growth, the gear's modifiers.
 
 * **Attributes** (the Attributes tree, one stat point a rank): STR, DEX, INT, LUK (and VIT for
-  health, Twin Arts for STR + INT). Each actor starts with its own and every job grows them.
+  health). Each actor starts with its own and every job grows them.
 * **Formulas** (added to what gear, jobs, trees and passives give):
 
   ======================  ===============================================
@@ -221,7 +221,6 @@ def _attributes(c):
         node("attr_int", "INT (Intellect)", 30, points, int_reward),
         node("attr_luk", "LUK (Luck)", 30, points, bonus(luk=1)),
         node("attr_vit", "VIT (Vitality)", 30, points, {"resource_bonuses": {HP: 70}}),
-        node("attr_twin", "Twin Arts (STR + INT)", 30, points, bonus(str=0.5, int=0.5)),
     )  # fmt: skip
     graph = db.progression_graphs["attributes"]
     tags = tuple(dict.fromkeys((*graph.tags, "shared")))  # every hero's tree screen shows it
