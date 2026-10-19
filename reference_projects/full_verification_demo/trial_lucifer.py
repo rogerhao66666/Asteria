@@ -12,8 +12,16 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+# the CC0 Foozle pixel packs: the engine's asset library (asset_library/foozle in the repo)
 FREE_ASSETS = Path(
-    os.environ.get("ASTERIA_FREE_ASSETS", Path.home() / "Downloads" / "free_assets")
+    os.environ.get(
+        "ASTERIA_FREE_ASSETS", Path(__file__).resolve().parents[2] / "asset_library" / "foozle"
+    )
+)
+# the music packs are large and stay outside the repo; without them the copies kept in
+# playable_assets/audio are used
+MUSIC_ASSETS = Path(
+    os.environ.get("ASTERIA_MUSIC_ASSETS", Path.home() / "Downloads" / "free_assets")
 )
 SOURCE = (("license", "CC0 1.0"), ("source", "Foozle Lucifer packs"))
 PACKS = {
@@ -446,7 +454,11 @@ def apply_music(context):
     folder.mkdir(parents=True, exist_ok=True)
     context.audio = {}
     for name, rel in MUSIC.items():
-        shutil.copyfile(FREE_ASSETS / rel, folder / f"{name}.ogg")
+        source, target = MUSIC_ASSETS / rel, folder / f"{name}.ogg"
+        if source.is_file():
+            shutil.copyfile(source, target)
+        elif not target.is_file():
+            raise FileNotFoundError(f"music {rel}: set ASTERIA_MUSIC_ASSETS to the music packs")
         context.audio[name] = f"playable_assets/audio/{name}.ogg"
 
 

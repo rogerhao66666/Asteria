@@ -837,6 +837,9 @@ class AsteriaEditorWindow(QMainWindow):
         self.import_mv_action = QAction("Import RPG Maker MV Project…", self)
         self.import_mv_action.triggered.connect(self.import_mv_project_dialog)
         file_menu.addAction(self.import_mv_action)
+        self.import_library_action = QAction("Import from Asset Library…", self)
+        self.import_library_action.triggered.connect(lambda: self.import_from_asset_library())
+        file_menu.addAction(self.import_library_action)
         self.export_action = QAction("Export Game…", self)
         self.export_action.triggered.connect(self.export_game_dialog)
         file_menu.addAction(self.export_action)
@@ -1702,7 +1705,31 @@ class AsteriaEditorWindow(QMainWindow):
         fix.setEnabled(len(images) == 1)
         pack = menu.addAction("Pack into Atlas…", lambda: self.pack_selected_images())
         pack.setEnabled(len(images) >= 1)
+        menu.addSeparator()
+        menu.addAction("Import from Asset Library…", lambda: self.import_from_asset_library())
         menu.exec(self.asset_list.viewport().mapToGlobal(position))
+
+    def import_from_asset_library(self, *, dialog_hook=None, root=None):
+        """Copy pictures from the engine's asset library into the project (one undo step)."""
+        from .asset_library_dialog import AssetLibraryDialog, ImportLibraryAssetsCommand
+        from .image_tools import project_root
+
+        if self.document.project is None:
+            self.statusBar().showMessage("Open a project to import library assets")
+            return ()
+        dialog = AssetLibraryDialog(self, root=root)
+        accepted = dialog_hook(dialog) if dialog_hook is not None else dialog.exec()
+        picks = dialog.picks()
+        if not accepted or not picks:
+            return ()
+        command = ImportLibraryAssetsCommand(
+            self.document.project, project_root(self.document), picks
+        )
+        self.document.execute(command)
+        self.refresh_asset_list()
+        count = len(command.records)
+        self.statusBar().showMessage(f"Imported {count} picture(s) from the library")
+        return tuple(command.records)
 
     def auto_fix_selected_image(self, *, dialog_hook=None):
         """AST-11: preview a safe fix on the selected image and apply it (original kept as

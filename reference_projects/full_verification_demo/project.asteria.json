@@ -47167,7 +47167,7 @@
             "tags": []
           }
         ],
-        "icon_id": "playable_assets/lucifer/icons/skill_attack_bow.png",
+        "icon_id": "playable_assets/lucifer/icons/w_bow.png",
         "schema": "asteria.ability_definition",
         "tags": [
           "ability",
@@ -86230,6 +86230,14 @@
             "rarity": "common",
             "required_switch": "",
             "weight": 1.0
+          },
+          {
+            "item_id": "w_titan_cleaver",
+            "maximum": 1,
+            "minimum": 1,
+            "rarity": "common",
+            "required_switch": "",
+            "weight": 1.0
           }
         ],
         "luck_weight_bonus": 0.0,
@@ -90078,6 +90086,89 @@
         "sockets": [],
         "tags": [
           "equip.sword",
+          "weapon"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Titan Cleaver",
+        "equipment_id": "w_titan_cleaver",
+        "forbidden_capabilities": [],
+        "granted_abilities": [
+          "attack_axe"
+        ],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/w_titan_cleaver.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_titan_cleaver.power",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "power",
+            "value": 75.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_titan_cleaver.crit",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "crit",
+            "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_titan_cleaver.str",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "str",
+            "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_titan_cleaver.earth_attack",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "earth_attack",
+            "value": 25.0
+          }
+        ],
+        "rarity": "mythic",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "weapon",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          },
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g2"
+          },
+          {
+            "accepted_tags": [
+              "card"
+            ],
+            "locked": false,
+            "socket_id": "c1"
+          }
+        ],
+        "tags": [
+          "equip.axe",
+          "tier.3",
           "weapon"
         ],
         "triggers": [],

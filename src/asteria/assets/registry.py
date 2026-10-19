@@ -30,6 +30,12 @@ class AssetRegistry:
         self._by_path[record.source_path] = record.id
         return record
 
+    def remove_record(self, asset_id):
+        """Forget a project asset record (its file stays on disk); returns it."""
+        record = self._by_id.pop(asset_id)
+        self._by_path.pop(record.source_path, None)
+        return record
+
     def get(self, asset_id):
         return self._by_id.get(asset_id)
 

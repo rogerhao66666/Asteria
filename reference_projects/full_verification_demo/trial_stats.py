@@ -82,6 +82,7 @@ ELEMENT_GEAR = {  # gear / attachment: {stat: amount} (an attribute charm's repl
     "w_bone_scepter": {"dark_attack": 20},
     "w_dragoon_lance": {"wind_attack": 15},
     "w_war_axe": {"earth_attack": 15},
+    "w_titan_cleaver": {"earth_attack": 25},
     "w_longbow": {"wind_attack": 10},
     "w_ritual_kris": {"dark_attack": 15},
     "w_demon_ring": {f"{e}_attack": 10 for e in ELEMENTS},
@@ -175,6 +176,7 @@ STATE_NAMES = {
 
 def stats(c):
     """The whole stat system: attributes, formulas, checks, elements, foes, descriptions."""
+    _titan_cleaver(c)
     _attributes(c)
     _formulas(c)
     _checks(c)
@@ -184,6 +186,39 @@ def stats(c):
     _extras(c)
     describe(c)
     _status_screen(c)
+
+
+# -- the Titan Cleaver ---------------------------------------------------------------------------
+def _titan_cleaver(c):
+    """A Mythic axe (the Lucifer Mythic Battleaxe): STR, power, crit and earth; three sockets;
+    the Ancient Skeleton of the crypt always leaves it."""
+    from asteria.rpg import EquipmentDefinition, SocketDefinition
+    from asteria.rpg.drop_tables import DropEntry
+
+    db = c.db
+    war_axe = db.equipment["w_war_axe"]
+    modifiers = [
+        tc._modifier(stat, value, f"w_titan_cleaver.{stat}")
+        for stat, value in (("power", 75.0), ("crit", 10.0), ("str", 10.0))
+    ]
+    db.equipment["w_titan_cleaver"] = EquipmentDefinition(
+        "w_titan_cleaver",
+        "Titan Cleaver",
+        slot="weapon",
+        tags=("equip.axe", "tier.3", "weapon"),
+        modifiers=tuple(modifiers),
+        granted_abilities=war_axe.granted_abilities,
+        sockets=(
+            SocketDefinition("g1", accepted_tags=("gem",)),
+            SocketDefinition("g2", accepted_tags=("gem",)),
+            SocketDefinition("c1", accepted_tags=("card",)),
+        ),
+        required_capabilities=war_axe.required_capabilities,
+        any_capabilities=war_axe.any_capabilities,
+    )
+    spoils = db.drop_tables["ancient_spoils"]
+    guaranteed = (*spoils.guaranteed, DropEntry("w_titan_cleaver"))
+    db.drop_tables["ancient_spoils"] = dataclasses.replace(spoils, guaranteed=guaranteed)
 
 
 # -- attributes ------------------------------------------------------------------------------

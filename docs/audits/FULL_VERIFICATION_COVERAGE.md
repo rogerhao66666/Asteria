@@ -300,7 +300,12 @@ strip). Each weapon carries the rarity its picture names - the new optional
 | Common | Iron Sword (Arming Sword), Steel Sword (Greatsword), Stiletto (Shamshir), Hand Axe (Bearded Axe), Wyrm Lance (Spear), Oak Staff (Wizards Pole), Hunter's Bow |
 | Rare | **Sunbrand, Aldric's sword (Rare Greatsword)**, Ritual Kris (Explorers Hook), Dragoon Lance, Ash Staff (Mages Spire), Saint's Staff, Longbow |
 | Legendary | Kris (Rapier), War Axe (Dane Axe), Dawnbreaker (Shamshir) |
-| Mythic (new, never rolled as loot) | Bone Scepter (Godhammer), Demon Ring |
+| Mythic (new, never rolled as loot) | Bone Scepter (Godhammer), Demon Ring, **Titan Cleaver (Mythic Battleaxe)** - a new axe (power 75, crit 10, STR 10, earth +25, two gem and one card sockets) the crypt's Ancient Skeleton always leaves (campaign fact `titan_cleaver`) |
+
+The bows: the Lucifer pack has none, so the Hunter's Bow and the Longbow wear HomoHikka's CC0
+bow (OpenGameArt) with the Lucifer outline of their rarity, and the bow attack shows it. The
+art comes from the engine's asset library (`asset_library/`, see THIRD_PARTY_ASSETS.md), not
+from `~/Downloads`.
 
 ## World commands (58)
 

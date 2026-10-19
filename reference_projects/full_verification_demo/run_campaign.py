@@ -935,6 +935,10 @@ class Campaign:
             self.facts["steals"] += 1
             self.rt._after_hero_action()
         self.fight()
+        bag = self.game.save.rpg_state.equipment_bag  # the Ancient always leaves its Mythic axe
+        self.facts["titan_cleaver"] += any(
+            g.equipment.equipment_id == "w_titan_cleaver" for g in bag
+        )
         self.talk("Cael")  # he will wait at the guild in town
         self.talk("Sealed Vault")
         self.facts["interactions"] += 1
@@ -1066,7 +1070,7 @@ REQUIRED = (
     "embers_burn", "embers_out", "music_unlocked", "new_game_plus", "home_sleeps",
     "ring_sockets", "used_attack_ring", "used_valiant_slash", "used_arsenal_storm",
     "used_wind_bolt", "used_earth_bolt", "equip_offers", "guarded_blows", "dodged_blows",
-    "critical_blows", "breaks", "boss_breaks", "status_ticks",
+    "critical_blows", "breaks", "boss_breaks", "status_ticks", "titan_cleaver",
 )  # fmt: skip
 
 

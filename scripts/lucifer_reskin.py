@@ -5,8 +5,9 @@ backgrounds, UI skin and font, and the icons of skills, states, gear, items and 
     Reskin(project, root).run(heroes={...}, enemies={...}, field={...})
 
 The engine stays generic: this is a repository tool that edits project data (assets, presentation
-library records, icon ids, manifest pictures). The packs are read from ``~/Downloads/free_assets``
-(or ``ASTERIA_FREE_ASSETS``); what the projects use is copied into their ``playable_assets``.
+library records, icon ids, manifest pictures). The packs are read from the engine's asset library
+``asset_library/foozle`` (or ``ASTERIA_FREE_ASSETS``); what the projects use is copied into
+their ``playable_assets``.
 """
 
 from __future__ import annotations

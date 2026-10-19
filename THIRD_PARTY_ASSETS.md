@@ -5,6 +5,25 @@ Downloaded packs live in the git-ignored `local_reference/free_assets/<pack>/`
 "In repo" below are committed. Verified 2026-10-09 from each pack's page and
 bundled license file.
 
+**Asset library (`asset_library/`, in repo since 2026-10-19).** The engine's shared art: any
+project imports pictures from it (File > Import from Asset Library…, copied into the project's
+`playable_assets/library/`), and the Full Verification build reads its art from it.
+
+- `asset_library/foozle/` - 35 CC0 Foozle pixel packs from `~/Downloads/free_assets`: PNGs,
+  fonts and each pack's readme (1,300 files, 11 MB). Left out: the music packs (1.3 GB; the
+  build reads the few tracks it uses from `ASTERIA_MUSIC_ASSETS`, default
+  `~/Downloads/free_assets`, and keeps its copies), the isometric gold mines, the vector packs,
+  the Chest and Key pack and the two robot packs (high-resolution, not pixel art), and
+  **Critters Tileset 2 Old Castle (`Foozle_2DT0005`), whose licence is not CC0 and forbids
+  redistributing the art files** - it stays local only.
+- `asset_library/opengameart/CC0_Ranged_Icons_HomoHikka/` - a bow (32x32, 48x48) by HomoHikka,
+  "Generic Fantasy RPG Items" (https://opengameart.org/node/115091), CC0 1.0, from the "CC0
+  Ranged Icons" collection (https://opengameart.org/content/cc0-ranged-icons); downloaded
+  2026-10-19. The Full Verification demo's Hunter's Bow and Longbow wear it with a Lucifer
+  rarity outline.
+- `asset_library/opengameart/CC0_Ranged_Icons_Falco276/` - three bows and two arrows (32x32) by
+  Falco276 from the same collection (drawn from openclipart.org), CC0 1.0; not used yet.
+
 | Pack | Author | Source URL | License | Redistribution | Commercial use | Repository inclusion | Intended usage |
 |---|---|---|---|---|---|---|---|
 | Ninja Adventure – Asset Pack (89 MB) | Pixel-boy, AAA | https://pixel-boy.itch.io/ninja-adventure-asset-pack | CC0 1.0 (`LICENSE.txt`) | Allowed | Allowed | **In repo**: 6 audio files (`playable_assets/audio/` of the reference demos) and, since 2026-10-19, the Full Verification demo's townsfolk, house, bed and room tiles (copied into its `playable_assets`, cut from `Actor/Character`, `Items` and `Backgrounds/Tilesets`); rest local only | Asset Pipeline, animation, VFX, audio and runtime tests (the tests/golden fixtures were cut from it earlier) |

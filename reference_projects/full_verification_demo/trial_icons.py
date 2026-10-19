@@ -28,13 +28,14 @@ TINTS = {  # name: RGB multiplied into the picture
     "dark": (0.55, 0.5, 0.6),
     "blue": (0.6, 0.85, 1.35),
 }
-GEAR = {  # equipment id: (source file under Equipment, tint or None) / ("draw", kind)
-    "w_bow": ("draw", "bow"),
-    "w_longbow": ("draw", "longbow"),
+GEAR = {  # equipment id: (file under Equipment, tint or None) / ("library_bow", rarity)
+    "w_bow": ("library_bow", "common"),  # HomoHikka's CC0 bow (OpenGameArt), Lucifer outline
+    "w_longbow": ("library_bow", "rare"),
     "w_steel_sword": ("Weapons/Png/Common Greatsword.png", None),
     "w_dragoon_lance": ("Weapons/Png/Common Spear.png", "gold"),
     "w_kris": ("Weapons/Png/Legendary Rapier .png", None),
     "w_war_axe": ("Weapons/Png/Legendary Dane Axe.png", None),
+    "w_titan_cleaver": ("Weapons/Png/Mythic Battleaxe.png", None),
     "w_ash_staff": ("Weapons/Png/Mages Spire.png", None),
     "w_saint_staff": ("Weapons/Png/Wizards Pole.png", "gold"),
     "w_bone_scepter": ("Weapons/Png/Mythic Godhammer.png", None),
@@ -114,19 +115,30 @@ def _outline(image, color=(24, 16, 28, 255)):
     return out
 
 
-def _bow(kind):
-    from PIL import Image, ImageDraw
+OUTLINE = {"common": (183, 183, 183), "rare": (209, 202, 128)}  # the Lucifer rarity outlines
+BOW = lucifer.FREE_ASSETS.parent / "opengameart" / "CC0_Ranged_Icons_HomoHikka" / "32x32"
 
-    wood, light, string = (116, 80, 48, 255), (176, 126, 74, 255), (214, 210, 190, 255)
-    image = Image.new("RGBA", (32, 16), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(image)
-    top, right = (0, 22) if kind == "longbow" else (1, 20)
-    draw.arc((4, top, right + 6, 15 - top), -85, 85, fill=wood, width=2)
-    draw.arc((5, top, right + 5, 15 - top), -80, 80, fill=light, width=1)
-    draw.line((right - 4, top + 1, right - 4, 14 - top), fill=string)
-    draw.line((6, 8, 29, 8), fill=wood)
-    draw.polygon([(28, 6), (31, 8), (28, 10)], fill=(196, 202, 212, 255))
-    return _outline(image)
+
+def _library_bow(rarity):
+    """HomoHikka's CC0 bow (asset library) wearing the Lucifer outline of ``rarity``: every
+    transparent pixel touching the bow becomes the rarity colour."""
+    from PIL import Image
+
+    bow = Image.open(BOW / "bow.png").convert("RGBA")
+    out = Image.new("RGBA", (bow.width + 2, bow.height + 2), (0, 0, 0, 0))
+    out.alpha_composite(bow, (1, 1))
+    src, px = out.copy().load(), out.load()
+    for y in range(out.height):
+        for x in range(out.width):
+            if src[x, y][3]:
+                continue
+            near = (
+                0 <= x + dx < out.width and 0 <= y + dy < out.height and src[x + dx, y + dy][3]
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))
+            )
+            if any(near):
+                px[x, y] = (*OUTLINE[rarity], 255)
+    return out
 
 
 def _scroll():
@@ -187,6 +199,7 @@ WEAPON_RARITY = {  # a weapon's rarity: what its Lucifer picture is called (Comm
     "w_war_axe": "legendary",
     "w_sunbrand_ex": "legendary",
     "w_bone_scepter": "mythic",
+    "w_titan_cleaver": "mythic",
     "w_demon_ring": "mythic",
 }
 
@@ -226,10 +239,18 @@ def apply_all(context):
     for eid, (source, extra) in GEAR.items():
         if eid not in db.equipment:
             continue
-        image = _bow(extra) if source == "draw" else _tint(open_png(EQ / source), extra)
+        if source == "library_bow":
+            image = _library_bow(extra)
+        else:
+            image = _tint(open_png(EQ / source), extra)
         db.equipment[eid] = dataclasses.replace(
             db.equipment[eid], icon_id=save(image, f"{eid}.png")
         )
+        attack = context.abilities.get(f"attack_{eid[2:]}")
+        if attack is not None:  # a weapon's attack shows the weapon (the bow's too)
+            context.abilities._definitions[attack.ability_id] = dataclasses.replace(
+                attack, icon_id=db.equipment[eid].icon_id
+            )
     for gem, (file, tint) in GEMS.items():
         picture = _tint(open_png(PICK / "Gems" / "Png" / file), tint)
         for prefix, image in (("", picture), ("flawless_", _flawless(picture))):
