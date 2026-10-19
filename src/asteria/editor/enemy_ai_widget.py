@@ -543,9 +543,9 @@ class EnemyAIEditorWidget(QWidget):
 
         fill_named(self.ai_list, ids, self._ai_name)
         self.ai_list.blockSignals(False)
-        from .record_vocabulary import ProjectVocabulary
+        from .record_vocabulary import vocabulary_for
 
-        names = ProjectVocabulary(self.api.document.project).names()
+        names = vocabulary_for(self.api.document).names()
         self.ability.clear()  # names shown, ids as the data (any id can still be typed)
         for ability_id in self.api.abilities():
             self.ability.addItem(names.get(ability_id, ability_id), ability_id)

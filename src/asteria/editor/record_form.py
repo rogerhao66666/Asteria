@@ -51,7 +51,6 @@ from .record_vocabulary import (
     REFERENCES,
     TECHNICAL,
     TERM_KEY_SOURCES,
-    ProjectVocabulary,
     is_chance_field,
     is_tag_field,
     is_trigger_field,
@@ -59,6 +58,7 @@ from .record_vocabulary import (
     map_source,
     tag_label,
     trigger_label,
+    vocabulary_for,
     words,
 )
 
@@ -814,7 +814,7 @@ class RecordForm(QScrollArea):
         self._data = None
         self._title = None
         self._icons = {}
-        self.vocabulary = ProjectVocabulary(getattr(document, "project", None))
+        self.vocabulary = vocabulary_for(document)
         self._page = QWidget()
         self._page.setObjectName("RecordFormPage")
         self.setWidget(self._page)
@@ -833,11 +833,20 @@ class RecordForm(QScrollArea):
         self._rebuild()
 
     def set_record(self, data, title=None, *, optional=(), category=""):
+        same = (
+            self._data is not None
+            and data == self._data
+            and title == self._title
+            and set(optional) == self.optional
+            and (category or self.category) == self.category
+        )
+        if same:  # already showing exactly this (a refresh after an edit elsewhere): keep it
+            return
         self._data = deepcopy(data)
         self._title = title
         self.optional = set(optional)
         self.category = category or self.category
-        self.vocabulary = ProjectVocabulary(getattr(self.document, "project", None))
+        self.vocabulary = vocabulary_for(self.document)
         self._rebuild()
 
     def record(self):

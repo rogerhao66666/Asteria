@@ -481,6 +481,17 @@ class AsteriaEditorWindow(QMainWindow):
         self._workspace_mode_changed(self.workspace.mode.value)
         self.refresh_all()
         QTimer.singleShot(0, self.viewport, self.viewport.frame_initial)
+        # the big workspaces are built one after another once the window is up, so the first
+        # switch to Game Data, Battle or Presentation is as quick as any later one
+        self._warm = [WorkspaceMode.RPG, WorkspaceMode.BATTLE, WorkspaceMode.UI]
+        QTimer.singleShot(400, self, self._warm_next_workspace)
+
+    def _warm_next_workspace(self):
+        if not getattr(self, "_warm", None) or self.document.project is None:
+            return
+        self._ensure_workspace_fresh(self._warm.pop(0))
+        if self._warm:
+            QTimer.singleShot(150, self, self._warm_next_workspace)
 
     def _schedule_dock_tab_cleanup(self, *_):
         QTimer.singleShot(0, self, self.hide_stale_dock_tab_bars)
@@ -761,21 +772,65 @@ class AsteriaEditorWindow(QMainWindow):
             if action is not None:
                 action.setChecked(current == candidate)
         self._switch_workspace_docks(current)
-        if current == WorkspaceMode.CODE:
+        # rebuilt only when something changed since it was last shown: switching back and
+        # forth between Game Data and Battle no longer rebuilds every page each time
+        self._ensure_workspace_fresh(current)
+
+    # each workspace's pages, rebuilt on their own (refresh_all rebuilds only the one shown;
+    # the others wait until they are opened)
+    _WORKSPACE_EDITORS = {
+        WorkspaceMode.RPG: (
+            "game_systems_editor",
+            "game_start_editor",
+            "enemy_ai_editor",
+            "behavior_tree_editor",
+        ),
+        WorkspaceMode.UI: (
+            "animation_editor",
+            "state_machine_editor",
+            "composition_editor",
+            "action_timeline_editor",
+            "vfx_editor",
+            "input_map_editor",
+        ),
+        WorkspaceMode.EVENT: ("event_flow_editor",),
+    }
+
+    def _rebuild_workspace(self, mode):
+        if mode == WorkspaceMode.CODE:
             self.code_workspace.refresh_project_context()
-        elif current == WorkspaceMode.RPG:
+        elif mode == WorkspaceMode.RPG:
             self.rpg_authoring.rebuild()
-            self._refresh_game_systems()
-        elif current == WorkspaceMode.BATTLE:
+        elif mode == WorkspaceMode.BATTLE:
             self.battle_authoring.rebuild()
-        elif current == WorkspaceMode.UI:
+        elif mode == WorkspaceMode.UI:
             self.presentation_authoring.rebuild()
             self.runtime_ui_authoring.rebuild()
-            self._refresh_game_systems()
-        elif current == WorkspaceMode.EVENT:
+        elif mode == WorkspaceMode.EVENT:
             self.game_flow_overview.refresh()
-        elif current == WorkspaceMode.MULTIPLAYER:
+        elif mode == WorkspaceMode.MULTIPLAYER:
             self.multiplayer_workspace.refresh_profile()
+        if self.document.project is not None:
+            for name in self._WORKSPACE_EDITORS.get(mode, ()):
+                editor = getattr(self, name, None)
+                if editor is not None:
+                    editor.refresh()
+        if mode in (WorkspaceMode.UI, WorkspaceMode.EVENT, WorkspaceMode.CODE):
+            self._polish_presentation_pages(mode)
+
+    def _ensure_workspace_fresh(self, mode, *, force=False):
+        """Rebuild ``mode``'s pages if the project changed (an edit, an undo, a refresh) since
+        they were last built for it."""
+        mode = WorkspaceMode(mode)
+        stamp = (
+            id(self.document.project),
+            self.document.revision,
+            getattr(self, "_refresh_epoch", 0),
+        )
+        fresh = self.__dict__.setdefault("_workspace_stamps", {})
+        if force or fresh.get(mode) != stamp:
+            self._rebuild_workspace(mode)
+            fresh[mode] = stamp
 
     def _code_script_saved(self, path):
         self.statusBar().showMessage(f"Saved script {path}", 3000)
@@ -1603,14 +1658,19 @@ class AsteriaEditorWindow(QMainWindow):
             if editor is not None:
                 editor.refresh()
 
-    def _polish_presentation_pages(self):
+    def _polish_presentation_pages(self, mode=None):
+        """Inset titles and growing pages; only the workspace given (all when ``None``):
+        walking every widget of every page on each refresh cost a tenth of a second."""
         from .presentation_layout import polish_presentation_page
 
-        for index in range(self.ui_workspace.count()):
-            polish_presentation_page(self.ui_workspace.widget(index))
-        for index in range(self.events_workspace.count()):
-            polish_presentation_page(self.events_workspace.widget(index))
-        polish_presentation_page(self.code_workspace)
+        if mode in (None, WorkspaceMode.UI):
+            for index in range(self.ui_workspace.count()):
+                polish_presentation_page(self.ui_workspace.widget(index))
+        if mode in (None, WorkspaceMode.EVENT):
+            for index in range(self.events_workspace.count()):
+                polish_presentation_page(self.events_workspace.widget(index))
+        if mode in (None, WorkspaceMode.CODE):
+            polish_presentation_page(self.code_workspace)
 
     def refresh_all(self):
         project = getattr(self.document, "project", None)
@@ -1625,13 +1685,11 @@ class AsteriaEditorWindow(QMainWindow):
         self._sync_scene_authoring_context()
         self._sync_animation_context()
         self._sync_event_context()
-        self.code_workspace.refresh_project_context()
-        self.rpg_authoring.rebuild()
-        self._refresh_game_systems()
-        self.battle_authoring.rebuild()
-        self.presentation_authoring.rebuild()
-        self.runtime_ui_authoring.rebuild()
-        self.game_flow_overview.refresh()
+        # the workspace on screen is rebuilt now; the others when they are next opened
+        self._refresh_epoch = getattr(self, "_refresh_epoch", 0) + 1
+        workspace = getattr(self, "workspace", None)
+        if workspace is not None:
+            self._ensure_workspace_fresh(workspace.mode, force=True)
         self.viewport.refresh()
         if self.viewport.render_source is not None:
             self.tile_layers.set_tilemap(
@@ -1641,7 +1699,6 @@ class AsteriaEditorWindow(QMainWindow):
             self.tile_palette.set_layer(self.viewport.tile_tools.active_layer)
         self._refresh_actions()
         self._refresh_title()
-        self._polish_presentation_pages()
 
     def set_project(self, project, file_path=None):
         if self.play_session is not None and self.play_session.active:
@@ -1656,6 +1713,10 @@ class AsteriaEditorWindow(QMainWindow):
             self.set_tilemap_render_source(None)
         self.code_workspace.load_default_script()
         self.refresh_all()
+        # another project: every workspace is rebuilt now (none may keep the old one's records,
+        # even before it is opened)
+        for mode in WorkspaceMode:
+            self._ensure_workspace_fresh(mode)
         QTimer.singleShot(0, self.viewport, self.viewport.frame_initial)
 
     def refresh_asset_list(self):

@@ -573,10 +573,10 @@ class RecordForm(QWidget):
             _wheel_guard(widget)  # scrolling the page leaves values alone
 
     def _vocabulary(self):
-        from .record_vocabulary import ProjectVocabulary
+        from .record_vocabulary import vocabulary_for
 
         document = self.document or getattr(self.icons, "document", None)
-        return ProjectVocabulary(getattr(document, "project", None))
+        return vocabulary_for(document)
 
     def _noun(self, f):
         """What one entry of a list field is, for its "+ Add …" button: from what it refers to
@@ -926,9 +926,9 @@ class GameSystemsEditorWidget(QWidget):
         self.browser.blockSignals(True)
         self.browser.clear()
         ids = self.controller.ids(self.kind_id)
-        from .record_vocabulary import ProjectVocabulary
+        from .record_vocabulary import vocabulary_for
 
-        names = ProjectVocabulary(self.controller.document.project).names()
+        names = vocabulary_for(self.controller.document).names()
         for key in ids:  # the record's name; its id is the row's data and its tooltip
             item = QListWidgetItem(self._record_name(key, names))
             item.setData(Qt.UserRole, key)

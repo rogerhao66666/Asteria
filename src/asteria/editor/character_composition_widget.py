@@ -52,6 +52,25 @@ def _spin(low, high, value=0.0, step=1.0):
     return box
 
 
+class _FittedView(QGraphicsView):
+    """Keeps the whole picture in view: fitted again whenever the view changes size or is
+    shown (drawn while the page was hidden, it was fitted to a size it never had and showed
+    the body small and cut off)."""
+
+    def _refit(self):
+        rect = self.sceneRect()
+        if not rect.isEmpty() and self.viewport().width() > 1:
+            self.fitInView(rect, Qt.KeepAspectRatio)
+
+    def resizeEvent(self, event):  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        self._refit()
+
+    def showEvent(self, event):  # noqa: N802 - Qt API
+        super().showEvent(event)
+        self._refit()
+
+
 class CharacterCompositionWidget(QWidget):
     changed = Signal()
 
@@ -69,7 +88,7 @@ class CharacterCompositionWidget(QWidget):
         self.frame.valueChanged.connect(lambda _v: self._draw_preview())
         self.clip = QComboBox()
         self.clip.currentTextChanged.connect(lambda _t: self._draw_preview())
-        self.preview = QGraphicsView(QGraphicsScene(self))
+        self.preview = _FittedView(QGraphicsScene(self))
         self.preview.setMinimumSize(200, 160)
 
         # sockets
@@ -363,7 +382,7 @@ class CharacterCompositionWidget(QWidget):
         scene.addEllipse(QRectF(px * s - 3, py * s - 3, 6, 6), QPen(QColor("#d9534f")))
         # the whole body, parts and socket labels fit in the preview, whatever its size
         self.preview.setSceneRect(scene.itemsBoundingRect().adjusted(-8, -8, 8, 8))
-        self.preview.fitInView(self.preview.sceneRect(), Qt.KeepAspectRatio)
+        self.preview._refit()
 
     # -- edits ------------------------------------------------------------------------------------
     def _try(self, action, message):

@@ -316,23 +316,33 @@ class IconLibrary:
     def __init__(self, document):
         self.document = document
 
-    CACHE_SECONDS = 3.0  # a form that builds several pickers asks for the list once
+    FILES_SECONDS = 30.0  # picture files added outside the editor show up within this
 
     def choices(self):
+        """The list, built again only when the project's icons change (another project, an
+        icon asset added or removed, a picture imported) or the picture files may have -
+        not after every edit, nor for every form that shows a picker."""
         import time
 
+        project = getattr(self.document, "project", None)
+        icons = () if project is None else project.assets.query(kind="icon")
+        stamp = (id(project), tuple(sorted(a.asset_id for a in icons)))
         now = time.monotonic()
-        cached = getattr(self, "_cache", None)
-        if cached is not None and now - cached[0] < self.CACHE_SECONDS:
-            return cached[1]
+        # kept on the document: every library made for it (one per page) shares the list
+        holder = self.document if self.document is not None else self
+        cached = getattr(holder, "_icon_choices_cache", None)
+        if cached is not None and cached[0] == stamp and now - cached[1] < self.FILES_SECONDS:
+            return cached[2]
         choices = icon_choices(self.document)
-        self._cache = (now, choices)
+        holder._icon_choices_cache = (stamp, now, choices)
         return choices
 
     def import_file(self, path):
         """Use the picture at ``path`` as an icon: a file already inside the project keeps its
         place; any other is copied to ``<project>/icons/``. Returns the ``icon_id`` (a path
         relative to the project folder)."""
+        holder = self.document if self.document is not None else self
+        holder._icon_choices_cache = None  # the new picture joins the list
         import shutil
 
         source = Path(path).resolve()

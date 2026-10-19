@@ -20,8 +20,12 @@ from .tile_palette import build_tile_palette
 THUMBNAIL_SIZE = 24
 
 
+_SHARED_IMAGES = {}  # path -> (modified time, size, image): read again only when changed
+
+
 class ImageCache:
-    """Loads each image file once per panel refresh."""
+    """Loads each image file once - across refreshes too: a file is read again only when its
+    modified time or size changes (every asset list refresh used to read every picture)."""
 
     def __init__(self):
         self._images = {}
@@ -29,9 +33,24 @@ class ImageCache:
     def get(self, path):
         path = Path(path)
         if path not in self._images:
-            image = QImage(str(path)) if path.is_file() else None
-            self._images[path] = None if image is None or image.isNull() else image
+            self._images[path] = _shared_image(path)
         return self._images[path]
+
+
+def _shared_image(path):
+    try:
+        stat = path.stat()
+    except OSError:
+        _SHARED_IMAGES.pop(path, None)
+        return None
+    stamp = (stat.st_mtime_ns, stat.st_size)
+    cached = _SHARED_IMAGES.get(path)
+    if cached is not None and cached[0] == stamp:
+        return cached[1]
+    image = QImage(str(path))
+    image = None if image.isNull() else image
+    _SHARED_IMAGES[path] = (stamp, image)
+    return image
 
 
 def _icon(image, rect=None, size=THUMBNAIL_SIZE):

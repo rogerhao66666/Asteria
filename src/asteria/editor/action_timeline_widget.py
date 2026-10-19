@@ -252,10 +252,10 @@ class ActionTimelineWidget(QWidget):
 
     def _sequence_name(self, sequence_id):
         """A timeline by its skill's name ("Fire Bolt"), else its id in words."""
-        from .record_vocabulary import ProjectVocabulary, words
+        from .record_vocabulary import vocabulary_for, words
 
         if getattr(self, "_names", None) is None:
-            self._names = ProjectVocabulary(self.api.document.project).names()
+            self._names = vocabulary_for(self.api.document).names()
         head = str(sequence_id).split(".")[0]
         return self._names.get(sequence_id) or self._names.get(head) or words(sequence_id)
 

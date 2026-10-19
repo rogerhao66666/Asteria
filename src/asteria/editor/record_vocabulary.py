@@ -449,6 +449,24 @@ class Choice:
     icon: str = ""  # a project path or forged:<kind>; empty = none
 
 
+_SHARED_VOCABULARY = {}  # the last one built, by (project, revision)
+
+
+def vocabulary_for(document):
+    """The project's vocabulary, shared until the project changes (an edit, an undo, another
+    project): every form used to rescan the whole database for its drop-downs."""
+    project = getattr(document, "project", None)
+    revision = getattr(document, "revision", None)
+    if document is None or revision is None:
+        return ProjectVocabulary(project)
+    stamp = (id(project), revision)
+    cached = _SHARED_VOCABULARY.get("last")
+    if cached is None or cached[0] != stamp or cached[1].project is not project:
+        cached = (stamp, ProjectVocabulary(project))
+        _SHARED_VOCABULARY["last"] = cached
+    return cached[1]
+
+
 class ProjectVocabulary:
     """Read once per form build; cheap enough to rebuild after every edit."""
 
