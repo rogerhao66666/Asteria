@@ -28,6 +28,7 @@ from asteria.runtime.input_map import DEVICES, InputActionMap, InputBinding
 from asteria.runtime.input_rebinding import describe_binding
 
 from .authoring_sidebar import authoring_sidebar
+from .record_vocabulary import words as _words
 
 
 @dataclass(slots=True)
@@ -159,8 +160,9 @@ class InputMapWidget(QWidget):
 
     @property
     def action_id(self):
-        item = self.actions.currentItem()
-        return None if item is None else item.text()
+        from .ui_fit import named_id
+
+        return named_id(self.actions.currentItem())
 
     def refresh(self, select=None):
         if self.api.document.project is None:
@@ -168,8 +170,9 @@ class InputMapWidget(QWidget):
         current = select or self.action_id
         ids = list(self.api.input_map.actions())
         self.actions.blockSignals(True)
-        self.actions.clear()
-        self.actions.addItems(ids)
+        from .ui_fit import fill_named
+
+        fill_named(self.actions, ids, _words)
         self.actions.blockSignals(False)
         if ids:
             self.actions.setCurrentRow(ids.index(current) if current in ids else 0)

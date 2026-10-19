@@ -74,7 +74,7 @@ def test_action_timeline_moves_beats_by_drag_and_previews(window):
     editor = window.action_timeline_editor
     editor.sequence_list.setCurrentRow(editor.api.sequences().index("fire_arc"))
     editor.view.beatSelected.emit("impact")
-    assert editor.beat_id.text() == "impact" and editor.channel.currentText() == "animation"
+    assert editor.beat_id.text() == "impact" and editor.channel.currentData() == "animation"
     editor.view.beatMoved.emit("impact", 0.45)  # what a drag-and-drop emits
     assert next(b.at for b in editor.api.beats("fire_arc") if b.beat_id == "impact") == 0.45
     assert editor.add_beat("extra", 0.5, "vfx", "battle.fx.slash")

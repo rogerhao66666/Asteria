@@ -29,6 +29,18 @@ from .action_timeline_authoring import (
     ActionTimelineError,
 )
 
+CHANNEL_WORDS = {  # each lane of the timeline in words
+    "animation": "Pose",
+    "vfx": "Effect",
+    "audio": "Sound",
+    "camera": "Camera",
+    "screen_fx": "Screen flash",
+    "timing": "Hit-stop",
+    "motion_fx": "Trail",
+    "move": "Move",
+}
+MEMBER_WORDS = {"@source": "The user", "@target": "The target"}
+
 LANE_HEIGHT = 28
 LEFT = 84
 COLORS = {
@@ -113,7 +125,7 @@ class TimelineView(QWidget):
                 LEFT, y + 1, self.width() - LEFT - 12, LANE_HEIGHT - 2, QColor("#1e232b")
             )
             painter.setPen(QColor("#c8d0dc"))
-            painter.drawText(6, y + LANE_HEIGHT // 2 + 5, channel)
+            painter.drawText(6, y + LANE_HEIGHT // 2 + 5, CHANNEL_WORDS.get(channel, channel))
         for beat in self.sequence.beats:
             rect = self.beat_rect(beat)
             painter.fillRect(rect, QColor(COLORS.get(beat.channel, "#cccccc")))
@@ -190,12 +202,14 @@ class ActionTimelineWidget(QWidget):
         self.at.setDecimals(3)
         self.at.setSingleStep(0.01)
         self.channel = QComboBox()
-        self.channel.addItems(list(CHANNELS))
-        self.channel.currentTextChanged.connect(self._channel_changed)
+        for channel in CHANNELS:  # in words; the channel name is the data
+            self.channel.addItem(CHANNEL_WORDS.get(channel, channel), channel)
+        self.channel.currentIndexChanged.connect(lambda _i: self._channel_changed(self._pick()))
         self.cue = QComboBox()
         self.cue.setEditable(True)
         self.member = QComboBox()
-        self.member.addItems(list(TARGETS))
+        for target in TARGETS:
+            self.member.addItem(MEMBER_WORDS.get(target, target), target)
         apply_beat, add_beat, remove_beat = (
             QPushButton("Apply Beat"),
             QPushButton("Add Beat…"),
@@ -236,19 +250,31 @@ class ActionTimelineWidget(QWidget):
         self.playing = False
         self.refresh()
 
+    def _sequence_name(self, sequence_id):
+        """A timeline by its skill's name ("Fire Bolt"), else its id in words."""
+        from .record_vocabulary import ProjectVocabulary, words
+
+        if getattr(self, "_names", None) is None:
+            self._names = ProjectVocabulary(self.api.document.project).names()
+        head = str(sequence_id).split(".")[0]
+        return self._names.get(sequence_id) or self._names.get(head) or words(sequence_id)
+
     @property
     def sequence_id(self):
-        item = self.sequence_list.currentItem()
-        return None if item is None else item.text()
+        from .ui_fit import named_id
+
+        return named_id(self.sequence_list.currentItem())
 
     def refresh(self, select=None):
         if self.api.document.project is None:
             return
         current = select or self.sequence_id
         self.sequence_list.blockSignals(True)
-        self.sequence_list.clear()
         ids = self.api.sequences()
-        self.sequence_list.addItems(list(ids))
+        self._names = None  # names read again: skills may have been renamed
+        from .ui_fit import fill_named
+
+        fill_named(self.sequence_list, ids, self._sequence_name)
         self.sequence_list.blockSignals(False)
         if ids:
             self.sequence_list.setCurrentRow(ids.index(current) if current in ids else 0)
@@ -275,11 +301,25 @@ class ActionTimelineWidget(QWidget):
         self.view.selected = beat_id
         self.beat_id.setText(beat.beat_id)
         self.at.setValue(beat.at)
-        self.channel.setCurrentText(beat.channel)
+        self._select(self.channel, beat.channel)
         self._channel_changed(beat.channel)
         self.cue.setCurrentText(beat.cue)
-        self.member.setCurrentText(beat.member_id or "@source")
+        self._select(self.member, beat.member_id or "@source")
         self.view.update()
+
+    def _pick(self, combo=None):
+        """The value behind a combo shown in words (the channel by default)."""
+        combo = self.channel if combo is None else combo
+        value = combo.currentData()
+        return combo.currentText() if value is None else value
+
+    @staticmethod
+    def _select(combo, value):
+        index = combo.findData(value)
+        if index < 0:  # a name the list does not know yet stays visible
+            combo.addItem(str(value), value)
+            index = combo.count() - 1
+        combo.setCurrentIndex(index)
 
     def _channel_changed(self, channel):
         suggestions = {
@@ -321,9 +361,9 @@ class ActionTimelineWidget(QWidget):
                 sid,
                 beat,
                 at=self.at.value(),
-                channel=self.channel.currentText(),
+                channel=self._pick(),
                 cue=self.cue.currentText(),
-                member=self.member.currentText(),
+                member=self._pick(self.member),
             ),
             f"Applied {beat}",
             beat,
@@ -389,7 +429,7 @@ class ActionTimelineWidget(QWidget):
             self.add_beat(
                 name.strip(),
                 self.view.playhead,
-                self.channel.currentText(),
+                self._pick(),
                 self.cue.currentText(),
             )
 

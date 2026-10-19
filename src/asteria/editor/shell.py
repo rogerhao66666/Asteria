@@ -1212,7 +1212,8 @@ class AsteriaEditorWindow(QMainWindow):
         if clip_set is None:
             self.animation_widget.set_clips(())
             self.animation_widget.set_status(
-                "No animation selected"
+                "Pick a character in the Scene (one with an Animator) to play its animations "
+                "here. Sprite Animation edits a sheet's animations directly."
                 if current is None
                 else f"Missing animation asset for {current}"
             )

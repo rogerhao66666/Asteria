@@ -295,10 +295,9 @@ class InspectorWidget(QWidget):
 
     def _show(self, page, column):
         column.addStretch(1)
-        old = self.scroll.takeWidget()
-        self.scroll.setWidget(page)
-        if old is not None:
-            old.deleteLater()
+        from .ui_fit import swap_scroll_page
+
+        swap_scroll_page(self.scroll, page)
 
     def show_message(self, message):
         self.title.setText(message)

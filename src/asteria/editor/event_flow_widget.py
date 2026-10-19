@@ -32,6 +32,7 @@ from asteria.events.conditions import EventCondition
 
 from .event_editing import describe_instruction, parse_world_args
 from .event_flow_authoring import BATTLE_HOOKS, EventFlowAuthoring, EventFlowError
+from .record_vocabulary import trigger_label
 
 COMPARATORS = ("<=", "<", "==", "!=", ">", ">=")
 
@@ -97,7 +98,9 @@ class EventFlowWidget(QWidget):
         self._table(self.battle)
         self.battle.itemSelectionChanged.connect(self._battle_selected)
         self.battle_hook = QComboBox()
-        self.battle_hook.addItems(list(BATTLE_HOOKS))
+
+        for hook in BATTLE_HOOKS:  # the moment in words; the hook name is the data
+            self.battle_hook.addItem(trigger_label(hook), hook)
         self.battle_program = QComboBox()
         self.battle_once = QCheckBox("Once per battle")
         self.conditions = QListWidget()
@@ -220,7 +223,7 @@ class EventFlowWidget(QWidget):
             self.battle.insertRow(row)
             when = " and ".join(describe_condition(c) for c in b.conditions) or "always"
             values = (
-                b.hook_name.removeprefix("rpg.battle."),
+                trigger_label(b.hook_name),
                 b.event_program_id,
                 when,
                 "yes" if b.once else "",
@@ -269,7 +272,11 @@ class EventFlowWidget(QWidget):
         if row < 0:
             return
         binding = self.api.project.lifecycle_event_bindings[self._battle_index[row]]
-        self.battle_hook.setCurrentText(binding.hook_name)
+        found = self.battle_hook.findData(binding.hook_name)
+        if found < 0:
+            self.battle_hook.addItem(binding.hook_name, binding.hook_name)
+            found = self.battle_hook.count() - 1
+        self.battle_hook.setCurrentIndex(found)
         self.battle_program.setCurrentText(binding.event_program_id)
         self.battle_once.setChecked(binding.once)
         self._condition_values = list(binding.conditions)
@@ -304,7 +311,7 @@ class EventFlowWidget(QWidget):
 
     def add_battle(self):
         hook, pid, once = (
-            self.battle_hook.currentText(),
+            self.battle_hook.currentData() or self.battle_hook.currentText(),
             self.battle_program.currentText(),
             self.battle_once.isChecked(),
         )
@@ -319,7 +326,7 @@ class EventFlowWidget(QWidget):
             return False
         index = self._battle_index[row]
         hook, pid, once = (
-            self.battle_hook.currentText(),
+            self.battle_hook.currentData() or self.battle_hook.currentText(),
             self.battle_program.currentText(),
             self.battle_once.isChecked(),
         )

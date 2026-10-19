@@ -192,6 +192,15 @@ _ACRONYMS = {
 }
 
 
+def _free_id(base, taken, suffix="copy"):
+    """A suggested id for a new or copied record: ``fire_bolt_copy``, ``fire_bolt_copy2``..."""
+    base = f"{base}_{suffix}" if base else suffix
+    taken, candidate, number = set(taken), base, 2
+    while candidate in taken:
+        candidate, number = f"{base}{number}", number + 1
+    return candidate
+
+
 def field_label(key):
     """``display_name`` -> "Display Name", ``actor_id`` -> "Actor ID" (the data key itself is
     unchanged)."""
@@ -1033,7 +1042,7 @@ class AdapterFamilyWidget(QWidget):
                     data = self.adapter.encode(record)
                 except Exception:  # noqa: BLE001 - a record that cannot be encoded keeps its id
                     data = None
-                name = record_title(self.category_id, data, self.editor.vocabulary)
+                name = record_title(self.category_id, data, self.editor.vocabulary, key)
             if name:  # the name only; the internal id is in the tooltip and the filter
                 item.setText(name)
             item.setToolTip(f"Internal ID: {key}")
@@ -1231,7 +1240,13 @@ class AdapterFamilyWidget(QWidget):
             return False
         from PySide6.QtWidgets import QInputDialog
 
-        value, ok = QInputDialog.getText(self, "Duplicate", "New ID:")
+        value, ok = QInputDialog.getText(
+            self,
+            "Duplicate",
+            "Internal ID for the copy - other records refer to it by this, so it stays fixed\n"
+            "(lowercase letters, numbers and _; the name players see is set in the form):",
+            text=_free_id(self.selected_id, self._ids),
+        )
         if not ok or not value.strip():
             return False
         return self.duplicate_selected_as(value.strip())

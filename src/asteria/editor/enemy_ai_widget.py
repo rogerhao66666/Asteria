@@ -68,6 +68,27 @@ def describe_condition(value):
     return f"NOT ({text})" if value.negate else text
 
 
+def _value(combo):
+    """The id behind a combo of names; typed text when it matches no entry (a new id)."""
+    text = combo.currentText().strip()
+    index = combo.currentIndex()
+    if index >= 0 and combo.itemText(index) == text and combo.itemData(index) is not None:
+        return str(combo.itemData(index))
+    found = combo.findText(text)
+    if found >= 0 and combo.itemData(found) is not None:
+        return str(combo.itemData(found))
+    return text
+
+
+def _choose(combo, value):
+    """Show ``value`` (an id) by its name; an unknown id is shown as it is."""
+    index = combo.findData(value)
+    if index >= 0:
+        combo.setCurrentIndex(index)
+    else:
+        combo.setCurrentText(value)
+
+
 class ConditionList(QGroupBox):
     """Conditions of one rule or phase: list + a small form to add / replace / remove."""
 
@@ -243,7 +264,7 @@ class EnemyAIEditorWidget(QWidget):
         self.used_by.setWordWrap(True)
         self.enemy = QComboBox()
         bind = QPushButton("Use for Enemy")
-        bind.clicked.connect(lambda: self.bind_enemy(self.enemy.currentText()))
+        bind.clicked.connect(lambda: self.bind_enemy(_value(self.enemy)))
         bind_row = QHBoxLayout()
         bind_row.addWidget(self.enemy, 1)
         bind_row.addWidget(bind)
@@ -408,7 +429,7 @@ class EnemyAIEditorWidget(QWidget):
         pv.addWidget(self.phase_label)
         pv.addWidget(QLabel("Would pick"))
         pv.addWidget(self.decision)
-        pv.addWidget(QLabel("Phase by vitality"))
+        pv.addWidget(QLabel("Phase by HP"))
         pv.addWidget(self.curve)
         checks = QGroupBox("Checks")
         cv = QVBoxLayout(checks)
@@ -485,8 +506,19 @@ class EnemyAIEditorWidget(QWidget):
     # -- state --------------------------------------------------------------------------
     @property
     def ai_id(self):
-        item = self.ai_list.currentItem()
-        return None if item is None else item.text()
+        from .ui_fit import named_id
+
+        return named_id(self.ai_list.currentItem())
+
+    def _ai_name(self, ai_id):
+        """An AI in words, with the foes that use it: "Crimson AI  (Vaelor)"."""
+        from .record_vocabulary import words
+
+        enemies = self.api.database.enemies
+        users = [
+            getattr(enemies.get(e), "display_name", "") or e for e in self.api.bound_enemies(ai_id)
+        ]
+        return words(ai_id) + (f"  ({', '.join(users)})" if users else "")
 
     @property
     def rule_id(self):
@@ -507,13 +539,19 @@ class EnemyAIEditorWidget(QWidget):
         current = select or self.ai_id
         ids = self.api.ai_ids()
         self.ai_list.blockSignals(True)
-        self.ai_list.clear()
-        self.ai_list.addItems(list(ids))
+        from .ui_fit import fill_named
+
+        fill_named(self.ai_list, ids, self._ai_name)
         self.ai_list.blockSignals(False)
-        self.ability.clear()
-        self.ability.addItems(list(self.api.abilities()))
+        from .record_vocabulary import ProjectVocabulary
+
+        names = ProjectVocabulary(self.api.document.project).names()
+        self.ability.clear()  # names shown, ids as the data (any id can still be typed)
+        for ability_id in self.api.abilities():
+            self.ability.addItem(names.get(ability_id, ability_id), ability_id)
         self.enemy.clear()
-        self.enemy.addItems(sorted(self.api.database.enemies))
+        for enemy_id in sorted(self.api.database.enemies):
+            self.enemy.addItem(names.get(enemy_id, enemy_id), enemy_id)
         if ids:
             self.ai_list.setCurrentRow(ids.index(current) if current in ids else 0)
         self._load()
@@ -618,7 +656,7 @@ class EnemyAIEditorWidget(QWidget):
             return
         r = self.api.rule(self.ai_id, self.rule_id)
         self.action_kind.setCurrentText(r.action_kind)
-        self.ability.setCurrentText(str(r.payload.get("ability_id", "")))
+        _choose(self.ability, str(r.payload.get("ability_id", "")))
         self.hook.setText(str(r.payload.get("hook", "")))
         self.target.setCurrentText(r.target_selector)
         self.priority.setValue(r.priority)
@@ -704,7 +742,7 @@ class EnemyAIEditorWidget(QWidget):
             "weight": self.weight.value(),
         }
         if kind == "ability":
-            changes["ability_id"] = self.ability.currentText().strip()
+            changes["ability_id"] = _value(self.ability)
         elif kind == "hook":
             changes["hook"] = self.hook.text().strip()
         return self._try(
@@ -714,7 +752,7 @@ class EnemyAIEditorWidget(QWidget):
         )
 
     def add_rule(self, rule_id):
-        ability = self.ability.currentText().strip() or None
+        ability = _value(self.ability) or None
         return self._try(
             lambda: self.api.add_rule(self.ai_id, rule_id, ability_id=ability),
             f"Rule {rule_id} added",
@@ -835,7 +873,9 @@ class EnemyAIEditorWidget(QWidget):
             spin.setSuffix(f" / {maximum:g}")
             spin.valueChanged.connect(lambda _v: self.run_preview())
             self.resource_inputs[rid] = (spin, maximum)
-            self.resource_form.addRow(rid, spin)
+            from .record_vocabulary import label_for
+
+            self.resource_form.addRow(label_for(rid), spin)
             # Measure after parenting so the inherited font and styled arrows are included.
             spin.ensurePolished()
             spin.setMinimumHeight(spin.sizeHint().height())

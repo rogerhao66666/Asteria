@@ -284,8 +284,9 @@ class AnimationStateMachineWidget(QWidget):
 
     @property
     def sheet(self):
-        item = self.sheet_list.currentItem()
-        return None if item is None else item.text()
+        from .animation_editor_widget import listed_id
+
+        return listed_id(self.sheet_list.currentItem())
 
     def refresh(self, select=None):
         if self.api.document.project is None:
@@ -293,8 +294,9 @@ class AnimationStateMachineWidget(QWidget):
         current = select or self.sheet
         ids = self.api.sheets()
         self.sheet_list.blockSignals(True)
-        self.sheet_list.clear()
-        self.sheet_list.addItems(list(ids))
+        from .animation_editor_widget import fill_sheet_list
+
+        fill_sheet_list(self.sheet_list, ids, self.api.document.project)
         self.sheet_list.blockSignals(False)
         if ids:
             self.sheet_list.setCurrentRow(ids.index(current) if current in ids else 0)

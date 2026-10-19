@@ -230,7 +230,8 @@ LABELS = {
     "multiplier_source_terms": "Multiplier grows with attacker stats",
     "multiplier_target_terms": "Multiplier grows with target stats",
     "contributed_tags": "Tags while active",
-    "duration": "Lasts (turns)",
+    "duration": "Lasts",
+    "power": "Power ×",
     "periodic": "Every turn",
     "on_apply": "When applied",
     "on_remove": "When removed",
@@ -376,7 +377,7 @@ HELP = {
     "flat_delta": "Added to the damage before the multiplier.",
     "base_chance": "How often it happens before stats (100% = always).",
     "chance": "How often it happens (100% = always).",
-    "duration": "How many turns it lasts.",
+    "duration": "How long it lasts: turns for a status, seconds for a hitbox or an effect.",
     "max_stacks": "How many times it can pile up.",
     "terms": "Each stat times its number is added up.",
     "contributed_tags": "Labels the holder has while this lasts.",
@@ -507,7 +508,7 @@ class ProjectVocabulary:
             for name in sorted(names):
                 yield Choice(name, _resource_label(name))
         elif source == "stats":
-            for name in sorted(self.stats()):
+            for name in sorted(self.stats(), key=_stat_order):
                 yield Choice(name, _stat_label(name))
         elif source == "checks":
             for key in sorted(db.outcome_checks):
@@ -531,6 +532,25 @@ class ProjectVocabulary:
             slots = {e.slot for e in db.equipment.values()}
             for name in sorted(slots):
                 yield Choice(name, words(name))
+        elif source == "clips":  # every animation name the project's sprite sheets have
+            from .animation_editor_widget import clip_title
+
+            names = set()
+            for asset in project.assets.query(kind="sprite_sheet"):
+                names.update(dict(asset.meta().get("clips", {}) or {}))
+            for name in sorted(names):
+                yield Choice(name, clip_title(name))
+        elif source.startswith("assets:"):  # project assets of one kind, by their names
+            kind = source.split(":", 1)[1]
+            seen = set()
+            for record in project.assets.records():
+                if record.kind == kind and record.id not in seen:
+                    seen.add(record.id)
+                    yield Choice(record.id, record.name or words(record.id))
+            for asset in project.assets.query(kind=kind):
+                if asset.asset_id not in seen:
+                    seen.add(asset.asset_id)
+                    yield Choice(asset.asset_id, words(asset.asset_id.rsplit(".", 1)[-1]))
         elif source == "currencies":
             names = set(getattr(project.game_start, "currencies", {}) or {}) | {"gold"}
             for name in sorted(names):
@@ -553,7 +573,8 @@ class ProjectVocabulary:
         """Display names by id of jobs, skills, states, items and gear (for tags in words)."""
         if "__names" not in self._cache:
             names = {}
-            for source in ("classes", "abilities", "states", "items", "equipment", "enemies"):
+            sources = ("classes", "abilities", "states", "items", "equipment", "enemies", "actors")
+            for source in sources:
                 for choice in self.choices(source):
                     names.setdefault(choice.value, choice.label)
             self._cache["__names"] = names
@@ -638,6 +659,17 @@ def words(text):
     return " ".join(out)
 
 
+def _stat_order(name):
+    """Stats in the order a status screen reads: the points the player spends (STR, DEX, INT,
+    LUK, VIT), the core numbers, then elements and the rest alphabetically."""
+    head = list(_STAT_NAMES) + ["vit"]
+    if name in head:
+        return (0, head.index(name), name)
+    if name.endswith(("_attack", "_resist")):
+        return (2, 0, name)
+    return (1, 0, name)
+
+
 def _stat_label(name):
     if name in _STAT_NAMES:
         return _STAT_NAMES[name]
@@ -675,22 +707,25 @@ def label_for(key):
 _POINTS = {"ap": "Ability Points", "stat_points": "Stat Points", "skill_points": "Skill Points"}
 
 
-def record_title(category, data, vocabulary):
+def record_title(category, data, vocabulary, key=None):
     """A readable title for a record that has no name of its own (the list shows it):
-    an evolution as "Fire Bolt → Fire Bolt (Echo)", a skill's targeting by the skill's name."""
-    if not isinstance(data, dict):
-        return ""
+    an evolution as "Fire Bolt → Fire Bolt (Echo)", a skill's targeting by the skill's name,
+    a fighter's look by its fighter's name (Vaelor); else its id in words."""
     names = vocabulary.names() if vocabulary is not None else {}
+    if not isinstance(data, dict):
+        return words(key) if key else ""
     source, result = data.get("source_ability_id"), data.get("result_ability_id")
     if source and result:
         return f"{names.get(source, source)}  →  {names.get(result, result)}"
     ability = data.get("ability_id")
     if isinstance(ability, str) and ability in names:
         return names[ability]
-    for key in ("display_name", "name", "label", "title"):
-        if isinstance(data.get(key), str) and data[key]:
-            return data[key]
-    return ""
+    for field in ("display_name", "name", "label", "title"):
+        if isinstance(data.get(field), str) and data[field]:
+            return data[field]
+    if key and str(key) in names:  # a record named after a fighter, a skill...
+        return names[str(key)]
+    return words(str(key).replace(".", " ")) if key else ""
 
 
 # -- fields with a fixed set of values, read from the engine ----------------------------------
@@ -817,12 +852,18 @@ def tag_label(tag, names=None):
             return pattern.format(word)
     if tag.startswith("outcome."):
         return "Result: " + tag[8:].replace("_", " ")
-    return tag.replace(".", " · ").replace("_", " ").capitalize()
+    for mark in (":", "."):  # "stage:vigil_portrait" -> "Stage: Vigil Portrait"
+        if mark in tag:
+            head, rest = tag.split(mark, 1)
+            rest = names.get(rest) or words(rest.replace(".", " · ").replace(":", " · "))
+            return f"{words(head)}: {rest}"
+    return words(tag)
 
 
 # -- triggers (moments in a battle) in words ----------------------------------------------------
 TRIGGERS = {  # trigger id -> when it happens
     "battle.hit": "When a hit lands",
+    "*": "Any moment",
     "battle.break": "When a shield breaks (Break)",
     "battle.overdrive": "When the gauge fills (Overdrive)",
     "battle.action": "When an action is used",

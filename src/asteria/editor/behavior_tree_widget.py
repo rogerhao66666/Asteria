@@ -30,6 +30,7 @@ from .behavior_tree_authoring import (
     BehaviorTreeAuthoring,
     BehaviorTreeAuthoringError,
 )
+from .record_vocabulary import words as _words
 
 
 def describe(node):
@@ -151,8 +152,9 @@ class BehaviorTreeEditorWidget(QWidget):
     # -- state -----------------------------------------------------------------------------------
     @property
     def tree_id(self):
-        item = self.tree_list.currentItem()
-        return None if item is None else item.text()
+        from .ui_fit import named_id
+
+        return named_id(self.tree_list.currentItem())
 
     @property
     def path(self):
@@ -165,8 +167,9 @@ class BehaviorTreeEditorWidget(QWidget):
         current = select or self.tree_id
         ids = self.api.ids()
         self.tree_list.blockSignals(True)
-        self.tree_list.clear()
-        self.tree_list.addItems(list(ids))
+        from .ui_fit import fill_named
+
+        fill_named(self.tree_list, ids, _words)
         self.tree_list.blockSignals(False)
         if ids:
             self.tree_list.setCurrentRow(ids.index(current) if current in ids else 0)

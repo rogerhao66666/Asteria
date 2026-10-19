@@ -40,6 +40,7 @@ from PySide6.QtWidgets import (
 from .authoring_sidebar import authoring_sidebar
 from .game_systems_authoring import FORMS, KINDS, GameSystemsAuthoringError, new_row
 from .project_empty_state import ProjectEmptyState
+from .record_form import Picker
 from .responsive_form import ResponsiveForm, ResponsiveSplit
 
 _BIG = 1_000_000_000
@@ -239,6 +240,73 @@ class _TableField(QGroupBox):
     def values(self):
         self._commit()
         return [copy.deepcopy(r) for r in self.rows]
+
+
+# text fields that name something in the project: the names offered (a "+" joins sources)
+_TEXT_SOURCES = {
+    "currency": "currencies",
+    "currency_id": "currencies",
+    "fee_currency": "currencies",
+    "repair_currency": "currencies",
+    "damage_resource": "resources",
+    "resource": "resources",
+    "check_stat": "stats",
+    "lifesteal_stat": "stats",
+    "stat": "stats",
+    "sprite_sheet_asset_id": "assets:sprite_sheet",
+    "battle_background": "assets:texture",
+    "target": "enemies+items",
+    "target_key": "enemies",
+}
+_SWITCH_KEYS = (
+    "enabled_switch", "visible_switch", "failure_switch", "success_switch", "required_switch",
+    "switch", "unlock_switch",
+)  # fmt: skip
+_VALUE_KEYS = {  # a field offering the values another field uses
+    "side": "side",
+    "event": "event",
+    "default_difficulty": "difficulty_id",
+    "default_locale": "locale",
+}
+
+
+class _TextPicker(Picker):
+    """A text field as a drop-down of the project's names (any other text can be typed); the
+    API of the line edit it replaces: ``text``, ``setText``, ``textEdited``."""
+
+    textEdited = Signal(str)
+
+    def __init__(self, choices):
+        super().__init__(choices, "", allow_none=True)
+        self.picked.connect(lambda: self.textEdited.emit(self.value()))
+
+    def set_value(self, value):
+        value = "" if value is None else str(value)
+        if value not in self._values:  # a name typed by hand stays as it is
+            self.addItem(value, value)
+            self._values.append(value)
+        self.setCurrentIndex(self._values.index(value))
+
+    def text(self):
+        return self.value()
+
+    def setText(self, text):  # noqa: N802 - the line edit's API
+        self.set_value(text)
+
+
+def _choice_words(choice, words):
+    """A fixed choice as players read it: "defeat_enemy" -> "Defeat Enemy"; operators and
+    symbols stay as they are (==, <=)."""
+    text = str(choice)
+    return words(text) if text[:1].isalpha() else text
+
+
+class _Decimal(QDoubleSpinBox):
+    """A number shown without trailing zeros (1, 0.25, 12.5 - not 1.000)."""
+
+    def textFromValue(self, value):  # noqa: N802 - Qt API
+        text = f"{value:.{self.decimals()}f}".rstrip("0").rstrip(".")
+        return "0" if text in ("", "-0") else text
 
 
 class _Group(QGroupBox):
@@ -461,7 +529,11 @@ class RecordForm(QWidget):
                 self.grid.add_wide(widget)
             else:
                 self.grid.add_row(
-                    f.label, widget, span=f.kind in ("amounts", "pairs", "ref_list", "multiline")
+                    f.label,
+                    widget,
+                    # tables and long text (a translation, a description) take a whole row
+                    span=f.kind in ("amounts", "pairs", "ref_list", "multiline")
+                    or f.key in ("text", "description", "message", "detail"),
                 )
 
     def _edited(self, *_args):
@@ -506,6 +578,57 @@ class RecordForm(QWidget):
         document = self.document or getattr(self.icons, "document", None)
         return ProjectVocabulary(getattr(document, "project", None))
 
+    def _noun(self, f):
+        """What one entry of a list field is, for its "+ Add …" button: from what it refers to
+        (an item, a stat, a quest), else from the field's own name."""
+        from .record_vocabulary import map_source
+
+        if "price" in f.key or "currenc" in f.key:
+            return "currency"
+        source = getattr(f, "source", None) or map_source(f.key) or ""
+        nouns = {"items": "item", "stats": "stat", "resources": "resource", "quests": "quest",
+                 "abilities": "skill", "equipment": "equipment", "enemies": "enemy",
+                 "factions": "faction", "states": "state", "classes": "job",
+                 "actors": "character", "currencies": "currency"}  # fmt: skip
+        nouns.update({"progression_tracks": "track", "carry_parts": "part"})
+        if source in nouns:
+            return nouns[source]
+        by_key = {"bonuses": "stat", "growth": "stat", "stat_growth": "stat", "stats": "stat",
+                  "terms": "stat", "resource_growth": "resource", "resources": "resource",
+                  "capacity_by_level": "level", "thresholds": "level",
+                  "shared_gauges": "gauge"}  # fmt: skip
+        if f.key in by_key:
+            return by_key[f.key]
+        word = f.label.split("(")[0].strip().split(" ")[-1].lower()
+        for suffix, replacement in (("ies", "y"), ("ses", "s"), ("s", "")):
+            if word.endswith(suffix) and len(word) > 3:
+                return word[: -len(suffix)] + replacement
+        return word or "entry"
+
+    def _text_choices(self, key):
+        """A text field that names something in the project (a currency, a stat, an enemy, a
+        switch...) offers those names; anything else can still be typed."""
+        from .record_vocabulary import Choice, words
+
+        vocabulary = self._vocabulary()
+        if vocabulary.project is None:
+            return []
+        source = _TEXT_SOURCES.get(key)
+        if source is not None:
+            out = []
+            for part in source.split("+"):
+                out.extend(vocabulary.choices(part))
+            return out
+        if key in _SWITCH_KEYS:
+            used = set()
+            for other in _SWITCH_KEYS:
+                used.update(vocabulary.values_for(other))
+            return [Choice(v, v) for v in sorted(used)]
+        if key in _VALUE_KEYS:
+            values = vocabulary.values_for(_VALUE_KEYS[key])
+            return [Choice(v, words(v)) for v in values]
+        return []
+
     def _reference_choices(self, f):
         from .record_vocabulary import Choice, map_source
 
@@ -529,7 +652,8 @@ class RecordForm(QWidget):
             widget.setReadOnly(True)
             return widget
         if f.kind == "text":
-            return QLineEdit()
+            choices = self._text_choices(f.key)
+            return _TextPicker(choices) if choices else QLineEdit()
         if f.kind == "multiline":
             widget = QPlainTextEdit()
             widget.setMaximumHeight(70)
@@ -539,15 +663,18 @@ class RecordForm(QWidget):
             widget.setRange(-_BIG, _BIG)
             return widget
         if f.kind == "float":
-            widget = QDoubleSpinBox()
+            widget = _Decimal()
             widget.setRange(-_BIG, _BIG)
             widget.setDecimals(3)
             return widget
         if f.kind == "bool":
             return QCheckBox()
         if f.kind == "choice":
+            from .record_vocabulary import words
+
             widget = QComboBox()
-            widget.addItems(list(f.choices))
+            for choice in f.choices:  # in words; the value written is the item's data
+                widget.addItem(_choice_words(choice, words), choice)
             return widget
         if f.kind in ("ref", "optional_ref"):
             widget = QComboBox()
@@ -572,7 +699,7 @@ class RecordForm(QWidget):
         if f.kind == "ref_list":
             from .record_form import ChipList
 
-            return ChipList((), self._reference_choices(f), allow_new=False, noun="entry")
+            return ChipList((), self._reference_choices(f), allow_new=False, noun=self._noun(f))
         if f.kind == "string_list":
             from .record_form import ChipList
             from .record_vocabulary import Choice, is_tag_field, tag_label
@@ -582,12 +709,11 @@ class RecordForm(QWidget):
             names = vocabulary.names() if words else {}
             namer = (lambda t, n=names: tag_label(t, n)) if words else None
             choices = [Choice(t, tag_label(t, names)) for t in words]
-            return ChipList((), choices, noun="tag" if words else "entry", namer=namer)
+            return ChipList((), choices, noun="tag" if words else self._noun(f), namer=namer)
         if f.kind == "amounts":
             from .record_form import AmountTable
 
-            noun = "currency" if "price" in f.key or "currenc" in f.key else "entry"
-            return AmountTable({}, self._reference_choices(f), noun=noun)
+            return AmountTable({}, self._reference_choices(f), noun=self._noun(f))
         if f.kind == "pairs":
             return _KeyValueTable(("Threshold", "Name"))
         if f.kind == "group":
@@ -626,9 +752,9 @@ class RecordForm(QWidget):
                 widget.setChecked(bool(value))
             elif f.kind == "choice":
                 text = "" if value is None else str(value)
-                if widget.findText(text) < 0:
-                    widget.addItem(text)
-                widget.setCurrentIndex(widget.findText(text))
+                if widget.findData(text) < 0:
+                    widget.addItem(text, text)
+                widget.setCurrentIndex(widget.findData(text))
             elif f.kind in ("ref", "optional_ref"):
                 text = "" if value is None else str(value)
                 if widget.findData(text) < 0:  # a reference that no longer exists stays visible
@@ -666,7 +792,8 @@ class RecordForm(QWidget):
             elif f.kind == "bool":
                 out[f.key] = widget.isChecked()
             elif f.kind == "choice":
-                out[f.key] = widget.currentText()
+                value = widget.currentData()
+                out[f.key] = widget.currentText() if value is None else str(value)
             elif f.kind in ("ref", "optional_ref"):
                 value = widget.currentData()
                 out[f.key] = widget.currentText() if value is None else str(value)
@@ -751,7 +878,25 @@ class GameSystemsEditorWidget(QWidget):
     @property
     def selected_id(self):
         item = self.browser.currentItem()
-        return None if item is None else item.text()
+        return None if item is None else item.data(Qt.UserRole)
+
+    def _record_name(self, key, names):
+        """A record as the list shows it: its name, else what it is about (a capture rule by
+        its enemy), else its id in words."""
+        from .record_vocabulary import words
+
+        try:
+            data = self.controller.form_data(self.kind_id, key)
+        except (GameSystemsAuthoringError, KeyError, TypeError, ValueError):
+            data = {}
+        for field in ("display_name", "name", "label", "title"):
+            if isinstance(data.get(field), str) and data[field].strip():
+                return data[field]
+        if "locale" in data:  # a language: its own name for itself, and its code
+            entries = data.get("entries", ())
+            own = next((e.get("text") for e in entries if e.get("key") == "language.name"), "")
+            return f"{own}  ({key})" if own else str(key)
+        return names.get(str(key)) or words(str(key).replace(".", " "))
 
     def set_kind(self, kind_id):
         self.kind_box.setCurrentIndex(self.kind_box.findData(kind_id))
@@ -760,8 +905,10 @@ class GameSystemsEditorWidget(QWidget):
         current = select or self.selected_id
         if self.controller.document.project is None:
             self.browser.clear()
-            self.scroll.setWidget(
-                ProjectEmptyState("Open a project to edit game systems and settings.")
+            from .ui_fit import swap_scroll_page
+
+            swap_scroll_page(
+                self.scroll, ProjectEmptyState("Open a project to edit game systems and settings.")
             )
             self.form = None
             return
@@ -773,11 +920,20 @@ class GameSystemsEditorWidget(QWidget):
             document=self.controller.document,
         )
         self.form.changed.connect(self._apply_timer.start)
-        self.scroll.setWidget(self.form)
+        from .ui_fit import swap_scroll_page
+
+        swap_scroll_page(self.scroll, self.form)
         self.browser.blockSignals(True)
         self.browser.clear()
         ids = self.controller.ids(self.kind_id)
-        self.browser.addItems(list(ids))
+        from .record_vocabulary import ProjectVocabulary
+
+        names = ProjectVocabulary(self.controller.document.project).names()
+        for key in ids:  # the record's name; its id is the row's data and its tooltip
+            item = QListWidgetItem(self._record_name(key, names))
+            item.setData(Qt.UserRole, key)
+            item.setToolTip(f"Internal ID: {key}")
+            self.browser.addItem(item)
         self.browser.blockSignals(False)
         self.form.setEnabled(bool(ids))
         if ids:
@@ -803,7 +959,7 @@ class GameSystemsEditorWidget(QWidget):
     def _attempt(self, action, message, select=None):
         try:
             action()
-        except (GameSystemsAuthoringError, ValueError, TypeError) as exc:
+        except (GameSystemsAuthoringError, ValueError, TypeError, KeyError, AttributeError) as exc:
             self._report(str(exc), ok=False)
             return False
         self._report(message)
@@ -881,13 +1037,37 @@ class GameSystemsEditorWidget(QWidget):
             ]
             key, ok = QInputDialog.getItem(self, "New Capture Rule", "Enemy:", choices, 0, False)
         else:
-            key, ok = QInputDialog.getText(self, "New", "ID:")
+            from .authoring_hub_widget import _free_id
+
+            noun = self.kind_box.currentText()
+            key, ok = QInputDialog.getText(
+                self,
+                f"New - {noun}",
+                "Internal ID - other records refer to it by this, so it stays fixed\n"
+                "(lowercase letters, numbers and _; the name players see is set in the form):",
+                text=_free_id("", self.controller.ids(kind), "new"),
+            )
         if ok and str(key).strip():
             self.new_record(key)
 
     def _duplicate_clicked(self):
         if self.selected_id is None:
             return
-        key, ok = QInputDialog.getText(self, "Duplicate", "New ID:")
+        from .authoring_hub_widget import _free_id
+
+        if self.kind_id == "capture_rules":  # a capture rule belongs to one enemy: pick another
+            taken = self.controller.ids(self.kind_id)
+            choices = [x for x in self.controller.references("enemies") if x not in taken]
+            key, ok = QInputDialog.getItem(self, "Copy to Enemy", "Enemy:", choices, 0, False)
+            if ok and str(key).strip():
+                self.duplicate_as(key)
+            return
+        key, ok = QInputDialog.getText(
+            self,
+            "Duplicate",
+            "Internal ID for the copy - other records refer to it by this, so it stays fixed\n"
+            "(lowercase letters, numbers and _):",
+            text=_free_id(self.selected_id, self.controller.ids(self.kind_id)),
+        )
         if ok and key.strip():
             self.duplicate_as(key)

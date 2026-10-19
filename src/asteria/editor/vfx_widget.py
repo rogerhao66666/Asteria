@@ -200,8 +200,9 @@ class VFXEditorWidget(QWidget):
     # -- state ----------------------------------------------------------------------
     @property
     def vfx_id(self):
-        item = self.vfx_list.currentItem()
-        return None if item is None else item.text()
+        from .animation_editor_widget import listed_id
+
+        return listed_id(self.vfx_list.currentItem())
 
     def refresh(self, select=None):
         if self.api.document.project is None:
@@ -210,8 +211,9 @@ class VFXEditorWidget(QWidget):
         current = select or self.vfx_id
         ids = self.api.vfx_ids()
         self.vfx_list.blockSignals(True)
-        self.vfx_list.clear()
-        self.vfx_list.addItems(list(ids))
+        from .animation_editor_widget import fill_sheet_list
+
+        fill_sheet_list(self.vfx_list, ids, self.api.document.project)
         self.vfx_list.blockSignals(False)
         if ids:
             self.vfx_list.setCurrentRow(ids.index(current) if current in ids else 0)

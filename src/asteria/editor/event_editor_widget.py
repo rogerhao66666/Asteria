@@ -21,6 +21,12 @@ except ImportError:
 
 from .event_editing import describe_instruction
 
+OLD_EMPTY_HINT = "Select an Entity to edit events"
+EMPTY_HINT = (
+    "Pick a person or object in the Scene (or in the Project tree) to see and edit what "
+    "happens when the player talks to it, touches it or enters the map."
+)
+
 
 class EventEditorWidget(QWidget):
     if QT_AVAILABLE:
@@ -111,22 +117,29 @@ class EventEditorWidget(QWidget):
         layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(12)
         layout.addWidget(self.title)
-        layout.addLayout(header)
-        layout.addLayout(form)
-        layout.addLayout(condition_row)
+        # everything below the title: greyed out until a person or object is picked
+        self.body = QWidget()
+        body = QVBoxLayout(self.body)
+        body.setContentsMargins(0, 0, 0, 0)
+        body.setSpacing(12)
+        body.addLayout(header)
+        body.addLayout(form)
+        body.addLayout(condition_row)
         commands_heading = QLabel("Commands")
         commands_heading.setProperty("presentationHeading", True)
-        layout.addWidget(commands_heading)
-        layout.addWidget(self.commands, 1)
-        layout.addLayout(buttons)
-        layout.addLayout(ordering)
+        body.addWidget(commands_heading)
+        body.addWidget(self.commands, 1)
+        body.addLayout(buttons)
+        body.addLayout(ordering)
+        layout.addWidget(self.body, 1)
 
-        self.show_empty("Select an Entity to edit events")
+        self.show_empty(EMPTY_HINT)
 
     def show_empty(self, message):
         self._refreshing = True
+        self.body.setEnabled(False)
         try:
-            self.title.setText(message)
+            self.title.setText(EMPTY_HINT if message == OLD_EMPTY_HINT else message)
             self.binding_combo.clear()
             self.program_combo.clear()
             self.commands.clear()
@@ -139,6 +152,7 @@ class EventEditorWidget(QWidget):
     def set_entity_context(self, entity, bindings, registry):
         self._refreshing = True
         try:
+            self.body.setEnabled(True)
             self.title.setText(f"Events — {entity.name}")
             entity_bindings = list(bindings.for_entity(entity.id))
             self._binding_ids = [b.binding_id for b in entity_bindings]

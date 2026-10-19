@@ -725,6 +725,7 @@ class Section(QFrame):
         widget.setToolTip(widget.toolTip() or tip.strip())
         holder = QVBoxLayout()
         if self.columns:
+            help_text = ""  # a card stays compact: its help is the field's tooltip
             self._grid_place(title, label, widget, holder)
         elif self.compact:
             holder.addWidget(title)
@@ -779,7 +780,8 @@ class Section(QFrame):
         if isinstance(widget, QCheckBox) and label:
             widget.setText(label)
             holder.addSpacing(title.sizeHint().height() + 1)  # in line with labelled fields
-            title.deleteLater()
+            # the unused label has no parent: Python frees it (a deleteLater as well would
+            # free it twice and crash later)
         else:
             holder.addWidget(title)
 
@@ -889,6 +891,11 @@ class RecordForm(QScrollArea):
         self._layout.addStretch(1)
         self.setWidget(self._page)
         if old is not None:
+            # takeWidget hands the old page to Python, which would free it at once - while a
+            # click on one of its buttons (an "+ Add" that rebuilt the form) is still being
+            # handled: a use-after-free that crashes later. It is held until deleteLater runs.
+            old.hide()
+            self._retired = old  # held (not a child, so it is never found among them)
             old.deleteLater()
         QTimer.singleShot(0, self._page, lambda: self.verticalScrollBar().setValue(scroll))
 
@@ -975,7 +982,7 @@ class RecordForm(QScrollArea):
         if id_key is not None and name_key is None:  # no name: a title from its parts
             from .record_vocabulary import record_title
 
-            title = record_title(self.category, data, self.vocabulary)
+            title = record_title(self.category, data, self.vocabulary, data.get(id_key))
             if title:
                 heading = QLabel(title)
                 heading.setObjectName("FormTitle")
@@ -1061,6 +1068,11 @@ class RecordForm(QScrollArea):
             picker.setText(str(value or ""))
             picker.changed.connect(lambda p=picker: self._set(data, key, p.text()))
             return picker
+        if (isinstance(value, str) or value is None) and skey in _CLIP_KEYS.get(self.category, ()):
+            # a pose names one of the sheet's animations: offer them, in words
+            picker = Picker(self.vocabulary.choices("clips"), value or "", allow_none=True)
+            picker.picked.connect(lambda p=picker: self._set(data, key, p.value()))
+            return picker
         if isinstance(value, str) or value is None:
             if source is not None or skey in self.field_choices:
                 choices = self._choices(source, skey)
@@ -1075,6 +1087,8 @@ class RecordForm(QScrollArea):
 
                 used = self.vocabulary.values_for(skey)
                 known = dict.fromkeys(fixed or (*TRIGGERS, *used))
+                if value:  # the record's own moment is always one of the choices
+                    known.setdefault(str(value), None)
                 choices = [Choice(t, trigger_label(t)) for t in known]
                 picker = Picker(choices, value or "", allow_none=True)
                 picker.picked.connect(lambda p=picker: self._set(data, key, p.value()))
@@ -1113,7 +1127,7 @@ class RecordForm(QScrollArea):
                     choices = self._choices(source, skey)
                 else:
                     choices = self._value_choices(skey)
-                noun = _singular(label_for(skey).lower()) or "entry"
+                noun = _noun(skey)
             namer = None
             if noun == "tag":
                 names = self.vocabulary.names()
@@ -1124,7 +1138,9 @@ class RecordForm(QScrollArea):
         if isinstance(value, dict) and _number_map(value):
             kind = map_source(skey)
             choices = self.vocabulary.choices(kind) if kind else ()
-            noun = {"resources": "resource", "stats": "stat", "items": "item"}.get(kind, "entry")
+            noun = {"resources": "resource", "stats": "stat", "items": "item"}.get(kind) or _noun(
+                skey
+            )
             table = AmountTable(value, choices, percent=False, noun=noun)
             table.edited.connect(lambda t=table: self._set(data, key, dict(t.values)))
             return table
@@ -1147,7 +1163,8 @@ class RecordForm(QScrollArea):
     def _value_choices(self, key):
         from .record_vocabulary import Choice
 
-        return [Choice(v, v) for v in self.vocabulary.values_for(key)]
+        # values in words: a stat by its name ("STR", "Critical Rate"), else the id in words
+        return [Choice(v, label_for(v)) for v in self.vocabulary.values_for(key)]
 
     def _reference(self, data, key):
         if key == "key" and isinstance(data.get("source"), str):
@@ -1238,7 +1255,7 @@ class CardList(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
-        noun = _singular(label_for(key).lower()) or "entry"
+        noun = _noun(key)
         if not entries:
             layout.addWidget(_small(f"No {label_for(key).lower()} yet."))
         for index, entry in enumerate(entries):
@@ -1382,6 +1399,22 @@ def _numbers(text):
     return out
 
 
+_CLIP_KEYS = {"combatant_visuals": ("clip_role", "state_id", "fallback_state_id")}
+
+
+def _noun(key):
+    """What one entry of a list field is, for "+ Add …": its label when that is one word
+    ("Jobs" -> job), else the key's last word ("gain_rules" -> rule)."""
+    label = label_for(key)
+    if label and " " not in label.strip():
+        return _singular(label.lower())
+    word = str(key).replace("-", "_").split("_")[-1].lower()
+    special = {"operations": "step", "impacts": "rule", "entries": "entry", "members": "member"}
+    if word in special:
+        return special[word]
+    return _singular(word) if word and word not in ("ids", "id") else "entry"
+
+
 def _plural(noun):
     """``currency`` -> "currencies", ``entry`` -> "entries", ``stat`` -> "stats"."""
     noun = str(noun)
@@ -1423,6 +1456,14 @@ def _entry_title(entry, noun, names=None):
     """A card's title: the entry's name, or what it refers to by its display name (``Brave``
     for ``class_id: brave``)."""
     names = names or {}
+    title = _entry_name(entry, noun, names)
+    if isinstance(entry, dict) and isinstance(entry.get("trigger"), str) and entry["trigger"]:
+        moment = trigger_label(entry["trigger"])  # a rule also says the moment it reacts to
+        return moment if title == noun.title() else f"{title}  ·  {moment}"
+    return title
+
+
+def _entry_name(entry, noun, names):
     if isinstance(entry, dict):
         for key in ("display_name", "name", "label", "state", "stat", "ability_id", "class_id",
                     "item_id", "resource", "command", "socket_id", "form_id", "key",
@@ -1430,7 +1471,7 @@ def _entry_title(entry, noun, names=None):
             value = entry.get(key)
             if isinstance(value, str) and value:
                 extra = ""
-                if "value" in entry and isinstance(entry["value"], (int, float)):
+                if isinstance(entry.get("value"), (int, float)) and entry["value"]:
                     extra = f"  {entry['value']:+g}"
                 if "to" in entry and isinstance(entry["to"], str):
                     extra += f"  → {names.get(entry['to'], entry['to'])}"

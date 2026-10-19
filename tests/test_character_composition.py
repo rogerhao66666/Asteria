@@ -231,11 +231,11 @@ def test_composition_tab_authors_through_its_forms_and_previews_the_parts():
     widget.socket_rotation.setValue(45)
     assert widget.key_socket_from_form() and "keys 4" in widget.sockets.item(0).text()
     widget.attachment_id.setText("charm")
-    widget.item_sheet.setCurrentText(ITEM)
+    widget.item_sheet.setCurrentIndex(widget.item_sheet.findData(ITEM))  # names shown, id is data
     widget.attach_socket.setCurrentText("hand")
     widget.attach_scale.setValue(0.25)
     assert widget.attach_from_form() and "charm" in widget.attachments.item(0).text()
-    widget.layer_sheet.setCurrentText(ITEM)
+    widget.layer_sheet.setCurrentIndex(widget.layer_sheet.findData(ITEM))
     widget.layer_component.setText("cape")
     widget.layer_z.setValue(-1)
     assert widget.add_layer_from_form() and widget.layers.count() == 1

@@ -149,7 +149,7 @@ def test_quest_editor_objectives_chain_and_reward(window):
     objectives.set_rows([])
     row = objectives.add_row()
     row.widgets["objective_id"].setText("tyrant")
-    row.widgets["kind"].setCurrentText("defeat_enemy")
+    _pick(row.widgets["kind"], "defeat_enemy")
     row.widgets["target"].setText("astral_tyrant")
     assert _field(form, "next_quest_ids").set_checked("report")
     reward = _field(form, "reward").form
@@ -185,7 +185,7 @@ def test_faction_achievement_set_and_capture_editors(window):
 
     editor.set_kind("achievements")
     editor.new_record("friend")
-    _field(editor.form, "kind").setCurrentText("reputation")
+    _pick(_field(editor.form, "kind"), "reputation")
     _field(editor.form, "target").setText("guild")
     _field(editor.form, "value").setValue(20)
     assert editor.apply(), editor.status.text()

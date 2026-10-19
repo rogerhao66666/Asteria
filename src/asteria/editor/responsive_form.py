@@ -24,11 +24,29 @@ from PySide6.QtWidgets import (
 
 
 class _Cell(QWidget):
-    """One label / field pair. Its height is its plain minimum: the wrapping caption would
-    otherwise give a height-for-width below what a table inside needs, squeezing it."""
+    """One label / field pair. Its minimum height is the larger of its plain minimum (what a
+    table inside needs) and its height at its own width (a caption wrapped onto two lines):
+    neither the table nor the field under a long caption is squeezed."""
 
     def hasHeightForWidth(self):  # noqa: N802 - Qt API
         return False
+
+    def minimumSizeHint(self):  # noqa: N802 - Qt API
+        size = super().minimumSizeHint()
+        layout = self.layout()
+        if layout is not None and self.width() > 0 and layout.hasHeightForWidth():
+            size.setHeight(max(size.height(), layout.heightForWidth(self.width())))
+        return size
+
+    def sizeHint(self):  # noqa: N802 - Qt API
+        size = super().sizeHint()
+        size.setHeight(max(size.height(), self.minimumSizeHint().height()))
+        return size
+
+    def resizeEvent(self, event):  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        if event.size().width() != event.oldSize().width():
+            self.updateGeometry()  # a new width can wrap the caption differently
 
 
 def _field_cell(label, widget):

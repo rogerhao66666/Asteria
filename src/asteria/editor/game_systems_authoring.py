@@ -1198,9 +1198,16 @@ class GameSystemsAuthoringController:
         return value
 
     def duplicate(self, kind_id, key, new_key):
+        # the stored record's own data, read back by its class: not through the form's
+        # adapter, which expects the form's shape (a translation's rows, not its mapping)
+        kind = self.kind(kind_id)
         data = self.get(kind_id, key).to_data()
-        data[self.kind(kind_id).key] = str(new_key)
-        return self.create(kind_id, data)
+        data[kind.key] = str(new_key)
+        try:
+            value = kind.cls.from_data(data)
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+            raise GameSystemsAuthoringError(f"could not copy {key}: {exc}") from exc
+        return self.create(kind_id, value)
 
     def delete(self, kind_id, key):
         kind = self.kind(kind_id)

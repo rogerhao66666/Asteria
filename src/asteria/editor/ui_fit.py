@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QComboBox, QStyledItemDelegate
+from PySide6.QtWidgets import QComboBox, QListWidgetItem, QStyledItemDelegate
 
 
 def fit_combo_boxes(root, *, cap=260, padding=44):
@@ -46,3 +46,34 @@ class _ViewWidthDelegate(QStyledItemDelegate):
         size = super().sizeHint(option, index)
         size.setWidth(min(size.width(), max(1, self.parent().viewport().width() - 2)))
         return size
+
+
+def fill_named(listing, ids, namer):
+    """Fill a record list with names in words (``namer(id)``); each row keeps its id as its
+    data and in its tooltip, so the list reads like the game while the editor works on ids."""
+    listing.clear()
+    for key in ids:
+        item = QListWidgetItem(namer(key) or str(key))
+        item.setData(Qt.UserRole, key)
+        item.setToolTip(f"Internal ID: {key}")
+        listing.addItem(item)
+
+
+def named_id(item):
+    """The id behind a row filled by ``fill_named`` (a plain row: its text)."""
+    if item is None:
+        return None
+    return item.data(Qt.UserRole) or item.text()
+
+
+def swap_scroll_page(scroll, page):
+    """Show ``page`` in ``scroll`` and retire the page it replaces safely: ``setWidget`` (or a
+    ``takeWidget`` left to Python) frees the old page at once, even while a click on one of its
+    buttons is still being handled - a use-after-free that crashes later. The old page is
+    hidden, held and deleted once the event in hand is over."""
+    old = scroll.takeWidget()
+    scroll.setWidget(page)
+    if old is not None and old is not page:
+        old.hide()
+        scroll._retired_page = old  # held (not a child, so it is never found among them)
+        old.deleteLater()

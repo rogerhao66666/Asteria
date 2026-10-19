@@ -75,7 +75,39 @@ def sheet_title(project, asset_id):
         return f"{_words(key)} · fighter"
     if asset_id.startswith(("battle.fx.", "battle.vfx.")):
         return f"Effect: {_words(key)}"
+    assets = getattr(project, "assets", None)
+    for record in assets.records() if assets is not None else ():
+        if record.id == asset_id and record.name:  # an imported sheet: its own name
+            return record.name
     return _words(key)
+
+
+def fill_sheet_list(listing, ids, project):
+    """Fill a list of sprite sheets with their names in words; each row keeps the sheet's
+    asset id as its data (and in its tooltip)."""
+    listing.clear()
+    for asset_id in ids:
+        item = QListWidgetItem(sheet_title(project, asset_id))
+        item.setData(Qt.UserRole, asset_id)
+        item.setToolTip(f"Sheet id: {asset_id}")
+        listing.addItem(item)
+
+
+def fill_sheet_combo(combo, ids, project):
+    """The same for a drop-down: names shown, the asset id is each entry's data."""
+    current = combo.currentData()
+    combo.clear()
+    for asset_id in ids:
+        combo.addItem(sheet_title(project, asset_id), asset_id)
+    if current in ids:
+        combo.setCurrentIndex(combo.findData(current))
+
+
+def listed_id(item):
+    """The id a row of such a list stands for."""
+    if item is None:
+        return None
+    return item.data(Qt.UserRole) or item.text()
 
 
 def clip_title(name, clip=None):
@@ -107,24 +139,47 @@ class FrameGridView(QWidget):
         self.pixmap, self.frame_size, self.highlight = pixmap, tuple(frame_size), tuple(highlight)
         self.update()
 
+    def _frames(self):
+        """``(count, source columns)`` of the sheet's frames."""
+        fw, fh = self.frame_size
+        columns = max(1, self.pixmap.width() // max(1, fw))
+        rows = max(1, self.pixmap.height() // max(1, fh))
+        return columns * rows, columns
+
     def _layout(self):
+        """``(scale, display columns)``: the frames wrapped into as many columns as make them
+        largest in the view (a long one-row strip shows as several rows, not a thin line)."""
         if self.pixmap is None or self.pixmap.isNull():
-            return 1.0
-        return max(
-            0.25,
-            min(self.width() / self.pixmap.width(), self.height() / self.pixmap.height(), 4.0),
+            return 1.0, 1
+        fw, fh = self.frame_size
+        count, _columns = self._frames()
+        best = (0.0, 1)
+        for columns in range(1, count + 1):
+            rows = -(-count // columns)
+            scale = min(self.width() / (columns * fw), self.height() / (rows * fh), 4.0)
+            if scale > best[0]:
+                best = (scale, columns)
+        return max(0.1, best[0]), best[1]
+
+    def _cell_rect(self, index, scale, columns):
+        fw, fh = self.frame_size
+        return QRect(
+            int((index % columns) * fw * scale),
+            int((index // columns) * fh * scale),
+            int(fw * scale),
+            int(fh * scale),
         )
 
     def cell_at(self, x, y):
-        if self.pixmap is None:
+        if self.pixmap is None or self.pixmap.isNull():
             return None
-        scale = self._layout()
+        scale, columns = self._layout()
         fw, fh = self.frame_size
-        columns = max(1, self.pixmap.width() // fw)
-        rows = max(1, self.pixmap.height() // fh)
+        count, _ = self._frames()
         column, row = int(x / (fw * scale)), int(y / (fh * scale))
-        if 0 <= column < columns and 0 <= row < rows:
-            return row * columns + column
+        index = row * columns + column
+        if 0 <= column < columns and 0 <= index < count:
+            return index
         return None
 
     def mousePressEvent(self, event):  # noqa: N802 - Qt API
@@ -139,29 +194,24 @@ class FrameGridView(QWidget):
             painter.setPen(QColor("#8a93a3"))
             painter.drawText(self.rect(), Qt.AlignCenter, "No sprite sheet")
             return
-        scale = self._layout()
-        painter.drawPixmap(
-            QRect(0, 0, int(self.pixmap.width() * scale), int(self.pixmap.height() * scale)),
-            self.pixmap,
-        )
+        scale, columns = self._layout()
         fw, fh = self.frame_size
-        columns = max(1, self.pixmap.width() // fw)
-        rows = max(1, self.pixmap.height() // fh)
-        painter.setPen(QPen(QColor(124, 145, 190, 160), 1))
-        for c in range(columns + 1):
-            painter.drawLine(int(c * fw * scale), 0, int(c * fw * scale), int(rows * fh * scale))
-        for r in range(rows + 1):
-            painter.drawLine(
-                0, int(r * fh * scale), int(columns * fw * scale), int(r * fh * scale)
+        count, source_columns = self._frames()
+        for index in range(count):
+            rect = self._cell_rect(index, scale, columns)
+            source = QRect((index % source_columns) * fw, (index // source_columns) * fh, fw, fh)
+            painter.drawPixmap(rect, self.pixmap, source)
+            painter.setPen(QPen(QColor(124, 145, 190, 160), 1))
+            painter.drawRect(rect.adjusted(0, 0, -1, -1))
+            painter.setPen(QColor(150, 158, 175))  # the frame's number, as typed in "Frames"
+            painter.drawText(
+                rect.adjusted(0, 0, -3, -2), Qt.AlignRight | Qt.AlignBottom, str(index)
             )
         painter.setPen(QPen(QColor(240, 201, 93), 2))
         for order, index in enumerate(self.highlight):
-            rect = QRect(
-                int((index % columns) * fw * scale),
-                int((index // columns) * fh * scale),
-                int(fw * scale),
-                int(fh * scale),
-            )
+            if not 0 <= index < count:
+                continue
+            rect = self._cell_rect(index, scale, columns)
             painter.drawRect(rect.adjusted(1, 1, -1, -1))
             painter.drawText(rect.adjusted(4, 2, 0, 0), Qt.AlignLeft | Qt.AlignTop, str(order + 1))
 

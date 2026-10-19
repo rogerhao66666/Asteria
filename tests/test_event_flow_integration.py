@@ -195,7 +195,7 @@ def test_common_and_battle_events_panel_edits_the_project_with_undo(window):
     assert panel.add_common()
     project = window.document.project
     assert project.common_events[-1] == CommonEvent("rest_routine", "parallel", "resting")
-    panel.battle_hook.setCurrentText("rpg.battle.round_started")
+    panel.battle_hook.setCurrentIndex(panel.battle_hook.findData("rpg.battle.round_started"))
     panel.battle_program.setCurrentText("rest_routine")
     panel.cond_source.setCurrentText("battle")
     panel.cond_name.setText("round")

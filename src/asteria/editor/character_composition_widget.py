@@ -217,8 +217,9 @@ class CharacterCompositionWidget(QWidget):
 
     @property
     def sheet(self):
-        item = self.sheet_list.currentItem()
-        return None if item is None else item.text()
+        from .animation_editor_widget import listed_id
+
+        return listed_id(self.sheet_list.currentItem())
 
     # -- loading ----------------------------------------------------------------------------------
     def refresh(self, select=None):
@@ -227,15 +228,13 @@ class CharacterCompositionWidget(QWidget):
         current = select or self.sheet
         ids = list(self.api.sheets())
         self.sheet_list.blockSignals(True)
-        self.sheet_list.clear()
-        self.sheet_list.addItems(ids)
+        from .animation_editor_widget import fill_sheet_combo, fill_sheet_list
+
+        project = self.api.document.project
+        fill_sheet_list(self.sheet_list, ids, project)
         self.sheet_list.blockSignals(False)
         for combo in (self.item_sheet, self.layer_sheet):
-            text = combo.currentText()
-            combo.clear()
-            combo.addItems(ids)
-            if text in ids:
-                combo.setCurrentText(text)
+            fill_sheet_combo(combo, ids, project)
         self._pixmaps.clear()
         if ids:
             self.sheet_list.setCurrentRow(ids.index(current) if current in ids else 0)
@@ -423,7 +422,7 @@ class CharacterCompositionWidget(QWidget):
             lambda: self.api.attach(
                 self.sheet,
                 attachment_id,
-                self.item_sheet.currentText(),
+                self.item_sheet.currentData() or self.item_sheet.currentText(),
                 self.attach_socket.currentText(),
                 rotation=self.attach_rotation.value(),
                 scale=self.attach_scale.value(),
@@ -439,7 +438,7 @@ class CharacterCompositionWidget(QWidget):
         return self._try(
             lambda: self.api.add_layer(
                 self.sheet,
-                self.layer_sheet.currentText(),
+                self.layer_sheet.currentData() or self.layer_sheet.currentText(),
                 component_id=self.layer_component.text().strip() or "foreground",
                 z=self.layer_z.value(),
                 clips=clips,

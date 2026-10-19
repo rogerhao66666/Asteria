@@ -556,8 +556,8 @@ class RarityPreview(_Preview):
             painter.setPen(Qt.NoPen)
             painter.setBrush(bg)
             painter.drawRoundedRect(QRectF(16, y, w - 32, 40), 8, 8)
-            if index:  # on a light surface a pale colour needs an outline to be read
-                for ox, oy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            if index:  # on a light surface a pale colour needs a shadow to be read
+                for ox, oy in ((1, 1),):  # one soft shadow: an outline blurs small text
                     self._caption(
                         painter,
                         28 + ox,
@@ -962,7 +962,7 @@ class CombatWorkspace(QWidget):
                 continue
             item = QListWidgetItem(
                 icon(spec.icon, getattr(record, "color", None) or spec.accent),
-                name if name == record_id else f"{name}  ·  {record_id}",
+                name,
             )
             item.setData(Qt.UserRole, record_id)
             self.list.addItem(item)

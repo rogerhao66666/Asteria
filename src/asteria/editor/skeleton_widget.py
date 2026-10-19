@@ -56,7 +56,15 @@ class _Canvas(QWidget):
         painter = QPainter(self)
         painter.fillRect(self.rect(), QColor(32, 34, 38))
         segments = self.owner.segments()
-        if not segments:
+        if not segments:  # say what to do instead of an empty grey box
+            painter.setPen(QColor(150, 158, 175))
+            painter.drawText(
+                self.rect().adjusted(24, 0, -24, 0),
+                Qt.AlignCenter | Qt.TextWordWrap,
+                'No rig open. Click "Open rig…" to load a skeleton, then pick a bone below '
+                'to move it or key it on the timeline; "Attach to selected entity" puts it '
+                "on a character in the scene.",
+            )
             return
         left, top, right, bottom = bounds(segments)
         scale = min(self.width() / max(right - left, 1), self.height() / max(bottom - top, 1))
@@ -218,7 +226,7 @@ class SkeletonViewerWidget(QWidget):
         controls_layout.setSpacing(layout.spacing())
         self._build_bone_editor(controls_layout)
         self._build_key_editor(controls_layout)
-        self.status = QLabel("No rig loaded")
+        self.status = QLabel("No rig open yet")
         self.status.setObjectName("MutedLabel")
         self.status.setWordWrap(True)
         controls_layout.addWidget(self.status)
