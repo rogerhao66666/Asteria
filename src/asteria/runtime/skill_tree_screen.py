@@ -115,6 +115,7 @@ class SkillTreeScreen:
         self.zoom, self.origin = 1.0, [0.0, 0.0]  # screen position of the graph's (0, 0)
         self._view_for = None  # the graph the view was fitted to
         self._spread = {}  # graph id -> pixels per graph unit that keep nodes apart
+        self._layouts = {}  # graph id -> (graph, positions): laid out once, not per node
         self._drag = None
 
     # -- data ------------------------------------------------------------------------------------
@@ -156,6 +157,16 @@ class SkillTreeScreen:
         return "available" if all(r.startswith("insufficient") for r in reasons) else "locked"
 
     # -- the view --------------------------------------------------------------------------------
+    def positions(self, graph):
+        """The graph's node positions, laid out once per graph (``layout`` walks every
+        prerequisite: done per node and per line each frame it made a long tree stutter)."""
+        layouts = self.__dict__.setdefault("_layouts", {})
+        cached = layouts.get(graph.graph_id)
+        if cached is None or cached[0] is not graph:  # an edited graph is a new object
+            cached = (graph, layout(graph))
+            layouts[graph.graph_id] = cached
+        return cached[1]
+
     def area(self):
         rt = self.rt
         return (36, 100, rt.width - 36 - 330 - 24, rt.height - 100 - 64)
@@ -165,7 +176,7 @@ class SkillTreeScreen:
         cached = self._spread.get(graph.graph_id)
         if cached is not None:
             return cached
-        points = list(layout(graph).values())
+        points = list(self.positions(graph).values())
         factor = 1.0
         for i, (ax, ay) in enumerate(points):
             for bx, by in points[i + 1 :]:
@@ -181,13 +192,13 @@ class SkillTreeScreen:
 
     def node_point(self, graph, node_id):
         """The centre of a node on the screen."""
-        x, y = layout(graph)[node_id]
+        x, y = self.positions(graph)[node_id]
         k = self.spread(graph) * self.zoom
         return self.origin[0] + x * k, self.origin[1] + y * k
 
     def fit(self, graph):
         """Zoom and place the whole tree in the area (never larger than life)."""
-        positions = layout(graph)
+        positions = self.positions(graph)
         k = self.spread(graph)
         xs = [p[0] * k for p in positions.values()]
         ys = [p[1] * k for p in positions.values()]
@@ -264,7 +275,7 @@ class SkillTreeScreen:
 
     # -- input -----------------------------------------------------------------------------------
     def _move(self, graph, dx, dy):
-        positions = layout(graph)
+        positions = self.positions(graph)
         here = positions.get(self.node_id)
         if here is None:
             self.node_id = graph.nodes[0].node_id

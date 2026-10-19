@@ -237,6 +237,33 @@ def test_a_long_tree_is_spread_instead_of_overlapping():
     assert _overlaps(screen, graph) == []
 
 
+def test_the_tree_is_laid_out_once_not_per_node_and_frame(monkeypatch):
+    """Drawing asks for every node's place (and twice per line): laying the whole tree out on
+    each ask made a long tree without saved positions stutter. It is laid out once per graph,
+    and again only for an edited graph (a new object)."""
+    import asteria.runtime.skill_tree_screen as tree
+    from asteria.rpg import ProgressionGraphDefinition, ProgressionNodeDefinition
+
+    nodes = [ProgressionNodeDefinition(f"n{i}", f"Node {i}") for i in range(30)]
+    graph = ProgressionGraphDefinition("plain", nodes=nodes)  # no saved positions
+    calls = []
+    real = tree.layout
+    monkeypatch.setattr(tree, "layout", lambda g: calls.append(g) or real(g))
+
+    class Stub:
+        width, height = 960, 540
+
+    screen = tree.SkillTreeScreen.__new__(tree.SkillTreeScreen)
+    screen.rt, screen.zoom, screen.origin, screen._spread = Stub(), 1.0, [0.0, 0.0], {}
+    for _frame in range(5):
+        for node in graph.nodes:
+            screen.node_point(graph, node.node_id)
+    assert len(calls) == 1
+    edited = ProgressionGraphDefinition("plain", nodes=nodes[:10])
+    screen.node_point(edited, "n1")
+    assert len(calls) == 2  # an edited graph is laid out again
+
+
 def test_the_wheel_zooms_drag_pans_and_fit_comes_back(demo):  # noqa: F811
     pg = demo.pg
     screen = _screen(demo)
