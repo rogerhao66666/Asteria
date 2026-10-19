@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QInputDialog,
@@ -167,9 +168,20 @@ class _TableField(QGroupBox):
         self.changed.emit()
 
     def _label(self, row):
-        first = self.fields[0].key
-        value = row.get(first, "")
-        return f"{self.fields[0].label}: {value}"
+        """The row in words: a condition as "festival == true", a reference by its name
+        (Healing Herb, not "Item: healing_herb"), else the first field's value."""
+        if {"name", "operator", "value"} <= set(row):
+            name = str(row.get("name") or "(no name yet)")
+            return f"{row.get('source', '')} {name} {row.get('operator', '==')} {row['value']}"
+        first = self.fields[0]
+        value = row.get(first.key, "")
+        if first.kind in ("ref", "optional_ref") and value:
+            for choice in self.detail._reference_choices(first):
+                if choice.value == str(value):
+                    return choice.label
+        if value in ("", None):
+            return f"(new {first.label.lower()})"
+        return str(value)
 
     def _commit(self):
         if 0 <= self._current < len(self.rows):
@@ -232,7 +244,8 @@ class _IconPicker(QWidget):
     def __init__(self, library, parent=None):
         super().__init__(parent)
         self.library = library
-        row = QHBoxLayout(self)
+        # picture on the left; the list over Browse… so a narrow form column shows a whole id
+        row = QGridLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
         self.preview = QLabel()
         self.preview.setFixedSize(32, 32)
@@ -245,15 +258,19 @@ class _IconPicker(QWidget):
         self.browse = QPushButton("Browse…")
         self.browse.setToolTip("Use a picture file of your own as the icon")
         self.browse.clicked.connect(self._browse)
-        row.addWidget(self.preview)
-        row.addWidget(self.combo, 1)
-        row.addWidget(self.browse)
+        row.addWidget(self.preview, 0, 0, 2, 1, Qt.AlignTop)
+        row.addWidget(self.combo, 0, 1)
+        row.addWidget(self.browse, 1, 1, Qt.AlignLeft)
+        row.setColumnStretch(1, 1)
         self._fill()
         self.combo.currentIndexChanged.connect(self._shown)
 
     @staticmethod
     def _label(icon_id):
-        return icon_id.rsplit("/", 1)[-1] if icon_id else "(none)"
+        if not icon_id:
+            return "(none)"
+        # "icon.alchemy_salt" shows as "alchemy_salt": the list is all icons already
+        return icon_id.rsplit("/", 1)[-1].removeprefix("icon.")
 
     def _add(self, icon_id, icon=None):
         if icon is not None:
@@ -427,10 +444,8 @@ class RecordForm(QWidget):
             widget = QComboBox()
             if f.kind == "optional_ref":
                 widget.addItem(f.empty_label, "")
-            for entry in self.references(f.source):
-                # an entry is an id, or (id, name) to show a readable name for an opaque id
-                value, label = entry if isinstance(entry, tuple) else (entry, entry)
-                widget.addItem(str(label), str(value))
+            for choice in self._reference_choices(f):  # the name shows; the id is the data
+                widget.addItem(str(choice.label), str(choice.value))
             return widget
         if f.kind == "icon":
             return _IconPicker(self.icons)
@@ -451,10 +466,14 @@ class RecordForm(QWidget):
             return ChipList((), self._reference_choices(f), allow_new=False, noun="entry")
         if f.kind == "string_list":
             from .record_form import ChipList
-            from .record_vocabulary import Choice, is_tag_field
+            from .record_vocabulary import Choice, is_tag_field, tag_label
 
-            words = self._vocabulary().tags() if is_tag_field(f.key) else ()
-            return ChipList((), [Choice(t, t) for t in words], noun="entry")
+            vocabulary = self._vocabulary()
+            words = vocabulary.tags() if is_tag_field(f.key) else ()
+            names = vocabulary.names() if words else {}
+            namer = (lambda t, n=names: tag_label(t, n)) if words else None
+            choices = [Choice(t, tag_label(t, names)) for t in words]
+            return ChipList((), choices, noun="tag" if words else "entry", namer=namer)
         if f.kind == "amounts":
             from .record_form import AmountTable
 

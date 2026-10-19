@@ -210,9 +210,7 @@ def character(assets, key, lucifer_key, name, *, townsfolk=False):
     strips = {}
     for facing, folder in (("down", "Down"), ("up", "Up"), ("left", "Left"), ("right", "Right")):
         idle = lucifer._facing_strip(lucifer_key, folder, "Idle")
-        walk = lucifer._facing_strip(lucifer_key, folder, "Walk") or lucifer._facing_strip(
-            lucifer_key, folder, "Run"
-        )
+        walk = lucifer.walk_strip(lucifer_key, folder)
         if townsfolk:
             idle = [lucifer.villager(f) for f in idle]
             walk = [lucifer.villager(f) for f in walk] if walk else walk
@@ -862,9 +860,9 @@ def build_world(c, story):
         "Vaelor", places["throne"]["boss"], looks["skeleton_king"], "boss_room", radius=24.0
     )
     throne.foe("Acolyte Vigil", world_xy(17, 13), looks["skeleton_grunt"], "acolyte_vigil")
-    from asteria.core.prefab import prefab_from_entity
-
     import trial_people as people
+
+    from asteria.core.prefab import prefab_from_entity
 
     lantern = people.look(assets, "look_npc_lantern", people.LANTERN, "Spirit Lantern")
     for prefab_id, face in (("spirit_lantern", lantern), ("bone_pile", looks["skeleton_hunter"])):

@@ -374,7 +374,7 @@ def test_conditional_prices_and_entries():
     assert "visible_when" not in plain and "price_rules" not in plain
 
 
-def test_shop_conditions_round_trip_through_the_flat_form():
+def test_shop_conditions_round_trip_through_the_form_rows():
     from asteria.editor.game_systems_authoring import _decode_shop, _encode_shop
 
     shop = ShopDefinition(
@@ -400,12 +400,18 @@ def test_shop_conditions_round_trip_through_the_flat_form():
     )
     form = _encode_shop(shop.to_data())
     entry = form["entries"][0]
-    assert entry["visible_when"] == ["variable:day>=3"]
-    assert entry["price_rules"] == ["0.5 2 | switch:festival==true ; switch:vip==false"]
+    # rows the form shows: pick the check, type the name, pick the operator (no syntax to learn)
+    assert entry["visible_when"] == [
+        {"source": "variable", "name": "day", "operator": ">=", "value": "3"}
+    ]
+    rule = entry["price_rules"][0]
+    assert (rule["buy_multiplier"], rule["sell_multiplier"]) == (0.5, 2.0)
+    assert [c["value"] for c in rule["conditions"]] == ["true", "false"]
     again = _decode_shop(form)["entries"][0]
     assert again["visible_when"][0]["operator"] == ">="
     assert [c["name"] for c in again["price_rules"][0]["conditions"]] == ["festival", "vip"]
     assert again["price_rules"][0]["conditions"][1]["value"] is False
     assert again["visible_when"][0]["value"] == 3
-    with pytest.raises(ValueError):
-        _decode_shop({"entries": [{"visible_when": ["nonsense"], "price_rules": []}]})
+    blank = {"source": "switch", "name": " ", "operator": "==", "value": "true"}
+    empty = _decode_shop({"entries": [{"visible_when": [blank], "price_rules": []}]})
+    assert empty["entries"][0]["visible_when"] == []  # an empty row is left out

@@ -106,6 +106,13 @@ def _field(form, key):
     return form.widgets[key]
 
 
+def _pick(combo, value):
+    """Choose a reference by its id (the list shows names)."""
+    index = combo.findData(value)
+    assert index >= 0, value
+    combo.setCurrentIndex(index)
+
+
 def test_shop_editor_form_adds_stock_rows_and_applies(window):
     editor = window.game_systems_editor
     db = window.document.project.rpg_database
@@ -115,7 +122,7 @@ def test_shop_editor_form_adds_stock_rows_and_applies(window):
     _field(form, "display_name").setText("Apothecary")
     entries = _field(form, "entries")
     row = entries.add_row()
-    row.widgets["item_id"].setCurrentText("ether_leaf")
+    _pick(row.widgets["item_id"], "ether_leaf")
     row.widgets["buy_prices"].add_row("gold", "30")
     row.widgets["sell_prices"].add_row("gold", "12")
     row.widgets["stock"].check.setChecked(True)
@@ -148,7 +155,7 @@ def test_quest_editor_objectives_chain_and_reward(window):
     reward = _field(form, "reward").form
     reward.widgets["currencies"].add_row("renown", "5")
     loot = reward.widgets["loot"].add_row()
-    loot.widgets["item_id"].setCurrentText("focus_stone")
+    _pick(loot.widgets["item_id"], "focus_stone")
     assert editor.apply(), editor.status.text()
     quest = db.quests["hunt"]
     assert [(o.kind, o.target) for o in quest.objectives] == [("defeat_enemy", "astral_tyrant")]
@@ -208,8 +215,8 @@ def test_faction_achievement_set_and_capture_editors(window):
 
     editor.set_kind("capture_rules")
     assert editor.new_record("mender_wisp")
-    _field(editor.form, "actor_id").setCurrentText("hero_02")
-    _field(editor.form, "item_id").setCurrentText("ether_leaf")
+    _pick(_field(editor.form, "actor_id"), "hero_02")
+    _pick(_field(editor.form, "item_id"), "ether_leaf")
     _field(editor.form, "base_chance").setValue(0.4)
     assert editor.apply(), editor.status.text()
     rule = db.capture_rules["mender_wisp"]

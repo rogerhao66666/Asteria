@@ -79,6 +79,21 @@ REFERENCES = {  # field name -> vocabulary source
     "slot_id": "slots",
     "composition_id": "gauges",
     "rules_id": None,  # a record's own id
+    "source_ability_id": "abilities",
+    "result_ability_id": "abilities",
+    "battle_ability": "abilities",
+    "progression_track_id": "tracks",
+    "evolution_equipment_id": "equipment",
+    "fallback_state_id": "states",
+    "initial_phase_id": None,
+    "species_id": None,
+}
+# the same field name meaning something else in one kind of record: no list (the form offers
+# the values that kind of record uses instead)
+NOT_REFERENCES = {
+    "combatant_visuals": ("state", "state_id", "fallback_state_id"),  # animation poses
+    "formations": ("slot_id",),  # places in the formation, not equipment slots
+    "parties": ("slot_id",),
 }
 # a formula term's ``key`` reads a stat or a resource, picked by its ``source``
 TERM_KEY_SOURCES = {
@@ -131,8 +146,11 @@ def map_source(key):
 
 def is_tag_field(key):
     key = str(key)
-    return key == "tags" or key.endswith("_tags") or key.endswith("_tags_all") or (
-        key.endswith("_tags_any")
+    return (
+        key == "tags"
+        or key.endswith("_tags")
+        or key.endswith("_tags_all")
+        or (key.endswith("_tags_any"))
     )
 
 
@@ -228,6 +246,109 @@ LABELS = {
     "operation": "How",
     "target": "Changes",
     "value": "Amount",
+    # ability evolutions
+    "source_ability_id": "Skill that changes",
+    "result_ability_id": "Becomes",
+    "progression_track_id": "Rank counted on (track)",
+    "minimum_rank": "Needs rank at least",
+    "retain_source": "Keep the original skill too",
+    "required_tags": "Needs these tags",
+    "blocked_tags": "Not when it has these tags",
+    # skill trees
+    "max_rank": "Most ranks",
+    "rank_costs": "Cost per rank",
+    "rewards": "Each rank gives",
+    "prerequisites": "Needs all of",
+    "any_prerequisites": "Needs one of",
+    "exclusive_group": "Only one from group",
+    "granted_capabilities": "Capabilities it gives",
+    "unlocked_passives": "Passives it unlocks",
+    "node_positions": "Positions in the graph view",
+    "editor_view": "Opens as",
+    # skills
+    "menu_category": "Battle menu page",
+    "input_workflow": "Input steps",
+    "requires_pet": "Needs a pet",
+    "requires_items": "Needs items (kept)",
+    "item_costs": "Uses up items",
+    "currency_costs": "Costs money",
+    "gauge_costs": "Costs party gauge",
+    "follow_tags": "Tags carried into follow-ups",
+    "forms": "Forms (cast choices)",
+    "battle_resource_gains": "Gives battle points",
+    "commands": "World commands it runs",
+    "concoct_station": "Concoction station",
+    "cooldown_seconds": "Cooldown (seconds, real-time)",
+    "move_while_acting": "Can move while acting (0-1)",
+    "interrupts_actions": "Interrupts the target",
+    "cooldown_formula": "Cooldown formula",
+    "targeting": "Targets",
+    "effects": "What it does",
+    "use_effects": "When used",
+    "destroyed_on_removal": "Destroyed when taken out",
+    "timeline_id": "Animation timeline",
+    # states
+    "immune_target_tags": "Immune when the target has",
+    "duration_multiplier": "Duration ×",
+    "prevent_action": "Stops the holder from acting",
+    "blocked_ability_tags": "Blocks skills tagged",
+    "allowed_ability_tags": "Only skills tagged",
+    "tick_trigger": "Counts down",
+    "tick_amount": "Turns used per count",
+    "remove_triggers": "Removed when",
+    "interaction_tags": "Damage tags of its ticks",
+    "target_override": "Makes it target",
+    "interval": "Every (turns)",
+    "growth": "Grows by",
+    # targeting and timing
+    "relation": "Who it targets",
+    "selection_mode": "How targets are picked",
+    "selection_count": "How many are picked",
+    "adjacent_to_actor": "Only neighbours",
+    "active_only": "Only fighters still standing",
+    "startup": "Wind-up (s)",
+    "cast_time": "Cast time (s)",
+    "recovery": "Recovery (s)",
+    "interruptible": "Can be interrupted",
+    "interrupt_threshold": "Interrupted by damage over",
+    "cost_commit": "Costs are paid",
+    "interrupt_cost": "If interrupted, the cost is",
+    # enemies and encounters
+    "members": "Who is in it",
+    "count": "How many",
+    "weight": "How likely (weight)",
+    "experience": "Experience",
+    "currencies": "Money",
+    "loot": "Items it may drop",
+    "phases": "Phases",
+    "actions_per_ready": "Actions per turn",
+    # resources and gauges
+    "start_mode": "Starts at",
+    "start_value": "Starting value",
+    "end_mode": "After battle",
+    "overflow_limit": "Can go over by",
+    "subject_maximum": "Maximum comes from the fighter",
+    "impacts": "What changes it",
+    "thresholds": "When it reaches",
+    "recipient": "Who it changes",
+    "delta": "Changes by",
+    "value_scale": "× the damage",
+    "required_outcome_tags_all": "Only when the result has all of",
+    "required_outcome_tags_any": "Only when the result has one of",
+    "blocked_outcome_tags": "Not when the result has",
+    # presentation
+    "battlefield_visible": "Shown on the battlefield",
+    "hud_visible": "Shown in the HUD",
+    "battlefield_asset_id": "Battlefield picture",
+    "portrait_asset_id": "Portrait",
+    "small_portrait_asset_id": "Small portrait",
+    "clip_role": "Animation to play",
+    "fallback_state_id": "If missing, use",
+    "persistent": "Stays after it plays",
+    "z_order": "Drawn in front order",
+    "page_size": "Rows per page",
+    "playback_rate": "Playback speed",
+    "transition_duration": "Blend time (s)",
 }
 HELP = {
     "display_name": "What players see.",
@@ -269,7 +390,39 @@ HELP = {
     "applies_to": "Who uses it: the party (actors), foes (enemies) or everyone.",
     "speed": "Acts sooner and more often.",
     "outcome_tags": "Labels this result carries (WEAK shows on screen for outcome.weak).",
+    "source_ability_id": "The skill the character has now.",
+    "result_ability_id": "The stronger version that replaces it once the conditions are met.",
+    "progression_track_id": "Optional: the track whose rank counts (empty = rank not checked).",
+    "minimum_rank": "Rank needed on that track (only when a track is chosen).",
+    "retain_source": "On: the character keeps both skills. Off: the new one replaces the old.",
+    "required_tags": "The character must have all of these (a rune node in a tree gives one).",
+    "blocked_tags": "Does nothing while any of these is present.",
+    "max_rank": "How many times this node can be learned.",
+    "rank_costs": "Points each rank costs (job points, stat points...).",
+    "prerequisites": "Every one of these nodes must be learned first.",
+    "any_prerequisites": "At least one of these nodes must be learned first.",
+    "exclusive_group": "Only one node of the same group can be learned.",
+    "granted_capabilities": "What anyone with this can do (wear plate, use bows...).",
+    "menu_category": "The page of the battle menu it is listed on.",
+    "requires_items": "Items the user must own; they are not used up.",
+    "item_costs": "Items used up each time.",
+    "forms": "Ways to cast it, chosen when it is used (fire / ice...).",
+    "battle_resource_gains": "Points it gives when used (boost points, gauge...).",
+    "prevent_action": "While this lasts, the holder loses its turns.",
+    "tick_trigger": "When one turn of its duration is used up.",
+    "target_override": "Confusion-like: the holder picks this kind of target instead.",
+    "relation": "Allies, opponents, itself or anyone.",
+    "selection_mode": "Manual (the player picks), all, random...",
+    "members": "The foes in this fight and how many of each.",
+    "weight": "Higher = more often, compared with the others.",
+    "start_mode": "Full, empty or a fixed value when the battle starts.",
+    "end_mode": "What happens to it when the battle ends.",
+    "impacts": "Each rule changes the gauge when something happens (a weak hit...).",
+    "thresholds": "What happens when the gauge reaches a value (Break...).",
+    "clip_role": "Which animation of the sprite this pose plays.",
+    "fallback_state_id": "Played when this pose has no animation.",
 }
+
 
 CATEGORY_HELP = {
     "actors": "The heroes the player controls: their jobs, starting stats and skills.",
@@ -338,6 +491,8 @@ class ProjectVocabulary:
             yield from self.choices("equipment")
         elif source in ("classes", "actors", "items", "equipment", "attachments", "enemies",
                         "passives", "encounters"):  # fmt: skip
+            if source == "actors":  # a party command's stand-in for whoever uses the skill
+                yield Choice("@actor", "The one using the skill")
             yield from records(getattr(db, source))
         elif source == "graphs":
             yield from records(db.progression_graphs)
@@ -345,6 +500,8 @@ class ProjectVocabulary:
             yield from records(db.progression_tracks)
         elif source == "resources":
             names = set(db.battle_resources)
+            names.update(self.values_for("resource"))  # a skill's own pool (rage, focus...)
+            names.update(self.values_for("resource_id"))
             for actor in db.actors.values():
                 names.update(actor.base_resources)
             for enemy in db.enemies.values():
@@ -380,6 +537,16 @@ class ProjectVocabulary:
             names = set(getattr(project.game_start, "currencies", {}) or {}) | {"gold"}
             for name in sorted(names):
                 yield Choice(name, name.title())
+
+    def names(self):
+        """Display names by id of jobs, skills, states, items and gear (for tags in words)."""
+        if "__names" not in self._cache:
+            names = {}
+            for source in ("classes", "abilities", "states", "items", "equipment", "enemies"):
+                for choice in self.choices(source):
+                    names.setdefault(choice.value, choice.label)
+            self._cache["__names"] = names
+        return self._cache["__names"]
 
     def stats(self):
         if "__stats" in self._cache:
@@ -468,9 +635,38 @@ def label_for(key):
     key = str(key)
     if key in LABELS:
         return LABELS[key]
+    if key in _STAT_NAMES or key.endswith("_attack") or key.endswith("_resist"):
+        return _stat_label(key)
+    if key in _RESOURCE_NAMES:
+        return _resource_label(key)
+    if key.startswith("jp."):
+        return f"Job Points ({key[3:].replace('_', ' ').title()})"
+    if key in _POINTS:
+        return _POINTS[key]
     if key.endswith("_id") and REFERENCES.get(key):
         return field_label(key[:-3])
     return field_label(key)
+
+
+_POINTS = {"ap": "Ability Points", "stat_points": "Stat Points", "skill_points": "Skill Points"}
+
+
+def record_title(category, data, vocabulary):
+    """A readable title for a record that has no name of its own (the list shows it):
+    an evolution as "Fire Bolt → Fire Bolt (Echo)", a skill's targeting by the skill's name."""
+    if not isinstance(data, dict):
+        return ""
+    names = vocabulary.names() if vocabulary is not None else {}
+    source, result = data.get("source_ability_id"), data.get("result_ability_id")
+    if source and result:
+        return f"{names.get(source, source)}  →  {names.get(result, result)}"
+    ability = data.get("ability_id")
+    if isinstance(ability, str) and ability in names:
+        return names[ability]
+    for key in ("display_name", "name", "label", "title"):
+        if isinstance(data.get(key), str) and data[key]:
+            return data[key]
+    return ""
 
 
 # -- fields with a fixed set of values, read from the engine ----------------------------------
@@ -489,7 +685,6 @@ def engine_enums():
     import importlib
     import pkgutil
     import re
-
 
     found = {}  # field -> {frozenset of allowed values, ...}
     tuple_check = re.compile(r"if\s+(\w+)\s+not\s+in\s+([A-Z][A-Z0-9_]+)\s*:")
@@ -524,3 +719,159 @@ def engine_enums():
         if len(sets) == 1 and next(iter(sets))
     }
     return _ENGINE_ENUMS
+
+
+# -- tags in words ------------------------------------------------------------------------------
+_TAG_PREFIXES = (  # prefix -> how the rest reads
+    ("capability.weapon.", "Can use: {} weapons"),
+    ("capability.armor.", "Can wear: {} armour"),
+    ("capability.", "Can: {}"),
+    ("class.", "Job: {}"),
+    ("job.", "Job tree: {}"),
+    ("weak.", "Weak to {}"),
+    ("resist.", "Resists {}"),
+    ("absorb.", "Absorbs {}"),
+    ("immune.", "Immune to {}"),
+    ("damage.", "{} damage"),
+    ("weapon.", "{} weapon blow"),
+    ("equip.", "Equipment: {}"),
+    ("status.", "Has status: {}"),
+    ("state.", "In state: {}"),
+    ("stance.", "Stance: {}"),
+    ("trait.", "Trait: {}"),
+    ("attune.", "Attuned to {}"),
+    ("mastery.", "Mastery: {}"),
+    ("weather.", "Weather: {}"),
+    ("rune.", "Rune: {}"),
+    ("roster.", "Party slot {}"),
+    ("boost.", "Boosted: {}"),
+    ("set.", "Set: {}"),
+    ("tier.", "Tier {}"),
+    ("form.", "Form: {}"),
+    ("vigil.", "Vigil: {}"),
+    ("action.", "Action: {}"),
+    ("ai.", "AI: {}"),
+)
+_OUTCOMES = {
+    "outcome.crit": "Result: critical hit",
+    "outcome.weak": "Result: hit a weakness",
+    "outcome.evade": "Result: dodged (miss)",
+    "outcome.block": "Result: blocked",
+    "outcome.guard": "Result: guarded",
+}
+_PLAIN_TAGS = {
+    "boss": "Boss",
+    "ability": "Is a skill",
+    "magic": "Magic (a spell)",
+    "support": "Support skill",
+    "divine": "Divine skill",
+    "follow_up": "Follow-up attack",
+    "combo": "Combo",
+    "consumable": "Used up when used",
+    "unique": "Unique (one only)",
+    "weapon": "Is a weapon",
+    "actor.playable": "Playable character",
+    "gem": "Gem",
+    "card": "Card",
+    "charm": "Charm",
+}
+
+
+def tag_label(tag, names=None):
+    """A tag in words: ``capability.weapon.ring`` -> "Can use: Ring weapons", ``class.brave``
+    -> "Job: Brave" (``names`` gives records' display names by id)."""
+    tag = str(tag)
+    names = names or {}
+    if tag in _OUTCOMES:
+        return _OUTCOMES[tag]
+    if tag in _PLAIN_TAGS:
+        return _PLAIN_TAGS[tag]
+    for prefix, pattern in _TAG_PREFIXES:
+        if tag.startswith(prefix):
+            rest = tag[len(prefix) :]
+            word = names.get(rest) or rest.replace(".", " · ").replace("_", " ").title()
+            return pattern.format(word)
+    if tag.startswith("outcome."):
+        return "Result: " + tag[8:].replace("_", " ")
+    return tag.replace(".", " · ").replace("_", " ").capitalize()
+
+
+# -- triggers (moments in a battle) in words ----------------------------------------------------
+TRIGGERS = {  # trigger id -> when it happens
+    "battle.hit": "When a hit lands",
+    "battle.break": "When a shield breaks (Break)",
+    "battle.overdrive": "When the gauge fills (Overdrive)",
+    "battle.action": "When an action is used",
+    "battle.turn": "When a turn starts",
+    "rpg.battle.started": "When the battle starts",
+    "rpg.battle.finished": "When the battle ends",
+    "rpg.battle.round_started": "When a new round starts",
+    "rpg.battle.round_ended": "When a round ends",
+    "rpg.battle.turn_ready": "When its turn comes",
+    "rpg.battle.turn_ended": "When its turn ends",
+    "rpg.battle.turn_skipped": "When its turn is skipped",
+    "rpg.battle.before_action": "Before an action",
+    "rpg.battle.after_action": "After an action",
+    "rpg.battle.action_cancelled": "When an action is cancelled",
+    "rpg.battle.state_applied": "When a state is put on",
+    "rpg.battle.state_removed": "When a state is taken off",
+    "rpg.battle.state_expired": "When a state runs out",
+    "rpg.battle.state_resisted": "When a state is resisted",
+    "rpg.battle.combatant_revived": "When someone is revived",
+    "rpg.battle.combatant_summoned": "When someone is summoned",
+    "rpg.battle.combatant_removed": "When someone leaves the battle",
+    "rpg.battle.escape_resolved": "When an escape is tried",
+    "rpg.battle.mastery_up": "When a skill's mastery rises",
+}
+
+
+def is_trigger_field(key):
+    key = str(key)
+    return "trigger" in key or key in ("hook", "enter_hook", "exit_hook", "event_kind")
+
+
+def trigger_label(trigger):
+    """A trigger in words: ``rpg.battle.turn_ready`` -> "When its turn comes"."""
+    trigger = str(trigger)
+    if trigger in TRIGGERS:
+        return TRIGGERS[trigger]
+    words = trigger.removeprefix("rpg.").removeprefix("battle.").replace(".", " ")
+    return "When: " + words.replace("_", " ")
+
+
+CATEGORY_HELP.update(
+    {
+        "tracks": "Level-like tracks (job levels...) that count up with points.",
+        "evolutions": "A skill turns into a stronger version when the character qualifies - "
+        "usually a rune node in a skill tree gives the tag it needs. Example: Fire Bolt becomes "
+        "Fire Bolt (Echo) once the Echo rune is learned.",
+        "growth": "Weapons that grow with use: what each growth node unlocks.",
+        "recipes": "Crafting and alchemy: what goes in, what comes out.",
+        "parties": "The starting party and its order.",
+        "formations": "Where party members stand.",
+        "party_ui": "Rules for the party menu.",
+        "ai": "How each foe picks its actions, and its boss phases.",
+        "action_timelines": "Real-time field actions: wind-up, hit and recovery.",
+        "attacks": "Real-time attacks: damage, range, knock-back.",
+        "projectiles": "Shots that fly: speed, range, what they hit.",
+        "rarities": "Loot rarity: colour, chance, how many bonuses.",
+        "affixes": "Random bonuses loot can roll (prefixes and suffixes).",
+        "resources": "Battle-only points: boost points, shields, gauges.",
+        "targeting": "Who each skill can target and how targets are picked.",
+        "schedulers": "Turn order: rounds, speed order or a timeline.",
+        "timing": "Wind-up, casting and recovery time of skills.",
+        "sequences": "Multi-step actions (combos) and their steps.",
+        "reactions": "Counters and follow-ups: who reacts and with what.",
+        "objectives": "How a battle is won or lost.",
+        "escape": "The chance to run away from a fight.",
+        "transactions": "When a skill's costs are paid, and refunds.",
+        "session": "Battle-wide rules: knock-out, boost points, shields.",
+        "combatant_visuals": "How each fighter looks: sprite, poses, size and place.",
+        "feedback": "Damage numbers and labels (WEAK, CRITICAL...).",
+        "hud": "The battle HUD: bars and numbers shown.",
+        "ui_layout": "Where the battle UI sits on screen.",
+        "ui_polish": "Spacing and sizes of the battle UI.",
+        "motion_sequences": "Each skill's animation beats: moves, effects, sounds.",
+        "rpg_character_screen": "The status screen: sections, stat names and order.",
+    }
+)

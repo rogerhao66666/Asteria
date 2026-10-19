@@ -160,6 +160,19 @@ _PET_MOVE = (
     F("min_affinity", "Needs Affinity", "float", default=0.0),
 )
 
+_CONDITION = (  # a switch or variable check (shops: when an item is sold, a price changes)
+    F("source", "Check a", "choice", choices=("switch", "variable"), default="switch"),
+    F("name", "Switch / Variable Name", "text", default=""),
+    F("operator", "Is", "choice", choices=("==", "!=", ">=", "<=", ">", "<"), default="=="),
+    F("value", "Value (true / false / a number)", "text", default="true"),
+)
+_PRICE_RULE = (
+    F("buy_multiplier", "Buy Price × (1 = unchanged)", "float", default=1.0),
+    F("sell_multiplier", "Sell Price × (1 = unchanged)", "float", default=1.0),
+    F("conditions", "When (every condition true)", "table", fields=_CONDITION, default=()),
+)
+
+
 FORMS = {
     "pet_species": (
         F("species_id", "Species ID", "id"),
@@ -291,14 +304,16 @@ FORMS = {
                 F("stock", "Limited Stock", "optional_int", default=None),
                 F(
                     "visible_when",
-                    "Offered Only When (one per line: switch:name==true)",
-                    "string_list",
+                    "Sold Only When (every condition true; none = always)",
+                    "table",
+                    fields=_CONDITION,
                     default=(),
                 ),
                 F(
                     "price_rules",
-                    "Price Rules (one per line: buy x, sell x | conditions joined by ;)",
-                    "string_list",
+                    "Price Changes (when their conditions are true)",
+                    "table",
+                    fields=_PRICE_RULE,
                     default=(),
                 ),
             ),
@@ -777,12 +792,6 @@ def _decode_credits(data):
     return data
 
 
-def _condition_text(c):
-    value = c.get("value", True)
-    value = str(value).lower() if isinstance(value, bool) else value
-    return f"{c['source']}:{c['name']}{c.get('operator', '==')}{value}"
-
-
 def _condition_value(text):
     text = str(text).strip()
     if text.lower() in ("true", "false"):
@@ -795,30 +804,41 @@ def _condition_value(text):
     return text
 
 
-def _parse_condition(text):
-    from asteria.rpg.economy import _CONDITION_OPERATORS
+def _condition_row(c):
+    """A condition as form rows (its value as text: true, false, 3)."""
+    value = c.get("value", True)
+    value = str(value).lower() if isinstance(value, bool) else str(value)
+    return {
+        "source": c.get("source", "switch"),
+        "name": c.get("name", ""),
+        "operator": c.get("operator", "=="),
+        "value": value,
+    }
 
-    text = str(text).strip()
-    source, _, rest = text.partition(":")
-    for operator in _CONDITION_OPERATORS:  # longest first: "<=" before "<"
-        name, found, value = rest.partition(operator)
-        if found and name.strip():
-            return {
-                "source": source.strip(),
-                "name": name.strip(),
-                "operator": operator,
-                "value": _condition_value(value) if value.strip() else True,
-            }
-    raise ValueError(f"condition must look like switch:name==true, got {text!r}")
+
+def _condition_from_row(row):
+    name = str(row.get("name", "")).strip()
+    if not name:
+        return None  # an empty row is left out
+    text = str(row.get("value", "")).strip()
+    return {
+        "source": row.get("source") or "switch",
+        "name": name,
+        "operator": row.get("operator") or "==",
+        "value": _condition_value(text) if text else True,
+    }
 
 
 def _encode_shop(data):
     data = copy.deepcopy(data)
     for entry in data.get("entries", ()):
-        entry["visible_when"] = [_condition_text(c) for c in entry.get("visible_when", ())]
+        entry["visible_when"] = [_condition_row(c) for c in entry.get("visible_when", ())]
         entry["price_rules"] = [
-            f"{r.get('buy_multiplier', 1.0):g} {r.get('sell_multiplier', 1.0):g} | "
-            + " ; ".join(_condition_text(c) for c in r.get("conditions", ()))
+            {
+                "buy_multiplier": float(r.get("buy_multiplier", 1.0)),
+                "sell_multiplier": float(r.get("sell_multiplier", 1.0)),
+                "conditions": [_condition_row(c) for c in r.get("conditions", ())],
+            }
             for r in entry.get("price_rules", ())
         ]
     return data
@@ -827,18 +847,16 @@ def _encode_shop(data):
 def _decode_shop(data):
     data = copy.deepcopy(data)
     for entry in data.get("entries", ()):
-        entry["visible_when"] = [_parse_condition(t) for t in entry.get("visible_when", ())]
+        rows = entry.get("visible_when", ())
+        entry["visible_when"] = [c for c in map(_condition_from_row, rows) if c]
         rules = []
-        for text in entry.get("price_rules", ()):
-            head, _, tail = str(text).partition("|")
-            numbers = head.split()
-            if len(numbers) != 2:
-                raise ValueError(f"price rule must start with 'buy sell |', got {text!r}")
+        for rule in entry.get("price_rules", ()):
+            conditions = [c for c in map(_condition_from_row, rule.get("conditions", ())) if c]
             rules.append(
                 {
-                    "buy_multiplier": float(numbers[0]),
-                    "sell_multiplier": float(numbers[1]),
-                    "conditions": [_parse_condition(t) for t in tail.split(";") if t.strip()],
+                    "buy_multiplier": float(rule.get("buy_multiplier", 1.0)),
+                    "sell_multiplier": float(rule.get("sell_multiplier", 1.0)),
+                    "conditions": conditions,
                 }
             )
         entry["price_rules"] = rules

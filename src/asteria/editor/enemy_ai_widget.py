@@ -3,7 +3,7 @@ preview."""
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -40,6 +40,7 @@ from asteria.rpg.enemy_ai import (
 
 from .authoring_sidebar import authoring_sidebar
 from .enemy_ai_authoring import AIScenario, EnemyAIEditor, EnemyAIEditorError
+from .flow_layout import FlowLayout
 from .responsive_form import ResponsiveColumns
 from .ui_fit import fit_combo_boxes
 
@@ -87,10 +88,13 @@ class ConditionList(QGroupBox):
         self.op.addItems(list(COMPARISONS))
         self.value = QLineEdit()
         self.negate = QCheckBox("Not")
-        row = QHBoxLayout()
+        # the fields and buttons wrap onto more lines in a narrow column (no sideways scroll)
+        row_box = QWidget()
+        row = FlowLayout(row_box)
         for w in (self.kind, self.subject, self.op, self.value, self.negate):
             row.addWidget(w)
-        buttons = QHBoxLayout()
+        buttons_box = QWidget()
+        buttons = FlowLayout(buttons_box)
         for label, slot in (
             ("Add", self._add),
             ("Replace", self._replace),
@@ -99,11 +103,10 @@ class ConditionList(QGroupBox):
             b = QPushButton(label)
             b.clicked.connect(slot)
             buttons.addWidget(b)
-        buttons.addStretch(1)
         layout = QVBoxLayout(self)
         layout.addWidget(self.list)
-        layout.addLayout(row)
-        layout.addLayout(buttons)
+        layout.addWidget(row_box)
+        layout.addWidget(buttons_box)
         self.conditions = ()
         self._kind_changed(self.kind.currentText())
 
@@ -167,6 +170,47 @@ def _fit_columns(table, cap=140):
                 item.setToolTip(item.text())
 
 
+class _ColumnsThatFit(QObject):
+    """Shows a table's columns, most important first, while they fit its width and hides the
+    rest, so a narrow window never scrolls the table sideways; the Selected panel under the
+    table shows every field of the chosen row."""
+
+    def __init__(self, table, priority, cap=140):
+        super().__init__(table)
+        self.table, self.priority, self.cap = table, tuple(priority), cap
+        table.horizontalHeader().setToolTip(
+            "Columns that do not fit are hidden; widen the panel to see them. "
+            "The panel below shows every field of the selected row."
+        )
+        table.viewport().installEventFilter(self)
+
+    def eventFilter(self, watched, event):
+        if event.type() == QEvent.Resize:
+            self.apply()
+        return False
+
+    def apply(self):
+        table, header = self.table, self.table.horizontalHeader()
+        room = table.viewport().width()
+        for column in range(table.columnCount()):
+            table.setColumnHidden(column, False)  # a hidden column measures 0 wide
+        natural = {
+            column: min(
+                max(table.sizeHintForColumn(column), header.sectionSizeHint(column)), self.cap
+            )
+            for column in range(table.columnCount())
+        }
+        shown, used = [], 0
+        for column in self.priority:
+            if not shown or used + natural[column] <= room:
+                shown.append(column)
+                used += natural[column]
+        for column in range(table.columnCount()):
+            table.setColumnHidden(column, column not in shown)
+            if column in shown:
+                table.setColumnWidth(column, min(natural[column], room))
+
+
 class EnemyAIEditorWidget(QWidget):
     changed = Signal()
 
@@ -223,6 +267,8 @@ class EnemyAIEditorWidget(QWidget):
         self.rules.horizontalHeader().setMinimumSectionSize(48)
         self.rules.resizeColumnsToContents()
         self.rules.itemSelectionChanged.connect(self._rule_selected)
+        # Rule, Action, Ability / Hook, When, Priority, Target, Weight
+        self._rule_columns = _ColumnsThatFit(self.rules, (0, 1, 2, 6, 4, 3, 5))
         self.action_kind = QComboBox()
         self.action_kind.addItems(list(ACTION_KINDS))
         self.action_kind.currentTextChanged.connect(self._action_changed)
@@ -233,6 +279,9 @@ class EnemyAIEditorWidget(QWidget):
         self.target = QComboBox()
         self.target.setEditable(True)
         self.target.addItems([*TARGET_SELECTORS, "lowest_resource_ratio:vitality"])
+        for combo in (self.ability, self.target):  # the longest item does not set the width
+            combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+            combo.setMinimumContentsLength(10)
         self.priority = QSpinBox()
         self.priority.setRange(-999, 999)
         self.weight = QDoubleSpinBox()
@@ -246,7 +295,9 @@ class EnemyAIEditorWidget(QWidget):
         rule_form.addRow("Target", self.target)
         rule_form.addRow("Priority", self.priority)
         rule_form.addRow("Weight", self.weight)
-        rule_buttons = QHBoxLayout()
+        rule_form.setRowWrapPolicy(QFormLayout.WrapLongRows)
+        rule_buttons_box = QWidget()
+        rule_buttons = FlowLayout(rule_buttons_box)  # wraps in a narrow column
         for label, slot in (
             ("Apply", self.apply_rule),
             ("Add Rule…", self._add_rule_clicked),
@@ -256,7 +307,7 @@ class EnemyAIEditorWidget(QWidget):
             b.setMinimumWidth(b.fontMetrics().horizontalAdvance(label) + 34)  # never clip
             b.clicked.connect(slot)
             rule_buttons.addWidget(b)
-        rule_form.addRow(rule_buttons)
+        rule_form.addRow(rule_buttons_box)
         self.rule_conditions = ConditionList("Rule applies when (all)")
         self._wire_conditions(self.rule_conditions, "rule")
         rules_tab = QWidget()
@@ -274,6 +325,8 @@ class EnemyAIEditorWidget(QWidget):
         self.phases.verticalHeader().hide()
         self.phases.horizontalHeader().setStretchLastSection(True)
         self.phases.itemSelectionChanged.connect(self._phase_selected)
+        # Phase, Enters when, Rules, Actions / turn, Priority
+        self._phase_columns = _ColumnsThatFit(self.phases, (0, 4, 2, 3, 1))
         self.phase_priority = QSpinBox()
         self.phase_priority.setRange(-999, 999)
         self.phase_rules = QListWidget()
@@ -291,7 +344,9 @@ class EnemyAIEditorWidget(QWidget):
         phase_form.addRow("Actions per turn", self.phase_actions)
         phase_form.addRow("On enter hook", self.enter_hook)
         phase_form.addRow("On exit hook", self.exit_hook)
-        phase_buttons = QHBoxLayout()
+        phase_form.setRowWrapPolicy(QFormLayout.WrapLongRows)
+        phase_buttons_box = QWidget()
+        phase_buttons = FlowLayout(phase_buttons_box)  # wraps in a narrow column
         for label, slot in (
             ("Apply", self.apply_phase),
             ("Add Phase…", self._add_phase_clicked),
@@ -300,7 +355,7 @@ class EnemyAIEditorWidget(QWidget):
             b = QPushButton(label)
             b.clicked.connect(slot)
             phase_buttons.addWidget(b)
-        phase_form.addRow(phase_buttons)
+        phase_form.addRow(phase_buttons_box)
         self.phase_conditions = ConditionList("Phase starts when (all)")
         self._wire_conditions(self.phase_conditions, "phase")
         phases_tab = QWidget()
@@ -462,7 +517,9 @@ class EnemyAIEditorWidget(QWidget):
         if ids:
             self.ai_list.setCurrentRow(ids.index(current) if current in ids else 0)
         self._load()
-        fit_combo_boxes(self)
+        # narrower cap than the default: the Selected Rule card fits a 1100 px window (a long
+        # target is elided on the box; its drop-down list shows it whole)
+        fit_combo_boxes(self, cap=180)
 
     def select_ai(self, ai_id):
         self.refresh(select=ai_id)
@@ -521,6 +578,7 @@ class EnemyAIEditorWidget(QWidget):
                 self.rules.setItem(row, col, QTableWidgetItem(text))
         self.rules.blockSignals(False)
         _fit_columns(self.rules)
+        self._rule_columns.apply()
         self.phases.blockSignals(True)
         self.phases.setRowCount(0)
         for p in ai.phases:
@@ -541,6 +599,7 @@ class EnemyAIEditorWidget(QWidget):
                 self.phases.setItem(row, col, item)
         self.phases.blockSignals(False)
         _fit_columns(self.phases)
+        self._phase_columns.apply()
         if not (rule and self._select_row(self.rules, rule)) and self.rules.rowCount():
             self.rules.selectRow(0)
         if not (phase and self._select_row(self.phases, phase)) and self.phases.rowCount():

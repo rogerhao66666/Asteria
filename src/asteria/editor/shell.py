@@ -41,7 +41,7 @@ from .scenes import (
     build_remove_scene_command,
     build_reorder_scene_command,
 )
-from .scrolling_tabs import ScrollingTabWidget, scrollable
+from .scrolling_tabs import ScrollingTabWidget, WrappingTabWidget, scrollable
 from .storage import EditorStorageError, load_document, save_document
 from .structure import (
     StructureEditError,
@@ -243,7 +243,8 @@ class AsteriaEditorWindow(QMainWindow):
             "Runtime RPG UI", self.authoring_controllers.runtime_ui_categories, self
         )
 
-        self.ui_workspace = ScrollingTabWidget(self)
+        # eleven tabs: they wrap onto rows so none hides behind the scroll arrows
+        self.ui_workspace = WrappingTabWidget(self)
         self.ui_workspace.setObjectName("PresentationWorkspaceTabs")
         self.ui_workspace.tabBar().setObjectName("PresentationWorkspaceTabBar")
         self.ui_workspace.tabBar().setDrawBase(True)
@@ -2767,14 +2768,21 @@ class AsteriaEditorWindow(QMainWindow):
         return restored
 
 
-def starter_fingerprint():
-    """A short hash of what the Basic RPG starter is made from: when it changes, a starter made
-    earlier is out of date."""
+def starter_fingerprint(template_id="basic_rpg"):
+    """A short hash of what the starter is made from: when it changes, a starter made earlier
+    is out of date."""
     import hashlib
 
     from . import basic_rpg_map, basic_rpg_template, project_templates
 
     digest = hashlib.sha256()
+    if template_id != "basic_rpg":
+        template = next(t for t in project_templates.TEMPLATES if t.template_id == template_id)
+        for name in ("project.asteria.json", "playable_test_manifest.json"):
+            file = Path(template.source) / name
+            if file.exists():
+                digest.update(file.read_bytes())
+        return digest.hexdigest()[:16]
     for template in project_templates.TEMPLATES:
         if template.template_id in ("party_rpg", "action_rpg", "basic_rpg"):
             for name in ("project.asteria.json", "playable_test_manifest.json"):
@@ -2786,7 +2794,7 @@ def starter_fingerprint():
     return digest.hexdigest()[:16]
 
 
-def ensure_starter_project(folder):
+def ensure_starter_project(folder, template_id="basic_rpg", name="Basic RPG"):
     """The starter project's file in ``folder``, made if missing. A starter made from an older
     template is replaced: untouched, it is rebuilt in place; edited (or of unknown age), it is
     moved aside to ``<name> (previous)`` first, so nothing the user did is lost."""
@@ -2799,7 +2807,7 @@ def ensure_starter_project(folder):
     folder = Path(folder)
     path = folder / "project.asteria.json"
     stamp_file = folder / ".starter.json"
-    fingerprint = starter_fingerprint()
+    fingerprint = starter_fingerprint(template_id)
     if path.exists():
         try:
             stamp = json.loads(stamp_file.read_text(encoding="utf-8"))
@@ -2817,7 +2825,7 @@ def ensure_starter_project(folder):
                 number += 1
                 aside = folder.with_name(f"{folder.name} (previous {number})")
             folder.rename(aside)
-    create_from_template("basic_rpg", "Basic RPG", folder)
+    create_from_template(template_id, name, folder)
     stamp_file.write_text(
         json.dumps(
             {
@@ -2845,14 +2853,24 @@ def launch_editor(project=None):
     if project is None:
         from asteria.project import Project
 
-        # Keep the starter in writable user storage so edits survive editor restarts.
+        from .project_templates import TEMPLATES
+
+        # The project to learn from opens first: Full Verification when the engine has it (a
+        # source checkout), else the small Basic RPG. A copy in writable user storage, so edits
+        # survive restarts and the reference project itself is never changed.
+        full = next(t for t in TEMPLATES if t.template_id == "full_verification")
+        template_id, name = (
+            ("full_verification", "Full Verification")
+            if full.available()
+            else ("basic_rpg", "Basic RPG")
+        )
         folder = (
             Path(QStandardPaths.writableLocation(QStandardPaths.GenericDataLocation))
             / "Asteria"
             / "Projects"
-            / "Basic RPG"
+            / name
         )
-        path = ensure_starter_project(folder)
+        path = ensure_starter_project(folder, template_id, name)
         starter = Project.load_json(path, window.document.component_registry)
         window.set_project(starter, file_path=path)
     window.show()

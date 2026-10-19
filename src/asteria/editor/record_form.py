@@ -47,14 +47,18 @@ from PySide6.QtWidgets import (
 from .record_vocabulary import (
     CATEGORY_HELP,
     HELP,
+    NOT_REFERENCES,
     REFERENCES,
     TECHNICAL,
     TERM_KEY_SOURCES,
     ProjectVocabulary,
     is_chance_field,
     is_tag_field,
+    is_trigger_field,
     label_for,
     map_source,
+    tag_label,
+    trigger_label,
 )
 
 FORMAT_KEYS = ("schema", "version")
@@ -265,8 +269,8 @@ class Picker(QComboBox):
 
     def set_value(self, value):
         value = "" if value is None else str(value)
-        if value not in self._values:
-            self.addItem(f"{value}  (not in the list)", value)
+        if value not in self._values:  # a reference to something that is not there
+            self.addItem(f"⚠ {value}  (missing - pick one from the list)", value)
             self._values.append(value)
         self.setCurrentIndex(self._values.index(value))
 
@@ -346,8 +350,9 @@ class ChipList(QWidget):
 
     edited = Signal()
 
-    def __init__(self, values, choices, *, icons=None, allow_new=True, noun="entry"):
+    def __init__(self, values, choices, *, icons=None, allow_new=True, noun="entry", namer=None):
         super().__init__()
+        self.namer = namer  # words for a value that is not a listed choice (a new tag)
         self.values = [str(v) for v in values]
         self.choices = tuple(choices)
         self.icons = icons
@@ -391,8 +396,9 @@ class ChipList(QWidget):
             choice = self._labels.get(value)
             chip = QToolButton()
             chip.setObjectName("FormChip")
-            chip.setText((choice.label if choice else value) + "  ✕")
-            chip.setToolTip(f"{value}\nClick to remove")
+            shown = choice.label if choice else (self.namer(value) if self.namer else value)
+            chip.setText(shown + "  ✕")
+            chip.setToolTip(f"{self.noun.title()}: {value}\nClick to remove")
             if choice is not None and choice.icon and self.icons:
                 icon = self.icons(choice.icon)
                 if icon is not None:
@@ -898,8 +904,21 @@ class RecordForm(QScrollArea):
             names.addWidget(_small(label_for(name_key)))
             names.addWidget(edit)
         id_key = self._id_key(data)
+        if id_key is not None and name_key is None:  # no name: a title from its parts
+            from .record_vocabulary import record_title
+
+            title = record_title(self.category, data, self.vocabulary)
+            if title:
+                heading = QLabel(title)
+                heading.setObjectName("FormTitle")
+                names.addWidget(heading)
         if id_key is not None:
-            names.addWidget(_small(f"ID  {data[id_key]}   (used by other records; fixed)"))
+            names.addWidget(
+                _small(
+                    f"Internal ID: {data[id_key]}   ·   other records refer to it by this, "
+                    "so it stays fixed (use Duplicate to make a copy with a new one)"
+                )
+            )
         elif self._title:
             names.addWidget(_small(str(self._title)))
         if icon_box is not None:
@@ -974,6 +993,15 @@ class RecordForm(QScrollArea):
             from .record_vocabulary import engine_enums
 
             fixed = _ENUMS.get(skey) or engine_enums().get(skey)
+            if is_trigger_field(skey):  # a moment in the battle, in words
+                from .record_vocabulary import TRIGGERS, Choice
+
+                used = self.vocabulary.values_for(skey)
+                known = dict.fromkeys(fixed or (*TRIGGERS, *used))
+                choices = [Choice(t, trigger_label(t)) for t in known]
+                picker = Picker(choices, value or "", allow_none=True)
+                picker.picked.connect(lambda p=picker: self._set(data, key, p.value()))
+                return picker
             if fixed or _closed_set(skey, self.vocabulary.values_for(skey)):
                 from .record_vocabulary import Choice
 
@@ -1009,7 +1037,11 @@ class RecordForm(QScrollArea):
                 else:
                     choices = self._value_choices(skey)
                 noun = _singular(label_for(skey).lower()) or "entry"
-            chips = ChipList(value, choices, icons=self.icon, noun=noun)
+            namer = None
+            if noun == "tag":
+                names = self.vocabulary.names()
+                namer = lambda tag, n=names: tag_label(tag, n)  # noqa: E731
+            chips = ChipList(value, choices, icons=self.icon, noun=noun, namer=namer)
             chips.edited.connect(lambda c=chips: self._set(data, key, list(c.values)))
             return chips
         if isinstance(value, dict) and _number_map(value):
@@ -1032,7 +1064,8 @@ class RecordForm(QScrollArea):
     def vocabulary_tags(self):
         from .record_vocabulary import Choice
 
-        return [Choice(t, t) for t in self.vocabulary.tags()]
+        names = self.vocabulary.names()
+        return [Choice(t, tag_label(t, names)) for t in self.vocabulary.tags()]
 
     def _value_choices(self, key):
         from .record_vocabulary import Choice
@@ -1046,6 +1079,8 @@ class RecordForm(QScrollArea):
             return "resources"
         if key == "target" and data.get("kind") == "stat_delta":
             return "stats"
+        if key in NOT_REFERENCES.get(self.category, ()):
+            return None
         return REFERENCES.get(key)
 
     def _choices(self, source, key):
@@ -1093,6 +1128,7 @@ class RecordForm(QScrollArea):
 
     def _apply_style(self):
         """The look comes from the editor theme (theme._form_rules), shared by every page."""
+
 
 class _SubForm(QWidget):
     """The fields of a nested part, laid out like a section's body."""

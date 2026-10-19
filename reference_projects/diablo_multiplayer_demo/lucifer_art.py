@@ -64,7 +64,7 @@ def character(assets, key, lucifer_key, name, *, height=26):
     for facing in FOLDERS.values():
         roles = {
             "idle": _strip(lucifer_key, facing, ("Idle",)),
-            "walk": _strip(lucifer_key, facing, ("Walk", "Run", "Idle")),
+            "walk": lucifer.walk_strip(lucifer_key, facing),
         }
         for role, (names, _seconds) in ACTIONS.items():
             roles[role] = _strip(lucifer_key, facing, names)

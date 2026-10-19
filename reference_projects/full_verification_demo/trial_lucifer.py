@@ -179,13 +179,30 @@ def _facing_strip(key, facing, anim):
     return _strip_frames(hits[0], mirror) if hits else []
 
 
+FACINGS = ("Down", "Left", "Right", "Up")
+
+
+def walk_strip(key, facing):
+    """The walk cycle of one facing. A pack may draw ``Walk`` for some facings and ``Run`` for
+    the rest (the Necromancer has Walk facing right only): the name most facings have is used
+    for all of them, so the character walks alike whichever way it turns."""
+    names = sorted(
+        ("Walk", "Run"), key=lambda n: -sum(bool(_facing_strip(key, f, n)) for f in FACINGS)
+    )
+    for name in (*names, "Idle"):
+        frames = _facing_strip(key, facing, name)
+        if frames:
+            return frames
+    return []
+
+
 def field_sheet(key, *, frame=64):
     """The walk cycle in the engine's 3 x 4 field sheet (rows down / left / right / up)."""
     from PIL import Image
 
     out = Image.new("RGBA", (3 * frame, 4 * frame), (0, 0, 0, 0))
     for row, facing in enumerate(("Down", "Left", "Right", "Up")):
-        walk = _facing_strip(key, facing, "Walk") or _facing_strip(key, facing, "Run")
+        walk = walk_strip(key, facing)
         picks = [walk[0], walk[len(walk) // 3], walk[2 * len(walk) // 3]]
         for column, cell in enumerate(picks):
             cell = cell.crop(cell.getchannel("A").getbbox() or (0, 0, *cell.size))

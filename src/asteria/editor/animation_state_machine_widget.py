@@ -32,6 +32,8 @@ from .animation_state_machine_authoring import (
     AnimationStateMachineAuthoring,
     StateMachineAuthoringError,
 )
+from .flow_layout import FlowLayout
+from .ui_fit import fit_list_to_width
 
 NODE_W, NODE_H = 120, 44
 ANY = "*"
@@ -141,6 +143,7 @@ class AnimationStateMachineWidget(QWidget):
         self.last_error = None
         self.preview_state = None
         self.sheet_list = QListWidget()
+        fit_list_to_width(self.sheet_list)
         self.sheet_list.currentTextChanged.connect(lambda _t: self._load())
         create, remove = QPushButton("Create Machine"), QPushButton("Remove Machine")
         create.clicked.connect(lambda: self._try(lambda: self.api.create(self.sheet), "Created"))
@@ -195,10 +198,12 @@ class AnimationStateMachineWidget(QWidget):
         sf = QFormLayout(state_box)
         sf.addRow("Selected", self.state_label)
         sf.addRow("Clip", self.state_clip)
-        row = QHBoxLayout()
+        # button and field rows wrap in a narrow window instead of widening the page
+        row_box = QWidget()
+        row = FlowLayout(row_box)
         for b in (set_clip, set_initial, remove_state):
             row.addWidget(b)
-        sf.addRow(row)
+        sf.addRow(row_box)
         sf.addRow(self.new_state, add_state)
 
         # transitions
@@ -230,10 +235,11 @@ class AnimationStateMachineWidget(QWidget):
         tf.addRow("Conditions", self.conditions)
         tf.addRow(self.when_finished)
         tf.addRow("Priority", self.priority)
-        trow = QHBoxLayout()
+        trow_box = QWidget()
+        trow = FlowLayout(trow_box)
         for b in (add_t, apply_t, remove_t):
             trow.addWidget(b)
-        tf.addRow(trow)
+        tf.addRow(trow_box)
 
         # parameters + preview
         self.parameters = QListWidget()
@@ -251,10 +257,11 @@ class AnimationStateMachineWidget(QWidget):
         p_box = QGroupBox("Parameters & Preview")
         pf = QFormLayout(p_box)
         pf.addRow(self.parameters)
-        prow = QHBoxLayout()
+        prow_box = QWidget()
+        prow = FlowLayout(prow_box)
         for w in (self.param_name, self.param_default, self.param_trigger, add_p):
             prow.addWidget(w)
-        pf.addRow(prow)
+        pf.addRow(prow_box)
         pf.addRow(self.preview_values, step)
         pf.addRow(self.preview_label)
         self.status = QLabel("")

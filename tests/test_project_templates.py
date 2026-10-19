@@ -12,7 +12,10 @@ from asteria.editor.project_templates import (
 
 
 def test_both_templates_are_installed_and_listed():
-    assert {t.template_id for t in available_templates()} == {
+    templates = available_templates()
+    assert templates[0].template_id == "full_verification"  # listed first: the one to learn from
+    assert {t.template_id for t in templates} == {
+        "full_verification",
         "basic_rpg",
         "party_rpg",
         "action_rpg",

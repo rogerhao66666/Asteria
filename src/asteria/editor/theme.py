@@ -446,6 +446,14 @@ QToolButton {
 QToolButton[workspace] { font-weight: 700; }
 QToolButton:hover { background: $hover; color: $text; }
 QToolButton:checked { background: $selection; border-color: $primary; color: $selection_text; }
+QToolButton#WrappingTabButton {
+    background: $panel; border: 1px solid $border_strong; border-radius: 0;
+    padding: 5px 9px; font-weight: 700;
+}
+QToolButton#WrappingTabButton:hover { background: $hover; color: $text; }
+QToolButton#WrappingTabButton:checked {
+    background: $raised; color: $text; border-bottom: 2px solid $primary;
+}
 
 QFrame#DockContentCard {
     background: $raised; border: 1px solid $border_strong; border-radius: 0;
@@ -655,6 +663,7 @@ def _form_rules(p):
     return f"""
 QFrame#FormHeader {{ background: {p.raised}; border: 1px solid {p.border}; border-radius: 8px; }}
 QLineEdit#FormName {{ font-size: 18px; font-weight: 600; padding: 4px 6px; }}
+QLabel#FormTitle {{ font-size: 18px; font-weight: 600; padding: 2px 0; }}
 QFrame#FormSection, QFrame#FormSubSection {{ background: {p.panel}; border: 1px solid {p.border};
     border-radius: 8px; }}
 QToolButton#FormSectionTitle {{ border: none; font-weight: 700; font-size: 13px;

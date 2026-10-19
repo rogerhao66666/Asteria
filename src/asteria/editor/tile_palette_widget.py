@@ -343,6 +343,7 @@ class TilePaletteWidget(QWidget):
 
         self.layer_label = QLabel("Layer: —")
         self.layer_label.setObjectName("MutedLabel")
+        self.layer_label.setWordWrap(True)  # a narrow dock wraps a long layer name
         brush_row = QHBoxLayout()
         brush_row.addWidget(self.layer_label, 1)
         brush_row.addWidget(QLabel("Brush"))
@@ -350,6 +351,10 @@ class TilePaletteWidget(QWidget):
         self.brush_spin.setObjectName("BrushSizeSpin")
         self.brush_spin.setRange(1, 9)
         self.brush_spin.setSuffix(" × tiles")
+        # the layer label beside it stretches: keep room for "9 × tiles" and the arrows
+        self.brush_spin.setMinimumWidth(
+            self.brush_spin.fontMetrics().horizontalAdvance("9 × tiles") + 64
+        )
         self.brush_spin.setToolTip(
             "Paint / Erase brush width in tiles ([ and ] change it). "
             "Drag over several tiles below to paint with the whole block."

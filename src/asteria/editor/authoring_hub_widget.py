@@ -1019,6 +1019,14 @@ class AdapterFamilyWidget(QWidget):
             except Exception:  # noqa: BLE001 - a record that cannot be read keeps its id
                 continue
             name = str(getattr(record, "display_name", "") or getattr(record, "name", "") or "")
+            if not name:  # an evolution, a skill's targeting...: a title made from its parts
+                from .record_vocabulary import record_title
+
+                try:
+                    data = self.adapter.encode(record)
+                except Exception:  # noqa: BLE001 - a record that cannot be encoded keeps its id
+                    data = None
+                name = record_title(self.category_id, data, self.editor.vocabulary)
             if name and name.lower().replace(" ", "_") != key.lower():
                 item.setText(f"{name}   ·  {key}")
             elif name:

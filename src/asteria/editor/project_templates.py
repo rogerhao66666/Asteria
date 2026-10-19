@@ -46,8 +46,16 @@ class ProjectTemplate:
 
 TEMPLATES = (
     ProjectTemplate(
+        "full_verification",
+        "Full Verification (Recommended)",
+        "A whole game to learn from: four maps, a town with a house and shops, a party of four "
+        "with jobs and skill trees, STR / DEX / INT / LUK points, elements, shields and Breaks, "
+        "bosses, quests, crafting and every editor page filled in.",
+        "full_verification_demo",
+    ),
+    ProjectTemplate(
         "basic_rpg",
-        "Basic RPG (Recommended)",
+        "Basic RPG (Small)",
         "One hero, two enemies, Attack, Fire and Heal; a playable field and basic battles.",
         "octopath_demo",
     ),
@@ -98,11 +106,14 @@ def create_from_template(template_id, name, folder):
     source = template.source
     if template_id == "basic_rpg":
         source = next(t for t in TEMPLATES if t.template_id == "party_rpg").source
+    skip = SKIP
+    if template_id == "full_verification":  # the scripts that build it stay with the engine
+        skip = (*SKIP, "*.py", "README.md")
     shutil.copytree(
         source,
         target,
         dirs_exist_ok=True,
-        ignore=shutil.ignore_patterns(*SKIP),
+        ignore=shutil.ignore_patterns(*skip),
     )
     project_file = target / "project.asteria.json"
     import json

@@ -8,7 +8,7 @@ clip through the runtime animation path.
 
 from __future__ import annotations
 
-from PySide6.QtCore import QRect, Qt, QTimer, Signal
+from PySide6.QtCore import QRect, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
+    QListWidgetItem,
     QPushButton,
     QSlider,
     QSpinBox,
@@ -30,6 +31,63 @@ from PySide6.QtWidgets import (
 )
 
 from .animation_authoring import AnimationAuthoringController, AnimationAuthoringError
+from .ui_fit import fit_list_to_width
+
+_CLIP_WORDS = {  # a clip name's first word, in plain words
+    "idle": "Standing",
+    "walk": "Walking",
+    "run": "Running",
+    "attack": "Attack 1",
+    "attack2": "Attack 2",
+    "attack3": "Attack 3",
+    "cast": "Casting a spell",
+    "hit": "Getting hit",
+    "hurt": "Getting hit",
+    "guard": "Guarding",
+    "ko": "Knocked out",
+    "revive": "Getting back up",
+    "status": "Under a status",
+    "transform": "Transforming",
+    "victory": "Winning",
+    "jump": "Jumping",
+}
+_FACING_WORDS = {"down": "facing you", "up": "facing away", "left": "facing left",
+                 "right": "facing right"}  # fmt: skip
+
+
+def _words(text):
+    return str(text).replace("_", " ").replace(".", " ").strip().title()
+
+
+def sheet_title(project, asset_id):
+    """A sprite sheet in words: who it draws or what effect it is, e.g. ``Aldric · party`` for
+    ``battle.combatant.hero_01``; any other sheet reads as its last name part."""
+    asset_id = str(asset_id)
+    key = asset_id.rsplit(".", 1)[-1]
+    db = getattr(project, "rpg_database", None)
+    if asset_id.startswith("battle.combatant."):
+        actor = getattr(db, "actors", {}).get(key) if db is not None else None
+        if actor is not None:
+            return f"{actor.display_name or _words(key)} · party"
+        enemy = getattr(db, "enemies", {}).get(key) if db is not None else None
+        if enemy is not None:
+            return f"{getattr(enemy, 'display_name', '') or _words(key)} · foe"
+        return f"{_words(key)} · fighter"
+    if asset_id.startswith(("battle.fx.", "battle.vfx.")):
+        return f"Effect: {_words(key)}"
+    return _words(key)
+
+
+def clip_title(name, clip=None):
+    """A clip in words: ``idle_left`` -> "Standing, facing left  (5 frames, loops)"."""
+    head, _, tail = str(name).partition("_")
+    words = _CLIP_WORDS.get(head, _words(head))
+    if tail:
+        words += ", " + _FACING_WORDS.get(tail, _words(tail).lower())
+    if clip:
+        count = len(clip.get("frames", ()))
+        words += f"  ({count} frame{'s' * (count != 1)}{', loops' if clip.get('loop') else ''})"
+    return words
 
 
 class FrameGridView(QWidget):
@@ -118,10 +176,22 @@ class AnimationEditorWidget(QWidget):
         self.time = 0.0
         self.playing = False
 
+        # the lists show names in words; each row keeps its real id (the sheet's asset id, the
+        # clip's name) as its data
         self.sheet_list = QListWidget()
+        self.sheet_list.setIconSize(QSize(32, 32))
+        fit_list_to_width(self.sheet_list)
         self.clip_list = QListWidget()
-        self.sheet_list.currentTextChanged.connect(self._sheet_changed)
-        self.clip_list.currentTextChanged.connect(self._clip_changed)
+        self.sheet_filter = QLineEdit()
+        self.sheet_filter.setPlaceholderText("Search sheets…")
+        self.sheet_filter.setClearButtonEnabled(True)
+        self.sheet_filter.textChanged.connect(self._filter_sheets)
+        self.sheet_list.currentItemChanged.connect(
+            lambda item, _old: self._sheet_changed(self._id(item))
+        )
+        self.clip_list.currentItemChanged.connect(
+            lambda item, _old: self._clip_changed(self._id(item))
+        )
         add_clip, remove_clip, rename_clip = (
             QPushButton("New Clip…"),
             QPushButton("Delete"),
@@ -131,9 +201,14 @@ class AnimationEditorWidget(QWidget):
         remove_clip.clicked.connect(self.remove_clip)
         rename_clip.clicked.connect(self._rename_clicked)
         left = QVBoxLayout()
-        left.addWidget(QLabel("Sprite Sheets"))
+        step_one = QLabel("<b>1. Sprite sheet</b> - a picture cut into frames")
+        step_two = QLabel("<b>2. Animation</b> - pick one to edit or preview")
+        for label in (step_one, step_two):
+            label.setWordWrap(True)
+        left.addWidget(step_one)
+        left.addWidget(self.sheet_filter)
         left.addWidget(self.sheet_list, 1)
-        left.addWidget(QLabel("Clips"))
+        left.addWidget(step_two)
         left.addWidget(self.clip_list, 1)
         buttons = QHBoxLayout()
         for b in (add_clip, rename_clip, remove_clip):
@@ -146,14 +221,18 @@ class AnimationEditorWidget(QWidget):
         self.grid.frameClicked.connect(self.append_frame)
 
         self.frames = QLineEdit()
-        self.frames.setPlaceholderText("frame indices, e.g. 0, 1, 2, 1")
+        self.frames.setPlaceholderText("click frames in the grid, or type 0, 1, 2, 1")
+        self.frames.setToolTip(
+            "The frames this animation plays, in order: the numbers shown on the sheet in the "
+            "middle. Click a frame there to add it."
+        )
         self.duration = QDoubleSpinBox()
         self.duration.setRange(0.01, 10.0)
         self.duration.setDecimals(3)
         self.duration.setSingleStep(0.01)
         self.loop = QCheckBox("Loop")
         self.events = QLineEdit()
-        self.events.setPlaceholderText("keyframe:event, e.g. 2:hit")
+        self.events.setPlaceholderText("step:event, e.g. 2:hit (the blow lands on step 2)")
         apply_clip = QPushButton("Apply Clip")
         apply_clip.clicked.connect(self.apply_clip)
         clip_box = QGroupBox("Clip")
@@ -264,15 +343,38 @@ class AnimationEditorWidget(QWidget):
         self.refresh()
 
     # -- state --------------------------------------------------------------------
+    @staticmethod
+    def _id(item):
+        return None if item is None else item.data(Qt.UserRole)
+
     @property
     def sheet(self):
-        item = self.sheet_list.currentItem()
-        return None if item is None else item.text()
+        return self._id(self.sheet_list.currentItem())
 
     @property
     def clip(self):
-        item = self.clip_list.currentItem()
-        return None if item is None else item.text()
+        return self._id(self.clip_list.currentItem())
+
+    def _filter_sheets(self, text):
+        text = text.strip().lower()
+        for row in range(self.sheet_list.count()):
+            item = self.sheet_list.item(row)
+            shown = not text or text in item.text().lower() or text in self._id(item).lower()
+            item.setHidden(not shown)
+
+    def _sheet_icon(self, asset_id):
+        """The sheet's first frame, for its row in the list."""
+        from PySide6.QtGui import QIcon
+
+        try:
+            pixmap = self._pixmap(asset_id)
+            width, height = self.api.data(asset_id)["frame_size"]
+        except (AnimationAuthoringError, OSError, KeyError):
+            return None
+        if pixmap.isNull():
+            return None
+        first = pixmap.copy(0, 0, min(width, pixmap.width()), min(height, pixmap.height()))
+        return QIcon(first)
 
     def _pixmap(self, asset_id):
         path = self.api.image_path(asset_id)
@@ -288,8 +390,17 @@ class AnimationEditorWidget(QWidget):
         self.sheet_list.blockSignals(True)
         self.sheet_list.clear()
         sheets = self.api.sheets()
-        self.sheet_list.addItems(list(sheets))
+        project = self.api.document.project
+        for asset_id in sheets:
+            item = QListWidgetItem(sheet_title(project, asset_id))
+            item.setData(Qt.UserRole, asset_id)
+            item.setToolTip(f"Sheet id: {asset_id}")
+            icon = self._sheet_icon(asset_id)
+            if icon is not None:
+                item.setIcon(icon)
+            self.sheet_list.addItem(item)
         self.sheet_list.blockSignals(False)
+        self._filter_sheets(self.sheet_filter.text())
         if sheets:
             self.sheet_list.setCurrentRow(sheets.index(sheet) if sheet in sheets else 0)
             self._sheet_changed(self.sheet, clip)
@@ -301,7 +412,11 @@ class AnimationEditorWidget(QWidget):
         self.clip_list.blockSignals(True)
         self.clip_list.clear()
         names = sorted(data["clips"])
-        self.clip_list.addItems(names)
+        for name in names:
+            item = QListWidgetItem(clip_title(name, data["clips"][name]))
+            item.setData(Qt.UserRole, name)
+            item.setToolTip(f"Animation name: {name} (what skills and states ask for)")
+            self.clip_list.addItem(item)
         self.clip_list.blockSignals(False)
         self.frame_w.setValue(data["frame_size"][0])
         self.frame_h.setValue(data["frame_size"][1])

@@ -39,7 +39,7 @@ from .character_composition_authoring import (
     CharacterCompositionAuthoring,
     CompositionAuthoringError,
 )
-from .ui_fit import fit_combo_boxes
+from .ui_fit import fit_combo_boxes, fit_list_to_width
 
 PREVIEW_SCALE = 3.0
 
@@ -62,6 +62,7 @@ class CharacterCompositionWidget(QWidget):
         self._pixmaps = {}
 
         self.sheet_list = QListWidget()
+        fit_list_to_width(self.sheet_list)
         self.sheet_list.currentTextChanged.connect(lambda _t: self._load())
         self.frame = QSpinBox()
         self.frame.setRange(0, 999)
