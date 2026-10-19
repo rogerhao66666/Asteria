@@ -89,7 +89,7 @@ def test_command_pages_order_rename_and_page_the_top_commands():
     game = _game()
     library = game.project.battle_presentation_library
     pages = library.require("interaction", "trial_commands")
-    assert pages.max_primary_layers == 6 and pages.page_size == 6
+    assert pages.max_primary_layers == 5 and pages.page_size == 6
     pages = dataclasses.replace(pages, max_primary_layers=3)  # this early hero has fewer
     commands = BattleCommands(game, style="root", pages=pages)
     rows = commands.entries(smoke.HERO)

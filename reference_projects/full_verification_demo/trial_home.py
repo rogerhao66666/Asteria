@@ -96,6 +96,9 @@ def furnish(assets, town, home, home_places):
         "up",
     )
     home.door("Front Door", home_places["exit"], town.scene.id, (door_x, y1 * 16.0 + 10.0), "down")
+    import trial_brave
+
+    trial_brave.family_chest(assets, home, maps)  # the Demon Ring and the charms
     bed = home.entity("Bed", 3 * 16.0, 5 * 16.0)
     home.look(bed, *picture(assets, "home_bed", "tileset_bed.png", (0, 48, 32, 96), "Bed"))
     bed.add_component(maps._set(Collider2DComponent(), width=28, height=40, offset_y=-20))

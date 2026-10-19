@@ -33,6 +33,7 @@ SUB_JOBS = (
     "forgemaster",
     "rogue",
     "guardian",
+    "archmage",  # with the Brave as main job: Aldric's own pair
 )
 SW = "w_sunbrand:hero_01"
 
@@ -80,7 +81,7 @@ def prepare(game, facts, sub="duelist", tier=0):
     # the campaign earns these a little at a time; the scripted fights start with plenty
     allocation.grant("ap", 200)
     allocation.grant("stat_points", 12)
-    for job in ("knight", "duelist", "mystic", *SUB_JOBS):
+    for job in ("brave", "knight", "duelist", "mystic", *SUB_JOBS):
         allocation.grant(f"jp.{job}", 130)
     for graph_id in [g for g in allocation.definitions if g.endswith("_tree")]:
         graph = allocation.definitions[graph_id]
@@ -136,8 +137,9 @@ def prepare(game, facts, sub="duelist", tier=0):
     for node_id in ("edge", "edge", "edge", "ember"):
         world(game, "UPGRADE_EQUIPMENT", actor_id=HERO, instance_id=SW, node_id=node_id)
         facts["growth_nodes"] += 1
+    main = "brave" if sub == "archmage" else "knight"
     for job in ("mystic", "duelist", sub):
-        world(game, "SET_CLASSES", actor_id=HERO, class_ids=f"knight,{job}")
+        world(game, "SET_CLASSES", actor_id=HERO, class_ids=f"{main},{job}")
         facts["job_changes"] += 1
 
 

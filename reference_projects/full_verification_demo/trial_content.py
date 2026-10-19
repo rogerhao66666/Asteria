@@ -1741,18 +1741,18 @@ SERVICES = {
     "Mystic Teacher": (
         (30.0, -30.0),
         "Walk the mystic path with me.",
-        ("SET_CLASSES", {"actor_id": "hero_01", "class_ids": "knight,mystic"}),
+        ("SET_CLASSES", {"actor_id": "hero_01", "class_ids": "brave,mystic"}),
     ),
     "Duelist Teacher": (
         (14.0, -34.0),
         "Speed is a blade.",
-        ("SET_CLASSES", {"actor_id": "hero_01", "class_ids": "knight,duelist"}),
+        ("SET_CLASSES", {"actor_id": "hero_01", "class_ids": "brave,duelist"}),
     ),
     **{
         name: (
             (x, y),
             line,
-            ("SET_CLASSES", {"actor_id": "hero_01", "class_ids": f"knight,{job}"}),
+            ("SET_CLASSES", {"actor_id": "hero_01", "class_ids": f"brave,{job}"}),
         )
         for name, x, y, line, job in (
             ("Weapon Master Dojo", -44.0, 30.0, "Every weapon, one hand.", "weapon_master"),
@@ -1892,7 +1892,7 @@ def game_start(c):
         balances={
             "ap": 6,
             "stat_points": 0,
-            **{f"jp.{j}": 8 for j in ("knight", "duelist", "mystic")},
+            **{f"jp.{j}": 8 for j in ("brave", "archmage", "knight", "duelist", "mystic")},
             **{f"jp.{j}": 0 for j in ADVANCED_JOBS},
         },
     )
@@ -1911,8 +1911,9 @@ def game_start(c):
             "level": 1,
             "experience": 0.0,
             "points": {},
-            "active_class_ids": ["knight", "duelist"],
-            "unlocked_class_ids": ["knight", "duelist", "mystic"],  # the rest: trainers
+            "active_class_ids": ["brave", "archmage"],  # Aldric the Brave, an Archmage too
+            # the rest: trainers
+            "unlocked_class_ids": ["brave", "archmage", "knight", "duelist", "mystic"],
         },
         **{
             who: {
@@ -1978,7 +1979,7 @@ def game_start(c):
     for _name, (base, catalyst), _ability, _target in trial_items.CONCOCTIONS.values():
         counts[base] = counts[catalyst] = max(counts.get(base, 0), 8)
     for item_id in db.items:
-        if item_id.endswith("_item"):
+        if item_id.endswith("_item") and not item_id.startswith("charm_"):  # charms: the chest
             counts[item_id] = 3 if item_id.startswith("card") else 2
     rpg["inventory"]["counts"] = counts
     rpg["currencies"] = {"gold": 6000.0}

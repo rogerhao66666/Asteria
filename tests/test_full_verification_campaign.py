@@ -119,13 +119,14 @@ def test_the_bag_has_a_limit_of_kinds_and_says_what_did_not_fit(played):
     campaign, _facts = played
     game = campaign.game
     db = game.project.rpg_database
-    for index in range(60):
+    for index in range(90):
         db.add_item(ItemDefinition(f"junk_{index}", f"Junk {index}"))
     bag = game.save.rpg_state.inventory
-    for index in range(60):
+    for index in range(90):
         bag.add(f"junk_{index}", 1)
     kinds = [k for k, v in bag._counts.items() if v > 0]
-    assert len(kinds) <= 40 + 5  # the limit (key items do not count) plus what is exempt
+    limit = db.inventory_rules["trial_bag"].max_kinds
+    assert len(kinds) <= limit + 5  # the limit (key items do not count) plus what is exempt
     assert bag.overflow  # what did not fit was reported
 
 

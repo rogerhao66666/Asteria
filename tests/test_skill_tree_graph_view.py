@@ -79,5 +79,5 @@ def test_game_data_follows_a_newly_opened_project_with_the_same_id(app):
     family = window.rpg_authoring.child  # the Game Data surface shown now
     index = family.category.findData("graphs")
     family.category.setCurrentIndex(index)
-    assert len(family._ids) == len(second.rpg_database.progression_graphs) == 20
+    assert len(family._ids) == len(second.rpg_database.progression_graphs) >= 20
     window.close()

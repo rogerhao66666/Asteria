@@ -301,7 +301,7 @@ def presentation(c):
                 for command, label, order in COMMANDS
             ),
             page_size=6,
-            max_primary_layers=6,
+            max_primary_layers=5,  # past five commands the rest wait on a More page
         ),
     )
     library.set(

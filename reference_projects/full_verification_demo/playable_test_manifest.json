@@ -605,6 +605,84 @@
       "apostasy": {
         "label": "Apostasy"
       },
+      "valiant_slash": {
+        "label": "Valiant Slash"
+      },
+      "gigaslash": {
+        "label": "Gigaslash"
+      },
+      "heroic_lance": {
+        "label": "Heroic Lance"
+      },
+      "aegis_of_courage": {
+        "label": "Aegis of Courage"
+      },
+      "rallying_cry": {
+        "label": "Rallying Cry"
+      },
+      "arsenal_storm": {
+        "label": "Arsenal Storm"
+      },
+      "dragon_slayer": {
+        "label": "Dragon Slayer"
+      },
+      "lightbringer": {
+        "label": "Lightbringer"
+      },
+      "final_hope": {
+        "label": "Final Hope"
+      },
+      "fire_bolt": {
+        "label": "Fire Bolt"
+      },
+      "fire_storm": {
+        "label": "Inferno"
+      },
+      "ice_bolt": {
+        "label": "Ice Bolt"
+      },
+      "ice_storm": {
+        "label": "Blizzard"
+      },
+      "lightning_bolt": {
+        "label": "Thunder Bolt"
+      },
+      "lightning_storm": {
+        "label": "Thunderstorm"
+      },
+      "light_bolt": {
+        "label": "Holy Bolt"
+      },
+      "light_storm": {
+        "label": "Radiant Storm"
+      },
+      "dark_bolt": {
+        "label": "Shadow Bolt"
+      },
+      "dark_storm": {
+        "label": "Abyss"
+      },
+      "wind_bolt": {
+        "label": "Gale Bolt"
+      },
+      "wind_storm": {
+        "label": "Tempest"
+      },
+      "earth_bolt": {
+        "label": "Stone Bolt"
+      },
+      "earth_storm": {
+        "label": "Earthquake"
+      },
+      "prismatic_cataclysm": {
+        "label": "Prismatic Cataclysm"
+      },
+      "mana_shield": {
+        "label": "Mana Shield"
+      },
+      "arcane_surge": {
+        "label": "Arcane Surge"
+      },
       "shield_bash__ember": {
         "label": "Shield Bash (Ember)"
       },
@@ -767,6 +845,24 @@
       "forbidden_rite__siphon": {
         "label": "Forbidden Rite (Siphon)"
       },
+      "valiant_slash__ember": {
+        "label": "Valiant Slash (Ember)"
+      },
+      "valiant_slash__echo": {
+        "label": "Valiant Slash (Echo)"
+      },
+      "valiant_slash__siphon": {
+        "label": "Valiant Slash (Siphon)"
+      },
+      "fire_bolt__ember": {
+        "label": "Fire Bolt (Ember)"
+      },
+      "fire_bolt__echo": {
+        "label": "Fire Bolt (Echo)"
+      },
+      "fire_bolt__siphon": {
+        "label": "Fire Bolt (Siphon)"
+      },
       "gob_sling": {
         "label": "Sling Stone"
       },
@@ -814,6 +910,9 @@
       },
       "water_holy": {
         "label": "Holy Water"
+      },
+      "attack_ring": {
+        "label": "Attack (ring)"
       },
       "momentum_strike": {
         "label": "Momentum Strike"

@@ -29,6 +29,7 @@ sys.path.insert(0, str(REPO / "scripts"))
 import trial_art as art  # noqa: E402
 import trial_b11 as b11  # noqa: E402
 import trial_b12 as b12  # noqa: E402
+import trial_brave as brave  # noqa: E402
 import trial_battle as battle_rules  # noqa: E402
 import trial_cast as cast  # noqa: E402
 import trial_classes as classes  # noqa: E402
@@ -77,10 +78,13 @@ def main():
     b12.systems(context)
     cast.party(context)
     classes.jobs(context)  # three-tier job lines and sub jobs for the companions
+    brave.jobs(context)  # Aldric the Brave and Archmage: skills, passives, their trees
     trees.trees(context)  # the shared web, specs, runes and skill books
     cast.foes(context)
     gear_plus.forge(context)  # more gear, sets, gems, cards, refining, crafting
+    brave.ring(context)  # the Demon Ring and its charms
     battle_rules.rules(context)  # every Battle category designed and used
+    brave.foes(context)  # every foe far stronger; wind and earth weaknesses
     stage.abilities(context)  # input steps, slot-limited arts, field strikes
     world_extras.data(context)  # map areas, New Game Plus, translations, music room
     extras.systems(context)
@@ -95,6 +99,7 @@ def main():
     kept = art.weapon_icons(context)
     kept = (*kept, *lucifer.apply_icons(context))
     icons.apply_all(context)  # gear, items, gems, cards, jobs, passives, states
+    brave.icons(context)  # the Demon Ring and the charms
     lucifer.apply_ui(context)
     lucifer.apply_music(context)
     import lucifer_reskin

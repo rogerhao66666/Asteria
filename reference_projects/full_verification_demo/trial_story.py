@@ -213,7 +213,7 @@ def systems(c):
     ):
         db.add_achievement(achievement)
     db.add_inventory_rules(
-        InventoryRules("trial_bag", "Traveller's bag", max_kinds=40, overflow="fill")
+        InventoryRules("trial_bag", "Traveller's bag", max_kinds=64, overflow="fill")
     )
     for interaction in (
         WorldInteraction(

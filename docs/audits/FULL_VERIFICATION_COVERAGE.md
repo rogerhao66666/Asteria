@@ -90,7 +90,7 @@ and lists only the drops that really fell.
 | Category | Used by |
 |---|---|
 | Factions | Hearthfold Wardens (rank Ally at the end), Bonewalker Court (goes negative); reputation rewards, achievement |
-| Inventory rules | `trial_bag`: 40 kinds, overflow reported (`test_the_bag_has_a_limit...`) |
+| Inventory rules | `trial_bag`: 64 kinds, overflow reported (`test_the_bag_has_a_limit...`) |
 | Behaviour trees | `foe_patrol` drives the goblins and skeletons in view (they roam and chase; `foes_roamed`) |
 | World interactions | Search the old cache, persuade the scout, pick the sealed vault |
 
@@ -132,7 +132,7 @@ specs, books, gear and refining stack. The vigil foes are warded so the 8 rounds
 |---|---|
 | Side-View Positions | `crypt_ranks`: the catacomb guards stand in a staggered rank against the party's (`stage:crypt_ranks` on `crypt_guard`) |
 | Portrait Party Layout | `vigil_portrait`: the Acolytes' Vigil keeps the party in its HUD (bodies hidden), the acolytes in one line |
-| Command Menu Pages | `trial_commands` (named by the layout's `command_pages`): Fight, Skills, Arts, Limit, Combos, then a More page with Rites, Beast, Bag, Run; six rows a page |
+| Command Menu Pages | `trial_commands` (named by the layout's `command_pages`): five commands, then a More page with the rest (Fight, Skills, Arts, Limit, Combos, Rites, Beast, Bag, Run in that order); six rows a page |
 | Command Input Steps | `elemental_weave`: Vesper picks an element, then up to two focuses (Overcharge x1.5 for 12 SP, Echo x1.25 for 1 Soul) through the real command menu |
 | Ability Slots | `trial_slots`: the Old Master teaches four arts (`LEARN_ABILITY`); two slots, three from level 10, four from level 18; a full slot refuses, an unset art is not usable |
 | Attacks / Projectiles | `field_slash` (J) and `sling_throw` (1, the `sling_stone` projectile): hitting a foe in view first opens its fight preemptive |
@@ -179,6 +179,25 @@ a chest (`tests/test_town_people_and_home.py` fails if two share a picture). Ald
 in Hearthfold's north-east corner; the game starts at its door. Inside, the bed's Sleep fades out,
 rests the party (`REST_PARTY`) and fades in; the campaign hurts the hero, sleeps and checks full
 health (`home_sleeps`).
+
+## Aldric the Brave and Archmage, the Demon Ring, stronger foes (2026-10-19)
+
+`trial_brave.py`. Aldric starts as a **Brave** (main) with an **Archmage** sub job; the job
+teachers and the vault let him try others, and he returns to the pair.
+
+| What | Design |
+|---|---|
+| Brave | Every weapon (`capability.weapon.*`: sword, axe, spear, dagger, bow, staff, ring); power and magic grow together; nine skills: Valiant Slash, Aegis of Courage, Heroic Lance, Gigaslash, Rallying Cry, Lightbringer, Dragon Slayer, Arsenal Storm (one blow with each weapon, so any weapon weakness lands), Final Hope (divine, 3 BP) |
+| Archmage | Every element: fire, ice, lightning, light, dark and the new wind and earth (weak / resist rules, foes tagged); a Bolt and a Storm each, Prismatic Cataclysm (seven elements), Mana Shield, Arcane Surge |
+| Brave tree (38 nodes) | 10-rank core, the skills, a 5-rank mastery per weapon (its blows x1.25), Weapon Saint (all seven at rank 3), three exclusive Oaths, Hero's Resolve, three specs with talents and capstones, three runes on Valiant Slash, a skill book; Final Hope needs Dragon Slayer, Lightbringer and an Oath |
+| Archmage tree (52 nodes) | 10-rank core, seven schools (school, Bolt, Storm, Attunement: that element x1.25), Mana Shield, Arcane Surge, three exclusive Paths, Archmage's Insight, three specs, runes on Fire Bolt, a book; Prismatic Cataclysm needs fire / ice / lightning attunement and one more |
+| Attributes | Twin Arts: power and magic from one point |
+| Demon Ring | A ring weapon (power +45, magic +45, crit, speed); seven sockets - three cards, two gems, two charms (six new charm attachments); its attack strikes five times; in the Family Chest in Aldric's house (worn in his second hand) |
+| Foes | Health x3 (the vigil's acolytes excepted), power and magic x1.8, defence x1.4, speed x1.15 |
+
+The campaign opens the chest, sockets two charms, and uses the ring's five-strike attack,
+Valiant Slash, Arsenal Storm and the wind and earth bolts against the stronger foes; it still
+wins every fight. The bag holds 64 kinds now (the charms did not fit in 40).
 
 ## World commands (58)
 

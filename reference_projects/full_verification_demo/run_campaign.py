@@ -35,6 +35,11 @@ class Campaign:
         "art_whirlwind",
         "art_dawn_edge",
         "art_iron_vow",
+        "attack_ring",
+        "valiant_slash",
+        "arsenal_storm",
+        "wind_bolt",
+        "earth_bolt",
     )
 
     def _watch(self):
@@ -184,6 +189,11 @@ class Campaign:
         self.shot(self.shot_pending)
 
     FIRST = (
+        "attack_ring",
+        "valiant_slash",
+        "arsenal_storm",
+        "wind_bolt",
+        "earth_bolt",
         "momentum_strike",
         "soul_burst",
         "party_rush",
@@ -459,6 +469,14 @@ class Campaign:
         full = game.save.rpg_state.actor_snapshots[HERO].resources["values"]["vitality"]
         assert self.hp() == full["maximum"] > hurt, (hurt, self.hp())
         self.facts["home_sleeps"] += 1
+        self.talk("Family Chest")  # the Demon Ring (second hand) and six charms
+        ring = self.demon_ring()
+        assert ring is not None, "the Demon Ring is not worn"
+        for socket, charm in (("h1", "charm_serpent"), ("h2", "charm_lion")):
+            game.socket_item(HERO, ring.instance_id, socket, f"{charm}_item")
+        self.facts["ring_sockets"] = len(self.demon_ring().attachments)
+        attack = game.project.gameplay_library.abilities.get("attack_ring")
+        assert len(attack.hits) == 5  # one attack, five strikes
         self.go("Front Door")
         assert self.scene_name() == "Hearthfold"
 
@@ -575,6 +593,23 @@ class Campaign:
         if allocation is None:
             return 0
         spent = 0
+        if actor_id == HERO:  # a Brave Archmage's first picks: every weapon's storm, every bolt
+            elements = ("fire", "ice", "lightning", "light", "dark", "wind", "earth")
+            wishes = [
+                ("brave_tree", "brave_core", 4),
+                ("brave_tree", "brave_mastery_sword", 3),
+                ("brave_tree", "brave_arsenal_storm", 1),
+                ("archmage_tree", "arch_core", 2),
+                *(("archmage_tree", f"arch_school_{e}", 1) for e in elements),
+                *(("archmage_tree", f"arch_{e}_bolt", 1) for e in elements),
+            ]
+            for graph_id, node_id, rank in wishes:
+                while allocation.rank(graph_id, node_id) < rank:
+                    try:
+                        allocation.allocate(graph_id, node_id)
+                    except ValueError:
+                        break
+                    spent += 1
         for graph_id in [g for g in allocation.definitions]:
             graph = allocation.definitions[graph_id]
             for _ in range(8):
@@ -639,6 +674,8 @@ class Campaign:
             self.talk(teacher, picks)
             assert job in game.ensure_actor_progression(HERO).active_class_ids, job
             self.facts["job_changes"] += 1
+        game.set_classes(HERO, ["brave", "archmage"])  # tried them all; back to his own two
+        assert game.ensure_actor_progression(HERO).active_class_ids[:2] == ("brave", "archmage")
         for _ in range(3):
             self.talk("Smith", picks=(0,))
         self.talk("Smith", picks=(1,))
@@ -742,6 +779,10 @@ class Campaign:
             _ = result
         game.refresh_actor_combatants(actor_id)
 
+    def demon_ring(self):
+        weapons = self.game.save.rpg_state.loadouts[HERO].equipped("weapon")
+        return next((w for w in weapons if w.equipment.equipment_id == "w_demon_ring"), None)
+
     def sunbrand(self):
         return self.game.save.rpg_state.loadouts[HERO].equipped("weapon")[0]
 
@@ -755,6 +796,7 @@ class Campaign:
     def woods(self):
         game = self.game
         self.note("Whispering Woods: goblins, a tame slinger, the beast, Vesper")
+        self.allocate()  # the points the last fights earned
         self.go("Road East")
         assert self.scene_name() == "Whispering Woods"
         assert game.battle_weather() is not None and game.battle_weather()[0] == "rain"
@@ -817,6 +859,7 @@ class Campaign:
     def crypt(self):
         game = self.game
         self.note("Catacombs: skeletons, a locked vault, the Ancient, Cael")
+        self.allocate()  # the points the last fights earned
         self.go("Crypt Door")
         assert self.scene_name() == "Catacombs"
         self.talk("Sealed Vault")
@@ -827,7 +870,7 @@ class Campaign:
         self.staged("sideview")
         self.menus()
         self.fight()
-        game.set_classes(HERO, ["knight", "rogue"])  # a thief's pick for the sealed vault
+        game.set_classes(HERO, ["brave", "rogue"])  # a thief's pick for the sealed vault
         self.facts["job_changes"] += 1
         self.touch("Skeleton Ancient")
         assert "no_escape" in game.escape_unavailable()
@@ -849,7 +892,8 @@ class Campaign:
     def throne(self):
         game = self.game
         self.note("Ember Throne: the full party against Vaelor")
-        game.set_classes(HERO, ["knight", "hero"])
+        self.allocate()  # the points the last fights earned
+        game.set_classes(HERO, ["brave", "archmage"])  # the Brave and Archmage again
         self.facts["job_changes"] += 1
         self.go("Stairs Up")  # back to town: every companion takes the third job of their line
         self.go("Road West")
@@ -967,6 +1011,8 @@ REQUIRED = (
     "used_art_rending_gale", "used_art_dawn_edge", "used_art_iron_vow",
     "translated_lines", "bog_damage", "area_backdrops", "glade_rests", "shadow_stealth",
     "embers_burn", "embers_out", "music_unlocked", "new_game_plus", "home_sleeps",
+    "ring_sockets", "used_attack_ring", "used_valiant_slash", "used_arsenal_storm",
+    "used_wind_bolt", "used_earth_bolt",
 )  # fmt: skip
 
 
