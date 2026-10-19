@@ -154,18 +154,11 @@ def test_editor_places_sheet_character_copies_it_and_lists_it_with_a_thumbnail(
 
         window.document.select_component(created.entity.get(SpriteRenderer2D))
         window.refresh_inspector()
-        table = window.inspector.table
-        widgets = [table.cellWidget(r, 1) for r in range(table.rowCount())]
-        assert any(isinstance(w, QComboBox) for w in widgets)  # sprite sheet picker
-        combo = next(w for w in widgets if isinstance(w, QComboBox))
-        assert not combo.currentText().startswith(
-            "Missing"
-        )  # the placed sheet is a loaded choice at once
-        rows = [r for r in range(table.rowCount()) if table.cellWidget(r, 1) is not None]
-        assert all(
-            table.item(r, 1).text() == "" for r in rows
-        )  # no value text beneath the widgets
-        assert any(isinstance(w, QCheckBox) for w in widgets)  # flip_x / visible
+        form = window.inspector.scroll.widget()
+        combos = form.findChildren(QComboBox)
+        assert combos  # the sprite sheet picker
+        assert not any(c.currentText().startswith("Missing") for c in combos)  # loaded at once
+        assert form.findChildren(QCheckBox)  # flip_x / visible
     finally:
         window.document.mark_saved()
         window.close()

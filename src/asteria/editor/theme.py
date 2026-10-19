@@ -645,7 +645,35 @@ def _workspace_rules(palette):
 
 def build_qss(palette):
     tokens = {f.name: getattr(palette, f.name) for f in fields(palette)}
-    return _TEMPLATE.substitute(tokens) + _workspace_rules(palette) + "\n"
+    return (
+        _TEMPLATE.substitute(tokens) + _workspace_rules(palette) + _form_rules(palette) + "\n"
+    )
+
+
+def _form_rules(p):
+    """The record forms of every editor page: header card, sections, cards, chips, hints."""
+    return f"""
+QFrame#FormHeader {{ background: {p.raised}; border: 1px solid {p.border}; border-radius: 8px; }}
+QLineEdit#FormName {{ font-size: 18px; font-weight: 600; padding: 4px 6px; }}
+QFrame#FormSection, QFrame#FormSubSection {{ background: {p.panel}; border: 1px solid {p.border};
+    border-radius: 8px; }}
+QToolButton#FormSectionTitle {{ border: none; font-weight: 700; font-size: 13px;
+    color: {p.text}; padding: 2px; }}
+QLabel#FormFieldLabel {{ color: {p.text_dim}; padding-top: 4px; }}
+QFrame#FormCard {{ background: {p.list_alt}; border: 1px solid {p.border_strong};
+    border-radius: 6px; }}
+QToolButton#FormChip {{ background: {p.selection}; color: {p.selection_text}; border: none;
+    border-radius: 10px; padding: 3px 8px; }}
+QToolButton#FormChip:hover {{ background: {p.danger_border}; }}
+QToolButton#FormAddChip {{ background: transparent; color: {p.primary_hi};
+    border: 1px dashed {p.border_strong}; border-radius: 10px; padding: 3px 8px; }}
+QPushButton#FormAddButton {{ color: {p.primary_hi}; }}
+QToolButton#FormMoreButton {{ border: none; color: {p.text_muted}; padding: 2px; }}
+QToolButton#FormMoreButton:hover {{ color: {p.primary_hi}; }}
+QLabel#FormError {{ background: {p.danger_bg}; color: {p.danger_text};
+    border: 1px solid {p.danger_border}; border-radius: 6px; padding: 6px 8px; }}
+QLabel#FormSavedHint {{ color: {p.text_muted}; }}
+"""
 
 
 ASTERIA_DARK_QSS = build_qss(GRAPHITE)

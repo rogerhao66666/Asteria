@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import copy
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -130,6 +130,8 @@ class _RefList(QListWidget):
 class _TableField(QGroupBox):
     """Master–detail editor for a list of nested records."""
 
+    changed = Signal()
+
     def __init__(self, label, fields, references, parent=None, *, icons=None):
         super().__init__(label, parent)
         self.fields = fields
@@ -142,9 +144,10 @@ class _TableField(QGroupBox):
             fields, references, column_width=200, icons=icons
         )  # nested rows: narrower columns
         self.detail.setEnabled(False)
-        add, remove = QPushButton("Add"), QPushButton("Remove")
-        add.clicked.connect(self.add_row)
-        remove.clicked.connect(self.remove_row)
+        self.detail.changed.connect(self._detail_changed)
+        add, remove = QPushButton("+ Add"), QPushButton("Remove")
+        add.clicked.connect(lambda: (self.add_row(), self.changed.emit()))
+        remove.clicked.connect(lambda: (self.remove_row(), self.changed.emit()))
         buttons = QHBoxLayout()
         buttons.addWidget(add)
         buttons.addWidget(remove)
@@ -158,6 +161,10 @@ class _TableField(QGroupBox):
         # the row list sits beside the selected row's form when there is room
         self.split = ResponsiveSplit(rows, self.detail, side_by_side_at=520)
         layout.addWidget(self.split)
+
+    def _detail_changed(self):
+        self._commit()
+        self.changed.emit()
 
     def _label(self, row):
         first = self.fields[0].key
@@ -302,14 +309,18 @@ class RecordForm(QWidget):
 
     changed = Signal()
 
-    def __init__(self, fields, references, parent=None, *, column_width=250, icons=None):
+    def __init__(
+        self, fields, references, parent=None, *, column_width=250, icons=None, document=None
+    ):
         super().__init__(parent)
+        self.document = document  # whose project fills key drop-downs (currencies, stats)
         self.icons = icons  # an ``IconLibrary`` for icon fields (None: a plain editable list)
         self.column_width = column_width
         self.fields = tuple(fields)
         self.references = references
         self.widgets = {}
         self._original = {}
+        self._loading = False  # set_data fills the widgets: no change to report
         # fields flow into as many columns as the width allows; groups and tables span the full
         # width
         self.grid = ResponsiveForm(self, column_width=self.column_width)
@@ -318,6 +329,7 @@ class RecordForm(QWidget):
         outer.addWidget(self.grid)
         for f in self.fields:
             widget = self._build(f)
+            self._watch(f, widget)
             self.widgets[f.key] = widget
             if f.kind in ("group", "table"):
                 self.grid.add_wide(widget)
@@ -325,6 +337,65 @@ class RecordForm(QWidget):
                 self.grid.add_row(
                     f.label, widget, span=f.kind in ("amounts", "pairs", "ref_list", "multiline")
                 )
+
+    def _edited(self, *_args):
+        if not self._loading:
+            self.changed.emit()
+
+    def _watch(self, f, widget):
+        """Every edit of the field is reported (the page applies it on its own)."""
+        signals = {
+            "text": "textEdited",
+            "multiline": "textChanged",
+            "int": "valueChanged",
+            "float": "valueChanged",
+            "bool": "toggled",
+            "choice": "currentIndexChanged",
+            "ref": "currentIndexChanged",
+            "optional_ref": "currentIndexChanged",
+            "icon": "changed",
+            "ref_list": "edited",
+            "string_list": "edited",
+            "amounts": "edited",
+            "group": None,
+            "table": "changed",
+        }
+        if f.kind == "optional_int":
+            widget.check.toggled.connect(self._edited)
+            widget.spin.valueChanged.connect(self._edited)
+        elif f.kind == "pairs":
+            widget.table.itemChanged.connect(self._edited)
+        elif f.kind == "group":
+            widget.form.changed.connect(self._edited)
+        elif signals.get(f.kind):
+            getattr(widget, signals[f.kind]).connect(self._edited)
+        if isinstance(widget, (QSpinBox, QDoubleSpinBox, QComboBox)):
+            from .record_form import _wheel_guard
+
+            _wheel_guard(widget)  # scrolling the page leaves values alone
+
+    def _vocabulary(self):
+        from .record_vocabulary import ProjectVocabulary
+
+        document = self.document or getattr(self.icons, "document", None)
+        return ProjectVocabulary(getattr(document, "project", None))
+
+    def _reference_choices(self, f):
+        from .record_vocabulary import Choice, map_source
+
+        vocabulary = self._vocabulary()
+        known = ("items", "actors", "enemies", "equipment", "classes", "abilities", "states",
+                 "attachments", "passives", "encounters")  # fmt: skip
+        if f.source in known and vocabulary.project is not None:
+            return list(vocabulary.choices(f.source))  # names and icons
+        if f.source:
+            out = []
+            for entry in self.references(f.source):
+                value, label = entry if isinstance(entry, tuple) else (entry, entry)
+                out.append(Choice(str(value), str(label)))
+            return out
+        kind = map_source(f.key)
+        return list(self._vocabulary().choices(kind)) if kind else []
 
     def _build(self, f):
         if f.kind == "id":
@@ -375,19 +446,28 @@ class RecordForm(QWidget):
             row.addWidget(box.spin, 1)
             return box
         if f.kind == "ref_list":
-            return _RefList(self.references(f.source))
+            from .record_form import ChipList
+
+            return ChipList((), self._reference_choices(f), allow_new=False, noun="entry")
         if f.kind == "string_list":
-            widget = QLineEdit()
-            widget.setPlaceholderText("comma, separated, values")
-            return widget
+            from .record_form import ChipList
+            from .record_vocabulary import Choice, is_tag_field
+
+            words = self._vocabulary().tags() if is_tag_field(f.key) else ()
+            return ChipList((), [Choice(t, t) for t in words], noun="entry")
         if f.kind == "amounts":
-            return _KeyValueTable(("Key", "Amount"))
+            from .record_form import AmountTable
+
+            noun = "currency" if "price" in f.key or "currenc" in f.key else "entry"
+            return AmountTable({}, self._reference_choices(f), noun=noun)
         if f.kind == "pairs":
             return _KeyValueTable(("Threshold", "Name"))
         if f.kind == "group":
             box = QGroupBox(f.label)
             layout = QVBoxLayout(box)
-            box.form = RecordForm(f.fields, self.references, icons=self.icons)
+            box.form = RecordForm(
+                f.fields, self.references, icons=self.icons, document=self.document
+            )
             layout.addWidget(box.form)
             return box
         if f.kind == "table":
@@ -395,6 +475,13 @@ class RecordForm(QWidget):
         raise ValueError(f"unknown form field kind: {f.kind}")
 
     def set_data(self, data):
+        self._loading = True
+        try:
+            self._fill(data)
+        finally:
+            self._loading = False
+
+    def _fill(self, data):
         self._original = copy.deepcopy(data)
         for f in self.fields:
             widget, value = self.widgets[f.key], data.get(f.key, f.default)
@@ -422,14 +509,12 @@ class RecordForm(QWidget):
                 widget.check.setChecked(value is not None)
                 widget.spin.setEnabled(value is not None)
                 widget.spin.setValue(int(value or 0))
-            elif f.kind == "ref_list":
-                widget.set_values(value or ())
-            elif f.kind == "string_list":
-                widget.setText(", ".join(value or ()))
+            elif f.kind in ("ref_list", "string_list"):
+                widget.values = [str(v) for v in value or ()]
+                widget._build()
             elif f.kind == "amounts":
-                widget.table.setRowCount(0)
-                for k, v in dict(value or {}).items():
-                    widget.add_row(k, f"{float(v):g}")
+                widget.values = {str(k): float(v) for k, v in dict(value or {}).items()}
+                widget._build()
             elif f.kind == "pairs":
                 widget.table.setRowCount(0)
                 for t, n in value or ():
@@ -458,12 +543,10 @@ class RecordForm(QWidget):
                 out[f.key] = widget.currentText() if value is None else str(value)
             elif f.kind == "optional_int":
                 out[f.key] = widget.spin.value() if widget.check.isChecked() else None
-            elif f.kind == "ref_list":
-                out[f.key] = widget.values()
-            elif f.kind == "string_list":
-                out[f.key] = [x.strip() for x in widget.text().split(",") if x.strip()]
+            elif f.kind in ("ref_list", "string_list"):
+                out[f.key] = list(widget.values)
             elif f.kind == "amounts":
-                out[f.key] = {k: _number(v, k) for k, v in widget.rows()}
+                out[f.key] = {k: float(v) for k, v in widget.values.items()}
             elif f.kind == "pairs":
                 out[f.key] = [[_number(t, n), n] for t, n in widget.rows()]
             elif f.kind == "group":
@@ -501,6 +584,12 @@ class GameSystemsEditorWidget(QWidget):
         self.scroll.setFrameShape(QScrollArea.NoFrame)
         self.scroll.setViewportMargins(0, 0, 10, 0)  # fields never touch the scroll bar
         self.form = None
+        self._apply_timer = QTimer(self)
+        self._apply_timer.setSingleShot(True)
+        self._apply_timer.setInterval(350)
+        self._apply_timer.timeout.connect(self.auto_apply)
+        self._unannounced = False
+        self._editing = None
         self.status = QLabel("")
         self.status.setWordWrap(True)
         self.used_by = QLabel("")
@@ -509,11 +598,12 @@ class GameSystemsEditorWidget(QWidget):
             ("New…", self._new_clicked),
             ("Duplicate…", self._duplicate_clicked),
             ("Delete", self.delete_selected),
-            ("Apply Changes", self.apply),
         ):
             button = QPushButton(label)
             button.clicked.connect(slot)
             buttons.addWidget(button)
+        buttons.addStretch(1)
+        buttons.addWidget(QLabel("Changes apply as you edit  ·  Ctrl+Z undoes"))
         split = QSplitter()
         split.addWidget(authoring_sidebar("Game Systems", self.browser, header=self.kind_box))
         split.addWidget(self.scroll)
@@ -546,9 +636,14 @@ class GameSystemsEditorWidget(QWidget):
             )
             self.form = None
             return
+        self.flush_edits()
         self.form = RecordForm(
-            FORMS[self.kind_id], self.controller.references, icons=self.controller.icon_library
+            FORMS[self.kind_id],
+            self.controller.references,
+            icons=self.controller.icon_library,
+            document=self.controller.document,
         )
+        self.form.changed.connect(self._apply_timer.start)
         self.scroll.setWidget(self.form)
         self.browser.blockSignals(True)
         self.browser.clear()
@@ -562,7 +657,9 @@ class GameSystemsEditorWidget(QWidget):
             self.used_by.setText("")
 
     def _selected(self, row):
+        self.flush_edits()
         key = self.selected_id
+        self._editing = key
         if key is None:
             return
         self.form.set_data(self.controller.form_data(self.kind_id, key))
@@ -585,7 +682,34 @@ class GameSystemsEditorWidget(QWidget):
         self.refresh(select)
         return True
 
+    def auto_apply(self):
+        """Apply the form to the record being edited without rebuilding the page."""
+        key = self._editing
+        if key is None or self.form is None:
+            return False
+        try:
+            self.controller.edit(self.kind_id, key, self.form.data())
+        except (GameSystemsAuthoringError, ValueError, TypeError, KeyError) as exc:
+            self._report("⚠  Not applied: " + str(exc), ok=False)
+            return False
+        self._report("")
+        self._unannounced = True
+        return True
+
+    def flush_edits(self):
+        if self._apply_timer.isActive():
+            self._apply_timer.stop()
+            self.auto_apply()
+        if self._unannounced:
+            self._unannounced = False
+            self.changed.emit()
+
+    def hideEvent(self, event):  # noqa: N802 - Qt API
+        self.flush_edits()
+        super().hideEvent(event)
+
     def apply(self):
+        self._apply_timer.stop()
         key = self.selected_id
         if key is None:
             return False

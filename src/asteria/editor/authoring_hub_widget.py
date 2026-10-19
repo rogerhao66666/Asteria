@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 try:
-    from PySide6.QtCore import Qt, Signal
+    from PySide6.QtCore import Qt, QTimer, Signal
     from PySide6.QtWidgets import (
         QAbstractItemView,
         QComboBox,
@@ -949,7 +949,17 @@ class AdapterFamilyWidget(QWidget):
         filter_row.addWidget(self.sort)
         browser_layout.addLayout(filter_row)
         browser_layout.addWidget(self.browser, 1)
-        self.editor = StructuredRecordEditor()
+        from .record_form import RecordForm
+
+        self.editor = RecordForm(document=document)
+        # an edit applies on its own a moment after typing stops (undoable, like any edit)
+        self._apply_timer = QTimer(self)
+        self._apply_timer.setSingleShot(True)
+        self._apply_timer.setInterval(350)
+        self._apply_timer.timeout.connect(self.auto_apply)
+        self._unannounced = False  # applied edits the rest of the editor has not heard of yet
+        self._editing = None
+        self.editor.changed.connect(self._apply_timer.start)
         if document is not None:
             from .image_tools import icon_choices
 
@@ -985,15 +995,40 @@ class AdapterFamilyWidget(QWidget):
         actions.addWidget(self.view_button)
         actions.addWidget(self.save_layout_button)
         actions.addStretch(1)
+        self.saved_label = QLabel("Changes apply as you edit  ·  Ctrl+Z undoes")
+        self.saved_label.setObjectName("FormSavedHint")
+        actions.addWidget(self.saved_label)
         actions.addWidget(self.duplicate_button)
-        actions.addWidget(self.apply_button)
         actions.addWidget(self.delete_button)
+        self.apply_button.hide()  # kept for scripts; edits apply on their own
 
         layout = QVBoxLayout(self)
         layout.addLayout(header)
         layout.addWidget(split, 1)
         layout.addLayout(actions)
         self.refresh()
+
+    def _name_rows(self):
+        """Each row shows the record's name (and its own icon when it has one); the id stays
+        in the tooltip and after the name when the two differ."""
+        icon_for = getattr(self.editor, "icon", None)
+        for row, key in enumerate(self._ids):
+            item = self.browser.item(row)
+            try:
+                record = self.adapter.get(key)
+            except Exception:  # noqa: BLE001 - a record that cannot be read keeps its id
+                continue
+            name = str(getattr(record, "display_name", "") or getattr(record, "name", "") or "")
+            if name and name.lower().replace(" ", "_") != key.lower():
+                item.setText(f"{name}   ·  {key}")
+            elif name:
+                item.setText(name)
+            item.setToolTip(key)
+            item.setData(Qt.UserRole, key)
+            icon_id = getattr(record, "icon_id", "")
+            icon = icon_for(icon_id) if icon_for and icon_id else None
+            if icon is not None:
+                item.setIcon(icon)
 
     @property
     def category_id(self):
@@ -1045,6 +1080,7 @@ class AdapterFamilyWidget(QWidget):
             self._selection_changed(first)
 
     def refresh(self, *_args, keep=None):
+        self.flush_edits()
         adapter = self.adapter
         self.browser.blockSignals(True)
         self.browser.clear()
@@ -1055,10 +1091,17 @@ class AdapterFamilyWidget(QWidget):
             return
         needle = self.search.text().strip().lower()
         self._ids = self._sorted(
-            [key for key in adapter.ids() if not needle or needle in key.lower()]
+            [
+                key
+                for key in adapter.ids()
+                if not needle
+                or needle in key.lower()
+                or needle in self._display_name(key).lower()
+            ]
         )
         self.browser.addItems(self._ids)
         _category_icons(self.browser, self.category.currentText())
+        self._name_rows()
         _count_heading(self.heading, self.category.currentText(), len(self._ids))
         self.duplicate_button.setEnabled(adapter.duplicate is not None and bool(self._ids))
         is_graph = self.category_id == "graphs"
@@ -1073,13 +1116,19 @@ class AdapterFamilyWidget(QWidget):
             self.browser.setCurrentRow(0)
 
     def _selection_changed(self, row):
+        self.flush_edits()
         key = self.selected_id
         if key is None:
+            self._editing = None
             self.editor.clear()
             return
         value = self.adapter.get(key)
-        data = with_optional_fields(self.adapter.encode(value), value)
-        self.editor.set_record(data)
+        encoded = self.adapter.encode(value)
+        data = with_optional_fields(encoded, value)
+        optional = set(data) - set(encoded) if isinstance(data, dict) else ()
+        self._editing = key
+        self.editor.set_record(data, key, optional=optional, category=self.category_id)
+        self.editor.set_error(None)
         if self.category_id == "graphs":
             self.graph_view.set_graph_data(data)
             if not self._list_chosen:  # a skill tree opens as its graph until List is asked for
@@ -1107,7 +1156,40 @@ class AdapterFamilyWidget(QWidget):
         self.refresh()
         return True
 
+    def auto_apply(self):
+        """Apply what the form holds to the record being edited; a problem shows on the form
+        (and nothing is applied)."""
+        key = self._editing
+        if key is None or self.adapter is None or key not in self._ids:
+            return False
+        data = self.editor.record()
+        if data is None:
+            return False
+        try:
+            value = self.adapter.decode(data)
+            self.adapter.edit(key, value)
+        except Exception as exc:  # noqa: BLE001 - shown to the author beside the form
+            self.editor.set_error(str(exc))
+            return False
+        self.editor.set_error(None)
+        self._unannounced = True
+        return True
+
+    def flush_edits(self):
+        """Apply a pending edit now and tell the rest of the editor about applied ones."""
+        if self._apply_timer.isActive():
+            self._apply_timer.stop()
+            self.auto_apply()
+        if self._unannounced:
+            self._unannounced = False
+            self.changed.emit()
+
+    def hideEvent(self, event):  # noqa: N802 - Qt API
+        self.flush_edits()
+        super().hideEvent(event)
+
     def apply_selected(self):
+        self._apply_timer.stop()
         key = self.selected_id
         if key is None:
             return False

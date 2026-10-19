@@ -4,10 +4,8 @@ try:
         QAbstractItemView,
         QCheckBox,
         QComboBox,
-        QHeaderView,
         QLabel,
-        QTableWidget,
-        QTableWidgetItem,
+        QLineEdit,
         QTreeWidget,
         QTreeWidgetItem,
         QVBoxLayout,
@@ -228,28 +226,33 @@ def asset_icon_name(path):
 
 
 class InspectorWidget(QWidget):
+    """The selected object's properties as a form: an entity shows every component as its own
+    section (numbers, drop-downs, switches, text; each field's hint on hover and under it).
+    Edits apply at once through undoable commands; a problem shows in red."""
+
     def __init__(self, document, parent=None):
         if not QT_AVAILABLE:
             raise RuntimeError("PySide6 is required for editor UI")
         super().__init__(parent)
+        from PySide6.QtWidgets import QFrame, QScrollArea
+
         self.document = document
         self._refreshing = False
         self._field_models = {}
         self.title = QLabel("Nothing selected")
-        self.error = QLabel("")
-        self.table = QTableWidget(0, 3)
-        self.table.setHorizontalHeaderLabels(["Property", "Value", "Type"])
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        self.table.itemChanged.connect(self._item_changed)
         self.title.setObjectName("SectionLabel")
+        self.error = QLabel("")
         self.error.setObjectName("ErrorLabel")
+        self.error.setWordWrap(True)
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QFrame.NoFrame)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.empty_state = self._empty_state()
         layout = QVBoxLayout(self)
         layout.addWidget(self.title)
         layout.addWidget(self.error)
-        layout.addWidget(self.table)
+        layout.addWidget(self.scroll, 1)
         layout.addWidget(self.empty_state, 1)
         self._set_empty(True)
 
@@ -280,146 +283,163 @@ class InspectorWidget(QWidget):
 
     def _set_empty(self, empty):
         self.empty_state.setVisible(empty)
-        self.table.setVisible(not empty)
+        self.scroll.setVisible(not empty)
         self.title.setVisible(not empty)
 
+    def _page(self):
+        page = QWidget()
+        column = QVBoxLayout(page)
+        column.setContentsMargins(2, 2, 2, 8)
+        column.setSpacing(8)
+        return page, column
+
+    def _show(self, page, column):
+        column.addStretch(1)
+        old = self.scroll.takeWidget()
+        self.scroll.setWidget(page)
+        if old is not None:
+            old.deleteLater()
+
     def show_message(self, message):
-        self._refreshing = True
-        try:
-            self.title.setText(message)
-            self.error.setText("")
-            self.table.setRowCount(0)
-            self._field_models = {}
-            self._set_empty(message == "Nothing selected")
-        finally:
-            self._refreshing = False
+        self.title.setText(message)
+        self.error.setText("")
+        self._field_models = {}
+        self._set_empty(message == "Nothing selected")
+        page, column = self._page()
+        if message != "Nothing selected":
+            column.addWidget(QLabel(message))
+        self._show(page, column)
 
     def show_properties(self, title, rows):
+        """Read-only facts (a project, a scene, an asset...)."""
+        from .record_form import Section
+
         self._set_empty(False)
-        self._refreshing = True
-        try:
-            self.title.setText(title)
-            self.error.setText("")
-            self._field_models = {}
-            self.table.setRowCount(len(rows))
-            for i, (name, value, type_name) in enumerate(rows):
-                n = QTableWidgetItem(str(name))
-                n.setFlags(n.flags() & ~Qt.ItemIsEditable)
-                v = QTableWidgetItem(str(value))
-                v.setFlags(v.flags() & ~Qt.ItemIsEditable)
-                t = QTableWidgetItem(str(type_name))
-                t.setFlags(t.flags() & ~Qt.ItemIsEditable)
-                self.table.setItem(i, 0, n)
-                self.table.setItem(i, 1, v)
-                self.table.setItem(i, 2, t)
-        finally:
-            self._refreshing = False
+        self.title.setText(title)
+        self.error.setText("")
+        page, column = self._page()
+        section = Section(title, compact=True)
+        for name, value, _type_name in rows:
+            label = QLabel(str(value))
+            label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            section.add_row(str(name), label)
+        column.addWidget(section)
+        self._show(page, column)
 
     def show_component(self, title, fields):
-        self._refreshing = True
-        try:
-            self.title.setText(title)
-            self.error.setText("")
-            self.table.setRowCount(len(fields))
-            self._field_models = {}
-            for row, f in enumerate(fields):
-                self._field_models[row] = f
-                n = QTableWidgetItem(f.label)
-                n.setFlags(n.flags() & ~Qt.ItemIsEditable)
-                v = QTableWidgetItem(str(f.value))
-                if not f.editable:
-                    v.setFlags(v.flags() & ~Qt.ItemIsEditable)
-                t = QTableWidgetItem(f.type_name)
-                t.setFlags(t.flags() & ~Qt.ItemIsEditable)
-                if f.tooltip:
-                    n.setToolTip(f.tooltip)
-                    v.setToolTip(f.tooltip)
-                self.table.setItem(row, 0, n)
-                # A cell widget from a previously shown component would otherwise
-                # sit on top of this row's plain value item.
-                self.table.removeCellWidget(row, 1)
-                from .inspector import inspector_choices
+        """One component (picked in the project tree)."""
+        self._set_empty(False)
+        self.title.setText(_pretty_type(title))
+        self.error.setText("")
+        page, column = self._page()
+        component = self.document.selection.value
+        column.addWidget(self._component_section(component, fields, selected=True))
+        self._show(page, column)
 
-                choices = inspector_choices(self.document, self.document.selection.value, f)
-                if choices is not None:
-                    combo = QComboBox()
-                    for label, value in choices:
-                        combo.addItem(label, value)
-                    current = combo.findData(f.value if f.choices else str(f.value))
-                    combo.setCurrentIndex(max(0, current))
-                    combo.setEnabled(f.editable)
-                    if f.tooltip:
-                        combo.setToolTip(f.tooltip)
-                    combo.currentIndexChanged.connect(
-                        lambda _index, r=row, c=combo: self._choice_changed(r, c)
-                    )
-                    v.setText("")  # the widget shows the value; text beneath would show through
-                    self.table.setItem(row, 1, v)
-                    self.table.setCellWidget(row, 1, combo)
-                elif f.value_type is bool:
-                    checkbox = QCheckBox()
-                    checkbox.setChecked(bool(f.value))
-                    checkbox.setEnabled(f.editable)
-                    if f.tooltip:
-                        checkbox.setToolTip(f.tooltip)
-                    checkbox.toggled.connect(lambda checked, r=row: self._bool_changed(r, checked))
-                    v.setText("")  # the widget shows the value; text beneath would show through
-                    self.table.setItem(row, 1, v)
-                    self.table.setCellWidget(row, 1, checkbox)
-                else:
-                    self.table.setItem(row, 1, v)
-                self.table.setItem(row, 2, t)
-        finally:
-            self._refreshing = False
+    def show_entity(self, entity):
+        """An entity: its name and switch, then every component's fields."""
+        from .inspector import build_inspector_fields
+        from .record_form import Section
 
-    def _bool_changed(self, row, checked):
-        if self._refreshing:
-            return
-        field = self._field_models.get(row)
-        if field is None or not field.editable:
-            return
-        window = self.window()
-        if not hasattr(window, "edit_selected_component_field"):
-            return
-        ok, error = window.edit_selected_component_field(field.name, bool(checked))
-        self.error.setText("" if ok else error or "Invalid value")
-
-    def _choice_changed(self, row, combo):
-        if self._refreshing:
-            return
-        field = self._field_models.get(row)
-        if field is None or not field.editable:
-            return
-        window = self.window()
-        if not hasattr(window, "edit_selected_component_field"):
-            return
-        ok, error = window.edit_selected_component_field(field.name, combo.currentData())
-        self.error.setText("" if ok else error or "Invalid value")
-
-    def _item_changed(self, item):
-        if self._refreshing or item.column() != 1:
-            return
-        field = self._field_models.get(item.row())
-        if field is None or not field.editable:
-            return
-        window = self.window()
-        if not hasattr(window, "edit_selected_component_field"):
-            return
-        ok, error = window.edit_selected_component_field(field.name, item.text())
-        if ok:
-            self.error.setText("")
-            self._refreshing = True
+        self._set_empty(False)
+        self.title.setText(entity.name or "Entity")
+        self.error.setText("")
+        page, column = self._page()
+        head = Section("Entity", compact=True)
+        name = QLineEdit(entity.name)
+        name.editingFinished.connect(lambda e=entity, w=name: self._entity(e, name=w.text()))
+        head.add_row("Name", name, help_text="What the scene list and events call it.")
+        enabled = QCheckBox("Active in the game")
+        enabled.setChecked(bool(entity.enabled))
+        enabled.toggled.connect(lambda on, e=entity: self._entity(e, enabled=on))
+        head.add_row("Enabled", enabled)
+        column.addWidget(head)
+        for component in entity.components():
             try:
-                item.setText(str(getattr(self.document.selection.value, field.name)))
-            finally:
-                self._refreshing = False
+                fields = build_inspector_fields(component)
+            except Exception:  # noqa: BLE001 - a component without a schema shows its name
+                fields = ()
+            column.addWidget(
+                self._component_section(component, fields, title=type(component).__name__)
+            )
+        self._show(page, column)
+
+    def _component_section(self, component, fields, *, title=None, selected=False):
+        from .record_form import Section
+
+        name = _pretty_type(title or type(component).__name__)
+        section = Section(name, hint="" if fields else "No editable fields.", compact=True)
+        for f in fields:
+            self._field_models[(id(component), f.name)] = f
+            widget = self._field_widget(component, f, selected)
+            section.add_row(f.label, widget, help_text=f.tooltip or "", key=f.name)
+        return section
+
+    def _field_widget(self, component, f, selected):
+        from .inspector import inspector_choices
+        from .record_form import NumberBox, _wheel_guard
+
+        def commit(value):
+            if self._refreshing:
+                return
+            self._apply(component, f, value, selected)
+
+        choices = inspector_choices(self.document, component, f)
+        if choices is not None:
+            combo = QComboBox()
+            _wheel_guard(combo)
+            for label, value in choices:
+                combo.addItem(label, value)
+            current = combo.findData(f.value if f.choices else str(f.value))
+            combo.setCurrentIndex(max(0, current))
+            combo.setEnabled(f.editable)
+            combo.currentIndexChanged.connect(lambda _i, c=combo: commit(c.currentData()))
+            return combo
+        if f.value_type is bool:
+            box = QCheckBox("Yes")
+            box.setChecked(bool(f.value))
+            box.setEnabled(f.editable)
+            box.toggled.connect(lambda on: commit(bool(on)))
+            return box
+        if f.value_type in (int, float) and isinstance(f.value, (int, float)):
+            box = NumberBox(f.value, integer=f.value_type is int)
+            if f.minimum is not None or f.maximum is not None:
+                box.setRange(
+                    float(f.minimum) if f.minimum is not None else -1e9,
+                    float(f.maximum) if f.maximum is not None else 1e9,
+                )
+                box.set_value(f.value)
+            box.setEnabled(f.editable)
+            box.editingFinished.connect(lambda b=box: commit(b.number()))
+            return box
+        edit = QLineEdit(str(f.value))
+        edit.setEnabled(f.editable)
+        edit.editingFinished.connect(lambda e=edit: commit(e.text()))
+        return edit
+
+    def _apply(self, component, f, value, selected):
+        window = self.window()
+        if selected and hasattr(window, "edit_selected_component_field"):
+            ok, error = window.edit_selected_component_field(f.name, value)
+        elif hasattr(window, "edit_component_field"):
+            ok, error = window.edit_component_field(component, f.name, value)
         else:
-            self.error.setText(error or "Invalid value")
-            self._refreshing = True
-            try:
-                item.setText(str(getattr(self.document.selection.value, field.name)))
-            finally:
-                self._refreshing = False
+            return
+        self.error.setText("" if ok else "⚠  " + (error or "Invalid value"))
+
+    def _entity(self, entity, **changes):
+        window = self.window()
+        if hasattr(window, "edit_entity"):
+            window.edit_entity(entity, **changes)
+
+
+def _pretty_type(name):
+    """``SpriteRenderer2D`` -> "Sprite Renderer 2D", ``ActorLinkComponent`` -> "Actor Link"."""
+    import re
+
+    name = re.sub(r"Component$", "", str(name))
+    words = re.findall(r"[A-Z]+(?=[A-Z][a-z])|[A-Z]?[a-z]+|[A-Z]+|\d+[A-Z]?", name)
+    return " ".join(words) or str(name)
 
 
 class SceneViewportPlaceholder(QWidget):

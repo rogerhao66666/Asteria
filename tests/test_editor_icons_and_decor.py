@@ -60,7 +60,7 @@ def test_editor_has_icons_roles_and_titled_docks():
         for action in (window.scene_workspace_action, window.play_action, window.stop_action):
             assert not action.icon().isNull()
         roles = {b.text(): b.property("role") for b in window.findChildren(QPushButton)}
-        assert roles.get("Delete") == "danger" and roles.get("Apply Changes") == "primary"
+        assert roles.get("Delete") == "danger" and roles.get("Apply Rule") == "primary"
         assert all(
             not window.ui_workspace.tabIcon(i).isNull() for i in range(window.ui_workspace.count())
         )

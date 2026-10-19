@@ -131,6 +131,16 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
   複製整個專案資料夾（含美術與授權文件）後改名開啟，Console 會顯示專案裡的 `START_HERE.md`（每個規則
   在編輯器哪裡改）。範本隨套件發布（`src/asteria/templates/`）；改了 demo 之後執行
   `scripts/sync_templates.py`，測試會檢查兩邊一致。
+- **紀錄表單（`editor/record_form.py`，2026-10-19）**：Game Data、Battle Rules、Battle Screen、Runtime UI
+  的每一筆紀錄不再是 Field／Value 樹，而是表單：名稱與圖示在上方，ID 固定顯示；數字框（機率以 %
+  顯示）、開關、**下拉選單挑參照**（技能、狀態、職業、物品、資源、能力值…附圖示，從專案讀出，
+  `record_vocabulary.py`）、標籤用 chips（附專案內所有標籤的建議）、能力值表（兩欄、能力值從清單選）、
+  多筆資料用卡片（新增／複製／上下移／刪除，新卡片的內部 id 自動編號）、巢狀部分各成區塊；固定值欄位
+  （stacking、selection_mode…）從引擎的檢查自動讀出選項（`engine_enums()`）；空的選填欄位收在
+  「Show N more fields」／「More fields」；內部欄位收在 Advanced。每個欄位有說明（ⓘ 與灰字）。
+  **改了就套用**（停止輸入 0.35 秒後經可復原指令套用，Ctrl+Z 復原），錯誤以紅字顯示且不套用；
+  左側清單顯示名稱與圖示，篩選也找名稱。Game Systems 與 Game Start 也改為自動套用、鍵值從清單選。
+- **Inspector**：選取實體即顯示全部元件，每個元件一個區塊（數字兩兩並排、下拉、開關），可直接改名與開關。
 - Real-Time Combat 工作區（攻擊、投射物、稀有度、詞綴，即時預覽與判定框疊圖）；Enemy AI；技能與狀態
   可編輯 `display_name`、`icon_id`（圖示挑選）；Capture Rules 可設 `Joins As Actor`、`Becomes Pet Item`。
 - 窄視窗：最小視窗 1000×640；預覽在窄頁自動收起；表格欄寬與下拉選單依內容。

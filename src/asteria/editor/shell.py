@@ -1819,14 +1819,7 @@ class AsteriaEditorWindow(QMainWindow):
                 ),
             )
         elif sel.kind == "entity":
-            self.inspector.show_properties(
-                "Entity",
-                (
-                    ("Name", obj.name, "str"),
-                    ("Enabled", obj.enabled, "bool"),
-                    ("Components", len(obj.components()), "int"),
-                ),
-            )
+            self.inspector.show_entity(obj)
         elif sel.kind == "component":
             self.inspector.show_component(type(obj).__name__, build_inspector_fields(obj))
         elif sel.kind == "asset":
@@ -2203,8 +2196,27 @@ class AsteriaEditorWindow(QMainWindow):
         sel = self.document.selection
         if sel.kind != "component" or sel.value is None or sel.multiple:
             return False, "No single component selected"
+        return self.edit_component_field(sel.value, field_name, raw_value)
+
+    def edit_entity(self, entity, *, name=None, enabled=None):
+        """Rename or switch on/off an entity from the Inspector (undoable)."""
+        from .commands import RenameCommand, SetAttributeCommand
+
+        if name is not None and str(name).strip() and name != entity.name:
+            self.document.execute(RenameCommand(entity, str(name).strip(), entity.name))
+        if enabled is not None and bool(enabled) != bool(entity.enabled):
+            self.document.execute(
+                SetAttributeCommand(entity, "enabled", bool(enabled), entity.enabled)
+            )
+        self._refresh_actions()
+        self._refresh_title()
+        self.viewport.refresh()
+        return True
+
+    def edit_component_field(self, component, field_name, raw_value):
+        """Set one field of a component from the Inspector (undoable); (ok, error)."""
         try:
-            command = build_set_component_field_command(sel.value, field_name, raw_value)
+            command = build_set_component_field_command(component, field_name, raw_value)
             if command.new_value == command.old_value:
                 return True, None
             self.document.execute(command)

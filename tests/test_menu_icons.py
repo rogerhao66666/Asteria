@@ -130,13 +130,9 @@ def test_the_database_editor_offers_the_project_icons_and_applies_a_choice():
     )
     family.category.setCurrentIndex(family.category.findData("items"))
     family.select_ids(["ether_leaf"])
-    tree = family.editor
-    combo = None
-    for i in range(tree.topLevelItem(0).childCount()):
-        child = tree.topLevelItem(0).child(i)
-        if child.data(0, 0x0100) == ("icon_id",):
-            combo = tree.itemWidget(child, 1)
-    assert isinstance(combo, _IconPicker) and combo.text() == "icon.ether_leaf"
+    form = family.editor
+    (combo,) = form.findChildren(_IconPicker)  # the icon field of the record form
+    assert combo.text() == "icon.ether_leaf"
     index = combo.combo.findData("icon.weapon_01")
     assert index > 0 and not combo.combo.itemIcon(index).isNull()
     assert combo.combo.findData("forged:fire") > 0  # the built-in library is offered too

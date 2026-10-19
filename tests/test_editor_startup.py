@@ -173,8 +173,9 @@ def test_the_party_list_shows_names_and_the_position_toggle_says_what_it_does():
     fields = [f for f in GAME_START_FORM if f.key in ("party_actor_ids", "position_x")]
     form = RecordForm(tuple(fields), lambda source: refs.get(source, ()))
     form.set_data({"party_actor_ids": ["hero_02"], "position_x": 5})
-    party = form.widgets["party_actor_ids"]
-    assert [party.item(i).text() for i in range(party.count())][0] == "Mira (hero_02)"
+    party = form.widgets["party_actor_ids"]  # chips: the names, picked from the actors
+    assert party.values == ["hero_02"]
+    assert party._labels["hero_02"].label == "Mira (hero_02)"
     assert form.data()["party_actor_ids"] == ["hero_02"]
     assert form.widgets["position_x"].check.text() == "Set position"
 
