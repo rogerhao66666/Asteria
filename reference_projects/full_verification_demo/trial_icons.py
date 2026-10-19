@@ -31,13 +31,13 @@ TINTS = {  # name: RGB multiplied into the picture
 GEAR = {  # equipment id: (source file under Equipment, tint or None) / ("draw", kind)
     "w_bow": ("draw", "bow"),
     "w_longbow": ("draw", "longbow"),
-    "w_steel_sword": ("Weapons/Png/Common Shamshir.png", None),
+    "w_steel_sword": ("Weapons/Png/Common Greatsword.png", None),
     "w_dragoon_lance": ("Weapons/Png/Common Spear.png", "gold"),
-    "w_kris": ("Weapons/Png/Legendary Shamshir.png", None),
+    "w_kris": ("Weapons/Png/Legendary Rapier .png", None),
     "w_war_axe": ("Weapons/Png/Legendary Dane Axe.png", None),
     "w_ash_staff": ("Weapons/Png/Mages Spire.png", None),
     "w_saint_staff": ("Weapons/Png/Wizards Pole.png", "gold"),
-    "w_bone_scepter": ("Weapons/Png/Mages Spire.png", "grey"),
+    "w_bone_scepter": ("Weapons/Png/Mythic Godhammer.png", None),
     "w_ritual_kris": ("Weapons/Png/Rare Explorers Hook.png", None),
     "a_leather_vest": ("Chest/Png/Rare Explorers Top.png", None),
     "a_shadow_garb": ("Chest/Png/Common Gambeson.png", "dark"),
@@ -169,6 +169,42 @@ def _card(character):
     return card.resize((48, 64), Image.NEAREST)
 
 
+WEAPON_RARITY = {  # a weapon's rarity: what its Lucifer picture is called (Common, Rare...)
+    "w_sword": "common",
+    "w_steel_sword": "common",
+    "w_dagger": "common",
+    "w_axe": "common",
+    "w_spear": "common",
+    "w_staff": "common",
+    "w_bow": "common",
+    "w_sunbrand": "rare",  # Aldric's sword: the Rare Greatsword
+    "w_ritual_kris": "rare",
+    "w_dragoon_lance": "rare",
+    "w_ash_staff": "rare",
+    "w_saint_staff": "rare",
+    "w_longbow": "rare",
+    "w_kris": "legendary",
+    "w_war_axe": "legendary",
+    "w_sunbrand_ex": "legendary",
+    "w_bone_scepter": "mythic",
+    "w_demon_ring": "mythic",
+}
+
+
+def weapon_rarities(context):
+    """Every weapon wears the rarity its picture names; Mythic is added for the Godhammer and the
+    Demon Ring (weight 0: authored only, never rolled as loot)."""
+    from asteria.rpg.loot import RarityDefinition
+
+    db = context.db
+    if "mythic" not in db.rarities:
+        db.add_rarity(RarityDefinition("mythic", "Mythic", "#ff4a4a", 6, 6, 0.0, 4, 3, 3))
+    for equipment_id, rarity in WEAPON_RARITY.items():
+        if equipment_id in db.equipment:
+            weapon = db.equipment[equipment_id]
+            db.equipment[equipment_id] = dataclasses.replace(weapon, rarity=rarity)
+
+
 def apply_all(context):
     """Give every gear piece, item, attachment, job, passive and state without an icon one."""
 
@@ -181,6 +217,10 @@ def apply_all(context):
         return f"playable_assets/lucifer/icons/{name}"
 
     def open_png(path):
+        if path.is_relative_to(EQ):  # equipment pictures are whole (a weapon is 32 x 16)
+            from PIL import Image
+
+            return Image.open(path).convert("RGBA")
         return lucifer.first_frame(path)  # a strip (the pickups) gives its first frame
 
     for eid, (source, extra) in GEAR.items():

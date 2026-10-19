@@ -102,6 +102,7 @@ def main():
     kept = art.weapon_icons(context)
     kept = (*kept, *lucifer.apply_icons(context))
     icons.apply_all(context)  # gear, items, gems, cards, jobs, passives, states
+    icons.weapon_rarities(context)  # each weapon: the rarity its picture names
     brave.icons(context)  # the Demon Ring and the charms
     lucifer.apply_ui(context)
     lucifer.apply_music(context)

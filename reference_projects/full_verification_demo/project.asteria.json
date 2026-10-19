@@ -89110,6 +89110,7 @@
             "value": 15.0
           }
         ],
+        "rarity": "rare",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -89155,6 +89156,7 @@
         "growth_id": null,
         "icon_id": "playable_assets/lucifer/icons/w_axe.png",
         "modifiers": [],
+        "rarity": "common",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -89196,6 +89198,7 @@
             "value": 20.0
           }
         ],
+        "rarity": "mythic",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -89242,6 +89245,7 @@
         "growth_id": null,
         "icon_id": "playable_assets/lucifer/icons/w_bow.png",
         "modifiers": [],
+        "rarity": "common",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -89264,6 +89268,7 @@
         "growth_id": null,
         "icon_id": "playable_assets/lucifer/icons/w_dagger.png",
         "modifiers": [],
+        "rarity": "common",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -89386,6 +89391,7 @@
             "value": 10.0
           }
         ],
+        "rarity": "mythic",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -89487,6 +89493,7 @@
             "value": 15.0
           }
         ],
+        "rarity": "rare",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -89560,6 +89567,7 @@
             "value": 6.0
           }
         ],
+        "rarity": "legendary",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -89633,6 +89641,7 @@
             "value": 10.0
           }
         ],
+        "rarity": "rare",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -89706,6 +89715,7 @@
             "value": 15.0
           }
         ],
+        "rarity": "rare",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -89771,6 +89781,7 @@
             "value": 20.0
           }
         ],
+        "rarity": "rare",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -89817,6 +89828,7 @@
         "growth_id": null,
         "icon_id": "playable_assets/lucifer/icons/w_spear.png",
         "modifiers": [],
+        "rarity": "common",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -89839,6 +89851,7 @@
         "growth_id": null,
         "icon_id": "playable_assets/lucifer/icons/w_staff.png",
         "modifiers": [],
+        "rarity": "common",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -89871,6 +89884,7 @@
             "value": 30.0
           }
         ],
+        "rarity": "common",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -89936,6 +89950,7 @@
             "value": 10.0
           }
         ],
+        "rarity": "rare",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -90010,6 +90025,7 @@
             "value": 25.0
           }
         ],
+        "rarity": "legendary",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -90055,6 +90071,7 @@
         "growth_id": null,
         "icon_id": "playable_assets/lucifer/icons/w_sword.png",
         "modifiers": [],
+        "rarity": "common",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -90096,6 +90113,7 @@
             "value": 15.0
           }
         ],
+        "rarity": "legendary",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
@@ -130958,6 +130976,19 @@
         "schema": "asteria.rpg.rarity",
         "version": 1,
         "weight": 30.0
+      },
+      {
+        "color": "#ff4a4a",
+        "display_name": "Mythic",
+        "max_affixes": 6,
+        "max_prefixes": 3,
+        "max_suffixes": 3,
+        "min_affixes": 6,
+        "order": 4,
+        "rarity_id": "mythic",
+        "schema": "asteria.rpg.rarity",
+        "version": 1,
+        "weight": 0.0
       },
       {
         "color": "#ffe066",

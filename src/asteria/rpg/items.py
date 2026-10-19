@@ -159,7 +159,9 @@ class EquipmentDefinition:
     forbidden_capabilities: tuple[str, ...] = ()
     growth_id: str | None = None
     icon_id: str = ""  # a project icon asset shown in menus; written only when set
-    OPTIONAL_DATA = {"icon_id": ""}
+    # a rarity id (Game Data > Rarities): its colour and name in the bag; written only when set
+    rarity: str = ""
+    OPTIONAL_DATA = {"icon_id": "", "rarity": ""}
 
     def __init__(
         self,
@@ -177,6 +179,7 @@ class EquipmentDefinition:
         forbidden_capabilities=(),
         growth_id=None,
         icon_id="",
+        rarity="",
     ):
         equipment_id = _id(equipment_id, "equipment_id")
         modifiers = tuple(modifiers)
@@ -209,6 +212,7 @@ class EquipmentDefinition:
             self, "growth_id", None if growth_id is None else _id(growth_id, "growth_id")
         )
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
+        object.__setattr__(self, "rarity", str(rarity or "").strip())
 
     def to_data(self):
         return {
@@ -227,6 +231,7 @@ class EquipmentDefinition:
             "forbidden_capabilities": list(self.forbidden_capabilities),
             "growth_id": self.growth_id,
             **({"icon_id": self.icon_id} if self.icon_id else {}),
+            **({"rarity": self.rarity} if self.rarity else {}),
         }
 
     def eligibility(self, capabilities=()):
@@ -264,6 +269,7 @@ class EquipmentDefinition:
             forbidden_capabilities=data.get("forbidden_capabilities", ()) if version >= 2 else (),
             growth_id=data.get("growth_id") if version >= 3 else None,
             icon_id=data.get("icon_id", ""),
+            rarity=data.get("rarity", ""),
         )
 
 

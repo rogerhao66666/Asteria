@@ -288,6 +288,20 @@ boss 9 rounds, 66%; crypt boss 11 rounds, 53%; the vigil (held) 8 rounds, 19%; t
 Warlord 16 rounds, two heroes knocked out. Facts: `guarded_blows` 40, `dodged_blows` 70,
 `critical_blows` 39, `breaks` 3, `status_ticks` 78, `blocked_blows` 47.
 
+## Weapons: whole Lucifer pictures and their rarity (2026-10-19)
+
+Every weapon wears a whole picture from the Lucifer Equipment pack (`Weapons/Png`, 32 x 16);
+before, eight were cut to their left half (the icon step read any wide picture as an animation
+strip). Each weapon carries the rarity its picture names - the new optional
+`EquipmentDefinition.rarity`, shown as the cell colour and the name in the bag:
+
+| Rarity | Weapons (picture) |
+|---|---|
+| Common | Iron Sword (Arming Sword), Steel Sword (Greatsword), Stiletto (Shamshir), Hand Axe (Bearded Axe), Wyrm Lance (Spear), Oak Staff (Wizards Pole), Hunter's Bow |
+| Rare | **Sunbrand, Aldric's sword (Rare Greatsword)**, Ritual Kris (Explorers Hook), Dragoon Lance, Ash Staff (Mages Spire), Saint's Staff, Longbow |
+| Legendary | Kris (Rapier), War Axe (Dane Axe), Dawnbreaker (Shamshir) |
+| Mythic (new, never rolled as loot) | Bone Scepter (Godhammer), Demon Ring |
+
 ## World commands (58)
 
 Used in the campaign or by Showman Pip's menu: TRANSFER, GIVE_ITEM, TAKE_ITEM, START_QUEST,

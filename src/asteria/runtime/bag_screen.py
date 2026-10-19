@@ -191,7 +191,7 @@ class BagScreen:
         color = (60, 66, 84)
         fill = (24, 28, 42)
         if item is not None:
-            rarity = rarities.get(item.rarity)
+            rarity = rarities.get(_rarity(item))
             if rarity is not None:
                 color = rarity.rgb()
                 fill = tuple(int(c * 0.22) + 14 for c in color)
@@ -271,10 +271,10 @@ class BagScreen:
         if item is None:
             rt.text("Nothing here.", x + 16, y + 16, size=20, color=MUTED)
             return
-        rarity = rarities.get(item.rarity)
+        rarity = rarities.get(_rarity(item))
         color = rarity.rgb() if rarity is not None else (230, 230, 230)
         rt.text(self._name(item), x + 16, y + 14, size=26, color=color)
-        kind = rarity.display_name if rarity is not None else item.rarity or "Common"
+        kind = rarity.display_name if rarity is not None else _rarity(item) or "Common"
         rt.text(
             f"{kind}  ·  item level {item.item_level}  ·  {_label(item.equipment.slot)}",
             x + 16,
@@ -336,3 +336,8 @@ class BagScreen:
 
 
 __all__ = ["BagScreen", "compare", "format_value", "stat_totals"]
+
+
+def _rarity(item):
+    """A rolled drop's rarity, else the one its equipment was authored with."""
+    return item.rarity or getattr(item.equipment, "rarity", "")
