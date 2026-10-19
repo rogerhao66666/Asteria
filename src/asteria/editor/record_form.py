@@ -59,6 +59,7 @@ from .record_vocabulary import (
     map_source,
     tag_label,
     trigger_label,
+    words,
 )
 
 FORMAT_KEYS = ("schema", "version")
@@ -109,12 +110,19 @@ RECORD_LISTS = set(_LIST_TEMPLATES) | {
 }  # fmt: skip
 
 
-def _choice_text(choice):
-    """``Weapon`` for (weapon, Weapon); ``Fire Bolt  ·  fire_bolt`` when they differ."""
-    plain = choice.label.lower().replace(" ", "_").replace("-", "_")
-    if plain == choice.value.lower() or choice.label == choice.value:
-        return choice.label
-    return f"{choice.label}  ·  {choice.value}"
+def _choice_text(choice, repeated=()):
+    """A choice as players read it: its name only (the id is in the tooltip); a name two
+    choices share carries the id too, so they can be told apart."""
+    if choice.label in repeated and choice.label != choice.value:
+        return f"{choice.label}  ({choice.value})"
+    return choice.label
+
+
+def _repeated(choices):
+    seen, twice = set(), set()
+    for choice in choices:
+        (twice if choice.label in seen else seen).add(choice.label)
+    return twice
 
 
 def _wheel_guard(widget):
@@ -213,9 +221,9 @@ class NumberBox(QDoubleSpinBox):
             self.setRange(-1e9, 1e9)
             self.setDecimals(0 if integer else 3)
             self.setSingleStep(1.0)
-        self.setButtonSymbols(QDoubleSpinBox.NoButtons if not integer else self.buttonSymbols())
+        self.setButtonSymbols(QDoubleSpinBox.NoButtons)  # every number looks alike
         self.setMinimumWidth(90)
-        self.setMaximumWidth(170)
+        self.setMaximumWidth(140)
         self.set_value(value)
 
     def set_value(self, value):
@@ -251,13 +259,17 @@ class Picker(QComboBox):
         if allow_none:
             self.addItem("(none)", "")
             self._values.append("")
+        choices = tuple(choices)
+        repeated = _repeated(choices)
         for choice in choices:
-            text = _choice_text(choice)
+            text = _choice_text(choice, repeated)
             icon = icons(choice.icon) if icons and choice.icon else None
             if icon is not None:
                 self.addItem(icon, text, choice.value)
             else:
                 self.addItem(text, choice.value)
+            if text != choice.value:
+                self.setItemData(self.count() - 1, f"ID: {choice.value}", Qt.ToolTipRole)
             self._values.append(choice.value)
         completer = QCompleter([self.itemText(i) for i in range(self.count())], self)
         completer.setFilterMode(Qt.MatchContains)
@@ -283,9 +295,7 @@ class Picker(QComboBox):
                 return
         lowered = text.lower()
         for i in range(self.count()):  # an id or a name typed on its own
-            if str(self.itemData(i)).lower() == lowered or self.itemText(i).lower().startswith(
-                lowered + "  ·"
-            ):
+            if str(self.itemData(i)).lower() == lowered or self.itemText(i).lower() == lowered:
                 self.setCurrentIndex(i)
                 self.picked.emit()
                 return
@@ -391,6 +401,7 @@ class ChipList(QWidget):
         while self.flow.count():
             item = self.flow.takeAt(0)
             if item.widget() is not None:
+                item.widget().hide()  # gone now, not only once the event loop runs
                 item.widget().deleteLater()
         for value in self.values:
             choice = self._labels.get(value)
@@ -486,9 +497,10 @@ class AmountTable(QWidget):
         while self.grid.count():
             item = self.grid.takeAt(0)
             if item.widget() is not None:
+                item.widget().hide()  # gone now, not only once the event loop runs
                 item.widget().deleteLater()
         if not self.values:
-            self.grid.addWidget(_small(f"No {self.noun}s yet."), 0, 0)
+            self.grid.addWidget(_small(f"No {_plural(self.noun)} yet."), 0, 0)
         order = {c.value: i for i, c in enumerate(self.choices)}
         ordered = sorted(self.values.items(), key=lambda kv: (order.get(kv[0], 1e9), kv[0]))
         for index, (key, value) in enumerate(ordered):
@@ -499,6 +511,7 @@ class AmountTable(QWidget):
             text_width = name.fontMetrics().horizontalAdvance(name.text()) + 10
             name.setMinimumWidth(min(260, max(120, text_width)))  # long names are not cut
             box = NumberBox(value, integer=isinstance(value, int), percent=self.percent)
+            box.setMaximumWidth(120)
             box.valueChanged.connect(lambda _v, k=key, b=box: self._set(k, b.number()))
             remove = QToolButton()
             remove.setText("✕")
@@ -507,9 +520,15 @@ class AmountTable(QWidget):
             self.grid.addWidget(name, row, column)
             self.grid.addWidget(box, row, column + 1)
             self.grid.addWidget(remove, row, column + 2)
-        self.grid.setColumnMinimumWidth(3, 24)
-        self.grid.setColumnStretch(8, 1)
+        self.grid.setColumnMinimumWidth(3, 32)
+        self.grid.setColumnStretch(7, 1)
+        for index in range(self.grid.count()):  # new rows count at once, not once shown
+            widget = self.grid.itemAt(index).widget()
+            if widget is not None:
+                widget.show()
         # any parent layout gives the table (and its Add button) the height it needs
+        self.grid.invalidate()
+        self.layout().invalidate()
         self.setMinimumHeight(self.layout().sizeHint().height())
 
     def _set(self, key, value):
@@ -567,6 +586,7 @@ class TextTable(QWidget):
         while self.grid.count():
             item = self.grid.takeAt(0)
             if item.widget() is not None:
+                item.widget().hide()  # gone now, not only once the event loop runs
                 item.widget().deleteLater()
         for index, (key, value) in enumerate(self.rows):
             k, v = QLineEdit(key), QLineEdit(value)
@@ -625,11 +645,16 @@ class ColorButton(QPushButton):
 class Section(QFrame):
     """A titled card holding fields; ``collapsed`` starts it folded (Advanced)."""
 
-    def __init__(self, title, *, icon=None, collapsed=False, hint="", compact=False):
+    def __init__(self, title, *, icon=None, collapsed=False, hint="", compact=False, columns=0):
         super().__init__()
         self.setObjectName("FormSection")
         self.compact = compact  # labels above their fields (nested parts: narrow)
         self._pair_row = None  # a row holding one number, waiting for a second
+        # ``columns``: small fields (pickers, numbers, switches) sit side by side, this many to
+        # a row; lists and long text take a whole row (cards of a list)
+        self.columns = columns
+        self._cell = (0, 0)
+        self.keeps_empty = False  # empty optional fields show here (no "show more" link)
         self.toggle = QToolButton()
         self.toggle.setObjectName("FormSectionTitle")
         self.toggle.setText(title)
@@ -645,6 +670,10 @@ class Section(QFrame):
         self.form.setColumnStretch(1, 1)
         if compact:
             self.form.setColumnStretch(0, 1)  # paired numbers get half each
+        for column in range(columns):
+            self.form.setColumnStretch(column, 1)
+        if columns:
+            self.form.setHorizontalSpacing(16)
         self.body.setVisible(not collapsed)
         self.toggle.toggled.connect(self._toggled)
         self._more = []  # (label, widget, help, key) of empty fields, shown on request
@@ -695,7 +724,9 @@ class Section(QFrame):
         title.setToolTip(tip.strip())
         widget.setToolTip(widget.toolTip() or tip.strip())
         holder = QVBoxLayout()
-        if self.compact:
+        if self.columns:
+            self._grid_place(title, label, widget, holder)
+        elif self.compact:
             holder.addWidget(title)
             small = isinstance(widget, NumberBox) and not help_text
             if small and self._pair_row is not None:  # two numbers share a row (X  Y)
@@ -708,11 +739,20 @@ class Section(QFrame):
                 self.form.addLayout(holder, row, 0, 1, 2)
                 self._pair_row = None
         else:
-            title.setAlignment(Qt.AlignRight | Qt.AlignTop)
+            # the label stands level with the field's first line (a box, a row of chips)
+            title.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            title.setFixedHeight(_first_line_height(widget))
             title.setMinimumWidth(140)
-            self.form.addWidget(title, row, 0)
+            if isinstance(widget, QCheckBox):  # a switch reads as one line: "[x] Shown in HUD"
+                widget.setText(label)
+                title.setText("")
+            self.form.addWidget(title, row, 0, Qt.AlignTop)
             self.form.addLayout(holder, row, 1)
         holder.setSpacing(1)
+        if help_text and _is_wide(widget) and not isinstance(widget, ChipList):
+            # a table's hint above it, not under its Add button
+            holder.addWidget(_small(help_text))
+            help_text = ""
         if isinstance(widget, (NumberBox, QCheckBox, ColorButton)):
             line = QHBoxLayout()  # a small control stays small
             line.addWidget(widget)
@@ -723,7 +763,33 @@ class Section(QFrame):
         if help_text:
             holder.addWidget(_small(help_text))
 
+    def _grid_place(self, title, label, widget, holder):
+        """Label above the field; a small field takes the next free column, a wide one (a list,
+        long text) a row of its own. A switch carries its label beside its box."""
+        row, column = self._cell
+        if _is_wide(widget):
+            if column:
+                row, column = row + 1, 0
+            self.form.addLayout(holder, row, 0, 1, self.columns)
+            self._cell = (row + 1, 0)
+        else:
+            self.form.addLayout(holder, row, column, Qt.AlignTop)
+            column += 1
+            self._cell = (row + 1, 0) if column >= self.columns else (row, column)
+        if isinstance(widget, QCheckBox) and label:
+            widget.setText(label)
+            holder.addSpacing(title.sizeHint().height() + 1)  # in line with labelled fields
+            title.deleteLater()
+        else:
+            holder.addWidget(title)
+
     def add_wide(self, widget):
+        if self.columns:
+            row, column = self._cell
+            row += 1 if column else 0
+            self.form.addWidget(widget, row, 0, 1, self.columns)
+            self._cell = (row + 1, 0)
+            return
         self.form.addWidget(widget, self.form.rowCount(), 0, 1, 2)
 
 
@@ -890,7 +956,9 @@ class RecordForm(QScrollArea):
             picker.changed.connect(lambda p=picker: self._set(data, "icon_id", p.text()))
             picker.setToolTip(HELP["icon_id"])
             icon_box = QHBoxLayout()
-            icon_box.addWidget(_small("Icon"))
+            label = _small("Icon")
+            label.setFixedHeight(48)  # level with the picture
+            icon_box.addWidget(label, 0, Qt.AlignTop)
             icon_box.addWidget(picker, 1)
         else:
             icon_box = None
@@ -956,12 +1024,21 @@ class RecordForm(QScrollArea):
         if widget is None:
             return
         text = label_for(key) if label is None else label
+        help_text = HELP.get(str(key), "")
+        source = self._reference(data, str(key)) if isinstance(value, str) else None
+        about = self.vocabulary.description(source, value) if source else ""
+        if about:  # what the picked skill / item does, under its picker
+            help_text = f"{help_text}  ·  {about}" if help_text else about
         if not text:
             section.add_wide(widget)
-        elif _empty_optional(value) and section.toggle.text() != "Advanced":
-            section.add_empty(text, widget, help_text=HELP.get(str(key), ""), key=str(key))
+        elif (
+            _empty_optional(value)
+            and not section.keeps_empty
+            and section.toggle.text() != "Advanced"
+        ):
+            section.add_empty(text, widget, help_text=help_text, key=str(key))
         else:
-            section.add_row(text, widget, help_text=HELP.get(str(key), ""), key=str(key))
+            section.add_row(text, widget, help_text=help_text, key=str(key))
 
     # -- one field ----------------------------------------------------------------------------
     def widget_for(self, data, key, value):
@@ -1006,7 +1083,7 @@ class RecordForm(QScrollArea):
                 from .record_vocabulary import Choice
 
                 options = fixed or self.vocabulary.values_for(skey)
-                choices = [Choice(v, v.replace("_", " ")) for v in options]
+                choices = [Choice(v, words(v)) for v in options]
                 picker = Picker(choices, value or "", allow_none=True)
                 picker.picked.connect(lambda p=picker: self._set(data, key, p.value()))
                 return picker
@@ -1135,7 +1212,7 @@ class _SubForm(QWidget):
 
     def __init__(self, form, data, key):
         super().__init__()
-        self.section = Section(label_for(key), compact=True)
+        self.section = Section(label_for(key), compact=True, columns=3)
         self.section.toggle.hide()
         self.section.setObjectName("FormSubSection")
         layout = QVBoxLayout(self)
@@ -1157,6 +1234,7 @@ class CardList(QWidget):
         super().__init__()
         self.form, self.parent_data, self.key = form, parent, key
         self.entries = entries
+        self.names = form.vocabulary.names()  # card titles show names, not ids
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
@@ -1179,7 +1257,7 @@ class CardList(QWidget):
         body = QVBoxLayout(card)
         body.setContentsMargins(8, 6, 8, 6)
         head = QHBoxLayout()
-        title = QLabel(f"<b>{index + 1}.</b>  {_entry_title(entry, noun)}")
+        title = QLabel(f"<b>{index + 1}.</b>  {_entry_title(entry, noun, self.names)}")
         head.addWidget(title, 1)
         for text, tip, handler in (
             ("↑", "Move up", lambda: self.move(index, -1)),
@@ -1194,20 +1272,31 @@ class CardList(QWidget):
             head.addWidget(button)
         body.addLayout(head)
         if isinstance(entry, dict):
-            section = Section("", compact=True)
+            plain = "QFrame#FormSection { border: none; background: transparent; }"
+            section = Section("", compact=True, columns=3)
             section.toggle.hide()
-            section.setStyleSheet("QFrame#FormSection { border: none; background: transparent; }")
-            extra = Section("Advanced", collapsed=True, compact=True)
+            section.setStyleSheet(plain)
+            section.layout().setContentsMargins(0, 0, 0, 0)
+            # empty and technical fields wait behind one small "More" fold
+            extra = Section("More", collapsed=True, compact=True, columns=3)
+            extra.keeps_empty = True
+            extra.setStyleSheet(plain)
+            extra.toggle.setObjectName("FormCardMore")
+            extra.layout().setContentsMargins(0, 0, 0, 0)
+            hidden = 0
             for key, value in entry.items():
                 if key in FORMAT_KEYS:
                     continue
-                target = extra if key in TECHNICAL else section
+                folded = key in TECHNICAL or _empty_optional(value)
+                hidden += folded
+                target = extra if folded else section
                 if isinstance(value, list) and not _scalar_list(key, value):
                     target.add_row(label_for(key), CardList(self.form, entry, key, value))
                 else:
                     self.form._field(target, entry, key, value)
             body.addWidget(section)
             if extra.form.count():
+                extra.toggle.setText(f"More ({hidden})")
                 body.addWidget(extra)
         else:
             body.addWidget(self.form.widget_for(self.entries, index, entry))
@@ -1293,29 +1382,62 @@ def _numbers(text):
     return out
 
 
+def _plural(noun):
+    """``currency`` -> "currencies", ``entry`` -> "entries", ``stat`` -> "stats"."""
+    noun = str(noun)
+    if noun.endswith("y") and noun[-2:-1] not in "aeiou":
+        return noun[:-1] + "ies"
+    if noun.endswith(("s", "x", "ch", "sh")):
+        return noun + "es"
+    return noun + "s"
+
+
 def _singular(text):
+    """``stats`` -> "stat"; a phrase ("what it does") is an "entry"."""
     text = str(text).strip()
+    if " " in text:
+        return "entry"
     for suffix, replacement in (("ies", "y"), ("ses", "s"), ("s", "")):
         if text.endswith(suffix) and len(text) > 3:
             return text[: -len(suffix)] + replacement
     return text
 
 
-def _entry_title(entry, noun):
+def _first_line_height(widget):
+    """The height of a field's first line: a box's own height, a chip row's, else a box's."""
+    if isinstance(widget, ChipList):
+        chip = widget.findChild(QToolButton)
+        return max(22, chip.sizeHint().height() if chip is not None else 24)
+    if isinstance(widget, (QLineEdit, QComboBox, QDoubleSpinBox, QCheckBox, QPushButton)):
+        return max(22, widget.sizeHint().height())
+    return QLineEdit().sizeHint().height()
+
+
+def _is_wide(widget):
+    """A field that needs a whole row: a list, a table, long text."""
+    wide = (ChipList, AmountTable, TextTable, CardList, _SubForm, QPlainTextEdit, Section)
+    return isinstance(widget, wide)
+
+
+def _entry_title(entry, noun, names=None):
+    """A card's title: the entry's name, or what it refers to by its display name (``Brave``
+    for ``class_id: brave``)."""
+    names = names or {}
     if isinstance(entry, dict):
         for key in ("display_name", "name", "label", "state", "stat", "ability_id", "class_id",
-                    "item_id", "resource", "command", "socket_id", "form_id", "key"):  # fmt: skip
+                    "item_id", "resource", "command", "socket_id", "form_id", "key",
+                    "kind"):  # fmt: skip
             value = entry.get(key)
             if isinstance(value, str) and value:
                 extra = ""
                 if "value" in entry and isinstance(entry["value"], (int, float)):
                     extra = f"  {entry['value']:+g}"
                 if "to" in entry and isinstance(entry["to"], str):
-                    extra += f"  → {entry['to']}"
-                return f"{value}{extra}"
+                    extra += f"  → {names.get(entry['to'], entry['to'])}"
+                return f"{names.get(value) or words(value)}{extra}"
         for key, value in entry.items():
             if key.endswith("_id") and isinstance(value, str) and value:
-                return value
+                return names.get(value) or words(value)
     elif isinstance(entry, (str, int, float)):
         return str(entry)
     return noun.title()

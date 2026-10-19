@@ -653,9 +653,7 @@ def _workspace_rules(palette):
 
 def build_qss(palette):
     tokens = {f.name: getattr(palette, f.name) for f in fields(palette)}
-    return (
-        _TEMPLATE.substitute(tokens) + _workspace_rules(palette) + _form_rules(palette) + "\n"
-    )
+    return _TEMPLATE.substitute(tokens) + _workspace_rules(palette) + _form_rules(palette) + "\n"
 
 
 def _form_rules(p):
@@ -666,9 +664,10 @@ QLineEdit#FormName {{ font-size: 18px; font-weight: 600; padding: 4px 6px; }}
 QLabel#FormTitle {{ font-size: 18px; font-weight: 600; padding: 2px 0; }}
 QFrame#FormSection, QFrame#FormSubSection {{ background: {p.panel}; border: 1px solid {p.border};
     border-radius: 8px; }}
-QToolButton#FormSectionTitle {{ border: none; font-weight: 700; font-size: 13px;
-    color: {p.text}; padding: 2px; }}
-QLabel#FormFieldLabel {{ color: {p.text_dim}; padding-top: 4px; }}
+QToolButton#FormSectionTitle, QToolButton#FormSectionTitle:checked,
+QToolButton#FormSectionTitle:hover {{ border: none; background: transparent; font-weight: 700;
+    font-size: 14px; color: {p.primary_hi}; padding: 2px 0; }}
+QLabel#FormFieldLabel {{ color: {p.text_dim}; }}
 QFrame#FormCard {{ background: {p.list_alt}; border: 1px solid {p.border_strong};
     border-radius: 6px; }}
 QToolButton#FormChip {{ background: {p.selection}; color: {p.selection_text}; border: none;
@@ -677,6 +676,9 @@ QToolButton#FormChip:hover {{ background: {p.danger_border}; }}
 QToolButton#FormAddChip {{ background: transparent; color: {p.primary_hi};
     border: 1px dashed {p.border_strong}; border-radius: 10px; padding: 3px 8px; }}
 QPushButton#FormAddButton {{ color: {p.primary_hi}; }}
+QToolButton#FormCardMore {{ border: none; color: {p.text_muted}; font-size: 12px;
+    padding: 1px; }}
+QToolButton#FormCardMore:hover {{ color: {p.primary_hi}; }}
 QToolButton#FormMoreButton {{ border: none; color: {p.text_muted}; padding: 2px; }}
 QToolButton#FormMoreButton:hover {{ color: {p.primary_hi}; }}
 QLabel#FormError {{ background: {p.danger_bg}; color: {p.danger_text};

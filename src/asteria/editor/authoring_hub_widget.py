@@ -182,6 +182,13 @@ _ACRONYMS = {
     "y": "Y",
     "z": "Z",
     "rpg": "RPG",
+    "bp": "BP",
+    "ap": "AP",
+    "jp": "JP",
+    "atb": "ATB",
+    "ko": "KO",
+    "npc": "NPC",
+    "aoe": "AOE",
 }
 
 
@@ -1027,11 +1034,9 @@ class AdapterFamilyWidget(QWidget):
                 except Exception:  # noqa: BLE001 - a record that cannot be encoded keeps its id
                     data = None
                 name = record_title(self.category_id, data, self.editor.vocabulary)
-            if name and name.lower().replace(" ", "_") != key.lower():
-                item.setText(f"{name}   ·  {key}")
-            elif name:
+            if name:  # the name only; the internal id is in the tooltip and the filter
                 item.setText(name)
-            item.setToolTip(key)
+            item.setToolTip(f"Internal ID: {key}")
             item.setData(Qt.UserRole, key)
             icon_id = getattr(record, "icon_id", "")
             icon = icon_for(icon_id) if icon_for and icon_id else None
@@ -1102,9 +1107,7 @@ class AdapterFamilyWidget(QWidget):
             [
                 key
                 for key in adapter.ids()
-                if not needle
-                or needle in key.lower()
-                or needle in self._display_name(key).lower()
+                if not needle or needle in key.lower() or needle in self._display_name(key).lower()
             ]
         )
         self.browser.addItems(self._ids)

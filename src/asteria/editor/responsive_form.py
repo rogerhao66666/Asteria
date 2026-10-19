@@ -12,16 +12,37 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtWidgets import QBoxLayout, QGridLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QBoxLayout,
+    QCheckBox,
+    QGridLayout,
+    QLabel,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
+
+
+class _Cell(QWidget):
+    """One label / field pair. Its height is its plain minimum: the wrapping caption would
+    otherwise give a height-for-width below what a table inside needs, squeezing it."""
+
+    def hasHeightForWidth(self):  # noqa: N802 - Qt API
+        return False
 
 
 def _field_cell(label, widget):
     """A label above its field (no crowded label column; every field gets the cell's whole
     width)."""
-    cell = QWidget()
+    cell = _Cell()
     box = QVBoxLayout(cell)
     box.setContentsMargins(0, 0, 0, 0)
     box.setSpacing(3)
+    if isinstance(widget, QCheckBox) and not widget.text():
+        # a switch carries its own label beside the box; the empty line above keeps the box
+        # level with the fields next to it
+        widget.setText(label)
+        label = " "
     caption = QLabel(label)
     caption.setObjectName("FieldLabel")
     caption.setBuddy(widget)

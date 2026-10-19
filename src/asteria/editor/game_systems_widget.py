@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
+    QFrame,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
@@ -31,6 +32,7 @@ from PySide6.QtWidgets import (
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -163,6 +165,11 @@ class _TableField(QGroupBox):
         self.split = ResponsiveSplit(rows, self.detail, side_by_side_at=520)
         layout.addWidget(self.split)
 
+    def hasHeightForWidth(self):  # noqa: N802 - Qt API
+        # the wrapping hints inside would give a height-for-width below what the rows need,
+        # squeezing them; the box asks for its plain minimum height instead
+        return False
+
     def _detail_changed(self):
         self._commit()
         self.changed.emit()
@@ -232,6 +239,108 @@ class _TableField(QGroupBox):
     def values(self):
         self._commit()
         return [copy.deepcopy(r) for r in self.rows]
+
+
+class _Group(QGroupBox):
+    """A titled group of fields; sized by its plain minimum height (see ``_TableField``)."""
+
+    def hasHeightForWidth(self):  # noqa: N802 - Qt API
+        return False
+
+
+_FLAT_KINDS = ("text", "int", "float", "bool", "choice", "ref", "optional_ref", "optional_int")
+
+
+def _flat(fields):
+    """A small table of plain fields (a condition, an objective; a price rule with its own
+    conditions): each row is a card of its own instead of a list beside a form."""
+    return len(fields) <= 6 and all(
+        f.kind in _FLAT_KINDS or (f.kind == "table" and _flat(f.fields)) for f in fields
+    )
+
+
+class _InlineTable(QGroupBox):
+    """Rows of a small table as cards, one under another: the row's fields side by side, ✕
+    removes it, "+ Add" below the last. Same API as ``_TableField``."""
+
+    changed = Signal()
+
+    def __init__(self, label, fields, references, parent=None, *, icons=None):
+        super().__init__(label, parent)
+        self.fields, self.references, self.icons = fields, references, icons
+        self.forms = []
+        self.body = QVBoxLayout()
+        self.body.setSpacing(6)
+        self.empty = QLabel("None yet.")
+        self.empty.setObjectName("FieldHint")
+        add = QPushButton("+ Add")
+        add.setObjectName("FormAddButton")
+        add.clicked.connect(lambda: (self.add_row(), self.changed.emit()))
+        buttons = QHBoxLayout()
+        buttons.addWidget(add)
+        buttons.addStretch(1)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 14, 10, 10)
+        layout.addWidget(self.empty)
+        layout.addLayout(self.body)
+        layout.addLayout(buttons)
+
+    def hasHeightForWidth(self):  # noqa: N802 - Qt API
+        # the wrapping hints inside would give a height-for-width below what the rows need,
+        # squeezing them; the box asks for its plain minimum height instead
+        return False
+
+    @property
+    def rows(self):
+        return [form.data() for form in self.forms]
+
+    def _card(self, row):
+        card = QFrame()
+        card.setObjectName("FormCard")
+        line = QHBoxLayout(card)
+        line.setContentsMargins(8, 6, 6, 6)
+        form = RecordForm(self.fields, self.references, column_width=150, icons=self.icons)
+        form.set_data(row)
+        form.changed.connect(self.changed.emit)
+        remove = QToolButton()
+        remove.setText("✕")
+        remove.setToolTip("Remove this row")
+        remove.clicked.connect(lambda: (self._remove(form), self.changed.emit()))
+        line.addWidget(form, 1)
+        line.addWidget(remove, 0, Qt.AlignTop)
+        form.card = card
+        return form
+
+    def _remove(self, form):
+        self.forms.remove(form)
+        form.card.hide()
+        form.card.deleteLater()
+        self.empty.setVisible(not self.forms)
+
+    def set_rows(self, rows):
+        for form in self.forms:
+            form.card.hide()
+            form.card.deleteLater()
+        self.forms = []
+        for row in rows:
+            self._append(copy.deepcopy(row))
+
+    def _append(self, row):
+        form = self._card(row)
+        self.forms.append(form)
+        self.body.addWidget(form.card)
+        self.empty.setVisible(False)
+        return form
+
+    def add_row(self):
+        return self._append(new_row(self.fields))
+
+    def remove_row(self):
+        if self.forms:
+            self._remove(self.forms[-1])
+
+    def values(self):
+        return [copy.deepcopy(form.data()) for form in self.forms]
 
 
 class _IconPicker(QWidget):
@@ -482,7 +591,7 @@ class RecordForm(QWidget):
         if f.kind == "pairs":
             return _KeyValueTable(("Threshold", "Name"))
         if f.kind == "group":
-            box = QGroupBox(f.label)
+            box = _Group(f.label)
             layout = QVBoxLayout(box)
             box.form = RecordForm(
                 f.fields, self.references, icons=self.icons, document=self.document
@@ -490,7 +599,8 @@ class RecordForm(QWidget):
             layout.addWidget(box.form)
             return box
         if f.kind == "table":
-            return _TableField(f.label, f.fields, self.references, icons=self.icons)
+            kind = _InlineTable if _flat(f.fields) else _TableField
+            return kind(f.label, f.fields, self.references, icons=self.icons)
         raise ValueError(f"unknown form field kind: {f.kind}")
 
     def set_data(self, data):

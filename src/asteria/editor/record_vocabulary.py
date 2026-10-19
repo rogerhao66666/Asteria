@@ -174,8 +174,6 @@ TECHNICAL = {
     "growth_mode",
     "growth_cap",
     "role",
-    "required_tags",
-    "blocked_tags",
 }
 
 
@@ -184,7 +182,7 @@ LABELS = {
     "display_name": "Name",
     "class_assignments": "Jobs",
     "base_stats": "Base Stats",
-    "base_resources": "Health, SP and other resources",
+    "base_resources": "HP, SP and other resources",
     "granted_tags": "Tags it gives",
     "granted_abilities": "Skills it gives",
     "stat_bonuses": "Stat bonuses",
@@ -355,7 +353,7 @@ HELP = {
     "icon_id": "The picture in menus and lists. Pick one, or Browse for your own file.",
     "class_assignments": "The jobs this character has; the first is the main job.",
     "base_stats": "Starting numbers before jobs, levels, gear and points.",
-    "base_resources": "Health (vitality), SP (technique) and other pools at the start.",
+    "base_resources": "HP, SP and other pools at the start.",
     "tags": "Short labels other rules look for (weak.fire, boss, trait.guard...).",
     "abilities": "Skills this one starts with.",
     "granted_abilities": "Skills anyone with this gets.",
@@ -481,11 +479,11 @@ class ProjectVocabulary:
             ids = library.abilities.ids()
             for key in sorted(ids):
                 value = library.abilities.get(key)
-                label = getattr(value, "display_name", "") or key.replace("_", " ").title()
+                label = getattr(value, "display_name", "") or words(key)
                 yield Choice(key, label, getattr(value, "icon_id", "") or "")
         elif source == "states":
             for key in sorted(library.states._definitions):
-                yield Choice(key, key.replace("_", " ").title())
+                yield Choice(key, words(key))
         elif source == "items_and_equipment":
             yield from self.choices("items")
             yield from self.choices("equipment")
@@ -513,30 +511,43 @@ class ProjectVocabulary:
                 yield Choice(name, _stat_label(name))
         elif source == "checks":
             for key in sorted(db.outcome_checks):
-                yield Choice(key, key.replace("_", " ").title())
+                yield Choice(key, words(key))
         elif source == "rarities":
             for rarity in sorted(db.loot_rarities().values(), key=lambda r: r.order):
                 yield Choice(rarity.rarity_id, rarity.display_name or rarity.rarity_id)
         elif source == "drop_tables":
             for key in sorted(db.drop_tables):
-                yield Choice(key, key.replace("_", " ").title())
+                yield Choice(key, words(key))
         elif source == "growth":
             for key in sorted(db.equipment_growth):
-                yield Choice(key, key.replace("_", " ").title())
+                yield Choice(key, words(key))
         elif source == "gauges":
             for key in sorted(db.gauge_compositions):
-                yield Choice(key, key.replace("_", " ").title())
+                yield Choice(key, words(key))
         elif source == "scenes":
             for scene in project.scenes():
                 yield Choice(scene.id, getattr(scene, "name", "") or scene.id)
         elif source == "slots":
             slots = {e.slot for e in db.equipment.values()}
             for name in sorted(slots):
-                yield Choice(name, name.replace("_", " ").title())
+                yield Choice(name, words(name))
         elif source == "currencies":
             names = set(getattr(project.game_start, "currencies", {}) or {}) | {"gold"}
             for name in sorted(names):
-                yield Choice(name, name.title())
+                yield Choice(name, words(name))
+
+    def description(self, source, key):
+        """What a skill / item / state says about itself (shown under its picker)."""
+        project = self.project
+        if project is None or not key:
+            return ""
+        value = None
+        if source == "abilities":
+            library = project.gameplay_library.abilities
+            value = library.get(key) if key in library.ids() else None
+        elif source in ("items", "equipment", "classes", "states"):
+            value = getattr(project.rpg_database, source, {}).get(key)
+        return str(getattr(value, "description", "") or "")
 
     def names(self):
         """Display names by id of jobs, skills, states, items and gear (for tags in words)."""
@@ -611,7 +622,20 @@ _STAT_NAMES = {
     "accuracy": "Accuracy", "evade": "Evasion", "crit": "Critical Rate",
     "crit_damage": "Critical Damage %", "speed": "Speed", "lifesteal": "Lifesteal",
 }  # fmt: skip
-_RESOURCE_NAMES = {"vitality": "HP (vitality)", "technique": "SP (technique)"}
+_RESOURCE_NAMES = {"vitality": "HP", "technique": "SP"}
+# short forms that stay in capitals whenever an id is turned into words
+ACRONYMS = frozenset({
+    "hp", "sp", "mp", "bp", "tp", "ap", "jp", "xp", "exp", "atb", "ai", "hud", "ui", "id",
+    "vfx", "fx", "str", "dex", "int", "luk", "vit", "agi", "npc", "aoe", "ko", "dps", "rpg",
+})  # fmt: skip
+
+
+def words(text):
+    """An id in words, short forms in capitals: ``bp_gain`` -> "BP Gain"."""
+    out = []
+    for word in str(text).replace("_", " ").split():
+        out.append(word.upper() if word.lower() in ACRONYMS else word[:1].upper() + word[1:])
+    return " ".join(out)
 
 
 def _stat_label(name):
@@ -619,12 +643,12 @@ def _stat_label(name):
         return _STAT_NAMES[name]
     if name.endswith("_attack") or name.endswith("_resist"):
         element, kind = name.rsplit("_", 1)
-        return f"{element.title()} {kind.title()} %"
-    return name.replace("_", " ").title()
+        return f"{words(element)} {words(kind)} %"
+    return words(name)
 
 
 def _resource_label(name):
-    return _RESOURCE_NAMES.get(name, name.replace("_", " ").title())
+    return _RESOURCE_NAMES.get(name, words(name))
 
 
 def label_for(key):
@@ -640,7 +664,7 @@ def label_for(key):
     if key in _RESOURCE_NAMES:
         return _resource_label(key)
     if key.startswith("jp."):
-        return f"Job Points ({key[3:].replace('_', ' ').title()})"
+        return f"Job Points ({words(key[3:])})"
     if key in _POINTS:
         return _POINTS[key]
     if key.endswith("_id") and REFERENCES.get(key):
@@ -789,7 +813,7 @@ def tag_label(tag, names=None):
     for prefix, pattern in _TAG_PREFIXES:
         if tag.startswith(prefix):
             rest = tag[len(prefix) :]
-            word = names.get(rest) or rest.replace(".", " · ").replace("_", " ").title()
+            word = names.get(rest) or words(rest.replace(".", " · "))
             return pattern.format(word)
     if tag.startswith("outcome."):
         return "Result: " + tag[8:].replace("_", " ")
