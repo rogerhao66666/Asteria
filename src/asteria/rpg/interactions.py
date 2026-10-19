@@ -183,9 +183,14 @@ class OutcomeCheckDefinition:
     required_target_tags: tuple[str, ...] = ()
     success_tags: tuple[str, ...] = ()
     failure_tags: tuple[str, ...] = ()
+    # any of these on the source / target and the check does not apply (a broken or stunned
+    # foe cannot guard or dodge)
+    blocked_source_tags: tuple[str, ...] = ()
+    blocked_target_tags: tuple[str, ...] = ()
 
     SCHEMA = "asteria.rpg.outcome_check"
     VERSION = 1
+    OPTIONAL_DATA = {"blocked_source_tags": [], "blocked_target_tags": []}  # shown while empty
 
     def __init__(
         self,
@@ -200,6 +205,8 @@ class OutcomeCheckDefinition:
         required_target_tags=(),
         success_tags=(),
         failure_tags=(),
+        blocked_source_tags=(),
+        blocked_target_tags=(),
     ):
         minimum_chance = _number(minimum_chance, "minimum_chance")
         maximum_chance = _number(maximum_chance, "maximum_chance")
@@ -219,6 +226,8 @@ class OutcomeCheckDefinition:
         object.__setattr__(self, "required_target_tags", _tags(required_target_tags))
         object.__setattr__(self, "success_tags", _tags(success_tags))
         object.__setattr__(self, "failure_tags", _tags(failure_tags))
+        object.__setattr__(self, "blocked_source_tags", _tags(blocked_source_tags))
+        object.__setattr__(self, "blocked_target_tags", _tags(blocked_target_tags))
 
     def to_data(self):
         return {
@@ -234,6 +243,11 @@ class OutcomeCheckDefinition:
             "required_target_tags": list(self.required_target_tags),
             "success_tags": list(self.success_tags),
             "failure_tags": list(self.failure_tags),
+            **{
+                key: list(getattr(self, key))
+                for key in self.OPTIONAL_DATA
+                if getattr(self, key)  # written only when set
+            },
         }
 
     @classmethod
@@ -251,6 +265,8 @@ class OutcomeCheckDefinition:
             required_target_tags=data.get("required_target_tags", ()),
             success_tags=data.get("success_tags", ()),
             failure_tags=data.get("failure_tags", ()),
+            blocked_source_tags=data.get("blocked_source_tags", ()),
+            blocked_target_tags=data.get("blocked_target_tags", ()),
         )
 
 
@@ -396,9 +412,12 @@ class InteractionResolver:
         definition = self.checks[_id(check_id, "check_id")]
         source_tags = set(source.tags.values()) | set(_tags(action_tags))
         target_tags = set(target.tags.values())
-        applicable = set(definition.required_source_tags).issubset(source_tags) and set(
-            definition.required_target_tags
-        ).issubset(target_tags)
+        applicable = (
+            set(definition.required_source_tags).issubset(source_tags)
+            and set(definition.required_target_tags).issubset(target_tags)
+            and source_tags.isdisjoint(definition.blocked_source_tags)
+            and target_tags.isdisjoint(definition.blocked_target_tags)
+        )
         if not applicable:
             return OutcomeCheckResult(definition.check_id, False, None, None, None, ())
         chance = definition.base_chance

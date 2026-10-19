@@ -96,6 +96,7 @@ def main():
     content.presentation(context)
     stage.presentation(context)  # staging templates, command pages, input steps
     systems.fill(context)  # the editor's remaining sections, each used by the game
+    brave.mechanics(context)  # weakness, crit, break, guard, dodge, states that are felt
     kept = art.weapon_icons(context)
     kept = (*kept, *lucifer.apply_icons(context))
     icons.apply_all(context)  # gear, items, gems, cards, jobs, passives, states

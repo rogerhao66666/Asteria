@@ -55,6 +55,7 @@ STANDARD_WORLD_COMMANDS = (
     "UNSOCKET_ITEM",
     "UPGRADE_EQUIPMENT",
     "EQUIP_ITEM",
+    "GIVE_EQUIPMENT",
     "DISASSEMBLE",
 )
 
@@ -114,6 +115,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "UNSOCKET_ITEM": ("actor_id", "instance_id", "socket_id"),
     "UPGRADE_EQUIPMENT": ("actor_id", "instance_id", "node_id"),
     "EQUIP_ITEM": ("actor_id", "equipment_id", "slot_id", "index"),
+    "GIVE_EQUIPMENT": ("equipment_id", "quantity"),
     "DISASSEMBLE": ("item_id",),
     "WALK_TO": ("entity", "x", "y", "speed"),
     "MOVE_ROUTE": ("entity", "route", "step", "speed"),
@@ -434,6 +436,12 @@ def register_standard_world_commands(router, session):
             str(_required(c, "equipment_id")),
             slot_id=c.args.get("slot_id") or None,
             index=int(c.args.get("index", 0)),
+        ),
+    )
+    gear_command(  # into the equipment bag; the inventory rules may ask to wear it
+        "GIVE_EQUIPMENT",
+        lambda c: session.gain_equipment(
+            str(_required(c, "equipment_id")), int(c.args.get("quantity", 1) or 1)
         ),
     )
     gear_command("DISASSEMBLE", lambda c: session.disassemble(str(_required(c, "item_id"))))

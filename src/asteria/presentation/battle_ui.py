@@ -18,6 +18,12 @@ from .battle_turn_timeline import BattleTurnTimelineView
 from .battle_ui_polish import BattleUiPolishProfile
 
 
+def _value_text(value):
+    """A floating number: whole from 10 up (a share of health is not 604.444, a million is
+    not 1e+06), as written below that (a 0.5 gauge step)."""
+    return str(round(value)) if abs(value) >= 10 else f"{value:g}"
+
+
 def _finite(value, label):
     value = float(value)
     if not isfinite(value):
@@ -1278,7 +1284,7 @@ class BattleUiComposer:
             sign = "+" if value.kind == BattleValueKind.HEAL and value.value >= 0 else ""
             texts.append(
                 BattleUiText(
-                    f"{sign}{value.value:g}",
+                    f"{sign}{_value_text(value.value)}",
                     x,
                     y - lift,
                     f"value:{value.kind.value}",

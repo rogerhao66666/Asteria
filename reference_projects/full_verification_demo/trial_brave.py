@@ -16,7 +16,16 @@ elements and much stronger foes.
 * **Demon Ring**: a ring weapon with power and magic, seven sockets (three cards, two gems, two
   charms - six new charm attachments) whose attack strikes five times. It waits in the family
   chest in Aldric's house.
-* **Foes**: every foe is far stronger (health x3, power and magic x1.8, defence x1.4).
+* **Foes**: every foe is far stronger (FOE_SCALE: minions health x6 and power x2, bosses
+  health x8 and power x2.1, the Crimson Warlord its own row), grows faster with its level and
+  meets the party on Legend difficulty (strength x1.6, three levels above).
+* **Mechanics that are felt** (``mechanics``): weaknesses x1.8, resistances x0.4, critical blows
+  x2.5 with crit and evade soft-capped; bosses carry seven to ten weaknesses behind shields of
+  16 / 24 / 36 (a weak critical blow chips two) and a Break leaves them x2.5 and three turns
+  out; some foes guard (x0.3) or dodge, but not while broken, stunned, asleep or frozen; foe
+  blows leave bleed, blind, poison, silence, stun and more; poison, burn and bleed take 3-5% of
+  the holder's maximum health a turn; every job gains health per level; WEAK / CRITICAL /
+  GUARD / MISS / BLOCK / BREAK! show on the hits.
 """
 
 from __future__ import annotations
@@ -52,7 +61,14 @@ ELEMENTS = {  # element: (name, bolt, storm, fx, status the storm leaves)
     "wind": ("Wind", "Gale Bolt", "Tempest", ("circ", "slash"), "defense_down"),
     "earth": ("Earth", "Stone Bolt", "Earthquake", ("explosion", "smoke"), "power_down"),
 }
-FOE_SCALE = {"stats": {"power": 1.8, "magic": 1.8, "defense": 1.4, "speed": 1.15}, HP: 3.0}
+FOE_SCALE = {  # every foe's stats x these; a boss uses its own row
+    "stats": {"power": 2.0, "magic": 2.0, "defense": 1.4, "speed": 1.3},
+    "boss": {"power": 2.1, "magic": 2.1, "defense": 1.5, "speed": 1.45},
+    HP: 6.0,  # health x this; a boss x "boss health" (or its own entry here)
+    "boss health": 8.0,
+    "crimson_warlord": 4.5,  # the last boss heals and summons: less health, as long a fight
+    "crimson_warlord stats": {"power": 1.6, "magic": 1.6, "defense": 1.5, "speed": 1.3},
+}
 NEW_WEAKNESS = {  # foe: tags for the new elements
     "goblin_slinger": ("weak.wind",),
     "goblin_beast": ("resist.earth",),
@@ -714,7 +730,8 @@ def ring(c):
 
 
 def family_chest(assets, home, maps):
-    """The chest in Aldric's house: the Demon Ring (worn in his second hand) and the charms."""
+    """The chest in Aldric's house: the Demon Ring (his free hand is offered it) and the
+    charms."""
     import trial_people as people
     from asteria.runtime.collision import Collider2DComponent
 
@@ -723,7 +740,7 @@ def family_chest(assets, home, maps):
     home.look(chest, *people.look(assets, "home_chest", picture, "Family Chest"))
     chest.add_component(maps._set(Collider2DComponent(), width=26, height=10, offset_y=-5))
     gifts = [
-        maps.world("EQUIP_ITEM", actor_id="hero_01", equipment_id="w_demon_ring", index=1),
+        maps.world("GIVE_EQUIPMENT", equipment_id="w_demon_ring"),  # asked to wear it
         *(maps.world("GIVE_ITEM", item_id=f"{charm}_item", quantity=1) for charm in CHARMS),
         maps.world("SHOW_POPUP", text="The Demon Ring and six charms!", kind="item"),
     ]
@@ -732,7 +749,7 @@ def family_chest(assets, home, maps):
         "home.chest",
         maps.when(
             "home.chest.open",
-            [maps.say("Family Chest", "Empty. The ring is on your hand.")],
+            [maps.say("Family Chest", "Empty. The ring is yours.")],
             [maps.set_switch("home.chest.open"), *gifts],
         ),
         radius=28.0,
@@ -741,20 +758,269 @@ def family_chest(assets, home, maps):
 
 
 # -- the foes ------------------------------------------------------------------------------
+LEVELS = {  # how a foe grows with its level (it meets the party's level), per level above 1
+    "stats": {"power": 0.08, "magic": 0.08, "defense": 0.04, "speed": 0.03},
+    HP: 0.10,
+}
+LEGEND = (1.6, 1.3, 3)  # the default difficulty: strength, rewards, levels above the party
+
+
 def foes(c):
-    """Every foe far stronger; wind and earth weaknesses on some."""
+    """Every foe far stronger; wind and earth weaknesses on some; foes grow faster with their
+    level and the default difficulty is Legend (Normal / Hard / Nightmare stay to pick)."""
+    from asteria.rpg.enemy_levels import DifficultyLevel
+
     db = c.db
+    for rules_id, rules in list(db.enemy_level_rules.items()):
+        difficulties = (
+            *(d for d in rules.difficulties if d.difficulty_id != "legend"),
+            DifficultyLevel("legend", *LEGEND),
+        )
+        db.enemy_level_rules[rules_id] = dataclasses.replace(
+            rules,
+            stat_growth=tuple(sorted(LEVELS["stats"].items())),
+            resource_growth=((HP, LEVELS[HP]),),
+            difficulties=difficulties,
+            default_difficulty="legend",
+        )
     for enemy_id, enemy in list(db.enemies.items()):
-        stats = {
-            k: v * FOE_SCALE["stats"].get(k, 1.0) for k, v in dict(enemy.stats).items()
-        }
+        boss = "boss" in enemy.tags
+        scale = FOE_SCALE.get(f"{enemy_id} stats", FOE_SCALE["boss" if boss else "stats"])
+        stats = {k: v * scale.get(k, 1.0) for k, v in dict(enemy.stats).items()}
         resources = dict(enemy.resources)
         if HP in resources and enemy_id != "vigil_acolyte":  # the vigil is held, not won
-            resources[HP] = resources[HP] * FOE_SCALE[HP]
+            resources[HP] *= FOE_SCALE.get(enemy_id, FOE_SCALE["boss health" if boss else HP])
         tags = (*enemy.tags, *NEW_WEAKNESS.get(enemy_id, ()))
         db.enemies[enemy_id] = dataclasses.replace(
             enemy, stats=stats, resources=resources, tags=tuple(dict.fromkeys(tags))
         )
+
+
+# -- battle mechanics that are felt -----------------------------------------------------------
+MULTIPLIERS = {"weak": 1.8, "resist": 0.4, "crit_x": 2.5, "broken": 2.5}
+BROKEN_TURNS = 3  # a broken foe loses this many turns
+FOES = {  # foe: (shield, extra weaknesses, traits, accuracy)
+    "goblin_slinger": (4, ("weak.bow",), ("trait.dodge",), 15),
+    "skeleton_hunter": (5, ("weak.axe",), ("trait.guard", "trait.dodge"), 20),
+    "mender_wisp": (4, ("weak.light",), ("trait.dodge",), 15),
+    "goblin_beast": (
+        16,
+        ("weak.sword", "weak.fire", "weak.wind", "weak.bow", "weak.ring"),
+        ("trait.guard",),
+        30,
+    ),
+    "skeleton_ancient": (
+        24,
+        ("weak.axe", "weak.spear", "weak.earth", "weak.staff", "weak.lightning", "weak.ring"),
+        ("trait.guard",),
+        35,
+    ),
+    "crimson_warlord": (
+        36,
+        ("weak.light", "weak.spear", "weak.bow", "weak.staff", "weak.ring", "weak.dark"),
+        ("trait.guard", "trait.dodge"),
+        45,
+    ),
+}
+FOE_STATUS = {  # foe skill: the states its blow leaves
+    "gob_stab": ("bleed",),
+    "gob_sling": ("blind",),
+    "beast_maul": ("bleed",),
+    "beast_pounce": ("burn",),
+    "skel_shot": ("blind",),
+    "skel_slash": ("bleed",),
+    "anc_curse": ("poison", "silence"),
+    "anc_rain": ("magic_down",),
+    "w_combo": ("bleed",),
+    "w_roar": ("stun",),
+    "w_mark": ("defense_down",),
+    "w_charge": ("power_down",),
+}
+FOE_SKILL_POWER = {"beast_pounce": 10.0, "w_charge": 10.0, "beast_maul": 5.0}  # x power
+DOTS = {"poison": (0.03, 4), "burn": (0.04, 3), "bleed": (0.05, 3)}  # share of max HP a turn
+CANNOT_DEFEND = ("state.broken", "status.stun", "status.sleep", "status.freeze")
+LABELS = {
+    "outcome.crit": "CRITICAL",
+    "outcome.weak": "WEAK",
+    "outcome.block": "BLOCK",
+    "outcome.guard": "GUARD",
+    "outcome.evade": "MISS",
+}
+
+
+HEALTH_GROWTH = {  # job: maximum health gained per level (any other job: 80)
+    "brave": 160, "guardian": 150, "knight": 130, "archmage": 70,
+    "forgemaster": 110, "heretic": 110, "death_lord": 110, "spirit": 0,
+}
+
+
+def mechanics(c):
+    """Weaknesses x1.8, resistances x0.4, critical blows x2.5 (crit and evade soft-capped so
+    neither side always crits or always dodges); bosses carry many weaknesses behind thick
+    shields (a weak critical blow chips two), a Break leaves them x2.5 and three turns out; some
+    foes guard (x0.3) or dodge; foe blows leave states, and poison, burn and bleed take a share
+    of the holder's maximum health; WEAK / CRITICAL / GUARD / MISS / BREAK show on the hits."""
+    from asteria.presentation.battle_feedback import BattleFeedbackProfile
+    from asteria.rpg.gauge_composition import GaugeImpactRule
+    from asteria.rpg.interactions import OutcomeCheckDefinition
+
+    db, library = c.db, c.abilities
+    rules = db.interaction_rules
+    for rule_id, rule in list(rules.items()):
+        kind = rule_id.split("_", 1)[0]
+        if kind in ("weak", "resist") and rule.target_tags_all[0].startswith(kind + "."):
+            rules[rule_id] = dataclasses.replace(rule, multiplier=MULTIPLIERS[kind])
+    for rule_id in ("crit_x", "broken"):
+        rules[rule_id] = dataclasses.replace(rules[rule_id], multiplier=MULTIPLIERS[rule_id])
+    rules["guarded"] = InteractionRule(
+        "guarded", source_tags_all=("outcome.guard",), multiplier=0.3, priority=4
+    )
+    checks = db.outcome_checks
+    checks["crit"] = dataclasses.replace(
+        checks["crit"], source_stat_terms={"crit": 0.003}, maximum_chance=0.65
+    )
+    land = checks["land"]
+    checks["land"] = dataclasses.replace(
+        land,
+        target_stat_terms={**land.target_stat_terms, "evade": -0.003},
+        minimum_chance=0.3,
+    )
+    checks["foe_guard"] = OutcomeCheckDefinition(
+        "foe_guard",
+        0.3,
+        required_target_tags=("trait.guard",),
+        blocked_target_tags=CANNOT_DEFEND,
+        success_tags=("outcome.guard",),
+    )
+    checks["foe_dodge"] = OutcomeCheckDefinition(
+        "foe_dodge",
+        0.2,
+        target_stat_terms={"speed": 0.0002},
+        maximum_chance=0.35,
+        required_target_tags=("trait.dodge",),
+        blocked_target_tags=CANNOT_DEFEND,
+        success_tags=("outcome.evade",),
+    )
+    for class_id, job in list(db.classes.items()):
+        growth = {HP: float(HEALTH_GROWTH.get(class_id, 80))}
+        db.classes[class_id] = dataclasses.replace(job, resource_growth=growth)
+    _break_rules(c, GaugeImpactRule)
+    _foe_traits(c)
+    _hit_checks(c, library)
+    _states(c, library)
+    feedback = c.project.battle_presentation_library
+    for profile_id in feedback.ids("feedback"):
+        feedback.set(
+            "feedback",
+            profile_id,
+            BattleFeedbackProfile(
+                outcome_tag_labels=LABELS,
+                disposition_labels={"absorb": "ABSORB", "reflect": "REFLECT"},
+                threshold_labels={"break": "BREAK!", "overdrive": "OVERDRIVE"},
+                label_duration=0.9,
+            ),
+        )
+
+
+def _break_rules(c, impact_type):
+    db = c.db
+    gauge = db.gauge_compositions["break"]
+    chip = impact_type(
+        "weak_crit",
+        tc.SHIELD,
+        "battle.hit",
+        recipient="target",
+        delta=-1.0,
+        required_outcome_tags_all=("outcome.weak", "outcome.crit"),
+    )
+    impacts = tuple(i for i in gauge.impacts if i.impact_id != "weak_crit")
+    db.gauge_compositions["break"] = dataclasses.replace(gauge, impacts=(*impacts, chip))
+    states = c.project.gameplay_library.states
+    states._definitions["broken"] = dataclasses.replace(
+        states.get("broken"), duration=float(BROKEN_TURNS)
+    )
+
+
+def _foe_traits(c):
+    db = c.db
+    for enemy_id, (shield, weak, traits, accuracy) in FOES.items():
+        enemy = db.enemies[enemy_id]
+        resists = {t.replace("weak.", "resist.") for t in weak}
+        tags = [t for t in enemy.tags if t not in resists]
+        db.enemies[enemy_id] = dataclasses.replace(
+            enemy,
+            resources={**enemy.resources, tc.SHIELD: float(shield)},
+            stats={**enemy.stats, "accuracy": float(accuracy)},
+            tags=tuple(dict.fromkeys((*tags, *weak, *traits))),
+        )
+
+
+def _hit_checks(c, library):
+    """Every party blow can be guarded or dodged by a foe with the trait."""
+    foe_skills = {a for e in c.db.enemies.values() for a in e.abilities}
+    definitions = library._definitions
+    for ability_id, definition in list(definitions.items()):
+        if ability_id in foe_skills or not definition.hits:
+            continue
+        hits = tuple(
+            {**h, "checks": [*dict.fromkeys([*h.get("checks", []), "foe_guard", "foe_dodge"])]}
+            for h in definition.hits
+        )
+        definitions[ability_id] = dataclasses.replace(definition, hits=hits)
+    for ability_id, coefficient in FOE_SKILL_POWER.items():
+        definitions[ability_id] = _with_power(definitions[ability_id], coefficient)
+    for ability_id, states in FOE_STATUS.items():
+        definition = definitions[ability_id]
+        have = {s["state"] for s in definition.apply_states}
+        extra = [_state(s) for s in states if s not in have]
+        definitions[ability_id] = dataclasses.replace(
+            definition, apply_states=[*definition.apply_states, *extra]
+        )
+
+
+def _with_power(definition, coefficient):
+    """``definition`` with its blow's user-stat coefficient set to ``coefficient``."""
+
+    def term(t):
+        if t.source.value != "source_stat":
+            return t
+        return dataclasses.replace(t, coefficient=-coefficient)
+
+    def operation(o):
+        if not isinstance(o.value, ValueFormula):
+            return o
+        terms = tuple(map(term, o.value.terms))
+        return dataclasses.replace(o, value=dataclasses.replace(o.value, terms=terms))
+
+    effects = tuple(
+        dataclasses.replace(
+            e,
+            effect=dataclasses.replace(
+                e.effect, operations=tuple(map(operation, e.effect.operations))
+            ),
+        )
+        for e in definition.effects
+    )
+    return dataclasses.replace(definition, effects=effects)
+
+
+def _states(c, library):
+    """Poison, burn and bleed take a share of the holder's maximum health each turn; regen gives
+    one back."""
+    from asteria.gameplay import Effect, PeriodicEffect
+
+    states = c.project.gameplay_library.states._definitions
+
+    def share(amount):
+        return ValueFormula((FormulaTerm("target_resource_max", HP, amount),))
+
+    for state_id, (amount, turns) in DOTS.items():
+        tick = Effect(f"{state_id}.tick", (op(share(-amount)),))
+        states[state_id] = dataclasses.replace(
+            states[state_id], duration=float(turns), periodic=(PeriodicEffect(1, tick),)
+        )
+    tick = Effect("regen.tick", (op(share(0.04)),))
+    states["regen"] = dataclasses.replace(states["regen"], periodic=(PeriodicEffect(1, tick),))
 
 
 # -- pictures ------------------------------------------------------------------------------

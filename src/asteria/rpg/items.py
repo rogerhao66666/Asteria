@@ -357,6 +357,9 @@ class ItemDefinition:
 
 
 INVENTORY_OVERFLOW = ("fill", "reject")
+# when new gear arrives: never ask (it waits in the equipment bag), ask when a party member has
+# a free place for it, or ask every time (offering to swap what is worn)
+EQUIP_OFFERS = ("never", "empty_slot", "always")
 
 
 @dataclass(frozen=True, slots=True)
@@ -371,6 +374,8 @@ class InventoryRules:
     * ``overflow``      - what happens when an amount does not fit: ``"fill"`` keeps what fits,
       ``"reject"``
       keeps none of it. What did not fit is reported in ``Inventory.overflow``.
+    * ``equip_offer``   - when new gear arrives: ``"never"`` asks nothing, ``"empty_slot"`` asks
+      whether to wear it when someone has a free place for it, ``"always"`` also offers to swap.
     """
 
     rules_id: str
@@ -379,6 +384,7 @@ class InventoryRules:
     max_kinds: int | None = None
     exempt_tags: tuple[str, ...] = ("item.key",)
     overflow: str = "fill"
+    equip_offer: str = "never"
 
     def __init__(
         self,
@@ -389,6 +395,7 @@ class InventoryRules:
         max_kinds=None,
         exempt_tags=("item.key",),
         overflow="fill",
+        equip_offer="never",
     ):
         if max_kinds is not None:
             max_kinds = int(max_kinds)
@@ -402,6 +409,9 @@ class InventoryRules:
         object.__setattr__(self, "max_kinds", max_kinds)
         object.__setattr__(self, "exempt_tags", _tags(exempt_tags))
         object.__setattr__(self, "overflow", overflow)
+        if equip_offer not in EQUIP_OFFERS:
+            raise ValueError(f"equip_offer must be one of {EQUIP_OFFERS}")
+        object.__setattr__(self, "equip_offer", equip_offer)
 
     def to_data(self):
         return {
@@ -413,6 +423,7 @@ class InventoryRules:
             "max_kinds": self.max_kinds,
             "exempt_tags": list(self.exempt_tags),
             "overflow": self.overflow,
+            **({"equip_offer": self.equip_offer} if self.equip_offer != "never" else {}),
         }
 
     @classmethod
@@ -426,6 +437,7 @@ class InventoryRules:
             max_kinds=data.get("max_kinds"),
             exempt_tags=data.get("exempt_tags", ("item.key",)),
             overflow=data.get("overflow", "fill"),
+            equip_offer=data.get("equip_offer", "never"),
         )
 
 

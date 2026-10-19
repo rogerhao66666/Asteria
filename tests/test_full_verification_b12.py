@@ -91,7 +91,9 @@ def test_a_kill_and_a_wound_fill_boost_points():
     pool = game.battle.battle_resources
     pool.change(HERO, BP, -pool.current(HERO, BP))
     wisp = next(e for e in game.active_enemy_ids() if not e.startswith(BOSS))
-    game.battle.member(wisp).subject.resources.set_current(HP, 1)
+    subject = game.battle.member(wisp).subject
+    subject.resources.set_current(HP, 1)
+    subject.tags.remove("trait.dodge")  # wisps dodge some blows; this one must land
     game.use_ability(HERO, "attack_sword", (wisp,))
     assert pool.current(HERO, BP) >= 1
 
@@ -128,7 +130,7 @@ def test_quests_achievements_and_enemy_levels():
     log.start("slay_vaelor")
     state.inventory.add("healing_herb", 3)
     assert game.enemy_levels  # the boss and its wisps have levels
-    assert game.difficulty == "normal"
+    assert game.difficulty == "legend"  # the demo's default: foes far above the party
     game.set_difficulty("hard")
     _win(game)
     log = game.quest_log

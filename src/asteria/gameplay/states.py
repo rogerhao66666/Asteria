@@ -6,6 +6,7 @@ from enum import Enum
 from math import isfinite
 
 from .effects import Effect, apply_effect
+from .formulas import FormulaContext
 from .modifiers import ModifierSet, StatModifier
 from .stats import ResourcePool, StatBlock
 from .tags import TagSet
@@ -434,8 +435,19 @@ class StateRuntime:
         # on_apply describes this application event, not all stacks that
         # already existed. Replaying prior stacks would compound mutations.
         for effect in definition.on_apply:
-            apply_effect(effect, self.stats, self.resources, self.tags)
+            self._apply(effect)
         return active
+
+    def _apply(self, effect, *, value_transform=None):
+        """Apply one of a state's own effects to its holder; a formula reads the holder as both
+        source and target (a poison tick can take a share of the holder's maximum HP)."""
+        holder = (self.stats, self.resources, self.tags)
+        return apply_effect(
+            effect,
+            *holder,
+            formula_context=FormulaContext(*holder, *holder),
+            value_transform=value_transform,
+        )
 
     def remove(self, state_id, *, run_remove_effects=True):
         state_id = str(state_id)
@@ -457,7 +469,7 @@ class StateRuntime:
                 del self._tag_contributions[tag]
         if run_remove_effects:
             for effect in definition.on_remove:
-                apply_effect(effect, self.stats, self.resources, self.tags)
+                self._apply(effect)
         return True
 
     def expire(self, state_id):
@@ -466,7 +478,7 @@ class StateRuntime:
         if not self.remove(state_id, run_remove_effects=True):
             return False
         for effect in definition.on_expire:
-            apply_effect(effect, self.stats, self.resources, self.tags)
+            self._apply(effect)
         return True
 
     def advance(self, state_id, dt, *, value_transform=None):
@@ -492,13 +504,7 @@ class StateRuntime:
                 transform = _scaled(periodic.factor(_count_tick(active, index)), value_transform)
                 repeat = active.stacks if definition.stacking == StackingPolicy.STACK else 1
                 for _ in range(repeat):
-                    apply_effect(
-                        periodic.effect,
-                        self.stats,
-                        self.resources,
-                        self.tags,
-                        value_transform=transform,
-                    )
+                    self._apply(periodic.effect, value_transform=transform)
         if active.remaining <= 0.0:
             self.expire(state_id)
             return True
@@ -525,13 +531,7 @@ class StateRuntime:
                     transform = _scaled(periodic.factor(_count_tick(active, index)), None)
                     repeat = active.stacks if definition.stacking == StackingPolicy.STACK else 1
                     for _ in range(repeat):
-                        apply_effect(
-                            periodic.effect,
-                            self.stats,
-                            self.resources,
-                            self.tags,
-                            value_transform=transform,
-                        )
+                        self._apply(periodic.effect, value_transform=transform)
 
             if active.remaining <= 0.0:
                 expired.append(state_id)

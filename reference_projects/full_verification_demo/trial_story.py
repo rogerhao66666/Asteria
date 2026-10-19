@@ -213,7 +213,13 @@ def systems(c):
     ):
         db.add_achievement(achievement)
     db.add_inventory_rules(
-        InventoryRules("trial_bag", "Traveller's bag", max_kinds=64, overflow="fill")
+        InventoryRules(
+            "trial_bag",
+            "Traveller's bag",
+            max_kinds=64,
+            overflow="fill",
+            equip_offer="empty_slot",  # new gear: asked to wear it when a hand / place is free
+        )
     )
     for interaction in (
         WorldInteraction(
@@ -985,9 +991,9 @@ def town_people(builders, looks, places):
         "Armory",
         maps.menu(
             "Armory",
-            "Which off-hand weapon?",
+            "Which weapon will you take?",
             [
-                (label, [world("EQUIP_ITEM", actor_id=HERO, equipment_id=weapon, index=1)])
+                (label, [world("GIVE_EQUIPMENT", equipment_id=weapon)])  # asked to wear it
                 for label, weapon in (
                     ("Bow", "w_bow"),
                     ("Dagger", "w_dagger"),

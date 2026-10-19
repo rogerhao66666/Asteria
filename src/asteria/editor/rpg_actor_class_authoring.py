@@ -139,6 +139,7 @@ class RpgActorClassAuthoringController:
         level_growth=None,
         unlock_level=0,
         unlock_classes=(),
+        resource_growth=None,
     ):
         cid = str(class_id).strip()
         if cid in self.database.classes:
@@ -153,6 +154,7 @@ class RpgActorClassAuthoringController:
             level_growth=level_growth,
             unlock_level=unlock_level,
             unlock_classes=unlock_classes,
+            resource_growth=resource_growth,
         )
         self._execute(
             _DefinitionCommand(self.database.classes, cid, value, None, f"Add Class {cid}")
@@ -172,6 +174,7 @@ class RpgActorClassAuthoringController:
         icon_id=None,
         unlock_level=None,
         unlock_classes=None,
+        resource_growth=None,
     ):
         old = self.database.classes.get(str(class_id))
         if old is None:
@@ -193,6 +196,9 @@ class RpgActorClassAuthoringController:
             icon_id=old.icon_id if icon_id is None else icon_id,
             unlock_level=old.unlock_level if unlock_level is None else unlock_level,
             unlock_classes=old.unlock_classes if unlock_classes is None else unlock_classes,
+            resource_growth=(
+                old.resource_growth if resource_growth is None else resource_growth
+            ),
         )
         self._execute(
             _DefinitionCommand(
@@ -233,6 +239,7 @@ class RpgActorClassAuthoringController:
             level_growth=source.level_growth,
             unlock_level=source.unlock_level,
             unlock_classes=source.unlock_classes,
+            resource_growth=source.resource_growth,
         )
 
     def create_actor(

@@ -92,6 +92,17 @@ def _merge_casts(first, second):
     return merged
 
 
+@dataclasses.dataclass(frozen=True, slots=True)
+class EquipOffer:
+    """A question waiting for the player: wear the bag's ``instance_id`` on ``actor_id``
+    (in place of ``replaces`` when the slot is full and the rules offer a swap)?"""
+
+    instance_id: str
+    actor_id: str
+    slot_id: str
+    replaces: str = ""
+
+
 class GameSessionRuntime:
     """Generic Project + GameRuntimeSave integration runtime.
 
@@ -132,6 +143,7 @@ class GameSessionRuntime:
         self.touch = TouchTriggerController()
         self.struck_encounters = 0  # fights a field attack started (they open preemptive)
         self.pending_new_game = None  # a New Game Plus save the host starts next frame
+        self.equip_offers = []  # EquipOffer: new gear the player is asked to wear
         self.sight_scale = 1.0  # how far field foes see the player (map areas set it)
         self.touch.arm(self.scene, self.player)
         self.mode = "field"
@@ -1049,6 +1061,86 @@ class GameSessionRuntime:
         self.refresh_actor_combatants(actor_id)
         return item
 
+    # -- new gear: ask before wearing it (InventoryRules.equip_offer) ---------------------------
+    def gain_equipment(self, equipment_id, quantity=1):
+        """New gear goes into the equipment bag; the project's ``equip_offer`` rule may then ask
+        whether a party member wears it (``equip_offers``, answered by ``answer_equip_offer``)."""
+        definition = self.project.rpg_database.equipment[str(equipment_id)]
+        bag = self.save.rpg_state.equipment_bag
+        gained = []
+        for _ in range(int(quantity)):
+            serial = sum(1 for g in bag if g.equipment.equipment_id == definition.equipment_id)
+            growth_id = definition.growth_id
+            instance = EquippedItem(
+                definition,
+                instance_id=f"{definition.equipment_id}:bag{serial + 1}",
+                growth=(
+                    EquipmentGrowthRuntime(self.project.rpg_database.equipment_growth[growth_id])
+                    if growth_id
+                    else None
+                ),
+            )
+            if self.durability_rules is not None:
+                self.durability_rules.ensure(instance)
+            bag.append(instance)
+            gained.append(instance)
+            self.offer_equipment(instance)
+        return tuple(gained)
+
+    def offer_equipment(self, instance):
+        """Queue the question "wear it?" for gear now in the bag, as the inventory rules say:
+        ``empty_slot`` asks when a party member has a free place it fits (and can use it),
+        ``always`` also offers to swap the first piece worn there; ``never`` asks nothing."""
+        rules = self.save.rpg_state.inventory.rules
+        mode = getattr(rules, "equip_offer", "never") if rules is not None else "never"
+        if mode == "never":
+            return None
+        slot_id = instance.equipment.slot
+        state = self.save.rpg_state
+        for actor_id in state.party_active_actor_ids:
+            loadout = state.loadouts.get(actor_id)
+            if loadout is None or slot_id not in loadout._slots:
+                continue
+            capabilities = self.resolve_actor_build(actor_id).capabilities
+            if loadout.check_equip(slot_id, instance, capabilities=capabilities).allowed:
+                offer = EquipOffer(instance.instance_id, actor_id, slot_id)
+            elif (
+                mode == "always"
+                and loadout.equipped(slot_id)
+                and instance.equipment.eligibility(capabilities).allowed
+            ):
+                worn = loadout.equipped(slot_id)[0]
+                offer = EquipOffer(instance.instance_id, actor_id, slot_id, worn.instance_id)
+            else:
+                continue
+            self.equip_offers.append(offer)
+            return offer
+        return None
+
+    def answer_equip_offer(self, wear):
+        """Answer the first waiting offer: wear the gear (a swapped piece goes to the bag) or
+        leave it in the bag. Returns the offer."""
+        if not self.equip_offers:
+            raise GameSessionError("no gear is waiting to be worn")
+        offer = self.equip_offers.pop(0)
+        if not wear:
+            return offer
+        bag = self.save.rpg_state.equipment_bag
+        item = next((g for g in bag if g.instance_id == offer.instance_id), None)
+        if item is None:
+            return offer  # it left the bag meanwhile (sold, worn some other way)
+        loadout = self.save.rpg_state.loadouts[offer.actor_id]
+        if offer.replaces:
+            held = loadout.equipped(offer.slot_id)
+            index = next(i for i, g in enumerate(held) if g.instance_id == offer.replaces)
+            bag.append(held[index])
+            loadout.unequip(offer.slot_id, index)
+        capabilities = self.resolve_actor_build(offer.actor_id).capabilities
+        loadout.equip(offer.slot_id, item, capabilities=capabilities)
+        bag.remove(item)
+        self.refresh_actor_combatants(offer.actor_id)
+        return offer
+
     def unequip_to_bag(self, actor_id, slot_id):
         loadout = self.save.rpg_state.loadouts[str(actor_id)]
         items = list(loadout.equipped(str(slot_id)))
@@ -1105,6 +1197,7 @@ class GameSessionRuntime:
             if equipment is None:
                 return False
             state.equipment_bag.append(equipment)
+            self.offer_equipment(equipment)
             return True
         room = state.inventory.room_for(loot.item_id)
         if room is not None and room < loot.amount:
@@ -4506,6 +4599,7 @@ class GameSessionRuntime:
                     instance_id=f"{equipment_id}:drop{serial}",
                 )
             )
+            self.offer_equipment(bag[-1])
 
     def finish_victory(self):
         if self.mode != "battle":

@@ -127,3 +127,11 @@ def test_cjk_text_uses_a_system_font_without_changing_latin_font(monkeypatch):
 
     assert cjk_font == ("/System/Library/Fonts/STHeiti Medium.ttc", 20)
     assert resolver(pg, latin_font, "繁體中文", cache, 20) is cjk_font
+
+
+def test_floating_numbers_are_whole_from_ten_up():
+    from asteria.presentation.battle_ui import _value_text
+
+    assert _value_text(604.444) == "604"  # a share of health
+    assert _value_text(1_250_000.0) == "1250000"  # not 1.25e+06
+    assert _value_text(0.5) == "0.5"

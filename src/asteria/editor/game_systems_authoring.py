@@ -32,7 +32,7 @@ from asteria.rpg.drop_tables import RARITIES, DropTable
 from asteria.rpg.durability import ON_BREAK, DurabilityRules
 from asteria.rpg.enemy_levels import EnemyLevelRules
 from asteria.rpg.extras import BattleOptions, CreditsPage, MenuEntry, MusicTrack
-from asteria.rpg.items import INVENTORY_OVERFLOW, InventoryRules
+from asteria.rpg.items import EQUIP_OFFERS, INVENTORY_OVERFLOW, InventoryRules
 from asteria.rpg.job_points import JobPointRules
 from asteria.rpg.localization import LocaleTable, MessageSettings
 from asteria.rpg.map_rules import MapRuleSet
@@ -211,6 +211,13 @@ FORMS = {
             "choice",
             choices=INVENTORY_OVERFLOW,
             default="fill",
+        ),
+        F(
+            "equip_offer",
+            "Ask to Wear New Gear (never / a free place / always, swapping)",
+            "choice",
+            choices=EQUIP_OFFERS,
+            default="never",
         ),
     ),
     "drop_tables": (

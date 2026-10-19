@@ -8383,11 +8383,23 @@
       },
       "feedback": {
         "premium": {
-          "disposition_labels": {},
-          "label_duration": 0.65,
-          "outcome_tag_labels": {},
+          "disposition_labels": {
+            "absorb": "ABSORB",
+            "reflect": "REFLECT"
+          },
+          "label_duration": 0.9,
+          "outcome_tag_labels": {
+            "outcome.block": "BLOCK",
+            "outcome.crit": "CRITICAL",
+            "outcome.evade": "MISS",
+            "outcome.guard": "GUARD",
+            "outcome.weak": "WEAK"
+          },
           "schema": "asteria.battle_feedback_profile",
-          "threshold_labels": {},
+          "threshold_labels": {
+            "break": "BREAK!",
+            "overdrive": "OVERDRIVE"
+          },
           "value_duration": 0.9,
           "version": 1,
           "vfx_default_duration": 0.5
@@ -38174,11 +38186,9 @@
         {
           "args": {
             "args": {
-              "actor_id": "hero_01",
-              "equipment_id": "w_demon_ring",
-              "index": 1
+              "equipment_id": "w_demon_ring"
             },
-            "command": "EQUIP_ITEM"
+            "command": "GIVE_EQUIPMENT"
           },
           "opcode": "WORLD"
         },
@@ -38265,7 +38275,7 @@
         {
           "args": {
             "speaker": "Family Chest",
-            "text": "Empty. The ring is on your hand."
+            "text": "Empty. The ring is yours."
           },
           "opcode": "DIALOGUE"
         },
@@ -42593,7 +42603,7 @@
                 "value": 4
               }
             ],
-            "prompt": "Armory: Which off-hand weapon?",
+            "prompt": "Armory: Which weapon will you take?",
             "variable_name": "menu"
           },
           "opcode": "CHOICE"
@@ -42676,11 +42686,9 @@
         {
           "args": {
             "args": {
-              "actor_id": "hero_01",
-              "equipment_id": "w_bow",
-              "index": 1
+              "equipment_id": "w_bow"
             },
-            "command": "EQUIP_ITEM"
+            "command": "GIVE_EQUIPMENT"
           },
           "opcode": "WORLD"
         },
@@ -42697,11 +42705,9 @@
         {
           "args": {
             "args": {
-              "actor_id": "hero_01",
-              "equipment_id": "w_dagger",
-              "index": 1
+              "equipment_id": "w_dagger"
             },
-            "command": "EQUIP_ITEM"
+            "command": "GIVE_EQUIPMENT"
           },
           "opcode": "WORLD"
         },
@@ -42718,11 +42724,9 @@
         {
           "args": {
             "args": {
-              "actor_id": "hero_01",
-              "equipment_id": "w_spear",
-              "index": 1
+              "equipment_id": "w_spear"
             },
-            "command": "EQUIP_ITEM"
+            "command": "GIVE_EQUIPMENT"
           },
           "opcode": "WORLD"
         },
@@ -42739,11 +42743,9 @@
         {
           "args": {
             "args": {
-              "actor_id": "hero_01",
-              "equipment_id": "w_axe",
-              "index": 1
+              "equipment_id": "w_axe"
             },
-            "command": "EQUIP_ITEM"
+            "command": "GIVE_EQUIPMENT"
           },
           "opcode": "WORLD"
         },
@@ -44375,14 +44377,6 @@
                 "instance_id": "w_sunbrand:hero_01",
                 "schema": "asteria.rpg.equipment_instance",
                 "version": 2
-              },
-              {
-                "attachments": {},
-                "equipment_id": "w_dagger",
-                "growth": null,
-                "instance_id": "w_dagger:hero_01",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
               }
             ]
           },
@@ -44932,6 +44926,11 @@
             "remove": false,
             "state": "doom",
             "to": "targets"
+          },
+          {
+            "remove": false,
+            "state": "poison",
+            "to": "targets"
           }
         ],
         "conditions": {
@@ -45100,6 +45099,13 @@
       },
       {
         "ability_id": "anc_rain",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "magic_down",
+            "to": "targets"
+          }
+        ],
         "conditions": {
           "conditions": [],
           "mode": "all",
@@ -45320,7 +45326,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -45418,7 +45426,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -45428,7 +45438,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.4,
             "tags": [
@@ -45663,7 +45675,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -45671,7 +45685,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -45838,7 +45854,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -45929,7 +45947,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -45939,7 +45959,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -45949,7 +45971,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -45959,7 +45983,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -46061,7 +46087,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -46071,7 +46099,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -46081,7 +46111,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -46091,7 +46123,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -46196,7 +46230,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.6,
             "tags": [
@@ -46206,7 +46242,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.6,
             "tags": [
@@ -46216,7 +46254,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.6,
             "tags": [
@@ -46226,7 +46266,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.6,
             "tags": [
@@ -46323,7 +46365,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.8,
             "tags": [
@@ -46333,7 +46377,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.8,
             "tags": [
@@ -46343,7 +46389,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.8,
             "tags": [
@@ -46353,7 +46401,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.8,
             "tags": [
@@ -46363,7 +46413,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.8,
             "tags": [
@@ -46373,7 +46425,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.8,
             "tags": [
@@ -46469,7 +46523,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -46612,7 +46668,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -46622,7 +46680,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -46714,7 +46774,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -46806,7 +46868,9 @@
         "hits": [
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "kill": {
               "chance": 0.3,
@@ -46885,7 +46949,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -46957,7 +47023,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -47029,7 +47097,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -47106,7 +47176,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -47116,7 +47188,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -47126,7 +47200,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -47136,7 +47212,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -47146,7 +47224,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -47220,7 +47300,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -47292,7 +47374,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -47364,7 +47448,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -47461,7 +47547,8 @@
           {
             "checks": [
               "crit",
-              "crit"
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -47650,7 +47737,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -47660,7 +47749,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -47725,6 +47816,13 @@
       },
       {
         "ability_id": "beast_maul",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "bleed",
+            "to": "targets"
+          }
+        ],
         "conditions": {
           "conditions": [],
           "mode": "all",
@@ -47748,7 +47846,7 @@
                     "schema": "asteria.value_formula",
                     "terms": [
                       {
-                        "coefficient": -7.0,
+                        "coefficient": -5.0,
                         "key": "power",
                         "source": "source_stat"
                       },
@@ -47826,6 +47924,11 @@
             "remove": false,
             "state": "stun",
             "to": "targets"
+          },
+          {
+            "remove": false,
+            "state": "burn",
+            "to": "targets"
           }
         ],
         "conditions": {
@@ -47851,7 +47954,7 @@
                     "schema": "asteria.value_formula",
                     "terms": [
                       {
-                        "coefficient": -16.0,
+                        "coefficient": -10.0,
                         "key": "power",
                         "source": "source_stat"
                       },
@@ -48085,7 +48188,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -48093,7 +48198,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -48101,7 +48208,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -48109,7 +48218,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -48117,7 +48228,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -48125,7 +48238,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -48447,7 +48562,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -48455,7 +48572,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -49015,7 +49134,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -49113,14 +49234,18 @@
         "hits": [
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.3,
             "tags": []
@@ -49215,14 +49340,18 @@
         "hits": [
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.5,
             "tags": []
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.9500000000000002,
             "tags": []
@@ -49318,7 +49447,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -49751,7 +49882,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -49843,7 +49976,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -49853,7 +49988,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -49863,7 +50000,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.3,
             "tags": [
@@ -50017,7 +50156,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -50120,7 +50261,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -50620,7 +50763,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -50736,7 +50881,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -50747,7 +50894,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.6,
             "tags": [
@@ -50848,7 +50997,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -50858,7 +51009,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -50983,7 +51136,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -50991,7 +51146,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -51176,7 +51333,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -51275,7 +51434,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -51285,7 +51446,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -51389,7 +51552,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -51518,7 +51683,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -51610,7 +51777,9 @@
         "hits": [
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "kill": {
               "chance": 0.35,
@@ -51715,7 +51884,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -52272,7 +52443,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -52347,7 +52520,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -52357,7 +52532,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -52367,7 +52544,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.3,
             "tags": [
@@ -52570,7 +52749,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -52581,7 +52762,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 2.2,
             "tags": [
@@ -52907,7 +53090,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -52999,7 +53184,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -53098,7 +53285,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -53108,7 +53297,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -53202,7 +53393,9 @@
         "hits": [
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.8,
             "tags": [
@@ -53211,7 +53404,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.05,
             "tags": [
@@ -53220,7 +53415,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.3,
             "tags": [
@@ -53229,7 +53426,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.55,
             "tags": [
@@ -53238,7 +53437,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.8,
             "tags": [
@@ -53360,7 +53561,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -53370,7 +53573,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.2,
             "tags": [
@@ -53461,7 +53666,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -53672,14 +53879,18 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "kill": {
               "chance": 0.2,
@@ -53784,7 +53995,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -53794,7 +54007,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -53892,7 +54107,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -53902,7 +54119,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -53912,7 +54131,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -53922,7 +54143,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -54025,7 +54248,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -54036,7 +54261,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -54166,7 +54393,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -54176,7 +54405,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -54352,7 +54583,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -54363,7 +54596,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -54374,7 +54609,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -54385,7 +54622,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 2.5,
             "tags": [
@@ -54542,7 +54781,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -54634,7 +54875,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -54644,7 +54887,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -54743,7 +54988,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -54865,7 +55112,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -54964,7 +55213,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -54974,7 +55225,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -55309,7 +55562,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -55317,7 +55572,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -55325,7 +55582,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -55333,7 +55592,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -55341,7 +55602,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -55349,7 +55612,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -55499,7 +55764,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -55509,7 +55776,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -55519,7 +55788,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -55611,7 +55882,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -55621,7 +55894,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -55631,7 +55906,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -55641,7 +55918,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -55651,7 +55930,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -55661,7 +55942,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -55760,7 +56043,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -55770,7 +56055,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -55780,7 +56067,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -55902,7 +56191,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -55912,7 +56203,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -55922,7 +56215,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -56469,7 +56764,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -56568,7 +56865,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -56578,7 +56877,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -56682,7 +56983,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -56811,7 +57114,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -56996,7 +57301,9 @@
         "hits": [
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -57005,7 +57312,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.2,
             "tags": [
@@ -57014,7 +57323,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.4,
             "tags": [
@@ -57023,7 +57334,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.6,
             "tags": [
@@ -57032,7 +57345,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.8,
             "tags": [
@@ -57129,7 +57444,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -57140,7 +57457,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -57151,7 +57470,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.4,
             "tags": [
@@ -57237,7 +57558,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.6,
             "tags": [
@@ -57247,7 +57570,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.6,
             "tags": [
@@ -57308,6 +57633,13 @@
       },
       {
         "ability_id": "gob_sling",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "blind",
+            "to": "targets"
+          }
+        ],
         "conditions": {
           "conditions": [],
           "mode": "all",
@@ -57596,7 +57928,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -57606,7 +57940,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -57757,7 +58093,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -57898,7 +58236,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -57908,7 +58248,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.1,
             "tags": [
@@ -57918,7 +58260,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.2,
             "tags": [
@@ -57928,7 +58272,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 2.0,
             "tags": [
@@ -58178,7 +58524,9 @@
         "hits": [
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -58187,7 +58535,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.4,
             "tags": [
@@ -58196,7 +58546,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.8,
             "tags": [
@@ -58205,7 +58557,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 3.0,
             "tags": [
@@ -58310,7 +58664,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.5,
             "tags": [
@@ -58418,7 +58774,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -58522,7 +58880,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -58614,7 +58974,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -58624,7 +58986,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -58716,7 +59080,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -58726,7 +59092,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -58736,7 +59104,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -58746,7 +59116,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -58845,7 +59217,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -58855,7 +59229,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -58977,7 +59353,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -58987,7 +59365,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -59079,7 +59459,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -59089,7 +59471,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -59099,7 +59483,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.2,
             "tags": [
@@ -59893,7 +60279,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -60054,7 +60442,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -60064,7 +60454,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -60275,7 +60667,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -60374,7 +60768,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -60384,7 +60780,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -60559,7 +60957,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -60658,7 +61058,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -60668,7 +61070,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -60767,7 +61171,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -61321,7 +61727,9 @@
         "hits": [
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -61330,7 +61738,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.4,
             "tags": [
@@ -61339,7 +61749,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.8,
             "tags": [
@@ -61348,7 +61760,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 3.0,
             "tags": [
@@ -61856,7 +62270,9 @@
         "hits": [
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -61865,7 +62281,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -61874,7 +62292,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -61883,7 +62303,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 2.5,
             "tags": [
@@ -62015,7 +62437,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -62026,7 +62450,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.2,
             "tags": [
@@ -62107,7 +62533,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -62117,7 +62545,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.5,
             "tags": [
@@ -62218,7 +62648,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -62228,7 +62660,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -62328,7 +62762,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -62338,7 +62774,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -62348,7 +62786,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -62358,7 +62798,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -62465,7 +62907,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -62476,7 +62920,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -62608,7 +63054,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -62618,7 +63066,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -62879,7 +63329,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -62953,7 +63405,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -63055,7 +63509,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.8,
             "tags": []
@@ -63063,7 +63519,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.9,
             "tags": []
@@ -63071,7 +63529,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -63079,7 +63539,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.1,
             "tags": []
@@ -63087,7 +63549,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.2000000000000002,
             "tags": []
@@ -63095,7 +63559,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.3,
             "tags": []
@@ -63103,7 +63569,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.4000000000000001,
             "tags": []
@@ -63111,7 +63579,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.5,
             "tags": []
@@ -63256,7 +63726,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -63450,7 +63922,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -63541,7 +64015,9 @@
         "hits": [
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.9,
             "tags": [
@@ -63550,7 +64026,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.9,
             "tags": [
@@ -63559,7 +64037,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.9,
             "tags": [
@@ -63568,7 +64048,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.9,
             "tags": [
@@ -63577,7 +64059,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.9,
             "tags": [
@@ -63586,7 +64070,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.9,
             "tags": [
@@ -63595,7 +64081,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.9,
             "tags": [
@@ -64028,7 +64516,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -64038,7 +64528,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -64130,7 +64622,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -64140,7 +64634,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -64150,7 +64646,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -64160,7 +64658,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -64259,7 +64759,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -64270,7 +64772,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -64394,7 +64898,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -64404,7 +64910,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -64838,7 +65346,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -64848,7 +65358,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -64982,7 +65494,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -65334,7 +65848,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.8,
             "tags": []
@@ -65342,7 +65858,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.9500000000000001,
             "tags": []
@@ -65350,7 +65868,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.1,
             "tags": []
@@ -65358,7 +65878,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.25,
             "tags": []
@@ -65366,7 +65888,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.4,
             "tags": []
@@ -65374,7 +65898,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.55,
             "tags": []
@@ -65382,7 +65908,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.7,
             "tags": []
@@ -65390,7 +65918,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.85,
             "tags": []
@@ -65398,7 +65928,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 2.0,
             "tags": []
@@ -65606,7 +66138,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -65702,7 +66236,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": []
@@ -65710,7 +66246,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": []
@@ -65811,7 +66349,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -65940,7 +66480,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -66265,6 +66807,11 @@
             "remove": false,
             "state": "poison",
             "to": "targets"
+          },
+          {
+            "remove": false,
+            "state": "blind",
+            "to": "targets"
           }
         ],
         "conditions": {
@@ -66341,6 +66888,13 @@
       },
       {
         "ability_id": "skel_slash",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "bleed",
+            "to": "targets"
+          }
+        ],
         "conditions": {
           "conditions": [],
           "mode": "all",
@@ -66573,7 +67127,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -66740,7 +67296,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -66750,7 +67308,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.2,
             "tags": [
@@ -66873,7 +67433,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -66883,7 +67445,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.1,
             "tags": [
@@ -67005,7 +67569,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -67079,7 +67645,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -67090,7 +67658,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -67214,7 +67784,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -67224,7 +67796,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -67467,7 +68041,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -67476,7 +68052,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.2,
             "tags": [
@@ -67485,7 +68063,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 2.0,
             "tags": [
@@ -67930,21 +68510,27 @@
         "hits": [
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -68095,7 +68681,9 @@
         "hits": [
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -68104,7 +68692,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -68113,7 +68703,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -68213,7 +68805,9 @@
         "hits": [
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.5,
             "tags": [
@@ -68222,7 +68816,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.5,
             "tags": [
@@ -68231,7 +68827,9 @@
           },
           {
             "checks": [
-              "crit"
+              "crit",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 2.5,
             "tags": [
@@ -68366,7 +68964,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -68377,7 +68977,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.2,
             "tags": [
@@ -68388,7 +68990,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.4,
             "tags": [
@@ -68399,7 +69003,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.6,
             "tags": [
@@ -68410,7 +69016,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 2.0,
             "tags": [
@@ -68510,7 +69118,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -68521,7 +69131,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.8,
             "tags": [
@@ -68619,7 +69231,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -68630,7 +69244,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.48,
             "tags": [
@@ -68641,7 +69257,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -68652,7 +69270,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.48,
             "tags": [
@@ -68757,7 +69377,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -68768,7 +69390,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.8,
             "tags": [
@@ -68896,7 +69520,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -68907,7 +69533,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.8,
             "tags": [
@@ -69037,7 +69665,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -69194,7 +69824,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -69204,7 +69836,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -69303,7 +69937,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -69311,7 +69947,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": []
@@ -69412,6 +70050,11 @@
             "remove": false,
             "state": "defense_down",
             "to": "targets"
+          },
+          {
+            "remove": false,
+            "state": "power_down",
+            "to": "targets"
           }
         ],
         "conditions": {
@@ -69437,7 +70080,7 @@
                     "schema": "asteria.value_formula",
                     "terms": [
                       {
-                        "coefficient": -14.0,
+                        "coefficient": -10.0,
                         "key": "power",
                         "source": "source_stat"
                       },
@@ -69555,6 +70198,13 @@
       },
       {
         "ability_id": "w_combo",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "bleed",
+            "to": "targets"
+          }
+        ],
         "conditions": {
           "conditions": [],
           "mode": "all",
@@ -69996,6 +70646,13 @@
       },
       {
         "ability_id": "w_mark",
+        "apply_states": [
+          {
+            "remove": false,
+            "state": "defense_down",
+            "to": "targets"
+          }
+        ],
         "conditions": {
           "conditions": [],
           "mode": "all",
@@ -70527,7 +71184,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -70537,7 +71196,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -70547,7 +71208,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -70557,7 +71220,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -70567,7 +71232,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -70657,7 +71324,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -70667,7 +71336,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -70677,7 +71348,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -70687,7 +71360,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -70697,7 +71372,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -70707,7 +71384,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -70717,7 +71396,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -70727,7 +71408,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -70737,7 +71420,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -70747,7 +71432,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 0.6,
             "tags": [
@@ -70844,7 +71531,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -70855,7 +71544,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -70866,7 +71557,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -70877,7 +71570,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -70888,7 +71583,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -71010,7 +71707,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -71020,7 +71719,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -71030,7 +71731,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -71040,7 +71743,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -71050,7 +71755,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -71140,7 +71847,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -71239,7 +71948,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -71249,7 +71960,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -71351,7 +72064,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.0,
             "tags": [
@@ -71361,7 +72076,9 @@
           {
             "checks": [
               "crit",
-              "land"
+              "land",
+              "foe_guard",
+              "foe_dodge"
             ],
             "power": 1.4,
             "tags": [
@@ -71573,15 +72290,26 @@
                 {
                   "kind": "resource_delta",
                   "target": "vitality",
-                  "value": -200.0
+                  "value": {
+                    "maximum": null,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -0.05,
+                        "key": "vitality",
+                        "source": "target_resource_max"
+                      }
+                    ],
+                    "version": 1
+                  }
                 }
               ],
               "required_tags": [],
               "schema": "asteria.effect",
               "version": 1
             },
-            "growth": 1.0,
-            "growth_mode": "add",
             "interval": 1.0
           }
         ],
@@ -71621,7 +72349,7 @@
           "state.broken"
         ],
         "display_name": "Broken",
-        "duration": 2.0,
+        "duration": 3.0,
         "icon_id": "playable_assets/icons/skill_broken.png",
         "max_stacks": 1,
         "modifiers": [],
@@ -71655,15 +72383,26 @@
                 {
                   "kind": "resource_delta",
                   "target": "vitality",
-                  "value": -120.0
+                  "value": {
+                    "maximum": null,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -0.04,
+                        "key": "vitality",
+                        "source": "target_resource_max"
+                      }
+                    ],
+                    "version": 1
+                  }
                 }
               ],
               "required_tags": [],
               "schema": "asteria.effect",
               "version": 1
             },
-            "growth": 1.0,
-            "growth_mode": "add",
             "interval": 1.0
           }
         ],
@@ -72160,15 +72899,26 @@
                 {
                   "kind": "resource_delta",
                   "target": "vitality",
-                  "value": -140.0
+                  "value": {
+                    "maximum": null,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": -0.03,
+                        "key": "vitality",
+                        "source": "target_resource_max"
+                      }
+                    ],
+                    "version": 1
+                  }
                 }
               ],
               "required_tags": [],
               "schema": "asteria.effect",
               "version": 1
             },
-            "growth": 1.0,
-            "growth_mode": "add",
             "interval": 1.0
           }
         ],
@@ -72233,7 +72983,20 @@
                 {
                   "kind": "resource_delta",
                   "target": "vitality",
-                  "value": 260.0
+                  "value": {
+                    "maximum": null,
+                    "minimum": null,
+                    "multipliers": [],
+                    "schema": "asteria.value_formula",
+                    "terms": [
+                      {
+                        "coefficient": 0.04,
+                        "key": "vitality",
+                        "source": "target_resource_max"
+                      }
+                    ],
+                    "version": 1
+                  }
                 }
               ],
               "required_tags": [],
@@ -82268,6 +83031,9 @@
         "resource_bonuses": {
           "technique": 260.0
         },
+        "resource_growth": {
+          "vitality": 70.0
+        },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
           "magic": 32.0,
@@ -82293,6 +83059,9 @@
         "resource_bonuses": {
           "technique": 140.0,
           "vitality": 400.0
+        },
+        "resource_growth": {
+          "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
@@ -82333,6 +83102,9 @@
           "technique": 120.0,
           "vitality": 800.0
         },
+        "resource_growth": {
+          "vitality": 160.0
+        },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
           "crit": 8.0,
@@ -82369,6 +83141,9 @@
         "resource_bonuses": {
           "technique": 120.0
         },
+        "resource_growth": {
+          "vitality": 80.0
+        },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
           "defense": 8.0,
@@ -82402,6 +83177,9 @@
         "resource_bonuses": {
           "technique": 90.0
         },
+        "resource_growth": {
+          "vitality": 80.0
+        },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
           "evade": 10.0,
@@ -82429,6 +83207,9 @@
         "resource_bonuses": {
           "technique": 160.0,
           "vitality": 500.0
+        },
+        "resource_growth": {
+          "vitality": 110.0
         },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
@@ -82462,6 +83243,9 @@
         "resource_bonuses": {
           "technique": 30.0
         },
+        "resource_growth": {
+          "vitality": 80.0
+        },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
           "crit": 12.0,
@@ -82489,6 +83273,9 @@
         "resource_bonuses": {
           "technique": 50.0,
           "vitality": 300.0
+        },
+        "resource_growth": {
+          "vitality": 110.0
         },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
@@ -82521,6 +83308,9 @@
           "technique": 30.0,
           "vitality": 900.0
         },
+        "resource_growth": {
+          "vitality": 150.0
+        },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
           "defense": 22.0
@@ -82550,6 +83340,9 @@
         "resource_bonuses": {
           "technique": 100.0,
           "vitality": 400.0
+        },
+        "resource_growth": {
+          "vitality": 110.0
         },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
@@ -82588,6 +83381,9 @@
         "resource_bonuses": {
           "technique": 60.0,
           "vitality": 300.0
+        },
+        "resource_growth": {
+          "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
@@ -82628,6 +83424,9 @@
         "resource_bonuses": {
           "vitality": 500.0
         },
+        "resource_growth": {
+          "vitality": 130.0
+        },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
           "defense": 12.0,
@@ -82651,6 +83450,9 @@
         },
         "resource_bonuses": {
           "technique": 120.0
+        },
+        "resource_growth": {
+          "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
@@ -82683,6 +83485,9 @@
         "resource_bonuses": {
           "technique": 90.0
         },
+        "resource_growth": {
+          "vitality": 80.0
+        },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
           "magic": 16.0
@@ -82714,6 +83519,9 @@
         "resource_bonuses": {
           "technique": 140.0
         },
+        "resource_growth": {
+          "vitality": 80.0
+        },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
           "defense": 5.0,
@@ -82738,6 +83546,9 @@
         },
         "resource_bonuses": {
           "technique": 80.0
+        },
+        "resource_growth": {
+          "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
@@ -82771,6 +83582,9 @@
         "resource_bonuses": {
           "technique": 40.0
         },
+        "resource_growth": {
+          "vitality": 80.0
+        },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
           "crit": 14.0,
@@ -82802,6 +83616,9 @@
         "resource_bonuses": {
           "technique": 120.0
         },
+        "resource_growth": {
+          "vitality": 80.0
+        },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
           "defense": 6.0,
@@ -82825,6 +83642,9 @@
         ],
         "icon_id": "playable_assets/lucifer/icons/job_spirit.png",
         "resource_bonuses": {},
+        "resource_growth": {
+          "vitality": 0.0
+        },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
           "defense": 10.0,
@@ -82856,6 +83676,9 @@
         "resource_bonuses": {
           "technique": 40.0
         },
+        "resource_growth": {
+          "vitality": 80.0
+        },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
           "crit": 8.0,
@@ -82886,6 +83709,9 @@
         },
         "resource_bonuses": {
           "technique": 60.0
+        },
+        "resource_growth": {
+          "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
         "stat_bonuses": {
@@ -84572,9 +85398,9 @@
         "display_name": "Vaelor",
         "enemy_id": "crimson_warlord",
         "resources": {
-          "shield": 6.0,
+          "shield": 36.0,
           "technique": 9999.0,
-          "vitality": 72000.0
+          "vitality": 108000.0
         },
         "reward": {
           "currencies": {
@@ -84607,12 +85433,13 @@
         },
         "schema": "asteria.rpg.enemy",
         "stats": {
+          "accuracy": 45.0,
           "crit": 10.0,
-          "defense": 125.99999999999999,
+          "defense": 135.0,
           "evade": 3.0,
-          "magic": 198.0,
-          "power": 216.0,
-          "speed": 82.8
+          "magic": 176.0,
+          "power": 192.0,
+          "speed": 93.60000000000001
         },
         "tags": [
           "boss",
@@ -84621,10 +85448,18 @@
           "resist.fire",
           "resist.sword",
           "resist.wind",
+          "trait.dodge",
+          "trait.guard",
+          "weak.bow",
           "weak.dagger",
+          "weak.dark",
           "weak.earth",
           "weak.ice",
-          "weak.lightning"
+          "weak.light",
+          "weak.lightning",
+          "weak.ring",
+          "weak.spear",
+          "weak.staff"
         ],
         "version": 1
       },
@@ -84637,9 +85472,9 @@
         "display_name": "Goblin Beast",
         "enemy_id": "goblin_beast",
         "resources": {
-          "shield": 4.0,
+          "shield": 16.0,
           "technique": 999.0,
-          "vitality": 28500.0
+          "vitality": 76000.0
         },
         "reward": {
           "currencies": {
@@ -84653,20 +85488,27 @@
         },
         "schema": "asteria.rpg.enemy",
         "stats": {
+          "accuracy": 30.0,
           "crit": 5.0,
-          "defense": 61.599999999999994,
+          "defense": 66.0,
           "evade": 3.0,
-          "magic": 72.0,
-          "power": 147.6,
-          "speed": 57.49999999999999
+          "magic": 84.0,
+          "power": 172.20000000000002,
+          "speed": 72.5
         },
         "tags": [
           "boss",
           "enemy",
           "immune.sleep",
           "resist.earth",
+          "trait.guard",
+          "weak.bow",
+          "weak.fire",
           "weak.lightning",
-          "weak.spear"
+          "weak.ring",
+          "weak.spear",
+          "weak.sword",
+          "weak.wind"
         ],
         "version": 1
       },
@@ -84679,9 +85521,9 @@
         "display_name": "Goblin Slinger",
         "enemy_id": "goblin_slinger",
         "resources": {
-          "shield": 2.0,
+          "shield": 4.0,
           "technique": 999.0,
-          "vitality": 4500.0
+          "vitality": 9000.0
         },
         "reward": {
           "currencies": {
@@ -84695,15 +85537,18 @@
         },
         "schema": "asteria.rpg.enemy",
         "stats": {
+          "accuracy": 15.0,
           "crit": 5.0,
           "defense": 33.599999999999994,
           "evade": 3.0,
-          "magic": 36.0,
-          "power": 82.8,
-          "speed": 64.39999999999999
+          "magic": 40.0,
+          "power": 92.0,
+          "speed": 72.8
         },
         "tags": [
           "enemy",
+          "trait.dodge",
+          "weak.bow",
           "weak.sword",
           "weak.wind"
         ],
@@ -84717,9 +85562,9 @@
         "display_name": "Skeleton Acolyte",
         "enemy_id": "mender_wisp",
         "resources": {
-          "shield": 2.0,
+          "shield": 4.0,
           "technique": 999.0,
-          "vitality": 12600.0
+          "vitality": 25200.0
         },
         "reward": {
           "currencies": {
@@ -84733,15 +85578,18 @@
         },
         "schema": "asteria.rpg.enemy",
         "stats": {
+          "accuracy": 15.0,
           "defense": 42.0,
-          "magic": 108.0,
-          "power": 72.0,
-          "speed": 69.0
+          "magic": 120.0,
+          "power": 80.0,
+          "speed": 78.0
         },
         "tags": [
           "enemy",
+          "trait.dodge",
           "weak.axe",
           "weak.ice",
+          "weak.light",
           "weak.wind"
         ],
         "version": 1
@@ -84756,9 +85604,9 @@
         "display_name": "Skeleton Ancient",
         "enemy_id": "skeleton_ancient",
         "resources": {
-          "shield": 4.0,
+          "shield": 24.0,
           "technique": 999.0,
-          "vitality": 49500.0
+          "vitality": 132000.0
         },
         "reward": {
           "currencies": {
@@ -84772,20 +85620,28 @@
         },
         "schema": "asteria.rpg.enemy",
         "stats": {
+          "accuracy": 35.0,
           "crit": 5.0,
-          "defense": 98.0,
+          "defense": 105.0,
           "evade": 3.0,
-          "magic": 162.0,
-          "power": 172.8,
-          "speed": 66.69999999999999
+          "magic": 189.0,
+          "power": 201.60000000000002,
+          "speed": 84.1
         },
         "tags": [
           "absorb.dark",
           "boss",
           "enemy",
           "immune.sleep",
+          "trait.guard",
+          "weak.axe",
+          "weak.earth",
           "weak.fire",
           "weak.light",
+          "weak.lightning",
+          "weak.ring",
+          "weak.spear",
+          "weak.staff",
           "weak.wind"
         ],
         "version": 1
@@ -84799,9 +85655,9 @@
         "display_name": "Skeleton Hunter",
         "enemy_id": "skeleton_hunter",
         "resources": {
-          "shield": 2.0,
+          "shield": 5.0,
           "technique": 999.0,
-          "vitality": 5400.0
+          "vitality": 10800.0
         },
         "reward": {
           "currencies": {
@@ -84815,16 +85671,20 @@
         },
         "schema": "asteria.rpg.enemy",
         "stats": {
+          "accuracy": 20.0,
           "crit": 5.0,
           "defense": 42.0,
           "evade": 3.0,
-          "magic": 36.0,
-          "power": 126.0,
-          "speed": 71.3
+          "magic": 40.0,
+          "power": 140.0,
+          "speed": 80.60000000000001
         },
         "tags": [
           "enemy",
           "resist.dagger",
+          "trait.dodge",
+          "trait.guard",
+          "weak.axe",
           "weak.earth",
           "weak.light"
         ],
@@ -84854,10 +85714,10 @@
         },
         "schema": "asteria.rpg.enemy",
         "stats": {
-          "defense": 42.0,
-          "magic": 108.0,
-          "power": 72.0,
-          "speed": 69.0
+          "defense": 45.0,
+          "magic": 126.0,
+          "power": 84.0,
+          "speed": 87.0
         },
         "tags": [
           "boss",
@@ -85542,7 +86402,7 @@
     ],
     "enemy_level_rules": [
       {
-        "default_difficulty": "normal",
+        "default_difficulty": "legend",
         "difficulties": [
           {
             "difficulty_id": "normal",
@@ -85561,20 +86421,28 @@
             "level_offset": 0,
             "reward": 3.0,
             "strength": 2.5
+          },
+          {
+            "difficulty_id": "legend",
+            "level_offset": 3,
+            "reward": 1.3,
+            "strength": 1.6
           }
         ],
         "map_levels": {},
         "max_level": 99,
         "party_level_offset": 0,
         "resource_growth": {
-          "vitality": 0.03
+          "vitality": 0.1
         },
         "reward_growth": 0.1,
         "rules_id": "trial_levels",
         "schema": "asteria.rpg.enemy_level_rules",
         "stat_growth": {
-          "magic": 0.02,
-          "power": 0.02
+          "defense": 0.04,
+          "magic": 0.08,
+          "power": 0.08,
+          "speed": 0.03
         },
         "version": 1
       }
@@ -88753,6 +89621,23 @@
           {
             "blocked_outcome_tags": [],
             "delta": -1.0,
+            "impact_id": "weak_crit",
+            "priority": 0,
+            "recipient": "target",
+            "required_outcome_tags_all": [
+              "outcome.crit",
+              "outcome.weak"
+            ],
+            "required_outcome_tags_any": [],
+            "resource_id": "shield",
+            "schema": "asteria.rpg.gauge_impact_rule",
+            "trigger": "battle.hit",
+            "value_scale": 0.0,
+            "version": 1
+          },
+          {
+            "blocked_outcome_tags": [],
+            "delta": -1.0,
             "impact_id": "weak_hit",
             "priority": 0,
             "recipient": "target",
@@ -89085,7 +89970,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 2.0,
+        "multiplier": 2.5,
         "outcome_tags": [],
         "priority": 0,
         "rule_id": "broken",
@@ -89154,7 +90039,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 1.75,
+        "multiplier": 2.5,
         "outcome_tags": [],
         "priority": 5,
         "rule_id": "crit_x",
@@ -89223,6 +90108,26 @@
         "source_stat_terms": {},
         "source_tags_all": [
           "stance.fury"
+        ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 0.3,
+        "outcome_tags": [],
+        "priority": 4,
+        "rule_id": "guarded",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [
+          "outcome.guard"
         ],
         "source_tags_any": [],
         "target_stat_terms": {},
@@ -89526,7 +90431,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 0.5,
+        "multiplier": 0.4,
         "outcome_tags": [],
         "priority": 0,
         "rule_id": "resist_axe",
@@ -89548,7 +90453,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 0.5,
+        "multiplier": 0.4,
         "outcome_tags": [],
         "priority": 0,
         "rule_id": "resist_bow",
@@ -89570,7 +90475,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 0.5,
+        "multiplier": 0.4,
         "outcome_tags": [],
         "priority": 0,
         "rule_id": "resist_dagger",
@@ -89592,7 +90497,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 0.5,
+        "multiplier": 0.4,
         "outcome_tags": [],
         "priority": 0,
         "rule_id": "resist_dark",
@@ -89614,7 +90519,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 0.5,
+        "multiplier": 0.4,
         "outcome_tags": [],
         "priority": 0,
         "rule_id": "resist_earth",
@@ -89636,7 +90541,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 0.5,
+        "multiplier": 0.4,
         "outcome_tags": [],
         "priority": 0,
         "rule_id": "resist_fire",
@@ -89658,7 +90563,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 0.5,
+        "multiplier": 0.4,
         "outcome_tags": [],
         "priority": 0,
         "rule_id": "resist_ice",
@@ -89680,7 +90585,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 0.5,
+        "multiplier": 0.4,
         "outcome_tags": [],
         "priority": 0,
         "rule_id": "resist_light",
@@ -89702,7 +90607,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 0.5,
+        "multiplier": 0.4,
         "outcome_tags": [],
         "priority": 0,
         "rule_id": "resist_lightning",
@@ -89724,7 +90629,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 0.5,
+        "multiplier": 0.4,
         "outcome_tags": [],
         "priority": 0,
         "rule_id": "resist_spear",
@@ -89746,7 +90651,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 0.5,
+        "multiplier": 0.4,
         "outcome_tags": [],
         "priority": 0,
         "rule_id": "resist_staff",
@@ -89768,7 +90673,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 0.5,
+        "multiplier": 0.4,
         "outcome_tags": [],
         "priority": 0,
         "rule_id": "resist_sword",
@@ -89790,7 +90695,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 0.5,
+        "multiplier": 0.4,
         "outcome_tags": [],
         "priority": 0,
         "rule_id": "resist_wind",
@@ -89852,7 +90757,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 1.3,
+        "multiplier": 1.8,
         "outcome_tags": [
           "outcome.weak"
         ],
@@ -89876,7 +90781,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 1.3,
+        "multiplier": 1.8,
         "outcome_tags": [
           "outcome.weak"
         ],
@@ -89900,7 +90805,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 1.3,
+        "multiplier": 1.8,
         "outcome_tags": [
           "outcome.weak"
         ],
@@ -89924,7 +90829,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 1.3,
+        "multiplier": 1.8,
         "outcome_tags": [
           "outcome.weak"
         ],
@@ -89948,7 +90853,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 1.3,
+        "multiplier": 1.8,
         "outcome_tags": [
           "outcome.weak"
         ],
@@ -89972,7 +90877,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 1.3,
+        "multiplier": 1.8,
         "outcome_tags": [
           "outcome.weak"
         ],
@@ -89996,7 +90901,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 1.3,
+        "multiplier": 1.8,
         "outcome_tags": [
           "outcome.weak"
         ],
@@ -90020,7 +90925,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 1.3,
+        "multiplier": 1.8,
         "outcome_tags": [
           "outcome.weak"
         ],
@@ -90044,7 +90949,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 1.3,
+        "multiplier": 1.8,
         "outcome_tags": [
           "outcome.weak"
         ],
@@ -90068,7 +90973,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 1.3,
+        "multiplier": 1.8,
         "outcome_tags": [
           "outcome.weak"
         ],
@@ -90092,7 +90997,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 1.3,
+        "multiplier": 1.8,
         "outcome_tags": [
           "outcome.weak"
         ],
@@ -90116,7 +91021,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 1.3,
+        "multiplier": 1.8,
         "outcome_tags": [
           "outcome.weak"
         ],
@@ -90140,7 +91045,7 @@
         "blocked_target_tags": [],
         "disposition": "normal",
         "flat_delta": 0.0,
-        "multiplier": 1.3,
+        "multiplier": 1.8,
         "outcome_tags": [
           "outcome.weak"
         ],
@@ -90163,6 +91068,7 @@
     "inventory_rules": [
       {
         "display_name": "Traveller's bag",
+        "equip_offer": "empty_slot",
         "exempt_tags": [
           "item.key"
         ],
@@ -91014,6 +91920,8 @@
     "outcome_checks": [
       {
         "base_chance": 0.05,
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
         "check_id": "block",
         "failure_tags": [],
         "maximum_chance": 0.5,
@@ -91032,15 +91940,17 @@
       },
       {
         "base_chance": 0.05,
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
         "check_id": "crit",
         "failure_tags": [],
-        "maximum_chance": 1.0,
+        "maximum_chance": 0.65,
         "minimum_chance": 0.0,
         "required_source_tags": [],
         "required_target_tags": [],
         "schema": "asteria.rpg.outcome_check",
         "source_stat_terms": {
-          "crit": 0.01
+          "crit": 0.003
         },
         "success_tags": [
           "outcome.crit"
@@ -91049,13 +91959,67 @@
         "version": 1
       },
       {
+        "base_chance": 0.2,
+        "blocked_source_tags": [],
+        "blocked_target_tags": [
+          "state.broken",
+          "status.freeze",
+          "status.sleep",
+          "status.stun"
+        ],
+        "check_id": "foe_dodge",
+        "failure_tags": [],
+        "maximum_chance": 0.35,
+        "minimum_chance": 0.0,
+        "required_source_tags": [],
+        "required_target_tags": [
+          "trait.dodge"
+        ],
+        "schema": "asteria.rpg.outcome_check",
+        "source_stat_terms": {},
+        "success_tags": [
+          "outcome.evade"
+        ],
+        "target_stat_terms": {
+          "speed": 0.0002
+        },
+        "version": 1
+      },
+      {
+        "base_chance": 0.3,
+        "blocked_source_tags": [],
+        "blocked_target_tags": [
+          "state.broken",
+          "status.freeze",
+          "status.sleep",
+          "status.stun"
+        ],
+        "check_id": "foe_guard",
+        "failure_tags": [],
+        "maximum_chance": 1.0,
+        "minimum_chance": 0.0,
+        "required_source_tags": [],
+        "required_target_tags": [
+          "trait.guard"
+        ],
+        "schema": "asteria.rpg.outcome_check",
+        "source_stat_terms": {},
+        "success_tags": [
+          "outcome.guard"
+        ],
+        "target_stat_terms": {},
+        "version": 1
+      },
+      {
         "base_chance": 0.95,
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
         "check_id": "land",
         "failure_tags": [
           "outcome.evade"
         ],
         "maximum_chance": 1.0,
-        "minimum_chance": 0.1,
+        "minimum_chance": 0.3,
         "required_source_tags": [],
         "required_target_tags": [],
         "schema": "asteria.rpg.outcome_check",
@@ -91064,7 +92028,7 @@
         },
         "success_tags": [],
         "target_stat_terms": {
-          "evade": -0.01
+          "evade": -0.003
         },
         "version": 1
       }

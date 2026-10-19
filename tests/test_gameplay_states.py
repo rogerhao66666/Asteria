@@ -159,3 +159,15 @@ def test_state_names_are_not_hardcoded_gameplay_rules():
     rt = runtime([definition])
     rt.apply("machine.overheated")
     assert rt.modifiers().evaluate("movement_rate", 20, tags=rt.tags) == 10
+
+
+def test_a_tick_formula_reads_the_holder_so_poison_can_take_a_share_of_max_hp():
+    from asteria.gameplay.formulas import FormulaTerm, ValueFormula
+
+    share = ValueFormula((FormulaTerm("target_resource_max", "hp", -0.05),))
+    tick = Effect("poison.tick", (EffectOperation("resource_delta", "hp", share),))
+    poison = StateDefinition("poison", 3, periodic=(PeriodicEffect(1, tick),))
+    rt = runtime([poison])
+    rt.apply("poison")
+    rt.update(2)
+    assert rt.resources.current("hp") == 90  # 5% of 100, twice

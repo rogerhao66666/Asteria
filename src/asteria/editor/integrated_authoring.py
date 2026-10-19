@@ -120,6 +120,7 @@ class IntegratedAuthoringControllers:
                 icon_id=v.icon_id,
                 unlock_level=v.unlock_level,
                 unlock_classes=v.unlock_classes,
+                resource_growth=v.resource_growth,
             )
 
         def edit_passive(key, v):

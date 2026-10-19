@@ -565,11 +565,13 @@ class BattleRuntime:
     def apply_state(self, state_id, source_id, target_id, *, rng=None):
         source = self.member(source_id)
         target = self.member(target_id)
+        rng = self.rng if rng is None else rng  # the battle's own seeded dice
         return self.battle_states.apply(
             state_id, source.member_id, source.subject, target.member_id, target.subject, rng=rng
         )
 
     def resolve_targets(self, actor_id, ability_id, requested_ids=(), *, rng=None):
+        rng = self.rng if rng is None else rng
         return self.targeting.resolve(actor_id, ability_id, requested_ids, rng=rng)
 
     def _validate_action(self, action, *, rng=None, continuation=False):

@@ -192,12 +192,64 @@ teachers and the vault let him try others, and he returns to the pair.
 | Brave tree (38 nodes) | 10-rank core, the skills, a 5-rank mastery per weapon (its blows x1.25), Weapon Saint (all seven at rank 3), three exclusive Oaths, Hero's Resolve, three specs with talents and capstones, three runes on Valiant Slash, a skill book; Final Hope needs Dragon Slayer, Lightbringer and an Oath |
 | Archmage tree (52 nodes) | 10-rank core, seven schools (school, Bolt, Storm, Attunement: that element x1.25), Mana Shield, Arcane Surge, three exclusive Paths, Archmage's Insight, three specs, runes on Fire Bolt, a book; Prismatic Cataclysm needs fire / ice / lightning attunement and one more |
 | Attributes | Twin Arts: power and magic from one point |
-| Demon Ring | A ring weapon (power +45, magic +45, crit, speed); seven sockets - three cards, two gems, two charms (six new charm attachments); its attack strikes five times; in the Family Chest in Aldric's house (worn in his second hand) |
-| Foes | Health x3 (the vigil's acolytes excepted), power and magic x1.8, defence x1.4, speed x1.15 |
+| Demon Ring | A ring weapon (power +45, magic +45, crit, speed); seven sockets - three cards, two gems, two charms (six new charm attachments); its attack strikes five times; in the Family Chest in Aldric's house: it goes to the bag and the game asks whether to wear it in his free second hand |
+| Foes | See the next two sections |
 
 The campaign opens the chest, sockets two charms, and uses the ring's five-strike attack,
 Valiant Slash, Arsenal Storm and the wind and earth bolts against the stronger foes; it still
 wins every fight. The bag holds 64 kinds now (the charms did not fit in 40).
+
+## New gear asks before it is worn (2026-10-19)
+
+Engine: `InventoryRules.equip_offer` - `never` (the default: new gear waits in the bag),
+`empty_slot` (asks only when a party member has a free place for it) or `always` (also offers a
+swap; the worn piece goes to the bag). The bag rules form in the editor has the field ("Ask to
+Wear New Gear"). `GIVE_EQUIPMENT` gives gear to the bag; chests, drops and loot all ask through
+the same offer. The playtest host shows "New: <name> / <who> has a free <place>. Wear it now?"
+(1 / Enter: wear it, 2 / Esc: keep it in the bag).
+
+Demo: `empty_slot`. Aldric starts with only Sunbrand, so the chest's Demon Ring is offered for
+his free hand (the campaign says yes); the Armory's pick is offered too (the campaign keeps it
+in the bag). Fact `equip_offers` = 2.
+
+## Battle mechanics that are felt, and foes that are truly strong (2026-10-19)
+
+`trial_brave.mechanics`, all project data (Battle Rules: Interactions, Chance Checks, Gauges;
+States; Enemies; Jobs; Battle Presentation > Feedback):
+
+| What | Design |
+|---|---|
+| Weakness / resistance | x1.8 / x0.4 (were x1.3 / x0.5); every weakness hit chips the shield |
+| Critical blows | x2.5 (was x1.75); chance 5% + 0.3% per crit point, at most 65% (Aldric was at 100%) |
+| Evasion | 0.3% per evade point and a blow lands at least 30% of the time (Aldric's 200 evade made every foe miss: they dealt 0 damage); foes have accuracy 15-45 |
+| Bosses | Many weaknesses behind thick shields: Goblin Beast 16 (seven weaknesses), Ancient Skeleton 24 (nine), Crimson Warlord 36 (ten) - a weak *critical* blow chips two. Broken: x2.5 damage taken and three turns lost |
+| Guard / dodge | Foes with `trait.guard` guard 30% of the party's blows (x0.3); `trait.dodge` foes dodge 20-35% (by speed). Neither while broken, stunned, asleep or frozen (the new blocked tags on Chance Checks) |
+| Foe states | Their blows leave bleed, blind, burn, poison + silence, magic down, stun, defence down, power down |
+| Damage over time | Poison 3% / burn 4% / bleed 5% of the holder's maximum health a turn; regen gives 4% back (state ticks can use formulas now) |
+| Foes | Minions health x6, power and magic x2, speed x1.3; bosses health x8, power x2.1, speed x1.45; the Warlord (heals, summons, stuns) health x4.5 and power x1.6; Pounce / Charge / Maul softened (no one-blow KOs); level growth power 8%, speed 3% a level; Legend difficulty by default (x1.6, three levels above the party) |
+| Party health | Every job gains maximum health per level (Brave 160, Guardian 150, Knight 130, Archmage 70, most 80) - before, health never grew with level |
+| On screen | WEAK, CRITICAL, GUARD, MISS, BLOCK, BREAK!, OVERDRIVE, ABSORB, REFLECT labels on the hits (the feedback profile was empty) |
+
+Measured on the scripted campaign (rounds, the lowest any hero fell to):
+
+| Fight | Before | Now |
+|---|---|---|
+| Woods boss | 4 rounds, party untouched (every foe blow missed) | 4 rounds, party at 95% |
+| Crypt guard | 2 rounds, untouched | 5 rounds, down to 63% |
+| Crypt boss | 1 round | 8 rounds, down to 89% |
+| Ember vigil | 8 rounds (held), 85% | 8 rounds, down to 52% |
+| Crimson Warlord | 2 rounds, down to 5% | 11 rounds, two heroes knocked out |
+
+New campaign facts: `guarded_blows` 20, `dodged_blows` 38, `critical_blows` 56, `breaks` 3
+(`boss_breaks` 2), `status_ticks` 52. The scripted player now heals when it is low or (half the
+time) when an ally is. The smoke covers the boss's mechanics on Normal (the campaign plays
+Legend).
+
+Engine fixes found on the way: `ClassDefinition.resource_growth` (health per level, in the job
+form); state ticks and apply / remove / expire effects get a formula context (the holder);
+`OutcomeCheckDefinition.blocked_source_tags` / `blocked_target_tags`; `Battle.apply_state` and
+`Battle.resolve_targets` use the battle's seeded dice (they used Python's unseeded global
+random, so status hits differed on every run).
 
 ## World commands (58)
 

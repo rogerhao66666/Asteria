@@ -1950,7 +1950,7 @@ def game_start(c):
                 {"slot_id": "form", "capacity": 1, "accepted_tags": []},
             ],
             "equipped": {
-                "weapon": [instance("w_sunbrand"), instance("w_dagger")],
+                "weapon": [instance("w_sunbrand")],  # a free hand: new weapons ask to fill it
                 "armor": [instance("a_warden_plate")],
                 "accessory": [instance("a_warden_ring"), instance("a_warden_charm")],
                 "form": [instance("f_normal")],

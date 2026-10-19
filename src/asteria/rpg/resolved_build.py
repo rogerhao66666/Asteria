@@ -273,6 +273,11 @@ def resolve_actor_build(
         level=level,
     )
     resources = _copy_resources(actor_runtime.resources)
+    for resource_id, amount in actor_runtime.level_resource_growth(level).items():
+        _apply_resource_bonus(resources, resource_id, amount)
+        contributions.append(
+            BuildContribution("resource", resource_id, "class_growth", resource_id, amount)
+        )
     if allocation_contribution is not None:
         for resource_id, amount in allocation_contribution.resource_bonuses.items():
             _apply_resource_bonus(resources, resource_id, amount)

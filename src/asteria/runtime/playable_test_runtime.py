@@ -1615,6 +1615,58 @@ class PlayableTestRuntime:
                 self.message, self.width / 2, 92, size=22, color=(175, 235, 255), center=True
             )
         self._draw_dialogue()
+        self._draw_equip_offer()
+
+    def _equip_offer_text(self, offer):
+        """("Wear the Demon Ring?", "Aldric - weapon (a free hand)") for an offer."""
+        db = self.project.rpg_database
+        bag = self.game.save.rpg_state.equipment_bag
+        item = next((g for g in bag if g.instance_id == offer.instance_id), None)
+        name = item.equipment.display_name if item is not None else offer.instance_id
+        actor = db.actors.get(offer.actor_id)
+        who = getattr(actor, "display_name", "") or offer.actor_id
+        if offer.replaces:
+            loadout = self.game.save.rpg_state.loadouts[offer.actor_id]
+            worn = next(
+                (g for g in loadout.equipped(offer.slot_id) if g.instance_id == offer.replaces),
+                None,
+            )
+            old = worn.equipment.display_name if worn is not None else offer.replaces
+            return f"New: {name}", f"{who}: wear it instead of {old}?"
+        return f"New: {name}", f"{who} has a free {offer.slot_id} place. Wear it now?"
+
+    def _draw_equip_offer(self):
+        """New gear asks whether to wear it (InventoryRules.equip_offer)."""
+        offers = self.game.equip_offers
+        if not offers or self.game.pending_dialogue is not None:
+            return
+        title, question = self._equip_offer_text(offers[0])
+        box = (self.width / 2 - 300, self.height - 250, 600, 150)
+        self.panel(box, fill=(10, 14, 24, 240), border=(240, 201, 93))
+        self.text(title, self.width / 2, box[1] + 26, size=26, color=(255, 220, 124), center=True)
+        self.text(question, self.width / 2, box[1] + 64, size=21, center=True)
+        self.text(
+            "1 / Enter: wear it     2 / Esc: keep it in the bag",
+            self.width / 2,
+            box[1] + 108,
+            size=18,
+            color=(170, 210, 240),
+            center=True,
+        )
+
+    def _equip_offer_input(self, events):
+        """Keys for a waiting equip offer. Returns True when one is open."""
+        if not self.game.equip_offers or self.game.event_busy:
+            return False
+        wear = self.input.just_pressed("confirm") or any(
+            e.type == self.pg.KEYDOWN and e.key == self.pg.K_1 for e in events
+        )
+        keep = self.input.just_pressed("cancel") or any(
+            e.type == self.pg.KEYDOWN and e.key == self.pg.K_2 for e in events
+        )
+        if wear or keep:
+            self.game.answer_equip_offer(bool(wear))
+        return True
 
     def _picture_image(self, picture):
         """The sub-image of a picture's asset for its sprite-sheet cell, or ``None``."""
@@ -1906,6 +1958,8 @@ class PlayableTestRuntime:
                 self.game.skip_cutscene()
                 return False
             self._dialogue_input(events)
+            return False
+        if self._equip_offer_input(events):
             return False
         if self._dialogue_input(events) or (
             getattr(self, "_network_event_busy", False)

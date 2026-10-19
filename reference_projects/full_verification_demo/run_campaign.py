@@ -57,9 +57,30 @@ class Campaign:
                 facts[f"used_{entry.ability_id}"] += 1
             if kind == "hit_check" and "outcome.block" in str(entry.data):
                 facts["blocked_blows"] += 1  # a defender's Block halved a blow
+            for tag, fact in (
+                ("outcome.guard", "guarded_blows"),  # a foe guarded the party's blow (x0.3)
+                ("outcome.evade", "dodged_blows"),  # someone dodged a blow outright
+                ("outcome.crit", "critical_blows"),
+            ):
+                if kind == "hit_check" and tag in str(entry.data):
+                    facts[fact] += 1
+            if kind == "gauge" and "'break'" in str(entry.data):
+                facts["breaks"] += 1  # a foe's shield ran out: Broken
+                foe = session.battle.member(entry.member_id).subject
+                facts["boss_breaks"] += foe.tags.contains("boss")
             return entry
 
         GameSessionRuntime._log = counting
+        from asteria.gameplay.states import StateRuntime
+
+        apply_state_effect = StateRuntime._apply
+
+        def ticking(runtime, effect, **values):
+            if effect.effect_id in ("poison.tick", "burn.tick", "bleed.tick"):
+                facts["status_ticks"] += 1  # a share of the holder's health, every turn
+            return apply_state_effect(runtime, effect, **values)
+
+        StateRuntime._apply = ticking
         GameSessionRuntime._campaign_watch = True
 
     def __init__(self, rt=None, seed=5, log=print):
@@ -224,10 +245,18 @@ class Campaign:
         self.rng.shuffle(pool)
         pool.sort(key=lambda a: (self.used[a], a not in self.FIRST))
         pool.sort(key=lambda a: not (a in self.FIRST and self.used[a] == 0))
-        resources = game.battle.member(actor).subject.resources
-        low = resources.current("vitality") < 0.4 * resources.maximum("vitality")
-        guards = ("mend", "second_wind", "benediction", "purge", "shield_wall", "fortify")
-        pool.sort(key=lambda a: (a in guards) != low)
+        def share(member):
+            pool = game.battle.member(member).subject.resources
+            return pool.current("vitality") / max(1.0, pool.maximum("vitality"))
+
+        # low on health, or (every other time) an ally is: heal or guard first, as a player would
+        ally_low = min(map(share, game.active_hero_ids())) < 0.4 and self.rng.random() < 0.5
+        low = share(actor) < 0.4 or ally_low
+        guards = (
+            *("mend", "mass_cure", "holy_nova", "lightbringer", "second_wind", "benediction"),
+            *("purge", "shield_wall", "fortify", "guard_stance"),
+        )
+        pool.sort(key=lambda a: (a.split("__")[0] in guards) != low)
         if not self.facts["used_momentum_strike"] and "party_rush" in pool:
             pool.remove("party_rush")  # Momentum is saved for the strike first
         for finisher in ("soul_burst", "momentum_strike"):  # a finisher goes as soon as it can
@@ -268,7 +297,7 @@ class Campaign:
             return ability_id
         return None
 
-    def fight(self, limit=120):
+    def fight(self, limit=400):
         """Play the running battle with the party's skills until it is won."""
         game = self.game
         for _ in range(limit):
@@ -469,7 +498,11 @@ class Campaign:
         full = game.save.rpg_state.actor_snapshots[HERO].resources["values"]["vitality"]
         assert self.hp() == full["maximum"] > hurt, (hurt, self.hp())
         self.facts["home_sleeps"] += 1
-        self.talk("Family Chest")  # the Demon Ring (second hand) and six charms
+        self.talk("Family Chest")  # the Demon Ring and six charms
+        offer = game.equip_offers[0]
+        assert offer.instance_id.startswith("w_demon_ring") and not offer.replaces, offer
+        game.answer_equip_offer(True)  # wear it in the free hand
+        self.facts["equip_offers"] += 1
         ring = self.demon_ring()
         assert ring is not None, "the Demon Ring is not worn"
         for socket, charm in (("h1", "charm_serpent"), ("h2", "charm_lion")):
@@ -700,7 +733,10 @@ class Campaign:
         self.facts["bought"] += 1
         self.talk("Breaker", picks=(1,))
         self.facts["disassembled"] += 1
-        self.talk("Armory", picks=(0,))
+        self.talk("Armory", picks=(0,))  # a bow: asked to wear it in the free hand...
+        assert game.equip_offers and game.equip_offers[0].actor_id == HERO, game.equip_offers
+        game.answer_equip_offer(False)  # ...kept in the bag (the hand stays free for the ring)
+        self.facts["equip_offers"] += 1
         self.talk("Innkeeper Marla", picks=(0,))
         self.facts["rests"] += 1
         self.allocate()
@@ -1012,7 +1048,8 @@ REQUIRED = (
     "translated_lines", "bog_damage", "area_backdrops", "glade_rests", "shadow_stealth",
     "embers_burn", "embers_out", "music_unlocked", "new_game_plus", "home_sleeps",
     "ring_sockets", "used_attack_ring", "used_valiant_slash", "used_arsenal_storm",
-    "used_wind_bolt", "used_earth_bolt",
+    "used_wind_bolt", "used_earth_bolt", "equip_offers", "guarded_blows", "dodged_blows",
+    "critical_blows", "breaks", "boss_breaks", "status_ticks",
 )  # fmt: skip
 
 

@@ -63,6 +63,9 @@ class ClassDefinition:
     # stat -> amount gained per actor level above 1 (a warrior's attack rises faster than a
     # scholar's); written only when set
     level_growth: dict[str, float] = field(default_factory=dict)
+    # resource -> maximum gained per actor level above 1 (a knight's health climbs faster than a
+    # mage's); written only when set
+    resource_growth: dict[str, float] = field(default_factory=dict)
     # what a job asks for before it can be taken: the actor's level and jobs it must already
     # have unlocked; written only when set
     unlock_level: int = 0
@@ -70,6 +73,7 @@ class ClassDefinition:
     OPTIONAL_DATA = {
         "icon_id": "",
         "level_growth": {},
+        "resource_growth": {},
         "unlock_level": 0,
         "unlock_classes": [],
     }  # shown in the editor while empty
@@ -87,6 +91,7 @@ class ClassDefinition:
         level_growth=None,
         unlock_level=0,
         unlock_classes=(),
+        resource_growth=None,
     ):
         class_id = _id(class_id, "class_id")
         if int(unlock_level) < 0:
@@ -113,6 +118,8 @@ class ClassDefinition:
         )
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
         object.__setattr__(self, "level_growth", _numbers(level_growth or {}, "stat"))
+        growth = _numbers(resource_growth or {}, "resource")
+        object.__setattr__(self, "resource_growth", growth)
 
     def to_data(self):
         return {
@@ -128,6 +135,11 @@ class ClassDefinition:
             **(
                 {"level_growth": dict(sorted(self.level_growth.items()))}
                 if self.level_growth
+                else {}
+            ),
+            **(
+                {"resource_growth": dict(sorted(self.resource_growth.items()))}
+                if self.resource_growth
                 else {}
             ),
             **({"unlock_level": self.unlock_level} if self.unlock_level else {}),
@@ -149,6 +161,7 @@ class ClassDefinition:
             level_growth=data.get("level_growth"),
             unlock_level=data.get("unlock_level", 0),
             unlock_classes=data.get("unlock_classes", ()),
+            resource_growth=data.get("resource_growth"),
         )
 
 
@@ -545,6 +558,18 @@ class RpgActorRuntime:
             definition = self.class_definitions.get(assignment.class_id)
             for stat, rate in (definition.level_growth if definition else {}).items():
                 bonuses[stat] = bonuses.get(stat, 0.0) + rate * gained
+        return bonuses
+
+    def level_resource_growth(self, level):
+        """Per-class resource growth gained by ``level`` (resource -> extra maximum)."""
+        gained = max(0, int(level) - 1)
+        bonuses = {}
+        for assignment in self.class_assignments if gained else ():
+            if not assignment.enabled:
+                continue
+            definition = self.class_definitions.get(assignment.class_id)
+            for resource_id, rate in (definition.resource_growth if definition else {}).items():
+                bonuses[resource_id] = bonuses.get(resource_id, 0.0) + rate * gained
         return bonuses
 
     def effective_stats(
