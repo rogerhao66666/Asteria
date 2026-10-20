@@ -5,7 +5,10 @@ import math
 from pathlib import Path
 
 from asteria.core import Transform
+from asteria.presentation.motion_fx import EchoSettings, MotionEchoes
 from asteria.runtime.audio_mixer import AudioMixer
+from asteria.runtime.battle_commands import BattleCommands
+from asteria.runtime.battle_extras import draw_blocks, extras_layout
 from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
 from asteria.runtime.battle_visuals import vfx_rect
 from asteria.runtime.collision import CollisionWorld
@@ -34,6 +37,7 @@ from asteria.runtime.game_menus import (
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
 from asteria.runtime.input_map import InputActionTracker
+from asteria.runtime.particle_draw import ParticleDrawer
 from asteria.runtime.profiler import NullProfiler, RuntimeProfiler
 from asteria.runtime.skeleton_component import SkeletonSceneRuntime
 
@@ -161,6 +165,12 @@ class PlayableTestRuntime:
         # the "battle" scope and are released when play returns to the field.
         self._image_scope = {}
         self.released_images = 0
+        # Battle pictures decoded ahead in the field (image_preloader.py). None: only in a real
+        # window (off-screen runs and tests skip it); True / False: always / never.
+        self.preload_battle_images = None
+        self._preloader = None
+        self._preload_frames = 0
+        self._preload_scene = ""
         self.debug_server = None
         self._ui_mode = "title"
         self._menu_actor_index = 0
@@ -215,7 +225,10 @@ class PlayableTestRuntime:
         rel = str(rel)
         if rel not in self._loaded:
             with self.profiler.section("asset_loading"):
-                self._loaded[rel] = self.pg.image.load(self.path(rel)).convert_alpha()
+                ready = None if self._preloader is None else self._preloader.take(rel)
+                if ready is None:
+                    ready = self.pg.image.load(self.path(rel)).convert_alpha()
+                self._loaded[rel] = ready
             in_battle = self.game.mode == "battle" or self._victory or self._defeat
             self._image_scope[rel] = "battle" if in_battle else "field"
         return self._loaded[rel]
@@ -290,8 +303,6 @@ class PlayableTestRuntime:
 
     @property
     def particle_drawer(self):
-        from .particle_draw import ParticleDrawer
-
         drawer = getattr(self, "_particle_drawer", None)
         if drawer is None:
             drawer = self._particle_drawer = ParticleDrawer(self.pg)
@@ -323,13 +334,44 @@ class PlayableTestRuntime:
         self.screen.blit(icon, (x + (size - w) // 2, y + (size - h) // 2))
         return True
 
+    PRELOAD_REFRESH_FRAMES = 120  # field frames between looks at what the next fight may show
+
+    def _preload_battle_images(self):
+        """Decode the next fight's pictures in the background while the player is in the field
+        (a battle used to load them all in its first frame). The manifest's
+        ``battle.preload_mb`` caps the memory held (0: off)."""
+        preloader = self._preloader
+        if preloader is None:
+            budget = float(self.manifest.get("battle", {}).get("preload_mb", 64))
+            upcoming = getattr(self._battle_presentation, "upcoming_images", None)
+            enabled = self.preload_battle_images
+            if enabled is None:
+                driver = self.pg.display.get_driver() if self.pg.display.get_init() else "dummy"
+                enabled = driver not in ("dummy", "offscreen")
+            if budget <= 0 or upcoming is None or not enabled:
+                return
+            from asteria.runtime.image_preloader import ImagePreloader
+
+            preloader = self._preloader = ImagePreloader(
+                self.pg, self.path, self._loaded, budget_bytes=int(budget * (1 << 20))
+            )
+            self._preload_frames = 0
+        if self._preload_frames <= 0 or self.game.scene.id != self._preload_scene:
+            self._preload_scene = self.game.scene.id
+            self._preload_frames = self.PRELOAD_REFRESH_FRAMES
+            preloader.want(self._battle_presentation.upcoming_images())
+        self._preload_frames -= 1
+        preloader.step()
+
     def release_resource_scope(self, scope):
         """Drop every cached image owned by ``scope``; returns how many were released."""
         self._icon_cache.clear()  # icons are cut from cached images: rebuild them on demand
         names = [rel for rel, owner in self._image_scope.items() if owner == scope]
         for rel in names:
-            self._loaded.pop(rel, None)
+            image = self._loaded.pop(rel, None)
             self._image_scope.pop(rel, None)
+            if image is not None and self._preloader is not None:
+                self._preloader.keep(rel, image)  # ready for the next fight
         self.released_images += len(names)
         return len(names)
 
@@ -630,6 +672,9 @@ class PlayableTestRuntime:
         return self.gpu.read(self.pg) if self.gpu is not None else self.screen.copy()
 
     def close(self):
+        if self._preloader is not None:
+            self._preloader.close()
+            self._preloader = None
         if self.multiplayer_bridge is not None:
             self.multiplayer_bridge.close()
         if self.gpu is not None:
@@ -1010,7 +1055,6 @@ class PlayableTestRuntime:
     def _blit_with_trail(self, entity, image, position):
         """Blit a field sprite; with MotionTrail2D, fading echoes of earlier positions go behind it
         (VFX-03)."""
-        from asteria.presentation.motion_fx import EchoSettings, MotionEchoes
         from asteria.runtime.environment2d import MotionTrail2DComponent
 
         trail = entity.try_get(MotionTrail2DComponent)
@@ -2628,8 +2672,6 @@ class PlayableTestRuntime:
     def battle_commands(self):
         """The player's battle command menu for the current game (skills, items, concoct, boost,
         targets)."""
-        from .battle_commands import BattleCommands
-
         commands = getattr(self, "_battle_commands", None)
         if commands is None or commands.game is not self.game:
             labels = self.manifest.get("battle", {}).get("skills", {})
@@ -2709,8 +2751,6 @@ class PlayableTestRuntime:
     def _draw_battle_extras(self):
         """Shield and weaknesses under each enemy, boost points under each hero (unless the
         party panel has them), the chosen boost level (runtime/battle_extras.py)."""
-        from .battle_extras import draw_blocks, extras_layout
-
         game, adapter = self.game, self._battle_presentation
         box = getattr(adapter, "member_screen_box", None)
         if game.battle is None or box is None or self._victory or self._defeat:
@@ -2963,7 +3003,7 @@ class PlayableTestRuntime:
             elif event.key in (self.pg.K_RETURN, self.pg.K_SPACE):
                 try:
                     menu.activate()
-                except Exception as exc:  # noqa: BLE001 - shown to the player, the game keeps running
+                except Exception as exc:  # noqa: BLE001 - shown to the player, play goes on
                     menu.message = str(exc)
 
     def _draw_status_menu(self):
@@ -3984,6 +4024,7 @@ class PlayableTestRuntime:
             else:
                 override = getattr(self, "_bgm_override", None)  # a story event chose the track
                 self._music(self.manifest["field"].get("bgm") if override is None else override)
+                self._preload_battle_images()
                 self._draw_field(moving)
 
 

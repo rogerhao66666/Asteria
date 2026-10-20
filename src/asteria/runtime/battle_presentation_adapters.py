@@ -29,6 +29,7 @@ from asteria.presentation.character_composition import CharacterComposition
 from asteria.presentation.particles import ParticleSystem, effect_definition
 from asteria.rpg import BattleOutcome
 from asteria.runtime.battle_visuals import (
+    SPRITE_SHEET_KIND,
     BattleVisualError,
     BattleVisualResolver,
     member_body_height,
@@ -387,6 +388,51 @@ class CanonicalBattleAdapter:
                 self.host.load_image(uri)
             except Exception:  # noqa: BLE001 - a missing picture is reported when it is drawn
                 continue
+
+    def upcoming_images(self):
+        """Pictures the next fight is likely to show, most likely first (the host loads them
+        ahead in the field): the party's battle sheets, the battle background, the sheets of the
+        foes on this map, the effect sheets, then every other combatant's sheet."""
+        from asteria.runtime.field_ai import VisibleEncounterComponent
+
+        game = self.host.game
+        project = game.project
+        library = project.battle_presentation_library
+        encounters = project.rpg_database.encounters
+        profiles = library.ids("combatant_visuals")
+
+        def sheets(keys):
+            return [
+                self._sheet_uri(
+                    library.require("combatant_visuals", key).assets.battlefield_asset_id
+                )
+                for key in keys
+                if key in profiles
+            ]
+
+        foes = []
+        for _entity, spec in game.scene.query(VisibleEncounterComponent):
+            encounter = encounters.get(spec.encounter_id)
+            foes += [m.enemy_id for m in encounter.members] if encounter is not None else []
+        uris = [
+            *sheets(game.save.rpg_state.party_active_actor_ids),
+            game._area_battle_background(),
+            self.host.manifest.get("battle", {}).get("background", ""),
+            *sheets(foes),
+            *(
+                self._sheet_uri(a.asset_id)
+                for a in project.assets.query(SPRITE_SHEET_KIND, tags={"vfx"})
+            ),
+            *sheets(profiles),
+        ]
+        return [uri for uri in dict.fromkeys(uris) if uri]
+
+    def _sheet_uri(self, asset_id):
+        try:
+            asset = self.host.game.project.assets.resolve(str(asset_id))
+        except KeyError:
+            return ""
+        return asset.source.uri if asset.kind == SPRITE_SHEET_KIND else ""
 
     # -- boss intro camera (CAM-02) ---------------------------------------------------------------
     BOSS_INTRO = {"zoom": 1.35, "blend": 0.5, "hold": 0.9}
