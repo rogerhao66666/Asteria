@@ -2,8 +2,8 @@
 
 The hero and the three companions keep their Lucifer looks; everyone else gets a different
 Ninja Adventure character (CC0, Pixel-boy), drawn half as big again so it stands about as tall
-as the Lucifer cast; the two shrines, the plaque and the banner are statues or spirits, the cache a bag
-and the vault a chest. Foes keep their monsters (a kind of foe looks alike on purpose).
+as the Lucifer cast; the two shrines, the plaque and the banner are statues or spirits, the cache
+a bag and the vault a chest. Foes keep their monsters (a kind of foe looks alike on purpose).
 """
 
 from __future__ import annotations

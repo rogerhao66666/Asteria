@@ -585,8 +585,10 @@ class BattleCommands:
             if self.mode == "steps":
                 self._step_back()
                 return False
-            if self.mode in ("target", "forms") and self._workflow() is not None and (
-                self.mode == "forms" or self.form is None
+            if (
+                self.mode in ("target", "forms")
+                and self._workflow() is not None
+                and (self.mode == "forms" or self.form is None)
             ):  # back into the last input step
                 self.mode, self.form = "steps", None
                 self.choices.pop(next(reversed(self.choices)), None) if self.choices else None

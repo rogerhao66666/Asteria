@@ -29,9 +29,8 @@ sys.path.insert(0, str(REPO / "scripts"))
 import trial_art as art  # noqa: E402
 import trial_b11 as b11  # noqa: E402
 import trial_b12 as b12  # noqa: E402
-import trial_brave as brave  # noqa: E402
-import trial_stats as stats  # noqa: E402
 import trial_battle as battle_rules  # noqa: E402
+import trial_brave as brave  # noqa: E402
 import trial_cast as cast  # noqa: E402
 import trial_classes as classes  # noqa: E402
 import trial_content as content  # noqa: E402
@@ -43,6 +42,7 @@ import trial_jobs as jobs  # noqa: E402
 import trial_lucifer as lucifer  # noqa: E402
 import trial_maps as maps  # noqa: E402
 import trial_stage as stage  # noqa: E402
+import trial_stats as stats  # noqa: E402
 import trial_story as story  # noqa: E402
 import trial_systems as systems  # noqa: E402
 import trial_trees as trees  # noqa: E402

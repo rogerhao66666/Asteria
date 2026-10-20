@@ -75,8 +75,11 @@ def picture(assets, key, file, box, name):
 
     image = Image.open(TILES / file).convert("RGBA").crop(box)
     sheet = assets.sheet(key, image, [(0, 0, image.width, image.height)], name)
-    clips = {f"{kind}_{facing}": ([0], 1.0, True) for kind in ("idle", "walk")
-             for facing in people.DIRECTIONS}
+    clips = {
+        f"{kind}_{facing}": ([0], 1.0, True)
+        for kind in ("idle", "walk")
+        for facing in people.DIRECTIONS
+    }
     return sheet, assets.clips(key, clips, name)
 
 

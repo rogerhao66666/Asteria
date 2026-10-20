@@ -231,7 +231,7 @@ def brave_skills():
 
 def archmage_skills():
     rows = []
-    for element, (name, bolt, storm, _fx, status) in ELEMENTS.items():
+    for element, (_name, bolt, storm, _fx, status) in ELEMENTS.items():
         tags = ("magic", f"damage.{element}")
         rows.append(
             (
@@ -377,9 +377,7 @@ def jobs(c):
         actor,
         class_assignments=(
             ClassAssignment("brave", assignment_id="hero_01.main", role="main", priority=10),
-            ClassAssignment(
-                "archmage", assignment_id="hero_01.sub", role="secondary", priority=5
-            ),
+            ClassAssignment("archmage", assignment_id="hero_01.sub", role="secondary", priority=5),
         ),
     )
 
@@ -718,15 +716,14 @@ def ring(c):
                 modifiers=tuple(mod(k, v, f"{charm}.{k}") for k, v in stats.items()),
             )
         )
-        db.add_item(
-            ItemDefinition(f"{charm}_item", name, stack_limit=9, attachment_id=charm)
-        )
+        db.add_item(ItemDefinition(f"{charm}_item", name, stack_limit=9, attachment_id=charm))
 
 
 def family_chest(assets, home, maps):
     """The chest in Aldric's house: the Demon Ring (his free hand is offered it) and the
     charms."""
     import trial_people as people
+
     from asteria.runtime.collision import Collider2DComponent
 
     chest = home.entity("Family Chest", 9 * 16.0 + 8.0, 4 * 16.0)
@@ -840,8 +837,14 @@ LABELS = {
 
 
 HEALTH_GROWTH = {  # job: maximum health gained per level (any other job: 80)
-    "brave": 160, "guardian": 150, "knight": 130, "archmage": 70,
-    "forgemaster": 110, "heretic": 110, "death_lord": 110, "spirit": 0,
+    "brave": 160,
+    "guardian": 150,
+    "knight": 130,
+    "archmage": 70,
+    "forgemaster": 110,
+    "heretic": 110,
+    "death_lord": 110,
+    "spirit": 0,
 }
 
 

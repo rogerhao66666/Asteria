@@ -173,7 +173,7 @@ class Campaign:
         for _ in range(400):
             if not self.game.event_busy:
                 break
-            self.game.pending_dialogue  # the line is shown (and written to the message log)
+            _ = self.game.pending_dialogue  # shows the line (and writes it to the log)
             runner = self.game._dialogue_runner()
             dialogue = None if runner is None else runner.dialogue
             if dialogue is not None and dialogue.choice is not None:
@@ -245,6 +245,7 @@ class Campaign:
         self.rng.shuffle(pool)
         pool.sort(key=lambda a: (self.used[a], a not in self.FIRST))
         pool.sort(key=lambda a: not (a in self.FIRST and self.used[a] == 0))
+
         def share(member):
             pool = game.battle.member(member).subject.resources
             return pool.current("vitality") / max(1.0, pool.maximum("vitality"))
@@ -464,6 +465,7 @@ class Campaign:
     def stand(self, tile_x, tile_y, seconds=0.0):
         """Teleport onto a tile and live there a while (map areas tick in the field update)."""
         import trial_maps as maps
+
         from asteria.core import Transform
 
         player = self.game.player.get(Transform)
@@ -516,6 +518,7 @@ class Campaign:
     def bog_and_glade(self):
         """The bog hurts and fights there stand in a bog; the glade rests the party."""
         import trial_world
+
         from asteria.core import Transform
 
         game = self.game
@@ -537,9 +540,12 @@ class Campaign:
         self.stand(33, 24)
         spot = game.player.get(Transform)
         assert game.map_rules.runtime.blocked("npc", spot.x, spot.y)  # foes cannot follow
-        assert self.hp() == self.game.save.rpg_state.actor_snapshots[HERO].resources["values"][
-            "vitality"
-        ]["maximum"]
+        assert (
+            self.hp()
+            == self.game.save.rpg_state.actor_snapshots[HERO].resources["values"]["vitality"][
+                "maximum"
+            ]
+        )
         self.facts["glade_rests"] += 1
 
     def shadow(self):

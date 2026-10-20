@@ -196,9 +196,7 @@ class RpgActorClassAuthoringController:
             icon_id=old.icon_id if icon_id is None else icon_id,
             unlock_level=old.unlock_level if unlock_level is None else unlock_level,
             unlock_classes=old.unlock_classes if unlock_classes is None else unlock_classes,
-            resource_growth=(
-                old.resource_growth if resource_growth is None else resource_growth
-            ),
+            resource_growth=(old.resource_growth if resource_growth is None else resource_growth),
         )
         self._execute(
             _DefinitionCommand(

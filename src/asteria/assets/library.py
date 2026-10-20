@@ -50,9 +50,7 @@ def library_packs(root=None):
         return ()
     for collection in sorted(p for p in root.iterdir() if p.is_dir()):
         for pack in sorted(p for p in collection.iterdir() if p.is_dir()):
-            readme = next(
-                (f for f in sorted(pack.iterdir()) if f.suffix.lower() == ".txt"), None
-            )
+            readme = next((f for f in sorted(pack.iterdir()) if f.suffix.lower() == ".txt"), None)
             text = readme.read_text(encoding="utf-8", errors="replace") if readme else ""
             packs.append(LibraryPack(f"{collection.name}/{pack.name}", pack, text))
     return tuple(packs)

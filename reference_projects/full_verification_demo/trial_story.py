@@ -679,6 +679,7 @@ def crypt(builders, looks, places):
 def throne(builders, looks, places):
     scene = builders["throne"]
     banner = scene.npc("Victory Banner", maps.world_xy(6, 8), looks["warrior"], solid=False)
+
     def on(name):
         return EventCondition("switch", name, "==", True, None).to_data()
 

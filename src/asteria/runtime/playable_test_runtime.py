@@ -2603,9 +2603,7 @@ class PlayableTestRuntime:
                 self._victory_screen = self._make_victory_screen(applied, before, gained)
             self._victory = True
             # The jingle waits for the presentation to finish showing the final blows.
-            self._victory_audio_pending = (
-                True  # played by _present_battle once the screen is idle
-            )
+            self._victory_audio_pending = True  # played by _present_battle once the screen is idle
             self._last_action_name = "Victory — rewards + progression applied"
         except Exception as exc:
             self._last_action_name = f"Victory finalize failed: {exc}"

@@ -261,9 +261,7 @@ class BehaviorTreeSystem(System):
         if kind == "player_beyond":
             radius = float(p.get("radius", 64)) * sight
             return (
-                SUCCESS
-                if target is None or self._distance_to(ctx, target) > radius
-                else FAILURE
+                SUCCESS if target is None or self._distance_to(ctx, target) > radius else FAILURE
             )
         if kind == "home_within":
             return (
