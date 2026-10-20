@@ -3,7 +3,38 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QComboBox, QLayout, QListWidgetItem, QStyledItemDelegate, QWidget
+from PySide6.QtWidgets import (
+    QComboBox,
+    QLayout,
+    QListWidgetItem,
+    QStyle,
+    QStyledItemDelegate,
+    QStyleOptionComboBox,
+    QWidget,
+)
+
+
+def fit_combo_to_items(combo, *, cap=360):
+    """Make ``combo`` wide enough for its longest item, its icon and its arrow (up to ``cap``),
+    measured with the themed frame, so a chosen name is never cut off."""
+    combo.ensurePolished()  # the themed font and padding, not the system ones
+    option = QStyleOptionComboBox()
+    combo.initStyleOption(option)
+    field = combo.style().subControlRect(
+        QStyle.CC_ComboBox, option, QStyle.SC_ComboBoxEditField, combo
+    )
+    frame = combo.width() - field.width()  # padding, border and the arrow
+    metrics = combo.fontMetrics()
+    widest = max(
+        (metrics.horizontalAdvance(combo.itemText(i)) for i in range(combo.count())),
+        default=0,
+    )
+    # icons the decorator adds later ("decorate") take room as well
+    if combo.property("decorate") or any(
+        not combo.itemIcon(i).isNull() for i in range(combo.count())
+    ):
+        widest += combo.iconSize().width() + 6
+    combo.setMinimumWidth(max(combo.minimumWidth(), min(cap, widest + frame + 2)))
 
 
 def fit_combo_boxes(root, *, cap=260, padding=44):

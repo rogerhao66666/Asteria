@@ -242,7 +242,6 @@ class TilePaletteWidget(QWidget):
         self.terrain_combo.setToolTip("Terrains: tiles with a terrain id and mask:<n> tags")
         self.region_spin = QSpinBox()
         self.region_spin.setObjectName("RegionIdSpin")
-        self.region_spin.setMinimumHeight(30)
         self.region_spin.setRange(0, 255)
         self.region_spin.setValue(1)
         self.region_erase = QCheckBox("Erase region")

@@ -43,6 +43,7 @@ from .game_systems_authoring import FORMS, KINDS, GameSystemsAuthoringError, new
 from .project_empty_state import ProjectEmptyState
 from .record_form import Picker
 from .responsive_form import ResponsiveForm, ResponsiveSplit
+from .ui_fit import fit_combo_to_items
 
 _BIG = 1_000_000_000
 
@@ -889,6 +890,7 @@ class GameSystemsEditorWidget(QWidget):
         for kind in KINDS:
             self.kind_box.addItem(kind.label, kind.kind_id)
         self.kind_box.setProperty("decorate", True)  # kind icons (decor.py), as the hub combos
+        fit_combo_to_items(self.kind_box)  # "Battle Extras (taunt, steal, TP...)" whole
         self.kind_box.currentIndexChanged.connect(self.refresh)
         self.browser = QListWidget()
         self.browser.setSelectionMode(QAbstractItemView.SingleSelection)

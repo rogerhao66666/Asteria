@@ -503,6 +503,9 @@ class AuthoringHubWidget(QWidget):
         self.category.setProperty("decorate", True)  # category icons (decor.py)
         for key, label in self.categories:
             self.category.addItem(label, key)
+        from .ui_fit import fit_combo_to_items
+
+        fit_combo_to_items(self.category)  # "Combatant Sprites" whole, with its icon
         self.category.currentIndexChanged.connect(self.refresh)
         header.addWidget(heading)
         header.addStretch(1)
@@ -940,6 +943,9 @@ class AdapterFamilyWidget(QWidget):
         self.category.setProperty("decorate", True)  # category icons (decor.py)
         for adapter in adapters:
             self.category.addItem(adapter.label, adapter.category_id)
+        from .ui_fit import fit_combo_to_items
+
+        fit_combo_to_items(self.category)  # "Combatant Sprites" whole, with its icon
         self.category.currentIndexChanged.connect(self.refresh)
         header.addWidget(heading)
         header.addStretch(1)

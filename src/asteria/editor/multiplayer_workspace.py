@@ -34,6 +34,7 @@ from asteria.multiplayer import MultiplayerClient, MultiplayerClientError
 from asteria.multiplayer.protocol import clean_guest_id
 from asteria.multiplayer.rules import default_rules, load_rules, save_rules, validate_rules
 
+from .flow_layout import FlowLayout
 from .icons import icon
 
 _PROFILE_SCHEMA = "asteria.multiplayer.profile"
@@ -350,10 +351,12 @@ class MultiplayerWorkspaceWidget(QWidget):
         self.movement_demo_button.setIcon(icon("multiplayer"))
         self.boss_demo_button = QPushButton("Use Boss Co-op Demo")
         self.boss_demo_button.setIcon(icon("multiplayer"))
-        adapter_row = QHBoxLayout()
-        adapter_row.addWidget(self.adapter_factory, 1)
-        adapter_examples = QVBoxLayout()
-        adapter_examples.setSpacing(4)
+        # the box level with its label, its examples under it (beside the box, the stack of
+        # three pushed the box down to their middle and squeezed its text)
+        adapter_row = QVBoxLayout()
+        adapter_row.setSpacing(6)
+        adapter_row.addWidget(self.adapter_factory)
+        adapter_examples = FlowLayout(spacing=6)  # more lines in a narrow panel
         adapter_examples.addWidget(self.counter_demo_button)
         adapter_examples.addWidget(self.movement_demo_button)
         adapter_examples.addWidget(self.boss_demo_button)

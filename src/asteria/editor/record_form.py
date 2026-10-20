@@ -140,6 +140,9 @@ def _wheel_guard(widget):
     return widget
 
 
+LABEL_GAP = 4  # a label above its field: its letters (a "y", a "g") clear of the box
+
+
 def _small(text, color="#8b8e98"):
     label = QLabel(text)
     label.setWordWrap(True)
@@ -515,6 +518,10 @@ class AmountTable(QWidget):
             box.valueChanged.connect(lambda _v, k=key, b=box: self._set(k, b.number()))
             remove = QToolButton()
             remove.setText("✕")
+            box.ensurePolished()  # the themed height, not the system one
+            # as tall as the box: a taller ✕ made the row a pixel taller than the box, its
+            # name then stood half a pixel below the box's number
+            remove.setFixedHeight(box.sizeHint().height())
             remove.setToolTip(f"Remove {self._labels.get(key, key)}")
             remove.clicked.connect(lambda _c=False, k=key: self._remove(k))
             self.grid.addWidget(name, row, column)
@@ -596,6 +603,8 @@ class TextTable(QWidget):
             v.textEdited.connect(lambda t, i=index: self._set(i, 1, t))
             remove = QToolButton()
             remove.setText("✕")
+            k.ensurePolished()
+            remove.setFixedHeight(k.sizeHint().height())  # the row as tall as its boxes
             remove.clicked.connect(lambda _c=False, i=index: self._remove(i))
             self.grid.addWidget(k, index, 0)
             self.grid.addWidget(v, index, 1)
@@ -749,11 +758,16 @@ class Section(QFrame):
                 title.setText("")
             self.form.addWidget(title, row, 0, Qt.AlignTop)
             self.form.addLayout(holder, row, 1)
-        holder.setSpacing(1)
+        holder.setSpacing(LABEL_GAP)
         if help_text and _is_wide(widget) and not isinstance(widget, ChipList):
             # a table's hint above it, not under its Add button
-            holder.addWidget(_small(help_text))
+            hint = _small(help_text)
+            holder.addWidget(hint)
             help_text = ""
+            if not self.columns and not self.compact:
+                # the label reads level with its hint: "Base Stats  ⓘ  Starting numbers…", the
+                # table below (level with neither, it stood crooked between the two)
+                title.setFixedHeight(_first_line_height(hint))
         if isinstance(widget, (NumberBox, QCheckBox, ColorButton)):
             line = QHBoxLayout()  # a small control stays small
             line.addWidget(widget)
@@ -779,7 +793,7 @@ class Section(QFrame):
             self._cell = (row + 1, 0) if column >= self.columns else (row, column)
         if isinstance(widget, QCheckBox) and label:
             widget.setText(label)
-            holder.addSpacing(title.sizeHint().height() + 1)  # in line with labelled fields
+            holder.addSpacing(title.sizeHint().height() + LABEL_GAP)  # level with labelled fields
             # the unused label has no parent: Python frees it (a deleteLater as well would
             # free it twice and crash later)
         else:
@@ -1509,7 +1523,11 @@ def _singular(text):
 
 
 def _first_line_height(widget):
-    """The height of a field's first line: a box's own height, a chip row's, else a box's."""
+    """The height of a field's first line: a box's own height, a chip row's, a hint's first
+    line, else a box's."""
+    if isinstance(widget, QLabel):
+        widget.ensurePolished()  # its own small font, not the default one
+        return widget.fontMetrics().height()
     if isinstance(widget, ChipList):
         chip = widget.findChild(QToolButton)
         return max(22, chip.sizeHint().height() if chip is not None else 24)
