@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QSpinBox,
     QSplitter,
     QTableWidget,
@@ -742,9 +743,13 @@ class RecordForm(QWidget):
             box = QWidget()
             row = QHBoxLayout(box)
             row.setContentsMargins(0, 0, 0, 0)
+            row.setSpacing(12)  # the switch's text clear of the number box
             box.check = QCheckBox(f.toggle_label)
+            # its whole text, always: squeezed, the text ran into the number box
+            box.check.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
             box.spin = QSpinBox()
             box.spin.setRange(0, _BIG)
+            box.spin.setMinimumWidth(70)  # it narrows in a narrow column, not the gap
             box.check.toggled.connect(box.spin.setEnabled)
             row.addWidget(box.check)
             row.addWidget(box.spin, 1)

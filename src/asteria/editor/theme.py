@@ -387,7 +387,8 @@ QComboBox { padding-right: 24px; combobox-popup: 0; }
 QComboBox QLineEdit, QComboBox QLineEdit:focus, QComboBox QLineEdit:hover {
     background: transparent; border: 0; border-radius: 0; margin: 0; padding: 0;
 }
-QAbstractSpinBox { padding-right: 30px; min-height: 26px; }
+/* a number box as tall as a text box (26 px: 18 + padding + border); its arrows fit inside */
+QAbstractSpinBox { padding-right: 30px; min-height: 18px; }
 QAbstractSpinBox::up-button, QAbstractSpinBox::down-button {
     subcontrol-origin: padding; width: 26px;
     background: $raised; border: 0; border-left: 1px solid $border_strong;
@@ -785,14 +786,15 @@ def _branch_rules(palette):
     tick = check.as_posix()
     return (
         f"QAbstractSpinBox::up-arrow {{ image: url({spin_up});"
-        " width: 12px; height: 12px; }\n"
+        " width: 9px; height: 9px; }\n"
         f"QAbstractSpinBox::down-arrow {{ image: url({combo});"
-        " width: 12px; height: 12px; }\n"
+        " width: 9px; height: 9px; }\n"
         f"QComboBox::down-arrow {{ image: url({combo}); width: 12px; height: 12px; }}\n"
         f"QTreeView::branch:has-children:closed {{ image: url({closed}); }}\n"
         f"QTreeView::branch:has-children:open {{ image: url({opened}); }}\n"
         "QTreeView::branch { background: transparent; }\n"
         # every checkbox drawn alike (the system's bright blue box looked foreign in a form)
+        "QCheckBox { spacing: 8px; }\n"  # the box and its text not squeezed together
         f"QCheckBox::indicator {{ width: 16px; height: 16px; border-radius: 4px;"
         f" border: 1px solid {palette.border_strong}; background: {palette.raised}; }}\n"
         f"QCheckBox::indicator:hover {{ border-color: {palette.primary_hi}; }}\n"

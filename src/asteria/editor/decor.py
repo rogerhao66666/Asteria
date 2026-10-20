@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
     QAbstractSpinBox,
     QApplication,
     QBoxLayout,
+    QCheckBox,
     QComboBox,
     QFormLayout,
     QGroupBox,
@@ -347,6 +348,10 @@ class _Decorator(QObject):
             else:
                 event.ignore()
             return True
+        if kind == QEvent.Polish and isinstance(obj, QCheckBox):
+            # the themed box and its spacing draw wider than the macOS style tells layouts:
+            # without this a box's text ran into the field beside it
+            obj.setAttribute(Qt.WA_LayoutUsesWidgetRect, True)
         if kind == QEvent.Show:
             if isinstance(obj, (QComboBox, QLabel, QGroupBox, QAbstractSpinBox)):
                 compact_widget(obj)
