@@ -22,8 +22,9 @@ A kernel set is a module with the same names in every implementation:
   ``expired``, ``keep``.
 
 ``python`` is the reference and is always available. ``numpy`` runs the same arithmetic on arrays
-when numpy is installed. ``native`` is the numpy set with the hot loops in C++ (build it with
-``python -m asteria.kernels.build_native``; it is skipped when not built). Implementations must
+when numpy is installed. ``native`` runs the hot loops in C++ (build it with
+``python -m asteria.kernels.build_native``; it is skipped when not built) and needs no numpy: the
+rest comes from numpy when installed, else from python. Implementations must
 give the same results as
 ``python`` (tests compare them). ``ASTERIA_KERNELS`` = ``auto`` (default: the fastest installed),
 ``python``,

@@ -1,11 +1,16 @@
 """D23: the native (C++) kernel set gives exactly the python reference results - the returned
-values and the column buffers it writes in place; without the compiled library the engine keeps
-working on numpy."""
+values and the column buffers it writes in place - with numpy installed and without it (an
+exported game on a plain Python); without the compiled library the engine keeps working on numpy
+or python."""
 
 import copy
 import math
+import os
 import random
+import subprocess
+import sys
 from array import array
+from pathlib import Path
 
 import pytest
 
@@ -310,7 +315,7 @@ def test_native_field_ai_matches_the_reference():
                 assert _same(list(left[name]), list(right[name])), name
 
 
-def test_native_falls_back_to_numpy_for_unexpected_column_types():
+def test_native_falls_back_for_unexpected_column_types():
     native = _native()
     ints = lambda *v: array("q", v)  # noqa: E731 - int columns, not the float ones C++ reads
     transform = {"x": ints(1, 2), "y": ints(3, 4)}
@@ -336,7 +341,10 @@ def test_the_native_set_is_selectable_and_never_required():
 def test_native_blocked_boxes_match_cross_pairs_then_blocked_rows():
     """The fused broad phase + blocking test gives the rows the two separate steps give."""
     native = _native()
-    from asteria.kernels import _numpy as npk
+    try:
+        from asteria.kernels import _numpy as npk
+    except ImportError:  # the run without numpy
+        npk = None
 
     rng = random.Random(8)
     for _ in range(80):
@@ -362,5 +370,176 @@ def test_native_blocked_boxes_match_cross_pairs_then_blocked_rows():
         pairs = py.aabb_cross_pairs(boxes, solids, args[3], touching=True)
         expected = py.blocked_rows(boxes, walls, pairs, *args[4:]) if pairs else []
         assert py.blocked_boxes(*args) == expected
-        assert npk.blocked_boxes(*args) == expected
+        if npk is not None:
+            assert npk.blocked_boxes(*args) == expected
         assert native.blocked_boxes(*args) == expected
+
+
+def test_native_stores_follow_the_reference_through_every_method():
+    """Rows written, kept (any order, negative = from the end), cut and read back alike."""
+    native = _native()
+    rng = random.Random(4)
+    rows = [tuple(rng.uniform(-50, 50) for _ in py.PROJECTILE_FIELDS) for _ in range(30)]
+    ref, fast = py.ProjectileStore(), native.ProjectileStore()
+    for store in (ref, fast):
+        store.add(rows)
+        store.add([])
+        store.set_velocity(-1, 3.5, -2)
+        store.set_values(0, x=1.25, gravity=7, uid=99)
+        store.keep([5, 0, -1, 7, 7, 29])
+    for name in py.PROJECTILE_FIELDS:
+        assert fast.column(name) == ref.column(name), name
+    assert [list(map(float, c)) for c in fast.boxes()] == list(map(list, ref.boxes()))
+    assert fast.expired() == ref.expired()
+    for store in (ref, fast):
+        with pytest.raises(IndexError):
+            store.keep([6])
+        with pytest.raises(IndexError):
+            store.set_values(6, x=0.0)
+    with pytest.raises(ValueError):
+        fast.add([(1.0, 2.0)])
+    fast.keep([])
+    assert len(fast) == 0 and fast.boxes()[0] is not None and fast.expired() == []
+    fast.step(1 / 60, [], [])
+    weather = [tuple(rng.uniform(0, 100) for _ in py.WEATHER_FIELDS) for _ in range(12)]
+    ref, fast = py.WeatherStore(), native.WeatherStore()
+    for store in (ref, fast):
+        store.add(weather)
+        store.set_row(-2, (1.0, 2.0, 3.0, 4.0, 5.0))
+        store.truncate(50)
+        store.truncate(9)
+    for name in py.WEATHER_FIELDS:
+        assert fast.column(name) == ref.column(name), name
+    fast.truncate(0)
+    assert len(fast) == 0 and fast.step(1 / 60, 0, 0, True, 0, 0, 10, 10) == []
+    particles = native.ParticleStore()
+    particles.shift(1.0, 1.0)  # empty: nothing to move
+    particles.step(1 / 60, 0.0, 0.0, 1.0)
+    assert len(particles) == 0 and particles.views(1, 2, (0,) * 4, (0,) * 4, 1.0) == []
+
+
+def test_native_kernels_accept_numpy_columns_and_odd_values():
+    """Inputs the engine may hand over: numpy columns, iterators, float flags and indices."""
+    native = _native()
+    a = ([0.0, 3.0], [0.0, 3.0], [4.0, 9.0], [4.0, 9.0])
+    want = py.aabb_pairs(*a, 8.0)
+    assert native.aabb_pairs(*(iter(c) for c in a), 8.0) == want
+    try:
+        import numpy as np
+    except ImportError:
+        np = None
+    if np is not None:
+        assert native.aabb_pairs(*(np.asarray(c) for c in a), 8.0) == want
+        assert native.aabb_pairs(*(np.asarray(c)[::-1][::-1] for c in a), 8.0) == want
+    held = [0.5, 0, 2, -1]
+    args = ([1.0, 1.0, 0.0, 0.0], [0.0] * 4, [0.0, 1.0, 2.0, 3.0], held)
+    assert native.facing_codes(*args) == py.facing_codes(*args)
+    walls = ([5.0], [5.0], [1.0])
+    boxes = ([0.0], [0.0], [10.0], [10.0])
+    for flags in ([0.5], [2], [True], [0]):
+        call = (boxes, walls, [(0, 0)], [1], [-1], [1], [0], flags)
+        assert native.blocked_rows(*call) == py.blocked_rows(*call)
+
+
+_WITHOUT_NUMPY = """
+import sys
+sys.modules["numpy"] = None  # import numpy now fails, as on a Python without it
+import pytest
+from asteria import kernels
+from asteria.kernels import _native
+assert _native.np is None and _native._fallback.NAME == "python"
+assert kernels.available()[0] == "native", kernels.available()
+sys.exit(pytest.main(["-q", "-p", "no:cacheprovider", sys.argv[1], "-k", "not without_numpy"]))
+"""
+
+
+def test_native_kernels_match_the_reference_without_numpy():
+    """This whole file again in a Python where numpy cannot be imported."""
+    _native()
+    result = subprocess.run(
+        [sys.executable, "-c", _WITHOUT_NUMPY, __file__],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=Path(__file__).resolve().parents[1],
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert " passed" in result.stdout and "skipped" not in result.stdout, result.stdout
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="universal binaries are a macOS thing")
+def test_the_macos_library_is_universal():
+    native = _native()
+    if not Path("/usr/bin/lipo").is_file():
+        pytest.skip("no lipo")
+    info = subprocess.run(
+        ["/usr/bin/lipo", "-archs", str(native._path)], capture_output=True, text=True
+    )
+    archs = set(info.stdout.split())
+    if archs == {"arm64"} or archs == {"x86_64"}:
+        pytest.skip(f"built for this machine only ({info.stdout.strip()}): no universal compiler")
+    assert {"arm64", "x86_64"} <= archs, info.stdout + info.stderr
+    if Path("/usr/bin/vtool").is_file() and not os.environ.get("MACOSX_DEPLOYMENT_TARGET"):
+        build = subprocess.run(
+            ["/usr/bin/vtool", "-show-build", str(native._path)], capture_output=True, text=True
+        )
+        mins = [line.split()[1] for line in build.stdout.splitlines() if "minos" in line]
+        assert mins and all(m == "11.0" for m in mins), build.stdout  # loads on older Macs
+
+
+def test_the_build_falls_back_to_this_machine_when_universal_fails(monkeypatch):
+    from asteria.kernels import build_native
+
+    commands = []
+
+    def run(command, **_):
+        commands.append(command)
+        failed = "-arch" in command
+        return subprocess.CompletedProcess(command, 1 if failed else 0, "", "")
+
+    monkeypatch.setattr(build_native.subprocess, "run", run)
+    build_native.build(verbose=False, universal=True)
+    assert len(commands) == 2 and "-arch" in commands[0] and "-arch" not in commands[1]
+    commands.clear()
+    build_native.build(verbose=False, universal=False)
+    assert len(commands) == 1 and "-arch" not in commands[0]
+
+
+_FROM_PYZ = """
+import sys, zipfile
+from pathlib import Path
+sys.modules["numpy"] = None  # the player's Python has no numpy
+pyz = Path(sys.argv[1])
+main = {"__name__": "packaged_game", "__file__": str(pyz / "__main__.py")}
+exec(zipfile.ZipFile(pyz).read("__main__.py"), main)
+target = main["unpack"](pyz)
+sys.path.insert(0, str(target / "engine"))
+from asteria import kernels
+from asteria.kernels import _native, _python
+assert Path(_native._path).is_relative_to(target), _native._path
+a = ([0.0, 3.0], [0.0, 3.0], [4.0, 9.0], [4.0, 9.0])
+assert _native.aabb_pairs(*a, 8.0) == _python.aabb_pairs(*a, 8.0)
+print(kernels.available()[0])
+"""
+
+
+def test_an_exported_pyz_loads_the_native_library_after_unpacking(tmp_path):
+    _native()
+    from asteria.project_tools import _copy_engine, build_pyz
+
+    _copy_engine(tmp_path / "game" / "engine")
+    pyz = build_pyz(tmp_path / "game", tmp_path / "out" / "Game.pyz", name="KernelCheck")
+    home = tmp_path / "home"
+    env = {**os.environ, "HOME": str(home), "LOCALAPPDATA": str(home)}
+    env.pop("XDG_CACHE_HOME", None)
+    env.pop("PYTHONPATH", None)
+    result = subprocess.run(
+        [sys.executable, "-I", "-c", _FROM_PYZ, str(pyz)],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=tmp_path,
+        env=env,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout.split() == ["native"], result.stdout

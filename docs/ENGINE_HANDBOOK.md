@@ -231,7 +231,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | 項目 | 狀態 |
 | --- | --- |
 | 圖示與美術 | 所有 demo（Full Verification、Octopath、reference、Diablo 兩個、party／basic／action 範本）的人物、怪物、地圖、UI、裝備與技能圖示都是 Foozle Lucifer（CC0）；例外：Diablo 的箭與投射物、弓和魔杖圖示來自 Ninja Adventure（Lucifer 沒有）。程式畫的原創圖示（`graphics/forged_icons.py`，D35）仍在引擎裡可選。沒有 AI 美術 |
-| 原生 kernel 要每台機器編譯一次 | `python -m asteria.kernels.build_native`；沒編譯會退回 numpy |
+| 原生 kernel 要在開發機編譯一次 | `python -m asteria.kernels.build_native`（macOS 編成 arm64 + x86_64 通用檔）；匯出會帶著它，玩家的 Python 沒有 numpy 也能用；沒編譯會退回 numpy／python |
 | `CollisionWorld.from_scene` 沒有快取 | 2026-10-16 量測：100／500／2000 個碰撞器建一次 0.05／0.22／0.85 ms，每幀約一次，不是瓶頸；失效模型（啟用狀態、增刪、換場景、移動）的風險大於收益，**決定不做** |
 | Enemy AI 的七欄規則表 | 窗口很窄時可橫向捲動（表格的正常行為） |
 | 手把與實體鍵盤、音訊聽感與延遲 | 需要真人；沒有自動化 |

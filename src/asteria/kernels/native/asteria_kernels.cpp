@@ -56,7 +56,7 @@ int64_t emit(std::vector<int64_t>& found, int64_t* out, int64_t cap) {
 
 extern "C" {
 
-int32_t ak_abi_version() { return 3; }
+int32_t ak_abi_version() { return 4; }
 
 // -- broad phase ----------------------------------------------------------------------------
 // Pairs i < j of overlapping (or touching) boxes, written as i * n + j, sorted.
@@ -189,6 +189,24 @@ void ak_projectile_step(
         y[i] += vy[i] * dt;
         age[i] += dt;
     }
+}
+
+// -- store rows (an (fields, n) row-major float64 matrix) -------------------------------------
+// The rows ``rows`` (negative = from the end) of ``src`` into ``dst`` (fields, m). Returns 0, or
+// -1 when a row is out of range (``dst`` is then partly written).
+int32_t ak_take_rows(
+    const double* src, int64_t fields, int64_t n, const int64_t* rows, int64_t m, double* dst) {
+    for (int64_t k = 0; k < m; ++k) {
+        const int64_t r = rows[k] < 0 ? rows[k] + n : rows[k];
+        if (r < 0 || r >= n) return -1;
+        for (int64_t f = 0; f < fields; ++f) dst[f * m + k] = src[f * n + r];
+    }
+    return 0;
+}
+
+// ``values[i] += delta`` for every value.
+void ak_offset(double* values, int64_t n, double delta) {
+    for (int64_t i = 0; i < n; ++i) values[i] += delta;
 }
 
 // -- columns by slot ------------------------------------------------------------------------
