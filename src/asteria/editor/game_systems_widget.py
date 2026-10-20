@@ -411,6 +411,25 @@ class _InlineTable(QGroupBox):
         return [copy.deepcopy(form.data()) for form in self.forms]
 
 
+_ICON_TABLES = {}  # id of an icon list -> {icon id: picture}
+
+
+class _LazyIconCombo(QComboBox):
+    """Fills its owner's whole icon list when opened or searched."""
+
+    def __init__(self, owner):
+        super().__init__()
+        self._owner = owner
+
+    def showPopup(self):  # noqa: N802 - Qt API
+        self._owner._fill_all()
+        super().showPopup()
+
+    def findData(self, *args, **kwargs):  # noqa: N802 - Qt API
+        self._owner._fill_all()
+        return super().findData(*args, **kwargs)
+
+
 class _IconPicker(QWidget):
     """An icon field: a list of the project's icons and the built-in library (each with its
     picture), a preview and Browse… to bring in a picture file of one's own. Paths show as their
@@ -427,7 +446,8 @@ class _IconPicker(QWidget):
         self.preview = QLabel()
         self.preview.setFixedSize(32, 32)
         self.preview.setAlignment(Qt.AlignCenter)
-        self.combo = QComboBox()
+        self.combo = _LazyIconCombo(self)
+        self._filled = False  # the whole list is added when it is first opened
         self.combo.setMaxVisibleItems(12)
         # a long list must not make Qt measure every entry each time the form is laid out
         self.combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
@@ -457,13 +477,34 @@ class _IconPicker(QWidget):
         self.combo.setItemData(self.combo.count() - 1, icon_id, Qt.ToolTipRole)
 
     def _fill(self):
+        """The list: the current icon only until it is opened (a skill tree's form has a
+        picker per node; filling each with every icon took seconds)."""
+        current = self.text() if self.combo.count() else ""
         self.combo.blockSignals(True)
         self.combo.clear()
         self._add("")
-        if self.library is not None:
+        if self._filled and self.library is not None:
             for icon_id, icon in self.library.choices():
                 self._add(icon_id, icon)
         self.combo.blockSignals(False)
+        if current:
+            self.setText(current)
+
+    def _fill_all(self):
+        if self._filled:
+            return
+        self._filled = True
+        self._fill()
+
+    def _icon_of(self, icon_id):
+        if self.library is None or not icon_id:
+            return None
+        choices = self.library.choices()
+        table = _ICON_TABLES.get(id(choices))
+        if table is None:
+            _ICON_TABLES.clear()  # one list at a time: the newest
+            table = _ICON_TABLES[id(choices)] = dict(choices)
+        return table.get(icon_id)
 
     def _shown(self, *_):
         icon = self.combo.itemIcon(self.combo.currentIndex())
@@ -488,9 +529,9 @@ class _IconPicker(QWidget):
 
     def setText(self, value):  # noqa: N802 - Qt-style
         value = str(value or "").strip()
-        index = self.combo.findData(value)
-        if index < 0:  # an id the list does not know (hand-written data): keep it
-            self._add(value)
+        index = QComboBox.findData(self.combo, value)  # the plain search: no full fill
+        if index < 0:  # not listed yet (or hand-written data): added with its picture
+            self._add(value, self._icon_of(value))
             index = self.combo.count() - 1
         self.combo.blockSignals(True)
         self.combo.setCurrentIndex(index)

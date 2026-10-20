@@ -69,3 +69,43 @@ def test_a_bad_value_is_shown_and_not_applied(app):
     assert not family.auto_apply()
     assert form.error.isVisibleTo(form) and "Not applied" in form.error.text()
     assert project.rpg_database.classes["brave"].unlock_level == 0
+
+
+def test_a_skill_tree_opens_as_its_graph_without_building_the_form(app):
+    """The graph shows first; the form (thousands of fields for a 50-node tree) waits, unbuilt,
+    yet holds the record; long lists open one entry at a time; icon pickers fill on demand."""
+    from PySide6.QtWidgets import QToolButton
+
+    from asteria.editor.record_form import CardList, NumberBox
+
+    _project, _document, family = _family("graphs", "archmage_tree")
+    assert family.detail_stack.currentWidget() is family.graph_view
+    form = family.editor
+    assert form._unbuilt and not form.findChildren(NumberBox)  # nothing built behind the graph
+    assert form.record()["graph_id"] == "archmage_tree"  # the record is there all the same
+    family.show()  # the page on screen, still on the graph
+    app.processEvents()
+    assert form._unbuilt
+    family.toggle_skill_tree_view()  # the form shown: built now
+    app.processEvents()
+    assert not form._unbuilt
+    nodes = next(c for c in form.findChildren(CardList) if c.key == "nodes")
+    assert nodes.folded and len(nodes.entries) > 8
+    arrows = [b for b in nodes.findChildren(QToolButton) if b.text() == "▸"]
+    assert len(arrows) == len(nodes.entries)  # every node closed: title lines only
+    before = len(nodes.findChildren(NumberBox))
+    arrows[0].click()  # opening a node builds its fields
+    assert len(nodes.findChildren(NumberBox)) > before
+    family.close()
+
+
+def test_an_icon_picker_fills_its_list_when_opened(app):
+    from asteria.editor.game_systems_widget import _IconPicker
+
+    _project, _document, family = _family("items", "ether_leaf")
+    (picker,) = family.editor.findChildren(_IconPicker)
+    assert picker.combo.count() <= 2  # "(none)" and the item's own icon
+    assert picker.text() == "icon.ether_leaf"
+    assert not picker.combo.itemIcon(picker.combo.currentIndex()).isNull()  # with its picture
+    assert picker.combo.findData("forged:fire") > 0  # a search fills the whole list
+    assert picker.text() == "icon.ether_leaf"  # and keeps the choice

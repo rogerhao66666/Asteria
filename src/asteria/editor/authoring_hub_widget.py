@@ -1147,7 +1147,12 @@ class AdapterFamilyWidget(QWidget):
         data = with_optional_fields(encoded, value)
         optional = set(data) - set(encoded) if isinstance(data, dict) else ()
         self._editing = key
-        self.editor.set_record(data, key, optional=optional, category=self.category_id)
+        graph_first = self.category_id == "graphs" and not self._list_chosen
+        if graph_first:  # the graph shows first: the form waits behind it, unbuilt
+            self.detail_stack.setCurrentWidget(self.graph_view)
+        self.editor.set_record(
+            data, key, optional=optional, category=self.category_id, defer=graph_first
+        )
         self.editor.set_error(None)
         if self.category_id == "graphs":
             self.graph_view.set_graph_data(data)

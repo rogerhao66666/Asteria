@@ -832,7 +832,10 @@ class RecordForm(QScrollArea):
         self._data = None
         self._rebuild()
 
-    def set_record(self, data, title=None, *, optional=(), category=""):
+    def set_record(self, data, title=None, *, optional=(), category="", defer=False):
+        """Show ``data``; ``defer`` keeps it (``record()`` has it) but builds the fields only
+        when the form is first shown - a skill tree's form has thousands of fields, and it
+        sits behind the graph until asked for."""
         same = (
             self._data is not None
             and data == self._data
@@ -847,7 +850,15 @@ class RecordForm(QScrollArea):
         self.optional = set(optional)
         self.category = category or self.category
         self.vocabulary = vocabulary_for(self.document)
-        self._rebuild()
+        self._unbuilt = bool(defer) and not self.isVisible()
+        if not self._unbuilt:
+            self._rebuild()
+
+    def showEvent(self, event):  # noqa: N802 - Qt API
+        super().showEvent(event)
+        if getattr(self, "_unbuilt", False):
+            self._unbuilt = False
+            self._rebuild()
 
     def record(self):
         return None if self._data is None else deepcopy(self._data)
@@ -886,6 +897,7 @@ class RecordForm(QScrollArea):
 
     # -- building -----------------------------------------------------------------------------
     def _rebuild(self):
+        self._unbuilt = False
         scroll = self.verticalScrollBar().value()
         old = self.takeWidget()  # kept alive until the new page is in (the banner moves over)
         self.error.setParent(None)
@@ -1253,6 +1265,9 @@ class _SubForm(QWidget):
                 form._field(self.section, data, k, v)
 
 
+FOLD_AFTER = 8  # a list with more entries than this opens one entry at a time
+
+
 class CardList(QWidget):
     """A list of entries as cards; each card holds the entry's fields."""
 
@@ -1265,8 +1280,13 @@ class CardList(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
         noun = _noun(key)
+        # a long list (a skill tree's nodes) shows each entry as its title line; its fields
+        # are built when it is opened - building every card at once took many seconds
+        self.folded = len(entries) > FOLD_AFTER
         if not entries:
             layout.addWidget(_small(f"No {label_for(key).lower()} yet."))
+        elif self.folded:
+            layout.addWidget(_small(f"{len(entries)} entries - click ▸ to open one."))
         for index, entry in enumerate(entries):
             layout.addWidget(self._card(index, entry, noun))
         add = QPushButton(f"+ Add {noun}")
@@ -1283,6 +1303,15 @@ class CardList(QWidget):
         body = QVBoxLayout(card)
         body.setContentsMargins(8, 6, 8, 6)
         head = QHBoxLayout()
+        foldable = self.folded and isinstance(entry, dict)
+        opened = self._opened()
+        is_open = not foldable or (id(self.entries), index) in opened
+        if foldable:
+            arrow = QToolButton()
+            arrow.setText("▾" if is_open else "▸")
+            arrow.setToolTip("Show or hide this entry's fields")
+            arrow.setObjectName("FormCardMore")
+            head.addWidget(arrow)
         title = QLabel(f"<b>{index + 1}.</b>  {_entry_title(entry, noun, self.names)}")
         head.addWidget(title, 1)
         for text, tip, handler in (
@@ -1297,6 +1326,39 @@ class CardList(QWidget):
             button.clicked.connect(handler)
             head.addWidget(button)
         body.addLayout(head)
+        if foldable:
+            holder = QWidget()
+            holder_layout = QVBoxLayout(holder)
+            holder_layout.setContentsMargins(0, 0, 0, 0)
+            body.addWidget(holder)
+
+            def toggle(_checked=False, holder=holder, arrow=arrow):
+                key = (id(self.entries), index)
+                if key in opened:
+                    opened.discard(key)
+                    holder.hide()
+                    arrow.setText("▸")
+                    return
+                opened.add(key)
+                if not holder_layout.count():
+                    self._fill_card(holder_layout, index, entry)
+                holder.show()
+                arrow.setText("▾")
+
+            arrow.clicked.connect(toggle)
+            if is_open:
+                self._fill_card(holder_layout, index, entry)
+            else:
+                holder.hide()
+            return card
+        self._fill_card(body, index, entry)
+        return card
+
+    def _opened(self):
+        """Which folded entries are open, kept by the form across its rebuilds."""
+        return self.form.__dict__.setdefault("_open_cards", set())
+
+    def _fill_card(self, body, index, entry):
         if isinstance(entry, dict):
             plain = "QFrame#FormSection { border: none; background: transparent; }"
             section = Section("", compact=True, columns=3)
@@ -1326,7 +1388,6 @@ class CardList(QWidget):
                 body.addWidget(extra)
         else:
             body.addWidget(self.form.widget_for(self.entries, index, entry))
-        return card
 
     def add(self):
         if self.entries:
@@ -1336,11 +1397,13 @@ class CardList(QWidget):
             if entry is None:
                 return  # nothing known to start from (copy an entry from another record)
         self.entries.append(_fresh_ids(entry, self.entries, self.form))
+        self._opened().add((id(self.entries), len(self.entries) - 1))  # a new one opens
         self.form.restructure()
 
     def duplicate(self, index):
         entry = _fresh_ids(deepcopy(self.entries[index]), self.entries, self.form)
         self.entries.insert(index + 1, entry)
+        self._opened().add((id(self.entries), index + 1))
         self.form.restructure()
 
     def remove(self, index):
