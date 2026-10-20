@@ -137,7 +137,10 @@ class _TableField(QGroupBox):
     changed = Signal()
 
     def __init__(self, label, fields, references, parent=None, *, icons=None):
-        super().__init__(label, parent)
+        # untitled: its name is the form's caption above it, like every other field's
+        super().__init__("", parent)
+        self.label = label
+        self.setProperty("untitled", True)
         self.fields = fields
         self.rows = []
         self._current = -1
@@ -310,7 +313,13 @@ class _Decimal(QDoubleSpinBox):
 
 
 class _Group(QGroupBox):
-    """A titled group of fields; sized by its plain minimum height (see ``_TableField``)."""
+    """A group of fields (named by the caption above it); sized by its plain minimum height
+    (see ``_TableField``)."""
+
+    def __init__(self, label="", parent=None):
+        super().__init__("", parent)
+        self.label = label
+        self.setProperty("untitled", True)
 
     def hasHeightForWidth(self):  # noqa: N802 - Qt API
         return False
@@ -334,7 +343,10 @@ class _InlineTable(QGroupBox):
     changed = Signal()
 
     def __init__(self, label, fields, references, parent=None, *, icons=None):
-        super().__init__(label, parent)
+        # untitled: its name is the form's caption above it, like every other field's
+        super().__init__("", parent)
+        self.label = label
+        self.setProperty("untitled", True)
         self.fields, self.references, self.icons = fields, references, icons
         self.forms = []
         self.body = QVBoxLayout()
@@ -566,8 +578,8 @@ class RecordForm(QWidget):
             widget = self._build(f)
             self._watch(f, widget)
             self.widgets[f.key] = widget
-            if f.kind in ("group", "table"):
-                self.grid.add_wide(widget)
+            if f.kind in ("group", "table"):  # a caption like any field's, the box below it
+                self.grid.add_row(f.label, widget, span=True)
             else:
                 self.grid.add_row(
                     f.label,

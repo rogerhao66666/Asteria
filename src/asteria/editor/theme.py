@@ -411,6 +411,7 @@ QGroupBox {
     border: 1px solid $border; border-radius: 8px; margin-top: 22px; padding: 8px 5px 5px 5px;
     background: $panel;
 }
+QGroupBox[untitled="true"] { margin-top: 0px; padding-top: 4px; }
 /* the title sits above the frame line (not on it): the margin is taller than the title */
 QGroupBox::title { subcontrol-origin: margin; subcontrol-position: top left; left: 8px;
     top: 2px; padding: 0 2px; color: $text_dim; font-weight: 700; }
@@ -768,6 +769,20 @@ def _branch_rules(palette):
         paths[kind] = path.as_posix()
     closed, opened, combo = paths["closed"], paths["open"], paths["combo"]
     spin_up = paths["spin-up"]
+    check = folder / "check-ffffff.png"  # the tick of a checked box, on the accent colour
+    if not check.exists():
+        pm = QPixmap(32, 32)
+        pm.fill(Qt.transparent)
+        painter = QPainter(pm)
+        painter.setRenderHint(QPainter.Antialiasing)
+        pen = QPen(QColor("#ffffff"), 4.0)
+        pen.setCapStyle(Qt.RoundCap)
+        pen.setJoinStyle(Qt.RoundJoin)
+        painter.setPen(pen)
+        painter.drawPolyline([QPointF(8, 16.5), QPointF(13.5, 22), QPointF(24, 10)])
+        painter.end()
+        pm.save(str(check))
+    tick = check.as_posix()
     return (
         f"QAbstractSpinBox::up-arrow {{ image: url({spin_up});"
         " width: 12px; height: 12px; }\n"
@@ -777,6 +792,13 @@ def _branch_rules(palette):
         f"QTreeView::branch:has-children:closed {{ image: url({closed}); }}\n"
         f"QTreeView::branch:has-children:open {{ image: url({opened}); }}\n"
         "QTreeView::branch { background: transparent; }\n"
+        # every checkbox drawn alike (the system's bright blue box looked foreign in a form)
+        f"QCheckBox::indicator {{ width: 16px; height: 16px; border-radius: 4px;"
+        f" border: 1px solid {palette.border_strong}; background: {palette.raised}; }}\n"
+        f"QCheckBox::indicator:hover {{ border-color: {palette.primary_hi}; }}\n"
+        f"QCheckBox::indicator:checked {{ background: {palette.primary};"
+        f" border-color: {palette.primary}; image: url({tick}); }}\n"
+        f"QCheckBox::indicator:disabled {{ background: {palette.panel}; }}\n"
     )
 
 

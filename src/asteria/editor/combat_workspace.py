@@ -155,22 +155,30 @@ class _Table(QWidget):
                 widget = _double(
                     value or options.get("default", 0.0), step=options.get("step", 1.0)
                 )
+                # a narrow cell: no arrows (typing and the wheel still change it), so the
+                # number itself has the room
+                widget.setButtonSymbols(QDoubleSpinBox.NoButtons)
                 widget.valueChanged.connect(self._emit)
             elif kind == "bool":
                 widget = QCheckBox()
                 widget.setChecked(bool(value))
                 widget.toggled.connect(self._emit)
-                cell = QWidget()  # the box centred in its cell, not in the top corner
-                centre = QHBoxLayout(cell)
-                centre.setContentsMargins(0, 0, 0, 0)
-                centre.addWidget(widget, 0, Qt.AlignCenter)
-                cell.check = widget
-                widget = cell
+
             else:
                 widget = QLineEdit("" if value is None else str(value))
                 widget.setPlaceholderText(options.get("placeholder", ""))
                 widget.textChanged.connect(self._emit)
-            self.table.setCellWidget(row, column, widget)
+            # each field sits in its cell with a little room around it (they touched before);
+            # a checkbox is centred
+            cell = QWidget()
+            room = QHBoxLayout(cell)
+            room.setContentsMargins(3, 3, 3, 3)
+            if kind == "bool":
+                room.addWidget(widget, 0, Qt.AlignCenter)
+            else:
+                room.addWidget(widget)
+            cell.field = widget
+            self.table.setCellWidget(row, column, cell)
         # as tall as its tallest field (spin boxes and lists are taller than 30 px)
         tallest = max(
             (self.table.cellWidget(row, c).sizeHint().height() for c in range(len(self.columns))),
@@ -185,6 +193,7 @@ class _Table(QWidget):
             values = []
             for column, (_title, kind, _options) in enumerate(self.columns):
                 widget = self.table.cellWidget(row, column)
+                widget = getattr(widget, "field", widget)
                 if kind == "choice":
                     text = widget.currentText()
                     index = widget.findText(text)
@@ -192,7 +201,7 @@ class _Table(QWidget):
                 elif kind == "float":
                     values.append(widget.value())
                 elif kind == "bool":
-                    values.append(getattr(widget, "check", widget).isChecked())
+                    values.append(widget.isChecked())
                 else:
                     values.append(widget.text().strip())
             result.append(values)
