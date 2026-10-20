@@ -458,7 +458,8 @@ class _IconPicker(QWidget):
         row = QGridLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
         self.preview = QLabel()
-        self.preview.setFixedSize(32, 32)
+        self.preview.setObjectName("IconPreview")  # a framed square (theme)
+        self.preview.setFixedSize(36, 36)
         self.preview.setAlignment(Qt.AlignCenter)
         self.combo = _LazyIconCombo(self)
         self._filled = False  # the whole list is added when it is first opened
@@ -518,14 +519,23 @@ class _IconPicker(QWidget):
         if table is None:
             _ICON_TABLES.clear()  # one list at a time: the newest
             table = _ICON_TABLES[id(choices)] = dict(choices)
-        return table.get(icon_id)
+        icon = table.get(icon_id)
+        if icon is None:  # a picture file outside the icon folders (playable_assets/…)
+            from PySide6.QtGui import QIcon
+
+            from .image_tools import icon_pixmap
+
+            pixmap = icon_pixmap(getattr(self.library, "document", None), icon_id, 64)
+            icon = None if pixmap is None else QIcon(pixmap)
+        return icon
 
     def _shown(self, *_):
         icon = self.combo.itemIcon(self.combo.currentIndex())
         if icon is not None and not icon.isNull():
-            self.preview.setPixmap(icon.pixmap(32, 32))
+            side = min(self.preview.width(), self.preview.height()) - 8  # inside its frame
+            self.preview.setPixmap(icon.pixmap(side, side))
         else:
-            self.preview.clear()
+            self.preview.setText("None")  # the frame says there is no picture yet
         self.combo.setToolTip(self.text())
         self.changed.emit()
 

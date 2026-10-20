@@ -993,13 +993,17 @@ class RecordForm(QScrollArea):
             from .game_systems_widget import _IconPicker
 
             picker = _IconPicker(self.icon_library)
-            picker.preview.setFixedSize(48, 48)
+            picker.preview.setFixedSize(56, 56)
             picker.setText(str(data.get("icon_id") or ""))
             picker.changed.connect(lambda p=picker: self._set(data, "icon_id", p.text()))
             picker.setToolTip(HELP["icon_id"])
             icon_box = QHBoxLayout()
             label = _small("Icon")
-            label.setFixedHeight(48)  # level with the picture
+            label.setWordWrap(False)
+            # level with the list beside it (centred on the picture and Browse…, the word
+            # floated between them)
+            picker.combo.ensurePolished()
+            label.setFixedHeight(picker.combo.sizeHint().height())
             icon_box.addWidget(label, 0, Qt.AlignTop)
             icon_box.addWidget(picker, 1)
         else:

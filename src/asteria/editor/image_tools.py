@@ -250,9 +250,12 @@ def icon_pixmap(document, icon_id, size=32):
     path = Path(icon_id) if Path(icon_id).is_absolute() else root / icon_id
     if not path.is_file() and project is not None:  # an icon asset (maybe a sheet cell)
         try:
-            uri, region = icon_source(project, icon_id)
+            source = icon_source(project, icon_id)
         except (KeyError, ValueError):
             return None
+        if source is None:  # no such icon asset either
+            return None
+        uri, region = source
         path = Path(uri) if Path(uri).is_absolute() else root / uri
     if not path.is_file():
         return None

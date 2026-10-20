@@ -155,6 +155,11 @@ QDockWidget::title {
 }
 QWidget#DockTitleBar { background: $panel; border-bottom: 1px solid $border; }
 QLabel#DockTitle { color: $text; font-weight: 700; padding: 0 2px; }
+/* an icon field's picture in a frame; "None" in it when there is no picture */
+QLabel#IconPreview {
+    background: $input; border: 1px solid $border_strong; border-radius: 6px;
+    color: $text_muted; font-size: 10px;
+}
 QToolButton#DockTitleButton { background: transparent; border: 0; border-radius: 5px; padding:
 3px; }
 QToolButton#DockTitleButton:hover { background: $hover; }
