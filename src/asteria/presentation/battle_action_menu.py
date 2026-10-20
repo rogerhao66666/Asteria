@@ -53,8 +53,16 @@ class BattleActionEntry:
         label = action_id if label is None else _id(label, "label")
         category = _id(category, "category")
         kind = _id(kind, "kind")
-        tags = tuple(dict.fromkeys(str(x).strip() for x in tags if str(x).strip()))
-        search_terms = tuple(dict.fromkeys(str(x).strip() for x in search_terms if str(x).strip()))
+        if tags:  # most rows have none; the menu builds rows on every frame
+            tags = tuple(dict.fromkeys(str(x).strip() for x in tags if str(x).strip()))
+        else:
+            tags = ()
+        if search_terms:
+            search_terms = tuple(
+                dict.fromkeys(str(x).strip() for x in search_terms if str(x).strip())
+            )
+        else:
+            search_terms = ()
         object.__setattr__(self, "action_id", action_id)
         object.__setattr__(self, "label", label)
         object.__setattr__(self, "category", category)

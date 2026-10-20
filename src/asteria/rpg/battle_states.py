@@ -297,20 +297,17 @@ class BattleStateRuntime:
     def ability_availability(self, subject, ability_tags=()):
         if subject.states is None:
             return AbilityAvailability(True)
-        ability_tags = set(_tags(ability_tags))
-        blocked = []
+        blocked, tags = [], None
         for active in subject.states.active_states():
             policy = self.policies.get(active.state_id)
             if policy is None:
                 continue
-            outside = bool(policy.allowed_ability_tags) and not ability_tags.intersection(
+            if tags is None:  # the tags are read only once a state with a battle policy is on
+                tags = set(_tags(ability_tags))
+            outside = bool(policy.allowed_ability_tags) and not tags.intersection(
                 policy.allowed_ability_tags
             )
-            if (
-                policy.prevent_action
-                or outside
-                or ability_tags.intersection(policy.blocked_ability_tags)
-            ):
+            if policy.prevent_action or outside or tags.intersection(policy.blocked_ability_tags):
                 blocked.append(active.state_id)
         blocked = tuple(sorted(blocked))
         return AbilityAvailability(not blocked, blocked, "blocked_by_state" if blocked else "")

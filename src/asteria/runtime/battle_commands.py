@@ -124,6 +124,17 @@ class BattleCommands:
         return labels.get(resource_id) or resource_id.upper()[:3]
 
     def _cost_text(self, definition):
+        # Ability definitions are frozen, so each one's text is worked out once (the menu asks on
+        # every frame); the definition is kept with it so a replaced one is worked out again.
+        cache = getattr(self, "_costs", None)
+        if cache is None:
+            cache = self._costs = {}
+        known = cache.get(id(definition))
+        if known is None or known[0] is not definition:
+            known = cache[id(definition)] = (definition, self._work_out_cost_text(definition))
+        return known[1]
+
+    def _work_out_cost_text(self, definition):
         parts = []
         for cost in definition.costs:
             amount = _constant(cost.amount)
@@ -177,15 +188,20 @@ class BattleCommands:
         return self._ability_rows(actor_id, self.weapon_ability_ids(actor_id), "Attack")
 
     def root_rows(self, actor_id):
-        weapons = self.attack_rows(actor_id)
-        skills = [r for r in self.skill_rows(actor_id) if r.action_id not in ("boost",)]
-        items = self.item_rows()
+        # Only how many rows each command opens is shown here, so the rows are counted, not
+        # built (building them asks every ability why it cannot be used, on every frame).
+        registry = self.game.battle.ability_runtime.registry
+        weapons = sum(1 for a in self.weapon_ability_ids(actor_id) if registry.get(a) is not None)
+        abilities = self._skill_groups(actor_id)
+        skills = sum(1 for a, _ in abilities.get("Skills", ()) if a != "boost")
+        skills += 1 if self.game.capture_targets() else 0
+        items = sum(1 for _ in self._usable_items())
         rows = []
-        groups = [("Attack", len(weapons), "Choose a weapon"), ("Skills", len(skills), "")]
-        groups[1] = ("Skills", len(skills), "Abilities, concoct, capture")
+        groups = [("Attack", weapons, "Choose a weapon")]
+        groups.append(("Skills", skills, "Abilities, concoct, capture"))
         for name in self.custom_categories(actor_id):
-            groups.append((name, len(self.skill_rows(actor_id, name)), "Abilities"))
-        groups.append(("Items", len(items), "Use an item from the bag"))
+            groups.append((name, len(abilities.get(name, ())), "Abilities"))
+        groups.append(("Items", items, "Use an item from the bag"))
         run = self.game.escape_chance()
         if run is not None:
             groups.append(("Escape", 1, f"{round(run * 100)}% to get away"))
@@ -219,10 +235,11 @@ class BattleCommands:
             )
         return rows
 
-    def skill_rows(self, actor_id, category="Skills"):
-        game, rows = self.game, []
-        registry = game.battle.ability_runtime.registry
-        known = game.battle.member(actor_id).ability_ids
+    def _skill_groups(self, actor_id):
+        """The abilities ``skill_rows`` lists, by category: ``{category: [(id, definition)]}``."""
+        groups = {}
+        registry = self.game.battle.ability_runtime.registry
+        known = self.game.battle.member(actor_id).ability_ids
         if self.style == "root":  # the weapons' attacks have their own category
             weapons = set(self.weapon_ability_ids(actor_id))
             known = tuple(a for a in known if a not in weapons)
@@ -233,8 +250,27 @@ class BattleCommands:
             definition = registry.get(ability_id)
             if definition is None:
                 continue
-            if (getattr(definition, "menu_category", "") or "Skills") != category:
-                continue
+            category = getattr(definition, "menu_category", "") or "Skills"
+            groups.setdefault(category, []).append((ability_id, definition))
+        return groups
+
+    def skill_rows(self, actor_id, category="Skills"):
+        return self._skill_rows(actor_id, category, self._skill_groups(actor_id))
+
+    def command_rows(self, actor_id):
+        """The rows of every category the command list shows, ``{category: rows}`` in menu
+        order: *Attack* (root style), *Skills*, the project's own groups, then *Items*."""
+        abilities = self._skill_groups(actor_id)
+        groups = {"Attack": self.attack_rows(actor_id)} if self.style == "root" else {}
+        groups["Skills"] = self._skill_rows(actor_id, "Skills", abilities)
+        for name in self.custom_categories(actor_id):  # a project's own menu groups
+            groups[name] = self._skill_rows(actor_id, name, abilities)
+        groups["Items"] = self.item_rows()
+        return groups
+
+    def _skill_rows(self, actor_id, category, abilities):
+        game, rows = self.game, []
+        for ability_id, definition in abilities.get(category, ()):
             reason = game.ability_unavailable(actor_id, ability_id)
             rows.append(
                 BattleActionEntry(
@@ -282,13 +318,17 @@ class BattleCommands:
             )
         return rows
 
-    def item_rows(self):
-        game, rows = self.game, []
-        inventory = game.save.rpg_state.inventory
-        for item_id, item in sorted(game.project.rpg_database.items.items()):
+    def _usable_items(self):
+        """``(item id, item, count)`` of the items in the bag that can be used in battle."""
+        inventory = self.game.save.rpg_state.inventory
+        for item_id, item in sorted(self.game.project.rpg_database.items.items()):
             count = inventory.count(item_id)
-            if count <= 0 or not (item.battle_ability or item.use_effects):
-                continue
+            if count > 0 and (item.battle_ability or item.use_effects):
+                yield item_id, item, count
+
+    def item_rows(self):
+        rows = []
+        for item_id, item, count in self._usable_items():
             rows.append(
                 BattleActionEntry(
                     item_id,

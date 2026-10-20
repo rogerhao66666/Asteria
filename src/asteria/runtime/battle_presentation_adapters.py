@@ -1221,17 +1221,21 @@ class CanonicalBattleAdapter:
             menu.show((), "Skills", 0)
             feedback.target_ids, feedback.primary_target_id = (), None
             return
+        if commands.mode == "command":
+            # Every category's rows, each built once; the open category's rows are among them.
+            groups = commands.command_rows(actor)
+            if commands.category in groups:
+                count = len(groups[commands.category])
+                commands.cursor = min(commands.cursor, max(0, count - 1))
+            else:
+                commands.entries(actor)  # keeps the cursor on a row of the open category
+            everything = [row for rows in groups.values() for row in rows]
+            menu.show(everything, commands.category, commands.cursor)
+            feedback.target_ids, feedback.primary_target_id = (), None
+            return
         rows = commands.entries(actor)
         if commands.mode == "root":
             menu.show(rows, "Command", commands.cursor)
-        elif commands.mode == "command":
-            everything = commands.skill_rows(actor)
-            for name in commands.custom_categories(actor):  # a project's own menu groups
-                everything = everything + commands.skill_rows(actor, name)
-            everything = everything + commands.item_rows()
-            if commands.style == "root":
-                everything = commands.attack_rows(actor) + everything
-            menu.show(everything, commands.category, commands.cursor)
         else:
             menu.show(rows, rows[0].category if rows else "Target", commands.cursor)
         target = commands.selected_target(actor)
