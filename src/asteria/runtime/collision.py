@@ -312,7 +312,9 @@ class CollisionWorld:
         self._row = {}
         self._shapes = None
         self._grid = None
+        self._rows = None  # (cell -> [row], row -> [cell]): the row grid, kept up to date
         self._solid = None
+        self._source = None  # what from_scene read, so follow() can update it in place
         self.parented = False  # some collider hangs under a parent transform (see move_shapes)
         self.stale = False  # positions changed in a way move_shapes could not follow: rebuild
         for shape in shapes:
@@ -343,6 +345,7 @@ class CollisionWorld:
             ):
                 getattr(self, "_" + name)[i] = value
             return
+        self._rows = None
         self._row[entity_id] = len(self._ids)
         self._ids.append(entity_id)
         self._kind.append(kind)
@@ -421,20 +424,85 @@ class CollisionWorld:
         A collider under a moved parent cannot be followed here; the world is then marked
         ``stale``.
         """
-        moved = False
+        moved = []
         row, cx, cy = self._row, self._cx, self._cy
         for entity_id, (dx, dy) in deltas.items():
             i = row.get(entity_id)
             if i is not None and (dx or dy):
                 cx[i] += dx
                 cy[i] += dy
-                moved = True
+                moved.append(i)
         if deltas and self.parented:
             self.stale = True
         if moved:
-            self._grid = None
-            self._solid = None
-            self._shapes = None
+            self._moved(moved)
+
+    def _moved(self, rows):
+        """Rows whose box changed: their cells are updated in the row grid (not rebuilt)."""
+        self._grid = None
+        self._solid = None
+        self._shapes = None
+        if self._rows is None:
+            return
+        if len(rows) * 2 > len(self._ids):  # most moved (a swarm): rebuilt when next needed
+            self._rows = None
+            return
+        cells, where = self._rows
+        for i in rows:
+            new = self._cells_of(i)
+            old = where[i]
+            if new == old:
+                continue
+            for cell in old:
+                members = cells[cell]
+                members.remove(i)
+                if not members:
+                    del cells[cell]
+            for cell in new:
+                members = cells.setdefault(cell, [])
+                members.append(i)
+                if len(members) > 1 and members[-2] > i:
+                    members.sort()  # rows in a cell stay in row (scene) order
+            where[i] = new
+
+    def _cells_of(self, i):
+        size = self.cell_size
+        x0, x1 = self._cx[i] - self._hw[i], self._cx[i] + self._hw[i]
+        y0, y1 = self._cy[i] - self._hh[i], self._cy[i] + self._hh[i]
+        return [
+            (a, b)
+            for a in range(floor(x0 / size), floor(x1 / size) + 1)
+            for b in range(floor(y0 / size), floor(y1 / size) + 1)
+        ]
+
+    def _row_grid(self):
+        """``(cells, where)``: the rows in each grid cell (in row order) and each row's cells;
+        built once, then moved shapes only change their own cells."""
+        if self._rows is None:
+            cells, where = {}, []
+            for i in range(len(self._ids)):
+                keys = self._cells_of(i)
+                where.append(keys)
+                for key in keys:
+                    cells.setdefault(key, []).append(i)
+            self._rows = (cells, where)
+        return self._rows
+
+    def query_box(self, bounds):
+        """Shapes whose grid cells meet ``bounds`` (as ``grid.query``: each once, in the order
+        cells and rows are met)."""
+        cells, _ = self._row_grid()
+        size = self.cell_size
+        x0, y0, x1, y1 = bounds
+        seen = {}
+        for a in range(floor(x0 / size), floor(x1 / size) + 1):
+            for b in range(floor(y0 / size), floor(y1 / size) + 1):
+                for i in cells.get((a, b), ()):
+                    if i not in seen:
+                        seen[i] = None
+        made = self.shapes
+        ids = self._ids
+        return tuple(made[ids[i]] for i in seen)
 
     @property
     def grid(self):
@@ -484,6 +552,17 @@ class CollisionWorld:
         live.sort(key=lambda row: row[0])
         slots = [row[1] for row in live]
         kinds = [row[3].shape for row in live]
+        world._source = (
+            scene,
+            colliders,
+            transforms,
+            colliders.version,
+            transforms.version,
+            len(colliders.slots()),
+            [(row[2], row[3]) for row in live],
+            slots,
+            [kind == "circle" for kind in kinds],
+        )
         cx, cy, hw, hh = kernels.active().collider_columns(
             transforms.data, colliders.data, slots, [kind == "circle" for kind in kinds]
         )
@@ -526,6 +605,67 @@ class CollisionWorld:
             )
         return world
 
+    def follow(self, scene):
+        """Bring this snapshot up to date with ``scene`` in place: moved and resized colliders
+        are updated (each only in its own grid cells). Returns False - rebuild with
+        ``from_scene`` - when that cannot be done exactly: another scene, colliders or
+        transforms added or removed, one enabled, disabled or being destroyed, one under a
+        parent, or a layer, mask or kind changed. Rebuilding the whole world twice a frame was
+        most of a field frame with many foes."""
+        source = self._source
+        if source is None or self.parented or self.stale:
+            return False
+        owner, colliders, transforms, cv, tv, count, live, slots, circles = source
+        if (
+            owner is not scene
+            or scene.columns(Collider2DComponent) is not colliders
+            or scene.columns(Transform) is not transforms
+            or colliders.version != cv
+            or transforms.version != tv
+            or len(colliders.slots()) != count
+        ):
+            return False
+        if not all(c.enabled and e.enabled and not e._destroy_requested for e, c in live):
+            return False
+        if count != len(live):  # some collider was left out: it must still be left out
+            members = {id(c) for _, c in live}
+            for slot in colliders.slots():
+                collider = colliders.components[slot]
+                entity = collider._entity
+                if id(collider) not in members and (
+                    collider.enabled and entity.enabled and not entity._destroy_requested
+                ):
+                    return False
+        data = colliders.data
+        # the settings (whole lists compared at once: a loop per collider was the cost)
+        radius, layer, mask = data["radius"], data["layer"], data["mask"]
+        trigger, one_way, ladder = data["is_trigger"], data["one_way"], data["ladder"]
+        if (
+            [radius[s] for s in slots] != self._radius
+            or [1 << int(layer[s]) for s in slots] != self._bit
+            or [int(mask[s]) for s in slots] != self._mask
+            or [bool(trigger[s]) or bool(ladder[s]) for s in slots] != self._trigger
+            or [bool(one_way[s]) for s in slots] != self._one_way
+            or [bool(ladder[s]) for s in slots] != self._ladder
+            or [c.shape for _, c in live] != self._kind
+        ):
+            return False
+        cx, cy, hw, hh = (
+            list(v.tolist() if hasattr(v, "tolist") else v)
+            for v in kernels.active().collider_columns(transforms.data, data, slots, circles)
+        )
+        if cx == self._cx and cy == self._cy and hw == self._hw and hh == self._hh:
+            return True  # nothing moved
+        old_x, old_y, old_w, old_h = self._cx, self._cy, self._hw, self._hh
+        changed = [
+            k
+            for k in range(len(slots))
+            if cx[k] != old_x[k] or cy[k] != old_y[k] or hw[k] != old_w[k] or hh[k] != old_h[k]
+        ]
+        self._cx, self._cy, self._hw, self._hh = cx, cy, hw, hh
+        self._moved(changed)
+        return True
+
     def contacts(self):
         result = []
         for a, b in self.candidate_pairs():
@@ -536,22 +676,33 @@ class CollisionWorld:
         return tuple(result)
 
     def query_point(self, x, y, *, mask=ALL_LAYERS, solid_only=True, exclude=()):
-        probe = ColliderShape("__probe__", "box", x, y, 0.0, 0.0, 0.0, ALL_LAYERS, mask, False)
+        """Ids of the shapes containing the point, read straight from the columns (no shape
+        objects: AI steps ask this tens of thousands of times a second)."""
+        cells, _ = self._row_grid()
+        size = self.cell_size
+        rows = cells.get((floor(x / size), floor(y / size)))
+        if not rows:
+            return ()
+        ids, kind, trigger, bit = self._ids, self._kind, self._trigger, self._bit
+        cx, cy, hw, hh = self._cx, self._cy, self._hw, self._hh
         hits = []
-        for shape in self.grid.query(probe.bounds):
-            if (
-                shape.entity_id in exclude
-                or (solid_only and shape.is_trigger)
-                or not (mask & shape.layer_bit)
-            ):
+        for i in rows:
+            if (solid_only and trigger[i]) or not (mask & bit[i]) or ids[i] in exclude:
                 continue
-            if shape.contains_point(x, y):
-                hits.append(shape.entity_id)
+            shape = kind[i]
+            if shape == "circle":
+                if hypot(x - cx[i], y - cy[i]) <= self._radius[i]:
+                    hits.append(ids[i])
+            elif cx[i] - hw[i] <= x <= cx[i] + hw[i] and cy[i] - hh[i] <= y <= cy[i] + hh[i]:
+                if shape not in ("slope_right", "slope_left") or self._shape(i).contains_point(
+                    x, y
+                ):
+                    hits.append(ids[i])
         return tuple(hits)
 
     def ladder_at(self, x0, y0, x1, y1, *, exclude=()):
         """A ladder shape overlapping the box, or ``None``."""
-        for shape in self.grid.query((x0, y0, x1, y1)):
+        for shape in self.query_box((x0, y0, x1, y1)):
             if shape.ladder and shape.entity_id not in exclude:
                 sx0, sy0, sx1, sy1 = shape.bounds
                 if x0 <= sx1 and sx0 <= x1 and y0 <= sy1 and sy0 <= y1:

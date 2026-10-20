@@ -155,3 +155,52 @@ def test_playable_field_movement_stops_at_a_solid_collider(monkeypatch, tmp_path
         assert start < player.x < start + 16
     finally:
         runtime.close()
+
+
+def test_a_followed_world_answers_like_a_rebuilt_one():
+    """``follow`` updates the snapshot in place (moved and resized colliders, each in its own
+    grid cells) and gives up - so the caller rebuilds - on any change it cannot follow exactly;
+    every query then answers as a world built from scratch."""
+    from asteria.runtime.collision import CollisionWorld
+
+    rng = random.Random(7)
+    scene = Scene("S")
+    bodies = [
+        _body(scene, f"b{i}", rng.uniform(0, 400), rng.uniform(0, 400),
+              shape=rng.choice(("box", "circle")), size=rng.uniform(4, 90))
+        for i in range(40)
+    ]  # fmt: skip
+    world = CollisionWorld.from_scene(scene)
+
+    def same(world):
+        fresh = CollisionWorld.from_scene(scene)
+        for _ in range(300):
+            x, y = rng.uniform(-20, 420), rng.uniform(-20, 420)
+            assert world.query_point(x, y) == fresh.query_point(x, y)
+            box = (x, y, x + rng.uniform(0, 80), y + rng.uniform(0, 80))
+            assert [s.entity_id for s in world.query_box(box)] == [
+                s.entity_id for s in fresh.query_box(box)
+            ]
+        assert world.shapes == fresh.shapes
+
+    for _step in range(25):  # foes wander, some grow or shrink
+        for entity in rng.sample(bodies, 12):
+            t = entity.get(Transform)
+            t.x, t.y = t.x + rng.uniform(-70, 70), t.y + rng.uniform(-70, 70)
+        entity = rng.choice(bodies)
+        entity.get(Collider2DComponent).width = rng.uniform(4, 90)
+        assert world.follow(scene)
+        same(world)
+    victim = bodies[3]
+    victim.enabled = False
+    assert not world.follow(scene)  # a disabled collider: rebuild
+    world = CollisionWorld.from_scene(scene)
+    victim.enabled = True
+    assert not world.follow(scene)  # enabled again: rebuild
+    world = CollisionWorld.from_scene(scene)
+    bodies[5].get(Collider2DComponent).layer = 3
+    assert not world.follow(scene)  # another layer: rebuild
+    world = CollisionWorld.from_scene(scene)
+    _body(scene, "new", 10, 10)
+    assert not world.follow(scene)  # a new collider: rebuild
+    assert not CollisionWorld.from_scene(scene).follow(Scene("other"))  # another scene

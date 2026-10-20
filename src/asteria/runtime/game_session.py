@@ -738,6 +738,15 @@ class GameSessionRuntime:
             resources.change(resource_id, -hurt)
             state.actor_snapshots[actor_id] = replace(snapshot, resources=resources.to_data())
 
+    def _follow_collision_world(self):
+        """Keep the frame's collision world current: updated in place when only positions or
+        sizes changed (the common case), dropped - rebuilt when next asked for - otherwise."""
+        world = self._frame_collision_world
+        if world is not None:
+            with self.profiler.section("collision"):
+                if not world.follow(self.scene):
+                    self._frame_collision_world = None
+
     def field_update(self, dt):
         """Advance field enemies and spawn zones, then start any touched visible encounter."""
         if self.mode != "field" or self.event_busy:
@@ -761,11 +770,11 @@ class GameSessionRuntime:
         systems["player_input"].update(self.scene, float(dt))
         with self.profiler.section("spawn"):
             systems["spawn"].update(self.scene, float(dt))
-        self._frame_collision_world = None
+        self._follow_collision_world()
         with self.profiler.section("ai"):
             systems["ai"].update(self.scene, float(dt))
             systems["behavior"].update(self.scene, float(dt))
-        self._frame_collision_world = None
+        self._follow_collision_world()  # the foes moved
         systems["action_combat"].update(self.scene, float(dt))
         systems["actions"].update(self.scene, float(dt))
         rules = self.map_rules

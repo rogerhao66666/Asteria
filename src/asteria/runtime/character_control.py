@@ -459,7 +459,7 @@ class CharacterControllerSystem(System):
         x0, y0, x1, y1 = x - hw, y - hh, x + hw, y + hh
         if self._tiles_block(x0, y0, x1, y1):
             return True
-        for shape in world.grid.query((x0, y0, x1, y1)):
+        for shape in world.query_box((x0, y0, x1, y1)):
             if (
                 shape.entity_id != entity_id
                 and not shape.is_trigger
