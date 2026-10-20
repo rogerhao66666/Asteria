@@ -477,15 +477,22 @@ class CharacterControllerSystem(System):
         blocked = set()
         k = kernels.active()
         if len(shapes):
-            pairs = k.aabb_cross_pairs(boxes, columns, self.cell_size, touching=True)
-            if pairs:
-                cx, cy, radius, bit, one_way, circle, index_of = world.solid_extras()
-                own = [index_of.get(entity_id, -1) for entity_id in ids]
-                blocked.update(
-                    k.blocked_rows(
-                        boxes, (cx, cy, radius), pairs, masks, own, bit, one_way, circle
-                    )
+            cx, cy, radius, bit, one_way, circle, index_of = world.solid_extras()
+            own = [index_of.get(entity_id, -1) for entity_id in ids]
+            # overlap and blocking tested in one kernel call (no pair list in between)
+            blocked.update(
+                k.blocked_boxes(
+                    boxes,
+                    columns,
+                    (cx, cy, radius),
+                    self.cell_size,
+                    masks,
+                    own,
+                    bit,
+                    one_way,
+                    circle,
                 )
+            )
         if self.extra_blocking is not None:
             for i in range(len(ids)):
                 if i not in blocked and self._tiles_block(

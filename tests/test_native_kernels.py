@@ -331,3 +331,36 @@ def test_the_native_set_is_selectable_and_never_required():
             kernels.use(previous)
     with pytest.raises(ValueError):
         kernels.use("nope")
+
+
+def test_native_blocked_boxes_match_cross_pairs_then_blocked_rows():
+    """The fused broad phase + blocking test gives the rows the two separate steps give."""
+    native = _native()
+    from asteria.kernels import _numpy as npk
+
+    rng = random.Random(8)
+    for _ in range(80):
+        nm, nw = rng.randint(0, 40), rng.randint(0, 40)
+        boxes = _boxes(rng, nm, 120, 30)
+        solids = _boxes(rng, nw, 120, 30)
+        walls = (
+            [(a + b) / 2 for a, b in zip(solids[0], solids[2], strict=True)],
+            [(a + b) / 2 for a, b in zip(solids[1], solids[3], strict=True)],
+            [rng.uniform(1, 20) for _ in range(nw)],
+        )
+        args = (
+            boxes,
+            solids,
+            walls,
+            rng.choice([8.0, 32.0, 64.0]),
+            [rng.choice([0xFFFFFFFF, 1, 2, 3]) for _ in range(nm)],
+            [rng.choice([-1, rng.randrange(nw)]) if nw else -1 for _ in range(nm)],
+            [rng.choice([1, 2, 4]) for _ in range(nw)],
+            [rng.random() < 0.3 for _ in range(nw)],
+            [rng.random() < 0.4 for _ in range(nw)],
+        )
+        pairs = py.aabb_cross_pairs(boxes, solids, args[3], touching=True)
+        expected = py.blocked_rows(boxes, walls, pairs, *args[4:]) if pairs else []
+        assert py.blocked_boxes(*args) == expected
+        assert npk.blocked_boxes(*args) == expected
+        assert native.blocked_boxes(*args) == expected

@@ -429,6 +429,20 @@ def blocked_rows(boxes, walls, pairs, mover_mask, mover_row, wall_bit, wall_one_
     return sorted(blocked)
 
 
+def blocked_boxes(
+    boxes, solids, walls, cell_size, mover_mask, mover_row, wall_bit, wall_one_way, wall_circle
+):
+    """Movers (rows of ``boxes``) blocked by a wall: ``aabb_cross_pairs(boxes, solids,
+    touching=True)`` filtered by ``blocked_rows`` in one call. ``solids`` = the walls'
+    ``(x0, y0, x1, y1)`` columns, ``walls`` their ``(cx, cy, radius)``. Returns sorted rows."""
+    pairs = aabb_cross_pairs(boxes, solids, cell_size, touching=True)
+    if not pairs:
+        return []
+    return blocked_rows(
+        boxes, walls, pairs, mover_mask, mover_row, wall_bit, wall_one_way, wall_circle
+    )
+
+
 def facing_codes(dx, dy, current, locked):
     """Top-down facing codes (0 down, 1 up, 2 left, 3 right) after moving by ``(dx, dy)``;
     standing still or

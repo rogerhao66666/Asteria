@@ -405,6 +405,17 @@ def blocked_rows(boxes, walls, pairs, mover_mask, mover_row, wall_bit, wall_one_
     return np.unique(i[ok]).tolist()
 
 
+def blocked_boxes(
+    boxes, solids, walls, cell_size, mover_mask, mover_row, wall_bit, wall_one_way, wall_circle
+):
+    pairs = aabb_cross_pairs(boxes, solids, cell_size, touching=True)
+    if not len(pairs):
+        return []
+    return blocked_rows(
+        boxes, walls, pairs, mover_mask, mover_row, wall_bit, wall_one_way, wall_circle
+    )
+
+
 def facing_codes(dx, dy, current, locked):
     x, y = np.asarray(dx, dtype=float), np.asarray(dy, dtype=float)
     code = np.asarray(current, dtype=np.int64)

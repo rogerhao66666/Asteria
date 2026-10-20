@@ -56,7 +56,7 @@ int64_t emit(std::vector<int64_t>& found, int64_t* out, int64_t cap) {
 
 extern "C" {
 
-int32_t ak_abi_version() { return 2; }
+int32_t ak_abi_version() { return 3; }
 
 // -- broad phase ----------------------------------------------------------------------------
 // Pairs i < j of overlapping (or touching) boxes, written as i * n + j, sorted.
@@ -316,6 +316,48 @@ void ak_blocked_rows(
             if (d > radius[j]) continue;
         }
         blocked[i] = 1;
+    }
+}
+
+// Movers (boxes x0..y1) blocked by a wall (boxes bx0..by1; shared edges count): the broad phase
+// of ak_aabb_cross_pairs and the test of ak_blocked_rows in one pass, with no pair list between
+// them (building it, and turning it into Python tuples and back, cost more than both tests).
+void ak_blocked_boxes(
+    const double* x0, const double* y0, const double* x1, const double* y1, int64_t na,
+    const double* bx0, const double* by0, const double* bx1, const double* by1, int64_t nb,
+    double cell_size, const double* cx, const double* cy, const double* radius,
+    const int64_t* mover_mask, const int64_t* mover_row, const int64_t* wall_bit,
+    const uint8_t* wall_one_way, const uint8_t* wall_circle, uint8_t* blocked) {
+    if (na == 0 || nb == 0) return;
+    const std::vector<CellKey> cells = grid_cells(bx0, by0, bx1, by1, nb, cell_size);
+    for (int64_t i = 0; i < na; ++i) {
+        const int64_t cx0 = cell_of(x0[i], cell_size), cx1 = cell_of(x1[i], cell_size);
+        const int64_t cy0 = cell_of(y0[i], cell_size), cy1 = cell_of(y1[i], cell_size);
+        for (int64_t gx = cx0; gx <= cx1 && !blocked[i]; ++gx) {
+            for (int64_t gy = cy0; gy <= cy1 && !blocked[i]; ++gy) {
+                const int64_t key = cell_key(gx, gy);
+                auto it = std::lower_bound(
+                    cells.begin(), cells.end(), key,
+                    [](const CellKey& c, int64_t k) { return c.key < k; });
+                for (; it != cells.end() && it->key == key; ++it) {
+                    const int64_t j = it->row;
+                    if (!(x0[i] <= bx1[j] && bx0[j] <= x1[i] && y0[i] <= by1[j] &&
+                          by0[j] <= y1[i]))
+                        continue;
+                    if (j == mover_row[i] || wall_one_way[j] || !(mover_mask[i] & wall_bit[j]))
+                        continue;
+                    if (wall_circle[j]) {
+                        const double nx = std::min(std::max(cx[j], x0[i]), x1[i]);
+                        const double ny = std::min(std::max(cy[j], y0[i]), y1[i]);
+                        const double d =
+                            std::sqrt((nx - cx[j]) * (nx - cx[j]) + (ny - cy[j]) * (ny - cy[j]));
+                        if (d > radius[j]) continue;
+                    }
+                    blocked[i] = 1;
+                    break;
+                }
+            }
+        }
     }
 }
 

@@ -21,7 +21,7 @@ from ._python import _turn_cosines
 from .build_native import library_name
 
 NAME = "native"
-ABI_VERSION = 2
+ABI_VERSION = 3
 
 _path = library_name()
 if not _path.is_file():
@@ -63,6 +63,7 @@ _add_to_column = _sig("ak_add_to_column", None, _V, _V, _V, _L)
 _decay_push = _sig("ak_decay_push", None, _V, _V, _V, _V, _L, _F, _F)
 _box_columns = _sig("ak_box_columns", None, *([_V] * 9), _L, *([_V] * 4))
 _blocked_rows = _sig("ak_blocked_rows", None, *([_V] * 8), _L, *([_V] * 6))
+_blocked_boxes = _sig("ak_blocked_boxes", None, *([_V] * 4), _L, *([_V] * 4), _L, _F, *([_V] * 9))
 _facing_codes = _sig("ak_facing_codes", None, _V, _V, _V, _V, _L, _V)
 _fieldai_step = _sig("ak_fieldai_step", None, *([_V] * 12), _L, *([_V] * 4), _F, _V)
 
@@ -348,6 +349,31 @@ def blocked_rows(boxes, walls, pairs, mover_mask, mover_row, wall_bit, wall_one_
         _ptr(pair_array),
         len(pair_array),
         *[_ptr(a) for a in (mask, row, bit, one_way, circle)],
+        _ptr(blocked),
+    )
+    return np.flatnonzero(blocked).tolist()
+
+
+def blocked_boxes(
+    boxes, solids, walls, cell_size, mover_mask, mover_row, wall_bit, wall_one_way, wall_circle
+):
+    if cell_size <= 0:
+        raise ValueError("cell_size must be positive")
+    a, b = _columns(boxes), _columns(solids)
+    na, nb = len(a[0]), len(b[0])
+    if not na or not nb:
+        return []
+    cx, cy, radius = _columns(walls)
+    mask, row, bit = _i(mover_mask), _i(mover_row), _i(wall_bit)
+    one_way, circle = _flags(wall_one_way), _flags(wall_circle)
+    blocked = np.zeros(na, dtype=np.uint8)
+    _blocked_boxes(
+        *[_ptr(c) for c in a],
+        na,
+        *[_ptr(c) for c in b],
+        nb,
+        float(cell_size),
+        *[_ptr(c) for c in (cx, cy, radius, mask, row, bit, one_way, circle)],
         _ptr(blocked),
     )
     return np.flatnonzero(blocked).tolist()
