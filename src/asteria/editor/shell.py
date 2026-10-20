@@ -2408,6 +2408,7 @@ class AsteriaEditorWindow(QMainWindow):
         missing = result["report"].missing
         if missing:
             lines.append("Missing: " + ", ".join(missing))
+        lines.extend(result["report"].warnings)
         QMessageBox.information(self, "Export Game", "\n".join(lines))
         return result
 

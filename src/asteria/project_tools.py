@@ -8,6 +8,10 @@ An exported folder carries the engine (``engine/asteria``), so it runs with
 only Python and pygame-ce installed — not from the Asteria repository. The
 ``.pyz`` is the same folder in one file: it unpacks once into the user cache
 and keeps saves in a per-game data folder that survives updates.
+
+The engine copy carries the native (C++) kernel library, built first when it
+is missing or out of date. When it cannot be built the export still succeeds
+and its report warns that the game runs on the slower kernels.
 """
 
 from __future__ import annotations
@@ -141,6 +145,7 @@ class ExportReport:
     output: Path
     files: list[Path] = field(default_factory=list)
     missing: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 def _manifest_paths(value):
@@ -211,22 +216,50 @@ def export_game(project_path, output, *, allow_missing=False, bundle_engine=True
                 shutil.copy2(notice, target)
                 report.files.append(target)
     if bundle_engine:
-        report.files.extend(_copy_engine(output / "engine"))
+        library = _native_library(report)
+        report.files.extend(_copy_engine(output / "engine", library))
     launcher = output / "run_game.py"
     launcher.write_text(LAUNCHER.format(project=PROJECT_FILE), encoding="utf-8")
     report.files.append(launcher)
     return report
 
 
-def _copy_engine(target):
-    """The ``asteria`` package (sources only) so the export runs without an installed engine."""
+def _native_library(report):
+    """The native kernel library to ship (built now when missing or out of date), or ``None``.
+    A problem becomes a report warning: the kernels are a speed-up, never a reason to fail."""
+    from asteria.kernels import build_native
+
+    try:
+        usable, reason = build_native.ensure()
+    except Exception as exc:  # whatever goes wrong here, the export goes on
+        usable, reason = False, f"not checked ({exc})"
+    if reason and usable:
+        report.warnings.append(
+            f"Native kernels: the library is {reason}. The game carries the older build."
+        )
+    elif reason:
+        report.warnings.append(
+            f"Native kernels not included: the library is {reason}. The game runs on the "
+            "slower numpy or python kernels; install a C++ compiler (macOS: xcode-select "
+            "--install) and export again."
+        )
+    return build_native.library_name() if usable else None
+
+
+def _copy_engine(target, library=None):
+    """The ``asteria`` package (sources only) so the export runs without an installed engine,
+    plus ``library`` (the checked native kernel library) in its place."""
     import asteria
 
     source = Path(asteria.__file__).resolve().parent
     shutil.rmtree(target / "asteria", ignore_errors=True)
     shutil.copytree(
-        source, target / "asteria", ignore=shutil.ignore_patterns("__pycache__", "*.pyc")
+        source,
+        target / "asteria",
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "libasteria_kernels.*", ".*.tmp"),
     )
+    if library is not None:
+        shutil.copy2(library, target / "asteria" / "kernels" / "native" / Path(library).name)
     return sorted(p for p in (target / "asteria").rglob("*") if p.is_file())
 
 
@@ -338,6 +371,8 @@ def export_main(argv=None):
         print(f"Exported {len(report.files)} files to {report.output}")
         for missing in report.missing:
             print(f"  missing: {missing}")
+        for warning in report.warnings:
+            print(f"  warning: {warning}")
         print(f"Run: python {report.output / 'run_game.py'}")
         return 0
     result = package_game(
@@ -350,6 +385,8 @@ def export_main(argv=None):
     )
     for missing in result["report"].missing:
         print(f"  missing: {missing}")
+    for warning in result["report"].warnings:
+        print(f"  warning: {warning}")
     print(f"Game folder: {result['folder']}  (python run_game.py)")
     print(f"Single file: {result['pyz']}  (python3 {result['pyz'].name})")
     if result["app"] is not None:

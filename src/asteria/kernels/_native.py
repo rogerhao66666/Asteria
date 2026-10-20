@@ -20,10 +20,9 @@ from itertools import chain, compress, repeat
 
 from . import _python
 from ._python import FIELDS, PROJECTILE_FIELDS, WEATHER_FIELDS, _turn_cosines
-from .build_native import library_name
+from .build_native import ABI_VERSION, library_name
 
 NAME = "native"
-ABI_VERSION = 4
 
 _path = library_name()
 if not _path.is_file():
@@ -80,6 +79,10 @@ _blocked_rows = _sig("ak_blocked_rows", None, *([_V] * 8), _L, *([_V] * 6))
 _blocked_boxes = _sig("ak_blocked_boxes", None, *([_V] * 4), _L, *([_V] * 4), _L, _F, *([_V] * 9))
 _facing_codes = _sig("ak_facing_codes", None, _V, _V, _V, _V, _L, _V)
 _fieldai_step = _sig("ak_fieldai_step", None, *([_V] * 12), _L, *([_V] * 4), _F, _V)
+_fieldai_free_step = _sig(
+    "ak_fieldai_free_step", None, *([_V] * 10), _L, *([_V] * 7), _F, *([_V] * 3)
+)
+_points_blocked = _sig("ak_points_blocked", None, _V, _V, _L, *([_V] * 9), _L, _F, *([_V] * 4))
 
 
 # -- buffers --------------------------------------------------------------------------------
@@ -635,3 +638,71 @@ def fieldai_step(f, t, c, slots, behaviour, target_x, target_y, has_target, dt):
     rest = _zeros("B", n)
     _fieldai_step(*cols, _ptr(idx), n, _ptr(b), _ptr(tx), _ptr(ty), _ptr(has), dt, _ptr(rest))
     return _rows(rest)
+
+
+def fieldai_free_step(
+    f, t, slots, behaviour, target_x, target_y, has_target, goal_x, goal_y, has_goal, dt
+):
+    n = len(slots)
+    if not n:
+        return [], [], []
+    args = (f, t, slots, behaviour, target_x, target_y, has_target, goal_x, goal_y, has_goal, dt)
+    try:
+        cols = [
+            _col(f["mode_code"], "q"),
+            *[
+                _col(f[name], "d")
+                for name in (
+                    "home_x",
+                    "home_y",
+                    "detect_radius",
+                    "lose_radius",
+                    "arrive_distance",
+                    "speed",
+                )
+            ],
+            _col(t["x"], "d"),
+            _col(t["y"], "d"),
+        ]
+    except _Mismatch:
+        return _fallback.fieldai_free_step(*args)
+    idx, b = _i(slots), _i(behaviour)
+    tx, ty, has = _f(target_x), _f(target_y), _flags(has_target)
+    gx, gy, goal = _f(goal_x), _f(goal_y), _flags(has_goal)
+    status, mx, my = _zeros("b", n), _zeros("d", n), _zeros("d", n)
+    _fieldai_free_step(
+        *cols,
+        _ptr(idx),
+        n,
+        *[_ptr(a) for a in (b, tx, ty, has, gx, gy, goal)],
+        dt,
+        *[_ptr(a) for a in (status, mx, my)],
+    )
+    return status.tolist(), mx.tolist(), my.tolist()
+
+
+def points_blocked(px, py, solids, walls, shapes, wall_bit, cell_size, mask, skip_start, skip):
+    if cell_size <= 0:
+        raise ValueError("cell_size must be positive")
+    n, nw = len(px), len(solids[0])
+    if not n or not nw:
+        return []
+    x, y = _f(px), _f(py)
+    cols = _columns(solids) + _columns(walls)
+    kind, bit, masks = _i(shapes), _i(wall_bit), _i(mask)
+    starts, skipped = _i(skip_start), _i(skip)
+    if not len(skipped):
+        skipped = _zeros("q", 1)  # a valid address; nothing is read from it
+    blocked = _zeros("B", n)
+    _points_blocked(
+        _ptr(x),
+        _ptr(y),
+        n,
+        *[_ptr(c) for c in cols],
+        _ptr(kind),
+        _ptr(bit),
+        nw,
+        float(cell_size),
+        *[_ptr(a) for a in (masks, starts, skipped, blocked)],
+    )
+    return _rows(blocked)

@@ -513,7 +513,35 @@ class PlayableTestRuntime:
                 self._multiplayer_error = self.multiplayer_bridge.error
                 self.message = f"Co-op offline: {self.multiplayer_bridge.error}"
                 self.message_until = self.pg.time.get_ticks() + 8000
+        self._warm_start()
         return self
+
+    # modules the field imports on first use; open() imports them before the first frame
+    FIELD_MODULES = (
+        "asteria.presentation.animated_text",
+        "asteria.presentation.text_render_integration",
+        "asteria.runtime.behavior_tree",
+        "asteria.runtime.entity_actions",
+        "asteria.runtime.hud_bottom",
+        "asteria.runtime.image_preloader",
+        "asteria.runtime.map_rules_field",
+        "asteria.runtime.menu_icons",
+        "asteria.runtime.preview",
+        "asteria.runtime.projectiles",
+        "asteria.runtime.tile_scene_view",
+        "asteria.runtime.tilemap_field",
+    )
+
+    def _warm_start(self):
+        """Load now what the first field frame would load mid-frame (70-90 ms): the kernel set
+        (numpy, the native library), chosen on first use, and the field's modules."""
+        import importlib
+
+        from asteria import kernels
+
+        kernels.active()
+        for name in self.FIELD_MODULES:
+            importlib.import_module(name)
 
     def _settings_path(self):
         return self.resource_root / "saves" / "settings.json"

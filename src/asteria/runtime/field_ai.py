@@ -22,6 +22,7 @@ from asteria.core.columns import column_storage
 from asteria.core.prefab import instantiate
 
 from .character import CharacterController2D
+from .collision import CombinedQuery, _BlockingQuery
 
 FIELD_AI_BEHAVIOURS = ("idle", "patrol", "wander", "chase", "flee")
 MODES = (
@@ -237,10 +238,98 @@ class FieldAISystem(System):
                 table.data, transforms.data, controllers.data, slots, codes, tx, ty, has, dt
             )
             later = [(batch[k][1], batch[k][2], batch[k][3], batch[k][4]) for k in rest]
-        for entity, spec, transform, controller in sorted(
-            single + later, key=lambda row: row[0]._order
-        ):
+        rows = sorted(single + later, key=lambda row: row[0]._order)
+        if single and self._walk(scene, rows, targets, dt):
+            return
+        for entity, spec, transform, controller in rows:
             self._think(scene, entity, spec, transform, controller, targets, dt)
+
+    def _walk(self, scene, rows, targets, dt):
+        """Entities without a controller in one batch: ``fieldai_free_step`` reacts and steps
+        them, ``points_blocked`` tests the steps against the collision world (x first, then y,
+        as ``CharacterController2D.move``). Patrol points and wander goals are still picked one
+        by one in scene order, between the controller rows' ``_think``, so the rng draws in the
+        same order. Blocking queries are read as fixed for the update (the collision world is a
+        start-of-frame snapshot). Returns False, having changed nothing, when one of these
+        entities chases or flees another of them (it must see it where the one-by-one update
+        would have left it)."""
+        free = [row for row in rows if row[3] is None]
+        movers = {id(row[2]) for row in free}
+        aims = [self._target_of(scene, row[1], targets) for row in free]
+        if any(target is not None and id(target) in movers for target in aims):
+            return False
+        nan = float("nan")
+        slots, codes, tx, ty, has, gx, gy, goal, plans, queries = ([] for _ in range(10))
+        aim = iter(aims)
+        for entity, spec, transform, controller in rows:
+            if controller is not None:  # patrol / wander through a controller: intents only
+                self._think(scene, entity, spec, transform, controller, targets, dt)
+                continue
+            extra = self._extra.setdefault(entity.id, FieldAIState())
+            queries.append(self._blocking_of(entity))
+            target = next(aim)
+            plan, point = None, None
+            if MODES[spec.mode_code] not in ("chase", "flee", "return"):
+                if spec.behaviour == "patrol":
+                    path = parse_path(spec.patrol_path)
+                    if path:
+                        plan, point = len(path), path[extra.patrol_index % len(path)]
+                elif spec.behaviour == "wander":
+                    if extra.wander_goal is None:
+                        angle = self.rng.uniform(0, 2 * pi)
+                        reach = self.rng.uniform(0, spec.wander_radius)
+                        extra.wander_goal = (
+                            spec.home_x + cos(angle) * reach,
+                            spec.home_y + sin(angle) * reach,
+                        )
+                    plan, point = "wander", extra.wander_goal
+            slots.append(spec._cslot)
+            codes.append(MODES.index(spec.behaviour))
+            has.append(target is not None)
+            tx.append(target.x if target is not None else nan)
+            ty.append(target.y if target is not None else nan)
+            goal.append(point is not None)
+            gx.append(point[0] if point is not None else nan)
+            gy.append(point[1] if point is not None else nan)
+            plans.append((extra, plan))
+        table, transforms = scene.columns(FieldAIComponent), scene.columns(Transform)
+        status, move_x, move_y = kernels.active().fieldai_free_step(
+            table.data, transforms.data, slots, codes, tx, ty, has, gx, gy, goal, dt
+        )
+        walking = []
+        for k, code in enumerate(status):
+            if code == 1:
+                walking.append(k)
+            elif code == 2:  # arrived: the next patrol point, a new wander goal next update
+                extra, plan = plans[k]
+                if plan == "wander":
+                    extra.wander_goal = None
+                elif plan:
+                    extra.patrol_index = (extra.patrol_index + 1) % plan
+        if walking:
+            x, y = transforms.data["x"], transforms.data["y"]
+            plan = _blocking_plan([_parts(queries[k]) for k in walking])
+            at = [slots[k] for k in walking]
+            px = [x[s] + move_x[k] for s, k in zip(at, walking, strict=True)]
+            py = [y[s] for s in at]
+            stopped = _blocked(px, py, plan)
+            for i, s in enumerate(at):
+                if i not in stopped:
+                    x[s] = px[i]
+            px = [x[s] for s in at]
+            py = [y[s] + move_y[k] for s, k in zip(at, walking, strict=True)]
+            stopped = _blocked(px, py, plan)
+            for i, s in enumerate(at):
+                if i not in stopped:
+                    y[s] = py[i]
+        return True
+
+    def _blocking_of(self, entity):
+        """The blocking query of an entity without a controller."""
+        blocking = self.blocking
+        if callable(blocking) and not hasattr(blocking, "collides_world_point"):
+            return blocking(entity)
+        return blocking
 
     def _think(self, scene, entity, spec, transform, controller, targets, dt):
         """One entity, the per-entity way: entities without a controller, and patrol / wander."""
@@ -301,6 +390,69 @@ class FieldAISystem(System):
 class _Open:
     def collides_world_point(self, x, y):
         return False
+
+
+def _parts(query):
+    """``(worlds, others)`` of a blocking query: ``(world, mask, exclude)`` of each collision
+    world query in it (tested in one kernel call per world) and every other query (asked point
+    by point). Combined queries are opened up; ``None`` blocks nothing."""
+    worlds, others = [], []
+    if query:
+        _split(query, worlds, others)
+    return worlds, others
+
+
+def _split(query, worlds, others):
+    if isinstance(query, _BlockingQuery):
+        worlds.append((query.world, query.mask, query.exclude))
+    elif isinstance(query, CombinedQuery):
+        for part in query.queries:
+            _split(part, worlds, others)
+    elif not isinstance(query, _Open):
+        others.append(query)
+
+
+def _blocking_plan(blocks):
+    """What ``_blocked`` asks for the movers whose blocking ``_parts`` are ``blocks``: per
+    collision world the movers' rows, masks and left-out walls (the entity itself, the player),
+    and the other queries per mover. Made once, used for the x and the y step."""
+    groups = {}
+    for i, (worlds, _) in enumerate(blocks):
+        for world, mask, exclude in worlds:
+            groups.setdefault(id(world), (world, []))[1].append((i, mask, exclude))
+    plan = []
+    for world, entries in groups.values():
+        shapes, solids = world.solid_columns()
+        if not len(shapes):
+            continue
+        cx, cy, radius, bit, _, _, index_of = world.solid_extras()
+        starts, skip = [0], []
+        for _, _, exclude in entries:
+            skip.extend(index_of[entity_id] for entity_id in exclude if entity_id in index_of)
+            starts.append(len(skip))
+        rows = [i for i, _, _ in entries]
+        masks = [mask for _, mask, _ in entries]
+        walls = (solids, (cx, cy, radius), world.solid_shape_codes(), bit, world.cell_size)
+        plan.append((rows, walls, masks, starts, skip))
+    others = [(i, queries) for i, (_, queries) in enumerate(blocks) if queries]
+    return plan, others
+
+
+def _blocked(px, py, plan):
+    """Indexes ``i`` whose point ``(px[i], py[i])`` is blocked (``plan`` from
+    ``_blocking_plan``)."""
+    worlds, others = plan
+    stopped = set()
+    points_blocked = kernels.active().points_blocked
+    for rows, walls, masks, starts, skip in worlds:
+        hits = points_blocked(
+            [px[i] for i in rows], [py[i] for i in rows], *walls, masks, starts, skip
+        )
+        stopped.update(rows[h] for h in hits)
+    for i, queries in others:
+        if i not in stopped and any(q.collides_world_point(px[i], py[i]) for q in queries):
+            stopped.add(i)
+    return stopped
 
 
 @component_schema(

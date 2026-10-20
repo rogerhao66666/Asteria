@@ -1,6 +1,8 @@
 """D21: compute kernels - the numpy set must give the reference (python) results exactly."""
 
 import random
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -250,3 +252,28 @@ def test_homing_turns_at_most_its_rate_then_aims_straight():
     assert math.hypot(store.vx[0], store.vy[0]) == pytest.approx(100)
     store.step(1.0, [store.x[0] + 10.0], [store.y[0] + 10.0])  # within 3 rad: straight at it
     assert math.atan2(store.vy[0], store.vx[0]) == pytest.approx(math.pi / 4)
+
+
+def test_opening_the_game_window_loads_the_kernels_before_the_first_frame(
+    resource_root, monkeypatch
+):
+    pytest.importorskip("pygame")
+    from asteria.editor import EditorDocument
+    from asteria.project import Project
+    from asteria.runtime.playable_test_runtime import PlayableTestRuntime
+
+    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+    monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
+    reference = Path(__file__).resolve().parents[1] / "reference_projects"
+    project = Project.load_json(
+        reference / "complex_reference_rpg" / "project.asteria.json",
+        EditorDocument().component_registry,
+    )
+    runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), resource_root)
+    monkeypatch.setattr(kernels, "_active", None)  # nothing chosen yet, as in a fresh game
+    runtime.open()
+    try:  # the first field frame no longer imports numpy or loads the native library
+        assert kernels._active is not None
+        assert all(name in sys.modules for name in PlayableTestRuntime.FIELD_MODULES)
+    finally:
+        runtime.close()

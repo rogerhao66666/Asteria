@@ -12,6 +12,7 @@ import pytest
 from asteria.core import Component, ComponentRegistry, Field, component_schema
 from asteria.core.migration import component_migration
 from asteria.core.serialization import deserialize_component
+from asteria.kernels.build_native import ABI_VERSION as ABI
 from asteria.project_tools import export_game, load_project, package_game, upgrade_project
 
 OLD_PROJECT = (  # a project saved by an older build
@@ -98,6 +99,75 @@ def test_export_refuses_missing_resources_unless_allowed(tmp_path):
         export_game(source / "project.asteria.json", tmp_path / "out")
     report = export_game(source / "project.asteria.json", tmp_path / "out2", allow_missing=True)
     assert report.missing == ["playable_assets/audio/hit.wav"]
+
+
+def _fake_library(monkeypatch, tmp_path, compiler="fake++"):
+    """Point the native build at a library under ``tmp_path`` with a fake compiler that writes
+    the ABI it was built for; the real library is never touched."""
+    from asteria.kernels import build_native
+
+    library = tmp_path / "native" / build_native.library_name().name
+    library.parent.mkdir()
+    builds = []
+
+    def run(command, verbose):
+        output = Path(command[command.index("-o") + 1])
+        output.write_text(str(build_native.ABI_VERSION))
+        builds.append(command)
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr(build_native, "library_name", lambda: library)
+    monkeypatch.setattr(build_native, "find_compiler", lambda: compiler)
+    monkeypatch.setattr(build_native, "_run", run)
+    monkeypatch.setattr(build_native, "_abi_of", lambda path: int(Path(path).read_text()))
+    return library, builds
+
+
+def _shipped_libraries(game):
+    return sorted(p.name for p in (game / "engine").rglob("libasteria_kernels.*"))
+
+
+def test_export_builds_a_missing_or_outdated_native_library_and_ships_it(monkeypatch, tmp_path):
+    library, builds = _fake_library(monkeypatch, tmp_path)
+    report = export_game(REF / "project.asteria.json", tmp_path / "game")
+    assert report.warnings == [] and len(builds) == 1
+    shipped = tmp_path / "game" / "engine" / "asteria" / "kernels" / "native" / library.name
+    assert _shipped_libraries(tmp_path / "game") == [library.name]  # only the checked one
+    assert shipped.read_text() == library.read_text() == str(ABI)
+    library.write_text(str(ABI - 1))  # built by an older engine: the ABI no longer matches
+    report = export_game(REF / "project.asteria.json", tmp_path / "game2")
+    assert report.warnings == [] and len(builds) == 2
+    assert (tmp_path / "game2" / shipped.relative_to(tmp_path / "game")).read_text() == str(ABI)
+    export_game(REF / "project.asteria.json", tmp_path / "game3")
+    assert len(builds) == 2  # a current library is not rebuilt
+
+
+def test_export_without_a_compiler_warns_and_still_exports(monkeypatch, tmp_path, capsys):
+    from asteria.kernels import build_native
+    from asteria.project_tools import export_main
+
+    library, builds = _fake_library(monkeypatch, tmp_path, compiler=None)
+    assert export_main([str(REF / "project.asteria.json"), str(tmp_path / "game")]) == 0
+    out = capsys.readouterr().out
+    assert "warning: Native kernels not included: the library is not built" in out
+    assert "no C++ compiler found" in out and not builds
+    assert (tmp_path / "game" / "run_game.py").is_file()
+    assert _shipped_libraries(tmp_path / "game") == []  # the game falls back to numpy / python
+    library.write_text(str(ABI))  # a current ABI built before the latest source change
+    os.utime(library, (0, 0))
+    assert build_native.problem() == build_native.STALE
+    report = export_game(REF / "project.asteria.json", tmp_path / "game2")
+    assert _shipped_libraries(tmp_path / "game2") == [library.name]  # it still works: shipped
+    assert len(report.warnings) == 1 and "carries the older build" in report.warnings[0]
+
+
+def test_a_library_that_does_not_load_is_reported(tmp_path):
+    from asteria.kernels import build_native
+
+    junk = tmp_path / build_native.library_name().name
+    junk.write_bytes(b"not a library")
+    assert build_native.problem(junk).startswith("not loadable")
+    assert build_native.problem(tmp_path / "absent.dylib") == "not built"
 
 
 def _run_isolated(tmp_path, *command, home=None):

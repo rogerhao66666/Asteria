@@ -34,6 +34,7 @@ from asteria.rpg.quests import QuestLog
 from asteria.rpg.targeting import TargetRelation
 from asteria.runtime.backlog import MessageBacklog
 from asteria.runtime.character_control import CharacterController2DComponent
+from asteria.runtime.collision import CombinedQuery
 from asteria.runtime.input import InputSnapshot
 from asteria.runtime.interaction import InteractionController
 from asteria.runtime.pictures import PictureManager
@@ -43,10 +44,11 @@ from asteria.runtime.world_command_handlers import (
 )
 
 
-class _EitherBlocks:
+class _EitherBlocks(CombinedQuery):
     """Two ``collides_world_point`` queries: a point is blocked when either blocks it."""
 
     def __init__(self, first, second):
+        super().__init__(first, second)
         self.first, self.second = first, second
 
     def collides_world_point(self, x, y):

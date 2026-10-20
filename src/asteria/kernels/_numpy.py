@@ -3,6 +3,8 @@ results)."""
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
 
 from asteria.kernels._python import (
@@ -468,3 +470,102 @@ def fieldai_step(f, t, c, slots, behaviour, target_x, target_y, has_target, dt):
     _view(c["intent_x"])[idx] = ix
     _view(c["intent_y"])[idx] = iy
     return np.flatnonzero(wanders).tolist()
+
+
+def _hypot(a, b):
+    """``math.hypot`` per row: numpy's hypot can round the last bit differently."""
+    return np.fromiter(map(math.hypot, a.tolist(), b.tolist()), dtype=float, count=len(a))
+
+
+def fieldai_free_step(
+    f, t, slots, behaviour, target_x, target_y, has_target, goal_x, goal_y, has_goal, dt
+):
+    n = len(slots)
+    if not n:
+        return [], [], []
+    idx = np.asarray(slots, dtype=np.int64)
+    mode_col = _view(f["mode_code"])
+    m = mode_col[idx].copy()
+    b = np.asarray(behaviour, dtype=np.int64)
+    tx, ty = np.asarray(target_x, dtype=float), np.asarray(target_y, dtype=float)
+    has = np.asarray(has_target, dtype=bool)
+    x, y = _view(t["x"])[idx], _view(t["y"])[idx]
+    detect, lose = _view(f["detect_radius"])[idx], _view(f["lose_radius"])[idx]
+    arrive, speed = _view(f["arrive_distance"])[idx], _view(f["speed"])[idx]
+    hx, hy = _view(f["home_x"])[idx], _view(f["home_y"])[idx]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        distance = _hypot(tx - x, ty - y)
+        reacting = ((b == 3) | (b == 4)) & has
+        busy = (m == 3) | (m == 4)
+        m = np.where(reacting & busy & (distance > lose), 5, m)
+        m = np.where(reacting & ~busy & (distance <= detect), b, m)
+        m = np.where(((m == 3) | (m == 4)) & ~has, 5, m)
+        chasing, home = (m == 3) | (m == 4), m == 5
+        patrols = ~chasing & ~home & ((b == 1) | (b == 2))
+        m = np.where(patrols, b, np.where(chasing | home, m, 0))
+        steer = chasing | home | (patrols & np.asarray(has_goal, dtype=bool))
+        away = m == 4
+        gx = np.where(home, hx, np.where(chasing, tx, np.asarray(goal_x, dtype=float)))
+        gy = np.where(home, hy, np.where(chasing, ty, np.asarray(goal_y, dtype=float)))
+        dx, dy = gx - x, gy - y
+        dx, dy = np.where(away, -dx, dx), np.where(away, -dy, dy)
+        d = _hypot(dx, dy)
+        arrived = steer & (d <= np.where(away, 0.0, arrive))
+        m = np.where(arrived & home, 0, m)
+        moving = steer & ~arrived & (dt > 0)
+        step = speed * dt
+        land = ~away & (step > d)
+        dx, dy = np.where(land, dx * d / step, dx), np.where(land, dy * d / step, dy)
+        ux, uy = dx / d, dy / d
+        long = np.flatnonzero(moving & (ux * ux + uy * uy > 1.0))
+        for k in long.tolist():  # CharacterController2D.move's ``** 0.5`` (libm pow), per row
+            magnitude = (ux[k] * ux[k] + uy[k] * uy[k]).item() ** 0.5
+            if magnitude > 1.0:
+                ux[k], uy[k] = ux[k] / magnitude, uy[k] / magnitude
+        mx = np.where(moving, ux * speed * dt, 0.0)
+        my = np.where(moving, uy * speed * dt, 0.0)
+    mode_col[idx] = m
+    code = np.where(arrived, 2, np.where(moving, 1, 0))
+    return code.tolist(), mx.tolist(), my.tolist()
+
+
+def points_blocked(px, py, solids, walls, shapes, wall_bit, cell_size, mask, skip_start, skip):
+    n, nw = len(px), len(solids[0])
+    if not n or not nw:
+        return []
+    px, py = np.asarray(px, dtype=float), np.asarray(py, dtype=float)
+    x0, y0, x1, y1 = (np.asarray(c, dtype=float) for c in solids)
+    cx, cy, radius = (np.asarray(c, dtype=float) for c in walls)
+    kind = np.asarray(shapes, dtype=np.int64)
+    # candidates: the point's grid cell is one of the wall's cells, the layers meet, not skipped
+    gx, gy = np.floor(px / cell_size), np.floor(py / cell_size)
+    near = (
+        (np.floor(x0 / cell_size) <= gx[:, None])
+        & (gx[:, None] <= np.floor(x1 / cell_size))
+        & (np.floor(y0 / cell_size) <= gy[:, None])
+        & (gy[:, None] <= np.floor(y1 / cell_size))
+        & ((np.asarray(mask, dtype=np.int64)[:, None] & np.asarray(wall_bit, dtype=np.int64)) != 0)
+    )
+    starts = np.asarray(skip_start, dtype=np.int64)
+    if len(skip):
+        near[np.repeat(np.arange(n), np.diff(starts)), np.asarray(skip, dtype=np.int64)] = False
+    i, j = np.nonzero(near)
+    if not len(i):
+        return []
+    x, y, k = px[i], py[i], kind[j]
+    hit = (x0[j] <= x) & (x <= x1[j]) & (y0[j] <= y) & (y <= y1[j])
+    slope = hit & (k > 1)
+    if slope.any():
+        with np.errstate(invalid="ignore", divide="ignore"):
+            wide = x1[j] > x0[j]
+            rise = (x - x0[j]) / (x1[j] - x0[j])
+            rise = np.where(rise > 0.0, rise, 0.0)
+            rise = np.where(rise < 1.0, rise, 1.0)
+            rise = np.where(k == 3, 1.0 - rise, rise)
+            top = np.where(wide, y1[j] - rise * (y1[j] - y0[j]), y0[j])
+        hit &= ~slope | (y >= top - 1e-9)
+    round_ = np.flatnonzero(k == 1)
+    if len(round_):
+        reach = _hypot(x[round_] - cx[j[round_]], y[round_] - cy[j[round_]])
+        hit[round_] = reach <= radius[j[round_]]
+    return np.unique(i[hit]).tolist()

@@ -8,6 +8,7 @@
 // it needs; when that is larger than ``cap`` nothing past ``cap`` is written and the caller
 // retries with a bigger buffer.
 #include <algorithm>
+#include <cfloat>
 #include <cmath>
 #include <cstdint>
 #include <vector>
@@ -52,11 +53,50 @@ int64_t emit(std::vector<int64_t>& found, int64_t* out, int64_t cap) {
     return count;
 }
 
+// CPython's math.hypot for two values (Modules/mathmodule.c vector_norm, Python 3.12+): scaled
+// so the larger is in [0.5, 1), squares and sums kept exact with fma, one Newton correction. The
+// last bit can differ from the C library's hypot, so distances match the python kernels only
+// this way.
+double norm2(double x, double y, double max) {
+    int max_e;
+    std::frexp(max, &max_e);
+    if (max_e < -1023)  // subnormal: ldexp(1.0, -max_e) would overflow
+        return DBL_MIN * norm2(x / DBL_MIN, y / DBL_MIN, max / DBL_MIN);
+    const double scale = std::ldexp(1.0, -max_e);
+    const double scaled[2] = {x * scale, y * scale};
+    double csum = 1.0, frac1 = 0.0, frac2 = 0.0;
+    for (const double v : scaled) {
+        const double hi = v * v, lo = std::fma(v, v, -hi);
+        const double sum = csum + hi;
+        frac2 += (csum - sum) + hi;
+        csum = sum;
+        frac1 += lo;
+    }
+    double h = std::sqrt(csum - 1.0 + (frac1 + frac2));
+    const double hi = -h * h, lo = std::fma(-h, h, -hi);
+    const double sum = csum + hi;
+    frac2 += (csum - sum) + hi;
+    csum = sum;
+    frac1 += lo;
+    h += (csum - 1.0 + (frac1 + frac2)) / (2.0 * h);
+    return h / scale;
+}
+
+double py_hypot(double x, double y) {
+    x = std::fabs(x);
+    y = std::fabs(y);
+    const double max = y > x ? y : x;
+    if (std::isinf(x) || std::isinf(y)) return INFINITY;
+    if (std::isnan(x) || std::isnan(y)) return NAN;
+    if (max == 0.0) return max;
+    return norm2(x, y, max);
+}
+
 }  // namespace
 
 extern "C" {
 
-int32_t ak_abi_version() { return 4; }
+int32_t ak_abi_version() { return 5; }
 
 // -- broad phase ----------------------------------------------------------------------------
 // Pairs i < j of overlapping (or touching) boxes, written as i * n + j, sorted.
@@ -448,6 +488,130 @@ void ak_fieldai_step(
             m = 0;
         }
         mode[s] = m;
+    }
+}
+
+// Field AI entities without a controller (FieldAISystem._think / _step_toward as one zero-size
+// mover each): react, pick the goal (``goal_x/y`` where ``has_goal``: the caller's patrol point
+// or wander goal), arrive or step. Writes ``mode``; ``status[k]`` 0 stays, 1 moves by
+// ``move_x/y[k]`` (the caller tests blocking), 2 arrived.
+void ak_fieldai_free_step(
+    int64_t* mode, const double* home_x, const double* home_y, const double* detect,
+    const double* lose, const double* arrive, const double* speed, const double* x,
+    const double* y, const int64_t* slots, int64_t n, const int64_t* behaviour,
+    const double* target_x, const double* target_y, const uint8_t* has_target,
+    const double* goal_x, const double* goal_y, const uint8_t* has_goal, double dt,
+    int8_t* status, double* move_x, double* move_y) {
+    for (int64_t k = 0; k < n; ++k) {
+        const int64_t s = slots[k];
+        const int64_t b = behaviour[k];
+        int64_t m = mode[s];
+        if ((b == 3 || b == 4) && has_target[k]) {
+            const double distance = py_hypot(target_x[k] - x[s], target_y[k] - y[s]);
+            if (m == 3 || m == 4) {
+                if (distance > lose[s]) m = 5;
+            } else if (distance <= detect[s]) {
+                m = b;
+            }
+        }
+        if ((m == 3 || m == 4) && !has_target[k]) m = 5;
+        const bool away = m == 4;
+        bool steer = true;
+        double gx = 0.0, gy = 0.0;
+        if (m == 3 || m == 4) {
+            gx = target_x[k];
+            gy = target_y[k];
+        } else if (m == 5) {
+            gx = home_x[s];
+            gy = home_y[s];
+        } else if (b == 1 || b == 2) {
+            m = b;
+            steer = has_goal[k] != 0;
+            gx = goal_x[k];
+            gy = goal_y[k];
+        } else {
+            m = 0;
+            steer = false;
+        }
+        int8_t code = 0;
+        double mx = 0.0, my = 0.0;
+        if (steer) {
+            double dx = gx - x[s], dy = gy - y[s];
+            if (away) {
+                dx = -dx;
+                dy = -dy;
+            }
+            const double d = py_hypot(dx, dy);
+            if (d <= (away ? 0.0 : arrive[s])) {
+                code = 2;
+                if (m == 5) m = 0;
+            } else if (dt > 0) {
+                const double v = speed[s];
+                const double step = v * dt;
+                if (!away && step > d) {
+                    dx = dx * d / step;
+                    dy = dy * d / step;
+                }
+                double ux = dx / d, uy = dy / d;
+                // CharacterController2D.move: ``** 0.5`` is the C library's pow, not sqrt
+                const double magnitude = std::pow(ux * ux + uy * uy, 0.5);
+                if (magnitude > 1.0) {
+                    ux = ux / magnitude;
+                    uy = uy / magnitude;
+                }
+                code = 1;
+                mx = ux * v * dt;
+                my = uy * v * dt;
+            }
+        }
+        mode[s] = m;
+        status[k] = code;
+        move_x[k] = mx;
+        move_y[k] = my;
+    }
+}
+
+// Points inside a solid (CollisionWorld.query_point for many points): a wall counts when its grid
+// cells hold the point, the layers meet and it is not one of the point's skipped walls
+// (``skip[skip_start[i]..skip_start[i + 1]]``). ``shape`` 0 box, 1 circle, 2 / 3 slope rising
+// right / left. Sets ``blocked[i]``.
+void ak_points_blocked(
+    const double* px, const double* py, int64_t n, const double* x0, const double* y0,
+    const double* x1, const double* y1, const double* cx, const double* cy, const double* radius,
+    const int64_t* shape, const int64_t* wall_bit, int64_t nw, double cell_size,
+    const int64_t* mask, const int64_t* skip_start, const int64_t* skip, uint8_t* blocked) {
+    if (n == 0 || nw == 0) return;
+    const std::vector<CellKey> cells = grid_cells(x0, y0, x1, y1, nw, cell_size);
+    for (int64_t i = 0; i < n; ++i) {
+        const double x = px[i], y = py[i];
+        const int64_t key = cell_key(cell_of(x, cell_size), cell_of(y, cell_size));
+        auto it = std::lower_bound(
+            cells.begin(), cells.end(), key,
+            [](const CellKey& c, int64_t k) { return c.key < k; });
+        for (; it != cells.end() && it->key == key; ++it) {
+            const int64_t j = it->row;
+            if (!(mask[i] & wall_bit[j])) continue;
+            bool skipped = false;
+            for (int64_t q = skip_start[i]; q < skip_start[i + 1]; ++q) skipped |= skip[q] == j;
+            if (skipped) continue;
+            if (shape[j] == 1) {
+                if (py_hypot(x - cx[j], y - cy[j]) > radius[j]) continue;
+            } else if (!(x0[j] <= x && x <= x1[j] && y0[j] <= y && y <= y1[j])) {
+                continue;
+            } else if (shape[j] > 1) {  // a slope: only below the line across its box
+                double top = y0[j];
+                if (x1[j] > x0[j]) {
+                    double rise = (x - x0[j]) / (x1[j] - x0[j]);
+                    rise = rise > 0.0 ? rise : 0.0;
+                    rise = rise < 1.0 ? rise : 1.0;
+                    if (shape[j] == 3) rise = 1.0 - rise;
+                    top = y1[j] - rise * (y1[j] - y0[j]);
+                }
+                if (!(y >= top - 1e-9)) continue;
+            }
+            blocked[i] = 1;
+            break;
+        }
     }
 }
 

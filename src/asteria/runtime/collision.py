@@ -19,6 +19,7 @@ from asteria.core.columns import column_storage
 from asteria.core.migration import component_migration
 
 ALL_LAYERS = 0xFFFFFFFF
+_POINT_SHAPES = {"circle": 1, "slope_right": 2, "slope_left": 3}  # other shapes: boxes
 SHAPES = ("box", "circle", "slope_right", "slope_left")
 
 
@@ -417,6 +418,15 @@ class CollisionWorld:
             )
         return shapes.extras
 
+    def solid_shape_codes(self):
+        """Per solid row (same order as ``solid_columns``): 0 box, 1 circle, 2 slope rising right,
+        3 slope rising left — what the batched point test (``points_blocked``) needs."""
+        shapes, _ = self.solid_columns()
+        if shapes.codes is None:
+            kind = self._kind
+            shapes.codes = [_POINT_SHAPES.get(kind[i], 0) for i in shapes.rows]
+        return shapes.codes
+
     def move_shapes(self, deltas):
         """Shift the shapes of entities that moved (``{entity_id: (dx, dy)}``) so the snapshot
         stays current.
@@ -717,10 +727,11 @@ class CollisionWorld:
 class _ShapeRows:
     """Sequence view of selected world rows; each ``ColliderShape`` is made when first indexed."""
 
-    __slots__ = ("world", "rows", "_made", "extras")
+    __slots__ = ("world", "rows", "_made", "extras", "codes")
 
     def __init__(self, world, rows):
         self.world, self.rows, self._made, self.extras = world, rows, {}, None
+        self.codes = None
 
     def __len__(self):
         return len(self.rows)

@@ -513,3 +513,116 @@ def fieldai_step(f, t, c, slots, behaviour, target_x, target_y, has_target, dt):
             m = 0
         mode[s] = m
     return rest
+
+
+def fieldai_free_step(
+    f, t, slots, behaviour, target_x, target_y, has_target, goal_x, goal_y, has_goal, dt
+):
+    """React and step field AI entities without a controller (the per-entity ``_think`` /
+    ``_step_toward`` arithmetic, one zero-size mover each).
+
+    ``goal_x`` / ``goal_y`` are the patrol point or wander goal the caller picked (``has_goal``)
+    for entities that patrol or wander. Writes ``f["mode_code"]``; returns ``(status, move_x,
+    move_y)`` lists: status 0 stays, 1 moves by ``(move_x, move_y)`` (x first, then y; the caller
+    tests blocking), 2 arrived at its goal (a returning entity is idle again).
+    """
+    mode, hx, hy = f["mode_code"], f["home_x"], f["home_y"]
+    detect, lose, arrive, speed = (
+        f["detect_radius"],
+        f["lose_radius"],
+        f["arrive_distance"],
+        f["speed"],
+    )
+    x, y = t["x"], t["y"]
+    status, move_x, move_y = [], [], []
+    for k, s in enumerate(slots):
+        b, m = behaviour[k], mode[s]
+        if b in (3, 4) and has_target[k]:
+            distance = math.hypot(target_x[k] - x[s], target_y[k] - y[s])
+            if m in (3, 4):
+                if distance > lose[s]:
+                    m = 5
+            elif distance <= detect[s]:
+                m = b
+        if m in (3, 4) and not has_target[k]:
+            m = 5  # the target is gone: go home
+        away, steer = m == 4, True
+        if m in (3, 4):
+            gx, gy = target_x[k], target_y[k]
+        elif m == 5:
+            gx, gy = hx[s], hy[s]
+        elif b in (1, 2):
+            m = b
+            steer = bool(has_goal[k])  # a patrol without points stands still
+            gx, gy = goal_x[k], goal_y[k]
+        else:
+            m, steer = 0, False
+        code, mx, my = 0, 0.0, 0.0
+        if steer:
+            dx, dy = gx - x[s], gy - y[s]
+            if away:
+                dx, dy = -dx, -dy
+            d = math.hypot(dx, dy)
+            if d <= (0.0 if away else arrive[s]):
+                code = 2
+                if m == 5:
+                    m = 0
+            elif dt > 0:
+                v = speed[s]
+                step = v * dt
+                if not away and step > d:  # land exactly on the goal
+                    dx, dy = dx * d / step, dy * d / step
+                ux, uy = dx / d, dy / d
+                magnitude = (ux * ux + uy * uy) ** 0.5  # as CharacterController2D.move
+                if magnitude > 1.0:
+                    ux, uy = ux / magnitude, uy / magnitude
+                code, mx, my = 1, ux * v * dt, uy * v * dt
+        mode[s] = m
+        status.append(code)
+        move_x.append(mx)
+        move_y.append(my)
+    return status, move_x, move_y
+
+
+def points_blocked(px, py, solids, walls, shapes, wall_bit, cell_size, mask, skip_start, skip):
+    """Points ``(px[i], py[i])`` inside a solid (``CollisionWorld.query_point`` for many points).
+
+    ``solids`` = the walls' ``(x0, y0, x1, y1)`` columns, ``walls`` their ``(cx, cy, radius)``,
+    ``shapes`` codes 0 box, 1 circle, 2 slope rising right, 3 slope rising left. A wall counts
+    when its grid cells hold the point, ``mask[i] & wall_bit[j]`` and it is not one of point
+    ``i``'s skipped walls ``skip[skip_start[i]:skip_start[i + 1]]``. Returns sorted point rows.
+    """
+    x0, y0, x1, y1 = solids
+    cx, cy, radius = walls
+    cells = {}
+    for j in range(len(x0)):
+        for a in range(floor(x0[j] / cell_size), floor(x1[j] / cell_size) + 1):
+            for b in range(floor(y0[j] / cell_size), floor(y1[j] / cell_size) + 1):
+                cells.setdefault((a, b), []).append(j)
+    blocked = []
+    for i in range(len(px)):
+        x, y = px[i], py[i]
+        rows = cells.get((floor(x / cell_size), floor(y / cell_size)))
+        if not rows:
+            continue
+        own = skip[skip_start[i] : skip_start[i + 1]]
+        for j in rows:
+            if not (mask[i] & wall_bit[j]) or j in own:
+                continue
+            if shapes[j] == 1:
+                if math.hypot(x - cx[j], y - cy[j]) > radius[j]:
+                    continue
+            elif not (x0[j] <= x <= x1[j] and y0[j] <= y <= y1[j]):
+                continue
+            elif shapes[j] > 1:  # a slope: only below the line across its box
+                top = y0[j]
+                if x1[j] > x0[j]:
+                    rise = min(1.0, max(0.0, (x - x0[j]) / (x1[j] - x0[j])))
+                    if shapes[j] == 3:
+                        rise = 1.0 - rise
+                    top = y1[j] - rise * (y1[j] - y0[j])
+                if not y >= top - 1e-9:
+                    continue
+            blocked.append(i)
+            break
+    return blocked

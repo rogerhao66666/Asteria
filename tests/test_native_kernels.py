@@ -487,7 +487,7 @@ def test_the_macos_library_is_universal():
         assert mins and all(m == "11.0" for m in mins), build.stdout  # loads on older Macs
 
 
-def test_the_build_falls_back_to_this_machine_when_universal_fails(monkeypatch):
+def test_the_build_falls_back_to_this_machine_when_universal_fails(monkeypatch, tmp_path):
     from asteria.kernels import build_native
 
     commands = []
@@ -495,14 +495,21 @@ def test_the_build_falls_back_to_this_machine_when_universal_fails(monkeypatch):
     def run(command, **_):
         commands.append(command)
         failed = "-arch" in command
+        if not failed:
+            Path(command[command.index("-o") + 1]).write_bytes(b"built")
         return subprocess.CompletedProcess(command, 1 if failed else 0, "", "")
 
+    library = tmp_path / "libasteria_kernels.so"
+    monkeypatch.setattr(build_native, "library_name", lambda: library)
     monkeypatch.setattr(build_native.subprocess, "run", run)
     build_native.build(verbose=False, universal=True)
     assert len(commands) == 2 and "-arch" in commands[0] and "-arch" not in commands[1]
     commands.clear()
     build_native.build(verbose=False, universal=False)
     assert len(commands) == 1 and "-arch" not in commands[0]
+    assert library.read_bytes() == b"built" and [p.name for p in tmp_path.iterdir()] == [
+        library.name
+    ]  # swapped into place, no temporary left
 
 
 _FROM_PYZ = """
@@ -524,10 +531,10 @@ print(kernels.available()[0])
 
 
 def test_an_exported_pyz_loads_the_native_library_after_unpacking(tmp_path):
-    _native()
+    native = _native()
     from asteria.project_tools import _copy_engine, build_pyz
 
-    _copy_engine(tmp_path / "game" / "engine")
+    _copy_engine(tmp_path / "game" / "engine", native._path)
     pyz = build_pyz(tmp_path / "game", tmp_path / "out" / "Game.pyz", name="KernelCheck")
     home = tmp_path / "home"
     env = {**os.environ, "HOME": str(home), "LOCALAPPDATA": str(home)}

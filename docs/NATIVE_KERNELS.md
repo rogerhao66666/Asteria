@@ -31,6 +31,12 @@ built for this machine only. `lipo -info` on the library shows which.
 Without the library nothing breaks: `auto` falls back to numpy (or python). Each native function
 also checks the buffer types it reads and falls back for anything else.
 
+**Exports** (`asteria-export`, the editor's Export Game) check the library first: missing, not
+loadable, another ABI (`ABI_VERSION` in `build_native.py`, `ak_abi_version` in the C++) or older
+than its source means it is built again. Only a library that passed the check is copied into the
+game. When no compiler can build it the export still finishes, with a warning in its report, the
+CLI output and the editor's export message; that game runs on numpy or python.
+
 ## Without numpy
 
 The native set does not need numpy: the C++ reads and writes `array.array` buffers through
