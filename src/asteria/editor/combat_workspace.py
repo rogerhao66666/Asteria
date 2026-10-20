@@ -118,11 +118,14 @@ class _Table(QWidget):
         layout.addWidget(self.table, 1)
         layout.addLayout(buttons)
 
+    ROW = 30  # row height until a row's own fields ask for more
+
     def _fit(self):
         """As tall as its rows (one empty row at least, six at most - then it scrolls)."""
-        rows = min(6, max(1, self.table.rowCount()))
+        count = self.table.rowCount()
+        heights = [self.table.rowHeight(r) for r in range(min(6, count))] or [self.ROW]
         header = self.table.horizontalHeader().sizeHint().height()
-        self.table.setFixedHeight(header + rows * 30 + 4)
+        self.table.setFixedHeight(header + sum(heights) + 4)
 
     def _remove(self):
         row = self.table.currentRow()
@@ -157,12 +160,23 @@ class _Table(QWidget):
                 widget = QCheckBox()
                 widget.setChecked(bool(value))
                 widget.toggled.connect(self._emit)
+                cell = QWidget()  # the box centred in its cell, not in the top corner
+                centre = QHBoxLayout(cell)
+                centre.setContentsMargins(0, 0, 0, 0)
+                centre.addWidget(widget, 0, Qt.AlignCenter)
+                cell.check = widget
+                widget = cell
             else:
                 widget = QLineEdit("" if value is None else str(value))
                 widget.setPlaceholderText(options.get("placeholder", ""))
                 widget.textChanged.connect(self._emit)
             self.table.setCellWidget(row, column, widget)
-        self.table.setRowHeight(row, 30)
+        # as tall as its tallest field (spin boxes and lists are taller than 30 px)
+        tallest = max(
+            (self.table.cellWidget(row, c).sizeHint().height() for c in range(len(self.columns))),
+            default=self.ROW,
+        )
+        self.table.setRowHeight(row, max(self.ROW, tallest + 4))
         self._fit()
 
     def rows(self):
@@ -178,7 +192,7 @@ class _Table(QWidget):
                 elif kind == "float":
                     values.append(widget.value())
                 elif kind == "bool":
-                    values.append(widget.isChecked())
+                    values.append(getattr(widget, "check", widget).isChecked())
                 else:
                     values.append(widget.text().strip())
             result.append(values)

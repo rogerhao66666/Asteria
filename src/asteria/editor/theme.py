@@ -408,11 +408,12 @@ QComboBox QAbstractItemView {
 }
 QCheckBox, QRadioButton { color: $text; }
 QGroupBox {
-    border: 1px solid $border; border-radius: 8px; margin-top: 12px; padding: 8px 5px 5px 5px;
+    border: 1px solid $border; border-radius: 8px; margin-top: 22px; padding: 8px 5px 5px 5px;
     background: $panel;
 }
-QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; color: $text_dim;
-font-weight: 700; }
+/* the title sits above the frame line (not on it): the margin is taller than the title */
+QGroupBox::title { subcontrol-origin: margin; subcontrol-position: top left; left: 8px;
+    top: 2px; padding: 0 2px; color: $text_dim; font-weight: 700; }
 
 /* -- buttons
 ------------------------------------------------------------------------------------- */
