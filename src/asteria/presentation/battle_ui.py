@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from math import isfinite
 
 from asteria.runtime import Camera2D
@@ -16,6 +16,10 @@ from .battle_result import BattleResultView
 from .battle_runtime import BattlePresentationFrame
 from .battle_turn_timeline import BattleTurnTimelineView
 from .battle_ui_polish import BattleUiPolishProfile
+
+# what the command menu's layout reads: every field of the menu view but its revision count
+# (the adapter sets the same entries again each frame, and each set counts)
+_MENU_LAYOUT_FIELDS = tuple(f.name for f in fields(BattleActionMenuView) if f.name != "revision")
 
 
 def _value_text(value):
@@ -223,6 +227,8 @@ class BattleUiComposer:
         self._camera = None
         self._focus = None
         self.overhead_labels = {}  # member_id: (x, y, w, h) of its overhead label, last frame
+        self._hud_cache = None  # (inputs, commands, overhead_labels) of the last HUD layout
+        self._menu_cache = None  # (inputs, commands) of the last command menu layout
 
     def _name(self, member_id):
         return self._display_names.get(str(member_id), str(member_id))
@@ -250,6 +256,36 @@ class BattleUiComposer:
     def _hud_commands(
         self, members, side_by_member, placement_by_member=None, focus_member_id=None
     ):
+        """The member HUD (panels, overhead labels): laid out again only when something it
+        reads changed since the last frame, else the last frame's commands."""
+        L = self.layout
+        anchors = None
+        if L.overhead_zones and self._camera is not None:  # overhead labels follow the figures
+            to_screen = self._camera.world_to_screen
+            anchors = tuple(
+                (v.member_id, to_screen(v.anchor.x, v.anchor.y)) for v in self.scene.combatants
+            )
+        key = (
+            tuple(members),
+            dict(side_by_member or {}),
+            dict(placement_by_member or {}),
+            focus_member_id,
+            self._display_names,
+            self._member_heights,
+            anchors,
+            L,
+            self.party_layout,
+            self.polish,
+        )
+        cached = self._hud_cache
+        if cached is not None and cached[0] == key:
+            self.overhead_labels = dict(cached[2])
+            return tuple(list(x) for x in cached[1])
+        out = self._hud_layout(*key[:4])
+        self._hud_cache = (key, tuple(tuple(x) for x in out), dict(self.overhead_labels))
+        return out
+
+    def _hud_layout(self, members, side_by_member, placement_by_member, focus_member_id):
         panels, texts, gauges, icons = [], [], [], []
         L = self.layout
 
@@ -584,16 +620,7 @@ class BattleUiComposer:
         boxes = self._combatant_boxes()
         placed = []
         self.overhead_labels = {}
-
-        def free(rect, own):
-            x, y, w, h = rect
-            if y < L.timeline_y + 24.0 or y + h > L.virtual_height:
-                return False
-            others = [b for k, b in boxes.items() if k != own] + placed
-            return all(
-                x + w <= bx or bx + bw <= x or y + h <= by or by + bh <= y
-                for bx, by, bw, bh in others
-            )
+        floor, margin = L.timeline_y + 24.0, L.margin  # a label stays under the turn bar
 
         for member in members:
             anchor = None if camera is None else self._anchor_screen(camera, member.member_id)
@@ -628,18 +655,20 @@ class BattleUiComposer:
                 key=lambda t: t[2],
             )
             right = L.virtual_width - L.margin - width
-
-            def clamp(cx, right=right):
-                return max(L.margin, min(right, cx))
-
-            y, x = next(
-                (
-                    (cy, clamp(cx))
-                    for cy, cx, _cost in tries
-                    if free((clamp(cx), cy, width, height), member.member_id)
-                ),
-                (ys[0][0], clamp(home_x)),
-            )
+            # the first (cheapest) spot that is on screen and covers no other figure or label
+            others = [b for k, b in boxes.items() if k != member.member_id] + placed
+            spot = None
+            for cy, cx, _cost in tries:
+                if cy < floor or cy + height > L.virtual_height:
+                    continue
+                cx = max(margin, min(right, cx))
+                if all(
+                    cx + width <= bx or bx + bw <= cx or cy + height <= by or by + bh <= cy
+                    for bx, by, bw, bh in others
+                ):
+                    spot = (cy, cx)
+                    break
+            y, x = spot or (ys[0][0], max(margin, min(right, home_x)))
             placed.append((x, y, width, height))
             name_y = y + self.OVERHEAD_CAPTION
             self.overhead_labels[member.member_id] = (x, y, width, height)
@@ -786,6 +815,37 @@ class BattleUiComposer:
         return panels, texts, gauges
 
     def _action_menu_commands(self, menu):
+        """The command menu: laid out again only when the menu, the stage or a label it keeps
+        clear of changed since the last frame, else the last frame's commands."""
+        if menu is None:
+            return [], [], []
+        if not isinstance(menu, BattleActionMenuView):
+            raise TypeError("action_menu must be BattleActionMenuView")
+        camera = self._camera
+        stage = None
+        if camera is not None:
+            stage = tuple(
+                camera.world_to_screen(v.anchor.x, v.anchor.y) for v in self.scene.combatants
+            )
+        key = (
+            tuple(getattr(menu, name) for name in _MENU_LAYOUT_FIELDS),
+            self._focus,
+            self._member_heights,
+            self.overhead_labels,
+            self.scene.combatants,
+            stage,
+            self.layout,
+            self.polish,
+        )
+        cached = self._menu_cache
+        if cached is not None and cached[0] == key:
+            return tuple(list(x) for x in cached[1])
+        out = self._action_menu_layout(menu)
+        key = key[:3] + (dict(self.overhead_labels),) + key[4:]
+        self._menu_cache = (key, tuple(tuple(x) for x in out))
+        return out
+
+    def _action_menu_layout(self, menu):
         panels, texts, icons = [], [], []
         if menu is None:
             return panels, texts, icons
