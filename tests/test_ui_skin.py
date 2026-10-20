@@ -42,6 +42,35 @@ def test_the_nine_patch_keeps_corners_and_stretches_the_rest():
     assert scaled.get_at((2, 2))[:3] == (255, 0, 0)  # a corner is 3 px when drawn at 3x
 
 
+def test_a_cached_panel_draws_exactly_the_pixels_of_drawing_it_piece_by_piece():
+    """Panels are composed once per size and reused; the screen must not change by a pixel,
+    over any background, at any size (also smaller than the corners) and scale."""
+    import random
+
+    from asteria.presentation.ui_skin import _nine_patch
+
+    pg = _pg()
+    rng = random.Random(3)
+    image = pg.Surface((12, 10), pg.SRCALPHA)
+    for x in range(12):
+        for y in range(10):
+            image.set_at((x, y), tuple(rng.randrange(256) for _ in range(4)))
+    for patch in (NinePatch("x", 3, 2, 4, 3), NinePatch("x", 2, 2, 2, 2, scale=2.0)):
+        for w, h in ((40, 30), (5, 4), (13, 31), (1, 1)):
+            for scale in (1.0, 1.5):
+                background = pg.Surface((50, 40), pg.SRCALPHA)
+                for x in range(0, 50, 3):
+                    for y in range(0, 40, 3):
+                        background.fill(tuple(rng.randrange(256) for _ in range(4)), (x, y, 3, 3))
+                direct, cached = background.copy(), background.copy()
+                _nine_patch(pg, direct, image, (4, 5, w, h), patch, scale, 0)
+                for _ in range(2):  # composed, then reused
+                    drawn = background.copy()
+                    draw_nine_patch(pg, drawn, image, (4, 5, w, h), patch, scale=scale)
+                    cached = drawn
+                assert pg.image.tobytes(cached, "RGBA") == pg.image.tobytes(direct, "RGBA")
+
+
 def test_skins_are_picked_by_role_pattern_and_round_trip_in_the_theme():
     frame, plain = NinePatch("ui.frame", 3, 3, 3, 3, 2.0), NinePatch("ui.plain")
     theme = BattleUiTheme(

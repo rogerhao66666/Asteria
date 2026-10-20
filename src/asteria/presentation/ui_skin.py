@@ -7,6 +7,7 @@ any size. It is project data (an asset id and four numbers), drawn by a backend.
 
 from __future__ import annotations
 
+import weakref
 from dataclasses import dataclass
 from fnmatch import fnmatchcase
 
@@ -69,8 +70,34 @@ def skin_for(skins, role):
     return None
 
 
+# picture -> {(width, height, patch, unit): the whole panel}: a HUD draws the same few panels
+# every frame, and nine scaled pieces each were most of drawing one
+_PANELS = weakref.WeakKeyDictionary()
+_PANELS_PER_PICTURE = 64
+
+
 def draw_nine_patch(pg, target, image, rect, patch, *, scale=1.0):
     """Draw ``image`` into ``rect`` of the ``target`` surface as ``patch`` describes."""
+    x, y, w, h = rect
+    if image.get_flags() & pg.SRCALPHA:  # composed once per size, then one blit a frame
+        panels = _PANELS.get(image)
+        if panels is None:
+            panels = _PANELS[image] = {}
+        key = (w, h, patch, float(scale))
+        panel = panels.get(key)
+        if panel is None:
+            panel = pg.Surface((max(1, w), max(1, h)), pg.SRCALPHA)
+            # the pieces never overlap: MAX onto a clear surface copies them exactly
+            _nine_patch(pg, panel, image, (0, 0, w, h), patch, scale, pg.BLEND_RGBA_MAX)
+            if len(panels) >= _PANELS_PER_PICTURE:
+                panels.clear()
+            panels[key] = panel
+        target.blit(panel, (x, y))
+        return
+    _nine_patch(pg, target, image, rect, patch, scale, 0)
+
+
+def _nine_patch(pg, target, image, rect, patch, scale, flags):
     unit = float(patch.scale) * float(scale)
     iw, ih = image.get_size()
     left, top = min(patch.left, iw // 2), min(patch.top, ih // 2)
@@ -79,7 +106,7 @@ def draw_nine_patch(pg, target, image, rect, patch, *, scale=1.0):
     dr, db = max(1, round(right * unit)), max(1, round(bottom * unit))
     x, y, w, h = rect
     if w < dl + dr or h < dt + db:  # smaller than its corners: squeeze the whole picture
-        target.blit(pg.transform.scale(image, (max(1, w), max(1, h))), (x, y))
+        target.blit(pg.transform.scale(image, (max(1, w), max(1, h))), (x, y), special_flags=flags)
         return
     sx = (0, left, iw - right, iw)
     sy = (0, top, ih - bottom, ih)
@@ -94,4 +121,4 @@ def draw_nine_patch(pg, target, image, rect, patch, *, scale=1.0):
             piece = image.subsurface(source)
             if piece.get_size() != size:
                 piece = pg.transform.scale(piece, size)
-            target.blit(piece, (dx[col], dy[row]))
+            target.blit(piece, (dx[col], dy[row]), special_flags=flags)

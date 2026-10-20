@@ -107,7 +107,7 @@ def test_tile_scene_view_draws_component_slot_into_game_surface():
     view._animated = {}
     view._skeleton_runtime = SkeletonSceneRuntime()
     view._parallax = lambda screen: None
-    view._layer = lambda screen, group: None
+    view._layer = lambda screen, group, backdrop=None: None
     view._texture = lambda _asset_id: texture
     view._skeleton_runtime.update(scene, 0.25)
     screen = pygame.Surface((view.width, view.height), pygame.SRCALPHA)

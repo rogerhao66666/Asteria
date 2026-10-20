@@ -202,6 +202,7 @@ class PygameBattleUiBackend:
         self._fonts = {}
         self._glyph_cache = {}
         self._cjk_fonts = {}
+        self._text_images = {}  # (size, text, colour) -> the drawn line, reused frame to frame
 
     def _s(self, value):
         return round(float(value) * self.scale)
@@ -384,21 +385,32 @@ class PygameBattleUiBackend:
         """Replace characters the font cannot draw (shown as empty boxes otherwise)."""
         return renderable_text(self.pg, font, value, self._glyph_cache)
 
+    TEXT_IMAGES = 1024  # drawn lines kept; the HUD redraws the same few dozen every frame
+
     def draw_text(self, text, *, color, size):
-        font = self._font(size)
-        font = font_for_text(self.pg, font, text.text, self._cjk_fonts, self._s(size))
-        if self.font_name is None:
-            image = font.render(self._renderable(font, text.text), True, self._rgb(color))
-        else:  # a skin's own face: the built-in one fills in what it cannot draw
-            image = render_with_fallback(
-                self.pg, font, text.text, self._rgb(color), self._glyph_cache, self._fallback_font
-            )
+        key = (size, text.text, self._rgb(color))
+        image = self._text_images.get(key)
+        if image is None:
+            image = self._text_image(text.text, color, size)
+            if len(self._text_images) >= self.TEXT_IMAGES:
+                self._text_images.clear()  # changing numbers: start over, no slow bookkeeping
+            self._text_images[key] = image
         x, y = self._s(text.x), self._s(text.y)
         if text.align == "center":
             x -= image.get_width() // 2
         elif text.align == "right":
             x -= image.get_width()
         self.screen.blit(image, (x, y))
+
+    def _text_image(self, value, color, size):
+        font = self._font(size)
+        font = font_for_text(self.pg, font, value, self._cjk_fonts, self._s(size))
+        if self.font_name is None:
+            return font.render(self._renderable(font, value), True, self._rgb(color))
+        # a skin's own face: the built-in one fills in what it cannot draw
+        return render_with_fallback(
+            self.pg, font, value, self._rgb(color), self._glyph_cache, self._fallback_font
+        )
 
     # Set by the battle presentation adapter: draws one VFX cue (sprite sheet playback).
     vfx_drawer = None

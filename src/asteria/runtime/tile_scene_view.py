@@ -171,6 +171,7 @@ class TileSceneView:
         self._frame_rects = {}
         self._chunk_cache = {}  # (group, chunk_x, chunk_y) -> Surface | None, least recent first
         self._canvas = {}
+        self._scaled_canvas = {}  # the zoomed layer picture, reused frame to frame
         self._groups = {
             "below": [
                 layer
@@ -313,7 +314,9 @@ class TileSceneView:
         return image
 
     def _parallax(self, screen):
-        """Scrolling backdrops (``ParallaxBackground2D``), far to near, below the tile layers."""
+        """Scrolling backdrops (``ParallaxBackground2D``), far to near, below the tile layers.
+        Returns whether any was drawn."""
+        drawn = False
         cam = self.camera
         rows = [
             spec
@@ -348,6 +351,7 @@ class TileSceneView:
             if spec.opacity < 1.0:
                 image = image.copy()
                 image.set_alpha(int(spec.opacity * 255))
+            drawn = True
             if spec.repeat_x:
                 x = shift % w - w
                 while x < self.width:
@@ -355,6 +359,7 @@ class TileSceneView:
                     x += w
             else:
                 screen.blit(image, (round(shift), y))
+        return drawn
 
     def effect_frame_count(self, sheet_id):
         """How many frames an effect sheet has (0 when it cannot be loaded)."""
@@ -438,17 +443,24 @@ class TileSceneView:
             cache.pop(next(iter(cache)))
         return surface
 
-    def _layer(self, screen, group):
+    def _layer(self, screen, group, backdrop=None):
+        """One layer group, drawn at 1x then scaled by the camera zoom. ``backdrop``: the screen
+        holds only this colour so far, so the layer is drawn onto it in an opaque canvas -
+        scaling and blitting a whole-screen picture without alpha took a fraction of the time."""
         cam = self.camera
         tw, th = self.tilemap.tile_width, self.tilemap.tile_height
         cwp, chp = self.tilemap.chunk_width * tw, self.tilemap.chunk_height * th
         view_w, view_h = self.width / cam.zoom, self.height / cam.zoom
         x0, y0 = floor(cam.x), floor(cam.y)
         w, h = int(view_w) + 2, int(view_h) + 2
-        canvas = self._canvas.get((w, h))
+        opaque = backdrop is not None
+        canvas = self._canvas.get((w, h, opaque))
         if canvas is None:
-            canvas = self._canvas[(w, h)] = self.pg.Surface((w, h), self.pg.SRCALPHA)
-        canvas.fill((0, 0, 0, 0))
+            canvas = self.pg.Surface((w, h), 0 if opaque else self.pg.SRCALPHA)
+            if opaque and self.pg.display.get_surface() is not None:
+                canvas = canvas.convert()  # the screen's own pixel format
+            self._canvas[(w, h, opaque)] = canvas
+        canvas.fill(backdrop if opaque else (0, 0, 0, 0))
         drawn = False
         for cy in range(floor(y0 / chp), floor((y0 + h) / chp) + 1):
             for cx in range(floor(x0 / cwp), floor((x0 + w) / cwp) + 1):
@@ -460,15 +472,21 @@ class TileSceneView:
             return
         size = (round(w * cam.zoom), round(h * cam.zoom))
         sx, sy = cam.world_to_screen(x0, y0)
-        screen.blit(self.pg.transform.scale(canvas, size), (round(sx), round(sy)))
+        scaled = self._scaled_canvas.get((size, opaque))
+        if scaled is None:  # scaled into the same surface every frame (no new one each time)
+            scaled = self._scaled_canvas[(size, opaque)] = self.pg.transform.scale(canvas, size)
+        else:
+            self.pg.transform.scale(canvas, size, scaled)
+        screen.blit(scaled, (round(sx), round(sy)))
 
     def draw(self, screen, flash=()):
         """Layers below characters, the sprites (depth-sorted, on their feet), layers above."""
         settings = getattr(self.session, "combat_scene", None)
         color = getattr(settings, "background_color", "") or "#0c0e14"
-        screen.fill(tuple(int(color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)))
-        self._parallax(screen)
-        self._layer(screen, "below")
+        backdrop = tuple(int(color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4))
+        screen.fill(backdrop)
+        behind = self._parallax(screen)
+        self._layer(screen, "below", None if behind else backdrop)
         sprites = []
         for entity in self.session.scene.entities():
             if not entity.enabled:

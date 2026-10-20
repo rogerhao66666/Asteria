@@ -1238,8 +1238,7 @@ class CanonicalBattleAdapter:
         scale = self.host.width / layout.virtual_width
         size = (round(self.host.width * zoom), round(self.host.height * zoom))
         self.host.screen.blit(
-            self.host.pg.transform.smoothscale(background, size),
-            (round(bx * scale), round(by * scale)),
+            self._scaled_background(background, size), (round(bx * scale), round(by * scale))
         )
         textures = self.textures if self.screen.scene.combatants else None
         self._view_camera = self.screen.camera_feedback.camera_view(base)
@@ -1252,6 +1251,24 @@ class CanonicalBattleAdapter:
             world_then_ui.finish()
         self.audio_cues.extend(result.audio_cues)
         return result
+
+    def _scaled_background(self, background, size):
+        """The battlefield picture at ``size``: scaled once while the camera holds still (it was
+        smoothed again every frame), in the screen's pixel format (a quicker blit)."""
+        cached = getattr(self, "_background_cache", None)
+        if cached is not None and cached[0] is background and cached[1] == size:
+            return cached[2]
+        pg = self.host.pg
+        scaled = pg.transform.smoothscale(background, size)
+        if pg.display.get_surface() is not None:
+            # fully opaque (the usual battlefield): no alpha to blend, the same pixels
+            opaque = (
+                not scaled.get_flags() & pg.SRCALPHA
+                or pg.mask.from_surface(scaled, 254).count() == size[0] * size[1]
+            )
+            scaled = scaled.convert() if opaque else scaled.convert_alpha()
+        self._background_cache = (background, size, scaled)
+        return scaled
 
     def _compositions(self, combatants):
         """Attachments and layers authored on each body sheet (Character Composition tab)."""
