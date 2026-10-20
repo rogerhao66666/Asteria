@@ -61,7 +61,10 @@ def run_benchmark(
         runtime._battle_presentation = CanonicalBattleAdapter(runtime)
 
         def phase(name, frames, before_frame=None):
-            profiler = runtime.enable_profiling(RuntimeProfiler(target_fps=target_fps))
+            # timings without heap tracing (tracemalloc slows every allocation many times)
+            profiler = runtime.enable_profiling(
+                RuntimeProfiler(target_fps=target_fps, track_python_heap=False)
+            )
             for index in range(frames):
                 dt = (
                     min(runtime.clock.tick(target_fps) / 1000.0, 0.05)

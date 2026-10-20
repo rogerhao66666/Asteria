@@ -142,7 +142,11 @@ def run_arpg_stress(
         shots = game.projectiles  # systems for this scene (kernel set chosen now)
         hits = landed = 0
         game.combat.listeners.append(lambda event: None)
-        profiler = runtime.enable_profiling(RuntimeProfiler(target_fps=target_fps))
+        # no heap tracing: tracemalloc makes every allocation tens of times slower and the
+        # frame times would measure that instead of the engine
+        profiler = runtime.enable_profiling(
+            RuntimeProfiler(target_fps=target_fps, track_python_heap=False)
+        )
         for index in range(frames):
             missing = projectiles - len(shots)
             for _ in range(max(0, missing)):
