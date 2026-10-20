@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+import time
+
 from asteria.runtime.audio_mixer import RecordingAudioDevice
 
 
 class PygameAudioDevice:
     """Music streams through ``pygame.mixer.music``; sounds play on mixer channels."""
 
-    def __init__(self, pg):
+    def __init__(self, pg, clock=time.monotonic):
         self.pg = pg
         self._sounds = {}
+        self._clock = clock
+        self._fading_until = 0.0  # when the music fading out now falls silent
+        self._queued = False  # a track waits for that fade to end
 
     def _sound(self, path):
         sound = self._sounds.get(path)
@@ -19,15 +24,33 @@ class PygameAudioDevice:
         return sound
 
     def play_music(self, path, *, loops, fade_ms, volume):
-        self.pg.mixer.music.load(path)
-        self.pg.mixer.music.set_volume(volume)
-        self.pg.mixer.music.play(loops=loops, fade_ms=fade_ms)
+        music = self.pg.mixer.music
+        if self._clock() < self._fading_until and music.get_busy():
+            # loading now would wait for the old track to fade out: the game froze for the
+            # whole fade (half a second on every scene change). The new track waits its turn
+            # instead and starts the moment the old one falls silent.
+            try:
+                music.queue(path, loops=loops)
+            except TypeError:  # an older pygame without loops: load and wait, as before
+                pass
+            else:
+                music.set_volume(volume)
+                self._queued = True
+                return
+        self._fading_until = 0.0
+        self._queued = False
+        music.load(path)
+        music.set_volume(volume)
+        music.play(loops=loops, fade_ms=fade_ms)
 
     def stop_music(self, *, fade_ms):
-        if fade_ms > 0:
+        if fade_ms > 0 and not self._queued:
             self.pg.mixer.music.fadeout(fade_ms)
-        else:
+            self._fading_until = self._clock() + fade_ms / 1000.0
+        else:  # no fade, or a track queued behind the fade (stopping must cancel it too)
             self.pg.mixer.music.stop()
+            self._fading_until = 0.0
+            self._queued = False
 
     def set_music_volume(self, volume):
         self.pg.mixer.music.set_volume(volume)

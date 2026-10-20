@@ -77,6 +77,42 @@ def test_pygame_device_plays_the_committed_files(monkeypatch):
         pygame.mixer.quit()
 
 
+def test_a_new_track_waits_behind_a_fade_out_instead_of_freezing_the_game():
+    """pygame's music.load waits until a fading track falls silent (half a second of frozen
+    game on every scene change): the device queues the new track behind the fade instead."""
+    from asteria.platform.pygame_audio import PygameAudioDevice
+
+    class Music:
+        def __init__(self):
+            self.calls = []
+
+        def __getattr__(self, name):
+            return lambda *a, **k: self.calls.append((name, a, k))
+
+        def get_busy(self):
+            return True
+
+    class Pg:
+        class mixer:  # noqa: N801 - pygame's module name
+            music = Music()
+
+    now = [10.0]
+    device = PygameAudioDevice(Pg, clock=lambda: now[0])
+    music = Pg.mixer.music
+    device.play_music("field.ogg", loops=-1, fade_ms=500, volume=1.0)
+    device.stop_music(fade_ms=500)
+    device.play_music("battle.ogg", loops=-1, fade_ms=500, volume=0.8)
+    names = [c[0] for c in music.calls]
+    assert names == ["load", "set_volume", "play", "fadeout", "queue", "set_volume"]
+    assert music.calls[4][1] == ("battle.ogg",) and music.calls[4][2] == {"loops": -1}
+    device.stop_music(fade_ms=500)  # stopping during the hand-over cancels the queued track
+    assert music.calls[-1][0] == "stop"
+    music.calls.clear()
+    now[0] = 11.0  # long after any fade: tracks load straight away
+    device.play_music("field.ogg", loops=-1, fade_ms=0, volume=1.0)
+    assert [c[0] for c in music.calls] == ["load", "set_volume", "play"]
+
+
 def test_playable_runtime_plays_field_battle_and_victory_audio(monkeypatch, tmp_path):
     pygame = pytest.importorskip("pygame")
     from asteria.editor import EditorDocument
