@@ -18,6 +18,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .ui_fit import layout_widgets
+
 
 class _SectionHeightGuard(QObject):
     def __init__(self, group):
@@ -90,10 +92,11 @@ def polish_presentation_page(page):
         form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
         form.setVerticalSpacing(10)
         form.setHorizontalSpacing(12)
-        for row in range(form.rowCount()):
-            item = form.itemAt(row, QFormLayout.LabelRole)
-            if item is not None and isinstance(item.widget(), QLabel):
-                item.widget().setWordWrap(True)
+        for label in layout_widgets(form):  # not itemAt: see ui_fit.layout_widgets
+            if isinstance(label, QLabel) and form.getWidgetPosition(label)[1] == (
+                QFormLayout.LabelRole
+            ):
+                label.setWordWrap(True)
 
     for area in page.findChildren(QScrollArea):
         area.setFrameShape(QScrollArea.NoFrame)
@@ -145,7 +148,8 @@ def polish_presentation_page(page):
         layout = sidebar.layout()
         if layout is None or not layout.count() or not sidebar.findChildren(QListWidget):
             continue
-        heading = layout.itemAt(0).widget()
+        widgets = layout_widgets(layout)
+        heading = widgets[0] if widgets and layout.indexOf(widgets[0]) == 0 else None
         if not isinstance(heading, QLabel):
             continue
         sidebar.setProperty("presentationSidebar", True)

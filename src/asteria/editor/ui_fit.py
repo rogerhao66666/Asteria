@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QComboBox, QListWidgetItem, QStyledItemDelegate
+from PySide6.QtWidgets import QComboBox, QLayout, QListWidgetItem, QStyledItemDelegate, QWidget
 
 
 def fit_combo_boxes(root, *, cap=260, padding=44):
@@ -64,6 +64,32 @@ def named_id(item):
     if item is None:
         return None
     return item.data(Qt.UserRole) or item.text()
+
+
+def layout_widgets(layout):
+    """The widgets placed directly in ``layout``, in order.
+
+    Found without ``layout.itemAt``: PySide gives every item ``itemAt`` returns a Python
+    wrapper that the layout keeps alive. When Qt later deletes that item on its own (its widget
+    is deleted, or moved to another layout) the wrapper still claims the freed address, and the
+    next object Qt allocates there crashes the editor (a segfault far from the cause)."""
+    owner = layout.parentWidget()
+    if owner is None:
+        return []
+    found = [
+        (layout.indexOf(widget), widget)
+        for widget in owner.findChildren(QWidget, options=Qt.FindDirectChildrenOnly)
+    ]
+    return [widget for index, widget in sorted(found, key=lambda pair: pair[0]) if index >= 0]
+
+
+def layout_children(layout):
+    """The layouts nested directly in ``layout``, in order (without ``itemAt``, see
+    ``layout_widgets``)."""
+    found = [
+        (layout.indexOf(child), child) for child in layout.children() if isinstance(child, QLayout)
+    ]
+    return [child for index, child in sorted(found, key=lambda pair: pair[0]) if index >= 0]
 
 
 def swap_scroll_page(scroll, page):

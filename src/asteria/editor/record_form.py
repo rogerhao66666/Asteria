@@ -522,10 +522,10 @@ class AmountTable(QWidget):
             self.grid.addWidget(remove, row, column + 2)
         self.grid.setColumnMinimumWidth(3, 32)
         self.grid.setColumnStretch(7, 1)
-        for index in range(self.grid.count()):  # new rows count at once, not once shown
-            widget = self.grid.itemAt(index).widget()
-            if widget is not None:
-                widget.show()
+        from .ui_fit import layout_widgets  # not itemAt: see layout_widgets
+
+        for widget in layout_widgets(self.grid):  # new rows count at once, not once shown
+            widget.show()
         # any parent layout gives the table (and its Add button) the height it needs
         self.grid.invalidate()
         self.layout().invalidate()

@@ -98,6 +98,65 @@ def test_compact_pass_keeps_panels_narrow():
     assert combo.minimumWidth() > 0 and page.minimumSize().width() < wide
 
 
+def _layout_item_wrappers():
+    import shiboken6
+    from PySide6.QtWidgets import QSpacerItem, QWidgetItem
+
+    return [
+        w for w in shiboken6.getAllValidWrappers() if isinstance(w, (QWidgetItem, QSpacerItem))
+    ]
+
+
+def test_flowing_button_rows_leaves_no_layout_item_wrappers():
+    """The pass that wraps button rows runs on every page shown. Reading a layout's items with
+    itemAt gave each one a Python wrapper its layout kept; when Qt then deleted the item (a
+    form moving its error banner to the next page), the wrapper still claimed the freed address
+    and a later object allocated there crashed the editor (an intermittent segfault)."""
+    import gc
+
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import (
+        QApplication,
+        QHBoxLayout,
+        QLabel,
+        QPushButton,
+        QVBoxLayout,
+        QWidget,
+    )
+
+    from asteria.editor.decor import compact
+    from asteria.editor.flow_layout import FlowLayout
+    from asteria.editor.ui_fit import layout_children, layout_widgets
+
+    QApplication.instance() or QApplication([])
+    gc.collect()
+    before = {id(w) for w in _layout_item_wrappers()}
+    page = QWidget()
+    column = QVBoxLayout(page)
+    banner = QLabel("Not applied")
+    column.addWidget(banner)
+    row = QHBoxLayout()
+    column.addLayout(row)  # empty when added: PySide wraps nothing yet
+    row.addStretch(1)
+    buttons = [QPushButton(text) for text in ("Add", "Duplicate", "Remove")]
+    for button in buttons:
+        row.addWidget(button)
+    assert layout_widgets(column) == [banner] and layout_children(column) == [row]
+    assert layout_widgets(row) == buttons
+
+    compact(page)
+
+    flow = layout_children(column)[0]
+    assert isinstance(flow, FlowLayout) and flow.alignment() & Qt.AlignRight
+    assert layout_widgets(flow) == buttons
+    kept_by_flow = {id(item) for item in flow._items}
+    left = [w for w in _layout_item_wrappers() if id(w) not in before | kept_by_flow]
+    assert left == []  # nothing a box layout keeps, so nothing outlives its item
+    banner.setParent(None)  # what RecordForm does with its banner on every rebuild
+    banner.deleteLater()
+    page.deleteLater()
+
+
 def test_record_editor_shows_readable_field_names_and_keeps_the_data():
     from PySide6.QtWidgets import QApplication
 

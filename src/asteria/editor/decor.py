@@ -42,6 +42,7 @@ from PySide6.QtWidgets import (
 )
 
 from .icons import icon
+from .ui_fit import layout_children, layout_widgets
 
 # (pattern on the button text, icon, role); first match wins
 BUTTON_RULES = (
@@ -278,36 +279,36 @@ def flow_button_rows(layout):
     """Rows of two or more buttons wrap onto a second line in narrow panels."""
     from .flow_layout import FlowLayout
 
-    for index in range(layout.count()):
-        child = layout.itemAt(index).layout()
-        if child is None:
-            continue
+    # Rows are found without itemAt (see ui_fit.layout_widgets): this runs on every page shown,
+    # and an item wrapper it left behind crashed the editor once Qt deleted that item.
+    for child in layout_children(layout):
         if (
             isinstance(child, QHBoxLayout)
             and isinstance(layout, QBoxLayout)
             and not isinstance(child, FlowLayout)
             and _button_row(child)
         ):
-            leading_stretch = child.itemAt(0).spacerItem() is not None
+            widgets = layout_widgets(child)
+            used = {child.indexOf(w) for w in widgets}
+            used.update(child.indexOf(sub) for sub in layout_children(child))
+            leading_stretch = child.count() > 0 and 0 not in used  # a spacer comes first
             flow = FlowLayout(spacing=max(4, child.spacing()))
             if leading_stretch:
                 flow.setAlignment(Qt.AlignRight)
-            for widget in [
-                child.itemAt(i).widget() for i in range(child.count()) if child.itemAt(i).widget()
-            ]:
-                child.removeWidget(widget)
-                flow.addWidget(widget)
+            index = layout.indexOf(child)
             layout.takeAt(index)
             child.deleteLater()
+            # the row goes in empty: inserting a filled one would wrap its items as well
             layout.insertLayout(index, flow)
+            for widget in widgets:
+                child.removeWidget(widget)
+                flow.addWidget(widget)
         else:
             flow_button_rows(child)
 
 
 def _button_row(row):
-    widgets = [
-        row.itemAt(i).widget() for i in range(row.count()) if row.itemAt(i).widget() is not None
-    ]
+    widgets = layout_widgets(row)
     return len(widgets) >= 2 and all(isinstance(w, QAbstractButton) for w in widgets)
 
 
