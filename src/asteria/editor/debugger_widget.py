@@ -31,7 +31,7 @@ ACTIONS = {
     "remove_item": ("Remove item", [("item_id", "text"), ("quantity", "number")]),
     "set_currency": ("Set currency", [("currency_id", "text"), ("amount", "number")]),
     "set_resource": (
-        "Set resource (HP, SP, ...)",
+        "Set resource (HP, MP, ...)",
         [("member_id", "text"), ("resource_id", "text"), ("value", "number")],
     ),
     "set_stat": ("Set stat", [("member_id", "text"), ("stat", "text"), ("value", "number")]),

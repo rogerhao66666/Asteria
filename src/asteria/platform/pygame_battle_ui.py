@@ -256,6 +256,24 @@ class PygameBattleUiBackend:
             )
         self.screen.blit(layer, rect.topleft)
 
+    def _draw_pips(self, rect, count, filled, track, fill):
+        """``count`` round pips spread along ``rect``, larger than a thin bar is tall: the
+        first ``filled`` solid with a light rim, the rest as dark rings."""
+        step = rect.width / max(1, count)
+        radius = max(2, int(min(step * 0.42, max(rect.height, self._s(3)) * 0.9)))
+        cy = rect.y + rect.height // 2
+        rim = tuple(min(255, c + 60) for c in self._rgb(fill))
+        for index in range(count):
+            center = (round(rect.x + step * (index + 0.5)), cy)
+            if index < filled:
+                self.pg.draw.circle(self.screen, self._rgb(fill), center, radius)
+                self.pg.draw.circle(self.screen, rim, center, radius, width=max(1, radius // 4))
+            else:
+                self.pg.draw.circle(self.screen, self._rgb(track), center, radius)
+                ring = max(1, radius // 4)
+                dim = tuple((a + b) // 2 for a, b in zip(self._rgb(fill), self._rgb(track)))
+                self.pg.draw.circle(self.screen, dim, center, radius, width=ring)
+
     def draw_gauge(self, gauge, *, track, fill):
         mode = str(getattr(gauge, "presentation", "bar"))
         normalized = max(0.0, min(1.0, float(gauge.normalized)))
@@ -278,6 +296,9 @@ class PygameBattleUiBackend:
             ):
                 value = self.resolve_icon(gauge.icon_asset_id)
                 icon = getattr(value, "backend_handle", value)
+            if mode == "pips":  # points: a row of round pips, filled ones solid
+                self._draw_pips(rect, segments, filled_count, track, fill)
+                return
             for index in range(segments):
                 cell = self.pg.Rect(rect.x + index * (cell_w + gap), rect.y, cell_w, rect.height)
                 active = index < filled_count

@@ -19,6 +19,13 @@ def _color(value, label):
     return value
 
 
+def _hex(text):
+    """``"#rrggbb"`` / ``"#rrggbbaa"`` as an RGBA tuple."""
+    digits = str(text).lstrip("#")
+    channels = [int(digits[i : i + 2], 16) for i in range(0, len(digits), 2)]
+    return _color(channels, "color")
+
+
 @dataclass(frozen=True, slots=True)
 class BattleUiTheme:
     panel_fill: Color = (18, 23, 34, 224)
@@ -271,6 +278,9 @@ class BattleUiRenderer:
             if not layer:
                 for gauge in frame.gauges:
                     fill = t.gauge_full if gauge.normalized >= 1.0 else t.gauge_fill
+                    own = getattr(gauge, "color", "")
+                    if own:  # the resource's own colour (HUD style), full or not
+                        fill = _hex(own)
                     b.draw_gauge(gauge, track=t.gauge_track, fill=fill)
             for icon in frame.icons:
                 if on_top(icon.role) == layer:

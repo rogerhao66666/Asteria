@@ -158,6 +158,7 @@ class BattleUiGaugeBar:
     presentation: str = "bar"
     segments: int = 0
     icon_asset_id: str | None = None
+    color: str = ""  # "#rrggbb" fill; empty: the theme's
 
 
 @dataclass(frozen=True, slots=True)
@@ -417,6 +418,7 @@ class BattleUiComposer:
                                     mode,
                                     int(gauge.segments),
                                     gauge.icon_asset_id,
+                                    getattr(gauge, "color", ""),
                                 )
                             )
                         continue
@@ -469,6 +471,7 @@ class BattleUiComposer:
                                 mode,
                                 int(gauge.segments),
                                 gauge.icon_asset_id,
+                                getattr(gauge, "color", ""),
                             )
                         )
                         if gauge.show_value and not gauge.compact and density == "expanded":
@@ -547,6 +550,7 @@ class BattleUiComposer:
             str(gauge.presentation),
             int(gauge.segments),
             gauge.icon_asset_id,
+            getattr(gauge, "color", ""),
         )
 
     # room an overhead label keeps: a line of state names (drawn by the runtime) over the name

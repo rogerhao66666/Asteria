@@ -8426,7 +8426,7 @@
               "compact": false,
               "group": "primary",
               "icon_asset_id": null,
-              "label": "SP",
+              "label": "MP",
               "order": 1,
               "presentation": "bar",
               "priority": 5,
@@ -8438,6 +8438,7 @@
             },
             {
               "compact": false,
+              "color": "#e9c155",
               "group": "primary",
               "icon_asset_id": null,
               "label": "BP",
@@ -37057,7 +37058,7 @@
           "hidden_sections": [],
           "progression_labels": {},
           "resource_labels": {
-            "technique": "SP",
+            "technique": "MP",
             "vitality": "HP"
           },
           "resource_presentations": {},
@@ -50948,7 +50949,7 @@
             "resource": "technique"
           }
         ],
-        "description": "Magic / Dark: inflicts Silence, drains SP",
+        "description": "Magic / Dark: inflicts Silence, drains MP",
         "display_name": "Shadow Bolt",
         "effects": [
           {
@@ -51247,7 +51248,7 @@
             "resource": "technique"
           }
         ],
-        "description": "Magic / Dark: all foes, 2 hits, inflicts Magic Down, drains SP",
+        "description": "Magic / Dark: all foes, 2 hits, inflicts Magic Down, drains MP",
         "display_name": "Abyss",
         "effects": [
           {

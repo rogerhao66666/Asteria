@@ -11,6 +11,17 @@ def _id(value, label):
     return value
 
 
+def _color(value):
+    """``"#rrggbb"`` (or ``"#rrggbbaa"``), lower case; empty for the theme's colour."""
+    text = str(value or "").strip().lower()
+    if not text:
+        return ""
+    digits = text[1:] if text.startswith("#") else text
+    if len(digits) not in (6, 8) or any(c not in "0123456789abcdef" for c in digits):
+        raise ValueError(f"color must be #rrggbb, got {value!r}")
+    return "#" + digits
+
+
 def _finite(value, label):
     value = float(value)
     if not isfinite(value):
@@ -40,6 +51,7 @@ class BattleHudResourceStyle:
     show_label: bool = True
     show_value: bool = True
     compact: bool = False
+    color: str = ""  # the gauge's fill, "#rrggbb"; empty: the battle UI theme's
 
     BUILTIN_PRESENTATIONS = frozenset(
         {
@@ -71,6 +83,7 @@ class BattleHudResourceStyle:
         show_label=True,
         show_value=True,
         compact=False,
+        color="",
     ):
         resource_id = _id(resource_id, "resource_id")
         presentation = _id(presentation, "presentation").lower()
@@ -96,6 +109,7 @@ class BattleHudResourceStyle:
         object.__setattr__(self, "show_label", bool(show_label))
         object.__setattr__(self, "show_value", bool(show_value))
         object.__setattr__(self, "compact", bool(compact))
+        object.__setattr__(self, "color", _color(color))
 
     def to_data(self):
         return {
@@ -111,6 +125,7 @@ class BattleHudResourceStyle:
             "show_label": self.show_label,
             "show_value": self.show_value,
             "compact": self.compact,
+            "color": self.color,
         }
 
     @classmethod
@@ -239,6 +254,7 @@ class BattleHudGauge:
     show_label: bool = True
     show_value: bool = True
     compact: bool = False
+    color: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -325,6 +341,7 @@ class BattleHudRuntime:
             style.show_label,
             style.show_value,
             style.compact,
+            style.color,
         )
 
     def _status(self, active):

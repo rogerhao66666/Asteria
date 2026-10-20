@@ -164,7 +164,7 @@ EXTRAS = {
     "mana_shield": (("mirror", "self"),),
     "arcane_surge": (("focus", "self"),),
 }
-DRAINS = {"dark_storm": 0.25, "dark_bolt": 0.15}  # magic: drains this share of magic as SP
+DRAINS = {"dark_storm": 0.25, "dark_bolt": 0.15}  # magic: drains this share of magic as MP
 
 STATE_NAMES = {
     "defense_down": "Defence Down", "power_down": "Power Down", "magic_down": "Magic Down",
@@ -461,7 +461,7 @@ def describe(c):
         if buffs:
             parts.append("user gains " + ", ".join(dict.fromkeys(buffs)))
         if any(e.effect.effect_id.endswith(".sap") for e in definition.effects):
-            parts.append("drains SP")
+            parts.append("drains MP")
         elif any(e.mode.value == "self" for e in definition.effects) and kind != "Healing":
             parts.append("heals the user")
         text = head if len(parts) == 1 else f"{head}: " + ", ".join(parts[1:])
@@ -494,6 +494,6 @@ def _status_screen(c):
                 profile,
                 stat_labels=tuple(sorted(labels.items())),
                 stat_order=order,
-                resource_labels=(*profile.resource_labels, (HP, "HP"), (SP, "SP")),
+                resource_labels=(*profile.resource_labels, (HP, "HP"), (SP, "MP")),
             ),
         )

@@ -632,11 +632,15 @@ class ColorButton(QPushButton):
 
     def __init__(self, value):
         super().__init__()
-        self.color = str(value or "#ffffff")
+        self.color = str(value or "")  # empty: none of its own (the theme's is used)
         self.clicked.connect(self._pick)
         self._show()
 
     def _show(self):
+        if not self.color:
+            self.setText("Theme colour")
+            self.setStyleSheet("")
+            return
         self.setText(self.color)
         self.setStyleSheet(
             f"QPushButton {{ background: {self.color}; color: "
@@ -644,7 +648,7 @@ class ColorButton(QPushButton):
         )
 
     def _pick(self):
-        chosen = QColorDialog.getColor(QColor(self.color), self, "Colour")
+        chosen = QColorDialog.getColor(QColor(self.color or "#ffffff"), self, "Colour")
         if chosen.isValid():
             self.color = chosen.name()
             self._show()
@@ -1274,7 +1278,10 @@ class _SubForm(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.section)
-        for k, v in data.items():
+        from .record_vocabulary import resource_order
+
+        # HP above MP (the saved order is alphabetical: technique before vitality)
+        for k, v in sorted(data.items(), key=lambda kv: resource_order(kv[0])):
             if k in FORMAT_KEYS:
                 continue
             if isinstance(v, list) and not _scalar_list(k, v):
@@ -1496,6 +1503,8 @@ def _noun(key):
     """What one entry of a list field is, for "+ Add …": its label when that is one word
     ("Jobs" -> job), else the key's last word ("gain_rules" -> rule)."""
     label = label_for(key)
+    if label and label.isupper():  # HP's numbers: "+ Add value", not "+ Add hp"
+        return "value"
     if label and " " not in label.strip():
         return _singular(label.lower())
     word = str(key).replace("-", "_").split("_")[-1].lower()

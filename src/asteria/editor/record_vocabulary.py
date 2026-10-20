@@ -182,7 +182,7 @@ LABELS = {
     "display_name": "Name",
     "class_assignments": "Jobs",
     "base_stats": "Base Stats",
-    "base_resources": "HP, SP and other resources",
+    "base_resources": "HP, MP and other resources",
     "granted_tags": "Tags it gives",
     "granted_abilities": "Skills it gives",
     "stat_bonuses": "Stat bonuses",
@@ -354,7 +354,7 @@ HELP = {
     "icon_id": "The picture in menus and lists. Pick one, or Browse for your own file.",
     "class_assignments": "The jobs this character has; the first is the main job.",
     "base_stats": "Starting numbers before jobs, levels, gear and points.",
-    "base_resources": "HP, SP and other pools at the start.",
+    "base_resources": "HP, MP and other pools at the start.",
     "tags": "Short labels other rules look for (weak.fire, boss, trait.guard...).",
     "abilities": "Skills this one starts with.",
     "granted_abilities": "Skills anyone with this gets.",
@@ -661,7 +661,7 @@ _STAT_NAMES = {
     "accuracy": "Accuracy", "evade": "Evasion", "crit": "Critical Rate",
     "crit_damage": "Critical Damage %", "speed": "Speed", "lifesteal": "Lifesteal",
 }  # fmt: skip
-_RESOURCE_NAMES = {"vitality": "HP", "technique": "SP"}
+_RESOURCE_NAMES = {"vitality": "HP", "technique": "MP"}  # in the order a status screen reads
 # short forms that stay in capitals whenever an id is turned into words
 ACRONYMS = frozenset({
     "hp", "sp", "mp", "bp", "tp", "ap", "jp", "xp", "exp", "atb", "ai", "hud", "ui", "id",
@@ -699,6 +699,12 @@ def _stat_label(name):
 
 def _resource_label(name):
     return _RESOURCE_NAMES.get(name, words(name))
+
+
+def resource_order(name):
+    """Where a resource stands in a list: HP, then MP, then the rest as they come."""
+    names = list(_RESOURCE_NAMES)
+    return names.index(name) if name in names else len(names)
 
 
 def label_for(key):

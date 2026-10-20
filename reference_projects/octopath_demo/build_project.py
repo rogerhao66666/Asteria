@@ -938,7 +938,13 @@ def main():
             resources=(
                 *hud.resources,
                 BattleHudResourceStyle(
-                    "bp", "BP", order=9, presentation="pips", segments=5, show_value=False
+                    "bp",
+                    "BP",
+                    order=9,
+                    presentation="pips",
+                    segments=5,
+                    show_value=False,
+                    color="#e9c155",  # gold points
                 ),
                 # shields show under each enemy, not in the party list
                 BattleHudResourceStyle("shield", "SH", order=10, visible=False),

@@ -60,7 +60,7 @@ def test_every_skill_says_physical_or_magic_and_its_element():
     assert library.get("fire_bolt").description.startswith("Magic / Fire")
     assert library.get("valiant_slash").description.startswith("Physical + Magic / Light")
     assert library.get("attack_sword").description == "Physical / Non-elemental"
-    assert "drains SP" in library.get("dark_bolt").description
+    assert "drains MP" in library.get("dark_bolt").description
     assert library.get("mend").description == "Healing"
     assert trial_stats.EXTRAS["ice_bolt"] == (("freeze", "targets"),)
 

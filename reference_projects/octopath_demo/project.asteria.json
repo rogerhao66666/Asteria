@@ -7650,7 +7650,7 @@
               "compact": false,
               "group": "primary",
               "icon_asset_id": null,
-              "label": "SP",
+              "label": "MP",
               "order": 1,
               "presentation": "bar",
               "priority": 5,
@@ -7662,6 +7662,7 @@
             },
             {
               "compact": false,
+              "color": "#e9c155",
               "group": "primary",
               "icon_asset_id": null,
               "label": "BP",

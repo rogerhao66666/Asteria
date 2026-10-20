@@ -5934,7 +5934,7 @@
               "compact": false,
               "group": "primary",
               "icon_asset_id": null,
-              "label": "SP",
+              "label": "MP",
               "order": 1,
               "presentation": "bar",
               "priority": 5,
