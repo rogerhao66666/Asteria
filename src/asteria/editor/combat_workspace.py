@@ -60,6 +60,19 @@ SOURCES = (
 OPERATIONS = ("add", "multiply", "override")
 
 
+class _CellCombo(QComboBox):
+    """A list in a table cell: as wide as its column, never wider. (``fit_combo_boxes`` widens
+    a page's lists to their longest entry - in a narrow column that spilled over the next.)"""
+
+    def __init__(self):
+        super().__init__()
+        # tighter padding than a form's lists: the text keeps the room in a narrow column
+        self.setStyleSheet("QComboBox { padding-left: 6px; padding-right: 16px; }")
+
+    def setMinimumWidth(self, width):  # noqa: N802 - Qt API
+        super().setMinimumWidth(0)
+
+
 def _double(value=0.0, *, minimum=-1_000_000.0, maximum=1_000_000.0, step=1.0, decimals=2):
     box = QDoubleSpinBox()
     box.setRange(minimum, maximum)
@@ -140,7 +153,7 @@ class _Table(QWidget):
         for column, (_title, kind, options) in enumerate(self.columns):
             value = None if values is None else values[column]
             if kind == "choice":
-                widget = QComboBox()
+                widget = _CellCombo()
                 widget.setEditable(bool(options.get("editable")))
                 for key, label in options.get("items", ()):
                     widget.addItem(label, key)
@@ -176,15 +189,23 @@ class _Table(QWidget):
             if kind == "bool":
                 room.addWidget(widget, 0, Qt.AlignCenter)
             else:
+                # a field never wider than its column (a list asks for more on macOS and
+                # spilled over the next column)
+                widget.setMinimumWidth(0)
+                widget.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
+                if isinstance(widget, QComboBox):
+                    widget.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+                    widget.setMinimumContentsLength(2)
                 room.addWidget(widget)
             cell.field = widget
             self.table.setCellWidget(row, column, cell)
-        # as tall as its tallest field (spin boxes and lists are taller than 30 px)
-        tallest = max(
-            (self.table.cellWidget(row, c).sizeHint().height() for c in range(len(self.columns))),
-            default=self.ROW,
-        )
-        self.table.setRowHeight(row, max(self.ROW, tallest + 4))
+        # every field of the row as tall as the tallest (a text box was shorter than a number)
+        fields = [self.table.cellWidget(row, c).field for c in range(len(self.columns))]
+        tallest = max((f.sizeHint().height() for f in fields), default=self.ROW - 6)
+        for field, (_title, kind, _options) in zip(fields, self.columns, strict=True):
+            if kind != "bool":
+                field.setFixedHeight(tallest)
+        self.table.setRowHeight(row, max(self.ROW, tallest + 6))
         self._fit()
 
     def rows(self):
