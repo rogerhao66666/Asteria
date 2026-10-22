@@ -27,6 +27,7 @@ from .event_editing import (
 from .event_editor_widget import EventEditorWidget
 from .game_flow_overview_widget import GameFlowOverviewWidget
 from .hierarchy import build_reorder_entity_command
+from .i18n import english
 from .icons import icon as workspace_icon
 from .inspector import build_inspector_fields
 from .integrated_authoring import IntegratedAuthoringControllers
@@ -507,7 +508,7 @@ class AsteriaEditorWindow(QMainWindow):
         icons = {dock.windowTitle(): dock.windowIcon() for dock in self.findChildren(QDockWidget)}
         for bar in bars:
             bar.setDrawBase(False)
-            titles = {bar.tabText(index) for index in range(bar.count())}
+            titles = {english(bar.tabText(index)) for index in range(bar.count())}
             if "Assets" in titles:
                 bar.setObjectName("BottomPanelDockTabs")
             elif "Project" in titles:
@@ -1010,6 +1011,20 @@ class AsteriaEditorWindow(QMainWindow):
             group.addAction(action)
             theme_menu.addAction(action)
             self.theme_actions[key] = action
+
+        from .i18n import CURRENT as LANGUAGE
+        from .i18n import LANGUAGES
+
+        language_menu = view_menu.addMenu("Language")
+        group = QActionGroup(self)
+        self.language_actions = {}
+        for key, name in LANGUAGES.items():  # each named in its own language
+            action = QAction(name, self, checkable=True)
+            action.setChecked(LANGUAGE["language"] == key)
+            action.triggered.connect(lambda checked=False, k=key: self.set_language(k))
+            group.addAction(action)
+            language_menu.addAction(action)
+            self.language_actions[key] = action
 
         prefab_menu = self.menuBar().addMenu("&Prefab")
         self.create_prefab_action = QAction("Create Prefab from Selected Entity…", self)
@@ -2721,7 +2736,7 @@ class AsteriaEditorWindow(QMainWindow):
 
     def _left_tab_bar(self):
         for bar in self.findChildren(QTabBar):
-            titles = {bar.tabText(i) for i in range(bar.count())}
+            titles = {english(bar.tabText(i)) for i in range(bar.count())}
             if bar.parent() is self and set(self.LEFT_TITLES) <= titles:
                 return bar
         return None
@@ -2731,14 +2746,14 @@ class AsteriaEditorWindow(QMainWindow):
         bar = self._left_tab_bar()
         if bar is None or bar.currentIndex() < 0:
             return default
-        return self.LEFT_TITLES.get(bar.tabText(bar.currentIndex()), default)
+        return self.LEFT_TITLES.get(english(bar.tabText(bar.currentIndex())), default)
 
     def show_left_tab(self, name):
         bar = self._left_tab_bar()
         if bar is None or str(name) not in self.LEFT_TITLES.values():
             return
         for index in range(bar.count()):
-            if self.LEFT_TITLES.get(bar.tabText(index)) == str(name):
+            if self.LEFT_TITLES.get(english(bar.tabText(index))) == str(name):
                 bar.setCurrentIndex(index)
 
     # Panels a workspace starts without (it keeps whatever the user opens or closes afterwards).
@@ -2790,6 +2805,17 @@ class AsteriaEditorWindow(QMainWindow):
                 not self._layout_restored
             ):  # dock sizes only apply once the window has its real size
                 QTimer.singleShot(0, self, self._apply_default_dock_sizes)
+
+    def set_language(self, name):
+        """Switch the editor language live (English or Traditional Chinese) and remember it."""
+        from .i18n import set_language
+
+        set_language(name)
+        self.refresh_all()  # trees and forms built from the editor's words, built again
+        if name in getattr(self, "language_actions", {}):
+            self.language_actions[name].setChecked(True)
+        if self.layout_settings is not None:
+            self.layout_settings.setValue("editor/language", name)
 
     def set_theme(self, name):
         """Switch the editor palette live and remember it."""
@@ -2911,6 +2937,9 @@ def launch_editor(project=None):
     app = QApplication.instance() or QApplication(sys.argv)
     settings = QSettings("Asteria", "Editor")
     apply_asteria_theme(app, palette_name(settings))
+    from .i18n import install, language_name
+
+    install(app, language_name(settings))  # before any window: its text is drawn translated
     window = AsteriaEditorWindow(project)
     window.restore_layout(settings)
     if project is None:

@@ -44,6 +44,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .i18n import english
 from .record_vocabulary import (
     CATEGORY_HELP,
     HELP,
@@ -252,6 +253,8 @@ class Picker(QComboBox):
     def __init__(self, choices, value, *, icons=None, allow_none=True, allow_other=True):
         super().__init__()
         _wheel_guard(self)
+        # the value is each item's data: its shown text may be translated (editor language)
+        self.setProperty("i18n_choices", True)
         self.setEditable(True)
         self.setInsertPolicy(QComboBox.NoInsert)
         self.setMaxVisibleItems(16)
@@ -1084,7 +1087,7 @@ class RecordForm(QScrollArea):
         elif (
             _empty_optional(value)
             and not section.keeps_empty
-            and section.toggle.text() != "Advanced"
+            and english(section.toggle.text()) != "Advanced"
         ):
             section.add_empty(text, widget, help_text=help_text, key=str(key))
         else:
@@ -1529,7 +1532,8 @@ def _singular(text):
     text = str(text).strip()
     if " " in text:
         return "entry"
-    for suffix, replacement in (("ies", "y"), ("ses", "s"), ("s", "")):
+    # "phases" -> "phase" (not "phas"), "statuses" -> "status"
+    for suffix, replacement in (("ies", "y"), ("ases", "ase"), ("ses", "s"), ("s", "")):
         if text.endswith(suffix) and len(text) > 3:
             return text[: -len(suffix)] + replacement
     return text

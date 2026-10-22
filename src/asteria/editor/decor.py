@@ -146,7 +146,9 @@ def button_style(text):
 
 
 def label_icon(text):
-    plain = text.replace("&", "").strip()
+    from .i18n import english
+
+    plain = english(text.replace("&", "").strip())  # icons are picked by the English title
     for pattern, name in _LABELS:
         if pattern.search(plain):
             return name
@@ -157,7 +159,9 @@ def decorate_button(button):
     if button.property("decorated") == button.text():
         return
     button.setProperty("decorated", button.text())
-    name, role = button_style(button.text())
+    from .i18n import english
+
+    name, role = button_style(english(button.text().strip()))  # by the English (Delete: red)
     if re.match(r"^[+\-−–↑↓▲▼]", button.text().strip()):
         name = None  # the text already carries its symbol
     if name and button.icon().isNull():

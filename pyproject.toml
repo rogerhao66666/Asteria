@@ -16,7 +16,7 @@ fast=["numpy>=2"]
 dev=["pytest>=9", "ruff>=0.16", "numpy>=2"]
 
 [tool.setuptools.package-data]
-asteria=["templates/**/*"]
+asteria=["templates/**/*", "editor/translations/*.json"]
 
 [tool.ruff]
 target-version="py312"

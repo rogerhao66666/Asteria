@@ -239,6 +239,7 @@ def surfaces(window):
     """``(name, activate)`` for every workspace and sub-tab."""
     from PySide6.QtWidgets import QTabWidget
 
+    from asteria.editor.i18n import english
     from asteria.editor.workspace import WorkspaceMode
 
     out = []
@@ -246,7 +247,8 @@ def surfaces(window):
         page = window.workspace._pages.get(mode)
         if isinstance(page, QTabWidget):
             for i in range(page.count()):
-                title = page.tabText(i).replace("&&", "and").replace(" ", "_").replace("/", "-")
+                title = english(page.tabText(i))  # the same names in any editor language
+                title = title.replace("&&", "and").replace(" ", "_").replace("/", "-")
                 name = f"{mode.value}_{title.lower()}"
                 out.append(
                     (

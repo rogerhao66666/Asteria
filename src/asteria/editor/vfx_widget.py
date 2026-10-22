@@ -260,7 +260,9 @@ class VFXEditorWidget(QWidget):
         )
         self.usages.addItems([f"{s}.{b}" for s, b in self.api.usages(asset_id)] or [])
         problems = self.api.problems(asset_id)
-        self.problems.addItems(problems or ["No problems"])
+        from .i18n import translate
+
+        self.problems.addItems(problems or [translate("No problems")])
         self._render()
 
     def form_placement(self):

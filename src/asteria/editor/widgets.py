@@ -136,8 +136,11 @@ class ProjectTreeWidget(QWidget):
                 "component": "settings",
             }
 
+            from .i18n import translate
+
             def item(label, kind=None, value=None):
-                tree_item = QTreeWidgetItem([label])
+                # a folder (no kind) is the editor's own word; a record's name is the author's
+                tree_item = QTreeWidgetItem([translate(label) if kind is None else label])
                 name = kind_icons.get(kind) or (folder_icons.get(label) if kind is None else None)
                 if kind == "asset":
                     name = asset_icon_name(getattr(value, "source_path", ""))

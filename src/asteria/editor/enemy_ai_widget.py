@@ -647,7 +647,9 @@ class EnemyAIEditorWidget(QWidget):
         self._build_resource_inputs()
         self.problem_list.clear()
         problems = self.api.problems(ai_id)
-        self.problem_list.addItems(problems or ["No problems"])
+        from .i18n import translate
+
+        self.problem_list.addItems(problems or [translate("No problems")])
         self.run_preview()
 
     def _rule_selected(self):

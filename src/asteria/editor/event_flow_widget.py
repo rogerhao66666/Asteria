@@ -221,12 +221,14 @@ class EventFlowWidget(QWidget):
         for index, b in self.api.battle_events():
             row = self.battle.rowCount()
             self.battle.insertRow(row)
-            when = " and ".join(describe_condition(c) for c in b.conditions) or "always"
+            from .i18n import translate  # the editor's words in its language; ids stay
+
+            when = " and ".join(describe_condition(c) for c in b.conditions) or translate("always")
             values = (
-                trigger_label(b.hook_name),
+                translate(trigger_label(b.hook_name)),
                 b.event_program_id,
                 when,
-                "yes" if b.once else "",
+                translate("yes") if b.once else "",
             )
             for col, text in enumerate(values):
                 self.battle.setItem(row, col, QTableWidgetItem(text))
